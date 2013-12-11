@@ -41,6 +41,9 @@ function testGen() {
   subtestGen("error");
   yield undefined;
 
+  subtestGen("exception");
+  yield undefined;
+
   subtestGen("debug"); // bug 616742
   yield undefined;
 
@@ -86,7 +89,18 @@ function testConsoleLoggingAPI(aMethod) {
 
   // TODO: move all filtering tests into a separate test file: see bug 608135
   setStringFilter("");
-  let filter = aMethod == "debug" ? "log" : aMethod;
+  let filter;
+  switch(aMethod) {
+    case "debug":
+      filter = "log";
+      break;
+    case "exception":
+      filter = "error";
+      break;
+    default:
+      filter = aMethod;
+      break;
+  }
   hud.setFilterState(filter, false);
   console[aMethod]("foo-bar-baz");
 

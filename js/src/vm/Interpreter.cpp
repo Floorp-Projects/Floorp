@@ -331,12 +331,12 @@ SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleV
     RootedId id(cx, NameToId(script->getName(pc)));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
         if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0,
-                                                             &rref, script->strict))
+                                                             &rref, script->strict()))
         {
             return false;
         }
     } else {
-        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict))
+        if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict()))
             return false;
     }
 
@@ -1179,7 +1179,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         if ((uint32_t)i >= length) {
             // Annotate script if provided with information (e.g. baseline)
             if (script && script->hasBaselineScript() && *pc == JSOP_SETELEM)
-                script->baselineScript()->noteArrayWriteHole(pc - script->code);
+                script->baselineScript()->noteArrayWriteHole(script->pcToOffset(pc));
         }
     }
 #endif
@@ -1298,14 +1298,14 @@ Interpret(JSContext *cx, RunState &state)
 #define SET_SCRIPT(s)                                                         \
     JS_BEGIN_MACRO                                                            \
         script = (s);                                                         \
-        if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts) \
+        if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts()) \
             activation.enableInterruptsUnconditionally();                     \
     JS_END_MACRO
 
 #define SANITY_CHECKS()                                                       \
     JS_BEGIN_MACRO                                                            \
         js::gc::MaybeVerifyBarriers(cx);                                      \
-        JS_ASSERT_IF(script->hasScriptCounts,                                 \
+        JS_ASSERT_IF(script->hasScriptCounts(),                               \
                      activation.opMask() == EnableInterruptsPseudoOpcode);    \
     JS_END_MACRO
 
@@ -1348,8 +1348,8 @@ Interpret(JSContext *cx, RunState &state)
     DebugOnly<uint32_t> blockDepth;
 
     if (JS_UNLIKELY(REGS.fp()->isGeneratorFrame())) {
-        JS_ASSERT(size_t(REGS.pc - script->code) <= script->length);
-        JS_ASSERT(REGS.stackDepth() <= script->nslots);
+        JS_ASSERT(script->containsPC(REGS.pc));
+        JS_ASSERT(REGS.stackDepth() <= script->nslots());
 
         /*
          * To support generator_throw and to catch ignored exceptions,
@@ -1401,12 +1401,12 @@ CASE(EnableInterruptsPseudoOpcode)
     jsbytecode op = *REGS.pc;
 
     if (cx->runtime()->profilingScripts) {
-        if (!script->hasScriptCounts)
+        if (!script->hasScriptCounts())
             script->initScriptCounts(cx);
         moreInterrupts = true;
     }
 
-    if (script->hasScriptCounts) {
+    if (script->hasScriptCounts()) {
         PCCounts counts = script->getPCCounts(REGS.pc);
         counts.get(PCCounts::BASE_INTERP)++;
         moreInterrupts = true;
@@ -1761,7 +1761,7 @@ CASE(JSOP_IN)
 {
     HandleValue rref = REGS.stackHandleAt(-1);
     if (!rref.isObject()) {
-        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, NullPtr());
+        js_ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -2176,7 +2176,7 @@ END_CASE(JSOP_POS)
 CASE(JSOP_DELNAME)
 {
     /* Strict mode code should never contain JSOP_DELNAME opcodes. */
-    JS_ASSERT(!script->strict);
+    JS_ASSERT(!script->strict());
 
     RootedPropertyName &name = rootName0;
     name = script->getName(REGS.pc);
@@ -2202,7 +2202,7 @@ CASE(JSOP_DELPROP)
     bool succeeded;
     if (!JSObject::deleteProperty(cx, obj, name, &succeeded))
         goto error;
-    if (!succeeded && script->strict) {
+    if (!succeeded && script->strict()) {
         obj->reportNotConfigurable(cx, NameToId(name));
         goto error;
     }
@@ -2223,7 +2223,7 @@ CASE(JSOP_DELELEM)
     bool succeeded;
     if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
         goto error;
-    if (!succeeded && script->strict) {
+    if (!succeeded && script->strict()) {
         // XXX This observably calls ToString(propval).  We should convert to
         //     PropertyKey and use that to delete, and to report an error if
         //     necessary!
@@ -2358,7 +2358,7 @@ CASE(JSOP_SETELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
     Value &value = REGS.sp[-1];
-    if (!SetObjectElementOperation(cx, obj, id, value, script->strict))
+    if (!SetObjectElementOperation(cx, obj, id, value, script->strict()))
         goto error;
     REGS.sp[-3] = value;
     REGS.sp -= 2;
@@ -2375,7 +2375,7 @@ CASE(JSOP_ENUMELEM)
     RootedId &id = rootId0;
     FETCH_ELEMENT_ID(-1, id);
     rval = REGS.sp[-3];
-    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict))
+    if (!JSObject::setGeneric(cx, obj, obj, id, &rval, script->strict()))
         goto error;
     REGS.sp -= 3;
 }
@@ -2384,7 +2384,7 @@ END_CASE(JSOP_ENUMELEM)
 CASE(JSOP_EVAL)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-    if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
+    if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
         if (!DirectEval(cx, args))
             goto error;
     } else {
@@ -2438,7 +2438,7 @@ CASE(JSOP_SPREADEVAL)
             goto error;
         break;
       case JSOP_SPREADEVAL:
-        if (IsBuiltinEvalForScope(REGS.fp()->scopeChain(), args.calleev())) {
+        if (REGS.fp()->scopeChain()->global().valueIsEval(args.calleev())) {
             if (!DirectEval(cx, args))
                 goto error;
         } else {
@@ -2488,7 +2488,7 @@ CASE(JSOP_FUNCALL)
         funScript = fun->getOrCreateScript(cx);
         if (!funScript)
             goto error;
-        if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite) {
+        if (cx->typeInferenceEnabled() && funScript->shouldCloneAtCallsite()) {
             fun = CloneFunctionAtCallsite(cx, fun, script, REGS.pc);
             if (!fun)
                 goto error;
@@ -2790,8 +2790,9 @@ CASE(JSOP_SETALIASEDVAR)
 
     // Avoid computing the name if no type updates are needed, as this may be
     // expensive on scopes with large numbers of variables.
-    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(script, REGS.pc)
-                                                : nullptr;
+    PropertyName *name = (obj.hasSingletonType() && !obj.hasLazyType())
+                         ? ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, REGS.pc)
+                         : nullptr;
 
     obj.setAliasedVar(cx, sc, name, REGS.sp[-1]);
 }
@@ -3021,7 +3022,7 @@ CASE(JSOP_INITPROP)
 
     if (JS_UNLIKELY(name == cx->names().proto)
         ? !baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval,
-                                                           script->strict)
+                                                           script->strict())
         : !DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
@@ -3116,7 +3117,7 @@ END_CASE(JSOP_SPREAD)
 CASE(JSOP_GOSUB)
 {
     PUSH_BOOLEAN(false);
-    int32_t i = (REGS.pc - script->code) + JSOP_GOSUB_LENGTH;
+    int32_t i = script->pcToOffset(REGS.pc) + JSOP_GOSUB_LENGTH;
     int32_t len = GET_JUMP_OFFSET(REGS.pc);
     PUSH_INT32(i);
     ADVANCE_AND_DISPATCH(len);
@@ -3142,7 +3143,7 @@ CASE(JSOP_RETSUB)
     JS_ASSERT(rval.isInt32());
 
     /* Increment the PC by this much. */
-    int32_t len = rval.toInt32() - int32_t(REGS.pc - script->code);
+    int32_t len = rval.toInt32() - int32_t(script->pcToOffset(REGS.pc));
     ADVANCE_AND_DISPATCH(len);
 }
 
@@ -3183,7 +3184,7 @@ CASE(JSOP_INSTANCEOF)
     RootedValue &rref = rootValue0;
     rref = REGS.sp[-1];
     if (rref.isPrimitive()) {
-        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, NullPtr());
+        js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, js::NullPtr());
         goto error;
     }
     RootedObject &obj = rootObject0;
@@ -3230,7 +3231,7 @@ CASE(JSOP_ENTERLET2)
 
     if (*REGS.pc == JSOP_ENTERBLOCK) {
         JS_ASSERT(REGS.stackDepth() == blockObj.stackDepth());
-        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots);
+        JS_ASSERT(REGS.stackDepth() + blockObj.slotCount() <= script->nslots());
         Value *vp = REGS.sp + blockObj.slotCount();
         SetValueRangeToUndefined(REGS.sp, vp);
         REGS.sp = vp;
@@ -3289,7 +3290,7 @@ CASE(JSOP_YIELD)
     if (cx->innermostGenerator()->state == JSGEN_CLOSING) {
         RootedValue &val = rootValue0;
         val.setObject(REGS.fp()->callee());
-        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, NullPtr());
+        js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD, JSDVG_SEARCH_STACK, val, js::NullPtr());
         goto error;
     }
     REGS.fp()->setReturnValue(REGS.sp[-1]);
@@ -3301,8 +3302,8 @@ CASE(JSOP_YIELD)
 CASE(JSOP_ARRAYPUSH)
 {
     uint32_t slot = GET_UINT16(REGS.pc);
-    JS_ASSERT(script->nfixed <= slot);
-    JS_ASSERT(slot < script->nslots);
+    JS_ASSERT(script->nfixed() <= slot);
+    JS_ASSERT(slot < script->nslots());
     RootedObject &obj = rootObject0;
     obj = &REGS.fp()->unaliasedLocal(slot).toObject();
     if (!js_NewbornArrayPush(cx, obj, REGS.sp[-1]))
@@ -3325,7 +3326,7 @@ DEFAULT()
     MOZ_ASSUME_UNREACHABLE("Interpreter loop exited via fallthrough");
 
   error:
-    JS_ASSERT(uint32_t(REGS.pc - script->code) < script->length);
+    JS_ASSERT(script->containsPC(REGS.pc));
 
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
@@ -3595,7 +3596,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
         if (!fun)
             return false;
     } else {
-        JS_ASSERT(script->compileAndGo);
+        JS_ASSERT(script->compileAndGo());
         JS_ASSERT(!script->function());
     }
 
@@ -3622,7 +3623,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      * ECMA requires functions defined when entering Eval code to be
      * impermanent.
      */
-    unsigned attrs = script->isActiveEval
+    unsigned attrs = script->isActiveEval()
                      ? JSPROP_ENUMERATE
                      : JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
@@ -3659,7 +3660,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
      */
 
     /* Step 5f. */
-    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict);
+    return JSObject::setProperty(cx, parent, parent, name, &rval, script->strict());
 }
 
 bool
@@ -3852,10 +3853,10 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
 bool
 js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 {
-    JS_ASSERT(script->treatAsRunOnce);
+    JS_ASSERT(script->treatAsRunOnce());
 
-    if (!script->hasRunOnce) {
-        script->hasRunOnce = true;
+    if (!script->hasRunOnce()) {
+        script->setHasRunOnce();
         return true;
     }
 

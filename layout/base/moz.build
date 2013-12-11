@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
 ]
@@ -79,7 +77,6 @@ UNIFIED_SOURCES += [
     'nsCSSRenderingBorders.cpp',
     'nsDisplayList.cpp',
     'nsDisplayListInvalidation.cpp',
-    'nsDocumentViewer.cpp',
     'nsFrameManager.cpp',
     'nsFrameTraversal.cpp',
     'nsGenConList.cpp',
@@ -87,7 +84,6 @@ UNIFIED_SOURCES += [
     'nsLayoutHistoryState.cpp',
     'nsLayoutUtils.cpp',
     'nsPresContext.cpp',
-    'nsPresShell.cpp',
     'nsQuoteList.cpp',
     'nsStyleChangeList.cpp',
     'nsStyleSheetService.cpp',
@@ -98,10 +94,14 @@ UNIFIED_SOURCES += [
     'StackArena.cpp',
 ]
 
+# nsDocumentViewer.cpp and nsPresShell.cpp need to be built separately
+# because they force NSPR logging.
 # nsPresArena.cpp needs to be built separately because it uses plarena.h.
 # nsRefreshDriver.cpp needs to be built separately because of name clashes in the OS X headers
 SOURCES += [
+    'nsDocumentViewer.cpp',
     'nsPresArena.cpp',
+    'nsPresShell.cpp',
     'nsRefreshDriver.cpp',
 ]
 
@@ -112,6 +112,28 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
+    '../../content/base/src',
+    '../../content/events/src',
+    '../../content/html/content/src',
+    '../../content/svg/content/src',
+    '../../content/xbl/src',
+    '../../dom/base',
+    '../../view/src',
+    '../forms',
+    '../generic',
+    '../mathml',
+    '../printing',
+    '../style',
+    '../svg',
+    '../tables',
+    '../xul',
+    '../xul/tree/',
     '/docshell/base',
+    '/xpcom/ds',
 ]
+
 FINAL_LIBRARY = 'gklayout'
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']

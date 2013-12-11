@@ -146,10 +146,10 @@ function getRepositoryAddon(aAddon, aCallback) {
 /**
  * Wrap an API-supplied function in an exception handler to make it safe to call
  */
-function safeCallback(aCallback) {
+function makeSafe(aCallback) {
   return function(...aArgs) {
     try {
-      aCallback.apply(null, aArgs);
+      aCallback(...aArgs);
     }
     catch(ex) {
       WARN("XPI Database callback failed", ex);
@@ -616,6 +616,9 @@ this.XPIDatabase = {
                                                 "schemaMismatch-" + inputAddons.schemaVersion);
         LOG("JSON schema mismatch: expected " + DB_SCHEMA +
             ", actual " + inputAddons.schemaVersion);
+        // When we rev the schema of the JSON database, we need to make sure we
+        // force the DB to save so that the DB_SCHEMA value in the JSON file and
+        // the preference are updated.
       }
       // If we got here, we probably have good data
       // Make AddonInternal instances from the loaded data and save them
@@ -656,6 +659,7 @@ this.XPIDatabase = {
       let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA);
       if (schemaVersion <= LAST_SQLITE_DB_SCHEMA) {
         // we should have an older SQLITE database
+        LOG("Attempting to upgrade from SQLITE database");
         this.migrateData = this.getMigrateDataFromSQLITE();
       }
       else {
@@ -756,6 +760,12 @@ this.XPIDatabase = {
     this.addonDB = new Map();
     this.initialized = true;
 
+    if (XPIProvider.installStates && XPIProvider.installStates.length == 0) {
+      // No extensions installed, so we're done
+      LOG("Rebuilding XPI database with no extensions");
+      return;
+    }
+
     // If there is no migration data then load the list of add-on directories
     // that were active during the last run
     if (!this.migrateData)
@@ -764,13 +774,12 @@ this.XPIDatabase = {
     if (aRebuildOnError) {
       WARN("Rebuilding add-ons database from installed extensions.");
       try {
-        let state = XPIProvider.getInstallLocationStates();
-        XPIProvider.processFileChanges(state, {}, false);
+        XPIProvider.processFileChanges(XPIProvider.installStates, {}, false);
       }
       catch (e) {
         ERROR("Failed to rebuild XPI database from installed extensions", e);
       }
-      // Make to update the active add-ons and add-ons list on shutdown
+      // Make sure to update the active add-ons and add-ons list on shutdown
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
     }
   },
@@ -786,10 +795,13 @@ this.XPIDatabase = {
   getActiveBundles: function XPIDB_getActiveBundles() {
     let bundles = [];
 
+    // non-bootstrapped extensions
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
 
     if (!addonsList.exists())
+      // XXX Irving believes this is broken in the case where there is no
+      // extensions.ini but there are bootstrap extensions (e.g. Android)
       return null;
 
     try {
@@ -1057,12 +1069,12 @@ this.XPIDatabase = {
     this.asyncLoadDB().then(
       addonDB => {
         let addonList = _filterDB(addonDB, aFilter);
-        asyncMap(addonList, getRepositoryAddon, safeCallback(aCallback));
+        asyncMap(addonList, getRepositoryAddon, makeSafe(aCallback));
       })
     .then(null,
         error => {
           ERROR("getAddonList failed", e);
-          safeCallback(aCallback)([]);
+          makeSafe(aCallback)([]);
         });
   },
 
@@ -1077,12 +1089,12 @@ this.XPIDatabase = {
   getAddon: function(aFilter, aCallback) {
     return this.asyncLoadDB().then(
       addonDB => {
-        getRepositoryAddon(_findAddon(addonDB, aFilter), safeCallback(aCallback));
+        getRepositoryAddon(_findAddon(addonDB, aFilter), makeSafe(aCallback));
       })
     .then(null,
         error => {
           ERROR("getAddon failed", e);
-          safeCallback(aCallback)(null);
+          makeSafe(aCallback)(null);
         });
   },
 
@@ -1112,7 +1124,7 @@ this.XPIDatabase = {
   getAddonInLocation: function XPIDB_getAddonInLocation(aId, aLocation, aCallback) {
     this.asyncLoadDB().then(
         addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
-                                      safeCallback(aCallback)));
+                                      makeSafe(aCallback)));
   },
 
   /**

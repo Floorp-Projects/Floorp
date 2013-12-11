@@ -110,7 +110,7 @@ private:
     changeCaseFnc(depStr, result);
 
     JSString *ucstr =
-      JS_NewUCStringCopyN(cx, (jschar*)result.get(), result.Length());
+      JS_NewUCStringCopyN(cx, result.get(), result.Length());
     if (!ucstr) {
       return false;
     }

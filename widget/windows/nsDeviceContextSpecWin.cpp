@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
@@ -183,7 +183,7 @@ static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
 
 //----------------------------------------------------------------
 static nsresult 
-EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFound, bool& aIsFile)
+EnumerateNativePrinters(DWORD aWhichPrinters, const wchar_t *aPrinterName, bool& aIsFound, bool& aIsFile)
 {
   DWORD             dwSizeNeeded = 0;
   DWORD             dwNumItems   = 0;
@@ -221,7 +221,7 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFoun
 
 //----------------------------------------------------------------
 static void 
-CheckForPrintToFileWithName(LPWSTR aPrinterName, bool& aIsFile)
+CheckForPrintToFileWithName(char16ptr_t aPrinterName, bool& aIsFile)
 {
   bool isFound = false;
   aIsFile = false;
@@ -334,7 +334,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
 
 //----------------------------------------------------------------------------------
 static nsresult
-CheckForPrintToFile(nsIPrintSettings* aPS, LPWSTR aPrinterName, PRUnichar* aUPrinterName)
+CheckForPrintToFile(nsIPrintSettings* aPS, const PRUnichar* aPrinterName, const PRUnichar* aUPrinterName)
 {
   nsresult rv = NS_OK;
 
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
 //----------------------------------------------------------
 // Helper Function - Free and reallocate the string
-static void CleanAndCopyString(PRUnichar*& aStr, const PRUnichar* aNewStr)
+static void CleanAndCopyString(wchar_t*& aStr, const wchar_t* aNewStr)
 {
   if (aStr != nullptr) {
     if (aNewStr != nullptr && wcslen(aStr) > wcslen(aNewStr)) { // reuse it if we can
@@ -459,7 +459,7 @@ static void CleanAndCopyString(PRUnichar*& aStr, const PRUnichar* aNewStr)
   }
 
   if (nullptr != aNewStr) {
-    aStr = (PRUnichar *)PR_Malloc(sizeof(PRUnichar)*(wcslen(aNewStr) + 1));
+    aStr = (wchar_t *)PR_Malloc(sizeof(wchar_t)*(wcslen(aNewStr) + 1));
     wcscpy(aStr, aNewStr);
   }
 }
@@ -517,13 +517,13 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetDeviceName(const PRUnichar* aDeviceName)
+void nsDeviceContextSpecWin::SetDeviceName(char16ptr_t aDeviceName)
 {
   CleanAndCopyString(mDeviceName, aDeviceName);
 }
 
 //----------------------------------------------------------------------------------
-void nsDeviceContextSpecWin::SetDriverName(const PRUnichar* aDriverName)
+void nsDeviceContextSpecWin::SetDriverName(char16ptr_t aDriverName)
 {
   CleanAndCopyString(mDriverName, aDriverName);
 }
@@ -640,7 +640,7 @@ SetupDevModeFromSettings(LPDEVMODEW aDevMode, nsIPrintSettings* aPrintSettings)
 //----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
 nsresult
-nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSettings* aPS)
+nsDeviceContextSpecWin::GetDataFromPrinter(char16ptr_t aName, nsIPrintSettings* aPS)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -654,32 +654,28 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
   }
 
   HANDLE hPrinter = nullptr;
+  wchar_t *name = (wchar_t*)aName; // Windows APIs use non-const name argument
   
-  BOOL status = ::OpenPrinterW((LPWSTR)(aName),
-                              &hPrinter, nullptr);
+  BOOL status = ::OpenPrinterW(name, &hPrinter, nullptr);
   if (status) {
 
     LPDEVMODEW   pDevMode;
     DWORD       dwNeeded, dwRet;
 
     // Allocate a buffer of the correct size.
-    dwNeeded = ::DocumentPropertiesW(nullptr, hPrinter,
-                                    const_cast<wchar_t*>(aName),
-                                    nullptr, nullptr, 0);
+    dwNeeded = ::DocumentPropertiesW(nullptr, hPrinter, name, nullptr, nullptr, 0);
 
     pDevMode = (LPDEVMODEW)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
     // Get the default DevMode for the printer and modify it for our needs.
-    dwRet = DocumentPropertiesW(nullptr, hPrinter, 
-                               const_cast<wchar_t*>(aName),
+    dwRet = DocumentPropertiesW(nullptr, hPrinter, name,
                                pDevMode, nullptr, DM_OUT_BUFFER);
 
     if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentPropertiesW(nullptr, hPrinter,
-                                   const_cast<wchar_t*>(aName),
+      dwRet = ::DocumentPropertiesW(nullptr, hPrinter, name,
                                    pDevMode, pDevMode,
                                    DM_IN_BUFFER | DM_OUT_BUFFER);
     }

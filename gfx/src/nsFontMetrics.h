@@ -19,6 +19,7 @@
 #include "nscore.h"                     // for PRUnichar
 
 class gfxUserFontSet;
+class gfxTextPerfMetrics;
 class nsDeviceContext;
 class nsIAtom;
 class nsRenderingContext;
@@ -58,7 +59,8 @@ public:
      */
     nsresult Init(const nsFont& aFont, nsIAtom* aLanguage,
                   nsDeviceContext *aContext,
-                  gfxUserFontSet *aUserFontSet = nullptr);
+                  gfxUserFontSet *aUserFontSet,
+                  gfxTextPerfMetrics *aTextPerf);
 
     /**
      * Destroy this font metrics. This breaks the association between

@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(928356ff-26b2-434e-a7ce-c1a660162d81)]
+[scriptable, uuid(3d9bf70c-5b83-11e3-9090-3c970e9f4238)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -312,6 +312,21 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in boolean aIgnoreRootScrollFrame,
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg);
+
+  /** The same as sendTouchEvent but ensures that the event is dispatched to
+   *  this DOM window or one of its children.
+   */
+  boolean sendTouchEventToWindow(in AString aType,
+                                 [array, size_is(count)] in uint32_t aIdentifiers,
+                                 [array, size_is(count)] in int32_t aXs,
+                                 [array, size_is(count)] in int32_t aYs,
+                                 [array, size_is(count)] in uint32_t aRxs,
+                                 [array, size_is(count)] in uint32_t aRys,
+                                 [array, size_is(count)] in float aRotationAngles,
+                                 [array, size_is(count)] in float aForces,
+                                 in uint32_t count,
+                                 in long aModifiers,
+                                 [optional] in boolean aIgnoreRootScrollFrame);
 
   /** Synthesize a wheel event for a window. The event types supported is only
    *  wheel.
@@ -651,6 +666,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
+
+  /**
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
+   */
+  void getScrollXYFloat(in boolean aFlushLayout, out float aScrollX, out float aScrollY);
 
   /**
    * Sets the scroll position of the root scroll frame of the window.
@@ -1044,7 +1067,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean layerManagerRemote;
 
   /**
-   * Record (and return) frame-intervals and paint-times for frames which were presented
+   * Record (and return) frame-intervals for frames which were presented
    *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
    *
    * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
@@ -1066,7 +1089,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * - Allocation is infallible. Should be released even if size is 0.
    */
    void stopFrameTimeRecording(in unsigned long startIndex,
-                              [optional, array, size_is(frameCount)] out float paintTimes,
                               [optional] out unsigned long frameCount,
                               [retval, array, size_is(frameCount)] out float frameIntervals);
 

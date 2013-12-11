@@ -26,7 +26,10 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      NetMonitorView.editor("#response-content-textarea").then((aEditor) => {
+      let RESPONSE_BODY_DISPLAYED = aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED;
+      waitFor(aMonitor.panelWin, RESPONSE_BODY_DISPLAYED).then(() =>
+        NetMonitorView.editor("#response-content-textarea")
+      ).then((aEditor) => {
         is(aEditor.getText().indexOf("\u044F"), 26, // я
           "The text shown in the source editor is incorrect.");
         is(aEditor.getMode(), Editor.modes.text,

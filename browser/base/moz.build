@@ -21,3 +21,16 @@ BROWSER_CHROME_MANIFESTS += [
     'content/test/newtab/browser.ini',
     'content/test/social/browser.ini',
 ]
+
+DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
+DEFINES['APP_LICENSE_BLOCK'] = '%s/content/overrides/app-license.html' % SRCDIR
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
+    DEFINES['HAVE_SHELL_SERVICE'] = 1
+    DEFINES['CONTEXT_COPY_IMAGE_CONTENTS'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa'):
+    DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
+    DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1

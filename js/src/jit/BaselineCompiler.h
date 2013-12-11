@@ -183,14 +183,14 @@ class BaselineCompiler : public BaselineCompilerSpecific
     bool modifiesArguments_;
 
     Label *labelOf(jsbytecode *pc) {
-        return &labels_[pc - script->code];
+        return &labels_[script->pcToOffset(pc)];
     }
 
     // If a script has more |nslots| than this, then emit code to do an
     // early stack check.
     static const unsigned EARLY_STACK_CHECK_SLOT_COUNT = 128;
     bool needsEarlyStackCheck() const {
-        return script->nslots > EARLY_STACK_CHECK_SLOT_COUNT;
+        return script->nslots() > EARLY_STACK_CHECK_SLOT_COUNT;
     }
 
   public:

@@ -49,21 +49,23 @@ var SelectionHandler = {
 
   _addObservers: function sh_addObservers() {
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Window:Resize", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "after-viewport-change", false);
     Services.obs.addObserver(this, "TextSelection:Move", false);
     Services.obs.addObserver(this, "TextSelection:Position", false);
+    Services.obs.addObserver(this, "TextSelection:End", false);
+    Services.obs.addObserver(this, "TextSelection:Action", false);
     BrowserApp.deck.addEventListener("compositionend", this, false);
   },
 
   _removeObservers: function sh_removeObservers() {
     Services.obs.removeObserver(this, "Gesture:SingleTap");
-    Services.obs.removeObserver(this, "Window:Resize");
     Services.obs.removeObserver(this, "Tab:Selected");
     Services.obs.removeObserver(this, "after-viewport-change");
     Services.obs.removeObserver(this, "TextSelection:Move");
     Services.obs.removeObserver(this, "TextSelection:Position");
+    Services.obs.removeObserver(this, "TextSelection:End");
+    Services.obs.removeObserver(this, "TextSelection:Action");
     BrowserApp.deck.removeEventListener("compositionend", this);
   },
 
@@ -84,17 +86,17 @@ var SelectionHandler = {
         break;
       }
       case "Tab:Selected":
+      case "TextSelection:End":
         this._closeSelection();
         break;
-
-      case "Window:Resize": {
-        if (this._activeType == this.TYPE_SELECTION) {
-          // Knowing when the page is done drawing is hard, so let's just cancel
-          // the selection when the window changes. We should fix this later.
-          this._closeSelection();
+      case "TextSelection:Action":
+        for (let type in this.actions) {
+          if (this.actions[type].id == aData) {
+            this.actions[type].action(this._targetElement);
+            break;
+          }
         }
         break;
-      }
       case "after-viewport-change": {
         if (this._activeType == this.TYPE_SELECTION) {
           // Update the cache after the viewport changes (e.g. panning, zooming).
@@ -229,16 +231,24 @@ var SelectionHandler = {
     // Clear any existing selection from the document
     this._contentWindow.getSelection().removeAllRanges();
 
+    // If we didn't have any coordinates to associate with this event (for instance, selectAll is chosen from
+    // the actionMode), set them to a point inside the top left corner of the target
+    if (aX == undefined || aY == undefined) {
+      let rect = this._targetElement.getBoundingClientRect();
+      aX = rect.left + 1;
+      aY = rect.top  + 1;
+    }
+
     if (!this._domWinUtils.selectAtPoint(aX, aY, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
       this._deactivate();
-      return;
+      return false;
     }
 
     let selection = this._getSelection();
     // If the range didn't have any text, let's bail
-    if (!selection || selection.rangeCount == 0) {
+    if (!selection || selection.rangeCount == 0 || selection.getRangeAt(0).collapsed) {
       this._deactivate();
-      return;
+      return false;
     }
 
     // Add a listener to end the selection if it's removed programatically
@@ -274,15 +284,133 @@ var SelectionHandler = {
     // Do not select text far away from where the user clicked
     if (distance > maxSelectionDistance) {
       this._closeSelection();
-      return;
+      return false;
     }
 
     this._positionHandles(positions);
+    this._sendMessage("TextSelection:ShowHandles", [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END], aX, aY);
+    return true;
+  },
+
+
+  /* Reads a value from an action. If the action defines the value as a function, will return the result of calling
+     the function. Otherwise, will return the value itself. If the value isn't defined for this action, will return a default */
+  _getValue: function(obj, name, defaultValue) {
+    if (!(name in obj))
+      return defaultValue;
+
+    if (typeof obj[name] == "function")
+      return obj[name](this._targetElement);
+
+    return obj[name];
+  },
+
+  _sendMessage: function(type, handles, aX, aY) {
+    let actions = [];
+    for (let type in this.actions) {
+      let action = this.actions[type];
+      if (action.selector.matches(this._targetElement, aX, aY)) {
+        let a = {
+          id: action.id,
+          label: this._getValue(action, "label", ""),
+          icon: this._getValue(action, "icon", "drawable://ic_status_logo"),
+          showAsAction: this._getValue(action, "showAsAction", true),
+          order: this._getValue(action, "order", 0)
+        };
+        actions.push(a);
+      }
+    }
+
+    actions.sort((a, b) => b.order - a.order);
 
     sendMessageToJava({
-      type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END]
+      type: type,
+      handles: handles,
+      actions: actions,
     });
+  },
+
+  _updateMenu: function() {
+    this._sendMessage("TextSelection:Update");
+  },
+
+  actions: {
+    SELECT_ALL: {
+      label: Strings.browser.GetStringFromName("contextmenu.selectAll"),
+      id: "selectall_action",
+      icon: "drawable://select_all",
+      action: function(aElement) {
+        SelectionHandler.selectAll(aElement);
+      },
+      selector: ClipboardHelper.selectAllContext,
+      order: 1,
+    },
+
+    CUT: {
+      label: Strings.browser.GetStringFromName("contextmenu.cut"),
+      id: "cut_action",
+      icon: "drawable://cut",
+      action: function(aElement) {
+        let start = aElement.selectionStart;
+        let end   = aElement.selectionEnd;
+
+        SelectionHandler.copySelection();
+        aElement.value = aElement.value.substring(0, start) + aElement.value.substring(end)
+
+        // copySelection closes the selection. Show a caret where we just cut the text.
+        SelectionHandler.attachCaret(aElement);
+      },
+      order: 1,
+      selector: ClipboardHelper.cutContext,
+    },
+
+    COPY: {
+      label: Strings.browser.GetStringFromName("contextmenu.copy"),
+      id: "copy_action",
+      icon: "drawable://copy",
+      action: function() {
+        SelectionHandler.copySelection();
+      },
+      order: 1,
+      selector: ClipboardHelper.getCopyContext(false)
+    },
+
+    PASTE: {
+      label: Strings.browser.GetStringFromName("contextmenu.paste"),
+      id: "paste_action",
+      icon: "drawable://paste",
+      action: function(aElement) {
+        ClipboardHelper.paste(aElement);
+        SelectionHandler._positionHandles();
+        SelectionHandler._updateMenu();
+      },
+      order: 1,
+      selector: ClipboardHelper.pasteContext,
+    },
+
+    SHARE: {
+      label: Strings.browser.GetStringFromName("contextmenu.share"),
+      id: "share_action",
+      icon: "drawable://ic_menu_share",
+      action: function() {
+        SelectionHandler.shareSelection();
+      },
+      selector: ClipboardHelper.shareContext,
+    },
+
+    SEARCH: {
+      label: function() {
+        return Strings.browser.formatStringFromName("contextmenu.search", [Services.search.defaultEngine.name], 1);
+      },
+      id: "search_action",
+      icon: "drawable://ic_url_bar_search",
+      action: function() {
+        SelectionHandler.searchSelection();
+        SelectionHandler._closeSelection();
+      },
+      selector: ClipboardHelper.searchWithContext,
+    },
+
   },
 
   /*
@@ -292,6 +420,12 @@ var SelectionHandler = {
    * @param aX, aY tap location in client coordinates.
    */
   attachCaret: function sh_attachCaret(aElement) {
+    // See if its an input element, and it isn't disabled, nor handled by Android native dialog
+    if (aElement.disabled ||
+        InputWidgetHelper.hasInputWidget(aElement) ||
+        !((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
+          (aElement instanceof HTMLTextAreaElement)))
+      return;
     this._initTargetInfo(aElement);
 
     this._contentWindow.addEventListener("keydown", this, false);
@@ -300,10 +434,7 @@ var SelectionHandler = {
     this._activeType = this.TYPE_CURSOR;
     this._positionHandles();
 
-    sendMessageToJava({
-      type: "TextSelection:ShowHandles",
-      handles: [this.HANDLE_TYPE_MIDDLE]
-    });
+    this._sendMessage("TextSelection:ShowHandles", [this.HANDLE_TYPE_MIDDLE]);
   },
 
   _initTargetInfo: function sh_initTargetInfo(aElement) {
@@ -354,8 +485,8 @@ var SelectionHandler = {
   },
 
   // Used by the contextmenu "matches" functions in ClipboardHelper
-  shouldShowContextMenu: function sh_shouldShowContextMenu(aX, aY) {
-    return (this._activeType == this.TYPE_SELECTION) && this._pointInSelection(aX, aY);
+  isSelectionActive: function sh_isSelectionActive() {
+    return (this._activeType == this.TYPE_SELECTION);
   },
 
   selectAll: function sh_selectAll(aElement, aX, aY) {

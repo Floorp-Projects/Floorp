@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsDebugImpl_h
+#define nsDebugImpl_h
+
 #include "nsIDebug.h"
 #include "nsIDebug2.h"
 
@@ -12,7 +15,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDEBUG
     NS_DECL_NSIDEBUG2
-    
+
     static nsresult Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     /*
@@ -32,4 +35,6 @@ public:
     0xaaf6,                                          \
     0x4852,                                          \
     {0xb6, 0x78, 0xc2, 0x7e, 0xb7, 0xa5, 0x18, 0xaf} \
-}            
+}
+
+#endif // nsDebugImpl_h

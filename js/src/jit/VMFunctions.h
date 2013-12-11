@@ -260,7 +260,7 @@ struct VMFunctionsModal
         funs_[info.executionMode].init(info);
     }
 
-    VMFunction funs_[NumExecutionModes];
+    mozilla::Array<VMFunction, NumExecutionModes> funs_;
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
@@ -661,6 +661,7 @@ bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
 JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
                                 HandleObject owner, int32_t offset);
 
+bool Recompile(JSContext *cx);
 } // namespace jit
 } // namespace js
 

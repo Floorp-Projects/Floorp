@@ -13,36 +13,36 @@ using namespace mozilla;
 
 FrameAnimator::FrameAnimator(FrameBlender& aFrameBlender)
   : mCurrentAnimationFrameIndex(0)
-  , mLoopCount(-1)
+  , mLoopCounter(-1)
   , mFrameBlender(aFrameBlender)
   , mAnimationMode(imgIContainer::kNormalAnimMode)
   , mDoneDecoding(false)
 {
 }
 
-uint32_t
+int32_t
 FrameAnimator::GetSingleLoopTime() const
 {
   // If we aren't done decoding, we don't know the image's full play time.
   if (!mDoneDecoding) {
-    return 0;
+    return -1;
   }
 
   // If we're not looping, a single loop time has no meaning
   if (mAnimationMode != imgIContainer::kNormalAnimMode) {
-    return 0;
+    return -1;
   }
 
   uint32_t looptime = 0;
   for (uint32_t i = 0; i < mFrameBlender.GetNumFrames(); ++i) {
-    int32_t timeout = mFrameBlender.RawGetFrame(i)->GetTimeout();
-    if (timeout > 0) {
+    int32_t timeout = mFrameBlender.GetTimeoutForFrame(i);
+    if (timeout >= 0) {
       looptime += static_cast<uint32_t>(timeout);
     } else {
       // If we have a frame that never times out, we're probably in an error
       // case, but let's handle it more gracefully.
       NS_WARNING("Negative frame timeout - how did this happen?");
-      return 0;
+      return -1;
     }
   }
 
@@ -52,9 +52,8 @@ FrameAnimator::GetSingleLoopTime() const
 TimeStamp
 FrameAnimator::GetCurrentImgFrameEndTime() const
 {
-  imgFrame* currentFrame = mFrameBlender.RawGetFrame(mCurrentAnimationFrameIndex);
   TimeStamp currentFrameTime = mCurrentAnimationFrameTime;
-  int64_t timeout = currentFrame->GetTimeout();
+  int32_t timeout = mFrameBlender.GetTimeoutForFrame(mCurrentAnimationFrameIndex);
 
   if (timeout < 0) {
     // We need to return a sentinel value in this case, because our logic
@@ -82,7 +81,7 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
 
   uint32_t currentFrameIndex = mCurrentAnimationFrameIndex;
   uint32_t nextFrameIndex = currentFrameIndex + 1;
-  uint32_t timeout = 0;
+  int32_t timeout = 0;
 
   RefreshResult ret;
 
@@ -101,17 +100,22 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
     // If we're done decoding the next frame, go ahead and display it now and
     // reinit with the next frame's delay time.
     if (mFrameBlender.GetNumFrames() == nextFrameIndex) {
-      // End of Animation, unless we are looping forever
+      // End of an animation loop...
 
-      // If animation mode is "loop once", it's time to stop animating
-      if (mAnimationMode == imgIContainer::kLoopOnceAnimMode || mLoopCount == 0) {
+      // If we are not looping forever, initialize the loop counter
+      if (mLoopCounter < 0 && mFrameBlender.GetLoopCount() >= 0) {
+        mLoopCounter = mFrameBlender.GetLoopCount();
+      }
+
+      // If animation mode is "loop once", or we're at end of loop counter, it's time to stop animating
+      if (mAnimationMode == imgIContainer::kLoopOnceAnimMode || mLoopCounter == 0) {
         ret.animationFinished = true;
       }
 
       nextFrameIndex = 0;
 
-      if (mLoopCount > 0) {
-        mLoopCount--;
+      if (mLoopCounter > 0) {
+        mLoopCounter--;
       }
 
       // If we're done, exit early.
@@ -120,11 +124,11 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
       }
     }
 
-    timeout = mFrameBlender.GetFrame(nextFrameIndex)->GetTimeout();
+    timeout = mFrameBlender.GetTimeoutForFrame(nextFrameIndex);
   }
 
   // Bad data
-  if (!(timeout > 0)) {
+  if (timeout < 0) {
     ret.animationFinished = true;
     ret.error = true;
   }
@@ -244,12 +248,6 @@ void
 FrameAnimator::UnionFirstFrameRefreshArea(const nsIntRect& aRect)
 {
   mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, aRect);
-}
-
-void
-FrameAnimator::SetLoopCount(int loopcount)
-{
-  mLoopCount = loopcount;
 }
 
 uint32_t

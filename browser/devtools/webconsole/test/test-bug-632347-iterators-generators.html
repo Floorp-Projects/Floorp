@@ -14,11 +14,13 @@ function genFunc() {
   }
 }
 
-window.gen1 = genFunc();
-gen1.next();
+window._container = {};
+
+_container.gen1 = genFunc();
+_container.gen1.next();
 
 var obj = { foo: "bar", baz: "baaz", hay: "stack" };
-window.iter1 = Iterator(obj);
+_container.iter1 = Iterator(obj);
 
 function Range(low, high) {
   this.low = low;
@@ -42,9 +44,9 @@ Range.prototype.__iterator__ = function() {
   return new RangeIterator(this);
 }
 
-window.iter2 = new Range(3, 15);
+_container.iter2 = new Range(3, 15);
 
-window.gen2 = (i * 2 for (i in iter2));
+_container.gen2 = (i * 2 for (i in _container.iter2));
 })();
 </script>
   </head>

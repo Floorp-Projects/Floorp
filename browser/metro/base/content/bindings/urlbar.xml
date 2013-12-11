@@ -173,7 +173,7 @@
 
             let uri;
             try {
-              uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_USE_UTF8);
+              uri = uriFixup.createFixupURI(inputVal, Ci.nsIURIFixup.FIXUP_FLAG_NONE);
             } catch (e) {}
             if (!uri)
               return selectedVal;
@@ -540,8 +540,6 @@
       <property name="matchCount" readonly="true" onget="return this.input.controller.matchCount;"/>
       <property name="popupOpen" readonly="true" onget="return !this.hidden"/>
       <property name="overrideValue" readonly="true" onget="return null;"/>
-      <!-- Alias of popupOpen, for compatibility with global/content/bindings/autocomplete.xml -->
-      <property name="mPopupOpen" readonly="true" onget="return this.popupOpen"/>
 
       <property name="selectedItem">
         <getter>
@@ -551,7 +549,9 @@
         </getter>
         <setter>
           <![CDATA[
-            return this._isGridBound(this._results) ? this._results.selectedItem : null;
+            if (this._isGridBound(this._results)) {
+              this._results.selectedItem = val;
+            }
           ]]>
         </setter>
       </property>
@@ -564,7 +564,9 @@
         </getter>
         <setter>
           <![CDATA[
-            return this._isGridBound(this._results) ? this._results.selectedIndex : -1;
+            if (this._isGridBound(this._results)) {
+              this._results.selectedIndex = val;
+            }
           ]]>
         </setter>
       </property>

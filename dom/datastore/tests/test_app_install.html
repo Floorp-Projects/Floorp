@@ -26,7 +26,9 @@
      { "type": "webapps-manage", "allow": 1, "context": document }],
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
-                                         ["dom.promise.enabled", true]]}, function() {
+                                         ["dom.promise.enabled", true],
+                                         ["dom.testing.ignore_ipc_principal", true],
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, function() {
         gGenerator.next(); });
     });
 
@@ -43,11 +45,6 @@
   function runTest() {
     ok("getDataStores" in navigator, "getDataStores exists");
     is(typeof navigator.getDataStores, "function", "getDataStores exists and it's a function");
-    navigator.getDataStores('foo').then(function(stores) {
-      is(stores.length, 0, "getDataStores('foo') returns 0 elements");
-      continueTest();
-    }, cbError);
-    yield undefined;
 
     SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);

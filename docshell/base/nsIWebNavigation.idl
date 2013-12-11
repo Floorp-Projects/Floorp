@@ -185,16 +185,13 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_OWNER = 0x40000;
 
   /**
-   * Assume the URI is encoded in UTF-8.
-   */
-  const unsigned long LOAD_FLAGS_URI_IS_UTF8 = 0x80000;
-
-  /**
    * This flag specifies that the URI may be submitted to a third-party
    * server for correction. This should only be applied to non-sensitive
    * URIs entered by users.  This flag must not be passed to Reload.
    */
   const unsigned long LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP = 0x100000;
+
+  /* Note that flag 0x80000 is available. */
 
   /**
    * Loads a given URI.  This will give priority to loading the requested URI

@@ -5,7 +5,6 @@
 
 #include <gtk/gtk.h>
 
-#include "mozilla/Util.h"
 #include "nsColor.h"
 #include "nsColorPicker.h"
 #include "nsGtkUtils.h"

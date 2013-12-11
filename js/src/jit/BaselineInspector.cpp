@@ -226,8 +226,20 @@ BaselineInspector::expectedCompareType(jsbytecode *pc)
     if (!first && !dimorphicStub(pc, &first, &second))
         return MCompare::Compare_Unknown;
 
-    if (CanUseInt32Compare(first->kind()) && (!second || CanUseInt32Compare(second->kind())))
+    if (CanUseInt32Compare(first->kind()) && (!second || CanUseInt32Compare(second->kind()))) {
+        ICCompare_Int32WithBoolean *coerce =
+            first->isCompare_Int32WithBoolean()
+            ? first->toCompare_Int32WithBoolean()
+            : ((second && second->isCompare_Int32WithBoolean())
+               ? second->toCompare_Int32WithBoolean()
+               : nullptr);
+        if (coerce) {
+            return coerce->lhsIsInt32()
+                   ? MCompare::Compare_Int32MaybeCoerceRHS
+                   : MCompare::Compare_Int32MaybeCoerceLHS;
+        }
         return MCompare::Compare_Int32;
+    }
 
     if (CanUseDoubleCompare(first->kind()) && (!second || CanUseDoubleCompare(second->kind()))) {
         ICCompare_NumberWithUndefined *coerce =

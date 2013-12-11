@@ -10,7 +10,7 @@ interface nsIDOMElement;
 interface nsIDOMEvent;
 interface nsIMessageBroadcaster;
 
-[scriptable, uuid(6ff5df67-22da-4379-bf57-da775dad19f8)]
+[scriptable, uuid(0c10226f-8abb-4345-aa6b-2780a6f4687e)]
 interface nsIDOMChromeWindow : nsISupports
 {
   const unsigned short STATE_MAXIMIZED = 1;

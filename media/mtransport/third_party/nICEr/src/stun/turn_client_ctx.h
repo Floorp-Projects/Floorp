@@ -69,19 +69,21 @@ typedef struct nr_turn_permission_ {
 typedef STAILQ_HEAD(nr_turn_permission_head_, nr_turn_permission_)
     nr_turn_permission_head;
 
-
 /* A single connection to a TURN server. Use one
    turn_client_ctx per socket/server pair. */
 typedef struct nr_turn_client_ctx_ {
   int state;
 #define NR_TURN_CLIENT_STATE_INITTED         1
-#define NR_TURN_CLIENT_STATE_ALLOCATING      2
-#define NR_TURN_CLIENT_STATE_ALLOCATED       3
+#define NR_TURN_CLIENT_STATE_CONNECTED       2
+#define NR_TURN_CLIENT_STATE_ALLOCATION_WAIT 3
+#define NR_TURN_CLIENT_STATE_ALLOCATING      4
+#define NR_TURN_CLIENT_STATE_ALLOCATED       5
 #define NR_TURN_CLIENT_STATE_FAILED          6
-#define NR_TURN_CLIENT_STATE_CANCELLED       8
+#define NR_TURN_CLIENT_STATE_CANCELLED       7
 
   char *label;
   nr_socket *sock;
+
   char *username;
   Data *password;
   char *nonce;
@@ -97,6 +99,7 @@ typedef struct nr_turn_client_ctx_ {
   NR_async_cb finished_cb;
   void *cb_arg;
 
+  void *connected_timer_handle;
   void *refresh_timer_handle;
 } nr_turn_client_ctx;
 

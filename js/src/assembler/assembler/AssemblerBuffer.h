@@ -57,7 +57,7 @@
 namespace JSC {
 
     class AssemblerBuffer {
-        static const int inlineCapacity = 256;
+        static const size_t inlineCapacity = 256;
     public:
         AssemblerBuffer()
             : m_buffer(m_inlineBuffer)
@@ -73,13 +73,13 @@ namespace JSC {
                 js_free(m_buffer);
         }
 
-        void ensureSpace(int space)
+        void ensureSpace(size_t space)
         {
             if (m_size > m_capacity - space)
                 grow();
         }
 
-        bool isAligned(int alignment) const
+        bool isAligned(size_t alignment) const
         {
             return !(m_size & (alignment - 1));
         }
@@ -138,7 +138,7 @@ namespace JSC {
             return m_buffer;
         }
 
-        int size() const
+        size_t size() const
         {
             return m_size;
         }
@@ -177,7 +177,7 @@ namespace JSC {
         }
 
     protected:
-        void append(const char* data, int size)
+        void append(const char* data, size_t size)
         {
             if (m_size > m_capacity - size)
                 grow(size);
@@ -204,18 +204,27 @@ namespace JSC {
          * See also the |executableAllocAndCopy| and |buffer| methods.
          */
 
-        void grow(int extraCapacity = 0)
+        void grow(size_t extraCapacity = 0)
         {
+            char* newBuffer;
+
             /*
              * If |extraCapacity| is zero (as it almost always is) this is an
              * allocator-friendly doubling growth strategy.
              */
-            int newCapacity = m_capacity + m_capacity + extraCapacity;
-            char* newBuffer;
+            size_t doubleCapacity = m_capacity + m_capacity;
 
-            // Do not allow offsets to grow beyond INT_MAX / 2. This mirrors
-            // Assembler-shared.h.
-            if (newCapacity >= INT_MAX / 2) {
+            // Check for overflow.
+            if (doubleCapacity < m_capacity) {
+                m_size = 0;
+                m_oom = true;
+                return;
+            }
+
+            size_t newCapacity = doubleCapacity + extraCapacity;
+
+            // Check for overflow.
+            if (newCapacity < doubleCapacity) {
                 m_size = 0;
                 m_oom = true;
                 return;
@@ -244,8 +253,8 @@ namespace JSC {
 
         char m_inlineBuffer[inlineCapacity];
         char* m_buffer;
-        int m_capacity;
-        int m_size;
+        size_t m_capacity;
+        size_t m_size;
         bool m_oom;
     };
 

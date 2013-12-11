@@ -331,12 +331,12 @@ GetViewListRef(ArrayBufferObject *obj)
     return reinterpret_cast<OldObjectRepresentationHack*>(obj->getElementsHeader())->views;
 }
 
-bool
-ArrayBufferObject::neuterViews(JSContext *cx)
+/* static */ bool
+ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
     ArrayBufferViewObject *view;
     size_t numViews = 0;
-    for (view = GetViewList(this); view; view = view->nextView()) {
+    for (view = GetViewList(buffer); view; view = view->nextView()) {
         numViews++;
         view->neuter();
 
@@ -346,26 +346,26 @@ ArrayBufferObject::neuterViews(JSContext *cx)
 
     // neuterAsmJSArrayBuffer adjusts state specific to the ArrayBuffer data
     // itself, but it only affects the behavior of views
-    if (isAsmJSArrayBuffer()) {
-        if (!ArrayBufferObject::neuterAsmJSArrayBuffer(cx, *this))
+    if (buffer->isAsmJSArrayBuffer()) {
+        if (!ArrayBufferObject::neuterAsmJSArrayBuffer(cx, *buffer))
             return false;
     }
 
     // Remove buffer from the list of buffers with > 1 view.
-    if (numViews > 1 && GetViewList(this)->bufferLink() != UNSET_BUFFER_LINK) {
-        ArrayBufferObject *prev = compartment()->gcLiveArrayBuffers;
-        if (prev == this) {
-            compartment()->gcLiveArrayBuffers = GetViewList(prev)->bufferLink();
+    if (numViews > 1 && GetViewList(buffer)->bufferLink() != UNSET_BUFFER_LINK) {
+        ArrayBufferObject *prev = buffer->compartment()->gcLiveArrayBuffers;
+        if (prev == buffer) {
+            buffer->compartment()->gcLiveArrayBuffers = GetViewList(prev)->bufferLink();
         } else {
-            for (ArrayBufferObject *buf = GetViewList(prev)->bufferLink();
-                 buf;
-                 buf = GetViewList(buf)->bufferLink())
+            for (ArrayBufferObject *b = GetViewList(prev)->bufferLink();
+                 b;
+                 b = GetViewList(b)->bufferLink())
             {
-                if (buf == this) {
-                    GetViewList(prev)->setBufferLink(GetViewList(buf)->bufferLink());
+                if (b == buffer) {
+                    GetViewList(prev)->setBufferLink(GetViewList(b)->bufferLink());
                     break;
                 }
-                prev = buf;
+                prev = b;
             }
         }
     }
@@ -705,7 +705,7 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
 
     // Neuter the views, which may also mprotect(PROT_NONE) the buffer. So do
     // it after copying out the data.
-    if (!buffer->neuterViews(cx))
+    if (!ArrayBufferObject::neuterViews(cx, buffer))
         return false;
 
     if (!own) {
@@ -1035,16 +1035,6 @@ ArrayBufferObject::obj_getElement(JSContext *cx, HandleObject obj,
     if (!delegate)
         return false;
     return baseops::GetElement(cx, delegate, receiver, index, vp);
-}
-
-bool
-ArrayBufferObject::obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                           uint32_t index, MutableHandleValue vp, bool *present)
-{
-    RootedObject delegate(cx, ArrayBufferDelegate(cx, obj));
-    if (!delegate)
-        return false;
-    return JSObject::getElementIfPresent(cx, delegate, receiver, index, vp, present);
 }
 
 bool
@@ -1492,27 +1482,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         Rooted<PropertyName*> name(cx, atom->asPropertyName());
         return obj_getProperty(cx, obj, receiver, name, vp);
-    }
-
-    static bool
-    obj_getElementIfPresent(JSContext *cx, HandleObject tarray, HandleObject receiver, uint32_t index,
-                            MutableHandleValue vp, bool *present)
-    {
-        // Fast-path the common case of index < length
-        if (index < tarray->as<TypedArrayObject>().length()) {
-            // this inline function is specialized for each type
-            copyIndexToValue(tarray, index, vp);
-            *present = true;
-            return true;
-        }
-
-        RootedObject proto(cx, tarray->getProto());
-        if (!proto) {
-            vp.setUndefined();
-            return true;
-        }
-
-        return JSObject::getElementIfPresent(cx, proto, receiver, index, vp, present);
     }
 
     static bool
@@ -3480,7 +3449,6 @@ const Class ArrayBufferObject::class_ = {
         ArrayBufferObject::obj_getGeneric,
         ArrayBufferObject::obj_getProperty,
         ArrayBufferObject::obj_getElement,
-        ArrayBufferObject::obj_getElementIfPresent,
         ArrayBufferObject::obj_getSpecial,
         ArrayBufferObject::obj_setGeneric,
         ArrayBufferObject::obj_setProperty,
@@ -3492,8 +3460,9 @@ const Class ArrayBufferObject::class_ = {
         ArrayBufferObject::obj_deleteElement,
         ArrayBufferObject::obj_deleteSpecial,
         nullptr, nullptr, /* watch/unwatch */
+        nullptr,          /* slice */
         ArrayBufferObject::obj_enumerate,
-        nullptr,       /* thisObject      */
+        nullptr,          /* thisObject      */
     }
 };
 
@@ -3643,7 +3612,6 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         _typedArray##Object::obj_getGeneric,                                   \
         _typedArray##Object::obj_getProperty,                                  \
         _typedArray##Object::obj_getElement,                                   \
-        _typedArray##Object::obj_getElementIfPresent,                          \
         _typedArray##Object::obj_getSpecial,                                   \
         _typedArray##Object::obj_setGeneric,                                   \
         _typedArray##Object::obj_setProperty,                                  \
@@ -3655,8 +3623,9 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
         _typedArray##Object::obj_deleteElement,                                \
         _typedArray##Object::obj_deleteSpecial,                                \
         nullptr, nullptr, /* watch/unwatch */                                  \
+        nullptr,          /* slice */                                          \
         _typedArray##Object::obj_enumerate,                                    \
-        nullptr,             /* thisObject  */                                 \
+        nullptr,          /* thisObject  */                                    \
     }                                                                          \
 }
 
@@ -4062,7 +4031,7 @@ JS_NeuterArrayBuffer(JSContext *cx, HandleObject obj)
     }
 
     Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
-    if (!buffer->neuterViews(cx))
+    if (!ArrayBufferObject::neuterViews(cx, buffer))
         return false;
     buffer->neuter(cx);
     return true;

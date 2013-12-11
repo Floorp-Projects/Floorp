@@ -95,14 +95,14 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
 inline void
 StackFrame::initVarsToUndefined()
 {
-    SetValueRangeToUndefined(slots(), script()->nfixed);
+    SetValueRangeToUndefined(slots(), script()->nfixed());
 }
 
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-    JS_ASSERT(i < script()->nfixed);
+    JS_ASSERT(i < script()->nfixed());
     return slots()[i];
 }
 
@@ -137,7 +137,7 @@ template <class Op>
 inline void
 StackFrame::forEachUnaliasedActual(Op op)
 {
-    JS_ASSERT(!script()->funHasAnyAliasedFormal);
+    JS_ASSERT(!script()->funHasAnyAliasedFormal());
     JS_ASSERT(!script()->needsArgsObj());
 
     const Value *argsEnd = argv() + numActualArgs();
@@ -256,7 +256,7 @@ InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript
 
     JS_ASSERT(fun->nonLazyScript() == script);
     unsigned nformal = fun->nargs;
-    unsigned nvals = script->nslots;
+    unsigned nvals = script->nslots();
 
     if (args.length() >= nformal) {
         *pargv = args.array();
@@ -855,12 +855,12 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx, Sta
 {
     if (!state.isGenerator()) {
         regs_.prepareToRun(*entryFrame, state.script());
-        JS_ASSERT(regs_.pc == state.script()->code);
+        JS_ASSERT(regs_.pc == state.script()->code());
     } else {
         regs_ = state.asGenerator()->gen()->regs;
     }
 
-    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval);
+    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval());
 }
 
 InterpreterActivation::~InterpreterActivation()

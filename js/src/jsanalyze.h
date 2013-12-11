@@ -206,10 +206,10 @@ FollowBranch(JSContext *cx, JSScript *script, unsigned offset)
      * 'continue' statements, short circuit any artificial backwards jump
      * inserted by the emitter.
      */
-    jsbytecode *pc = script->code + offset;
+    jsbytecode *pc = script->offsetToPC(offset);
     unsigned targetOffset = offset + GET_JUMP_OFFSET(pc);
     if (targetOffset < offset) {
-        jsbytecode *target = script->code + targetOffset;
+        jsbytecode *target = script->offsetToPC(targetOffset);
         JSOp nop = JSOp(*target);
         if (nop == JSOP_GOTO)
             return targetOffset + GET_JUMP_OFFSET(target);
@@ -228,7 +228,7 @@ static inline uint32_t LocalSlot(JSScript *script, uint32_t local) {
     return 1 + (script->function() ? script->function()->nargs : 0) + local;
 }
 static inline uint32_t TotalSlots(JSScript *script) {
-    return LocalSlot(script, 0) + script->nfixed;
+    return LocalSlot(script, 0) + script->nfixed();
 }
 
 static inline uint32_t StackSlot(JSScript *script, uint32_t index) {
@@ -680,23 +680,23 @@ class ScriptAnalysis
     /* Accessors for bytecode information. */
 
     Bytecode& getCode(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
+        JS_ASSERT(offset < script_->length());
         JS_ASSERT(codeArray[offset]);
         return *codeArray[offset];
     }
-    Bytecode& getCode(const jsbytecode *pc) { return getCode(pc - script_->code); }
+    Bytecode& getCode(const jsbytecode *pc) { return getCode(script_->pcToOffset(pc)); }
 
     Bytecode* maybeCode(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
+        JS_ASSERT(offset < script_->length());
         return codeArray[offset];
     }
-    Bytecode* maybeCode(const jsbytecode *pc) { return maybeCode(pc - script_->code); }
+    Bytecode* maybeCode(const jsbytecode *pc) { return maybeCode(script_->pcToOffset(pc)); }
 
     bool jumpTarget(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
+        JS_ASSERT(offset < script_->length());
         return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
-    bool jumpTarget(const jsbytecode *pc) { return jumpTarget(pc - script_->code); }
+    bool jumpTarget(const jsbytecode *pc) { return jumpTarget(script_->pcToOffset(pc)); }
 
     bool popGuaranteed(jsbytecode *pc) {
         jsbytecode *next = pc + GetBytecodeLength(pc);
@@ -708,10 +708,10 @@ class ScriptAnalysis
     inline const SSAValue &poppedValue(const jsbytecode *pc, uint32_t which);
 
     const SlotValue *newValues(uint32_t offset) {
-        JS_ASSERT(offset < script_->length);
+        JS_ASSERT(offset < script_->length());
         return getCode(offset).newValues;
     }
-    const SlotValue *newValues(const jsbytecode *pc) { return newValues(pc - script_->code); }
+    const SlotValue *newValues(const jsbytecode *pc) { return newValues(script_->pcToOffset(pc)); }
 
     bool trackUseChain(const SSAValue &v) {
         JS_ASSERT_IF(v.kind() == SSAValue::VAR, trackSlot(v.varSlot()));

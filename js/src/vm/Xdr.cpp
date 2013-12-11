@@ -117,7 +117,7 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
         return false;
 
     if (mode == XDR_DECODE) {
-        JS_ASSERT(!script->compileAndGo);
+        JS_ASSERT(!script->compileAndGo());
         CallNewScriptHook(cx(), script, NullPtr());
         Debugger::onNewScript(cx(), script, nullptr);
         scriptp.set(script);

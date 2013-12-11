@@ -77,8 +77,8 @@ class BailoutStack
     };
 
   private:
-    double    fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
+    mozilla::Array<double, FloatRegisters::Total> fpregs_;
+    mozilla::Array<uintptr_t, Registers::Total> regs_;
 
     uintptr_t snapshotOffset_;
 

@@ -397,7 +397,7 @@ var SelectionHandler = {
           contentWindow: contentWindow,
           offset: offset,
           utils: utils } =
-      this.getCurrentWindowAndOffset(aX, aY);
+      Content.getCurrentWindowAndOffset(aX, aY);
     if (!contentWindow) {
       return false;
     }
@@ -547,7 +547,7 @@ var SelectionHandler = {
         break;
 
       case "Browser:ResetLastPos":
-        this._onClickCoords(json.xPos, json.yPos);
+        this.onClickCoords(json.xPos, json.yPos);
         break;
     }
   },
@@ -555,61 +555,6 @@ var SelectionHandler = {
   /*************************************************
    * Utilities
    */
-
-  /*
-   * Retrieve the total offset from the window's origin to the sub frame
-   * element including frame and scroll offsets. The resulting offset is
-   * such that:
-   * sub frame coords + offset = root frame position
-   */
-  getCurrentWindowAndOffset: function(x, y) {
-    // If the element at the given point belongs to another document (such
-    // as an iframe's subdocument), the element in the calling document's
-    // DOM (e.g. the iframe) is returned.
-    let utils = Util.getWindowUtils(content);
-    let element = utils.elementFromPoint(x, y, true, false);
-    let offset = { x:0, y:0 };
-
-    while (element && (element instanceof HTMLIFrameElement ||
-                       element instanceof HTMLFrameElement)) {
-      // get the child frame position in client coordinates
-      let rect = element.getBoundingClientRect();
-
-      // calculate offsets for digging down into sub frames
-      // using elementFromPoint:
-
-      // Get the content scroll offset in the child frame
-      scrollOffset = ContentScroll.getScrollOffset(element.contentDocument.defaultView);
-      // subtract frame and scroll offset from our elementFromPoint coordinates
-      x -= rect.left + scrollOffset.x;
-      y -= rect.top + scrollOffset.y;
-
-      // calculate offsets we'll use to translate to client coords:
-
-      // add frame client offset to our total offset result
-      offset.x += rect.left;
-      offset.y += rect.top;
-
-      // get the frame's nsIDOMWindowUtils
-      utils = element.contentDocument
-                     .defaultView
-                     .QueryInterface(Ci.nsIInterfaceRequestor)
-                     .getInterface(Ci.nsIDOMWindowUtils);
-
-      // retrieve the target element in the sub frame at x, y
-      element = utils.elementFromPoint(x, y, true, false);
-    }
-
-    if (!element)
-      return {};
-
-    return {
-      element: element,
-      contentWindow: element.ownerDocument.defaultView,
-      offset: offset,
-      utils: utils
-    };
-  },
 
   _getDocShell: function _getDocShell(aWindow) {
     if (aWindow == null)

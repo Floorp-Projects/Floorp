@@ -25,14 +25,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882145
 */
 var tests = [
   // Each test here tests a different constraint or codepath.
-  { message: "unknown mandatory constraint on video fails",
-    constraints: { video: { mandatory: { somethingUnknown:0 } } },
-    error: "NOT_SUPPORTED_ERR: somethingUnknown",
-    pass: false },
-  { message: "unknown mandatory constraint on audio fails",
-    constraints: { audio: { mandatory: { somethingUnknown:0 } } },
-    error: "NOT_SUPPORTED_ERR: somethingUnknown",
-    pass: false },
   { message: "video overconstrained by facingMode fails",
     constraints: { video: { mandatory: { facingMode:'left' } } },
     error: "NO_DEVICES_FOUND",
@@ -40,7 +32,8 @@ var tests = [
   { message: "Success-path: optional video facingMode + audio ignoring facingMode",
     constraints: { fake: true,
                    audio: { mandatory: { facingMode:'left' } },
-                   video: { optional: [{ facingMode:'left' },
+                   video: { mandatory: { somethingUnknown:0 },
+                            optional: [{ facingMode:'left' },
                                        { facingMode:'right' },
                                        { facingMode:'environment' },
                                        { facingMode:'user' },

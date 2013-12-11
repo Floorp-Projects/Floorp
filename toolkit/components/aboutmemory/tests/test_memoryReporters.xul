@@ -171,14 +171,7 @@
                 domSize, styleSize, otherSize, totalSize,
                 jsMilliseconds, nonJSMilliseconds);
 
-  let e = mgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    r.collectReports(handleReport, null);
-
-    // Access |name| to make sure it doesn't crash or assert.
-    dummy = r.name;
-  }
+  mgr.getReportsForThisProcess(handleReport, null);
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {

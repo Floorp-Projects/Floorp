@@ -11,6 +11,7 @@ builtin(include, build/autoconf/ccache.m4)dnl
 builtin(include, build/autoconf/wrapper.m4)dnl
 builtin(include, build/autoconf/pkg.m4)dnl
 builtin(include, build/autoconf/nspr.m4)dnl
+builtin(include, build/autoconf/codeset.m4)dnl
 builtin(include, build/autoconf/altoptions.m4)dnl
 builtin(include, build/autoconf/mozprog.m4)dnl
 builtin(include, build/autoconf/mozheader.m4)dnl
@@ -28,5 +29,6 @@ builtin(include, build/autoconf/zlib.m4)dnl
 builtin(include, build/autoconf/linux.m4)dnl
 builtin(include, build/autoconf/python-virtualenv.m4)dnl
 builtin(include, build/autoconf/winsdk.m4)dnl
+builtin(include, build/autoconf/icu.m4)dnl
 
 MOZ_PROG_CHECKMSYS()

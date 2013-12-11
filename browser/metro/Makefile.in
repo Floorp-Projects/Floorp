@@ -7,16 +7,12 @@ include $(topsrcdir)/config/rules.mk
 #########################################
 # application.ini
 
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+DEFINES += -DGRE_BUILDID=$(GRE_BUILDID) -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME)
 
 # 'application.ini' breaks firefox build config. So we use something different.
 metroapp.ini: metroapp.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
-	$(RM) "metroapp.ini"
+	$(RM) metroapp.ini
 	$(call py_action,preprocessor,$(DEFINES) $< -o $@)
 
 libs:: metroapp.ini

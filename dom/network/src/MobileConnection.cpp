@@ -24,7 +24,7 @@
 
 using namespace mozilla::dom::network;
 
-class MobileConnection::Listener : public nsIMobileConnectionListener
+class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
 {
   MobileConnection* mMobileConnection;
 
@@ -269,6 +269,39 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** aRequest)
   }
 
   return mProvider->SelectNetworkAutomatically(mClientId, GetOwner(), aRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::SetPreferredNetworkType(const nsAString& aType,
+                                          nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->SetPreferredNetworkType(mClientId, GetOwner(), aType, aDomRequest);
+}
+
+NS_IMETHODIMP
+MobileConnection::GetPreferredNetworkType(nsIDOMDOMRequest** aDomRequest)
+{
+  *aDomRequest = nullptr;
+
+  if (!CheckPermission("mobileconnection")) {
+    return NS_OK;
+  }
+
+  if (!mProvider) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return mProvider->GetPreferredNetworkType(mClientId, GetOwner(), aDomRequest);
 }
 
 NS_IMETHODIMP

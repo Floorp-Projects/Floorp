@@ -9,14 +9,14 @@
  */
 
 
-#ifndef __INC_VP8D_INT_H
-#define __INC_VP8D_INT_H
+#ifndef ONYXD_INT_H_
+#define ONYXD_INT_H_
+
 #include "vpx_config.h"
 #include "vp8/common/onyxd.h"
 #include "treereader.h"
 #include "vp8/common/onyxc_int.h"
 #include "vp8/common/threading.h"
-
 
 #if CONFIG_ERROR_CONCEALMENT
 #include "ec_types.h"
@@ -32,32 +32,47 @@ typedef struct
 typedef struct
 {
     MACROBLOCKD  mbd;
-    int mb_row;
-    int current_mb_col;
-    short *coef_ptr;
 } MB_ROW_DEC;
+
 
 typedef struct
 {
-    int64_t time_stamp;
-    int size;
-} DATARATE;
+    int enabled;
+    unsigned int count;
+    const unsigned char *ptrs[MAX_PARTITIONS];
+    unsigned int sizes[MAX_PARTITIONS];
+} FRAGMENT_DATA;
 
+#define MAX_FB_MT_DEC 32
+
+struct frame_buffers
+{
+    /*
+     * this struct will be populated with frame buffer management
+     * info in future commits. */
+
+    /* enable/disable frame-based threading */
+    int     use_frame_threads;
+
+    /* decoder instances */
+    struct VP8D_COMP *pbi[MAX_FB_MT_DEC];
+
+};
 
 typedef struct VP8D_COMP
 {
     DECLARE_ALIGNED(16, MACROBLOCKD, mb);
 
+    YV12_BUFFER_CONFIG *dec_fb_ref[NUM_YV12_BUFFERS];
+
     DECLARE_ALIGNED(16, VP8_COMMON, common);
 
-    vp8_reader bc, bc2;
+    /* the last partition will be used for the modes/mvs */
+    vp8_reader mbc[MAX_PARTITIONS];
 
     VP8D_CONFIG oxcf;
 
-
-    const unsigned char *fragments[MAX_PARTITIONS];
-    unsigned int   fragment_sizes[MAX_PARTITIONS];
-    unsigned int   num_fragments;
+    FRAGMENT_DATA fragments;
 
 #if CONFIG_MULTITHREAD
     /* variable for threading */
@@ -65,7 +80,7 @@ typedef struct VP8D_COMP
     volatile int b_multithreaded_rd;
     int max_threads;
     int current_mb_col_main;
-    int decoding_thread_count;
+    unsigned int decoding_thread_count;
     int allocated_decoding_thread_count;
 
     int mt_baseline_filter_level[MAX_MB_SEGMENTS];
@@ -88,11 +103,8 @@ typedef struct VP8D_COMP
     /* end of threading data */
 #endif
 
-    vp8_reader *mbc;
     int64_t last_time_stamp;
     int   ready_for_new_data;
-
-    DATARATE dr[16];
 
     vp8_prob prob_intra;
     vp8_prob prob_last;
@@ -106,16 +118,18 @@ typedef struct VP8D_COMP
 #endif
     int ec_enabled;
     int ec_active;
-    int input_fragments;
     int decoded_key_frame;
     int independent_partitions;
     int frame_corrupt_residual;
 
+    vp8_decrypt_cb *decrypt_cb;
+    void *decrypt_state;
 } VP8D_COMP;
 
 int vp8_decode_frame(VP8D_COMP *cpi);
-void vp8_dmachine_specific_config(VP8D_COMP *pbi);
 
+int vp8_create_decoder_instances(struct frame_buffers *fb, VP8D_CONFIG *oxcf);
+int vp8_remove_decoder_instances(struct frame_buffers *fb);
 
 #if CONFIG_DEBUG
 #define CHECK_MEM_ERROR(lval,expr) do {\
@@ -134,4 +148,4 @@ void vp8_dmachine_specific_config(VP8D_COMP *pbi);
     } while(0)
 #endif
 
-#endif
+#endif  // ONYXD_INT_H_

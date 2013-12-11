@@ -32,7 +32,7 @@ LOCAL_INCLUDES += [
     '../html',
     '../xul',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/widget/cocoa',
     '/widget/xpwidgets',
 ]

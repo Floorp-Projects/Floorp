@@ -10,6 +10,8 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+#include "vm/Shape.h"
+
 namespace js {
 
 class StringObject : public JSObject
@@ -57,12 +59,18 @@ class StringObject : public JSObject
     friend JSObject *
     ::js_InitStringClass(JSContext *cx, js::HandleObject global);
 
+    /* For access to assignInitialShape. */
+    friend bool
+    EmptyShape::ensureInitialCustomShape<StringObject>(ExclusiveContext *cx,
+                                                       Handle<StringObject*> obj);
+
     /*
      * Compute the initial shape to associate with fresh String objects, which
      * encodes the initial length property. Return the shape after changing
-     * this String object's last property to it.
+     * |obj|'s last property to it.
      */
-    Shape *assignInitialShape(JSContext *cx);
+    static Shape *
+    assignInitialShape(ExclusiveContext *cx, Handle<StringObject*> obj);
 };
 
 } // namespace js

@@ -461,8 +461,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Used to work around the move resolver's lack of support for
     // moving into register pairs, which the softfp ABI needs.
-    MoveResolver::MoveOperand floatArgsInGPR[2];
-    bool floatArgsInGPRValid[2];
+    mozilla::Array<MoveResolver::MoveOperand, 2> floatArgsInGPR;
+    mozilla::Array<bool, 2> floatArgsInGPRValid;
 
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
@@ -1238,6 +1238,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address &src, Register dest);
+    void not32(Register reg);
 
     void move32(const Imm32 &imm, const Register &dest);
     void move32(const Register &src, const Register &dest);

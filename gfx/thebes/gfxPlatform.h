@@ -117,7 +117,9 @@ enum eGfxLog {
     // dump text runs, font matching, system fallback for chrome
     eGfxLog_textrunui        = 3,
     // dump cmap coverage data as they are loaded
-    eGfxLog_cmapdata         = 4
+    eGfxLog_cmapdata         = 4,
+    // text perf data
+    eGfxLog_textperf         = 5
 };
 
 // when searching through pref langs, max number of pref langs
@@ -504,6 +506,7 @@ public:
     static bool CanUseDirect3D9();
     static int  GetPrefLayoutFrameRate();
     static bool GetPrefLayersDump();
+    static bool GetPrefLayersScrollGraph();
 
     static bool OffMainThreadCompositionRequired();
 
@@ -699,7 +702,7 @@ private:
 
     static void CreateCMSOutputProfile();
 
-    friend int RecordingPrefChanged(const char *aPrefName, void *aClosure);
+    friend void RecordingPrefChanged(const char *aPrefName, void *aClosure);
 
     virtual qcms_profile* GetPlatformCMSOutputProfile();
 

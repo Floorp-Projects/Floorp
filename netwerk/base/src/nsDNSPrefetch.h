@@ -6,6 +6,7 @@
 #ifndef nsDNSPrefetch_h___
 #define nsDNSPrefetch_h___
 
+#include "nsWeakReference.h"
 #include "nsString.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
@@ -21,7 +22,7 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER
   
-    nsDNSPrefetch(nsIURI *aURI, bool storeTiming);
+    nsDNSPrefetch(nsIURI *aURI, nsIDNSListener *aListener, bool storeTiming);
     bool TimingsValid() const {
         return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
     }
@@ -33,15 +34,16 @@ public:
     static nsresult Shutdown();
 
     // Call one of the following methods to start the Prefetch.
-    nsresult PrefetchHigh();
-    nsresult PrefetchMedium();
-    nsresult PrefetchLow();
+    nsresult PrefetchHigh(bool refreshDNS = false);
+    nsresult PrefetchMedium(bool refreshDNS = false);
+    nsresult PrefetchLow(bool refreshDNS = false);
   
 private:
     nsCString mHostname;
     bool mStoreTiming;
     mozilla::TimeStamp mStartTimestamp;
     mozilla::TimeStamp mEndTimestamp;
+    nsWeakPtr mListener;
 
     nsresult Prefetch(uint16_t flags);
 };

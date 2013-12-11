@@ -14,7 +14,6 @@
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsString.h"                   // for nsAutoCString
 
-class gfxImageSurface;
 class nsIntRegion;
 
 namespace mozilla {
@@ -43,16 +42,16 @@ ImageHost::UseTextureHost(TextureHost* aTexture)
 }
 
 void
-ImageHost::RemoveTextureHost(uint64_t aTextureID)
+ImageHost::RemoveTextureHost(TextureHost* aTexture)
 {
-  CompositableHost::RemoveTextureHost(aTextureID);
-  if (mFrontBuffer && mFrontBuffer->GetID() == aTextureID) {
+  CompositableHost::RemoveTextureHost(aTexture);
+  if (mFrontBuffer && mFrontBuffer->GetID() == aTexture->GetID()) {
     mFrontBuffer = nullptr;
   }
 }
 
 TextureHost*
-ImageHost::GetTextureHost()
+ImageHost::GetAsTextureHost()
 {
   return mFrontBuffer;
 }
@@ -86,6 +85,10 @@ ImageHost::Composite(EffectChain& aEffectChain,
   RefPtr<TexturedEffect> effect = CreateTexturedEffect(mFrontBuffer->GetFormat(),
                                                        source,
                                                        aFilter);
+  if (!effect) {
+    return;
+  }
+
   aEffectChain.mPrimaryEffect = effect;
   IntSize textureSize = source->GetSize();
   gfx::Rect gfxPictureRect
@@ -177,11 +180,11 @@ ImageHost::Dump(FILE* aFile,
     aFile = stderr;
   }
   if (mFrontBuffer) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<ul><li>TextureHost: "
+    fprintf_stderr(aFile, "%s", aPrefix);
+    fprintf_stderr(aFile, aDumpHtml ? "<ul><li>TextureHost: "
                              : "TextureHost: ");
     DumpTextureHost(aFile, mFrontBuffer);
-    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+    fprintf_stderr(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
 #endif
@@ -196,7 +199,7 @@ ImageHost::GetRenderState()
 }
 
 #ifdef MOZ_DUMP_PAINTING
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 ImageHost::GetAsSurface()
 {
   return mFrontBuffer->GetAsSurface();
@@ -288,6 +291,9 @@ DeprecatedImageHostSingle::Composite(EffectChain& aEffectChain,
 
   RefPtr<TexturedEffect> effect =
     CreateTexturedEffect(mDeprecatedTextureHost, aFilter);
+  if (!effect) {
+    return;
+  }
 
   aEffectChain.mPrimaryEffect = effect;
 
@@ -384,15 +390,15 @@ DeprecatedImageHostSingle::Dump(FILE* aFile,
     aFile = stderr;
   }
   if (mDeprecatedTextureHost) {
-    fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<ul><li>DeprecatedTextureHost: "
+    fprintf_stderr(aFile, "%s", aPrefix);
+    fprintf_stderr(aFile, aDumpHtml ? "<ul><li>DeprecatedTextureHost: "
                              : "DeprecatedTextureHost: ");
     DumpDeprecatedTextureHost(aFile, mDeprecatedTextureHost);
-    fprintf(aFile, aDumpHtml ? " </li></ul> " : " ");
+    fprintf_stderr(aFile, aDumpHtml ? " </li></ul> " : " ");
   }
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 DeprecatedImageHostSingle::GetAsSurface()
 {
   return mDeprecatedTextureHost->GetAsSurface();

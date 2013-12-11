@@ -416,7 +416,8 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 {
   nsresult rv;
   PCImplReadyState gotready;
-  PCImplIceState gotice;
+  PCImplIceConnectionState gotice;
+  PCImplIceGatheringState goticegathering;
   PCImplSipccState gotsipcc;
   PCImplSignalingState gotsignaling;
 
@@ -431,12 +432,20 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
               << PCImplReadyStateValues::strings[int(gotready)].value
               << std::endl;
     break;
-  case PCObserverStateType::IceState:
-    rv = pc->IceState(&gotice);
+  case PCObserverStateType::IceConnectionState:
+    rv = pc->IceConnectionState(&gotice);
     NS_ENSURE_SUCCESS(rv, rv);
-    std::cout << "ICE State: "
-              << PCImplIceStateValues::strings[int(gotice)].value
+    std::cout << "ICE Connection State: "
+              << PCImplIceConnectionStateValues::strings[int(gotice)].value
               << std::endl;
+    break;
+  case PCObserverStateType::IceGatheringState:
+    rv = pc->IceGatheringState(&goticegathering);
+    NS_ENSURE_SUCCESS(rv, rv);
+    std::cout
+        << "ICE Gathering State: "
+        << PCImplIceGatheringStateValues::strings[int(goticegathering)].value
+        << std::endl;
     break;
   case PCObserverStateType::SdpState:
     std::cout << "SDP State: " << std::endl;
@@ -458,6 +467,7 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
     break;
   default:
     // Unknown State
+    MOZ_CRASH("Unknown state change type.");
     break;
   }
 
@@ -759,16 +769,19 @@ class SignalingAgent {
   }
 
   void WaitForGather() {
-    ASSERT_TRUE_WAIT(ice_state() == PCImplIceState::IceWaiting, 5000);
+    ASSERT_TRUE_WAIT(ice_gathering_state() == PCImplIceGatheringState::Complete,
+                     5000);
 
     std::cout << name << ": Init Complete" << std::endl;
   }
 
   bool WaitForGatherAllowFail() {
-    EXPECT_TRUE_WAIT(ice_state() == PCImplIceState::IceWaiting ||
-                     ice_state() == PCImplIceState::IceFailed, 5000);
+    EXPECT_TRUE_WAIT(
+        ice_gathering_state() == PCImplIceGatheringState::Complete ||
+        ice_connection_state() == PCImplIceConnectionState::Failed,
+        5000);
 
-    if (ice_state() == PCImplIceState::IceFailed) {
+    if (ice_connection_state() == PCImplIceConnectionState::Failed) {
       std::cout << name << ": Init Failed" << std::endl;
       return false;
     }
@@ -782,9 +795,14 @@ class SignalingAgent {
     return pc->SipccState();
   }
 
-  PCImplIceState ice_state()
+  PCImplIceConnectionState ice_connection_state()
   {
-    return pc->IceState();
+    return pc->IceConnectionState();
+  }
+
+  PCImplIceGatheringState ice_gathering_state()
+  {
+    return pc->IceGatheringState();
   }
 
   PCImplSignalingState signaling_state()
@@ -1041,7 +1059,7 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
 
 
   bool IceCompleted() {
-    return pc->IceState() == PCImplIceState::IceConnected;
+    return pc->IceConnectionState() == PCImplIceConnectionState::Connected;
   }
 
   void AddIceCandidate(const char* candidate, const char* mid, unsigned short level,
@@ -3681,7 +3699,7 @@ int main(int argc, char **argv) {
       g_stun_server_port = atoi(tmp.c_str());
 
   test_utils = new MtransportTestUtils();
-  NSS_NoDB_Init(NULL);
+  NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
 
   ::testing::InitGoogleTest(&argc, argv);

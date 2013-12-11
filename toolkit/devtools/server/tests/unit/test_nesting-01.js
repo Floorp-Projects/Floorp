@@ -6,15 +6,26 @@
 // ThreadActor.prototype.synchronize.
 
 const { defer } = devtools.require("sdk/core/promise");
+var gClient;
+var gThreadActor;
 
 function run_test() {
   initTestDebuggerServer();
+  let gDebuggee = addTestGlobal("test-nesting");
+  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  gClient.connect(function () {
+    attachTestTabAndResume(gClient, "test-nesting", function (aResponse, aTabClient, aThreadClient) {
+      // Reach over the protocol connection and get a reference to the thread actor.
+      gThreadActor = aThreadClient._transport._serverConnection.getActor(aThreadClient._actor);
+
+      test_nesting();
+    });
+  });
   do_test_pending();
-  test_nesting();
 }
 
 function test_nesting() {
-  const thread = new DebuggerServer.ThreadActor(DebuggerServer);
+  const thread = gThreadActor;
   const { resolve, reject, promise } = defer();
 
   let currentStep = 0;
@@ -34,5 +45,5 @@ function test_nesting() {
   // There shouldn't be any nested event loops anymore
   do_check_eq(thread._nestedEventLoops.size, 0);
 
-  do_test_finished();
+  finishClient(gClient);
 }

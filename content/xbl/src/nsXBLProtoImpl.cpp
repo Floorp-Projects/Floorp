@@ -113,9 +113,6 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
        curr = curr->GetNext())
     curr->InstallMember(cx, propertyHolder);
 
-  // From here on out, work in the scope of the bound element.
-  JSAutoCompartment ac2(cx, targetClassObject);
-
   // Now, if we're using a separate XBL scope, enter the compartment of the
   // bound node and copy exposable properties to the prototype there. This
   // rewraps them appropriately, which should result in cross-compartment
@@ -134,6 +131,9 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
       }
     }
   }
+
+  // From here on out, work in the scope of the bound element.
+  JSAutoCompartment ac2(cx, targetClassObject);
 
   // Install all of our field accessors.
   for (nsXBLProtoImplField* curr = mFields;
@@ -304,9 +304,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
     // all.
     nsDependentString name(f->GetName());
     JS::Rooted<JS::Value> dummy(cx);
-    if (!::JS_LookupUCProperty(cx, obj,
-                               reinterpret_cast<const jschar*>(name.get()),
-                               name.Length(), &dummy)) {
+    if (!::JS_LookupUCProperty(cx, obj, name.get(), name.Length(), &dummy)) {
       return false;
     }
   }
@@ -321,7 +319,7 @@ nsXBLProtoImpl::UndefineFields(JSContext *cx, JS::Handle<JSObject*> obj) const
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
     nsDependentString name(f->GetName());
 
-    const jschar* s = reinterpret_cast<const jschar*>(name.get());
+    const jschar* s = name.get();
     bool hasProp;
     if (::JS_AlreadyHasOwnUCProperty(cx, obj, s, name.Length(), &hasProp) &&
         hasProp) {

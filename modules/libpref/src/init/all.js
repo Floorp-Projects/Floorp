@@ -100,17 +100,16 @@ pref("dom.workers.enabled", true);
 pref("dom.workers.maxPerDomain", 20);
 
 // Whether or not Shared Web Workers are enabled.
-pref("dom.workers.sharedWorkers.enabled", false);
+pref("dom.workers.sharedWorkers.enabled", true);
 
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
 // Whether the Gamepad API is enabled
+pref("dom.gamepad.enabled", true);
 #ifdef RELEASE_BUILD
-pref("dom.gamepad.enabled", false);
 pref("dom.gamepad.non_standard_events.enabled", false);
 #else
-pref("dom.gamepad.enabled", true);
 pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
 
@@ -230,14 +229,23 @@ pref("media.apple.mp3.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
+pref("media.navigator.video.enabled", true);
+pref("media.navigator.load_adapt", false);
 pref("media.navigator.video.default_width",640);
 pref("media.navigator.video.default_height",480);
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
+#ifdef MOZ_WIDGET_GONK
+pref("media.peerconnection.enabled", false);
+pref("media.peerconnection.video.enabled", false);
+pref("media.navigator.video.max_fs", 1200); // 640x480 == 1200mb
+pref("media.navigator.video.max_fr", 30);
+#else
+pref("media.peerconnection.enabled", true);
+pref("media.peerconnection.video.enabled", true);
 pref("media.navigator.video.max_fs", 0); // unrestricted
 pref("media.navigator.video.max_fr", 0); // unrestricted
-pref("media.navigator.load_adapt", false);
-pref("media.peerconnection.enabled", true);
+#endif
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
 pref("media.peerconnection.trickle_ice", true);
@@ -263,7 +271,7 @@ pref("media.tabstreaming.height", 240);
 pref("media.tabstreaming.time_per_frame", 40);
 
 // TextTrack support
-pref("media.webvtt.enabled", false);
+pref("media.webvtt.enabled", true);
 
 // Whether to enable MediaSource support
 pref("media.mediasource.enabled", false);
@@ -301,6 +309,10 @@ pref("apz.axis_lock_mode", 0);
 //   >= 2 : hidpi supported even with mixed backingScaleFactors (somewhat broken)
 pref("gfx.hidpi.enabled", 2);
 #endif
+
+// Whether to enable LayerScope tool and default listening port
+pref("gfx.layerscope.enabled", false);
+pref("gfx.layerscope.port", 23456);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
@@ -394,7 +406,6 @@ pref("gfx.content.azure.backends", "cairo");
 pref("gfx.content.azure.backends", "cairo");
 #endif
 #ifdef ANDROID
-pref("gfx.textures.poweroftwo.force-enabled", false);
 pref("gfx.content.azure.backends", "cairo");
 #endif
 
@@ -580,7 +591,6 @@ pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 pref("browser.fixup.hide_user_pass", true);
-pref("browser.fixup.use-utf8", false);
 
 // Location Bar AutoComplete
 pref("browser.urlbar.autocomplete.enabled", true);
@@ -858,7 +868,9 @@ pref("dom.min_background_timeout_value", 1000);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
-pref("dom.forms.number", false);
+
+// Enable <input type=number>:
+pref("dom.forms.number", true);
 
 // Enable <input type=color> by default. It will be turned off for remaining
 // platforms which don't have a color picker implemented yet.
@@ -889,6 +901,8 @@ pref("privacy.donottrackheader.value",      1);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
+
+pref("dom.webcomponents.enabled",           false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
@@ -950,6 +964,11 @@ pref("security.fileuri.strict_origin_policy", true);
 // telemetry is also enabled as otherwise there is no way to report
 // the results
 pref("network.allow-experiments", true);
+#if defined(EARLY_BETA_OR_EARLIER)
+pref("network.dns.allow-srv-experiment", true);
+#else
+pref("network.dns.allow-srv-experiment", false);
+#endif
 
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
@@ -1629,7 +1648,7 @@ pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
-pref("security.dialog_enable_delay", 2000);
+pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 pref("security.csp.enable", true);
@@ -2032,6 +2051,15 @@ pref("hangmonitor.timeout", 0);
 pref("plugins.load_appdir_plugins", false);
 // If true, plugins will be click to play
 pref("plugins.click_to_play", false);
+
+// A comma-delimited list of plugin name prefixes matching plugins that will be
+// exposed when enumerating navigator.plugins[]. For example, prefix "Shockwave"
+// matches both Adobe Flash Player ("Shockwave Flash") and Adobe Shockwave
+// Player ("Shockwave for Director"). To hide all plugins from enumeration, use
+// the empty string "" to match no plugin names. To allow all plugins to be
+// enumerated, use the string "*" to match all plugin names.
+pref("plugins.enumerable_names", "Java,Nexus Personal,QuickTime,Shockwave");
+
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
 
@@ -4223,6 +4251,10 @@ pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
+// When a layer is moving it will add a scroll graph to measure the smoothness
+// of the movement. NOTE: This pref triggers composites to refresh
+// the graph.
+pref("layers.scroll-graph", false);
 
 // Set the default values, and then override per-platform as needed
 pref("layers.offmainthreadcomposition.enabled", false);
@@ -4523,7 +4555,7 @@ pref("ui.touch_activation.delay_ms", 100);
 // If the user has clicked an element, how long do we keep the
 // :active state before it is cleared by the mouse sequences
 // fired after a touchstart/touchend.
-pref("ui.touch_activation.duration_ms", 100);
+pref("ui.touch_activation.duration_ms", 10);
 
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.

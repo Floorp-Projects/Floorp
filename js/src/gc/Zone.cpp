@@ -172,8 +172,8 @@ Zone::sweepBreakpoints(FreeOp *fop)
             continue;
         bool scriptGone = IsScriptAboutToBeFinalized(&script);
         JS_ASSERT(script == i.get<JSScript>());
-        for (unsigned i = 0; i < script->length; i++) {
-            BreakpointSite *site = script->getBreakpointSite(script->code + i);
+        for (unsigned i = 0; i < script->length(); i++) {
+            BreakpointSite *site = script->getBreakpointSite(script->offsetToPC(i));
             if (!site)
                 continue;
             Breakpoint *nextbp;

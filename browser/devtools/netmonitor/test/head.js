@@ -5,7 +5,8 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
@@ -281,4 +282,21 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
         "Unexpected 'odd' attribute for " + aRequestItem.value);
     }
   }
+}
+
+/**
+ * Helper function for waiting for an event to fire before resolving a promise.
+ * Example: waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.TAB_UPDATED);
+ *
+ * @param object subject
+ *        The event emitter object that is being listened to.
+ * @param string eventName
+ *        The name of the event to listen to.
+ * @return object
+ *        Returns a promise that resolves upon firing of the event.
+ */
+function waitFor (subject, eventName) {
+  let deferred = promise.defer();
+  subject.once(eventName, deferred.resolve);
+  return deferred.promise;
 }

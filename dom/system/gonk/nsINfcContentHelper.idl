@@ -7,9 +7,29 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(28c8f240-da8c-11e1-9b23-0800200c9a66)]
+[scriptable, function, uuid(271f48b0-c884-4f0b-a348-e29824c95168)]
+interface nsINfcPeerCallback : nsISupports
+{
+  /**
+   * Callback function used to notify NFC peer events.
+   *
+   * @param event
+   *        An event indicating 'PeerReady' or 'PeerLost'
+   *        One of NFC_EVENT_PEER_XXXX
+   *
+   * @param sessionToken
+   *        SessionToken received from Chrome process
+   */
+   void peerNotification(in unsigned long event,
+                         in DOMString sessionToken);
+};
+
+[scriptable, uuid(91c2760a-f41c-4174-ad68-614840d4e201)]
 interface nsINfcContentHelper : nsISupports
 {
+  const long NFC_EVENT_PEER_READY = 0x01;
+  const long NFC_EVENT_PEER_LOST  = 0x02;
+
   void setSessionToken(in DOMString sessionToken);
 
   nsIDOMDOMRequest getDetailsNDEF(in nsIDOMWindow window, in DOMString sessionToken);
@@ -19,4 +39,62 @@ interface nsINfcContentHelper : nsISupports
 
   nsIDOMDOMRequest connect(in nsIDOMWindow window, in unsigned long techType, in DOMString sessionToken);
   nsIDOMDOMRequest close(in nsIDOMWindow window, in DOMString sessionToken);
+
+ /**
+  * Register the given application id with Chrome process
+  *
+  * @param window
+  *        Current window
+  *
+  * @param appId
+  *        Application ID to be registered
+  *
+  * @param event
+  *       Event to be registered. Either NFC_EVENT_PEER_READY or NFC_EVENT_PEER_LOST
+  *
+  * @param callback
+  *       Callback that is used to notify upper layers whenever PeerEvents happen.
+  */
+  void registerTargetForPeerEvent(in nsIDOMWindow window,
+                                  in unsigned long appId,
+                                  in octet event,
+                                  in nsINfcPeerCallback callback);
+ /**
+  * Unregister the given application id with Chrome process
+  *
+  * @param window
+  *        Current window
+  *
+  * @param appId
+  *        Application ID to be registered
+  *
+  * @param event
+  *       Event to be unregistered. Either NFC_EVENT_PEER_READY or NFC_EVENT_PEER_LOST
+  */
+  void unregisterTargetForPeerEvent(in nsIDOMWindow window,
+                                    in unsigned long appId,
+                                    in octet event);
+ /**
+  * Checks if the given application's id is a registered peer target (with the Chrome process)
+  *
+  * @param window
+  *        Current window
+  *
+  * @param appId
+  *        Application ID to be updated with Chrome process
+  *
+  * Returns DOMRequest, if appId is registered then 'onsuccess' is called else 'onerror'
+  */
+  nsIDOMDOMRequest checkP2PRegistration(in nsIDOMWindow window, in unsigned long appId);
+
+ /**
+  * Notify the Chrome process that user has accepted to share nfc message on P2P UI
+  *
+  * @param window
+  *        Current window
+  *
+  * @param appId
+  *        Application ID that is capable of handling NFC_EVENT_PEER_READY event
+  */
+  void notifyUserAcceptedP2P(in nsIDOMWindow window, in unsigned long appId);
 };

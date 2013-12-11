@@ -7,7 +7,7 @@
 #if !defined(WMFVideoDecoder_h_)
 #define WMFVideoDecoder_h_
 
-#include "wmf.h"
+#include "WMF.h"
 #include "MP4Reader.h"
 #include "MFTDecoder.h"
 #include "nsRect.h"
@@ -68,7 +68,6 @@ private:
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
 
   const bool mDXVAEnabled;
-  const bool mIsRunningOnVista;
   bool mUseHwAccel;
 };
 

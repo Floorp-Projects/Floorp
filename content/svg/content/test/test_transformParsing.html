@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946529
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test transform parsing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946529">Mozilla Bug 946529</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg width="100%" height="1" id="svg">
+    <g id="g"/>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// Test cases
+checkParseOk("", [ ]);
+checkParseOk("matrix(-.7235 .6903 .6903 .7235 -2050 1.14e4)",
+  [ { type: "matrix", a: -0.7235, b: 0.6903, c: 0.6903,
+                      d: 0.7235,  e: -2050,  f: 11400 } ]);
+checkParseOk("matrix(0e0 1e0 1e1 1e-1 1E+2 -.1e1)",
+  [ { type: "matrix", a: 0,   b: 1,   c: 10,
+                      d: 0.1, e: 100, f: -1 } ]);
+checkParseOk("matrix(-0e-0 1e+0 0e-5 1e-10 12.3e+4 .12e2)",
+  [ { type: "matrix", a: 0,   b: 1,   c: 0,
+                      d: 0.0000000001, e: 123000, f: 12 } ]);
+
+// Fail cases
+checkParseFail("matrix(1e+ 0 0 0 0 0)");
+checkParseFail("matrix(e2 0 0 0 0 0)");
+checkParseFail("matrix(1 e2 0 0 0 0 0)");
+checkParseFail("matrix(1e 2 0 0 0 0 0)");
+checkParseFail("matrix(1e+-2 0 0 0 0 0)");
+checkParseFail("matrix(1e 0 0 0 0 0)");
+checkParseFail("matrix(1e1.1 0 0 0 0 0)");
+checkParseFail("scale(2) matrix(1e1.1 0 0 0 0 0)");
+
+function checkParseOk(spec, expected) {
+  var g = document.getElementById("g");
+
+  // Clear previous value
+  g.removeAttribute("transform");
+
+  g.setAttribute("transform", spec);
+
+  // Check length
+  var transformList = g.transform.baseVal;
+  is(transformList.numberOfItems, expected.length, spec + " - length");
+  if (transformList.numberOfItems != expected.length)
+    return;
+
+  // Check each item
+  for (var i=0; i < transformList.numberOfItems; i++) {
+    checkTransform(transformList.getItem(i), expected[i], spec, i);
+  }
+}
+
+function checkTransform(transform, expected, spec, index) {
+  var typeMapping = {
+    "unknown": SVGTransform.SVG_TRANSFORM_UNKNOWN,
+    "matrix": SVGTransform.SVG_TRANSFORM_MATRIX,
+    "translate": SVGTransform.SVG_TRANSFORM_TRANSLATE,
+    "scale": SVGTransform.SVG_TRANSFORM_SCALE,
+    "rotate": SVGTransform.SVG_TRANSFORM_ROTATE,
+    "skewx": SVGTransform.SVG_TRANSFORM_SKEWX,
+    "skewy": SVGTransform.SVG_TRANSFORM_SKEWY
+  };
+  var name = "Item " + index + " of '" + spec + "'";
+
+  // Compare type
+  if (typeof expected.type != "undefined") {
+    ise(transform.type, typeMapping[expected.type], name + " - transform type");
+  }
+
+  // Compare angle
+  if (typeof expected.angle != "undefined") {
+    ise(transform.angle, expected.angle, name + " - angle");
+  }
+
+  // Compare matrix values (roughly)
+  ['a', 'b', 'c', 'd', 'e', 'f'].forEach(function(item) {
+    var actual = transform.matrix[item];
+    var msg = name + " - matrix:" + item;
+    const tolerance = 1 / 65535;
+    ok(Math.abs(actual - expected[item]) < tolerance,
+       msg + ' - got ' + actual + ', expected ' + expected[item]);
+  });
+}
+
+function checkParseFail(spec) {
+  checkParseOk(spec, []);
+}
+</script>
+</pre>
+</body>
+</html>

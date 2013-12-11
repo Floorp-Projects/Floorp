@@ -163,12 +163,8 @@ nsAppShell::NotifyNativeEvent()
     mQueueCond.Notify();
 }
 
-#define PREFNAME_MATCH_OS  "intl.locale.matchOS"
-#define PREFNAME_UA_LOCALE "general.useragent.locale"
 #define PREFNAME_COALESCE_TOUCHES "dom.event.touch.coalescing.enabled"
 static const char* kObservedPrefs[] = {
-  PREFNAME_MATCH_OS,
-  PREFNAME_UA_LOCALE,
   PREFNAME_COALESCE_TOUCHES,
   nullptr
 };
@@ -182,8 +178,6 @@ nsAppShell::Init()
 #endif
 
     nsresult rv = nsBaseAppShell::Init();
-    AndroidBridge* bridge = AndroidBridge::Bridge();
-
     nsCOMPtr<nsIObserverService> obsServ =
         mozilla::services::GetObserverService();
     if (obsServ) {
@@ -193,27 +187,7 @@ nsAppShell::Init()
     if (sPowerManagerService)
         sPowerManagerService->AddWakeLockListener(sWakeLockListener);
 
-    if (!bridge)
-        return rv;
-
     Preferences::AddStrongObservers(this, kObservedPrefs);
-
-    bool match;
-    rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (match) {
-        GeckoAppShell::SetSelectedLocale(EmptyString());
-        return NS_OK;
-    }
-
-    nsAutoString locale;
-    rv = Preferences::GetLocalizedString(PREFNAME_UA_LOCALE, &locale);
-    if (NS_FAILED(rv)) {
-        rv = Preferences::GetString(PREFNAME_UA_LOCALE, &locale);
-    }
-
-    GeckoAppShell::SetSelectedLocale(locale);
     mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
     return rv;
 }
@@ -228,30 +202,9 @@ nsAppShell::Observe(nsISupports* aSubject,
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
         return nsBaseAppShell::Observe(aSubject, aTopic, aData);
-    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) && aData && (
-                   nsDependentString(aData).Equals(
-                       NS_LITERAL_STRING(PREFNAME_UA_LOCALE)) ||
-                   nsDependentString(aData).Equals(
-                       NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES)) ||
-                   nsDependentString(aData).Equals(
-                       NS_LITERAL_STRING(PREFNAME_MATCH_OS)))) {
-        bool match;
-        nsresult rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (match) {
-            GeckoAppShell::SetSelectedLocale(EmptyString());
-            return NS_OK;
-        }
-
-        nsAutoString locale;
-        if (NS_FAILED(Preferences::GetLocalizedString(PREFNAME_UA_LOCALE,
-                                                      &locale))) {
-            locale = Preferences::GetString(PREFNAME_UA_LOCALE);
-        }
-
-        GeckoAppShell::SetSelectedLocale(locale);
-
+    } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
+               aData &&
+               nsDependentString(aData).Equals(NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES))) {
         mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
         return NS_OK;
     }
@@ -306,13 +259,19 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         NativeEventCallback();
         break;
 
-    case AndroidGeckoEvent::SENSOR_EVENT:
-      {
+    case AndroidGeckoEvent::SENSOR_EVENT: {
         InfallibleTArray<float> values;
         mozilla::hal::SensorType type = (mozilla::hal::SensorType) curEvent->Flags();
 
         switch (type) {
+          // Bug 938035, transfer HAL data for orientation sensor to meet w3c
+          // spec, ex: HAL report alpha=90 means East but alpha=90 means West
+          // in w3c spec
           case hal::SENSOR_ORIENTATION:
+            values.AppendElement(360 -curEvent->X());
+            values.AppendElement(-curEvent->Y()); 
+            values.AppendElement(-curEvent->Z());
+            break;
           case hal::SENSOR_LINEAR_ACCELERATION:
           case hal::SENSOR_ACCELERATION:
           case hal::SENSOR_GYROSCOPE:
@@ -411,7 +370,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
-
         if (curEvent->Characters().Length() == 0)
             break;
 
@@ -422,6 +380,57 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         const nsPromiseFlatString& data = PromiseFlatString(curEvent->CharactersExtra());
 
         obsServ->NotifyObservers(nullptr, topic.get(), data.get());
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_STOP: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->StopSession(
+                nsString(curEvent->Characters()).get(),
+                nsString(curEvent->CharactersExtra()).get(),
+                curEvent->Time()
+                );
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_SESSION_START: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->StartSession(
+                nsString(curEvent->Characters()).get(),
+                curEvent->Time()
+                );
+        break;
+    }
+
+    case AndroidGeckoEvent::TELEMETRY_UI_EVENT: {
+        if (curEvent->Characters().Length() == 0)
+            break;
+
+        nsCOMPtr<nsIUITelemetryObserver> obs;
+        mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        if (!obs)
+            break;
+
+        obs->AddEvent(
+                nsString(curEvent->Data()).get(),
+                nsString(curEvent->Characters()).get(),
+                curEvent->Time(),
+                nsString(curEvent->CharactersExtra()).get()
+                );
         break;
     }
 

@@ -251,7 +251,9 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
         templateObject->setShouldConvertDoubleElements();
 
-    MNewArray *ins = MNewArray::New(alloc(), initLength, templateObject, allocating);
+    MNewArray *ins = MNewArray::New(alloc(), initLength, templateObject,
+                                    templateObject->type()->initialHeap(constraints()),
+                                    allocating);
     current->add(ins);
     current->push(ins);
 
@@ -498,7 +500,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MArrayConcat *ins = MArrayConcat::New(alloc(), callInfo.thisArg(), callInfo.getArg(0), templateObj);
+    MArrayConcat *ins = MArrayConcat::New(alloc(), callInfo.thisArg(), callInfo.getArg(0), templateObj,
+                                          templateObj->type()->initialHeap(constraints()));
     current->add(ins);
     current->push(ins);
 
@@ -570,7 +573,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
 
     if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
-        MFloor *ins = new MFloor(callInfo.getArg(0));
+        MFloor *ins = MFloor::New(alloc(), callInfo.getArg(0));
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -608,7 +611,7 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
 
     if (argType == MIRType_Double && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
-        MRound *ins = new MRound(callInfo.getArg(0));
+        MRound *ins = MRound::New(alloc(), callInfo.getArg(0));
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -1262,7 +1265,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
     JSFunction *target = nullptr;
     if (targetObj && targetObj->is<JSFunction>())
         target = &targetObj->as<JSFunction>();
-    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
+    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite()) {
         if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
             target = clone;
     }
@@ -1287,7 +1290,7 @@ IonBuilder::inlineParallelArray(CallInfo &callInfo)
     if (!target)
         return InliningStatus_NotInlined;
 
-    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite);
+    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite());
     if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
         target = clone;
 
@@ -1364,7 +1367,7 @@ IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
 
     // Place an MPrepareCall before the first passed argument, before we
     // potentially perform rearrangement.
-    MPrepareCall *start = new MPrepareCall;
+    MPrepareCall *start = MPrepareCall::New(alloc());
     oldThis->block()->insertBefore(oldThis, start);
     call->initPrepareCall(start);
 
@@ -1436,9 +1439,10 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MNewDenseArrayPar *newObject = new MNewDenseArrayPar(graph().forkJoinSlice(),
-                                                         callInfo.getArg(0),
-                                                         templateObject);
+    MNewDenseArrayPar *newObject = MNewDenseArrayPar::New(alloc(),
+                                                          graph().forkJoinSlice(),
+                                                          callInfo.getArg(0),
+                                                          templateObject);
     current->add(newObject);
     current->push(newObject);
 

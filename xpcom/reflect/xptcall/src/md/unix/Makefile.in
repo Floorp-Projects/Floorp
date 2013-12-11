@@ -19,22 +19,6 @@ endif
 endif
 
 ######################################################################
-# i386 and beyond
-######################################################################
-#
-# Lots of Unixish x86 flavors
-#
-
-ifeq (Darwin,$(OS_ARCH))
-ifeq (86,$(findstring 86,$(OS_TEST)))
-ifeq (x86_64,$(OS_TEST))
-else
-DEFINES		+= -DMOZ_NEED_LEADING_UNDERSCORE
-endif
-endif
-endif
-
-######################################################################
 # ARM
 ######################################################################
 #
@@ -125,8 +109,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DIMPL_LIBXUL
-
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../.. \
 	-I$(srcdir)/../../../../xptinfo/src \
@@ -164,10 +146,6 @@ xptcstubsdef_asm.solx86: $(DIST)/include/xptcstubsdef.inc
 	$(DIST)/include/xptcstubsdef.inc > $@
 ifeq (x86_64,$(OS_TEST))
 ASFLAGS += -xarch=amd64
-
-xptcstubs_asm_x86_64_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
-else
-xptcstubs_asm_x86_solaris_SUNW.$(OBJ_SUFFIX): xptcstubsdef_asm.solx86
 endif
 
 endif

@@ -56,8 +56,6 @@ using namespace mozilla::psm;
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
-static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 
 // This is being stored in an uint32_t that can otherwise
@@ -283,7 +281,7 @@ GetKeyUsagesString(CERTCertificate *cert, nsINSSComponent *nssComponent,
   unsigned char keyUsage = keyUsageItem.data[0];
   nsAutoString local;
   nsresult rv;
-  const PRUnichar *comma = NS_LITERAL_STRING(",").get();
+  const char16_t comma = ',';
 
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     rv = nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
@@ -342,6 +340,8 @@ GetKeyUsagesString(CERTCertificate *cert, nsINSSComponent *nssComponent,
 nsresult
 nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   if (!NS_IsMainThread()) {
     NS_ERROR("nsNSSCertificate::FormatUIStrings called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
@@ -565,6 +565,8 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 NS_IMETHODIMP
 nsNSSCertificate::GetNickname(nsAString &aNickname)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -585,6 +587,8 @@ nsNSSCertificate::GetNickname(nsAString &aNickname)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString &aEmailAddress)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -1038,6 +1042,8 @@ nsNSSCertificate::GetMd5Fingerprint(nsAString &_md5Fingerprint)
 NS_IMETHODIMP
 nsNSSCertificate::GetTokenName(nsAString &aTokenName)
 {
+  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -1775,11 +1781,11 @@ nsNSSCertificate::GetFlags(uint32_t *aFlags)
   return NS_OK;
 }
 
-static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
-
 NS_IMETHODIMP 
 nsNSSCertificate::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
 {
+  static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
+
   *aClassIDNoAlloc = kNSSCertificateCID;
   return NS_OK;
 }

@@ -14,6 +14,7 @@
 #include "nsError.h"                    // for nsresult
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsRect.h"                     // for nsIntRect, nsRect
+#include "nsMargin.h"                   // for nsIntMargin
 #include "nsString.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 
@@ -170,6 +171,33 @@ public:
     pixman_region32_clear(&mImpl);
   }
 
+  nsRegion MovedBy(int32_t aXOffset, int32_t aYOffset) const
+  {
+    return MovedBy(nsPoint(aXOffset, aYOffset));
+  }
+  nsRegion MovedBy(const nsPoint& aPt) const
+  {
+    nsRegion copy(*this);
+    copy.MoveBy(aPt);
+    return copy;
+  }
+
+  nsRegion Intersect(const nsRegion& aOther) const
+  {
+    nsRegion intersection;
+    intersection.And(*this, aOther);
+    return intersection;
+  }
+
+  void Inflate(const nsMargin& aMargin);
+
+  nsRegion Inflated(const nsMargin& aMargin) const
+  {
+    nsRegion copy(*this);
+    copy.Inflate(aMargin);
+    return copy;
+  }
+
   bool IsEmpty () const { return !pixman_region32_not_empty(Impl()); }
   bool IsComplex () const { return GetNumRects() > 1; }
   bool IsEqual (const nsRegion& aRegion) const
@@ -228,8 +256,17 @@ private:
 
   nsRegion& Copy (const nsRect& aRect)
   {
-    pixman_box32_t box = RectToBox(aRect);
-    pixman_region32_reset(&mImpl, &box);
+    // pixman needs to distinguish between an empty region and a region
+    // with one rect so that it can return a different number of rectangles.
+    // Empty rect: data = empty_box
+    //     1 rect: data = NULL
+    //    >1 rect: data = rects
+    if (aRect.IsEmpty()) {
+      pixman_region32_clear(&mImpl);
+    } else {
+      pixman_box32_t box = RectToBox(aRect);
+      pixman_region32_reset(&mImpl, &box);
+    }
     return *this;
   }
 
@@ -425,6 +462,35 @@ public:
   {
     mImpl.MoveBy (aPt.x, aPt.y);
   }
+  nsIntRegion MovedBy(int32_t aXOffset, int32_t aYOffset) const
+  {
+    return MovedBy(nsIntPoint(aXOffset, aYOffset));
+  }
+  nsIntRegion MovedBy(const nsIntPoint& aPt) const
+  {
+    nsIntRegion copy(*this);
+    copy.MoveBy(aPt);
+    return copy;
+  }
+
+  nsIntRegion Intersect(const nsIntRegion& aOther) const
+  {
+    nsIntRegion intersection;
+    intersection.And(*this, aOther);
+    return intersection;
+  }
+
+  void Inflate(const nsIntMargin& aMargin)
+  {
+    mImpl.Inflate(nsMargin(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left));
+  }
+  nsIntRegion Inflated(const nsIntMargin& aMargin) const
+  {
+    nsIntRegion copy(*this);
+    copy.Inflate(aMargin);
+    return copy;
+  }
+
   void SetEmpty ()
   {
     mImpl.SetEmpty  ();

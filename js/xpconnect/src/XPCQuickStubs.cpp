@@ -7,6 +7,7 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "nsCOMPtr.h"
+#include "AccessCheck.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCInlines.h"
@@ -140,7 +141,13 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
                 }
 
                 if (entry->newBindingProperties) {
-                    mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties, false);
+                    if (entry->newBindingProperties->regular) {
+                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->regular, false);
+                    }
+                    if (entry->newBindingProperties->chromeOnly &&
+                        xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
+                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->chromeOnly, false);
+                    }
                 }
                 // Next.
                 size_t j = entry->parentInterface;

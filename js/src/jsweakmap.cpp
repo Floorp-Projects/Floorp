@@ -200,9 +200,9 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             // Read barrier to prevent an incorrectly gray value from escaping the
             // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
-            ExposeValueToActiveJS(ptr->value.get());
+            ExposeValueToActiveJS(ptr->value().get());
 
-            args.rval().set(ptr->value);
+            args.rval().set(ptr->value());
             return true;
         }
     }
@@ -268,6 +268,21 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
     return true;
 }
 
+static inline void
+WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *map, JSObject *key)
+{
+#ifdef JSGC_GENERATIONAL
+    /*
+     * Strip the barriers from the type before inserting into the store buffer.
+     * This will automatically ensure that barriers do not fire during GC.
+     */
+    typedef WeakMap<JSObject *, Value> UnbarrieredObjectValueMap;
+    typedef gc::HashKeyRef<UnbarrieredObjectValueMap, JSObject *> Ref;
+    if (key && IsInsideNursery(rt, key))
+        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredObjectValueMap *>(map), key));
+#endif
+}
+
 JS_ALWAYS_INLINE bool
 WeakMap_set_impl(JSContext *cx, CallArgs args)
 {
@@ -312,7 +327,7 @@ WeakMap_set_impl(JSContext *cx, CallArgs args)
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    HashTableWriteBarrierPost(cx->runtime(), map, key.get());
+    WeakMapPostWriteBarrier(cx->runtime(), map, key.get());
 
     args.rval().setUndefined();
     return true;
@@ -342,7 +357,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **re
         // Prevent GC from mutating the weakmap while iterating.
         gc::AutoSuppressGC suppress(cx);
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
-            RootedObject key(cx, r.front().key);
+            RootedObject key(cx, r.front().key());
             if (!cx->compartment()->wrap(cx, &key))
                 return false;
             if (!js_NewbornArrayPush(cx, arr, ObjectValue(*key)))

@@ -101,7 +101,7 @@ public:
     @param inputSize is the input size. Max supported value is ~1.9GB
     @return maximum output size in a "worst case" scenario
   */
-  static MFBT_API size_t maxCompressedSize(size_t inputSize)
+  static inline size_t maxCompressedSize(size_t inputSize)
   {
       size_t max = ((inputSize) + ((inputSize)/255) + 16);
       MOZ_ASSERT(max > inputSize);

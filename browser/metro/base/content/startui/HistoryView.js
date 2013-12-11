@@ -107,7 +107,7 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
 
   _setContextActions: function bv__setContextActions(aItem) {
     let uri = aItem.getAttribute("value");
-    aItem.setAttribute("data-contextactions", "delete," + (this._pinHelper.isPinned(uri) ? "unpin" : "pin"));
+    aItem.setAttribute("data-contextactions", "delete," + (this._pinHelper.isPinned(uri) ? "hide" : "pin"));
     if ("refresh" in aItem) aItem.refresh();
   },
 

@@ -80,8 +80,14 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
   }
 }
 
-// implemented in TextureOGL.cpp
+// implemented in TextureHostOGL.cpp
 TemporaryRef<TextureHost> CreateTextureHostOGL(uint64_t aID,
+                                               const SurfaceDescriptor& aDesc,
+                                               ISurfaceAllocator* aDeallocator,
+                                               TextureFlags aFlags);
+
+// implemented in TextureHostBasic.cpp
+TemporaryRef<TextureHost> CreateTextureHostBasic(uint64_t aID,
                                                const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
                                                TextureFlags aFlags);
@@ -97,10 +103,14 @@ TextureHost::Create(uint64_t aID,
     case LAYERS_OPENGL:
       return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
     case LAYERS_BASIC:
-      return CreateBackendIndependentTextureHost(aID,
-                                                 aDesc,
-                                                 aDeallocator,
-                                                 aFlags);
+      return CreateTextureHostBasic(aID, aDesc, aDeallocator, aFlags);
+#ifdef MOZ_WIDGET_GONK
+    case LAYERS_NONE:
+      // Power on video reqests to allocate TextureHost,
+      // when Compositor is still not present. This is a very hacky workaround.
+      // See Bug 944420.
+      return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
+#endif
 #ifdef XP_WIN
     case LAYERS_D3D11:
     case LAYERS_D3D9:
@@ -261,11 +271,13 @@ DeprecatedTextureHost::PrintInfo(nsACString& aTo, const char* aPrefix)
   AppendToString(aTo, mFlags, " [flags=", "]");
 }
 
-
-
-
-
-
+void
+DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
+{
+  MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
+  mBuffer = aBuffer;
+  mDeAllocator = aAllocator;
+}
 
 BufferTextureHost::BufferTextureHost(uint64_t aID,
                                      gfx::SurfaceFormat aFormat,
@@ -459,10 +471,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
   return true;
 }
 
-already_AddRefed<gfxImageSurface>
+TemporaryRef<gfx::DataSourceSurface>
 BufferTextureHost::GetAsSurface()
 {
-  nsRefPtr<gfxImageSurface> result;
+  RefPtr<gfx::DataSourceSurface> result;
   if (mFormat == gfx::FORMAT_UNKNOWN) {
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
@@ -471,17 +483,13 @@ BufferTextureHost::GetAsSurface()
     if (!yuvDeserializer.IsValid()) {
       return nullptr;
     }
-    result = new gfxImageSurface(yuvDeserializer.GetYData(),
-                                 yuvDeserializer.GetYSize(),
-                                 yuvDeserializer.GetYStride(),
-                                 gfxImageFormatA8);
+    result = yuvDeserializer.ToDataSourceSurface();
   } else {
     ImageDataDeserializer deserializer(GetBuffer());
     if (!deserializer.IsValid()) {
       return nullptr;
     }
-    RefPtr<gfxImageSurface> surf = deserializer.GetAsThebesSurface();
-    result = surf.get();
+    result = deserializer.GetAsSurface();
   }
   return result.forget();
 }
@@ -512,6 +520,7 @@ ShmemTextureHost::DeallocateSharedData()
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
     mDeallocator->DeallocShmem(*mShmem);
+    mShmem = nullptr;
   }
 }
 
@@ -540,6 +549,8 @@ MemoryTextureHost::MemoryTextureHost(uint64_t aID,
 MemoryTextureHost::~MemoryTextureHost()
 {
   DeallocateDeviceData();
+  NS_ASSERTION(!mBuffer || (mFlags & TEXTURE_DEALLOCATE_CLIENT),
+               "Leaking our buffer");
   MOZ_COUNT_DTOR(MemoryTextureHost);
 }
 
@@ -550,6 +561,7 @@ MemoryTextureHost::DeallocateSharedData()
     GfxMemoryImageReporter::WillFree(mBuffer);
   }
   delete[] mBuffer;
+  mBuffer = nullptr;
 }
 
 uint8_t* MemoryTextureHost::GetBuffer()

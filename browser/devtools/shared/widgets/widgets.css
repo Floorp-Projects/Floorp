@@ -50,9 +50,9 @@
   overflow: hidden;
 }
 
-.variables-view-scope[non-header] > .title,
-.variable-or-property[non-header] > .title,
-.variable-or-property[non-match] > .title {
+.variables-view-scope[untitled] > .title,
+.variable-or-property[untitled] > .title,
+.variable-or-property[unmatched] > .title {
   display: none;
 }
 
@@ -63,8 +63,14 @@
   display: none;
 }
 
-*:not(:hover) .variables-view-delete {
+*:not(:hover) .variables-view-delete,
+*:not(:hover) .variables-view-add-property {
   visibility: hidden;
+}
+
+.variables-view-delete > .toolbarbutton-text,
+.variables-view-add-property > .toolbarbutton-text {
+  display: none;
 }
 
 .variables-view-container[aligned-values] .title > [optional-visibility] {

@@ -99,8 +99,8 @@ class JSFunction : public JSObject
 
         // Note: this should be kept in sync with FunctionBox::isHeavyweight().
         return nonLazyScript()->bindings.hasAnyAliasedBindings() ||
-               nonLazyScript()->funHasExtensibleScope ||
-               nonLazyScript()->funNeedsDeclEnvObject;
+               nonLazyScript()->funHasExtensibleScope() ||
+               nonLazyScript()->funNeedsDeclEnvObject();
     }
 
     /* A function can be classified as either native (C++) or interpreted (JS): */
@@ -166,7 +166,7 @@ class JSFunction : public JSObject
 
     /* Returns the strictness of this function, which must be interpreted. */
     bool strict() const {
-        return nonLazyScript()->strict;
+        return nonLazyScript()->strict();
     }
 
     // Can be called multiple times by the parser.

@@ -58,7 +58,6 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/Util.h"
 
 #include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
@@ -125,6 +124,9 @@
 #include "nsIWidgetListener.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/gfx/2D.h"
+#include "nsToolkitCompsCID.h"
+#include "nsIAppStartup.h"
+#include "mozilla/WindowsVersion.h"
 
 #ifdef MOZ_ENABLE_D3D9_LAYER
 #include "LayerManagerD3D9.h"
@@ -134,7 +136,6 @@
 #include "LayerManagerD3D10.h"
 #endif
 
-#include "LayerManagerOGL.h"
 #include "nsIGfxInfo.h"
 #include "nsUXThemeConstants.h"
 #include "KeyboardLayout.h"
@@ -173,6 +174,10 @@
 #include "WinIMEHandler.h"
 
 #include "npapi.h"
+
+#if !defined(SM_CONVERTIBLESLATEMODE)
+#define SM_CONVERTIBLESLATEMODE 0x2003
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -240,7 +245,7 @@ bool            nsWindow::sAllowD3D9              = false;
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
 // Used in OOPP plugin focus processing.
-const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
+const wchar_t* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 uint32_t        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
 
@@ -481,9 +486,7 @@ nsWindow::Create(nsIWidget *aParent,
       parent = nullptr;
     }
 
-    if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-        WinUtils::GetWindowsVersion() <= WinUtils::WIN7_VERSION &&
-        HasBogusPopupsDropShadowOnMultiMonitor()) {
+    if (IsVistaOrLater() && !IsWin8OrLater()) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
 
@@ -606,7 +609,7 @@ nsWindow::Create(nsIWidget *aParent,
     // bugs over the years, disable it (sTrimOnMinimize=1) on Vista and up.
     sTrimOnMinimize =
       Preferences::GetBool("config.trim_on_minimize",
-        (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION)) ? 1 : 0;
+        IsVistaOrLater() ? 1 : 0);
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
   }
@@ -1226,8 +1229,7 @@ bool nsWindow::IsVisible() const
 // transparency. These routines are called on size and move operations.
 void nsWindow::ClearThemeRegion()
 {
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-      !HasGlass() &&
+  if (IsVistaOrLater() && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, nullptr, false);
@@ -1241,8 +1243,7 @@ void nsWindow::SetThemeRegion()
   // so default constants are used for part and state. At some point we might need part and
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION &&
-      !HasGlass() &&
+  if (IsVistaOrLater() && !HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nullptr;
@@ -1995,7 +1996,7 @@ nsWindow::ResetLayout()
 // Internally track the caption status via a window property. Required
 // due to our internal handling of WM_NCACTIVATE when custom client
 // margins are set.
-static const PRUnichar kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
+static const wchar_t kManageWindowInfoProperty[] = L"ManageWindowInfoProperty";
 typedef BOOL (WINAPI *GetWindowInfoPtr)(HWND hwnd, PWINDOWINFO pwi);
 static GetWindowInfoPtr sGetWindowInfoPtrStub = nullptr;
 
@@ -3317,39 +3318,11 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         }
       }
 #endif
-      if (!mLayerManager && prefs.mPreferOpenGL) {
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-        int32_t status = nsIGfxInfo::FEATURE_NO_INFO;
-
-        if (gfxInfo && !prefs.mForceAcceleration) {
-          gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_OPENGL_LAYERS, &status);
-        }
-
-        if (status == nsIGfxInfo::FEATURE_NO_INFO) {
-          nsRefPtr<LayerManagerOGL> layerManager =
-            new LayerManagerOGL(this);
-          if (layerManager->Initialize()) {
-            mLayerManager = layerManager;
-          }
-
-        } else {
-          NS_WARNING("OpenGL accelerated layers are not supported on this system.");
-        }
-      }
     }
 
     // Fall back to software if we couldn't use any hardware backends.
     if (!mLayerManager) {
-      // Try to use an async compositor first, if possible
-      if (ShouldUseOffMainThreadCompositing()) {
-        // e10s uses the parameter to pass in the shadow manager from the TabChild
-        // so we don't expect to see it there since this doesn't support e10s.
-        NS_ASSERTION(aShadowManager == nullptr, "Async Compositor not supported with e10s");
-        CreateCompositor();
-      }
-
-      if (!mLayerManager)
-        mLayerManager = CreateBasicLayerManager();
+      mLayerManager = CreateBasicLayerManager();
     }
   }
 
@@ -3495,7 +3468,7 @@ nsWindow::OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
 
   // Only Vista and later, Windows has the system setting of horizontal
   // scrolling by the mouse wheel.
-  if (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION) {
+  if (IsVistaOrLater()) {
     if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, &systemSpeed, 0)) {
       return NS_ERROR_FAILURE;
     }
@@ -3540,19 +3513,36 @@ mozilla::TemporaryRef<mozilla::gfx::DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
   MOZ_ASSERT(!mCompositeDC);
+  NS_ASSERTION(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D) ||
+               IsRenderMode(gfxWindowsPlatform::RENDER_GDI),
+               "Unexpected render mode for remote drawing");
 
-  HDC dc = GetDC(mWnd);
-  if (!dc) {
-    return nullptr;
+  HDC dc = (HDC)GetNativeData(NS_NATIVE_GRAPHIC);
+  nsRefPtr<gfxASurface> surf;
+
+  if (mTransparencyMode == eTransparencyTransparent) {
+    if (!mTransparentSurface) {
+      SetupTranslucentWindowMemoryBitmap(mTransparencyMode);
+    }
+    if (mTransparentSurface) {
+      surf = mTransparentSurface;
+    }
+  } 
+  
+  if (!surf) {
+    if (!dc) {
+      return nullptr;
+    }
+    uint32_t flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
+        gfxWindowsSurface::FLAG_IS_TRANSPARENT;
+    surf = new gfxWindowsSurface(dc, flags);
   }
-
-  uint32_t flags = (mTransparencyMode == eTransparencyOpaque) ? 0 :
-      gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-  nsRefPtr<gfxASurface> surf = new gfxWindowsSurface(dc, flags);
 
   mozilla::gfx::IntSize size(surf->GetSize().width, surf->GetSize().height);
   if (size.width <= 0 || size.height <= 0) {
-    ReleaseDC(mWnd, dc);
+    if (dc) {
+      FreeNativeData(dc, NS_NATIVE_GRAPHIC);
+    }
     return nullptr;
   }
 
@@ -3565,7 +3555,14 @@ nsWindow::StartRemoteDrawing()
 void
 nsWindow::EndRemoteDrawing()
 {
-  ReleaseDC(mWnd, mCompositeDC);
+  if (mTransparencyMode == eTransparencyTransparent) {
+    MOZ_ASSERT(IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D)
+               || mTransparentSurface);
+    UpdateTranslucentWindow();
+  }
+  if (mCompositeDC) {
+    FreeNativeData(mCompositeDC, NS_NATIVE_GRAPHIC);
+  }
   mCompositeDC = nullptr;
 }
 
@@ -4232,7 +4229,7 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
         // Check for Adobe Reader X sync activate message from their
         // helper window and ignore. Fixes an annoying focus problem.
         if ((InSendMessageEx(nullptr) & (ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-          PRUnichar szClass[10];
+          wchar_t szClass[10];
           HWND focusWnd = (HWND)lParam;
           if (IsWindowVisible(focusWnd) &&
               GetClassNameW(focusWnd, szClass,
@@ -5494,6 +5491,23 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
     }
     break;
+    case WM_SETTINGCHANGE:
+      if (IsWin8OrLater() && lParam &&
+          !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)lParam)) {
+        // If we're switching into slate mode, switch to Metro for hardware
+        // that supports this feature if the pref is set.
+        if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) == 0 &&
+            Preferences::GetBool("browser.shell.desktop-auto-switch-enabled",
+                                 false)) {
+          nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+          if (appStartup) {
+            appStartup->Quit(nsIAppStartup::eForceQuit |
+                             nsIAppStartup::eRestartTouchEnvironment);
+          }
+        }
+      }
+    break;
+
   }
 
   //*aRetValue = result;
@@ -6648,7 +6662,11 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   LayerManagerPrefs prefs;
   GetLayerManagerPrefs(&prefs);
 
-  if (!prefs.mDisableAcceleration) {
+  // We don't currently support using an accelerated layer manager with
+  // transparent windows so don't even try. I'm also not sure if we even
+  // want to support this case. See bug 593471
+  if (!(prefs.mDisableAcceleration ||
+        mTransparencyMode == eTransparencyTransparent)) {
     if (prefs.mPreferOpenGL) {
       aHints.AppendElement(LAYERS_OPENGL);
     }

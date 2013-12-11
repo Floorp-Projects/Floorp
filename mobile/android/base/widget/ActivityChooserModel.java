@@ -668,6 +668,20 @@ public class ActivityChooserModel extends DataSetObservable {
         }
     }
 
+    public int getDistinctActivityCountInHistory() {
+        synchronized (mInstanceLock) {
+            ensureConsistentState();
+            final List<String> packages = new ArrayList<String>();
+            for (HistoricalRecord record : mHistoricalRecords) {
+              String activity = record.activity.flattenToString();
+              if (!packages.contains(activity)) {
+                packages.add(activity);
+              }
+            }
+            return packages.size();
+        }
+    }
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
@@ -961,7 +975,12 @@ public class ActivityChooserModel extends DataSetObservable {
             for (int i = 0; i < activityCount; i++) {
                 ActivityResolveInfo activity = activities.get(i);
                 activity.weight = 0.0f;
-                String packageName = activity.resolveInfo.activityInfo.packageName;
+
+                // Make sure we're using a non-ambiguous name here
+                ComponentName chosenName = new ComponentName(
+                        activity.resolveInfo.activityInfo.packageName,
+                        activity.resolveInfo.activityInfo.name);
+                String packageName = chosenName.flattenToString();
                 packageNameToActivityMap.put(packageName, activity);
             }
 
@@ -969,7 +988,7 @@ public class ActivityChooserModel extends DataSetObservable {
             float nextRecordWeight = 1;
             for (int i = lastShareIndex; i >= 0; i--) {
                 HistoricalRecord historicalRecord = historicalRecords.get(i);
-                String packageName = historicalRecord.activity.getPackageName();
+                String packageName = historicalRecord.activity.flattenToString();
                 ActivityResolveInfo activity = packageNameToActivityMap.get(packageName);
                 if (activity != null) {
                     activity.weight += historicalRecord.weight * nextRecordWeight;

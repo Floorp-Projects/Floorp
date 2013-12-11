@@ -807,12 +807,36 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
 
     // Check for expando properties first. Note that the expando object lives
     // in the target compartment.
+    bool found = false;
     if (expando) {
         JSAutoCompartment ac(cx, expando);
         if (!JS_GetPropertyDescriptorById(cx, expando, id, 0, desc))
             return false;
+        found = !!desc.object();
     }
-    if (desc.object()) {
+
+    // Next, check for ES builtins.
+    if (!found && JS_IsGlobalObject(target)) {
+        JSProtoKey key = JS_IdToProtoKey(cx, id);
+        JSAutoCompartment ac(cx, target);
+        if (key != JSProto_Null) {
+            MOZ_ASSERT(key < JSProto_LIMIT);
+            RootedObject constructor(cx);
+            if (!JS_GetClassObject(cx, target, key, constructor.address()))
+                return false;
+            MOZ_ASSERT(constructor);
+            desc.value().set(ObjectValue(*constructor));
+            found = true;
+        } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_EVAL)) {
+            RootedObject eval(cx);
+            if (!js::GetOriginalEval(cx, target, &eval))
+                return false;
+            desc.value().set(ObjectValue(*eval));
+            found = true;
+        }
+    }
+
+    if (found) {
         if (!JS_WrapPropertyDescriptor(cx, desc))
             return false;
         // Pretend the property lives on the wrapper.
@@ -1273,8 +1297,7 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
 
     result.AppendASCII(end);
 
-    JSString *str = JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(result.get()),
-                                        result.Length());
+    JSString *str = JS_NewUCStringCopyN(cx, result.get(), result.Length());
     if (!str)
         return false;
 

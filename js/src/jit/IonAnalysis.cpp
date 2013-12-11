@@ -40,6 +40,8 @@ jit::SplitCriticalEdges(MIRGraph &graph)
 
             // Create a new block inheriting from the predecessor.
             MBasicBlock *split = MBasicBlock::NewSplitEdge(graph, block->info(), *block);
+            if (!split)
+                return false;
             split->setLoopDepth(block->loopDepth());
             graph.insertBlockAfter(*block, split);
             split->end(MGoto::New(graph.alloc(), target));
@@ -88,7 +90,7 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             // parameter passing might be live. Rewriting uses of these terms
             // in resume points may affect the interpreter's behavior. Rather
             // than doing a more sophisticated analysis, just ignore these.
-            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier())
+            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() || ins->isComputeThis())
                 continue;
 
             // If the instruction's behavior has been constant folded into a
@@ -434,13 +436,17 @@ class TypeAnalyzer
 
 // Try to specialize this phi based on its non-cyclic inputs.
 static MIRType
-GuessPhiType(MPhi *phi)
+GuessPhiType(MPhi *phi, bool *hasInputsWithEmptyTypes)
 {
+    *hasInputsWithEmptyTypes = false;
+
     MIRType type = MIRType_None;
     bool convertibleToFloat32 = false;
+    bool hasPhiInputs = false;
     for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
         MDefinition *in = phi->getOperand(i);
         if (in->isPhi()) {
+            hasPhiInputs = true;
             if (!in->toPhi()->triedToSpecialize())
                 continue;
             if (in->type() == MIRType_None) {
@@ -450,33 +456,41 @@ GuessPhiType(MPhi *phi)
                 continue;
             }
         }
+
+        // Ignore operands which we've never observed.
+        if (in->resultTypeSet() && in->resultTypeSet()->empty()) {
+            *hasInputsWithEmptyTypes = true;
+            continue;
+        }
+
         if (type == MIRType_None) {
             type = in->type();
-            if (in->isConstant())
+            if (in->canProduceFloat32())
                 convertibleToFloat32 = true;
             continue;
         }
         if (type != in->type()) {
-            // Ignore operands which we've never observed.
-            if (in->resultTypeSet() && in->resultTypeSet()->empty())
-                continue;
-
-            if (IsFloatType(type) && IsFloatType(in->type())) {
-                // Specialize phis with int32 and float32 operands as float32.
-                type = MIRType_Float32;
-            } else if (convertibleToFloat32 && in->type() == MIRType_Float32) {
-                // If we only saw constants before and encounter a Float32 value, promote previous
-                // constants to Float32
+            if (convertibleToFloat32 && in->type() == MIRType_Float32) {
+                // If we only saw definitions that can be converted into Float32 before and
+                // encounter a Float32 value, promote previous values to Float32
                 type = MIRType_Float32;
             } else if (IsNumberType(type) && IsNumberType(in->type())) {
                 // Specialize phis with int32 and double operands as double.
                 type = MIRType_Double;
-                convertibleToFloat32 &= in->isConstant();
+                convertibleToFloat32 &= in->canProduceFloat32();
             } else {
                 return MIRType_Value;
             }
         }
     }
+
+    if (type == MIRType_None && !hasPhiInputs) {
+        // All inputs are non-phis with empty typesets. Use MIRType_Value
+        // in this case, as it's impossible to get better type information.
+        JS_ASSERT(*hasInputsWithEmptyTypes);
+        type = MIRType_Value;
+    }
+
     return type;
 }
 
@@ -510,8 +524,10 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
             continue;
         }
         if (use->type() != phi->type()) {
-            // Specialize phis with int32 and float operands as floats.
-            if (IsFloatType(use->type()) && IsFloatType(phi->type())) {
+            // Specialize phis with int32 that can be converted to float and float operands as floats.
+            if ((use->type() == MIRType_Int32 && use->canProduceFloat32() && phi->type() == MIRType_Float32) ||
+                (phi->type() == MIRType_Int32 && phi->canProduceFloat32() && use->type() == MIRType_Float32))
+            {
                 if (!respecialize(use, MIRType_Float32))
                     return false;
                 continue;
@@ -536,18 +552,28 @@ TypeAnalyzer::propagateSpecialization(MPhi *phi)
 bool
 TypeAnalyzer::specializePhis()
 {
+    Vector<MPhi *, 0, SystemAllocPolicy> phisWithEmptyInputTypes;
+
     for (PostorderIterator block(graph.poBegin()); block != graph.poEnd(); block++) {
         if (mir->shouldCancel("Specialize Phis (main loop)"))
             return false;
 
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-            MIRType type = GuessPhiType(*phi);
+            bool hasInputsWithEmptyTypes;
+            MIRType type = GuessPhiType(*phi, &hasInputsWithEmptyTypes);
             phi->specialize(type);
             if (type == MIRType_None) {
                 // We tried to guess the type but failed because all operands are
                 // phis we still have to visit. Set the triedToSpecialize flag but
                 // don't propagate the type to other phis, propagateSpecialization
                 // will do that once we know the type of one of the operands.
+
+                // Edge case: when this phi has a non-phi input with an empty
+                // typeset, it's possible for two phis to have a cyclic
+                // dependency and they will both have MIRType_None. Specialize
+                // such phis to MIRType_Value later on.
+                if (hasInputsWithEmptyTypes && !phisWithEmptyInputTypes.append(*phi))
+                    return false;
                 continue;
             }
             if (!propagateSpecialization(*phi))
@@ -555,14 +581,31 @@ TypeAnalyzer::specializePhis()
         }
     }
 
-    while (!phiWorklist_.empty()) {
-        if (mir->shouldCancel("Specialize Phis (worklist)"))
-            return false;
+    do {
+        while (!phiWorklist_.empty()) {
+            if (mir->shouldCancel("Specialize Phis (worklist)"))
+                return false;
 
-        MPhi *phi = popPhi();
-        if (!propagateSpecialization(phi))
-            return false;
-    }
+            MPhi *phi = popPhi();
+            if (!propagateSpecialization(phi))
+                return false;
+        }
+
+        // When two phis have a cyclic dependency and inputs that have an empty
+        // typeset (which are ignored by GuessPhiType), we may still have to
+        // specialize these to MIRType_Value.
+        while (!phisWithEmptyInputTypes.empty()) {
+            if (mir->shouldCancel("Specialize Phis (phisWithEmptyInputTypes)"))
+                return false;
+
+            MPhi *phi = phisWithEmptyInputTypes.popCopy();
+            if (phi->type() == MIRType_None) {
+                phi->specialize(MIRType_Value);
+                if (!propagateSpecialization(phi))
+                    return false;
+            }
+        }
+    } while (!phiWorklist_.empty());
 
     return true;
 }
@@ -571,6 +614,7 @@ void
 TypeAnalyzer::adjustPhiInputs(MPhi *phi)
 {
     MIRType phiType = phi->type();
+    JS_ASSERT(phiType != MIRType_None);
 
     // If we specialized a type that's not Value, there are 3 cases:
     // 1. Every input is of that type.
@@ -1289,7 +1333,7 @@ void
 jit::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
-    if (!js_IonOptions.assertGraphConsistency)
+    if (!js_IonOptions.checkGraphConsistency)
         return;
     AssertBasicGraphCoherency(graph);
     AssertReversePostOrder(graph);
@@ -1304,7 +1348,7 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
     // are split)
 
 #ifdef DEBUG
-    if (!js_IonOptions.assertGraphConsistency)
+    if (!js_IonOptions.checkGraphConsistency)
         return;
     AssertGraphCoherency(graph);
 
@@ -1378,7 +1422,7 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
     // See the comment in ValueNumberer::findDominatingDef.
     HashNumber hash = BoundsCheckHashIgnoreOffset(check);
     BoundsCheckMap::Ptr p = checks.lookup(hash);
-    if (!p || index > p->value.validUntil) {
+    if (!p || index > p->value().validUntil) {
         // We didn't find a dominating bounds check.
         BoundsCheckInfo info;
         info.check = check;
@@ -1390,7 +1434,7 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
         return check;
     }
 
-    return p->value.check;
+    return p->value().check;
 }
 
 // Extract a linear sum from ins, if possible (otherwise giving the sum 'ins + 0').
@@ -1450,7 +1494,7 @@ jit::ExtractLinearInequality(MTest *test, BranchDirection direction,
     MDefinition *rhs = compare->getOperand(1);
 
     // TODO: optimize Compare_UInt32
-    if (compare->compareType() != MCompare::Compare_Int32)
+    if (!compare->isInt32Comparison())
         return false;
 
     JS_ASSERT(lhs->type() == MIRType_Int32);
@@ -1748,9 +1792,6 @@ FindLeadingGoto(LBlock *bb)
         // Ignore labels.
         if (ins->isLabel())
             continue;
-        // Ignore empty move groups.
-        if (ins->isMoveGroup() && ins->toMoveGroup()->numMoves() == 0)
-            continue;
         // If we have a goto, we're good to go.
         if (ins->isGoto())
             return ins->toGoto();
@@ -1925,6 +1966,12 @@ LinearSum::dump(FILE *fp) const
     fprintf(fp, "%s\n", sp.string());
 }
 
+void
+LinearSum::dump() const
+{
+    dump(stderr);
+}
+
 static bool
 AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
                   MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
@@ -2007,14 +2054,14 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
             MResumePoint *rp = callerResumePoints[i];
             JSScript *script = rp->block()->info().script();
             types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP_FRAME,
-                                                    rp->pc() - script->code);
+                                                    script->pcToOffset(rp->pc()));
             if (!initializerList->append(entry))
                 return false;
         }
 
         JSScript *script = ins->block()->info().script();
         types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP,
-                                                setprop->resumePoint()->pc() - script->code);
+                                                script->pcToOffset(setprop->resumePoint()->pc()));
         if (!initializerList->append(entry))
             return false;
 
@@ -2079,7 +2126,7 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
 
     RootedScript script(cx, fun->nonLazyScript());
 
-    if (!script->compileAndGo || !script->canBaselineCompile())
+    if (!script->compileAndGo() || !script->canBaselineCompile())
         return true;
 
     Vector<PropertyName *> accessedProperties(cx);

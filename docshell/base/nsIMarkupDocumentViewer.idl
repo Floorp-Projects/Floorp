@@ -23,7 +23,7 @@ interface nsIMarkupDocumentViewer;
 
 [ref] native nsIMarkupDocumentViewerTArray(nsTArray<nsCOMPtr<nsIMarkupDocumentViewer> >);
 
-[scriptable, uuid(6acfadef-22ee-4924-be6c-776e8def6e1b)]
+[scriptable, uuid(3528324f-f5d3-4724-bd8d-9233a7114112)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -63,51 +63,6 @@ interface nsIMarkupDocumentViewer : nsISupports
    * Requests the size of the content to the container.
    */
   void getContentSize(out long width, out long height);
-
-  /**
-   * Options for Bidi presentation.
-   *
-   * Use these attributes to access the individual Bidi options.
-   */
-
-  /**
-   * bidiTextDirection: the default direction for the layout of bidirectional text.
-   *                    1 - left to right
-   *                    2 - right to left
-   */
-  attribute octet bidiTextDirection;
-  
-  /**
-   * bidiTextType: the ordering of bidirectional text. This may be either "logical"
-   * or "visual". Logical text will be reordered for presentation using the Unicode
-   * Bidi Algorithm. Visual text will be displayed without reordering. 
-   *               1 - the default order for the charset
-   *               2 - logical order
-   *               3 - visual order
-   */
-  attribute octet bidiTextType;
-
-  /**
-   * bidiNumeral: the type of numerals to display. 
-   *              1 - depending on context, default is Arabic numerals
-   *              2 - depending on context, default is Hindi numerals
-   *              3 - Arabic numerals
-   *              4 - Hindi numerals
-   */
-  attribute octet bidiNumeral;
-
-  /**
-   * bidiSupport: whether to use platform bidi support or Mozilla's bidi support
-   *              1 - Use Mozilla's bidi support
-   *              2 - Use the platform bidi support
-   *              3 - Disable bidi support
-   */
-  attribute octet bidiSupport;
-
-  /**
-   * Use this attribute to access all the Bidi options in one operation
-   */
-  attribute uint32_t bidiOptions;
 
   /** The minimum font size  */
   attribute long minFontSize;

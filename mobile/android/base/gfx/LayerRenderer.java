@@ -25,6 +25,7 @@ import android.graphics.RectF;
 import android.opengl.GLES20;
 import android.os.SystemClock;
 import android.util.Log;
+import org.mozilla.gecko.mozglue.JNITarget;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -81,7 +82,6 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
     private boolean mProfileRender;
     private long mProfileOutputTime;
 
-    /* Used by robocop for testing purposes */
     private IntBuffer mPixelBuffer;
 
     // Used by GLES 2.0
@@ -489,6 +489,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @JNITarget
         public void beginDrawing() {
             mFrameStartTime = System.nanoTime();
 
@@ -578,6 +579,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @JNITarget
         public void drawBackground() {
             // Any GL state which is changed here must be restored in
             // CompositorOGL::RestoreState
@@ -612,7 +614,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             rootLayer.draw(mPageContext);
         }
 
-        /** This function is invoked via JNI; be careful when modifying signature. */
+        @JNITarget
         public void drawForeground() {
             // Any GL state which is changed here must be restored in
             // CompositorOGL::RestoreState
@@ -666,6 +668,7 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         }
 
         /** This function is invoked via JNI; be careful when modifying signature. */
+        @JNITarget
         public void endDrawing() {
             // If a layer update requires further work, schedule another redraw
             if (!mUpdated)
@@ -708,8 +711,12 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         // but other code that touches the paint state is run on the compositor
         // thread, so this may need to be changed if any problems appear.
         if (msg == Tabs.TabEvents.SELECTED) {
-            mView.getChildAt(0).setBackgroundColor(tab.getBackgroundColor());
-            mView.setPaintState(LayerView.PAINT_START);
+            if (mView != null) {
+                if (mView.getChildAt(0) != null) {
+                    mView.getChildAt(0).setBackgroundColor(tab.getBackgroundColor());
+                }
+                mView.setPaintState(LayerView.PAINT_START);
+            }
         }
     }
 }

@@ -75,7 +75,7 @@ void configCtlFetchReq(int device_handle)
 
     CSF::CC_SIPCCService * pPhone = CSF::CC_SIPCCService::_self;
 
-    if (pPhone == NULL)
+    if (pPhone == nullptr)
     {
         CSFLogError( logTag, "CC_SIPCCService::_self is NULL.");
     }
@@ -171,7 +171,7 @@ char * platGetIPAddr ()
 
     CSF::CC_SIPCCService * pPhone = CSF::CC_SIPCCService::_self;
 
-    if (pPhone == NULL)
+    if (pPhone == nullptr)
     {
         CSFLogError( logTag, "In platGetIPAddr(). CC_SIPCCService::_self is NULL.");
         return (char *) "";
@@ -307,7 +307,7 @@ extern "C" void CCAPI_CallListener_onCallEvent(ccapi_call_event_e type, cc_call_
 namespace CSF
 {
 
-CC_SIPCCService* CC_SIPCCService::_self = NULL;
+CC_SIPCCService* CC_SIPCCService::_self = nullptr;
 
 CC_SIPCCService::CC_SIPCCService()
 : loggingMask(0),
@@ -317,7 +317,7 @@ CC_SIPCCService::CC_SIPCCService()
   bUseConfig(false)
 {
 	// Only one instance allowed!
-    assert(_self == NULL);
+    assert(_self == nullptr);
     _self = this;
     // <emannion> Commented as part of media provider removal
     //vcmMediaBridge.setStreamObserver(this);
@@ -328,7 +328,7 @@ CC_SIPCCService::~CC_SIPCCService()
 {
   destroy();
 
-  _self = NULL;
+  _self = nullptr;
 }
 
 bool CC_SIPCCService::init(const std::string& user, const std::string& password, const std::string& domain, const std::string& device)
@@ -372,13 +372,13 @@ void CC_SIPCCService::destroy()
     CC_SIPCCCall::reset();
     CC_SIPCCCallInfo::reset();
 
-	if(audioControlWrapper != NULL)
+	if(audioControlWrapper != nullptr)
 	{
-		audioControlWrapper->setAudioControl(NULL);
+		audioControlWrapper->setAudioControl(nullptr);
 	}
-	if(videoControlWrapper != NULL)
+	if(videoControlWrapper != nullptr)
 	{
-		videoControlWrapper->setVideoControl(NULL);
+		videoControlWrapper->setVideoControl(nullptr);
 	}
 }
 
@@ -402,12 +402,12 @@ void CC_SIPCCService::setLocalAddressAndGateway(const std::string& localAddress,
                            localAddress.c_str(), "", 0);
 
 	AudioTermination* audio = VcmSIPCCBinding::getAudioTermination();
-	if(audio != NULL)
+	if(audio != nullptr)
 	{
 		audio->setLocalIP(localAddress.c_str());
 	}
 	VideoTermination* video = VcmSIPCCBinding::getVideoTermination();
-	if(video != NULL)
+	if(video != nullptr)
 	{
 		video->setLocalIP(localAddress.c_str());
 	}
@@ -421,14 +421,14 @@ bool CC_SIPCCService::startService()
 	AudioTermination * pAudio = VcmSIPCCBinding::getAudioTermination();
 	VideoTermination * pVideo = VcmSIPCCBinding::getVideoTermination();
 
-	if(pAudio != NULL)
+	if(pAudio != nullptr)
 	{
 		pAudio->setMediaPorts(16384, 32766);
 		pAudio->setDSCPValue(184);
     	pAudio->setVADEnabled(false);
 	}
 
-    if (pVideo != NULL)
+    if (pVideo != nullptr)
     {
 		pVideo->setDSCPValue(136);
     }
@@ -441,7 +441,7 @@ bool CC_SIPCCService::startService()
     }
 
     CC_DevicePtr devicePtr = CC_SIPCCDevice::createDevice ();
-    if (devicePtr == NULL)
+    if (devicePtr == nullptr)
     {
     	CSFLogWarn( logTag, "stopping because createDevice failed");
     	stop();
@@ -491,7 +491,7 @@ vector<CC_DevicePtr> CC_SIPCCService::getDevices()
 	vector<CC_DevicePtr> devices;
 
 	CC_SIPCCDevicePtr pDevice = CC_SIPCCDevice::wrap(CCAPI_Device_getDeviceID());
-	if(pDevice != NULL)
+	if(pDevice != nullptr)
 	{
         devices.push_back(pDevice.get());
     }
@@ -504,7 +504,7 @@ vector<CC_DevicePtr> CC_SIPCCService::getDevices()
 // method are not safe except from ccapp_thread.
 AudioControlPtr CC_SIPCCService::getAudioControl ()
 {
-	if(audioControlWrapper != NULL)
+	if(audioControlWrapper != nullptr)
 	{
 		return audioControlWrapper.get();
 	}
@@ -520,7 +520,7 @@ AudioControlPtr CC_SIPCCService::getAudioControl ()
 // method are not safe except from ccapp_thread.
 VideoControlPtr CC_SIPCCService::getVideoControl ()
 {
-	if(videoControlWrapper != NULL)
+	if(videoControlWrapper != nullptr)
 	{
 		return videoControlWrapper.get();
 	}
@@ -556,7 +556,7 @@ void CC_SIPCCService::applyLoggingMask (int newMask)
 void CC_SIPCCService::endAllActiveCalls()
 {
 	CC_DevicePtr device = getActiveDevice();
-	if(device != NULL)
+	if(device != nullptr)
 	{
 		CC_DeviceInfoPtr deviceInfo = device->getDeviceInfo();
 		vector<CC_CallPtr> calls = deviceInfo->getCalls();
@@ -600,7 +600,7 @@ void CC_SIPCCService::endAllActiveCalls()
 // C++ Event Handlers
 void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_t handle, cc_deviceinfo_ref_t info)
 {
-    if (_self == NULL)
+    if (_self == nullptr)
     {
         CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
         return;
@@ -609,14 +609,14 @@ void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_
     mozilla::MutexAutoLock lock(_self->m_lock);
 
     CC_SIPCCDevicePtr devicePtr = CC_SIPCCDevice::wrap(handle);
-    if (devicePtr == NULL)
+    if (devicePtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify device observers for device handle (%u), as failed to create CC_DevicePtr", handle);
         return;
     }
 
     CC_SIPCCDeviceInfoPtr infoPtr = CC_SIPCCDeviceInfo::wrap(info);
-    if (infoPtr == NULL)
+    if (infoPtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify call observers for device handle (%u), as failed to create CC_DeviceInfoPtr", handle);
         return;
@@ -632,7 +632,7 @@ void CC_SIPCCService::onDeviceEvent(ccapi_device_event_e type, cc_device_handle_
 void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_ref_t /* device_info */, cc_featureinfo_ref_t feature_info)
 {
 
-    if (_self == NULL)
+    if (_self == nullptr)
      {
          CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of device event.");
          return;
@@ -642,14 +642,14 @@ void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_re
 
      cc_device_handle_t hDevice = CCAPI_Device_getDeviceID();
      CC_DevicePtr devicePtr = CC_SIPCCDevice::wrap(hDevice).get();
-     if (devicePtr == NULL)
+     if (devicePtr == nullptr)
      {
          CSFLogError( logTag, "Unable to notify device observers for device handle (%u), as failed to create CC_DevicePtr", hDevice);
          return;
      }
 
      CC_FeatureInfoPtr infoPtr = CC_SIPCCFeatureInfo::wrap(feature_info).get();
-     if (infoPtr  == NULL)
+     if (infoPtr  == nullptr)
      {
          CSFLogError( logTag, "Unable to notify call observers for feature info handle (%p), as failed to create CC_FeatureInfoPtr", feature_info);
          return;
@@ -664,7 +664,7 @@ void CC_SIPCCService::onFeatureEvent(ccapi_device_event_e type, cc_deviceinfo_re
 
 void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line, cc_lineinfo_ref_t info)
 {
-    if (_self == NULL)
+    if (_self == nullptr)
     {
         CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of line event.");
         return;
@@ -673,14 +673,14 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
     mozilla::MutexAutoLock lock(_self->m_lock);
 
     CC_LinePtr linePtr = CC_SIPCCLine::wrap(line).get();
-    if (linePtr == NULL)
+    if (linePtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify line observers for line lineId (%u), as failed to create CC_LinePtr", line);
         return;
     }
 
     CC_LineInfoPtr infoPtr = CC_SIPCCLineInfo::wrap(info).get();
-    if (infoPtr == NULL)
+    if (infoPtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify line observers for line lineId (%u), as failed to create CC_LineInfoPtr", line);
         return;
@@ -694,7 +694,7 @@ void CC_SIPCCService::onLineEvent(ccapi_line_event_e eventType, cc_lineid_t line
 
 void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t handle, cc_callinfo_ref_t info)
 {
-    if (_self == NULL)
+    if (_self == nullptr)
     {
         CSFLogError( logTag, "CC_SIPCCService::_self is NULL. Unable to notify observers of call event.");
         return;
@@ -703,14 +703,14 @@ void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t
     mozilla::MutexAutoLock lock(_self->m_lock);
 
     CC_SIPCCCallPtr callPtr = CC_SIPCCCall::wrap(handle);
-    if (callPtr == NULL)
+    if (callPtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify call observers for call handle (%u), as failed to create CC_CallPtr", handle);
         return;
     }
 
     CC_SIPCCCallInfoPtr infoPtr = CC_SIPCCCallInfo::wrap(info);
-    if (infoPtr == NULL)
+    if (infoPtr == nullptr)
     {
         CSFLogError( logTag, "Unable to notify call observers for call handle (%u), as failed to create CC_CallInfoPtr", handle);
         return;
@@ -740,7 +740,7 @@ void CC_SIPCCService::onCallEvent(ccapi_call_event_e eventType, cc_call_handle_t
 void CC_SIPCCService::addCCObserver ( CC_Observer * observer )
 {
 	mozilla::MutexAutoLock lock(m_lock);
-    if (observer == NULL)
+    if (observer == nullptr)
     {
         CSFLogError( logTag, "NULL value for \"observer\" passed to addCCObserver().");
         return;
@@ -808,7 +808,7 @@ void CC_SIPCCService::registerStream(cc_call_handle_t call, int streamId, bool i
         call, streamId, isVideo ? "TRUE" : "FALSE");
 	// get the object corresponding to the handle
     CC_SIPCCCallPtr callPtr = CC_SIPCCCall::wrap(call);
-    if (callPtr != NULL)
+    if (callPtr != nullptr)
     {
     	callPtr->addStream(streamId, isVideo);
     }
@@ -826,7 +826,7 @@ void CC_SIPCCService::deregisterStream(cc_call_handle_t call, int streamId)
 {
 	// get the object corresponding to the handle
     CC_SIPCCCallPtr callPtr = CC_SIPCCCall::wrap(call);
-    if (callPtr != NULL)
+    if (callPtr != nullptr)
     {
     	callPtr->removeStream(streamId);
     }
@@ -896,7 +896,7 @@ void CC_SIPCCService::sendIFrame(cc_call_handle_t call_handle)
 {
 	CC_SIPCCCallPtr callPtr = CC_SIPCCCall::wrap(call_handle);
     CC_SIPCCCallMediaDataPtr pMediaData=callPtr->getMediaData();
-    if (pMediaData != NULL )
+    if (pMediaData != nullptr)
     {
         for (StreamMapType::iterator entry =  pMediaData->streamMap.begin(); entry !=  pMediaData->streamMap.end(); entry++)
         {

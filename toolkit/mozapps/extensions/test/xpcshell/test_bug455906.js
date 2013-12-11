@@ -143,12 +143,12 @@ var PluginHostFactory = {
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, arguments) {
+  openWindow: function(parent, url, name, features, windowArguments) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     if (gNotificationCheck) {
-      var args = arguments.wrappedJSObject;
+      var args = windowArguments.wrappedJSObject;
       gNotificationCheck(args);
     }
 
@@ -205,10 +205,12 @@ function create_addon(addon) {
   target.append("extensions");
   target.append(addon.id);
   target.append("install.rdf");
-  target.create(target.NORMAL_FILE_TYPE, 0644);
+  target.create(target.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
   var stream = Cc["@mozilla.org/network/file-output-stream;1"].
                createInstance(Ci.nsIFileOutputStream);
-  stream.init(target, 0x04 | 0x08 | 0x20, 0664, 0); // write, create, truncate
+  stream.init(target,
+              FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+              FileUtils.PERMS_FILE, 0);
   stream.write(installrdf, installrdf.length);
   stream.close();
 }

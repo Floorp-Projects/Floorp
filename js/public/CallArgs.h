@@ -118,7 +118,7 @@ extern JS_PUBLIC_DATA(const HandleValue) UndefinedHandleValue;
 
 namespace detail {
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 extern JS_PUBLIC_API(void)
 CheckIsValidConstructible(Value v);
 #endif
@@ -147,7 +147,7 @@ class MOZ_STACK_CLASS UsedRvalBase<NoUsedRval>
 
 template<UsedRval WantUsedRval>
 class MOZ_STACK_CLASS CallReceiverBase : public UsedRvalBase<
-#ifdef DEBUG
+#ifdef JS_DEBUG
         WantUsedRval
 #else
         NoUsedRval
@@ -197,7 +197,7 @@ class MOZ_STACK_CLASS CallReceiverBase : public UsedRvalBase<
     }
 
     bool isConstructing() const {
-#ifdef DEBUG
+#ifdef JS_DEBUG
         if (this->usedRval_)
             CheckIsValidConstructible(calleev());
 #endif

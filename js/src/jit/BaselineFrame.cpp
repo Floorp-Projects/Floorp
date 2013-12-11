@@ -56,7 +56,7 @@ BaselineFrame::trace(JSTracer *trc)
 bool
 BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
 {
-    unsigned nfixed = script()->nfixed;
+    unsigned nfixed = script()->nfixed();
     unsigned nformals = numFormalArgs();
 
     if (!vec->resize(nformals + nfixed))

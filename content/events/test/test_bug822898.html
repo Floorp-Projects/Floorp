@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=822898
+-->
+<head>
+  <title>Test for Bug 822898</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=822898">Mozilla Bug 822898</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="subFrame"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+/** Test for Bug 822898 - Pointer* Events **/
+
+let tests = [], testTarget, parent, iframeBody, gOnPointerPropHandled;
+
+function nextTest() {
+  if (tests.length)
+    SimpleTest.executeSoon(tests.shift());
+}
+
+function random() {
+  return Math.floor(Math.random() * 100);
+}
+
+function createTestEventValue(name) {
+
+  let detail = random();
+  let screenX = random();
+  let screenY = random();
+  let clientX = random();
+  let clientY = random();
+  let ctrlKey = random() % 2 ? true : false;
+  let altKey = random() % 2 ? true : false;
+  let shiftKey = random() % 2 ? true : false;
+  let metaKey = random() % 2 ? true : false;
+  let button = random();
+  let pointerId = random();
+
+  return function() {
+    let event = new PointerEvent("pointerdown", {
+      bubbles: true, cancelable: true, view: window,
+      detail: detail, screenX: screenX, screenY: screenY, clientX: clientX, clientY: clientY,
+      ctrlKey: ctrlKey, altKey: altKey, shiftKey: shiftKey, metaKey: metaKey,
+      button: button, relatedTarget: null, pointerId: pointerId
+    });
+
+
+    function check(ev) {
+      is(ev.detail, detail, "Correct detail");
+      is(ev.screenX, screenX, "Correct screenX");
+      is(ev.screenY, screenY, "Correct screenY");
+      is(ev.clientX, clientX, "Correct clientX");
+      is(ev.clientY, clientY, "Correct clientY");
+      is(ev.ctrlKey, ctrlKey, "Correct ctrlKey");
+      is(ev.altKey, altKey, "Correct altKey");
+      is(ev.shiftKey, shiftKey, "Correct shiftKey");
+      is(ev.metaKey, metaKey, "Correct metaKey");
+      is(ev.button, button, "Correct buttonArg");
+      is(ev.pointerId, pointerId, "Correct pointerId");
+    }
+
+    for each (let target in [document, window, testTarget, parent])
+      target.addEventListener(name, check, false);
+
+    testTarget.dispatchEvent(event);
+
+    for each (let target in [document, window, testTarget, parent])
+      target.removeEventListener(name, check, false);
+
+
+    nextTest();
+  }
+}
+
+function getDefaultArgEvent(eventname) {
+  return new PointerEvent(eventname, {
+    bubbles: true, cancelable: true, view: window,
+    detail: 0, screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+    ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+    button: 0, relatedTarget: null, pointerId: 0
+  });
+}
+
+function testDefaultArg() {
+  let event = getDefaultArgEvent("pointerdown");
+
+  testTarget.addEventListener("pointerdown", function(ev) {
+    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    is(ev.pointerId, 0, "Correct default pointerId");
+  }, false);
+  testTarget.dispatchEvent(event);
+
+  nextTest();
+}
+
+function testStopPropagation() {
+  let event = getDefaultArgEvent("pointerdown");
+
+  let unreachableListener = function () {
+    ok(false, "Event should have been stopped");
+  }
+
+  // Capturing phase
+  let captured = false;
+  parent.addEventListener("pointerdown", function() {
+    parent.removeEventListener("pointerdown", arguments.callee, true);
+    captured = true;
+  }, true); // Capturing phase
+
+  // Bubbling phase
+  parent.addEventListener("pointerdown", unreachableListener, false);
+
+  testTarget.addEventListener("pointerdown", function(ev) {
+    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    is(captured, true, "Event should have been captured");
+    ev.stopPropagation();
+  }, false);
+
+  testTarget.dispatchEvent(event);
+
+  parent.removeEventListener("pointerdown", unreachableListener, false);
+
+  nextTest();
+}
+
+function testPreventDefault() {
+  let event = getDefaultArgEvent("pointerdown");
+
+  parent.addEventListener("pointerdown", function(ev) {
+    parent.removeEventListener("pointerdown", arguments.callee, false);
+    is(ev.defaultPrevented, true, "preventDefault can be called");
+    nextTest();
+  }, false);
+
+  testTarget.addEventListener("pointerdown", function(ev) {
+    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    ev.preventDefault();
+  }, false);
+
+  testTarget.dispatchEvent(event);
+}
+
+function testBlockPreventDefault() {
+  let event = new PointerEvent("pointerdown", {
+    bubbles: true, cancelable: false, view: window,
+    detail: 0, screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+    ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+    button: 0, relatedTarget: null, pointerId: 0, pointerType: "pen"
+  });
+
+  parent.addEventListener("pointerdown", function(ev) {
+    parent.removeEventListener("pointerdown", arguments.callee, false);
+    is(ev.defaultPrevented, false, "aCancelableArg works");
+    nextTest();
+  }, false);
+
+  testTarget.addEventListener("pointerdown", function(ev) {
+    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    ev.preventDefault();
+  }, false);
+
+  testTarget.dispatchEvent(event);
+}
+
+function testBlockBubbling() {
+  let unreachableListener = function () {
+    ok(false, "aCanBubble doesn't work");
+  }
+
+  let event = new PointerEvent("pointerdown", {
+    bubbles: false, cancelable: true, view: window,
+    detail: 0, screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+    ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+    button: 0, relatedTarget: null, pointerId: 0
+  });
+
+  parent.addEventListener("pointerdown", unreachableListener, false);
+  testTarget.dispatchEvent(event);
+  parent.removeEventListener("pointerdown", unreachableListener, false);
+
+  nextTest();
+}
+
+function testOnPointerProperty()
+{
+  iframeBody.onpointerdown = function (e) { gOnPointerPropHandled["pointerdown"] = true; }
+  iframeBody.onpointerup = function (e) { gOnPointerPropHandled["pointerup"] = true; }
+  iframeBody.onpointermove = function (e) { gOnPointerPropHandled["pointermove"] = true; }
+  iframeBody.onpointerout = function (e) { gOnPointerPropHandled["pointerout"] = true; }
+  iframeBody.onpointerover = function (e) { gOnPointerPropHandled["pointerover"] = true; }
+  iframeBody.onpointerenter = function (e) { gOnPointerPropHandled["pointerenter"] = true; }
+  iframeBody.onpointerleave = function (e) { gOnPointerPropHandled["pointerleave"] = true; }
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerdown"));
+  is(gOnPointerPropHandled['pointerdown'], true, "pointerdown property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerup"));
+  is(gOnPointerPropHandled['pointerup'], true, "pointerup property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointermove"));
+  is(gOnPointerPropHandled['pointermove'], true, "pointermove property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerout"));
+  is(gOnPointerPropHandled['pointerout'], true, "pointerout property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerover"));
+  is(gOnPointerPropHandled['pointerover'], true, "pointerover property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerenter"));
+  is(gOnPointerPropHandled['pointerenter'], true, "pointerenter property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointerleave"));
+  is(gOnPointerPropHandled['pointerleave'], true, "pointerleave property is performed");
+
+  nextTest();
+}
+
+function testPointerEventCTORS()
+{
+  // TODO: This should go to test_eventctors.html, when PointerEvents enabled by default
+  var receivedEvent;
+  iframeBody.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+  var e;
+  var ex = false;
+
+  try {
+    e = new PointerEvent();
+  } catch(exp) {
+    ex = true;
+  }
+  ok(ex, "PointerEvent: First parameter is required!");
+  ex = false;
+
+  e = new PointerEvent("hello");
+  ok(e.type, "hello", "PointerEvent: Wrong event type!");
+  ok(!e.isTrusted, "PointerEvent: Event shouldn't be trusted!");
+  ok(!e.bubbles, "PointerEvent: Event shouldn't bubble!");
+  ok(!e.cancelable, "PointerEvent: Event shouldn't be cancelable!");
+  iframeBody.dispatchEvent(e);
+  is(receivedEvent, e, "PointerEvent: Wrong event!");
+
+  var PointerEventProps =
+  [ { screenX: 0 },
+    { screenY: 0 },
+    { clientX: 0 },
+    { clientY: 0 },
+    { ctrlKey: false },
+    { shiftKey: false },
+    { altKey: false },
+    { metaKey: false },
+    { button: 0 },
+    { buttons: 0 },
+    { relatedTarget: null },
+    { pointerId: 0 },
+    { pointerType: "" }
+  ];
+
+  var testPointerProps =
+  [
+    { screenX: 1 },
+    { screenY: 2 },
+    { clientX: 3 },
+    { clientY: 4 },
+    { ctrlKey: true },
+    { shiftKey: true },
+    { altKey: true },
+    { metaKey: true },
+    { button: 5 },
+    { buttons: 6 },
+    { relatedTarget: window },
+    { pointerId: 5 },
+    { pointerType: "mouse" }
+  ];
+
+  var defaultPointerEventValues = {};
+  for (var i = 0; i < PointerEventProps.length; ++i) {
+    for (prop in PointerEventProps[i]) {
+      ok(prop in e, "PointerEvent: PointerEvent doesn't have property " + prop + "!");
+      defaultPointerEventValues[prop] = PointerEventProps[i][prop];
+    }
+  }
+
+  while (testPointerProps.length) {
+    var p = testPointerProps.shift();
+    e = new PointerEvent("foo", p);
+    for (var def in defaultPointerEventValues) {
+      if (!(def in p)) {
+        is(e[def], defaultPointerEventValues[def],
+           "PointerEvent: Wrong default value for " + def + "!");
+      } else {
+        is(e[def], p[def], "PointerEvent: Wrong event init value for " + def + "!");
+      }
+    }
+  }
+  nextTest();
+}
+
+function runTests() {
+  SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
+  testTarget = document.getElementById("testTarget");
+  parent = testTarget.parentNode;
+  gOnPointerPropHandled = new Array;
+  iframeBody = document.getElementById("subFrame").contentWindow.document.body;
+
+  tests.push(createTestEventValue("pointerdown"));
+  tests.push(createTestEventValue("pointermove"));
+  tests.push(createTestEventValue("pointerup"));
+
+  tests.push(testDefaultArg);
+  tests.push(testStopPropagation);
+
+  tests.push(testPreventDefault);
+  tests.push(testBlockPreventDefault);
+
+  tests.push(testBlockBubbling);
+  tests.push(testOnPointerProperty());
+  tests.push(testPointerEventCTORS());
+
+  tests.push(function() {
+    clearPrefs();
+    SimpleTest.finish();
+  });
+
+  nextTest();
+}
+
+function initPrefs()
+{
+  SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
+}
+
+function clearPrefs()
+{
+  SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
+}
+
+window.onload = function () {
+  initPrefs();
+  SimpleTest.executeSoon(runTests);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+<div id="parent">
+  <span id="testTarget" style="border: 1px solid black;">testTarget</span>
+</div>
+</body>
+</html>

@@ -246,8 +246,8 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
         if (!map.initialized())
             return;
         for (Map::Enum e(map); !e.empty(); e.popFront()) {
-            gc::MarkGCThingRoot(trc, const_cast<void **>(&e.front().key), "HeapReverser::map::key");
-            e.front().value.trace(trc);
+            gc::MarkGCThingRoot(trc, const_cast<void **>(&e.front().key()), "HeapReverser::map::key");
+            e.front().value().trace(trc);
         }
         for (Child *c = work.begin(); c != work.end(); ++c)
             gc::MarkGCThingRoot(trc, &c->cell, "HeapReverser::Child");
@@ -281,7 +281,7 @@ HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind)
     }
 
     /* Add this edge to the reversed map. */
-    return a->value.incoming.append(Move(e));
+    return a->value().incoming.append(Move(e));
 }
 
 bool
@@ -427,7 +427,7 @@ ReferenceFinder::visit(void *cell, Path *path)
 
     HeapReverser::Map::Ptr p = reverser.map.lookup(cell);
     JS_ASSERT(p);
-    HeapReverser::Node *node = &p->value;
+    HeapReverser::Node *node = &p->value();
 
     /* Is |cell| a representable cell, reached via a non-empty path? */
     if (path != nullptr) {

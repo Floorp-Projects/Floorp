@@ -26,6 +26,7 @@
 #include "BasicLayers.h"
 #include "FrameMetrics.h"
 #include "Windows.Graphics.Display.h"
+#include "DisplayInfo_sdk81.h"
 #include "nsNativeDragTarget.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -57,6 +58,10 @@ using namespace ABI::Windows::Graphics::Display;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gWindowsLog;
+#endif
+
+#if !defined(SM_CONVERTIBLESLATEMODE)
+#define SM_CONVERTIBLESLATEMODE 0x2003
 #endif
 
 static uint32_t gInstanceCount = 0;
@@ -279,7 +284,8 @@ MetroWidget::Destroy()
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       observerService->RemoveObserver(this, "apzc-scroll-offset-changed");
-      observerService->RemoveObserver(this, "Metro:ZoomToRect");
+      observerService->RemoveObserver(this, "apzc-zoom-to-rect");
+      observerService->RemoveObserver(this, "apzc-disable-zoom");
     }
   }
 
@@ -708,6 +714,19 @@ MetroWidget::WindowProcedure(HWND aWnd, UINT aMsg, WPARAM aWParam, LPARAM aLPara
 {
   if(sDefaultBrowserMsgId == aMsg) {
     CloseGesture();
+  } else if (WM_SETTINGCHANGE == aMsg) {
+    if (aLParam && !wcsicmp(L"ConvertibleSlateMode", (wchar_t*)aLParam)) {
+      // If we're switching away from slate mode, switch to Desktop for
+      // hardware that supports this feature if the pref is set.
+      if (GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0 &&
+          Preferences::GetBool("browser.shell.metro-auto-switch-enabled",
+                               false)) {
+        nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
+        if (appStartup) {
+          appStartup->Quit(nsIAppStartup::eForceQuit | nsIAppStartup::eRestart);
+        }
+      }
+    }
   }
 
   // Indicates if we should hand messages to the default windows
@@ -990,7 +1009,8 @@ CompositorParent* MetroWidget::NewCompositorParent(int aSurfaceWidth, int aSurfa
     nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
     if (NS_SUCCEEDED(rv)) {
       observerService->AddObserver(this, "apzc-scroll-offset-changed", false);
-      observerService->AddObserver(this, "Metro:ZoomToRect", false);
+      observerService->AddObserver(this, "apzc-zoom-to-rect", false);
+      observerService->AddObserver(this, "apzc-disable-zoom", false);
     }
   }
 
@@ -1315,6 +1335,19 @@ double MetroWidget::GetDefaultScaleInternal()
 {
   // Return the resolution scale factor reported by the metro environment.
   // XXX TODO: also consider the desktop resolution setting, as IE appears to do?
+
+  ComPtr<IDisplayInformationStatics> dispInfoStatics;
+  if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayInformation).Get(),
+                                      dispInfoStatics.GetAddressOf()))) {
+    ComPtr<IDisplayInformation> dispInfo;
+    if (SUCCEEDED(dispInfoStatics->GetForCurrentView(&dispInfo))) {
+      ResolutionScale scale;
+      if (SUCCEEDED(dispInfo->get_ResolutionScale(&scale))) {
+        return (double)scale / 100.0;
+      }
+    }
+  }
+
   ComPtr<IDisplayPropertiesStatics> dispProps;
   if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
                                      dispProps.GetAddressOf()))) {
@@ -1323,6 +1356,7 @@ double MetroWidget::GetDefaultScaleInternal()
       return (double)scale / 100.0;
     }
   }
+
   return 1.0;
 }
 
@@ -1586,7 +1620,7 @@ MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *d
     mController->UpdateScrollOffset(ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
                                     scrollOffset);
   }
-  else if (!strcmp(topic, "Metro:ZoomToRect")) {
+  else if (!strcmp(topic, "apzc-zoom-to-rect")) {
     CSSRect rect = CSSRect();
     uint64_t viewId = 0;
     int32_t presShellId = 0;
@@ -1595,13 +1629,24 @@ MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *d
                  &rect.x, &rect.y, &rect.width, &rect.height,
                  &presShellId, &viewId);
     if(reScan != 6) {
-      NS_WARNING("Malformed Metro:ZoomToRect message");
+      NS_WARNING("Malformed apzc-zoom-to-rect message");
     }
 
     ScrollableLayerGuid guid = ScrollableLayerGuid(mRootLayerTreeId, presShellId, viewId);
     APZController::sAPZC->ZoomToRect(guid, rect);
   }
-  else {
-    return NS_OK;
+  else if (!strcmp(topic, "apzc-disable-zoom")) {
+    uint64_t viewId = 0;
+    int32_t presShellId = 0;
+
+    int reScan = swscanf(data, L"%d,%llu",
+      &presShellId, &viewId);
+    if (reScan != 2) {
+      NS_WARNING("Malformed apzc-disable-zoom message");
+    }
+
+    ScrollableLayerGuid guid = ScrollableLayerGuid(mRootLayerTreeId, presShellId, viewId);
+    APZController::sAPZC->UpdateZoomConstraints(guid, false, CSSToScreenScale(1.0f), CSSToScreenScale(1.0f));
   }
+  return NS_OK;
 }

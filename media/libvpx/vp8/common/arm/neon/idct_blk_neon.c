@@ -9,8 +9,7 @@
  */
 
 #include "vpx_config.h"
-#include "vp8/common/idct.h"
-#include "vp8/common/dequantize.h"
+#include "vp8_rtcd.h"
 
 /* place these declarations here because we don't want to maintain them
  * outside of this scope

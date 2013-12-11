@@ -6,10 +6,18 @@
 
 /* UI Tour */
 
-html|div#UITourHighlight {
-  border-radius: 20px;
-  border: 2px #5B9CD9 solid;
-  box-shadow: 0 0 2px #5B9CD9, inset 0 0 1px #5B9CD9;
+#UITourHighlightContainer {
+  -moz-appearance: none;
+  background-color: transparent;
+  /* This is a buffer to compensate for the movement in the "wobble" effect */
+  padding: 4px;
+}
+
+#UITourHighlight {
+  background-image: radial-gradient(50% 100%, rgba(0,149,220,0.4) 50%, rgba(0,149,220,0.6) 100%);
+  border-radius: 40px;
+  border: 1px solid white;
+  box-shadow: 0 0 3px 0 rgba(0,0,0,0.5);
   min-height: 32px;
   min-width: 32px;
 }

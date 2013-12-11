@@ -8,12 +8,16 @@ EXPORTS += [
     'WrapperFactory.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AccessCheck.cpp',
     'ChromeObjectWrapper.cpp',
     'FilteringWrapper.cpp',
     'WaiveXrayWrapper.cpp',
     'WrapperFactory.cpp',
+]
+
+# XrayWrapper needs to be built separately becaue of template instantiations.
+SOURCES += [
     'XrayWrapper.cpp',
 ]
 

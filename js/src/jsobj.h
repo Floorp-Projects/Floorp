@@ -361,6 +361,8 @@ class JSObject : public js::ObjectImpl
 
     bool hasIdempotentProtoChain() const;
 
+    // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
+    // size classes will give an object.
     static const uint32_t MAX_FIXED_SLOTS = 16;
 
   public:
@@ -1028,12 +1030,6 @@ class JSObject : public js::ObjectImpl
     static inline bool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
                                       uint32_t index, js::Value *vp);
 
-    /* If element is not present (e.g. array hole) *present is set to
-       false and the contents of *vp are unusable garbage. */
-    static inline bool getElementIfPresent(JSContext *cx, js::HandleObject obj,
-                                           js::HandleObject receiver, uint32_t index,
-                                           js::MutableHandleValue vp, bool *present);
-
     static bool getSpecial(JSContext *cx, js::HandleObject obj,
                            js::HandleObject receiver, js::SpecialId sid,
                            js::MutableHandleValue vp)
@@ -1188,6 +1184,9 @@ class JSObject : public js::ObjectImpl
                       "JSObject itself must not have any fields");
         static_assert(sizeof(JSObject) % sizeof(js::Value) == 0,
                       "fixed slots after an object must be aligned");
+        static_assert(js::shadow::Object::MAX_FIXED_SLOTS == MAX_FIXED_SLOTS,
+                      "We shouldn't be confused about our actual maximum "
+                      "number of fixed slots");
     }
 
     JSObject() MOZ_DELETE;

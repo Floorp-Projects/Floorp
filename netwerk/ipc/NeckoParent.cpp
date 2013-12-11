@@ -28,6 +28,7 @@
 #include "nsPrintfCString.h"
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIAppsService.h"
+#include "nsIUDPSocketFilter.h"
 #include "nsEscape.h"
 #include "RemoteOpenFileParent.h"
 #include "SerializedLoadContext.h"
@@ -379,23 +380,42 @@ NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor)
 
 PUDPSocketParent*
 NeckoParent::AllocPUDPSocketParent(const nsCString& aHost,
-                                   const uint16_t& aPort)
+                                   const uint16_t& aPort,
+                                   const nsCString& aFilter)
 {
-  bool enabled = Preferences::GetBool("media.peerconnection.ipc.enabled", false);
-  if (!enabled) {
-    NS_WARNING("Not support UDP socket in content process, aborting subprocess");
-    return nullptr;
-  }
-  UDPSocketParent* p = new UDPSocketParent();
-  p->AddRef();
-  return p;
+  UDPSocketParent* p = nullptr;
 
+  // Only allow socket if it specifies a valid packet filter.
+  nsAutoCString contractId(NS_NETWORK_UDP_SOCKET_FILTER_HANDLER_PREFIX);
+  contractId.Append(aFilter);
+
+  if (!aFilter.IsEmpty()) {
+    nsCOMPtr<nsIUDPSocketFilterHandler> filterHandler =
+      do_GetService(contractId.get());
+    if (filterHandler) {
+      nsCOMPtr<nsIUDPSocketFilter> filter;
+      nsresult rv = filterHandler->NewFilter(getter_AddRefs(filter));
+      if (NS_SUCCEEDED(rv)) {
+        p = new UDPSocketParent(filter);
+      } else {
+        printf_stderr("Cannot create filter that content specified. "
+                      "filter name: %s, error code: %d.", aFilter.get(), rv);
+      }
+    } else {
+      printf_stderr("Content doesn't have a valid filter. "
+                    "filter name: %s.", aFilter.get());
+    }
+  }
+
+  NS_IF_ADDREF(p);
+  return p;
 }
 
 bool
 NeckoParent::RecvPUDPSocketConstructor(PUDPSocketParent* aActor,
                                        const nsCString& aHost,
-                                       const uint16_t& aPort)
+                                       const uint16_t& aPort,
+                                       const nsCString& aFilter)
 {
   return static_cast<UDPSocketParent*>(aActor)->Init(aHost, aPort);
 }

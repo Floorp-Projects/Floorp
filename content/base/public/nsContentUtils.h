@@ -27,6 +27,11 @@
 #include "nsMathUtils.h"
 #include "Units.h"
 
+#if defined(XP_WIN)
+// Undefine LoadImage to prevent naming conflict with Windows.
+#undef LoadImage
+#endif
+
 class imgICache;
 class imgIContainer;
 class imgINotificationObserver;
@@ -1256,6 +1261,7 @@ public:
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
+  static void DestroyAnonymousContent(nsCOMPtr<Element>* aElement);
 
   static void DeferredFinalize(nsISupports* aSupports);
   static void DeferredFinalize(mozilla::DeferredFinalizeAppendFunction aAppendFunc,
@@ -1841,6 +1847,18 @@ public:
   static bool HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc);
 
   /**
+   * Fire mutation events for changes caused by parsing directly into a
+   * context node.
+   *
+   * @param aDoc the document of the node
+   * @param aDest the destination node that got stuff appended to it
+   * @param aOldChildCount the number of children the node had before parsing
+   */
+  static void FireMutationEventsForDirectParsing(nsIDocument* aDoc,
+                                                 nsIContent* aDest,
+                                                 int32_t aOldChildCount);
+
+  /**
    * Returns true if the content is in a document and contains a plugin
    * which we don't control event dispatch for, i.e. do any plugins in this
    * doc tree receive key events outside of our control? This always returns
@@ -1894,6 +1912,12 @@ public:
    * @return Whether the node ignores user focus.
    */
   static bool IsUserFocusIgnored(nsINode* aNode);
+
+  /**
+   * Returns if aContent has the 'scrollgrab' property.
+   * aContent may be null (in this case false is returned).
+   */
+  static bool HasScrollgrab(nsIContent* aContent);
 
   /**
    * Flushes the layout tree (recursively)
@@ -2086,6 +2110,17 @@ public:
    * Return true if the browser.dom.window.dump.enabled pref is set.
    */
   static bool DOMWindowDumpEnabled();
+
+  /**
+   * Returns whether a content is an insertion point for XBL
+   * bindings or web components ShadowRoot. In web components,
+   * this corresponds to a <content> element that participates
+   * in node distribution. In XBL this corresponds to an
+   * <xbl:children> element in anonymous content.
+   *
+   * @param aContent The content to test for being an insertion point.
+   */
+  static bool IsContentInsertionPoint(const nsIContent* aContent);
 
 private:
   static bool InitializeEventTable();

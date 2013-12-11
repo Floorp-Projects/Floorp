@@ -169,63 +169,28 @@ function testBailoutToInt32() {
 }
 test(setupBailoutToInt32, testBailoutToInt32);
 
-// MMath
+// MMath (no trigo - see also testFloat32-trigo.js
 function assertNear(a, b) {
-    return ( a != a && b != b ) ||
-           Math.abs(a-b) < 1e-7;
+    var r = (a != a && b != b) || Math.abs(a-b) < 1e-1 || a === b;
+    if (!r) {
+        print('Precision error: ');
+        print(new Error().stack);
+        print('Got', a, ', expected near', b);
+        assertEq(false, true);
+    }
 }
-function setupTrigo() {
-    f32[0] = 0;
-    f32[1] = Math.PI / 2;
-    f32[2] = Math.PI;
-    f32[3] = 3 * Math.PI / 2;
+
+function setupOtherMath() {
+    setupComp();
+    f32[8] = 4.2;
 }
-function trigo() {
-    // Cos
-    assertNear(Math.fround(Math.cos(f32[0])), Math.cos(0));
-    assertNear(Math.fround(Math.cos(f32[1])), Math.cos(Math.PI / 2));
-    assertNear(Math.fround(Math.cos(f32[2])), Math.cos(Math.PI));
-    assertNear(Math.fround(Math.cos(f32[3])), Math.cos(3 * Math.PI / 2));
-
-    // Sin
-    assertNear(Math.fround(Math.sin(f32[0])), Math.sin(0));
-    assertNear(Math.fround(Math.sin(f32[1])), Math.sin(Math.PI / 2));
-    assertNear(Math.fround(Math.sin(f32[2])), Math.sin(Math.PI));
-    assertNear(Math.fround(Math.sin(f32[3])), Math.sin(3 * Math.PI / 2));
-
-    // Tan
-    assertNear(Math.fround(Math.tan(f32[0])), Math.tan(0));
-    assertNear(Math.fround(Math.tan(f32[1])), Math.tan(Math.PI / 2));
-    assertNear(Math.fround(Math.tan(f32[2])), Math.tan(Math.PI));
-    assertNear(Math.fround(Math.tan(f32[3])), Math.tan(3 * Math.PI / 2));
-
-    // ACos
-    assertNear(Math.fround(Math.acos(f32[0])), Math.acos(0));
-    assertNear(Math.fround(Math.acos(f32[1])), Math.acos(Math.PI / 2));
-    assertNear(Math.fround(Math.acos(f32[2])), Math.acos(Math.PI));
-    assertNear(Math.fround(Math.acos(f32[3])), Math.acos(3 * Math.PI / 2));
-
-    // ASin
-    assertNear(Math.fround(Math.asin(f32[0])), Math.asin(0));
-    assertNear(Math.fround(Math.asin(f32[1])), Math.asin(Math.PI / 2));
-    assertNear(Math.fround(Math.asin(f32[2])), Math.asin(Math.PI));
-    assertNear(Math.fround(Math.asin(f32[3])), Math.asin(3 * Math.PI / 2));
-
-    // ATan
-    assertNear(Math.fround(Math.atan(f32[0])), Math.atan(0));
-    assertNear(Math.fround(Math.atan(f32[1])), Math.atan(Math.PI / 2));
-    assertNear(Math.fround(Math.atan(f32[2])), Math.atan(Math.PI));
-    assertNear(Math.fround(Math.atan(f32[3])), Math.atan(3 * Math.PI / 2));
-}
-test(setupTrigo, trigo);
-
 function otherMath() {
-    for (var i = 0; i < 10; ++i) {
+    for (var i = 0; i < 9; ++i) {
         assertNear(Math.fround(Math.exp(f32[i])), Math.exp(f32[i]));
         assertNear(Math.fround(Math.log(f32[i])), Math.log(f32[i]));
     }
 };
-test(setupComp, otherMath);
+test(setupOtherMath, otherMath);
 
 function setupFloor() {
     f32[0] = -5.5;
@@ -264,4 +229,3 @@ function testFloorDouble() {
 }
 test(setupFloor, testFloor);
 test(setupFloorDouble, testFloorDouble);
-

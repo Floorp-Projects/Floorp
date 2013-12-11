@@ -31,7 +31,6 @@ DECL_CLASS(nsIDirectoryServiceProvider);
 DECL_CLASS(nsIMemory);
 DECL_CLASS(nsIDebug);
 DECL_CLASS(nsITraceRefcnt);
-DECL_STRUCT(nsPurpleBufferEntry);
 
 #ifdef __cplusplus
 namespace mozilla {

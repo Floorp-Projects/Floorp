@@ -4,16 +4,8 @@
 
 include $(topsrcdir)/config/rules.mk
 
-EncodingUtils.$(OBJ_SUFFIX): labelsencodings.properties.h
-FallbackEncoding.$(OBJ_SUFFIX): localesfallbacks.properties.h
-
 PROPS2ARRAYS = $(topsrcdir)/intl/locale/src/props2arrays.py
 labelsencodings.properties.h: $(PROPS2ARRAYS) labelsencodings.properties
 	$(PYTHON) $^ $@
 localesfallbacks.properties.h: $(PROPS2ARRAYS) localesfallbacks.properties
 	$(PYTHON) $^ $@
-
-GARBAGE += \
-	labelsencodings.properties.h \
-	localesfallbacks.properties.h \
-	$(NULL)

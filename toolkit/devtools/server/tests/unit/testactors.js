@@ -71,6 +71,10 @@ TestTabActor.prototype = {
     return { wrappedJSObject: this._global };
   },
 
+  get url() {
+    return this._global.__name;
+  },
+
   form: function() {
     let response = { actor: this.actorID, title: this._global.__name };
 
@@ -105,16 +109,7 @@ TestTabActor.prototype = {
 
   /* Support for DebuggerServer.addTabActor. */
   _createExtraActors: CommonCreateExtraActors,
-  _appendExtraActors: CommonAppendExtraActors,
-
-  // Hooks for use by TestTabActors.
-  addToParentPool: function(aActor) {
-    this.conn.addActor(aActor);
-  },
-
-  removeFromParentPool: function(aActor) {
-    this.conn.removeActor(aActor);
-  }
+  _appendExtraActors: CommonAppendExtraActors
 };
 
 TestTabActor.prototype.requestTypes = {

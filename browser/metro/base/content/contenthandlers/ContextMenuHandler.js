@@ -118,6 +118,14 @@ var ContextMenuHandler = {
       } else {
         Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
       }
+    } else if (this._target.isContentEditable) {
+      try {
+        this._target.ownerDocument.execCommand("paste",
+                                               false,
+                                               Ci.nsIClipboard.kGlobalClipboard);
+      } catch (ex) {
+        dump("ContextMenuHandler: exception pasting into contentEditable: " + ex.message + "\n");
+      }
     }
     this.reset();
   },
@@ -133,6 +141,12 @@ var ContextMenuHandler = {
         edit.editor.cut();
       } else {
         Util.dumpLn("error: target element does not support nsIDOMNSEditableElement");
+      }
+    } else if (this._target.isContentEditable) {
+      try {
+        this._target.ownerDocument.execCommand("cut", false);
+      } catch (ex) {
+        dump("ContextMenuHandler: exception cutting from contentEditable: " + ex.message + "\n");
       }
     }
     this.reset();
@@ -188,12 +202,13 @@ var ContextMenuHandler = {
       contentDisposition: "",
       string: "",
     };
+    let uniqueStateTypes = new Set();
 
     // Do checks for nodes that never have children.
     if (popupNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
       // See if the user clicked on an image.
       if (popupNode instanceof Ci.nsIImageLoadingContent && popupNode.currentURI) {
-        state.types.push("image");
+        uniqueStateTypes.add("image");
         state.label = state.mediaURL = popupNode.currentURI.spec;
         imageUrl = state.mediaURL;
         this._target = popupNode;
@@ -218,6 +233,7 @@ var ContextMenuHandler = {
 
     let elem = popupNode;
     let isText = false;
+    let isEditableText = false;
 
     while (elem) {
       if (elem.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
@@ -230,7 +246,7 @@ var ContextMenuHandler = {
             continue;
           }
 
-          state.types.push("link");
+          uniqueStateTypes.add("link");
           state.label = state.linkURL = this._getLinkURL(elem);
           linkUrl = state.linkURL;
           state.linkTitle = popupNode.textContent || popupNode.title;
@@ -238,49 +254,61 @@ var ContextMenuHandler = {
           // mark as text so we can pickup on selection below
           isText = true;
           break;
-        } else if (Util.isTextInput(elem)) {
+        }
+        // is the target contentEditable (not just inheriting contentEditable)
+        else if (elem.contentEditable == "true") {
+          this._target = elem;
+          isEditableText = true;
+          isText = true;
+          uniqueStateTypes.add("input-text");
+
+          if (elem.textContent.length) {
+            uniqueStateTypes.add("selectable");
+          } else {
+            uniqueStateTypes.add("input-empty");
+          }
+          break;
+        }
+        // is the target a text input
+        else if (Util.isTextInput(elem)) {
+          this._target = elem;
+          isEditableText = true;
+          uniqueStateTypes.add("input-text");
+
           let selectionStart = elem.selectionStart;
           let selectionEnd = elem.selectionEnd;
-
-          state.types.push("input-text");
-          this._target = elem;
 
           // Don't include "copy" for password fields.
           if (!(elem instanceof Ci.nsIDOMHTMLInputElement) || elem.mozIsTextField(true)) {
             // If there is a selection add cut and copy
             if (selectionStart != selectionEnd) {
-              state.types.push("cut");
-              state.types.push("copy");
+              uniqueStateTypes.add("cut");
+              uniqueStateTypes.add("copy");
               state.string = elem.value.slice(selectionStart, selectionEnd);
             } else if (elem.value && elem.textLength) {
               // There is text and it is not selected so add selectable items
-              state.types.push("selectable");
+              uniqueStateTypes.add("selectable");
               state.string = elem.value;
             }
           }
 
           if (!elem.textLength) {
-            state.types.push("input-empty");
-          }
-
-          let flavors = ["text/unicode"];
-          let cb = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-          let hasData = cb.hasDataMatchingFlavors(flavors,
-                                                  flavors.length,
-                                                  Ci.nsIClipboard.kGlobalClipboard);
-          if (hasData && !elem.readOnly) {
-            state.types.push("paste");
+            uniqueStateTypes.add("input-empty");
           }
           break;
-        } else if (Util.isText(elem)) {
+        }
+        // is the target an element containing text content
+        else if (Util.isText(elem)) {
           isText = true;
-        } else if (elem instanceof Ci.nsIDOMHTMLMediaElement ||
+        }
+        // is the target a media element
+        else if (elem instanceof Ci.nsIDOMHTMLMediaElement ||
                    elem instanceof Ci.nsIDOMHTMLVideoElement) {
           state.label = state.mediaURL = (elem.currentSrc || elem.src);
-          state.types.push((elem.paused || elem.ended) ?
+          uniqueStateTypes.add((elem.paused || elem.ended) ?
             "media-paused" : "media-playing");
           if (elem instanceof Ci.nsIDOMHTMLVideoElement) {
-            state.types.push("video");
+            uniqueStateTypes.add("video");
           }
         }
       }
@@ -295,20 +323,37 @@ var ContextMenuHandler = {
       let selection = targetWindow.getSelection();
       if (selection && this._tapInSelection(selection, aX, aY)) {
         state.string = targetWindow.getSelection().toString();
-        state.types.push("copy");
-        state.types.push("selected-text");
+        uniqueStateTypes.add("copy");
+        uniqueStateTypes.add("selected-text");
+        if (isEditableText) {
+          uniqueStateTypes.add("cut");
+        }
       } else {
         // Add general content text if this isn't anything specific
-        if (state.types.indexOf("image") == -1 &&
-            state.types.indexOf("media") == -1 &&
-            state.types.indexOf("video") == -1 &&
-            state.types.indexOf("link") == -1 &&
-            state.types.indexOf("input-text") == -1) {
-          state.types.push("content-text");
+        if (!(
+            uniqueStateTypes.has("image") ||
+            uniqueStateTypes.has("media") ||
+            uniqueStateTypes.has("video") ||
+            uniqueStateTypes.has("link") ||
+            uniqueStateTypes.has("input-text")
+        )) {
+          uniqueStateTypes.add("content-text");
         }
       }
     }
 
+    // Is paste applicable here?
+    if (isEditableText) {
+      let flavors = ["text/unicode"];
+      let cb = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+      let hasData = cb.hasDataMatchingFlavors(flavors,
+                                              flavors.length,
+                                              Ci.nsIClipboard.kGlobalClipboard);
+      // add paste if there's data
+      if (hasData && !elem.readOnly) {
+        uniqueStateTypes.add("paste");
+      }
+    }
     // populate position and event source
     state.xPos = offsetX + aX;
     state.yPos = offsetY + aY;
@@ -316,8 +361,9 @@ var ContextMenuHandler = {
 
     for (let i = 0; i < this._types.length; i++)
       if (this._types[i].handler(state, popupNode))
-        state.types.push(this._types[i].name);
+        uniqueStateTypes.add(this._types[i].name);
 
+    state.types = [type for (type of uniqueStateTypes)];
     this._previousState = state;
 
     sendAsyncMessage("Content:ContextMenu", state);

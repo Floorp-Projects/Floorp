@@ -111,6 +111,10 @@ PluginModuleParent::LoadModule(const char* aFilePath)
         parent->mShutdown = true;
         return nullptr;
     }
+#ifdef XP_WIN
+    mozilla::MutexAutoLock lock(parent->mCrashReporterMutex);
+    parent->mCrashReporter = parent->CrashReporter();
+#endif
 #endif
 
     return parent.forget();
@@ -130,6 +134,10 @@ PluginModuleParent::PluginModuleParent(const char* aFilePath)
     , mHangUIParent(nullptr)
     , mHangUIEnabled(true)
     , mIsTimerReset(true)
+#ifdef MOZ_CRASHREPORTER
+    , mCrashReporterMutex("PluginModuleParent::mCrashReporterMutex")
+    , mCrashReporter(nullptr)
+#endif
 #endif
 #ifdef MOZ_CRASHREPORTER_INJECTOR
     , mFlashProcess1(0)
@@ -194,6 +202,10 @@ PluginModuleParent::~PluginModuleParent()
 void
 PluginModuleParent::WriteExtraDataForMinidump(AnnotationTable& notes)
 {
+#ifdef XP_WIN
+    // mCrashReporterMutex is already held by the caller
+    mCrashReporterMutex.AssertCurrentThreadOwns();
+#endif
     typedef nsDependentCString CS;
 
     // Get the plugin filename, try to get just the file leafname
@@ -252,7 +264,7 @@ PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
     SetReplyTimeoutMs(timeoutMs);
 }
 
-int
+void
 PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
 {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -272,7 +284,6 @@ PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule)
       int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
       unused << static_cast<PluginModuleParent*>(aModule)->SendSetParentHangTimeout(timeoutSecs);
     }
-    return 0;
 }
 
 void
@@ -419,7 +430,17 @@ void
 PluginModuleParent::TerminateChildProcess(MessageLoop* aMsgLoop)
 {
 #ifdef MOZ_CRASHREPORTER
+#ifdef XP_WIN
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
+    CrashReporterParent* crashReporter = mCrashReporter;
+    if (!crashReporter) {
+        // If mCrashReporter is null then the hang has ended, the plugin module
+        // is shutting down. There's nothing to do here.
+        return;
+    }
+#else
     CrashReporterParent* crashReporter = CrashReporter();
+#endif
     crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("PluginHang"),
                                        NS_LITERAL_CSTRING("1"));
 #ifdef XP_WIN
@@ -636,6 +657,9 @@ RemoveMinidump(nsIFile* minidump)
 void
 PluginModuleParent::ProcessFirstMinidump()
 {
+#ifdef XP_WIN
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
+#endif
     CrashReporterParent* crashReporter = CrashReporter();
     if (!crashReporter)
         return;
@@ -1535,6 +1559,14 @@ PluginModuleParent::AllocPCrashReporterParent(mozilla::dom::NativeThreadId* id,
 bool
 PluginModuleParent::DeallocPCrashReporterParent(PCrashReporterParent* actor)
 {
+#ifdef MOZ_CRASHREPORTER
+#ifdef XP_WIN
+    mozilla::MutexAutoLock lock(mCrashReporterMutex);
+    if (actor == static_cast<PCrashReporterParent*>(mCrashReporter)) {
+        mCrashReporter = nullptr;
+    }
+#endif
+#endif
     delete actor;
     return true;
 }

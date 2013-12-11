@@ -137,10 +137,8 @@ public:
 
         // Return the actual scroll value so we can use it to filter
         // out scroll messages triggered by setting the display port.
-        CSSIntPoint actualScrollOffset;
-        utils->GetScrollXY(false, &actualScrollOffset.x, &actualScrollOffset.y);
         if (mLastOffsetOut) {
-          *mLastOffsetOut = actualScrollOffset;
+          *mLastOffsetOut = mozilla::gfx::RoundedToInt(mFrameMetrics.mScrollOffset);
         }
         if (mLastScrollIdOut) {
           mLastScrollIdOut->mScrollId = mFrameMetrics.mScrollId;
@@ -280,20 +278,26 @@ APZController::UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aS
   sAPZC->UpdateScrollOffset(aScrollLayerId, aScrollOffset);
 }
 
-// Gesture event handlers from the APZC. Currently not in use.
-
 void
-APZController::HandleDoubleTap(const CSSIntPoint& aPoint)
+APZController::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
+  NS_ConvertASCIItoUTF16 data(
+      nsPrintfCString("{ \"x\": %d, \"y\": %d, \"modifiers\": %d }",
+      (int32_t)aPoint.x, (int32_t)aPoint.y, aModifiers));
+  MetroUtils::FireObserver("Gesture:DoubleTap", data.get());
 }
 
 void
-APZController::HandleSingleTap(const CSSIntPoint& aPoint)
+APZController::HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
+  NS_ConvertASCIItoUTF16 data(
+      nsPrintfCString("{ \"x\": %d, \"y\": %d, \"modifiers\": %d }",
+      (int32_t)aPoint.x, (int32_t)aPoint.y, aModifiers));
+  MetroUtils::FireObserver("Gesture:SingleTap", data.get());
 }
 
 void
-APZController::HandleLongTap(const CSSIntPoint& aPoint)
+APZController::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 {
 }
 
@@ -311,18 +315,44 @@ APZController::PostDelayedTask(Task* aTask, int aDelayMs)
   MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
 }
 
-// async scroll notifications
+// apzc notifications
+
+class TransformedStartEvent : public nsRunnable
+{
+  NS_IMETHOD Run() {
+    MetroUtils::FireObserver("apzc-transform-start", L"");
+    return NS_OK;
+  }
+};
+
+class TransformedEndEvent : public nsRunnable
+{
+  NS_IMETHOD Run() {
+    MetroUtils::FireObserver("apzc-transform-end", L"");
+    return NS_OK;
+  }
+};
 
 void
-APZController::HandlePanBegin()
+APZController::NotifyTransformBegin(const ScrollableLayerGuid& aGuid)
 {
-  MetroUtils::FireObserver("apzc-handle-pan-begin", L"");
+  if (NS_IsMainThread()) {
+    MetroUtils::FireObserver("apzc-transform-begin", L"");
+    return;
+  }
+  nsCOMPtr<nsIRunnable> runnable = new TransformedStartEvent();
+  NS_DispatchToMainThread(runnable);
 }
 
 void
-APZController::HandlePanEnd()
+APZController::NotifyTransformEnd(const ScrollableLayerGuid& aGuid)
 {
-  MetroUtils::FireObserver("apzc-handle-pan-end", L"");
+  if (NS_IsMainThread()) {
+    MetroUtils::FireObserver("apzc-transform-end", L"");
+    return;
+  }
+  nsCOMPtr<nsIRunnable> runnable = new TransformedEndEvent();
+  NS_DispatchToMainThread(runnable);
 }
 
 } } }

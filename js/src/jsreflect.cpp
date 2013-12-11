@@ -8,8 +8,8 @@
 
 #include "jsreflect.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include <stdlib.h>
 
@@ -166,7 +166,7 @@ class NodeBuilder
         MakeRangeGCSafe(callbacks, mozilla::ArrayLength(callbacks));
     }
 
-    bool init(HandleObject userobj = NullPtr()) {
+    bool init(HandleObject userobj = js::NullPtr()) {
         if (src) {
             if (!atomValue(src, &srcval))
                 return false;
@@ -202,7 +202,7 @@ class NodeBuilder
 
             if (!funv.isObject() || !funv.toObject().is<JSFunction>()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NOT_FUNCTION,
-                                         JSDVG_SEARCH_STACK, funv, NullPtr(), nullptr, nullptr);
+                                         JSDVG_SEARCH_STACK, funv, js::NullPtr(), nullptr, nullptr);
                 return false;
             }
 
@@ -3205,7 +3205,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!arg.isNullOrUndefined()) {
         if (!arg.isObject()) {
             js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                     JSDVG_SEARCH_STACK, arg, NullPtr(),
+                                     JSDVG_SEARCH_STACK, arg, js::NullPtr(),
                                      "not an object", nullptr);
             return false;
         }
@@ -3263,7 +3263,7 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
         if (!prop.isNullOrUndefined()) {
             if (!prop.isObject()) {
                 js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
-                                         JSDVG_SEARCH_STACK, prop, NullPtr(),
+                                         JSDVG_SEARCH_STACK, prop, js::NullPtr(),
                                          "not an object", nullptr);
                 return false;
             }
@@ -3304,16 +3304,19 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     return true;
 }
 
-static const JSFunctionSpec static_methods[] = {
-    JS_FN("parse", reflect_parse, 1, 0),
-    JS_FS_END
-};
-
 JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JSObject *objArg)
 {
+    static const JSFunctionSpec static_methods[] = {
+        JS_FN("parse", reflect_parse, 1, 0),
+        JS_FS_END
+    };
+
     RootedObject obj(cx, objArg);
-    RootedObject Reflect(cx, NewObjectWithClassProto(cx, &JSObject::class_, nullptr,
+    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    if (!proto)
+        return nullptr;
+    RootedObject Reflect(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto,
                                                      obj, SingletonObject));
     if (!Reflect)
         return nullptr;

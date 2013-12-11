@@ -19,6 +19,7 @@ EXPORTS.mozilla.gfx += [
     'Blur.h',
     'BorrowedContext.h',
     'DataSurfaceHelpers.h',
+    'Filters.h',
     'Helpers.h',
     'Matrix.h',
     'PathHelpers.h',
@@ -50,16 +51,23 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2D.cpp',
         'SourceSurfaceD2DTarget.cpp',
     ]
+    DEFINES['WIN32'] = True
+    DEFINES['INITGUID'] = True
+    # For Direct2D 1.1 we require WINSDK_MAXVER 0x06020000 or higher.
     if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
         SOURCES += [
             'DrawTargetD2D1.cpp',
+            'FilterNodeD2D1.cpp',
             'RadialGradientEffectD2D1.cpp',
             'SourceSurfaceD2D1.cpp'
         ]
+        DEFINES['USE_D2D1_1'] = True
     if CONFIG['MOZ_ENABLE_SKIA']:
         SOURCES += [
             'ScaledFontWin.cpp',
         ]
+        DEFINES['SKIA_IMPLEMENTATION'] = 1
+        DEFINES['GR_IMPLEMENTATION'] = 1
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
@@ -78,16 +86,22 @@ if CONFIG['INTEL_ARCHITECTURE']:
     if CONFIG['_MSC_VER'] != '1400':
         SOURCES += [
             'BlurSSE2.cpp',
+            'FilterProcessingSSE2.cpp',
             'ImageScalingSSE2.cpp',
         ]
+        DEFINES['USE_SSE2'] = True
 
 UNIFIED_SOURCES += [
     'Blur.cpp',
+    'DataSourceSurface.cpp',
     'DrawEventRecorder.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
     'Factory.cpp',
+    'FilterNodeSoftware.cpp',
+    'FilterProcessing.cpp',
+    'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
     'Matrix.cpp',
     'Path.cpp',
@@ -115,3 +129,18 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gkmedias'
+
+for var in ('MOZ_GFX', 'USE_CAIRO', 'GFX2D_INTERNAL', 'MOZ2D_HAS_MOZ_CAIRO'):
+    DEFINES[var] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
+
+DEFINES['SK_A32_SHIFT'] = 24
+DEFINES['SK_R32_SHIFT'] = 16
+DEFINES['SK_G32_SHIFT'] = 8
+DEFINES['SK_B32_SHIFT'] = 0
+
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['GFX_LOG_DEBUG'] = True
+    DEFINES['GFX_LOG_WARNING'] = True

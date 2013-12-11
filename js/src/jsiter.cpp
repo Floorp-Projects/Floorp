@@ -8,9 +8,9 @@
 
 #include "jsiter.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Util.h"
 
 #include "jsarray.h"
 #include "jsatom.h"
@@ -344,7 +344,7 @@ GetCustomIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandle
             return false;
         RootedValue val(cx, ObjectValue(*obj));
         js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
-                             -1, val, NullPtr(), bytes.ptr());
+                             -1, val, js::NullPtr(), bytes.ptr());
         return false;
     }
     return true;
@@ -396,7 +396,11 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         return &obj->as<PropertyIteratorObject>();
     }
 
-    return &NewBuiltinClassInstance(cx, &PropertyIteratorObject::class_)->as<PropertyIteratorObject>();
+    JSObject *obj = NewBuiltinClassInstance(cx, &PropertyIteratorObject::class_);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<PropertyIteratorObject>();
 }
 
 NativeIterator *
@@ -618,8 +622,10 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                     if (!pobj->isNative() ||
                         !pobj->hasEmptyElements() ||
                         pobj->hasUncacheableProto() ||
-                        obj->getOps()->enumerate ||
-                        pobj->getClass()->enumerate != JS_EnumerateStub) {
+                        pobj->getOps()->enumerate ||
+                        pobj->getClass()->enumerate != JS_EnumerateStub ||
+                        pobj->nativeContainsPure(cx->names().iteratorIntrinsic))
+                    {
                         shapes.clear();
                         goto miss;
                     }
@@ -1560,7 +1566,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
                    (-1 + /* one Value included in JSGenerator */
                     vplen +
                     VALUES_PER_STACK_FRAME +
-                    stackfp->script()->nslots) * sizeof(HeapValue);
+                    stackfp->script()->nslots()) * sizeof(HeapValue);
 
     JS_ASSERT(nbytes % sizeof(Value) == 0);
     JS_STATIC_ASSERT(sizeof(StackFrame) % sizeof(HeapValue) == 0);
@@ -1702,7 +1708,7 @@ star_generator_next(JSContext *cx, CallArgs args)
     if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
         RootedValue val(cx, args[0]);
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                            JSDVG_SEARCH_STACK, val, NullPtr());
+                            JSDVG_SEARCH_STACK, val, js::NullPtr());
         return false;
     }
 
@@ -1737,7 +1743,7 @@ legacy_generator_next(JSContext *cx, CallArgs args)
     if (gen->state == JSGEN_NEWBORN && args.hasDefined(0)) {
         RootedValue val(cx, args[0]);
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_SEND,
-                            JSDVG_SEARCH_STACK, val, NullPtr());
+                            JSDVG_SEARCH_STACK, val, js::NullPtr());
         return false;
     }
 
@@ -1945,7 +1951,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
             return false;
 
-        global->markStandardClassInitializedNoProto(&StopIterationObject::class_);
+        global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
     }
 
     return true;

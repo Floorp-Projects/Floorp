@@ -392,6 +392,8 @@ TouchPoint.prototype = {
         return {type: 'tap', x: this.startX, y: this.startY};
       } else if (!this.done && duration == TouchAdapter.DWELL_THRESHOLD) {
         return {type: 'dwell', x: this.startX, y: this.startY};
+      } else if (this.done && duration > TouchAdapter.DWELL_THRESHOLD) {
+        return {type: 'dwellend', x: this.startX, y: this.startY};
       }
     }
 

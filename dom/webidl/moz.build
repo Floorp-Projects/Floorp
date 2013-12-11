@@ -86,6 +86,7 @@ WEBIDL_FILES = [
     'DOMStringMap.webidl',
     'DOMTokenList.webidl',
     'DOMTransaction.webidl',
+    'Downloads.webidl',
     'DragEvent.webidl',
     'DummyBinding.webidl',
     'DynamicsCompressorNode.webidl',
@@ -119,6 +120,7 @@ WEBIDL_FILES = [
     'HTMLButtonElement.webidl',
     'HTMLCanvasElement.webidl',
     'HTMLCollection.webidl',
+    'HTMLContentElement.webidl',
     'HTMLDataElement.webidl',
     'HTMLDataListElement.webidl',
     'HTMLDirectoryElement.webidl',
@@ -272,6 +274,7 @@ WEBIDL_FILES = [
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
     'SettingsManager.webidl',
+    'ShadowRoot.webidl',
     'SharedWorker.webidl',
     'SharedWorkerGlobalScope.webidl',
     'SimpleGestureEvent.webidl',
@@ -502,6 +505,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothAdapter.webidl',
         'BluetoothDevice.webidl',
         'BluetoothDeviceEvent.webidl',
+        'BluetoothDiscoveryStateChangedEvent.webidl',
         'BluetoothManager.webidl',
         'BluetoothStatusChangedEvent.webidl',
     ]
@@ -532,6 +536,7 @@ if CONFIG['MOZ_NFC']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     WEBIDL_FILES += [
+        'MozSpeakerManager.webidl',
         'MozWifiConnectionInfoEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
     ]
@@ -565,6 +570,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'DataStoreChangeEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'DownloadEvent.webidl',
     'ErrorEvent.webidl',
     'IccChangeEvent.webidl',
     'MediaStreamEvent.webidl',

@@ -1,5 +1,7 @@
+default-preferences pref(dom.forms.number,true)
 needs-focus == input-load.html input-ref.html
 needs-focus == input-create.html input-ref.html
+needs-focus == input-number.html input-number-ref.html
 needs-focus == button-load.html button-ref.html
 needs-focus == button-create.html button-ref.html
 needs-focus == textarea-load.html textarea-ref.html

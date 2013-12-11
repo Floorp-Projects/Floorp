@@ -153,6 +153,9 @@ class MacroAssemblerX86Shared : public Assembler
     void xor32(Imm32 imm, Register dest) {
         xorl(imm, dest);
     }
+    void not32(Register reg) {
+        notl(reg);
+    }
 
     void branch32(Condition cond, const Operand &lhs, const Register &rhs, Label *label) {
         cmpl(lhs, rhs);

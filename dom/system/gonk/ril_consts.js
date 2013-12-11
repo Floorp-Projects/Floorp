@@ -667,6 +667,13 @@ this.USIM_TAG_NAME[ICC_USIM_EFUID_TAG] = "uid";
 this.USIM_TAG_NAME[ICC_USIM_EFEMAIL_TAG] = "email";
 this.USIM_TAG_NAME[ICC_USIM_EFCCP1_TAG] = "ccp1";
 
+// Error message for ICC contact.
+this.CONTACT_ERR_REQUEST_NOT_SUPPORTED = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+this.CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED = "ContactTypeNotSupported";
+this.CONTACT_ERR_FIELD_NOT_SUPPORTED = "FieldNotSupported";
+this.CONTACT_ERR_NO_FREE_RECORD_FOUND = "NoFreeRecordFound";
+this.CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK = "CannotAccessPhoneBook";
+
 // CDMA IMSI_M's byte const.
 // 3GPP2 C.S0065 Sec. 5.2.2
 this.CSIM_IMSI_M_MIN2_BYTE = 1;
@@ -709,6 +716,7 @@ this.COMPREHENSIONTLV_TAG_IMEI = 0x14;
 this.COMPREHENSIONTLV_TAG_HELP_REQUEST = 0x15;
 this.COMPREHENSIONTLV_TAG_NMR = 0x16;
 this.COMPREHENSIONTLV_TAG_DEFAULT_TEXT = 0x17;
+this.COMPREHENSIONTLV_TAG_NEXT_ACTION_IND = 0x18;
 this.COMPREHENSIONTLV_TAG_CAUSE = 0x1a;
 this.COMPREHENSIONTLV_TAG_LOCATION_STATUS = 0x1b;
 this.COMPREHENSIONTLV_TAG_TRANSACTION_ID = 0x1c;
@@ -759,10 +767,6 @@ this.STK_CMD_SEND_USSD = 0x12;
 this.STK_CMD_SEND_SMS = 0x13;
 this.STK_CMD_SEND_DTMF = 0x14;
 this.STK_CMD_LAUNCH_BROWSER = 0x15;
-this.STK_CMD_OPEN_CHANNEL = 0x16;
-this.STK_CMD_CLOSE_CHANNEL = 0x17;
-this.STK_CMD_RECEIVE_DATA = 0x18;
-this.STK_CMD_SEND_DATA = 0x19;
 this.STK_CMD_PLAY_TONE = 0x20;
 this.STK_CMD_DISPLAY_TEXT = 0x21;
 this.STK_CMD_GET_INKEY = 0x22;
@@ -772,6 +776,10 @@ this.STK_CMD_SET_UP_MENU = 0x25;
 this.STK_CMD_PROVIDE_LOCAL_INFO = 0x26;
 this.STK_CMD_TIMER_MANAGEMENT = 0x27;
 this.STK_CMD_SET_UP_IDLE_MODE_TEXT = 0x28;
+this.STK_CMD_OPEN_CHANNEL = 0x40;
+this.STK_CMD_CLOSE_CHANNEL = 0x41;
+this.STK_CMD_RECEIVE_DATA = 0x42;
+this.STK_CMD_SEND_DATA = 0x43;
 
 // STK Result code.
 // TS 11.14, clause 12.12
@@ -981,6 +989,10 @@ this.STK_TMIER_GET_CURRENT_VALUE = 0x02;
 // Browser Termination Cause.
 this.STK_BROWSER_TERMINATION_CAUSE_USER = 0x00;
 this.STK_BROWSER_TERMINATION_CAUSE_ERROR = 0x01;
+
+// Next Action Indicator.
+this.STK_NEXT_ACTION_NULL = 0x00;
+this.STK_NEXT_ACTION_END_PROACTIVE_SESSION = 0x81;
 
 /**
  * Supported Terminal Facilities.
@@ -2749,9 +2761,10 @@ this.PDU_CDMA_MSG_TYPE_BROADCAST = 0x01;  // Broadcast
 this.PDU_CDMA_MSG_TYPE_ACK = 0x02;        // Acknowledge
 
 // SMS Teleservice Identitifier, as defined in 3GPP2 N.S0005, Table 175
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS = 0x1002;   // SMS
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;  // Wireless Enhanced Messaging Teleservice
-                                                  // required for fragmented SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS  = 0x1002;   // SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP  = 0x1004;   // WAP
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;   // Wireless Enhanced Messaging Teleservice
+                                                   // required for fragmented SMS
 
 // SMS Service Category, as defined in 3GPP2 C.R1001-D, Table 9.3.1-1
 this.PDU_CDMA_MSG_CATEGORY_UNSPEC = 0x00; // Unknown/Unspecified

@@ -11,6 +11,7 @@
 #include "d3d9.h"
 #include "nsTArray.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/RefPtr.h"
 
 struct nsIntRect;
 
@@ -21,6 +22,7 @@ class DeviceManagerD3D9;
 class LayerD3D9;
 class Nv3DVUtils;
 class Layer;
+class TextureSourceD3D9;
 
 // Shader Constant locations
 const int CBmLayerTransform = 0;
@@ -31,6 +33,15 @@ const int CBvLayerQuad = 10;
 // we don't use opacity with solid color shaders
 const int CBfLayerOpacity = 0;
 const int CBvColor = 0;
+
+// TODO lower case this
+enum DeviceManagerState {
+  DeviceOK,
+  DeviceFail,
+  DeviceMustRecreate,
+  DeviceRetry
+};
+
 
 /**
  * This structure is used to pass rectangles to our shader constant. We can use
@@ -82,7 +93,7 @@ public:
    * in no case does this function guarantee the backbuffer to still have its
    * old content.
    */
-  bool PrepareForRendering();
+  DeviceManagerState PrepareForRendering();
 
   already_AddRefed<IDirect3DSurface9> GetBackBuffer();
 
@@ -122,6 +133,13 @@ public:
   DeviceManagerD3D9();
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceManagerD3D9)
 
+  /**
+   * Initialises the device manager, the underlying device, and everything else
+   * the manager needs.
+   * Returns true if initialisation succeeds, false otherwise.
+   * Note that if initisalisation fails, you cannot try again - you must throw
+   * away the DeviceManagerD3D9 and create a new one.
+   */
   bool Init();
 
   /**
@@ -173,25 +191,53 @@ public:
 
   int32_t GetMaxTextureSize() { return mMaxTextureSize; }
 
-  static uint32_t sMaskQuadRegister;
+  // Removes aHost from our list of texture hosts if it is the head.
+  void RemoveTextureListHead(TextureSourceD3D9* aHost);
 
-private:
-  friend class SwapChainD3D9;
-
-  ~DeviceManagerD3D9();
+  /**
+   * Creates a texture using our device.
+   * If needed, we keep a record of the new texture, so the texture can be
+   * released. In this case, aTextureHostIDirect3DTexture9 must be non-null.
+   */
+  TemporaryRef<IDirect3DTexture9> CreateTexture(const gfx::IntSize &aSize,
+                                                _D3DFORMAT aFormat,
+                                                D3DPOOL aPool,
+                                                TextureSourceD3D9* aTextureHostIDirect3DTexture9);
+#ifdef DEBUG
+  // Looks for aFind in the list of texture hosts.
+  // O(n) so only use for assertions.
+  bool IsInTextureHostList(TextureSourceD3D9* aFind);
+#endif
 
   /**
    * This function verifies the device is ready for rendering, internally this
    * will test the cooperative level of the device and reset the device if
    * needed. If this returns false subsequent rendering calls may return errors.
    */
-  bool VerifyReadyForRendering();
+  DeviceManagerState VerifyReadyForRendering();
+
+  static uint32_t sMaskQuadRegister;
+
+private:
+  friend class SwapChainD3D9;
+
+  ~DeviceManagerD3D9();
+  void DestroyDevice();
 
   /**
    * This will fill our vertex buffer with the data of our quad, it may be
    * called when the vertex buffer is recreated.
    */
   bool CreateVertexBuffer();
+
+  /**
+   * Release all textures created by this device manager.
+   */
+  void ReleaseTextureResources();
+  /**
+   * Add aHost to our list of texture hosts.
+   */
+  void RegisterTextureHost(TextureSourceD3D9* aHost);
 
   /* Array used to store all swap chains for device resets */
   nsTArray<SwapChainD3D9*> mSwapChains;
@@ -245,6 +291,14 @@ private:
 
   /* Our vertex declaration */
   nsRefPtr<IDirect3DVertexDeclaration9> mVD;
+
+  /* We maintain a doubly linked list of all d3d9 texture hosts which host
+   * d3d9 textures created by this device manager.
+   * Texture hosts must remove themselves when they disappear (i.e., we
+   * expect all hosts in the list to be valid).
+   * The list is cleared when we release the textures.
+   */
+  TextureSourceD3D9* mTextureHostList;
 
   /* Our focus window - this is really a dummy window we can associate our
    * device with.

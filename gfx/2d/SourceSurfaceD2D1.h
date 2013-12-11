@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_GFX_SOURCESURFACED2DTARGET_H_
-#define MOZILLA_GFX_SOURCESURFACED2DTARGET_H_
+#ifndef MOZILLA_GFX_SOURCESURFACED2D1_H_
+#define MOZILLA_GFX_SOURCESURFACED2D1_H_
 
 #include "2D.h"
 #include "HelpersD2D.h"
@@ -31,6 +31,8 @@ public:
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 
   ID2D1Image *GetImage() { return mImage; }
+
+  void EnsureIndependent() { if (!mDrawTarget) return; DrawTargetWillChange(); }
 
 private:
   friend class DrawTargetD2D1;

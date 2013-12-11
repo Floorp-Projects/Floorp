@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
     'nsIPluginInputStream.idl',
     'nsIPluginInstanceOwner.idl',
     'nsIPluginTag.idl',
-    'nsIPluginTagInfo.idl',
     'nspluginroot.idl',
 ]
 
@@ -42,50 +41,55 @@ EXPORTS.mozilla += [
     'PluginPRLibrary.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsJSNPRuntime.cpp',
+    'nsPluginInstanceOwner.cpp',
+    'nsPluginModule.cpp',
+    'nsPluginPlayPreviewInfo.cpp',
+    'PluginPRLibrary.cpp',
+]
+
+# These files cannot be built in unified mode because they force NSPR logging.
+SOURCES += [
     'nsNPAPIPlugin.cpp',
     'nsNPAPIPluginInstance.cpp',
     'nsNPAPIPluginStreamListener.cpp',
     'nsPluginHost.cpp',
-    'nsPluginInstanceOwner.cpp',
-    'nsPluginModule.cpp',
-    'nsPluginPlayPreviewInfo.cpp',
     'nsPluginStreamListenerPeer.cpp',
     'nsPluginTags.cpp',
-    'PluginPRLibrary.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsPluginDirServiceProvider.cpp',
         'nsPluginNativeWindowWin.cpp',
         'nsPluginsDirWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsPluginNativeWindowOS2.cpp',
         'nsPluginsDirOS2.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsPluginNativeWindow.cpp',
         'nsPluginsDirDarwin.cpp',
     ]
 else:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsPluginsDirUnix.cpp',
     ]
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk2':
+        # This file cannot be built in unified mode because of name clashes in X11 headers.
         SOURCES += [
             'nsPluginNativeWindowGtk2.cpp',
         ]
     elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'nsPluginNativeWindowQt.cpp',
         ]
     else:
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'nsPluginNativeWindow.cpp',
         ]
 
@@ -103,7 +107,7 @@ LOCAL_INCLUDES += [
     '/gfx/skia/include/config',
     '/gfx/skia/include/core',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/widget/android',
     '/widget/xpwidgets',
     '/xpcom/base',

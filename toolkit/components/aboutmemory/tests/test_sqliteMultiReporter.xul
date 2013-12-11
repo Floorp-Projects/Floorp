@@ -40,11 +40,7 @@
   // them.  It shouldn't crash.
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
-  e = mgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    r.collectReports(function(){}, null);
-  }
+  mgr.getReportsForThisProcess(function(){}, null);
 
   // If we haven't crashed, we've passed, but the test harness requires that
   // we explicitly check something.

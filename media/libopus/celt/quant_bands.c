@@ -312,6 +312,7 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       opus_int32 tell_intra;
       opus_uint32 nstart_bytes;
       opus_uint32 nintra_bytes;
+      opus_uint32 save_bytes;
       int badness2;
       VARDECL(unsigned char, intra_bits);
 
@@ -322,7 +323,10 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
       nstart_bytes = ec_range_bytes(&enc_start_state);
       nintra_bytes = ec_range_bytes(&enc_intra_state);
       intra_buf = ec_get_buffer(&enc_intra_state) + nstart_bytes;
-      ALLOC(intra_bits, nintra_bytes-nstart_bytes, unsigned char);
+      save_bytes = nintra_bytes-nstart_bytes;
+      if (save_bytes == 0)
+         save_bytes = ALLOC_NONE;
+      ALLOC(intra_bits, save_bytes, unsigned char);
       /* Copy bits from intra bit-stream */
       OPUS_COPY(intra_bits, intra_buf, nintra_bytes - nstart_bytes);
 

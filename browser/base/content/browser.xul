@@ -27,19 +27,19 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
-        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
-        title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title="&mainWindow.title;"
+        title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
-        title_privatebrowsing="&mainWindow.title;@PRE_RELEASE_SUFFIX@&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
-        titledefault="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;"
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
 #else
-        title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
-        titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
+        title_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
+        titlemodifier="&mainWindow.titlemodifier;"
+        titlemodifier_normal="&mainWindow.titlemodifier;"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
 #ifdef XP_WIN
@@ -197,17 +197,20 @@
     <!-- UI tour experience -->
     <panel id="UITourTooltip"
            type="arrow"
-           hidden="true"
            noautofocus="true"
+           noautohide="true"
            align="start"
            orient="vertical"
            role="alert">
       <label id="UITourTooltipTitle" flex="1"/>
       <description id="UITourTooltipDescription" flex="1"/>
     </panel>
-    <html:div id="UITourHighlightContainer" style="position:relative">
-      <html:div id="UITourHighlight"></html:div>
-    </html:div>
+    <panel id="UITourHighlightContainer"
+           noautofocus="true"
+           noautohide="true"
+           consumeoutsideclicks="false">
+      <box id="UITourHighlight"></box>
+    </panel>
 
     <panel id="socialActivatedNotification"
            type="arrow"
@@ -266,9 +269,19 @@
            position="topcenter topright"/>
 
     <menupopup id="toolbar-context-menu"
-               onpopupshowing="onViewToolbarsPopupShowing(event);">
+               onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
+      <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
+                accesskey="&customizeMenu.addToPanel.accesskey;"
+                label="&customizeMenu.addToPanel.label;"
+                class="customize-context-addToPanel"/>
+      <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
+                accesskey="&customizeMenu.removeFromToolbar.accesskey;"
+                label="&customizeMenu.removeFromToolbar.label;"
+                class="customize-context-removeFromToolbar"/>
       <menuseparator/>
+      <menuseparator id="viewToolbarsMenuSeparator"/>
       <menuitem command="cmd_CustomizeToolbars"
+                class="viewCustomizeToolbar"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
     </menupopup>
@@ -954,7 +967,7 @@
     </toolbar>
 
     <!-- This is a shim which will go away ASAP. See bug 749804 for details -->
-    <toolbar id="addon-bar" toolbar-delegate="nav-bar">
+    <toolbar id="addon-bar" toolbar-delegate="nav-bar" mode="icons" iconsize="small">
       <hbox id="addonbar-closebutton"/>
       <statusbar id="status-bar"/>
     </toolbar>

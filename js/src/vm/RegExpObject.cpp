@@ -17,6 +17,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/Shape-inl.h"
+
 using namespace js;
 using js::frontend::TokenStream;
 
@@ -273,10 +275,9 @@ RegExpObject::createShared(ExclusiveContext *cx, RegExpGuard *g)
 }
 
 Shape *
-RegExpObject::assignInitialShape(ExclusiveContext *cx)
+RegExpObject::assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> self)
 {
-    JS_ASSERT(is<RegExpObject>());
-    JS_ASSERT(nativeEmpty());
+    JS_ASSERT(self->nativeEmpty());
 
     JS_STATIC_ASSERT(LAST_INDEX_SLOT == 0);
     JS_STATIC_ASSERT(SOURCE_SLOT == LAST_INDEX_SLOT + 1);
@@ -285,10 +286,8 @@ RegExpObject::assignInitialShape(ExclusiveContext *cx)
     JS_STATIC_ASSERT(MULTILINE_FLAG_SLOT == IGNORE_CASE_FLAG_SLOT + 1);
     JS_STATIC_ASSERT(STICKY_FLAG_SLOT == MULTILINE_FLAG_SLOT + 1);
 
-    RootedObject self(cx, this);
-
     /* The lastIndex property alone is writable but non-configurable. */
-    if (!addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
+    if (!self->addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
         return nullptr;
 
     /* Remaining instance properties are non-writable and non-configurable. */
@@ -309,19 +308,8 @@ RegExpObject::init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags)
 {
     Rooted<RegExpObject *> self(cx, this);
 
-    if (nativeEmpty()) {
-        if (isDelegate()) {
-            if (!assignInitialShape(cx))
-                return false;
-        } else {
-            RootedShape shape(cx, assignInitialShape(cx));
-            if (!shape)
-                return false;
-            RootedObject proto(cx, self->getProto());
-            EmptyShape::insertInitialShape(cx, shape, proto);
-        }
-        JS_ASSERT(!self->nativeEmpty());
-    }
+    if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, self))
+        return false;
 
     JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().lastIndex))->slot() ==
               LAST_INDEX_SLOT);
@@ -669,7 +657,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
 {
 #ifdef DEBUG
     for (Map::Range r = map_.all(); !r.empty(); r.popFront())
-        JS_ASSERT(inUse_.has(r.front().value));
+        JS_ASSERT(inUse_.has(r.front().value()));
 #endif
 
     map_.clear();
@@ -696,7 +684,7 @@ RegExpCompartment::get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, R
     Key key(source, flags);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p) {
-        g->init(*p->value);
+        g->init(*p->value());
         return true;
     }
 

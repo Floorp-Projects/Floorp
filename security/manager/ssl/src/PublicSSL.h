@@ -15,7 +15,7 @@ namespace psm {
 
 void InitializeSSLServerCertVerificationThreads();
 void StopSSLServerCertVerificationThreads();
-void ConfigureMD5(bool enabled);
+void DisableMD5();
 nsresult InitializeCipherSuite();
 
 } //namespace psm

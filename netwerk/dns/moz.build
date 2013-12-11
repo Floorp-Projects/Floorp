@@ -20,17 +20,17 @@ EXPORTS.mozilla.net += [
 ]
 
 SOURCES += [
-    'nameprep.c',
-    'punycode.c',
-    'race.c',
+    'nsEffectiveTLDService.cpp', # Excluded from UNIFIED_SOURCES due to special build flags.
+    'nsHostResolver.cpp',        # Excluded from UNIFIED_SOURCES due to NSPR forced logging.
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DNS.cpp',
+    'nameprep.c',
     'nsDNSService2.cpp',
-    'nsEffectiveTLDService.cpp',
-    'nsHostResolver.cpp',
     'nsIDNService.cpp',
+    'punycode.c',
+    'race.c',
 ]
 
 FAIL_ON_WARNINGS = True
@@ -38,3 +38,12 @@ FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'necko'
+
+GENERATED_FILES = [
+    'etld_data.inc',
+]
+
+# need to include etld_data.inc
+LOCAL_INCLUDES += [
+    '../base/src',
+]

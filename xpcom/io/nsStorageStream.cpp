@@ -342,7 +342,7 @@ protected:
 
 private:
     nsStorageStream* mStorageStream;
-    uint32_t         mReadCursor;    // Next memory location to read byte, or NULL
+    uint32_t         mReadCursor;    // Next memory location to read byte, or 0
     uint32_t         mSegmentEnd;    // One byte past end of current buffer segment
     uint32_t         mSegmentNum;    // Segment number containing read cursor
     uint32_t         mSegmentSize;   // All segments, except the last, are of this size
@@ -539,3 +539,7 @@ NS_NewStorageStream(uint32_t segmentSize, uint32_t maxSize, nsIStorageStream **r
     *result = storageStream;
     return NS_OK;
 }
+
+// Undefine LOG, so that other .cpp files (or their includes) won't complain
+// about it already being defined, when we build in unified mode.
+#undef LOG

@@ -10,7 +10,6 @@
 # include <sys/mman.h>
 #endif
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jslibmath.h"
@@ -32,7 +31,6 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
-using mozilla::DebugOnly;
 using mozilla::PodEqual;
 
 void
@@ -466,7 +464,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
         return cursor;
     }
 
-    Vector<jschar> tmp(cx);
+    js::Vector<jschar> tmp(cx);
     jschar *src;
     if ((size_t(cursor) & (sizeof(jschar) - 1)) != 0) {
         // Align 'src' for AtomizeChars.
@@ -488,7 +486,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
 
 template <class T>
 size_t
-SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializedVectorSize(const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     size_t size = sizeof(uint32_t);
     for (size_t i = 0; i < vec.length(); i++)
@@ -498,7 +496,7 @@ SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 uint8_t *
-SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializeVector(uint8_t *cursor, const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     for (size_t i = 0; i < vec.length(); i++)
@@ -508,7 +506,7 @@ SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 const uint8_t *
-DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, Vector<T, 0, SystemAllocPolicy> *vec)
+DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, js::Vector<T, 0, SystemAllocPolicy> *vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -799,9 +797,17 @@ class ModuleChars
     uint32_t length_;
     const jschar *begin_;
     uint32_t isFunCtor_;
-    Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
+    js::Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
 
   public:
+    static uint32_t beginOffset(AsmJSParser &parser) {
+      return parser.pc->maybeFunction->pn_pos.begin;
+    }
+
+    static uint32_t endOffset(AsmJSParser &parser) {
+      return parser.tokenStream.peekTokenPos().end;
+    }
+
     bool initFromParsedModule(AsmJSParser &parser, const AsmJSModule &module) {
         // For a function statement or named function expression:
         //   function f(x,y,z) { abc }
@@ -815,11 +821,9 @@ class ModuleChars
         // For functions created with 'new Function', function arguments are
         // not present in the source so we must manually explicitly serialize
         // and match the formals as a Vector of PropertyName.
-        uint32_t beginOffset = parser.pc->maybeFunction->pn_pos.begin;
-        uint32_t endOffset = parser.tokenStream.peekTokenPos().end;
-        JS_ASSERT(beginOffset < endOffset);
-        begin_ = parser.tokenStream.rawBase() + beginOffset;
-        length_ = endOffset - beginOffset;
+        JS_ASSERT(beginOffset(parser) < endOffset(parser));
+        begin_ = parser.tokenStream.rawBase() + beginOffset(parser);
+        length_ = endOffset(parser) - beginOffset(parser);
         isFunCtor_ = parser.pc->isFunctionConstructorBody();
         if (isFunCtor_) {
             unsigned numArgs;
@@ -858,9 +862,8 @@ class ModuleChars
         return cursor;
     }
 
-    bool matchUnparsedModule(const AsmJSParser &parser) const {
-        uint32_t parseBeginOffset = parser.pc->maybeFunction->pn_pos.begin;
-        const jschar *parseBegin = parser.tokenStream.rawBase() + parseBeginOffset;
+    bool matchUnparsedModule(AsmJSParser &parser) const {
+        const jschar *parseBegin = parser.tokenStream.rawBase() + beginOffset(parser);
         const jschar *parseLimit = parser.tokenStream.rawLimit();
         JS_ASSERT(parseLimit >= parseBegin);
         if (uint32_t(parseLimit - parseBegin) < length_)
@@ -909,7 +912,7 @@ struct ScopedCacheEntryOpenedForWrite
     }
 };
 
-void
+bool
 js::StoreAsmJSModuleInCache(AsmJSParser &parser,
                             const AsmJSModule &module,
                             const AsmJSStaticLinkData &linkData,
@@ -917,24 +920,27 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
 {
     MachineId machineId(cx);
     if (!machineId.extractCurrentState(cx))
-        return;
+        return false;
 
     ModuleChars moduleChars;
     if (!moduleChars.initFromParsedModule(parser, module))
-        return;
+        return false;
 
     size_t serializedSize = machineId.serializedSize() +
                             moduleChars.serializedSize() +
                             module.serializedSize() +
                             linkData.serializedSize();
 
-    JS::OpenAsmJSCacheEntryForWriteOp openEntryForWrite = cx->asmJSCacheOps().openEntryForWrite;
-    if (!openEntryForWrite)
-        return;
+    JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
+    if (!open)
+        return false;
+
+    const jschar *begin = parser.tokenStream.rawBase() + ModuleChars::beginOffset(parser);
+    const jschar *end = parser.tokenStream.rawBase() + ModuleChars::endOffset(parser);
 
     ScopedCacheEntryOpenedForWrite entry(cx, serializedSize);
-    if (!openEntryForWrite(cx->global(), entry.serializedSize, &entry.memory, &entry.handle))
-        return;
+    if (!open(cx->global(), begin, end, entry.serializedSize, &entry.memory, &entry.handle))
+        return false;
 
     uint8_t *cursor = entry.memory;
     cursor = machineId.serialize(cursor);
@@ -943,6 +949,7 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
     cursor = linkData.serialize(cursor);
 
     JS_ASSERT(cursor == entry.memory + serializedSize);
+    return true;
 }
 
 struct ScopedCacheEntryOpenedForRead
@@ -974,12 +981,15 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!machineId.extractCurrentState(cx))
         return true;
 
-    JS::OpenAsmJSCacheEntryForReadOp openEntryForRead = cx->asmJSCacheOps().openEntryForRead;
-    if (!openEntryForRead)
+    JS::OpenAsmJSCacheEntryForReadOp open = cx->asmJSCacheOps().openEntryForRead;
+    if (!open)
         return true;
 
+    const jschar *begin = parser.tokenStream.rawBase() + ModuleChars::beginOffset(parser);
+    const jschar *limit = parser.tokenStream.rawLimit();
+
     ScopedCacheEntryOpenedForRead entry(cx);
-    if (!openEntryForRead(cx->global(), &entry.serializedSize, &entry.memory, &entry.handle))
+    if (!open(cx->global(), begin, limit, &entry.serializedSize, &entry.memory, &entry.handle))
         return true;
 
     const uint8_t *cursor = entry.memory;
@@ -1009,8 +1019,10 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!cursor)
         return false;
 
-    if (cursor != entry.memory + entry.serializedSize)
-        MOZ_CRASH("Corrupt serialized module");
+    bool atEnd = cursor == entry.memory + entry.serializedSize;
+    MOZ_ASSERT(atEnd, "Corrupt cache file");
+    if (!atEnd)
+        return true;
 
     module->staticallyLink(linkData, cx);
 

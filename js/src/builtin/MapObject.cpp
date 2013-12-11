@@ -1103,29 +1103,50 @@ MapObject::mark(JSTracer *trc, JSObject *obj)
 }
 
 #ifdef JSGC_GENERATIONAL
+struct UnbarrieredHashPolicy {
+    typedef Value Lookup;
+    static HashNumber hash(const Lookup &v) { return v.asRawBits(); }
+    static bool match(const Value &k, const Lookup &l) { return k == l; }
+    static bool isEmpty(const Value &v) { return v.isMagic(JS_HASH_KEY_EMPTY); }
+    static void makeEmpty(Value *vp) { vp->setMagic(JS_HASH_KEY_EMPTY); }
+};
+
 template <typename TableType>
 class OrderedHashTableRef : public gc::BufferableRef
 {
     TableType *table;
-    HashableValue key;
+    Value key;
 
   public:
-    explicit OrderedHashTableRef(TableType *t, const HashableValue &k) : table(t), key(k) {}
+    explicit OrderedHashTableRef(TableType *t, const Value &k) : table(t), key(k) {}
 
     void mark(JSTracer *trc) {
-        HashableValue prior = key;
-        key = key.mark(trc);
+        JS_ASSERT(UnbarrieredHashPolicy::hash(key) ==
+                  HashableValue::Hasher::hash(*reinterpret_cast<HashableValue*>(&key)));
+        Value prior = key;
+        gc::MarkValueUnbarriered(trc, &key, "ordered hash table key");
         table->rekeyOneEntry(prior, key);
     }
 };
 #endif
 
-template <typename TableType>
 static void
-WriteBarrierPost(JSRuntime *rt, TableType *table, const HashableValue &key)
+WriteBarrierPost(JSRuntime *rt, ValueMap *map, const HashableValue &key)
 {
 #ifdef JSGC_GENERATIONAL
-    rt->gcStoreBuffer.putGeneric(OrderedHashTableRef<TableType>(table, key));
+    typedef OrderedHashMap<Value, Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredMap;
+    rt->gcStoreBuffer.putGeneric(OrderedHashTableRef<UnbarrieredMap>(
+                reinterpret_cast<UnbarrieredMap *>(map), key.get()));
+#endif
+}
+
+static void
+WriteBarrierPost(JSRuntime *rt, ValueSet *set, const HashableValue &key)
+{
+#ifdef JSGC_GENERATIONAL
+    typedef OrderedHashSet<Value, UnbarrieredHashPolicy, RuntimeAllocPolicy> UnbarrieredSet;
+    rt->gcStoreBuffer.putGeneric(OrderedHashTableRef<UnbarrieredSet>(
+                reinterpret_cast<UnbarrieredSet *>(set), key.get()));
 #endif
 }
 

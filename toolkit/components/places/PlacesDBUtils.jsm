@@ -883,7 +883,7 @@ this.PlacesDBUtils = {
         query:     "SELECT count(*) FROM moz_keywords " },
 
       { histogram: "PLACES_SORTED_BOOKMARKS_PERC",
-        query:     "SELECT ROUND(( "
+        query:     "SELECT IFNULL(ROUND(( "
                  +   "SELECT count(*) FROM moz_bookmarks b "
                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
                  +   "AND t.parent <> :tags_folder AND t.parent > :places_root "
@@ -893,10 +893,10 @@ this.PlacesDBUtils = {
                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
                  +   "AND t.parent <> :tags_folder "
                  +   "WHERE b.type = :type_bookmark "
-                 + ")) " },
+                 + ")), 0) " },
 
       { histogram: "PLACES_TAGGED_BOOKMARKS_PERC",
-        query:     "SELECT ROUND(( "
+        query:     "SELECT IFNULL(ROUND(( "
                  +   "SELECT count(*) FROM moz_bookmarks b "
                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
                  +   "AND t.parent = :tags_folder "
@@ -905,7 +905,7 @@ this.PlacesDBUtils = {
                  +   "JOIN moz_bookmarks t ON t.id = b.parent "
                  +   "AND t.parent <> :tags_folder "
                  +   "WHERE b.type = :type_bookmark "
-                 + ")) " },
+                 + ")), 0) " },
 
       { histogram: "PLACES_DATABASE_FILESIZE_MB",
         callback: function () {
@@ -970,13 +970,12 @@ this.PlacesDBUtils = {
         if ("callback" in aProbe) {
           value = aProbe.callback(value);
         }
-        if (isFinite(value)) {
-          probeValues[aProbe.histogram] = value;
-          Services.telemetry.getHistogramById(aProbe.histogram)
-                            .add(value);
-        }
+        probeValues[aProbe.histogram] = value;
+        Services.telemetry.getHistogramById(aProbe.histogram).add(value);
       } catch (ex) {
-        Components.utils.reportError(ex);
+        Components.utils.reportError("Error adding value " + value +
+                                     " to histogram " + aProbe.histogram +
+                                     ": " + ex);
       }
 
       if (!outstandingProbes && aHealthReportCallback) {

@@ -4,10 +4,6 @@
 
 DIST_FILES := package-name.txt.in
 
-ifdef MOZ_ANDROID_ANR_REPORTER
-DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
-endif
-
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
 else
@@ -34,48 +30,15 @@ UA_BUILDID=$(shell echo $(ANDROID_VERSION_CODE) | cut -c1-8)
 
 MOZ_BUILD_TIMESTAMP=$(shell echo `$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-timestamp`)
 
-ifdef MOZ_UPDATER
-DEFINES +=  -DMOZ_UPDATER=$(MOZ_UPDATER)
-endif
-
-# Mangle our package name to avoid Bug 750548.
 DEFINES += \
-  -DMANGLED_ANDROID_PACKAGE_NAME=$(subst fennec,f3nn3c,$(ANDROID_PACKAGE_NAME)) \
-  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
-  -DANDROID_CPU_ARCH=$(ANDROID_CPU_ARCH) \
   -DANDROID_VERSION_CODE=$(ANDROID_VERSION_CODE) \
-  -DCPU_ARCH=$(CPU_ARCH) \
-  -DGRE_MILESTONE=$(GRE_MILESTONE) \
-  -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
   -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
   -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
   -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)" \
-  -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
-  -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME) \
   -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
-  -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
-  -DMOZ_APP_ID=$(MOZ_APP_ID) \
-  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-  -DMOZ_APP_VENDOR=$(MOZ_APP_VENDOR) \
-  -DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
   -DMOZ_BUILD_TIMESTAMP=$(MOZ_BUILD_TIMESTAMP) \
-  -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME) \
-  -DMOZ_CRASHREPORTER=$(MOZ_CRASHREPORTER) \
-  -DMOZ_MIN_CPU_VERSION=$(MIN_CPU_VERSION) \
-  -DMOZ_UPDATE_CHANNEL=$(MOZ_UPDATE_CHANNEL) \
-  -DOMNIJAR_NAME=$(OMNIJAR_NAME) \
-  -DOS_TARGET=$(OS_TARGET) \
-  -DTARGET_XPCOM_ABI=$(TARGET_XPCOM_ABI) \
   -DUA_BUILDID=$(UA_BUILDID) \
   $(NULL)
-
-ifdef MOZ_PKG_SPECIAL
-DEFINES += -DMOZ_PKG_SPECIAL=$(MOZ_PKG_SPECIAL)
-endif
-
-ifdef MOZ_LINKER_EXTRACT
-DEFINES += -DMOZ_LINKER_EXTRACT=1
-endif
 
 GARBAGE += \
   AndroidManifest.xml  \
@@ -124,9 +87,23 @@ include $(topsrcdir)/config/config.mk
 # Sync dependencies are provided in a single jar. Sync classes themselves are delivered as source,
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
-classes.dex: $(ALL_JARS)
-	@echo "DX classes.dex"
-	$(DX) --dex --output=classes.dex $(ALL_JARS) $(ANDROID_COMPAT_LIB)
+
+classes.dex: proguard-jars
+	@echo 'DX classes.dex'
+	$(DX) --dex --output=classes.dex jars-proguarded $(ANDROID_COMPAT_LIB)
+
+ifdef MOZ_DISABLE_PROGUARD
+  PROGUARD_PASSES=0
+else
+  ifdef MOZ_DEBUG
+  PROGUARD_PASSES=1
+  else
+  PROGUARD_PASSES=6
+  endif
+endif
+
+proguard-jars: $(ALL_JARS)
+	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar @$(topsrcdir)/mobile/android/config/proguard.cfg -optimizationpasses $(PROGUARD_PASSES) -injars $(subst ::,:,$(subst $(NULL) ,:,$(ALL_JARS))) -outjars jars-proguarded -libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
@@ -217,7 +194,7 @@ $(call mkdir_deps,$(ANDROID_RESDIRS)): $(ANDROID_RESFILES) Makefile
 	$(TOUCH) $@
 
 $(subst resources/,res/,$(ANDROID_RESFILES)): $(call mkdir_deps,$(ANDROID_RESDIRS)) $(ANDROID_RESFILES)
-	@echo "creating $@"
+	@echo 'creating $@'
 	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
 
 res/values/strings.xml: $(call mkdir_deps,res/values)
@@ -260,4 +237,4 @@ include $(topsrcdir)/config/android-common.mk
 libs:: classes.dex jni-stubs.inc GeneratedJNIWrappers.cpp fennec_ids.txt
 	$(INSTALL) classes.dex $(FINAL_TARGET)
 	@(diff jni-stubs.inc $(topsrcdir)/mozglue/android/jni-stubs.inc >/dev/null && diff GeneratedJNIWrappers.cpp $(topsrcdir)/widget/android/GeneratedJNIWrappers.cpp >/dev/null) || \
-	 (echo "*** Error: The generated JNI code has changed. Please run cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android and repeat the build." && exit 1)
+	 (echo '*** Error: The generated JNI code has changed. Please run cp $(CURDIR)/jni-stubs.inc $(topsrcdir)/mozglue/android && cp $(CURDIR)/GeneratedJNIWrappers.* $(topsrcdir)/widget/android and repeat the build.' && exit 1)

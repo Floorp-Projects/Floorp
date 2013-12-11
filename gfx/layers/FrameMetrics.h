@@ -36,7 +36,7 @@ public:
   // We use IDs to identify frames across processes.
   typedef uint64_t ViewID;
   static const ViewID NULL_SCROLL_ID;   // This container layer does not scroll.
-  static const ViewID START_SCROLL_ID;  // This is the ID that scrolling subframes
+  static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling subframes
                                         // will begin at.
 
   FrameMetrics()
@@ -54,6 +54,7 @@ public:
     , mMayHaveTouchListeners(false)
     , mPresShellId(-1)
     , mIsRoot(false)
+    , mHasScrollgrab(false)
   {}
 
   // Default copy ctor and operator= are fine
@@ -256,6 +257,9 @@ public:
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRoot;
+
+  // Whether or not this frame is for an element marked 'scrollgrab'.
+  bool mHasScrollgrab;
 };
 
 /**

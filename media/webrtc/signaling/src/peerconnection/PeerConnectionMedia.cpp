@@ -20,9 +20,11 @@
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 namespace sipcc {
 
@@ -136,7 +138,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
 PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     : mParent(parent),
       mLocalSourceStreamsLock("PeerConnectionMedia.mLocalSourceStreamsLock"),
-      mIceCtx(NULL),
+      mIceCtx(nullptr),
       mDNSResolver(new mozilla::NrIceResolver()),
       mMainThread(mParent->GetMainThread()),
       mSTSThread(mParent->GetSTSThread()) {}
@@ -178,12 +180,12 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     CSFLogError(logTag, "%s: Failed to get dns resolver", __FUNCTION__);
     return rv;
   }
-  mIceCtx->SignalGatheringCompleted.connect(this,
-                                            &PeerConnectionMedia::IceGatheringCompleted);
-  mIceCtx->SignalCompleted.connect(this,
-                                   &PeerConnectionMedia::IceCompleted);
-  mIceCtx->SignalFailed.connect(this,
-                                &PeerConnectionMedia::IceFailed);
+  mIceCtx->SignalGatheringStateChange.connect(
+      this,
+      &PeerConnectionMedia::IceGatheringStateChange);
+  mIceCtx->SignalConnectionStateChange.connect(
+      this,
+      &PeerConnectionMedia::IceConnectionStateChange);
 
   // Create three streams to start with.
   // One each for audio, video and DataChannel
@@ -245,6 +247,11 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   // Adding tracks here based on nsDOMMediaStream expectation settings
   uint32_t hints = stream->GetHintContents();
+#ifdef MOZILLA_INTERNAL_API
+  if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
+    hints &= ~(DOMMediaStream::HINT_CONTENTS_VIDEO);
+  }
+#endif
 
   if (!(hints & (DOMMediaStream::HINT_CONTENTS_AUDIO |
         DOMMediaStream::HINT_CONTENTS_VIDEO))) {
@@ -361,7 +368,7 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
   disconnect_all();
   mTransportFlows.clear();
   mIceStreams.clear();
-  mIceCtx = NULL;
+  mIceCtx = nullptr;
 
   mMainThread->Dispatch(WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),
                         NS_DISPATCH_NORMAL);
@@ -371,7 +378,7 @@ LocalSourceStreamInfo*
 PeerConnectionMedia::GetLocalStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mLocalSourceStreams.Length()) {
-    return NULL;
+    return nullptr;
   }
 
   MOZ_ASSERT(mLocalSourceStreams[aIndex]);
@@ -382,7 +389,7 @@ RemoteSourceStreamInfo*
 PeerConnectionMedia::GetRemoteStream(int aIndex)
 {
   if(aIndex < 0 || aIndex >= (int) mRemoteSourceStreams.Length()) {
-    return NULL;
+    return nullptr;
   }
 
   MOZ_ASSERT(mRemoteSourceStreams[aIndex]);
@@ -424,24 +431,17 @@ PeerConnectionMedia::AddRemoteStreamHint(int aIndex, bool aIsVideo)
 
 
 void
-PeerConnectionMedia::IceGatheringCompleted(NrIceCtx *aCtx)
+PeerConnectionMedia::IceGatheringStateChange(NrIceCtx* ctx,
+                                             NrIceCtx::GatheringState state)
 {
-  MOZ_ASSERT(aCtx);
-  SignalIceGatheringCompleted(aCtx);
+  SignalIceGatheringStateChange(ctx, state);
 }
 
 void
-PeerConnectionMedia::IceCompleted(NrIceCtx *aCtx)
+PeerConnectionMedia::IceConnectionStateChange(NrIceCtx* ctx,
+                                              NrIceCtx::ConnectionState state)
 {
-  MOZ_ASSERT(aCtx);
-  SignalIceCompleted(aCtx);
-}
-
-void
-PeerConnectionMedia::IceFailed(NrIceCtx *aCtx)
-{
-  MOZ_ASSERT(aCtx);
-  SignalIceFailed(aCtx);
+  SignalIceConnectionStateChange(ctx, state);
 }
 
 void
@@ -454,17 +454,69 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
 
 // This method exists for the unittests.
 // It allows visibility into the pipelines and flows.
-// It returns NULL if no pipeline exists for this track number.
+// It returns nullptr if no pipeline exists for this track number.
 mozilla::RefPtr<mozilla::MediaPipeline>
 SourceStreamInfo::GetPipeline(int aTrack) {
   std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
     mPipelines.find(aTrack);
 
   if (it == mPipelines.end()) {
-    return NULL;
+    return nullptr;
   }
 
   return it->second;
+}
+
+// This methods gathers statistics for the getStats API.
+// aTrack == 0 means gather stats for all tracks.
+
+nsresult
+SourceStreamInfo::GetPipelineStats(DOMHighResTimeStamp now, int aTrack,
+                                   Sequence<RTCInboundRTPStreamStats > *inbound,
+                                   Sequence<RTCOutboundRTPStreamStats > *outbound)
+{
+#ifdef MOZILLA_INTERNAL_API
+  ASSERT_ON_THREAD(mParent->GetSTSThread());
+  // walk through all the MediaPipelines and gather stats
+  for (std::map<int, RefPtr<MediaPipeline> >::iterator it = mPipelines.begin();
+       it != mPipelines.end();
+       ++it) {
+    if (!aTrack || aTrack == it->first) {
+      const MediaPipeline &mp = *it->second;
+      nsString idstr = (mp.Conduit()->type() == MediaSessionConduit::AUDIO) ?
+          NS_LITERAL_STRING("audio_") : NS_LITERAL_STRING("video_");
+      idstr.AppendInt(mp.trackid());
+
+      switch (mp.direction()) {
+        case MediaPipeline::TRANSMIT: {
+          RTCOutboundRTPStreamStats s;
+          s.mTimestamp.Construct(now);
+          s.mId.Construct(NS_LITERAL_STRING("outbound_rtp_") + idstr);
+          s.mType.Construct(RTCStatsType::Outboundrtp);
+          // TODO: Get SSRC
+          // int channel = mp.Conduit()->GetChannel();
+          s.mSsrc.Construct(NS_LITERAL_STRING("123457"));
+          s.mPacketsSent.Construct(mp.rtp_packets_sent());
+          s.mBytesSent.Construct(mp.rtp_bytes_sent());
+          outbound->AppendElement(s);
+          break;
+        }
+        case MediaPipeline::RECEIVE: {
+          RTCInboundRTPStreamStats s;
+          s.mTimestamp.Construct(now);
+          s.mId.Construct(NS_LITERAL_STRING("inbound_rtp_") + idstr);
+          s.mType.Construct(RTCStatsType::Inboundrtp);
+          s.mSsrc.Construct(NS_LITERAL_STRING("123457"));
+          s.mPacketsReceived.Construct(mp.rtp_packets_received());
+          s.mBytesReceived.Construct(mp.rtp_bytes_received());
+          inbound->AppendElement(s);
+          break;
+        }
+      }
+    }
+  }
+#endif
+  return NS_OK;
 }
 
 void

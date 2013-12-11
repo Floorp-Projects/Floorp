@@ -6,8 +6,10 @@
 #include "gfxBlur.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 
 #include "mozilla/gfx/Blur.h"
+#include "mozilla/gfx/2D.h"
 
 using namespace mozilla::gfx;
 
@@ -19,7 +21,6 @@ gfxAlphaBoxBlur::gfxAlphaBoxBlur()
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur()
 {
   mContext = nullptr;
-  mImageSurface = nullptr;
   delete mBlur;
 }
 
@@ -58,51 +59,79 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
 
     // Make an alpha-only surface to draw on. We will play with the data after
     // everything is drawn to create a blur effect.
-    mImageSurface = new gfxImageSurface(gfxIntSize(size.width, size.height),
-                                        gfxImageFormatA8,
-                                        mBlur->GetStride(),
-                                        blurDataSize,
-                                        true);
-    if (mImageSurface->CairoStatus())
-        return nullptr;
+    mData = new unsigned char[blurDataSize];
+    memset(mData, 0, blurDataSize);
+
+    mozilla::RefPtr<DrawTarget> dt =
+        gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData, size,
+                                                            mBlur->GetStride(),
+                                                            FORMAT_A8);
+    if (!dt) {
+        nsRefPtr<gfxImageSurface> image =
+            new gfxImageSurface(mData,
+                                gfxIntSize(size.width, size.height),
+                                mBlur->GetStride(),
+                                gfxImageFormatA8);
+        dt = Factory::CreateDrawTargetForCairoSurface(image->CairoSurface(), size);
+        if (!dt) {
+            return nullptr;
+        }
+    }
 
     IntRect irect = mBlur->GetRect();
     gfxPoint topleft(irect.TopLeft().x, irect.TopLeft().y);
 
-    // Use a device offset so callers don't need to worry about translating
-    // coordinates, they can draw as if this was part of the destination context
-    // at the coordinates of rect.
-    mImageSurface->SetDeviceOffset(-topleft);
-
-    mContext = new gfxContext(mImageSurface);
+    mContext = new gfxContext(dt);
+    mContext->Translate(-topleft);
 
     return mContext;
 }
 
 void
-gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx, const gfxPoint& offset)
+gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
 {
     if (!mContext)
         return;
 
-    mBlur->Blur(mImageSurface->Data());
+    mBlur->Blur(mData);
 
-    mozilla::gfx::Rect* dirtyrect = mBlur->GetDirtyRect();
+    mozilla::gfx::Rect* dirtyRect = mBlur->GetDirtyRect();
+
+    DrawTarget *dest = aDestinationCtx->GetDrawTarget();
+    if (!dest) {
+      NS_ERROR("Blurring not supported for Thebes contexts!");
+      return;
+    }
+
+    mozilla::RefPtr<SourceSurface> mask
+      = dest->CreateSourceSurfaceFromData(mData,
+                                          mBlur->GetSize(),
+                                          mBlur->GetStride(),
+                                          FORMAT_A8);
+    if (!mask) {
+      NS_ERROR("Failed to create mask!");
+      return;
+    }
+
+    nsRefPtr<gfxPattern> thebesPat = aDestinationCtx->GetPattern();
+    Pattern* pat = thebesPat->GetPattern(dest, nullptr);
+
+    Matrix oldTransform = dest->GetTransform();
+    Matrix newTransform = oldTransform;
+    newTransform.Translate(mBlur->GetRect().x, mBlur->GetRect().y);
 
     // Avoid a semi-expensive clip operation if we can, otherwise
     // clip to the dirty rect
-    if (dirtyrect) {
-        aDestinationCtx->Save();
-        aDestinationCtx->NewPath();
-        gfxRect dirty(dirtyrect->x, dirtyrect->y, dirtyrect->width, dirtyrect->height);
-        gfxRect imageRect(offset - mImageSurface->GetDeviceOffset(), mImageSurface->GetSize());
-        dirty.IntersectRect(dirty, imageRect);
-        aDestinationCtx->Rectangle(dirty);
-        aDestinationCtx->Clip();
-        aDestinationCtx->Mask(mImageSurface, offset);
-        aDestinationCtx->Restore();
-    } else {
-        aDestinationCtx->Mask(mImageSurface, offset);
+    if (dirtyRect) {
+        dest->PushClipRect(*dirtyRect);
+    }
+
+    dest->SetTransform(newTransform);
+    dest->MaskSurface(*pat, mask, Point(0, 0));
+    dest->SetTransform(oldTransform);
+
+    if (dirtyRect) {
+        dest->PopClip();
     }
 }
 
@@ -111,4 +140,38 @@ gfxIntSize gfxAlphaBoxBlur::CalculateBlurRadius(const gfxPoint& aStd)
     mozilla::gfx::Point std(Float(aStd.x), Float(aStd.y));
     IntSize size = AlphaBoxBlur::CalculateBlurRadius(std);
     return gfxIntSize(size.width, size.height);
+}
+
+/* static */ void
+gfxAlphaBoxBlur::BlurRectangle(gfxContext *aDestinationCtx,
+                               const gfxRect& aRect,
+                               gfxCornerSizes* aCornerRadii,
+                               const gfxPoint& aBlurStdDev,
+                               const gfxRGBA& aShadowColor,
+                               const gfxRect& aDirtyRect,
+                               const gfxRect& aSkipRect)
+{
+  gfxIntSize blurRadius = CalculateBlurRadius(aBlurStdDev);
+
+  // Create the temporary surface for blurring
+  gfxAlphaBoxBlur blur;
+  gfxContext *dest = blur.Init(aRect, gfxIntSize(), blurRadius, &aDirtyRect, &aSkipRect);
+
+  if (!dest) {
+    return;
+  }
+
+  gfxRect shadowGfxRect = aRect;
+  shadowGfxRect.Round();
+
+  dest->NewPath();
+  if (aCornerRadii) {
+    dest->RoundedRectangle(shadowGfxRect, *aCornerRadii);
+  } else {
+    dest->Rectangle(shadowGfxRect);
+  }
+  dest->Fill();
+
+  aDestinationCtx->SetColor(aShadowColor);
+  blur.Paint(aDestinationCtx);
 }

@@ -5,7 +5,6 @@
 
 INSTALL_EXTENSION_ID = widgetutils@extensions.mozilla.org
 DIST_FILES = install.rdf
-NO_JAR_AUTO_REG        = 1
 USE_EXTENSION_MANIFEST = 1
 XPI_PKGNAME            = widgetutils-$(MOZ_APP_VERSION)
 

@@ -28,6 +28,9 @@ template <class T>
 class Heap;
 } /* namespace JS */
 
+class nsRegion;
+class nsIntRegion;
+
 //
 // nsTArray is a resizable array class, like std::vector.
 //
@@ -191,7 +194,7 @@ struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase
     moz_free(ptr);
   }
 
-  static void SizeTooBig() {
+  static void SizeTooBig(size_t) {
   }
 };
 
@@ -209,8 +212,8 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
     moz_free(ptr);
   }
 
-  static void SizeTooBig() {
-    mozalloc_abort("Trying to allocate an infallible array that's too big");
+  static void SizeTooBig(size_t size) {
+    NS_ABORT_OOM(size);
   }
 };
 
@@ -231,7 +234,7 @@ struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase
     free(ptr);
   }
 
-  static void SizeTooBig() {
+  static void SizeTooBig(size_t) {
   }
 };
 
@@ -240,7 +243,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
   static void* Malloc(size_t size) {
     void* ptr = malloc(size);
     if (MOZ_UNLIKELY(!ptr)) {
-      HandleOOM();
+      NS_ABORT_OOM(size);
     }
     return ptr;
   }
@@ -248,7 +251,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
   static void* Realloc(void* ptr, size_t size) {
     void* newptr = realloc(ptr, size);
     if (MOZ_UNLIKELY(!ptr && size)) {
-      HandleOOM();
+      NS_ABORT_OOM(size);
     }
     return newptr;
   }
@@ -257,14 +260,8 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
     free(ptr);
   }
 
-  static void SizeTooBig() {
-    HandleOOM();
-  }
-
-private:
-  static void HandleOOM() {
-    fputs("Out of memory allocating nsTArray buffer.\n", stderr);
-    MOZ_CRASH();
+  static void SizeTooBig(size_t size) {
+    NS_ABORT_OOM(size);
   }
 };
 
@@ -663,12 +660,22 @@ struct nsTArray_CopyChooser {
 };
 
 //
-// JS::Heap<E> elements require constructors/destructors to be called and so is
+// Some classes require constructors/destructors to be called, so they are
 // specialized here.
 //
 template <class E>
 struct nsTArray_CopyChooser<JS::Heap<E> > {
-  typedef nsTArray_CopyWithConstructors<E> Type;
+  typedef nsTArray_CopyWithConstructors<JS::Heap<E> > Type;
+};
+
+template<>
+struct nsTArray_CopyChooser<nsRegion> {
+  typedef nsTArray_CopyWithConstructors<nsRegion> Type;
+};
+
+template<>
+struct nsTArray_CopyChooser<nsIntRegion> {
+  typedef nsTArray_CopyWithConstructors<nsIntRegion> Type;
 };
 
 //

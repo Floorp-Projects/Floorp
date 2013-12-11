@@ -72,6 +72,8 @@ function testSourcesDisplay() {
   executeSoon(() => {
     is(gEditor.getDebugLocation(), 5,
       "Editor debugger location is correct.");
+    ok(gEditor.hasLineClass(5, "debug-line"),
+      "The debugged line is highlighted appropriately.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
     gSources.selectedLabel = gLabel1;
@@ -102,6 +104,8 @@ function testSwitchPaused1() {
 
     is(gEditor.getDebugLocation(), null,
       "Editor debugger location is correct.");
+    ok(!gEditor.hasLineClass(5, "debug-line"),
+      "The debugged line highlight was removed.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
     gSources.selectedLabel = gLabel2;
@@ -131,6 +135,8 @@ function testSwitchPaused2() {
       "Editor caret location is correct.");
     is(gEditor.getDebugLocation(), 5,
       "Editor debugger location is correct.");
+    ok(gEditor.hasLineClass(5, "debug-line"),
+      "The debugged line is highlighted appropriately.");
 
     // Step out three times.
     waitForThreadEvents(gPanel, "paused").then(() => {
@@ -167,6 +173,8 @@ function testSwitchRunning() {
       "Editor caret location is correct.");
     is(gEditor.getDebugLocation(), 4,
       "Editor debugger location is correct.");
+    ok(gEditor.hasLineClass(4, "debug-line"),
+      "The debugged line is highlighted appropriately.");
 
     deferred.resolve();
   });

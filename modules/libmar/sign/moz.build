@@ -6,7 +6,7 @@
 
 LIBRARY_NAME = 'signmar'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mar_sign.c',
     'nss_secutil.c',
 ]

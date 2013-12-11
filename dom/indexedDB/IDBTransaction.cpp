@@ -45,7 +45,7 @@ namespace {
 NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
-uint64_t gNextSerialNumber = 1;
+uint64_t gNextTransactionSerialNumber = 1;
 #endif
 
 PLDHashOperator
@@ -166,7 +166,7 @@ IDBTransaction::IDBTransaction()
   mActorParent(nullptr),
   mAbortCode(NS_OK),
 #ifdef MOZ_ENABLE_PROFILER_SPS
-  mSerialNumber(gNextSerialNumber++),
+  mSerialNumber(gNextTransactionSerialNumber++),
 #endif
   mCreating(false)
 #ifdef DEBUG

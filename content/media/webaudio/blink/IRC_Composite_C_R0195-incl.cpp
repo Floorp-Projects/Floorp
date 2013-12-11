@@ -18,7 +18,7 @@
  * the listener.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 using mozilla::ArrayLength;
 

@@ -25,7 +25,9 @@ SafepointIndex::resolve()
 {
     JS_ASSERT(!resolved);
     safepointOffset_ = safepoint_->offset();
+#ifdef DEBUG
     resolved = true;
+#endif
 }
 
 inline uint8_t *

@@ -60,4 +60,6 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
 FINAL_LIBRARY = 'gklayout'

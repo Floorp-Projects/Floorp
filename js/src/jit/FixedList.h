@@ -32,12 +32,12 @@ class FixedList
     { }
 
     // Dynamic memory allocation requires the ability to report failure.
-    bool init(size_t length) {
+    bool init(TempAllocator &alloc, size_t length) {
         length_ = length;
         if (length == 0)
             return true;
 
-        list_ = (T *)GetIonContext()->temp->allocate(length * sizeof(T));
+        list_ = (T *)alloc.allocate(length * sizeof(T));
         return list_ != nullptr;
     }
 
@@ -50,8 +50,8 @@ class FixedList
         length_ -= num;
     }
 
-    bool growBy(size_t num) {
-        T *list = (T *)GetIonContext()->temp->allocate((length_ + num) * sizeof(T));
+    bool growBy(TempAllocator &alloc, size_t num) {
+        T *list = (T *)alloc.allocate((length_ + num) * sizeof(T));
         if (!list)
             return false;
 

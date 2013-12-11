@@ -107,6 +107,44 @@ function test() {
     is(testVar.get("someProp4").target.querySelector(".value").getAttribute("value"), "Object",
       "The grip information for the variable wasn't set correctly (9).");
 
+    let parent = testVar.get("someProp2");
+    let child = parent.addItem("child", {
+      value: {
+        type: "null"
+      }
+    });
+
+    is(variables.getItemForNode(parent.target), parent,
+       "VariablesView should have a record of the parent.");
+    is(variables.getItemForNode(child.target), child,
+       "VariablesView should have a record of the child.");
+    is([...parent].length, 1,
+       "Parent should have one child.");
+
+    parent.remove();
+
+    is(variables.getItemForNode(parent.target), undefined,
+       "VariablesView should not have a record of the parent anymore.");
+    is(parent.target.parentNode, null,
+       "Parent element should not have a parent.")
+    is(variables.getItemForNode(child.target), undefined,
+       "VariablesView should not have a record of the child anymore.");
+    is(child.target.parentNode, null,
+       "Child element should not have a parent.")
+    is([...parent].length, 0,
+       "Parent should have zero children.");
+
+    testScope.remove();
+
+    is([...variables].length, 0,
+       "VariablesView should have been emptied.");
+    is(Cu.nondeterministicGetWeakMapKeys(variables._itemsByElement).length, 0,
+       "VariablesView _itemsByElement map has been emptied.");
+    is(variables._currHierarchy.size, 0,
+       "VariablesView _currHierarchy map has been emptied.");
+    is(variables._list.children.length, 0,
+       "VariablesView element should have no children.");
+
     closeDebuggerAndFinish(aPanel);
   });
 }

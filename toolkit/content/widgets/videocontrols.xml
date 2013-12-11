@@ -287,9 +287,10 @@
                     <button class="muteButton"
                             mutelabel="&muteButton.muteLabel;"
                             unmutelabel="&muteButton.unmuteLabel;"/>
-                    <stack class="volumeStack" hidden="true" fadeout="true">
-                        <box class="volumeBackgroundBar"/>
-                        <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
+                    <stack class="volumeStack">
+                      <box class="volumeBackground"/>
+                      <box class="volumeForeground" anonid="volumeForeground"/>
+                      <scale class="volumeControl" movetoclick="true"/>
                     </stack>
                     <button class="fullscreenButton"
                             enterfullscreenlabel="&fullscreenButton.enterfullscreenlabel;"
@@ -313,7 +314,6 @@
                 controlBar : null,
                 playButton : null,
                 muteButton : null,
-                volumeStack    : null,
                 volumeControl  : null,
                 durationLabel  : null,
                 positionLabel  : null,
@@ -342,10 +342,22 @@
                 get isAudioOnly() { return this._isAudioOnly; },
                 set isAudioOnly(val) {
                     this._isAudioOnly = val;
+                    if (this._isAudioOnly) {
+                        this.controlBar.setAttribute("audio-only", true);
+                    } else {
+                        this.controlBar.removeAttribute("audio-only");
+                    }
+                    this.adjustControlSize();
+
                     if (!this.isTopLevelSyntheticDocument)
                         return;
-                    this.video.style.height = this._controlBarHeight + "px";
-                    this.video.style.width = "66%";
+                    if (this._isAudioOnly) {
+                        this.video.style.height = this._controlBarHeight + "px";
+                        this.video.style.width = "66%";
+                    } else {
+                        this.video.style.removeProperty("height");
+                        this.video.style.removeProperty("width");
+                    }
                 },
                 suppressError : false,
 
@@ -457,6 +469,7 @@
                     this._playButtonWidth = this.playButton.clientWidth;
                     this._durationLabelWidth = this.durationLabel.clientWidth;
                     this._muteButtonWidth = this.muteButton.clientWidth;
+                    this._volumeControlWidth = this.volumeControl.clientWidth;
                     this._fullscreenButtonWidth = this.fullscreenButton.clientWidth;
                     this._controlBarHeight = this.controlBar.clientHeight;
                     this.controlBar.hidden = true;
@@ -549,9 +562,11 @@
                             this.setupStatusFader();
                             break;
                         case "volumechange":
-                            var volume = this.video.muted ? 0 : Math.round(this.video.volume * 100);
+                            var volume = this.video.muted ? 0 : this.video.volume;
+                            var volumePercentage = Math.round(volume * 100);
                             this.setMuteButtonState(this.video.muted);
-                            this.volumeControl.value = volume;
+                            this.volumeControl.value = volumePercentage;
+                            this.volumeForeground.style.paddingRight = (1 - volume) * this._volumeControlWidth + "px";
                             break;
                         case "loadedmetadata":
                             this.adjustControlSize();
@@ -847,21 +862,6 @@
                     }
                     this.bufferBar.max = duration;
                     this.bufferBar.value = endTime;
-                },
-
-                onVolumeMouseInOut : function (event) {
-                    let doc = this.video.ownerDocument;
-                    let win = doc.defaultView;
-                    if (this.isVideoWithoutAudioTrack() ||
-                        (this.isAudioOnly && this.isTopLevelSyntheticDocument)) {
-                        return;
-                    }
-                    // Ignore events caused by transitions between mute button and volumeStack,
-                    // or between nodes inside these two elements.
-                    if (this.isEventWithin(event, this.muteButton, this.volumeStack))
-                        return;
-                    var isMouseOver = (event.type == "mouseover");
-                    this.startFade(this.volumeStack, isMouseOver);
                 },
 
                 _controlsHiddenByTimeout : false,
@@ -1355,15 +1355,14 @@
                 _playButtonWidth : 0,
                 _durationLabelWidth : 0,
                 _muteButtonWidth : 0,
+                _volumeControlWidth : 0,
                 _fullscreenButtonWidth : 0,
                 _controlBarHeight : 0,
                 _overlayPlayButtonHeight : 64,
                 _overlayPlayButtonWidth : 64,
+                _volumeStackMarginEnd : 8,
                 adjustControlSize : function adjustControlSize() {
                     let doc = this.video.ownerDocument;
-                    let isAudioOnly = this.isAudioOnly;
-                    if (isAudioOnly && !this.isTopLevelSyntheticDocument)
-                        return;
 
                     // The scrubber has |flex=1|, therefore |minScrubberWidth|
                     // was generated by empirical testing.
@@ -1372,7 +1371,15 @@
                                               minScrubberWidth +
                                               this._durationLabelWidth +
                                               this._muteButtonWidth +
+                                              this._volumeControlWidth +
                                               this._fullscreenButtonWidth;
+
+                    let isAudioOnly = this.isAudioOnly;
+                    if (isAudioOnly) {
+                        // When the fullscreen button is hidden we add margin-end to the volume stack.
+                        minWidthAllControls -= this._fullscreenButtonWidth - this._volumeStackMarginEnd;
+                    }
+
                     let minHeightForControlBar = this._controlBarHeight;
                     let minWidthOnlyPlayPause = this._playButtonWidth + this._muteButtonWidth;
 
@@ -1395,14 +1402,12 @@
                 init : function (binding) {
                     this.video = binding.parentNode;
                     this.videocontrols = binding;
-                    this.isAudioOnly = (this.video instanceof HTMLAudioElement);
 
                     this.statusIcon    = document.getAnonymousElementByAttribute(binding, "class", "statusIcon");
                     this.controlBar    = document.getAnonymousElementByAttribute(binding, "class", "controlBar");
                     this.playButton    = document.getAnonymousElementByAttribute(binding, "class", "playButton");
                     this.muteButton    = document.getAnonymousElementByAttribute(binding, "class", "muteButton");
                     this.volumeControl = document.getAnonymousElementByAttribute(binding, "class", "volumeControl");
-                    this.volumeStack   = document.getAnonymousElementByAttribute(binding, "class", "volumeStack");
                     this.progressBar   = document.getAnonymousElementByAttribute(binding, "class", "progressBar");
                     this.bufferBar     = document.getAnonymousElementByAttribute(binding, "class", "bufferBar");
                     this.scrubber      = document.getAnonymousElementByAttribute(binding, "class", "scrubber");
@@ -1414,6 +1419,7 @@
                     this.controlsSpacer     = document.getAnonymousElementByAttribute(binding, "class", "controlsSpacer");
                     this.clickToPlay        = document.getAnonymousElementByAttribute(binding, "class", "clickToPlay");
                     this.fullscreenButton   = document.getAnonymousElementByAttribute(binding, "class", "fullscreenButton");
+                    this.volumeForeground   = document.getAnonymousElementByAttribute(binding, "anonid", "volumeForeground");
 
                     this.statsTable       = document.getAnonymousElementByAttribute(binding, "class", "statsTable");
                     this.stats.filename   = document.getAnonymousElementByAttribute(binding, "class", "statFilename");
@@ -1427,6 +1433,7 @@
                     this.stats.framesPresented = document.getAnonymousElementByAttribute(binding, "class", "statFramesPresented");
                     this.stats.framesPainted   = document.getAnonymousElementByAttribute(binding, "class", "statFramesPainted");
 
+                    this.isAudioOnly = (this.video instanceof HTMLAudioElement);
                     this.setupInitialState();
                     this.setupNewLoadState();
 
@@ -1453,15 +1460,6 @@
                     addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "click", this.clickToPlayClickHandler);
                     addListener(this.controlsSpacer, "dblclick", this.toggleFullscreen);
-
-                    if (this.isAudioOnly) {
-                      this.controlBar.classList.add("audio");
-                    } else {
-                      addListener(this.muteButton, "mouseover", this.onVolumeMouseInOut);
-                      addListener(this.muteButton, "mouseout", this.onVolumeMouseInOut);
-                      addListener(this.volumeStack, "mouseover", this.onVolumeMouseInOut);
-                      addListener(this.volumeStack, "mouseout", this.onVolumeMouseInOut);
-                    }
 
                     addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
@@ -1534,11 +1532,12 @@
                         <button class="muteButton"
                                 mutelabel="&muteButton.muteLabel;"
                                 unmutelabel="&muteButton.unmuteLabel;"/>
-                        <stack class="volumeStack" hidden="true" fadeout="true">
-                            <box class="volumeBackgroundBar"/>
-                            <scale class="volumeControl" orient="vertical" dir="reverse" movetoclick="true"/>
+                        <stack class="volumeStack">
+                          <box class="volumeBackground"/>
+                          <box class="volumeForeground" anonid="volumeForeground"/>
+                          <scale class="volumeControl" movetoclick="true"/>
                         </stack>
-                    </hbox>
+                      </hbox>
                     <stack class="scrubberStack" flex="1">
                         <box class="backgroundBar"/>
                         <progressmeter class="bufferBar"/>

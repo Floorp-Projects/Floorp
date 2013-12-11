@@ -15,8 +15,6 @@ static AtkObject* mai_redundant_object_factory_create_accessible (
                               GObject *obj);
 static GType mai_redundant_object_factory_get_accessible_type (void);
 
-static gpointer parent_class = NULL;
-
 GType
 mai_redundant_object_factory_get_type (void)
 {
@@ -49,8 +47,6 @@ static void
 mai_redundant_object_factory_class_init (maiRedundantObjectFactoryClass *klass)
 {
   AtkObjectFactoryClass *class = ATK_OBJECT_FACTORY_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   class->create_accessible = mai_redundant_object_factory_create_accessible;
   class->get_accessible_type = mai_redundant_object_factory_get_accessible_type;

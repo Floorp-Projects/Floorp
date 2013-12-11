@@ -4,30 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS.vpx += [
-    'vpx/vp8.h',
-    'vpx/vp8cx.h',
-    'vpx/vp8dx.h',
-    'vpx/vp8e.h',
-    'vpx/vpx_codec.h',
-    'vpx/vpx_codec_impl_bottom.h',
-    'vpx/vpx_codec_impl_top.h',
-    'vpx/vpx_decoder.h',
-    'vpx/vpx_decoder_compat.h',
-    'vpx/vpx_encoder.h',
-    'vpx/vpx_image.h',
-    'vpx/vpx_integer.h',
-    'vpx_mem/include/vpx_mem_intrnl.h',
-    'vpx_mem/vpx_mem.h',
-    'vpx_ports/arm.h',
-    'vpx_ports/mem.h',
-    'vpx_ports/vpx_timer.h',
-    'vpx_ports/x86.h',
-    'vpx_scale/scale_mode.h',
-    'vpx_scale/vpxscale.h',
-    'vpx_scale/yv12config.h',
-    'vpx_scale/yv12extend.h',
-]
+include('sources.mozbuild')
+
+EXPORTS.vpx += files['EXPORTS']
 
 if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
     HOST_SOURCES += [
@@ -36,61 +15,62 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HOST_PROGRAM = 'host_obj_int_extract'
 
-SOURCES += [
-    'vp8/common/alloccommon.c',
-    'vp8/common/blockd.c',
-    'vp8/common/debugmodes.c',
-    'vp8/common/dequantize.c',
-    'vp8/common/entropy.c',
-    'vp8/common/entropymode.c',
-    'vp8/common/entropymv.c',
-    'vp8/common/extend.c',
-    'vp8/common/filter.c',
-    'vp8/common/findnearmv.c',
-    'vp8/common/generic/systemdependent.c',
-    'vp8/common/idct_blk.c',
-    'vp8/common/idctllm.c',
-    'vp8/common/loopfilter.c',
-    'vp8/common/loopfilter_filters.c',
-    'vp8/common/mbpitch.c',
-    'vp8/common/modecont.c',
-    'vp8/common/modecontext.c',
-    'vp8/common/postproc.c',
-    'vp8/common/quant_common.c',
-    'vp8/common/reconinter.c',
-    'vp8/common/reconintra.c',
-    'vp8/common/reconintra4x4.c',
-    'vp8/common/sad_c.c',
-    'vp8/common/setupintrarecon.c',
-    'vp8/common/swapyv12buffer.c',
-    'vp8/common/treecoder.c',
-    'vp8/common/variance_c.c',
-    'vp8/decoder/dboolhuff.c',
-    'vp8/decoder/decodemv.c',
-    'vp8/decoder/decodframe.c',
-    'vp8/decoder/detokenize.c',
-    'vp8/decoder/generic/dsystemdependent.c',
-    'vp8/decoder/onyxd_if.c',
-    'vp8/decoder/reconintra_mt.c',
-    'vp8/decoder/threading.c',
-    'vp8/vp8_dx_iface.c',
-    'vpx/src/vpx_codec.c',
-    'vpx/src/vpx_decoder.c',
-    'vpx/src/vpx_decoder_compat.c',
-    'vpx/src/vpx_encoder.c',
-    'vpx/src/vpx_image.c',
-    'vpx_config_c.c',
-    'vpx_mem/vpx_mem.c',
-    'vpx_scale/generic/gen_scalers.c',
-    'vpx_scale/generic/scalesystemdependent.c',
-    'vpx_scale/generic/vpxscale.c',
-    'vpx_scale/generic/yv12config.c',
-    'vpx_scale/generic/yv12extend.c',
-]
+SOURCES += files['SOURCES']
+
+if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
+    SOURCES += files['ERROR_CONCEALMENT']
+
+if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
+    SOURCES += [
+        'vp8/encoder/vp8_asm_enc_offsets.c',
+        'vpx_scale/vpx_scale_asm_offsets.c',
+    ]
+
+if CONFIG['VPX_X86_ASM']:
+    SOURCES += files['X86_ASM']
+
+    if '64' in CONFIG['OS_TEST']:
+        SOURCES += files['X86-64_ASM']
+
+    # AVX2 only supported on
+    # Darwin toolchain right now
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        SOURCES += files['AVX2']
+
+    #postproc is only enabled on x86 with asm
+    SOURCES += files['VP8_POSTPROC']
+
+arm_asm_files = []
+if CONFIG['VPX_ARM_ASM']:
+    arm_asm_files += files['ARM_ASM']
+
+    if CONFIG['VPX_AS_CONVERSION']:
+        GENERATED_SOURCES += [ "%s.%s" % (f, CONFIG['VPX_ASM_SUFFIX'])
+            for f in sorted(arm_asm_files) if f.endswith('.asm')
+        ]
+        SOURCES += [
+            f for f in sorted(arm_asm_files) if not f.endswith('.asm')
+        ]
+    else:
+        SOURCES += sorted(arm_asm_files)
+
+# boolhuff_armv5te.asm defines the same functions as boolhuff.c instead of
+# using RTCD, so we have to make sure we only add one of the two.
+if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
+    SOURCES += [
+        'vp8/encoder/boolhuff.c',
+    ]
 
 MSVC_ENABLE_PGO = True
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['HAVE_CONFIG_H'] = 'vpx_config.h'
+
+if CONFIG['OS_TARGET'] == 'Android':
+    # Older versions of the Android NDK don't pre-define anything to indicate
+    # the OS they're on, so do it for them.
+    DEFINES['__linux__'] = True

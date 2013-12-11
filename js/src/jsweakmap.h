@@ -131,6 +131,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
   public:
     typedef HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy> Base;
     typedef typename Base::Enum Enum;
+    typedef typename Base::Lookup Lookup;
     typedef typename Base::Range Range;
 
     explicit WeakMap(JSContext *cx, JSObject *memOf = nullptr)
@@ -147,16 +148,16 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
 
     void nonMarkingTraceKeys(JSTracer *trc) {
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            Key key(e.front().key);
+            Key key(e.front().key());
             gc::Mark(trc, &key, "WeakMap entry key");
-            if (key != e.front().key)
-                e.rekeyFront(key, key);
+            if (key != e.front().key())
+                entryMoved(e, key);
         }
     }
 
     void nonMarkingTraceValues(JSTracer *trc) {
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            gc::Mark(trc, &r.front().value, "WeakMap entry value");
+            gc::Mark(trc, &r.front().value(), "WeakMap entry value");
     }
 
     bool keyNeedsMark(JSObject *key) {
@@ -180,17 +181,17 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         bool markedAny = false;
         for (Enum e(*this); !e.empty(); e.popFront()) {
             /* If the entry is live, ensure its key and value are marked. */
-            Key key(e.front().key);
+            Key key(e.front().key());
             if (gc::IsMarked(const_cast<Key *>(&key))) {
-                if (markValue(trc, &e.front().value))
+                if (markValue(trc, &e.front().value()))
                     markedAny = true;
-                if (e.front().key != key)
-                    e.rekeyFront(key);
+                if (e.front().key() != key)
+                    entryMoved(e, key);
             } else if (keyNeedsMark(key)) {
-                gc::Mark(trc, const_cast<Key *>(&key), "proxy-preserved WeakMap entry key");
-                if (e.front().key != key)
-                    e.rekeyFront(key);
-                gc::Mark(trc, &e.front().value, "WeakMap entry value");
+                gc::Mark(trc, &key, "proxy-preserved WeakMap entry key");
+                if (e.front().key() != key)
+                    entryMoved(e, key);
+                gc::Mark(trc, &e.front().value(), "WeakMap entry value");
                 markedAny = true;
             }
             key.unsafeSet(nullptr);
@@ -201,11 +202,11 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     void sweep() {
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            Key k(e.front().key);
+            Key k(e.front().key());
             if (gc::IsAboutToBeFinalized(&k))
                 e.removeFront();
-            else if (k != e.front().key)
-                e.rekeyFront(k, k);
+            else if (k != e.front().key())
+                entryMoved(e, k);
         }
         /*
          * Once we've swept, all remaining edges should stay within the
@@ -217,24 +218,34 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     /* memberOf can be nullptr, which means that the map is not part of a JSObject. */
     void traceMappings(WeakMapTracer *tracer) {
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            gc::Cell *key = gc::ToMarkable(r.front().key);
-            gc::Cell *value = gc::ToMarkable(r.front().value);
+            gc::Cell *key = gc::ToMarkable(r.front().key());
+            gc::Cell *value = gc::ToMarkable(r.front().value());
             if (key && value) {
                 tracer->callback(tracer, memberOf,
-                                 key, gc::TraceKind(r.front().key),
-                                 value, gc::TraceKind(r.front().value));
+                                 key, gc::TraceKind(r.front().key()),
+                                 value, gc::TraceKind(r.front().value()));
             }
         }
+    }
+
+    /* Rekey an entry when moved, ensuring we do not trigger barriers. */
+    void entryMoved(Enum &eArg, const Key &k) {
+        typedef typename HashMap<typename Unbarriered<Key>::type,
+                                 typename Unbarriered<Value>::type,
+                                 typename Unbarriered<HashPolicy>::type,
+                                 RuntimeAllocPolicy>::Enum UnbarrieredEnum;
+        UnbarrieredEnum &e = reinterpret_cast<UnbarrieredEnum &>(eArg);
+        e.rekeyFront(reinterpret_cast<const typename Unbarriered<Key>::type &>(k));
     }
 
 protected:
     void assertEntriesNotAboutToBeFinalized() {
 #if DEBUG
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
-            Key k(r.front().key);
+            Key k(r.front().key());
             JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
-            JS_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value));
-            JS_ASSERT(k == r.front().key);
+            JS_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
+            JS_ASSERT(k == r.front().key());
         }
 #endif
     }

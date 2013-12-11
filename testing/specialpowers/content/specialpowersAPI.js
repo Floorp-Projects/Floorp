@@ -626,6 +626,12 @@ SpecialPowersAPI.prototype = {
           originalValue = Ci.nsIPermissionManager.DENY_ACTION;
         } else if (this.testPermission(permission.type, Ci.nsIPermissionManager.PROMPT_ACTION, permission.context)) {
           originalValue = Ci.nsIPermissionManager.PROMPT_ACTION;
+        } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_SESSION, permission.context)) {
+          originalValue = Ci.nsICookiePermission.ACCESS_SESSION;
+        } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY, permission.context)) {
+          originalValue = Ci.nsICookiePermission.ACCESS_ALLOW_FIRST_PARTY_ONLY;
+        } else if (this.testPermission(permission.type, Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY, permission.context)) {
+          originalValue = Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY;
         }
 
         let [url, appId, isInBrowserElement] = this._getInfoFromPermissionArg(permission.context);

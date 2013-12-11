@@ -29,6 +29,7 @@
 #include "nsUnicodeScriptCodes.h"
 #include "nsDataHashtable.h"
 #include "harfbuzz/hb.h"
+#include "mozilla/gfx/2D.h"
 
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 typedef struct gr_face            gr_face;
@@ -950,15 +951,11 @@ public:
                                 FontCacheSizes* aSizes) const;
 
 protected:
-    class MemoryReporter MOZ_FINAL : public mozilla::MemoryMultiReporter
+    class MemoryReporter MOZ_FINAL : public nsIMemoryReporter
     {
     public:
-        MemoryReporter()
-            : MemoryMultiReporter("font-cache")
-        {}
-
-        NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                                  nsISupports* aClosure);
+        NS_DECL_ISUPPORTS
+        NS_DECL_NSIMEMORYREPORTER
     };
 
     // Observer for notifications that the font cache cares about
@@ -1012,6 +1009,59 @@ protected:
     static PLDHashOperator AgeCachedWordsForFont(HashEntry* aHashEntry, void*);
     static void WordCacheExpirationTimerCallback(nsITimer* aTimer, void* aCache);
     nsCOMPtr<nsITimer>      mWordCacheExpirationTimer;
+};
+
+class gfxTextPerfMetrics {
+public:
+
+    struct TextCounts {
+        uint32_t    numContentTextRuns;
+        uint32_t    numChromeTextRuns;
+        uint32_t    numChars;
+        uint32_t    maxTextRunLen;
+        uint32_t    wordCacheSpaceRules;
+        uint32_t    wordCacheLong;
+        uint32_t    wordCacheHit;
+        uint32_t    wordCacheMiss;
+        uint32_t    fallbackPrefs;
+        uint32_t    fallbackSystem;
+        uint32_t    textrunConst;
+        uint32_t    textrunDestr;
+    };
+
+    uint32_t reflowCount;
+
+    // counts per reflow operation
+    TextCounts current;
+
+    // totals for the lifetime of a document
+    TextCounts cumulative;
+
+    gfxTextPerfMetrics() {
+        memset(this, 0, sizeof(gfxTextPerfMetrics));
+    }
+
+    // add current totals to cumulative ones
+    void Accumulate() {
+        if (current.numChars == 0) {
+            return;
+        }
+        cumulative.numContentTextRuns += current.numContentTextRuns;
+        cumulative.numChromeTextRuns += current.numChromeTextRuns;
+        cumulative.numChars += current.numChars;
+        if (current.maxTextRunLen > cumulative.maxTextRunLen) {
+            cumulative.maxTextRunLen = current.maxTextRunLen;
+        }
+        cumulative.wordCacheSpaceRules += current.wordCacheSpaceRules;
+        cumulative.wordCacheLong += current.wordCacheLong;
+        cumulative.wordCacheHit += current.wordCacheHit;
+        cumulative.wordCacheMiss += current.wordCacheMiss;
+        cumulative.fallbackPrefs += current.fallbackPrefs;
+        cumulative.fallbackSystem += current.fallbackSystem;
+        cumulative.textrunConst += current.textrunConst;
+        cumulative.textrunDestr += current.textrunDestr;
+        memset(&current, 0, sizeof(current));
+    }
 };
 
 class gfxTextRunFactory {
@@ -1645,7 +1695,8 @@ public:
                                  uint32_t aHash,
                                  int32_t aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
-                                 uint32_t aFlags);
+                                 uint32_t aFlags,
+                                 gfxTextPerfMetrics *aTextPerf);
 
     // Ensure the ShapedWord cache is initialized. This MUST be called before
     // any attempt to use GetShapedWord().
@@ -3381,6 +3432,24 @@ public:
         return MakeTextRun(aString, aLength, &params, aFlags);
     }
 
+    /**
+     * Get the (possibly-cached) width of the hyphen character.
+     * The aCtx and aAppUnitsPerDevUnit parameters will be used only if
+     * needed to initialize the cached hyphen width; otherwise they are
+     * ignored.
+     */
+    gfxFloat GetHyphenWidth(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit);
+
+    /**
+     * Make a text run representing a single hyphen character.
+     * This will use U+2010 HYPHEN if available in the first font,
+     * otherwise fall back to U+002D HYPHEN-MINUS.
+     * The caller is responsible for deleting the returned text run
+     * when no longer required.
+     */
+    gfxTextRun *MakeHyphenTextRun(gfxContext *aCtx,
+                                  uint32_t aAppUnitsPerDevUnit);
+
     /* helper function for splitting font families on commas and
      * calling a function for each family to fill the mFonts array
      */
@@ -3438,6 +3507,10 @@ public:
     // with no @font-face rule, this always returns 0.
     uint64_t GetGeneration();
 
+    // used when logging text performance
+    gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
+    void SetTextPerfMetrics(gfxTextPerfMetrics *aTextPerf) { mTextPerf = aTextPerf; }
+
     // If there is a user font set, check to see whether the font list or any
     // caches need updating.
     virtual void UpdateFontList();
@@ -3463,9 +3536,12 @@ protected:
     gfxFontStyle mStyle;
     nsTArray<FamilyFace> mFonts;
     gfxFloat mUnderlineOffset;
+    gfxFloat mHyphenWidth;
 
     gfxUserFontSet* mUserFontSet;
     uint64_t mCurrGeneration;  // track the current user font set generation, rebuild font list if needed
+
+    gfxTextPerfMetrics *mTextPerf;
 
     // Cache a textrun representing an ellipsis (useful for CSS text-overflow)
     // at a specific appUnitsPerDevPixel size

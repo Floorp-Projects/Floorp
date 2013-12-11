@@ -40,14 +40,14 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[2]);
 
-      testParamsTab("urlencoded")
-        .then(() => {
-          RequestsMenu.selectedIndex = 1;
-          return testParamsTab("multipart");
-        })
-        .then(() => {
-          return teardown(aMonitor);
-        })
+      let TAB_UPDATED = aMonitor.panelWin.EVENTS.TAB_UPDATED;
+      waitFor(aMonitor.panelWin, TAB_UPDATED).then(() =>
+        testParamsTab("urlencoded")
+      ).then(() => {
+        RequestsMenu.selectedIndex = 1;
+        return waitFor(aMonitor.panelWin, TAB_UPDATED);
+      }).then(() => testParamsTab("multipart"))
+        .then(() => teardown(aMonitor))
         .then(finish);
 
       function testParamsTab(aType) {

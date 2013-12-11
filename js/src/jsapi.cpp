@@ -61,6 +61,7 @@
 #include "gc/Marking.h"
 #include "jit/AsmJSLink.h"
 #include "js/CharacterEncoding.h"
+#include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
 #if ENABLE_INTL_API
 #include "unicode/uclean.h"
@@ -1094,7 +1095,7 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
         // There might already be a wrapper for the original object in
         // the new compartment. If there is, we use its identity and swap
         // in the contents of |target|.
-        newIdentity = &p->value.toObject();
+        newIdentity = &p->value().toObject();
 
         // When we remove origv from the wrapper map, its wrapper, newIdentity,
         // must immediately cease to be a cross-compartment wrapper. Neuter it.
@@ -1162,61 +1163,54 @@ JS_InitStandardClasses(JSContext *cx, JSObject *objArg)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArrayObject::classes[ScalarTypeRepresentation::type])
 #define EAGER_ATOM(name)            NAME_OFFSET(name)
 #define EAGER_CLASS_ATOM(name)      NAME_OFFSET(name)
-#define EAGER_ATOM_AND_CLASP(name)  EAGER_CLASS_ATOM(name), CLASP(name)
-#define EAGER_ATOM_AND_OCLASP(name) EAGER_CLASS_ATOM(name), OCLASP(name)
+
+static JSObject *
+DummyInit(JSContext *cx, HandleObject obj)
+{
+    MOZ_ASSUME_UNREACHABLE();
+    return nullptr;
+}
 
 typedef struct JSStdName {
     ClassInitializerOp init;
     size_t      atomOffset;     /* offset of atom pointer in JSAtomState */
     const Class *clasp;
+    bool isDummy() const { return init == DummyInit; };
 } JSStdName;
 
-static Handle<PropertyName*>
-StdNameToPropertyName(JSContext *cx, const JSStdName *stdn)
+static const JSStdName*
+LookupStdName(JSRuntime *rt, HandleString name, const JSStdName *table)
 {
-    return AtomStateOffsetToName(cx->runtime()->atomState, stdn->atomOffset);
+    MOZ_ASSERT(name->isAtom());
+    for (unsigned i = 0; table[i].init; i++) {
+        if (table[i].isDummy())
+            continue;
+        JSAtom *atom = AtomStateOffsetToName(rt->atomState, table[i].atomOffset);
+        MOZ_ASSERT(atom);
+        if (name == atom)
+            return &table[i];
+    }
+
+    return nullptr;
 }
 
 /*
- * Table of class initializers and their atom offsets in rt->atomState.
- * If you add a "standard" class, remember to update this table.
+ * Table of standard classes, indexed by JSProtoKey. For entries where the
+ * JSProtoKey does not correspond to a class with a meaningful constructor, we
+ * insert a null entry into the table.
  */
-static const JSStdName standard_class_atoms[] = {
-    {js_InitFunctionClass,              EAGER_CLASS_ATOM(Function), &JSFunction::class_},
-    {js_InitObjectClass,                EAGER_CLASS_ATOM(Object), &JSObject::class_},
-    {js_InitArrayClass,                 EAGER_ATOM_AND_OCLASP(Array)},
-    {js_InitBooleanClass,               EAGER_ATOM_AND_OCLASP(Boolean)},
-    {js_InitDateClass,                  EAGER_ATOM_AND_OCLASP(Date)},
-    {js_InitMathClass,                  EAGER_ATOM_AND_CLASP(Math)},
-    {js_InitNumberClass,                EAGER_ATOM_AND_OCLASP(Number)},
-    {js_InitStringClass,                EAGER_ATOM_AND_OCLASP(String)},
-    {js_InitExceptionClasses,           EAGER_ATOM_AND_OCLASP(Error)},
-    {js_InitRegExpClass,                EAGER_ATOM_AND_OCLASP(RegExp)},
-    {js_InitIteratorClasses,            EAGER_ATOM_AND_OCLASP(StopIteration)},
-    {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
-    {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBufferObject::protoClass},
-    {js_InitWeakMapClass,               EAGER_ATOM_AND_OCLASP(WeakMap)},
-    {js_InitMapClass,                   EAGER_ATOM_AND_OCLASP(Map)},
-    {js_InitSetClass,                   EAGER_ATOM_AND_OCLASP(Set)},
-#ifdef ENABLE_PARALLEL_JS
-    {js_InitParallelArrayClass,         EAGER_ATOM_AND_OCLASP(ParallelArray)},
-#endif
-    {js_InitProxyClass,                 EAGER_CLASS_ATOM(Proxy), &ProxyObject::uncallableClass_},
-#if EXPOSE_INTL_API
-    {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
-#endif
-#ifdef ENABLE_BINARYDATA
-    {js_InitTypedObjectClass,           EAGER_ATOM_AND_CLASP(TypedObject)},
-#endif
-    {nullptr,                           0, nullptr}
+#define STD_NAME_ENTRY(name, code, init, clasp) { init, EAGER_CLASS_ATOM(name), clasp },
+#define STD_DUMMY_ENTRY(name, code, init, dummy) { DummyInit, 0, nullptr },
+static const JSStdName standard_class_names[] = {
+  JS_FOR_PROTOTYPES(STD_NAME_ENTRY, STD_DUMMY_ENTRY)
+  { nullptr, 0, nullptr }
 };
 
 /*
- * Table of top-level function and constant names and their init functions.
- * If you add a "standard" global function or property, remember to update
- * this table.
+ * Table of top-level function and constant names and the init function of the
+ * corresponding standard class that sets them up.
  */
-static const JSStdName standard_class_names[] = {
+static const JSStdName builtin_property_names[] = {
     {js_InitObjectClass,        EAGER_ATOM(eval), &JSObject::class_},
 
     /* Global properties and functions defined by the Number class. */
@@ -1237,32 +1231,6 @@ static const JSStdName standard_class_names[] = {
 #if JS_HAS_UNEVAL
     {js_InitStringClass,        EAGER_ATOM(uneval), OCLASP(String)},
 #endif
-
-    /* Exception constructors. */
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(Error), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(InternalError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(EvalError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(RangeError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(ReferenceError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(SyntaxError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(TypeError), OCLASP(Error)},
-    {js_InitExceptionClasses,   EAGER_CLASS_ATOM(URIError), OCLASP(Error)},
-
-    {js_InitIteratorClasses,    EAGER_CLASS_ATOM(Iterator), &PropertyIteratorObject::class_},
-
-    /* Typed Arrays */
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(ArrayBuffer),  &ArrayBufferObject::class_},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int8Array),    TYPED_ARRAY_CLASP(TYPE_INT8)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8Array),   TYPED_ARRAY_CLASP(TYPE_UINT8)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int16Array),   TYPED_ARRAY_CLASP(TYPE_INT16)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint16Array),  TYPED_ARRAY_CLASP(TYPE_UINT16)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Int32Array),   TYPED_ARRAY_CLASP(TYPE_INT32)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint32Array),  TYPED_ARRAY_CLASP(TYPE_UINT32)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), TYPED_ARRAY_CLASP(TYPE_FLOAT32)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), TYPED_ARRAY_CLASP(TYPE_FLOAT64)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray),
-                                TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)},
-    {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(DataView),     &DataViewObject::class_},
 
     {nullptr,                     0, nullptr}
 };
@@ -1298,15 +1266,12 @@ static const JSStdName object_prototype_names[] = {
 #undef EAGER_ATOM
 #undef EAGER_CLASS_ATOM
 #undef EAGER_ATOM_CLASP
-#undef EAGER_ATOM_AND_CLASP
 
 JS_PUBLIC_API(bool)
 JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *resolved)
 {
     JSRuntime *rt;
-    JSAtom *atom;
     const JSStdName *stdnm;
-    unsigned i;
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -1321,59 +1286,34 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     RootedString idstr(cx, JSID_TO_STRING(id));
 
     /* Check whether we're resolving 'undefined', and define it if so. */
-    atom = rt->atomState.undefined;
-    if (idstr == atom) {
+    JSAtom *undefinedAtom = rt->atomState.undefined;
+    if (idstr == undefinedAtom) {
         *resolved = true;
         RootedValue undefinedValue(cx, UndefinedValue());
-        return JSObject::defineProperty(cx, obj, atom->asPropertyName(), undefinedValue,
+        return JSObject::defineProperty(cx, obj, undefinedAtom->asPropertyName(),
+                                        undefinedValue,
                                         JS_PropertyStub, JS_StrictPropertyStub,
                                         JSPROP_PERMANENT | JSPROP_READONLY);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
-    stdnm = nullptr;
-    for (i = 0; standard_class_atoms[i].init; i++) {
-        JS_ASSERT(standard_class_atoms[i].clasp);
-        atom = AtomStateOffsetToName(rt->atomState, standard_class_atoms[i].atomOffset);
-        if (idstr == atom) {
-            stdnm = &standard_class_atoms[i];
-            break;
-        }
-    }
+    stdnm = LookupStdName(rt, idstr, standard_class_names);
 
+    /* Try less frequently used top-level functions and constants. */
+    if (!stdnm)
+        stdnm = LookupStdName(rt, idstr, builtin_property_names);
+
+    /*
+     * Try even less frequently used names delegated from the global
+     * object to Object.prototype, but only if the Object class hasn't
+     * yet been initialized.
+     */
     if (!stdnm) {
-        /* Try less frequently used top-level functions and constants. */
-        for (i = 0; standard_class_names[i].init; i++) {
-            JS_ASSERT(standard_class_names[i].clasp);
-            atom = StdNameToPropertyName(cx, &standard_class_names[i]);
-            if (!atom)
-                return false;
-            if (idstr == atom) {
-                stdnm = &standard_class_names[i];
-                break;
-            }
-        }
-
         RootedObject proto(cx);
         if (!JSObject::getProto(cx, obj, &proto))
             return false;
-        if (!stdnm && !proto) {
-            /*
-             * Try even less frequently used names delegated from the global
-             * object to Object.prototype, but only if the Object class hasn't
-             * yet been initialized.
-             */
-            for (i = 0; object_prototype_names[i].init; i++) {
-                JS_ASSERT(object_prototype_names[i].clasp);
-                atom = StdNameToPropertyName(cx, &object_prototype_names[i]);
-                if (!atom)
-                    return false;
-                if (idstr == atom) {
-                    stdnm = &object_prototype_names[i];
-                    break;
-                }
-            }
-        }
+        if (!proto)
+            stdnm = LookupStdName(rt, idstr, object_prototype_names);
     }
 
     if (stdnm) {
@@ -1415,10 +1355,17 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
         return false;
     }
 
-    /* Initialize any classes that have not been initialized yet. */
-    for (unsigned i = 0; standard_class_atoms[i].init; i++) {
-        const JSStdName &stdnm = standard_class_atoms[i];
-        if (!obj->as<GlobalObject>().isStandardClassResolved(stdnm.clasp)) {
+    /*
+     * Initialize any classes that have not been initialized yet. Note that
+     * resolving everything in standard_class_names has the effect of resolving
+     * everything in builtin_property_names, so we don't need to iterate over
+     * that separately. Moreover, we'll resolve the Object constructor as well,
+     * so we can also skip object_prototype_names.
+     */
+    for (unsigned i = 0; standard_class_names[i].init; i++) {
+        const JSStdName &stdnm = standard_class_names[i];
+        // Watch out for dummy entries.
+        if (!stdnm.isDummy() && !obj->as<GlobalObject>().isStandardClassResolved(stdnm.clasp)) {
             if (!stdnm.init(cx, obj))
                 return false;
         }
@@ -1461,6 +1408,23 @@ JS_IdentifyClassPrototype(JSContext *cx, JSObject *obj)
     assertSameCompartment(cx, obj);
     JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
     return js_IdentifyClassPrototype(obj);
+}
+
+extern JS_PUBLIC_API(JSProtoKey)
+JS_IdToProtoKey(JSContext *cx, JS::HandleId id)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    if (!JSID_IS_ATOM(id))
+        return JSProto_Null;
+    RootedString idstr(cx, JSID_TO_STRING(id));
+    const JSStdName *stdnm = LookupStdName(cx->runtime(), idstr, standard_class_names);
+    if (!stdnm)
+        return JSProto_Null;
+
+    MOZ_ASSERT(MOZ_ARRAY_LENGTH(standard_class_names) == JSProto_LIMIT + 1);
+    return static_cast<JSProtoKey>(stdnm - standard_class_names);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -1704,11 +1668,6 @@ JS_PUBLIC_API(void)
 JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp)
 {
     RemoveRoot(rt, (void *)rp);
-}
-
-JS_NEVER_INLINE JS_PUBLIC_API(void)
-JS_AnchorPtr(void *p)
-{
 }
 
 JS_PUBLIC_API(bool)
@@ -3279,6 +3238,15 @@ JS_DefineProperties(JSContext *cx, JSObject *objArg, const JSPropertySpec *ps)
             // If you have self-hosted getter/setter, you can't have a
             // native one.
             JS_ASSERT(!ps->getter.op && !ps->setter.op);
+            /*
+             * During creation of the self-hosting global, we ignore all
+             * self-hosted properties, as that means we're currently setting up
+             * the global object that the self-hosted code is then compiled
+             * in. That means that Self-hosted properties can't be used in the
+             * self-hosting global itself, right now.
+             */
+            if (cx->runtime()->isSelfHostingGlobal(cx->global()))
+                continue;
 
             ok = DefineSelfHostedProperty(cx, obj, ps->name,
                                           ps->selfHostedGetter,
@@ -3423,25 +3391,6 @@ JS_ForwardGetElementTo(JSContext *cx, JSObject *objArg, uint32_t index, JSObject
     JSAutoResolveFlags rf(cx, 0);
 
     return JSObject::getElement(cx, obj, onBehalfOf, index, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_GetElementIfPresent(JSContext *cx, JSObject *objArg, uint32_t index, JSObject *onBehalfOfArg,
-                       MutableHandleValue vp, bool* present)
-{
-    RootedObject obj(cx, objArg);
-    RootedObject onBehalfOf(cx, onBehalfOfArg);
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    JSAutoResolveFlags rf(cx, 0);
-
-    bool isPresent;
-    if (!JSObject::getElementIfPresent(cx, obj, onBehalfOf, index, vp, &isPresent))
-        return false;
-
-    *present = isPresent;
-    return true;
 }
 
 JS_PUBLIC_API(bool)
@@ -3892,13 +3841,13 @@ JS_CheckAccess(JSContext *cx, JSObject *objArg, jsid idArg, JSAccessMode mode,
 JS_PUBLIC_API(void)
 JS_HoldPrincipals(JSPrincipals *principals)
 {
-    JS_ATOMIC_INCREMENT(&principals->refcount);
+    ++principals->refcount;
 }
 
 JS_PUBLIC_API(void)
 JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals)
 {
-    int rc = JS_ATOMIC_DECREMENT(&principals->refcount);
+    int rc = --principals->refcount;
     if (rc == 0)
         rt->destroyPrincipals(principals);
 }
@@ -4017,7 +3966,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobjArg, JSObject *parentArg)
             return nullptr;
     }
     if (fun->isInterpreted() && (fun->nonLazyScript()->enclosingStaticScope() ||
-        (fun->nonLazyScript()->compileAndGo && !parent->is<GlobalObject>())))
+        (fun->nonLazyScript()->compileAndGo() && !parent->is<GlobalObject>())))
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_FUNOBJ_SCOPE);
         return nullptr;
@@ -4183,6 +4132,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
          * call paths then call InitializeLazyFunctionScript if !hasScript.
          */
         if (fs->selfHostedName) {
+            JS_ASSERT(!fs->call.op);
+            JS_ASSERT(!fs->call.info);
             /*
              * During creation of the self-hosting global, we ignore all
              * self-hosted functions, as that means we're currently setting up
@@ -4190,8 +4141,6 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
              * in. Self-hosted functions can access each other via their names,
              * but not via the builtin classes they get installed into.
              */
-            JS_ASSERT(!fs->call.op);
-            JS_ASSERT(!fs->call.info);
             if (cx->runtime()->isSelfHostingGlobal(cx->global()))
                 continue;
 
@@ -4398,7 +4347,8 @@ JS::ReadOnlyCompileOptions::originPrincipals() const
 JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
-      elementRoot(cx)
+      elementRoot(cx),
+      elementPropertyRoot(cx)
 {
 }
 
@@ -4463,7 +4413,7 @@ JS::OwningCompileOptions::setSourceMapURL(JSContext *cx, const jschar *s)
 }
 
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : ReadOnlyCompileOptions(), elementRoot(cx)
+    : ReadOnlyCompileOptions(), elementRoot(cx), elementPropertyRoot(cx)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
@@ -4532,24 +4482,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
 JS_PUBLIC_API(bool)
 JS::CanCompileOffThread(JSContext *cx, const ReadOnlyCompileOptions &options)
 {
-#ifdef JS_WORKER_THREADS
-    if (!cx->runtime()->useHelperThreads() || !cx->runtime()->helperThreadCount())
-        return false;
-
-    if (!cx->runtime()->useHelperThreadsForParsing())
-        return false;
-
-    // Off thread compilation can't occur during incremental collections on the
-    // atoms compartment, to avoid triggering barriers. Outside the atoms
-    // compartment, the compilation will use a new zone which doesn't require
-    // barriers itself.
-    if (cx->runtime()->activeGCInAtomsZone())
-        return false;
-
-    return true;
-#else
-    return false;
-#endif
+    return cx->runtime()->canUseParallelParsing();
 }
 
 JS_PUBLIC_API(bool)
@@ -4557,12 +4490,8 @@ JS::CompileOffThread(JSContext *cx, Handle<JSObject*> obj, const ReadOnlyCompile
                      const jschar *chars, size_t length,
                      OffThreadCompileCallback callback, void *callbackData)
 {
-#ifdef JS_WORKER_THREADS
     JS_ASSERT(CanCompileOffThread(cx, options));
     return StartOffThreadParseScript(cx, options, chars, length, obj, callback, callbackData);
-#else
-    MOZ_ASSUME_UNREACHABLE("Off thread compilation is not available.");
-#endif
 }
 
 JS_PUBLIC_API(JSScript *)
@@ -4641,7 +4570,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *objArg, const char *utf8, siz
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalFromScript(JSScript *script)
 {
-    JS_ASSERT(!script->isCachedEval);
+    JS_ASSERT(!script->isCachedEval());
     return &script->global();
 }
 
@@ -4840,7 +4769,7 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
     // which for large scripts means significant memory. Perform a GC eagerly
     // to clear out this analysis data before anything happens to inhibit the
     // flushing of this memory (such as setting requestAnimationFrame).
-    if (script->length > LARGE_SCRIPT_LENGTH) {
+    if (script->length() > LARGE_SCRIPT_LENGTH) {
         script = nullptr;
         PrepareZoneForGC(cx->zone());
         GC(cx->runtime(), GC_NORMAL, gcreason::FINISH_LARGE_EVALUTE);
@@ -6035,7 +5964,7 @@ JS_PUBLIC_API(void)
 JS_SetParallelParsingEnabled(JSContext *cx, bool enabled)
 {
 #ifdef JS_ION
-    cx->runtime()->setCanUseHelperThreadsForParsing(enabled);
+    cx->runtime()->setParallelParsingEnabled(enabled);
 #endif
 }
 
@@ -6043,7 +5972,7 @@ JS_PUBLIC_API(void)
 JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled)
 {
 #ifdef JS_ION
-    cx->runtime()->setCanUseHelperThreadsForIonCompilation(enabled);
+    cx->runtime()->setParallelIonCompilationEnabled(enabled);
 #endif
 }
 

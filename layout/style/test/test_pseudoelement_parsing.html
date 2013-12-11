@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<title>Test for Bug 922669</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+
+<style></style>
+
+<script>
+var style = document.querySelector("style");
+
+var gValidTests = [
+  "::-moz-progress-bar",
+  "::-moz-progress-bar:hover",
+  "::-moz-progress-bar:active",
+  "::-moz-progress-bar:focus",
+  "::-moz-progress-bar:hover:focus",
+  "#a::-moz-progress-bar:hover",
+  ":hover::-moz-progress-bar"
+];
+
+var gInvalidTests = [
+  "::foo",
+  "::-moz-progress-bar::-moz-progress-bar",
+  "::-moz-progress-bar::first-line",
+  "::-moz-progress-bar#a",
+  "::-moz-progress-bar:invalid",
+  "::-moz-focus-inner:active"
+];
+
+gValidTests.forEach(function(aTest) {
+  style.textContent = aTest + "{}";
+  is(style.sheet.cssRules.length, 1, aTest);
+  style.textContent = "";
+});
+
+gInvalidTests.forEach(function(aTest) {
+  style.textContent = aTest + "{}";
+  is(style.sheet.cssRules.length, 0, aTest);
+  style.textContent = "";
+});
+</script>

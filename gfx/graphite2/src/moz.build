@@ -57,7 +57,23 @@ UNIFIED_SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
+    DEFINES['GRAPHITE2_EXPORTING'] = True
+else:
+    # tell graphite2 not to export symbols, we'll be linking it directly with
+    # thebes
+    DEFINES['GRAPHITE2_STATIC'] = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['PACKAGE_VERSION'] = '"moz"'
+DEFINES['PACKAGE_BUGREPORT'] = '"http://bugzilla.mozilla.org/"'
+
+# disable features we don't need in the graphite2 code, to reduce code size
+for var in ('GRAPHITE2_NFILEFACE', 'GRAPHITE2_NTRACING', 'GRAPHITE2_NSEGCACHE'):
+    DEFINES[var] = True
+
+# provide a custom header that overrides malloc() and friends,
+# to ensure safe OOM handling
+DEFINES['GRAPHITE2_CUSTOM_HEADER'] = '"MozGrMalloc.h"'

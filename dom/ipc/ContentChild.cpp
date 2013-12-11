@@ -17,6 +17,8 @@
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
+#include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -81,6 +83,7 @@
 #if defined(MOZ_WIDGET_GONK)
 #include "nsVolume.h"
 #include "nsVolumeService.h"
+#include "SpeakerManagerService.h"
 #endif
 
 #ifdef XP_WIN
@@ -494,19 +497,12 @@ ContentChild::RecvPMemoryReportRequestConstructor(
     GetProcessName(process);
     AppendProcessId(process);
 
-    // Run each reporter.  The callback will turn each measurement into a
+    // Run the reporters.  The callback will turn each measurement into a
     // MemoryReport.
-    nsCOMPtr<nsISimpleEnumerator> e;
-    mgr->EnumerateReporters(getter_AddRefs(e));
     nsRefPtr<MemoryReportsWrapper> wrappedReports =
         new MemoryReportsWrapper(&reports);
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
-    bool more;
-    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsIMemoryReporter> r;
-      e->GetNext(getter_AddRefs(r));
-      r->CollectReports(cb, wrappedReports);
-    }
+    mgr->GetReportsForThisProcess(cb, wrappedReports);
 
     child->Send__delete__(child, generation, reports);
     return true;
@@ -584,6 +580,20 @@ ContentChild::RecvSetProcessPrivileges(const ChildPrivileges& aPrivs)
   SetCurrentProcessSandbox();
 #endif
   return true;
+}
+
+bool
+ContentChild::RecvSpeakerManagerNotify()
+{
+#ifdef MOZ_WIDGET_GONK
+  nsRefPtr<SpeakerManagerService> service =
+    SpeakerManagerService::GetSpeakerManagerService();
+  if (service) {
+    service->Notify();
+  }
+  return true;
+#endif
+  return false;
 }
 
 static CancelableTask* sFirstIdleTask;
@@ -849,6 +859,22 @@ bool
 ContentChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 {
   delete aActor;
+  return true;
+}
+
+asmjscache::PAsmJSCacheEntryChild*
+ContentChild::AllocPAsmJSCacheEntryChild(const asmjscache::OpenMode& aOpenMode,
+                                         const int64_t& aSizeToWrite,
+                                         const IPC::Principal& aPrincipal)
+{
+  NS_NOTREACHED("Should never get here!");
+  return nullptr;
+}
+
+bool
+ContentChild::DeallocPAsmJSCacheEntryChild(PAsmJSCacheEntryChild* aActor)
+{
+  asmjscache::DeallocEntryChild(aActor);
   return true;
 }
 
@@ -1278,6 +1304,11 @@ ContentChild::RecvActivateA11y()
 bool
 ContentChild::RecvGarbageCollect()
 {
+    // Rebroadcast the "child-gc-request" so that workers will GC.
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "child-gc-request", nullptr);
+    }
     nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
     return true;
 }
@@ -1285,7 +1316,11 @@ ContentChild::RecvGarbageCollect()
 bool
 ContentChild::RecvCycleCollect()
 {
-    nsJSContext::GarbageCollectNow(JS::gcreason::DOM_IPC);
+    // Rebroadcast the "child-cc-request" so that workers will CC.
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->NotifyObservers(nullptr, "child-cc-request", nullptr);
+    }
     nsJSContext::CycleCollectNow();
     return true;
 }
@@ -1306,17 +1341,6 @@ PreloadSlowThings()
 
     TabChild::PreloadSlowThings();
 
-#ifdef MOZ_NUWA_PROCESS
-    // After preload of slow things, start freezing threads.
-    if (IsNuwaProcess()) {
-        // Perform GC before freezing the Nuwa process to reduce memory usage.
-        ContentChild::GetSingleton()->RecvGarbageCollect();
-
-        MessageLoop::current()->
-                PostTask(FROM_HERE,
-                         NewRunnableFunction(OnFinishNuwaPreparation));
-    }
-#endif
 }
 
 bool
@@ -1327,15 +1351,32 @@ ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
     mAppInfo.buildID.Assign(buildID);
     mAppInfo.name.Assign(name);
     mAppInfo.UAName.Assign(UAName);
+
+    if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+        return true;
+    }
+
     // If we're part of the mozbrowser machinery, go ahead and start
     // preloading things.  We can only do this for mozbrowser because
     // PreloadSlowThings() may set the docshell of the first TabChild
     // inactive, and we can only safely restore it to active from
     // BrowserElementChild.js.
-    if ((mIsForApp || mIsForBrowser) &&
-        Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+    if ((mIsForApp || mIsForBrowser)
+#ifdef MOZ_NUWA_PROCESS
+        && !IsNuwaProcess()
+#endif
+       ) {
         PreloadSlowThings();
     }
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        ContentChild::GetSingleton()->RecvGarbageCollect();
+        MessageLoop::current()->PostTask(
+            FROM_HERE, NewRunnableFunction(OnFinishNuwaPreparation));
+    }
+#endif
+
     return true;
 }
 
@@ -1368,12 +1409,13 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
                                    const int32_t& aState,
                                    const int32_t& aMountGeneration,
                                    const bool& aIsMediaPresent,
-                                   const bool& aIsSharing)
+                                   const bool& aIsSharing,
+                                   const bool& aIsFormatting)
 {
 #ifdef MOZ_WIDGET_GONK
     nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
                                              aMountGeneration, aIsMediaPresent,
-                                             aIsSharing);
+                                             aIsSharing, aIsFormatting);
 
     nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
     if (vs) {
@@ -1387,6 +1429,7 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
     unused << aMountGeneration;
     unused << aIsMediaPresent;
     unused << aIsSharing;
+    unused << aIsFormatting;
 #endif
     return true;
 }

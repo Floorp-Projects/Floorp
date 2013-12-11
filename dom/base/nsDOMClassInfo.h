@@ -165,7 +165,6 @@ protected:
 public:
   static jsid sLocation_id;
   static jsid sConstructor_id;
-  static jsid s_content_id;
   static jsid sLength_id;
   static jsid sItem_id;
   static jsid sNamedItem_id;

@@ -15,7 +15,7 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, uint32_t startPo
     if (startPos > strLength)
       startPos = strLength;
 
-    mData = const_cast<char_type*>(str.Data()) + startPos;
+    mData = const_cast<char_type*>(static_cast<const char_type*>(str.Data())) + startPos;
     mLength = XPCOM_MIN(length, strLength - startPos);
 
     SetDataFlags(F_NONE);
@@ -29,7 +29,7 @@ nsTDependentSubstring_CharT::Rebind( const char_type* data, size_type length )
     // If we currently own a buffer, release it.
     Finalize();
 
-    mData = const_cast<char_type*>(data);
+    mData = const_cast<char_type*>(static_cast<const char_type*>(data));
     mLength = length;
     SetDataFlags(F_NONE);
   }

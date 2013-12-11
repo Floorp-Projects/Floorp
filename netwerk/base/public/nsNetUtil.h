@@ -999,6 +999,25 @@ NS_NewLocalFileOutputStream(nsIOutputStream **result,
 
 // returns a file output stream which can be QI'ed to nsISafeOutputStream.
 inline nsresult
+NS_NewAtomicFileOutputStream(nsIOutputStream **result,
+                                nsIFile          *file,
+                                int32_t           ioFlags       = -1,
+                                int32_t           perm          = -1,
+                                int32_t           behaviorFlags = 0)
+{
+    nsresult rv;
+    nsCOMPtr<nsIFileOutputStream> out =
+        do_CreateInstance(NS_ATOMICLOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = out->Init(file, ioFlags, perm, behaviorFlags);
+        if (NS_SUCCEEDED(rv))
+            out.forget(result);
+    }
+    return rv;
+}
+
+// returns a file output stream which can be QI'ed to nsISafeOutputStream.
+inline nsresult
 NS_NewSafeLocalFileOutputStream(nsIOutputStream **result,
                                 nsIFile          *file,
                                 int32_t           ioFlags       = -1,

@@ -109,8 +109,7 @@ enum nsEventStructType
 #define NS_OFFLINE                       (NS_WINDOW_START + 64)
 #define NS_ONLINE                        (NS_WINDOW_START + 65)
 
-// Indicates a resize will occur
-#define NS_BEFORERESIZE_EVENT            (NS_WINDOW_START + 66)
+// NS_BEFORERESIZE_EVENT used to be here (NS_WINDOW_START + 66)
 
 // Indicates that the user is either idle or active
 #define NS_MOZ_USER_IDLE                 (NS_WINDOW_START + 67)
@@ -459,6 +458,10 @@ enum nsEventStructType
 #define NS_MEDIARECORDER_DATAAVAILABLE  (NS_MEDIARECORDER_EVENT_START + 1)
 #define NS_MEDIARECORDER_WARNING        (NS_MEDIARECORDER_EVENT_START + 2)
 #define NS_MEDIARECORDER_STOP           (NS_MEDIARECORDER_EVENT_START + 3)
+
+// SpeakerManager events
+#define NS_SPEAKERMANAGER_EVENT_START 5800
+#define NS_SPEAKERMANAGER_SPEAKERFORCEDCHANGE (NS_SPEAKERMANAGER_EVENT_START + 1)
 
 #ifdef MOZ_GAMEPAD
 // Gamepad input events

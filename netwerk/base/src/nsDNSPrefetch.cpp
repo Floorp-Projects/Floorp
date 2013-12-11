@@ -6,6 +6,7 @@
 #include "nsDNSPrefetch.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsThreadUtils.h"
 
 #include "nsIDNSListener.h"
 #include "nsIDNSService.h"
@@ -30,8 +31,11 @@ nsDNSPrefetch::Shutdown()
     return NS_OK;
 }
 
-nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI, bool storeTiming)
+nsDNSPrefetch::nsDNSPrefetch(nsIURI *aURI,
+                             nsIDNSListener *aListener,
+                             bool storeTiming)
     : mStoreTiming(storeTiming)
+    , mListener(do_GetWeakReference(aListener))
 {
     aURI->GetAsciiHost(mHostname);
 }
@@ -53,26 +57,32 @@ nsDNSPrefetch::Prefetch(uint16_t flags)
     // then our timing will be useless. However, in such a case,
     // mEndTimestamp will be a null timestamp and callers should check
     // TimingsValid() before using the timing.
-    return sDNSService->AsyncResolve(mHostname, flags | nsIDNSService::RESOLVE_SPECULATE,
-                                     this, nullptr, getter_AddRefs(tmpOutstanding));
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    return sDNSService->AsyncResolve(mHostname,
+                                     flags | nsIDNSService::RESOLVE_SPECULATE,
+                                     this, mainThread,
+                                     getter_AddRefs(tmpOutstanding));
 }
 
 nsresult
-nsDNSPrefetch::PrefetchLow()
+nsDNSPrefetch::PrefetchLow(bool refreshDNS)
 {
-    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW);
+    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_LOW |
+      (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
 }
 
 nsresult
-nsDNSPrefetch::PrefetchMedium()
+nsDNSPrefetch::PrefetchMedium(bool refreshDNS)
 {
-    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM);
+    return Prefetch(nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
+      (refreshDNS ? nsIDNSService::RESOLVE_BYPASS_CACHE : 0));
 }
 
 nsresult
-nsDNSPrefetch::PrefetchHigh()
+nsDNSPrefetch::PrefetchHigh(bool refreshDNS)
 {
-    return Prefetch(0);
+    return Prefetch(refreshDNS ?
+                    nsIDNSService::RESOLVE_BYPASS_CACHE : 0);
 }
 
 
@@ -83,7 +93,14 @@ nsDNSPrefetch::OnLookupComplete(nsICancelable *request,
                                 nsIDNSRecord  *rec,
                                 nsresult       status)
 {
-    if (mStoreTiming)
+    MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+
+    if (mStoreTiming) {
         mEndTimestamp = mozilla::TimeStamp::Now();
+    }
+    nsCOMPtr<nsIDNSListener> listener = do_QueryReferent(mListener);
+    if (listener) {
+      listener->OnLookupComplete(request, rec, status);
+    }
     return NS_OK;
 }

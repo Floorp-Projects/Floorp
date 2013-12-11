@@ -69,19 +69,12 @@ typedef mozilla::docshell::OfflineCacheUpdateGlue OfflineCacheUpdateGlue;
 //
 PRLogModuleInfo *gOfflineCacheUpdateLog;
 #endif
+
 #undef LOG
 #define LOG(args) PR_LOG(gOfflineCacheUpdateLog, 4, args)
-#define LOG_ENABLED() PR_LOG_TEST(gOfflineCacheUpdateLog, 4)
 
-class AutoFreeArray {
-public:
-    AutoFreeArray(uint32_t count, char **values)
-        : mCount(count), mValues(values) {};
-    ~AutoFreeArray() { NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mCount, mValues); }
-private:
-    uint32_t mCount;
-    char **mValues;
-};
+#undef LOG_ENABLED
+#define LOG_ENABLED() PR_LOG_TEST(gOfflineCacheUpdateLog, 4)
 
 namespace { // anon
 

@@ -79,7 +79,7 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
     }
 
     // It's an error to use |arguments| in a legacy generator expression.
-    if (script->isGeneratorExp && script->isLegacyGenerator()) {
+    if (script->isGeneratorExp() && script->isLegacyGenerator()) {
         parser.report(ParseError, false, nullptr, JSMSG_BAD_GENEXP_BODY, js_arguments_str);
         return false;
     }
@@ -142,7 +142,8 @@ CanLazilyParse(ExclusiveContext *cx, const ReadOnlyCompileOptions &options)
     return options.canLazilyParse &&
         options.compileAndGo &&
         options.sourcePolicy == CompileOptions::SAVE_SOURCE &&
-        !cx->compartment()->debugMode();
+        !(cx->compartment()->debugMode() &&
+          cx->compartment()->runtimeFromAnyThread()->debugHooks.newScriptHook);
 }
 
 void
@@ -198,7 +199,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return nullptr;
 
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return nullptr;
 
@@ -237,7 +238,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     bool savedCallerFun =
         options.compileAndGo &&
         evalCaller &&
-        (evalCaller->function() || evalCaller->savedCallerFun);
+        (evalCaller->function() || evalCaller->savedCallerFun());
     Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), savedCallerFun,
                                                   options, staticLevel, sourceObject, 0, length));
     if (!script)
@@ -273,7 +274,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         return nullptr;
 
     /* If this is a direct call to eval, inherit the caller's strictness.  */
-    if (evalCaller && evalCaller->strict)
+    if (evalCaller && evalCaller->strict())
         globalsc.strict = true;
 
     if (options.compileAndGo) {
@@ -449,11 +450,11 @@ frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *cha
     script->bindings = pn->pn_funbox->bindings;
 
     if (lazy->directlyInsideEval())
-        script->directlyInsideEval = true;
+        script->setDirectlyInsideEval();
     if (lazy->usesArgumentsAndApply())
-        script->usesArgumentsAndApply = true;
+        script->setUsesArgumentsAndApply();
     if (lazy->hasBeenCloned())
-        script->hasBeenCloned = true;
+        script->setHasBeenCloned();
 
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, options.forEval,
                         /* evalCaller = */ NullPtr(), /* hasGlobalScope = */ true,
@@ -494,7 +495,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         return false;
     if (options.filename() && !ss->setFilename(cx, options.filename()))
         return false;
-    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss));
+    RootedScriptSource sourceObject(cx, ScriptSourceObject::create(cx, ss, options));
     if (!sourceObject)
         return false;
     SourceCompressionTask sct(cx);
@@ -567,7 +568,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     if (fn->pn_funbox->function()->isInterpreted()) {
         JS_ASSERT(fun == fn->pn_funbox->function());
 
-        Rooted<JSScript*> script(cx, JSScript::Create(cx, NullPtr(), false, options,
+        Rooted<JSScript*> script(cx, JSScript::Create(cx, js::NullPtr(), false, options,
                                                       /* staticLevel = */ 0, sourceObject,
                                                       /* sourceStart = */ 0, length));
         if (!script)
@@ -583,7 +584,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
          * instead is cloned immediately onto the right scope chain.
          */
         BytecodeEmitter funbce(/* parent = */ nullptr, &parser, fn->pn_funbox, script,
-                               /* insideEval = */ false, /* evalCaller = */ NullPtr(),
+                               /* insideEval = */ false, /* evalCaller = */ js::NullPtr(),
                                fun->environment() && fun->environment()->is<GlobalObject>(),
                                options.lineno);
         if (!funbce.init())

@@ -48,6 +48,10 @@ public:
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions,
                            const DrawOptions &aOptions);
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions());
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
@@ -114,10 +118,15 @@ public:
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = EXTEND_CLAMP) const;
 
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
+
+  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
+                                              ExtendMode aExtendMode);
 
   static ID2D1Factory1 *factory();
   static void CleanupD2D();
@@ -160,9 +169,6 @@ private:
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
-  TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
-                                              ExtendMode aExtendMode);
-
   void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
 
   IntSize mSize;
@@ -185,7 +191,7 @@ private:
   {
     D2D1_RECT_F mBounds;
     union {
-      // If mPath is non-NULL, the mTransform member will be used, otherwise
+      // If mPath is non-null, the mTransform member will be used, otherwise
       // the mIsPixelAligned member is valid.
       D2D1_MATRIX_3X2_F mTransform;
       bool mIsPixelAligned;

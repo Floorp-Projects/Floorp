@@ -12,7 +12,7 @@ let gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
@@ -28,6 +28,7 @@ const SIMPLE_CANVAS_URL = EXAMPLE_URL + "doc_simple-canvas.html";
 const SHADER_ORDER_URL = EXAMPLE_URL + "doc_shader-order.html";
 const MULTIPLE_CONTEXTS_URL = EXAMPLE_URL + "doc_multiple-contexts.html";
 const OVERLAPPING_GEOMETRY_CANVAS_URL = EXAMPLE_URL + "doc_overlapping-geometry.html";
+const BLENDED_GEOMETRY_CANVAS_URL = EXAMPLE_URL + "doc_blended-geometry.html";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -123,19 +124,29 @@ function once(aTarget, aEventName, aUseCapture = false) {
   let deferred = promise.defer();
 
   for (let [add, remove] of [
+    ["on", "off"], // Use event emitter before DOM events for consistency
     ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
+    ["addListener", "removeListener"]
   ]) {
     if ((add in aTarget) && (remove in aTarget)) {
       aTarget[add](aEventName, function onEvent(...aArgs) {
         aTarget[remove](aEventName, onEvent, aUseCapture);
-        deferred.resolve.apply(deferred, aArgs);
+        deferred.resolve(...aArgs);
       }, aUseCapture);
       break;
     }
   }
 
+  return deferred.promise;
+}
+
+// Hack around `once`, as that only resolves to a single (first) argument
+// and discards the rest. `onceSpread` is similar, except resolves to an
+// array of all of the arguments in the handler. These should be consolidated
+// into the same function, but many tests will need to be changed.
+function onceSpread(aTarget, aEvent) {
+  let deferred = promise.defer();
+  aTarget.once(aEvent, (...args) => deferred.resolve(args));
   return deferred.promise;
 }
 
@@ -271,4 +282,28 @@ function teardown(aPanel) {
     once(aPanel, "destroyed"),
     removeTab(aPanel.target.tab)
   ]);
+}
+
+// Due to `program-linked` events firing synchronously, we cannot
+// just yield/chain them together, as then we miss all actors after the
+// first event since they're fired consecutively. This allows us to capture
+// all actors and returns an array containing them.
+//
+// Takes a `front` object that is an event emitter, the number of
+// programs that should be listened to and waited on, and an optional
+// `onAdd` function that calls with the entire actors array on program link
+function getPrograms(front, count, onAdd) {
+  let actors = [];
+  let deferred = promise.defer();
+  front.on("program-linked", function onLink (actor) {
+    if (actors.length !== count) {
+      actors.push(actor);
+      if (typeof onAdd === 'function') onAdd(actors)
+    }
+    if (actors.length === count) {
+      front.off("program-linked", onLink);
+      deferred.resolve(actors);
+    }
+  });
+  return deferred.promise;
 }

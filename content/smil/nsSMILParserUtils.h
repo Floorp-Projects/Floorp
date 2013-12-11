@@ -6,11 +6,11 @@
 #ifndef NS_SMILPARSERUTILS_H_
 #define NS_SMILPARSERUTILS_H_
 
-#include "nscore.h"
 #include "nsTArray.h"
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 class nsISMILAttr;
+class nsSMILKeySpline;
 class nsSMILTimeValue;
 class nsSMILValue;
 class nsSMILRepeatCount;
@@ -31,72 +31,49 @@ class nsSMILParserUtils
 {
 public:
   // Abstract helper-class for assisting in parsing |values| attribute
-  class GenericValueParser {
+  class MOZ_STACK_CLASS GenericValueParser {
   public:
-    virtual nsresult Parse(const nsAString& aValueStr) = 0;
+    virtual bool Parse(const nsAString& aValueStr) = 0;
   };
 
-  static nsresult ParseKeySplines(const nsAString& aSpec,
-                                  nsTArray<double>& aSplineArray);
+  static const nsDependentSubstring TrimWhitespace(const nsAString& aString);
+
+  static bool ParseKeySplines(const nsAString& aSpec,
+                              FallibleTArray<nsSMILKeySpline>& aKeySplines);
 
   // Used for parsing the |keyTimes| and |keyPoints| attributes.
-  static nsresult ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
-                                                      bool aNonDecreasing,
-                                                      nsTArray<double>& aArray);
+  static bool ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
+                                                  bool aNonDecreasing,
+                                                  FallibleTArray<double>& aArray);
 
-  static nsresult ParseValues(const nsAString& aSpec,
-                              const mozilla::dom::SVGAnimationElement* aSrcElement,
-                              const nsISMILAttr& aAttribute,
-                              nsTArray<nsSMILValue>& aValuesArray,
-                              bool& aPreventCachingOfSandwich);
+  static bool ParseValues(const nsAString& aSpec,
+                          const mozilla::dom::SVGAnimationElement* aSrcElement,
+                          const nsISMILAttr& aAttribute,
+                          FallibleTArray<nsSMILValue>& aValuesArray,
+                          bool& aPreventCachingOfSandwich);
 
   // Generic method that will run some code on each sub-section of an animation
   // element's "values" list.
-  static nsresult ParseValuesGeneric(const nsAString& aSpec,
-                                     GenericValueParser& aParser);
+  static bool ParseValuesGeneric(const nsAString& aSpec,
+                                 GenericValueParser& aParser);
 
-  static nsresult ParseRepeatCount(const nsAString& aSpec,
-                                   nsSMILRepeatCount& aResult);
+  static bool ParseRepeatCount(const nsAString& aSpec,
+                               nsSMILRepeatCount& aResult);
 
-  static nsresult ParseTimeValueSpecParams(const nsAString& aSpec,
-                                           nsSMILTimeValueSpecParams& aResult);
-
-
-  // Used with ParseClockValue. Allow + or - before a clock value.
-  static const int8_t kClockValueAllowSign       = 1;
-  // Used with ParseClockValue. Allow "indefinite" in a clock value
-  static const int8_t kClockValueAllowIndefinite = 2;
+  static bool ParseTimeValueSpecParams(const nsAString& aSpec,
+                                       nsSMILTimeValueSpecParams& aResult);
 
   /*
-   * This method can actually parse more than a clock value as defined in the
-   * SMIL Animation specification. It can also parse:
-   *  - the + or - before an offset
-   *  - the special value "indefinite"
-   *  - the special value "media"
-   *
-   * Because the value "media" cannot be represented as part of an
-   * nsSMILTimeValue and has different meanings depending on where it is used,
-   * it is passed out as a separate parameter (which can be set to nullptr if the
-   * media attribute is not allowed).
+   * Parses a clock value as defined in the SMIL Animation specification.
+   * If parsing succeeds the returned value will be a non-negative, definite
+   * time value i.e. IsDefinite will return true.
    *
    * @param aSpec    The string containing a clock value, e.g. "10s"
-   * @param aResult  The parsed result. May be nullptr (e.g. if this method is
-   *                 being called just to test if aSpec is a valid clock value).
-   *                 [OUT]
-   * @param aFlags   A combination of the kClockValue* bit flags OR'ed together
-   *                 to define what additional syntax is allowed.
-   * @param aIsMedia Optional out parameter which, if not null, will be set to
-   *                 true if the value is the string "media", false
-   *                 otherwise. If it is null, the string "media" is not
-   *                 allowed.
-   *
-   * @return NS_OK if aSpec was successfully parsed as a valid clock value
-   * (according to aFlags), an error code otherwise.
+   * @param aResult  The parsed result. [OUT]
+   * @return true if parsing succeeded, otherwise false.
    */
-  static nsresult ParseClockValue(const nsAString& aSpec,
-                                  nsSMILTimeValue* aResult,
-                                  uint32_t aFlags = 0,
-                                  bool* aIsMedia = nullptr);
+  static bool ParseClockValue(const nsAString& aSpec,
+                              nsSMILTimeValue* aResult);
 
   /*
    * This method checks whether the given string looks like a negative number.

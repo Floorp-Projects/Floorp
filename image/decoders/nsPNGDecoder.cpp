@@ -805,11 +805,11 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
   }
 }
 
+#ifdef PNG_APNG_SUPPORTED
 // got the header of a new frame that's coming
 void
 nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 {
-#ifdef PNG_APNG_SUPPORTED
   png_uint_32 x_offset, y_offset;
   int32_t width, height;
 
@@ -835,8 +835,8 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
      */
     png_process_data_pause(png_ptr, /* save = */ 1);
   }
-#endif
 }
+#endif
 
 void
 nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)

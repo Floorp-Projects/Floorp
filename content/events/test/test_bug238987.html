@@ -21,7 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
 
   var shouldStop = false;
   var modifier = 0;
-  var expectedResult = "i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12";
+  var expectedResult = "i1,i2,i3,i4,i5,i6,i7,i8,number,i9,i10,i11,i12";
   var forwardFocusArray = expectedResult.split(",");
   var backwardFocusArray = expectedResult.split(",");
   var forwardBlurArray = expectedResult.split(",");
@@ -201,6 +201,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
       </tr>
       <tr>
         <td>type="file"</td><td><input type="file" id="i8"></td>
+      </tr>
+      <tr>
+        <td>type="number"</td><td><input type="number" id="number"></td>
       </tr>
       <tr>
         <td>button</td><td><button id="i9">button</button></td>

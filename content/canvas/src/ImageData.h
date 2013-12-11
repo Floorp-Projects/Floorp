@@ -48,7 +48,7 @@ public:
   {
     return mHeight;
   }
-  JSObject* Data(JSContext* cx, JS::Handle<JSObject*> /* unused */) const
+  JSObject* Data(JSContext* cx) const
   {
     return GetDataObject();
   }

@@ -152,6 +152,7 @@ LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mDestroyed(false)
+  , mIPCOpen(false)
 {
   MOZ_COUNT_CTOR(LayerTransactionParent);
 }
@@ -277,6 +278,10 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         layer->SetStickyPositionData(common.stickyScrollContainerId(),
                                      common.stickyScrollRangeOuter(),
                                      common.stickyScrollRangeInner());
+      }
+      if (common.isScrollbar()) {
+        layer->SetScrollbarData(common.scrollbarTargetContainerId(),
+          static_cast<Layer::ScrollDirection>(common.scrollbarDirection()));
       }
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());

@@ -72,7 +72,7 @@ js::ScriptDebugPrologue(JSContext *cx, AbstractFramePtr frame)
 {
     JS_ASSERT_IF(frame.isStackFrame(), frame.asStackFrame() == cx->interpreterFrame());
 
-    if (!frame.script()->selfHosted) {
+    if (!frame.script()->selfHosted()) {
         if (frame.isFramePushedByExecute()) {
             if (JSInterpreterHook hook = cx->runtime()->debugHooks.executeHook)
                 frame.setHookData(hook(cx, Jsvalify(frame), IsTopFrameConstructing(cx, frame),
@@ -391,7 +391,7 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, unsigned lineno)
 JS_PUBLIC_API(jsbytecode *)
 JS_EndPC(JSContext *cx, JSScript *script)
 {
-    return script->code + script->length;
+    return script->codeEnd();
 }
 
 JS_PUBLIC_API(bool)
@@ -399,7 +399,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
               unsigned startLine, unsigned maxLines,
               unsigned* count, unsigned** retLines, jsbytecode*** retPCs)
 {
-    size_t len = (script->length > maxLines ? maxLines : script->length);
+    size_t len = (script->length() > maxLines ? maxLines : script->length());
     unsigned *lines = cx->pod_malloc<unsigned>(len);
     if (!lines)
         return false;
@@ -410,7 +410,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
         return false;
     }
 
-    unsigned lineno = script->lineno;
+    unsigned lineno = script->lineno();
     unsigned offset = 0;
     unsigned i = 0;
     for (jssrcnote *sn = script->notes(); !SN_IS_TERMINATOR(sn); sn = SN_NEXT(sn)) {
@@ -424,7 +424,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
 
             if (lineno >= startLine) {
                 lines[i] = lineno;
-                pcs[i] = script->code + offset;
+                pcs[i] = script->offsetToPC(offset);
                 if (++i >= maxLines)
                     break;
             }
@@ -578,7 +578,7 @@ JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(unsigned)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
-    return script->lineno;
+    return script->lineno();
 }
 
 JS_PUBLIC_API(unsigned)
@@ -596,7 +596,7 @@ JS_GetScriptVersion(JSContext *cx, JSScript *script)
 JS_PUBLIC_API(bool)
 JS_GetScriptIsSelfHosted(JSScript *script)
 {
-    return script->selfHosted;
+    return script->selfHosted();
 }
 
 /***************************************************************************/
@@ -837,10 +837,10 @@ JS_DumpBytecode(JSContext *cx, JSScript *scriptArg)
     if (!sprinter.init())
         return;
 
-    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
     js_Disassemble(cx, script, true, &sprinter);
     fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
 #endif
 }
 
@@ -848,16 +848,16 @@ extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
 {
     Rooted<JSScript*> script(cx, scriptArg);
-    JS_ASSERT(script->hasScriptCounts);
+    JS_ASSERT(script->hasScriptCounts());
 
     Sprinter sprinter(cx);
     if (!sprinter.init())
         return;
 
-    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
     js_DumpPCCounts(cx, script, &sprinter);
     fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), script->lineno);
+    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
 }
 
 namespace {
@@ -892,7 +892,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         if (script->compartment() != cx->compartment())
             continue;
 
-        if (script->hasScriptCounts && script->enclosingScriptsCompiledSuccessfully())
+        if (script->hasScriptCounts() && script->enclosingScriptsCompiledSuccessfully())
             JS_DumpPCCounts(cx, script);
     }
 

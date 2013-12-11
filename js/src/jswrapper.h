@@ -155,6 +155,10 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
 
+    virtual bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
+                       JS::HandleObject callable) MOZ_OVERRIDE;
+    virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id) MOZ_OVERRIDE;
+
     /*
      * Allow our subclasses to select the superclass behavior they want without
      * needing to specify an exact superclass.
@@ -204,9 +208,6 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) MOZ_OVERRIDE;
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
-    virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp,
-                                     bool *present) MOZ_OVERRIDE;
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) MOZ_OVERRIDE;
 

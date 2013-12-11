@@ -185,7 +185,7 @@ sdnAccessible::get_attributesForNames(unsigned short aMaxAttribs,
     if (aAttribNames[index]) {
       nsAutoString attributeValue, nameSpaceURI;
       nsAutoString attributeName(nsDependentString(
-        static_cast<PRUnichar*>(aAttribNames[index])));
+        static_cast<const wchar_t*>(aAttribNames[index])));
 
       nsresult rv = NS_OK;
       if (aNameSpaceID[index]>0 &&
@@ -282,8 +282,7 @@ sdnAccessible::get_computedStyleForProperties(unsigned short aNumStyleProperties
   for (index = 0; index < aNumStyleProperties; index++) {
     nsAutoString value;
     if (aStyleProperties[index])
-      cssDecl->GetPropertyValue(nsDependentString(static_cast<PRUnichar*>(
-        aStyleProperties[index])), value);  // Get property value
+      cssDecl->GetPropertyValue(nsDependentString(aStyleProperties[index]), value);  // Get property value
     aStyleValues[index] = ::SysAllocString(value.get());
   }
 

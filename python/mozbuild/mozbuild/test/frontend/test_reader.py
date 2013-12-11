@@ -15,19 +15,21 @@ from mozbuild.frontend.reader import BuildReader
 
 from mozbuild.test.common import MockConfig
 
+import mozpack.path as mozpath
+
 
 if sys.version_info.major == 2:
     text_type = 'unicode'
 else:
     text_type = 'str'
 
-data_path = os.path.abspath(os.path.dirname(__file__))
-data_path = os.path.join(data_path, 'data')
+data_path = mozpath.abspath(mozpath.dirname(__file__))
+data_path = mozpath.join(data_path, 'data')
 
 
 class TestBuildReader(unittest.TestCase):
     def config(self, name, **kwargs):
-        path = os.path.join(data_path, name)
+        path = mozpath.join(data_path, name)
 
         return MockConfig(path, **kwargs)
 
@@ -40,7 +42,7 @@ class TestBuildReader(unittest.TestCase):
         return BuildReader(config)
 
     def file_path(self, name, *args):
-        return os.path.join(data_path, name, *args)
+        return mozpath.join(data_path, name, *args)
 
     def test_dirs_traversal_simple(self):
         reader = self.reader('traversal-simple')
@@ -52,7 +54,7 @@ class TestBuildReader(unittest.TestCase):
     def test_dirs_traversal_no_descend(self):
         reader = self.reader('traversal-simple')
 
-        path = os.path.join(reader.topsrcdir, 'moz.build')
+        path = mozpath.join(reader.topsrcdir, 'moz.build')
         self.assertTrue(os.path.exists(path))
 
         sandboxes = list(reader.read_mozbuild(path,
@@ -262,7 +264,7 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([sandbox['RELATIVEDIR'] for sandbox in sandboxes],
             ['', 'foo', 'foo/baz', 'bar'])
         self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
-            ['foobar', 'foobar', 'foobar', 'bazbar'])
+            ['foobar', 'foobar', 'foobar', 'foobar'])
 
 if __name__ == '__main__':
     main()

@@ -17,7 +17,7 @@ let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/p
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
-let { BrowserDebuggerProcess } = Cu.import("resource:///modules/devtools/DebuggerProcess.jsm", {});
+let { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
 let { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
@@ -473,9 +473,9 @@ function initChromeDebugger(aOnClose) {
 
   let deferred = promise.defer();
 
-  // Wait for the debugger process to start...
-  BrowserDebuggerProcess.init(aOnClose, aProcess => {
-    info("Chrome debugger process started successfully.");
+  // Wait for the toolbox process to start...
+  BrowserToolboxProcess.init(aOnClose, aProcess => {
+    info("Browser toolbox process started successfully.");
 
     prepareDebugger(aProcess);
     deferred.resolve(aProcess);
@@ -528,6 +528,8 @@ function resumeDebuggerThenCloseAndFinish(aPanel, aFlags = {}) {
   return deferred.promise;
 }
 
+// Blackboxing helpers
+
 function getBlackBoxButton(aPanel) {
   return aPanel.panelWin.document.getElementById("black-box");
 }
@@ -545,11 +547,56 @@ function toggleBlackBoxing(aPanel, aSource = null) {
   } else {
     clickBlackBoxButton();
   }
+
   return blackBoxChanged;
 }
 
 function selectSourceAndGetBlackBoxButton(aPanel, aSource) {
+  function returnBlackboxButton() {
+    return getBlackBoxButton(aPanel);
+  }
+
   aPanel.panelWin.DebuggerView.Sources.selectedValue = aSource;
-  return ensureSourceIs(aPanel, aSource, true)
-    .then(getBlackBoxButton.bind(null, aPanel));
+  return ensureSourceIs(aPanel, aSource, true).then(returnBlackboxButton);
+}
+
+// Variables view inspection popup helpers
+
+function openVarPopup(aPanel, aCoords, aWaitForFetchedProperties) {
+  let events = aPanel.panelWin.EVENTS;
+  let editor = aPanel.panelWin.DebuggerView.editor;
+  let bubble = aPanel.panelWin.DebuggerView.VariableBubble;
+  let tooltip = bubble._tooltip.panel;
+
+  let popupShown = once(tooltip, "popupshown");
+  let fetchedProperties = aWaitForFetchedProperties
+    ? waitForDebuggerEvents(aPanel, events.FETCHED_BUBBLE_PROPERTIES)
+    : promise.resolve(null);
+
+  let { left, top } = editor.getCoordsFromPosition(aCoords);
+  bubble._findIdentifier(left, top);
+  return promise.all([popupShown, fetchedProperties]).then(waitForTick);
+}
+
+function hideVarPopup(aPanel) {
+  let bubble = aPanel.panelWin.DebuggerView.VariableBubble;
+  let tooltip = bubble._tooltip.panel;
+
+  let popupHiding = once(tooltip, "popuphiding");
+  bubble.hideContents();
+  return popupHiding.then(waitForTick);
+}
+
+function hideVarPopupByScrollingEditor(aPanel) {
+  let editor = aPanel.panelWin.DebuggerView.editor;
+  let bubble = aPanel.panelWin.DebuggerView.VariableBubble;
+  let tooltip = bubble._tooltip.panel;
+
+  let popupHiding = once(tooltip, "popuphiding");
+  editor.setFirstVisibleLine(0);
+  return popupHiding.then(waitForTick);
+}
+
+function reopenVarPopup(...aArgs) {
+  return hideVarPopup.apply(this, aArgs).then(() => openVarPopup.apply(this, aArgs));
 }

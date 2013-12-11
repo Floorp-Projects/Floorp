@@ -972,7 +972,10 @@ nsSocketTransport::SendStatus(nsresult status)
 nsresult
 nsSocketTransport::ResolveHost()
 {
-    SOCKET_LOG(("nsSocketTransport::ResolveHost [this=%p]\n", this));
+    SOCKET_LOG(("nsSocketTransport::ResolveHost [this=%p %s:%d%s]\n",
+                this, SocketHost().get(), SocketPort(),
+                mConnectionFlags & nsSocketTransport::BYPASS_CACHE ?
+                " bypass cache" : ""));
 
     nsresult rv;
 

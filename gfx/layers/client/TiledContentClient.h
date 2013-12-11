@@ -104,14 +104,65 @@ struct BasicTiledLayerTile {
  * doesn't need to be recalculated on every repeated transaction.
  */
 struct BasicTiledLayerPaintData {
-  CSSPoint mScrollOffset;
-  CSSPoint mLastScrollOffset;
-  gfx3DMatrix mTransformScreenToLayer;
-  nsIntRect mLayerCriticalDisplayPort;
-  gfxSize mResolution;
-  nsIntRect mCompositionBounds;
+  /*
+   * The scroll offset of the content from the nearest ancestor layer that
+   * represents scrollable content with a display port set.
+   */
+  ScreenPoint mScrollOffset;
+
+  /*
+   * The scroll offset of the content from the nearest ancestor layer that
+   * represents scrollable content with a display port set, for the last
+   * layer update transaction.
+   */
+  ScreenPoint mLastScrollOffset;
+
+  /*
+   * The transform matrix to go from Screen units to transformed LayoutDevice
+   * units.
+   */
+  gfx3DMatrix mTransformScreenToLayout;
+
+  /*
+   * The critical displayport of the content from the nearest ancestor layer
+   * that represents scrollable content with a display port set. Empty if a
+   * critical displayport is not set.
+   *
+   * This is in transformed LayoutDevice coordinates, but is stored as an
+   * nsIntRect for convenience when intersecting with the layer's mValidRegion.
+   */
+  nsIntRect mLayoutCriticalDisplayPort;
+
+  /*
+   * The render resolution of the document that the content this layer
+   * represents is in.
+   */
+  CSSToScreenScale mResolution;
+
+  /*
+   * The composition bounds of the primary scrollable layer, in transformed
+   * layout device coordinates. This is used to make sure that tiled updates to
+   * regions that are visible to the user are grouped coherently.
+   */
+  LayoutDeviceRect mCompositionBounds;
+
+  /*
+   * Low precision updates are always executed a tile at a time in repeated
+   * transactions. This counter is set to 1 on the first transaction of a low
+   * precision update, and incremented for each subsequent transaction.
+   */
   uint16_t mLowPrecisionPaintCount;
+
+  /*
+   * Whether this is the first time this layer is painting
+   */
   bool mFirstPaint : 1;
+
+  /*
+   * Whether there is further work to complete this paint. This is used to
+   * determine whether or not to repeat the transaction when painting
+   * progressively.
+   */
   bool mPaintFinished : 1;
 };
 
@@ -180,8 +231,8 @@ public:
     }
   }
 
-  const gfxSize& GetFrameResolution() { return mFrameResolution; }
-  void SetFrameResolution(const gfxSize& aResolution) { mFrameResolution = aResolution; }
+  const CSSToScreenScale& GetFrameResolution() { return mFrameResolution; }
+  void SetFrameResolution(const CSSToScreenScale& aResolution) { mFrameResolution = aResolution; }
 
   bool HasFormatChanged() const;
 
@@ -234,7 +285,7 @@ private:
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
   void* mCallbackData;
-  gfxSize mFrameResolution;
+  CSSToScreenScale mFrameResolution;
   bool mLastPaintOpaque;
 
   // The buffer we use when UseSinglePaintBuffer() above is true.

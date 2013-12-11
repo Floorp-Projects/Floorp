@@ -10,10 +10,10 @@
 
 #include "jsobjinlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 
@@ -1607,13 +1607,14 @@ js::CreateThisForFunction(JSContext *cx, HandleObject callee, NewObjectKind newK
 static bool
 Detecting(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
+    JS_ASSERT(script->containsPC(pc));
+
     /* General case: a branch or equality op follows the access. */
     JSOp op = JSOp(*pc);
     if (js_CodeSpec[op].format & JOF_DETECTING)
         return true;
 
-    jsbytecode *endpc = script->code + script->length;
-    JS_ASSERT(script->code <= pc && pc < endpc);
+    jsbytecode *endpc = script->codeEnd();
 
     if (op == JSOP_NULL) {
         /*
@@ -1718,46 +1719,33 @@ JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, 
     return deleteProperty(cx, obj, propname, succeeded);
 }
 
-static bool
-CopyProperty(JSContext *cx, HandleObject target, HandleObject obj,
-             HandleShape shape)
-{
-    // |shape| and |obj| are generally not same-compartment with |target| and
-    // |cx| here.
-    assertSameCompartment(cx, target);
-
-    unsigned attrs = shape->attributes();
-    PropertyOp getter = shape->getter();
-    StrictPropertyOp setter = shape->setter();
-    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
-    if ((attrs & JSPROP_GETTER) && !cx->compartment()->wrap(cx, &getter))
-        return false;
-    if ((attrs & JSPROP_SETTER) && !cx->compartment()->wrap(cx, &setter))
-        return false;
-    RootedValue v(cx, shape->hasSlot() ? obj->getSlot(shape->slot())
-                                       : UndefinedValue());
-    if (!cx->compartment()->wrap(cx, &v))
-        return false;
-    RootedId id(cx, shape->propid());
-    return JSObject::defineGeneric(cx, target, id, v, getter,
-                                   setter, attrs);
-}
-
 JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
                     HandleObject obj)
 {
-    assertSameCompartment(cx, target);
-    MOZ_ASSERT(obj->isNative());
-    RootedObject obj2(cx);
-    RootedShape shape(cx);
-    {
-        AutoCompartment ac(cx, obj);
-        if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &shape))
-            return false;
-    }
-    MOZ_ASSERT(shape && obj == obj2);
-    return CopyProperty(cx, target, obj, shape);
+    // |obj| and |cx| are generally not same-compartment with |target| here.
+    assertSameCompartment(cx, obj, id);
+    Rooted<JSPropertyDescriptor> desc(cx);
+
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &desc))
+        return false;
+    MOZ_ASSERT(desc.object());
+
+    // Silently skip JSPropertyOp-implemented accessors.
+    if (desc.getter() && !desc.hasGetterObject())
+        return true;
+    if (desc.setter() && !desc.hasSetterObject())
+        return true;
+
+    JSAutoCompartment ac(cx, target);
+    RootedId wrappedId(cx, id);
+    if (!cx->compartment()->wrap(cx, &desc))
+        return false;
+    if (!cx->compartment()->wrapId(cx, wrappedId.address()))
+        return false;
+
+    bool ignored;
+    return DefineOwnProperty(cx, target, wrappedId, desc, &ignored);
 }
 
 JS_FRIEND_API(bool)
@@ -1765,26 +1753,17 @@ JS_CopyPropertiesFrom(JSContext *cx, JSObject *targetArg, JSObject *objArg)
 {
     RootedObject target(cx, targetArg);
     RootedObject obj(cx, objArg);
-    assertSameCompartment(cx, target);
+    JSAutoCompartment ac(cx, obj);
 
-    // If we're not native, then we cannot copy properties.
-    JS_ASSERT(target->isNative() == obj->isNative());
-    if (!target->isNative())
-        return true;
+    AutoIdVector props(cx);
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+        return false;
 
-    AutoShapeVector shapes(cx);
-    for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-        if (!shapes.append(&r.front()))
+    for (size_t i = 0; i < props.length(); ++i) {
+        if (!JS_CopyPropertyFrom(cx, props.handleAt(i), target, obj))
             return false;
     }
 
-    size_t n = shapes.length();
-    RootedShape shape(cx);
-    while (n > 0) {
-        shape = shapes[--n];
-        if (!CopyProperty(cx, target, obj, shape))
-            return false;
-    }
     return true;
 }
 
@@ -2907,13 +2886,13 @@ js_InitNullClass(JSContext *cx, HandleObject obj)
     return nullptr;
 }
 
-#define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init) \
+#define DECLARE_PROTOTYPE_CLASS_INIT(name,code,init,clasp) \
     extern JSObject *init(JSContext *cx, Handle<JSObject*> obj);
 JS_FOR_EACH_PROTOTYPE(DECLARE_PROTOTYPE_CLASS_INIT)
 #undef DECLARE_PROTOTYPE_CLASS_INIT
 
 static const ClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
-#define LAZY_PROTOTYPE_INIT(name,code,init) init,
+#define LAZY_PROTOTYPE_INIT(name,code,init,clasp) init,
     JS_FOR_EACH_PROTOTYPE(LAZY_PROTOTYPE_INIT)
 #undef LAZY_PROTOTYPE_INIT
 };
@@ -4089,7 +4068,7 @@ NativeGetInline(JSContext *cx,
               case JSOP_GETPROP:
               case JSOP_CALLPROP:
               case JSOP_LENGTH:
-                script->baselineScript()->noteAccessedGetter(pc - script->code);
+                script->baselineScript()->noteAccessedGetter(script->pcToOffset(pc));
                 break;
               default:
                 break;
@@ -4243,7 +4222,7 @@ GetPropertyHelperInline(JSContext *cx,
                 return true;
 
             /* Don't warn repeatedly for the same script. */
-            if (!script || script->warnedAboutUndefinedProp)
+            if (!script || script->warnedAboutUndefinedProp())
                 return true;
 
             /* We may just be checking if that object has an iterator. */
@@ -4258,12 +4237,12 @@ GetPropertyHelperInline(JSContext *cx,
             }
 
             unsigned flags = JSREPORT_WARNING | JSREPORT_STRICT;
-            script->warnedAboutUndefinedProp = true;
+            script->setWarnedAboutUndefinedProp();
 
             /* Ok, bad undefined property reference: whine about it. */
             RootedValue val(cx, IdToValue(id));
             if (!js_ReportValueErrorFlags(cx, flags, JSMSG_UNDEFINED_PROP,
-                                          JSDVG_IGNORE_STACK, val, NullPtr(),
+                                          JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                           nullptr, nullptr))
             {
                 return false;
@@ -4505,7 +4484,7 @@ MaybeReportUndeclaredVarAssignment(JSContext *cx, JSString *propname)
 
         // If the code is not strict and extra warnings aren't enabled, then no
         // check is needed.
-        if (!script->strict && !cx->options().extraWarnings())
+        if (!script->strict() && !cx->options().extraWarnings())
             return true;
     }
 
@@ -4529,7 +4508,7 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 
         // If the code is not strict and extra warnings aren't enabled, then no
         // check is needed.
-        if (!script->strict && !cx->options().extraWarnings())
+        if (!script->strict() && !cx->options().extraWarnings())
             return true;
 
         /*
@@ -4573,7 +4552,7 @@ JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 
@@ -4589,7 +4568,7 @@ JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned repo
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 
@@ -4605,7 +4584,7 @@ JSObject::reportNotExtensible(ThreadSafeContext *cxArg, unsigned report)
     JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, ObjectValue(*this));
     return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
-                                    JSDVG_IGNORE_STACK, val, NullPtr(),
+                                    JSDVG_IGNORE_STACK, val, js::NullPtr(),
                                     nullptr, nullptr);
 }
 
@@ -5391,7 +5370,7 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
     if (!shape) {
         const char *slotname = nullptr;
         if (obj->is<GlobalObject>()) {
-#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init)                           \
+#define TEST_SLOT_MATCHES_PROTOTYPE(name,code,init,clasp)                     \
             if ((code) == slot) { slotname = js_##name##_str; goto found; }
             JS_FOR_EACH_PROTOTYPE(TEST_SLOT_MATCHES_PROTOTYPE)
 #undef TEST_SLOT_MATCHES_PROTOTYPE
@@ -5463,8 +5442,8 @@ dumpValue(const Value &v)
         }
         if (fun->hasScript()) {
             JSScript *script = fun->nonLazyScript();
-            fprintf(stderr, " (%s:%u)",
-                    script->filename() ? script->filename() : "", script->lineno);
+            fprintf(stderr, " (%s:%d)",
+                    script->filename() ? script->filename() : "", (int) script->lineno());
         }
         fprintf(stderr, " at %p>", (void *) fun);
     } else if (v.isObject()) {
@@ -5690,7 +5669,7 @@ js_DumpStackFrame(JSContext *cx, StackFrame *start)
         fputc('\n', stderr);
 
         fprintf(stderr, "file %s line %u\n",
-                i.script()->filename(), (unsigned) i.script()->lineno);
+                i.script()->filename(), (unsigned) i.script()->lineno());
 
         if (jsbytecode *pc = i.pc()) {
             fprintf(stderr, "  pc = %p\n", pc);
@@ -5738,7 +5717,7 @@ js_DumpBacktrace(JSContext *cx)
         JSScript *script = i.script();
         sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
                         depth, (i.isJit() ? 0 : i.interpFrame()), filename, line,
-                        script, i.pc() - script->code);
+                        script, script->pcToOffset(i.pc()));
     }
     fprintf(stdout, "%s", sprinter.string());
 }

@@ -432,29 +432,9 @@ protected:
    * Return an offset corresponding to the given direction and selection amount
    * relative the given offset. A helper used to find word or line boundaries.
    */
-  int32_t FindOffset(int32_t aOffset, nsDirection aDirection,
-                     nsSelectionAmount aAmount,
-                     EWordMovementType aWordMovementType = eDefaultBehavior);
-
-  /**
-    * Used by FindOffset() to move backward/forward from a given point
-    * by word/line/etc.
-    *
-    * @param  aPresShell       the current presshell we're moving in
-    * @param  aFromFrame       the starting frame we're moving from
-    * @param  aFromOffset      the starting offset we're moving from
-    * @param  aFromAccessible  the starting accessible we're moving from
-    * @param  aAmount          how much are we moving (word/line/etc.) ?
-    * @param  aDirection       forward or backward?
-    * @param  aNeedsStart      for word and line cases, are we basing this on
-    *                          the start or end?
-    * @return                  the resulting offset into this hypertext
-    */
-  int32_t GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
-                            int32_t aFromOffset, Accessible* aFromAccessible,
-                            nsSelectionAmount aAmount, nsDirection aDirection,
-                            bool aNeedsStart,
-                            EWordMovementType aWordMovementType);
+  virtual int32_t FindOffset(int32_t aOffset, nsDirection aDirection,
+                             nsSelectionAmount aAmount,
+                             EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
     * Provides information for substring that is defined by the given start
@@ -473,8 +453,6 @@ protected:
     * @param  aText         [out, optional] return the substring's text
     * @param  aEndFrame     [out, optional] return the end frame for this
     *                       substring
-    * @param  aBoundsRect   [out, optional] return the bounds rectangle for this
-    *                       substring
     * @param  aStartAcc     [out, optional] return the start accessible for this
     *                       substring
     * @param  aEndAcc       [out, optional] return the end accessible for this
@@ -484,11 +462,16 @@ protected:
   nsIFrame* GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
                           nsAString *aText = nullptr,
                           nsIFrame **aEndFrame = nullptr,
-                          nsIntRect *aBoundsRect = nullptr,
                           Accessible** aStartAcc = nullptr,
                           Accessible** aEndAcc = nullptr);
 
-  nsIntRect GetBoundsForString(nsIFrame *aFrame, uint32_t aStartRenderedOffset, uint32_t aEndRenderedOffset);
+  /**
+   * Return the boundaries of the substring in case of textual frame or
+   * frame boundaries in case of non textual frame, offsets are ignored.
+   */
+  nsIntRect GetBoundsInFrame(nsIFrame* aFrame,
+                             uint32_t aStartRenderedOffset,
+                             uint32_t aEndRenderedOffset);
 
   // Selection helpers
 

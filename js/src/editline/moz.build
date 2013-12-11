@@ -6,9 +6,13 @@
 
 LIBRARY_NAME = 'editline'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'editline.c',
     'sysunix.c',
 ]
 
 FORCE_STATIC_LIB = True
+
+for var in ('ANSI_ARROWS', 'HAVE_TCGETATTR', 'HIDE', 'USE_DIRENT', 'SYS_UNIX',
+            'HAVE_STDLIB', 'UNIQUE_HISTORY'):
+    DEFINES[var] = True

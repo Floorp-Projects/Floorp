@@ -10,36 +10,22 @@
  * debugging global.
  */
 
-// |this.require| is used to test if this file was loaded via the devtools
-// loader (as it is in DebuggerProcess.jsm) or via loadSubScript (as it is from
-// dbg-server.jsm).  Note that testing |require| is not safe in either
-// situation, as it causes a ReferenceError.
-var Ci, Cc, CC, Cu, Cr, Components;
-if (this.require) {
-  ({ Ci, Cc, CC, Cu, Cr, components: Components }) = require("chrome");
-} else {
-  ({
-    interfaces: Ci,
-    classes: Cc,
-    Constructor: CC,
-    utils: Cu,
-    results: Cr
-  }) = Components;
-}
-
-// On B2G, if |this.require| is undefined at this point, it remains undefined
-// later on when |DebuggerServer.registerModule| is called.  On desktop (and
-// perhaps other places), if |this.require| starts out undefined, it ends up
-// being set to some native code by the time we get to |registerModule|.  Here
-// we perform a test early on, and then cache the correct require function for
-// later use.
-var localRequire;
-if (this.require) {
-  localRequire = id => require(id);
-} else {
-  let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  localRequire = id => devtools.require(id);
-}
+// Until all Debugger server code is converted to SDK modules,
+// imports Components.* alias from chrome module.
+var { Ci, Cc, CC, Cu, Cr } = require("chrome");
+// On B2G, `this` != Global scope, so `Ci` won't be binded on `this`
+// (i.e. this.Ci is undefined) Then later, when using loadSubScript,
+// Ci,... won't be defined for sub scripts.
+this.Ci = Ci;
+this.Cc = Cc;
+this.CC = CC;
+this.Cu = Cu;
+this.Cr = Cr;
+// Overload `Components` to prevent SDK loader exception on Components
+// object usage
+Object.defineProperty(this, "Components", {
+  get: function () require("chrome").components
+});
 
 const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
@@ -68,10 +54,12 @@ function loadSubScript(aURL)
   }
 }
 
-let loaderRequire = this.require;
-this.require = null;
-loadSubScript.call(this, "resource://gre/modules/commonjs/sdk/core/promise.js");
-this.require = loaderRequire;
+let {defer, resolve, reject, promised, all} = require("sdk/core/promise");
+this.defer = defer;
+this.resolve = resolve;
+this.reject = reject;
+this.promised = promised;
+this.all = all;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
 
@@ -82,12 +70,14 @@ function dumpn(str) {
     dump("DBG-SERVER: " + str + "\n");
   }
 }
+this.dumpn = dumpn;
 
 function dbg_assert(cond, e) {
   if (!cond) {
     return e;
   }
 }
+this.dbg_assert = dbg_assert;
 
 loadSubScript.call(this, "resource://gre/modules/devtools/server/transport.js");
 
@@ -168,7 +158,7 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
-  LONG_STRING_READ_LENGTH: 1000,
+  LONG_STRING_READ_LENGTH: 65 * 1024,
 
   /**
    * A handler function that prompts the user to accept or decline the incoming
@@ -324,7 +314,7 @@ var DebuggerServer = {
     }
 
     let moduleAPI = ModuleAPI();
-    let mod = localRequire(id);
+    let mod = require(id);
     mod.register(moduleAPI);
     gRegisteredModules[id] = { module: mod, api: moduleAPI };
   },
@@ -362,12 +352,12 @@ var DebuggerServer = {
     if ("nsIProfiler" in Ci)
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
 
-    this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/inspector");
     this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/styleeditor");
   },
 
   /**
@@ -382,9 +372,9 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/script.js");
       this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
       this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
-      this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       this.registerModule("devtools/server/actors/inspector");
       this.registerModule("devtools/server/actors/webgl");
+      this.registerModule("devtools/server/actors/styleeditor");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
@@ -688,6 +678,8 @@ var DebuggerServer = {
 if (this.exports) {
   exports.DebuggerServer = DebuggerServer;
 }
+// Needed on B2G (See header note)
+this.DebuggerServer = DebuggerServer;
 
 /**
  * Construct an ActorPool.
@@ -706,6 +698,8 @@ function ActorPool(aConnection)
 if (this.exports) {
   exports.ActorPool = ActorPool;
 }
+// Needed on B2G (See header note)
+this.ActorPool = ActorPool;
 
 ActorPool.prototype = {
   /**

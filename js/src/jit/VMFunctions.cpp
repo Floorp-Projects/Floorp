@@ -63,7 +63,7 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
                 return false;
 
             // Clone function at call site if needed.
-            if (fun->nonLazyScript()->shouldCloneAtCallsite) {
+            if (fun->nonLazyScript()->shouldCloneAtCallsite()) {
                 jsbytecode *pc;
                 RootedScript script(cx, cx->currentScript(&pc));
                 fun = CloneFunctionAtCallsite(cx, fun, script, pc);
@@ -297,7 +297,7 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
 {
     RootedTypeObject type(cx, typeArg);
     NewObjectKind newKind = !type ? SingletonObject : GenericObject;
-    if (type && type->isLongLivedForJITAlloc())
+    if (type && type->shouldPreTenure())
         newKind = TenuredObject;
     RootedObject obj(cx, NewDenseAllocatedArray(cx, count, nullptr, newKind));
     if (!obj)
@@ -315,7 +315,7 @@ JSObject*
 NewInitObject(JSContext *cx, HandleObject templateObject)
 {
     NewObjectKind newKind = templateObject->hasSingletonType() ? SingletonObject : GenericObject;
-    if (!templateObject->hasLazyType() && templateObject->type()->isLongLivedForJITAlloc())
+    if (!templateObject->hasLazyType() && templateObject->type()->shouldPreTenure())
         newKind = TenuredObject;
     RootedObject obj(cx, CopyInitializerObject(cx, templateObject, newKind));
 
@@ -336,7 +336,7 @@ NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
     JS_ASSERT(!templateObject->hasSingletonType());
     JS_ASSERT(!templateObject->hasLazyType());
 
-    NewObjectKind newKind = templateObject->type()->isLongLivedForJITAlloc()
+    NewObjectKind newKind = templateObject->type()->shouldPreTenure()
                             ? TenuredObject
                             : GenericObject;
     JSObject *obj = NewObjectWithGivenProto(cx,
@@ -804,7 +804,7 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
         return arrRes;
     }
 
-    NewObjectKind newKind = templateObj->type()->isLongLivedForJITAlloc()
+    NewObjectKind newKind = templateObj->type()->shouldPreTenure()
                             ? TenuredObject
                             : GenericObject;
     ArrayObject *arrRes = NewDenseCopiedArray(cx, length, rest, nullptr, newKind);
@@ -922,6 +922,28 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
     return TypedObject::createDerived(cx, type, owner, offset);
 }
 
+bool
+Recompile(JSContext *cx)
+{
+    JS_ASSERT(cx->currentlyRunningInJit());
+    JitActivationIterator activations(cx->runtime());
+    IonFrameIterator iter(activations);
+
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+
+    bool isConstructing = iter.isConstructing();
+    RootedScript script(cx, iter.script());
+    JS_ASSERT(script->hasIonScript());
+
+    MethodStatus status = Recompile(cx, script, nullptr, nullptr, isConstructing);
+    if (status == Method_Error)
+        return false;
+
+    JS_ASSERT(script->hasIonScript());
+
+    return true;
+}
 
 } // namespace jit
 } // namespace js

@@ -37,13 +37,11 @@ EXPORTS.mozilla += [
     'ProcessPriorityManager.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AppProcessChecker.cpp',
-    'Blob.cpp',
     'ContentChild.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
-    'CrashReporterChild.cpp',
     'CrashReporterParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
@@ -53,6 +51,14 @@ SOURCES += [
     'TabContext.cpp',
     'TabMessageUtils.cpp',
     'TabParent.cpp',
+]
+
+# Blob.cpp cannot be compiled in unified mode because it triggers a fatal gcc warning.
+# CrashReporterChild.cpp cannot be compiled in unified mode because of name clashes
+# in OS X headers.
+SOURCES += [
+    'Blob.cpp',
+    'CrashReporterChild.cpp',
 ]
 
 IPDL_SOURCES += [
@@ -102,3 +108,11 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
 ]
 
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
+    DEFINES['MOZ_ENABLE_FREETYPE'] = True
+
+for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
+    if CONFIG[var]:
+        DEFINES[var] = True

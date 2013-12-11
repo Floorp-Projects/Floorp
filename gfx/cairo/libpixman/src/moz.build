@@ -61,3 +61,17 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+LOCAL_INCLUDES += [
+    '../../cairo/src',
+]
+
+
+if CONFIG['MOZ_USE_PTHREADS']:
+    DEFINES['HAVE_PTHREAD_SETSPECIFIC'] = True
+
+if CONFIG['_MSC_VER']:
+    DEFINES['PIXMAN_USE_XP_DLL_TLS_WORKAROUND'] = True
+
+DEFINES['PACKAGE'] = 'mozpixman'
+
+DEFINES['_USE_MATH_DEFINES'] = True

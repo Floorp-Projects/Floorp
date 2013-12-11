@@ -94,7 +94,7 @@ function testUnregistered() {
 
     is(connection.voice.connected, false);
     is(connection.voice.state, "notSearching");
-    is(connection.voice.emergencyCallsOnly, false);
+    is(connection.voice.emergencyCallsOnly, true);
     is(connection.voice.roaming, false);
     is(connection.voice.cell, null);
     is(connection.voice.signalStrength, null);
@@ -112,7 +112,7 @@ function testSearching() {
 
     is(connection.voice.connected, false);
     is(connection.voice.state, "searching");
-    is(connection.voice.emergencyCallsOnly, false);
+    is(connection.voice.emergencyCallsOnly, true);
     is(connection.voice.roaming, false);
     is(connection.voice.cell, null);
     is(connection.voice.signalStrength, null);
@@ -130,7 +130,7 @@ function testDenied() {
 
     is(connection.voice.connected, false);
     is(connection.voice.state, "denied");
-    is(connection.voice.emergencyCallsOnly, false);
+    is(connection.voice.emergencyCallsOnly, true);
     is(connection.voice.roaming, false);
     is(connection.voice.cell, null);
     is(connection.voice.signalStrength, null);

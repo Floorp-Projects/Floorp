@@ -16,8 +16,7 @@ function ifWebGLSupported() {
   ok(true, "The cached programs behave correctly before the navigation.");
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
-  let secondProgram = yield once(front, "program-linked");
-  let thirdProgram = yield once(front, "program-linked");
+  let [secondProgram, thirdProgram] = yield getPrograms(front, 2);
   yield checkSecondCachedPrograms(firstProgram, [secondProgram, thirdProgram]);
   yield checkHighlightingInTheSecondPage(secondProgram, thirdProgram);
   ok(true, "The cached programs behave correctly after the navigation.");
@@ -81,15 +80,18 @@ function ifWebGLSupported() {
   function checkHighlightingInTheFirstPage(programActor) {
     return Task.spawn(function() {
       yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-      ok(true, "The top left pixel color was correct before highlighting.");
+      yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+      ok(true, "The corner pixel colors are correct before highlighting.");
 
-      yield programActor.highlight([0, 0, 1, 1]);
-      yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 255, a: 255 }, true);
-      ok(true, "The top left pixel color is correct after highlighting.");
+      yield programActor.highlight([0, 1, 0, 1]);
+      yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 0, g: 0, b: 0, a: 255 }, true);
+      yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+      ok(true, "The corner pixel colors are correct after highlighting.");
 
       yield programActor.unhighlight();
       yield ensurePixelIs(debuggee, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);
-      ok(true, "The top left pixel color is correct after unhighlighting.");
+      yield ensurePixelIs(debuggee, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
+      ok(true, "The corner pixel colors are correct after unhighlighting.");
     });
   }
 

@@ -74,4 +74,24 @@
         <item name="android:textColor">#FF000000</item>
     </style>
 
+    <style name="GeckoActionBar" parent="@android:style/Widget.Holo.Light.ActionMode">
+        <item name="android:background">@drawable/ab_stacked_transparent_light_holo</item>
+    </style>
+
+    <style name="GeckoActionBar.Title" parent="@android:style/TextAppearance.Holo.Widget.ActionBar.Title">
+        <item name="android:drawableLeft">?android:attr/actionModeCloseDrawable</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:paddingLeft">15dp</item>
+        <item name="android:paddingRight">15dp</item>
+    </style>
+
+    <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <style name="GeckoActionBar.Button.MenuButton" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
+        <item name="android:scaleType">center</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
 </resources>

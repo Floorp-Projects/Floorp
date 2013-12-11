@@ -50,8 +50,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
-    // Does this block do something that forces it to terminate early?
-    bool earlyAbort_;
+    // This block cannot be reached by any means.
+    bool unreachable_;
 
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
@@ -88,14 +88,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32_t id) {
         id_ = id;
     }
-    void setEarlyAbort() {
-        earlyAbort_ = true;
-    }
-    void clearEarlyAbort() {
-        earlyAbort_ = false;
-    }
-    bool earlyAbort() {
-        return earlyAbort_;
+
+    // Mark the current block and all dominated blocks as unreachable.
+    void setUnreachable();
+    bool unreachable() {
+        return unreachable_;
     }
     // Move the definition to the top of the stack.
     void pick(int32_t depth);
@@ -468,12 +465,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
 
     bool strict() const {
-        return info_.script()->strict;
+        return info_.script()->strict();
     }
 
     void dumpStack(FILE *fp);
 
     void dump(FILE *fp);
+    void dump();
 
     // Track bailouts by storing the current pc in MIR instruction added at this
     // cycle. This is also used for tracking calls when profiling.
@@ -532,13 +530,13 @@ typedef InlineListIterator<MBasicBlock> MBasicBlockIterator;
 typedef InlineListIterator<MBasicBlock> ReversePostorderIterator;
 typedef InlineListReverseIterator<MBasicBlock> PostorderIterator;
 
-typedef Vector<MBasicBlock *, 1, IonAllocPolicy> MIRGraphExits;
+typedef Vector<MBasicBlock *, 1, IonAllocPolicy> MIRGraphReturns;
 
 class MIRGraph
 {
     InlineList<MBasicBlock> blocks_;
     TempAllocator *alloc_;
-    MIRGraphExits *exitAccumulator_;
+    MIRGraphReturns *returnAccumulator_;
     uint32_t blockIdGen_;
     uint32_t idGen_;
     MBasicBlock *osrBlock_;
@@ -550,9 +548,9 @@ class MIRGraph
   public:
     MIRGraph(TempAllocator *alloc)
       : alloc_(alloc),
-        exitAccumulator_(nullptr),
+        returnAccumulator_(nullptr),
         blockIdGen_(0),
-        idGen_(0),
+        idGen_(1),
         osrBlock_(nullptr),
         osrStart_(nullptr),
         numBlocks_(0),
@@ -573,18 +571,18 @@ class MIRGraph
 
     void unmarkBlocks();
 
-    void setExitAccumulator(MIRGraphExits *accum) {
-        exitAccumulator_ = accum;
+    void setReturnAccumulator(MIRGraphReturns *accum) {
+        returnAccumulator_ = accum;
     }
-    MIRGraphExits *exitAccumulator() const {
-        return exitAccumulator_;
+    MIRGraphReturns *returnAccumulator() const {
+        return returnAccumulator_;
     }
 
-    bool addExit(MBasicBlock *exitBlock) {
-        if (!exitAccumulator_)
+    bool addReturn(MBasicBlock *returnBlock) {
+        if (!returnAccumulator_)
             return true;
 
-        return exitAccumulator_->append(exitBlock);
+        return returnAccumulator_->append(returnBlock);
     }
 
     MBasicBlock *entryBlock() {
@@ -597,7 +595,9 @@ class MIRGraph
         numBlocks_ = 0;
     }
     void resetInstructionNumber() {
-        idGen_ = 0;
+        // This intentionally starts above 0. The id 0 is in places used to
+        // indicate a failure to perform an operation on an instruction.
+        idGen_ = 1;
     }
     MBasicBlockIterator begin() {
         return blocks_.begin();
@@ -637,12 +637,9 @@ class MIRGraph
         return blockIdGen_;
     }
     void allocDefinitionId(MDefinition *ins) {
-        // This intentionally starts above 0. The id 0 is in places used to
-        // indicate a failure to perform an operation on an instruction.
-        idGen_ += 2;
-        ins->setId(idGen_);
+        ins->setId(idGen_++);
     }
-    uint32_t getMaxInstructionId() {
+    uint32_t getNumInstructionIds() {
         return idGen_;
     }
     MResumePoint *entryResumePoint() {
@@ -683,6 +680,7 @@ class MIRGraph
     MDefinition *forkJoinSlice();
 
     void dump(FILE *fp);
+    void dump();
 };
 
 class MDefinitionIterator

@@ -219,6 +219,15 @@ struct FieldInfo
   size_t              mOffset;  // offset of the field in the struct, in bytes
 };
 
+struct UnbarrieredFieldInfo
+{
+  JSObject*           mType;    // CType of the field
+  size_t              mIndex;   // index of the field in the struct (first is 0)
+  size_t              mOffset;  // offset of the field in the struct, in bytes
+};
+static_assert(sizeof(UnbarrieredFieldInfo) == sizeof(FieldInfo),
+              "UnbarrieredFieldInfo should be the same as FieldInfo but with unbarriered mType");
+
 // Hash policy for FieldInfos.
 struct FieldHashPolicy : DefaultHasher<JSFlatString*>
 {

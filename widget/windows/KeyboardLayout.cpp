@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/Util.h"
+#include "mozilla/WindowsVersion.h"
 
 #include "KeyboardLayout.h"
 #include "nsIMM32Handler.h"
@@ -581,7 +582,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   // On WinXP and WinServer2003, we cannot compute the virtual keycode for
   // extended keys due to the API limitation.
   bool canComputeVirtualKeyCodeFromScanCode =
-    (!mIsExtended || WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION);
+    (!mIsExtended || IsVistaOrLater());
   switch (mMsg.message) {
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
@@ -809,8 +810,7 @@ NativeKey::GetScanCodeWithExtendedFlag() const
   // a virtual keycode, we need to add 0xE000 to the scancode.
   // On Win XP and Win Server 2003, this doesn't support. On them, we have
   // no way to get virtual keycodes from scancode of extended keys.
-  if (!mIsExtended ||
-      WinUtils::GetWindowsVersion() < WinUtils::VISTA_VERSION) {
+  if (!mIsExtended || !IsVistaOrLater()) {
     return mScanCode;
   }
   return (0xE000 | mScanCode);
@@ -892,11 +892,9 @@ NativeKey::ComputeVirtualKeyCodeFromScanCode() const
 uint8_t
 NativeKey::ComputeVirtualKeyCodeFromScanCodeEx() const
 {
-  bool VistaOrLater =
-    (WinUtils::GetWindowsVersion() >= WinUtils::VISTA_VERSION);
   // NOTE: WinXP doesn't support mapping scan code to virtual keycode of
   //       extended keys.
-  NS_ENSURE_TRUE(!mIsExtended || VistaOrLater, 0);
+  NS_ENSURE_TRUE(!mIsExtended || IsVistaOrLater(), 0);
   return static_cast<uint8_t>(
            ::MapVirtualKeyEx(GetScanCodeWithExtendedFlag(), MAPVK_VSC_TO_VK_EX,
                              mKeyboardLayout));
@@ -949,6 +947,9 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
 
   aKeyEvent.mIsRepeat = IsRepeat();
   aKeyEvent.mKeyNameIndex = mKeyNameIndex;
+  if (mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+    aKeyEvent.mKeyValue = mCommittedCharsAndModifiers.ToString();
+  }
   aKeyEvent.location = GetKeyLocation();
   aModKeyState.InitInputEvent(aKeyEvent);
 }
@@ -1670,6 +1671,9 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
     return;
   }
 
+  MOZ_ASSERT(aNativeKey.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING,
+    "Printable key's key name index must be KEY_NAME_INDEX_USE_STRING");
+
   bool isKeyDown = aNativeKey.IsKeyDownMessage();
   uint8_t shiftState =
     VirtualKey::ModifiersToShiftState(aModKeyState.GetModifiers());
@@ -2313,6 +2317,10 @@ KeyboardLayout::ConvertNativeKeyCodeToDOMKeyCode(UINT aNativeKeyCode) const
 KeyNameIndex
 KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
 {
+  if (IsPrintableCharKey(aVirtualKey)) {
+    return KEY_NAME_INDEX_USE_STRING;
+  }
+
 #define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
 #define NS_JAPANESE_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
 #define NS_KOREAN_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
@@ -2330,9 +2338,6 @@ KeyboardLayout::ConvertNativeKeyCodeToKeyNameIndex(uint8_t aVirtualKey) const
 #define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex)
 
     default:
-      if (IsPrintableCharKey(aVirtualKey)) {
-        return KEY_NAME_INDEX_PrintableKey;
-      }
       break;
   }
 

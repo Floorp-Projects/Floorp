@@ -151,7 +151,7 @@ public class testSettingsMenuItems extends PixelTest {
 
         // Automatic updates
         if (AppConstants.MOZ_UPDATER) {
-            String[] autoUpdateUi = { "Automatic updates", "Only over Wi-Fi", "Enabled", "Only over Wi-Fi", "Disabled" };
+            String[] autoUpdateUi = { "Download updates automatically", "Only over Wi-Fi", "Always", "Only over Wi-Fi", "Never" };
             settingsMap.get("Customize").add(autoUpdateUi);
         }
 

@@ -131,6 +131,18 @@ if (params.runSlower) {
   TestRunner.runSlower = true;
 }
 
+if (params.dumpOutputDirectory) {
+  TestRunner.dumpOutputDirectory = params.dumpOutputDirectory;
+}
+
+if (params.dumpAboutMemoryAfterTest) {
+  TestRunner.dumpAboutMemoryAfterTest = true;
+}
+
+if (params.dumpDMDAfterTest) {
+  TestRunner.dumpDMDAfterTest = true;
+}
+
 var gTestList = [];
 var RunSet = {}
 RunSet.runall = function(e) {

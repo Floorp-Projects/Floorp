@@ -49,3 +49,13 @@ UNIFIED_SOURCES += [
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'gklayout'
+LOCAL_INCLUDES += [
+    '../../content/base/src',
+    '../../content/svg/content/src',
+    '../../widget',
+    '../base',
+    '../generic',
+    '../style',
+    '../xul',
+]
+

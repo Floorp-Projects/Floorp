@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -23,7 +23,6 @@
 #include "mozilla/Preferences.h"
 #include "BasicLayers.h"
 #include "ClientLayerManager.h"
-#include "LayerManagerOGL.h"
 #include "mozilla/layers/Compositor.h"
 #include "nsIXULRuntime.h"
 #include "nsIXULWindow.h"
@@ -41,6 +40,8 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
+#include "GLConsts.h"
+#include "LayerScope.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -161,6 +162,8 @@ static void DeferredDestroyCompositor(CompositorParent* aCompositorParent,
 
 void nsBaseWidget::DestroyCompositor()
 {
+  LayerScope::DestroyServerSocket();
+
   if (mCompositorChild) {
     mCompositorChild->SendWillStop();
     mCompositorChild->Destroy();
@@ -749,7 +752,7 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
     if (!mOriginalBounds)
       mOriginalBounds = new nsIntRect();
     GetScreenBounds(*mOriginalBounds);
-    // convert dev pix to display pix for window manipulation 
+    // convert dev pix to display pix for window manipulation
     CSSToLayoutDeviceScale scale = GetDefaultScale();
     mOriginalBounds->x = NSToIntRound(mOriginalBounds->x / scale.scale);
     mOriginalBounds->y = NSToIntRound(mOriginalBounds->y / scale.scale);
@@ -851,7 +854,7 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 #endif
 
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = IsSmallPopup() || gfxPlatform::GetPrefLayersAccelerationDisabled();
+  bool disableAcceleration = gfxPlatform::GetPrefLayersAccelerationDisabled();
   mForceLayersAcceleration = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -950,9 +953,12 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     return;
   }
 
+  // The server socket has to be created on the main thread.
+  LayerScope::CreateServerSocket();
+
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
   MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
-  LayerManager* lm = new ClientLayerManager(this);
+  ClientLayerManager* lm = new ClientLayerManager(this);
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
@@ -992,15 +998,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   // deallocated it when being freed.
 }
 
-bool nsBaseWidget::IsSmallPopup()
-{
-  return mWindowType == eWindowType_popup &&
-         mPopupType != ePopupTypePanel;
-}
-
 bool nsBaseWidget::ShouldUseOffMainThreadCompositing()
 {
-  return CompositorParent::CompositorLoop() && !IsSmallPopup();
+  return CompositorParent::CompositorLoop();
 }
 
 LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
@@ -1020,22 +1020,6 @@ LayerManager* nsBaseWidget::GetLayerManager(PLayerTransactionChild* aShadowManag
       CreateCompositor();
     }
 
-    if (mUseLayersAcceleration) {
-      if (!mLayerManager) {
-        nsRefPtr<LayerManagerOGL> layerManager = new LayerManagerOGL(this);
-        /**
-         * XXX - On several OSes initialization is expected to fail for now.
-         * If we'd get a non-basic layer manager they'd crash. This is ok though
-         * since on those platforms it will fail. Anyone implementing new
-         * platforms on LayerManagerOGL should ensure their widget is able to
-         * deal with it though!
-         */
-
-        if (layerManager->Initialize(mForceLayersAcceleration)) {
-          mLayerManager = layerManager;
-        }
-      }
-    }
     if (!mLayerManager) {
       mLayerManager = CreateBasicLayerManager();
     }
@@ -1421,13 +1405,7 @@ nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 uint32_t
 nsBaseWidget::GetGLFrameBufferFormat()
 {
-  if (mLayerManager &&
-      mLayerManager->GetBackendType() == LAYERS_OPENGL) {
-    // Assume that the default framebuffer has RGBA format.  Specific
-    // backends that know differently will override this method.
-    return LOCAL_GL_RGBA;
-  }
-  return LOCAL_GL_NONE;
+  return LOCAL_GL_RGBA;
 }
 
 void nsBaseWidget::SetSizeConstraints(const SizeConstraints& aConstraints)

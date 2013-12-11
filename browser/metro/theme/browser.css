@@ -322,10 +322,6 @@ documenttab[selected] .documenttab-selection {
   min-width: @scroller_minimum@;
 }
 
-#browsers[input="imprecise"] browser {
-  overflow: hidden;
-}
-
 /* overlay buttons */
 
 .overlay-button {
@@ -595,11 +591,6 @@ documenttab[selected] .documenttab-selection {
   padding: 0 !important;
 }
 
-#urlbar-edit > hbox > .textbox-input-box > .textbox-input::-moz-selection {
-  color: white;
-  background-color: @metro_orange@;
-}
-
 #urlbar-edit > hbox > .textbox-input-box > .textbox-input:invalid {
   /* Hide error glow around the address bar that shows by default
    * when URLs are made invalid by trmming. */
@@ -723,6 +714,7 @@ documenttab[selected] .documenttab-selection {
 /* Contextual toolbar controls */
 
 #toolbar-context-autocomplete,
+.hide-on-start,
 #toolbar-context-page {
   transition-property: opacity, visibility;
   transition-duration: @forward_transition_length@;
@@ -730,7 +722,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #toolbar-contextual:not([autocomplete]) #toolbar-context-autocomplete,
-#toolbar-contextual[startpage] #toolbar-context-page,
+#toolbar-contextual[startpage] .hide-on-start,
 #toolbar-contextual[autocomplete] #toolbar-context-page {
   opacity: 0;
   visibility: hidden;
@@ -746,13 +738,7 @@ documenttab[selected] .documenttab-selection {
 }
 
 #download-progress {
-  -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
-}
-#download-progress:hover {
-  -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
-}
-#download-progress:active {
-  -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-download.png);
 }
 
 #pin-button {
@@ -768,6 +754,10 @@ documenttab[selected] .documenttab-selection {
 }
 
 @media (min-resolution: @min_res_140pc@) {
+  #download-progress {
+    list-style-image: url(chrome://browser/skin/images/navbar-download@1.4x.png);
+  }
+
   #pin-button {
     list-style-image: url(chrome://browser/skin/images/navbar-pin@1.4x.png);
   }
@@ -782,6 +772,10 @@ documenttab[selected] .documenttab-selection {
 }
 
 @media (min-resolution: @min_res_180pc@) {
+  #download-progress {
+    list-style-image: url(chrome://browser/skin/images/navbar-download@1.8x.png);
+  }
+
   #pin-button {
     list-style-image: url(chrome://browser/skin/images/navbar-pin@1.8x.png);
   }
@@ -957,50 +951,79 @@ documenttab[selected] .documenttab-selection {
 }
 
 #pin-selected-button {
-  -moz-image-region: rect(0px, 240px, 40px, 200px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-pin.png);
 }
-#pin-selected-button:hover {
-  -moz-image-region: rect(40px, 240px, 80px, 200px) !important;
-}
-#pin-selected-button:active {
-  -moz-image-region: rect(80px, 240px, 120px, 200px) !important;
-}
+
 #unpin-selected-button {
-  -moz-image-region: rect(0px, 280px, 40px, 240px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-unpin.png);
 }
-#unpin-selected-button:hover {
-  -moz-image-region: rect(40px, 280px, 80px, 240px) !important;
+
+#hide-selected-button {
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-hide.png);
 }
-#unpin-selected-button:active {
-  -moz-image-region: rect(80px, 280px, 120px, 240px) !important;
-}
+
 #delete-selected-button {
-  -moz-image-region: rect(0px, 480px, 40px, 440px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-delete.png);
 }
-#delete-selected-button:hover {
-  -moz-image-region: rect(40px, 480px, 80px, 440px) !important;
-}
-#delete-selected-button:active {
-  -moz-image-region: rect(80px, 480px, 120px, 440px) !important;
-}
+
 #clear-selected-button {
-  -moz-image-region: rect(0px, 520px, 40px, 480px) !important;
-}
-#clear-selected-button:hover {
-  -moz-image-region: rect(40px, 520px, 80px, 480px) !important;
-}
-#clear-selected-button:active {
-  -moz-image-region: rect(80px, 520px, 120px, 480px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-clear.png);
 }
 
 #restore-selected-button {
-  -moz-image-region: rect(0px, 560px, 40px, 520px) !important;
+  list-style-image: url(chrome://browser/skin/images/navbar-contextual-restore.png);
 }
-#restore-selected-button:hover {
-  -moz-image-region: rect(40px, 560px, 80px, 520px) !important;
+
+@media (min-resolution: @min_res_140pc@) {
+  #pin-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-pin@1.4x.png);
+  }
+
+  #unpin-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-unpin@1.4x.png);
+  }
+
+  #hide-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-hide@1.4x.png);
+  }
+
+  #delete-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-delete@1.4x.png);
+  }
+
+  #clear-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-clear@1.4x.png);
+  }
+
+  #restore-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-restore@1.4x.png);
+  }
 }
-#restore-selected-button:active {
-  -moz-image-region: rect(80px, 560px, 120px, 520px) !important;
+
+@media (min-resolution: @min_res_180pc@) {
+  #pin-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-pin@1.8x.png);
+  }
+
+  #unpin-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-unpin@1.8x.png);
+  }
+
+  #hide-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-hide@1.8x.png);
+  }
+
+  #delete-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-delete@1.8x.png);
+  }
+
+  #clear-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-clear@1.8x.png);
+  }
+
+  #restore-selected-button {
+    list-style-image: url(chrome://browser/skin/images/navbar-contextual-restore@1.8x.png);
+  }
 }
 
 /* Download notifications ======================================================= */

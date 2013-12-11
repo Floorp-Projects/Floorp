@@ -545,7 +545,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     JS_ASSERT(functionWrappers_->initialized());
     VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
     if (p)
-        return p->value;
+        return p->value();
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm;
@@ -687,7 +687,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         if (cx->runtime()->jitSupportsFloatingPoint)
             masm.Pop(ReturnFloatReg);
         else
-            masm.breakpoint();
+            masm.assumeUnreachable("Unable to pop to float reg, with no FP support.");
         break;
 
       default:

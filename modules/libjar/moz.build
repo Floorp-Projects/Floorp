@@ -26,12 +26,16 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'nsJARProtocolHandler.cpp',
+    'nsJARURI.cpp',
+]
+
+# These files cannot be built in unified mode because they rely on plarena.h.
+SOURCES += [
     'nsJAR.cpp',
     'nsJARChannel.cpp',
     'nsJARFactory.cpp',
     'nsJARInputStream.cpp',
-    'nsJARProtocolHandler.cpp',
-    'nsJARURI.cpp',
     'nsZipArchive.cpp',
 ]
 

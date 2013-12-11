@@ -8,8 +8,8 @@
 
 #include "nsComputedDOMStyle.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Util.h"
 
 #include "nsError.h"
 #include "nsDOMString.h"
@@ -488,7 +488,10 @@ nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
     if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
       return nullptr;
     }
-    sc = styleSet->ResolvePseudoElementStyle(aElement, type, parentContext);
+    nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
+    Element* pseudoElement = frame ? frame->GetPseudoElement(type) : nullptr;
+    sc = styleSet->ResolvePseudoElementStyle(aElement, type, parentContext,
+                                             pseudoElement);
   } else {
     sc = styleSet->ResolveStyleFor(aElement, parentContext);
   }
@@ -3353,6 +3356,16 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetAlignContent()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mAlignContent,
+                                   nsCSSProps::kAlignContentKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetAlignItems()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -3432,6 +3445,16 @@ nsComputedDOMStyle::DoGetFlexShrink()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   val->SetNumber(StylePosition()->mFlexShrink);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetFlexWrap()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StylePosition()->mFlexWrap,
+                                   nsCSSProps::kFlexWrapKTable));
   return val;
 }
 
@@ -5182,11 +5205,10 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
   return valueList;
 }
 
-static int
+static void
 MarkComputedStyleMapDirty(const char* aPref, void* aData)
 {
   static_cast<nsComputedStyleMap*>(aData)->MarkDirty();
-  return 0;
 }
 
 /* static */ nsComputedStyleMap*

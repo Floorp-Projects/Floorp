@@ -17,6 +17,7 @@
 #include "nsXPCOM.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include <stdarg.h>
 
 #ifdef DEBUG
 #include "prprf.h"
@@ -386,6 +387,15 @@ inline bool NS_warn_if_impl(bool condition, const char* expr, const char* file,
     }
 #endif
 
+#ifdef MOZILLA_INTERNAL_API
+void NS_ABORT_OOM(size_t size);
+#else
+inline void NS_ABORT_OOM(size_t)
+{
+  MOZ_CRASH();
+}
+#endif
+
 /* When compiling the XPCOM Glue on Windows, we pretend that it's going to
  * be linked with a static CRT (-MT) even when it's not. This means that we
  * cannot link to data exports from the CRT, only function exports. So,
@@ -397,6 +407,13 @@ extern "C" {
 
 NS_COM_GLUE void
 printf_stderr(const char *fmt, ...);
+
+NS_COM_GLUE void
+vprintf_stderr(const char *fmt, va_list args);
+
+// fprintf with special handling for stderr to print to the console
+NS_COM_GLUE void
+fprintf_stderr(FILE* aFile, const char *fmt, ...);
 
 #ifdef __cplusplus
 }

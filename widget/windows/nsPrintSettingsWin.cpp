@@ -51,13 +51,13 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(const PRUnichar * aDeviceName)
   if (mDeviceName) {
     nsMemory::Free(mDeviceName);
   }
-  mDeviceName = aDeviceName?wcsdup(aDeviceName):nullptr;
+  mDeviceName = aDeviceName?wcsdup(char16ptr_t(aDeviceName)):nullptr;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(PRUnichar **aDeviceName)
 {
   NS_ENSURE_ARG_POINTER(aDeviceName);
-  *aDeviceName = mDeviceName?wcsdup(mDeviceName):nullptr;
+  *aDeviceName = mDeviceName?reinterpret_cast<PRUnichar*>(wcsdup(mDeviceName)):nullptr;
   return NS_OK;
 }
 
@@ -67,13 +67,13 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(const PRUnichar * aDriverName)
   if (mDriverName) {
     nsMemory::Free(mDriverName);
   }
-  mDriverName = aDriverName?wcsdup(aDriverName):nullptr;
+  mDriverName = aDriverName?wcsdup(char16ptr_t(aDriverName)):nullptr;
   return NS_OK;
 }
 NS_IMETHODIMP nsPrintSettingsWin::GetDriverName(PRUnichar **aDriverName)
 {
   NS_ENSURE_ARG_POINTER(aDriverName);
-  *aDriverName = mDriverName?wcsdup(mDriverName):nullptr;
+  *aDriverName = mDriverName?reinterpret_cast<PRUnichar*>(wcsdup(mDriverName)):nullptr;
   return NS_OK;
 }
 

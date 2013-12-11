@@ -32,7 +32,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
                 'msvc_throw_wrapper.cpp',
             ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mozalloc.cpp',
     'mozalloc_abort.cpp',
     'mozalloc_oom.cpp',
@@ -44,3 +44,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     FORCE_STATIC_LIB = True
 else:
     FORCE_SHARED_LIB = True
+
+if CONFIG['OS_ARCH'] != 'OS2':
+    # The strndup declaration in string.h is in an ifdef __USE_GNU section
+    DEFINES['_GNU_SOURCE'] = True

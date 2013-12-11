@@ -38,6 +38,8 @@
 #define FAILED_EVENT_NAME           NS_LITERAL_STRING("failed")
 #define DELIVERY_SUCCESS_EVENT_NAME NS_LITERAL_STRING("deliverysuccess")
 #define DELIVERY_ERROR_EVENT_NAME   NS_LITERAL_STRING("deliveryerror")
+#define READ_SUCCESS_EVENT_NAME     NS_LITERAL_STRING("readsuccess")
+#define READ_ERROR_EVENT_NAME       NS_LITERAL_STRING("readerror")
 
 using namespace mozilla::dom::mobilemessage;
 
@@ -62,6 +64,8 @@ NS_IMPL_EVENT_HANDLER(MobileMessageManager, sent)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, failed)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliverysuccess)
 NS_IMPL_EVENT_HANDLER(MobileMessageManager, deliveryerror)
+NS_IMPL_EVENT_HANDLER(MobileMessageManager, readsuccess)
+NS_IMPL_EVENT_HANDLER(MobileMessageManager, readerror)
 
 void
 MobileMessageManager::Init(nsPIDOMWindow *aWindow)
@@ -81,6 +85,8 @@ MobileMessageManager::Init(nsPIDOMWindow *aWindow)
   obs->AddObserver(this, kSmsFailedObserverTopic, false);
   obs->AddObserver(this, kSmsDeliverySuccessObserverTopic, false);
   obs->AddObserver(this, kSmsDeliveryErrorObserverTopic, false);
+  obs->AddObserver(this, kSmsReadSuccessObserverTopic, false);
+  obs->AddObserver(this, kSmsReadErrorObserverTopic, false);
 }
 
 void
@@ -99,6 +105,8 @@ MobileMessageManager::Shutdown()
   obs->RemoveObserver(this, kSmsFailedObserverTopic);
   obs->RemoveObserver(this, kSmsDeliverySuccessObserverTopic);
   obs->RemoveObserver(this, kSmsDeliveryErrorObserverTopic);
+  obs->RemoveObserver(this, kSmsReadSuccessObserverTopic);
+  obs->RemoveObserver(this, kSmsReadErrorObserverTopic);
 }
 
 NS_IMETHODIMP
@@ -173,10 +181,13 @@ MobileMessageManager::Send(const JS::Value& aNumber_,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_STATE(sc);
 
-  JS::Rooted<JSObject*> global(aCx, sc->GetWindowProxy());
-  NS_ASSERTION(global, "Failed to get global object!");
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
 
-  JSAutoCompartment ac(aCx, global);
+  mozilla::Maybe<JSAutoCompartment> ac;
+  if (!global) {
+    global = sc->GetWindowProxy();
+    ac.construct(aCx, global);
+  }
 
   nsCOMPtr<nsISmsService> smsService = do_GetService(SMS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(smsService, NS_ERROR_FAILURE);
@@ -293,37 +304,34 @@ MobileMessageManager::GetMessageMoz(int32_t aId, nsIDOMDOMRequest** aRequest)
 }
 
 nsresult
-MobileMessageManager::GetMessageId(AutoPushJSContext &aCx,
-                                   const JS::Value &aMessage, int32_t &aId)
+MobileMessageManager::GetMessageId(JSContext* aCx,
+                                   const JS::Value& aMessage, int32_t* aId)
 {
   nsCOMPtr<nsIDOMMozSmsMessage> smsMessage =
     do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, &aMessage.toObject()));
   if (smsMessage) {
-    return smsMessage->GetId(&aId);
+    return smsMessage->GetId(aId);
   }
 
   nsCOMPtr<nsIDOMMozMmsMessage> mmsMessage =
     do_QueryInterface(nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, &aMessage.toObject()));
   if (mmsMessage) {
-    return mmsMessage->GetId(&aId);
+    return mmsMessage->GetId(aId);
   }
 
   return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aRequest)
+MobileMessageManager::Delete(const JS::Value& aParam, JSContext* aCx,
+                             nsIDOMDOMRequest** aRequest)
 {
   // We expect Int32, SmsMessage, MmsMessage, Int32[], SmsMessage[], MmsMessage[]
   if (!aParam.isObject() && !aParam.isInt32()) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsresult rv;
-  nsIScriptContext* sc = GetContextForEventHandlers(&rv);
-  AutoPushJSContext cx(sc->GetNativeContext());
-  NS_ENSURE_STATE(sc);
-
+  nsresult rv = NS_OK;
   int32_t id, *idArray;
   uint32_t size;
 
@@ -333,30 +341,30 @@ MobileMessageManager::Delete(const JS::Value& aParam, nsIDOMDOMRequest** aReques
 
     size = 1;
     idArray = &id;
-  } else if (!JS_IsArrayObject(cx, &aParam.toObject())) {
+  } else if (!JS_IsArrayObject(aCx, &aParam.toObject())) {
     // Single SmsMessage/MmsMessage object
-    rv = GetMessageId(cx, aParam, id);
+    rv = GetMessageId(aCx, aParam, &id);
     NS_ENSURE_SUCCESS(rv, rv);
 
     size = 1;
     idArray = &id;
   } else {
     // Int32[], SmsMessage[], or MmsMessage[]
-    JS::Rooted<JSObject*> ids(cx, &aParam.toObject());
+    JS::Rooted<JSObject*> ids(aCx, &aParam.toObject());
 
-    JS_ALWAYS_TRUE(JS_GetArrayLength(cx, ids, &size));
+    JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, ids, &size));
     nsAutoArrayPtr<int32_t> idAutoArray(new int32_t[size]);
 
-    JS::Rooted<JS::Value> idJsValue(cx);
+    JS::Rooted<JS::Value> idJsValue(aCx);
     for (uint32_t i = 0; i < size; i++) {
-      if (!JS_GetElement(cx, ids, i, &idJsValue)) {
+      if (!JS_GetElement(aCx, ids, i, &idJsValue)) {
         return NS_ERROR_INVALID_ARG;
       }
 
       if (idJsValue.isInt32()) {
         idAutoArray[i] = idJsValue.toInt32();
       } else if (idJsValue.isObject()) {
-        rv = GetMessageId(cx, idJsValue, id);
+        rv = GetMessageId(aCx, idJsValue, &id);
         NS_ENSURE_SUCCESS(rv, rv);
 
         idAutoArray[i] = id;
@@ -534,6 +542,14 @@ MobileMessageManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, kSmsDeliveryErrorObserverTopic)) {
     return DispatchTrustedSmsEventToSelf(aTopic, DELIVERY_ERROR_EVENT_NAME, aSubject);
+  }
+
+  if (!strcmp(aTopic, kSmsReadSuccessObserverTopic)) {
+    return DispatchTrustedSmsEventToSelf(aTopic, READ_SUCCESS_EVENT_NAME, aSubject);
+  }
+
+  if (!strcmp(aTopic, kSmsReadErrorObserverTopic)) {
+    return DispatchTrustedSmsEventToSelf(aTopic, READ_ERROR_EVENT_NAME, aSubject);
   }
 
   return NS_OK;

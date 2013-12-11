@@ -38,7 +38,7 @@ public:
   }
 
   Image* GetImage() const { return mImage; }
-  void SetForceBlack(bool aForceBlack) { mForceBlack = true; }
+  void SetForceBlack(bool aForceBlack) { mForceBlack = aForceBlack; }
   bool GetForceBlack() const { return mForceBlack; }
   const gfxIntSize& GetIntrinsicSize() const { return mIntrinsicSize; }
   void SetNull();

@@ -28,17 +28,17 @@ EXPORTS += [
     'ipc/CompositorParent.h',
     'ipc/ShadowLayersManager.h',
     'Layers.h',
+    'LayerScope.h',
     'LayersLogging.h',
     'LayerSorter.h',
     'LayerTreeInvalidation.h',
     'opengl/Composer2D.h',
-    'opengl/ImageLayerOGL.h',
-    'opengl/LayerManagerOGL.h',
-    'opengl/LayerManagerOGLProgram.h',
-    'opengl/LayerManagerOGLShaders.h',
+    'opengl/OGLShaderProgram.h',
+    'opengl/OGLShaders.h',
     'opengl/TexturePoolOGL.h',
     'ReadbackLayer.h',
     'SharedTextureImage.h',
+    'TiledLayerBuffer.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
@@ -99,6 +99,8 @@ EXPORTS.gfxipc += [
 
 EXPORTS.mozilla.layers += [
     'basic/BasicCompositor.h',
+    'basic/MacIOSurfaceTextureHostBasic.h',
+    'basic/TextureHostBasic.h',
     'client/CanvasClient.h',
     'client/CompositableClient.h',
     'client/ContentClient.h',
@@ -126,7 +128,6 @@ EXPORTS.mozilla.layers += [
     'ipc/CompositableForwarder.h',
     'ipc/CompositableTransactionParent.h',
     'ipc/CompositorChild.h',
-    'ipc/CompositorCocoaWidgetHelper.h',
     'ipc/CompositorParent.h',
     'ipc/GeckoContentController.h',
     'ipc/GestureEventListener.h',
@@ -201,6 +202,7 @@ UNIFIED_SOURCES += [
     'basic/BasicLayerManager.cpp',
     'basic/BasicLayersImpl.cpp',
     'basic/BasicThebesLayer.cpp',
+    'basic/TextureHostBasic.cpp',
     'BufferUnrotate.cpp',
     'client/CanvasClient.cpp',
     'client/ClientCanvasLayer.cpp',
@@ -237,7 +239,6 @@ UNIFIED_SOURCES += [
     'ipc/Axis.cpp',
     'ipc/CompositableTransactionParent.cpp',
     'ipc/CompositorChild.cpp',
-    'ipc/CompositorCocoaWidgetHelper.cpp',
     'ipc/CompositorParent.cpp',
     'ipc/GestureEventListener.cpp',
     'ipc/ImageBridgeChild.cpp',
@@ -252,24 +253,19 @@ UNIFIED_SOURCES += [
     'ipc/SharedRGBImage.cpp',
     'ipc/TaskThrottler.cpp',
     'Layers.cpp',
+    'LayerScope.cpp',
     'LayersLogging.cpp',
     'LayerSorter.cpp',
     'LayerTreeInvalidation.cpp',
-    'opengl/CanvasLayerOGL.cpp',
-    'opengl/ColorLayerOGL.cpp',
     'opengl/CompositingRenderTargetOGL.cpp',
     'opengl/CompositorOGL.cpp',
-    'opengl/ContainerLayerOGL.cpp',
-    'opengl/ImageLayerOGL.cpp',
-    'opengl/LayerManagerOGL.cpp',
-    'opengl/LayerManagerOGLProgram.cpp',
+    'opengl/OGLShaderProgram.cpp',
     'opengl/TextureClientOGL.cpp',
     'opengl/TextureHostOGL.cpp',
     'opengl/TexturePoolOGL.cpp',
-    'opengl/ThebesLayerOGL.cpp',
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
-    'ThebesLayerBuffer.cpp',
+    'RotatedBuffer.cpp',
     'YCbCrImageDataSerializer.cpp',
 ]
 
@@ -280,6 +276,7 @@ SOURCES += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
+        'basic/MacIOSurfaceTextureHostBasic.cpp',
         'opengl/MacIOSurfaceTextureClientOGL.cpp',
         'opengl/MacIOSurfaceTextureHostOGL.cpp',
     ]
@@ -300,3 +297,13 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'thebes'
+
+LOCAL_INCLUDES += [
+    '/content/events/src',
+]
+
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['D3D_DEBUG_INFO'] = True
+
+if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
+    DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True

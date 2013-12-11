@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsEmbedStream_h__
+#define nsEmbedStream_h__
+
 #include "nsCOMPtr.h"
 #include "nsIOutputStream.h"
 #include "nsIURI.h"
@@ -27,5 +30,6 @@ class nsEmbedStream : public nsISupports
  private:
   nsIWebBrowser            *mOwner;
   nsCOMPtr<nsIOutputStream> mOutputStream;
-
 };
+
+#endif // nsEmbedStream_h__

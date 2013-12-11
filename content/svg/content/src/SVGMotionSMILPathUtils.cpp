@@ -126,7 +126,7 @@ SVGMotionSMILPathUtils::PathGenerator::
 
 //----------------------------------------------------------------------
 // MotionValueParser methods
-nsresult
+bool
 SVGMotionSMILPathUtils::MotionValueParser::
   Parse(const nsAString& aValueStr)
 {
@@ -145,7 +145,7 @@ SVGMotionSMILPathUtils::MotionValueParser::
       success = !!mPointDistances->AppendElement(mDistanceSoFar);
     }
   }
-  return success ? NS_OK : NS_ERROR_FAILURE;
+  return success;
 }
 
 } // namespace mozilla

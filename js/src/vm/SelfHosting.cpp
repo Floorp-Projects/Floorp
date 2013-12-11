@@ -7,6 +7,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
+#include "jshashutil.h"
 #include "jsobj.h"
 #include "selfhosted.out.h"
 
@@ -232,13 +233,13 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
-        funScript->shouldCloneAtCallsite = true;
+        funScript->setShouldCloneAtCallsite();
 
     id = AtomToId(Atomize(cx, "inline", strlen("inline")));
     if (!JSObject::getGeneric(cx, flags, flags, id, &propv))
         return false;
     if (ToBoolean(propv))
-        funScript->shouldInline = true;
+        funScript->setShouldInline();
 
     args.rval().setUndefined();
     return true;
@@ -462,6 +463,22 @@ js::intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JS_ASSERT(args.length() == 1);
+    JS_ASSERT(args[0].isObject());
+
+    JSObject *obj = &args[0].toObject();
+    bool isPacked = obj->is<ArrayObject>() &&
+                    !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
+                    obj->getDenseInitializedLength() == obj->as<ArrayObject>().length();
+
+    args.rval().setBoolean(isPacked);
+    return true;
+}
+
 static bool
 intrinsic_GetIteratorPrototype(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -611,6 +628,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("UnsafeSetReservedSlot",   intrinsic_UnsafeSetReservedSlot,   3,0),
     JS_FN("UnsafeGetReservedSlot",   intrinsic_UnsafeGetReservedSlot,   2,0),
     JS_FN("HaveSameClass",           intrinsic_HaveSameClass,           2,0),
+    JS_FN("IsPackedArray",           intrinsic_IsPackedArray,           1,0),
 
     JS_FN("GetIteratorPrototype",    intrinsic_GetIteratorPrototype,    0,0),
 
@@ -658,9 +676,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FNINFO("Memcpy",
               JSNativeThreadSafeWrapper<js::Memcpy>,
               &js::MemcpyJitInfo, 5, 0),
-    JS_FN("StandardTypeObjectDescriptors",
-          js::StandardTypeObjectDescriptors,
-          0, 0),
+    JS_FN("GetTypedObjectModule", js::GetTypedObjectModule, 0, 0),
 
 #define LOAD_AND_STORE_SCALAR_FN_DECLS(_constant, _type, _name)               \
     JS_FNINFO("Store_" #_name,                                                \
@@ -761,6 +777,12 @@ JSRuntime::initSelfHosting(JSContext *cx)
     options.setCanLazilyParse(false);
     options.setSourcePolicy(CompileOptions::NO_SOURCE);
     options.setVersion(JSVERSION_LATEST);
+    options.werrorOption = true;
+
+#ifdef DEBUG
+    options.strictOption = true;
+    options.extraWarningsOption = true;
+#endif
 
     /*
      * Set a temporary error reporter printing to stderr because it is too
@@ -865,9 +887,9 @@ GetObjectAllocKindForClone(JSRuntime *rt, JSObject *obj)
 static JSObject *
 CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
 {
-    CloneMemory::AddPtr p = clonedObjects.lookupForAdd(srcObj.get());
+    DependentAddPtr<CloneMemory> p(cx, clonedObjects, srcObj.get());
     if (p)
-        return p->value;
+        return p->value();
     RootedObject clone(cx);
     if (srcObj->is<JSFunction>()) {
         if (srcObj->as<JSFunction>().isWrappable()) {
@@ -904,9 +926,12 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
                                         GetObjectAllocKindForClone(cx->runtime(), srcObj),
                                         SingletonObject);
     }
-    if (!clone || !clonedObjects.relookupOrAdd(p, srcObj.get(), clone.get()) ||
-        !CloneProperties(cx, srcObj, clone, clonedObjects))
-    {
+    if (!clone)
+        return nullptr;
+    if (!p.add(clonedObjects, srcObj, clone))
+        return nullptr;
+    if (!CloneProperties(cx, srcObj, clone, clonedObjects)) {
+        clonedObjects.remove(srcObj);
         return nullptr;
     }
     return clone;

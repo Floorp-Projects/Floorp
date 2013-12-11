@@ -44,23 +44,23 @@ endif
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
-	@echo "STOP!  The CLOBBER file has changed."
-	@echo "Please run the build through a sanctioned build wrapper, such as"
-	@echo "'mach build' or client.mk."
+	@echo 'STOP!  The CLOBBER file has changed.'
+	@echo 'Please run the build through a sanctioned build wrapper, such as'
+	@echo '"mach build" or client.mk.'
 	@exit 1
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
-	@echo "STOP!  configure.in has changed, and your configure is out of date."
-	@echo "Please rerun autoconf and re-configure your build directory."
-	@echo "To ignore this message, touch 'configure' in the source directory,"
-	@echo "but your build might not succeed."
+	@echo 'STOP!  configure.in has changed, and your configure is out of date.'
+	@echo 'Please rerun autoconf and re-configure your build directory.'
+	@echo 'To ignore this message, touch "configure" in the source directory,'
+	@echo 'but your build might not succeed.'
 	@exit 1
 
 config.status: $(topsrcdir)/configure
-	@echo "STOP!  configure has changed and needs to be run in this build directory."
-	@echo "Please rerun configure."
-	@echo "To ignore this message, touch 'config.status' in the build directory,"
-	@echo "but your build might not succeed."
+	@echo 'STOP!  configure has changed and needs to be run in this build directory.'
+	@echo 'Please rerun configure.'
+	@echo 'To ignore this message, touch "config.status" in the build directory,'
+	@echo 'but your build might not succeed.'
 	@exit 1
 
 # Regenerate the build backend if it is out of date. We only have this rule in
@@ -71,7 +71,7 @@ config.status: $(topsrcdir)/configure
 # builds. This cleanly avoids most of the pain.
 
 backend.RecursiveMakeBackend:
-	@echo "Build configuration changed. Regenerating backend."
+	@echo 'Build configuration changed. Regenerating backend.'
 	$(PYTHON) config.status
 
 Makefile: backend.RecursiveMakeBackend
@@ -165,7 +165,7 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 # need to pass arch flags for universal builds
 ifdef UNIVERSAL_BINARY
-MAKE_SYM_STORE_ARGS := -c -a "i386 x86_64" --vcs-info
+MAKE_SYM_STORE_ARGS := -c -a 'i386 x86_64' --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/universal
 else
 MAKE_SYM_STORE_ARGS := -c -a $(OS_TEST) --vcs-info
@@ -194,9 +194,9 @@ buildsymbols:
 ifdef MOZ_CRASHREPORTER
 	echo building symbol store
 	$(RM) -r $(DIST)/crashreporter-symbols
-	$(RM) "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
+	$(RM) '$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip'
 	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
-	OBJCOPY="$(OBJCOPY)" \
+	OBJCOPY='$(OBJCOPY)' \
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
 	  $(MAKE_SYM_STORE_ARGS)                                          \
 	  $(foreach dir,$(SYM_STORE_SOURCE_DIRS),-s $(dir))               \
@@ -207,17 +207,17 @@ ifdef MOZ_CRASHREPORTER
 	echo packing symbols
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	cd $(DIST)/crashreporter-symbols && \
-          zip -r9D "../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip" . -x "*test*" -x "*Test*"
+          zip -r9D '../$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip' . -x '*test*' -x '*Test*'
 	cd $(DIST)/crashreporter-symbols && \
-	grep "sym" $(SYMBOL_INDEX_NAME) > $(SYMBOL_INDEX_NAME).tmp && \
+	grep 'sym' $(SYMBOL_INDEX_NAME) > $(SYMBOL_INDEX_NAME).tmp && \
 	  mv $(SYMBOL_INDEX_NAME).tmp $(SYMBOL_INDEX_NAME)
 	cd $(DIST)/crashreporter-symbols && \
-          zip -r9D "../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip" . -i "*.sym" -i "*.txt"  -x "*test*" -x "*Test*"
+          zip -r9D '../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip' . -i '*.sym' -i '*.txt'  -x '*test*' -x '*Test*'
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) "$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip"
+	$(SHELL) $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(SYMBOL_INDEX_NAME) '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).zip'
 endif
 
 # MOZ_SOURCE_STAMP is defined in package-name.mk with a deferred assignment.
@@ -238,7 +238,7 @@ endif
 else
 maybe_clobber_profiledbuild:
 	$(RM) $(DIST)/bin/*.pgc
-	find $(DIST)/$(MOZ_APP_NAME) -name "*.pgc" -exec mv {} $(DIST)/bin \;
+	find $(DIST)/$(MOZ_APP_NAME) -name '*.pgc' -exec mv {} $(DIST)/bin \;
 endif
 
 .PHONY: maybe_clobber_profiledbuild
@@ -246,8 +246,8 @@ endif
 # Look for R_386_PC32 relocations in shared libs, these
 # break x86_64 builds and SELinux users.
 ifeq ($(OS_TARGET)_$(TARGET_XPCOM_ABI),Linux_x86-gcc3)
-scheck::
-	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
+check::
+	@relcount=`find $(DIST)/bin -name '*.so' | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo 'FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?'; exit 1; else echo 'PASSED'; fi
 endif
 
 ifdef BUILD_JS

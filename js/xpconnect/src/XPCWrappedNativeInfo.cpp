@@ -126,10 +126,7 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
     if (!map)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        iface = map->Find(*iid);
-    }
+    iface = map->Find(*iid);
 
     if (iface)
         return iface;
@@ -143,17 +140,14 @@ XPCNativeInterface::GetNewOrUsed(const nsIID* iid)
     if (!iface)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        XPCNativeInterface* iface2 = map->Add(iface);
-        if (!iface2) {
-            NS_ERROR("failed to add our interface!");
-            DestroyInstance(iface);
-            iface = nullptr;
-        } else if (iface2 != iface) {
-            DestroyInstance(iface);
-            iface = iface2;
-        }
+    XPCNativeInterface* iface2 = map->Add(iface);
+    if (!iface2) {
+        NS_ERROR("failed to add our interface!");
+        DestroyInstance(iface);
+        iface = nullptr;
+    } else if (iface2 != iface) {
+        DestroyInstance(iface);
+        iface = iface2;
     }
 
     return iface;
@@ -176,10 +170,7 @@ XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
     if (!map)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        iface = map->Find(*iid);
-    }
+    iface = map->Find(*iid);
 
     if (iface)
         return iface;
@@ -188,17 +179,14 @@ XPCNativeInterface::GetNewOrUsed(nsIInterfaceInfo* info)
     if (!iface)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        XPCNativeInterface* iface2 = map->Add(iface);
-        if (!iface2) {
-            NS_ERROR("failed to add our interface!");
-            DestroyInstance(iface);
-            iface = nullptr;
-        } else if (iface2 != iface) {
-            DestroyInstance(iface);
-            iface = iface2;
-        }
+    XPCNativeInterface* iface2 = map->Add(iface);
+    if (!iface2) {
+        NS_ERROR("failed to add our interface!");
+        DestroyInstance(iface);
+        iface = nullptr;
+    } else if (iface2 != iface) {
+        DestroyInstance(iface);
+        iface = iface2;
     }
 
     return iface;
@@ -429,10 +417,7 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     if (!map)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        set = map->Find(&key);
-    }
+    set = map->Find(&key);
 
     if (set)
         return set;
@@ -443,17 +428,14 @@ XPCNativeSet::GetNewOrUsed(const nsIID* iid)
     if (!set)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        XPCNativeSet* set2 = map->Add(&key, set);
-        if (!set2) {
-            NS_ERROR("failed to add our set!");
-            DestroyInstance(set);
-            set = nullptr;
-        } else if (set2 != set) {
-            DestroyInstance(set);
-            set = set2;
-        }
+    XPCNativeSet* set2 = map->Add(&key, set);
+    if (!set2) {
+        NS_ERROR("failed to add our set!");
+        DestroyInstance(set);
+        set = nullptr;
+    } else if (set2 != set) {
+        DestroyInstance(set);
+        set = set2;
     }
 
     return set;
@@ -471,10 +453,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
     if (!map)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        set = map->Find(classInfo);
-    }
+    set = map->Find(classInfo);
 
     if (set)
         return set;
@@ -537,19 +516,16 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
 
                 XPCNativeSetKey key(set, nullptr, 0);
 
-                {   // scoped lock
-                    XPCAutoLock lock(rt->GetMapLock());
-                    XPCNativeSet* set2 = map2->Add(&key, set);
-                    if (!set2) {
-                        NS_ERROR("failed to add our set!");
-                        DestroyInstance(set);
-                        set = nullptr;
-                        goto out;
-                    }
-                    if (set2 != set) {
-                        DestroyInstance(set);
-                        set = set2;
-                    }
+                XPCNativeSet* set2 = map2->Add(&key, set);
+                if (!set2) {
+                    NS_ERROR("failed to add our set!");
+                    DestroyInstance(set);
+                    set = nullptr;
+                    goto out;
+                }
+                if (set2 != set) {
+                    DestroyInstance(set);
+                    set = set2;
                 }
             }
         } else
@@ -557,10 +533,7 @@ XPCNativeSet::GetNewOrUsed(nsIClassInfo* classInfo)
     } else
         set = GetNewOrUsed(&NS_GET_IID(nsISupports));
 
-    if (set)
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-
+    if (set) {
 #ifdef DEBUG
         XPCNativeSet* set2 =
 #endif
@@ -585,10 +558,7 @@ XPCNativeSet::ClearCacheEntryForClassInfo(nsIClassInfo* classInfo)
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     ClassInfo2NativeSetMap* map = rt->GetClassInfo2NativeSetMap();
     if (map)
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
         map->Remove(classInfo);
-    }
 }
 
 // static
@@ -606,10 +576,7 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* otherSet,
 
     XPCNativeSetKey key(otherSet, newInterface, position);
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        set = map->Find(&key);
-    }
+    set = map->Find(&key);
 
     if (set)
         return set;
@@ -622,17 +589,14 @@ XPCNativeSet::GetNewOrUsed(XPCNativeSet* otherSet,
     if (!set)
         return nullptr;
 
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        XPCNativeSet* set2 = map->Add(&key, set);
-        if (!set2) {
-            NS_ERROR("failed to add our set!");
-            DestroyInstance(set);
-            set = nullptr;
-        } else if (set2 != set) {
-            DestroyInstance(set);
-            set = set2;
-        }
+    XPCNativeSet* set2 = map->Add(&key, set);
+    if (!set2) {
+        NS_ERROR("failed to add our set!");
+        DestroyInstance(set);
+        set = nullptr;
+    } else if (set2 != set) {
+        DestroyInstance(set);
+        set = set2;
     }
 
     return set;

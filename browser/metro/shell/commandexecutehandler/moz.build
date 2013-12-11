@@ -13,3 +13,6 @@ SOURCES += [
 
 # We want this exe in dist/bin
 DIST_SUBDIR = ''
+
+for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM'):
+    DEFINES[var] = True

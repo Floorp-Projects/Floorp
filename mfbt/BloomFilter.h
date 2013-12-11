@@ -16,7 +16,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Util.h"
 
 #include <stdint.h>
 #include <string.h>

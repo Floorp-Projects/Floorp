@@ -720,7 +720,6 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // getGeneric
         nullptr, // getProperty
         nullptr, // getElement
-        nullptr, // getElementIfPresent
         nullptr, // getSpecial
         nullptr, // setGeneric
         nullptr, // setProperty
@@ -732,6 +731,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // deleteElement
         nullptr, // deleteSpecial
         nullptr, nullptr, // watch/unwatch
+        nullptr, // slice
         XPC_WN_JSOp_Enumerate,
         XPC_WN_JSOp_ThisObject,
     }
@@ -1129,11 +1129,8 @@ XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
 
     XPCJSRuntime* rt = XPCJSRuntime::Get();
     XPCNativeScriptableSharedMap* map = rt->GetNativeScriptableSharedMap();
-    {   // scoped lock
-        XPCAutoLock lock(rt->GetMapLock());
-        success = map->GetNewOrUsed(sci->GetFlags(), name,
-                                    sci->GetInterfacesBitmap(), newObj);
-    }
+    success = map->GetNewOrUsed(sci->GetFlags(), name,
+                                sci->GetInterfacesBitmap(), newObj);
 
     if (!success) {
         delete newObj;

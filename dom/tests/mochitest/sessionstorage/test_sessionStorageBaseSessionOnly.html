@@ -7,15 +7,33 @@
 
 <script type="text/javascript">
 
-function startTest()
-{
-  var io = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
-    .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = io.newURI(window.location, "", null);
-  var cp = SpecialPowers.Cc["@mozilla.org/cookie/permission;1"]
-    .getService(SpecialPowers.Ci.nsICookiePermission);
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION);
+var testframe;
+function iframeOnload(aValue) {
+  switch (aValue) {
+    case 1:
+      testframe.onload = test1;
+      break;
+    case 2:
+      testframe.onload = test2;
+      break;
+    default:
+      of(false, 'should not be reached');
+      SimpleTest.finish();
+      return;
+  }
+  /* After every permission change, an iframe has to be reloaded, 
+     otherwise this test causes failures in b2g (oop) mochitest, because
+     the permission changes don't seem to be always picked up
+     by the code that excercises it */
+  testframe.contentWindow.location.reload();
+}
 
+function startTest() {
+  testframe = document.getElementById('testframe');
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_SESSION, 'context': document}], function() { iframeOnload(1); });
+}
+
+function test1() {
 
   // Initially check the sessionStorage is empty
   is(sessionStorage.length, 0, "The storage is empty [1]");
@@ -195,9 +213,10 @@ function startTest()
   sessionStorage.removeItem("key1"); // Just check there is no exception
   sessionStorage.removeItem("key2"); // Just check there is no exception
 
+  SpecialPowers.pushPermissions([{'type': 'cookie', 'allow': SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT, 'context': document}], function() { iframeOnload(2); });
+}
 
-  cp.setAccess(uri, SpecialPowers.Ci.nsICookiePermission.ACCESS_DEFAULT);
-
+function test2() {
   sessionStorage.clear();
   SimpleTest.finish();
 }
@@ -209,6 +228,6 @@ SimpleTest.waitForExplicitFinish();
 </head>
 
 <body onload="startTest();">
-
+<iframe id="testframe" src="data:text/html;charset=utf-8,"></iframe>
 </body>
 </html>

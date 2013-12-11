@@ -12,6 +12,7 @@ package org.webrtc.videoengine;
 
 import java.io.IOException;
 import java.util.Locale;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.webrtc.videoengine.CaptureCapabilityAndroid;
@@ -37,6 +38,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoAppShell.AppStateListener;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.mozglue.WebRTCJNITarget;
 
 public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
@@ -107,6 +109,8 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
             // Invoked every time there's a new Camera preview frame
         }
     }
+
+    @WebRTCJNITarget
     public static
     void DeleteVideoCaptureAndroid(VideoCaptureAndroid captureAndroid) {
         Log.d(TAG, "DeleteVideoCaptureAndroid");
@@ -282,6 +286,12 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
 
             Camera.Parameters parameters = camera.getParameters();
+
+            List<String> focusModeList = parameters.getSupportedFocusModes();
+            if (focusModeList.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            }
+
             parameters.setPreviewSize(currentCapability.width,
                     currentCapability.height);
             parameters.setPreviewFormat(PIXEL_FORMAT);
@@ -313,6 +323,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
         return 0;
     }
 
+    @WebRTCJNITarget
     public int StartCapture(int width, int height, int frameRate) {
         Log.d(TAG, "StartCapture width " + width +
                 " height " + height +" frame rate " + frameRate);

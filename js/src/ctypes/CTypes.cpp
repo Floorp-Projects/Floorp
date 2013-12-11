@@ -2923,14 +2923,14 @@ BuildTypeSource(JSContext* cx,
       break;
 
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
-      fieldsArray[r.front().value.mIndex] = &r.front();
+      fieldsArray[r.front().value().mIndex] = &r.front();
 
     for (size_t i = 0; i < length; ++i) {
       const FieldInfoHash::Entry* entry = fieldsArray[i];
       AppendString(result, "{ \"");
-      AppendString(result, entry->key);
+      AppendString(result, entry->key());
       AppendString(result, "\": ");
-      BuildTypeSource(cx, entry->value.mType, true, result);
+      BuildTypeSource(cx, entry->value().mType, true, result);
       AppendString(result, " }");
       if (i != length - 1)
         AppendString(result, ", ");
@@ -3073,19 +3073,19 @@ BuildDataSource(JSContext* cx,
       return false;
 
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
-      fieldsArray[r.front().value.mIndex] = &r.front();
+      fieldsArray[r.front().value().mIndex] = &r.front();
 
     for (size_t i = 0; i < length; ++i) {
       const FieldInfoHash::Entry* entry = fieldsArray[i];
 
       if (isImplicit) {
         AppendString(result, "\"");
-        AppendString(result, entry->key);
+        AppendString(result, entry->key());
         AppendString(result, "\": ");
       }
 
-      char* fieldData = static_cast<char*>(data) + entry->value.mOffset;
-      RootedObject entryType(cx, entry->value.mType);
+      char* fieldData = static_cast<char*>(data) + entry->value().mOffset;
+      RootedObject entryType(cx, entry->value().mType);
       if (!BuildDataSource(cx, entryType, fieldData, true, result))
         return false;
 
@@ -3352,11 +3352,11 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     FieldInfoHash* fields =
       static_cast<FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
     for (FieldInfoHash::Enum e(*fields); !e.empty(); e.popFront()) {
-      JSString *key = e.front().key;
+      JSString *key = e.front().key();
       JS_CallStringTracer(trc, &key, "fieldName");
-      if (key != e.front().key)
+      if (key != e.front().key())
           e.rekeyFront(JS_ASSERT_STRING_IS_FLAT(key));
-      JS_CallHeapObjectTracer(trc, &e.front().value.mType, "fieldType");
+      JS_CallHeapObjectTracer(trc, &e.front().value().mType, "fieldType");
     }
 
     break;
@@ -4762,8 +4762,13 @@ StructType::Create(JSContext* cx, unsigned argc, jsval* vp)
 static void
 PostBarrierCallback(JSTracer *trc, void *k, void *d)
 {
+    typedef HashMap<JSFlatString*,
+                    UnbarrieredFieldInfo,
+                    FieldHashPolicy,
+                    SystemAllocPolicy> UnbarrieredFieldInfoHash;
+
     JSString *prior = static_cast<JSString*>(k);
-    FieldInfoHash *table = static_cast<FieldInfoHash*>(d);
+    UnbarrieredFieldInfoHash *table = reinterpret_cast<UnbarrieredFieldInfoHash*>(d);
     JSString *key = prior;
     JS_CallStringTracer(trc, &key, "CType fieldName");
     table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
@@ -4931,10 +4936,10 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
 
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
       const FieldInfoHash::Entry& entry = r.front();
-      ffi_type* fieldType = CType::GetFFIType(cx, entry.value.mType);
+      ffi_type* fieldType = CType::GetFFIType(cx, entry.value().mType);
       if (!fieldType)
         return nullptr;
-      elements[entry.value.mIndex] = fieldType;
+      elements[entry.value().mIndex] = fieldType;
     }
 
   } else {
@@ -5072,7 +5077,7 @@ StructType::ConstructData(JSContext* cx,
   // ImplicitConvert each field.
   if (args.length() == fields->count()) {
     for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
-      const FieldInfo& field = r.front().value;
+      const FieldInfo& field = r.front().value();
       STATIC_ASSUME(field.mIndex < fields->count());  /* Quantified invariant */
       if (!ImplicitConvert(cx, args[field.mIndex], field.mType,
              buffer + field.mOffset,
@@ -5108,7 +5113,7 @@ StructType::LookupField(JSContext* cx, JSObject* obj, JSFlatString *name)
 
   FieldInfoHash::Ptr ptr = GetFieldInfo(obj)->lookup(name);
   if (ptr)
-    return &ptr->value;
+    return &ptr->value();
 
   JSAutoByteString bytes(cx, name);
   if (!bytes)
@@ -5136,8 +5141,8 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
     const FieldInfoHash::Entry& entry = r.front();
     // Add the field descriptor to the array.
-    if (!AddFieldToArray(cx, &fieldsVec[entry.value.mIndex],
-                         entry.key, entry.value.mType))
+    if (!AddFieldToArray(cx, &fieldsVec[entry.value().mIndex],
+                         entry.key(), entry.value().mType))
       return nullptr;
   }
 
