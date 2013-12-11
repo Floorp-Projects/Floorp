@@ -40,7 +40,7 @@ mk_files = [
 extensions = ['.asm', '.c', '.h']
 
 MODULES = {
-    'SOURCES': [
+    'UNIFIED_SOURCES': [
         'API_DOC_SRCS-$(CONFIG_VP8_DECODER)',
         'API_DOC_SRCS-yes',
         'API_EXPORTS',
@@ -213,7 +213,15 @@ files = {
         'third_party/x86inc/x86inc.asm',
         'vp8/common/x86/loopfilter_block_sse2.asm',
     ],
-    'X86_ASM': [
+    'SOURCES': [
+        'vp8/common/rtcd.c',
+        'vp8/common/sad_c.c',
+        'vp8/vp8_dx_iface.c',
+        'vp9/common/vp9_entropymv.c',
+        'vp9/common/vp9_rtcd.c',
+        'vp9/encoder/vp9_bitstream.c',
+        'vpx/src/svc_encodeframe.c',
+        'vpx_mem/vpx_mem.c',
     ]
 }
 
@@ -357,6 +365,8 @@ def get_sources(prefix):
                         unknown[key] = []
                     t = unknown[key]
                 t.append(f)
+
+    files['UNIFIED_SOURCES'] = [f for f in files['UNIFIED_SOURCES'] if f not in files['SOURCES']]
 
     for key in files:
         files[key] = list(sorted(set(files[key])))
