@@ -1376,15 +1376,13 @@ gfxFontCache::MemoryReporter::CollectReports
 
     aCb->Callback(EmptyCString(),
                   NS_LITERAL_CSTRING("explicit/gfx/font-cache"),
-                  nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                  sizes.mFontInstances,
+                  KIND_HEAP, UNITS_BYTES, sizes.mFontInstances,
                   NS_LITERAL_CSTRING("Memory used for active font instances."),
                   aClosure);
 
     aCb->Callback(EmptyCString(),
                   NS_LITERAL_CSTRING("explicit/gfx/font-shaped-words"),
-                  nsIMemoryReporter::KIND_HEAP, nsIMemoryReporter::UNITS_BYTES,
-                  sizes.mShapedWords,
+                  KIND_HEAP, UNITS_BYTES, sizes.mShapedWords,
                   NS_LITERAL_CSTRING("Memory used to cache shaped glyph data."),
                   aClosure);
 

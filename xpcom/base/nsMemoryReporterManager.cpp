@@ -813,8 +813,7 @@ public:
     do {                                                                      \
       nsresult rv;                                                            \
       rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   nsIMemoryReporter::KIND_HEAP,              \
-                                   nsIMemoryReporter::UNITS_BYTES, _amount,   \
+                                   KIND_HEAP, UNITS_BYTES, _amount,           \
                                    NS_LITERAL_CSTRING(_desc), aData);         \
       if (NS_WARN_IF(NS_FAILED(rv)))                                          \
           return rv;                                                          \
