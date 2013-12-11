@@ -368,11 +368,6 @@ ClientLayerManager::ForwardTransaction()
           ->SetDescriptorFromReply(ots.textureId(), ots.image());
         break;
       }
-      case EditReply::TReplyTextureRemoved: {
-        // XXX - The logic to remove textures is implemented in the next patch
-        // of the same bug (897452). They will land together.
-        break;
-      }
 
       default:
         NS_RUNTIMEABORT("not reached");

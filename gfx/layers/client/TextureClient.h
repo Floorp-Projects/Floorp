@@ -113,14 +113,13 @@ public:
  * host side, there is nothing to do.
  * On the other hand, if the client data must be deallocated on the client
  * side, the CompositableClient will ask the TextureClient to drop its shared
- * data in the form of a TextureClientData object. The compositable will keep
- * this object until it has received from the host side the confirmation that
- * the compositor is not using the texture and that it is completely safe to
- * deallocate the shared data.
+ * data in the form of a TextureClientData object. This data will be kept alive
+ * until the host side confirms that it is not using the data anymore and that
+ * it is completely safe to deallocate the shared data.
  *
  * See:
- *  - CompositableClient::RemoveTextureClient
- *  - CompositableClient::OnReplyTextureRemoved
+ *  - The PTexture IPDL protocol
+ *  - CompositableChild in TextureClient.cpp
  */
 class TextureClientData {
 public:
@@ -297,6 +296,11 @@ public:
    */
   PTextureChild* GetIPDLActor();
 
+  /**
+   * TODO[nical] doc!
+   */
+  void ForceRemove();
+
 private:
   Atomic<int> mRefCount;
 
@@ -306,10 +310,7 @@ private:
    * Here goes the shut-down code that uses virtual methods.
    * Must only be called by Release().
    */
-  void Finalize()
-  {
-    // XXX Bug 897452 - Coming soon
-  }
+  void Finalize();
 
 protected:
   void AddFlags(TextureFlags  aFlags)
