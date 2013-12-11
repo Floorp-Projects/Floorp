@@ -7,7 +7,6 @@ package org.mozilla.gecko.tests.helpers;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.tests.UITestContext;
 
-// TODO: Add ispixel assertions.
 /**
  * Provides assertions in a JUnit-like API that wraps the robocop Assert interface.
  */
@@ -45,6 +44,14 @@ public final class AssertionHelper {
 
     public static void assertTrue(final String message, final boolean actual) {
         sAsserter.ok(actual, message, DIAG_STRING);
+    }
+
+    public static void assertIsPixel(final String message, final int actual, final int r, final int g, final int b) {
+	sAsserter.ispixel(actual, r, g, b, message);
+    }
+
+    public static void assertIsNotPixel(final String message, final int actual, final int r, final int g, final int b) {
+	sAsserter.isnotpixel(actual, r, g, b, message);
     }
 
     public static void fail(final String message) {
