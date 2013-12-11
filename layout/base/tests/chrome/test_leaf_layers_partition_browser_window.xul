@@ -32,14 +32,6 @@
     }
 
     function doTest(evt) {
-      if (tests[testIndex].maximize) {
-        SimpleTest.info("Maximizing test " + testIndex + " window" + testInfo());
-        Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                  .getService(Components.interfaces.nsIWindowMediator)
-                  .getMostRecentWindow("navigator:browser")
-                  .maximize();
-      }
-
       var initialCount = win.mozPaintCount;
 
       function nextStep() {
@@ -65,7 +57,22 @@
         nextTest();
       }
 
-      SimpleTest.executeSoon(nextStep);
+      if (tests[testIndex].maximize) {
+        function resizeListener() {
+          win.removeEventListener("resize", resizeListener, true);
+          // We want a paint after resize.
+          initialCount = win.mozPaintCount;
+          SimpleTest.executeSoon(nextStep);
+        }
+        win.addEventListener("resize", resizeListener, true);
+        SimpleTest.info("Maximizing test " + testIndex + " window" + testInfo());
+        Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                  .getService(Components.interfaces.nsIWindowMediator)
+                  .getMostRecentWindow("navigator:browser")
+                  .maximize();
+      } else {
+        SimpleTest.executeSoon(nextStep);
+      }
     }
 
     function nextTest() {
