@@ -126,14 +126,16 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mTextureClient->IsAllocated(), "This image already has allocated data");
   size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
+
+  // get new buffer _without_ setting mBuffer.
+  if (!mTextureClient->Allocate(size)) {
+    return nullptr;
+  }
+
   // update buffer size
   mBufferSize = size;
 
-  // get new buffer _without_ setting mBuffer.
-  bool status = mTextureClient->Allocate(mBufferSize);
-  MOZ_ASSERT(status);
   YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
-
   return serializer.GetData();
 }
 
@@ -248,16 +250,18 @@ DeprecatedSharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   NS_ABORT_IF_FALSE(!mAllocated, "This image already has allocated data");
   size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
+
+  // get new buffer _without_ setting mBuffer.
+  if (!AllocateBuffer(size)) {
+    return nullptr;
+  }
+
   // update buffer size
   mBufferSize = size;
 
-  // get new buffer _without_ setting mBuffer.
-  AllocateBuffer(mBufferSize);
   YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
-
   return serializer.GetData();
 }
-
 
 void
 DeprecatedSharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
