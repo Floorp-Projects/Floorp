@@ -85,7 +85,7 @@ class BackendMakeFile(object):
         self.objdir = objdir
         self.relobjdir = objdir[len(environment.topobjdir) + 1:]
         self.environment = environment
-        self.name = os.path.join(objdir, 'backend.mk')
+        self.name = mozpath.join(objdir, 'backend.mk')
 
         # XPIDLFiles attached to this file.
         self.idls = []
@@ -290,7 +290,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._test_manifests = {}
 
-        self.backend_input_files.add(os.path.join(self.environment.topobjdir,
+        self.backend_input_files.add(mozpath.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
 
         self._install_manifests = {
@@ -585,11 +585,11 @@ class RecursiveMakeBackend(CommonBackend):
         root_mk.add_statement('$(call include_deps,root-deps.mk)')
 
         with self._write_file(
-                os.path.join(self.environment.topobjdir, 'root.mk')) as root:
+                mozpath.join(self.environment.topobjdir, 'root.mk')) as root:
             root_mk.dump(root, removal_guard=False)
 
         with self._write_file(
-                os.path.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
+                mozpath.join(self.environment.topobjdir, 'root-deps.mk')) as root_deps:
             root_deps_mk.dump(root_deps, removal_guard=False)
 
     def _add_unified_build_rules(self, makefile, files, output_directory,
@@ -643,7 +643,7 @@ class RecursiveMakeBackend(CommonBackend):
             # blown away and we need to regenerate them.  The rule doesn't correctly
             # handle source files being added/removed/renamed.  Therefore, we
             # generate them here also to make sure everything's up-to-date.
-            with self._write_file(os.path.join(output_directory, unified_file)) as f:
+            with self._write_file(mozpath.join(output_directory, unified_file)) as f:
                 f.write('#define MOZ_UNIFIED_BUILD\n')
                 includeTemplate = '#include "%(cppfile)s"'
                 if poison_windows_h:
@@ -683,8 +683,8 @@ class RecursiveMakeBackend(CommonBackend):
         for objdir, backend_file in sorted(self._backend_files.items()):
             srcdir = backend_file.srcdir
             with self._write_file(fh=backend_file) as bf:
-                makefile_in = os.path.join(srcdir, 'Makefile.in')
-                makefile = os.path.join(objdir, 'Makefile')
+                makefile_in = mozpath.join(srcdir, 'Makefile.in')
+                makefile = mozpath.join(objdir, 'Makefile')
 
                 # If Makefile.in exists, use it as a template. Otherwise,
                 # create a stub.
@@ -711,22 +711,22 @@ class RecursiveMakeBackend(CommonBackend):
 
                 # Can't skip directories with a jar.mn for the 'libs' tier.
                 if bf.relobjdir in self._may_skip['libs'] and \
-                        os.path.exists(os.path.join(srcdir, 'jar.mn')):
+                        os.path.exists(mozpath.join(srcdir, 'jar.mn')):
                     self._may_skip['libs'].remove(bf.relobjdir)
 
                 with self._write_file(makefile) as fh:
                     bf.environment.create_makefile(fh, stub=stub)
 
         # Write out a master list of all IPDL source files.
-        ipdl_dir = os.path.join(self.environment.topobjdir, 'ipc', 'ipdl')
+        ipdl_dir = mozpath.join(self.environment.topobjdir, 'ipc', 'ipdl')
         mk = mozmakeutil.Makefile()
 
         sorted_ipdl_sources = list(sorted(self._ipdl_sources))
         mk.add_statement('ALL_IPDLSRCS := %s' % ' '.join(sorted_ipdl_sources))
 
         def files_from(ipdl):
-            base = os.path.basename(ipdl)
-            root, ext = os.path.splitext(base)
+            base = mozpath.basename(ipdl)
+            root, ext = mozpath.splitext(base)
 
             # Both .ipdl and .ipdlh become .cpp files
             files = ['%s.cpp' % root]
@@ -741,21 +741,21 @@ class RecursiveMakeBackend(CommonBackend):
                                       unified_prefix='UnifiedProtocols',
                                       unified_files_makefile_variable='CPPSRCS')
 
-        mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(os.path.dirname(p)
+        mk.add_statement('IPDLDIRS := %s' % ' '.join(sorted(set(mozpath.dirname(p)
             for p in self._ipdl_sources))))
 
-        with self._write_file(os.path.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
+        with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
             mk.dump(ipdls, removal_guard=False)
 
         self._may_skip['compile'] -= set(['ipc/ipdl'])
 
         # Write out master lists of WebIDL source files.
-        bindings_dir = os.path.join(self.environment.topobjdir, 'dom', 'bindings')
+        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom', 'bindings')
 
         mk = mozmakeutil.Makefile()
 
         def write_var(variable, sources):
-            files = [os.path.basename(f) for f in sorted(sources)]
+            files = [mozpath.basename(f) for f in sorted(sources)]
             mk.add_statement('%s += %s' % (variable, ' '.join(files)))
         write_var('webidl_files', self._webidl_sources)
         write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
@@ -768,7 +768,7 @@ class RecursiveMakeBackend(CommonBackend):
                                            iter(self._generated_events_webidl_sources),
                                            iter(self._generated_webidl_sources),
                                            iter(self._preprocessed_webidl_sources))
-        all_webidl_files = [os.path.basename(x) for x in all_webidl_files]
+        all_webidl_files = [mozpath.basename(x) for x in all_webidl_files]
         all_webidl_sources = [re.sub(r'\.webidl$', 'Binding.cpp', x) for x in all_webidl_files]
 
         self._add_unified_build_rules(mk, all_webidl_sources,
@@ -779,7 +779,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         # Assume that Somebody Else has responsibility for correctly
         # specifying removal dependencies for |all_webidl_sources|.
-        with self._write_file(os.path.join(bindings_dir, 'webidlsrcs.mk')) as webidls:
+        with self._write_file(mozpath.join(bindings_dir, 'webidlsrcs.mk')) as webidls:
             mk.dump(webidls, removal_guard=False)
 
         self._may_skip['compile'] -= set(['dom/bindings', 'dom/bindings/test'])
@@ -806,8 +806,8 @@ class RecursiveMakeBackend(CommonBackend):
         # Make the master test manifest files.
         for flavor, t in self._test_manifests.items():
             install_prefix, manifests = t
-            manifest_stem = os.path.join(install_prefix, '%s.ini' % flavor)
-            self._write_master_test_manifest(os.path.join(
+            manifest_stem = mozpath.join(install_prefix, '%s.ini' % flavor)
+            self._write_master_test_manifest(mozpath.join(
                 self.environment.topobjdir, '_tests', manifest_stem),
                 manifests)
 
@@ -819,7 +819,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._write_manifests('install', self._install_manifests)
 
-        ensureParentDir(os.path.join(self.environment.topobjdir, 'dist', 'foo'))
+        ensureParentDir(mozpath.join(self.environment.topobjdir, 'dist', 'foo'))
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -934,8 +934,8 @@ class RecursiveMakeBackend(CommonBackend):
             namespace += '/'
 
         for s in strings:
-            source = os.path.normpath(os.path.join(obj.srcdir, s))
-            dest = '%s%s' % (namespace, os.path.basename(s))
+            source = mozpath.normpath(mozpath.join(obj.srcdir, s))
+            dest = '%s%s' % (namespace, mozpath.basename(s))
             self._install_manifests['dist_include'].add_symlink(source, dest)
 
             if not os.path.exists(source):
@@ -1010,7 +1010,7 @@ class RecursiveMakeBackend(CommonBackend):
         # some processes (such as PGO at the time this was implemented) wipe
         # out dist/include without regard to our install manifests.
 
-        out_path = os.path.join(self.environment.topobjdir, 'config',
+        out_path = mozpath.join(self.environment.topobjdir, 'config',
             'makefiles', 'xpidl', 'Makefile')
         with self._write_file(out_path) as fh:
             self.environment.create_config_file(fh, extra=dict(
@@ -1020,7 +1020,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         # The Makefile can't regenerate itself because of custom substitution.
         # We need to list it here to ensure changes cause regeneration.
-        self.backend_input_files.add(os.path.join(self.environment.topsrcdir,
+        self.backend_input_files.add(mozpath.join(self.environment.topsrcdir,
             'config', 'makefiles', 'xpidl', 'Makefile.in'))
 
     def _process_program(self, program, backend_file):
@@ -1036,12 +1036,12 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)
 
     def _process_webidl_basename(self, basename):
-        header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]
+        header = 'mozilla/dom/%sBinding.h' % mozpath.splitext(basename)[0]
         self._install_manifests['dist_include'].add_optional_exists(header)
 
     def _process_test_manifest(self, obj, backend_file):
         # Much of the logic in this function could be moved to CommonBackend.
-        self.backend_input_files.add(os.path.join(obj.topsrcdir,
+        self.backend_input_files.add(mozpath.join(obj.topsrcdir,
             obj.manifest_relpath))
 
         # Duplicate manifests may define the same file. That's OK.
@@ -1094,7 +1094,7 @@ class RecursiveMakeBackend(CommonBackend):
                 (target, ' '.join(jar.sources)))
         if jar.generated_sources:
             backend_file.write('%s_PP_JAVAFILES := %s\n' %
-                (target, ' '.join(os.path.join('generated', f) for f in jar.generated_sources)))
+                (target, ' '.join(mozpath.join('generated', f) for f in jar.generated_sources)))
         if jar.extra_jars:
             backend_file.write('%s_EXTRA_JARS := %s\n' %
                 (target, ' '.join(jar.extra_jars)))
@@ -1117,7 +1117,7 @@ class RecursiveMakeBackend(CommonBackend):
                                % (relpath, basename))
 
     def _write_manifests(self, dest, manifests):
-        man_dir = os.path.join(self.environment.topobjdir, '_build_manifests',
+        man_dir = mozpath.join(self.environment.topobjdir, '_build_manifests',
             dest)
 
         # We have a purger for the manifests themselves to ensure legacy
@@ -1127,7 +1127,7 @@ class RecursiveMakeBackend(CommonBackend):
         for k, manifest in manifests.items():
             purger.add(k)
 
-            with self._write_file(os.path.join(man_dir, k)) as fh:
+            with self._write_file(mozpath.join(man_dir, k)) as fh:
                 manifest.write(fileobj=fh)
 
         purger.purge(man_dir)
