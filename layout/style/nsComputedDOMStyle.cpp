@@ -3729,7 +3729,10 @@ nsComputedDOMStyle::DoGetHeight()
 
     const nsStyleDisplay* displayData = StyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
+        // An outer SVG frame should behave the same as eReplaced in this case
+        mInnerFrame->GetType() != nsGkAtoms::svgOuterSVGFrame) {
+      
       calcHeight = false;
     }
   }
@@ -3770,7 +3773,10 @@ nsComputedDOMStyle::DoGetWidth()
 
     const nsStyleDisplay *displayData = StyleDisplay();
     if (displayData->mDisplay == NS_STYLE_DISPLAY_INLINE &&
-        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced))) {
+        !(mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) &&
+        // An outer SVG frame should behave the same as eReplaced in this case
+        mInnerFrame->GetType() != nsGkAtoms::svgOuterSVGFrame) {
+      
       calcWidth = false;
     }
   }
