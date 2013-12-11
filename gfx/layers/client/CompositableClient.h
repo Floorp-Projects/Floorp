@@ -145,6 +145,8 @@ public:
 protected:
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
+
+  friend class CompositableChild;
 };
 
 /**
@@ -178,7 +180,11 @@ public:
     return mCompositableClient;
   }
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason) MOZ_OVERRIDE {
+    if (mCompositableClient) {
+      mCompositableClient->mCompositableChild = nullptr;
+    }
+  }
 
   void SetAsyncID(uint64_t aID) { mID = aID; }
   uint64_t GetAsyncID() const
