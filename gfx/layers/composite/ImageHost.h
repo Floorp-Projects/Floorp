@@ -127,8 +127,6 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE {}
-
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
 #ifdef MOZ_DUMP_PAINTING

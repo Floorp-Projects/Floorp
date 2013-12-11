@@ -119,8 +119,6 @@ public:
     mCompositor = aCompositor;
   }
 
-  void OnActorDestroy() {}
-
 protected:
   TiledTexture ValidateTile(TiledTexture aTile,
                             const nsIntPoint& aTileRect,
@@ -240,12 +238,6 @@ public:
   virtual void Attach(Layer* aLayer,
                       Compositor* aCompositor,
                       AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE
-  {
-    mVideoMemoryTiledBuffer.OnActorDestroy();
-    mLowPrecisionVideoMemoryTiledBuffer.OnActorDestroy();
-  }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,
