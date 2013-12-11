@@ -76,15 +76,6 @@ bool AudioStream::sCubebLatencyPrefSet;
   return GetCubebContextUnlocked();
 }
 
-/*static*/ void AudioStream::InitPreferredSampleRate()
-{
-  StaticMutexAutoLock lock(sMutex);
-  if (sPreferredSampleRate != 0 &&
-      cubeb_get_preferred_sample_rate(GetCubebContext(), &sPreferredSampleRate) != CUBEB_OK) {
-    sPreferredSampleRate = 44100;
-  }
-}
-
 /*static*/ cubeb* AudioStream::GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
@@ -275,8 +266,25 @@ int64_t AudioStream::GetWritten()
 
 /*static*/ int AudioStream::PreferredSampleRate()
 {
-  MOZ_ASSERT(sPreferredSampleRate,
-             "sPreferredSampleRate has not been initialized!");
+  const int fallbackSampleRate = 44100;
+  StaticMutexAutoLock lock(sMutex);
+  if (sPreferredSampleRate != 0) {
+    return sPreferredSampleRate;
+  }
+
+  cubeb* cubebContext = GetCubebContextUnlocked();
+  if (!cubebContext) {
+    sPreferredSampleRate = fallbackSampleRate;
+  }
+  // Get the preferred samplerate for this platform, or fallback to something
+  // sensible if we fail. We cache the value, because this might be accessed
+  // often, and the complexity of the function call below depends on the
+  // backend used.
+  if (cubeb_get_preferred_sample_rate(cubebContext,
+                                      &sPreferredSampleRate) != CUBEB_OK) {
+    sPreferredSampleRate = fallbackSampleRate;
+  }
+
   return sPreferredSampleRate;
 }
 
