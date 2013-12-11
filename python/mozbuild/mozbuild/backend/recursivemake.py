@@ -90,7 +90,7 @@ class BackendMakeFile(object):
         self.idls = []
         self.xpt_name = None
 
-        self.fh = FileAvoidWrite(self.name)
+        self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
         self.fh.write('MOZBUILD_DERIVED := 1\n')
@@ -116,6 +116,10 @@ class BackendMakeFile(object):
                 'export\n')
 
         return self.fh.close()
+
+    @property
+    def diff(self):
+        return self.fh.diff
 
 
 class RecursiveMakeTraversal(object):
