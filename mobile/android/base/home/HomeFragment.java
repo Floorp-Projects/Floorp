@@ -44,6 +44,9 @@ abstract class HomeFragment extends Fragment {
     // Share MIME type.
     private static final String SHARE_MIME_TYPE = "text/plain";
 
+    // Default value for "can load" hint
+    static final boolean DEFAULT_CAN_LOAD_HINT = false;
+
     // Whether the fragment can load its content or not
     // This is used to defer data loading until the editing
     // mode animation ends.
@@ -58,9 +61,9 @@ abstract class HomeFragment extends Fragment {
 
         final Bundle args = getArguments();
         if (args != null) {
-            mCanLoadHint = args.getBoolean(HomePager.CAN_LOAD_ARG, false);
+            mCanLoadHint = args.getBoolean(HomePager.CAN_LOAD_ARG, DEFAULT_CAN_LOAD_HINT);
         } else {
-            mCanLoadHint = false;
+            mCanLoadHint = DEFAULT_CAN_LOAD_HINT;
         }
 
         mIsLoaded = false;
