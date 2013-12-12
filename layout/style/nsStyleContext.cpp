@@ -43,14 +43,14 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mRuleNode(aRuleNode),
     mAllocations(nullptr),
     mCachedResetData(nullptr),
-    mBits(((uint32_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
+    mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
 {
   // This check has to be done "backward", because if it were written the
   // more natural way it wouldn't fail even when it needed to.
-  static_assert((UINT32_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >=
+  static_assert((UINT64_MAX >> NS_STYLE_CONTEXT_TYPE_SHIFT) >=
                 nsCSSPseudoElements::ePseudo_MAX,
-                "pseudo element bits no longer fit in a uint32_t");
+                "pseudo element bits no longer fit in a uint64_t");
   MOZ_ASSERT(aRuleNode);
 
   mNextSibling = this;
@@ -262,7 +262,7 @@ nsStyleContext::GetUniqueStyleData(const nsStyleStructID& aSID)
   }
 
   SetStyle(aSID, result);
-  mBits &= ~nsCachedStyleData::GetBitForSID(aSID);
+  mBits &= ~static_cast<uint64_t>(nsCachedStyleData::GetBitForSID(aSID));
 
   return result;
 }

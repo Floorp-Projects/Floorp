@@ -55,7 +55,7 @@ struct nsInheritedStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void DestroyStructs(uint32_t aBits, nsPresContext* aContext) {
+  void DestroyStructs(uint64_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -68,7 +68,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
   }
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
     DestroyStructs(aBits, aContext);
     aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
   }
@@ -100,7 +100,7 @@ struct nsResetStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -178,7 +178,7 @@ struct nsCachedStyleData
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
     if (mResetData)
       mResetData->Destroy(aBits, aContext);
     if (mInheritedData)
