@@ -258,12 +258,38 @@ private:
  * The Lock/Unlock mecanism here mirrors Lock/Unlock in TextureClient.
  *
  */
-class TextureHost : public RefCounted<TextureHost>
+class TextureHost
 {
+  Atomic<int> mRefCount;
+
+  /**
+   * Called once, just before the destructor.
+   *
+   * Here goes the shut-down code that uses virtual methods.
+   * Must only be called by Release().
+   */
+  void Finalize();
+
 public:
   TextureHost(TextureFlags aFlags);
 
   virtual ~TextureHost();
+
+  void AddRef() {
+    MOZ_ASSERT(mRefCount >= 0);
+    ++mRefCount;
+  }
+
+  void Release() {
+    MOZ_ASSERT(mRefCount > 0);
+    if (0 == --mRefCount) {
+#ifdef DEBUG
+      mRefCount = detail::DEAD;
+#endif
+      Finalize();
+      delete this;
+    }
+  }
 
   /**
    * Factory method.
@@ -394,7 +420,7 @@ public:
 
   // If a texture host holds a reference to shmem, it should override this method
   // to forget about the shmem _without_ releasing it.
-  virtual void OnActorDestroy() {}
+  virtual void OnShutdown() {}
 
   virtual const char *Name() { return "TextureHost"; }
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
@@ -490,7 +516,7 @@ public:
 
   virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
+  virtual void OnShutdown() MOZ_OVERRIDE;
 
 protected:
   mozilla::ipc::Shmem* mShmem;
@@ -718,7 +744,7 @@ public:
   // see bug 865908 about fixing this.
   virtual void ForgetBuffer() {}
 
-  void OnActorDestroy();
+  void OnShutdown();
 
 protected:
   /**

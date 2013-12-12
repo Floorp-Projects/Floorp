@@ -45,45 +45,13 @@ ContentHostBase::GetAsTextureHost()
 void
 ContentHostBase::DestroyTextureHost()
 {
-  // The third clause in the if statement checks that we are in fact done with
-  // this texture. We don't want to prematurely deallocate a texture we might
-  // use again or double deallocate. Deallocation will happen in
-  // RemoveTextureHost.
-  // Note that GetTextureHost is linear in the number of texture hosts, but as
-  // long as that number is small (I expect a maximum of 6 for now) then it
-  // should be ok.
-  if (mTextureHost &&
-      mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED &&
-      !GetTextureHost(mTextureHost->GetID())) {
-    MOZ_ASSERT(!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    mTextureHost->DeallocateSharedData();
-  }
   mTextureHost = nullptr;
 }
 
 void
 ContentHostBase::DestroyTextureHostOnWhite()
 {
-  if (mTextureHostOnWhite &&
-      mTextureHostOnWhite->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED &&
-      !GetTextureHost(mTextureHostOnWhite->GetID())) {
-    MOZ_ASSERT(!(mTextureHostOnWhite->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    mTextureHostOnWhite->DeallocateSharedData();
-  }
   mTextureHostOnWhite = nullptr;
-}
-
-void
-ContentHostBase::RemoveTextureHost(TextureHost* aTexture)
-{
-  if ((aTexture->GetFlags() & TEXTURE_DEALLOCATE_DEFERRED) &&
-      !(mTextureHost && mTextureHost == aTexture) &&
-      !(mTextureHostOnWhite && mTextureHostOnWhite == aTexture)) {
-    MOZ_ASSERT(!(aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT));
-    aTexture->DeallocateSharedData();
-  }
-
-  CompositableHost::RemoveTextureHost(aTexture);
 }
 
 class MOZ_STACK_CLASS AutoLockTextureHost
@@ -338,12 +306,6 @@ ContentHostBase::Dump(FILE* aFile,
 void
 ContentHostBase::OnActorDestroy()
 {
-  if (mTextureHost) {
-    mTextureHost->OnActorDestroy();
-  }
-  if (mTextureHostOnWhite) {
-    mTextureHostOnWhite->OnActorDestroy();
-  }
   CompositableHost::OnActorDestroy();
 }
 
@@ -376,18 +338,6 @@ DeprecatedContentHostBase::DestroyFrontHost()
 void
 DeprecatedContentHostBase::OnActorDestroy()
 {
-  if (mDeprecatedTextureHost) {
-    mDeprecatedTextureHost->OnActorDestroy();
-  }
-  if (mDeprecatedTextureHostOnWhite) {
-    mDeprecatedTextureHostOnWhite->OnActorDestroy();
-  }
-  if (mNewFrontHost) {
-    mNewFrontHost->OnActorDestroy();
-  }
-  if (mNewFrontHostOnWhite) {
-    mNewFrontHostOnWhite->OnActorDestroy();
-  }
 }
 
 void
@@ -851,24 +801,6 @@ DeprecatedContentHostDoubleBuffered::DestroyTextures()
 void
 DeprecatedContentHostDoubleBuffered::OnActorDestroy()
 {
-  if (mDeprecatedTextureHost) {
-    mDeprecatedTextureHost->OnActorDestroy();
-  }
-  if (mDeprecatedTextureHostOnWhite) {
-    mDeprecatedTextureHostOnWhite->OnActorDestroy();
-  }
-  if (mNewFrontHost) {
-    mNewFrontHost->OnActorDestroy();
-  }
-  if (mNewFrontHostOnWhite) {
-    mNewFrontHostOnWhite->OnActorDestroy();
-  }
-  if (mBackHost) {
-    mBackHost->OnActorDestroy();
-  }
-  if (mBackHostOnWhite) {
-    mBackHostOnWhite->OnActorDestroy();
-  }
 }
 
 void
