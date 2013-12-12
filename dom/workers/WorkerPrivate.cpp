@@ -1208,7 +1208,7 @@ public:
         JS::Rooted<JSObject*> target(aCx, JS::CurrentGlobalOrNull(aCx));
         NS_ASSERTION(target, "This should never be null!");
 
-        bool preventDefaultCalled;
+        nsEventStatus status = nsEventStatus_eIgnore;
         nsIScriptGlobalObject* sgo;
 
         if (aWorkerPrivate) {
@@ -1222,15 +1222,12 @@ public:
           event.fileName = aFilename.get();
           event.typeString = NS_LITERAL_STRING("error");
 
-          nsEventStatus status = nsEventStatus_eIgnore;
           nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalTarget);
           if (NS_FAILED(nsEventDispatcher::Dispatch(target, nullptr, &event,
                                                     nullptr, &status))) {
             NS_WARNING("Failed to dispatch worker thread error event!");
             status = nsEventStatus_eIgnore;
           }
-
-          preventDefaultCalled = status == nsEventStatus_eConsumeNoDefault;
         }
         else if ((sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
           // Icky, we have to fire an InternalScriptErrorEvent...
@@ -1239,16 +1236,14 @@ public:
           event.errorMsg = aMessage.get();
           event.fileName = aFilename.get();
 
-          nsEventStatus status = nsEventStatus_eIgnore;
           if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
             NS_WARNING("Failed to dispatch main thread error event!");
             status = nsEventStatus_eIgnore;
           }
-
-          preventDefaultCalled = status == nsEventStatus_eConsumeNoDefault;
         }
 
-        if (preventDefaultCalled) {
+        // Was preventDefault() called?
+        if (status == nsEventStatus_eConsumeNoDefault) {
           return true;
         }
       }
