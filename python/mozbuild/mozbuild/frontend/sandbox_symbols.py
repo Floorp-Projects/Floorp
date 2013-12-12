@@ -68,10 +68,11 @@ VARIABLES = {
         file.
         """, 'export'),
 
-    'ANDROID_RESFILES': (StrictOrderingOnAppendList, list,
-        """Android resource files.
+    'ANDROID_RES_DIRS': (list, list,
+        """Android resource directories.
 
-        This variable contains a list of files to package into a 'res'
+        This variable contains a list of directories, each relative to
+        the srcdir, containing static files to package into a 'res'
         directory and merge into an APK file.
         """, 'export'),
 
@@ -571,6 +572,18 @@ VARIABLES = {
         result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
         the $(DIST_SUBDIR) directory of the otherwise default value is used.
         """, 'libs'),
+
+    'SPHINX_TREES': (dict, dict,
+        """Describes what the Sphinx documentation tree will look like.
+
+        Keys are relative directories inside the final Sphinx documentation
+        tree to install files into. Values are directories (relative to this
+        file) whose content to copy into the Sphinx documentation tree.
+        """, None),
+
+    'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
+        """Directories containing Python packages that Sphinx documents.
+        """, None),
 }
 
 # The set of functions exposed to the sandbox.

@@ -38,16 +38,14 @@ ImageHost::~ImageHost() {}
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
-  mFrontBuffer = aTexture;
-}
-
-void
-ImageHost::RemoveTextureHost(TextureHost* aTexture)
-{
-  CompositableHost::RemoveTextureHost(aTexture);
-  if (mFrontBuffer && mFrontBuffer->GetID() == aTexture->GetID()) {
-    mFrontBuffer = nullptr;
+  if (mFrontBuffer) {
+    // XXX - When we implement sharing textures between several compositables
+    // we will need to not remove the compositor if there is another compositable
+    // using the texture.
+    mFrontBuffer->SetCompositor(nullptr);
   }
+  CompositableHost::UseTextureHost(aTexture);
+  mFrontBuffer = aTexture;
 }
 
 TextureHost*
@@ -74,6 +72,10 @@ ImageHost::Composite(EffectChain& aEffectChain,
   if (!mFrontBuffer) {
     return;
   }
+
+  // Make sure the front buffer has a compositor
+  mFrontBuffer->SetCompositor(GetCompositor());
+
   if (!mFrontBuffer->Lock()) {
     NS_WARNING("failed to lock front buffer");
     return;
@@ -152,6 +154,15 @@ ImageHost::Composite(EffectChain& aEffectChain,
                                      aTransform);
   }
   mFrontBuffer->Unlock();
+}
+
+void
+ImageHost::SetCompositor(Compositor* aCompositor)
+{
+  if (mFrontBuffer && mCompositor != aCompositor) {
+    mFrontBuffer->SetCompositor(aCompositor);
+  }
+  CompositableHost::SetCompositor(aCompositor);
 }
 
 void

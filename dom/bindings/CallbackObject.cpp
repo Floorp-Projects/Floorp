@@ -19,6 +19,7 @@
 #include "xpcprivate.h"
 #include "WorkerPrivate.h"
 #include "nsGlobalWindow.h"
+#include "WorkerScope.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,15 +36,17 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(CallbackObject)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropCallback();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mCallback)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
+CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                                      ErrorResult& aRv,
                                      ExceptionHandling aExceptionHandling,
                                      JSCompartment* aCompartment)
@@ -63,8 +66,9 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   // callable.
 
   // First, find the real underlying callback.
-  JSObject* realCallback = js::UncheckedUnwrap(aCallback);
+  JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
   JSContext* cx = nullptr;
+  nsIGlobalObject* globalObject = nullptr;
 
   if (mIsMainThread) {
     // Now get the global and JSContext for this callback.
@@ -85,18 +89,33 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
                              // This happens - Removing it causes
                              // test_bug293235.xul to go orange.
                              : nsContentUtils::GetSafeJSContext();
+      globalObject = win;
     } else {
-      // No DOM Window. Use the SafeJSContext.
+      // No DOM Window. Store the global and use the SafeJSContext.
+      JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
+      globalObject = xpc::GetNativeForGlobal(glob);
+      MOZ_ASSERT(globalObject);
       cx = nsContentUtils::GetSafeJSContext();
     }
-
-    // Make sure our JSContext is pushed on the stack.
-    mCxPusher.Push(cx);
   } else {
     cx = workers::GetCurrentThreadJSContext();
+    globalObject = workers::GetCurrentThreadWorkerPrivate()->GlobalScope();
   }
 
-  // Unmark the callable, and stick it in a Rooted before it can go gray again.
+  // Bail out if there's no useful global. This seems to happen intermittently
+  // on gaia-ui tests, probably because nsInProcessTabChildGlobal is returning
+  // null in some kind of teardown state.
+  if (!globalObject->GetGlobalJSObject()) {
+    return;
+  }
+
+  mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
+  if (aCallback->IncumbentGlobalOrNull()) {
+    mAutoIncumbentScript.construct(aCallback->IncumbentGlobalOrNull());
+  }
+
+  // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
+  // variant), and stick it in a Rooted before it can go gray again.
   // Nothing before us in this function can trigger a CC, so it's safe to wait
   // until here it do the unmark. This allows us to order the following two
   // operations _after_ the Push() above, which lets us take advantage of the
@@ -104,15 +123,14 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   //
   // We can do this even though we're not in the right compartment yet, because
   // Rooted<> does not care about compartments.
-  JS::ExposeObjectToActiveJS(aCallback);
-  mRootedCallable.construct(cx, aCallback);
+  mRootedCallable.construct(cx, aCallback->Callback());
 
   if (mIsMainThread) {
     // Check that it's ok to run this callback at all.
-    // Make sure to unwrap aCallback before passing it in to get the global of
-    // the callback object, not the wrapper.
+    // Make sure to use realCallback to get the global of the callback object,
+    // not the wrapper.
     bool allowed = nsContentUtils::GetSecurityManager()->
-      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(js::UncheckedUnwrap(aCallback)));
+      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(realCallback));
 
     if (!allowed) {
       return;
@@ -120,7 +138,11 @@ CallbackObject::CallSetup::CallSetup(JS::Handle<JSObject*> aCallback,
   }
 
   // Enter the compartment of our callback, so we can actually work with it.
-  mAc.construct(cx, aCallback);
+  //
+  // Note that if the callback is a wrapper, this will not be the same
+  // compartment that we ended up in with mAutoEntryScript above, because the
+  // entry point is based off of the unwrapped callback (realCallback).
+  mAc.construct(cx, mRootedCallable.ref());
 
   // And now we're ready to go.
   mCx = cx;
@@ -194,17 +216,11 @@ CallbackObject::CallSetup::~CallSetup()
   // But be careful: it might not have been constructed at all!
   mAc.destroyIfConstructed();
 
-  // XXXbz For that matter why do we need to manually call ScriptEvaluated at
-  // all?  nsCxPusher::Pop will do that nowadays if !mScriptIsRunning, so the
-  // concerns from bug 295983 don't seem relevant anymore.  Do we want to make
-  // sure it's still called when !mScriptIsRunning?  I guess play it safe for
-  // now and do what CallEventHandler did, which is call always.
-
-  // Popping an nsCxPusher is safe even if it never got pushed.
-  mCxPusher.Pop();
+  mAutoIncumbentScript.destroyIfConstructed();
+  mAutoEntryScript.destroyIfConstructed();
 
   // It is important that this is the last thing we do, after leaving the
-  // compartment and popping the context.
+  // compartment and undoing all our entry/incumbent script changes
   if (mIsMainThread) {
     nsContentUtils::LeaveMicroTask();
   }

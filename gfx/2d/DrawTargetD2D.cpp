@@ -764,27 +764,37 @@ void
 DrawTargetD2D::ClearRect(const Rect &aRect)
 {
   MarkChanged();
+  PushClipRect(aRect);
 
-  FlushTransformToRT();
   PopAllClips();
 
   AutoSaveRestoreClippedOut restoreClippedOut(this);
 
-  restoreClippedOut.Save();
+  D2D1_RECT_F clipRect;
+  bool isPixelAligned;
+  bool pushedClip = false;
+  if (mTransform.IsRectilinear() &&
+      GetDeviceSpaceClipRect(clipRect, isPixelAligned)) {
+    if (mTransformDirty ||
+        !mTransform.IsIdentity()) {
+      mRT->SetTransform(D2D1::IdentityMatrix());
+      mTransformDirty = true;
+    }
 
-  bool needsClip = false;
-
-  needsClip = aRect.x > 0 || aRect.y > 0 ||
-              aRect.XMost() < mSize.width ||
-              aRect.YMost() < mSize.height;
-
-  if (needsClip) {
-    mRT->PushAxisAlignedClip(D2DRect(aRect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    mRT->PushAxisAlignedClip(clipRect, isPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    pushedClip = true;
+  } else {
+    FlushTransformToRT();
+    restoreClippedOut.Save();
   }
+
   mRT->Clear(D2D1::ColorF(0, 0.0f));
-  if (needsClip) {
+
+  if (pushedClip) {
     mRT->PopAxisAlignedClip();
   }
+
+  PopClip();
   return;
 }
 
@@ -1773,7 +1783,38 @@ IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
   result.top = max(aRect1.top, aRect2.top);
   result.right = min(aRect1.right, aRect2.right);
   result.bottom = min(aRect1.bottom, aRect2.bottom);
+
+  result.right = max(result.right, result.left);
+  result.bottom = max(result.bottom, result.top);
+
   return result;
+}
+
+bool
+DrawTargetD2D::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned)
+{
+  if (!mPushedClips.size()) {
+    return false;
+  }
+
+  std::vector<DrawTargetD2D::PushedClip>::iterator iter = mPushedClips.begin();
+  if (iter->mPath) {
+    return false;
+  }
+  aClipRect = iter->mBounds;
+  aIsPixelAligned = iter->mIsPixelAligned;
+
+  iter++;
+  for (;iter != mPushedClips.end(); iter++) {
+    if (iter->mPath) {
+      return false;
+    }
+    aClipRect = IntersectRect(aClipRect, iter->mBounds);
+    if (!iter->mIsPixelAligned) {
+      aIsPixelAligned = false;
+    }
+  }
+  return true;
 }
 
 TemporaryRef<ID2D1Geometry>

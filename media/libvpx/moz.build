@@ -15,16 +15,24 @@ if CONFIG['VPX_NEED_OBJ_INT_EXTRACT']:
 
     HOST_PROGRAM = 'host_obj_int_extract'
 
+# Unify fewer files together to reduce the chance of name collision
+FILES_PER_UNIFIED_FILE = 8
+
 SOURCES += files['SOURCES']
+UNIFIED_SOURCES += files['UNIFIED_SOURCES']
 
 if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
     SOURCES += files['ERROR_CONCEALMENT']
 
 if CONFIG['VPX_X86_ASM'] and CONFIG['OS_TARGET'] == 'WINNT':
-    SOURCES += [
+    offset_sources = [
         'vp8/encoder/vp8_asm_enc_offsets.c',
         'vpx_scale/vpx_scale_asm_offsets.c',
     ]
+    SOURCES += offset_sources
+    if CONFIG['_MSC_VER']:
+        for s in offset_sources:
+            SOURCES[s].no_pgo = True
 
 if CONFIG['VPX_X86_ASM']:
     SOURCES += files['X86_ASM']

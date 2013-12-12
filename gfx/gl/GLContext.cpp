@@ -1189,24 +1189,6 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
     return false;
 }
 
-void GLContext::ApplyFilterToBoundTexture(GraphicsFilter aFilter)
-{
-    ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_2D, aFilter);
-}
-
-void GLContext::ApplyFilterToBoundTexture(GLuint aTarget,
-                                          GraphicsFilter aFilter)
-{
-    if (aFilter == GraphicsFilter::FILTER_NEAREST) {
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-    } else {
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-    }
-}
-
-
 void
 GLContext::DetermineCaps()
 {

@@ -171,7 +171,7 @@ TestWriteObject() {
     = do_CreateInstance("@mozilla.org/storagestream;1");
   NS_ENSURE_ARG_POINTER(storageStream);
   
-  rv = storageStream->Init(256, (uint32_t) -1, nullptr);
+  rv = storageStream->Init(256, (uint32_t) -1);
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsCOMPtr<nsIObjectOutputStream> objectOutput
