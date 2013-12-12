@@ -38,6 +38,12 @@ ImageHost::~ImageHost() {}
 void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
+  if (mFrontBuffer) {
+    // XXX - When we implement sharing textures between several compositables
+    // we will need to not remove the compositor if there is another compositable
+    // using the texture.
+    mFrontBuffer->SetCompositor(nullptr);
+  }
   CompositableHost::UseTextureHost(aTexture);
   mFrontBuffer = aTexture;
 }
@@ -148,6 +154,15 @@ ImageHost::Composite(EffectChain& aEffectChain,
                                      aTransform);
   }
   mFrontBuffer->Unlock();
+}
+
+void
+ImageHost::SetCompositor(Compositor* aCompositor)
+{
+  if (mFrontBuffer && mCompositor != aCompositor) {
+    mFrontBuffer->SetCompositor(aCompositor);
+  }
+  CompositableHost::SetCompositor(aCompositor);
 }
 
 void
