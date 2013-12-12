@@ -62,6 +62,26 @@ public:
            nsCSSTokenSerializationType& aLastToken) const;
 
   /**
+   * Gets the name of the variable at the given index.
+   *
+   * Variables on this object are ordered, and that order is just determined
+   * based on the order that they are added to the object.  A consistent
+   * ordering is required for CSSDeclaration objects in the DOM.
+   * CSSDeclarations expose property names as indexed properties, which need to
+   * be stable.
+   *
+   * @param aIndex The index of the variable to get.
+   * @param aName Out parameter into which the name of the variable will be
+   *   stored.
+   */
+  void GetVariableAt(size_t aIndex, nsAString& aName) const;
+
+  /**
+   * Gets the number of variables stored on this object.
+   */
+  size_t Count() const;
+
+  /**
    * Adds or modifies an existing entry in this set of variable values.
    *
    * @param aName The variable name (not including any "var-" prefix that would
