@@ -142,9 +142,6 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
                         hostDataSurface->Stride(),
                         SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
   AssertSurfacesEqual(surface, hostSurface.get());
-
-  // host deallocation
-  host->DeallocateSharedData();
 }
 
 // Same as above, for YCbCr surfaces
@@ -207,9 +204,6 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
 
   AssertYCbCrSurfacesEqual(&ycbcrData, &data);
   host->Unlock();
-
-  // host deallocation
-  host->DeallocateSharedData();
 }
 
 TEST(Layers, TextureSerialization) {
@@ -228,7 +222,7 @@ TEST(Layers, TextureSerialization) {
     RefPtr<TextureClient> client
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
-                                TEXTURE_FLAGS_DEFAULT);
+                                TEXTURE_DEALLOCATE_CLIENT);
 
     TestTextureClientSurface(client, surface);
 
@@ -264,7 +258,7 @@ TEST(Layers, TextureYCbCrSerialization) {
   RefPtr<TextureClient> client
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::FORMAT_YUV,
-                              TEXTURE_FLAGS_DEFAULT);
+                              TEXTURE_DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
 
