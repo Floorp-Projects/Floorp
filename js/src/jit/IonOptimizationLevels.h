@@ -106,11 +106,7 @@ class OptimizationInfo
         return inlineNative_ && !js_JitOptions.disableInlining;
     }
 
-    uint32_t usesBeforeCompile() const {
-        if (js_JitOptions.forceDefaultIonUsesBeforeCompile)
-            return js_JitOptions.forcedDefaultIonUsesBeforeCompile;
-        return usesBeforeCompile_;
-    }
+    uint32_t usesBeforeCompile(JSScript *script, jsbytecode *pc = nullptr) const;
 
     bool gvnEnabled() const {
         return gvn_ && !js_JitOptions.disableGvn;
@@ -171,7 +167,10 @@ class OptimizationInfo
     }
 
     uint32_t usesBeforeInlining() const {
-        return usesBeforeCompile() * usesBeforeInliningFactor_;
+        uint32_t usesBeforeCompile = usesBeforeCompile_;
+        if (js_JitOptions.forceDefaultIonUsesBeforeCompile)
+            usesBeforeCompile = js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+        return usesBeforeCompile * usesBeforeInliningFactor_;
     }
 };
 
@@ -183,16 +182,17 @@ class OptimizationInfos
   public:
     OptimizationInfos();
 
-    const OptimizationInfo *get(OptimizationLevel level) {
+    const OptimizationInfo *get(OptimizationLevel level) const {
         JS_ASSERT(level < Optimization_Count);
         JS_ASSERT(level != Optimization_DontCompile);
 
         return &infos_[level - 1];
     }
 
-    OptimizationLevel nextLevel(OptimizationLevel level);
-    bool isLastLevel(OptimizationLevel level);
-    OptimizationLevel levelForUseCount(uint32_t useCount);
+    OptimizationLevel nextLevel(OptimizationLevel level) const;
+    OptimizationLevel firstLevel() const;
+    bool isLastLevel(OptimizationLevel level) const;
+    OptimizationLevel levelForScript(JSScript *script, jsbytecode *pc = nullptr) const;
 };
 
 extern OptimizationInfos js_IonOptimizations;
