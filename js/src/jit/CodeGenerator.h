@@ -146,6 +146,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitElemGetterSetter(LInitElemGetterSetter *lir);
+    bool visitMutateProto(LMutateProto *lir);
     bool visitInitProp(LInitProp *lir);
     bool visitInitPropGetterSetter(LInitPropGetterSetter *lir);
     bool visitCreateThis(LCreateThis *lir);
