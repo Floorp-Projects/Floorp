@@ -45,7 +45,7 @@ public:
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
-  void ActorDestroy(ActorDestroyReason why);
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   ISurfaceAllocator* mAllocator;
   RefPtr<TextureHost> mTextureHost;

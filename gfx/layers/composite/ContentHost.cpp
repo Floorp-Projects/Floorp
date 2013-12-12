@@ -32,26 +32,12 @@ ContentHostBase::ContentHostBase(const TextureInfo& aTextureInfo)
 
 ContentHostBase::~ContentHostBase()
 {
-  DestroyTextureHost();
-  DestroyTextureHostOnWhite();
 }
 
 TextureHost*
 ContentHostBase::GetAsTextureHost()
 {
   return mTextureHost;
-}
-
-void
-ContentHostBase::DestroyTextureHost()
-{
-  mTextureHost = nullptr;
-}
-
-void
-ContentHostBase::DestroyTextureHostOnWhite()
-{
-  mTextureHostOnWhite = nullptr;
 }
 
 class MOZ_STACK_CLASS AutoLockTextureHost
@@ -254,10 +240,10 @@ void
 ContentHostBase::UseTextureHost(TextureHost* aTexture)
 {
   if (aTexture->GetFlags() & TEXTURE_ON_WHITE) {
-    DestroyTextureHost();
+    mTextureHost = nullptr;
     mTextureHostOnWhite = aTexture;
   } else {
-    DestroyTextureHostOnWhite();
+    mTextureHostOnWhite = nullptr;
     mTextureHost = aTexture;
   }
 }
@@ -303,12 +289,6 @@ ContentHostBase::Dump(FILE* aFile,
 }
 #endif
 
-void
-ContentHostBase::OnActorDestroy()
-{
-  CompositableHost::OnActorDestroy();
-}
-
 DeprecatedContentHostBase::DeprecatedContentHostBase(const TextureInfo& aTextureInfo)
   : ContentHost(aTextureInfo)
   , mPaintWillResample(false)
@@ -333,11 +313,6 @@ DeprecatedContentHostBase::DestroyFrontHost()
              "We won't be able to destroy our SurfaceDescriptor");
   mDeprecatedTextureHost = nullptr;
   mDeprecatedTextureHostOnWhite = nullptr;
-}
-
-void
-DeprecatedContentHostBase::OnActorDestroy()
-{
 }
 
 void
@@ -796,11 +771,6 @@ DeprecatedContentHostDoubleBuffered::DestroyTextures()
   }
 
   // don't touch mDeprecatedTextureHost, we might need it for compositing
-}
-
-void
-DeprecatedContentHostDoubleBuffered::OnActorDestroy()
-{
 }
 
 void
