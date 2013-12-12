@@ -691,6 +691,8 @@ IonBuilder::build()
         current->add(lazyArguments_);
     }
 
+    insertRecompileCheck();
+
     if (!traverseBytecode())
         return false;
 
@@ -847,6 +849,8 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
         lazyArguments_ = MConstant::New(alloc(), MagicValue(JS_OPTIMIZED_ARGUMENTS));
         current->add(lazyArguments_);
     }
+
+    insertRecompileCheck();
 
     if (!traverseBytecode())
         return false;
@@ -3339,6 +3343,7 @@ IonBuilder::jsop_loophead(jsbytecode *pc)
     assertValidLoopHeadOp(pc);
 
     current->add(MInterruptCheck::New(alloc()));
+    insertRecompileCheck();
 
     return true;
 }
@@ -5989,6 +5994,15 @@ ClassHasResolveHook(CompileCompartment *comp, const Class *clasp, PropertyName *
         return FunctionHasResolveHook(comp->runtime()->names(), name);
 
     return true;
+}
+
+void
+IonBuilder::insertRecompileCheck()
+{
+    if (info().executionMode() != SequentialExecution)
+        return;
+
+    return;
 }
 
 JSObject *
