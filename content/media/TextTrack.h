@@ -99,9 +99,6 @@ public:
   void AddRegion(TextTrackRegion& aRegion);
   void RemoveRegion(const TextTrackRegion& aRegion, ErrorResult& aRv);
 
-  // Time is in seconds.
-  void Update(double aTime);
-
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void CueChanged(TextTrackCue& aCue);

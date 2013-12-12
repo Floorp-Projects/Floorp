@@ -50,6 +50,11 @@ WebVTTParserWrapper.prototype =
     return WebVTTParser.convertCueToDOMTree(window, cue.text);
   },
 
+  processCues: function(window, cues, overlay)
+  {
+    // TODO: Call prcoess cues on vtt.js
+  },
+
   classDescription: "Wrapper for the JS WebVTTParser (vtt.js)",
   classID: Components.ID(WEBVTTPARSERWRAPPER_CID),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebVTTParserWrapper]),
