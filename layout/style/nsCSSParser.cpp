@@ -54,6 +54,9 @@ nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
 #undef CSS_PROP
 };
 
+// Length of the "var-" prefix of custom property names.
+#define VAR_PREFIX_LENGTH 4
+
 namespace {
 
 // Rule processing function
@@ -260,6 +263,10 @@ protected:
   // returns true when the stop symbol is found, and false for EOF
   bool SkipUntil(PRUnichar aStopSymbol);
   void SkipUntilOneOf(const PRUnichar* aStopSymbolChars);
+  // For each character in aStopSymbolChars from the end of the array
+  // to the start, calls SkipUntil with that character.
+  typedef nsAutoTArray<PRUnichar, 16> StopSymbolCharStack;
+  void SkipUntilAllOf(const StopSymbolCharStack& aStopSymbolChars);
 
   void SkipRuleSet(bool aInsideBraces);
   bool SkipAtRule(bool aInsideBlock);
@@ -542,6 +549,32 @@ protected:
   bool ParseMarker();
   bool ParsePaintOrder();
   bool ParseAll();
+
+  /**
+   * Parses a variable value from a custom property declaration.
+   *
+   * @param aType Out parameter into which will be stored the type of variable
+   *   value, indicating whether the parsed value was a token stream or one of
+   *   the CSS-wide keywords.
+   * @param aValue Out parameter into which will be stored the token stream
+   *   as a string, if the parsed custom property did take a token stream.
+   * @return Whether parsing succeeded.
+   */
+  bool ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
+                                nsString& aValue);
+
+  /**
+   * Parses a CSS variable value.  This could be 'initial', 'inherit'
+   * or a token stream, which may or may not include variable references.
+   *
+   * @param aType Out parameter into which the type of the variable value
+   *   will be stored.
+   * @param aClosingChars Out parameter appended to which will be any
+   *   closing characters that were implied when encountering EOF.
+   * @return Whether parsing succeeded.
+   */
+  bool ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
+                               nsString& aClosingChars);
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
@@ -2975,6 +3008,15 @@ CSSParserImpl::SkipUntilOneOf(const PRUnichar* aStopSymbolChars)
   }
 }
 
+void
+CSSParserImpl::SkipUntilAllOf(const StopSymbolCharStack& aStopSymbolChars)
+{
+  uint32_t i = aStopSymbolChars.Length();
+  while (i--) {
+    SkipUntil(aStopSymbolChars[i]);
+  }
+}
+
 bool
 CSSParserImpl::SkipDeclaration(bool aCheckForBraces)
 {
@@ -4745,37 +4787,57 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   // rule.
   nsAutoSuppressErrors suppressErrors(this, mInFailingSupportsRule);
 
-  // Map property name to its ID and then parse the property
-  nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
-                                                    nsCSSProps::eEnabled);
-  if (eCSSProperty_UNKNOWN == propID ||
-     (aContext == eCSSContext_Page &&
-      !nsCSSProps::PropHasFlags(propID, CSS_PROPERTY_APPLIES_TO_PAGE_RULE))) { // unknown property
-    if (!NonMozillaVendorIdentifier(propertyName)) {
-      REPORT_UNEXPECTED_P(PEUnknownProperty, propertyName);
+  // Information about a parsed non-custom property.
+  nsCSSProperty propID;
+
+  // Information about a parsed custom property.
+  CSSVariableDeclarations::Type variableType;
+  nsString variableValue;
+
+  // Check if the property name is a custom property.
+  bool customProperty = nsLayoutUtils::CSSVariablesEnabled() &&
+                        nsCSSProps::IsCustomPropertyName(propertyName) &&
+                        aContext == eCSSContext_General;
+
+  if (customProperty) {
+    if (!ParseVariableDeclaration(&variableType, variableValue)) {
+      REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
       REPORT_UNEXPECTED(PEDeclDropped);
       OUTPUT_ERROR();
+      return false;
     }
+  } else {
+    // Map property name to its ID and then parse the property
+    propID = nsCSSProps::LookupProperty(propertyName, nsCSSProps::eEnabled);
+    if (eCSSProperty_UNKNOWN == propID ||
+        (aContext == eCSSContext_Page &&
+         !nsCSSProps::PropHasFlags(propID,
+                                   CSS_PROPERTY_APPLIES_TO_PAGE_RULE))) { // unknown property
+      if (!NonMozillaVendorIdentifier(propertyName)) {
+        REPORT_UNEXPECTED_P(PEUnknownProperty, propertyName);
+        REPORT_UNEXPECTED(PEDeclDropped);
+        OUTPUT_ERROR();
+      }
+      return false;
+    }
+    if (! ParseProperty(propID)) {
+      // XXX Much better to put stuff in the value parsers instead...
+      REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
+      REPORT_UNEXPECTED(PEDeclDropped);
+      OUTPUT_ERROR();
+      mTempData.ClearProperty(propID);
+      mTempData.AssertInitialState();
+      return false;
+    }
+  }
 
-    return false;
-  }
-  if (! ParseProperty(propID)) {
-    // XXX Much better to put stuff in the value parsers instead...
-    REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
-    REPORT_UNEXPECTED(PEDeclDropped);
-    OUTPUT_ERROR();
-    mTempData.ClearProperty(propID);
-    mTempData.AssertInitialState();
-    return false;
-  }
   CLEAR_ERROR();
 
   // Look for "!important".
   PriorityParsingStatus status;
   if ((aFlags & eParseDeclaration_AllowImportant) != 0) {
     status = ParsePriority();
-  }
-  else {
+  } else {
     status = ePriority_None;
   }
 
@@ -4805,15 +4867,26 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
     }
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
-    mTempData.ClearProperty(propID);
+    if (!customProperty) {
+      mTempData.ClearProperty(propID);
+    }
     mTempData.AssertInitialState();
     return false;
   }
 
-  *aChanged |= mData.TransferFromBlock(mTempData, propID,
-                                       status == ePriority_Important,
-                                       false, aMustCallValueAppended,
-                                       aDeclaration);
+  if (customProperty) {
+    MOZ_ASSERT(Substring(propertyName,
+                         0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+    nsDependentString varName(propertyName, VAR_PREFIX_LENGTH); // remove 'var-'
+    aDeclaration->AddVariableDeclaration(varName, variableType, variableValue,
+                                         status == ePriority_Important);
+  } else {
+    *aChanged |= mData.TransferFromBlock(mTempData, propID,
+                                         status == ePriority_Important,
+                                         false, aMustCallValueAppended,
+                                         aDeclaration);
+  }
+
   return true;
 }
 
@@ -6437,6 +6510,7 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
                     "hashless color quirk should not be set");
   NS_ABORT_IF_FALSE(!mUnitlessLengthQuirk,
                     "unitless length quirk should not be set");
+
   if (mNavQuirkMode) {
     mHashlessColorQuirk =
       nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_HASHLESS_COLOR_QUIRK);
@@ -11216,6 +11290,228 @@ CSSParserImpl::ParseAll()
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, eCSSProperty_all) {
     AppendValue(*p, value);
   }
+  return true;
+}
+
+bool
+CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
+                                        nsString& aValue)
+{
+  CSSVariableDeclarations::Type type;
+  nsString variableValue;
+  nsString closingBrackets;
+
+  // Record the token stream while parsing a variable value.
+  mScanner->StartRecording();
+  if (!ParseValueWithVariables(&type, closingBrackets)) {
+    mScanner->StopRecording();
+    return false;
+  }
+
+  if (type == CSSVariableDeclarations::eTokenStream) {
+    // This was indeed a token stream value, so store it in variableValue.
+    mScanner->StopRecording(variableValue);
+    variableValue.Append(closingBrackets);
+  } else {
+    // This was either 'inherit' or 'initial'; we don't need the recorded input.
+    mScanner->StopRecording();
+  }
+
+  if (mHavePushBack && type == CSSVariableDeclarations::eTokenStream) {
+    // If we came to the end of a valid variable declaration and a token was
+    // pushed back, then it would have been ended by '!', ')', ';', ']' or '}'.
+    // We need to remove it from the recorded variable value.
+    MOZ_ASSERT(mToken.IsSymbol('!') ||
+               mToken.IsSymbol(')') ||
+               mToken.IsSymbol(';') ||
+               mToken.IsSymbol(']') ||
+               mToken.IsSymbol('}'));
+    MOZ_ASSERT(!variableValue.IsEmpty());
+    MOZ_ASSERT(variableValue[variableValue.Length() - 1] == mToken.mSymbol);
+    variableValue.Truncate(variableValue.Length() - 1);
+  }
+
+  *aType = type;
+  aValue = variableValue;
+  return true;
+}
+
+bool
+CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
+                                       nsString& aClosingChars)
+{
+  // A property value is invalid if it contains variable references and also:
+  //
+  //   * has unbalanced parens, brackets or braces
+  //   * has any BAD_STRING or BAD_URL tokens
+  //   * has any ';' or '!' tokens at the top level of a variable reference's
+  //     fallback
+  //
+  // If the property is a custom property (i.e. a variable declaration), then
+  // it is also invalid if it consists of no tokens, such as:
+  //
+  //   var-invalid:;
+  //
+  // Note that is valid for a custom property to have a value that consists
+  // solely of white space, such as:
+  //
+  //   var-valid: ;
+
+  // Stack of closing characters for currently open constructs.
+  StopSymbolCharStack stack;
+
+  // Indexes into ')' characters in |stack| that correspond to "var(".  This
+  // is used to stop parsing when we encounter a '!' or ';' at the top level
+  // of a variable reference's fallback.
+  nsAutoTArray<uint32_t, 16> references;
+
+  if (!GetToken(false)) {
+    // Variable value was empty since we reached EOF.
+    REPORT_UNEXPECTED_EOF(PEVariableEOF);
+    return false;
+  }
+
+  if (mToken.mType == eCSSToken_Symbol &&
+      (mToken.mSymbol == '!' ||
+       mToken.mSymbol == ')' ||
+       mToken.mSymbol == ';' ||
+       mToken.mSymbol == ']' ||
+       mToken.mSymbol == '}')) {
+    // Variable value was empty since we reached the end of the construct.
+    UngetToken();
+    REPORT_UNEXPECTED_TOKEN(PEVariableEmpty);
+    return false;
+  }
+
+  if (mToken.mType == eCSSToken_Whitespace) {
+    if (!GetToken(true)) {
+      // Variable value was white space only.  This is valid.
+      *aType = CSSVariableDeclarations::eTokenStream;
+      return true;
+    }
+  }
+
+  // Look for 'initial' or 'inherit' as the first non-white space token.
+  CSSVariableDeclarations::Type type = CSSVariableDeclarations::eTokenStream;
+  if (mToken.mType == eCSSToken_Ident) {
+    if (mToken.mIdent.LowerCaseEqualsLiteral("initial")) {
+      type = CSSVariableDeclarations::eInitial;
+    } else if (mToken.mIdent.LowerCaseEqualsLiteral("inherit")) {
+      type = CSSVariableDeclarations::eInherit;
+    }
+  }
+
+  if (type != CSSVariableDeclarations::eTokenStream) {
+    if (!GetToken(true)) {
+      // Variable value was 'initial' or 'inherit' followed by EOF.
+      *aType = type;
+      return true;
+    }
+    UngetToken();
+    if (mToken.mType == eCSSToken_Symbol &&
+        (mToken.mSymbol == '!' ||
+         mToken.mSymbol == ')' ||
+         mToken.mSymbol == ';' ||
+         mToken.mSymbol == ']' ||
+         mToken.mSymbol == '}')) {
+      // Variable value was 'initial' or 'inherit' followed by the end
+      // of the declaration.
+      *aType = type;
+      return true;
+    }
+  }
+
+  do {
+    switch (mToken.mType) {
+      case eCSSToken_Symbol:
+        if (mToken.mSymbol == '(') {
+          stack.AppendElement(')');
+        } else if (mToken.mSymbol == '[') {
+          stack.AppendElement(']');
+        } else if (mToken.mSymbol == '{') {
+          stack.AppendElement('}');
+        } else if (mToken.mSymbol == ';' ||
+                   mToken.mSymbol == '!') {
+          if (stack.IsEmpty()) {
+            UngetToken();
+            *aType = CSSVariableDeclarations::eTokenStream;
+            return true;
+          } else if (!references.IsEmpty() &&
+                     references.LastElement() == stack.Length() - 1) {
+            SkipUntilAllOf(stack);
+            return false;
+          }
+        } else if (mToken.mSymbol == ')' ||
+                   mToken.mSymbol == ']' ||
+                   mToken.mSymbol == '}') {
+          for (;;) {
+            if (stack.IsEmpty()) {
+              UngetToken();
+              *aType = CSSVariableDeclarations::eTokenStream;
+              return true;
+            }
+            PRUnichar c = stack.LastElement();
+            stack.TruncateLength(stack.Length() - 1);
+            if (!references.IsEmpty() &&
+                references.LastElement() == stack.Length()) {
+              references.TruncateLength(references.Length() - 1);
+            }
+            if (mToken.mSymbol == c) {
+              break;
+            }
+          }
+        }
+        break;
+
+      case eCSSToken_Function:
+        if (mToken.mIdent.LowerCaseEqualsLiteral("var")) {
+          if (GetToken(true)) {
+            if (mToken.mType != eCSSToken_Ident) {
+              UngetToken();
+              SkipUntil(')');
+              SkipUntilAllOf(stack);
+              return false;
+            }
+          }
+          if (ExpectSymbol(',', true)) {
+            if (ExpectSymbol(')', false)) {
+              // Comma must be followed by at least one fallback token.
+              SkipUntilAllOf(stack);
+              return false;
+            }
+            references.AppendElement(stack.Length());
+            stack.AppendElement(')');
+          } else if (!ExpectSymbol(')', true)) {
+            UngetToken();
+            SkipUntilAllOf(stack);
+            return false;
+          }
+        } else {
+          stack.AppendElement(')');
+        }
+        break;
+
+      case eCSSToken_Bad_String:
+        SkipUntilAllOf(stack);
+        return false;
+
+      case eCSSToken_Bad_URL:
+        SkipUntil(')');
+        SkipUntilAllOf(stack);
+        return false;
+
+      default:
+        break;
+    }
+  } while (GetToken(true));
+
+  // Append any implied closing characters.
+  uint32_t i = stack.Length();
+  while (i--) {
+    aClosingChars.Append(stack[i]);
+  }
+
+  *aType = type;
   return true;
 }
 
