@@ -298,12 +298,6 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientRemoteBuffer::OnActorDestroy()
 {
-  if (mTextureClient) {
-    mTextureClient->OnActorDestroy();
-  }
-  if (mTextureClientOnWhite) {
-    mTextureClientOnWhite->OnActorDestroy();
-  }
 }
 
 void
@@ -495,12 +489,6 @@ DeprecatedContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdate
 void
 DeprecatedContentClientRemoteBuffer::OnActorDestroy()
 {
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
-  if (mDeprecatedTextureClientOnWhite) {
-    mDeprecatedTextureClientOnWhite->OnActorDestroy();
-  }
 }
  
 void
@@ -660,18 +648,6 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
 void
 ContentClientDoubleBuffered::OnActorDestroy()
 {
-  if (mTextureClient) {
-    mTextureClient->OnActorDestroy();
-  }
-  if (mTextureClientOnWhite) {
-    mTextureClientOnWhite->OnActorDestroy();
-  }
-  if (mFrontClient) {
-    mFrontClient->OnActorDestroy();
-  }
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->OnActorDestroy();
-  }
 }
 
 DeprecatedContentClientDoubleBuffered::~DeprecatedContentClientDoubleBuffered()
@@ -777,18 +753,6 @@ DeprecatedContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpda
 void
 DeprecatedContentClientDoubleBuffered::OnActorDestroy()
 {
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
-  if (mDeprecatedTextureClientOnWhite) {
-    mDeprecatedTextureClientOnWhite->OnActorDestroy();
-  }
-  if (mFrontClient) {
-    mFrontClient->OnActorDestroy();
-  }
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->OnActorDestroy();
-  }
 }
 
 struct AutoDeprecatedTextureClient {
