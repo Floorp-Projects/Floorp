@@ -72,14 +72,6 @@ TextTrack::SetDefaultSettings()
   mReadyState = HTMLTrackElement::NONE;
 }
 
-void
-TextTrack::Update(double aTime)
-{
-  if (mCueList) {
-    mCueList->Update(aTime);
-  }
-}
-
 JSObject*
 TextTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {

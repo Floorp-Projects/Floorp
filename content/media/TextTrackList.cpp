@@ -28,15 +28,6 @@ TextTrackList::TextTrackList(nsISupports* aGlobal) : mGlobal(aGlobal)
 }
 
 void
-TextTrackList::Update(double aTime)
-{
-  uint32_t length = Length(), i;
-  for (i = 0; i < length; i++) {
-    mTextTracks[i]->Update(aTime);
-  }
-}
-
-void
 TextTrackList::GetAllActiveCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {
   nsTArray< nsRefPtr<TextTrackCue> > cues;
