@@ -1429,6 +1429,9 @@ CssRuleView.prototype = {
     this._clearRules();
     this._viewedElement = null;
     this._elementStyle = null;
+
+    this.previewTooltip.hide();
+    this.colorPicker.hide();
   },
 
   /**

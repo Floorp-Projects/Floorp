@@ -57,6 +57,8 @@ user_pref("extensions.enabledScopes", 5);
 user_pref("extensions.getAddons.cache.enabled", false);
 // Disable intalling any distribution add-ons
 user_pref("extensions.installDistroAddons", false);
+// XPI extensions are required for test harnesses to load
+user_pref("extensions.defaultProviders.enabled", true);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
