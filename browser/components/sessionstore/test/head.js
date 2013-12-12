@@ -412,6 +412,11 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   whenDelayedStartupFinished(win, () => aCallback(win));
   return win;
 }
+function promiseNewWindowLoaded(aOptions) {
+  let deferred = Promise.defer();
+  whenNewWindowLoaded(aOptions, deferred.resolve);
+  return deferred.promise;
+}
 
 /**
  * This waits for the browser-delayed-startup-finished notification of a given
