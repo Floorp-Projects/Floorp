@@ -1173,10 +1173,11 @@ MarkupContainer.prototype = {
         this.node.getImageData(IMAGE_PREVIEW_MAX_DIM).then(data => {
           if (data) {
             data.data.string().then(str => {
+              let res = {data: str, size: data.size};
               // Resolving the data promise and, to always keep tooltipData.data
               // as a promise, create a new one that resolves immediately
-              def.resolve(str, data.size);
-              this.tooltipData.data = promise.resolve(str, data.size);
+              def.resolve(res);
+              this.tooltipData.data = promise.resolve(res);
             });
           }
         });
@@ -1186,7 +1187,7 @@ MarkupContainer.prototype = {
 
   _buildTooltipContent: function(target, tooltip) {
     if (this.tooltipData && target === this.tooltipData.target) {
-      this.tooltipData.data.then((data, size) => {
+      this.tooltipData.data.then(({data, size}) => {
         tooltip.setImageContent(data, size);
       });
       return true;
