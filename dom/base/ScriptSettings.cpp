@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 
 #include "jsapi.h"
+#include "xpcpublic.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -91,6 +92,39 @@ void DestroyScriptSettings()
   delete ptr;
 }
 
+// Note: When we're ready to expose it, GetEntryGlobal will look similar to
+// GetIncumbentGlobal below.
+
+nsIGlobalObject*
+GetIncumbentGlobal()
+{
+  // We need the current JSContext in order to check the JS for
+  // scripted frames that may have appeared since anyone last
+  // manipulated the stack. If it's null, that means that there
+  // must be no entry point on the stack, and therefore no incumbent
+  // global either.
+  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
+  if (!cx) {
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    return nullptr;
+  }
+
+  // See what the JS engine has to say. If we've got a scripted caller
+  // override in place, the JS engine will lie to us and pretend that
+  // there's nothing on the JS stack, which will cause us to check the
+  // incumbent script stack below.
+  JS::RootedScript script(cx);
+  if (JS_DescribeScriptedCaller(cx, &script, nullptr)) {
+    JS::RootedObject global(cx, JS_GetGlobalFromScript(script));
+    MOZ_ASSERT(global);
+    return xpc::GetNativeForGlobal(global);
+  }
+
+  // Ok, nothing from the JS engine. Let's use whatever's on the
+  // explicit stack.
+  return ScriptSettingsStack::Ref().Incumbent();
+}
+
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
@@ -128,6 +162,7 @@ AutoEntryScript::~AutoEntryScript()
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
   : mStack(ScriptSettingsStack::Ref())
   , mEntry(aGlobalObject, /* aCandidate = */ false)
+  , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
 {
   mStack.Push(&mEntry);
 }
