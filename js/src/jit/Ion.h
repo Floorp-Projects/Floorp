@@ -16,247 +16,12 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/CompileWrappers.h"
+#include "jit/IonOptions.h"
 
 namespace js {
 namespace jit {
 
 class TempAllocator;
-
-// Possible register allocators which may be used.
-enum IonRegisterAllocator {
-    RegisterAllocator_LSRA,
-    RegisterAllocator_Backtracking,
-    RegisterAllocator_Stupid
-};
-
-struct IonOptions
-{
-    // Toggles whether global value numbering is used.
-    //
-    // Default: true
-    bool gvn;
-
-    // Toggles whether global value numbering is optimistic (true) or
-    // pessimistic (false).
-    //
-    // Default: true
-    bool gvnIsOptimistic;
-
-    // Toggles whether loop invariant code motion is performed.
-    //
-    // Default: true
-    bool licm;
-
-    // Toggles whether functions may be entered at loop headers.
-    //
-    // Default: true
-    bool osr;
-
-    // Toggles whether large scripts are rejected.
-    //
-    // Default: true
-    bool limitScriptSize;
-
-    // Describes which register allocator to use.
-    //
-    // Default: LSRA
-    IonRegisterAllocator registerAllocator;
-
-    // Toggles whether inlining is performed.
-    //
-    // Default: true
-    bool inlining;
-
-    // Toggles whether Edge Case Analysis is used.
-    //
-    // Default: true
-    bool edgeCaseAnalysis;
-
-    // Toggles whether Range Analysis is used.
-    //
-    // Default: true
-    bool rangeAnalysis;
-
-    // Whether to enable extra code to perform dynamic validation of
-    // RangeAnalysis results.
-    //
-    // Default: false
-    bool checkRangeAnalysis;
-
-    // Whether to protect the GC heap during Ion compilation and ensure that
-    // only threadsafe operations are performed on it.
-    //
-    // Default: false
-    bool checkThreadSafety;
-
-    // Whether to perform expensive graph-consistency DEBUG-only assertions.
-    // It can be useful to disable this to reduce DEBUG-compile time of large
-    // asm.js programs.
-    //
-    // Default: true
-    bool checkGraphConsistency;
-
-    // Toggles whether Unreachable Code Elimination is performed.
-    //
-    // Default: true
-    bool uce;
-
-    // Toggles whether Effective Address Analysis is performed.
-    //
-    // Default: true
-    bool eaa;
-
-#ifdef CHECK_OSIPOINT_REGISTERS
-    // Emit extra code to verify live regs at the start of a VM call
-    // are not modified before its OsiPoint.
-    //
-    // Default: false
-    bool checkOsiPointRegisters;
-#endif
-
-    // How many invocations or loop iterations are needed before functions
-    // are compiled with the baseline compiler.
-    //
-    // Default: 10
-    uint32_t baselineUsesBeforeCompile;
-
-    // How many invocations or loop iterations are needed before functions
-    // are compiled.
-    //
-    // Default: 1,000
-    uint32_t usesBeforeCompile;
-
-    // How many invocations or loop iterations are needed before calls
-    // are inlined, as a fraction of usesBeforeCompile.
-    //
-    // Default: .125
-    double usesBeforeInliningFactor;
-
-    // How many times we will try to enter a script via OSR before
-    // invalidating the script.
-    //
-    // Default: 6,000
-    uint32_t osrPcMismatchesBeforeRecompile;
-
-    // Number of bailouts without invalidation before we set
-    // JSScript::hadFrequentBailouts and invalidate.
-    //
-    // Default: 10
-    uint32_t frequentBailoutThreshold;
-
-    // Number of exception bailouts (resuming into catch/finally block) before
-    // we invalidate and forbid Ion compilation.
-    //
-    // Default: 10
-    uint32_t exceptionBailoutThreshold;
-
-    // Whether Ion should compile try-catch statements.
-    //
-    // Default: true
-    bool compileTryCatch;
-
-    // How many actual arguments are accepted on the C stack.
-    //
-    // Default: 4,096
-    uint32_t maxStackArgs;
-
-    // The maximum inlining depth.
-    //
-    // Default: 3
-    uint32_t maxInlineDepth;
-
-    // The maximum inlining depth for functions.
-    //
-    // Inlining small functions has almost no compiling overhead
-    // and removes the otherwise needed call overhead.
-    // The value is currently very low.
-    // Actually it is only needed to make sure we don't blow out the stack.
-    //
-    // Default: 10
-    uint32_t smallFunctionMaxInlineDepth;
-
-    // The bytecode length limit for small function.
-    //
-    // The default for this was arrived at empirically via benchmarking.
-    // We may want to tune it further after other optimizations have gone
-    // in.
-    //
-    // Default: 100
-    uint32_t smallFunctionMaxBytecodeLength;
-
-    // The maximum number of functions to polymorphically inline at a call site.
-    //
-    // Default: 4
-    uint32_t polyInlineMax;
-
-    // The maximum total bytecode size of an inline call site.
-    //
-    // Default: 1000
-    uint32_t inlineMaxTotalBytecodeLength;
-
-    // Whether functions are compiled immediately.
-    //
-    // Default: false
-    bool eagerCompilation;
-
-    // How many uses of a parallel kernel before we attempt compilation.
-    //
-    // Default: 1
-    uint32_t usesBeforeCompilePar;
-
-    // The maximum bytecode length the caller may have,
-    // before we stop inlining large functions in that caller.
-    //
-    // Default: 10000
-    uint32_t inliningMaxCallerBytecodeLength;
-
-    void setEagerCompilation() {
-        eagerCompilation = true;
-        usesBeforeCompile = 0;
-        baselineUsesBeforeCompile = 0;
-    }
-
-    MOZ_CONSTEXPR IonOptions()
-      : gvn(true),
-        gvnIsOptimistic(true),
-        licm(true),
-        osr(true),
-        limitScriptSize(true),
-        registerAllocator(RegisterAllocator_LSRA),
-        inlining(true),
-        edgeCaseAnalysis(true),
-        rangeAnalysis(true),
-        checkRangeAnalysis(false),
-        checkThreadSafety(false),
-        checkGraphConsistency(true),
-        uce(true),
-        eaa(true),
-#ifdef CHECK_OSIPOINT_REGISTERS
-        checkOsiPointRegisters(false),
-#endif
-        baselineUsesBeforeCompile(10),
-        usesBeforeCompile(1000),
-        usesBeforeInliningFactor(.125),
-        osrPcMismatchesBeforeRecompile(6000),
-        frequentBailoutThreshold(10),
-        exceptionBailoutThreshold(10),
-        compileTryCatch(true),
-        maxStackArgs(4096),
-        maxInlineDepth(3),
-        smallFunctionMaxInlineDepth(10),
-        smallFunctionMaxBytecodeLength(100),
-        polyInlineMax(4),
-        inlineMaxTotalBytecodeLength(1000),
-        eagerCompilation(false),
-        usesBeforeCompilePar(1),
-        inliningMaxCallerBytecodeLength(10000)
-    {
-    }
-
-    uint32_t usesBeforeInlining() {
-        return usesBeforeCompile * usesBeforeInliningFactor;
-    }
-};
 
 enum MethodStatus
 {
@@ -307,8 +72,6 @@ class IonContext
     IonContext *prev_;
     int assemblerCount_;
 };
-
-extern IonOptions js_IonOptions;
 
 // Initialize Ion statically for all JSRuntimes.
 bool InitializeIon();
@@ -417,7 +180,7 @@ TooManyArguments(unsigned nargs)
 
 void ForbidCompilation(JSContext *cx, JSScript *script);
 void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
-uint32_t UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc);
+uint32_t UsesBeforeIonCompile(JSScript *script, jsbytecode *pc);
 
 void PurgeCaches(JSScript *script, JS::Zone *zone);
 size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);

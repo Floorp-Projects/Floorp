@@ -9196,13 +9196,16 @@ class MHaveSameClass
     }
 };
 
+// Increase the usecount of the provided script upon execution and test if
+// the usecount surpasses the threshold. Upon hit it will recompile the
+// outermost script (i.e. not the inlined script).
 class MRecompileCheck : public MNullaryInstruction
 {
     JSScript *script_;
     uint32_t recompileThreshold_;
 
-    MRecompileCheck(JSScript *script_, uint32_t recompileThreshold)
-      : script_(script_),
+    MRecompileCheck(JSScript *script, uint32_t recompileThreshold)
+      : script_(script),
         recompileThreshold_(recompileThreshold)
     {
         setGuard();
