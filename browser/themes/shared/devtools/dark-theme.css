@@ -112,8 +112,7 @@
 .cm-s-mozilla .cm-builtin,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
-.variables-view-property > .title > .name,
-.variable-or-property[safe-getter] > .title > .name { /* pink/lavender */
+.variables-view-property > .title > .name { /* pink/lavender */
   color: #a673bf;
 }
 
