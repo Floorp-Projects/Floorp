@@ -119,8 +119,6 @@ public:
 
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
-
 protected:
   virtual nsIntPoint GetOriginOffset()
   {
@@ -128,10 +126,6 @@ protected:
   }
 
   bool PaintWillResample() { return mPaintWillResample; }
-
-  // These must be called before forgetting mTextureHost or mTextureHostOnWhite
-  void DestroyTextureHost();
-  void DestroyTextureHostOnWhite();
 
   nsIntRect mBufferRect;
   nsIntPoint mBufferRotation;
@@ -182,8 +176,6 @@ public:
   // texture hosts and SurfaceDescriptors. Note that we don't immediately
   // destroy our front buffer so that we can continue to composite.
   virtual void DestroyTextures() = 0;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   virtual nsIntPoint GetOriginOffset()
@@ -256,8 +248,6 @@ public:
                                  ISurfaceAllocator* aAllocator,
                                  const TextureInfo& aTextureInfo) MOZ_OVERRIDE;
   virtual void DestroyTextures() MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,
