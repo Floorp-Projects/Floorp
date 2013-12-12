@@ -11464,71 +11464,33 @@ class CGEventGetter(CGNativeMember):
                                                                    attr),
                                 (attr.type, []),
                                 ea)
-
-    def retval(self, type):
-        if type.isPrimitive() and type.tag() in builtinNames:
-            result = CGGeneric(builtinNames[type.tag()])
-            if type.nullable():
-                result = CGTemplatedType("Nullable", result)
-            return result.define()
-        if type.isDOMString():
-            return "void"
-        if type.isByteString():
-            return "void"
-        if type.isEnum():
-            enumName = type.unroll().inner.identifier.name
-            if type.nullable():
-                enumName = CGTemplatedType("Nullable",
-                                           CGGeneric(enumName)).define()
-            return enumName
-        if type.isGeckoInterface():
-            iface = type.unroll().inner;
-            nativeType = self.descriptorProvider.getDescriptor(
-                iface.identifier.name).nativeType
-            # Now trim off unnecessary namespaces
-            nativeType = nativeType.split("::")
-            if nativeType[0] == "mozilla":
-                nativeType.pop(0)
-                if nativeType[0] == "dom":
-                    nativeType.pop(0)
-            return CGWrapper(CGGeneric("::".join(nativeType)), post="*").define()
-        if type.isAny():
-            return "JS::Value"
-        if type.isObject():
-            return "JSObject*"
-        if type.isSpiderMonkeyInterface():
-            return "JSObject*"
-        raise TypeError("Don't know how to declare return value for %s" %
-                        type)
+        self.body = self.getMethodBody()
 
     def getArgs(self, returnType, argList):
-        args = [self.getArg(arg) for arg in argList]
-        if returnType.isDOMString():
-            args.append(Argument("nsString&", "aRetVal"))
-        elif returnType.isByteString():
-            args.append(Argument("nsCString&", "aRetVal"))
-        if needCx(returnType, argList, self.extendedAttrs, True):
-            args.insert(0, Argument("JSContext*", "aCx"))
         if not 'infallible' in self.extendedAttrs:
             raise TypeError("Event code generator does not support [Throws]!")
-        return args
+        if not self.member.isAttr():
+            raise TypeError("Event code generator does not support methods")
+        if self.member.isStatic():
+            raise TypeError("Event code generators does not support static attributes")
+        return CGNativeMember.getArgs(self, returnType, argList)
 
     def getMethodBody(self):
         type = self.member.type
         memberName = CGDictionary.makeMemberName(self.member.identifier.name)
         if (type.isPrimitive() and type.tag() in builtinNames) or type.isEnum() or type.isGeckoInterface():
-            return "  return " + memberName + ";"
+            return "return " + memberName + ";"
         if type.isDOMString() or type.isByteString():
-            return "  aRetVal = " + memberName + ";";
+            return "retval = " + memberName + ";";
         if type.isSpiderMonkeyInterface() or type.isObject():
-            ret =  "  if (%s) {\n" % memberName
-            ret += "    JS::ExposeObjectToActiveJS(%s);\n" % memberName
-            ret += "  }\n"
-            ret += "  return " + memberName + ";"
+            ret =  "if (%s) {\n" % memberName
+            ret += "  JS::ExposeObjectToActiveJS(%s);\n" % memberName
+            ret += "}\n"
+            ret += "return " + memberName + ";"
             return ret;
         if type.isAny():
-            ret =  "  JS::ExposeValueToActiveJS("+ memberName + ");\n"
-            ret += "  return " + memberName + ";"
+            ret =  "JS::ExposeValueToActiveJS("+ memberName + ");\n"
+            ret += "return " + memberName + ";"
             return ret;
         raise TypeError("Event code generator does not support this type!")
 
@@ -11542,11 +11504,7 @@ class CGEventGetter(CGNativeMember):
         if getattr(self.member, "originatingInterface",
                    cgClass.descriptor.interface) != cgClass.descriptor.interface:
             return ""
-        ret = self.retval(self.member.type);
-        methodName = self.descriptorProvider.name + '::' + self.name
-        args = (', '.join([a.declare() for a in self.args]))
-        body = self.getMethodBody()
-        return ret + "\n" + methodName + '(' + args + ') const\n{\n' + body + "\n}\n"
+        return CGNativeMember.define(self, cgClass)
 
 class CGEventSetter(CGNativeMember):
     def __init__(self):
