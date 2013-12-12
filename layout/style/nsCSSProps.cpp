@@ -2727,6 +2727,13 @@ enum ColumnCheckCounter {
   ePropertyCount_for_Column
 };
 
+enum VariablesCheckCounter {
+  #define CSS_PROP_VARIABLES ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_VARIABLES
+  ePropertyCount_for_Variables
+};
+
 #undef ENUM_DATA_FOR_PROPERTY
 
 /* static */ const size_t
