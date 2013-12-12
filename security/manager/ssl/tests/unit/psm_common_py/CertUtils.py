@@ -23,7 +23,8 @@ def init_dsa(db_dir):
 
 def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
                           ext_text, signer_key_filename = "",
-                          signer_cert_filename = ""):
+                          signer_cert_filename = "",
+                          subject_string = ""):
     """
     Generate an x509 certificate with a sha256 signature
 
@@ -64,9 +65,11 @@ def generate_cert_generic(db_dir, dest_dir, serial_num,  key_type, name,
       os.system("openssl ecparam -out " + key_name + " -name "+ key_type +
                 " -genkey");
     csr_name =  db_dir + "/"+ name + ".csr"
+    if not subject_string:
+      subject_string = '/CN=' + name
     os.system ("openssl req -new -key " + key_name + " -days 3650" +
                " -extensions v3_ca -batch -out " + csr_name +
-               " -utf8 -subj '/CN=" + name + "'")
+               " -utf8 -subj '" + subject_string + "'")
 
     extensions_filename = db_dir + "/openssl-exts"
     f = open(extensions_filename,'w')
