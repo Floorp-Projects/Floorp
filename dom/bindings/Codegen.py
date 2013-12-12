@@ -3297,7 +3297,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                  exceptionCodeIndented.define()))
         templateBody = CGWrapper(CGIndenter(CGList([templateBody, throw], "\n")), pre="{\n", post="\n}")
 
-        typeName = ("Owning" if isMember else "") + type.name
+        typeName = CGUnionStruct.unionTypeDecl(type, isMember)
         argumentTypeName = typeName + "Argument"
         if nullable:
             typeName = "Nullable<" + typeName + " >"
@@ -4729,7 +4729,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             resultArgs = None
         return result, True, None, resultArgs
     if returnType.isUnion():
-        result = CGGeneric("Owning" + returnType.unroll().name)
+        result = CGGeneric(CGUnionStruct.unionTypeName(returnType.unroll(), True))
         if not isMember and typeNeedsRooting(returnType):
             if returnType.nullable():
                 result = CGTemplatedType("NullableRootedUnion", result)
@@ -6911,7 +6911,7 @@ class CGUnionStruct(CGThing):
                          default=CGGeneric("return false;")).define(), const=True))
 
         constructors = [ctor]
-        selfName = ("Owning" if self.ownsMembers else "") + str(self.type)
+        selfName = CGUnionStruct.unionTypeName(self.type, self.ownsMembers)
         if self.ownsMembers:
             if len(traceCases):
                 traceBody = CGSwitch("mType", traceCases,
@@ -6969,6 +6969,28 @@ class CGUnionStruct(CGThing):
     @staticmethod
     def isUnionCopyConstructible(type):
         return all(isTypeCopyConstructible(t) for t in type.flatMemberTypes)
+
+    @staticmethod
+    def unionTypeName(type, ownsMembers):
+        """
+        Returns a string name for this known union type.
+        """
+        assert type.isUnion() and not type.nullable()
+        return ("Owning" if ownsMembers else "") + type.name
+
+    @staticmethod
+    def unionTypeDecl(type, ownsMembers):
+        """
+        Returns a string for declaring this possibly-nullable union type.
+        """
+        assert type.isUnion()
+        nullable = type.nullable()
+        if nullable:
+            type = type.inner
+        decl = CGGeneric(CGUnionStruct.unionTypeName(type, ownsMembers))
+        if nullable:
+            decl = CGTemplatedType("Nullable", decl)
+        return decl.define()
 
 class CGUnionConversionStruct(CGThing):
     def __init__(self, type, descriptorProvider):
@@ -9854,6 +9876,14 @@ class CGNativeMember(ClassMethod):
                 return CGDictionary.makeDictionaryName(type.inner), None, None
             # In this case we convert directly into our outparam to start with
             return "void", "", ""
+        if type.isUnion():
+            if isMember:
+                # Only the first member of the tuple matters here, but return
+                # bogus values for the others in case someone decides to use
+                # them.
+                return CGUnionStruct.unionTypeDecl(type, True), None, None
+            # In this case we convert directly into our outparam to start with
+            return "void", "", ""
 
         raise TypeError("Don't know how to declare return value for %s" %
                         type)
@@ -9883,6 +9913,10 @@ class CGNativeMember(ClassMethod):
             if nullable:
                 dictType = CGTemplatedType("Nullable", dictType)
             args.append(Argument("%s&" % dictType.define(), "retval"))
+        elif returnType.isUnion():
+            args.append(Argument("%s&" %
+                                 CGUnionStruct.unionTypeDecl(returnType, True),
+                                 "retval"))
         # And the ErrorResult
         if not 'infallible' in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
@@ -11492,6 +11526,8 @@ class CGEventGetter(CGNativeMember):
             ret =  "JS::ExposeValueToActiveJS("+ memberName + ");\n"
             ret += "return " + memberName + ";"
             return ret;
+        if type.isUnion():
+            return "retval = " + memberName + ";"
         raise TypeError("Event code generator does not support this type!")
 
     def declare(self, cgClass):
@@ -11641,6 +11677,11 @@ class CGEventClass(CGBindingImplClass):
                     nativeType = "JS::Heap<JS::Value>"
                 elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
                     nativeType = "JS::Heap<JSObject*>"
+                elif m.type.isUnion():
+                    nativeType = CGUnionStruct.unionTypeDecl(m.type, True)
+                else:
+                    raise TypeError("Don't know how to declare member of type %s" %
+                                    m.type)
                 members.append(ClassMember(CGDictionary.makeMemberName(m.identifier.name),
                                nativeType,
                                visibility="private",
@@ -11702,6 +11743,9 @@ class CGEventClass(CGBindingImplClass):
                     retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(" + name + ")\n"
                 elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
                     retVal += "  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(" + name + ")\n"
+                elif typeNeedsRooting(m.type):
+                    raise TypeError("Need to implement tracing for event "
+                                    "member of type %s" % m.type)
         return retVal
 
     def define(self):
