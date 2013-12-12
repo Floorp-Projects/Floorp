@@ -244,13 +244,5 @@ CompositableClient::OnTransaction()
 {
 }
 
-
-void
-CompositableChild::ActorDestroy(ActorDestroyReason why)
-{
-  if (mCompositableClient && why == AbnormalShutdown) {
-    mCompositableClient->OnActorDestroy();
-  }
-}
 } // namespace layers
 } // namespace mozilla
