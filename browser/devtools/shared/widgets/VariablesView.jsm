@@ -2680,12 +2680,19 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     }
     else if (name == "<exception>") {
       target.setAttribute("exception", "");
+      target.setAttribute("pseudo-item", "");
     }
     else if (name == "<return>") {
       target.setAttribute("return", "");
+      target.setAttribute("pseudo-item", "");
     }
     else if (name == "__proto__") {
       target.setAttribute("proto", "");
+      target.setAttribute("pseudo-item", "");
+    }
+
+    if (Object.keys(descriptor).length == 0) {
+      target.setAttribute("pseudo-item", "");
     }
   },
 
