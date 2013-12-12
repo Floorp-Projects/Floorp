@@ -73,7 +73,6 @@
 #include "ActiveLayerTracker.h"
 #include "mozilla/gfx/2D.h"
 
-#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
@@ -4780,10 +4779,6 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA) {
     wantImageSurface = true;
   }
-
-  // Force a system caller so that the below code doesn't think it's being
-  // called by JS. See bug 604262.
-  AutoSystemCaller asc;
 
   nsCOMPtr<imgIRequest> imgRequest;
   rv = aElement->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
