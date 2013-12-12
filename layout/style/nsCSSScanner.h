@@ -95,6 +95,42 @@ enum nsCSSTokenType {
   eCSSToken_HTMLComment,    // <!-- -->
 };
 
+// Classification of tokens used to determine if a "/**/" string must be
+// inserted if pasting token streams together when serializing.  We include
+// values corresponding to eCSSToken_Dashmatch and eCSSToken_Containsmatch,
+// as css-syntax does not treat these as whole tokens, but we will still
+// need to insert a "/**/" string between a '|' delim and a '|=' dashmatch
+// and between a '/' delim and a '*=' containsmatch.
+//
+// https://dvcs.w3.org/hg/csswg/raw-file/372e659027a0/css-syntax/Overview.html#serialization
+enum nsCSSTokenSerializationType {
+  eCSSTokenSerialization_Nothing,
+  eCSSTokenSerialization_Whitespace,
+  eCSSTokenSerialization_AtKeyword_or_Hash,
+  eCSSTokenSerialization_Number,
+  eCSSTokenSerialization_Dimension,
+  eCSSTokenSerialization_Percentage,
+  eCSSTokenSerialization_URange,
+  eCSSTokenSerialization_URL_or_BadURL,
+  eCSSTokenSerialization_Function,
+  eCSSTokenSerialization_Ident,
+  eCSSTokenSerialization_CDC,
+  eCSSTokenSerialization_DashMatch,
+  eCSSTokenSerialization_ContainsMatch,
+  eCSSTokenSerialization_Symbol_Hash,         // '#'
+  eCSSTokenSerialization_Symbol_At,           // '@'
+  eCSSTokenSerialization_Symbol_Dot_or_Plus,  // '.', '+'
+  eCSSTokenSerialization_Symbol_Minus,        // '-'
+  eCSSTokenSerialization_Symbol_OpenParen,    // '('
+  eCSSTokenSerialization_Symbol_Question,     // '?'
+  eCSSTokenSerialization_Symbol_Assorted,     // '$', '^', '~'
+  eCSSTokenSerialization_Symbol_Equals,       // '='
+  eCSSTokenSerialization_Symbol_Bar,          // '|'
+  eCSSTokenSerialization_Symbol_Slash,        // '/'
+  eCSSTokenSerialization_Symbol_Asterisk,     // '*'
+  eCSSTokenSerialization_Other                // anything else
+};
+
 // A single token returned from the scanner.  mType is always
 // meaningful; comments above describe which other fields are
 // meaningful for which token types.
