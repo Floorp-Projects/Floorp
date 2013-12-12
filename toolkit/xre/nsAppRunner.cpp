@@ -789,6 +789,16 @@ nsXULAppInfo::GetProcessType(uint32_t* aResult)
   return NS_OK;
 }
 
+static bool gBrowserTabsRemote = false;
+static bool gBrowserTabsRemoteInitialized = false;
+
+NS_IMETHODIMP
+nsXULAppInfo::GetBrowserTabsRemote(bool* aResult)
+{
+  *aResult = BrowserTabsRemote();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsXULAppInfo::EnsureContentProcess()
 {
@@ -4366,6 +4376,17 @@ GeckoProcessType
 XRE_GetProcessType()
 {
   return mozilla::startup::sChildProcessType;
+}
+
+bool
+mozilla::BrowserTabsRemote()
+{
+  if (!gBrowserTabsRemoteInitialized) {
+    gBrowserTabsRemote = Preferences::GetBool("browser.tabs.remote", false);
+    gBrowserTabsRemoteInitialized = true;
+  }
+
+  return gBrowserTabsRemote;
 }
 
 void
