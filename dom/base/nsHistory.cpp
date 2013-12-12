@@ -139,7 +139,7 @@ nsHistory::GetState(JSContext* aCx, ErrorResult& aRv) const
     return jsData;
   }
 
-  return JS::UndefinedValue();
+  return JS::NullValue();
 }
 
 void
