@@ -129,6 +129,15 @@ public:
                          bool                aIsImportant,
                          bool                aIsSVGMode = false);
 
+  // The same as ParseProperty but for a variable.
+  nsresult ParseVariable(const nsAString&    aVariableName,
+                         const nsAString&    aPropValue,
+                         nsIURI*             aSheetURL,
+                         nsIURI*             aBaseURL,
+                         nsIPrincipal*       aSheetPrincipal,
+                         mozilla::css::Declaration* aDeclaration,
+                         bool*               aChanged,
+                         bool                aIsImportant);
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be
    * non-null, replacing its current contents.  If aHTMLMode is true,

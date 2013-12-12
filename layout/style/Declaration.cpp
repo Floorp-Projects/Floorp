@@ -175,8 +175,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   // Since we're doing this check for 'inherit' and 'initial' up front,
   // we can also simplify the property serialization code by serializing
   // those values up front as well.
+  //
+  // Additionally, if a shorthand property was set using a value with a
+  // variable reference and none of its component longhand properties were
+  // then overridden on the declaration, we return the token stream
+  // assigned to the shorthand.
+  const nsCSSValue* tokenStream = nullptr;
   uint32_t totalCount = 0, importantCount = 0,
-           initialCount = 0, inheritCount = 0, unsetCount = 0;
+           initialCount = 0, inheritCount = 0, unsetCount = 0,
+           matchingTokenStreamCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
@@ -201,6 +208,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       ++initialCount;
     } else if (val->GetUnit() == eCSSUnit_Unset) {
       ++unsetCount;
+    } else if (val->GetUnit() == eCSSUnit_TokenStream &&
+               val->GetTokenStreamValue()->mShorthandPropertyID == aProperty) {
+      tokenStream = val;
+      ++matchingTokenStreamCount;
     }
   }
   if (importantCount != 0 && importantCount != totalCount) {
@@ -224,6 +235,16 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
   if (initialCount != 0 || inheritCount != 0 || unsetCount != 0) {
     // Case (2): partially initial, inherit or unset.
+    return;
+  }
+  if (tokenStream) {
+    if (matchingTokenStreamCount == totalCount) {
+      // Shorthand was specified using variable references and all of its
+      // longhand components were set by the shorthand.
+      aValue.Append(tokenStream->GetTokenStreamValue()->mTokenStream);
+    } else {
+      // In all other cases, serialize to the empty string.
+    }
     return;
   }
 
@@ -1210,7 +1231,8 @@ void
 Declaration::AddVariableDeclaration(const nsAString& aName,
                                     CSSVariableDeclarations::Type aType,
                                     const nsString& aValue,
-                                    bool aIsImportant)
+                                    bool aIsImportant,
+                                    bool aOverrideImportant)
 {
   MOZ_ASSERT(IsMutable());
 
@@ -1220,7 +1242,8 @@ Declaration::AddVariableDeclaration(const nsAString& aName,
     mVariableOrder.AppendElement(aName);
   }
 
-  if (!aIsImportant && mImportantVariables && mImportantVariables->Has(aName)) {
+  if (!aIsImportant && !aOverrideImportant &&
+      mImportantVariables && mImportantVariables->Has(aName)) {
     return;
   }
 
@@ -1234,6 +1257,9 @@ Declaration::AddVariableDeclaration(const nsAString& aName,
     }
     variables = mImportantVariables;
   } else {
+    if (mImportantVariables) {
+      mImportantVariables->Remove(aName);
+    }
     if (!mVariables) {
       mVariables = new CSSVariableDeclarations;
     }
