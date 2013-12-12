@@ -586,73 +586,31 @@ nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv
   aCSSParseEnv.mPrincipal = nullptr;
 }
 
-already_AddRefed<CSSValue>
-nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorResult& aRv)
+void
+nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 {
-  NS_ASSERTION(!mStyleContextHolder, "bad state");
+  MOZ_ASSERT(!mStyleContextHolder);
 
   nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
   if (!document) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
+    return;
   }
 
   document->FlushPendingLinkUpdates();
-
-  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
-                                                  nsCSSProps::eEnabled);
-
-  bool needsLayoutFlush;
-  nsComputedStyleMap::Entry::ComputeMethod getter;
-
-  if (prop == eCSSPropertyExtra_variable) {
-    needsLayoutFlush = false;
-    getter = nullptr;
-  } else {
-    // We don't (for now, anyway, though it may make sense to change it
-    // for all aliases, including those in nsCSSPropAliasList) want
-    // aliases to be enumerable (via GetLength and IndexedGetter), so
-    // handle them here rather than adding entries to
-    // the nsComputedStyleMap.
-    if (prop != eCSSProperty_UNKNOWN &&
-        nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
-      const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
-      NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
-                        "must have list of length 1");
-      prop = subprops[0];
-    }
-
-    const nsComputedStyleMap::Entry* propEntry =
-      GetComputedStyleMap()->FindEntryForProperty(prop);
-
-    if (!propEntry) {
-#ifdef DEBUG_ComputedDOMStyle
-      NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
-                                    NS_LITERAL_CSTRING(" is not queryable!")).get());
-#endif
-
-      // NOTE:  For branches, we should flush here for compatibility!
-      return nullptr;
-    }
-
-    needsLayoutFlush = propEntry->IsLayoutFlushNeeded();
-    getter = propEntry->mGetter;
-  }
 
   // Flush _before_ getting the presshell, since that could create a new
   // presshell.  Also note that we want to flush the style on the document
   // we're computing style in, not on the document mContent is in -- the two
   // may be different.
   document->FlushPendingNotifications(
-    needsLayoutFlush ? Flush_Layout : Flush_Style);
+    aNeedsLayoutFlush ? Flush_Layout : Flush_Style);
 #ifdef DEBUG
-  mFlushedPendingReflows = needsLayoutFlush;
+  mFlushedPendingReflows = aNeedsLayoutFlush;
 #endif
 
   mPresShell = document->GetShell();
   if (!mPresShell || !mPresShell->GetPresContext()) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
+    return;
   }
 
   if (!mPseudo && mStyleType == eAll) {
@@ -704,8 +662,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
                                                     mPresShell,
                                                     mStyleType);
     if (!mStyleContextHolder) {
-      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
+      return;
     }
 
     NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
@@ -723,6 +680,68 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
       mStyleContextHolder = styleIfVisited;
     }
   }
+}
+
+void
+nsComputedDOMStyle::ClearCurrentStyleSources()
+{
+  mOuterFrame = nullptr;
+  mInnerFrame = nullptr;
+  mPresShell = nullptr;
+
+  // Release the current style context for it should be re-resolved
+  // whenever a frame is not available.
+  mStyleContextHolder = nullptr;
+}
+
+already_AddRefed<CSSValue>
+nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorResult& aRv)
+{
+  nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
+                                                  nsCSSProps::eEnabled);
+
+  bool needsLayoutFlush;
+  nsComputedStyleMap::Entry::ComputeMethod getter;
+
+  if (prop == eCSSPropertyExtra_variable) {
+    needsLayoutFlush = false;
+    getter = nullptr;
+  } else {
+    // We don't (for now, anyway, though it may make sense to change it
+    // for all aliases, including those in nsCSSPropAliasList) want
+    // aliases to be enumerable (via GetLength and IndexedGetter), so
+    // handle them here rather than adding entries to
+    // GetQueryablePropertyMap.
+    if (prop != eCSSProperty_UNKNOWN &&
+        nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
+      const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
+      NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
+                        "must have list of length 1");
+      prop = subprops[0];
+    }
+
+    const nsComputedStyleMap::Entry* propEntry =
+      GetComputedStyleMap()->FindEntryForProperty(prop);
+
+    if (!propEntry) {
+#ifdef DEBUG_ComputedDOMStyle
+      NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
+                                    NS_LITERAL_CSTRING(" is not queryable!")).get());
+#endif
+
+      // NOTE:  For branches, we should flush here for compatibility!
+      return nullptr;
+    }
+
+    needsLayoutFlush = propEntry->IsLayoutFlushNeeded();
+    getter = propEntry->mGetter;
+  }
+
+  UpdateCurrentStyleSources(needsLayoutFlush);
+  if (!mStyleContextHolder) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
 
   nsRefPtr<CSSValue> val;
   if (prop == eCSSPropertyExtra_variable) {
@@ -732,13 +751,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
     val = (this->*getter)();
   }
 
-  mOuterFrame = nullptr;
-  mInnerFrame = nullptr;
-  mPresShell = nullptr;
-
-  // Release the current style context for it should be re-resolved
-  // whenever a frame is not available.
-  mStyleContextHolder = nullptr;
+  ClearCurrentStyleSources();
 
   return val.forget();
 }
