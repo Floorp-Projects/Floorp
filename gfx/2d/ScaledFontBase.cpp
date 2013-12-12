@@ -113,36 +113,41 @@ ScaledFontBase::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *a
 }
 
 void
-ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *aTransformHint)
+ScaledFontBase::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
 {
 #ifdef USE_CAIRO
-  PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(aBuilder);
+  if (aBackendType == BACKEND_CAIRO) {
+    MOZ_ASSERT(mScaledFont);
 
-  
-  cairo_t *ctx = cairo_create(DrawTargetCairo::GetDummySurface());
+    PathBuilderCairo* builder = static_cast<PathBuilderCairo*>(aBuilder);
+    cairo_t *ctx = cairo_create(DrawTargetCairo::GetDummySurface());
 
-  if (aTransformHint) {
-    cairo_matrix_t mat;
-    GfxMatrixToCairoMatrix(*aTransformHint, mat);
-    cairo_set_matrix(ctx, &mat);
+    if (aTransformHint) {
+      cairo_matrix_t mat;
+      GfxMatrixToCairoMatrix(*aTransformHint, mat);
+      cairo_set_matrix(ctx, &mat);
+    }
+
+    // Convert our GlyphBuffer into an array of Cairo glyphs.
+    std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
+    for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
+      glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
+      glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
+      glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
+    }
+
+    cairo_set_scaled_font(ctx, mScaledFont);
+    cairo_glyph_path(ctx, &glyphs[0], aBuffer.mNumGlyphs);
+
+    RefPtr<PathCairo> cairoPath = new PathCairo(ctx);
+    cairo_destroy(ctx);
+
+    cairoPath->AppendPathToBuilder(builder);
+    return;
   }
-
-  // Convert our GlyphBuffer into an array of Cairo glyphs.
-  std::vector<cairo_glyph_t> glyphs(aBuffer.mNumGlyphs);
-  for (uint32_t i = 0; i < aBuffer.mNumGlyphs; ++i) {
-    glyphs[i].index = aBuffer.mGlyphs[i].mIndex;
-    glyphs[i].x = aBuffer.mGlyphs[i].mPosition.x;
-    glyphs[i].y = aBuffer.mGlyphs[i].mPosition.y;
-  }
-
-  cairo_set_scaled_font(ctx, mScaledFont);
-  cairo_glyph_path(ctx, &glyphs[0], aBuffer.mNumGlyphs);
-
-  RefPtr<PathCairo> cairoPath = new PathCairo(ctx);
-  cairo_destroy(ctx);
-
-  cairoPath->AppendPathToBuilder(builder);
 #endif
+
+  MOZ_CRASH("The specified backend type is not supported by CopyGlyphsToBuilder");
 }
 
 #ifdef USE_CAIRO_SCALED_FONT
