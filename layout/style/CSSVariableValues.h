@@ -14,6 +14,8 @@
 
 namespace mozilla {
 
+class CSSVariableResolver;
+
 class CSSVariableValues
 {
 public:
@@ -68,6 +70,12 @@ public:
            nsString aValue,
            nsCSSTokenSerializationType aFirstToken,
            nsCSSTokenSerializationType aLastToken);
+
+  /**
+   * Copies the variables from this object into aResolver, marking them as
+   * computed, inherited values.
+   */
+  void AddVariablesToResolver(CSSVariableResolver* aResolver) const;
 
 private:
   struct Variable
