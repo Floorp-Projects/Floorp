@@ -1122,14 +1122,11 @@ gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
 static void
 ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
 {
-    /* Don't mark properties for singletons. They'll be purged by the GC. */
-    if (!type->singleton) {
-        unsigned count = type->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            types::Property *prop = type->getProperty(i);
-            if (prop && JSID_IS_STRING(prop->id))
-                PushMarkStack(gcmarker, JSID_TO_STRING(prop->id));
-        }
+    unsigned count = type->getPropertyCount();
+    for (unsigned i = 0; i < count; i++) {
+        types::Property *prop = type->getProperty(i);
+        if (prop && JSID_IS_STRING(prop->id))
+            PushMarkStack(gcmarker, JSID_TO_STRING(prop->id));
     }
 
     if (TaggedProto(type->proto).isObject())
@@ -1350,7 +1347,7 @@ GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
 }
 
 void
-GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t addr)
+GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
 {
     if (tag == TypeTag) {
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
@@ -1364,35 +1361,6 @@ GCMarker::processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t ad
             pushObject(obj);
     } else if (tag == IonCodeTag) {
         MarkChildren(this, reinterpret_cast<jit::IonCode *>(addr));
-    } else if (tag == ArenaTag) {
-        ArenaHeader *aheader = reinterpret_cast<ArenaHeader *>(addr);
-        AllocKind thingKind = aheader->getAllocKind();
-        size_t thingSize = Arena::thingSize(thingKind);
-
-        for ( ; aheader; aheader = aheader->next) {
-            Arena *arena = aheader->getArena();
-            FreeSpan firstSpan(aheader->getFirstFreeSpan());
-            const FreeSpan *span = &firstSpan;
-
-            for (uintptr_t thing = arena->thingsStart(thingKind); ; thing += thingSize) {
-                JS_ASSERT(thing <= arena->thingsEnd());
-                if (thing == span->first) {
-                    if (!span->hasNext())
-                        break;
-                    thing = span->last;
-                    span = span->nextSpan();
-                } else {
-                    JSObject *object = reinterpret_cast<JSObject *>(thing);
-                    if (object->hasSingletonType() && object->markIfUnmarked(getMarkColor()))
-                        pushObject(object);
-                    budget.step();
-                }
-            }
-            if (budget.isOverBudget()) {
-                pushArenaList(aheader);
-                return;
-            }
-        }
     }
 }
 
@@ -1430,7 +1398,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         goto scan_obj;
     }
 
-    processMarkStackOther(budget, tag, addr);
+    processMarkStackOther(tag, addr);
     return;
 
   scan_value_array:

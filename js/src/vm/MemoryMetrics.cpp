@@ -215,7 +215,6 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 
     // Measure the compartment object itself, and things hanging off it.
     compartment->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
-                                        &cStats.typeInferencePendingArrays,
                                         &cStats.typeInferenceAllocationSiteTables,
                                         &cStats.typeInferenceArrayTypeTables,
                                         &cStats.typeInferenceObjectTypeTables,
