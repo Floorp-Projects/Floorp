@@ -178,15 +178,20 @@ function doChangeMaxLineBoxWidth(aWidth) {
     range = BrowserApp.selectedTab._mReflozPoint.range;
   }
 
-  docViewer.changeMaxLineBoxWidth(aWidth);
+  try {
+    docViewer.pausePainting();
+    docViewer.changeMaxLineBoxWidth(aWidth);
 
-  if (range) {
-    BrowserEventHandler._zoomInAndSnapToRange(range);
-  } else {
-    // In this case, we actually didn't zoom into a specific range. It probably
-    // happened from a page load reflow-on-zoom event, so we need to make sure
-    // painting is re-enabled.
-    BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
+    if (range) {
+      BrowserEventHandler._zoomInAndSnapToRange(range);
+    } else {
+      // In this case, we actually didn't zoom into a specific range. It
+      // probably happened from a page load reflow-on-zoom event, so we
+      // need to make sure painting is re-enabled.
+      BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
+    }
+  } finally {
+    docViewer.resumePainting();
   }
 }
 
@@ -3223,10 +3228,17 @@ Tab.prototype = {
       BrowserApp.selectedTab._mReflozPoint = null;
     }
 
+    let docViewer = null;
+
     if (isZooming &&
         BrowserEventHandler.mReflozPref &&
         BrowserApp.selectedTab._mReflozPoint &&
         BrowserApp.selectedTab.probablyNeedRefloz) {
+      let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
+      docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
+      docViewer.pausePainting();
+
       BrowserApp.selectedTab.performReflowOnZoom(aViewport);
       BrowserApp.selectedTab.probablyNeedRefloz = false;
     }
@@ -3255,6 +3267,9 @@ Tab.prototype = {
       aViewport.fixedMarginLeft / aViewport.zoom);
 
     Services.obs.notifyObservers(null, "after-viewport-change", "");
+    if (docViewer) {
+        docViewer.resumePainting();
+    }
   },
 
   setResolution: function(aZoom, aForce) {
@@ -4680,6 +4695,7 @@ var BrowserEventHandler = {
     rect.y = Math.max(topPos, viewport.cssPageTop);
     rect.w = viewport.cssWidth;
     rect.h = viewport.cssHeight;
+    rect.animate = false;
 
     sendMessageToJava(rect);
     BrowserApp.selectedTab._mReflozPoint = null;
