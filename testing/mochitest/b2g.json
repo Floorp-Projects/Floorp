@@ -205,18 +205,6 @@
     "content/base/test/test_object.html":"needs plugin support",
     "content/base/test/test_bug827160.html": "needs plugin support",
 
-    "content/base/test/csp/test_CSP_evalscript.html":"observer not working",
-    "content/base/test/csp/test_CSP_evalscript_getCRMFRequest.html":"observer not working",
-    "content/base/test/csp/test_CSP_frameancestors.html":"observer not working",
-    "content/base/test/csp/test_CSP.html":"observer not working",
-    "content/base/test/csp/test_bug836922_npolicies.html":"observer not working",
-    "content/base/test/csp/test_bug886164.html":"observer not working",
-    "content/base/test/csp/test_CSP_bug916446.html":"observer not working",
-    "content/base/test/csp/test_CSP_bug909029.html":"observer not working",
-    "content/base/test/csp/test_policyuri_regression_from_multipolicy.html":"observer not working",
-    "content/base/test/csp/test_nonce_source.html":"observer not working",
-    "content/base/test/csp/test_CSP_bug941404.html":"observer not working",
-
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
     "content/base/test/test_plugin_freezing.html":"",
     "content/base/test/test_bug466409.html":"",
@@ -229,7 +217,6 @@
     "content/base/test/test_bug717511.html":"",
     "content/base/test/test_copypaste.xhtml":"bug 904183",
     "content/base/test/test_copypaste.xul":"bug 904183",
-    "content/base/test/csp/test_csp_redirects.html":"",
     "content/base/test/test_fileapi_slice.html":"",
     "content/base/test/test_mixed_content_blocker.html":"",
     "content/base/test/test_mixed_content_blocker_bug803225.html":"",
@@ -255,7 +242,6 @@
     "content/svg/content/test/test_text_selection.html":"Mouse selection not workin on b2g",
     "content/svg/content/test/test_SVGAnimatedImageSMILDisabled.html":"",
     "content/xml/document/test/test_bug392338.html":"",
-    "content/base/test/csp/test_bothCSPheaders.html":"",
     "content/base/test/test_bug383430.html":"",
     "content/base/test/test_bug422403-2.xhtml":"",
     "content/base/test/test_bug424359-1.html":"",
@@ -433,6 +419,8 @@
     "layout/style/test/test_visited_reftests.html":"bug 870262, :visited support",
 
     "Harness_sanity/test_sanityEventUtils.html": "bug 688052",
-    "Harness_sanity/test_sanitySimpletest.html": "bug 688052"
+    "Harness_sanity/test_sanitySimpletest.html": "bug 688052",
+
+    "content/base/test/csp/test_CSP_evalscript_getCRMFRequest.html":"no window.crypto support in multiprocess"
   }
 }
