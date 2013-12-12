@@ -14,10 +14,6 @@ Cu.importGlobalProperties(["indexedDB"]);
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-const RIL_MOBILEMESSAGEDATABASESERVICE_CONTRACTID =
-  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1";
-const RIL_MOBILEMESSAGEDATABASESERVICE_CID =
-  Components.ID("{29785f90-6b5b-11e2-9201-3b280170b2ec}");
 const RIL_GETMESSAGESCURSOR_CID =
   Components.ID("{484d1ad8-840e-4782-9dc4-9ebc4d914937}");
 const RIL_GETTHREADSCURSOR_CID =
@@ -27,7 +23,6 @@ const DEBUG = false;
 const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
-const DB_NAME = "sms";
 const DB_VERSION = 20;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
@@ -81,12 +76,11 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function () {
 });
 
 /**
- * MobileMessageDatabaseService
+ * MobileMessageDB
  */
-function MobileMessageDatabaseService() {
-  // Prime the directory service's cache to ensure that the ProfD entry exists
-  // by the time IndexedDB queries for it off the main thread. (See bug 743635.)
-  Services.dirsvc.get("ProfD", Ci.nsIFile);
+this.MobileMessageDB = function(aDbName, aDbVersion) {
+  this.dbName = aDbName;
+  this.dbVersion = aDbVersion || DB_VERSION;
 
   let that = this;
   this.newTxn(READ_ONLY, function(error, txn, messageStore){
@@ -116,13 +110,11 @@ function MobileMessageDatabaseService() {
     };
   });
   this.updatePendingTransactionToError();
-}
-MobileMessageDatabaseService.prototype = {
+};
 
-  classID: RIL_MOBILEMESSAGEDATABASESERVICE_CID,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRilMobileMessageDatabaseService,
-                                         Ci.nsIMobileMessageDatabaseService,
-                                         Ci.nsIObserver]),
+MobileMessageDB.prototype = {
+  dbName: null,
+  dbVersion: null,
 
   /**
    * Cache the DB here.
@@ -133,11 +125,6 @@ MobileMessageDatabaseService.prototype = {
    * Last sms/mms object store key value in the database.
    */
   lastMessageId: 0,
-
-  /**
-   * nsIObserver
-   */
-  observe: function observe() {},
 
   /**
    * Prepare the database. This may include opening the database and upgrading
@@ -163,16 +150,16 @@ MobileMessageDatabaseService.prototype = {
       callback(null, db);
     }
 
-    let request = indexedDB.open(DB_NAME, DB_VERSION);
+    let request = indexedDB.open(this.dbName, this.dbVersion);
     request.onsuccess = function (event) {
-      if (DEBUG) debug("Opened database:", DB_NAME, DB_VERSION);
+      if (DEBUG) debug("Opened database:", self.dbName, self.dbVersion);
       gotDB(event.target.result);
     };
     request.onupgradeneeded = function (event) {
       if (DEBUG) {
-        debug("Database needs upgrade:", DB_NAME,
+        debug("Database needs upgrade:", self.dbName,
               event.oldVersion, event.newVersion);
-        debug("Correct new database version:", event.newVersion == DB_VERSION);
+        debug("Correct new database version:", event.newVersion == self.dbVersion);
       }
 
       let db = event.target.result;
@@ -2597,8 +2584,8 @@ let FilterSearcherHelper = {
   /**
    * Instanciate a filtering transaction.
    *
-   * @param service
-   *        A MobileMessageDatabaseService. Used to create
+   * @param mmdb
+   *        A MobileMessageDB.
    * @param txn
    *        Ongoing IDBTransaction context object.
    * @param error
@@ -2612,7 +2599,7 @@ let FilterSearcherHelper = {
    *        Result colletor function. It takes three parameters -- txn, message
    *        id, and message timestamp.
    */
-  transact: function transact(service, txn, error, filter, reverse, collect) {
+  transact: function transact(mmdb, txn, error, filter, reverse, collect) {
     if (error) {
       //TODO look at event.target.errorCode, pick appropriate error constant.
       if (DEBUG) debug("IDBRequest error " + error.target.errorCode);
@@ -2702,9 +2689,9 @@ let FilterSearcherHelper = {
       }
 
       let participantStore = txn.objectStore(PARTICIPANT_STORE_NAME);
-      service.findParticipantIdsByAddresses(participantStore, filter.numbers,
-                                            false, true,
-                                            (function (participantIds) {
+      mmdb.findParticipantIdsByAddresses(participantStore, filter.numbers,
+                                         false, true,
+                                         (function (participantIds) {
         if (!participantIds || !participantIds.length) {
           // Oops! No such participant at all.
 
@@ -3027,8 +3014,8 @@ UnionResultsCollector.prototype = {
   }
 };
 
-function GetMessagesCursor(service, callback) {
-  this.service = service;
+function GetMessagesCursor(mmdb, callback) {
+  this.mmdb = mmdb;
   this.callback = callback;
   this.collector = new ResultsCollector();
 
@@ -3038,7 +3025,7 @@ GetMessagesCursor.prototype = {
   classID: RIL_GETMESSAGESCURSOR_CID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICursorContinueCallback]),
 
-  service: null,
+  mmdb: null,
   callback: null,
   collector: null,
 
@@ -3052,7 +3039,7 @@ GetMessagesCursor.prototype = {
         debug("notifyNextMessageInListGot - messageId: " + messageId);
       }
       let domMessage =
-        self.service.createDomMessageFromRecord(event.target.result);
+        self.mmdb.createDomMessageFromRecord(event.target.result);
       self.callback.notifyCursorResult(domMessage);
     };
     getRequest.onerror = function onerror(event) {
@@ -3084,7 +3071,7 @@ GetMessagesCursor.prototype = {
 
     // Or, we have to open another transaction ourselves.
     let self = this;
-    this.service.newTxn(READ_ONLY, function (error, txn, messageStore) {
+    this.mmdb.newTxn(READ_ONLY, function (error, txn, messageStore) {
       if (error) {
         self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
@@ -3101,8 +3088,8 @@ GetMessagesCursor.prototype = {
   }
 };
 
-function GetThreadsCursor(service, callback) {
-  this.service = service;
+function GetThreadsCursor(mmdb, callback) {
+  this.mmdb = mmdb;
   this.callback = callback;
   this.collector = new ResultsCollector();
 
@@ -3112,7 +3099,7 @@ GetThreadsCursor.prototype = {
   classID: RIL_GETTHREADSCURSOR_CID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICursorContinueCallback]),
 
-  service: null,
+  mmdb: null,
   callback: null,
   collector: null,
 
@@ -3165,7 +3152,7 @@ GetThreadsCursor.prototype = {
 
     // Or, we have to open another transaction ourselves.
     let self = this;
-    this.service.newTxn(READ_ONLY, function (error, txn, threadStore) {
+    this.mmdb.newTxn(READ_ONLY, function (error, txn, threadStore) {
       if (error) {
         self.callback.notifyCursorError(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
         return;
@@ -3182,8 +3169,10 @@ GetThreadsCursor.prototype = {
   }
 }
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MobileMessageDatabaseService]);
+this.EXPORTED_SYMBOLS = [
+  'MobileMessageDB'
+];
 
 function debug() {
-  dump("MobileMessageDatabaseService: " + Array.slice(arguments).join(" ") + "\n");
+  dump("MobileMessageDB: " + Array.slice(arguments).join(" ") + "\n");
 }
