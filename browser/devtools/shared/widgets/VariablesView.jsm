@@ -913,6 +913,7 @@ VariablesView.prototype = {
     label.className = "variables-view-empty-notice";
     label.setAttribute("value", this._emptyTextValue);
 
+    this._parent.setAttribute("empty", "");
     this._parent.appendChild(label);
     this._emptyTextNode = label;
   },
@@ -925,6 +926,7 @@ VariablesView.prototype = {
       return;
     }
 
+    this._parent.removeAttribute("empty");
     this._parent.removeChild(this._emptyTextNode);
     this._emptyTextNode = null;
   },
