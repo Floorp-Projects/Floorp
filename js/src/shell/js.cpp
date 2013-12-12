@@ -3591,13 +3591,17 @@ EscapeForShell(AutoCStringVector &argv)
 }
 #endif
 
-Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
+static Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
 
+#ifdef DEBUG
+#if (defined(JS_CPU_X86) || defined(JS_CPU_X64)) && defined(JS_ION)
 static bool
 PropagateFlagToNestedShells(const char *flag)
 {
     return sPropagatedFlags.append(flag);
 }
+#endif
+#endif
 
 static bool
 NestedShell(JSContext *cx, unsigned argc, jsval *vp)
