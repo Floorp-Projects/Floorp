@@ -10,7 +10,7 @@ EXPORTS.mozilla.net += [
     'usrsctp.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'netinet/sctp_asconf.c',
     'netinet/sctp_auth.c',
     'netinet/sctp_bsd_addr.c',
@@ -20,6 +20,7 @@ UNIFIED_SOURCES += [
     'netinet/sctp_hashdriver.c',
     'netinet/sctp_indata.c',
     'netinet/sctp_input.c',
+    'netinet/sctp_output.c',
     'netinet/sctp_pcb.c',
     'netinet/sctp_peeloff.c',
     'netinet/sctp_sha1.c',
@@ -34,11 +35,6 @@ UNIFIED_SOURCES += [
     'user_mbuf.c',
     'user_recv_thread.c',
     'user_sctp_timer_iterate.c',
-]
-
-# These files cannot be built in unified mode because they rely on __FAVOR_BSD in udp.h.
-SOURCES += [
-    'netinet/sctp_output.c',
     'user_socket.c',
 ]
 
