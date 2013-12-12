@@ -4,6 +4,15 @@
 
 #include "nsISupports.idl"
 
+%{C++
+
+namespace mozilla {
+// Simple C++ getter for nsIXULRuntime::browserTabsRemote
+bool BrowserTabsRemote();
+}
+
+%}
+
 /**
  * Provides information about the XUL runtime.
  * @status UNSTABLE - This interface is not frozen and will probably change in
@@ -11,7 +20,7 @@
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(cb0b8eda-4c83-4d0e-a63c-d3b65714bc85)]
+[scriptable, uuid(33bd1630-611e-11e3-949a-0800200c9a66)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -66,6 +75,12 @@ interface nsIXULRuntime : nsISupports
    * The type of the caller's process.  Returns one of the values above.
    */
   readonly attribute unsigned long processType;
+
+  /**
+   * If true, browser tabs may be opened in a different process from the main
+   * browser UI.
+   */
+  readonly attribute boolean browserTabsRemote;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.
