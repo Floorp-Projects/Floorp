@@ -506,19 +506,19 @@
 /* Custom configurable/enumerable/writable or frozen/sealed/extensible
  * variables and properties */
 
-.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]):not([scope]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self]):not([pseudo-item]) > .title > .name {
   opacity: 0.6;
 }
 
-.variable-or-property[non-configurable] > .title > .name {
+.variable-or-property[non-configurable]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #99f;
 }
 
-.variable-or-property[non-writable] > .title > .name {
+.variable-or-property[non-writable]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #f99;
 }
 
-.variable-or-property[safe-getter] > .title > .name {
+.variable-or-property[safe-getter]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #8b0;
 }
 
