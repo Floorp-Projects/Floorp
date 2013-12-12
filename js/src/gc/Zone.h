@@ -310,8 +310,6 @@ struct Zone : public JS::shadow::Zone,
         js_ReportAllocationOverflow(nullptr);
     }
 
-    void markTypes(JSTracer *trc);
-
     js::types::TypeZone types;
 
     void sweep(js::FreeOp *fop, bool releaseTypes);

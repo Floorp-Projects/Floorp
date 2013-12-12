@@ -2087,10 +2087,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    cStats.typeInferenceTypeScripts,
                    "Memory used by type sets associated with scripts.");
 
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
-                   cStats.typeInferencePendingArrays,
-                   "Memory used for solving constraints during type inference.");
-
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
                    cStats.typeInferenceAllocationSiteTables,
                    "Memory indexing type objects associated with allocation sites.");

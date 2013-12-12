@@ -5825,7 +5825,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      safepoints_.size(), callTargets.length(),
                      patchableBackedges_.length());
     if (!ionScript) {
-        recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
+        recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
         return false;
     }
 
@@ -5850,7 +5850,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         // Use js_free instead of IonScript::Destroy: the cache list and
         // backedge list are still uninitialized.
         js_free(ionScript);
-        recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
+        recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
         return false;
     }
 
@@ -5871,7 +5871,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                         /* resetUses */ false, /* cancelOffThread*/ false))
         {
             js_free(ionScript);
-            recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
+            recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
             return false;
         }
     }
