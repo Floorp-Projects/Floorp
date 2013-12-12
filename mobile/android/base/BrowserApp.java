@@ -187,15 +187,6 @@ abstract public class BrowserApp extends GeckoApp
     // race by determining if the web content should be hidden at the animation's end.
     private boolean mHideWebContentOnAnimationEnd = false;
 
-    private SiteIdentityPopup mSiteIdentityPopup;
-
-    public SiteIdentityPopup getSiteIdentityPopup() {
-        if (mSiteIdentityPopup == null)
-            mSiteIdentityPopup = new SiteIdentityPopup(this);
-
-        return mSiteIdentityPopup;
-    }
-
     @Override
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         if (tab == null) {
@@ -217,9 +208,6 @@ abstract public class BrowserApp extends GeckoApp
             case SELECTED:
                 if (Tabs.getInstance().isSelectedTab(tab)) {
                     updateHomePagerForTab(tab);
-
-                    if (mSiteIdentityPopup != null)
-                        mSiteIdentityPopup.dismiss();
 
                     final TabsPanel.Panel panel = tab.isPrivate()
                                                 ? TabsPanel.Panel.PRIVATE_TABS
@@ -617,8 +605,7 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        if (mSiteIdentityPopup != null && mSiteIdentityPopup.isShowing()) {
-            mSiteIdentityPopup.dismiss();
+        if (mBrowserToolbar.onBackPressed()) {
             return;
         }
 
@@ -1047,9 +1034,7 @@ abstract public class BrowserApp extends GeckoApp
         invalidateOptionsMenu();
         updateSideBarState();
         mTabsPanel.refresh();
-        if (mSiteIdentityPopup != null) {
-            mSiteIdentityPopup.dismiss();
-        }
+        mBrowserToolbar.refresh();
     }
 
     @Override
