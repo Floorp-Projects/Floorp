@@ -273,6 +273,11 @@
 
 /* SideMenuWidget */
 
+.side-menu-widget-container {
+  /* Hack: force hardware acceleration */
+  transform: translateX(0px);
+}
+
 .side-menu-widget-container[theme="dark"] {
   background: url(background-noise-toolbar.png), hsl(208,11%,27%);
   color: #fff;
@@ -428,6 +433,11 @@
 }
 
 /* VariablesView */
+
+.variables-view-container:not([empty]) {
+  /* Hack: force hardware acceleration */
+  transform: translateX(1px);
+}
 
 .variables-view-empty-notice {
   color: GrayText;
