@@ -621,8 +621,17 @@ IonBuilder::build()
     if (!current)
         return false;
 
-    IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d)",
-            script()->filename(), script()->lineno(), (void *)script(), (int)script()->getUseCount());
+#ifdef DEBUG
+    if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
+        IonSpew(IonSpew_Scripts, "Recompiling script %s:%d (%p) (usecount=%d, level=%s)",
+                script()->filename(), script()->lineno(), (void *)script(),
+                (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
+    } else {
+        IonSpew(IonSpew_Scripts, "Analyzing script %s:%d (%p) (usecount=%d, level=%s)",
+                script()->filename(), script()->lineno(), (void *)script(),
+                (int)script()->getUseCount(), OptimizationLevelString(optimizationInfo().level()));
+    }
+#endif
 
     if (!initParameters())
         return false;
