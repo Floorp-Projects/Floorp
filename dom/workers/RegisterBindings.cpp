@@ -71,7 +71,7 @@ WorkerPrivate::RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, aGlobal) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, aGlobal) ||
       !URLBinding_workers::GetConstructorObject(aCx, aGlobal) ||
-      !URLSearchParamsBinding::GetConstructorObject(aCx, global) ||
+      !URLSearchParamsBinding::GetConstructorObject(aCx, aGlobal) ||
       !WorkerBinding::GetConstructorObject(aCx, aGlobal) ||
       !WorkerLocationBinding_workers::GetConstructorObject(aCx, aGlobal) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, aGlobal)) {

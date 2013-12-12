@@ -19,7 +19,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
 </div>
 <pre id="test">
 </pre>
-  <script type="application/javascript">
+<a href="http://www.example.net?a=b&c=d" id="anchor">foobar</a>
+<area href="http://www.example.net?a=b&c=d" id="area">foobar</area>
+<script type="application/javascript">
 
   /** Test for Bug 887836 **/
   ok("URLSearchParams" in window, "window.URLSearchParams exists");
@@ -117,10 +119,104 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testURL() {
+    var url = new URL('http://www.example.net?a=b&c=d');
+    ok(url.searchParams, "URL searchParams exists!");
+    ok(url.searchParams.has('a'), "URL.searchParams.has('a')");
+    is(url.searchParams.get('a'), 'b', "URL.searchParams.get('a')");
+    ok(url.searchParams.has('c'), "URL.searchParams.has('c')");
+    is(url.searchParams.get('c'), 'd', "URL.searchParams.get('c')");
+
+    url.searchParams.set('e', 'f');
+    ok(url.href.indexOf('e=f') != 1, 'URL right');
+
+    var u = new URLSearchParams();
+    u.append('foo', 'bar');
+    url.searchParams = u;
+    is(url.searchParams, u, "URL.searchParams is the same object");
+    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
+    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+
+    url.searchParams = null;
+    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
+    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+
+    var url2 = new URL('http://www.example.net?e=f');
+    url.searchParams = url2.searchParams;
+    isnot(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
+    is(url.searchParams.get('e'), 'f', "URL.searchParams.get('e')");
+
+    url.href = "http://www.example.net?bar=foo";
+    is(url.searchParams.get('bar'), 'foo', "URL.searchParams.get('bar')");
+
+    runTest();
+  }
+
+  function testElement(e) {
+    ok(e, 'element exists');
+    ok(e.searchParams, "e.searchParams exists!");
+    ok(e.searchParams.has('a'), "e.searchParams.has('a')");
+    is(e.searchParams.get('a'), 'b', "e.searchParams.get('a')");
+    ok(e.searchParams.has('c'), "e.searchParams.has('c')");
+    is(e.searchParams.get('c'), 'd', "e.searchParams.get('c')");
+
+    e.searchParams.set('e', 'f');
+    ok(e.href.indexOf('e=f') != 1, 'e is right');
+
+    var u = new URLSearchParams();
+    u.append('foo', 'bar');
+    e.searchParams = u;
+    is(e.searchParams, u, "e.searchParams is the same object");
+    is(e.searchParams.get('foo'), 'bar', "e.searchParams.get('foo')");
+    is(e.href, 'http://www.example.net/?foo=bar', 'e is right');
+
+    e.searchParams = null;
+    is(e.searchParams.get('foo'), 'bar', "e.searchParams.get('foo')");
+    is(e.href, 'http://www.example.net/?foo=bar', 'e is right');
+
+    var url2 = new URL('http://www.example.net?e=f');
+    e.searchParams = url2.searchParams;
+    isnot(e.searchParams, url2.searchParams, "e.searchParams is not the same object");
+    is(e.searchParams.get('e'), 'f', "e.searchParams.get('e')");
+
+    e.href = "http://www.example.net?bar=foo";
+    is(e.searchParams.get('bar'), 'foo', "e.searchParams.get('bar')");
+
+    e.setAttribute('href', "http://www.example.net?bar2=foo2");
+    is(e.searchParams.get('bar2'), 'foo2', "e.searchParams.get('bar2')");
+
+    runTest();
+  }
+
+  function testEncoding() {
+    var encoding = [ [ '1', '1' ],
+                     [ 'a b', 'a+b' ],
+                     [ '<>', '%3C%3E' ],
+                     [ '\u0541', '%D5%81'] ];
+
+    for (var i = 0; i < encoding.length; ++i) {
+      var a = new URLSearchParams();
+      a.set('a', encoding[i][0]);
+
+      var url = new URL('http://www.example.net');
+      url.searchParams = a;
+      is(url.href, 'http://www.example.net/?a=' + encoding[i][1]);
+
+      var url2 = new URL(url.href);
+      is(url2.searchParams.get('a'), encoding[i][0], 'a is still there');
+    }
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
-    testParserURLSearchParams
+    testParserURLSearchParams,
+    testURL,
+    function() { testElement(document.getElementById('anchor')) },
+    function() { testElement(document.getElementById('area')) },
+    testEncoding
   ];
 
   function runTest() {
@@ -136,6 +232,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
   SimpleTest.waitForExplicitFinish();
   runTest();
 
-  </script>
+</script>
 </body>
 </html>
