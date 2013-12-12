@@ -60,6 +60,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'CSSVariableDeclarations.h',
+    'CSSVariableValues.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -83,6 +84,7 @@ UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
     'CSSVariableDeclarations.cpp',
+    'CSSVariableValues.cpp',
     'Declaration.cpp',
     'ErrorReporter.cpp',
     'ImageLoader.cpp',
