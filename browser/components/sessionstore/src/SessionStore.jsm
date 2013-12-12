@@ -86,8 +86,10 @@ const BROWSER_EVENTS = [
 // The number of milliseconds in a day
 const MS_PER_DAY = 1000.0 * 60.0 * 60.0 * 24.0;
 
-#ifndef XP_WIN
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
 #define BROKEN_WM_Z_ORDER
+#endif
 #endif
 
 Cu.import("resource://gre/modules/Services.jsm", this);
