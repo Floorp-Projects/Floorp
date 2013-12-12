@@ -9,7 +9,6 @@ toolkit.jar:
 * content/mozapps/extensions/extensions.js                      (content/extensions.js)
 * content/mozapps/extensions/extensions.xml                     (content/extensions.xml)
   content/mozapps/extensions/updateinfo.xsl                     (content/updateinfo.xsl)
-  content/mozapps/extensions/extensions-content.js              (content/extensions-content.js)
   content/mozapps/extensions/about.xul                          (content/about.xul)
   content/mozapps/extensions/about.js                           (content/about.js)
   content/mozapps/extensions/list.xul                           (content/list.xul)

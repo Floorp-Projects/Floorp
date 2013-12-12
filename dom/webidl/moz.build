@@ -571,6 +571,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozWifiP2pStatusChangeEvent.webidl',
         'MozWifiStatusChangeEvent.webidl',
     ]
+else:
+    WEBIDL_FILES += [
+        'InstallTrigger.webidl',
+    ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     WEBIDL_FILES += [

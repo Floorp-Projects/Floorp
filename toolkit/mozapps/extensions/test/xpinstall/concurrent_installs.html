@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+<title>Concurrent InstallTrigger tests</title>
+<script type="text/javascript">
+function installCallback(url, status) {
+  window.installTriggerCallback({loc: location.href, xpi: url});
+  document.getElementById("status").textContent = status;
+}
+
+function startInstall() {
+  var root = location.href.replace("concurrent_installs.html", "");
+  var triggers = {
+    "Unsigned XPI": root + "unsigned.xpi"
+  };
+  try {
+    document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);
+  }
+  catch (e) {
+    document.getElementById("return").textContent = "exception";
+    throw e;
+  }
+}
+</script>
+</head>
+<body>
+<p>InstallTrigger tests</p>
+<button id="installnow" onclick="startInstall()">Click to install</button>
+<p id="return"></p>
+<p id="status"></p>
+</body>
+</html>

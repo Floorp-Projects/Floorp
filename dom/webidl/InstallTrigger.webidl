@@ -1,54 +1,40 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include "nsISupports.idl"
-
-interface nsIVariant;
 
 /**
  * A callback function that webpages can implement to be notified when triggered
  * installs complete.
  */
-[scriptable, function, uuid(bb22f5c0-3ca1-48f6-873c-54e87987700f)]
-interface amIInstallCallback : nsISupports
-{
-  /**
-   * Called when an install completes or fails.
-   *
-   * @param  aUrl
-   *         The url of the add-on being installed
-   * @param  aStatus
-   *         0 if the install was successful or negative if not
-   */
-  void onInstallEnded(in AString aUrl, in int32_t aStatus);
-};
+callback InstallTriggerCallback = void(DOMString url, short status);
 
 /**
  * The interface for the InstallTrigger object available to all websites.
  */
-[scriptable, uuid(14b4e84d-001c-4403-a608-52a67ffaab40)]
-interface amIInstallTrigger : nsISupports
-{
+[ChromeOnly,
+ JSImplementation="@mozilla.org/addons/installtrigger;1"]
+interface InstallTriggerImpl {
   /**
    * Retained for backwards compatibility.
    */
-  const uint32_t SKIN    = 1;
-  const uint32_t LOCALE  = 2;
-  const uint32_t CONTENT = 4;
-  const uint32_t PACKAGE = 7;
+  const unsigned short SKIN = 1;
+  const unsigned short LOCALE = 2;
+  const unsigned short CONTENT = 4;
+  const unsigned short PACKAGE = 7;
+
+  /**
+   * Tests if installation is enabled.
+   */
+  boolean enabled();
 
   /**
    * Tests if installation is enabled.
    *
    * @deprecated Use "enabled" in the future.
    */
-  [deprecated] boolean updateEnabled();
-
-  /**
-   * Tests if installation is enabled.
-   */
-  boolean enabled();
+  boolean updateEnabled();
 
   /**
    * Starts a new installation of a set of add-ons.
@@ -65,11 +51,12 @@ interface amIInstallTrigger : nsISupports
    *         A callback to call as each installation succeeds or fails
    * @return true if the installations were successfully started
    */
-  boolean install(in nsIVariant aArgs, [optional] in amIInstallCallback aCallback);
+  boolean install(object installs, optional InstallTriggerCallback callback);
 
   /**
-   * Starts installing a new add-on. This method is deprecated, please use
-   * "install" in the future.
+   * Starts installing a new add-on.
+   *
+   * @deprecated use "install" in the future.
    *
    * @param  aType
    *         Unused, retained for backwards compatibility
@@ -79,7 +66,7 @@ interface amIInstallTrigger : nsISupports
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
-  boolean installChrome(in uint32_t aType, in AString aUrl, in AString aSkin);
+  boolean installChrome(unsigned short type, DOMString url, DOMString skin);
 
   /**
    * Starts installing a new add-on.
@@ -92,5 +79,5 @@ interface amIInstallTrigger : nsISupports
    *         Unused, retained for backwards compatibility
    * @return true if the installation was successfully started
    */
-  [deprecated] boolean startSoftwareUpdate(in AString aUrl, [optional] in int32_t aFlags);
+  boolean startSoftwareUpdate(DOMString url, optional unsigned short flags);
 };
