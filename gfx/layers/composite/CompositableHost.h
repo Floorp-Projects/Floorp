@@ -295,7 +295,7 @@ public:
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
 
   void AddTextureHost(TextureHost* aTexture);
-  virtual void UseTextureHost(TextureHost* aTexture) {}
+  virtual void UseTextureHost(TextureHost* aTexture);
   // If a texture host is flagged for deferred removal, the compositable will
   // get an option to run any cleanup code early, that is when it would have
   // been run if the texture host was not marked deferred.
