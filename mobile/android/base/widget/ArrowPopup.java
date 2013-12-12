@@ -33,6 +33,10 @@ public class ArrowPopup extends PopupWindow {
     protected LinearLayout mContent;
     protected boolean mInflated;
 
+    public ArrowPopup(GeckoApp aActivity) {
+        this(aActivity, null);
+    }
+
     public ArrowPopup(GeckoApp aActivity, View aAnchor) {
         super(aActivity);
         mActivity = aActivity;
