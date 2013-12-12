@@ -50,16 +50,28 @@
           <vbox id="updateBox">
 #ifdef MOZ_UPDATER
             <deck id="updateDeck" orient="vertical">
-              <hbox id="updateButtonBox" align="center">
+              <hbox id="downloadAndInstall" align="center">
+                <button id="downloadAndInstallButton" align="start"
+                        oncommand="gAppUpdater.doUpdate();"/>
+                        <!-- label and accesskey will be filled by JS -->
+                <spacer flex="1"/>
+              </hbox>
+              <hbox id="apply" align="center">
                 <button id="updateButton" align="start"
-                        oncommand="gAppUpdater.buttonOnCommand();"/>
+                        label="&update.updateButton.label;"
+                        accesskey="&update.updateButton.accesskey;"
+                        oncommand="gAppUpdater.buttonRestartAfterDownload();"/>
+                <spacer flex="1"/>
+              </hbox>
+              <hbox id="applyBillboard" align="center">
+                <button id="applyButtonBillboard" align="start"
+                        label="&update.applyButtonBillboard.label;"
+                        accesskey="&update.applyButtonBillboard.accesskey;"
+                        oncommand="gAppUpdater.buttonApplyBillboard();"/>
                 <spacer flex="1"/>
               </hbox>
               <hbox id="checkingForUpdates" align="center">
                 <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
-              </hbox>
-              <hbox id="checkingAddonCompat" align="center">
-                <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
               </hbox>
               <hbox id="downloading" align="center">
                 <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
