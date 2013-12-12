@@ -63,7 +63,7 @@ flyoutpanel[visible] {
   border-width: 1px;
   -moz-border-start-style: solid;
   border-color: #c2c2c2;
-  padding: 40px;
+  padding: @metro_spacing_large@;
   width: 100%;
 }
 
