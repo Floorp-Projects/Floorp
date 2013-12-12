@@ -186,7 +186,16 @@ public class HomePager extends ViewPager {
     public void redisplay(LoaderManager lm, FragmentManager fm) {
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
-        Page currentPage = adapter.getPageAtPosition(getCurrentItem());
+        // If mInitialPage is non-null, this means the HomePager hasn't
+        // finished loading its config yet. Simply re-show() with the
+        // current target page.
+        final Page currentPage;
+        if (mInitialPage != null) {
+            currentPage = mInitialPage;
+        } else {
+            currentPage = adapter.getPageAtPosition(getCurrentItem());
+        }
+
         show(lm, fm, currentPage, null);
     }
 
