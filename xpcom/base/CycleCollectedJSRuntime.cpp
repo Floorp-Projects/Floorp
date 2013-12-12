@@ -59,6 +59,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMJSClass.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -441,6 +442,8 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
     mJSRuntime(nullptr),
     mJSHolders(512)
 {
+  mozilla::dom::InitScriptSettings();
+
   mJSRuntime = JS_NewRuntime(aMaxbytes, aUseHelperThreads);
   if (!mJSRuntime) {
     MOZ_CRASH();
@@ -470,6 +473,8 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
   nsCycleCollector_forgetJSRuntime();
+
+  mozilla::dom::DestroyScriptSettings();
 }
 
 size_t
