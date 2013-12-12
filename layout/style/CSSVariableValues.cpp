@@ -64,6 +64,12 @@ CSSVariableValues::operator==(const CSSVariableValues& aOther) const
   return true;
 }
 
+size_t
+CSSVariableValues::Count() const
+{
+  return mVariables.Length();
+}
+
 bool
 CSSVariableValues::Get(const nsAString& aName, nsString& aValue) const
 {
@@ -89,6 +95,12 @@ CSSVariableValues::Get(const nsAString& aName,
   aFirstToken = mVariables[id].mFirstToken;
   aLastToken = mVariables[id].mLastToken;
   return true;
+}
+
+void
+CSSVariableValues::GetVariableAt(size_t aIndex, nsAString& aName) const
+{
+  aName = mVariables[aIndex].mVariableName;
 }
 
 void
