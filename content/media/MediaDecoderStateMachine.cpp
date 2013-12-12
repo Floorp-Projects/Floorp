@@ -1313,7 +1313,7 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->NotifyPlaybackStopped();
 
   if (IsPlaying()) {
-    mPlayDuration += DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
+    mPlayDuration = GetClock();
     mPlayStartTime = TimeStamp();
   }
   // Notify the audio thread, so that it notices that we've stopped playing,
@@ -2422,7 +2422,6 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 int64_t
 MediaDecoderStateMachine::GetAudioClock()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
   // We must hold the decoder monitor while using the audio stream off the
   // audio thread to ensure that it doesn't get destroyed on the audio thread
   // while we're using it.
@@ -2457,8 +2456,8 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
   return mBasePosition + pos * mPlaybackRate + mStartTime;
 }
 
-int64_t MediaDecoderStateMachine::GetClock() {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
+int64_t MediaDecoderStateMachine::GetClock()
+{
   AssertCurrentThreadInMonitor();
 
   // Determine the clock time. If we've got audio, and we've not reached
