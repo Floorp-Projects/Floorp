@@ -35,7 +35,7 @@ interface nsISpeculativeConnect : nsISupports
  * inline) to determine whether or not to actually make a speculative
  * connection.
  */
-[builtinclass, uuid(2b6d6fb6-ab28-4f4c-af84-bfdbb7866d72)]
+[builtinclass, uuid(f5f70897-2edf-4c00-a1c3-87d51b92cec5)]
 interface nsISpeculativeConnectionOverrider : nsISupports
 {
     /**
@@ -50,11 +50,4 @@ interface nsISpeculativeConnectionOverrider : nsISupports
      * connect via SPDY or not.
      */
     [infallible] readonly attribute boolean ignorePossibleSpdyConnections;
-
-    /**
-     * Used to determine if we will ignore the existence of any currently idle
-     * connections when we decide whether or not to make a speculative
-     * connection.
-     */
-    [infallible] readonly attribute boolean ignoreIdle;
 };
