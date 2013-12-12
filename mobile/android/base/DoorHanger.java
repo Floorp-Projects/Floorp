@@ -36,7 +36,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-class DoorHanger extends LinearLayout {
+public class DoorHanger extends LinearLayout {
     private static final String LOGTAG = "GeckoDoorHanger";
 
     private static int sInputPadding = -1;
@@ -73,20 +73,20 @@ class DoorHanger extends LinearLayout {
     // Color used for dividers above and between buttons.
     private int mDividerColor;
 
-    static enum Theme {
+    public static enum Theme {
         LIGHT,
         DARK
     }
 
-    interface OnButtonClickListener {
+    public interface OnButtonClickListener {
         public void onButtonClick(DoorHanger dh, String tag);
     }
 
-    DoorHanger(Context context, Theme theme) {
+    public DoorHanger(Context context, Theme theme) {
         this(context, 0, null, theme);
     }
 
-    DoorHanger(Context context, int tabId, String value) {
+    public DoorHanger(Context context, int tabId, String value) {
         this(context, tabId, value, Theme.LIGHT);
     }
 
@@ -133,40 +133,40 @@ class DoorHanger extends LinearLayout {
         }
     }
 
-    int getTabId() {
+    public int getTabId() {
         return mTabId;
     }
 
-    String getValue() {
+    public String getValue() {
         return mValue;
     }
 
-    List<PromptInput> getInputs() {
+    public List<PromptInput> getInputs() {
         return mInputs;
     }
 
-    CheckBox getCheckBox() {
+    public CheckBox getCheckBox() {
         return mCheckBox;
     }
 
-    void showDivider() {
+    public void showDivider() {
         mDivider.setVisibility(View.VISIBLE);
     }
 
-    void hideDivider() {
+    public void hideDivider() {
         mDivider.setVisibility(View.GONE);
     }
 
-    void setMessage(String message) {
+    public void setMessage(String message) {
         mTextView.setText(message);
     }
 
-    void setIcon(int resId) {
+    public void setIcon(int resId) {
         mIcon.setImageResource(resId);
         mIcon.setVisibility(View.VISIBLE);
     }
 
-    void addLink(String label, String url, String delimiter) {
+    public void addLink(String label, String url, String delimiter) {
         String title = mTextView.getText().toString();
         SpannableString titleWithLink = new SpannableString(title + delimiter + label);
         URLSpan linkSpan = new URLSpan(url) {
@@ -185,7 +185,7 @@ class DoorHanger extends LinearLayout {
         mTextView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    void addButton(final String text, final String tag, final OnButtonClickListener listener) {
+    public void addButton(final String text, final String tag, final OnButtonClickListener listener) {
         final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
         button.setText(text);
         button.setTag(tag);
@@ -215,7 +215,7 @@ class DoorHanger extends LinearLayout {
         mChoicesLayout.addView(button, sButtonParams);
     }
 
-    void setOptions(final JSONObject options) {
+    public void setOptions(final JSONObject options) {
         final int persistence = options.optInt("persistence");
         if (persistence > 0) {
             mPersistence = persistence;
@@ -323,7 +323,7 @@ class DoorHanger extends LinearLayout {
      * @param isShowing Whether or not this doorhanger is currently visible to the user.
      *                 (e.g. the DoorHanger view might be VISIBLE, but its parent could be hidden)
      */
-    boolean shouldRemove(boolean isShowing) {
+    public boolean shouldRemove(boolean isShowing) {
         if (mPersistWhileVisible && isShowing) {
             // We still want to decrement mPersistence, even if the popup is showing
             if (mPersistence != 0)
