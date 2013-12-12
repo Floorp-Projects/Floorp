@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
+#include "ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 
@@ -4945,7 +4946,7 @@ nsGlobalWindow::RequestAnimationFrame(const JS::Value& aCallback,
   }
 
   nsRefPtr<FrameRequestCallback> callback =
-    new FrameRequestCallback(&aCallback.toObject());
+    new FrameRequestCallback(&aCallback.toObject(), GetIncumbentGlobal());
 
   ErrorResult rv;
   *aHandle = RequestAnimationFrame(*callback, rv);
@@ -13232,7 +13233,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new EventHandlerNonNull(callable);                           \
+      handler = new EventHandlerNonNull(callable, GetIncumbentGlobal());     \
     }                                                                        \
     SetOn##name_(handler);                                                   \
     return NS_OK;                                                            \
@@ -13262,7 +13263,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnErrorEventHandlerNonNull(callable);                    \
+      handler = new OnErrorEventHandlerNonNull(callable, GetIncumbentGlobal()); \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
@@ -13293,7 +13294,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     JSObject *callable;                                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnBeforeUnloadEventHandlerNonNull(callable);             \
+      handler = new OnBeforeUnloadEventHandlerNonNull(callable, GetIncumbentGlobal()); \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
