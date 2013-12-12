@@ -159,7 +159,10 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       }
     }
 
-    if (mState == GESTURE_WAITING_SINGLE_TAP &&
+    if (mState == GESTURE_LONG_TAP_UP) {
+      HandleLongTapUpEvent(event);
+      mState = GESTURE_NONE;
+    } else if (mState == GESTURE_WAITING_SINGLE_TAP &&
         event.mTime - mTapStartTime > MAX_TAP_TIME) {
       // Extended taps are immediately dispatched as single taps
       CancelLongTapTimeoutTask();
@@ -314,6 +317,13 @@ nsEventStatus GestureEventListener::HandleLongTapEvent(const MultiTouchInput& aE
   return mAsyncPanZoomController->HandleInputEvent(tapEvent);
 }
 
+nsEventStatus GestureEventListener::HandleLongTapUpEvent(const MultiTouchInput& aEvent)
+{
+  TapGestureInput tapEvent(TapGestureInput::TAPGESTURE_LONG_UP, aEvent.mTime,
+      aEvent.mTouches[0].mScreenPoint, aEvent.modifiers);
+  return mAsyncPanZoomController->HandleInputEvent(tapEvent);
+}
+
 nsEventStatus GestureEventListener::HandleTapCancel(const MultiTouchInput& aEvent)
 {
   mTapStartTime = 0;
@@ -326,6 +336,7 @@ nsEventStatus GestureEventListener::HandleTapCancel(const MultiTouchInput& aEven
     break;
 
   case GESTURE_WAITING_DOUBLE_TAP:
+  case GESTURE_LONG_TAP_UP:
     mState = GESTURE_NONE;
     break;
   default:
@@ -366,7 +377,7 @@ void GestureEventListener::TimeoutLongTap()
   mLongTapTimeoutTask = nullptr;
   // If the tap has not been released, this is a long press.
   if (mState == GESTURE_WAITING_SINGLE_TAP) {
-    mState = GESTURE_NONE;
+    mState = GESTURE_LONG_TAP_UP;
 
     HandleLongTapEvent(mLastTouchInput);
   }
