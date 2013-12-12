@@ -273,6 +273,8 @@ public:
   virtual void UseTexture(CompositableClient* aCompositable,
                           TextureClient* aClient) MOZ_OVERRIDE;
 
+  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
+
   virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
                                        const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE
   {

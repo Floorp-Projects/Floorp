@@ -254,14 +254,6 @@ CompositableClient::AddTextureClient(TextureClient* aClient)
 }
 
 void
-CompositableClient::RemoveTextureClient(TextureClient* aClient)
-{
-  MOZ_ASSERT(aClient);
-  mForwarder->RemoveTexture(aClient);
-  aClient->MarkInvalid();
-}
-
-void
 CompositableClient::OnTransaction()
 {
 }

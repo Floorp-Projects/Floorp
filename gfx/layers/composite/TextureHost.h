@@ -333,6 +333,14 @@ public:
   virtual void DeallocateSharedData() {}
 
   /**
+   * Should be overridden in order to force the TextureHost to drop all references
+   * to it's shared data.
+   *
+   * This is important to ensure the correctness of the deallocation protocol.
+   */
+  virtual void ForgetSharedData() {}
+
+  /**
    * An ID to differentiate TextureHosts of a given CompositableHost.
    *
    * A TextureHost and its corresponding TextureClient always have the same ID.
@@ -502,6 +510,8 @@ public:
 
   virtual void DeallocateSharedData() MOZ_OVERRIDE;
 
+  virtual void ForgetSharedData() MOZ_OVERRIDE;
+
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
   virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
@@ -530,6 +540,8 @@ public:
   ~MemoryTextureHost();
 
   virtual void DeallocateSharedData() MOZ_OVERRIDE;
+
+  virtual void ForgetSharedData() MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 

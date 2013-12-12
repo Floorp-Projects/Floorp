@@ -133,12 +133,6 @@ public:
   virtual bool AddTextureClient(TextureClient* aClient);
 
   /**
-   * Tells the Compositor to delete the TextureHost corresponding to this
-   * TextureClient.
-   */
-  virtual void RemoveTextureClient(TextureClient* aClient);
-
-  /**
    * A hook for the Compositable to execute whatever it held off for next transaction.
    */
   virtual void OnTransaction();
