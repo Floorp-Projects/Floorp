@@ -7,29 +7,6 @@
 
 ifndef INCLUDED_JAVA_BUILD_MK #{
 
-ifdef ANDROID_RESFILES #{
-ifndef IGNORE_ANDROID_RESFILES #{
-res-dep := .deps-copy-java-res
-
-GENERATED_DIRS += res
-GARBAGE        += $(res-dep)
-
-export:: $(res-dep)
-
-res-dep-preqs := \
-  $(addprefix $(srcdir)/,$(ANDROID_RESFILES)) \
-  $(call mkdir_deps,res) \
-  $(if $(IS_LANGUAGE_REPACK),FORCE) \
-  $(NULL)
-
-# nop-build: only copy res/ files when needed
-$(res-dep): $(res-dep-preqs)
-	$(call copy_dir,$(srcdir)/res,$(CURDIR)/res)
-	@$(TOUCH) $@
-endif #} IGNORE_ANDROID_RESFILES
-endif #} ANDROID_RESFILES
-
-
 ifdef JAVAFILES #{
 GENERATED_DIRS += classes
 
@@ -39,7 +16,8 @@ endif #} JAVAFILES
 
 
 ifdef ANDROID_APK_NAME #{
-_ANDROID_RES_FLAG := -S $(or $(ANDROID_RES_DIR),res)
+android_res_dirs := $(addprefix $(srcdir)/,$(or $(ANDROID_RES_DIRS),res))
+_ANDROID_RES_FLAG := $(addprefix -S ,$(android_res_dirs))
 _ANDROID_ASSETS_FLAG := $(addprefix -A ,$(ANDROID_ASSETS_DIR))
 
 GENERATED_DIRS += classes
@@ -57,7 +35,11 @@ classes.dex: $(JAVAFILES)
 R.java: .aapt.deps
 $(ANDROID_APK_NAME).ap_: .aapt.deps
 
-.aapt.deps: AndroidManifest.xml $(wildcard $(ANDROID_RES_DIR)) $(wildcard $(ANDROID_ASSETS_DIR))
+# This uses the fact that Android resource directories list all
+# resource files one subdirectory below the parent resource directory.
+android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(android_res_dirs)))))
+
+.aapt.deps: AndroidManifest.xml $(android_res_files) $(wildcard $(ANDROID_ASSETS_DIR))
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar $(_ANDROID_RES_FLAG) $(_ANDROID_ASSETS_FLAG) \
 		-J ${@D} \
 		-F $(ANDROID_APK_NAME).ap_

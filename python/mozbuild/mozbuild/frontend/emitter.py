@@ -206,7 +206,7 @@ class TreeMetadataEmitter(LoggingMixin):
         varmap = dict(
             # Makefile.in : moz.build
             ANDROID_GENERATED_RESFILES='ANDROID_GENERATED_RESFILES',
-            ANDROID_RESFILES='ANDROID_RESFILES',
+            ANDROID_RES_DIRS='ANDROID_RES_DIRS',
             CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             EXPORT_LIBRARY='EXPORT_LIBRARY',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',
