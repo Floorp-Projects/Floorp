@@ -384,18 +384,6 @@ VARIABLES = {
         populated by calling add_tier_dir().
         """, None),
 
-    'EXTERNAL_MAKE_DIRS': (list, list,
-        """Directories that build with make but don't use moz.build files.
-
-        This is like ``DIRS`` except it implies that ``make`` is used to build the
-        directory and that the directory does not define itself with moz.build
-        files.
-        """, None),
-
-    'PARALLEL_EXTERNAL_MAKE_DIRS': (list, list,
-        """Parallel version of ``EXTERNAL_MAKE_DIRS``.
-        """, None),
-
     'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list,
         """Output files that will be generated using configure-like substitution.
 

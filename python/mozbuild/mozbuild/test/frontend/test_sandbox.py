@@ -285,14 +285,6 @@ add_tier_dir('t1', 'bat', static=True)
 
         self.assertEqual(sandbox['DIRS'], ['foo'])
 
-    def test_external_make_dirs(self):
-        sandbox = self.sandbox()
-        sandbox.exec_source('EXTERNAL_MAKE_DIRS += ["foo"]', 'test.py')
-        sandbox.exec_source('PARALLEL_EXTERNAL_MAKE_DIRS += ["bar"]', 'test.py')
-
-        self.assertEqual(sandbox['EXTERNAL_MAKE_DIRS'], ['foo'])
-        self.assertEqual(sandbox['PARALLEL_EXTERNAL_MAKE_DIRS'], ['bar'])
-
     def test_error(self):
         sandbox = self.sandbox()
 
