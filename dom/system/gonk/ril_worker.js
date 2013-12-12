@@ -6168,7 +6168,7 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let recordNumber = Buf.readInt32List()[0];
 
-  ICCRecordHelper.readSMS(
+  SimRecordHelper.readSMS(
     recordNumber,
     function onsuccess(message) {
       if (message && message.simStatus === 3) { //New Unread SMS
