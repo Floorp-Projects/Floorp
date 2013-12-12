@@ -3691,18 +3691,35 @@ CSSParserImpl::ParseSupportsConditionInParensInsideParens(bool& aConditionMet)
         return false;
       }
 
-      if (ExpectSymbol(')', true)) {
-        UngetToken();
-        return false;
-      }
-
       nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName,
                                                         nsCSSProps::eEnabled);
       if (propID == eCSSProperty_UNKNOWN) {
+        if (ExpectSymbol(')', true)) {
+          UngetToken();
+          return false;
+        }
         aConditionMet = false;
         SkipUntil(')');
         UngetToken();
+      } else if (propID == eCSSPropertyExtra_variable) {
+        if (ExpectSymbol(')', false)) {
+          UngetToken();
+          return false;
+        }
+        CSSVariableDeclarations::Type variableType;
+        nsString variableValue;
+        aConditionMet =
+          ParseVariableDeclaration(&variableType, variableValue) &&
+          ParsePriority() != ePriority_Error;
+        if (!aConditionMet) {
+          SkipUntil(')');
+          UngetToken();
+        }
       } else {
+        if (ExpectSymbol(')', true)) {
+          UngetToken();
+          return false;
+        }
         aConditionMet = ParseProperty(propID) &&
                         ParsePriority() != ePriority_Error;
         if (!aConditionMet) {
