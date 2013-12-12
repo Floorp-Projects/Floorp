@@ -111,7 +111,8 @@ ShmemTextureClient::DropTextureData()
 }
 
 TextureClient::TextureClient(TextureFlags aFlags)
-  : mID(0)
+  : mRefCount(0)
+  , mID(0)
   , mFlags(aFlags)
   , mShared(false)
   , mValid(true)
