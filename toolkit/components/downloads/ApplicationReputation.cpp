@@ -21,7 +21,6 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/Telemetry.h"
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -34,7 +33,6 @@
 #include "nsXPCOMStrings.h"
 
 using mozilla::Preferences;
-using mozilla::Telemetry::Accumulate;
 
 // Preferences that we need to initialize the query. We may need another
 // preference than browser.safebrowsing.malware.enabled, or simply use
@@ -63,27 +61,6 @@ public:
   ~PendingLookup();
 
 private:
-  /**
-   * Telemetry states.
-   */
-  /**
-   * The download appeared on the allowlist, blocklist, or no list (and thus
-   * could trigger a remote query).
-   */
-  enum {
-    ALLOW_LIST = 0,
-    BLOCK_LIST = 1,
-    NO_LIST = 2,
-  } LIST_TYPES;
-  /**
-   * Status of the remote response (valid or not).
-   */
-  enum {
-    SERVER_RESPONSE_VALID = 0,
-    SERVER_RESPONSE_FAILED = 1,
-    SERVER_RESPONSE_INVALID = 2,
-  } SERVER_RESPONSE_TYPES;
-
   nsCOMPtr<nsIApplicationReputationQuery> mQuery;
   nsCOMPtr<nsIApplicationReputationCallback> mCallback;
   /**
@@ -128,8 +105,6 @@ PendingLookup::~PendingLookup() {
 
 nsresult
 PendingLookup::OnComplete(bool shouldBlock, nsresult rv) {
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SHOULD_BLOCK,
-    shouldBlock);
   nsresult res = mCallback->OnComplete(shouldBlock, rv);
   return res;
 }
@@ -144,18 +119,15 @@ PendingLookup::HandleEvent(const nsACString& tables) {
   nsCString allow_list;
   Preferences::GetCString(PREF_DOWNLOAD_ALLOW_TABLE, &allow_list);
   if (FindInReadable(tables, allow_list)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, ALLOW_LIST);
     return OnComplete(false, NS_OK);
   }
 
   nsCString block_list;
   Preferences::GetCString(PREF_DOWNLOAD_BLOCK_TABLE, &block_list);
   if (FindInReadable(tables, block_list)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, BLOCK_LIST);
     return OnComplete(true, NS_OK);
   }
 
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_LOCAL, NO_LIST);
 #if 0
   nsresult rv = SendRemoteQuery();
   if (NS_FAILED(rv)) {
@@ -296,32 +268,16 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
                                      nsISupports *aContext,
                                      nsresult aResult,
                                      bool* aShouldBlock) {
-  if (NS_FAILED(aResult)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-      SERVER_RESPONSE_FAILED);
-    return aResult;
-  }
-
   *aShouldBlock = false;
   nsresult rv;
   nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
-  if (NS_FAILED(rv)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-      SERVER_RESPONSE_FAILED);
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t status = 0;
   rv = channel->GetResponseStatus(&status);
-  if (NS_FAILED(rv)) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-      SERVER_RESPONSE_FAILED);
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (status != 200) {
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-      SERVER_RESPONSE_FAILED);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -329,15 +285,11 @@ PendingLookup::OnStopRequestInternal(nsIRequest *aRequest,
   safe_browsing::ClientDownloadResponse response;
   if (!response.ParseFromString(buf)) {
     NS_WARNING("Could not parse protocol buffer");
-    Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-                                   SERVER_RESPONSE_INVALID);
     return NS_ERROR_CANNOT_CONVERT_DATA;
   }
 
   // There are several more verdicts, but we only respect one for now and treat
   // everything else as SAFE.
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_SERVER,
-    SERVER_RESPONSE_VALID);
   if (response.verdict() == safe_browsing::ClientDownloadResponse::DANGEROUS) {
     *aShouldBlock = true;
   }
@@ -383,7 +335,6 @@ ApplicationReputationService::QueryReputation(
   NS_ENSURE_ARG_POINTER(aQuery);
   NS_ENSURE_ARG_POINTER(aCallback);
 
-  Accumulate(mozilla::Telemetry::APPLICATION_REPUTATION_COUNT, true);
   nsresult rv = QueryReputationInternal(aQuery, aCallback);
   if (NS_FAILED(rv)) {
     aCallback->OnComplete(false, rv);
