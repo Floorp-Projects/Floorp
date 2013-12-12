@@ -16,6 +16,7 @@
 #include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIXULRuntime.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
