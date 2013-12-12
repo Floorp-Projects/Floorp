@@ -256,6 +256,8 @@ if CONFIG['ENABLE_ION']:
         'jit/IonCaches.cpp',
         'jit/IonFrames.cpp',
         'jit/IonMacroAssembler.cpp',
+        'jit/IonOptimizationLevels.cpp',
+        'jit/IonOptions.cpp',
         'jit/IonSpewer.cpp',
         'jit/JSONSpewer.cpp',
         'jit/LICM.cpp',
