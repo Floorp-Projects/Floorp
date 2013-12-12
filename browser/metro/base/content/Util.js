@@ -209,6 +209,7 @@ let Util = {
             aURL == "about:blank" ||
             aURL == "about:empty" ||
             aURL == "about:home" ||
+            aURL == "about:newtab" ||
             aURL == "about:start");
   },
 
