@@ -14,6 +14,7 @@
 #include "jstypes.h"
 
 #include "gc/Heap.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/IonTypes.h"
 
 namespace JSC {
@@ -260,6 +261,9 @@ struct IonScript
     // Identifier of the compilation which produced this code.
     types::RecompileInfo recompileInfo_;
 
+    // The optimization level this script was compiled in.
+    OptimizationLevel optimizationLevel_;
+
     // Number of times we tried to enter this script via OSR but failed due to
     // a LOOPENTRY pc other than osrPc_.
     uint32_t osrPcMismatchCounter_;
@@ -334,7 +338,8 @@ struct IonScript
                           size_t snapshotsSize, size_t snapshotEntries,
                           size_t constants, size_t safepointIndexEntries, size_t osiIndexEntries,
                           size_t cacheEntries, size_t runtimeSize, size_t safepointsSize,
-                          size_t callTargetEntries, size_t backedgeEntries);
+                          size_t callTargetEntries, size_t backedgeEntries,
+                          OptimizationLevel optimizationLevel);
     static void Trace(JSTracer *trc, IonScript *script);
     static void Destroy(FreeOp *fop, IonScript *script);
 
@@ -530,6 +535,9 @@ struct IonScript
     }
     types::RecompileInfo& recompileInfoRef() {
         return recompileInfo_;
+    }
+    OptimizationLevel optimizationLevel() const {
+        return optimizationLevel_;
     }
     uint32_t incrOsrPcMismatchCounter() {
         return ++osrPcMismatchCounter_;

@@ -5991,18 +5991,21 @@ JS_PUBLIC_API(void)
 JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t value)
 {
 #ifdef JS_ION
-    jit::IonOptions defaultValues;
 
     switch (opt) {
       case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
-        if (value == uint32_t(-1))
+        if (value == uint32_t(-1)) {
+            jit::IonOptions defaultValues;
             value = defaultValues.baselineUsesBeforeCompile;
+        }
         jit::js_IonOptions.baselineUsesBeforeCompile = value;
         break;
       case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
-        if (value == uint32_t(-1))
-            value = defaultValues.usesBeforeCompile;
-        jit::js_IonOptions.usesBeforeCompile = value;
+        if (value == uint32_t(-1)) {
+            jit::js_IonOptions.resetUsesBeforeCompile();
+            break;
+        }
+        jit::js_IonOptions.setUsesBeforeCompile(value);
         if (value == 0)
             jit::js_IonOptions.setEagerCompilation();
         break;

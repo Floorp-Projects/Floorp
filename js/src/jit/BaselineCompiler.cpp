@@ -638,7 +638,7 @@ BaselineCompiler::emitUseCountIncrement()
 
     Label skipCall;
 
-    uint32_t minUses = UsesBeforeIonRecompile(script, pc);
+    uint32_t minUses = UsesBeforeIonCompile(script, pc);
     masm.branch32(Assembler::LessThan, countReg, Imm32(minUses), &skipCall);
 
     masm.branchPtr(Assembler::Equal,

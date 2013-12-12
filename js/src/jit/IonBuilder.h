@@ -13,6 +13,7 @@
 // JSScript.
 
 #include "jit/BytecodeAnalysis.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -211,9 +212,10 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp, MIRGraph *graph,
-               types::CompilerConstraintList *constraints,
-               BaselineInspector *inspector, CompileInfo *info, BaselineFrameInspector *baselineFrame,
+    IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp,
+               MIRGraph *graph, types::CompilerConstraintList *constraints,
+               BaselineInspector *inspector, CompileInfo *info,
+               const OptimizationInfo *optimizationInfo, BaselineFrameInspector *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
     bool build();
@@ -229,10 +231,6 @@ class IonBuilder : public MIRGenerator
     JSAtom *readAtom(jsbytecode *pc);
     bool abort(const char *message, ...);
     void spew(const char *message);
-
-    static bool inliningEnabled() {
-        return js_IonOptions.inlining;
-    }
 
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,

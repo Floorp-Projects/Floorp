@@ -5469,39 +5469,42 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     }
 
     if (const char *str = op->getStringOption("ion-gvn")) {
-        if (strcmp(str, "off") == 0)
-            jit::js_IonOptions.gvn = false;
-        else if (strcmp(str, "pessimistic") == 0)
-            jit::js_IonOptions.gvnIsOptimistic = false;
-        else if (strcmp(str, "optimistic") == 0)
-            jit::js_IonOptions.gvnIsOptimistic = true;
-        else
+        if (strcmp(str, "off") == 0) {
+            jit::js_IonOptions.disableGvn = true;
+        } else if (strcmp(str, "pessimistic") == 0) {
+            jit::js_IonOptions.forceGvnKind = true;
+            jit::js_IonOptions.forcedGvnKind = jit::GVN_Pessimistic;
+        } else if (strcmp(str, "optimistic") == 0) {
+            jit::js_IonOptions.forceGvnKind = true;
+            jit::js_IonOptions.forcedGvnKind = jit::GVN_Optimistic;
+        } else {
             return OptionFailure("ion-gvn", str);
+        }
     }
 
     if (const char *str = op->getStringOption("ion-licm")) {
         if (strcmp(str, "on") == 0)
-            jit::js_IonOptions.licm = true;
+            jit::js_IonOptions.disableLicm = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_IonOptions.licm = false;
+            jit::js_IonOptions.disableLicm = true;
         else
             return OptionFailure("ion-licm", str);
     }
 
     if (const char *str = op->getStringOption("ion-edgecase-analysis")) {
         if (strcmp(str, "on") == 0)
-            jit::js_IonOptions.edgeCaseAnalysis = true;
+            jit::js_IonOptions.disableEdgeCaseAnalysis = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_IonOptions.edgeCaseAnalysis = false;
+            jit::js_IonOptions.disableEdgeCaseAnalysis = true;
         else
             return OptionFailure("ion-edgecase-analysis", str);
     }
 
      if (const char *str = op->getStringOption("ion-range-analysis")) {
          if (strcmp(str, "on") == 0)
-             jit::js_IonOptions.rangeAnalysis = true;
+             jit::js_IonOptions.disableRangeAnalysis = false;
          else if (strcmp(str, "off") == 0)
-             jit::js_IonOptions.rangeAnalysis = false;
+             jit::js_IonOptions.disableRangeAnalysis = true;
          else
              return OptionFailure("ion-range-analysis", str);
      }
@@ -5514,9 +5517,9 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     if (const char *str = op->getStringOption("ion-inlining")) {
         if (strcmp(str, "on") == 0)
-            jit::js_IonOptions.inlining = true;
+            jit::js_IonOptions.disableInlining = false;
         else if (strcmp(str, "off") == 0)
-            jit::js_IonOptions.inlining = false;
+            jit::js_IonOptions.disableInlining = true;
         else
             return OptionFailure("ion-inlining", str);
     }
@@ -5541,7 +5544,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
 
     int32_t useCount = op->getIntOption("ion-uses-before-compile");
     if (useCount >= 0)
-        jit::js_IonOptions.usesBeforeCompile = useCount;
+        jit::js_IonOptions.setUsesBeforeCompile(useCount);
 
     useCount = op->getIntOption("baseline-uses-before-compile");
     if (useCount >= 0)
@@ -5551,14 +5554,18 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
         jit::js_IonOptions.baselineUsesBeforeCompile = 0;
 
     if (const char *str = op->getStringOption("ion-regalloc")) {
-        if (strcmp(str, "lsra") == 0)
-            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_LSRA;
-        else if (strcmp(str, "backtracking") == 0)
-            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Backtracking;
-        else if (strcmp(str, "stupid") == 0)
-            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Stupid;
-        else
+        if (strcmp(str, "lsra") == 0) {
+            jit::js_IonOptions.forceRegisterAllocator = true;
+            jit::js_IonOptions.forcedRegisterAllocator = jit::RegisterAllocator_LSRA;
+        } else if (strcmp(str, "backtracking") == 0) {
+            jit::js_IonOptions.forceRegisterAllocator = true;
+            jit::js_IonOptions.forcedRegisterAllocator = jit::RegisterAllocator_Backtracking;
+        } else if (strcmp(str, "stupid") == 0) {
+            jit::js_IonOptions.forceRegisterAllocator = true;
+            jit::js_IonOptions.forcedRegisterAllocator = jit::RegisterAllocator_Stupid;
+        } else {
             return OptionFailure("ion-regalloc", str);
+        }
     }
 
     if (op->getBoolOption("ion-eager"))

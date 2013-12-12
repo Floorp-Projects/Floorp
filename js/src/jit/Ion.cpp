@@ -27,6 +27,7 @@
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonAnalysis.h"
 #include "jit/IonBuilder.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
 #include "jit/JitCompartment.h"
 #include "jit/LICM.h"
@@ -50,9 +51,6 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Maybe;
-
-// Global variables.
-IonOptions jit::js_IonOptions;
 
 // Assert that IonCode is gc::Cell aligned.
 JS_STATIC_ASSERT(sizeof(IonCode) % gc::CellSize == 0);
@@ -765,7 +763,8 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
                uint32_t frameSlots, uint32_t frameSize, size_t snapshotsSize,
                size_t bailoutEntries, size_t constants, size_t safepointIndices,
                size_t osiIndices, size_t cacheEntries, size_t runtimeSize,
-               size_t safepointsSize, size_t callTargetEntries, size_t backedgeEntries)
+               size_t safepointsSize, size_t callTargetEntries, size_t backedgeEntries,
+               OptimizationLevel optimizationLevel)
 {
     static const int DataAlignment = sizeof(void *);
 
@@ -852,6 +851,7 @@ IonScript::New(JSContext *cx, types::RecompileInfo recompileInfo,
     script->frameSize_ = frameSize;
 
     script->recompileInfo_ = recompileInfo;
+    script->optimizationLevel_ = optimizationLevel;
 
     return script;
 }
@@ -1237,7 +1237,9 @@ OptimizeMIR(MIRGenerator *mir)
 
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
-    if (js_IonOptions.licm || js_IonOptions.gvn) {
+    if (mir->optimizationInfo().licmEnabled() ||
+        mir->optimizationInfo().gvnEnabled())
+    {
         AliasAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
@@ -1257,8 +1259,8 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (js_IonOptions.gvn) {
-        ValueNumberer gvn(mir, graph, js_IonOptions.gvnIsOptimistic);
+    if (mir->optimizationInfo().gvnEnabled()) {
+        ValueNumberer gvn(mir, graph, mir->optimizationInfo().gvnKind() == GVN_Optimistic);
         if (!gvn.analyze())
             return false;
         IonSpewPass("GVN");
@@ -1268,7 +1270,7 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (js_IonOptions.uce) {
+    if (mir->optimizationInfo().uceEnabled()) {
         UnreachableCodeElimination uce(mir, graph);
         if (!uce.analyze())
             return false;
@@ -1279,7 +1281,7 @@ OptimizeMIR(MIRGenerator *mir)
     if (mir->shouldCancel("UCE"))
         return false;
 
-    if (js_IonOptions.licm) {
+    if (mir->optimizationInfo().licmEnabled()) {
         // LICM can hoist instructions from conditional branches and trigger
         // repeated bailouts. Disable it if this script is known to bailout
         // frequently.
@@ -1296,7 +1298,7 @@ OptimizeMIR(MIRGenerator *mir)
         }
     }
 
-    if (js_IonOptions.rangeAnalysis) {
+    if (mir->optimizationInfo().rangeAnalysisEnabled()) {
         RangeAnalysis r(mir, graph);
         if (!r.addBetaNodes())
             return false;
@@ -1322,7 +1324,7 @@ OptimizeMIR(MIRGenerator *mir)
         if (mir->shouldCancel("RA De-Beta"))
             return false;
 
-        if (js_IonOptions.uce) {
+        if (mir->optimizationInfo().uceEnabled()) {
             bool shouldRunUCE = false;
             if (!r.prepareForUCE(&shouldRunUCE))
                 return false;
@@ -1354,7 +1356,7 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (js_IonOptions.eaa) {
+    if (mir->optimizationInfo().eaaEnabled()) {
         EffectiveAddressAnalysis eaa(graph);
         if (!eaa.analyze())
             return false;
@@ -1376,7 +1378,7 @@ OptimizeMIR(MIRGenerator *mir)
     // Passes after this point must not move instructions; these analyses
     // depend on knowing the final order in which instructions will execute.
 
-    if (js_IonOptions.edgeCaseAnalysis && !mir->compilingAsmJS()) {
+    if (mir->optimizationInfo().edgeCaseAnalysisEnabled()) {
         EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
         if (!edgeCaseAnalysis.analyzeLate())
             return false;
@@ -1387,7 +1389,7 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
-    if (!mir->compilingAsmJS()) {
+    if (mir->optimizationInfo().eliminateRedundantChecksEnabled()) {
         // Note: check elimination has to run after all other passes that move
         // instructions. Since check uses are replaced with the actual index,
         // code motion after this pass could incorrectly move a load or store
@@ -1420,7 +1422,7 @@ GenerateLIR(MIRGenerator *mir)
 
     AllocationIntegrityState integrity(*lir);
 
-    switch (js_IonOptions.registerAllocator) {
+    switch (mir->optimizationInfo().registerAllocator()) {
       case RegisterAllocator_LSRA: {
 #ifdef DEBUG
         if (!integrity.record())
@@ -1635,7 +1637,8 @@ TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame
 static AbortReason
 IonCompile(JSContext *cx, JSScript *script,
            BaselineFrame *baselineFrame, jsbytecode *osrPc, bool constructing,
-           ExecutionMode executionMode, bool recompile)
+           ExecutionMode executionMode, bool recompile,
+           OptimizationLevel optimizationLevel)
 {
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::defaultLogger(),
@@ -1643,6 +1646,8 @@ IonCompile(JSContext *cx, JSScript *script,
                         TraceLogging::ION_COMPILE_STOP,
                         script);
 #endif
+    JS_ASSERT(optimizationLevel > Optimization_DontCompile);
+
     TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
@@ -1692,10 +1697,13 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!constraints)
         return AbortReason_Alloc;
 
+    const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(optimizationLevel);
+
     IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr,
                                                   CompileCompartment::get(cx->compartment()),
                                                   temp, graph, constraints,
-                                                  inspector, info, baselineFrameInspector);
+                                                  inspector, info, optimizationInfo,
+                                                  baselineFrameInspector);
     if (!builder)
         return AbortReason_Alloc;
 
@@ -1873,6 +1881,17 @@ CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
     return CheckScriptSize(cx, script) == Method_Compiled;
 }
 
+static OptimizationLevel
+GetOptimizationLevel(HandleScript script, ExecutionMode executionMode)
+{
+    if (executionMode == ParallelExecution)
+        return Optimization_Normal;
+
+    JS_ASSERT(executionMode == SequentialExecution);
+
+    return js_IonOptimizations.levelForUseCount(script->getUseCount());
+}
+
 static MethodStatus
 Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode *osrPc,
         bool constructing, ExecutionMode executionMode)
@@ -1880,6 +1899,8 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(jit::IsBaselineEnabled(cx));
     JS_ASSERT_IF(osrPc != nullptr, (JSOp)*osrPc == JSOP_LOOPENTRY);
+    JS_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPC);
+    JS_ASSERT_IF(executionMode == ParallelExecution, !HasIonScript(script, executionMode));
 
     if (!script->hasBaselineScript())
         return Method_Skipped;
@@ -1901,23 +1922,44 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     }
 
     bool recompile = false;
+    OptimizationLevel optimizationLevel = GetOptimizationLevel(script, executionMode);
+    if (optimizationLevel == Optimization_DontCompile)
+        return Method_Skipped;
 
     IonScript *scriptIon = GetIonScript(script, executionMode);
     if (scriptIon) {
         if (!scriptIon->method())
             return Method_CantCompile;
-        return Method_Compiled;
-    }
 
-    if (executionMode == SequentialExecution) {
-        // Use getUseCount instead of incUseCount to avoid bumping the
-        // use count twice.
-        if (script->getUseCount() < UsesBeforeIonRecompile(script, osrPc ? osrPc : script->code()))
-            return Method_Skipped;
+        MethodStatus failedState = Method_Compiled;
+
+        // If we keep failing to enter the script due to an OSR pc mismatch,
+        // recompile with the right pc.
+        if (osrPc && script->ionScript()->osrPc() != osrPc) {
+            uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
+            if (count <= js_IonOptions.osrPcMismatchesBeforeRecompile)
+                return Method_Skipped;
+
+            failedState = Method_Skipped;
+        }
+
+        // Don't recompile/overwrite higher optimized code,
+        // with a lower optimization level.
+        if (optimizationLevel <= scriptIon->optimizationLevel())
+            return failedState;
+
+        // Don't start compiling if already compiling
+        if (scriptIon->isRecompiling())
+            return failedState;
+
+        if (osrPc)
+            script->ionScript()->resetOsrPcMismatchCounter();
+
+        recompile = true;
     }
 
     AbortReason reason = IonCompile(cx, script, osrFrame, osrPc, constructing, executionMode,
-                                    recompile);
+                                    recompile, optimizationLevel);
     if (reason == AbortReason_Error)
         return Method_Error;
 
@@ -1967,7 +2009,11 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
         return Method_CantCompile;
     }
 
-    // Attempt compilation. Returns Method_Compiled if already compiled.
+    // Attempt compilation.
+    // - Returns Method_Compiled if the right ionscript is present
+    //   (Meaning it was present or a sequantial compile finished)
+    // - Returns Method_Skipped if pc doesn't match
+    //   (This means a background thread compilation with that pc could have started or not.)
     RootedScript rscript(cx, script);
     MethodStatus status = Compile(cx, rscript, osrFrame, pc, isConstructing, SequentialExecution);
     if (status != Method_Compiled) {
@@ -1975,20 +2021,6 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
             ForbidCompilation(cx, script);
         return status;
     }
-
-    if (script->ionScript()->osrPc() != pc) {
-        // If we keep failing to enter the script due to an OSR pc mismatch,
-        // invalidate the script to force a recompile.
-        uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
-
-        if (count > js_IonOptions.osrPcMismatchesBeforeRecompile) {
-            if (!Invalidate(cx, script, SequentialExecution, true))
-                return Method_Error;
-        }
-        return Method_Skipped;
-    }
-
-    script->ionScript()->resetOsrPcMismatchCounter();
 
     return Method_Compiled;
 }
@@ -2702,11 +2734,14 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
 }
 
 uint32_t
-jit::UsesBeforeIonRecompile(JSScript *script, jsbytecode *pc)
+jit::UsesBeforeIonCompile(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPENTRY);
 
-    uint32_t minUses = js_IonOptions.usesBeforeCompile;
+    OptimizationLevel level = js_IonOptimizations.nextLevel(Optimization_DontCompile);
+    const OptimizationInfo *info = js_IonOptimizations.get(level);
+
+    uint32_t minUses = info->usesBeforeCompile();
 
     // If the script is too large to compile on the main thread, we can still
     // compile it off thread. In these cases, increase the use count threshold
