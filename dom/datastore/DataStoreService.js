@@ -9,7 +9,7 @@
 /* static functions */
 
 function debug(s) {
-  // dump('DEBUG DataStoreService: ' + s + '\n');
+  //dump('DEBUG DataStoreService: ' + s + '\n');
 }
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
@@ -137,22 +137,26 @@ DataStoreService.prototype = {
         request.onsuccess = function(aEvent) {
           let cursor = aEvent.target.result;
           if (cursor) {
-            ppmm.broadcastAsyncMessage('datastore-first-revision-created',
-                                       { name: aName, owner: aOwner });
+            debug("First revision already created.");
+            self.enableDataStore(aAppId, aName, aOwner);
           } else {
             // If the revision doesn't exist, let's create the first one.
             db.addRevision(aRevisionStore, 0, REVISION_VOID, function() {
               debug("First revision created.");
-              if (aName in self.stores && aAppId in self.stores[aName]) {
-                self.stores[aName][aAppId].enabled = true;
-                ppmm.broadcastAsyncMessage('datastore-first-revision-created',
-                                           { name: aName, owner: aOwner });
-              }
+              self.enableDataStore(aAppId, aName, aOwner);
             });
           }
         };
       }
     );
+  },
+
+  enableDataStore: function(aAppId, aName, aOwner) {
+    if (aName in this.stores && aAppId in this.stores[aName]) {
+      this.stores[aName][aAppId].enabled = true;
+      ppmm.broadcastAsyncMessage('datastore-first-revision-created',
+                                 { name: aName, owner: aOwner });
+    }
   },
 
   addPermissions: function(aAppId, aName, aOrigin, aOwner, aReadOnly) {

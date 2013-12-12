@@ -9,7 +9,7 @@
 this.EXPORTED_SYMBOLS = ["DataStore"];
 
 function debug(s) {
-  // dump('DEBUG DataStore: ' + s + '\n');
+  //dump('DEBUG DataStore: ' + s + '\n');
 }
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
