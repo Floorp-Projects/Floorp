@@ -197,6 +197,12 @@ documenttab[selected] .documenttab-selection {
   height: 100%;
 }
 
+#startui-page[viewstate="snapped"],
+#startui-page[viewstate="portrait"] {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
 #startui-body {
   height: 100%;
   margin: 0;
