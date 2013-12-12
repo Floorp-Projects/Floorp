@@ -1283,7 +1283,12 @@ void MediaDecoder::PlaybackPositionChanged()
         // and we don't want to override the seek algorithm and change the
         // current time after the seek has started but before it has
         // completed.
-        mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+        if (GetDecodedStream()) {
+          mCurrentTime = mDecoderStateMachine->GetCurrentTimeViaMediaStreamSync()/
+            static_cast<double>(USECS_PER_S);
+        } else {
+          mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+        }
       }
       mDecoderStateMachine->ClearPositionChangeFlag();
     }
