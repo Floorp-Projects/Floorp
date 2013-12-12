@@ -18,6 +18,7 @@
 #include "mozilla/Services.h"
 
 using namespace mozilla::image;
+using mozilla::WeakPtr;
 
 class imgStatusTrackerObserver : public imgDecoderObserver
 {
@@ -143,7 +144,7 @@ public:
   }
 
 private:
-  mozilla::WeakPtr<imgStatusTracker> mTracker;
+  WeakPtr<imgStatusTracker> mTracker;
 };
 
 // imgStatusTracker methods
@@ -357,17 +358,17 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
 
 #define NOTIFY_IMAGE_OBSERVERS(func) \
   do { \
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(proxies); \
+    ProxyArray::ForwardIterator iter(proxies); \
     while (iter.HasMore()) { \
-      nsRefPtr<imgRequestProxy> proxy = iter.GetNext(); \
-      if (!proxy->NotificationsDeferred()) { \
+      nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get(); \
+      if (proxy && !proxy->NotificationsDeferred()) { \
         proxy->func; \
       } \
     } \
   } while (false);
 
 /* static */ void
-imgStatusTracker::SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
+imgStatusTracker::SyncNotifyState(ProxyArray& proxies,
                                   bool hasImage, uint32_t state,
                                   nsIntRect& dirtyRect, bool hadLastPart)
 {
@@ -505,13 +506,13 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
   mInvalidRect.SetEmpty();
 
   if (diff.unblockedOnload) {
-    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+    ProxyArray::ForwardIterator iter(mConsumers);
     while (iter.HasMore()) {
       // Hold on to a reference to this proxy, since notifying the state can
       // cause it to disappear.
-      nsRefPtr<imgRequestProxy> proxy = iter.GetNext();
+      nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
 
-      if (!proxy->NotificationsDeferred()) {
+      if (proxy && !proxy->NotificationsDeferred()) {
         SendUnblockOnload(proxy);
       }
     }
@@ -550,8 +551,8 @@ imgStatusTracker::SyncNotify(imgRequestProxy* proxy)
     r = mImage->FrameRect(imgIContainer::FRAME_CURRENT);
   }
 
-  nsTObserverArray<imgRequestProxy*> array;
-  array.AppendElement(proxy);
+  ProxyArray array;
+  array.AppendElement(proxy->asWeakPtr());
   SyncNotifyState(array, !!mImage, mState, r, mHadLastPart);
 }
 
@@ -582,7 +583,7 @@ void
 imgStatusTracker::AddConsumer(imgRequestProxy* aConsumer)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mConsumers.AppendElementUnlessExists(aConsumer);
+  mConsumers.AppendElementUnlessExists(aConsumer->asWeakPtr());
 }
 
 // XXX - The last argument should go away.
@@ -608,6 +609,20 @@ imgStatusTracker::RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus)
   }
 
   return removed;
+}
+
+bool
+imgStatusTracker::FirstConsumerIs(imgRequestProxy* aConsumer)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+  ProxyArray::ForwardIterator iter(mConsumers);
+  while (iter.HasMore()) {
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      return proxy.get() == aConsumer;
+    }
+  }
+  return false;
 }
 
 void
@@ -781,9 +796,12 @@ imgStatusTracker::OnUnlockedDraw()
 {
   MOZ_ASSERT(NS_IsMainThread());
   RecordUnlockedDraw();
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendUnlockedDraw(iter.GetNext());
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendUnlockedDraw(proxy);
+    }
   }
 }
 
@@ -838,9 +856,12 @@ imgStatusTracker::OnStartRequest()
 {
   MOZ_ASSERT(NS_IsMainThread());
   RecordStartRequest();
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendStartRequest(iter.GetNext());
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendStartRequest(proxy);
+    }
   }
 }
 
@@ -909,9 +930,12 @@ imgStatusTracker::OnStopRequest(bool aLastPart,
 
   RecordStopRequest(aLastPart, aStatus);
   /* notify the kids */
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator srIter(mConsumers);
+  ProxyArray::ForwardIterator srIter(mConsumers);
   while (srIter.HasMore()) {
-    SendStopRequest(srIter.GetNext(), aLastPart, aStatus);
+    nsRefPtr<imgRequestProxy> proxy = srIter.GetNext().get();
+    if (proxy) {
+      SendStopRequest(proxy, aLastPart, aStatus);
+    }
   }
 
   if (NS_FAILED(aStatus) && !preexistingError) {
@@ -926,9 +950,12 @@ imgStatusTracker::OnDiscard()
   RecordDiscard();
 
   /* notify the kids */
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendDiscard(iter.GetNext());
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendDiscard(proxy);
+    }
   }
 }
 
@@ -939,9 +966,12 @@ imgStatusTracker::FrameChanged(const nsIntRect* aDirtyRect)
   RecordFrameChanged(aDirtyRect);
 
   /* notify the kids */
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendFrameChanged(iter.GetNext(), aDirtyRect);
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendFrameChanged(proxy, aDirtyRect);
+    }
   }
 }
 
@@ -952,9 +982,12 @@ imgStatusTracker::OnStopFrame()
   RecordStopFrame();
 
   /* notify the kids */
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendStopFrame(iter.GetNext());
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendStopFrame(proxy);
+    }
   }
 }
 
@@ -970,9 +1003,12 @@ imgStatusTracker::OnDataAvailable()
     return;
   }
   // Notify any imgRequestProxys that are observing us that we have an Image.
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    iter.GetNext()->SetHasImage();
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      proxy->SetHasImage();
+    }
   }
 }
 
@@ -1021,9 +1057,12 @@ imgStatusTracker::MaybeUnblockOnload()
 
   RecordUnblockOnload();
 
-  nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mConsumers);
+  ProxyArray::ForwardIterator iter(mConsumers);
   while (iter.HasMore()) {
-    SendUnblockOnload(iter.GetNext());
+    nsRefPtr<imgRequestProxy> proxy = iter.GetNext().get();
+    if (proxy) {
+      SendUnblockOnload(proxy);
+    }
   }
 }
 
