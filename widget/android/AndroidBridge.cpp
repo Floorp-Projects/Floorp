@@ -2003,6 +2003,11 @@ AndroidBridge::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
 }
 
 void
+AndroidBridge::HandleLongTapUp(const CSSIntPoint& aPoint, int32_t aModifiers)
+{
+}
+
+void
 AndroidBridge::SendAsyncScrollDOMEvent(bool aIsRoot,
                                        const CSSRect& aContentRect,
                                        const CSSSize& aScrollableSize)

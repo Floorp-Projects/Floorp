@@ -46,6 +46,13 @@ static const uint32_t kUpdateProgressBase = 50 * 1024;
  */
 static const uint32_t kPutRequestHeaderSize = 6;
 
+/*
+ * The format of the appended header of an PUT request is
+ * [headerId:1][header length:4]
+ * P.S. Length of name header is 4 since unicode is 2 bytes per char.
+ */
+static const uint32_t kPutRequestAppendHeaderSize = 5;
+
 StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
 static bool sInShutdown = false;
 }
@@ -970,6 +977,15 @@ BluetoothOppManager::ClientDataHandler(UnixSocketRawData* aMessage)
     mRemoteMaxPacketLength =
       (((int)(aMessage->mData[5]) << 8) | aMessage->mData[6]);
 
+    // The length of file name exceeds maximum length.
+    int fileNameByteLen = (mFileName.Length() + 1) * 2;
+    int headerLen = kPutRequestHeaderSize + kPutRequestAppendHeaderSize;
+    if (fileNameByteLen > mRemoteMaxPacketLength - headerLen) {
+      BT_WARNING("The length of file name is aberrant.");
+      SendDisconnectRequest();
+      return;
+    }
+
     SendPutHeaderRequest(mFileName, mFileLength);
   } else if (mLastCommand == ObexRequestCode::Put) {
     if (mWaitingToSendPutFinal) {
@@ -1056,7 +1072,8 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
   fileName[len * 2 + 1] = 0x00;
 
   int index = 3;
-  index += AppendHeaderName(&req[index], (char*)fileName, (len + 1) * 2);
+  index += AppendHeaderName(&req[index], mRemoteMaxPacketLength - index,
+                            (char*)fileName, (len + 1) * 2);
   index += AppendHeaderLength(&req[index], aFileSize);
 
   SendObexData(req, ObexRequestCode::Put, index);
@@ -1069,9 +1086,8 @@ void
 BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
                                     int aFileBodyLength)
 {
-  int packetLeftSpace = mRemoteMaxPacketLength - kPutRequestHeaderSize;
-
   if (!mConnected) return;
+  int packetLeftSpace = mRemoteMaxPacketLength - kPutRequestHeaderSize;
   if (aFileBodyLength > packetLeftSpace) {
     BT_WARNING("Not allowed such a small MaxPacketLength value");
     return;
@@ -1082,7 +1098,8 @@ BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
   uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
 
   int index = 3;
-  index += AppendHeaderBody(&req[index], aFileBody, aFileBodyLength);
+  index += AppendHeaderBody(&req[index], mRemoteMaxPacketLength - index,
+                            aFileBody, aFileBodyLength);
 
   SendObexData(req, ObexRequestCode::Put, index);
   delete [] req;

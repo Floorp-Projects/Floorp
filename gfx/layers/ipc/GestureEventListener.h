@@ -85,7 +85,10 @@ protected:
     // may be mistaken for a tap.
     GESTURE_WAITING_SINGLE_TAP,
     // A single tap has happened for sure, and we're waiting for a second tap.
-    GESTURE_WAITING_DOUBLE_TAP
+    GESTURE_WAITING_DOUBLE_TAP,
+    // A long tap has happened, wait for the tap to be released in case we need
+    // to fire a click event in the case the long tap was not handled.
+    GESTURE_LONG_TAP_UP
   };
 
   /**
@@ -119,6 +122,12 @@ protected:
    * for context menu.
    */
   nsEventStatus HandleLongTapEvent(const MultiTouchInput& aEvent);
+
+  /**
+   * Attempts to handle release of long tap. This is used to fire click
+   * events in the case the context menu was not invoked.
+   */
+  nsEventStatus HandleLongTapUpEvent(const MultiTouchInput& aEvent);
 
   /**
    * Attempts to handle a tap event cancellation. This happens when we think

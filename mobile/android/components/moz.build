@@ -13,6 +13,7 @@ XPIDL_MODULE = 'MobileComponents'
 EXTRA_COMPONENTS += [
     'AddonUpdateService.js',
     'BlocklistPrompt.js',
+    'ColorPicker.js',
     'ContentDispatchChooser.js',
     'ContentPermissionPrompt.js',
     'DownloadManagerUI.js',

@@ -9,7 +9,8 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 int
-AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength)
+AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const char* aName,
+                 int aLength)
 {
   int headerLength = aLength + 3;
 
@@ -17,13 +18,15 @@ AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength)
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&aRetBuf[3], aName, aLength);
+  memcpy(&aRetBuf[3], aName, (aLength < aBufferSize - 3)? aLength
+                                                        : aBufferSize - 3);
 
   return headerLength;
 }
 
 int
-AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength)
+AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aData,
+                 int aLength)
 {
   int headerLength = aLength + 3;
 
@@ -31,7 +34,8 @@ AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength)
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&aRetBuf[3], aData, aLength);
+  memcpy(&aRetBuf[3], aData, (aLength < aBufferSize - 3)? aLength
+                                                        : aBufferSize - 3);
 
   return headerLength;
 }
