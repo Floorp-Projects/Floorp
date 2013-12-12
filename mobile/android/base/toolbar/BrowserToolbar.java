@@ -12,6 +12,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SiteIdentity;
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -428,13 +430,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 if (mSiteSecurity.getVisibility() != View.VISIBLE)
                     return;
 
-                JSONObject identityData = Tabs.getInstance().getSelectedTab().getIdentityData();
-                if (identityData == null) {
+                final Tab tab = Tabs.getInstance().getSelectedTab();
+
+                final SiteIdentity siteIdentity = tab.getSiteIdentity();
+                if (siteIdentity.getSecurityMode() == SecurityMode.UNKNOWN) {
                     Log.e(LOGTAG, "Selected tab has no identity data");
                     return;
                 }
 
-                mSiteIdentityPopup.updateIdentity(identityData);
+                mSiteIdentityPopup.updateIdentity(siteIdentity);
                 mSiteIdentityPopup.show();
             }
         };
@@ -978,11 +982,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mFavicon.setImageDrawable(null);
         }
     }
-
-    private void setSecurityMode(String mode) {
-        int imageLevel = SiteIdentityPopup.getSecurityImageLevel(mode);
-        mSiteSecurity.setImageLevel(imageLevel);
-        mShowSiteSecurity = (imageLevel != SiteIdentityPopup.LEVEL_UKNOWN);
+    
+    private void setSecurityMode(SecurityMode mode) {
+        mSiteSecurity.setImageLevel(mode.ordinal());
+        mShowSiteSecurity = (mode != SecurityMode.UNKNOWN);
 
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }

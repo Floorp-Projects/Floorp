@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -46,7 +46,7 @@ public class Tab {
     private int mFaviconSize;
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
-    private JSONObject mIdentityData;
+    private SiteIdentity mSiteIdentity;
     private boolean mReaderEnabled;
     private BitmapDrawable mThumbnail;
     private int mHistoryIndex;
@@ -102,7 +102,7 @@ public class Tab {
         mFaviconSize = 0;
         mHasFeeds = false;
         mHasOpenSearch = false;
-        mIdentityData = null;
+        mSiteIdentity = new SiteIdentity();
         mReaderEnabled = false;
         mEnteringReaderMode = false;
         mThumbnail = null;
@@ -247,17 +247,12 @@ public class Tab {
         return mHasOpenSearch;
     }
 
-    public String getSecurityMode() {
-        try {
-            return mIdentityData.getString("mode");
-        } catch (Exception e) {
-            // If mIdentityData is null, or we get a JSONException
-            return SiteIdentityPopup.UNKNOWN;
-        }
+    public SecurityMode getSecurityMode() {
+        return mSiteIdentity.getSecurityMode();
     }
 
-    public JSONObject getIdentityData() {
-        return mIdentityData;
+    public SiteIdentity getSiteIdentity() {
+        return mSiteIdentity;
     }
 
     public boolean getReaderEnabled() {
@@ -416,7 +411,7 @@ public class Tab {
     }
 
     public void updateIdentityData(JSONObject identityData) {
-        mIdentityData = identityData;
+        mSiteIdentity.update(identityData);
     }
 
     public void setReaderEnabled(boolean readerEnabled) {
