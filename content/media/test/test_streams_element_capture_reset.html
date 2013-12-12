@@ -39,13 +39,13 @@ function startTest(test) {
 
   function endedAfterReplay() {
     isWithinEps(v.currentTime, test.duration, "checking v.currentTime at third 'ended' event");
-    isWithinEps(vout.currentTime, (v.currentTime - seekTime) + test.duration*2,
+    isWithinEps(vout.currentTime, (test.duration - seekTime) + test.duration*2,
 	            "checking vout.currentTime after seeking, playing through and reloading");
     SimpleTest.finish();
   };
   function endedAfterSeek() {
     isWithinEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
-    isWithinEps(vout.currentTime, (v.currentTime - seekTime) + test.duration,
+    isWithinEps(vout.currentTime, (test.duration - seekTime) + test.duration,
                 "checking vout.currentTime after seeking and playing through again");
     v.removeEventListener("ended", endedAfterSeek, false);
     v.addEventListener("ended", endedAfterReplay, false);
