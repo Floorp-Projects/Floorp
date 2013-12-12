@@ -23,6 +23,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nscore.h"                     // for nsACString
+#include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 
 class gfxImageSurface;
 class gfxReusableSurfaceWrapper;
@@ -259,9 +260,8 @@ private:
  *
  */
 class TextureHost
+  : public AtomicRefCountedWithFinalize<TextureHost>
 {
-  Atomic<int> mRefCount;
-
   /**
    * Called once, just before the destructor.
    *
@@ -270,26 +270,12 @@ class TextureHost
    */
   void Finalize();
 
+  friend class AtomicRefCountedWithFinalize<TextureHost>;
+
 public:
   TextureHost(TextureFlags aFlags);
 
   virtual ~TextureHost();
-
-  void AddRef() {
-    MOZ_ASSERT(mRefCount >= 0);
-    ++mRefCount;
-  }
-
-  void Release() {
-    MOZ_ASSERT(mRefCount > 0);
-    if (0 == --mRefCount) {
-#ifdef DEBUG
-      mRefCount = detail::DEAD;
-#endif
-      Finalize();
-      delete this;
-    }
-  }
 
   /**
    * Factory method.
