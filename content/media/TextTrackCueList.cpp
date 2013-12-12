@@ -116,5 +116,12 @@ TextTrackCueList::RemoveAll()
   mList.Clear();
 }
 
+void
+TextTrackCueList::GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
+{
+  aCues = nsTArray<nsRefPtr<TextTrackCue> >(mList);
+}
+
+
 } // namespace dom
 } // namespace mozilla
