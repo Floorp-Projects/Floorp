@@ -518,6 +518,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     const TapGestureInput& tapGestureInput = aEvent.AsTapGestureInput();
     switch (tapGestureInput.mType) {
       case TapGestureInput::TAPGESTURE_LONG: rv = OnLongPress(tapGestureInput); break;
+      case TapGestureInput::TAPGESTURE_LONG_UP: rv = OnLongPressUp(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_UP: rv = OnSingleTapUp(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_CONFIRMED: rv = OnSingleTapConfirmed(tapGestureInput); break;
       case TapGestureInput::TAPGESTURE_DOUBLE: rv = OnDoubleTap(tapGestureInput); break;
@@ -815,6 +816,20 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
     CSSIntPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
       controller->HandleLongTap(geckoScreenPoint, modifiers);
+      return nsEventStatus_eConsumeNoDefault;
+    }
+  }
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus AsyncPanZoomController::OnLongPressUp(const TapGestureInput& aEvent) {
+  APZC_LOG("%p got a long-tap-up in state %d\n", this, mState);
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller) {
+    int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
+    CSSIntPoint geckoScreenPoint;
+    if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
+      controller->HandleLongTapUp(geckoScreenPoint, modifiers);
       return nsEventStatus_eConsumeNoDefault;
     }
   }
