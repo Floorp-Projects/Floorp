@@ -353,6 +353,7 @@ nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
   , mSVGMode(false)
   , mRecording(false)
   , mSeenBadToken(false)
+  , mSeenVariableReference(false)
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
 }
@@ -385,6 +386,21 @@ nsCSSScanner::StopRecording(nsString& aBuffer)
   aBuffer.Append(mBuffer + mRecordStartOffset,
                  mOffset - mRecordStartOffset);
 }
+
+uint32_t
+nsCSSScanner::RecordingLength() const
+{
+  MOZ_ASSERT(mRecording, "haven't started recording");
+  return mOffset - mRecordStartOffset;
+}
+
+#ifdef DEBUG
+bool
+nsCSSScanner::IsRecording() const
+{
+  return mRecording;
+}
+#endif
 
 nsDependentSubstring
 nsCSSScanner::GetCurrentLine() const
@@ -477,6 +493,32 @@ nsCSSScanner::Backup(uint32_t n)
   else
     mOffset -= n;
 #endif
+}
+
+void
+nsCSSScanner::SavePosition(nsCSSScannerPosition& aState)
+{
+  aState.mOffset = mOffset;
+  aState.mLineNumber = mLineNumber;
+  aState.mLineOffset = mLineOffset;
+  aState.mTokenLineNumber = mTokenLineNumber;
+  aState.mTokenLineOffset = mTokenLineOffset;
+  aState.mTokenOffset = mTokenOffset;
+  aState.mInitialized = true;
+}
+
+void
+nsCSSScanner::RestoreSavedPosition(const nsCSSScannerPosition& aState)
+{
+  MOZ_ASSERT(aState.mInitialized, "have not saved state");
+  if (aState.mInitialized) {
+    mOffset = aState.mOffset;
+    mLineNumber = aState.mLineNumber;
+    mLineOffset = aState.mLineOffset;
+    mTokenLineNumber = aState.mTokenLineNumber;
+    mTokenLineOffset = aState.mTokenLineOffset;
+    mTokenOffset = aState.mTokenOffset;
+  }
 }
 
 /**
@@ -706,6 +748,8 @@ nsCSSScanner::ScanIdent(nsCSSToken& aToken)
   aToken.mType = eCSSToken_Function;
   if (aToken.mIdent.LowerCaseEqualsLiteral("url")) {
     NextURL(aToken);
+  } else if (aToken.mIdent.LowerCaseEqualsLiteral("var")) {
+    mSeenVariableReference = true;
   }
   return true;
 }
@@ -1080,18 +1124,11 @@ static const PRUnichar kImpliedEOFCharacters[] = {
 };
 
 /* static */ void
-nsCSSScanner::AdjustTokenStreamForEOFCharacters(EOFCharacters aEOFCharacters,
-                                                nsAString& aResult)
+nsCSSScanner::AppendImpliedEOFCharacters(EOFCharacters aEOFCharacters,
+                                         nsAString& aResult)
 {
-  uint32_t c = aEOFCharacters;
-
-  // First, handle eEOFCharacters_DropBackslash.
-  if (c & eEOFCharacters_DropBackslash) {
-    MOZ_ASSERT(aResult[aResult.Length() - 1] == '\\');
-    aResult.SetLength(aResult.Length() - 1);
-  }
-
-  c >>= 1;
+  // First, ignore eEOFCharacters_DropBackslash.
+  uint32_t c = aEOFCharacters >> 1;
 
   // All of the remaining EOFCharacters bits represent appended characters,
   // and the bits are in the order that they need appending.

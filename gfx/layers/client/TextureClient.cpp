@@ -19,6 +19,7 @@
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
+#include "mozilla/layers/PTextureChild.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
@@ -37,6 +38,126 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
+
+/**
+ * TextureChild is the content-side incarnation of the PTexture IPDL actor.
+ *
+ * TextureChild is used to synchronize a texture client and its corresponding
+ * TextureHost if needed (a TextureClient that is not shared with the compositor
+ * does not have a TextureChild)
+ *
+ * During the deallocation phase, a TextureChild may hold its recently destroyed
+ * TextureClient's data until the compositor side confirmed that it is safe to
+ * deallocte or recycle the it.
+ */
+class TextureChild : public PTextureChild
+{
+public:
+  TextureChild()
+  : mForwarder(nullptr)
+  , mTextureData(nullptr)
+  , mTextureClient(nullptr)
+  {
+    MOZ_COUNT_CTOR(TextureChild);
+  }
+
+  ~TextureChild()
+  {
+    MOZ_COUNT_DTOR(TextureChild);
+  }
+
+  bool Recv__delete__() MOZ_OVERRIDE;
+
+  /**
+   * Only used during the deallocation phase iff we need synchronization between
+   * the client and host side for deallocation (that is, when the data is going
+   * to be deallocated or recycled on the client side).
+   */
+  void SetTextureData(TextureClientData* aData)
+  {
+    mTextureData = aData;
+  }
+
+  void DeleteTextureData();
+
+  CompositableForwarder* GetForwarder() { return mForwarder; }
+
+  ISurfaceAllocator* GetAllocator() { return mForwarder; }
+
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
+private:
+
+  CompositableForwarder* mForwarder;
+  TextureClientData* mTextureData;
+  TextureClient* mTextureClient;
+
+  friend class TextureClient;
+};
+
+void
+TextureChild::DeleteTextureData()
+{
+  if (mTextureData) {
+    mTextureData->DeallocateSharedData(GetAllocator());
+    delete mTextureData;
+    mTextureData = nullptr;
+  }
+}
+
+bool
+TextureChild::Recv__delete__()
+{
+  DeleteTextureData();
+  return true;
+}
+
+void
+TextureChild::ActorDestroy(ActorDestroyReason why)
+{
+  if (mTextureClient) {
+    mTextureClient->mActor = nullptr;
+  }
+}
+
+// static
+PTextureChild*
+TextureClient::CreateIPDLActor()
+{
+  return new TextureChild();
+}
+
+// static
+bool
+TextureClient::DestroyIPDLActor(PTextureChild* actor)
+{
+  delete actor;
+  return true;
+}
+
+bool
+TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
+{
+  MOZ_ASSERT(!mActor);
+  MOZ_ASSERT(aForwarder);
+
+  SurfaceDescriptor desc;
+  if (!ToSurfaceDescriptor(desc)) {
+    return false;
+  }
+
+  mActor = static_cast<TextureChild*>(aForwarder->CreateEmptyTextureChild());
+  mActor->mForwarder = aForwarder;
+  mActor->mTextureClient = this;
+  mShared = true;
+  return mActor->SendInit(desc, GetFlags());
+}
+
+PTextureChild*
+TextureClient::GetIPDLActor()
+{
+  return mActor;
+}
 
 class ShmemTextureClientData : public TextureClientData
 {
@@ -80,6 +201,7 @@ public:
   virtual void DeallocateSharedData(ISurfaceAllocator*)
   {
     delete[] mBuffer;
+    mBuffer = nullptr;
   }
 
 private:
@@ -111,14 +233,43 @@ ShmemTextureClient::DropTextureData()
 }
 
 TextureClient::TextureClient(TextureFlags aFlags)
-  : mID(0)
+  : mActor(nullptr)
   , mFlags(aFlags)
   , mShared(false)
   , mValid(true)
 {}
 
 TextureClient::~TextureClient()
-{}
+{
+  // All the destruction code that may lead to virtual method calls must
+  // be in Finalize() which is called just before the destructor.
+}
+
+void TextureClient::ForceRemove()
+{
+  if (mValid && mActor) {
+    if (GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+      mActor->SetTextureData(DropTextureData());
+      mActor->SendRemoveTextureSync();
+      mActor->DeleteTextureData();
+    } else {
+      mActor->SendRemoveTexture();
+    }
+  }
+  MarkInvalid();
+}
+
+void
+TextureClient::Finalize()
+{
+  if (mActor) {
+    // this will call ForceRemove in the right thread, using a sync proxy if needed
+    mActor->GetForwarder()->RemoveTexture(this);
+
+    // mActor has a raw pointer to us, mActor->mTextureClient. Null it before we die.
+    mActor->mTextureClient = nullptr;
+  }
+}
 
 bool
 TextureClient::ShouldDeallocateInDestructor() const
@@ -237,8 +388,8 @@ MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable,
 MemoryTextureClient::~MemoryTextureClient()
 {
   MOZ_COUNT_DTOR(MemoryTextureClient);
-  if (ShouldDeallocateInDestructor() && mBuffer) {
-    // if the buffer has never been shared we must deallocate it or ir would
+  if (mBuffer && ShouldDeallocateInDestructor()) {
+    // if the buffer has never been shared we must deallocate it or it would
     // leak.
     GfxMemoryImageReporter::WillFree(mBuffer);
     delete mBuffer;
@@ -412,15 +563,6 @@ DeprecatedTextureClient::~DeprecatedTextureClient()
   MOZ_COUNT_DTOR(DeprecatedTextureClient);
   MOZ_ASSERT(mDescriptor.type() == SurfaceDescriptor::T__None, "Need to release surface!");
 }
-
-void
-DeprecatedTextureClient::OnActorDestroy()
-{
-  if (ISurfaceAllocator::IsShmem(&mDescriptor)) {
-    mDescriptor = SurfaceDescriptor();
-  }
-}
-
 
 DeprecatedTextureClientShmem::DeprecatedTextureClientShmem(CompositableForwarder* aForwarder,
                                        const TextureInfo& aTextureInfo)

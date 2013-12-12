@@ -205,13 +205,6 @@ BasicTextureImage::BindTexture(GLenum aTextureUnit)
     mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
-void
-BasicTextureImage::ApplyFilter()
-{
-  mGLContext->ApplyFilterToBoundTexture(mFilter);
-}
-
-
 already_AddRefed<gfxASurface>
 BasicTextureImage::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
 {
@@ -637,12 +630,6 @@ TiledTextureImage::BindTexture(GLenum aTextureUnit)
     mImages[mCurrentImage]->BindTexture(aTextureUnit);
 }
 
-void
-TiledTextureImage::ApplyFilter()
-{
-   mGL->ApplyFilterToBoundTexture(mFilter);
-}
-
 /*
  * Resize, trying to reuse tiles. The reuse strategy is to decide on reuse per
  * column. A tile on a column is reused if it hasn't changed size, otherwise it
@@ -743,16 +730,6 @@ void TiledTextureImage::Resize(const nsIntSize& aSize)
 uint32_t TiledTextureImage::GetTileCount()
 {
     return mImages.Length();
-}
-
-TextureImage::ScopedBindTexture::ScopedBindTexture(TextureImage* aTexture,
-                                                   GLenum aTextureUnit)
-    : mTexture(aTexture)
-{
-    if (mTexture) {
-        MOZ_ASSERT(aTextureUnit >= LOCAL_GL_TEXTURE0);
-        mTexture->BindTexture(aTextureUnit);
-    }
 }
 
 already_AddRefed<TextureImage>

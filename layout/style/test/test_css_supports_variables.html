@@ -1,0 +1,240 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=773296
+-->
+<head>
+  <title>Test for Bug 773296</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=773296">Mozilla Bug 773296</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 773296 **/
+
+function runTest()
+{
+  var passingConditions = [
+    "(color:var(a))",
+    "(color: var(a))",
+    "(color: var(a) )",
+    "(color: var( a ) )",
+    "(color: var(a, ))",
+    "(color: var(a,/**/a))",
+    "(color: 1px var(a))",
+    "(color: var(a) 1px)",
+    "(color: something 3px url(whereever) calc(var(a) + 1px))",
+    "(color: var(a) !important)",
+    "(color: var(a)var(b))",
+    "(color: var(a, var(b, var(c, black))))",
+    "(color: var(a) <!--)",
+    "(color: --> var(a))",
+    "(color: { [ var(a) ] })",
+    "(color: [;] var(a))",
+    "(color: var(a,(;)))",
+    "(color: VAR(a))",
+    "(color: var(\\30))",
+    "(color: var(\\d800))",
+    "(color: var(\\ffffff))",
+    "(color: var(a",
+    "(color: var(a , ",
+    "(color: var(a, ",
+    "(color: var(a, var(b",
+    "(color: var(a /* unclosed comment",
+    "(color: var(a, '",
+    "(color: var(a, '\\",
+    "(color: var(a, \\",
+
+    "(var-a:var(b))",
+    "(var-a: var(b))",
+    "(var-a: var(b) )",
+    "(var-a: var( b ) )",
+    "(var-a: var(b, ))",
+    "(var-a: var(b,/**/a))",
+    "(var-a: 1px var(b))",
+    "(var-a: var(b) 1px)",
+    "(var-a: something 3px url(whereever) calc(var(b) + 1px))",
+    "(var-a: var(b) !important)",
+    "(var-a: var(b)var(b))",
+    "(var-a: var(b, var(c, var(d, black))))",
+    "(var-a: var(b) <!--)",
+    "(var-a: --> var(b))",
+    "(var-a: { [ var(b) ] })",
+    "(var-a: [;] var(b))",
+    "(var-a: )",
+    "(var-a:var(a))",
+    "(var-0: a)",
+    "(var-\\61: a)",
+    "(var-\\d800: a)",
+    "(var-\\ffffff: a)",
+    "(var-\0: 1)",
+    "(var-a: ",
+    "(var-a: /* unclosed comment",
+    "(var-a: var(b",
+    "(var-a: var(b, ",
+    "(var-a: var(b, var(c",
+    "(var-a: [{(((",
+    "(var-a: '",
+    "(var-a: '\\",
+    "(var-a: \\",
+  ];
+
+  var failingConditions = [
+    "(color: var(a,))",
+    "(color: var(a,/**/))",
+    "(color: var(a,!))",
+    "(color: var(a,!important))",
+    "(color: var(a) !important !important)",
+    "(color: var(a,;))",
+    "(color: var(a);)",
+    "(color: var(0))",
+    "(color: var(1px))",
+    "(color: var(a)))",
+    "(color: var(a) \"\n",
+    "(color: var(a) url(\"\n",
+
+    "(var-a: var(b,))",
+    "(var-a: var(b,/**/))",
+    "(var-a: var(b,!))",
+    "(var-a: var(b,!important))",
+    "((var-a: var(b) !important !important))",
+    "(var-a: var(b,;))",
+    "(var-a: var(b);)",
+    "(var-a:)",
+    "(var-: a)",
+    "(var-a: var(1px))",
+    "(VAR-a: a)",
+    "(var-a: a))",
+    "(var-a: \"\n",
+    "(var-a: url(\"\n",
+  ];
+
+  var passingDeclarations = [
+    ["color", "var(a)"],
+    ["color", " var(a)"],
+    ["color", "var(a) "],
+    ["color", "var( a ) "],
+    ["color", "var(a, )"],
+    ["color", "var(a,/**/a)"],
+    ["color", "1px var(a)"],
+    ["color", "var(a) 1px"],
+    ["color", "something 3px url(whereever) calc(var(a) + 1px)"],
+    ["color", "var(a)var(b)"],
+    ["color", "var(a, var(b, var(c, black)))"],
+    ["color", "var(a) <!--"],
+    ["color", "--> var(a)"],
+    ["color", "{ [ var(a) ] }"],
+    ["color", "[;] var(a)"],
+    ["color", "var(a,(;))"],
+    ["color", "VAR(a)"],
+    ["color", "var(\\30)"],
+    ["color", "var(\\d800)"],
+    ["color", "var(\\ffffff)"],
+    ["color", "var(a"],
+    ["color", "var(a , "],
+    ["color", "var(a, "],
+    ["color", "var(a, var(b"],
+    ["color", "var(a /* unclosed comment"],
+    ["color", "var(a, '"],
+    ["color", "var(a, '\\"],
+    ["color", "var(a, \\"],
+
+    ["var-a", " var(b)"],
+    ["var-a", "var(b)"],
+    ["var-a", "var(b) "],
+    ["var-a", "var( b ) "],
+    ["var-a", "var(b, )"],
+    ["var-a", "var(b,/**/a)"],
+    ["var-a", "1px var(b)"],
+    ["var-a", "var(b) 1px"],
+    ["var-a", "something 3px url(whereever) calc(var(b) + 1px)"],
+    ["var-a", "var(b)var(b)"],
+    ["var-a", "var(b, var(c, var(d, black)))"],
+    ["var-a", "var(b) <!--"],
+    ["var-a", "--> var(b)"],
+    ["var-a", "{ [ var(b) ] }"],
+    ["var-a", "[;] var(b)"],
+    ["var-a", " "],
+    ["var-a", "var(a)"],
+    ["var-0", "a"],
+    ["var-\\61", "a"],
+    ["var-\\d800", "a"],
+    ["var-\\ffffff", "a"],
+    ["var-\0", "a"],
+    ["var-\ud800", "a"],
+    ["var-a", "a /* unclosed comment"],
+    ["var-a", "var(b"],
+    ["var-a", "var(b, "],
+    ["var-a", "var(b, var(c"],
+    ["var-a", "[{((("],
+    ["var-a ", "a"],
+    ["var-a ", "'"],
+    ["var-a ", "'\\"],
+    ["var-a ", "\\"],
+  ];
+
+  var failingDeclarations = [
+    ["color", "var(a,)"],
+    ["color", "var(a,/**/)"],
+    ["color", "var(a,!)"],
+    ["color", "var(a,!important)"],
+    ["color", "var(a,;)"],
+    ["color", "var(a);"],
+    ["color", "var(0)"],
+    ["color", "var(1px)"],
+    ["color", "var(a))"],
+    ["color", "var(a) \"\n"],
+    ["color", "var(a) url(\"\n"],
+    ["color", "var(a) !important"],
+    ["color", "var(a) !important !important"],
+
+    ["var-a", "var(b,)"],
+    ["var-a", "var(b,/**/)"],
+    ["var-a", "var(b,!)"],
+    ["var-a", "var(b,!important)"],
+    ["var-a", "var(b) !important !important"],
+    ["var-a", "var(b,;)"],
+    ["var-a", "var(b);"],
+    ["var-a", ""],
+    ["var-", "a"],
+    ["var-a", "var(1px)"],
+    ["(VAR-a", "a"],
+    ["var-a", "a)"],
+    ["var-a", "\"\n"],
+    ["var-a", "url(\"\n"],
+    ["var-a", "var(b))"],
+  ];
+
+  passingConditions.forEach(function(aCondition) {
+    is(CSS.supports(aCondition), true, "CSS.supports returns true for passing condition \"" + aCondition + "\"");
+  });
+
+  failingConditions.forEach(function(aCondition) {
+    is(CSS.supports(aCondition), false, "CSS.supports returns false for failing condition \"" + aCondition + "\"");
+  });
+
+  passingDeclarations.forEach(function(aDeclaration) {
+    is(CSS.supports(aDeclaration[0], aDeclaration[1]), true, "CSS.supports returns true for supported declaration \"" + aDeclaration.join(":") + "\"");
+  });
+
+  failingDeclarations.forEach(function(aDeclaration) {
+    is(CSS.supports(aDeclaration[0], aDeclaration[1]), false, "CSS.supports returns false for unsupported declaration \"" + aDeclaration.join(":") + "\"");
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.supports-rule.enabled", true],
+                                    ["layout.css.variables.enabled", true]] }, runTest);
+</script>
+</pre>
+</body>
+</html>

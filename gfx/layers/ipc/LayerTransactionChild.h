@@ -58,6 +58,10 @@ protected:
 
   virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) MOZ_OVERRIDE;
   virtual bool DeallocPCompositableChild(PCompositableChild* actor) MOZ_OVERRIDE;
+
+  virtual PTextureChild* AllocPTextureChild() MOZ_OVERRIDE;
+  virtual bool DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
+
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   void AddIPDLReference() {

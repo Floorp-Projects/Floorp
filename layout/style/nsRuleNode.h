@@ -55,7 +55,7 @@ struct nsInheritedStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void DestroyStructs(uint32_t aBits, nsPresContext* aContext) {
+  void DestroyStructs(uint64_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_INHERITED(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -68,7 +68,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
   }
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
     DestroyStructs(aBits, aContext);
     aContext->FreeToShell(sizeof(nsInheritedStyleData), this);
   }
@@ -100,7 +100,7 @@ struct nsResetStyleData
     return aContext->AllocateFromShell(sz);
   }
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
 #define STYLE_STRUCT_RESET(name, checkdata_cb) \
     void *name##Data = mStyleStructs[eStyleStruct_##name]; \
     if (name##Data && !(aBits & NS_STYLE_INHERIT_BIT(name))) \
@@ -178,7 +178,7 @@ struct nsCachedStyleData
   #undef STYLE_STRUCT_RESET
   #undef STYLE_STRUCT_INHERITED
 
-  void Destroy(uint32_t aBits, nsPresContext* aContext) {
+  void Destroy(uint64_t aBits, nsPresContext* aContext) {
     if (mResetData)
       mResetData->Destroy(aBits, aContext);
     if (mInheritedData)
@@ -423,6 +423,18 @@ protected:
   const void* SetDefaultOnRoot(const nsStyleStructID aSID,
                                nsStyleContext* aContext);
 
+  /**
+   * Resolves any property values in aRuleData for a given style struct that
+   * have eCSSUnit_TokenStream values, by resolving them against the computed
+   * variable values on the style context and re-parsing the property.
+   *
+   * @return Whether any properties with eCSSUnit_TokenStream values were
+   *   encountered.
+   */
+  static bool ResolveVariableReferences(const nsStyleStructID aSID,
+                                        nsRuleData* aRuleData,
+                                        nsStyleContext* aContext);
+
   const void*
     WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext);
 
@@ -587,6 +599,13 @@ protected:
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const bool aCanStoreInRuleTree);
+
+  const void*
+    ComputeVariablesData(void* aStartStruct,
+                         const nsRuleData* aRuleData,
+                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
+                         RuleDetail aRuleDetail,
+                         const bool aCanStoreInRuleTree);
 
   // helpers for |ComputeFontData| that need access to |mNoneBits|:
   static void SetFontSize(nsPresContext* aPresContext,

@@ -285,6 +285,7 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mTriedBrowserInit(false)
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
+  , mContextMenuHandled(false)
 {
 }
 
@@ -1661,6 +1662,18 @@ TabChild::RecvHandleLongTap(const CSSIntPoint& aPoint)
 }
 
 bool
+TabChild::RecvHandleLongTapUp(const CSSIntPoint& aPoint)
+{
+  if (mContextMenuHandled) {
+    mContextMenuHandled = false;
+    return true;
+  }
+
+  RecvHandleSingleTap(aPoint);
+  return true;
+}
+
+bool
 TabChild::RecvNotifyTransformBegin(const ViewID& aViewId)
 {
   nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
@@ -2518,6 +2531,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TabChildGlobal)
   NS_INTERFACE_MAP_ENTRY(nsISyncMessageSender)
   NS_INTERFACE_MAP_ENTRY(nsIContentFrameMessageManager)
   NS_INTERFACE_MAP_ENTRY(nsIScriptObjectPrincipal)
+  NS_INTERFACE_MAP_ENTRY(nsIGlobalObject)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ContentFrameMessageManager)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
@@ -2582,10 +2596,20 @@ TabChildGlobal::GetJSContextForEventHandlers()
   return nsContentUtils::GetSafeJSContext();
 }
 
-nsIPrincipal* 
+nsIPrincipal*
 TabChildGlobal::GetPrincipal()
 {
   if (!mTabChild)
     return nullptr;
   return mTabChild->GetPrincipal();
 }
+
+JSObject*
+TabChildGlobal::GetGlobalJSObject()
+{
+  NS_ENSURE_TRUE(mTabChild, nullptr);
+  nsCOMPtr<nsIXPConnectJSObjectHolder> ref = mTabChild->GetGlobal();
+  NS_ENSURE_TRUE(ref, nullptr);
+  return ref->GetJSObject();
+}
+

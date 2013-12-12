@@ -48,6 +48,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gl;
+using namespace mozilla::gfx;
 
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
 static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
@@ -2640,14 +2641,14 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
 
 nsresult
 WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                                     gfxImageSurface **imageOut, WebGLTexelFormat *format)
+                                                     RefPtr<DataSourceSurface>& imageOut, WebGLTexelFormat *format)
 {
-   *imageOut = nullptr;
    *format = WebGLTexelFormat::None;
 
-    if (!res.mSurface)
+    if (!res.mSourceSurface)
         return NS_OK;
-    if (res.mSurface->GetType() != gfxSurfaceTypeImage) {
+    RefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
+    if (!data) {
         // SurfaceFromElement lied!
         return NS_OK;
     }
@@ -2687,28 +2688,25 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     // Notice that there is never a need to mark the WebGL canvas as write-only, since we reject write-only/cross-domain
     // texture sources in the first place.
 
-    gfxImageSurface* surf = static_cast<gfxImageSurface*>(res.mSurface.get());
-
-    res.mSurface.forget();
-    *imageOut = surf;
-
-    switch (surf->Format()) {
-        case gfxImageFormatARGB32:
+    switch (data->GetFormat()) {
+        case FORMAT_B8G8R8A8:
             *format = WebGLTexelFormat::BGRA8; // careful, our ARGB means BGRA
             break;
-        case gfxImageFormatRGB24:
+        case FORMAT_B8G8R8X8:
             *format = WebGLTexelFormat::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
             break;
-        case gfxImageFormatA8:
+        case FORMAT_A8:
             *format = WebGLTexelFormat::A8;
             break;
-        case gfxImageFormatRGB16_565:
+        case FORMAT_R5G6B5:
             *format = WebGLTexelFormat::RGB565;
             break;
         default:
             NS_ASSERTION(false, "Unsupported image format. Unimplemented.");
             return NS_ERROR_NOT_IMPLEMENTED;
     }
+
+    imageOut = data;
 
     return NS_OK;
 }

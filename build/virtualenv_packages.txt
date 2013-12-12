@@ -13,6 +13,7 @@ mock.pth:python/mock-1.0.0
 mozilla.pth:build
 mozilla.pth:config
 mozilla.pth:xpcom/typelib/xpt/tools
+moztreedocs.pth:tools/docs
 copy:build/buildconfig.py
 packages.txt:testing/mozbase/packages.txt
 objdir:build

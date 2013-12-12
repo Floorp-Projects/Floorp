@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<title>Test serialization of computed CSS variable values</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
+
+<div style="var-z:an-inherited-value">
+  <span></span>
+</div>
+
+<script>
+// Each entry is an entire declaration followed by the property to check and
+// its expected computed value.
+var values = [
+  ["", "var-z", "an-inherited-value"],
+  ["var-a: ", "var-a", " "],
+  ["var-a: initial", "var-a", ""],
+  ["var-z: initial", "var-z", ""],
+  ["var-a: inherit", "var-a", ""],
+  ["var-z: inherit", "var-z", "an-inherited-value"],
+  ["var-a: unset", "var-a", ""],
+  ["var-z: unset", "var-z", "an-inherited-value"],
+  ["var-a: 1px", "var-a", " 1px"],
+  ["var-a: var(a)", "var-a", ""],
+  ["var-a: var(b)", "var-a", ""],
+  ["var-a: var(b); var-b: 1px", "var-a", "  1px"],
+  ["var-a: var(b, 1px)", "var-a", "  1px"],
+  ["var-a: var(a, 1px)", "var-a", "  1px"],
+  ["var-a: something 3px url(whereever) calc(var(a) + 1px)", "var-a", ""],
+  ["var-a: something 3px url(whereever) calc(var(b,1em) + 1px)", "var-a", " something 3px url(whereever) calc(1em + 1px)"],
+  ["var-a: var(b, var(c, var(d, Black)))", "var-a", "    Black"],
+  ["var-a: a var(b) c; var-b:b", "var-a", " a b c"],
+  ["var-a: a var(b,b var(c) d) e; var-c:c", "var-a", " a b c d e"],
+  ["var-a: var(b)red; var-b:orange;", "var-a", " orange/**/red"],
+  ["var-a: var(b)var(c); var-b:orange; var-c:red;", "var-a", " orange/**/red"],
+  ["var-a: var(b)var(c,red); var-b:orange;", "var-a", " orange/**/red"],
+  ["var-a: var(b,orange)var(c); var-c:red;", "var-a", " orange/**/red"],
+  ["counter-reset: var(a)red; var-a:orange;", "counter-reset", "orange 0 red 0"],
+  ["var-a: var(b)var(c); var-c:[c]; var-b:('ab", "var-a", " ('ab')[c]"],
+  ["var-a: '", "var-a", " ''"],
+  ["var-a: '\\", "var-a", " ''"],
+  ["var-a: \\", "var-a", " \\\ufffd"],
+  ["var-a: \"", "var-a", " \"\""],
+  ["var-a: \"\\", "var-a", " \"\""],
+  ["var-a: /* abc ", "var-a", " /* abc */"],
+  ["var-a: /* abc *", "var-a", " /* abc */"],
+  ["var-a: url(http://example.org/", "var-a", " url(http://example.org/)"],
+  ["var-a: url(http://example.org/\\", "var-a", " url(http://example.org/\\\ufffd)"],
+  ["var-a: url('http://example.org/", "var-a", " url('http://example.org/')"],
+  ["var-a: url('http://example.org/\\", "var-a", " url('http://example.org/')"],
+  ["var-a: url(\"http://example.org/", "var-a", " url(\"http://example.org/\")"],
+  ["var-a: url(\"http://example.org/\\", "var-a", " url(\"http://example.org/\")"]
+];
+
+var span = document.querySelector("span");
+
+values.forEach(function(entry, i) {
+  var declaration = entry[0];
+  var property = entry[1];
+  var expected = entry[2];
+  span.setAttribute("style", declaration);
+  var cs = getComputedStyle(span, "");
+  is(cs.getPropertyValue(property), expected, "subtest #" + i);
+});
+</script>

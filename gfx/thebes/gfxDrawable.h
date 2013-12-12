@@ -58,6 +58,8 @@ public:
                        const gfxMatrix aTransform = gfxMatrix());
     gfxSurfaceDrawable(mozilla::gfx::DrawTarget* aDT, const gfxIntSize aSize,
                        const gfxMatrix aTransform = gfxMatrix());
+    gfxSurfaceDrawable(mozilla::gfx::SourceSurface* aSurface, const gfxIntSize aSize,
+                       const gfxMatrix aTransform = gfxMatrix());
     virtual ~gfxSurfaceDrawable() {}
 
     virtual bool Draw(gfxContext* aContext,
@@ -71,6 +73,7 @@ public:
 protected:
     nsRefPtr<gfxASurface> mSurface;
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
+    mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     const gfxMatrix mTransform;
 };
 

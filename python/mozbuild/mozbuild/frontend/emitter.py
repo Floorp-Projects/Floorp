@@ -9,6 +9,7 @@ import logging
 import os
 import traceback
 import sys
+import time
 
 from mach.mixin.logging import LoggingMixin
 
@@ -79,26 +80,44 @@ class TreeMetadataEmitter(LoggingMixin):
         typically fed into this function.
         """
         file_count = 0
-        execution_time = 0.0
+        sandbox_execution_time = 0.0
+        emitter_time = 0.0
         sandboxes = {}
+
+        def emit_objs(objs):
+            for o in objs:
+                yield o
+                if not o._ack:
+                    raise Exception('Unhandled object of type %s' % type(o))
 
         for out in output:
             if isinstance(out, MozbuildSandbox):
                 # Keep all sandboxes around, we will need them later.
                 sandboxes[out['OBJDIR']] = out
 
-                for o in self.emit_from_sandbox(out):
-                    yield o
-                    if not o._ack:
-                        raise Exception('Unhandled object of type %s' % type(o))
+                start = time.time()
+                # We need to expand the generator for the timings to work.
+                objs = list(self.emit_from_sandbox(out))
+                emitter_time += time.time() - start
+
+                for o in emit_objs(objs): yield o
 
                 # Update the stats.
                 file_count += len(out.all_paths)
-                execution_time += out.execution_time
+                sandbox_execution_time += out.execution_time
 
             else:
                 raise Exception('Unhandled output type: %s' % out)
 
+        start = time.time()
+        objs = list(self._emit_libs_derived(sandboxes))
+        emitter_time += time.time() - start
+
+        for o in emit_objs(objs): yield o
+
+        yield ReaderSummary(file_count, sandbox_execution_time, emitter_time)
+
+    def _emit_libs_derived(self, sandboxes):
         for objdir, libname, final_lib in self._final_libs:
             if final_lib not in self._libs:
                 raise Exception('FINAL_LIBRARY in %s (%s) does not match any '
@@ -133,8 +152,6 @@ class TreeMetadataEmitter(LoggingMixin):
                         passthru.variables['FINAL_LIBRARY'] = basename
                         yield passthru
                 yield libdef
-
-        yield ReaderSummary(file_count, execution_time)
 
     def emit_from_sandbox(self, sandbox):
         """Convert a MozbuildSandbox to tree metadata objects.
@@ -189,7 +206,7 @@ class TreeMetadataEmitter(LoggingMixin):
         varmap = dict(
             # Makefile.in : moz.build
             ANDROID_GENERATED_RESFILES='ANDROID_GENERATED_RESFILES',
-            ANDROID_RESFILES='ANDROID_RESFILES',
+            ANDROID_RES_DIRS='ANDROID_RES_DIRS',
             CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             EXPORT_LIBRARY='EXPORT_LIBRARY',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',

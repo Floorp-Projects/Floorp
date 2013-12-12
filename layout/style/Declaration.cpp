@@ -18,11 +18,6 @@
 namespace mozilla {
 namespace css {
 
-// check that we can fit all the CSS properties into a uint16_t
-// for the mOrder array
-static_assert(eCSSProperty_COUNT_no_shorthands - 1 <= UINT16_MAX,
-              "CSS longhand property numbers no longer fit in a uint16_t");
-
 Declaration::Declaration()
   : mImmutable(false)
 {
@@ -31,9 +26,16 @@ Declaration::Declaration()
 
 Declaration::Declaration(const Declaration& aCopy)
   : mOrder(aCopy.mOrder),
+    mVariableOrder(aCopy.mVariableOrder),
     mData(aCopy.mData ? aCopy.mData->Clone() : nullptr),
-    mImportantData(aCopy.mImportantData
-                   ? aCopy.mImportantData->Clone() : nullptr),
+    mImportantData(aCopy.mImportantData ?
+                     aCopy.mImportantData->Clone() : nullptr),
+    mVariables(aCopy.mVariables ?
+        new CSSVariableDeclarations(*aCopy.mVariables) :
+        nullptr),
+    mImportantVariables(aCopy.mImportantVariables ?
+        new CSSVariableDeclarations(*aCopy.mImportantVariables) :
+        nullptr),
     mImmutable(false)
 {
   MOZ_COUNT_CTOR(mozilla::css::Declaration);
@@ -52,13 +54,15 @@ Declaration::ValueAppended(nsCSSProperty aProperty)
   NS_ABORT_IF_FALSE(!nsCSSProps::IsShorthand(aProperty),
                     "shorthands forbidden");
   // order IS important for CSS, so remove and add to the end
-  mOrder.RemoveElement(aProperty);
-  mOrder.AppendElement(aProperty);
+  mOrder.RemoveElement(static_cast<uint32_t>(aProperty));
+  mOrder.AppendElement(static_cast<uint32_t>(aProperty));
 }
 
 void
 Declaration::RemoveProperty(nsCSSProperty aProperty)
 {
+  MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT);
+
   nsCSSExpandedDataBlock data;
   ExpandTo(&data);
   NS_ABORT_IF_FALSE(!mData && !mImportantData, "Expand didn't null things out");
@@ -66,11 +70,11 @@ Declaration::RemoveProperty(nsCSSProperty aProperty)
   if (nsCSSProps::IsShorthand(aProperty)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
       data.ClearLonghandProperty(*p);
-      mOrder.RemoveElement(*p);
+      mOrder.RemoveElement(static_cast<uint32_t>(*p));
     }
   } else {
     data.ClearLonghandProperty(aProperty);
-    mOrder.RemoveElement(aProperty);
+    mOrder.RemoveElement(static_cast<uint32_t>(aProperty));
   }
 
   CompressFrom(&data);
@@ -171,8 +175,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   // Since we're doing this check for 'inherit' and 'initial' up front,
   // we can also simplify the property serialization code by serializing
   // those values up front as well.
+  //
+  // Additionally, if a shorthand property was set using a value with a
+  // variable reference and none of its component longhand properties were
+  // then overridden on the declaration, we return the token stream
+  // assigned to the shorthand.
+  const nsCSSValue* tokenStream = nullptr;
   uint32_t totalCount = 0, importantCount = 0,
-           initialCount = 0, inheritCount = 0, unsetCount = 0;
+           initialCount = 0, inheritCount = 0, unsetCount = 0,
+           matchingTokenStreamCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
@@ -197,6 +208,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       ++initialCount;
     } else if (val->GetUnit() == eCSSUnit_Unset) {
       ++unsetCount;
+    } else if (val->GetUnit() == eCSSUnit_TokenStream &&
+               val->GetTokenStreamValue()->mShorthandPropertyID == aProperty) {
+      tokenStream = val;
+      ++matchingTokenStreamCount;
     }
   }
   if (importantCount != 0 && importantCount != totalCount) {
@@ -220,6 +235,16 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
   if (initialCount != 0 || inheritCount != 0 || unsetCount != 0) {
     // Case (2): partially initial, inherit or unset.
+    return;
+  }
+  if (tokenStream) {
+    if (matchingTokenStreamCount == totalCount) {
+      // Shorthand was specified using variable references and all of its
+      // longhand components were set by the shorthand.
+      aValue.Append(tokenStream->GetTokenStreamValue()->mTokenStream);
+    } else {
+      // In all other cases, serialize to the empty string.
+    }
     return;
   }
 
@@ -883,12 +908,18 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   }
 }
 
+// Length of the "var-" prefix of custom property names.
+#define VAR_PREFIX_LENGTH 4
+
 bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
   nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty, nsCSSProps::eAny);
   if (propID == eCSSProperty_UNKNOWN) {
     return false;
+  }
+  if (propID == eCSSPropertyExtra_variable) {
+    return GetVariableValueIsImportant(Substring(aProperty, VAR_PREFIX_LENGTH));
   }
   return GetValueIsImportant(propID);
 }
@@ -940,6 +971,57 @@ Declaration::AppendPropertyAndValueToString(nsCSSProperty aProperty,
 }
 
 void
+Declaration::AppendVariableAndValueToString(const nsAString& aName,
+                                            nsAString& aResult) const
+{
+  aResult.AppendLiteral("var-");
+  aResult.Append(aName);
+  CSSVariableDeclarations::Type type;
+  nsString value;
+  bool important;
+
+  if (mImportantVariables && mImportantVariables->Get(aName, type, value)) {
+    important = true;
+  } else {
+    MOZ_ASSERT(mVariables);
+    MOZ_ASSERT(mVariables->Has(aName));
+    mVariables->Get(aName, type, value);
+    important = false;
+  }
+
+  switch (type) {
+    case CSSVariableDeclarations::eTokenStream:
+      if (value.IsEmpty()) {
+        aResult.Append(':');
+      } else {
+        aResult.AppendLiteral(": ");
+        aResult.Append(value);
+      }
+      break;
+
+    case CSSVariableDeclarations::eInitial:
+      aResult.AppendLiteral("initial");
+      break;
+
+    case CSSVariableDeclarations::eInherit:
+      aResult.AppendLiteral("inherit");
+      break;
+
+    case CSSVariableDeclarations::eUnset:
+      aResult.AppendLiteral("unset");
+      break;
+
+    default:
+      MOZ_ASSERT(false, "unexpected variable value type");
+  }
+
+  if (important) {
+    aResult.AppendLiteral("! important");
+  }
+  aResult.AppendLiteral("; ");
+}
+
+void
 Declaration::ToString(nsAString& aString) const
 {
   // Someone cares about this declaration's contents, so don't let it
@@ -959,7 +1041,14 @@ Declaration::ToString(nsAString& aString) const
   int32_t index;
   nsAutoTArray<nsCSSProperty, 16> shorthandsUsed;
   for (index = 0; index < count; index++) {
-    nsCSSProperty property = OrderValueAt(index);
+    nsCSSProperty property = GetPropertyAt(index);
+
+    if (property == eCSSPropertyExtra_variable) {
+      uint32_t variableIndex = mOrder[index] - eCSSProperty_COUNT;
+      AppendVariableAndValueToString(mVariableOrder[variableIndex], aString);
+      continue;
+    }
+
     if (!nsCSSProps::IsEnabled(property)) {
       continue;
     }
@@ -1058,7 +1147,11 @@ Declaration::GetNthProperty(uint32_t aIndex, nsAString& aReturn) const
 {
   aReturn.Truncate();
   if (aIndex < mOrder.Length()) {
-    nsCSSProperty property = OrderValueAt(aIndex);
+    nsCSSProperty property = GetPropertyAt(aIndex);
+    if (property == eCSSPropertyExtra_variable) {
+      GetCustomPropertyNameAt(aIndex, aReturn);
+      return true;
+    }
     if (0 <= property) {
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(property), aReturn);
       return true;
@@ -1092,7 +1185,143 @@ Declaration::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   n += mOrder.SizeOfExcludingThis(aMallocSizeOf);
   n += mData          ? mData         ->SizeOfIncludingThis(aMallocSizeOf) : 0;
   n += mImportantData ? mImportantData->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  if (mVariables) {
+    n += mVariables->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mImportantVariables) {
+    n += mImportantVariables->SizeOfIncludingThis(aMallocSizeOf);
+  }
   return n;
+}
+
+bool
+Declaration::HasVariableDeclaration(const nsAString& aName) const
+{
+  return (mVariables && mVariables->Has(aName)) ||
+         (mImportantVariables && mImportantVariables->Has(aName));
+}
+
+void
+Declaration::GetVariableDeclaration(const nsAString& aName,
+                                    nsAString& aValue) const
+{
+  aValue.Truncate();
+
+  CSSVariableDeclarations::Type type;
+  nsString value;
+
+  if ((mImportantVariables && mImportantVariables->Get(aName, type, value)) ||
+      (mVariables && mVariables->Get(aName, type, value))) {
+    switch (type) {
+      case CSSVariableDeclarations::eTokenStream:
+        aValue.Append(value);
+        break;
+
+      case CSSVariableDeclarations::eInitial:
+        aValue.AppendLiteral("initial");
+        break;
+
+      case CSSVariableDeclarations::eInherit:
+        aValue.AppendLiteral("inherit");
+        break;
+
+      case CSSVariableDeclarations::eUnset:
+        aValue.AppendLiteral("unset");
+        break;
+
+      default:
+        MOZ_ASSERT(false, "unexpected variable value type");
+    }
+  }
+}
+
+void
+Declaration::AddVariableDeclaration(const nsAString& aName,
+                                    CSSVariableDeclarations::Type aType,
+                                    const nsString& aValue,
+                                    bool aIsImportant,
+                                    bool aOverrideImportant)
+{
+  MOZ_ASSERT(IsMutable());
+
+  nsTArray<nsString>::index_type index = mVariableOrder.IndexOf(aName);
+  if (index == nsTArray<nsString>::NoIndex) {
+    index = mVariableOrder.Length();
+    mVariableOrder.AppendElement(aName);
+  }
+
+  if (!aIsImportant && !aOverrideImportant &&
+      mImportantVariables && mImportantVariables->Has(aName)) {
+    return;
+  }
+
+  CSSVariableDeclarations* variables;
+  if (aIsImportant) {
+    if (mVariables) {
+      mVariables->Remove(aName);
+    }
+    if (!mImportantVariables) {
+      mImportantVariables = new CSSVariableDeclarations;
+    }
+    variables = mImportantVariables;
+  } else {
+    if (mImportantVariables) {
+      mImportantVariables->Remove(aName);
+    }
+    if (!mVariables) {
+      mVariables = new CSSVariableDeclarations;
+    }
+    variables = mVariables;
+  }
+
+  switch (aType) {
+    case CSSVariableDeclarations::eTokenStream:
+      variables->PutTokenStream(aName, aValue);
+      break;
+
+    case CSSVariableDeclarations::eInitial:
+      MOZ_ASSERT(aValue.IsEmpty());
+      variables->PutInitial(aName);
+      break;
+
+    case CSSVariableDeclarations::eInherit:
+      MOZ_ASSERT(aValue.IsEmpty());
+      variables->PutInherit(aName);
+      break;
+
+    case CSSVariableDeclarations::eUnset:
+      MOZ_ASSERT(aValue.IsEmpty());
+      variables->PutUnset(aName);
+      break;
+
+    default:
+      MOZ_ASSERT("unexpected aType value");
+  }
+
+  uint32_t propertyIndex = index + eCSSProperty_COUNT;
+  mOrder.RemoveElement(propertyIndex);
+  mOrder.AppendElement(propertyIndex);
+}
+
+void
+Declaration::RemoveVariableDeclaration(const nsAString& aName)
+{
+  if (mVariables) {
+    mVariables->Remove(aName);
+  }
+  if (mImportantVariables) {
+    mImportantVariables->Remove(aName);
+  }
+  nsTArray<nsString>::index_type index = mVariableOrder.IndexOf(aName);
+  if (index != nsTArray<nsString>::NoIndex) {
+    mOrder.RemoveElement(index + eCSSProperty_COUNT);
+  }
+}
+
+bool
+Declaration::GetVariableValueIsImportant(const nsAString& aName) const
+{
+  return mImportantVariables && mImportantVariables->Has(aName);
 }
 
 } // namespace mozilla::css

@@ -95,18 +95,13 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
 
     MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
                aSourceSurface->Width()  == aDestSurface->Width() &&
-               aSourceSurface->Height() == aDestSurface->Height() &&
-               aSourceSurface->Stride() == aDestSurface->Stride(),
+               aSourceSurface->Height() == aDestSurface->Height(),
                "Source and destination surfaces don't have identical characteristics");
-
-    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-               "Source surface stride isn't tightly packed");
 
     // Only premultiply ARGB32
     if (aSourceSurface->Format() != gfxImageFormatARGB32) {
         if (aDestSurface != aSourceSurface) {
-            memcpy(aDestSurface->Data(), aSourceSurface->Data(),
-                   aSourceSurface->Stride() * aSourceSurface->Height());
+            aDestSurface->CopyFrom(aSourceSurface);
         }
         return;
     }
@@ -114,29 +109,33 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
 
-    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
-    for (uint32_t i = 0; i < dim; ++i) {
+    for (int32_t i = 0; i < aSourceSurface->Height(); ++i) {
+        uint8_t *srcRow = src + (i * aSourceSurface->Stride());
+        uint8_t *dstRow = dst + (i * aDestSurface->Stride());
+
+        for (int32_t j = 0; j < aSourceSurface->Width(); ++j) {
 #ifdef IS_LITTLE_ENDIAN
-        uint8_t b = *src++;
-        uint8_t g = *src++;
-        uint8_t r = *src++;
-        uint8_t a = *src++;
+          uint8_t b = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t a = *srcRow++;
 
-        *dst++ = UnpremultiplyValue(a, b);
-        *dst++ = UnpremultiplyValue(a, g);
-        *dst++ = UnpremultiplyValue(a, r);
-        *dst++ = a;
+          *dstRow++ = UnpremultiplyValue(a, b);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = a;
 #else
-        uint8_t a = *src++;
-        uint8_t r = *src++;
-        uint8_t g = *src++;
-        uint8_t b = *src++;
+          uint8_t a = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t b = *srcRow++;
 
-        *dst++ = a;
-        *dst++ = UnpremultiplyValue(a, r);
-        *dst++ = UnpremultiplyValue(a, g);
-        *dst++ = UnpremultiplyValue(a, b);
+          *dstRow++ = a;
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, b);
 #endif
+        }
     }
 }
 

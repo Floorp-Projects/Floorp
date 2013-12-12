@@ -1984,6 +1984,13 @@ pref("layout.css.unset-value.enabled", true);
 // Is support for the "all" shorthand enabled?
 pref("layout.css.all-shorthand.enabled", true);
 
+// Is support for CSS variables enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.variables.enabled", false);
+#else
+pref("layout.css.variables.enabled", true);
+#endif
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
