@@ -68,10 +68,11 @@ VARIABLES = {
         file.
         """, 'export'),
 
-    'ANDROID_RESFILES': (StrictOrderingOnAppendList, list,
-        """Android resource files.
+    'ANDROID_RES_DIRS': (list, list,
+        """Android resource directories.
 
-        This variable contains a list of files to package into a 'res'
+        This variable contains a list of directories, each relative to
+        the srcdir, containing static files to package into a 'res'
         directory and merge into an APK file.
         """, 'export'),
 
