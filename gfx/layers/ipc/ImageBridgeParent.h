@@ -65,6 +65,9 @@ public:
                                                 uint64_t*) MOZ_OVERRIDE;
   bool DeallocPCompositableParent(PCompositableParent* aActor) MOZ_OVERRIDE;
 
+  virtual PTextureParent* AllocPTextureParent() MOZ_OVERRIDE;
+  virtual bool DeallocPTextureParent(PTextureParent* actor) MOZ_OVERRIDE;
+
   bool RecvStop() MOZ_OVERRIDE;
 
   MessageLoop * GetMessageLoop();

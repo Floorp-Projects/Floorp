@@ -138,6 +138,12 @@ protected:
   // return the old value; it just does a straight removal.
   nsresult RemoveProperty(const nsCSSProperty aPropID);
 
+  void GetCustomPropertyValue(const nsAString& aPropertyName, nsAString& aValue);
+  nsresult RemoveCustomProperty(const nsAString& aPropertyName);
+  nsresult ParseCustomPropertyValue(const nsAString& aPropertyName,
+                                    const nsAString& aPropValue,
+                                    bool aIsImportant);
+
 protected:
   virtual ~nsDOMCSSDeclaration();
   nsDOMCSSDeclaration()

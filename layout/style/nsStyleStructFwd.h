@@ -62,6 +62,6 @@ eStyleStruct_BackendOnly = nsStyleStructID_Length
 };
 
 // A bit corresponding to each struct ID
-#define NS_STYLE_INHERIT_BIT(sid_)        (1 << int32_t(eStyleStruct_##sid_))
+#define NS_STYLE_INHERIT_BIT(sid_)        (1 << uint64_t(eStyleStruct_##sid_))
 
 #endif /* nsStyleStructFwd_h_ */

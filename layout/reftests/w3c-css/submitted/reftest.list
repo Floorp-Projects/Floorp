@@ -54,3 +54,6 @@ include ui3/reftest.list
 
 # Values and Units Level 3
 include values3/reftest.list
+
+# Variables Level 1
+include variables/reftest.list

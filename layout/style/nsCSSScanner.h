@@ -95,6 +95,42 @@ enum nsCSSTokenType {
   eCSSToken_HTMLComment,    // <!-- -->
 };
 
+// Classification of tokens used to determine if a "/**/" string must be
+// inserted if pasting token streams together when serializing.  We include
+// values corresponding to eCSSToken_Dashmatch and eCSSToken_Containsmatch,
+// as css-syntax does not treat these as whole tokens, but we will still
+// need to insert a "/**/" string between a '|' delim and a '|=' dashmatch
+// and between a '/' delim and a '*=' containsmatch.
+//
+// https://dvcs.w3.org/hg/csswg/raw-file/372e659027a0/css-syntax/Overview.html#serialization
+enum nsCSSTokenSerializationType {
+  eCSSTokenSerialization_Nothing,
+  eCSSTokenSerialization_Whitespace,
+  eCSSTokenSerialization_AtKeyword_or_Hash,
+  eCSSTokenSerialization_Number,
+  eCSSTokenSerialization_Dimension,
+  eCSSTokenSerialization_Percentage,
+  eCSSTokenSerialization_URange,
+  eCSSTokenSerialization_URL_or_BadURL,
+  eCSSTokenSerialization_Function,
+  eCSSTokenSerialization_Ident,
+  eCSSTokenSerialization_CDC,
+  eCSSTokenSerialization_DashMatch,
+  eCSSTokenSerialization_ContainsMatch,
+  eCSSTokenSerialization_Symbol_Hash,         // '#'
+  eCSSTokenSerialization_Symbol_At,           // '@'
+  eCSSTokenSerialization_Symbol_Dot_or_Plus,  // '.', '+'
+  eCSSTokenSerialization_Symbol_Minus,        // '-'
+  eCSSTokenSerialization_Symbol_OpenParen,    // '('
+  eCSSTokenSerialization_Symbol_Question,     // '?'
+  eCSSTokenSerialization_Symbol_Assorted,     // '$', '^', '~'
+  eCSSTokenSerialization_Symbol_Equals,       // '='
+  eCSSTokenSerialization_Symbol_Bar,          // '|'
+  eCSSTokenSerialization_Symbol_Slash,        // '/'
+  eCSSTokenSerialization_Symbol_Asterisk,     // '*'
+  eCSSTokenSerialization_Other                // anything else
+};
+
 // A single token returned from the scanner.  mType is always
 // meaningful; comments above describe which other fields are
 // meaningful for which token types.
@@ -120,6 +156,32 @@ struct nsCSSToken {
   void AppendToString(nsString& aBuffer) const;
 };
 
+// Represents an nsCSSScanner's saved position in the input buffer.
+class nsCSSScannerPosition {
+  friend class nsCSSScanner;
+public:
+  nsCSSScannerPosition() : mInitialized(false) { }
+
+  uint32_t LineNumber() {
+    MOZ_ASSERT(mInitialized);
+    return mLineNumber;
+  }
+
+  uint32_t LineOffset() {
+    MOZ_ASSERT(mInitialized);
+    return mLineOffset;
+  }
+
+private:
+  uint32_t mOffset;
+  uint32_t mLineNumber;
+  uint32_t mLineOffset;
+  uint32_t mTokenLineNumber;
+  uint32_t mTokenLineOffset;
+  uint32_t mTokenOffset;
+  bool mInitialized;
+};
+
 // nsCSSScanner tokenizes an input stream using the CSS2.1 forward
 // compatible tokenization rules.  Used internally by nsCSSParser;
 // not available for use by other code.
@@ -142,13 +204,12 @@ class nsCSSScanner {
   }
 
   // Reset or check whether a BAD_URL or BAD_STRING token has been seen.
-  void ClearSeenBadToken() {
-    mSeenBadToken = false;
-  }
+  void ClearSeenBadToken() { mSeenBadToken = false; }
+  bool SeenBadToken() const { return mSeenBadToken; }
 
-  bool SeenBadToken() const {
-    return mSeenBadToken;
-  }
+  // Reset or check whether a "var(" FUNCTION token has been seen.
+  void ClearSeenVariableReference() { mSeenVariableReference = false; }
+  bool SeenVariableReference() const { return mSeenVariableReference; }
 
   // Get the 1-based line number of the last character of
   // the most recently processed token.
@@ -194,6 +255,19 @@ class nsCSSScanner {
   // input to aBuffer.
   void StopRecording(nsString& aBuffer);
 
+  // Returns the length of the current recording.
+  uint32_t RecordingLength() const;
+
+#ifdef DEBUG
+  bool IsRecording() const;
+#endif
+
+  // Stores the current scanner offset into the specified object.
+  void SavePosition(nsCSSScannerPosition& aState);
+
+  // Resets the scanner offset to a position saved by SavePosition.
+  void RestoreSavedPosition(const nsCSSScannerPosition& aState);
+
   enum EOFCharacters {
     eEOFCharacters_None =                    0x0000,
 
@@ -217,11 +291,12 @@ class nsCSSScanner {
     eEOFCharacters_CloseParen =              0x0040,
   };
 
-  // Appends or drops any characters to/from the specified string
-  // the input stream to make the last token not rely on special EOF handling
-  // behavior.
-  static void AdjustTokenStreamForEOFCharacters(EOFCharacters aEOFCharacters,
-                                                nsAString& aString);
+  // Appends any characters to the specified string the input stream to make the
+  // last token not rely on special EOF handling behavior.
+  //
+  // If eEOFCharacters_DropBackslash is in aEOFCharacters, it is ignored.
+  static void AppendImpliedEOFCharacters(EOFCharacters aEOFCharacters,
+                                         nsAString& aString);
 
   EOFCharacters GetEOFCharacters() const {
 #ifdef DEBUG
@@ -275,6 +350,7 @@ protected:
   bool mSVGMode;
   bool mRecording;
   bool mSeenBadToken;
+  bool mSeenVariableReference;
 };
 
 #endif /* nsCSSScanner_h___ */

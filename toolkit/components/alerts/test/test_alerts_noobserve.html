@@ -22,38 +22,54 @@
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
-var gNotificationIsAvailable;
+const wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+             .getService(Ci.nsIWindowMediator);
 
-if (!("@mozilla.org/alerts-service;1" in Cc)) {
-  todo(false, "Alerts service does not exist in this application");
-} else {
-  ok(true, "Alerts service exists in this application");
+function anyXULAlertsVisible() {
+  var windows = wm.getEnumerator('alert:alert');
+  return windows.hasMoreElements();
+}
 
-  var notifier;
-  try {
-    notifier = Cc["@mozilla.org/alerts-service;1"].
-               getService(Ci.nsIAlertsService);
-    ok(true, "Alerts service is available");
-  } catch (ex) {
-    todo(false, "Alerts service is not available.", ex);
+function waitForAlertsThenFinish() {
+  if (anyXULAlertsVisible()) {
+    setTimeout(waitForAlertsThenFinish, 1000);
+  } else {
+    ok(true, "Alert disappeared.");
+    SimpleTest.finish();
   }
+}
 
-  if (notifier) {
+function runTest() {
+  if (!("@mozilla.org/alerts-service;1" in Cc)) {
+    todo(false, "Alerts service does not exist in this application");
+  } else {
+    ok(true, "Alerts service exists in this application");
+
+    var notifier;
     try {
-      notifier.showAlertNotification(null, "Notification test",
-                                     "This notification has no observer");
-      ok(true, "showAlertNotification() succeeded");
-
-      gNotificationIsAvailable = true;
+      notifier = Cc["@mozilla.org/alerts-service;1"].
+                 getService(Ci.nsIAlertsService);
+      ok(true, "Alerts service is available");
     } catch (ex) {
-      todo(false, "showAlertNotification() failed.", ex);
+      todo(false, "Alerts service is not available.", ex);
+    }
+
+    if (notifier) {
+      try {
+        notifier.showAlertNotification(null, "Notification test",
+                                       "This notification has no observer");
+        ok(true, "showAlertNotification() succeeded");
+      } catch (ex) {
+        todo(false, "showAlertNotification() failed.", ex);
+      }
     }
   }
 }
 
-if (gNotificationIsAvailable) {
-  ok(true, "Notification should actually display during later tests... (Hope this doesn't disturb them!)");
-}
+SimpleTest.waitForExplicitFinish();
+ok(!anyXULAlertsVisible(), "Alerts should not be present at the start of the test.");
+runTest();
+setTimeout(waitForAlertsThenFinish, 1000);
 </script>
 </pre>
 </body>

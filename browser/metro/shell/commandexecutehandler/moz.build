@@ -16,3 +16,5 @@ DIST_SUBDIR = ''
 
 for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM'):
     DEFINES[var] = True
+
+NO_PGO = True

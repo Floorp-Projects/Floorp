@@ -1079,33 +1079,51 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 };
 
 /*
- * Entries for the per-compartment set of type objects which are the default
- * 'new' or the lazy types of some prototype.
+ * Entries for the per-compartment set of type objects which are 'new' types to
+ * use for some prototype and constructed with an optional script. This also
+ * includes entries for the set of lazy type objects in the compartment, which
+ * use a null script (though there are only a few of these per compartment).
  */
-struct TypeObjectEntry : DefaultHasher<ReadBarriered<TypeObject> >
+struct TypeObjectWithNewScriptEntry
 {
+    ReadBarriered<TypeObject> object;
+
+    // Note: This pointer is only used for equality and does not need a read barrier.
+    JSFunction *newFunction;
+
+    TypeObjectWithNewScriptEntry(TypeObject *object, JSFunction *newFunction)
+      : object(object), newFunction(newFunction)
+    {}
+
     struct Lookup {
         const Class *clasp;
         TaggedProto hashProto;
         TaggedProto matchProto;
+        JSFunction *newFunction;
 
-        Lookup(const Class *clasp, TaggedProto proto)
-          : clasp(clasp), hashProto(proto), matchProto(proto) {}
+        Lookup(const Class *clasp, TaggedProto proto, JSFunction *newFunction)
+          : clasp(clasp), hashProto(proto), matchProto(proto), newFunction(newFunction)
+        {}
 
 #ifdef JSGC_GENERATIONAL
         /*
          * For use by generational post barriers only.  Look up an entry whose
          * proto has been moved, but was hashed with the original value.
          */
-        Lookup(const Class *clasp, TaggedProto hashProto, TaggedProto matchProto)
-          : clasp(clasp), hashProto(hashProto), matchProto(matchProto) {}
+        Lookup(const Class *clasp, TaggedProto hashProto, TaggedProto matchProto, JSFunction *newFunction)
+            : clasp(clasp), hashProto(hashProto), matchProto(matchProto), newFunction(newFunction)
+        {}
 #endif
+
     };
 
     static inline HashNumber hash(const Lookup &lookup);
-    static inline bool match(TypeObject *key, const Lookup &lookup);
+    static inline bool match(const TypeObjectWithNewScriptEntry &key, const Lookup &lookup);
+    static void rekey(TypeObjectWithNewScriptEntry &k, const TypeObjectWithNewScriptEntry& newKey) { k = newKey; }
 };
-typedef HashSet<ReadBarriered<TypeObject>, TypeObjectEntry, SystemAllocPolicy> TypeObjectSet;
+typedef HashSet<TypeObjectWithNewScriptEntry,
+                TypeObjectWithNewScriptEntry,
+                SystemAllocPolicy> TypeObjectWithNewScriptSet;
 
 /* Whether to use a new type object when calling 'new' at script/pc. */
 bool

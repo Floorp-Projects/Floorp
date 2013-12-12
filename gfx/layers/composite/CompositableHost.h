@@ -108,12 +108,6 @@ public:
     mBackendData = aBackendData;
   }
 
-  /**
-   * Our IPDL actor is being destroyed, get rid of any shmem resources now and
-   * don't worry about compositing anymore.
-   */
-  virtual void OnActorDestroy();
-
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
 
@@ -294,23 +288,13 @@ public:
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
 
-  void AddTextureHost(TextureHost* aTexture);
-  virtual void UseTextureHost(TextureHost* aTexture) {}
-  // If a texture host is flagged for deferred removal, the compositable will
-  // get an option to run any cleanup code early, that is when it would have
-  // been run if the texture host was not marked deferred.
-  // If the compositable does not cleanup the texture host now, it is the
-  // compositable's responsibility to cleanup the texture host before the
-  // texture host dies.
-  virtual void RemoveTextureHost(TextureHost* aTexture);
-  TextureHost* GetTextureHost(uint64_t aTextureID);
+  virtual void UseTextureHost(TextureHost* aTexture);
 
 protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<CompositableBackendSpecificData> mBackendData;
-  RefPtr<TextureHost> mFirstTexture;
   bool mAttached;
   bool mKeepAttached;
 };

@@ -12,6 +12,8 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
 #include "nsCSSKeywords.h"
@@ -25,10 +27,13 @@
 #include "nsStyleConsts.h"
 
 class imgRequestProxy;
+class nsCSSStyleSheet;
 class nsIDocument;
 class nsIPrincipal;
-class nsPresContext;
 class nsIURI;
+class nsPresContext;
+template <class T>
+class nsPtrHashKey;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -187,6 +192,7 @@ enum nsCSSUnit {
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
+  eCSSUnit_TokenStream  = 43,     // (nsCSSValueTokenStream*) value
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_Triplet      = 51,     // (nsCSSValueTriplet*) triplet of values
@@ -194,8 +200,10 @@ enum nsCSSUnit {
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
   eCSSUnit_ListDep      = 54,     // (nsCSSValueList*) same as List
                                   //   but does not own the list
-  eCSSUnit_PairList     = 55,     // (nsCSSValuePairList*) list of value pairs
-  eCSSUnit_PairListDep  = 56,     // (nsCSSValuePairList*) same as PairList
+  eCSSUnit_SharedList   = 55,     // (nsCSSValueSharedList*) same as list
+                                  //   but reference counted and shared
+  eCSSUnit_PairList     = 56,     // (nsCSSValuePairList*) list of value pairs
+  eCSSUnit_PairListDep  = 57,     // (nsCSSValuePairList*) same as PairList
                                   //   but does not own the list
 
   eCSSUnit_Integer      = 70,     // (int) simple value
@@ -249,10 +257,12 @@ enum nsCSSUnit {
 struct nsCSSValueGradient;
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
+struct nsCSSValueTokenStream;
 struct nsCSSRect;
 struct nsCSSRect_heap;
 struct nsCSSValueList;
 struct nsCSSValueList_heap;
+struct nsCSSValueSharedList;
 struct nsCSSValuePairList;
 struct nsCSSValuePairList_heap;
 struct nsCSSValueTriplet;
@@ -281,6 +291,7 @@ public:
   explicit nsCSSValue(mozilla::css::URLValue* aValue);
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(nsCSSValueGradient* aValue);
+  explicit nsCSSValue(nsCSSValueTokenStream* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue() { Reset(); }
 
@@ -419,6 +430,18 @@ public:
     return mValue.mGradient;
   }
 
+  nsCSSValueTokenStream* GetTokenStreamValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_TokenStream, "not a token stream value");
+    return mValue.mTokenStream;
+  }
+
+  nsCSSValueSharedList* GetSharedListValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_SharedList, "not a shared list value");
+    return mValue.mSharedList;
+  }
+
   // bodies of these are below
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
@@ -484,8 +507,10 @@ public:
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
+  void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
+  void SetSharedListValue(nsCSSValueSharedList* aList);
   void SetDependentListValue(nsCSSValueList* aList);
   void SetDependentPairListValue(nsCSSValuePairList* aList);
   void SetTripletValue(const nsCSSValueTriplet* aTriplet);
@@ -539,11 +564,13 @@ protected:
     mozilla::css::URLValue* mURL;
     mozilla::css::ImageValue* mImage;
     nsCSSValueGradient* mGradient;
+    nsCSSValueTokenStream* mTokenStream;
     nsCSSValuePair_heap* mPair;
     nsCSSRect_heap* mRect;
     nsCSSValueTriplet_heap* mTriplet;
     nsCSSValueList_heap* mList;
     nsCSSValueList* mListDependent;
+    nsCSSValueSharedList* mSharedList;
     nsCSSValuePairList_heap* mPairList;
     nsCSSValuePairList* mPairListDependent;
   } mValue;
@@ -686,6 +713,39 @@ struct nsCSSValueList_heap : public nsCSSValueList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueList_heap)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+};
+
+// This is a reference counted list value.  Note that the object is
+// a wrapper for the reference count and a pointer to the head of the
+// list, whereas the other list types (such as nsCSSValueList) do
+// not have such a wrapper.
+struct nsCSSValueSharedList {
+  nsCSSValueSharedList()
+    : mHead(nullptr)
+  {
+    MOZ_COUNT_CTOR(nsCSSValueSharedList);
+  }
+
+  // Takes ownership of aList.
+  nsCSSValueSharedList(nsCSSValueList* aList)
+    : mHead(aList)
+  {
+    MOZ_COUNT_CTOR(nsCSSValueSharedList);
+  }
+
+  ~nsCSSValueSharedList();
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueSharedList)
+
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  bool operator==(nsCSSValueSharedList const& aOther) const;
+  bool operator!=(const nsCSSValueSharedList& aOther) const
+  { return !(*this == aOther); }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  nsCSSValueList* mHead;
 };
 
 // This has to be here so that the relationship between nsCSSValueList
@@ -1128,6 +1188,69 @@ public:
 private:
   nsCSSValueGradient(const nsCSSValueGradient& aOther) MOZ_DELETE;
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) MOZ_DELETE;
+};
+
+struct nsCSSValueTokenStream {
+  nsCSSValueTokenStream();
+  ~nsCSSValueTokenStream();
+
+  bool operator==(const nsCSSValueTokenStream& aOther) const
+  {
+    bool eq;
+    return mPropertyID == aOther.mPropertyID &&
+           mShorthandPropertyID == aOther.mShorthandPropertyID &&
+           mTokenStream.Equals(aOther.mTokenStream) &&
+           (mBaseURI == aOther.mBaseURI ||
+            (mBaseURI && aOther.mBaseURI &&
+             NS_SUCCEEDED(mBaseURI->Equals(aOther.mBaseURI, &eq)) &&
+             eq)) &&
+           (mSheetURI == aOther.mSheetURI ||
+            (mSheetURI && aOther.mSheetURI &&
+             NS_SUCCEEDED(mSheetURI->Equals(aOther.mSheetURI, &eq)) &&
+             eq)) &&
+           (mSheetPrincipal == aOther.mSheetPrincipal ||
+            (mSheetPrincipal && aOther.mSheetPrincipal &&
+             NS_SUCCEEDED(mSheetPrincipal->Equals(aOther.mSheetPrincipal,
+                                                  &eq)) &&
+             eq));
+  }
+
+  bool operator!=(const nsCSSValueTokenStream& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueTokenStream)
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  // The property that has mTokenStream as its unparsed specified value.
+  // When a variable reference is used in a shorthand property, a
+  // TokenStream value is stored as the specified value for each of its
+  // component longhand properties.
+  nsCSSProperty mPropertyID;
+
+  // The shorthand property that had a value with a variable reference,
+  // which caused the longhand property identified by mPropertyID to have
+  // a TokenStream value.
+  nsCSSProperty mShorthandPropertyID;
+
+  // The unparsed CSS corresponding to the specified value of the property.
+  // When the value of a shorthand property has a variable reference, the
+  // same mTokenStream value is used on each of the nsCSSValueTokenStream
+  // objects that will be set by parsing the shorthand.
+  nsString mTokenStream;
+
+  nsCOMPtr<nsIURI> mBaseURI;
+  nsCOMPtr<nsIURI> mSheetURI;
+  nsCOMPtr<nsIPrincipal> mSheetPrincipal;
+  nsCSSStyleSheet* mSheet;
+  uint32_t mLineNumber;
+  uint32_t mLineOffset;
+
+private:
+  nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
+  nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
 };
 
 struct nsCSSCornerSizes {

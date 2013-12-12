@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import copy
+import difflib
 import errno
 import hashlib
 import os
@@ -115,10 +116,16 @@ class FileAvoidWrite(StringIO):
     it. When we close the file object, if the content in the in-memory buffer
     differs from what is on disk, then we write out the new content. Otherwise,
     the original file is untouched.
+
+    Instances can optionally capture diffs of file changes. This feature is not
+    enabled by default because it a) doesn't make sense for binary files b)
+    could add unwanted overhead to calls.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, capture_diff=False):
         StringIO.__init__(self)
         self.name = filename
+        self._capture_diff = capture_diff
+        self.diff = None
 
     def close(self):
         """Stop accepting writes, compare file contents, and rewrite if needed.
@@ -126,10 +133,16 @@ class FileAvoidWrite(StringIO):
         Returns a tuple of bools indicating what action was performed:
 
             (file existed, file updated)
+
+        If ``capture_diff`` was specified at construction time and the
+        underlying file was changed, ``.diff`` will be populated with the diff
+        of the result.
         """
         buf = self.getvalue()
         StringIO.close(self)
         existed = False
+        old_content = None
+
         try:
             existing = open(self.name, 'rU')
             existed = True
@@ -137,7 +150,8 @@ class FileAvoidWrite(StringIO):
             pass
         else:
             try:
-                if existing.read() == buf:
+                old_content = existing.read()
+                if old_content == buf:
                     return True, False
             except IOError:
                 pass
@@ -147,6 +161,22 @@ class FileAvoidWrite(StringIO):
         ensureParentDir(self.name)
         with open(self.name, 'w') as file:
             file.write(buf)
+
+        if self._capture_diff:
+            try:
+                old_lines = old_content.splitlines() if old_content else []
+                new_lines = buf.splitlines()
+
+                self.diff = '\n'.join(difflib.unified_diff(old_lines, new_lines,
+                    self.name, self.name, n=4, lineterm=''))
+            # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
+            # content or opened and written in different modes may involve
+            # implicit conversion and this will make Python unhappy. Since
+            # diffing isn't a critical feature, we just ignore the failure.
+            # This can go away once FileAvoidWrite uses io.BytesIO and
+            # io.StringIO. But that will require a lot of work.
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                self.diff = 'Binary or non-ascii file changed: %s' % self.name
 
         return existed, True
 

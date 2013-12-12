@@ -24,8 +24,7 @@ namespace mozilla {
 namespace layers {
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder)
-: mNextTextureID(1)
-, mCompositableChild(nullptr)
+: mCompositableChild(nullptr)
 , mForwarder(aForwarder)
 {
   MOZ_COUNT_CTOR(CompositableClient);
@@ -36,23 +35,6 @@ CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
-
-  FlushTexturesToRemoveCallbacks();
-  MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
-}
-
-void
-CompositableClient::FlushTexturesToRemoveCallbacks()
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.begin();
-  std::map<uint64_t,TextureClientData*>::iterator stop
-    = mTexturesToRemoveCallbacks.end();
-  for (; it != stop; ++it) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-  }
-  mTexturesToRemoveCallbacks.clear();
 }
 
 LayersBackend
@@ -251,70 +233,16 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
   return result;
 }
 
-uint64_t
-CompositableClient::NextTextureID()
-{
-  ++mNextTextureID;
-  // 0 is always an invalid ID
-  if (mNextTextureID == 0) {
-    ++mNextTextureID;
-  }
-
-  return mNextTextureID;
-}
-
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
-  aClient->SetID(NextTextureID());
-  return mForwarder->AddTexture(this, aClient);
-}
-
-void
-CompositableClient::RemoveTextureClient(TextureClient* aClient)
-{
-  MOZ_ASSERT(aClient);
-  mTexturesToRemove.AppendElement(TextureIDAndFlags(aClient->GetID(),
-                                                    aClient->GetFlags()));
-  if (aClient->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
-    TextureClientData* data = aClient->DropTextureData();
-    if (data) {
-      mTexturesToRemoveCallbacks[aClient->GetID()] = data;
-    }
-  }
-  aClient->ClearID();
-  aClient->MarkInvalid();
-}
-
-void
-CompositableClient::OnReplyTextureRemoved(uint64_t aTextureID)
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.find(aTextureID);
-  if (it != mTexturesToRemoveCallbacks.end()) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-    mTexturesToRemoveCallbacks.erase(it);
-  }
+  return aClient->InitIPDLActor(mForwarder);
 }
 
 void
 CompositableClient::OnTransaction()
 {
-  for (unsigned i = 0; i < mTexturesToRemove.Length(); ++i) {
-    const TextureIDAndFlags& texture = mTexturesToRemove[i];
-    mForwarder->RemoveTexture(this, texture.mID, texture.mFlags);
-  }
-  mTexturesToRemove.Clear();
 }
 
-
-void
-CompositableChild::ActorDestroy(ActorDestroyReason why)
-{
-  if (mCompositableClient && why == AbnormalShutdown) {
-    mCompositableClient->OnActorDestroy();
-  }
-}
 } // namespace layers
 } // namespace mozilla
