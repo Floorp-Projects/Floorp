@@ -368,7 +368,10 @@ class Type
   public:
     enum Which {
         Double,
-        Doublish,
+        MaybeDouble,
+        Float,
+        MaybeFloat,
+        Floatish,
         Fixnum,
         Int,
         Signed,
@@ -407,8 +410,20 @@ class Type
         return which_ == Double;
     }
 
-    bool isDoublish() const {
-        return isDouble() || which_ == Doublish;
+    bool isMaybeDouble() const {
+        return isDouble() || which_ == MaybeDouble;
+    }
+
+    bool isFloat() const {
+        return which_ == Float;
+    }
+
+    bool isMaybeFloat() const {
+        return isFloat() || which_ == MaybeFloat;
+    }
+
+    bool isFloatish() const {
+        return isMaybeFloat() || which_ == Floatish;
     }
 
     bool isVoid() const {
@@ -420,14 +435,18 @@ class Type
     }
 
     bool isVarType() const {
-        return isInt() || isDouble();
+        return isInt() || isDouble() || isFloat();
     }
 
     MIRType toMIRType() const {
         switch (which_) {
           case Double:
-          case Doublish:
+          case MaybeDouble:
             return MIRType_Double;
+          case Float:
+          case Floatish:
+          case MaybeFloat:
+            return MIRType_Float32;
           case Fixnum:
           case Int:
           case Signed:
@@ -442,14 +461,17 @@ class Type
 
     const char *toChars() const {
         switch (which_) {
-          case Double:    return "double";
-          case Doublish:  return "doublish";
-          case Fixnum:    return "fixnum";
-          case Int:       return "int";
-          case Signed:    return "signed";
-          case Unsigned:  return "unsigned";
-          case Intish:    return "intish";
-          case Void:      return "void";
+          case Double:      return "double";
+          case MaybeDouble: return "double?";
+          case Float:       return "float";
+          case Floatish:    return "floatish";
+          case MaybeFloat:  return "float?";
+          case Fixnum:      return "fixnum";
+          case Int:         return "int";
+          case Signed:      return "signed";
+          case Unsigned:    return "unsigned";
+          case Intish:      return "intish";
+          case Void:        return "void";
         }
         MOZ_ASSUME_UNREACHABLE("Invalid Type");
     }
@@ -465,7 +487,8 @@ class RetType
     enum Which {
         Void = Type::Void,
         Signed = Type::Signed,
-        Double = Type::Double
+        Double = Type::Double,
+        Float = Type::Float
     };
 
   private:
@@ -478,6 +501,7 @@ class RetType
         switch (coercion) {
           case AsmJS_ToInt32: which_ = Signed; break;
           case AsmJS_ToNumber: which_ = Double; break;
+          case AsmJS_FRound: which_ = Float; break;
         }
     }
     Which which() const {
@@ -490,6 +514,7 @@ class RetType
         switch (which_) {
           case Void: return AsmJSModule::Return_Void;
           case Signed: return AsmJSModule::Return_Int32;
+          case Float: // will be converted to a Double
           case Double: return AsmJSModule::Return_Double;
         }
         MOZ_ASSUME_UNREACHABLE("Unexpected return type");
@@ -499,6 +524,7 @@ class RetType
           case Void: return MIRType_None;
           case Signed: return MIRType_Int32;
           case Double: return MIRType_Double;
+          case Float: return MIRType_Float32;
         }
         MOZ_ASSUME_UNREACHABLE("Unexpected return type");
     }
@@ -534,7 +560,8 @@ class VarType
   public:
     enum Which {
         Int = Type::Int,
-        Double = Type::Double
+        Double = Type::Double,
+        Float = Type::Float
     };
 
   private:
@@ -549,6 +576,7 @@ class VarType
         switch (coercion) {
           case AsmJS_ToInt32: which_ = Int; break;
           case AsmJS_ToNumber: which_ = Double; break;
+          case AsmJS_FRound: which_ = Float; break;
         }
     }
     Which which() const {
@@ -558,18 +586,40 @@ class VarType
         return Type::Which(which_);
     }
     MIRType toMIRType() const {
-        return which_ == Int ? MIRType_Int32 : MIRType_Double;
+        switch(which_) {
+          case Int:     return MIRType_Int32;
+          case Double:  return MIRType_Double;
+          case Float:   return MIRType_Float32;
+        }
+        MOZ_ASSUME_UNREACHABLE("VarType can only be Int, Double or Float");
+        return MIRType_None;
     }
     AsmJSCoercion toCoercion() const {
-        return which_ == Int ? AsmJS_ToInt32 : AsmJS_ToNumber;
+        switch(which_) {
+          case Int:     return AsmJS_ToInt32;
+          case Double:  return AsmJS_ToNumber;
+          case Float:   return AsmJS_FRound;
+        }
+        MOZ_ASSUME_UNREACHABLE("VarType can only be Int, Double or Float");
+        return AsmJS_ToInt32;
     }
     static VarType FromMIRType(MIRType type) {
-        JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
-        return type == MIRType_Int32 ? Int : Double;
+        JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double || type == MIRType_Float32);
+        switch(type) {
+          case MIRType_Int32:   return Int;
+          case MIRType_Float32: return Float;
+          case MIRType_Double:  return Double;
+          default: MOZ_ASSUME_UNREACHABLE("FromMIRType MIR type not handled"); return Int;
+        }
     }
     static VarType FromCheckedType(Type type) {
-        JS_ASSERT(type.isInt() || type.isDoublish());
-        return type.isDoublish() ? Double : Int;
+        JS_ASSERT(type.isInt() || type.isMaybeDouble() || type.isFloatish());
+        if (type.isMaybeDouble())
+            return Double;
+        else if (type.isFloatish())
+            return Float;
+        else
+            return Int;
     }
     bool operator==(VarType rhs) const { return which_ == rhs.which_; }
     bool operator!=(VarType rhs) const { return which_ != rhs.which_; }
@@ -584,6 +634,7 @@ operator<=(Type lhs, VarType rhs)
     switch (rhs.which()) {
       case VarType::Int:    return lhs.isInt();
       case VarType::Double: return lhs.isDouble();
+      case VarType::Float:  return lhs.isFloat();
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected rhs type");
 }
@@ -706,6 +757,8 @@ class NumLit
     Value v_;
 
   public:
+    NumLit() {}
+
     NumLit(Which w, Value v)
       : which_(w), v_(v)
     {}
@@ -792,6 +845,29 @@ ExtractNumericLiteral(ParseNode *pn)
     return NumLit(NumLit::NegativeInt, Int32Value(i64));
 }
 
+static bool
+ExtractFRoundableLiteral(ParseNode *pn, double *value)
+{
+    if (!IsNumericLiteral(pn))
+        return false;
+
+    NumLit literal = ExtractNumericLiteral(pn);
+    switch (literal.which()) {
+      case NumLit::Double:
+        *value = literal.toDouble();
+        return true;
+      case NumLit::Fixnum:
+      case NumLit::NegativeInt:
+      case NumLit::BigUnsigned:
+        literal = NumLit(NumLit::Double, DoubleValue(literal.toInt32()));
+        *value = literal.toDouble();
+        return true;
+      case NumLit::OutOfRangeInt:
+        break;
+    }
+    return false;
+}
+
 static inline bool
 IsLiteralInt(ParseNode *pn, uint32_t *u32)
 {
@@ -848,32 +924,9 @@ TypedArrayLoadType(ArrayBufferView::ViewType viewType)
       case ArrayBufferView::TYPE_UINT32:
         return Type::Intish;
       case ArrayBufferView::TYPE_FLOAT32:
+        return Type::MaybeFloat;
       case ArrayBufferView::TYPE_FLOAT64:
-        return Type::Doublish;
-      default:;
-    }
-    MOZ_ASSUME_UNREACHABLE("Unexpected array type");
-}
-
-enum ArrayStoreEnum {
-    ArrayStore_Intish,
-    ArrayStore_Doublish
-};
-
-static ArrayStoreEnum
-TypedArrayStoreType(ArrayBufferView::ViewType viewType)
-{
-    switch (viewType) {
-      case ArrayBufferView::TYPE_INT8:
-      case ArrayBufferView::TYPE_INT16:
-      case ArrayBufferView::TYPE_INT32:
-      case ArrayBufferView::TYPE_UINT8:
-      case ArrayBufferView::TYPE_UINT16:
-      case ArrayBufferView::TYPE_UINT32:
-        return ArrayStore_Intish;
-      case ArrayBufferView::TYPE_FLOAT32:
-      case ArrayBufferView::TYPE_FLOAT64:
-        return ArrayStore_Doublish;
+        return Type::MaybeDouble;
       default:;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected array type");
@@ -1305,7 +1358,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibraryMathName("sqrt", AsmJSMathBuiltin_sqrt) ||
             !addStandardLibraryMathName("abs", AsmJSMathBuiltin_abs) ||
             !addStandardLibraryMathName("atan2", AsmJSMathBuiltin_atan2) ||
-            !addStandardLibraryMathName("imul", AsmJSMathBuiltin_imul))
+            !addStandardLibraryMathName("imul", AsmJSMathBuiltin_imul) ||
+            !addStandardLibraryMathName("fround", AsmJSMathBuiltin_fround))
         {
             return false;
         }
@@ -1441,7 +1495,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     bool addGlobalVarInitConstant(PropertyName *varName, VarType type, const Value &v,
                                   bool isConst) {
         uint32_t index;
-        if (!module_->addGlobalVarInitConstant(v, &index))
+        if (!module_->addGlobalVarInitConstant(v, type.toCoercion(), &index))
             return false;
         Global *global = moduleLifo_.new_<Global>(Global::Variable);
         if (!global)
@@ -1808,9 +1862,16 @@ class FunctionCompiler
         Local(VarType t, unsigned slot) : type(t), slot(slot) {}
     };
 
+    struct TypedValue
+    {
+        VarType type;
+        Value value;
+        TypedValue(VarType t, const Value &v) : type(t), value(v) {}
+    };
+
   private:
     typedef HashMap<PropertyName*, Local> LocalMap;
-    typedef js::Vector<Value> VarInitializerVector;
+    typedef js::Vector<TypedValue> VarInitializerVector;
     typedef HashMap<PropertyName*, BlockVector> LabeledBlockMap;
     typedef HashMap<ParseNode*, BlockVector> UnlabeledBlockMap;
     typedef js::Vector<ParseNode*, 4> NodeStack;
@@ -1924,7 +1985,7 @@ class FunctionCompiler
             return failName(pn, "duplicate local name '%s' not allowed", name);
         if (!locals_.add(p, name, Local(type, locals_.count())))
             return false;
-        return varInitializers_.append(init);
+        return varInitializers_.append(TypedValue(type, init));
     }
 
     bool prepareToEmitMIR(const VarTypeVector &argTypes)
@@ -1950,7 +2011,8 @@ class FunctionCompiler
         }
         unsigned firstLocalSlot = argTypes.length();
         for (unsigned i = 0; i < varInitializers_.length(); i++) {
-            MConstant *ins = MConstant::New(alloc(), varInitializers_[i]);
+            MConstant *ins = MConstant::NewAsmJS(alloc(), varInitializers_[i].value,
+                                                 varInitializers_[i].type.toMIRType());
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(firstLocalSlot + i), ins);
         }
@@ -2006,6 +2068,16 @@ class FunctionCompiler
             return nullptr;
         JS_ASSERT(v.isNumber());
         MConstant *constant = MConstant::New(alloc(), v);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    MDefinition *constantFloat(float f)
+    {
+        if (!curBlock_)
+            return NULL;
+
+        MConstant *constant = MConstant::NewAsmJS(alloc(), DoubleValue(double(f)), MIRType_Float32);
         curBlock_->add(constant);
         return constant;
     }
@@ -2870,9 +2942,38 @@ CheckGlobalVariableInitConstant(ModuleCompiler &m, PropertyName *varName, ParseN
 }
 
 static bool
+CheckFloat32Coercion(ModuleCompiler &m, ParseNode *callNode, ParseNode **coercedExpr,
+                     const char* errorMessage)
+{
+    JS_ASSERT(callNode->isKind(PNK_CALL));
+
+    ParseNode *callee = CallCallee(callNode);
+    if (!callee->isKind(PNK_NAME))
+        return m.fail(callee, errorMessage);
+
+    PropertyName *calleeName = callee->name();
+
+    const ModuleCompiler::Global *global = m.lookupGlobal(calleeName);
+    if (!global || global->which() != ModuleCompiler::Global::MathBuiltin ||
+        global->mathBuiltin() != AsmJSMathBuiltin_fround)
+    {
+        return m.fail(callee, errorMessage);
+    }
+
+    unsigned numArgs = CallArgListLength(callNode);
+    if (numArgs != 1)
+        return m.failf(callee, "fround passed %u arguments, expected one", numArgs);
+
+    if (coercedExpr)
+        *coercedExpr = CallArgList(callNode);
+    return true;
+}
+
+static bool
 CheckTypeAnnotation(ModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *coercion,
                     ParseNode **coercedExpr = nullptr)
 {
+    static const char *errorMessage = "in coercion expression, the expression must be of the form +x, fround(x) or x|0";
     switch (coercionNode->getKind()) {
       case PNK_BITOR: {
         ParseNode *rhs = BinaryRight(coercionNode);
@@ -2895,21 +2996,20 @@ CheckTypeAnnotation(ModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *c
             *coercedExpr = UnaryKid(coercionNode);
         return true;
       }
+      case PNK_CALL: {
+        *coercion = AsmJS_FRound;
+        return CheckFloat32Coercion(m, coercionNode, coercedExpr, errorMessage);
+      }
       default:;
     }
 
-    return m.fail(coercionNode, "in coercion expression, the expression must be of the form +x or x|0");
+    return m.fail(coercionNode, errorMessage);
 }
 
 static bool
-CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
-                              bool isConst)
+CheckGlobalVariableImportExpr(ModuleCompiler &m, PropertyName *varName, AsmJSCoercion coercion,
+                              ParseNode *coercedExpr, bool isConst)
 {
-    AsmJSCoercion coercion;
-    ParseNode *coercedExpr;
-    if (!CheckTypeAnnotation(m, initNode, &coercion, &coercedExpr))
-        return false;
-
     if (!coercedExpr->isKind(PNK_DOT))
         return m.failName(coercedExpr, "invalid import expression for global '%s'", varName);
 
@@ -2923,6 +3023,35 @@ CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNod
         return m.failName(coercedExpr, "base of import expression must be '%s'", importName);
 
     return m.addGlobalVarImport(varName, field, coercion, isConst);
+}
+
+static bool
+CheckGlobalVariableInitImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
+                              bool isConst)
+{
+    AsmJSCoercion coercion;
+    ParseNode *coercedExpr;
+    if (!CheckTypeAnnotation(m, initNode, &coercion, &coercedExpr))
+        return false;
+    return CheckGlobalVariableImportExpr(m, varName, coercion, coercedExpr, isConst);
+}
+
+static bool
+CheckGlobalVariableInitFloat32(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
+                               bool isConst)
+{
+    ParseNode *arg = NULL;
+    if (!CheckFloat32Coercion(m, initNode, &arg, "call must be of the form fround(x)"))
+        return false;
+
+    if (IsNumericLiteral(arg)) {
+        double value;
+        if (!ExtractFRoundableLiteral(arg, &value))
+            return m.fail(arg, "float global initializer needs to be a double literal");
+        return m.addGlobalVarInitConstant(varName, VarType::Float, DoubleValue(value), isConst);
+    }
+
+    return CheckGlobalVariableImportExpr(m, varName, AsmJSCoercion::AsmJS_FRound, arg, isConst);
 }
 
 static bool
@@ -3027,6 +3156,9 @@ CheckModuleGlobal(ModuleCompiler &m, ParseNode *var, bool isConst)
     if (initNode->isKind(PNK_BITOR) || initNode->isKind(PNK_POS))
         return CheckGlobalVariableInitImport(m, var->name(), initNode, isConst);
 
+    if (initNode->isKind(PNK_CALL))
+        return CheckGlobalVariableInitFloat32(m, var->name(), initNode, isConst);
+
     if (initNode->isKind(PNK_NEW))
         return CheckNewArrayView(m, var->name(), initNode);
 
@@ -3058,7 +3190,7 @@ static bool
 ArgFail(FunctionCompiler &f, PropertyName *argName, ParseNode *stmt)
 {
     return f.failName(stmt, "expecting argument type declaration for '%s' of the "
-                      "form 'arg = arg|0' or 'arg = +arg'", argName);
+                      "form 'arg = arg|0' or 'arg = +arg' or 'arg = fround(arg)'", argName);
 }
 
 static bool
@@ -3169,6 +3301,18 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
     ParseNode *initNode = MaybeDefinitionInitializer(var);
     if (!initNode)
         return f.failName(var, "var '%s' needs explicit type declaration via an initial value", name);
+
+    if (initNode->isKind(PNK_CALL)) {
+        ParseNode *coercedVar = NULL;
+        if (!CheckFloat32Coercion(f.m(), initNode, &coercedVar, "caller in var initializer can only be fround"))
+            return false;
+
+        double value;
+        if (!ExtractFRoundableLiteral(coercedVar, &value))
+            return f.failName(coercedVar, "float initializer for '%s' needs to be a double literal", name);
+
+        return f.addVariable(var, name, VarType::Float, DoubleValue(value));
+    }
 
     if (!IsNumericLiteral(initNode))
         return f.failName(initNode, "initializer for '%s' needs to be a numeric literal", name);
@@ -3416,7 +3560,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *elem, ArrayBufferView::ViewType
 }
 
 static bool
-CheckArrayLoad(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *type)
+CheckLoadArray(FunctionCompiler &f, ParseNode *elem, MDefinition **def, Type *type)
 {
     ArrayBufferView::ViewType viewType;
     MDefinition *pointerDef;
@@ -3443,15 +3587,30 @@ CheckStoreArray(FunctionCompiler &f, ParseNode *lhs, ParseNode *rhs, MDefinition
     if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
-    switch (TypedArrayStoreType(viewType)) {
-      case ArrayStore_Intish:
+    switch (viewType) {
+      case ArrayBufferView::TYPE_INT8:
+      case ArrayBufferView::TYPE_INT16:
+      case ArrayBufferView::TYPE_INT32:
+      case ArrayBufferView::TYPE_UINT8:
+      case ArrayBufferView::TYPE_UINT16:
+      case ArrayBufferView::TYPE_UINT32:
         if (!rhsType.isIntish())
             return f.failf(lhs, "%s is not a subtype of intish", rhsType.toChars());
         break;
-      case ArrayStore_Doublish:
-        if (!rhsType.isDoublish())
-            return f.failf(lhs, "%s is not a subtype of doublish", rhsType.toChars());
+      case ArrayBufferView::TYPE_FLOAT32:
+        if (rhsType.isMaybeDouble())
+            rhsDef = f.unary<MToFloat32>(rhsDef);
+        else if (!rhsType.isFloatish())
+            return f.failf(lhs, "%s is not a subtype of double? or floatish", rhsType.toChars());
         break;
+      case ArrayBufferView::TYPE_FLOAT64:
+        if (rhsType.isFloat())
+            rhsDef = f.unary<MToDouble>(rhsDef);
+        else if (!rhsType.isMaybeDouble())
+            return f.failf(lhs, "%s is not a subtype of float or double?", rhsType.toChars());
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected view type");
     }
 
     f.storeHeap(viewType, pointerDef, rhsDef, needsBoundsCheck);
@@ -3564,7 +3723,7 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
         return true;
     }
 
-    if (argType.isDoublish()) {
+    if (argType.isMaybeDouble()) {
         if (retType != RetType::Double)
             return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MAbs>(argDef, MIRType_Double);
@@ -3572,7 +3731,15 @@ CheckMathAbs(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition 
         return true;
     }
 
-    return f.failf(call, "%s is not a subtype of signed or doublish", argType.toChars());
+    if (argType.isMaybeFloat()) {
+        if (retType != RetType::Float)
+            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
+        *def = f.unary<MAbs>(argDef, MIRType_Float32);
+        *type = Type::Float;
+        return true;
+    }
+
+    return f.failf(call, "%s is not a subtype of signed, float? or double?", argType.toChars());
 }
 
 static bool
@@ -3588,7 +3755,7 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
     if (!CheckExpr(f, arg, &argDef, &argType))
         return false;
 
-    if (argType.isDoublish()) {
+    if (argType.isMaybeDouble()) {
         if (retType != RetType::Double)
             return f.failf(call, "return type is double, used as %s", retType.toType().toChars());
         *def = f.unary<MSqrt>(argDef, MIRType_Double);
@@ -3596,7 +3763,15 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
         return true;
     }
 
-    return f.failf(call, "%s is not a subtype of doublish", argType.toChars());
+    if (argType.isMaybeFloat()) {
+        if (retType != RetType::Float)
+            return f.failf(call, "return type is float, used as %s", retType.toType().toChars());
+        *def = f.unary<MSqrt>(argDef, MIRType_Float32);
+        *type = Type::Float;
+        return true;
+    }
+
+    return f.failf(call, "%s is neither a subtype of double? nor float?", argType.toChars());
 }
 
 typedef bool (*CheckArgType)(FunctionCompiler &f, ParseNode *argNode, Type type);
@@ -3672,7 +3847,7 @@ static bool
 CheckIsVarType(FunctionCompiler &f, ParseNode *argNode, Type type)
 {
     if (!type.isVarType())
-        return f.failf(argNode, "%s is not a subtype of int or double", type.toChars());
+        return f.failf(argNode, "%s is not a subtype of int, float or double", type.toChars());
     return true;
 }
 
@@ -3786,6 +3961,9 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
 {
     PropertyName *calleeName = CallCallee(callNode)->name();
 
+    if (retType == RetType::Float)
+        return f.fail(callNode, "FFI calls can't return float");
+
     FunctionCompiler::Call call(f, retType);
     if (!CheckCallArgs(f, callNode, CheckIsExternType, &call))
         return false;
@@ -3801,11 +3979,88 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
     return true;
 }
 
+static bool CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type);
+
 static bool
-CheckIsDoublish(FunctionCompiler &f, ParseNode *argNode, Type type)
+CheckFRoundArg(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type, const char* error)
 {
-    if (!type.isDoublish())
-        return f.failf(argNode, "%s is not a subtype of doublish", type.toChars());
+    ParseNode *arg = NULL;
+    if (!CheckFloat32Coercion(f.m(), expr, &arg, error))
+        return false;
+
+    if (arg->isKind(PNK_CALL))
+        return CheckCall(f, arg, RetType::Float, def, type);
+
+    if (IsNumericLiteral(arg)) {
+        double value;
+        if (!ExtractFRoundableLiteral(arg, &value))
+            return f.fail(arg, "call to fround with literal expects the literal to be a double");
+
+        *def = f.constantFloat(value);
+        *type = Type::Float;
+        return true;
+    }
+
+    MDefinition *inputDef;
+    Type inputType;
+    if (!CheckExpr(f, arg, &inputDef, &inputType))
+        return false;
+
+    if (inputType.isMaybeDouble() || inputType.isSigned())
+        *def = f.unary<MToFloat32>(inputDef);
+    else if (inputType.isUnsigned())
+        *def = f.unary<MAsmJSUnsignedToFloat32>(inputDef);
+    else if (inputType.isFloatish())
+        *def = inputDef;
+    else
+        return f.failf(arg, "%s is not a subtype of signed, unsigned, double? or floatish", inputType.toChars());
+
+    *type = Type::Float;
+    return true;
+}
+
+static bool
+CheckFRound(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type)
+{
+    MDefinition *operand;
+    Type operandType;
+    if (!CheckFRoundArg(f, callNode, &operand, &operandType, "coercion to float should use fround"))
+        return false;
+
+    switch (retType.which()) {
+      case RetType::Double:
+        *def = f.unary<MToDouble>(operand);
+        *type = Type::Double;
+        return true;
+      case RetType::Signed:
+        *def = f.unary<MTruncateToInt32>(operand);
+        *type = Type::Signed;
+        return true;
+      case RetType::Float:
+        *def = operand;
+        *type = Type::Float;
+        return true;
+      case RetType::Void:
+        // definition and return types should be ignored by the caller
+        return true;
+    }
+
+    MOZ_ASSUME_UNREACHABLE("return value of fround is ignored");
+}
+
+static bool
+CheckIsMaybeDouble(FunctionCompiler &f, ParseNode *argNode, Type type)
+{
+    if (!type.isMaybeDouble())
+        return f.failf(argNode, "%s is not a subtype of double?", type.toChars());
+    return true;
+}
+
+static bool
+CheckIsMaybeFloat(FunctionCompiler &f, ParseNode *argNode, Type type)
+{
+    if (!type.isMaybeFloat())
+        return f.failf(argNode, "%s is not a subtype of float?", type.toChars());
     return true;
 }
 
@@ -3814,39 +4069,46 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
                      RetType retType, MDefinition **def, Type *type)
 {
     unsigned arity = 0;
-    AsmJSImmKind callee;
+    AsmJSImmKind doubleCallee, floatCallee;
     switch (mathBuiltin) {
-      case AsmJSMathBuiltin_imul:  return CheckMathIMul(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_abs:   return CheckMathAbs(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_sqrt:  return CheckMathSqrt(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_sin:   arity = 1; callee = AsmJSImm_SinD;   break;
-      case AsmJSMathBuiltin_cos:   arity = 1; callee = AsmJSImm_CosD;   break;
-      case AsmJSMathBuiltin_tan:   arity = 1; callee = AsmJSImm_TanD;   break;
-      case AsmJSMathBuiltin_asin:  arity = 1; callee = AsmJSImm_ASinD;  break;
-      case AsmJSMathBuiltin_acos:  arity = 1; callee = AsmJSImm_ACosD;  break;
-      case AsmJSMathBuiltin_atan:  arity = 1; callee = AsmJSImm_ATanD;  break;
-      case AsmJSMathBuiltin_ceil:  arity = 1; callee = AsmJSImm_CeilD;  break;
-      case AsmJSMathBuiltin_floor: arity = 1; callee = AsmJSImm_FloorD; break;
-      case AsmJSMathBuiltin_exp:   arity = 1; callee = AsmJSImm_ExpD;   break;
-      case AsmJSMathBuiltin_log:   arity = 1; callee = AsmJSImm_LogD;   break;
-      case AsmJSMathBuiltin_pow:   arity = 2; callee = AsmJSImm_PowD;   break;
-      case AsmJSMathBuiltin_atan2: arity = 2; callee = AsmJSImm_ATan2D; break;
+      case AsmJSMathBuiltin_imul:   return CheckMathIMul(f, callNode, retType, def, type);
+      case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, retType, def, type);
+      case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, retType, def, type);
+      case AsmJSMathBuiltin_fround: return CheckFRound(f, callNode, retType, def, type);
+      case AsmJSMathBuiltin_sin:    arity = 1; doubleCallee = AsmJSImm_SinD; floatCallee = AsmJSImm_SinF;      break;
+      case AsmJSMathBuiltin_cos:    arity = 1; doubleCallee = AsmJSImm_CosD; floatCallee = AsmJSImm_CosF;      break;
+      case AsmJSMathBuiltin_tan:    arity = 1; doubleCallee = AsmJSImm_TanD; floatCallee = AsmJSImm_TanF;      break;
+      case AsmJSMathBuiltin_asin:   arity = 1; doubleCallee = AsmJSImm_ASinD; floatCallee = AsmJSImm_ASinF;    break;
+      case AsmJSMathBuiltin_acos:   arity = 1; doubleCallee = AsmJSImm_ACosD; floatCallee = AsmJSImm_ACosF;    break;
+      case AsmJSMathBuiltin_atan:   arity = 1; doubleCallee = AsmJSImm_ATanD; floatCallee = AsmJSImm_ATanF;    break;
+      case AsmJSMathBuiltin_ceil:   arity = 1; doubleCallee = AsmJSImm_CeilD; floatCallee = AsmJSImm_CeilF;    break;
+      case AsmJSMathBuiltin_floor:  arity = 1; doubleCallee = AsmJSImm_FloorD; floatCallee = AsmJSImm_FloorF;  break;
+      case AsmJSMathBuiltin_exp:    arity = 1; doubleCallee = AsmJSImm_ExpD; floatCallee = AsmJSImm_ExpF;      break;
+      case AsmJSMathBuiltin_log:    arity = 1; doubleCallee = AsmJSImm_LogD; floatCallee = AsmJSImm_LogF;      break;
+      case AsmJSMathBuiltin_pow:    arity = 2; doubleCallee = AsmJSImm_PowD; floatCallee = AsmJSImm_Invalid;   break;
+      case AsmJSMathBuiltin_atan2:  arity = 2; doubleCallee = AsmJSImm_ATan2D; floatCallee = AsmJSImm_Invalid; break;
     }
 
+    if (retType == RetType::Float && floatCallee == AsmJSImm_Invalid)
+        return f.fail(callNode, "math builtin cannot be used as float");
+    if (retType != RetType::Double && retType != RetType::Float)
+        return f.failf(callNode, "return type of math function is double or float, used as %s", retType.toType().toChars());
+
     FunctionCompiler::Call call(f, retType);
-    if (!CheckCallArgs(f, callNode, CheckIsDoublish, &call))
+    if (retType == RetType::Float && !CheckCallArgs(f, callNode, CheckIsMaybeFloat, &call))
+        return false;
+    if (retType == RetType::Double && !CheckCallArgs(f, callNode, CheckIsMaybeDouble, &call))
         return false;
 
     if (call.sig().args().length() != arity)
         return f.failf(callNode, "call passed %u arguments, expected %u", call.sig().args().length(), arity);
 
-    if (!f.builtinCall(callee, call, MIRType_Double, def))
+    if (retType == RetType::Float && !f.builtinCall(floatCallee, call, retType.toMIRType(), def))
+        return false;
+    if (retType == RetType::Double && !f.builtinCall(doubleCallee, call, retType.toMIRType(), def))
         return false;
 
-    if (retType != RetType::Double)
-        return f.failf(callNode, "return type is double, used as %s", retType.toType().toChars());
-
-    *type = Type::Double;
+    *type = retType.toType();
     return true;
 }
 
@@ -3898,14 +4160,14 @@ CheckPos(FunctionCompiler &f, ParseNode *pos, MDefinition **def, Type *type)
     if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
-    if (operandType.isSigned())
+    if (operandType.isMaybeFloat() || operandType.isSigned())
         *def = f.unary<MToDouble>(operandDef);
     else if (operandType.isUnsigned())
         *def = f.unary<MAsmJSUnsignedToDouble>(operandDef);
-    else if (operandType.isDoublish())
+    else if (operandType.isMaybeDouble())
         *def = operandDef;
     else
-        return f.failf(operand, "%s is not a subtype of signed, unsigned or doublish", operandType.toChars());
+        return f.failf(operand, "%s is not a subtype of signed, unsigned, float or double?", operandType.toChars());
 
     *type = Type::Double;
     return true;
@@ -3947,13 +4209,19 @@ CheckNeg(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
         return true;
     }
 
-    if (operandType.isDoublish()) {
+    if (operandType.isMaybeDouble()) {
         *def = f.unary<MAsmJSNeg>(operandDef, MIRType_Double);
         *type = Type::Double;
         return true;
     }
 
-    return f.failf(operand, "%s is not a subtype of int or doublish", operandType.toChars());
+    if (operandType.isMaybeFloat()) {
+        *def = f.unary<MAsmJSNeg>(operandDef, MIRType_Float32);
+        *type = Type::Floatish;
+        return true;
+    }
+
+    return f.failf(operand, "%s is not a subtype of int, float? or double?", operandType.toChars());
 }
 
 static bool
@@ -3967,14 +4235,14 @@ CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *
     if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
-    if (operandType.isDoublish()) {
+    if (operandType.isMaybeDouble() || operandType.isMaybeFloat()) {
         *def = f.unary<MTruncateToInt32>(operandDef);
         *type = Type::Signed;
         return true;
     }
 
     if (!operandType.isIntish())
-        return f.failf(operand, "%s is not a subtype of doublish or intish", operandType.toChars());
+        return f.failf(operand, "%s is not a subtype of double?, float? or intish", operandType.toChars());
 
     *def = operandDef;
     *type = Type::Signed;
@@ -4071,6 +4339,8 @@ CheckConditional(FunctionCompiler &f, ParseNode *ternary, MDefinition **def, Typ
         *type = Type::Int;
     } else if (thenType.isDouble() && elseType.isDouble()) {
         *type = Type::Double;
+    } else if (thenType.isFloat() && elseType.isFloat()) {
+        *type = Type::Float;
     } else {
         return f.failf(ternary, "then/else branches of conditional must both produce int or double, "
                        "current types are %s and %s", thenType.toChars(), elseType.toChars());
@@ -4130,14 +4400,19 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
         return true;
     }
 
-    if (!lhsType.isDoublish())
-        return f.failf(lhs, "%s is not a subtype of doublish", lhsType.toChars());
-    if (!rhsType.isDoublish())
-        return f.failf(rhs, "%s is not a subtype of doublish", rhsType.toChars());
+    if (lhsType.isMaybeDouble() && rhsType.isMaybeDouble()) {
+        *def = f.mul(lhsDef, rhsDef, MIRType_Double, MMul::Normal);
+        *type = Type::Double;
+        return true;
+    }
 
-    *def = f.mul(lhsDef, rhsDef, MIRType_Double, MMul::Normal);
-    *type = Type::Double;
-    return true;
+    if (lhsType.isMaybeFloat() && rhsType.isMaybeFloat()) {
+        *def = f.mul(lhsDef, rhsDef, MIRType_Float32, MMul::Normal);
+        *type = Type::Floatish;
+        return true;
+    }
+
+    return f.fail(star, "multiply operands must be both int, both double? or both float?");
 }
 
 static bool
@@ -4185,13 +4460,18 @@ CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
                ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Int32)
                : f.binary<MSub>(lhsDef, rhsDef, MIRType_Int32);
         *type = Type::Intish;
-    } else if (lhsType.isDoublish() && rhsType.isDoublish()) {
+    } else if (lhsType.isMaybeDouble() && rhsType.isMaybeDouble()) {
         *def = expr->isKind(PNK_ADD)
                ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double)
                : f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
         *type = Type::Double;
+    } else if (lhsType.isMaybeFloat() && rhsType.isMaybeFloat()) {
+        *def = expr->isKind(PNK_ADD)
+               ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Float32)
+               : f.binary<MSub>(lhsDef, rhsDef, MIRType_Float32);
+        *type = Type::Floatish;
     } else {
-        return f.failf(expr, "operands to +/- must both be int or doublish, got %s and %s",
+        return f.failf(expr, "operands to + or - must both be int, float? or double?, got %s and %s",
                        lhsType.toChars(), rhsType.toChars());
     }
 
@@ -4214,11 +4494,20 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
     if (!CheckExpr(f, rhs, &rhsDef, &rhsType))
         return false;
 
-    if (lhsType.isDoublish() && rhsType.isDoublish()) {
+    if (lhsType.isMaybeDouble() && rhsType.isMaybeDouble()) {
         *def = expr->isKind(PNK_DIV)
                ? f.div(lhsDef, rhsDef, MIRType_Double, /* unsignd = */ false)
                : f.mod(lhsDef, rhsDef, MIRType_Double, /* unsignd = */ false);
         *type = Type::Double;
+        return true;
+    }
+
+    if (lhsType.isMaybeFloat() && rhsType.isMaybeFloat()) {
+        if (expr->isKind(PNK_DIV))
+            *def = f.div(lhsDef, rhsDef, MIRType_Float32, /* unsignd = */ false);
+        else
+            return f.fail(expr, "modulo cannot receive float arguments");
+        *type = Type::Floatish;
         return true;
     }
 
@@ -4240,7 +4529,7 @@ CheckDivOrMod(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
         return true;
     }
 
-    return f.failf(expr, "arguments to / or %% must both be double, signed, or unsigned; "
+    return f.failf(expr, "arguments to / or %% must both be double?, float?, signed, or unsigned; "
                    "%s and %s are given", lhsType.toChars(), rhsType.toChars());
 }
 
@@ -4274,7 +4563,13 @@ CheckComparison(FunctionCompiler &f, ParseNode *comp, MDefinition **def, Type *t
         return true;
     }
 
-    return f.failf(comp, "arguments to a comparison must both be signed, unsigned or doubles; "
+    if (lhsType.isFloat() && rhsType.isFloat()) {
+        *def = f.compare(lhsDef, rhsDef, comp->getOp(), MCompare::Compare_Float32);
+        *type = Type::Int;
+        return true;
+    }
+
+    return f.failf(comp, "arguments to a comparison must both be signed, unsigned, floats or doubles; "
                    "%s and %s are given", lhsType.toChars(), rhsType.toChars());
 }
 
@@ -4346,6 +4641,18 @@ CheckBitwise(FunctionCompiler &f, ParseNode *bitwise, MDefinition **def, Type *t
 }
 
 static bool
+CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
+{
+    static const char* callError = "all function calls must either be ignored (via "
+                                   "f(); or comma-expression), coerced to signed "
+                                   "(via f()|0), coerced to float (via fround(f()))"
+                                   " or coerced to double (via +f())";
+
+    JS_ASSERT(expr->isKind(PNK_CALL));
+    return CheckFRoundArg(f, expr, def, type, callError);
+}
+
+static bool
 CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
@@ -4358,7 +4665,7 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 
     switch (expr->getKind()) {
       case PNK_NAME:        return CheckVarRef(f, expr, def, type);
-      case PNK_ELEM:        return CheckArrayLoad(f, expr, def, type);
+      case PNK_ELEM:        return CheckLoadArray(f, expr, def, type);
       case PNK_ASSIGN:      return CheckAssign(f, expr, def, type);
       case PNK_POS:         return CheckPos(f, expr, def, type);
       case PNK_NOT:         return CheckNot(f, expr, def, type);
@@ -4367,10 +4674,7 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
       case PNK_COMMA:       return CheckComma(f, expr, def, type);
       case PNK_CONDITIONAL: return CheckConditional(f, expr, def, type);
       case PNK_STAR:        return CheckMultiply(f, expr, def, type);
-
-      case PNK_CALL:        return f.fail(expr, "all function calls must either be ignored (via "
-                                                "f(); or comma-expression), coerced to signed "
-                                                "(via f()|0) or coerced to double (via +f())");
+      case PNK_CALL:        return CheckUncoercedCall(f, expr, def, type);
 
       case PNK_ADD:
       case PNK_SUB:         return CheckAddOrSub(f, expr, def, type);
@@ -4792,6 +5096,8 @@ CheckReturn(FunctionCompiler &f, ParseNode *returnStmt)
         retType = RetType::Signed;
     else if (type.isDouble())
         retType = RetType::Double;
+    else if (type.isFloat())
+        retType = RetType::Float;
     else if (type.isVoid())
         retType = RetType::Void;
     else
@@ -5605,7 +5911,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
                 masm.load32(src, scratch);
                 masm.storePtr(scratch, Address(StackPointer, iter->offsetFromArgBase()));
             } else {
-                JS_ASSERT(iter.mirType() == MIRType_Double);
+                JS_ASSERT(iter.mirType() == MIRType_Double || iter.mirType() == MIRType_Float32);
                 masm.loadDouble(src, ScratchFloatReg);
                 masm.storeDouble(ScratchFloatReg, Address(StackPointer, iter->offsetFromArgBase()));
             }
@@ -5629,6 +5935,9 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
       case RetType::Signed:
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
+      case RetType::Float:
+        masm.convertFloatToDouble(ReturnFloatReg, ReturnFloatReg);
+        // Fall through as ReturnFloatReg now contains a Double
       case RetType::Double:
         masm.canonicalizeDouble(ReturnFloatReg);
         masm.storeDouble(ReturnFloatReg, Address(argv, 0));
@@ -5873,6 +6182,9 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnFloatReg);
         break;
+      case RetType::Float:
+        MOZ_ASSUME_UNREACHABLE("Float32 shouldn't be returned from a FFI");
+        break;
     }
 
     // Note: the caller is IonMonkey code which means there are no non-volatile
@@ -5923,6 +6235,9 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
         masm.call(AsmJSImm_InvokeFromAsmJS_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnFloatReg);
+        break;
+      case RetType::Float:
+        MOZ_ASSUME_UNREACHABLE("Float32 shouldn't be returned from a FFI");
         break;
     }
 
@@ -6127,6 +6442,9 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         break;
       case RetType::Double:
         masm.convertValueToDouble(JSReturnOperand, ReturnFloatReg, &oolConvert);
+        break;
+      case RetType::Float:
+        MOZ_ASSUME_UNREACHABLE("Float shouldn't be returned from a FFI");
         break;
     }
 

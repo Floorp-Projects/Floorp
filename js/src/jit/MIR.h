@@ -9241,7 +9241,9 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
       : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, false)
     {
         setMovable();
-        if (vt == ArrayBufferView::TYPE_FLOAT32 || vt == ArrayBufferView::TYPE_FLOAT64)
+        if (vt == ArrayBufferView::TYPE_FLOAT32)
+            setResultType(MIRType_Float32);
+        else if (vt == ArrayBufferView::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -9291,7 +9293,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
       : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
-        JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
+        JS_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
     }
