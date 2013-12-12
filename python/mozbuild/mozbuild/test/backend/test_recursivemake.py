@@ -235,19 +235,6 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(os.path.getmtime(makefile_path), makefile_mtime)
         self.assertEqual(os.path.getmtime(backend_path), backend_mtime)
 
-    def test_external_make_dirs(self):
-        """Ensure we have make recursion into external make directories."""
-        env = self._consume('external_make_dirs', RecursiveMakeBackend)
-
-        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
-        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
-        self.assertEqual(lines, [
-            'DIRS := dir',
-            'PARALLEL_DIRS := p_dir',
-            'DIRS += external',
-            'PARALLEL_DIRS += p_external',
-        ])
-
     def test_substitute_config_files(self):
         """Ensure substituted config files are produced."""
         env = self._consume('substitute_config_files', RecursiveMakeBackend)
