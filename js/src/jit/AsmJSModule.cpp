@@ -235,28 +235,50 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return FuncCast(NumberMod);
       case AsmJSImm_SinD:
         return FuncCast<double (double)>(sin);
+      case AsmJSImm_SinF:
+        return FuncCast<float (float)>(sinf);
       case AsmJSImm_CosD:
         return FuncCast<double (double)>(cos);
+      case AsmJSImm_CosF:
+        return FuncCast<float (float)>(cosf);
       case AsmJSImm_TanD:
         return FuncCast<double (double)>(tan);
+      case AsmJSImm_TanF:
+        return FuncCast<float (float)>(tanf);
       case AsmJSImm_ASinD:
         return FuncCast<double (double)>(asin);
+      case AsmJSImm_ASinF:
+        return FuncCast<float (float)>(asinf);
       case AsmJSImm_ACosD:
         return FuncCast<double (double)>(acos);
+      case AsmJSImm_ACosF:
+        return FuncCast<float (float)>(acosf);
       case AsmJSImm_ATanD:
         return FuncCast<double (double)>(atan);
+      case AsmJSImm_ATanF:
+        return FuncCast<float (float)>(atanf);
       case AsmJSImm_CeilD:
         return FuncCast<double (double)>(ceil);
+      case AsmJSImm_CeilF:
+        return FuncCast<float (float)>(ceilf);
       case AsmJSImm_FloorD:
         return FuncCast<double (double)>(floor);
+      case AsmJSImm_FloorF:
+        return FuncCast<float (float)>(floorf);
       case AsmJSImm_ExpD:
         return FuncCast<double (double)>(exp);
+      case AsmJSImm_ExpF:
+        return FuncCast<float (float)>(expf);
       case AsmJSImm_LogD:
         return FuncCast<double (double)>(log);
+      case AsmJSImm_LogF:
+        return FuncCast<float (float)>(logf);
       case AsmJSImm_PowD:
         return FuncCast(ecmaPow);
       case AsmJSImm_ATan2D:
         return FuncCast(ecmaAtan2);
+      case AsmJSImm_Invalid:
+        break;
     }
 
     MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
