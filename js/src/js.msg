@@ -260,7 +260,7 @@ MSG_DEF(JSMSG_USER_DEFINED_ERROR,     206, 0, JSEXN_ERR, "JS_ReportError was cal
 MSG_DEF(JSMSG_WRONG_CONSTRUCTOR,      207, 1, JSEXN_TYPEERR, "wrong constructor called for {0}")
 MSG_DEF(JSMSG_BAD_GENERATOR_RETURN,   208, 1, JSEXN_TYPEERR, "generator function {0} returns a value")
 MSG_DEF(JSMSG_BAD_ANON_GENERATOR_RETURN, 209, 0, JSEXN_TYPEERR, "anonymous generator function returns a value")
-MSG_DEF(JSMSG_UNUSED210,              210, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_PROTO_SETTING_SLOW,     210, 0, JSEXN_TYPEERR, "mutating the [[Prototype]] of an object will cause your code to run very slowly; instead create the object with the correct initial [[Prototype]] value using Object.create")
 MSG_DEF(JSMSG_IN_AFTER_FOR_NAME,      211, 0, JSEXN_SYNTAXERR, "missing 'in' or 'of' after for")
 MSG_DEF(JSMSG_BAD_TRAP_RETURN_VALUE,  212, 2, JSEXN_TYPEERR,"trap {1} for {0} returned a primitive value")
 MSG_DEF(JSMSG_UNUSED213,              213, 0, JSEXN_NONE, "")
