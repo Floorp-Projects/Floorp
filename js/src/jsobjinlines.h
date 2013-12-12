@@ -500,11 +500,23 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
     if (!obj)
         return nullptr;
 
+    js::HeapSlot *slots = nullptr;
+    if (size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan())) {
+        slots = cx->pod_malloc<js::HeapSlot>(nDynamicSlots);
+        if (!slots)
+            return nullptr;
+        js::Debug_SetSlotRangeToCrashOnTouch(slots, nDynamicSlots);
+    }
+
     obj->shape_.init(shape);
     obj->type_.init(type);
-    obj->slots = nullptr;
+    obj->slots = slots;
     obj->setFixedElements();
     new (obj->getElementsHeader()) js::ObjectElements(capacity, length);
+
+    size_t span = shape->slotSpan();
+    if (span)
+        obj->initializeSlotRange(0, span);
 
     return &obj->as<js::ArrayObject>();
 }
