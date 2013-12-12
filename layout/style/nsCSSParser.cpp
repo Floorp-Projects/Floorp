@@ -64,6 +64,12 @@ typedef void (* RuleAppendFunc) (css::Rule* aRule, void* aData);
 static void AssignRuleToPointer(css::Rule* aRule, void* aPointer);
 static void AppendRuleToSheet(css::Rule* aRule, void* aParser);
 
+struct CSSParserInputState {
+  nsCSSScannerPosition mPosition;
+  nsCSSToken mToken;
+  bool mHavePushBack;
+};
+
 // Your basic top-down recursive descent style parser
 // The exposed methods and members of this class are precisely those
 // needed by nsCSSParser, far below.
@@ -288,6 +294,18 @@ protected:
   bool IsSVGMode() const {
     return mScanner->IsSVGMode();
   }
+
+  /**
+   * Saves the current input state, which includes any currently pushed
+   * back token, and the current position of the scanner.
+   */
+  void SaveInputState(CSSParserInputState& aState);
+
+  /**
+   * Restores the saved input state by pushing back any saved pushback
+   * token and calling RestoreSavedPosition on the scanner.
+   */
+  void RestoreSavedInputState(const CSSParserInputState& aState);
 
   bool GetToken(bool aSkipWS);
   void UngetToken();
@@ -7143,6 +7161,22 @@ static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_bottomRight,
   eCSSProperty__moz_outline_radius_bottomLeft
 };
+
+void
+CSSParserImpl::SaveInputState(CSSParserInputState& aState)
+{
+  aState.mToken = mToken;
+  aState.mHavePushBack = mHavePushBack;
+  mScanner->SavePosition(aState.mPosition);
+}
+
+void
+CSSParserImpl::RestoreSavedInputState(const CSSParserInputState& aState)
+{
+  mToken = aState.mToken;
+  mHavePushBack = aState.mHavePushBack;
+  mScanner->RestoreSavedPosition(aState.mPosition);
+}
 
 bool
 CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
