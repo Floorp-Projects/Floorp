@@ -1106,7 +1106,7 @@ static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
-    if (js_IonOptions.checkOsiPointRegisters) {
+    if (js_JitOptions.checkOsiPointRegisters) {
         // GC can modify spilled registers, breaking our register checks.
         // To handle this, we disable these checks for the current VM call
         // when a GC happens.

@@ -2088,7 +2088,7 @@ IonBuilder::restartLoop(CFGState state)
 {
     spew("New types at loop header, restarting loop body");
 
-    if (js_IonOptions.limitScriptSize) {
+    if (js_JitOptions.limitScriptSize) {
         if (++numLoopRestarts_ >= MAX_LOOP_RESTARTS)
             return ControlStatus_Abort;
     }
@@ -3488,7 +3488,7 @@ IonBuilder::jsop_try()
 {
     JS_ASSERT(JSOp(*pc) == JSOP_TRY);
 
-    if (!js_IonOptions.compileTryCatch)
+    if (!js_JitOptions.compileTryCatch)
         return abort("Try-catch support disabled");
 
     // Try-finally is not yet supported.
@@ -4046,7 +4046,7 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
     // Skip heuristics if we have an explicit hint to inline.
     if (!targetScript->shouldInline()) {
         // Cap the inlining depth.
-        if (js_IonOptions.isSmallFunction(targetScript)) {
+        if (js_JitOptions.isSmallFunction(targetScript)) {
             if (inliningDepth_ >= optimizationInfo().smallFunctionMaxInlineDepth())
                 return DontInline(targetScript, "Vetoed: exceeding allowed inline depth");
         } else {

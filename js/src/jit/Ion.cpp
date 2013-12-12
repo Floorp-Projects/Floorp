@@ -1738,7 +1738,7 @@ IonCompile(JSContext *cx, JSScript *script,
     ionCompiling.construct();
 
     Maybe<AutoProtectHeapForIonCompilation> protect;
-    if (js_IonOptions.checkThreadSafety &&
+    if (js_JitOptions.checkThreadSafety &&
         cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL &&
         !cx->runtime()->profilingScripts &&
         !cx->runtime()->spsProfiler.enabled())
@@ -1822,7 +1822,7 @@ static const uint32_t MAX_DOM_WORKER_LOCALS_AND_ARGS = 2048;
 static MethodStatus
 CheckScriptSize(JSContext *cx, JSScript* script)
 {
-    if (!js_IonOptions.limitScriptSize)
+    if (!js_JitOptions.limitScriptSize)
         return Method_Compiled;
 
     if (script->length() > MAX_OFF_THREAD_SCRIPT_SIZE) {
@@ -1899,7 +1899,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(jit::IsBaselineEnabled(cx));
     JS_ASSERT_IF(osrPc != nullptr, (JSOp)*osrPc == JSOP_LOOPENTRY);
-    JS_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPC);
+    JS_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPc);
     JS_ASSERT_IF(executionMode == ParallelExecution, !HasIonScript(script, executionMode));
 
     if (!script->hasBaselineScript())
@@ -1937,7 +1937,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
         // recompile with the right pc.
         if (osrPc && script->ionScript()->osrPc() != osrPc) {
             uint32_t count = script->ionScript()->incrOsrPcMismatchCounter();
-            if (count <= js_IonOptions.osrPcMismatchesBeforeRecompile)
+            if (count <= js_JitOptions.osrPcMismatchesBeforeRecompile)
                 return Method_Skipped;
 
             failedState = Method_Skipped;
@@ -2000,7 +2000,7 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
         return Method_Skipped;
 
     // Optionally ignore on user request.
-    if (!js_IonOptions.osr)
+    if (!js_JitOptions.osr)
         return Method_Skipped;
 
     // Mark as forbidden if frame can't be handled.
@@ -2083,7 +2083,7 @@ jit::CanEnter(JSContext *cx, RunState &state)
     // If --ion-eager is used, compile with Baseline first, so that we
     // can directly enter IonMonkey.
     RootedScript rscript(cx, script);
-    if (js_IonOptions.eagerCompilation && !rscript->hasBaselineScript()) {
+    if (js_JitOptions.eagerCompilation && !rscript->hasBaselineScript()) {
         MethodStatus status = CanEnterBaselineMethod(cx, state);
         if (status != Method_Compiled)
             return status;
@@ -2755,7 +2755,7 @@ jit::UsesBeforeIonCompile(JSScript *script, jsbytecode *pc)
     if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
         minUses = minUses * (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
 
-    if (JSOp(*pc) != JSOP_LOOPENTRY || js_IonOptions.eagerCompilation)
+    if (JSOp(*pc) != JSOP_LOOPENTRY || js_JitOptions.eagerCompilation)
         return minUses;
 
     // It's more efficient to enter outer loops, rather than inner loops, via OSR.
