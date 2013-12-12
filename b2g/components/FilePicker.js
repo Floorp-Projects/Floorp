@@ -32,6 +32,7 @@ const AUDIO_FILTERS = ['audio/basic', 'audio/L24', 'audio/mp4',
                        'audio/webm'];
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, 'cpmm',
                                    '@mozilla.org/childprocessmessagemanager;1',
@@ -179,18 +180,39 @@ FilePicker.prototype = {
       return;
     }
 
-    var name = 'blob';
-    if (data.result.blob.type) {
-      let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-      let mimeInfo = mimeSvc.getFromTypeAndExtension(data.result.blob.type, '');
-      if (mimeInfo) {
-        name += '.' + mimeInfo.primaryExtension;
+    // The name to be shown can be part of the message, or can be taken from
+    // the DOMFile (if the blob is a DOMFile).
+    let name = data.result.name;
+    if (!name &&
+        (data.result.blob instanceof this.mParent.File) &&
+        data.result.blob.name) {
+      name = data.result.blob.name;
+    }
+
+    // Let's try to remove the full path and take just the filename.
+    if (name) {
+      let file = new FileUtils.File(data.result.blob.name);
+      if (file && file.leafName) {
+        name = file.leafName;
+      }
+    }
+
+    // the fallback is a filename composed by 'blob' + extension.
+    if (!name) {
+      name = 'blob';
+      if (data.result.blob.type) {
+        let mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+        let mimeInfo = mimeSvc.getFromTypeAndExtension(data.result.blob.type, '');
+        if (mimeInfo) {
+          name += '.' + mimeInfo.primaryExtension;
+        }
       }
     }
 
     let file = new this.mParent.File(data.result.blob,
                                      { name: name,
                                        type: data.result.blob.type });
+
     if (file) {
       this.fireSuccess(file);
     } else {
