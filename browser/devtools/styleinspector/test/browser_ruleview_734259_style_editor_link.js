@@ -66,7 +66,7 @@ function highlightNode()
   inspector.once("inspector-updated", () => {
     is(inspector.selection.node, div, "selection matches the div element");
     testInlineStyle();
-  }).then(null, console.error);
+  });
 }
 
 function testInlineStyle()
