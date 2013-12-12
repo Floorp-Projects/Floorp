@@ -57,10 +57,10 @@ public class SiteIdentityPopup extends ArrowPopup
 
     private DoorHanger mMixedContentNotification;
 
-    public SiteIdentityPopup(BrowserApp aActivity) {
-        super(aActivity);
+    public SiteIdentityPopup(BrowserApp activity) {
+        super(activity);
 
-        mResources = aActivity.getResources();
+        mResources = activity.getResources();
     }
 
     public static int getSecurityImageLevel(String mode) {
