@@ -49,7 +49,7 @@ public:
   // incumbent script settings object when the callback is invoked (overriding
   // the entry point computed from aCallback). If no override is required, the
   // caller should pass null.
-  explicit CallbackObject(JSObject* aCallback, nsIGlobalObject *aIncumbentGlobal)
+  explicit CallbackObject(JS::Handle<JSObject*> aCallback, nsIGlobalObject *aIncumbentGlobal)
   {
     Init(aCallback, aIncumbentGlobal);
   }

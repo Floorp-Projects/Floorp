@@ -25,7 +25,7 @@ namespace dom {
 class CallbackFunction : public CallbackObject
 {
 public:
-  explicit CallbackFunction(JSObject* aCallable,
+  explicit CallbackFunction(JS::Handle<JSObject*> aCallable,
                             nsIGlobalObject* aIncumbentGlobal)
     : CallbackObject(aCallable, aIncumbentGlobal)
   {

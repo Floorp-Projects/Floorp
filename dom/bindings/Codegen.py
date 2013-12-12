@@ -3396,7 +3396,10 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
             conversion = (
-                "${declName} = new %s(&${val}.toObject(), mozilla::dom::GetIncumbentGlobal());\n" % name)
+                "{ // Scope for tempRoot\n"
+                "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
+                "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
+                "}" % name)
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
@@ -3729,7 +3732,10 @@ for (uint32_t i = 0; i < length; ++i) {
         else:
             declType = CGGeneric("OwningNonNull<%s>" % name)
         conversion = (
-            "  ${declName} = new %s(&${val}.toObject(), mozilla::dom::GetIncumbentGlobal());\n" % name)
+            "{ // Scope for tempRoot\n"
+            "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
+            "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
+            "}\n" % name)
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -10676,7 +10682,7 @@ class CGCallback(CGClass):
 
     def getConstructors(self):
         return [ClassConstructor(
-            [Argument("JSObject*", "aCallback"), Argument("nsIGlobalObject*", "aIncumbentGlobal")],
+            [Argument("JS::Handle<JSObject*>", "aCallback"), Argument("nsIGlobalObject*", "aIncumbentGlobal")],
             bodyInHeader=True,
             visibility="public",
             explicit=True,
