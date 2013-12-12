@@ -27,10 +27,13 @@
 #include "nsStyleConsts.h"
 
 class imgRequestProxy;
+class nsCSSStyleSheet;
 class nsIDocument;
 class nsIPrincipal;
-class nsPresContext;
 class nsIURI;
+class nsPresContext;
+template <class T>
+class nsPtrHashKey;
 
 // Deletes a linked list iteratively to avoid blowing up the stack (bug 456196).
 #define NS_CSS_DELETE_LIST_MEMBER(type_, ptr_, member_)                        \
@@ -1241,6 +1244,9 @@ struct nsCSSValueTokenStream {
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIURI> mSheetURI;
   nsCOMPtr<nsIPrincipal> mSheetPrincipal;
+  nsCSSStyleSheet* mSheet;
+  uint32_t mLineNumber;
+  uint32_t mLineOffset;
 
 private:
   nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
