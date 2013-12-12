@@ -461,11 +461,11 @@ SVGContentUtils::ParseNumber(const nsAString& aString,
       expSign = *expIter == '-' ? -1 : 1;
       if (*expIter == '-' || *expIter == '+') {
         ++expIter;
-        if (expIter != end && IsDigit(*expIter)) {
-          // At this point we're sure this is an exponent
-          // and not the start of a unit such as em or ex.
-          gotE = true;
-        }
+      }
+      if (expIter != end && IsDigit(*expIter)) {
+        // At this point we're sure this is an exponent
+        // and not the start of a unit such as em or ex.
+        gotE = true;
       }
     }
 
