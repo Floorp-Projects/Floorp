@@ -144,6 +144,9 @@ private:
   mozilla::dom::CSSValue* CreateTextAlignValue(uint8_t aAlign,
                                                bool aAlignTrue,
                                                const int32_t aTable[]);
+  // This indicates error by leaving mStyleContextHolder null.
+  void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
+  void ClearCurrentStyleSources();
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
