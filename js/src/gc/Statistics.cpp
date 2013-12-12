@@ -276,7 +276,6 @@ static const PhaseInfo phases[] = {
     { PHASE_PURGE, "Purge", PHASE_NO_PARENT },
     { PHASE_MARK, "Mark", PHASE_NO_PARENT },
     { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MARK },
-    { PHASE_MARK_TYPES, "Mark Types", PHASE_MARK_ROOTS },
     { PHASE_MARK_DELAYED, "Mark Delayed", PHASE_MARK },
     { PHASE_SWEEP, "Sweep", PHASE_NO_PARENT },
     { PHASE_SWEEP_MARK, "Mark During Sweeping", PHASE_SWEEP },
