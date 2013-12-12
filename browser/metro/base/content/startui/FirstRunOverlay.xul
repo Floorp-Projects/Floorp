@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://browser/skin/firstrun.css" type="text/css"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+]>
+
+<overlay id="firstrun"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <hbox id="start-container">
+    <box id="instruction-topsites-box" insertafter="start-topsites" class="firstrun">
+      <box id="instruction-topsites">
+        <vbox align="center">
+          <image class="instruction-arrow arrow-left" />
+          <label class="instruction-label" value="&firstRunTopSites.label;"/>
+        </vbox>
+      </box>
+    </box>
+
+    <vbox id="firstrun-welcome" insertafter="instruction-topsites-box" class="firstrun" align="center" pack="center">
+      <image class="welcome-image" />
+      <label class="welcome-title" value="&firstRunWelcome.label;"/>
+      <label class="welcome-subtitle" value="&firstRunDifferent.label;"/>
+    </vbox>
+
+    <box insertafter="start-bookmarks" class="firstrun">
+      <box id="instruction-bookmarks">
+        <vbox align="center">
+          <image class="instruction-arrow arrow-right" />
+          <label class="instruction-label" value="&firstRunBookmarks.label;"/>
+        </vbox>
+      </box>
+    </box>
+
+    <box id="instruction-history-container" insertafter="start-history" class="firstrun">
+      <box id="instruction-history">
+        <vbox align="center">
+          <image class="instruction-arrow arrow-right" />
+          <label class="instruction-label" value="&firstRunHistory.label;"/>
+        </vbox>
+      </box>
+    </box>
+
+    <box id="instruction-tabs" class="firstrun">
+      <vbox align="center">
+        <image class="instruction-arrow arrow-top" />
+        <label class="instruction-label" value="&firstRunTabs.label;"/>
+      </vbox>
+    </box>
+
+    <box id="instruction-menu" class="firstrun">
+      <hbox>
+        <label class="instruction-label" value="&firstRunMenu.label;"/>
+        <image class="instruction-arrow arrow-down" />
+      </hbox>
+    </box>
+
+ </hbox>
+</overlay>
