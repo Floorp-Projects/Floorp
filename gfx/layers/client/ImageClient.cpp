@@ -280,16 +280,6 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
   return ImageClientSingle::UpdateImage(aContainer, aContentFlags);
 }
 
-void
-ImageClientSingle::OnActorDestroy()
-{
-}
-
-void
-ImageClientBuffered::OnActorDestroy()
-{
-}
-
 bool
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
@@ -472,11 +462,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
 : ImageClient(aFwd, BUFFER_BRIDGE)
 , mAsyncContainerID(0)
 , mLayer(nullptr)
-{
-}
-
-void
-DeprecatedImageClientSingle::OnActorDestroy()
 {
 }
 
