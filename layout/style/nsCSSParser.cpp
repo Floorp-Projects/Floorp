@@ -5480,7 +5480,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
       return false;
     }
   } else {
-    // Map property name to its ID and then parse the property
+    // Map property name to its ID.
     propID = nsCSSProps::LookupProperty(propertyName, nsCSSProps::eEnabled);
     if (eCSSProperty_UNKNOWN == propID ||
         (aContext == eCSSContext_Page &&
@@ -5493,7 +5493,8 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
       }
       return false;
     }
-    if (! ParseProperty(propID)) {
+    // Then parse the property.
+    if (!ParseProperty(propID)) {
       // XXX Much better to put stuff in the value parsers instead...
       REPORT_UNEXPECTED_P(PEValueParsingError, propertyName);
       REPORT_UNEXPECTED(PEDeclDropped);
@@ -7207,12 +7208,21 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
       nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_UNITLESS_LENGTH_QUIRK);
   }
 
+  // Save the current input state so that we can restore it later if we
+  // have to re-parse the property value as a variable-reference-containing
+  // token stream.
+  CSSParserInputState stateBeforeProperty;
+  SaveInputState(stateBeforeProperty);
+  mScanner->ClearSeenVariableReference();
+
   NS_ASSERTION(aPropID < eCSSProperty_COUNT, "index out of range");
+  bool allowVariables = true;
   bool result;
   switch (nsCSSProps::PropertyParseType(aPropID)) {
     case CSS_PROPERTY_PARSE_INACCESSIBLE: {
       // The user can't use these
       REPORT_UNEXPECTED(PEInaccessibleProperty2);
+      allowVariables = false;
       result = false;
       break;
     }
@@ -7239,10 +7249,128 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
     }
     default: {
       result = false;
+      allowVariables = false;
       NS_ABORT_IF_FALSE(false,
                         "Property's flags field in nsCSSPropList.h is missing "
                         "one of the CSS_PROPERTY_PARSE_* constants");
       break;
+    }
+  }
+
+  bool seenVariable = mScanner->SeenVariableReference() ||
+    (stateBeforeProperty.mHavePushBack &&
+     stateBeforeProperty.mToken.mType == eCSSToken_Function &&
+     stateBeforeProperty.mToken.mIdent.LowerCaseEqualsLiteral("var"));
+  bool parseAsTokenStream;
+
+  if (!result && allowVariables) {
+    parseAsTokenStream = true;
+    if (!seenVariable) {
+      // We might have stopped parsing the property before its end and before
+      // finding a variable reference.  Keep checking until the end of the
+      // property.
+      CSSParserInputState stateAtError;
+      SaveInputState(stateAtError);
+
+      const PRUnichar stopChars[] = { ';', '!', '}', ')', 0 };
+      SkipUntilOneOf(stopChars);
+      UngetToken();
+      parseAsTokenStream = mScanner->SeenVariableReference();
+
+      if (!parseAsTokenStream) {
+        // If we parsed to the end of the propery and didn't find any variable
+        // references, then the real position we want to report the error at
+        // is |stateAtError|.
+        RestoreSavedInputState(stateAtError);
+      }
+    }
+  } else {
+    parseAsTokenStream = false;
+  }
+
+  if (parseAsTokenStream) {
+    // Go back to the start of the property value and parse it to make sure
+    // its variable references are syntactically valid and is otherwise
+    // balanced.
+    RestoreSavedInputState(stateBeforeProperty);
+
+    if (!mInSupportsCondition) {
+      mScanner->StartRecording();
+    }
+
+    CSSVariableDeclarations::Type type;
+    bool dropBackslash;
+    nsString impliedCharacters;
+    nsCSSValue value;
+    if (ParseValueWithVariables(&type, &dropBackslash, impliedCharacters,
+                                nullptr, nullptr)) {
+      MOZ_ASSERT(type == CSSVariableDeclarations::eTokenStream,
+                 "a non-custom property reparsed since it contained variable "
+                 "references should not have been 'initial' or 'inherit'");
+
+      nsString propertyValue;
+
+      if (!mInSupportsCondition) {
+        // If we are in an @supports condition, we don't need to store the
+        // actual token stream on the nsCSSValue.
+        mScanner->StopRecording(propertyValue);
+        if (dropBackslash) {
+          MOZ_ASSERT(!propertyValue.IsEmpty() &&
+                     propertyValue[propertyValue.Length() - 1] == '\\');
+          propertyValue.Truncate(propertyValue.Length() - 1);
+        }
+        propertyValue.Append(impliedCharacters);
+      }
+
+      if (mHavePushBack) {
+        // If we came to the end of a property value that had a variable
+        // reference and a token was pushed back, then it would have been
+        // ended by '!', ')', ';', ']' or '}'.  We should remove it from the
+        // recorded property value.
+        MOZ_ASSERT(mToken.IsSymbol('!') ||
+                   mToken.IsSymbol(')') ||
+                   mToken.IsSymbol(';') ||
+                   mToken.IsSymbol(']') ||
+                   mToken.IsSymbol('}'));
+        if (!mInSupportsCondition) {
+          MOZ_ASSERT(!propertyValue.IsEmpty());
+          MOZ_ASSERT(propertyValue[propertyValue.Length() - 1] ==
+                     mToken.mSymbol);
+          propertyValue.Truncate(propertyValue.Length() - 1);
+        }
+      }
+
+      if (!mInSupportsCondition) {
+        if (nsCSSProps::IsShorthand(aPropID)) {
+          // If this is a shorthand property, we store the token stream on each
+          // of its corresponding longhand properties.
+          CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
+            nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
+            tokenStream->mPropertyID = *p;
+            tokenStream->mShorthandPropertyID = aPropID;
+            tokenStream->mTokenStream = propertyValue;
+            tokenStream->mBaseURI = mBaseURI;
+            tokenStream->mSheetURI = mSheetURI;
+            tokenStream->mSheetPrincipal = mSheetPrincipal;
+            value.SetTokenStreamValue(tokenStream);
+            AppendValue(*p, value);
+          }
+        } else {
+          nsCSSValueTokenStream* tokenStream = new nsCSSValueTokenStream;
+          tokenStream->mPropertyID = aPropID;
+          tokenStream->mTokenStream = propertyValue;
+          tokenStream->mBaseURI = mBaseURI;
+          tokenStream->mSheetURI = mSheetURI;
+          tokenStream->mSheetPrincipal = mSheetPrincipal;
+          value.SetTokenStreamValue(tokenStream);
+          AppendValue(aPropID, value);
+        }
+      }
+      result = true;
+    } else {
+      if (!mInSupportsCondition) {
+        mScanner->StopRecording();
+      }
     }
   }
 
