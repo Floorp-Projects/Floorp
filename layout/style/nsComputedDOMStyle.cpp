@@ -1232,7 +1232,7 @@ nsComputedDOMStyle::DoGetTransform()
 
    bool dummy;
    gfx3DMatrix matrix =
-     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform,
+     nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
                                             mStyleContextHolder,
                                             mStyleContextHolder->PresContext(),
                                             dummy,

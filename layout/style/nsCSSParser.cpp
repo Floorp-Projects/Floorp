@@ -11179,7 +11179,10 @@ bool CSSParserImpl::ParseTransform(bool aIsPrefixed)
       return false;
     }
   } else {
-    nsCSSValueList* cur = value.SetListValue();
+    nsCSSValueSharedList* list = new nsCSSValueSharedList;
+    value.SetSharedListValue(list);
+    list->mHead = new nsCSSValueList;
+    nsCSSValueList* cur = list->mHead;
     for (;;) {
       if (!ParseSingleTransform(aIsPrefixed, cur->mValue)) {
         return false;
