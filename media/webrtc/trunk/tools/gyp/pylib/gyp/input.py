@@ -1424,6 +1424,10 @@ class DependencyGraphNode(object):
     self.dependencies = []
     self.dependents = []
 
+  # This Mozilla change makes DependencyGraphNode more idempotent.
+  def __hash__(self):
+    return hash(self.ref)
+
   def FlattenToList(self):
     # flat_list is the sorted list of dependencies - actually, the list items
     # are the "ref" attributes of DependencyGraphNodes.  Every target will
