@@ -26,6 +26,11 @@ var StartUI = {
     document.getElementById("bcast_preciseInput").setAttribute("input",
       this.chromeWin.InputSourceHelper.isPrecise ? "precise" : "imprecise");
 
+    // NOTE: location.search doesn't work for about: pages
+    if (location.href.indexOf("?firstrun") > 0) {
+      document.loadOverlay("chrome://browser/content/FirstRunOverlay.xul", null);
+    }
+
     this._adjustDOMforViewState(this.chromeWin.ContentAreaObserver.viewstate);
 
     TopSitesStartView.init();

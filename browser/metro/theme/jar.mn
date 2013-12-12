@@ -22,6 +22,7 @@ chrome.jar:
 * skin/tiles.css                            (tiles.css)
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
+  skin/firstrun.css                         (firstrun.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
 % override chrome://global/skin/netError.css chrome://browser/skin/netError.css
@@ -135,3 +136,10 @@ chrome.jar:
   skin/images/overlay-back.png              (images/overlay-back.png)
   skin/images/overlay-plus.png              (images/overlay-plus.png)
   skin/images/autoscroll.png                (images/autoscroll.png)
+
+  skin/images/arrow-top.png                 (images/arrow-top.png)
+  skin/images/arrow-top@1.4x.png            (images/arrow-top@1.4x.png)
+  skin/images/arrow-top@1.8x.png            (images/arrow-top@1.8x.png)
+  skin/images/arrow-left.png                (images/arrow-left.png)
+  skin/images/arrow-left@1.4x.png           (images/arrow-left@1.4x.png)
+  skin/images/arrow-left@1.8x.png           (images/arrow-left@1.8x.png)
