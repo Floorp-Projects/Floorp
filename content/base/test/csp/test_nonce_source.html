@@ -26,25 +26,21 @@ var expectedScriptInlineViolations = 1;
 
 // This is used to watch the blocked data bounce off CSP
 function examiner() {
-  SpecialPowers.addObserver(this, "http-on-modify-request", false);
+  SpecialPowers.addObserver(this, "specialpowers-http-notify-request", false);
   SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
 }
 
 examiner.prototype = {
   observe: function(subject, topic, data) {
-    if (!SpecialPowers.can_QI(subject))
-      return;
-
     var testid_re = new RegExp("testid=([a-z0-9_]+)");
 
     //_good things better be allowed!
     //_bad things better be blocked!
 
-    if (topic === "http-on-modify-request") {
-      // these things were allowed by CSP
-      var allowed_uri = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
-      if (!testid_re.test(allowed_uri)) return;
-      var testid = testid_re.exec(allowed_uri)[1];
+    if (topic === "specialpowers-http-notify-request") {
+      var uri = data;
+      if (!testid_re.test(uri)) return;
+      var testid = testid_re.exec(uri)[1];
       ok(/_good/.test(testid), "Allowed URI with testid " + testid);
       ranTests(1);
     }
@@ -59,6 +55,7 @@ examiner.prototype = {
         ranTests(1);
       } catch (e) {
         // if the subject is blocked inline, data will be a violation msg (defined at the top of contentSecurityPolicy.js)
+        //dump("** exception in csp-on-violate-policy: " + e + "\n");
         var violation_msg = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsISupportsCString"), "data");
         if (/Inline Script/.test(violation_msg)) {
           if (/Inline Script had invalid nonce/.test(violation_msg))
@@ -73,7 +70,7 @@ examiner.prototype = {
   },
   // must eventually call this to remove the listener, or mochitests might get borked.
   remove: function() {
-    SpecialPowers.removeObserver(this, "http-on-modify-request");
+    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
   }
 }

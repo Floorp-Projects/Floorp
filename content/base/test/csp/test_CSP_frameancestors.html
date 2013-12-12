@@ -2,23 +2,20 @@
 <html>
 <head>
   <title>Test for Content Security Policy Frame Ancestors directive</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <p id="display"></p>
 <div id="content" style="display: none">
-
-  
 </div>
-
 <iframe style="width:100%;height:300px;" id='cspframe'></iframe>
 <iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/content/base/test/csp/";
 
-// These are test results: -1 means it hasn't run, 
+// These are test results: -1 means it hasn't run,
 // true/false is the pass/fail result.
 var framesThatShouldLoad = {
   aa_allow: -1,    /* innermost frame allows a */
@@ -47,7 +44,7 @@ var framesThatShouldLoad = {
 
 var expectedViolationsLeft = 14;
 
-// This is used to watch the blocked data bounce off CSP and allowed data 
+// This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy", false);
@@ -57,7 +54,7 @@ examiner.prototype  = {
     // subject should be an nsURI, and should be either allowed or blocked.
     if (!SpecialPowers.can_QI(subject))
       return;
-      
+
     if (topic === "csp-on-violate-policy") {
       //these were blocked... record that they were blocked
       var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
@@ -65,7 +62,7 @@ examiner.prototype  = {
     }
   },
 
-  // must eventually call this to remove the listener, 
+  // must eventually call this to remove the listener,
   // or mochitests might get borked.
   remove: function() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
