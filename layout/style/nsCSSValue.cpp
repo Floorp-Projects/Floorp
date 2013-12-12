@@ -8,19 +8,20 @@
 
 #include "nsCSSValue.h"
 
+#include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/css/ImageLoader.h"
+#include "CSSCalc.h"
+#include "gfxFontConstants.h"
 #include "imgIRequest.h"
+#include "imgRequestProxy.h"
 #include "nsIDocument.h"
 #include "nsIPrincipal.h"
 #include "nsCSSProps.h"
-#include "nsStyleUtil.h"
-#include "CSSCalc.h"
+#include "nsCSSStyleSheet.h"
 #include "nsNetUtil.h"
-#include "mozilla/MemoryReporting.h"
-#include "mozilla/css/ImageLoader.h"
-#include "mozilla/Likely.h"
-#include "gfxFontConstants.h"
 #include "nsPresContext.h"
-#include "imgRequestProxy.h"
+#include "nsStyleUtil.h"
 #include "nsDeviceContext.h"
 
 using namespace mozilla;
