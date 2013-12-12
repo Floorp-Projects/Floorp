@@ -44,6 +44,7 @@
 #include "nsIDocument.h"
 #include "prtime.h"
 #include "CSSVariableResolver.h"
+#include "nsCSSParser.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -2021,6 +2022,44 @@ private:
   size_t mCount;
 };
 
+/* static */ bool
+nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
+                                      nsRuleData* aRuleData,
+                                      nsStyleContext* aContext)
+{
+  MOZ_ASSERT(aSID != eStyleStruct_Variables);
+  MOZ_ASSERT(aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(aSID));
+  MOZ_ASSERT(aRuleData->mValueOffsets[aSID] == 0);
+
+  nsCSSParser parser;
+  bool anyTokenStreams = false;
+
+  // Look at each property in the nsRuleData for the given style struct.
+  size_t nprops = nsCSSProps::PropertyCountInStruct(aSID);
+  for (nsCSSValue* value = aRuleData->mValueStorage,
+                  *values_end = aRuleData->mValueStorage + nprops;
+       value != values_end; value++) {
+    if (value->GetUnit() != eCSSUnit_TokenStream) {
+      continue;
+    }
+
+    const CSSVariableValues* variables =
+      &aContext->StyleVariables()->mVariables;
+    nsCSSValueTokenStream* tokenStream = value->GetTokenStreamValue();
+
+    parser.ParsePropertyWithVariableReferences(
+        tokenStream->mPropertyID, tokenStream->mShorthandPropertyID,
+        tokenStream->mTokenStream, variables, aRuleData,
+        tokenStream->mSheetURI, tokenStream->mBaseURI,
+        tokenStream->mSheetPrincipal);
+
+    aRuleData->mCanStoreInRuleTree = false;
+    anyTokenStreams = true;
+  }
+
+  return anyTokenStreams;
+}
+
 const void*
 nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
                          nsStyleContext* aContext)
@@ -2107,6 +2146,19 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     ruleNode = ruleNode->mParent;
   }
 
+  bool recomputeDetail = false;
+
+  // If we are computing a style struct other than nsStyleVariables, and
+  // ruleData has any properties with variable references (nsCSSValues of
+  // type eCSSUnit_TokenStream), then we need to resolve these.
+  if (aSID != eStyleStruct_Variables) {
+    // A property's value might have became 'inherit' after resolving
+    // variable references.  (This happens when an inherited property
+    // fails to parse its resolved value.)  We need to recompute
+    // |detail| in case this happened.
+    recomputeDetail = ResolveVariableReferences(aSID, &ruleData, aContext);
+  }
+
   // If needed, unset the properties that don't have a flag that allows
   // them to be set for this style context.  (For example, only some
   // properties apply to :first-line and :first-letter.)
@@ -2114,9 +2166,13 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (pseudoRestriction) {
     UnsetPropertiesWithoutFlags(aSID, &ruleData, pseudoRestriction);
 
-    // Recompute |detail| based on the restrictions we just applied.
+    // We need to recompute |detail| based on the restrictions we just applied.
     // We can adjust |detail| arbitrarily because of the restriction
     // rule added in nsStyleSet::WalkRestrictionRule.
+    recomputeDetail = true;
+  }
+
+  if (recomputeDetail) {
     detail = CheckSpecifiedProperties(aSID, &ruleData);
   }
 
@@ -3732,6 +3788,8 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     // the final value that we're computing.
     if (i != 0)
       ruleData.ValueForFontFamily()->Reset();
+
+    ResolveVariableReferences(eStyleStruct_Font, &ruleData, aContext);
 
     nsRuleNode::SetFont(aPresContext, context,
                         aGenericFontID, &ruleData, &parentFont, aFont,

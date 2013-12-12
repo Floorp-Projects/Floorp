@@ -423,6 +423,18 @@ protected:
   const void* SetDefaultOnRoot(const nsStyleStructID aSID,
                                nsStyleContext* aContext);
 
+  /**
+   * Resolves any property values in aRuleData for a given style struct that
+   * have eCSSUnit_TokenStream values, by resolving them against the computed
+   * variable values on the style context and re-parsing the property.
+   *
+   * @return Whether any properties with eCSSUnit_TokenStream values were
+   *   encountered.
+   */
+  static bool ResolveVariableReferences(const nsStyleStructID aSID,
+                                        nsRuleData* aRuleData,
+                                        nsStyleContext* aContext);
+
   const void*
     WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext);
 
