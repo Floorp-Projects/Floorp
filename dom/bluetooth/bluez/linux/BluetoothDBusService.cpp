@@ -497,6 +497,14 @@ RunDBusCallback(DBusMessage* aMsg, void* aBluetoothReplyRunnable,
   nsAutoString replyError;
   BluetoothValue v;
   aFunc(aMsg, nullptr, v, replyError);
+
+  // Bug 941462. When blueZ replys 'I/O error', we treat it as 'internal error'.
+  // This usually happned when the first pairing request has not yet finished,
+  // the second pairing request issued immediately.
+  if (replyError.EqualsLiteral("I/O error")) {
+    replyError.AssignLiteral(ERR_INTERNAL_ERROR);
+  }
+
   DispatchBluetoothReply(replyRunnable, v, replyError);
 }
 
