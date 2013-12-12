@@ -602,30 +602,41 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
   nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName,
                                                   nsCSSProps::eEnabled);
 
-  // We don't (for now, anyway, though it may make sense to change it
-  // for all aliases, including those in nsCSSPropAliasList) want
-  // aliases to be enumerable (via GetLength and IndexedGetter), so
-  // handle them here rather than adding entries to
-  // the nsComputedStyleMap.
-  if (prop != eCSSProperty_UNKNOWN &&
-      nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
-    const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
-    NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
-                      "must have list of length 1");
-    prop = subprops[0];
-  }
+  bool needsLayoutFlush;
+  nsComputedStyleMap::Entry::ComputeMethod getter;
 
-  const nsComputedStyleMap::Entry* propEntry =
-    GetComputedStyleMap()->FindEntryForProperty(prop);
+  if (prop == eCSSPropertyExtra_variable) {
+    needsLayoutFlush = false;
+    getter = nullptr;
+  } else {
+    // We don't (for now, anyway, though it may make sense to change it
+    // for all aliases, including those in nsCSSPropAliasList) want
+    // aliases to be enumerable (via GetLength and IndexedGetter), so
+    // handle them here rather than adding entries to
+    // the nsComputedStyleMap.
+    if (prop != eCSSProperty_UNKNOWN &&
+        nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
+      const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
+      NS_ABORT_IF_FALSE(subprops[1] == eCSSProperty_UNKNOWN,
+                        "must have list of length 1");
+      prop = subprops[0];
+    }
 
-  if (!propEntry) {
+    const nsComputedStyleMap::Entry* propEntry =
+      GetComputedStyleMap()->FindEntryForProperty(prop);
+
+    if (!propEntry) {
 #ifdef DEBUG_ComputedDOMStyle
-    NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
-                                  NS_LITERAL_CSTRING(" is not queryable!")).get());
+      NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
+                                    NS_LITERAL_CSTRING(" is not queryable!")).get());
 #endif
 
-    // NOTE:  For branches, we should flush here for compatibility!
-    return nullptr;
+      // NOTE:  For branches, we should flush here for compatibility!
+      return nullptr;
+    }
+
+    needsLayoutFlush = propEntry->IsLayoutFlushNeeded();
+    getter = propEntry->mGetter;
   }
 
   // Flush _before_ getting the presshell, since that could create a new
@@ -633,9 +644,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
   // we're computing style in, not on the document mContent is in -- the two
   // may be different.
   document->FlushPendingNotifications(
-    propEntry->IsLayoutFlushNeeded() ? Flush_Layout : Flush_Style);
+    needsLayoutFlush ? Flush_Layout : Flush_Style);
 #ifdef DEBUG
-  mFlushedPendingReflows = propEntry->IsLayoutFlushNeeded();
+  mFlushedPendingReflows = needsLayoutFlush;
 #endif
 
   mPresShell = document->GetShell();
@@ -713,8 +724,13 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
     }
   }
 
-  // Call our pointer-to-member-function.
-  nsRefPtr<CSSValue> val = (this->*(propEntry->mGetter))();
+  nsRefPtr<CSSValue> val;
+  if (prop == eCSSPropertyExtra_variable) {
+    val = DoGetCustomProperty(aPropertyName);
+  } else {
+    // Call our pointer-to-member-function.
+    val = (this->*getter)();
+  }
 
   mOuterFrame = nullptr;
   mInnerFrame = nullptr;
@@ -5215,6 +5231,25 @@ static void
 MarkComputedStyleMapDirty(const char* aPref, void* aData)
 {
   static_cast<nsComputedStyleMap*>(aData)->MarkDirty();
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetCustomProperty(const nsAString& aPropertyName)
+{
+  MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
+
+  const nsStyleVariables* variables = StyleVariables();
+
+  nsString variableValue;
+  const nsAString& name = Substring(aPropertyName, 4);
+  if (!variables->mVariables.Get(name, variableValue)) {
+    return nullptr;
+  }
+
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  val->SetString(variableValue);
+
+  return val;
 }
 
 /* static */ nsComputedStyleMap*
