@@ -35,6 +35,7 @@ public:
   virtual void HandleDoubleTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
   virtual void HandleSingleTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
   virtual void HandleLongTap(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
+  virtual void HandleLongTapUp(const mozilla::CSSIntPoint& aPoint, int32_t aModifiers);
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect, const mozilla::CSSSize &aScrollableSize);
   virtual void PostDelayedTask(Task* aTask, int aDelayMs);
   virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid);
