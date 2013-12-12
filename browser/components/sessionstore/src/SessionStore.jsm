@@ -86,12 +86,6 @@ const BROWSER_EVENTS = [
 // The number of milliseconds in a day
 const MS_PER_DAY = 1000.0 * 60.0 * 60.0 * 24.0;
 
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-#define BROKEN_WM_Z_ORDER
-#endif
-#endif
-
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
@@ -106,14 +100,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
-  "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
   "resource:///modules/sessionstore/PageStyle.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
+  "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
   "resource:///modules/sessionstore/SessionSaver.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
@@ -3217,32 +3213,7 @@ let SessionStoreInternal = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function ssi_getMostRecentBrowserWindow() {
-    var win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win)
-      return null;
-    if (!win.closed)
-      return win;
-
-#ifdef BROKEN_WM_Z_ORDER
-    win = null;
-    var windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    // this is oldest to newest, so this gets a bit ugly
-    while (windowsEnum.hasMoreElements()) {
-      let nextWin = windowsEnum.getNext();
-      if (!nextWin.closed)
-        win = nextWin;
-    }
-    return win;
-#else
-    var windowsEnum =
-      Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
-    while (windowsEnum.hasMoreElements()) {
-      win = windowsEnum.getNext();
-      if (!win.closed)
-        return win;
-    }
-    return null;
-#endif
+    return RecentWindow.getMostRecentBrowserWindow({ allowPopups: true });
   },
 
   /**
