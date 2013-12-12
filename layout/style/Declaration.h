@@ -64,7 +64,9 @@ public:
 
   void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
-  bool HasImportantData() const { return mImportantData != nullptr; }
+  bool HasImportantData() const {
+    return mImportantData || mImportantVariables;
+  }
   bool GetValueIsImportant(nsCSSProperty aProperty) const;
   bool GetValueIsImportant(const nsAString& aProperty) const;
 
@@ -166,11 +168,20 @@ public:
   void MapNormalRuleInfoInto(nsRuleData *aRuleData) const {
     NS_ABORT_IF_FALSE(mData, "called while expanded");
     mData->MapRuleInfoInto(aRuleData);
+    if (mVariables) {
+      mVariables->MapRuleInfoInto(aRuleData);
+    }
   }
   void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
     NS_ABORT_IF_FALSE(mData, "called while expanded");
-    NS_ABORT_IF_FALSE(mImportantData, "must have important data");
-    mImportantData->MapRuleInfoInto(aRuleData);
+    NS_ABORT_IF_FALSE(mImportantData || mImportantVariables,
+                      "must have important data or variables");
+    if (mImportantData) {
+      mImportantData->MapRuleInfoInto(aRuleData);
+    }
+    if (mImportantVariables) {
+      mImportantVariables->MapRuleInfoInto(aRuleData);
+    }
   }
 
   /**

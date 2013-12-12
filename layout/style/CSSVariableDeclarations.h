@@ -10,6 +10,8 @@
 
 #include "nsDataHashtable.h"
 
+class nsRuleData;
+
 namespace mozilla {
 
 class CSSVariableDeclarations
@@ -96,6 +98,12 @@ public:
    */
   uint32_t Count() const { return mVariables.Count(); }
 
+  /**
+   * Copies each variable value from this object into aRuleData, unless that
+   * variable already exists on aRuleData.
+   */
+  void MapRuleInfoInto(nsRuleData* aRuleData);
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
@@ -106,6 +114,10 @@ private:
   static PLDHashOperator EnumerateVariableForCopy(const nsAString& aName,
                                                   nsString aValue,
                                                   void* aData);
+  static PLDHashOperator
+    EnumerateVariableForMapRuleInfoInto(const nsAString& aName,
+                                        nsString aValue,
+                                        void* aData);
 
   nsDataHashtable<nsStringHashKey, nsString> mVariables;
 };
