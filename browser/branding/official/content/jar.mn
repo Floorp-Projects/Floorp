@@ -16,3 +16,8 @@ browser.jar:
   content/branding/identity-icons-brand.png      (identity-icons-brand.png)
   content/branding/identity-icons-brand@2x.png   (identity-icons-brand@2x.png)
   content/branding/aboutDialog.css               (aboutDialog.css)
+#ifdef MOZ_METRO
+  content/branding/metro-about.css               (metro-about.css)
+  content/branding/metro-about-footer.png        (metro-about-footer.png)
+  content/branding/metro-about-wordmark.png      (metro-about-wordmark.png)
+#endif
