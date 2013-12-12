@@ -39,6 +39,8 @@ class CompositableClient;
 class PlanarYCbCrImage;
 class PlanarYCbCrData;
 class Image;
+class PTextureChild;
+class TextureChild;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -193,6 +195,17 @@ public:
   virtual bool ImplementsLocking() const { return false; }
 
   /**
+   * Allocate and deallocate a TextureChild actor.
+   *
+   * TextureChild is an implementation detail of TextureHost that is not
+   * exposed to the rest of the code base. CreateIPDLActor and DestroyIPDLActor
+   * are for use with the maging IPDL protocols only (so that they can
+   * implement AllocPextureChild and DeallocPTextureChild).
+   */
+  static PTextureChild* CreateIPDLActor();
+  static bool DestroyIPDLActor(PTextureChild* actor);
+
+  /**
    * Sets this texture's ID.
    *
    * This ID is used to match a texture client with his corresponding TextureHost.
@@ -269,6 +282,21 @@ public:
   // method to forget about the shmem _without_ releasing it.
   virtual void OnActorDestroy() {}
 
+  /**
+   * Create and init the TextureChild/Parent IPDL actor pair.
+   *
+   * Should be called only once per TextureClient.
+   */
+  bool InitIPDLActor(CompositableForwarder* aForwarder);
+
+  /**
+   * Return a pointer to the IPDLActor.
+   *
+   * This is to be used with IPDL messages only. Do not store the returned
+   * pointer.
+   */
+  PTextureChild* GetIPDLActor();
+
 private:
   Atomic<int> mRefCount;
 
@@ -290,6 +318,7 @@ protected:
     mFlags |= aFlags;
   }
 
+  TextureChild* mActor;
   uint64_t mID;
   TextureFlags mFlags;
   bool mShared;
