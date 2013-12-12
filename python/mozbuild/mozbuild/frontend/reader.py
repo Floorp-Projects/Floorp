@@ -760,8 +760,8 @@ class BuildReader(object):
             gyp_sandboxes.extend(read_from_gyp(self.config,
                                                mozpath.join(curdir, gyp_dir.input),
                                                mozpath.join(sandbox['OBJDIR'],
-                                               target_dir),
-                                 gyp_dir.variables))
+                                                            target_dir),
+                                               gyp_dir.variables))
 
         # Add the gyp subdirectories to DIRS. We don't care about trying to
         # place some of them in PARALLEL_DIRS because they're only going to be

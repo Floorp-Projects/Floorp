@@ -891,17 +891,6 @@ class RecursiveMakeBackend(CommonBackend):
             self._traversal.add(backend_file.relobjdir,
                                 tools=relativize(obj.test_tool_dirs))
 
-        if len(obj.external_make_dirs):
-            fh.write('DIRS += %s\n' % ' '.join(obj.external_make_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                dirs=relativize(obj.external_make_dirs))
-
-        if len(obj.parallel_external_make_dirs):
-            fh.write('PARALLEL_DIRS += %s\n' %
-                ' '.join(obj.parallel_external_make_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                parallel=relativize(obj.parallel_external_make_dirs))
-
         # The directory needs to be registered whether subdirectories have been
         # registered or not.
         self._traversal.add(backend_file.relobjdir)
