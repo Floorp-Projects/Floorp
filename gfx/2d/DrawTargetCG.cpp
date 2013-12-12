@@ -1338,6 +1338,7 @@ DrawTargetCG::Init(BackendType aType,
   // XXX: Create input parameter to control interpolation and
   //      use the default for content.
   CGContextSetInterpolationQuality(mCg, kCGInterpolationLow);
+  CGContextSetShouldSmoothFonts(mCg, GetPermitSubpixelAA());
 
 
   if (aType == BACKEND_COREGRAPHICS_ACCELERATED) {
@@ -1377,6 +1378,7 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   mSize = aSize;
 
   mCg = cgContext;
+  CGContextSetShouldSmoothFonts(mCg, GetPermitSubpixelAA());
   CGContextRetain(mCg);
 
   assert(mCg);
@@ -1528,6 +1530,12 @@ DrawTargetCG::MarkChanged()
     }
     mSnapshot = nullptr;
   }
+}
+
+void
+DrawTargetCG::SetPermitSubpixelAA(bool aPermitSubpixelAA) {
+  DrawTarget::SetPermitSubpixelAA(aPermitSubpixelAA);
+  CGContextSetShouldSmoothFonts(mCg, aPermitSubpixelAA);
 }
 
 CGContextRef

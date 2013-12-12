@@ -154,6 +154,7 @@ public:
 
   virtual IntSize GetSize() { return mSize; }
 
+  virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) MOZ_OVERRIDE;
 
   /* This is for creating good compatible surfaces */
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
