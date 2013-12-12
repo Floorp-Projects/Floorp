@@ -235,3 +235,17 @@ function isSuppressConstructor(name)
         || /::AutoEnterAnalysis/.test(name)
         || /::AutoAssertNoGC/.test(name);
 }
+
+// nsISupports subclasses' methods may be scriptable (or overridden
+// via binary XPCOM), and so may GC. But some fields just aren't going
+// to get overridden with something that can GC.
+function isOverridableField(csu, field)
+{
+    if (csu != 'nsISupports')
+        return false;
+    if (field == 'GetCurrentJSContext')
+        return false;
+    if (field == 'IsOnCurrentThread')
+        return false;
+    return true;
+}
