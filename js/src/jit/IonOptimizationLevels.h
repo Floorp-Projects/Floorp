@@ -24,6 +24,23 @@ enum OptimizationLevel
     Optimization_Count
 };
 
+#ifdef DEBUG
+inline const char *
+OptimizationLevelString(OptimizationLevel level)
+{
+    switch (level) {
+      case Optimization_DontCompile:
+        return "Optimization_DontCompile";
+      case Optimization_Normal:
+        return "Optimization_Normal";
+      case Optimization_AsmJS:
+        return "Optimization_AsmJS";
+      default:
+        MOZ_ASSUME_UNREACHABLE("Invalid OptimizationLevel");
+    }
+}
+#endif
+
 class OptimizationInfo
 {
   public:
