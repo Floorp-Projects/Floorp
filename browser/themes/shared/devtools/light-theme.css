@@ -111,8 +111,7 @@
 .cm-s-mozilla .cm-variable,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
-.variables-view-property > .title > .name,
-.variable-or-property[safe-getter] > .title > .name { /* dark blue */
+.variables-view-property > .title > .name { /* dark blue */
   color: hsl(208,81%,21%)
 }
 
