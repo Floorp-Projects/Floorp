@@ -307,6 +307,11 @@ public:
     mDisplayState = aDisplayState;
   }
 
+  bool HasBeenReset()
+  {
+    return mReset;
+  }
+
   // Helper functions for implementation.
   bool
   operator==(const TextTrackCue& rhs) const
