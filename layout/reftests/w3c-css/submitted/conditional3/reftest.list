@@ -42,3 +42,6 @@ default-preferences pref(layout.css.supports-rule.enabled,true)
 == css-supports-040.xht support/pass.xht
 == css-supports-041.xht support/pass.xht
 == css-supports-042.xht support/pass.xht
+== css-supports-043.xht support/pass.xht
+== css-supports-044.xht support/pass.xht
+== css-supports-045.xht support/pass.xht

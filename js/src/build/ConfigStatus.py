@@ -64,7 +64,9 @@ def config_status(topobjdir='.', topsrcdir='.',
                       help='display verbose output')
     parser.add_option('-n', dest='not_topobjdir', action='store_true',
                       help='do not consider current directory as top object directory')
-    (options, args) = parser.parse_args()
+    parser.add_option('-d', '--diff', action='store_true',
+                      help='print diffs of changed files.')
+    options, args = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
     if not options.not_topobjdir:
@@ -98,3 +100,7 @@ def config_status(topobjdir='.', topsrcdir='.',
 
     for line in summary.summaries():
         print(line, file=sys.stderr)
+
+    if options.diff:
+        for path, diff in sorted(summary.file_diffs.items()):
+            print(diff)

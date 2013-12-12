@@ -407,39 +407,6 @@ ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
   mTxn->AddNoSwapPaint(OpUpdatePictureRect(nullptr, aCompositable->GetIPDLActor(), aRect));
 }
 
-bool
-ShadowLayerForwarder::AddTexture(CompositableClient* aCompositable,
-                                 TextureClient* aTexture)
-{
-  SurfaceDescriptor descriptor;
-  if (!aTexture->ToSurfaceDescriptor(descriptor)) {
-    NS_WARNING("Failed to serialize a TextureClient");
-    return false;
-  }
-  CheckSurfaceDescriptor(&descriptor);
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetFlags() != 0);
-  mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
-                             aTexture->GetID(),
-                             descriptor,
-                             aTexture->GetFlags()));
-  return true;
-}
-
-void
-ShadowLayerForwarder::RemoveTexture(CompositableClient* aCompositable,
-                                    uint64_t aTexture,
-                                    TextureFlags aFlags)
-{
-  mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
-                                aTexture,
-                                aFlags));
-  if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
-    mTxn->MarkSyncTransaction();
-  }
-}
-
 void
 ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
                                      TextureClient* aTexture,
@@ -449,11 +416,11 @@ ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
                                : MaybeRegion(null_t());
   if (aTexture->GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
     mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   aTexture->GetID(),
+                                   nullptr, aTexture->GetIPDLActor(),
                                    region));
   } else {
     mTxn->AddNoSwapPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                         aTexture->GetID(),
+                                         nullptr, aTexture->GetIPDLActor(),
                                          region));
   }
 }
@@ -463,7 +430,13 @@ ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
                                  TextureClient* aTexture)
 {
   mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
-                             aTexture->GetID()));
+                             nullptr, aTexture->GetIPDLActor()));
+}
+
+void
+ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
+{
+  aTexture->ForceRemove();
 }
 
 bool
@@ -988,6 +961,13 @@ void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
   mTxn->AddEdit(OpAttachAsyncCompositable(nullptr, Shadow(aLayer),
                                           aCompositableID));
 }
+
+PTextureChild*
+ShadowLayerForwarder::CreateEmptyTextureChild()
+{
+  return mShadowManager->SendPTextureConstructor();
+}
+
 
 void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManager)
 {

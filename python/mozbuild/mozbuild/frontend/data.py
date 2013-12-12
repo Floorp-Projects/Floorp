@@ -41,10 +41,12 @@ class TreeMetadata(object):
 class ReaderSummary(TreeMetadata):
     """A summary of what the reader did."""
 
-    def __init__(self, total_file_count, total_execution_time):
+    def __init__(self, total_file_count, total_sandbox_execution_time,
+        total_emitter_execution_time):
         TreeMetadata.__init__(self)
         self.total_file_count = total_file_count
-        self.total_execution_time = total_execution_time
+        self.total_sandbox_execution_time = total_sandbox_execution_time
+        self.total_emitter_execution_time = total_emitter_execution_time
 
 
 class SandboxDerived(TreeMetadata):

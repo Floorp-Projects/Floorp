@@ -12,7 +12,7 @@
 #define nsStyleStruct_h___
 
 #include "mozilla/Attributes.h"
-
+#include "mozilla/CSSVariableValues.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
@@ -40,27 +40,27 @@ class imgIContainer;
 
 // Bits for each struct.
 // NS_STYLE_INHERIT_BIT defined in nsStyleStructFwd.h
-#define NS_STYLE_INHERIT_MASK             0x007fffff
+#define NS_STYLE_INHERIT_MASK              0x000ffffff
 
 // Additional bits for nsStyleContext's mBits:
 // See nsStyleContext::HasTextDecorationLines
-#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x00800000
+#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x001000000
 // See nsStyleContext::HasPseudoElementData.
-#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x01000000
+#define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA   0x002000000
 // See nsStyleContext::RelevantLinkIsVisited
-#define NS_STYLE_RELEVANT_LINK_VISITED    0x02000000
+#define NS_STYLE_RELEVANT_LINK_VISITED     0x004000000
 // See nsStyleContext::IsStyleIfVisited
-#define NS_STYLE_IS_STYLE_IF_VISITED      0x04000000
+#define NS_STYLE_IS_STYLE_IF_VISITED       0x008000000
 // See nsStyleContext::GetPseudoEnum
-#define NS_STYLE_CONTEXT_TYPE_MASK        0xf8000000
-#define NS_STYLE_CONTEXT_TYPE_SHIFT       27
+#define NS_STYLE_CONTEXT_TYPE_MASK         0x1f0000000
+#define NS_STYLE_CONTEXT_TYPE_SHIFT        28
 
 // Additional bits for nsRuleNode's mDependentBits:
-#define NS_RULE_NODE_GC_MARK              0x02000000
-#define NS_RULE_NODE_USED_DIRECTLY        0x04000000
-#define NS_RULE_NODE_IS_IMPORTANT         0x08000000
-#define NS_RULE_NODE_LEVEL_MASK           0xf0000000
-#define NS_RULE_NODE_LEVEL_SHIFT          28
+#define NS_RULE_NODE_GC_MARK                0x02000000
+#define NS_RULE_NODE_USED_DIRECTLY          0x04000000
+#define NS_RULE_NODE_IS_IMPORTANT           0x08000000
+#define NS_RULE_NODE_LEVEL_MASK             0xf0000000
+#define NS_RULE_NODE_LEVEL_SHIFT            28
 
 // The lifetime of these objects is managed by the presshell's arena.
 
@@ -1724,10 +1724,10 @@ struct nsStyleDisplay {
   // mSpecifiedTransform is the list of transform functions as
   // specified, or null to indicate there is no transform.  (inherit or
   // initial are replaced by an actual list of transform functions, or
-  // null, as appropriate.) (owned by the style rule)
+  // null, as appropriate.)
   uint8_t mBackfaceVisibility;
   uint8_t mTransformStyle;
-  const nsCSSValueList *mSpecifiedTransform; // [reset]
+  nsRefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
   nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
   nsStyleCoord mChildPerspective; // [reset] coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc
@@ -2500,6 +2500,27 @@ struct nsStyleSVGReset {
   uint8_t          mDominantBaseline; // [reset] see nsStyleConsts.h
   uint8_t          mVectorEffect;     // [reset] see nsStyleConsts.h
   uint8_t          mMaskType;         // [reset] see nsStyleConsts.h
+};
+
+struct nsStyleVariables {
+  nsStyleVariables();
+  nsStyleVariables(const nsStyleVariables& aSource);
+  ~nsStyleVariables();
+
+  void* operator new(size_t sz, nsPresContext* aContext) CPP_THROW_NEW {
+    return aContext->AllocateFromShell(sz);
+  }
+  void Destroy(nsPresContext* aContext) {
+    this->~nsStyleVariables();
+    aContext->FreeToShell(sizeof(nsStyleVariables), this);
+  }
+
+  nsChangeHint CalcDifference(const nsStyleVariables& aOther) const;
+  static nsChangeHint MaxDifference() {
+    return nsChangeHint(0);
+  }
+
+  mozilla::CSSVariableValues mVariables;
 };
 
 #endif /* nsStyleStruct_h___ */

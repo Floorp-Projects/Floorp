@@ -13,8 +13,7 @@ namespace mozilla {
 namespace layers {
 
 TemporaryRef<TextureHost>
-CreateTextureHostBasic(uint64_t aID,
-                       const SurfaceDescriptor& aDesc,
+CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
                        TextureFlags aFlags)
 {
@@ -24,12 +23,12 @@ CreateTextureHostBasic(uint64_t aID,
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const SurfaceDescriptorMacIOSurface& desc =
         aDesc.get_SurfaceDescriptorMacIOSurface();
-      result = new MacIOSurfaceTextureHostBasic(aID, aFlags, desc);
+      result = new MacIOSurfaceTextureHostBasic(aFlags, desc);
       break;
     }
 #endif
     default: {
-      result = CreateBackendIndependentTextureHost(aID, aDesc, aDeallocator, aFlags);
+      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
       break;
     }
   }

@@ -1,0 +1,46 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include LayersSurfaces;
+include protocol PLayerTransaction;
+include protocol PImageBridge;
+include protocol PGrallocBuffer;
+include "mozilla/GfxMessageUtils.h";
+
+using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
+
+namespace mozilla {
+namespace layers {
+
+/**
+ * PTexture is the IPDL glue between a TextureClient and a TextureHost.
+ */
+sync protocol PTexture {
+    manager PImageBridge or PLayerTransaction;
+
+child:
+    async __delete__();
+
+parent:
+    /**
+     * Set the shared data and create the TextureHost on the parent side.
+     */
+    async Init(SurfaceDescriptor aSharedData, uint32_t aTextureFlags);
+
+    /**
+     * Asynchronously tell the Compositor side to remove the texture.
+     */
+    async RemoveTexture();
+
+    /**
+     * Synchronously tell the compositor side to remove the texture.
+     */
+    sync RemoveTextureSync();
+};
+
+} // layers
+} // mozilla

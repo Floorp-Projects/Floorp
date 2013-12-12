@@ -217,6 +217,14 @@ ErrorReporter::OutputError()
 }
 
 void
+ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aLineOffset)
+{
+  mErrorLineNumber = aLineNumber;
+  mErrorColNumber = aLineOffset;
+  OutputError();
+}
+
+void
 ErrorReporter::ClearError()
 {
   mError.Truncate();

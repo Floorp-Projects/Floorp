@@ -13,6 +13,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 

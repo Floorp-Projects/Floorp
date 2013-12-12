@@ -33,6 +33,15 @@ gfxSurfaceDrawable::gfxSurfaceDrawable(DrawTarget* aDrawTarget,
 {
 }
 
+gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
+                                       const gfxIntSize aSize,
+                                       const gfxMatrix aTransform)
+ : gfxDrawable(aSize)
+ , mSourceSurface(aSurface)
+ , mTransform(aTransform)
+{
+}
+
 static gfxMatrix
 DeviceToImageTransform(gfxContext* aContext,
                        const gfxMatrix& aUserSpaceToImageSpace)
@@ -127,6 +136,8 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
         RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
         pattern = new gfxPattern(source, Matrix());
       }
+    } else if (mSourceSurface) {
+      pattern = new gfxPattern(mSourceSurface, Matrix());
     } else {
       pattern = new gfxPattern(mSurface);
     }
@@ -160,7 +171,7 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
 already_AddRefed<gfxImageSurface>
 gfxSurfaceDrawable::GetAsImageSurface()
 {
-    if (mDrawTarget) {
+    if (mDrawTarget || mSourceSurface) {
       // TODO: Find a way to implement this. The caller really wants a 'sub-image' of
       // the original, without having to do a copy. GetDataSurface() might just copy,
       // which isn't useful.

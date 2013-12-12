@@ -297,6 +297,8 @@ CssHtmlTree.prototype = {
       return promise.resolve(undefined);
     }
 
+    this.tooltip.hide();
+
     if (aElement === this.viewedElement) {
       return promise.resolve(undefined);
     }

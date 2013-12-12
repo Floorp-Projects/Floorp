@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#ifndef SETUPINTRARECON_H
+#define SETUPINTRARECON_H
 
 #include "vpx_scale/yv12config.h"
 extern void vp8_setup_intra_recon(YV12_BUFFER_CONFIG *ybf);
@@ -31,3 +33,5 @@ void setup_intra_recon_left(unsigned char *y_buffer,
     for (i = 0; i < 8; i++)
         v_buffer[uv_stride *i] = (unsigned char) 129;
 }
+
+#endif

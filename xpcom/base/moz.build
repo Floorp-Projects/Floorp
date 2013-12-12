@@ -91,6 +91,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 SOURCES += [
     'nsDebugImpl.cpp',
 ]
+SOURCES['nsDebugImpl.cpp'].no_pgo = True
 
 UNIFIED_SOURCES += [
     'AvailableMemoryTracker.cpp',
@@ -128,8 +129,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 UNIFIED_SOURCES += [
     'nsErrorAssertsC.c',
 ]
-
-
 
 MSVC_ENABLE_PGO = True
 
