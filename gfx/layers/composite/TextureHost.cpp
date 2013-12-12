@@ -675,21 +675,23 @@ TextureParent::RecvRemoveTextureSync()
 void
 TextureParent::ActorDestroy(ActorDestroyReason why)
 {
+  if (!mTextureHost) {
+    return;
+  }
+
   switch (why) {
   case AncestorDeletion:
     NS_WARNING("PTexture deleted after ancestor");
     // fall-through to deletion path
   case Deletion:
-    if (mTextureHost && mTextureHost->GetFlags() & !TEXTURE_DEALLOCATE_CLIENT) {
+    if (!(mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
       mTextureHost->DeallocateSharedData();
     }
     break;
 
   case NormalShutdown:
   case AbnormalShutdown:
-    if (mTextureHost) {
-      mTextureHost->OnActorDestroy();
-    }
+    mTextureHost->OnActorDestroy();
     break;
 
   case FailedConstructor:
