@@ -4567,10 +4567,53 @@ JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 /*
  * Return the current script and line number of the most currently running
  * frame. Returns true if a scripted frame was found, false otherwise.
+ *
+ * If a the embedding has hidden the scripted caller for the topmost activation
+ * record, this will also return false.
  */
 extern JS_PUBLIC_API(bool)
 JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
 
+namespace JS {
+
+/*
+ * Informs the JS engine that the scripted caller should be hidden. This can be
+ * used by the embedding to maintain an override of the scripted caller in its
+ * calculations, by hiding the scripted caller in the JS engine and pushing data
+ * onto a separate stack, which it inspects when JS_DescribeScriptedCaller
+ * returns null.
+ *
+ * We maintain a counter on each activation record. Add() increments the counter
+ * of the topmost activation, and Remove() decrements it. The count may never
+ * drop below zero, and must always be exactly zero when the activation is
+ * popped from the stack.
+ */
+extern JS_PUBLIC_API(void)
+HideScriptedCaller(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+UnhideScriptedCaller(JSContext *cx);
+
+class AutoHideScriptedCaller
+{
+  public:
+    AutoHideScriptedCaller(JSContext *cx
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mContext(cx)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        HideScriptedCaller(mContext);
+    }
+    ~AutoHideScriptedCaller() {
+        UnhideScriptedCaller(mContext);
+    }
+
+  protected:
+    JSContext *mContext;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} /* namepsace JS */
 
 /*
  * Encode/Decode interpreted scripts and functions to/from memory.
