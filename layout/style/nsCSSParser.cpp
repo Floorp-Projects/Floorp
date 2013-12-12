@@ -131,6 +131,15 @@ public:
                       nsMediaList* aMediaList,
                       bool aHTMLMode);
 
+  nsresult ParseVariable(const nsAString& aVariableName,
+                         const nsAString& aPropValue,
+                         nsIURI* aSheetURL,
+                         nsIURI* aBaseURL,
+                         nsIPrincipal* aSheetPrincipal,
+                         css::Declaration* aDeclaration,
+                         bool* aChanged,
+                         bool aIsImportant);
+
   bool ParseColorString(const nsSubstring& aBuffer,
                         nsIURI* aURL, // for error reporting
                         uint32_t aLineNumber, // for error reporting
@@ -1257,6 +1266,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 #pragma warning( push )
 #pragma warning( disable : 4748 )
 #endif
+
 nsresult
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
@@ -1331,6 +1341,63 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   ReleaseScanner();
   return NS_OK;
 }
+
+nsresult
+CSSParserImpl::ParseVariable(const nsAString& aVariableName,
+                             const nsAString& aPropValue,
+                             nsIURI* aSheetURI,
+                             nsIURI* aBaseURI,
+                             nsIPrincipal* aSheetPrincipal,
+                             css::Declaration* aDeclaration,
+                             bool* aChanged,
+                             bool aIsImportant)
+{
+  NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
+  NS_PRECONDITION(aBaseURI, "need base URI");
+  NS_PRECONDITION(aDeclaration, "Need declaration to parse into!");
+  NS_PRECONDITION(nsLayoutUtils::CSSVariablesEnabled(),
+                  "expected Variables to be enabled");
+
+  mData.AssertInitialState();
+  mTempData.AssertInitialState();
+  aDeclaration->AssertMutable();
+
+  nsCSSScanner scanner(aPropValue, 0);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURI);
+  InitScanner(scanner, reporter, aSheetURI, aBaseURI, aSheetPrincipal);
+  mSection = eCSSSection_General;
+
+  *aChanged = false;
+
+  CSSVariableDeclarations::Type variableType;
+  nsString variableValue;
+
+  bool parsedOK = ParseVariableDeclaration(&variableType, variableValue);
+
+  // We should now be at EOF
+  if (parsedOK && GetToken(true)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+    parsedOK = false;
+  }
+
+  if (!parsedOK) {
+    REPORT_UNEXPECTED_P(PEValueParsingError, NS_LITERAL_STRING("var-") +
+                                             aVariableName);
+    REPORT_UNEXPECTED(PEDeclDropped);
+    OUTPUT_ERROR();
+  } else {
+    CLEAR_ERROR();
+    aDeclaration->AddVariableDeclaration(aVariableName, variableType,
+                                         variableValue, aIsImportant, true);
+    *aChanged = true;
+  }
+
+  mTempData.AssertInitialState();
+
+  ReleaseScanner();
+  return NS_OK;
+}
+
 #ifdef _MSC_VER
 #pragma warning( pop )
 #pragma optimize( "", on )
@@ -5541,6 +5608,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
   NS_PRECONDITION(aContext == eCSSContext_General ||
                   aContext == eCSSContext_Page,
                   "Must be page or general context");
+
   bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
 
   mTempData.AssertInitialState();
@@ -5683,7 +5751,7 @@ CSSParserImpl::ParseDeclaration(css::Declaration* aDeclaration,
                          0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
     nsDependentString varName(propertyName, VAR_PREFIX_LENGTH); // remove 'var-'
     aDeclaration->AddVariableDeclaration(varName, variableType, variableValue,
-                                         status == ePriority_Important);
+                                         status == ePriority_Important, false);
   } else {
     *aChanged |= mData.TransferFromBlock(mTempData, propID,
                                          status == ePriority_Important,
@@ -12665,6 +12733,21 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
     ParseProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
                   aSheetPrincipal, aDeclaration, aChanged,
                   aIsImportant, aIsSVGMode);
+}
+
+nsresult
+nsCSSParser::ParseVariable(const nsAString&    aVariableName,
+                           const nsAString&    aPropValue,
+                           nsIURI*             aSheetURI,
+                           nsIURI*             aBaseURI,
+                           nsIPrincipal*       aSheetPrincipal,
+                           css::Declaration*   aDeclaration,
+                           bool*               aChanged,
+                           bool                aIsImportant)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseVariable(aVariableName, aPropValue, aSheetURI, aBaseURI,
+                  aSheetPrincipal, aDeclaration, aChanged, aIsImportant);
 }
 
 void
