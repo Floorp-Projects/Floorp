@@ -457,10 +457,17 @@ let CustomizableUIInternal = {
 
         // If the placements have items in them which are (now) no longer removable,
         // we shouldn't be moving them:
-        if (node.parentNode != container && !this.isWidgetRemovable(node)) {
+        if (provider == CustomizableUI.PROVIDER_API) {
+          let widgetInfo = gPalette.get(id);
+          if (!widgetInfo.removable && aArea != widgetInfo.defaultArea) {
+            placementsToRemove.add(id);
+            continue;
+          }
+        } else if (provider == CustomizableUI.PROVIDER_XUL &&
+                   node.parentNode != container && !this.isWidgetRemovable(node)) {
           placementsToRemove.add(id);
           continue;
-        }
+        } // Special widgets are always removable, so no need to check them
 
         if (inPrivateWindow && provider == CustomizableUI.PROVIDER_API) {
           let widget = gPalette.get(id);
@@ -1736,7 +1743,7 @@ let CustomizableUIInternal = {
       source: aSource || "addon",
       instances: new Map(),
       currentArea: null,
-      removable: false,
+      removable: true,
       overflows: true,
       defaultArea: null,
       shortcutId: null,
@@ -1778,6 +1785,11 @@ let CustomizableUIInternal = {
 
     if (aData.defaultArea && gAreas.has(aData.defaultArea)) {
       widget.defaultArea = aData.defaultArea;
+    } else if (!widget.removable) {
+      ERROR("Widget '" + widget.id + "' is not removable but does not specify " +
+            "a valid defaultArea. That's not possible; it must specify a " +
+            "valid defaultArea as well.");
+      return null;
     }
 
     if ("type" in aData && gSupportedWidgetTypes.has(aData.type)) {
@@ -2383,11 +2395,13 @@ this.CustomizableUI = {
    *                  invoked when a user hides your view.
    * - tooltiptext:   string to use for the tooltip of the widget
    * - label:         string to use for the label of the widget
-   * - removable:     whether the widget is removable (optional, default: false)
+   * - removable:     whether the widget is removable (optional, default: true)
+   *                  NB: if you specify false here, you must provide a
+   *                  defaultArea, too.
    * - overflows:     whether widget can overflow when in an overflowable
    *                  toolbar (optional, default: true)
    * - defaultArea:   default area to add the widget to
-   *                  (optional, default: none)
+   *                  (optional, default: none; required if non-removable)
    * - shortcutId:    id of an element that has a shortcut for this widget
    *                  (optional, default: null). This is only used to display
    *                  the shortcut as part of the tooltip for builtin widgets
