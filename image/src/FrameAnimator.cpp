@@ -89,11 +89,11 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we're done decoding, we know we've got everything we're going to get.
   // If we aren't, we only display fully-downloaded frames; everything else
   // gets delayed.
-  bool needToWait = !mDoneDecoding &&
-                    mFrameBlender.RawGetFrame(nextFrameIndex) &&
-                    !mFrameBlender.RawGetFrame(nextFrameIndex)->ImageComplete();
+  bool canDisplay = mDoneDecoding ||
+                    (mFrameBlender.RawGetFrame(nextFrameIndex) &&
+                     mFrameBlender.RawGetFrame(nextFrameIndex)->ImageComplete());
 
-  if (needToWait) {
+  if (!canDisplay) {
     // Uh oh, the frame we want to show is currently being decoded (partial)
     // Wait until the next refresh driver tick and try again
     return ret;
