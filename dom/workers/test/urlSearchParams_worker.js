@@ -8,6 +8,11 @@ function is(a, b, msg) {
   postMessage({type: 'status', status: a === b, msg: a + " === " + b + ": " + msg });
 }
 
+function isnot(a, b, msg) {
+  dump("ISNOT: " + (a!==b) + "  =>  " + a + " | " + b + " " + msg + "\n");
+  postMessage({type: 'status', status: a !== b, msg: a + " !== " + b + ": " + msg });
+}
+
 onmessage = function() {
   status = false;
   try {
@@ -111,10 +116,66 @@ onmessage = function() {
     runTest();
   }
 
+  function testURL() {
+    var url = new URL('http://www.example.net?a=b&c=d');
+    ok(url.searchParams, "URL searchParams exists!");
+    ok(url.searchParams.has('a'), "URL.searchParams.has('a')");
+    is(url.searchParams.get('a'), 'b', "URL.searchParams.get('a')");
+    ok(url.searchParams.has('c'), "URL.searchParams.has('c')");
+    is(url.searchParams.get('c'), 'd', "URL.searchParams.get('c')");
+
+    url.searchParams.set('e', 'f');
+    ok(url.href.indexOf('e=f') != 1, 'URL right');
+
+    var u = new URLSearchParams();
+    u.append('foo', 'bar');
+    url.searchParams = u;
+    is(url.searchParams, u, "URL.searchParams is the same object");
+    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
+    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+
+    url.searchParams = null;
+    is(url.searchParams.get('foo'), 'bar', "URL.searchParams.get('foo')");
+    is(url.href, 'http://www.example.net/?foo=bar', 'URL right');
+
+    var url2 = new URL('http://www.example.net?e=f');
+    url.searchParams = url2.searchParams;
+    isnot(url.searchParams, url2.searchParams, "URL.searchParams is not the same object");
+    is(url.searchParams.get('e'), 'f', "URL.searchParams.get('e')");
+
+    url.href = "http://www.example.net?bar=foo";
+    is(url.searchParams.get('bar'), 'foo', "URL.searchParams.get('bar')");
+
+    runTest();
+  }
+
+  function testEncoding() {
+    var encoding = [ [ '1', '1' ],
+                     [ 'a b', 'a+b' ],
+                     [ '<>', '%3C%3E' ],
+                     [ '\u0541', '%D5%81'] ];
+
+    for (var i = 0; i < encoding.length; ++i) {
+      var a = new URLSearchParams();
+      a.set('a', encoding[i][0]);
+
+      var url = new URL('http://www.example.net');
+      url.searchParams = a;
+      is(url.href, 'http://www.example.net/?a=' + encoding[i][1]);
+
+      var url2 = new URL(url.href);
+      is(url2.searchParams.get('a'), encoding[i][0], 'a is still there');
+    }
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
-    testParserURLSearchParams
+    testParserURLSearchParams,
+    testURL,
+    testEncoding
   ];
 
   function runTest() {
@@ -129,5 +190,3 @@ onmessage = function() {
 
   runTest();
 }
-
-

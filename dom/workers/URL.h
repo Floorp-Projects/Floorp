@@ -11,7 +11,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/NonRefcountedDOMObject.h"
+#include "mozilla/dom/URLSearchParams.h"
 
 namespace mozilla {
 namespace dom {
@@ -23,9 +23,13 @@ BEGIN_WORKERS_NAMESPACE
 
 class URLProxy;
 
-class URL MOZ_FINAL : public NonRefcountedDOMObject
+class URL MOZ_FINAL : public mozilla::dom::URLSearchParamsObserver
 {
+  typedef mozilla::dom::URLSearchParams URLSearchParams;
+
 public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(URL)
 
   URL(WorkerPrivate* aWorkerPrivate, URLProxy* aURLProxy);
   ~URL();
@@ -38,8 +42,7 @@ public:
   }
 
   JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope,
-             bool* aTookOwnership);
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
 
   // Methods for WebIDL
 
@@ -101,9 +104,17 @@ public:
 
   void SetSearch(const nsAString& aSearch);
 
+  URLSearchParams* GetSearchParams();
+
+  void SetSearchParams(URLSearchParams* aSearchParams);
+
   void GetHash(nsString& aHost) const;
 
   void SetHash(const nsAString& aHash);
+
+  // IURLSearchParamsObserver
+  void URLSearchParamsUpdated() MOZ_OVERRIDE;
+  void URLSearchParamsNeedsUpdates() MOZ_OVERRIDE;
 
 private:
   URLProxy* GetURLProxy() const
@@ -111,8 +122,13 @@ private:
     return mURLProxy;
   }
 
+  void CreateSearchParamsIfNeeded();
+
+  void SetSearchInternal(const nsAString& aSearch);
+
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<URLProxy> mURLProxy;
+  nsRefPtr<URLSearchParams> mSearchParams;
 };
 
 END_WORKERS_NAMESPACE

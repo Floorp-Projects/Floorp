@@ -33,6 +33,10 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLAnchorElement,
+                                           nsGenericHTMLElement)
+
   virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
   virtual bool Draggable() const MOZ_OVERRIDE;
 
@@ -135,30 +139,14 @@ public:
     rv = SetText(aValue);
   }
 
-  void GetOrigin(nsAString& aOrigin)
-  {
-    Link::GetOrigin(aOrigin);
-  }
+  // Link::GetOrigin is OK for us
 
-  void GetUsername(nsAString& aUsername)
-  {
-    Link::GetUsername(aUsername);
-  }
+  // Link::GetUsername is OK for us
+  // Link::SetUsername is OK for us
 
-  void SetUsername(const nsAString& aUsername)
-  {
-    Link::SetUsername(aUsername);
-  }
+  // Link::Getpassword is OK for us
+  // Link::Setpassword is OK for us
 
-  void GetPassword(nsAString& aPassword)
-  {
-    Link::GetPassword(aPassword);
-  }
-
-  void SetPassword(const nsAString& aPassword)
-  {
-    Link::SetPassword(aPassword);
-  }
   // The XPCOM URI decomposition attributes are fine for us
   void GetCoords(nsString& aValue)
   {

@@ -30,6 +30,10 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
+  // CC
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLAreaElement,
+                                           nsGenericHTMLElement)
+
   // DOM memory reporter participant
   NS_DECL_SIZEOF_EXCLUDING_THIS
 
@@ -108,33 +112,16 @@ public:
     SetHTMLAttr(nsGkAtoms::ping, aPing, aError);
   }
 
-  void GetOrigin(nsAString &aOrigin)
-  {
-    Link::GetOrigin(aOrigin);
-  }
+  // The Link::GetOrigin is OK for us
 
   // The XPCOM GetProtocol is OK for us
   // The XPCOM SetProtocol is OK for us
 
-  void GetUsername(nsAString& aUsername)
-  {
-    Link::GetUsername(aUsername);
-  }
+  // The Link::GetUsername is OK for us
+  // The Link::SetUsername is OK for us
 
-  void SetUsername(const nsAString& aUsername)
-  {
-    Link::SetUsername(aUsername);
-  }
-
-  void GetPassword(nsAString& aPassword)
-  {
-    Link::GetPassword(aPassword);
-  }
-
-  void SetPassword(const nsAString& aPassword)
-  {
-    Link::SetPassword(aPassword);
-  }
+  // The Link::GetPassword is OK for us
+  // The Link::SetPassword is OK for us
 
   // The XPCOM GetHost is OK for us
   // The XPCOM SetHost is OK for us
@@ -153,6 +140,9 @@ public:
 
   // The XPCOM GetHash is OK for us
   // The XPCOM SetHash is OK for us
+
+  // The Link::GetSearchParams is OK for us
+  // The Link::SetSearchParams is OK for us
 
   bool NoHref() const
   {
