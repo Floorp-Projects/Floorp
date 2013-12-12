@@ -156,6 +156,22 @@ struct nsCSSToken {
   void AppendToString(nsString& aBuffer) const;
 };
 
+// Represents an nsCSSScanner's saved position in the input buffer.
+class nsCSSScannerPosition {
+  friend class nsCSSScanner;
+public:
+  nsCSSScannerPosition() : mInitialized(false) { }
+
+private:
+  uint32_t mOffset;
+  uint32_t mLineNumber;
+  uint32_t mLineOffset;
+  uint32_t mTokenLineNumber;
+  uint32_t mTokenLineOffset;
+  uint32_t mTokenOffset;
+  bool mInitialized;
+};
+
 // nsCSSScanner tokenizes an input stream using the CSS2.1 forward
 // compatible tokenization rules.  Used internally by nsCSSParser;
 // not available for use by other code.
@@ -235,6 +251,12 @@ class nsCSSScanner {
 #ifdef DEBUG
   bool IsRecording() const;
 #endif
+
+  // Stores the current scanner offset into the specified object.
+  void SavePosition(nsCSSScannerPosition& aState);
+
+  // Resets the scanner offset to a position saved by SavePosition.
+  void RestoreSavedPosition(const nsCSSScannerPosition& aState);
 
   enum EOFCharacters {
     eEOFCharacters_None =                    0x0000,

@@ -495,6 +495,32 @@ nsCSSScanner::Backup(uint32_t n)
 #endif
 }
 
+void
+nsCSSScanner::SavePosition(nsCSSScannerPosition& aState)
+{
+  aState.mOffset = mOffset;
+  aState.mLineNumber = mLineNumber;
+  aState.mLineOffset = mLineOffset;
+  aState.mTokenLineNumber = mTokenLineNumber;
+  aState.mTokenLineOffset = mTokenLineOffset;
+  aState.mTokenOffset = mTokenOffset;
+  aState.mInitialized = true;
+}
+
+void
+nsCSSScanner::RestoreSavedPosition(const nsCSSScannerPosition& aState)
+{
+  MOZ_ASSERT(aState.mInitialized, "have not saved state");
+  if (aState.mInitialized) {
+    mOffset = aState.mOffset;
+    mLineNumber = aState.mLineNumber;
+    mLineOffset = aState.mLineOffset;
+    mTokenLineNumber = aState.mTokenLineNumber;
+    mTokenLineOffset = aState.mTokenLineOffset;
+    mTokenOffset = aState.mTokenOffset;
+  }
+}
+
 /**
  * Skip over a sequence of whitespace characters (vertical or
  * horizontal) starting at the current read position.
