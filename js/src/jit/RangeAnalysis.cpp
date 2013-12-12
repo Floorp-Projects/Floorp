@@ -2040,7 +2040,7 @@ RangeAnalysis::analyze()
 bool
 RangeAnalysis::addRangeAssertions()
 {
-    if (!js_IonOptions.checkRangeAnalysis)
+    if (!js_JitOptions.checkRangeAnalysis)
         return true;
 
     // Check the computed range for this instruction, if the option is set. Note
