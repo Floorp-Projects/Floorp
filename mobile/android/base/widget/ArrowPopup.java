@@ -37,22 +37,22 @@ public class ArrowPopup extends PopupWindow {
         this(aActivity, null);
     }
 
-    public ArrowPopup(GeckoApp aActivity, View aAnchor) {
-        super(aActivity);
-        mActivity = aActivity;
-        mAnchor = aAnchor;
+    public ArrowPopup(GeckoApp activity, View anchor) {
+        super(activity);
+        mActivity = activity;
+        mAnchor = anchor;
 
         mInflated = false;
 
-        final Resources res = aActivity.getResources();
+        final Resources res = activity.getResources();
         mArrowWidth = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
         mYOffset = res.getDimensionPixelSize(R.dimen.menu_popup_offset);
 
         setAnimationStyle(R.style.PopupAnimation);
     }
 
-    public void setAnchor(View aAnchor) {
-        mAnchor = aAnchor;
+    public void setAnchor(View anchor) {
+        mAnchor = anchor;
     }
 
     protected void init() {
