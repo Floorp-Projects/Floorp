@@ -96,6 +96,12 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     }
 
     public Page getPageAtPosition(int position) {
+        // getPageAtPosition() might be called before HomeAdapter
+        // has got its initial list of PageEntries. Just bail.
+        if (mPageInfos.isEmpty()) {
+            return null;
+        }
+
         PageInfo info = mPageInfos.get(position);
         return info.toPage();
     }
