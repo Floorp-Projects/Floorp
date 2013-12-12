@@ -185,6 +185,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(NewDerivedTypedObject)
     UNSAFE_OP(InitElem)
     UNSAFE_OP(InitElemGetterSetter)
+    UNSAFE_OP(MutateProto)
     UNSAFE_OP(InitProp)
     UNSAFE_OP(InitPropGetterSetter)
     SAFE_OP(Start)
