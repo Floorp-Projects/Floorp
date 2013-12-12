@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;

@@ -27,6 +27,7 @@ import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
+import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
