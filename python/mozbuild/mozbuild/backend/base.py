@@ -312,10 +312,10 @@ class BuildBackend(LoggingMixin):
         srcdir = mozpath.dirname(obj.input_path)
         pp.context.update(self.environment.substs)
         pp.context.update(
-            top_srcdir=self.environment.topsrcdir,
+            top_srcdir=obj.topsrcdir,
             srcdir=srcdir,
-            relativesrcdir=mozpath.relpath(srcdir, self.environment.topsrcdir) or '.',
-            DEPTH=mozpath.relpath(self.environment.topobjdir, mozpath.dirname(obj.output_path)) or '.',
+            relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or '.',
+            DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path)) or '.',
         )
         pp.do_filter('attemptSubstitution')
         pp.setMarker(None)
