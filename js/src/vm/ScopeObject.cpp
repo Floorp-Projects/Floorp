@@ -1600,8 +1600,28 @@ DebugScopes::sweep(JSRuntime *rt)
      * creating an uncollectable cycle with suspended generator frames.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        if (IsObjectAboutToBeFinalized(e.front().value().unsafeGet()))
+        DebugScopeObject **debugScope = e.front().value().unsafeGet();
+        if (IsObjectAboutToBeFinalized(debugScope)) {
+            /*
+             * Note that onPopCall and onPopBlock rely on missingScopes to find
+             * scope objects that we synthesized for the debugger's sake, and
+             * clean up the synthetic scope objects' entries in liveScopes. So
+             * if we remove an entry frcom missingScopes here, we must also
+             * remove the corresponding liveScopes entry.
+             *
+             * Since the DebugScopeObject is the only thing using its scope
+             * object, and the DSO is about to be finalized, you might assume
+             * that the synthetic SO is also about to be finalized too, and thus
+             * the loop below will take care of things. But complex GC behavior
+             * means that marks are only conservative approximations of
+             * liveness; we should assume that anything could be marked.
+             *
+             * Thus, we must explicitly remove the entries from both liveScopes
+             * and missingScopes here.
+             */
+            liveScopes.remove(&(*debugScope)->scope());
             e.removeFront();
+        }
     }
 
     for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
