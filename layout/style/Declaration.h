@@ -78,11 +78,14 @@ public:
    * @param aValue The value of the variable, if aType is
    *   CSSVariableDeclarations::eTokenStream.
    * @param aIsImportant Whether the declaration is !important.
+   * @param aOverrideImportant When aIsImportant is false, whether an
+   *   existing !important declaration will be overridden.
    */
   void AddVariableDeclaration(const nsAString& aName,
                               CSSVariableDeclarations::Type aType,
                               const nsString& aValue,
-                              bool aIsImportant);
+                              bool aIsImportant,
+                              bool aOverrideImportant);
 
   /**
    * Removes a custom property declaration from this object.
