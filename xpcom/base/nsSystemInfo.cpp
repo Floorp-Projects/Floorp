@@ -176,6 +176,21 @@ nsSystemInfo::Init()
       }
     }
 
+#if defined(XP_WIN) && defined(MOZ_METRO)
+    // Create "hasWindowsTouchInterface" property.
+    nsAutoString version;
+    rv = GetPropertyAsAString(NS_LITERAL_STRING("version"), version);
+    NS_ENSURE_SUCCESS(rv, rv);
+    double versionDouble = atof(NS_ConvertUTF16toUTF8(version).get());
+
+    rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16("hasWindowsTouchInterface"),
+      versionDouble >= 6.2);
+    NS_ENSURE_SUCCESS(rv, rv);
+#else
+    rv = SetPropertyAsBool(NS_ConvertASCIItoUTF16("hasWindowsTouchInterface"), false);
+    NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
     // Additional informations not available through PR_GetSystemInfo.
     SetInt32Property(NS_LITERAL_STRING("pagesize"), PR_GetPageSize());
     SetInt32Property(NS_LITERAL_STRING("pageshift"), PR_GetPageShift());
