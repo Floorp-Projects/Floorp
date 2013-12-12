@@ -119,15 +119,7 @@ public:
     mCompositor = aCompositor;
   }
 
-  void OnActorDestroy()
-  {
-    Iterator end = TilesEnd();
-    for (Iterator it = TilesBegin(); it != end; ++it) {
-      if (it->mDeprecatedTextureHost) {
-        it->mDeprecatedTextureHost->OnActorDestroy();
-      }
-    }
-  }
+  void OnActorDestroy() {}
 
 protected:
   TiledTexture ValidateTile(TiledTexture aTile,
