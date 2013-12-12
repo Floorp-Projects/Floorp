@@ -35,6 +35,7 @@ MOCHITEST_FILES = \
 		test_getSubStringLength.xhtml \
 		getSubStringLength-helper.svg \
 		test_hasFeature.xhtml \
+		test_lengthParsing.html \
 		$(filter disabled-for-intermittent-failures--bug-701060, test_lang.xhtml) \
 		test_nonAnimStrings.xhtml \
 		test_non-scaling-stroke.html \

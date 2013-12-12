@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946529
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test transform parsing</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946529">Mozilla Bug 946529</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <svg width="100%" height="1" id="svg">
+    <rect id="rect"/>
+  </svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+// Test cases
+checkParseOk("", 0);
+checkParseOk("-.1", -0.1);
+checkParseOk("1e1", 10);
+checkParseOk("1em", 1, "em");
+checkParseOk("1ex", 1, "ex");
+checkParseOk("1e1em", 10, "em");
+checkParseOk("1E+2", 100);
+checkParseOk(".1e-2", 0.001);
+
+// Fail cases
+checkParseFail("1e");
+checkParseFail("1 e");
+checkParseFail("1 em");
+checkParseFail("1ee");
+
+function checkParseOk(spec, valueInUnits, units) {
+  var rect = document.getElementById("rect");
+
+  // Clear previous value
+  rect.removeAttribute("x");
+  rect.setAttribute("x", spec);
+
+  // Check number part
+  const tolerance = 1 / 65535;
+  var actual = rect.x.baseVal.valueInSpecifiedUnits;
+  ok(Math.abs(actual - valueInUnits) < tolerance,
+     spec + ' (value) - got ' + actual + ', expected ' + valueInUnits);
+
+  // Check unit part
+  var unitMapping = {
+    "unknown": SVGLength.SVG_LENGTHTYPE_UNKNOWN,
+    "": SVGLength.SVG_LENGTHTYPE_NUMBER,
+    "%": SVGLength.SVG_LENGTHTYPE_PERCENTAGE,
+    "em": SVGLength.SVG_LENGTHTYPE_EMS,
+    "ex": SVGLength.SVG_LENGTHTYPE_EXS,
+    "px": SVGLength.SVG_LENGTHTYPE_PX,
+    "cm": SVGLength.SVG_LENGTHTYPE_CM,
+    "mm": SVGLength.SVG_LENGTHTYPE_MM,
+    "in": SVGLength.SVG_LENGTHTYPE_IN,
+    "pt": SVGLength.SVG_LENGTHTYPE_PT,
+    "pc": SVGLength.SVG_LENGTHTYPE_PC
+  };
+  if (typeof units == "undefined") {
+    units = "";
+  }
+  ise(rect.x.baseVal.unitType, unitMapping[units], spec + " (unit)");
+}
+
+function checkParseFail(spec) {
+  checkParseOk(spec, 0);
+}
+</script>
+</pre>
+</body>
+</html>
