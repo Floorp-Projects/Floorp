@@ -369,7 +369,18 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
 {
   NS_PRECONDITION(aLength, "Null aLength!  Prepare to die!");
 
-  *aLength = GetComputedStyleMap()->Length();
+  uint32_t length = GetComputedStyleMap()->Length();
+
+  // Make sure we have up to date style so that we can include custom
+  // properties.
+  UpdateCurrentStyleSources(false);
+  if (mStyleContextHolder) {
+    length += StyleVariables()->mVariables.Count();
+  }
+
+  *aLength = length;
+
+  ClearCurrentStyleSources();
 
   return NS_OK;
 }
@@ -795,11 +806,32 @@ nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
                                   nsAString& aPropName)
 {
   nsComputedStyleMap* map = GetComputedStyleMap();
-  aFound = aIndex < map->Length();
-  if (aFound) {
+  uint32_t length = map->Length();
+
+  if (aIndex < length) {
+    aFound = true;
     CopyASCIItoUTF16(nsCSSProps::GetStringValue(map->PropertyAt(aIndex)),
                      aPropName);
+    return;
   }
+
+  // Custom properties are exposed with indexed properties just after all
+  // of the built-in properties.
+  UpdateCurrentStyleSources(false);
+  if (!mStyleContextHolder) {
+    aFound = false;
+    return;
+  }
+
+  const nsStyleVariables* variables = StyleVariables();
+  if (aIndex - length < variables->mVariables.Count()) {
+    aFound = true;
+    variables->mVariables.GetVariableAt(aIndex - length, aPropName);
+  } else {
+    aFound = false;
+  }
+
+  ClearCurrentStyleSources();
 }
 
 // Property getters...
