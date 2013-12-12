@@ -100,4 +100,5 @@
 #endif
   </hbox>
   </html:body>
+  <observes element="bcast_windowState" attribute="*"/>
 </html:html>
