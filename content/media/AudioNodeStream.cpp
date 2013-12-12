@@ -412,10 +412,6 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
   } else {
-    for (uint16_t i = 0; i < outputCount; ++i) {
-      mLastChunks[i].SetNull(0);
-    }
-
     // We need to generate at least one input
     uint16_t maxInputs = std::max(uint16_t(1), mEngine->InputCount());
     OutputChunks inputChunks;
@@ -424,10 +420,20 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       ObtainInputBlock(inputChunks[i], i);
     }
     bool finished = false;
+#ifdef DEBUG
+    for (uint16_t i = 0; i < outputCount; ++i) {
+      // Clear chunks so we can detect if ProduceAudioBlock fails to set them.
+      mLastChunks[i].SetNull(0);
+    }
+#endif
     if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
       mEngine->ProduceAudioBlock(this, inputChunks[0], &mLastChunks[0], &finished);
     } else {
       mEngine->ProduceAudioBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
+    }
+    for (uint16_t i = 0; i < outputCount; ++i) {
+      NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,
+                   "Invalid WebAudio chunk size");
     }
     if (finished) {
       mMarkAsFinishedAfterThisBlock = true;
