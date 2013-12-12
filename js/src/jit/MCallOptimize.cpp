@@ -24,9 +24,6 @@ namespace jit {
 IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
 {
-    if (!optimizationInfo().inlineNative())
-        return InliningStatus_NotInlined;
-
     // Array natives.
     if (native == js_Array)
         return inlineArray(callInfo);

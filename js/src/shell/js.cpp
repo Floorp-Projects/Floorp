@@ -5440,110 +5440,103 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     }
 
     if (const char *str = op->getStringOption("ion-gvn")) {
-        if (strcmp(str, "off") == 0) {
-            jit::js_JitOptions.disableGvn = true;
-        } else if (strcmp(str, "pessimistic") == 0) {
-            jit::js_JitOptions.forceGvnKind = true;
-            jit::js_JitOptions.forcedGvnKind = jit::GVN_Pessimistic;
-        } else if (strcmp(str, "optimistic") == 0) {
-            jit::js_JitOptions.forceGvnKind = true;
-            jit::js_JitOptions.forcedGvnKind = jit::GVN_Optimistic;
-        } else {
+        if (strcmp(str, "off") == 0)
+            jit::js_IonOptions.gvn = false;
+        else if (strcmp(str, "pessimistic") == 0)
+            jit::js_IonOptions.gvnIsOptimistic = false;
+        else if (strcmp(str, "optimistic") == 0)
+            jit::js_IonOptions.gvnIsOptimistic = true;
+        else
             return OptionFailure("ion-gvn", str);
-        }
     }
 
     if (const char *str = op->getStringOption("ion-licm")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableLicm = false;
+            jit::js_IonOptions.licm = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableLicm = true;
+            jit::js_IonOptions.licm = false;
         else
             return OptionFailure("ion-licm", str);
     }
 
     if (const char *str = op->getStringOption("ion-edgecase-analysis")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableEdgeCaseAnalysis = false;
+            jit::js_IonOptions.edgeCaseAnalysis = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableEdgeCaseAnalysis = true;
+            jit::js_IonOptions.edgeCaseAnalysis = false;
         else
             return OptionFailure("ion-edgecase-analysis", str);
     }
 
      if (const char *str = op->getStringOption("ion-range-analysis")) {
          if (strcmp(str, "on") == 0)
-             jit::js_JitOptions.disableRangeAnalysis = false;
+             jit::js_IonOptions.rangeAnalysis = true;
          else if (strcmp(str, "off") == 0)
-             jit::js_JitOptions.disableRangeAnalysis = true;
+             jit::js_IonOptions.rangeAnalysis = false;
          else
              return OptionFailure("ion-range-analysis", str);
      }
 
     if (op->getBoolOption("ion-check-range-analysis"))
-        jit::js_JitOptions.checkRangeAnalysis = true;
+        jit::js_IonOptions.checkRangeAnalysis = true;
 
     if (op->getBoolOption("ion-check-thread-safety"))
-        jit::js_JitOptions.checkThreadSafety = true;
+        jit::js_IonOptions.checkThreadSafety = true;
 
     if (const char *str = op->getStringOption("ion-inlining")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.disableInlining = false;
+            jit::js_IonOptions.inlining = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.disableInlining = true;
+            jit::js_IonOptions.inlining = false;
         else
             return OptionFailure("ion-inlining", str);
     }
 
     if (const char *str = op->getStringOption("ion-osr")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.osr = true;
+            jit::js_IonOptions.osr = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.osr = false;
+            jit::js_IonOptions.osr = false;
         else
             return OptionFailure("ion-osr", str);
     }
 
     if (const char *str = op->getStringOption("ion-limit-script-size")) {
         if (strcmp(str, "on") == 0)
-            jit::js_JitOptions.limitScriptSize = true;
+            jit::js_IonOptions.limitScriptSize = true;
         else if (strcmp(str, "off") == 0)
-            jit::js_JitOptions.limitScriptSize = false;
+            jit::js_IonOptions.limitScriptSize = false;
         else
             return OptionFailure("ion-limit-script-size", str);
     }
 
     int32_t useCount = op->getIntOption("ion-uses-before-compile");
     if (useCount >= 0)
-        jit::js_JitOptions.setUsesBeforeCompile(useCount);
+        jit::js_IonOptions.usesBeforeCompile = useCount;
 
     useCount = op->getIntOption("baseline-uses-before-compile");
     if (useCount >= 0)
-        jit::js_JitOptions.baselineUsesBeforeCompile = useCount;
+        jit::js_IonOptions.baselineUsesBeforeCompile = useCount;
 
     if (op->getBoolOption("baseline-eager"))
-        jit::js_JitOptions.baselineUsesBeforeCompile = 0;
+        jit::js_IonOptions.baselineUsesBeforeCompile = 0;
 
     if (const char *str = op->getStringOption("ion-regalloc")) {
-        if (strcmp(str, "lsra") == 0) {
-            jit::js_JitOptions.forceRegisterAllocator = true;
-            jit::js_JitOptions.forcedRegisterAllocator = jit::RegisterAllocator_LSRA;
-        } else if (strcmp(str, "backtracking") == 0) {
-            jit::js_JitOptions.forceRegisterAllocator = true;
-            jit::js_JitOptions.forcedRegisterAllocator = jit::RegisterAllocator_Backtracking;
-        } else if (strcmp(str, "stupid") == 0) {
-            jit::js_JitOptions.forceRegisterAllocator = true;
-            jit::js_JitOptions.forcedRegisterAllocator = jit::RegisterAllocator_Stupid;
-        } else {
+        if (strcmp(str, "lsra") == 0)
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_LSRA;
+        else if (strcmp(str, "backtracking") == 0)
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Backtracking;
+        else if (strcmp(str, "stupid") == 0)
+            jit::js_IonOptions.registerAllocator = jit::RegisterAllocator_Stupid;
+        else
             return OptionFailure("ion-regalloc", str);
-        }
     }
 
     if (op->getBoolOption("ion-eager"))
-        jit::js_JitOptions.setEagerCompilation();
+        jit::js_IonOptions.setEagerCompilation();
 
     if (op->getBoolOption("ion-compile-try-catch"))
-        jit::js_JitOptions.compileTryCatch = true;
+        jit::js_IonOptions.compileTryCatch = true;
 
 #ifdef JS_THREADSAFE
     bool parallelCompilation = false;
