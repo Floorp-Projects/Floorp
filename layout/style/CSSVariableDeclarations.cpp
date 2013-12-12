@@ -3,7 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* CSS Custom Property assignments for a Declaration at a given priority */
+
 #include "CSSVariableDeclarations.h"
+
+#include "nsRuleData.h"
 
 // These two special string values are used to represent specified values of
 // 'initial' and 'inherit'.  (Note that neither is a valid variable value.)
@@ -33,6 +37,10 @@ CSSVariableDeclarations::~CSSVariableDeclarations()
 CSSVariableDeclarations&
 CSSVariableDeclarations::operator=(const CSSVariableDeclarations& aOther)
 {
+  if (this == &aOther) {
+    return *this;
+  }
+
   mVariables.Clear();
   CopyVariablesFrom(aOther);
   return *this;
@@ -108,6 +116,35 @@ void
 CSSVariableDeclarations::Remove(const nsAString& aName)
 {
   mVariables.Remove(aName);
+}
+
+/* static */ PLDHashOperator
+CSSVariableDeclarations::EnumerateVariableForMapRuleInfoInto(
+                                                         const nsAString& aName,
+                                                         nsString aValue,
+                                                         void* aData)
+{
+  nsDataHashtable<nsStringHashKey, nsString>* variables =
+    static_cast<nsDataHashtable<nsStringHashKey, nsString>*>(aData);
+  if (!variables->Contains(aName)) {
+    variables->Put(aName, aValue);
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+CSSVariableDeclarations::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  if (!(aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Variables))) {
+    return;
+  }
+
+  if (!aRuleData->mVariables) {
+    aRuleData->mVariables = new CSSVariableDeclarations(*this);
+  } else {
+    mVariables.EnumerateRead(EnumerateVariableForMapRuleInfoInto,
+                             aRuleData->mVariables.get());
+  }
 }
 
 static size_t
