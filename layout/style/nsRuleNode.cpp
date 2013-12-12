@@ -1807,6 +1807,18 @@ static const uint32_t gColumnFlags[] = {
 #undef CSS_PROP_COLUMN
 };
 
+// There are no properties in nsStyleVariables, but we can't have a
+// zero length array.
+static const uint32_t gVariablesFlags[] = {
+  0,
+#define CSS_PROP_VARIABLES FLAG_DATA_FOR_PROPERTY
+#include "nsCSSPropList.h"
+#undef CSS_PROP_VARIABLES
+};
+static_assert(sizeof(gVariablesFlags) == sizeof(uint32_t),
+              "if nsStyleVariables has properties now you can remove the dummy "
+              "gVariablesFlags entry");
+
 #undef FLAG_DATA_FOR_PROPERTY
 
 static const uint32_t* gFlagsByStruct[] = {
@@ -2301,33 +2313,35 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       aContext->SetStyle(eStyleStruct_UIReset, ui);
       return ui;
     }
-
     case eStyleStruct_XUL:
     {
       nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
       aContext->SetStyle(eStyleStruct_XUL, xul);
       return xul;
     }
-
     case eStyleStruct_Column:
     {
       nsStyleColumn* column = new (mPresContext) nsStyleColumn(mPresContext);
       aContext->SetStyle(eStyleStruct_Column, column);
       return column;
     }
-
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
       aContext->SetStyle(eStyleStruct_SVG, svg);
       return svg;
     }
-
     case eStyleStruct_SVGReset:
     {
       nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset();
       aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
       return svgReset;
+    }
+    case eStyleStruct_Variables:
+    {
+      nsStyleVariables* vars = new (mPresContext) nsStyleVariables();
+      aContext->SetStyle(eStyleStruct_Variables, vars);
+      return vars;
     }
     default:
       /*
@@ -8269,6 +8283,21 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
               NS_STYLE_MASK_TYPE_LUMINANCE, 0, 0, 0, 0);
 
   COMPUTE_END_RESET(SVGReset, svgReset)
+}
+
+const void*
+nsRuleNode::ComputeVariablesData(void* aStartStruct,
+                                 const nsRuleData* aRuleData,
+                                 nsStyleContext* aContext,
+                                 nsRuleNode* aHighestNode,
+                                 const RuleDetail aRuleDetail,
+                                 const bool aCanStoreInRuleTree)
+{
+  COMPUTE_START_INHERITED(Variables, (), variables, parentVariables)
+
+  // ...
+
+  COMPUTE_END_INHERITED(Variables, variables)
 }
 
 const void*
