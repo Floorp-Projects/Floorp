@@ -230,7 +230,10 @@ public:
                                            nsRuleData* aRuleData,
                                            nsIURI* aDocURL,
                                            nsIURI* aBaseURL,
-                                           nsIPrincipal* aDocPrincipal);
+                                           nsIPrincipal* aDocPrincipal,
+                                           nsCSSStyleSheet* aSheet,
+                                           uint32_t aLineNumber,
+                                           uint32_t aLineOffset);
 
 protected:
   class nsAutoParseCompoundProperty;
@@ -926,6 +929,9 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 
 #define OUTPUT_ERROR() \
   mReporter->OutputError()
+
+#define OUTPUT_ERROR_WITH_POSITION(linenum_, lineoff_) \
+  mReporter->OutputError(linenum_, lineoff_)
 
 #define CLEAR_ERROR() \
   mReporter->ClearError()
@@ -2043,7 +2049,10 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
                                             nsRuleData* aRuleData,
                                             nsIURI* aDocURL,
                                             nsIURI* aBaseURL,
-                                            nsIPrincipal* aDocPrincipal)
+                                            nsIPrincipal* aDocPrincipal,
+                                            nsCSSStyleSheet* aSheet,
+                                            uint32_t aLineNumber,
+                                            uint32_t aLineOffset)
 {
   mTempData.AssertInitialState();
 
@@ -2053,12 +2062,23 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
   // Resolve any variable references in the property value.
   {
     nsCSSScanner scanner(aValue, 0);
-    css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+    css::ErrorReporter reporter(scanner, aSheet, mChildLoader, aDocURL);
     InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
 
     nsCSSTokenSerializationType firstToken, lastToken;
     valid = ResolveValueWithVariableReferences(aVariables, expandedValue,
                                                firstToken, lastToken);
+    if (!valid) {
+      NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropertyID));
+      REPORT_UNEXPECTED(PEInvalidVariableReference);
+      REPORT_UNEXPECTED_P(PEValueParsingError, propName);
+      if (nsCSSProps::IsInherited(aPropertyID)) {
+        REPORT_UNEXPECTED(PEValueWithVariablesFallbackInherit);
+      } else {
+        REPORT_UNEXPECTED(PEValueWithVariablesFallbackInitial);
+      }
+      OUTPUT_ERROR_WITH_POSITION(aLineNumber, aLineOffset);
+    }
     ReleaseScanner();
   }
 
@@ -2067,16 +2087,16 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
                                                    aPropertyID;
 
   // Parse the property with that resolved value.
-  {
+  if (valid) {
     nsCSSScanner scanner(expandedValue, 0);
-    css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+    css::ErrorReporter reporter(scanner, aSheet, mChildLoader, aDocURL);
     InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
-    bool parsedOK = ParseProperty(propertyToParse);
-    if (parsedOK && GetToken(true)) {
+    valid = ParseProperty(propertyToParse);
+    if (valid && GetToken(true)) {
       REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
-      parsedOK = false;
+      valid = false;
     }
-    if (!parsedOK) {
+    if (!valid) {
       NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(
                                                               propertyToParse));
       REPORT_UNEXPECTED_P(PEValueWithVariablesParsingError, propName);
@@ -2085,8 +2105,7 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
       } else {
         REPORT_UNEXPECTED(PEValueWithVariablesFallbackInitial);
       }
-      OUTPUT_ERROR();
-      valid = false;
+      OUTPUT_ERROR_WITH_POSITION(aLineNumber, aLineOffset);
     }
     ReleaseScanner();
   }
@@ -7463,6 +7482,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
             tokenStream->mBaseURI = mBaseURI;
             tokenStream->mSheetURI = mSheetURI;
             tokenStream->mSheetPrincipal = mSheetPrincipal;
+            tokenStream->mSheet = mSheet;
+            tokenStream->mLineNumber = stateBeforeProperty.mPosition.LineNumber();
+            tokenStream->mLineOffset = stateBeforeProperty.mPosition.LineOffset();
             value.SetTokenStreamValue(tokenStream);
             AppendValue(*p, value);
           }
@@ -7473,6 +7495,9 @@ CSSParserImpl::ParseProperty(nsCSSProperty aPropID)
           tokenStream->mBaseURI = mBaseURI;
           tokenStream->mSheetURI = mSheetURI;
           tokenStream->mSheetPrincipal = mSheetPrincipal;
+          tokenStream->mSheet = mSheet;
+          tokenStream->mLineNumber = stateBeforeProperty.mPosition.LineNumber();
+          tokenStream->mLineOffset = stateBeforeProperty.mPosition.LineOffset();
           value.SetTokenStreamValue(tokenStream);
           AppendValue(aPropID, value);
         }
@@ -12403,6 +12428,7 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
             return true;
           } else if (!references.IsEmpty() &&
                      references.LastElement() == stack.Length() - 1) {
+            REPORT_UNEXPECTED_TOKEN(PEInvalidVariableTokenFallback);
             SkipUntilAllOf(stack);
             return false;
           }
@@ -12434,11 +12460,13 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
         if (mToken.mIdent.LowerCaseEqualsLiteral("var")) {
           if (!GetToken(true)) {
             // EOF directly after "var(".
+            REPORT_UNEXPECTED_EOF(PEExpectedVariableNameEOF);
             return false;
           }
           if (mToken.mType != eCSSToken_Ident) {
             // There must be an identifier directly after the "var(".
             UngetToken();
+            REPORT_UNEXPECTED_TOKEN(PEExpectedVariableName);
             SkipUntil(')');
             SkipUntilAllOf(stack);
             return false;
@@ -12453,6 +12481,7 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
             // Variable reference with fallback.
             if (!GetToken(false) || mToken.IsSymbol(')')) {
               // Comma must be followed by at least one fallback token.
+              REPORT_UNEXPECTED(PEExpectedVariableFallback);
               SkipUntilAllOf(stack);
               return false;
             }
@@ -12463,6 +12492,7 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
             // Correctly closed variable reference.
           } else {
             // Malformed variable reference.
+            REPORT_UNEXPECTED_TOKEN(PEExpectedVariableCommaOrCloseParen);
             SkipUntil(')');
             SkipUntilAllOf(stack);
             return false;
@@ -12740,10 +12770,14 @@ nsCSSParser::ParsePropertyWithVariableReferences(
                                             nsRuleData* aRuleData,
                                             nsIURI* aDocURL,
                                             nsIURI* aBaseURL,
-                                            nsIPrincipal* aDocPrincipal)
+                                            nsIPrincipal* aDocPrincipal,
+                                            nsCSSStyleSheet* aSheet,
+                                            uint32_t aLineNumber,
+                                            uint32_t aLineOffset)
 {
   static_cast<CSSParserImpl*>(mImpl)->
     ParsePropertyWithVariableReferences(aPropertyID, aShorthandPropertyID,
                                         aValue, aVariables, aRuleData, aDocURL,
-                                        aBaseURL, aDocPrincipal);
+                                        aBaseURL, aDocPrincipal, aSheet,
+                                        aLineNumber, aLineOffset);
 }

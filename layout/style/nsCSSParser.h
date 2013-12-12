@@ -241,7 +241,10 @@ public:
                                    nsRuleData* aRuleData,
                                    nsIURI* aDocURL,
                                    nsIURI* aBaseURL,
-                                   nsIPrincipal* aDocPrincipal);
+                                   nsIPrincipal* aDocPrincipal,
+                                   nsCSSStyleSheet* aSheet,
+                                   uint32_t aLineNumber,
+                                   uint32_t aLineOffset);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

@@ -162,6 +162,16 @@ class nsCSSScannerPosition {
 public:
   nsCSSScannerPosition() : mInitialized(false) { }
 
+  uint32_t LineNumber() {
+    MOZ_ASSERT(mInitialized);
+    return mLineNumber;
+  }
+
+  uint32_t LineOffset() {
+    MOZ_ASSERT(mInitialized);
+    return mLineOffset;
+  }
+
 private:
   uint32_t mOffset;
   uint32_t mLineNumber;

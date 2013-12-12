@@ -2051,8 +2051,8 @@ nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
         tokenStream->mPropertyID, tokenStream->mShorthandPropertyID,
         tokenStream->mTokenStream, variables, aRuleData,
         tokenStream->mSheetURI, tokenStream->mBaseURI,
-        tokenStream->mSheetPrincipal);
-
+        tokenStream->mSheetPrincipal, tokenStream->mSheet,
+        tokenStream->mLineNumber, tokenStream->mLineOffset);
     aRuleData->mCanStoreInRuleTree = false;
     anyTokenStreams = true;
   }
