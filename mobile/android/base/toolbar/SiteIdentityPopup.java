@@ -38,11 +38,11 @@ public class SiteIdentityPopup extends ArrowPopup
     public static final String MIXED_CONTENT_LOADED = "mixed_content_loaded";
 
     // Security states corresponding to image levels in site_security_level.xml
-    public static final int LEVEL_UKNOWN = 0;
-    public static final int LEVEL_IDENTIFIED = 1;
-    public static final int LEVEL_VERIFIED = 2;
-    public static final int LEVEL_MIXED_CONTENT_BLOCKED = 3;
-    public static final int LEVEL_MIXED_CONTENT_LOADED = 4;
+    static final int LEVEL_UKNOWN = 0;
+    static final int LEVEL_IDENTIFIED = 1;
+    static final int LEVEL_VERIFIED = 2;
+    static final int LEVEL_MIXED_CONTENT_BLOCKED = 3;
+    static final int LEVEL_MIXED_CONTENT_LOADED = 4;
 
     // FIXME: Update this URL for mobile. See bug 885923.
     private static final String MIXED_CONTENT_SUPPORT_URL =
@@ -57,13 +57,13 @@ public class SiteIdentityPopup extends ArrowPopup
 
     private DoorHanger mMixedContentNotification;
 
-    public SiteIdentityPopup(BrowserApp activity) {
+    SiteIdentityPopup(BrowserApp activity) {
         super(activity);
 
         mResources = activity.getResources();
     }
 
-    public static int getSecurityImageLevel(String mode) {
+    static int getSecurityImageLevel(String mode) {
         if (IDENTIFIED.equals(mode)) {
             return LEVEL_IDENTIFIED;
         }
@@ -177,7 +177,7 @@ public class SiteIdentityPopup extends ArrowPopup
     /*
      * @param identityData A JSONObject that holds the current tab's identity data.
      */
-    public void updateIdentity(JSONObject identityData) {
+    void updateIdentity(JSONObject identityData) {
         String mode;
         try {
             mode = identityData.getString("mode");
