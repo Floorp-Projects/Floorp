@@ -368,17 +368,6 @@ ClientLayerManager::ForwardTransaction()
           ->SetDescriptorFromReply(ots.textureId(), ots.image());
         break;
       }
-      case EditReply::TReplyTextureRemoved: {
-        // XXX - to manage reuse of gralloc buffers, we'll need to add some
-        // glue code here to find the TextureClient and invoke a callback to
-        // let the camera know that the gralloc buffer is not used anymore on
-        // the compositor side and that it can reuse it.
-        const ReplyTextureRemoved& rep = reply.get_ReplyTextureRemoved();
-        CompositableClient* compositable
-          = static_cast<CompositableChild*>(rep.compositableChild())->GetCompositableClient();
-        compositable->OnReplyTextureRemoved(rep.textureId());
-        break;
-      }
 
       default:
         NS_RUNTIMEABORT("not reached");
