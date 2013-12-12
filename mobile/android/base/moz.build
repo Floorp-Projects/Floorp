@@ -208,6 +208,7 @@ gbjar.sources += [
     'home/BrowserSearch.java',
     'home/FadedTextView.java',
     'home/HistoryPage.java',
+    'home/HomeAdapter.java',
     'home/HomeBanner.java',
     'home/HomeFragment.java',
     'home/HomeListView.java',
