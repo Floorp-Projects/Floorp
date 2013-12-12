@@ -531,9 +531,6 @@ struct IonScript
     const types::RecompileInfo& recompileInfo() const {
         return recompileInfo_;
     }
-    types::RecompileInfo& recompileInfoRef() {
-        return recompileInfo_;
-    }
     OptimizationLevel optimizationLevel() const {
         return optimizationLevel_;
     }
