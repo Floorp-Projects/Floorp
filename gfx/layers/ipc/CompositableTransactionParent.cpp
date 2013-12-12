@@ -233,30 +233,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       break;
     }
-    case CompositableOperation::TOpRemoveTexture: {
-      const OpRemoveTexture& op = aEdit.get_OpRemoveTexture();
-
-      RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
-      MOZ_ASSERT(texture);
-
-      TextureFlags flags = texture->GetFlags();
-
-      if (!(flags & TEXTURE_DEALLOCATE_CLIENT) &&
-          !(flags & TEXTURE_DEALLOCATE_DEFERRED)) {
-        texture->DeallocateSharedData();
-      }
-
-      // if it is not the host that deallocates the shared data, then we need
-      // to notfy the client side to tell when it is safe to deallocate or
-      // reuse it.
-      if (flags & TEXTURE_DEALLOCATE_CLIENT) {
-        replyv.push_back(ReplyTextureRemoved(op.callbackID()));
-      }
-
-      TextureHost::SendDeleteIPDLActor(op.textureParent());
-
-      break;
-    }
     case CompositableOperation::TOpUpdateTexture: {
       const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
       CompositableHost* compositable = AsCompositable(op);
@@ -267,9 +243,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       texture->Updated(op.region().type() == MaybeRegion::TnsIntRegion
                        ? &op.region().get_nsIntRegion()
                        : nullptr); // no region means invalidate the entire surface
-
-
-      compositable->UseTextureHost(texture);
 
       break;
     }

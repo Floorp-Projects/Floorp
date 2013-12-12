@@ -302,15 +302,6 @@ struct OpUpdatePictureRect {
 };
 
 /**
- * Tells the compositor-side to remove the corresponding TextureHost and
- * deallocate its data.
- */
-struct OpRemoveTexture {
-  PTexture texture;
-  uint64_t callbackID;
-};
-
-/**
  * Tells the compositor-side which texture to use (for example, as front buffer
  * if there is several textures for double buffering)
  */
@@ -343,7 +334,6 @@ union CompositableOperation {
 
   OpPaintTiledLayerBuffer;
 
-  OpRemoveTexture;
   OpUpdateTexture;
   OpUseTexture;
 };
@@ -387,17 +377,11 @@ struct OpTextureSwap {
   SurfaceDescriptor image;
 };
 
-struct ReplyTextureRemoved {
-  uint64_t callbackID;
-};
-
 // Unit of a "changeset reply".  This is a weird abstraction, probably
 // only to be used for buffer swapping.
 union EditReply {
   OpContentBufferSwap;
   OpTextureSwap;
-
-  ReplyTextureRemoved;
 };
 
 } // namespace
