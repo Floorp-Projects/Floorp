@@ -440,7 +440,19 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   // by font-size changing, so we don't need to worry about them like
   // we worry about 'inherit' values.)
   bool compare = mRuleNode != aOther->mRuleNode;
-  DebugOnly<int> styleStructCount = 0;
+
+  // If we had any change in variable values, then we'll need to examine
+  // all of the other style structs too, even if the new style context has
+  // the same rule node as the old one.
+  const nsStyleVariables* thisVariables = PeekStyleVariables();
+  if (thisVariables) {
+    const nsStyleVariables* otherVariables = aOther->StyleVariables();
+    if (thisVariables->mVariables != otherVariables->mVariables) {
+      compare = true;
+    }
+  }
+
+  DebugOnly<int> styleStructCount = 1;  // count Variables already
 
 #define DO_STRUCT_DIFFERENCE(struct_)                                         \
   PR_BEGIN_MACRO                                                              \
@@ -490,7 +502,6 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther,
   DO_STRUCT_DIFFERENCE(TextReset);
   DO_STRUCT_DIFFERENCE(Background);
   DO_STRUCT_DIFFERENCE(Color);
-  DO_STRUCT_DIFFERENCE(Variables);
 
 #undef DO_STRUCT_DIFFERENCE
 
