@@ -1561,13 +1561,26 @@ CSSParserImpl::EvaluateSupportsDeclaration(const nsAString& aProperty,
   InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
   nsAutoSuppressErrors suppressErrors(this);
 
-  bool parsedOK = ParseProperty(propID) && !GetToken(true);
+  bool parsedOK;
+
+  if (propID == eCSSPropertyExtra_variable) {
+    MOZ_ASSERT(Substring(aProperty,
+                         0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+    const nsDependentSubstring varName =
+      Substring(aProperty, VAR_PREFIX_LENGTH);  // remove 'var-'
+    CSSVariableDeclarations::Type variableType;
+    nsString variableValue;
+    parsedOK = ParseVariableDeclaration(&variableType, variableValue) &&
+               !GetToken(true);
+  } else {
+    parsedOK = ParseProperty(propID) && !GetToken(true);
+
+    mTempData.ClearProperty(propID);
+    mTempData.AssertInitialState();
+  }
 
   CLEAR_ERROR();
   ReleaseScanner();
-
-  mTempData.ClearProperty(propID);
-  mTempData.AssertInitialState();
 
   return parsedOK;
 }
@@ -12341,25 +12354,32 @@ CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
   nsString impliedCharacters;
 
   // Record the token stream while parsing a variable value.
-  mScanner->StartRecording();
+  if (!mInSupportsCondition) {
+    mScanner->StartRecording();
+  }
   if (!ParseValueWithVariables(&type, &dropBackslash, impliedCharacters,
                                nullptr, nullptr)) {
-    mScanner->StopRecording();
+    if (!mInSupportsCondition) {
+      mScanner->StopRecording();
+    }
     return false;
   }
 
-  if (type == CSSVariableDeclarations::eTokenStream) {
-    // This was indeed a token stream value, so store it in variableValue.
-    mScanner->StopRecording(variableValue);
-    if (dropBackslash) {
-      MOZ_ASSERT(!variableValue.IsEmpty() &&
-                 variableValue[variableValue.Length() - 1] == '\\');
-      variableValue.Truncate(variableValue.Length() - 1);
+  if (!mInSupportsCondition) {
+    if (type == CSSVariableDeclarations::eTokenStream) {
+      // This was indeed a token stream value, so store it in variableValue.
+      mScanner->StopRecording(variableValue);
+      if (dropBackslash) {
+        MOZ_ASSERT(!variableValue.IsEmpty() &&
+                   variableValue[variableValue.Length() - 1] == '\\');
+        variableValue.Truncate(variableValue.Length() - 1);
+      }
+      variableValue.Append(impliedCharacters);
+    } else {
+      // This was either 'inherit' or 'initial'; we don't need the recorded
+      // input.
+      mScanner->StopRecording();
     }
-    variableValue.Append(impliedCharacters);
-  } else {
-    // This was either 'inherit' or 'initial'; we don't need the recorded input.
-    mScanner->StopRecording();
   }
 
   if (mHavePushBack && type == CSSVariableDeclarations::eTokenStream) {
@@ -12371,9 +12391,11 @@ CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
                mToken.IsSymbol(';') ||
                mToken.IsSymbol(']') ||
                mToken.IsSymbol('}'));
-    MOZ_ASSERT(!variableValue.IsEmpty());
-    MOZ_ASSERT(variableValue[variableValue.Length() - 1] == mToken.mSymbol);
-    variableValue.Truncate(variableValue.Length() - 1);
+    if (!mInSupportsCondition) {
+      MOZ_ASSERT(!variableValue.IsEmpty());
+      MOZ_ASSERT(variableValue[variableValue.Length() - 1] == mToken.mSymbol);
+      variableValue.Truncate(variableValue.Length() - 1);
+    }
   }
 
   *aType = type;
