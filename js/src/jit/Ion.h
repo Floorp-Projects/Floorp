@@ -16,7 +16,7 @@
 
 #include "jit/CompileInfo.h"
 #include "jit/CompileWrappers.h"
-#include "jit/IonOptions.h"
+#include "jit/JitOptions.h"
 
 namespace js {
 namespace jit {
@@ -175,7 +175,7 @@ IsIonInlinablePC(jsbytecode *pc) {
 inline bool
 TooManyArguments(unsigned nargs)
 {
-    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_IonOptions.maxStackArgs);
+    return (nargs >= SNAPSHOT_MAX_NARGS || nargs > js_JitOptions.maxStackArgs);
 }
 
 void ForbidCompilation(JSContext *cx, JSScript *script);

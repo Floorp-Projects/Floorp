@@ -600,7 +600,7 @@ class LiveRangeAllocator : protected RegisterAllocator
     void validateVirtualRegisters()
     {
 #ifdef DEBUG
-        if (!js_IonOptions.checkGraphConsistency)
+        if (!js_JitOptions.checkGraphConsistency)
             return;
 
         for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {

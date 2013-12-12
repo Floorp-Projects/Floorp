@@ -517,7 +517,7 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
     if (!allowFloat32Optimizations())
         return true;
 
-    if (type != MIRType_Value && !js_IonOptions.eagerCompilation) {
+    if (type != MIRType_Value && !js_JitOptions.eagerCompilation) {
         JS_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
         JS_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }
