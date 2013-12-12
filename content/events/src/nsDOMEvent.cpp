@@ -487,6 +487,27 @@ nsDOMEvent::PreventDefaultInternal(bool aCalledByDefaultHandler)
   if (!aCalledByDefaultHandler) {
     mEvent->mFlags.mDefaultPreventedByContent = true;
   }
+
+  if (!IsTrusted()) {
+    return;
+  }
+
+  WidgetDragEvent* dragEvent = mEvent->AsDragEvent();
+  if (!dragEvent) {
+    return;
+  }
+
+  nsCOMPtr<nsINode> node = do_QueryInterface(mEvent->currentTarget);
+  if (!node) {
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(mEvent->currentTarget);
+    if (!win) {
+      return;
+    }
+    node = win->GetExtantDoc();
+  }
+  if (!nsContentUtils::IsChromeDoc(node->OwnerDoc())) {
+    dragEvent->mDefaultPreventedOnContent = true;
+  }
 }
 
 void
