@@ -58,7 +58,7 @@ public class SiteIdentityPopup extends ArrowPopup
     private DoorHanger mMixedContentNotification;
 
     public SiteIdentityPopup(BrowserApp aActivity) {
-        super(aActivity, null);
+        super(aActivity);
 
         mResources = aActivity.getResources();
     }

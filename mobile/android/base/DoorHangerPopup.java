@@ -35,8 +35,8 @@ public class DoorHangerPopup extends ArrowPopup
     // Whether or not the doorhanger popup is disabled.
     private boolean mDisabled;
 
-    DoorHangerPopup(GeckoApp activity, View anchor) {
-        super(activity, anchor);
+    DoorHangerPopup(GeckoApp activity) {
+        super(activity);
 
         mDoorHangers = new HashSet<DoorHanger>();
 
