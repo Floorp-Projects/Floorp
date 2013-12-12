@@ -39,6 +39,7 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "GeckoProfiler.h"
+#include "mozilla/layers/TextureHost.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -598,6 +599,18 @@ LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* actor)
 {
   delete actor;
   return true;
+}
+
+PTextureParent*
+LayerTransactionParent::AllocPTextureParent()
+{
+  return TextureHost::CreateIPDLActor(this);
+}
+
+bool
+LayerTransactionParent::DeallocPTextureParent(PTextureParent* actor)
+{
+  return TextureHost::DestroyIPDLActor(actor);
 }
 
 } // namespace layers

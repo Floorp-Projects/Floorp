@@ -290,6 +290,7 @@ IPDL_SOURCES = [
     'ipc/PImageBridge.ipdl',
     'ipc/PLayer.ipdl',
     'ipc/PLayerTransaction.ipdl',
+    'ipc/PTexture.ipdl',
 ]
 
 MSVC_ENABLE_PGO = True
