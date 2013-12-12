@@ -12,7 +12,6 @@
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
 #include "jit/IonBuilder.h"
-#include "jit/IonOptimizationLevels.h"
 #include "jit/LIR.h"
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
@@ -1334,7 +1333,7 @@ void
 jit::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
-    if (!js_JitOptions.checkGraphConsistency)
+    if (!js_IonOptions.checkGraphConsistency)
         return;
     AssertBasicGraphCoherency(graph);
     AssertReversePostOrder(graph);
@@ -1349,7 +1348,7 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
     // are split)
 
 #ifdef DEBUG
-    if (!js_JitOptions.checkGraphConsistency)
+    if (!js_IonOptions.checkGraphConsistency)
         return;
     AssertGraphCoherency(graph);
 
@@ -2159,12 +2158,10 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
 
     AutoTempAllocatorRooter root(cx, &temp);
 
-    const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(Optimization_Normal);
-
     types::CompilerConstraintList *constraints = types::NewCompilerConstraintList(temp);
     BaselineInspector inspector(script);
     IonBuilder builder(cx, CompileCompartment::get(cx->compartment()), &temp, &graph, constraints,
-                       &inspector, &info, optimizationInfo, /* baselineFrame = */ nullptr);
+                       &inspector, &info, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {
         if (builder.abortReason() == AbortReason_Alloc)

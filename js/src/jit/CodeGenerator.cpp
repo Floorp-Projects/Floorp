@@ -22,7 +22,6 @@
 #include "jit/ExecutionModeInlines.h"
 #include "jit/IonCaches.h"
 #include "jit/IonLinker.h"
-#include "jit/IonOptimizationLevels.h"
 #include "jit/IonSpewer.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
@@ -5858,9 +5857,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 {
     RootedScript script(cx, gen->info().script());
     ExecutionMode executionMode = gen->info().executionMode();
-    OptimizationLevel optimizationLevel = gen->optimizationInfo().level();
-
-    JS_ASSERT_IF(HasIonScript(script, executionMode), executionMode == SequentialExecution);
+    JS_ASSERT(!HasIonScript(script, executionMode));
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
     // will trickle to jit::Compile() and return Method_Skipped.
@@ -5888,7 +5885,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
                      safepoints_.size(), callTargets.length(),
-                     patchableBackedges_.length(), optimizationLevel);
+                     patchableBackedges_.length());
     if (!ionScript) {
         recompileInfo.compilerOutput(cx->compartment()->types)->invalidate();
         return false;
@@ -7928,25 +7925,6 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
 
     masm.assumeUnreachable("Incorrect range for Value.");
     masm.bind(&done);
-    return true;
-}
-
-typedef bool (*RecompileFn)(JSContext *);
-static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile);
-
-bool
-CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
-{
-    Register useCount = ToRegister(ins->scratch());
-
-    masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), useCount);
-    Address ptr(useCount, 0);
-    masm.add32(Imm32(1), ptr);
-
-    OutOfLineCode *ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(useCount));
-    masm.branch32(Assembler::Above, ptr, Imm32(ins->mir()->useCount()), ool->entry());
-    masm.bind(ool->rejoin());
-
     return true;
 }
 

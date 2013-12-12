@@ -603,7 +603,7 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
 bool
 CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
 {
-    if (!js_JitOptions.checkOsiPointRegisters)
+    if (!js_IonOptions.checkOsiPointRegisters)
         return false;
 
     if (gen->info().executionMode() != SequentialExecution)
