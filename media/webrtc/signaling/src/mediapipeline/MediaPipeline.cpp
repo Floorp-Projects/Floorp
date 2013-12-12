@@ -50,6 +50,7 @@ namespace mozilla {
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
 MediaPipeline::~MediaPipeline() {
+  ASSERT_ON_THREAD(main_thread_);
   MOZ_ASSERT(!stream_);  // Check that we have shut down already.
   MOZ_MTLOG(ML_INFO, "Destroying MediaPipeline: " << description_);
 }
