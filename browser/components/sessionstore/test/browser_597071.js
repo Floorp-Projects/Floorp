@@ -1,53 +1,38 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  /** Test for Bug 597071 **/
+/**
+ * Bug 597071 - Closed windows should only be resurrected when there is a single
+ * popup window
+ */
+add_task(function test_close_last_nonpopup_window() {
+  // Purge the list of closed windows.
+  while (ss.getClosedWindowCount()) {
+    ss.forgetClosedWindow(0);
+  }
 
-  waitForExplicitFinish();
+  let oldState = ss.getWindowState(window);
 
-  // set the pref to 1 greater than it currently is so we have room for an extra
-  // closed window
-  let closedWindowCount = ss.getClosedWindowCount();
-  Services.prefs.setIntPref("browser.sessionstore.max_windows_undo",
-                            closedWindowCount + 1);
+  let popupState = {windows: [
+    {tabs: [{entries: []}], isPopup: true, hidden: "toolbar"}
+  ]};
 
-  let currentState = ss.getBrowserState();
-  let popupState = { windows:[
-    { tabs:[ {entries:[] }], isPopup: true, hidden: "toolbar" }
-  ] };
-
-  // set this window to be a popup.
+  // Set this window to be a popup.
   ss.setWindowState(window, JSON.stringify(popupState), true);
 
-  // open a new non-popup window
-  let newWin = openDialog(location, "", "chrome,all,dialog=no", "http://example.com");
-  newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
+  // Open a new window with a tab.
+  let win = yield promiseNewWindowLoaded({private: false});
+  let tab = win.gBrowser.addTab("http://example.com/");
+  yield promiseBrowserLoaded(tab.linkedBrowser);
 
-    newWin.gBrowser.addEventListener("load", function(aEvent) {
-      newWin.gBrowser.removeEventListener("load", arguments.callee, true);
+  // Make sure sessionstore sees this window.
+  let state = JSON.parse(ss.getBrowserState());
+  is(state.windows.length, 2, "sessionstore knows about this window");
 
-      newWin.gBrowser.addTab().linkedBrowser.stop();
+  // Closed the window and check the closed window count.
+  yield promiseWindowClosed(win);
+  is(ss.getClosedWindowCount(), 1, "correct closed window count");
 
-      // make sure sessionstore sees this window
-      let state = JSON.parse(ss.getBrowserState());
-      is(state.windows.length, 2, "sessionstore knows about this window");
-
-      newWin.close();
-      newWin.addEventListener("unload", function(aEvent) {
-        newWin.removeEventListener("unload", arguments.callee, false);
-
-        is(ss.getClosedWindowCount(), closedWindowCount + 1,
-           "increased closed window count");
-
-        Services.prefs.clearUserPref("browser.sessionstore.max_windows_undo");
-        ss.setBrowserState(currentState);
-        executeSoon(finish);
-
-      }, false);
-    }, true);
-  }, false);
-}
-
+  // Cleanup.
+  ss.setWindowState(window, oldState, true);
+});
