@@ -1737,6 +1737,14 @@ public:
   static bool IsTextAlignTrueValueEnabled();
 
   /**
+   * Checks if CSS variables are currently enabled.
+   */
+  static bool CSSVariablesEnabled()
+  {
+    return sCSSVariablesEnabled;
+  }
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */
@@ -1963,6 +1971,7 @@ private:
   static bool sFontSizeInflationForceEnabled;
   static bool sFontSizeInflationDisabledInMasterProcess;
   static bool sInvalidationDebuggingIsEnabled;
+  static bool sCSSVariablesEnabled;
 };
 
 template<typename PointType, typename RectType, typename CoordType>
