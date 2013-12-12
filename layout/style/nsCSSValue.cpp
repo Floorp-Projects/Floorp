@@ -96,6 +96,13 @@ nsCSSValue::nsCSSValue(nsCSSValueGradient* aValue)
   mValue.mGradient->AddRef();
 }
 
+nsCSSValue::nsCSSValue(nsCSSValueTokenStream* aValue)
+  : mUnit(eCSSUnit_TokenStream)
+{
+  mValue.mTokenStream = aValue;
+  mValue.mTokenStream->AddRef();
+}
+
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -131,6 +138,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Gradient == mUnit) {
     mValue.mGradient = aCopy.mValue.mGradient;
     mValue.mGradient->AddRef();
+  }
+  else if (eCSSUnit_TokenStream == mUnit) {
+    mValue.mTokenStream = aCopy.mValue.mTokenStream;
+    mValue.mTokenStream->AddRef();
   }
   else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair = aCopy.mValue.mPair;
@@ -205,6 +216,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_Gradient == mUnit) {
       return *mValue.mGradient == *aOther.mValue.mGradient;
+    }
+    else if (eCSSUnit_TokenStream == mUnit) {
+      return *mValue.mTokenStream == *aOther.mValue.mTokenStream;
     }
     else if (eCSSUnit_Pair == mUnit) {
       return *mValue.mPair == *aOther.mValue.mPair;
@@ -291,6 +305,8 @@ void nsCSSValue::DoReset()
     mValue.mImage->Release();
   } else if (eCSSUnit_Gradient == mUnit) {
     mValue.mGradient->Release();
+  } else if (eCSSUnit_TokenStream == mUnit) {
+    mValue.mTokenStream->Release();
   } else if (eCSSUnit_Pair == mUnit) {
     mValue.mPair->Release();
   } else if (eCSSUnit_Triplet == mUnit) {
@@ -386,6 +402,14 @@ void nsCSSValue::SetGradientValue(nsCSSValueGradient* aValue)
   mUnit = eCSSUnit_Gradient;
   mValue.mGradient = aValue;
   mValue.mGradient->AddRef();
+}
+
+void nsCSSValue::SetTokenStreamValue(nsCSSValueTokenStream* aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_TokenStream;
+  mValue.mTokenStream = aValue;
+  mValue.mTokenStream->AddRef();
 }
 
 void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
@@ -1137,6 +1161,15 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     }
 
     aResult.AppendLiteral(")");
+  } else if (eCSSUnit_TokenStream == unit) {
+    nsCSSProperty shorthand = mValue.mTokenStream->mShorthandPropertyID;
+    if (shorthand == eCSSProperty_UNKNOWN ||
+        nsCSSProps::PropHasFlags(shorthand, CSS_PROPERTY_IS_ALIAS)) {
+      // We treat serialization of aliases like '-moz-transform' as a special
+      // case, since it really wants to be serialized as if it were a longhand
+      // even though it is implemented as a shorthand.
+      aResult.Append(mValue.mTokenStream->mTokenStream);
+    }
   } else if (eCSSUnit_Pair == unit) {
     if (eCSSProperty_font_variant_alternates == aProperty) {
       int32_t intValue = GetPairValue().mXValue.GetIntValue();
@@ -1219,6 +1252,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
+    case eCSSUnit_TokenStream:  break;
     case eCSSUnit_Pair:         break;
     case eCSSUnit_Triplet:      break;
     case eCSSUnit_Rect:         break;
@@ -1319,6 +1353,11 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // Gradient
     case eCSSUnit_Gradient:
       n += mValue.mGradient->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    // TokenStream
+    case eCSSUnit_TokenStream:
+      n += mValue.mTokenStream->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Pair
@@ -1926,6 +1965,28 @@ nsCSSValueGradient::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) con
   for (uint32_t i = 0; i < mStops.Length(); i++) {
     n += mStops[i].SizeOfExcludingThis(aMallocSizeOf);
   }
+  return n;
+}
+
+// --- nsCSSValueTokenStream ------------
+
+nsCSSValueTokenStream::nsCSSValueTokenStream()
+  : mPropertyID(eCSSProperty_UNKNOWN)
+  , mShorthandPropertyID(eCSSProperty_UNKNOWN)
+{
+  MOZ_COUNT_CTOR(nsCSSValueTokenStream);
+}
+
+nsCSSValueTokenStream::~nsCSSValueTokenStream()
+{
+  MOZ_COUNT_DTOR(nsCSSValueTokenStream);
+}
+
+size_t
+nsCSSValueTokenStream::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mTokenStream.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   return n;
 }
 
