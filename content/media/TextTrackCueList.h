@@ -56,6 +56,7 @@ public:
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
+  void GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
 private:
   nsCOMPtr<nsISupports> mParent;
