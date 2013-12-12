@@ -56,6 +56,7 @@ public:
   TextureChild()
   : mForwarder(nullptr)
   , mTextureData(nullptr)
+  , mTextureClient(nullptr)
   {
     MOZ_COUNT_CTOR(TextureChild);
   }
@@ -83,9 +84,15 @@ public:
 
   ISurfaceAllocator* GetAllocator() { return mForwarder; }
 
+  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
+private:
+
   CompositableForwarder* mForwarder;
   TextureClientData* mTextureData;
+  TextureClient* mTextureClient;
 
+  friend class TextureClient;
 };
 
 void
@@ -103,6 +110,14 @@ TextureChild::Recv__delete__()
 {
   DeleteTextureData();
   return true;
+}
+
+void
+TextureChild::ActorDestroy(ActorDestroyReason why)
+{
+  if (mTextureClient) {
+    mTextureClient->mActor = nullptr;
+  }
 }
 
 // static
@@ -133,6 +148,7 @@ TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 
   mActor = static_cast<TextureChild*>(aForwarder->CreateEmptyTextureChild());
   mActor->mForwarder = aForwarder;
+  mActor->mTextureClient = this;
   mShared = true;
   return mActor->SendInit(desc, GetFlags());
 }
@@ -250,6 +266,9 @@ TextureClient::Finalize()
   if (mActor) {
     // this will call ForceRemove in the right thread, using a sync proxy if needed
     mActor->GetForwarder()->RemoveTexture(this);
+
+    // mActor has a raw pointer to us, mActor->mTextureClient. Null it before we die.
+    mActor->mTextureClient = nullptr;
   }
 }
 
