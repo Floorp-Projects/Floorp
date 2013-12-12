@@ -353,6 +353,7 @@ nsCSSScanner::nsCSSScanner(const nsAString& aBuffer, uint32_t aLineNumber)
   , mSVGMode(false)
   , mRecording(false)
   , mSeenBadToken(false)
+  , mSeenVariableReference(false)
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
 }
@@ -721,6 +722,8 @@ nsCSSScanner::ScanIdent(nsCSSToken& aToken)
   aToken.mType = eCSSToken_Function;
   if (aToken.mIdent.LowerCaseEqualsLiteral("url")) {
     NextURL(aToken);
+  } else if (aToken.mIdent.LowerCaseEqualsLiteral("var")) {
+    mSeenVariableReference = true;
   }
   return true;
 }

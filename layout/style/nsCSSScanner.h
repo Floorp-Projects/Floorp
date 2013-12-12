@@ -178,13 +178,12 @@ class nsCSSScanner {
   }
 
   // Reset or check whether a BAD_URL or BAD_STRING token has been seen.
-  void ClearSeenBadToken() {
-    mSeenBadToken = false;
-  }
+  void ClearSeenBadToken() { mSeenBadToken = false; }
+  bool SeenBadToken() const { return mSeenBadToken; }
 
-  bool SeenBadToken() const {
-    return mSeenBadToken;
-  }
+  // Reset or check whether a "var(" FUNCTION token has been seen.
+  void ClearSeenVariableReference() { mSeenVariableReference = false; }
+  bool SeenVariableReference() const { return mSeenVariableReference; }
 
   // Get the 1-based line number of the last character of
   // the most recently processed token.
@@ -319,6 +318,7 @@ protected:
   bool mSVGMode;
   bool mRecording;
   bool mSeenBadToken;
+  bool mSeenVariableReference;
 };
 
 #endif /* nsCSSScanner_h___ */
