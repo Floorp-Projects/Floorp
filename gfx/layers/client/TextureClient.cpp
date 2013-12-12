@@ -124,6 +124,8 @@ bool
 TextureClient::InitIPDLActor(CompositableForwarder* aForwarder)
 {
   MOZ_ASSERT(!mActor);
+  MOZ_ASSERT(aForwarder);
+
   SurfaceDescriptor desc;
   if (!ToSurfaceDescriptor(desc)) {
     return false;
