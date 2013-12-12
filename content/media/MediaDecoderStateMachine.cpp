@@ -1336,6 +1336,15 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
   mSyncPointInDecodedStream = mStartTime + mPlayDuration;
 }
 
+int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync()
+{
+  AssertCurrentThreadInMonitor();
+  NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
+  DecodedStreamData* stream = mDecoder->GetDecodedStream();
+  StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
+  return mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
+}
+
 void MediaDecoderStateMachine::StartPlayback()
 {
   DECODER_LOG(PR_LOG_DEBUG, ("%p StartPlayback()", mDecoder.get()));
@@ -2461,9 +2470,7 @@ int64_t MediaDecoderStateMachine::GetClock() {
   if (!IsPlaying()) {
     clock_time = mPlayDuration + mStartTime;
   } else if (stream) {
-    NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
-    StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
-    clock_time = mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
+    clock_time = GetCurrentTimeViaMediaStreamSync();
   } else {
     int64_t audio_time = GetAudioClock();
     if (HasAudio() && !mAudioCompleted && audio_time != -1) {
