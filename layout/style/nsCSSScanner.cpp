@@ -386,6 +386,21 @@ nsCSSScanner::StopRecording(nsString& aBuffer)
                  mOffset - mRecordStartOffset);
 }
 
+uint32_t
+nsCSSScanner::RecordingLength() const
+{
+  MOZ_ASSERT(mRecording, "haven't started recording");
+  return mOffset - mRecordStartOffset;
+}
+
+#ifdef DEBUG
+bool
+nsCSSScanner::IsRecording() const
+{
+  return mRecording;
+}
+#endif
+
 nsDependentSubstring
 nsCSSScanner::GetCurrentLine() const
 {
@@ -1080,18 +1095,11 @@ static const PRUnichar kImpliedEOFCharacters[] = {
 };
 
 /* static */ void
-nsCSSScanner::AdjustTokenStreamForEOFCharacters(EOFCharacters aEOFCharacters,
-                                                nsAString& aResult)
+nsCSSScanner::AppendImpliedEOFCharacters(EOFCharacters aEOFCharacters,
+                                         nsAString& aResult)
 {
-  uint32_t c = aEOFCharacters;
-
-  // First, handle eEOFCharacters_DropBackslash.
-  if (c & eEOFCharacters_DropBackslash) {
-    MOZ_ASSERT(aResult[aResult.Length() - 1] == '\\');
-    aResult.SetLength(aResult.Length() - 1);
-  }
-
-  c >>= 1;
+  // First, ignore eEOFCharacters_DropBackslash.
+  uint32_t c = aEOFCharacters >> 1;
 
   // All of the remaining EOFCharacters bits represent appended characters,
   // and the bits are in the order that they need appending.

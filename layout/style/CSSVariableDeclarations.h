@@ -10,6 +10,9 @@
 
 #include "nsDataHashtable.h"
 
+namespace mozilla {
+class CSSVariableResolver;
+}
 class nsRuleData;
 
 namespace mozilla {
@@ -104,6 +107,12 @@ public:
    */
   void MapRuleInfoInto(nsRuleData* aRuleData);
 
+  /**
+   * Copies the variables from this object into aResolver, marking them as
+   * specified values.
+   */
+  void AddVariablesToResolver(CSSVariableResolver* aResolver) const;
+
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
@@ -118,6 +127,10 @@ private:
     EnumerateVariableForMapRuleInfoInto(const nsAString& aName,
                                         nsString aValue,
                                         void* aData);
+  static PLDHashOperator
+    EnumerateVariableForAddVariablesToResolver(const nsAString& aName,
+                                               nsString aValue,
+                                               void* aData);
 
   nsDataHashtable<nsStringHashKey, nsString> mVariables;
 };

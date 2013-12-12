@@ -154,6 +154,44 @@ public:
                                  nsIURI* aBaseURL,
                                  nsIPrincipal* aDocPrincipal);
 
+  typedef nsCSSParser::VariableEnumFunc VariableEnumFunc;
+
+  /**
+   * Parses a CSS token stream value and invokes a callback function for each
+   * variable reference that is encountered.
+   *
+   * @param aPropertyValue The CSS token stream value.
+   * @param aFunc The callback function to invoke; its parameters are the
+   *   variable name found and the aData argument passed in to this function.
+   * @param aData User data to pass in to the callback.
+   * @return Whether aPropertyValue could be parsed as a valid CSS token stream
+   *   value (e.g., without syntactic errors in variable references).
+   */
+  bool EnumerateVariableReferences(const nsAString& aPropertyValue,
+                                   VariableEnumFunc aFunc,
+                                   void* aData);
+
+  /**
+   * Parses aPropertyValue as a CSS token stream value and resolves any
+   * variable references using the variables in aVariables.
+   *
+   * @param aPropertyValue The CSS token stream value.
+   * @param aVariables The set of variable values to use when resolving variable
+   *   references.
+   * @param aResult Out parameter that gets the resolved value.
+   * @param aFirstToken Out parameter that gets the type of the first token in
+   *   aResult.
+   * @param aLastToken Out parameter that gets the type of the last token in
+   *   aResult.
+   * @return Whether aResult could be parsed successfully and variable reference
+   *   substitution succeeded.
+   */
+  bool ResolveVariableValue(const nsAString& aPropertyValue,
+                            const CSSVariableValues* aVariables,
+                            nsString& aResult,
+                            nsCSSTokenSerializationType& aFirstToken,
+                            nsCSSTokenSerializationType& aLastToken);
+
 protected:
   class nsAutoParseCompoundProperty;
   friend class nsAutoParseCompoundProperty;
@@ -267,6 +305,10 @@ protected:
   // to the start, calls SkipUntil with that character.
   typedef nsAutoTArray<PRUnichar, 16> StopSymbolCharStack;
   void SkipUntilAllOf(const StopSymbolCharStack& aStopSymbolChars);
+  // returns true if the stop symbol or EOF is found, and false for an
+  // unexpected ')', ']' or '}'; this not safe to call outside variable
+  // resolution, as it doesn't handle mismatched content
+  bool SkipBalancedContentUntil(PRUnichar aStopSymbol);
 
   void SkipRuleSet(bool aInsideBraces);
   bool SkipAtRule(bool aInsideBlock);
@@ -323,6 +365,29 @@ protected:
   bool ParseSupportsConditionTermsAfterOperator(
                                        bool& aConditionMet,
                                        SupportsConditionTermOperator aOperator);
+
+  /**
+   * Parses the current input stream for a CSS token stream value and resolves
+   * any variable references using the variables in aVariables.
+   *
+   * @param aVariables The set of variable values to use when resolving variable
+   *   references.
+   * @param aResult Out parameter that, if the function returns true, will be
+   *   replaced with the resolved value.
+   * @return Whether aResult could be parsed successfully and variable reference
+   *   substitution succeeded.
+   */
+  bool ResolveValueWithVariableReferences(
+                              const CSSVariableValues* aVariables,
+                              nsString& aResult,
+                              nsCSSTokenSerializationType& aResultFirstToken,
+                              nsCSSTokenSerializationType& aResultLastToken);
+  // Helper function for ResolveValueWithVariableReferences.
+  bool ResolveValueWithVariableReferencesRec(
+                             nsString& aResult,
+                             nsCSSTokenSerializationType& aResultFirstToken,
+                             nsCSSTokenSerializationType& aResultLastToken,
+                             const CSSVariableValues* aVariables);
 
   enum nsSelectorParsingStatus {
     // we have parsed a selector and we saw a token that cannot be
@@ -569,12 +634,33 @@ protected:
    *
    * @param aType Out parameter into which the type of the variable value
    *   will be stored.
-   * @param aClosingChars Out parameter appended to which will be any
-   *   closing characters that were implied when encountering EOF.
+   * @param aDropBackslash Out parameter indicating whether during variable
+   *   value parsing there was a trailing backslash before EOF that must
+   *   be dropped when serializing the variable value.
+   * @param aImpliedCharacters Out parameter appended to which will be any
+   *   characters that were implied when encountering EOF and which
+   *   must be included at the end of the serialized variable value.
+   * @param aFunc A callback function to invoke when a variable reference
+   *   is encountered.  May be null.  Arguments are the variable name
+   *   and the aData argument passed in to this function.
+   * @param User data to pass in to the callback.
    * @return Whether parsing succeeded.
    */
   bool ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
-                               nsString& aClosingChars);
+                               bool* aDropBackslash,
+                               nsString& aImpliedCharacters,
+                               void (*aFunc)(const nsAString&, void*),
+                               void* aData);
+
+  /**
+   * Returns whether the scanner dropped a backslash just before EOF.
+   */
+  bool BackslashDropped();
+
+  /**
+   * Calls AppendImpliedEOFCharacters on mScanner.
+   */
+  void AppendImpliedEOFCharacters(nsAString& aResult);
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
@@ -1373,6 +1459,521 @@ CSSParserImpl::EvaluateSupportsCondition(const nsAString& aDeclaration,
   ReleaseScanner();
 
   return parsedOK && conditionMet;
+}
+
+bool
+CSSParserImpl::EnumerateVariableReferences(const nsAString& aPropertyValue,
+                                           VariableEnumFunc aFunc,
+                                           void* aData)
+{
+  nsCSSScanner scanner(aPropertyValue, 0);
+  css::ErrorReporter reporter(scanner, nullptr, nullptr, nullptr);
+  InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
+  nsAutoSuppressErrors suppressErrors(this);
+
+  CSSVariableDeclarations::Type type;
+  bool dropBackslash;
+  nsString impliedCharacters;
+  bool result = ParseValueWithVariables(&type, &dropBackslash,
+                                        impliedCharacters, aFunc, aData) &&
+                !GetToken(true);
+
+  ReleaseScanner();
+
+  return result;
+}
+
+static bool
+SeparatorRequiredBetweenTokens(nsCSSTokenSerializationType aToken1,
+                               nsCSSTokenSerializationType aToken2)
+{
+  // The two lines marked with (*) do not correspond to entries in
+  // the table in the css-syntax spec but which we need to handle,
+  // as we treat them as whole tokens.
+  switch (aToken1) {
+    case eCSSTokenSerialization_Ident:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
+             aToken2 == eCSSTokenSerialization_Symbol_Minus ||
+             aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension ||
+             aToken2 == eCSSTokenSerialization_URange ||
+             aToken2 == eCSSTokenSerialization_CDC ||
+             aToken2 == eCSSTokenSerialization_Symbol_OpenParen;
+    case eCSSTokenSerialization_AtKeyword_or_Hash:
+    case eCSSTokenSerialization_Dimension:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
+             aToken2 == eCSSTokenSerialization_Symbol_Minus ||
+             aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension ||
+             aToken2 == eCSSTokenSerialization_URange ||
+             aToken2 == eCSSTokenSerialization_CDC;
+    case eCSSTokenSerialization_Symbol_Hash:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
+             aToken2 == eCSSTokenSerialization_Symbol_Minus ||
+             aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension ||
+             aToken2 == eCSSTokenSerialization_URange;
+    case eCSSTokenSerialization_Symbol_Minus:
+    case eCSSTokenSerialization_Number:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
+             aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension ||
+             aToken2 == eCSSTokenSerialization_URange;
+    case eCSSTokenSerialization_Symbol_At:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
+             aToken2 == eCSSTokenSerialization_Symbol_Minus ||
+             aToken2 == eCSSTokenSerialization_URange;
+    case eCSSTokenSerialization_URange:
+      return aToken2 == eCSSTokenSerialization_Ident ||
+             aToken2 == eCSSTokenSerialization_Function ||
+             aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension ||
+             aToken2 == eCSSTokenSerialization_Symbol_Question;
+    case eCSSTokenSerialization_Symbol_Dot_or_Plus:
+      return aToken2 == eCSSTokenSerialization_Number ||
+             aToken2 == eCSSTokenSerialization_Percentage ||
+             aToken2 == eCSSTokenSerialization_Dimension;
+    case eCSSTokenSerialization_Symbol_Assorted:
+    case eCSSTokenSerialization_Symbol_Asterisk:
+      return aToken2 == eCSSTokenSerialization_Symbol_Equals;
+    case eCSSTokenSerialization_Symbol_Bar:
+      return aToken2 == eCSSTokenSerialization_Symbol_Equals ||
+             aToken2 == eCSSTokenSerialization_Symbol_Bar ||
+             aToken2 == eCSSTokenSerialization_DashMatch;              // (*)
+    case eCSSTokenSerialization_Symbol_Slash:
+      return aToken2 == eCSSTokenSerialization_Symbol_Asterisk ||
+             aToken2 == eCSSTokenSerialization_ContainsMatch;          // (*)
+    default:
+      MOZ_ASSERT(aToken1 == eCSSTokenSerialization_Nothing ||
+                 aToken1 == eCSSTokenSerialization_Whitespace ||
+                 aToken1 == eCSSTokenSerialization_Percentage ||
+                 aToken1 == eCSSTokenSerialization_URL_or_BadURL ||
+                 aToken1 == eCSSTokenSerialization_Function ||
+                 aToken1 == eCSSTokenSerialization_CDC ||
+                 aToken1 == eCSSTokenSerialization_Symbol_OpenParen ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Question ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Assorted ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Asterisk ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Equals ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Bar ||
+                 aToken1 == eCSSTokenSerialization_Symbol_Slash ||
+                 aToken1 == eCSSTokenSerialization_Other ||
+                 "unexpected nsCSSTokenSerializationType value");
+      return false;
+  }
+}
+
+/**
+ * Appends aValue to aResult, possibly inserting an empty CSS
+ * comment between the two to ensure that tokens from both strings
+ * remain separated.
+ */
+static void
+AppendTokens(nsAString& aResult,
+             nsCSSTokenSerializationType& aResultFirstToken,
+             nsCSSTokenSerializationType& aResultLastToken,
+             nsCSSTokenSerializationType aValueFirstToken,
+             nsCSSTokenSerializationType aValueLastToken,
+             const nsAString& aValue)
+{
+  if (SeparatorRequiredBetweenTokens(aResultLastToken, aValueFirstToken)) {
+    aResult.AppendLiteral("/**/");
+  }
+  aResult.Append(aValue);
+  if (aResultFirstToken == eCSSTokenSerialization_Nothing) {
+    aResultFirstToken = aValueFirstToken;
+  }
+  if (aValueLastToken != eCSSTokenSerialization_Nothing) {
+    aResultLastToken = aValueLastToken;
+  }
+}
+
+/**
+ * Stops the given scanner recording, and appends the recorded result
+ * to aResult, possibly inserting an empty CSS comment between the two to
+ * ensure that tokens from both strings remain separated.
+ */
+static void
+StopRecordingAndAppendTokens(nsString& aResult,
+                             nsCSSTokenSerializationType& aResultFirstToken,
+                             nsCSSTokenSerializationType& aResultLastToken,
+                             nsCSSTokenSerializationType aValueFirstToken,
+                             nsCSSTokenSerializationType aValueLastToken,
+                             nsCSSScanner* aScanner)
+{
+  if (SeparatorRequiredBetweenTokens(aResultLastToken, aValueFirstToken)) {
+    aResult.AppendLiteral("/**/");
+  }
+  aScanner->StopRecording(aResult);
+  if (aResultFirstToken == eCSSTokenSerialization_Nothing) {
+    aResultFirstToken = aValueFirstToken;
+  }
+  if (aValueLastToken != eCSSTokenSerialization_Nothing) {
+    aResultLastToken = aValueLastToken;
+  }
+}
+
+bool
+CSSParserImpl::ResolveValueWithVariableReferencesRec(
+                                     nsString& aResult,
+                                     nsCSSTokenSerializationType& aResultFirstToken,
+                                     nsCSSTokenSerializationType& aResultLastToken,
+                                     const CSSVariableValues* aVariables)
+{
+  // This function assumes we are already recording, and will leave the scanner
+  // recording when it returns.
+  MOZ_ASSERT(mScanner->IsRecording());
+  MOZ_ASSERT(aResult.IsEmpty());
+
+  // Stack of closing characters for currently open constructs.
+  nsAutoTArray<PRUnichar, 16> stack;
+
+  // The resolved value for this ResolveValueWithVariableReferencesRec call.
+  nsString value;
+
+  // The length of the scanner's recording before the currently parsed token.
+  // This is used so that when we encounter a "var(" token, we can strip
+  // it off the end of the recording, regardless of how long the token was.
+  // (With escapes, it could be longer than four characters.)
+  uint32_t lengthBeforeVar = 0;
+
+  // Tracking the type of token that appears at the start and end of |value|
+  // and that appears at the start and end of the scanner recording.  These are
+  // used to determine whether we need to insert "/**/" when pasting token
+  // streams together.
+  nsCSSTokenSerializationType valueFirstToken = eCSSTokenSerialization_Nothing,
+                              valueLastToken  = eCSSTokenSerialization_Nothing,
+                              recFirstToken   = eCSSTokenSerialization_Nothing,
+                              recLastToken    = eCSSTokenSerialization_Nothing;
+
+#define UPDATE_RECORDING_TOKENS(type)                    \
+  if (recFirstToken == eCSSTokenSerialization_Nothing) { \
+    recFirstToken = type;                                \
+  }                                                      \
+  recLastToken = type;
+
+  while (GetToken(false)) {
+    switch (mToken.mType) {
+      case eCSSToken_Symbol: {
+        nsCSSTokenSerializationType type = eCSSTokenSerialization_Other;
+        if (mToken.mSymbol == '(') {
+          stack.AppendElement(')');
+          type = eCSSTokenSerialization_Symbol_OpenParen;
+        } else if (mToken.mSymbol == '[') {
+          stack.AppendElement(']');
+        } else if (mToken.mSymbol == '{') {
+          stack.AppendElement('}');
+        } else if (mToken.mSymbol == ';') {
+          if (stack.IsEmpty()) {
+            // A ';' that is at the top level of the value or at the top level
+            // of a variable reference's fallback is invalid.
+            return false;
+          }
+        } else if (mToken.mSymbol == '!') {
+          if (stack.IsEmpty()) {
+            // An '!' that is at the top level of the value or at the top level
+            // of a variable reference's fallback is invalid.
+            return false;
+          }
+        } else if (mToken.mSymbol == ')' &&
+                   stack.IsEmpty()) {
+          // We're closing a "var(".
+          nsString finalTokens;
+          mScanner->StopRecording(finalTokens);
+          MOZ_ASSERT(finalTokens[finalTokens.Length() - 1] == ')');
+          finalTokens.Truncate(finalTokens.Length() - 1);
+          aResult.Append(value);
+
+          AppendTokens(aResult, valueFirstToken, valueLastToken,
+                       recFirstToken, recLastToken, finalTokens);
+
+          mScanner->StartRecording();
+          UngetToken();
+          aResultFirstToken = valueFirstToken;
+          aResultLastToken = valueLastToken;
+          return true;
+        } else if (mToken.mSymbol == ')' ||
+                   mToken.mSymbol == ']' ||
+                   mToken.mSymbol == '}') {
+          if (stack.IsEmpty() ||
+              stack.LastElement() != mToken.mSymbol) {
+            // A mismatched closing bracket is invalid.
+            return false;
+          }
+          stack.TruncateLength(stack.Length() - 1);
+        } else if (mToken.mSymbol == '#') {
+          type = eCSSTokenSerialization_Symbol_Hash;
+        } else if (mToken.mSymbol == '@') {
+          type = eCSSTokenSerialization_Symbol_At;
+        } else if (mToken.mSymbol == '.' ||
+                   mToken.mSymbol == '+') {
+          type = eCSSTokenSerialization_Symbol_Dot_or_Plus;
+        } else if (mToken.mSymbol == '-') {
+          type = eCSSTokenSerialization_Symbol_Minus;
+        } else if (mToken.mSymbol == '?') {
+          type = eCSSTokenSerialization_Symbol_Question;
+        } else if (mToken.mSymbol == '$' ||
+                   mToken.mSymbol == '^' ||
+                   mToken.mSymbol == '~') {
+          type = eCSSTokenSerialization_Symbol_Assorted;
+        } else if (mToken.mSymbol == '=') {
+          type = eCSSTokenSerialization_Symbol_Equals;
+        } else if (mToken.mSymbol == '|') {
+          type = eCSSTokenSerialization_Symbol_Bar;
+        } else if (mToken.mSymbol == '/') {
+          type = eCSSTokenSerialization_Symbol_Slash;
+        } else if (mToken.mSymbol == '*') {
+          type = eCSSTokenSerialization_Symbol_Asterisk;
+        }
+        UPDATE_RECORDING_TOKENS(type);
+        break;
+      }
+
+      case eCSSToken_Function:
+        if (mToken.mIdent.LowerCaseEqualsLiteral("var")) {
+          // Save the tokens before the "var(" to our resolved value.
+          nsString recording;
+          mScanner->StopRecording(recording);
+          recording.Truncate(lengthBeforeVar);
+          AppendTokens(value, valueFirstToken, valueLastToken,
+                       recFirstToken, recLastToken, recording);
+          recFirstToken = eCSSTokenSerialization_Nothing;
+          recLastToken = eCSSTokenSerialization_Nothing;
+
+          if (!GetToken(true) ||
+              mToken.mType != eCSSToken_Ident) {
+            // "var(" must be followed by an identifier.
+            return false;
+          }
+
+          // Get the value of the identified variable.  Note that we
+          // check if the variable value is the empty string, as that means
+          // that the variable was invalid at computed value time due to
+          // unresolveable variable references or cycles.
+          const nsString& variableName = mToken.mIdent;
+          nsString variableValue;
+          nsCSSTokenSerializationType varFirstToken, varLastToken;
+          bool valid = aVariables->Get(variableName, variableValue,
+                                       varFirstToken, varLastToken) &&
+                       !variableValue.IsEmpty();
+
+          if (!GetToken(true) ||
+              mToken.IsSymbol(')')) {
+            mScanner->StartRecording();
+            if (!valid) {
+              // Invalid variable with no fallback.
+              return false;
+            }
+            // Valid variable with no fallback.
+            AppendTokens(value, valueFirstToken, valueLastToken,
+                         varFirstToken, varLastToken, variableValue);
+          } else if (mToken.IsSymbol(',')) {
+            mScanner->StartRecording();
+            if (!GetToken(false) ||
+                mToken.IsSymbol(')')) {
+              // Comma must be followed by at least one fallback token.
+              return false;
+            }
+            UngetToken();
+            if (valid) {
+              // Valid variable with ignored fallback.
+              mScanner->StopRecording();
+              AppendTokens(value, valueFirstToken, valueLastToken,
+                           varFirstToken, varLastToken, variableValue);
+              bool ok = SkipBalancedContentUntil(')');
+              mScanner->StartRecording();
+              if (!ok) {
+                return false;
+              }
+            } else {
+              nsString fallback;
+              if (!ResolveValueWithVariableReferencesRec(fallback,
+                                                         varFirstToken,
+                                                         varLastToken,
+                                                         aVariables)) {
+                // Fallback value had invalid tokens or an invalid variable reference
+                // that itself had no fallback.
+                return false;
+              }
+              AppendTokens(value, valueFirstToken, valueLastToken,
+                           varFirstToken, varLastToken, fallback);
+              // Now we're either at the pushed back ')' that finished the
+              // fallback or at EOF.
+              DebugOnly<bool> gotToken = GetToken(false);
+              MOZ_ASSERT(!gotToken || mToken.IsSymbol(')'));
+            }
+          } else {
+            // Expected ',' or ')' after the variable name.
+            mScanner->StartRecording();
+            return false;
+          }
+        } else {
+          stack.AppendElement(')');
+          UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Function);
+        }
+        break;
+
+      case eCSSToken_Bad_String:
+      case eCSSToken_Bad_URL:
+        return false;
+
+      case eCSSToken_Whitespace:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Whitespace);
+        break;
+
+      case eCSSToken_AtKeyword:
+      case eCSSToken_Hash:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_AtKeyword_or_Hash);
+        break;
+
+      case eCSSToken_Number:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Number);
+        break;
+
+      case eCSSToken_Dimension:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Dimension);
+        break;
+
+      case eCSSToken_Ident:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Ident);
+        break;
+
+      case eCSSToken_Percentage:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Percentage);
+        break;
+
+      case eCSSToken_URange:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_URange);
+        break;
+
+      case eCSSToken_URL:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_URL_or_BadURL);
+        break;
+
+      case eCSSToken_HTMLComment:
+        if (mToken.mIdent[0] == '-') {
+          UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_CDC);
+        } else {
+          UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Other);
+        }
+        break;
+
+      case eCSSToken_Dashmatch:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_DashMatch);
+        break;
+
+      case eCSSToken_Containsmatch:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_ContainsMatch);
+        break;
+
+      default:
+        NS_NOTREACHED("unexpected token type");
+        // fall through
+      case eCSSToken_ID:
+      case eCSSToken_String:
+      case eCSSToken_Includes:
+      case eCSSToken_Beginsmatch:
+      case eCSSToken_Endsmatch:
+        UPDATE_RECORDING_TOKENS(eCSSTokenSerialization_Other);
+        break;
+    }
+
+    lengthBeforeVar = mScanner->RecordingLength();
+  }
+
+#undef UPDATE_RECORDING_TOKENS
+
+  aResult.Append(value);
+  StopRecordingAndAppendTokens(aResult, valueFirstToken, valueLastToken,
+                               recFirstToken, recLastToken, mScanner);
+
+  // Append any implicitly closed brackets.
+  if (!stack.IsEmpty()) {
+    do {
+      aResult.Append(stack.LastElement());
+      stack.TruncateLength(stack.Length() - 1);
+    } while (!stack.IsEmpty());
+    valueLastToken = eCSSTokenSerialization_Other;
+  }
+
+  mScanner->StartRecording();
+  aResultFirstToken = valueFirstToken;
+  aResultLastToken = valueLastToken;
+  return true;
+}
+
+bool
+CSSParserImpl::ResolveValueWithVariableReferences(
+                                        const CSSVariableValues* aVariables,
+                                        nsString& aResult,
+                                        nsCSSTokenSerializationType& aFirstToken,
+                                        nsCSSTokenSerializationType& aLastToken)
+{
+  aResult.Truncate(0);
+
+  // Start recording before we read the first token.
+  mScanner->StartRecording();
+
+  if (!GetToken(false)) {
+    // Value was empty since we reached EOF.
+    mScanner->StopRecording();
+    return false;
+  }
+
+  UngetToken();
+
+  nsString value;
+  nsCSSTokenSerializationType firstToken, lastToken;
+  bool ok = ResolveValueWithVariableReferencesRec(value, firstToken, lastToken, aVariables) &&
+            !GetToken(true);
+
+  mScanner->StopRecording();
+
+  if (ok) {
+    aResult = value;
+    aFirstToken = firstToken;
+    aLastToken = lastToken;
+  }
+  return ok;
+}
+
+bool
+CSSParserImpl::ResolveVariableValue(const nsAString& aPropertyValue,
+                                    const CSSVariableValues* aVariables,
+                                    nsString& aResult,
+                                    nsCSSTokenSerializationType& aFirstToken,
+                                    nsCSSTokenSerializationType& aLastToken)
+{
+  nsCSSScanner scanner(aPropertyValue, 0);
+
+  // At this point, we know that aPropertyValue is syntactically correct
+  // for a token stream that has variable references.  We also won't be
+  // interpreting any of the stream as we parse it, apart from expanding
+  // var() references, so we don't need a base URL etc. or any useful
+  // error reporting.
+  css::ErrorReporter reporter(scanner, nullptr, nullptr, nullptr);
+  InitScanner(scanner, reporter, nullptr, nullptr, nullptr);
+
+  bool valid = ResolveValueWithVariableReferences(aVariables, aResult,
+                                                  aFirstToken, aLastToken);
+
+  ReleaseScanner();
+  return valid;
 }
 
 //----------------------------------------------------------------------
@@ -2973,6 +3574,47 @@ CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
         stack.AppendElement(']');
       } else if ('(' == symbol) {
         stack.AppendElement(')');
+      }
+    } else if (eCSSToken_Function == tk->mType ||
+               eCSSToken_Bad_URL == tk->mType) {
+      stack.AppendElement(')');
+    }
+  }
+}
+
+bool
+CSSParserImpl::SkipBalancedContentUntil(PRUnichar aStopSymbol)
+{
+  nsCSSToken* tk = &mToken;
+  nsAutoTArray<PRUnichar, 16> stack;
+  stack.AppendElement(aStopSymbol);
+  for (;;) {
+    if (!GetToken(true)) {
+      return true;
+    }
+    if (eCSSToken_Symbol == tk->mType) {
+      PRUnichar symbol = tk->mSymbol;
+      uint32_t stackTopIndex = stack.Length() - 1;
+      if (symbol == stack.ElementAt(stackTopIndex)) {
+        stack.RemoveElementAt(stackTopIndex);
+        if (stackTopIndex == 0) {
+          return true;
+        }
+
+      // Just handle out-of-memory by parsing incorrectly.  It's
+      // highly unlikely we're dealing with a legitimate style sheet
+      // anyway.
+      } else if ('{' == symbol) {
+        stack.AppendElement('}');
+      } else if ('[' == symbol) {
+        stack.AppendElement(']');
+      } else if ('(' == symbol) {
+        stack.AppendElement(')');
+      } else if (')' == symbol ||
+                 ']' == symbol ||
+                 '}' == symbol) {
+        UngetToken();
+        return false;
       }
     } else if (eCSSToken_Function == tk->mType ||
                eCSSToken_Bad_URL == tk->mType) {
@@ -11280,6 +11922,20 @@ CSSParserImpl::ParsePaintOrder()
 }
 
 bool
+CSSParserImpl::BackslashDropped()
+{
+  return mScanner->GetEOFCharacters() &
+         nsCSSScanner::eEOFCharacters_DropBackslash;
+}
+
+void
+CSSParserImpl::AppendImpliedEOFCharacters(nsAString& aResult)
+{
+  nsCSSScanner::AppendImpliedEOFCharacters(mScanner->GetEOFCharacters(),
+                                           aResult);
+}
+
+bool
 CSSParserImpl::ParseAll()
 {
   nsCSSValue value;
@@ -11299,11 +11955,13 @@ CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
 {
   CSSVariableDeclarations::Type type;
   nsString variableValue;
-  nsString closingBrackets;
+  bool dropBackslash;
+  nsString impliedCharacters;
 
   // Record the token stream while parsing a variable value.
   mScanner->StartRecording();
-  if (!ParseValueWithVariables(&type, closingBrackets)) {
+  if (!ParseValueWithVariables(&type, &dropBackslash, impliedCharacters,
+                               nullptr, nullptr)) {
     mScanner->StopRecording();
     return false;
   }
@@ -11311,7 +11969,12 @@ CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
   if (type == CSSVariableDeclarations::eTokenStream) {
     // This was indeed a token stream value, so store it in variableValue.
     mScanner->StopRecording(variableValue);
-    variableValue.Append(closingBrackets);
+    if (dropBackslash) {
+      MOZ_ASSERT(!variableValue.IsEmpty() &&
+                 variableValue[variableValue.Length() - 1] == '\\');
+      variableValue.Truncate(variableValue.Length() - 1);
+    }
+    variableValue.Append(impliedCharacters);
   } else {
     // This was either 'inherit' or 'initial'; we don't need the recorded input.
     mScanner->StopRecording();
@@ -11338,7 +12001,10 @@ CSSParserImpl::ParseVariableDeclaration(CSSVariableDeclarations::Type* aType,
 
 bool
 CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
-                                       nsString& aClosingChars)
+                                       bool* aDropBackslash,
+                                       nsString& aImpliedCharacters,
+                                       void (*aFunc)(const nsAString&, void*),
+                                       void* aData)
 {
   // A property value is invalid if it contains variable references and also:
   //
@@ -11386,7 +12052,10 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   if (mToken.mType == eCSSToken_Whitespace) {
     if (!GetToken(true)) {
       // Variable value was white space only.  This is valid.
+      MOZ_ASSERT(!BackslashDropped());
       *aType = CSSVariableDeclarations::eTokenStream;
+      *aDropBackslash = false;
+      AppendImpliedEOFCharacters(aImpliedCharacters);
       return true;
     }
   }
@@ -11404,7 +12073,10 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   if (type != CSSVariableDeclarations::eTokenStream) {
     if (!GetToken(true)) {
       // Variable value was 'initial' or 'inherit' followed by EOF.
+      MOZ_ASSERT(!BackslashDropped());
       *aType = type;
+      *aDropBackslash = false;
+      AppendImpliedEOFCharacters(aImpliedCharacters);
       return true;
     }
     UngetToken();
@@ -11416,7 +12088,9 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
          mToken.mSymbol == '}')) {
       // Variable value was 'initial' or 'inherit' followed by the end
       // of the declaration.
+      MOZ_ASSERT(!BackslashDropped());
       *aType = type;
+      *aDropBackslash = false;
       return true;
     }
   }
@@ -11434,7 +12108,9 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
                    mToken.mSymbol == '!') {
           if (stack.IsEmpty()) {
             UngetToken();
+            MOZ_ASSERT(!BackslashDropped());
             *aType = CSSVariableDeclarations::eTokenStream;
+            *aDropBackslash = false;
             return true;
           } else if (!references.IsEmpty() &&
                      references.LastElement() == stack.Length() - 1) {
@@ -11447,7 +12123,9 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
           for (;;) {
             if (stack.IsEmpty()) {
               UngetToken();
+              MOZ_ASSERT(!BackslashDropped());
               *aType = CSSVariableDeclarations::eTokenStream;
+              *aDropBackslash = false;
               return true;
             }
             PRUnichar c = stack.LastElement();
@@ -11465,24 +12143,38 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
 
       case eCSSToken_Function:
         if (mToken.mIdent.LowerCaseEqualsLiteral("var")) {
-          if (GetToken(true)) {
-            if (mToken.mType != eCSSToken_Ident) {
-              UngetToken();
-              SkipUntil(')');
-              SkipUntilAllOf(stack);
-              return false;
-            }
+          if (!GetToken(true)) {
+            // EOF directly after "var(".
+            return false;
           }
-          if (ExpectSymbol(',', true)) {
-            if (ExpectSymbol(')', false)) {
+          if (mToken.mType != eCSSToken_Ident) {
+            // There must be an identifier directly after the "var(".
+            UngetToken();
+            SkipUntil(')');
+            SkipUntilAllOf(stack);
+            return false;
+          }
+          if (aFunc) {
+            aFunc(mToken.mIdent, aData);
+          }
+          if (!GetToken(true)) {
+            // EOF right after "var(<ident>".
+            stack.AppendElement(')');
+          } else if (mToken.IsSymbol(',')) {
+            // Variable reference with fallback.
+            if (!GetToken(false) || mToken.IsSymbol(')')) {
               // Comma must be followed by at least one fallback token.
               SkipUntilAllOf(stack);
               return false;
             }
+            UngetToken();
             references.AppendElement(stack.Length());
             stack.AppendElement(')');
-          } else if (!ExpectSymbol(')', true)) {
-            UngetToken();
+          } else if (mToken.IsSymbol(')')) {
+            // Correctly closed variable reference.
+          } else {
+            // Malformed variable reference.
+            SkipUntil(')');
             SkipUntilAllOf(stack);
             return false;
           }
@@ -11506,9 +12198,11 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
   } while (GetToken(true));
 
   // Append any implied closing characters.
+  *aDropBackslash = BackslashDropped();
+  AppendImpliedEOFCharacters(aImpliedCharacters);
   uint32_t i = stack.Length();
   while (i--) {
-    aClosingChars.Append(stack[i]);
+    aImpliedCharacters.Append(stack[i]);
   }
 
   *aType = type;
@@ -11725,4 +12419,25 @@ nsCSSParser::EvaluateSupportsCondition(const nsAString& aCondition,
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     EvaluateSupportsCondition(aCondition, aDocURL, aBaseURL, aDocPrincipal);
+}
+
+bool
+nsCSSParser::EnumerateVariableReferences(const nsAString& aPropertyValue,
+                                         VariableEnumFunc aFunc,
+                                         void* aData)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    EnumerateVariableReferences(aPropertyValue, aFunc, aData);
+}
+
+bool
+nsCSSParser::ResolveVariableValue(const nsAString& aPropertyValue,
+                                  const CSSVariableValues* aVariables,
+                                  nsString& aResult,
+                                  nsCSSTokenSerializationType& aFirstToken,
+                                  nsCSSTokenSerializationType& aLastToken)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ResolveVariableValue(aPropertyValue, aVariables,
+                         aResult, aFirstToken, aLastToken);
 }

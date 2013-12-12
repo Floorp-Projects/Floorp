@@ -7,6 +7,8 @@
 
 #include "CSSVariableValues.h"
 
+#include "CSSVariableResolver.h"
+
 namespace mozilla {
 
 CSSVariableValues::CSSVariableValues()
@@ -93,6 +95,18 @@ CSSVariableValues::CopyVariablesFrom(const CSSVariableValues& aOther)
         aOther.mVariables[i].mValue,
         aOther.mVariables[i].mFirstToken,
         aOther.mVariables[i].mLastToken);
+  }
+}
+
+void
+CSSVariableValues::AddVariablesToResolver(CSSVariableResolver* aResolver) const
+{
+  for (size_t i = 0, n = mVariables.Length(); i < n; i++) {
+    aResolver->Put(mVariables[i].mVariableName,
+                   mVariables[i].mValue,
+                   mVariables[i].mFirstToken,
+                   mVariables[i].mLastToken,
+                   true);
   }
 }
 
