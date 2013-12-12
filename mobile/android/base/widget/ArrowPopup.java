@@ -9,6 +9,7 @@ import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.view.Gravity;
@@ -39,8 +40,9 @@ public class ArrowPopup extends PopupWindow {
 
         mInflated = false;
 
-        mArrowWidth = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = aActivity.getResources().getDimensionPixelSize(R.dimen.menu_popup_offset);
+        final Resources res = aActivity.getResources();
+        mArrowWidth = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
+        mYOffset = res.getDimensionPixelSize(R.dimen.menu_popup_offset);
 
         setAnimationStyle(R.style.PopupAnimation);
     }
