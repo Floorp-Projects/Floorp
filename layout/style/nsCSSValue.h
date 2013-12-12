@@ -197,8 +197,10 @@ enum nsCSSUnit {
   eCSSUnit_List         = 53,     // (nsCSSValueList*) list of values
   eCSSUnit_ListDep      = 54,     // (nsCSSValueList*) same as List
                                   //   but does not own the list
-  eCSSUnit_PairList     = 55,     // (nsCSSValuePairList*) list of value pairs
-  eCSSUnit_PairListDep  = 56,     // (nsCSSValuePairList*) same as PairList
+  eCSSUnit_SharedList   = 55,     // (nsCSSValueSharedList*) same as list
+                                  //   but reference counted and shared
+  eCSSUnit_PairList     = 56,     // (nsCSSValuePairList*) list of value pairs
+  eCSSUnit_PairListDep  = 57,     // (nsCSSValuePairList*) same as PairList
                                   //   but does not own the list
 
   eCSSUnit_Integer      = 70,     // (int) simple value
@@ -257,6 +259,7 @@ struct nsCSSRect;
 struct nsCSSRect_heap;
 struct nsCSSValueList;
 struct nsCSSValueList_heap;
+struct nsCSSValueSharedList;
 struct nsCSSValuePairList;
 struct nsCSSValuePairList_heap;
 struct nsCSSValueTriplet;
@@ -430,6 +433,12 @@ public:
     return mValue.mTokenStream;
   }
 
+  nsCSSValueSharedList* GetSharedListValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_SharedList, "not a shared list value");
+    return mValue.mSharedList;
+  }
+
   // bodies of these are below
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
@@ -498,6 +507,7 @@ public:
   void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
+  void SetSharedListValue(nsCSSValueSharedList* aList);
   void SetDependentListValue(nsCSSValueList* aList);
   void SetDependentPairListValue(nsCSSValuePairList* aList);
   void SetTripletValue(const nsCSSValueTriplet* aTriplet);
@@ -557,6 +567,7 @@ protected:
     nsCSSValueTriplet_heap* mTriplet;
     nsCSSValueList_heap* mList;
     nsCSSValueList* mListDependent;
+    nsCSSValueSharedList* mSharedList;
     nsCSSValuePairList_heap* mPairList;
     nsCSSValuePairList* mPairListDependent;
   } mValue;
@@ -699,6 +710,38 @@ struct nsCSSValueList_heap : public nsCSSValueList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueList_heap)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+};
+
+// This is a reference counted list value.  Note that the object is
+// a wrapper for the reference count and a pointer to the head of the
+// list, whereas the other list types (such as nsCSSValueList) do
+// not have such a wrapper.
+struct nsCSSValueSharedList {
+  nsCSSValueSharedList()
+  {
+    MOZ_COUNT_CTOR(nsCSSValueSharedList);
+  }
+
+  // Takes ownership of aList.
+  nsCSSValueSharedList(nsCSSValueList* aList)
+    : mHead(aList)
+  {
+    MOZ_COUNT_CTOR(nsCSSValueSharedList);
+  }
+
+  ~nsCSSValueSharedList();
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueSharedList)
+
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+
+  bool operator==(nsCSSValueSharedList const& aOther) const;
+  bool operator!=(const nsCSSValueSharedList& aOther) const
+  { return !(*this == aOther); }
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  nsCSSValueList* mHead;
 };
 
 // This has to be here so that the relationship between nsCSSValueList

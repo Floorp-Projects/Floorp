@@ -162,6 +162,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_ListDep == mUnit) {
     mValue.mListDependent = aCopy.mValue.mListDependent;
   }
+  else if (eCSSUnit_SharedList == mUnit) {
+    mValue.mSharedList = aCopy.mValue.mSharedList;
+    mValue.mSharedList->AddRef();
+  }
   else if (eCSSUnit_PairList == mUnit) {
     mValue.mPairList = aCopy.mValue.mPairList;
     mValue.mPairList->AddRef();
@@ -231,6 +235,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_List == mUnit) {
       return *mValue.mList == *aOther.mValue.mList;
+    }
+    else if (eCSSUnit_SharedList == mUnit) {
+      return *mValue.mSharedList == *aOther.mValue.mSharedList;
     }
     else if (eCSSUnit_PairList == mUnit) {
       return *mValue.mPairList == *aOther.mValue.mPairList;
@@ -315,6 +322,8 @@ void nsCSSValue::DoReset()
     mValue.mRect->Release();
   } else if (eCSSUnit_List == mUnit) {
     mValue.mList->Release();
+  } else if (eCSSUnit_SharedList == mUnit) {
+    mValue.mSharedList->Release();
   } else if (eCSSUnit_PairList == mUnit) {
     mValue.mPairList->Release();
   }
@@ -511,6 +520,14 @@ nsCSSValueList* nsCSSValue::SetListValue()
   mValue.mList = new nsCSSValueList_heap;
   mValue.mList->AddRef();
   return mValue.mList;
+}
+
+void nsCSSValue::SetSharedListValue(nsCSSValueSharedList* aList)
+{
+  Reset();
+  mUnit = eCSSUnit_SharedList;
+  mValue.mSharedList = aList;
+  mValue.mSharedList->AddRef();
 }
 
 void nsCSSValue::SetDependentListValue(nsCSSValueList* aList)
@@ -1198,6 +1215,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     GetRectValue().AppendToString(aProperty, aResult);
   } else if (eCSSUnit_List == unit || eCSSUnit_ListDep == unit) {
     GetListValue()->AppendToString(aProperty, aResult);
+  } else if (eCSSUnit_SharedList == unit) {
+    GetSharedListValue()->AppendToString(aProperty, aResult);
   } else if (eCSSUnit_PairList == unit || eCSSUnit_PairListDep == unit) {
     switch (aProperty) {
       case eCSSProperty_font_feature_settings:
@@ -1258,6 +1277,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Rect:         break;
     case eCSSUnit_List:         break;
     case eCSSUnit_ListDep:      break;
+    case eCSSUnit_SharedList:   break;
     case eCSSUnit_PairList:     break;
     case eCSSUnit_PairListDep:  break;
 
@@ -1382,6 +1402,12 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
     // ListDep: not measured because it's non-owning.
     case eCSSUnit_ListDep:
+      break;
+
+    // SharedList
+    case eCSSUnit_SharedList:
+      // Makes more sense not to measure, since it most cases the list
+      // will be shared.
       break;
 
     // PairList
@@ -1519,6 +1545,41 @@ nsCSSValueList_heap::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
   size_t n = aMallocSizeOf(this);
   n += mValue.SizeOfExcludingThis(aMallocSizeOf);
   n += mNext ? mNext->SizeOfIncludingThis(aMallocSizeOf) : 0;
+  return n;
+}
+
+// --- nsCSSValueSharedList -----------------
+
+nsCSSValueSharedList::~nsCSSValueSharedList()
+{
+  MOZ_COUNT_DTOR(nsCSSValueSharedList);
+  if (mHead) {
+    NS_CSS_DELETE_LIST_MEMBER(nsCSSValueList, mHead, mNext);
+    delete mHead;
+  }
+}
+
+void
+nsCSSValueSharedList::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
+{
+  if (mHead) {
+    mHead->AppendToString(aProperty, aResult);
+  }
+}
+
+bool
+nsCSSValueSharedList::operator==(const nsCSSValueSharedList& aOther) const
+{
+  return !mHead == !aOther.mHead &&
+         (!mHead || *mHead == *aOther.mHead);
+}
+
+size_t
+nsCSSValueSharedList::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  n += aMallocSizeOf(this);
+  n += mHead->SizeOfIncludingThis(aMallocSizeOf);
   return n;
 }
 

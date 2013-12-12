@@ -4059,7 +4059,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     frame && frame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
   if (aProperties.mTransformList) {
-    result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList,
+    result = nsStyleTransformMatrix::ReadTransforms(aProperties.mTransformList->mHead,
                                                     frame ? frame->StyleContext() : nullptr,
                                                     frame ? frame->PresContext() : nullptr,
                                                     dummy, bounds, aAppUnitsPerPixel);

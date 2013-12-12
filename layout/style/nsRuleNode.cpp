@@ -5354,15 +5354,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     canStoreInRuleTree = false;
     break;
 
-  case eCSSUnit_List:
-  case eCSSUnit_ListDep: {
-    const nsCSSValueList* head = transformValue->GetListValue();
+  case eCSSUnit_SharedList: {
+    nsCSSValueSharedList* list = transformValue->GetSharedListValue();
+    nsCSSValueList* head = list->mHead;
+    MOZ_ASSERT(head, "transform list must have at least one item");
     // can get a _None in here from transform animation
     if (head->mValue.GetUnit() == eCSSUnit_None) {
       NS_ABORT_IF_FALSE(head->mNext == nullptr, "none must be alone");
       display->mSpecifiedTransform = nullptr;
     } else {
-      display->mSpecifiedTransform = head; // weak pointer, owned by rule
+      display->mSpecifiedTransform = list;
     }
     break;
   }
