@@ -821,7 +821,11 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       css::Declaration *decl = sortedKeyframes[kfIdx].mRule->Declaration();
       for (uint32_t propIdx = 0, propEnd = decl->Count();
            propIdx != propEnd; ++propIdx) {
-        properties.AddProperty(decl->OrderValueAt(propIdx));
+        nsCSSProperty prop = decl->GetPropertyAt(propIdx);
+        if (prop != eCSSPropertyExtra_variable) {
+          // CSS Variables are not animatable
+          properties.AddProperty(prop);
+        }
       }
     }
 

@@ -23,6 +23,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
 
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
+const PREF_DEFAULT_PROVIDERS_ENABLED  = "extensions.defaultProviders.enabled";
 const PREF_EM_UPDATE_ENABLED          = "extensions.update.enabled";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_EM_LAST_PLATFORM_VERSION   = "extensions.lastPlatformVersion";
@@ -543,15 +544,22 @@ var AddonManagerInternal = {
     } catch (e) {}
     Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
 
+    let defaultProvidersEnabled = true;
+    try {
+      defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED);
+    } catch (e) {}
+
     // Ensure all default providers have had a chance to register themselves
-    DEFAULT_PROVIDERS.forEach(function(url) {
-      try {
-        Components.utils.import(url, {});
-      }
-      catch (e) {
-        ERROR("Exception loading default provider \"" + url + "\"", e);
-      }
-    });
+    if (defaultProvidersEnabled) {
+      DEFAULT_PROVIDERS.forEach(function(url) {
+        try {
+          Components.utils.import(url, {});
+        }
+        catch (e) {
+          ERROR("Exception loading default provider \"" + url + "\"", e);
+        }
+      });
+    }
 
     // Load any providers registered in the category manager
     let catman = Cc["@mozilla.org/categorymanager;1"].

@@ -251,6 +251,14 @@ public:
                              bool aMustCallValueAppended,
                              mozilla::css::Declaration* aDeclaration);
 
+    /**
+     * Copies the values for aPropID into the specified aRuleData object.
+     *
+     * This is used for copying parsed-at-computed-value-time properties
+     * that had variable references.  aPropID must be a longhand property.
+     */
+    void MapRuleInfoInto(nsCSSProperty aPropID, nsRuleData* aRuleData) const;
+
     void AssertInitialState() {
 #ifdef DEBUG
         DoAssertInitialState();
@@ -298,6 +306,12 @@ private:
      * property |aProperty|.
      */
     nsCSSValue* PropertyAt(nsCSSProperty aProperty) {
+        NS_ABORT_IF_FALSE(0 <= aProperty &&
+                          aProperty < eCSSProperty_COUNT_no_shorthands,
+                          "property out of range");
+        return &mValues[aProperty];
+    }
+    const nsCSSValue* PropertyAt(nsCSSProperty aProperty) const {
         NS_ABORT_IF_FALSE(0 <= aProperty &&
                           aProperty < eCSSProperty_COUNT_no_shorthands,
                           "property out of range");

@@ -24,8 +24,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsWrapperCache.h"
 #include "nsJSEnvironment.h"
 #include "xpcpublic.h"
@@ -45,9 +45,13 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CallbackObject)
 
-  explicit CallbackObject(JSObject* aCallback)
+  // The caller may pass a global object which will act as an override for the
+  // incumbent script settings object when the callback is invoked (overriding
+  // the entry point computed from aCallback). If no override is required, the
+  // caller should pass null.
+  explicit CallbackObject(JS::Handle<JSObject*> aCallback, nsIGlobalObject *aIncumbentGlobal)
   {
-    Init(aCallback);
+    Init(aCallback, aIncumbentGlobal);
   }
 
   virtual ~CallbackObject()
@@ -76,6 +80,11 @@ public:
     return JS::Handle<JSObject*>::fromMarkedLocation(mCallback.address());
   }
 
+  nsIGlobalObject* IncumbentGlobalOrNull() const
+  {
+    return mIncumbentGlobal;
+  }
+
   enum ExceptionHandling {
     // Report any exception and don't throw it to the caller code.
     eReportExceptions,
@@ -90,17 +99,19 @@ public:
 protected:
   explicit CallbackObject(CallbackObject* aCallbackObject)
   {
-    Init(aCallbackObject->mCallback);
+    Init(aCallbackObject->mCallback, aCallbackObject->mIncumbentGlobal);
   }
 
 private:
-  inline void Init(JSObject* aCallback)
+  inline void Init(JSObject* aCallback, nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
     // Set mCallback before we hold, on the off chance that a GC could somehow
     // happen in there... (which would be pretty odd, granted).
     mCallback = aCallback;
     mozilla::HoldJSObjects(this);
+
+    mIncumbentGlobal = aIncumbentGlobal;
   }
 
   CallbackObject(const CallbackObject&) MOZ_DELETE;
@@ -116,6 +127,7 @@ protected:
   }
 
   JS::Heap<JSObject*> mCallback;
+  nsCOMPtr<nsIGlobalObject> mIncumbentGlobal;
 
   class MOZ_STACK_CLASS CallSetup
   {
@@ -128,7 +140,7 @@ protected:
   public:
     // If aExceptionHandling == eRethrowContentExceptions then aCompartment
     // needs to be set to the caller's compartment.
-    CallSetup(JS::Handle<JSObject*> aCallable, ErrorResult& aRv,
+    CallSetup(CallbackObject* aCallback, ErrorResult& aRv,
               ExceptionHandling aExceptionHandling,
               JSCompartment* aCompartment = nullptr);
     ~CallSetup();
@@ -152,17 +164,17 @@ protected:
     JSCompartment* mCompartment;
 
     // And now members whose construction/destruction order we need to control.
-
-    nsCxPusher mCxPusher;
+    Maybe<AutoEntryScript> mAutoEntryScript;
+    Maybe<AutoIncumbentScript> mAutoIncumbentScript;
 
     // Constructed the rooter within the scope of mCxPusher above, so that it's
     // always within a request during its lifetime.
     Maybe<JS::Rooted<JSObject*> > mRootedCallable;
 
     // Can't construct a JSAutoCompartment without a JSContext either.  Also,
-    // Put mAc after mCxPusher so that we exit the compartment before we pop the
-    // JSContext.  Though in practice we'll often manually order those two
-    // things.
+    // Put mAc after mAutoEntryScript so that we exit the compartment before
+    // we pop the JSContext. Though in practice we'll often manually order
+    // those two things.
     Maybe<JSAutoCompartment> mAc;
 
     // An ErrorResult to possibly re-throw exceptions on and whether
@@ -336,28 +348,7 @@ public:
       nsRefPtr<WebIDLCallbackT> callback = GetWebIDLCallback();
       return callback.forget();
     }
-
-    XPCOMCallbackT* callback = GetXPCOMCallback();
-    if (!callback) {
-      return nullptr;
-    }
-
-    nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS = do_QueryInterface(callback);
-    if (!wrappedJS) {
-      return nullptr;
-    }
-
-    AutoSafeJSContext cx;
-
-    JS::Rooted<JSObject*> obj(cx, wrappedJS->GetJSObject());
-    if (!obj) {
-      return nullptr;
-    }
-
-    JSAutoCompartment ac(cx, obj);
-
-    nsRefPtr<WebIDLCallbackT> newCallback = new WebIDLCallbackT(obj);
-    return newCallback.forget();
+    return nullptr;
   }
 
 private:

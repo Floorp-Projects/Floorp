@@ -195,6 +195,12 @@ public:
   virtual bool
   DeallocPGrallocBufferChild(PGrallocBufferChild* actor) MOZ_OVERRIDE;
 
+  virtual PTextureChild*
+  AllocPTextureChild() MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPTextureChild(PTextureChild* actor) MOZ_OVERRIDE;
+
   /**
    * Allocate a gralloc SurfaceDescriptor remotely.
    */
@@ -255,19 +261,6 @@ public:
   virtual void Connect(CompositableClient* aCompositable) MOZ_OVERRIDE;
 
   /**
-   * See CompositableForwarder::AddTexture
-   */
-  virtual bool AddTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) MOZ_OVERRIDE;
-
-  /**
-   * See CompositableForwarder::RemoveTexture
-   */
-  virtual void RemoveTexture(CompositableClient* aCompositable,
-                             uint64_t aTextureID,
-                             TextureFlags aFlags) MOZ_OVERRIDE;
-
-  /**
    * See CompositableForwarder::UpdatedTexture
    */
   virtual void UpdatedTexture(CompositableClient* aCompositable,
@@ -279,6 +272,8 @@ public:
    */
   virtual void UseTexture(CompositableClient* aCompositable,
                           TextureClient* aClient) MOZ_OVERRIDE;
+
+  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
 
   virtual void PaintedTiledLayerBuffer(CompositableClient* aCompositable,
                                        const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE
@@ -377,6 +372,8 @@ public:
    * call on the ImageBridgeChild thread.
    */
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem);
+
+  virtual PTextureChild* CreateEmptyTextureChild() MOZ_OVERRIDE;
 
 protected:
   ImageBridgeChild();

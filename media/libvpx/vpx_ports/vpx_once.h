@@ -7,6 +7,9 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifndef VPX_ONCE_H
+#define VPX_ONCE_H
+
 #include "vpx_config.h"
 
 #if CONFIG_MULTITHREAD && defined(_WIN32)
@@ -94,4 +97,6 @@ static void once(void (*func)(void))
         done = 1;
     }
 }
+#endif
+
 #endif

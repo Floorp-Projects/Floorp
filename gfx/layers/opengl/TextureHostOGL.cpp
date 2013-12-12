@@ -24,6 +24,7 @@
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
 #ifdef MOZ_WIDGET_GONK
 # include "GrallocImages.h"  // for GrallocImage
+# include "EGLImageHelpers.h"
 #endif
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
@@ -44,7 +45,7 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-class Compositor; 
+class Compositor;
 
 TemporaryRef<CompositableBackendSpecificData>
 CreateCompositableBackendSpecificDataOGL()
@@ -87,8 +88,7 @@ CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
 
 
 TemporaryRef<TextureHost>
-CreateTextureHostOGL(uint64_t aID,
-                     const SurfaceDescriptor& aDesc,
+CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                      ISurfaceAllocator* aDeallocator,
                      TextureFlags aFlags)
 {
@@ -96,13 +96,13 @@ CreateTextureHostOGL(uint64_t aID,
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem:
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {
-      result = CreateBackendIndependentTextureHost(aID, aDesc,
+      result = CreateBackendIndependentTextureHost(aDesc,
                                                    aDeallocator, aFlags);
       break;
     }
     case SurfaceDescriptor::TSharedTextureDescriptor: {
       const SharedTextureDescriptor& desc = aDesc.get_SharedTextureDescriptor();
-      result = new SharedTextureHostOGL(aID, aFlags,
+      result = new SharedTextureHostOGL(aFlags,
                                         desc.shareType(),
                                         desc.handle(),
                                         gfx::ToIntSize(desc.size()),
@@ -113,7 +113,7 @@ CreateTextureHostOGL(uint64_t aID,
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const SurfaceDescriptorMacIOSurface& desc =
         aDesc.get_SurfaceDescriptorMacIOSurface();
-      result = new MacIOSurfaceTextureHostOGL(aID, aFlags, desc);
+      result = new MacIOSurfaceTextureHostOGL(aFlags, desc);
       break;
     }
 #endif
@@ -121,7 +121,7 @@ CreateTextureHostOGL(uint64_t aID,
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc: {
       const NewSurfaceDescriptorGralloc& desc =
         aDesc.get_NewSurfaceDescriptorGralloc();
-      result = new GrallocTextureHostOGL(aID, aFlags, desc);
+      result = new GrallocTextureHostOGL(aFlags, desc);
       break;
     }
 #endif
@@ -376,13 +376,12 @@ SharedTextureSourceOGL::GetTextureTransform()
   return handleDetails.mTextureTransform;
 }
 
-SharedTextureHostOGL::SharedTextureHostOGL(uint64_t aID,
-                                           TextureFlags aFlags,
+SharedTextureHostOGL::SharedTextureHostOGL(TextureFlags aFlags,
                                            gl::SharedTextureShareType aShareType,
                                            gl::SharedTextureHandle aSharedHandle,
                                            gfx::IntSize aSize,
                                            bool inverted)
-  : TextureHost(aID, aFlags)
+  : TextureHost(aFlags)
   , mSize(aSize)
   , mCompositor(nullptr)
   , mSharedHandle(aSharedHandle)
@@ -1156,9 +1155,9 @@ GrallocDeprecatedTextureHostOGL::DeleteTextures()
 {
   if (mEGLImage) {
     if (gl()->MakeCurrent()) {
-      gl()->DestroyEGLImage(mEGLImage);
+      EGLImageDestroy(gl(), mEGLImage);
     }
-    mEGLImage = 0;
+    mEGLImage = EGL_NO_IMAGE;
   }
 }
 
@@ -1214,7 +1213,7 @@ GrallocDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImag
   // create new EGLImage
   // create EGLImage during buffer swap could reduce the graphic driver's task
   // during rendering.
-  mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+  mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
 
 }
@@ -1387,7 +1386,7 @@ GrallocDeprecatedTextureHostOGL::GetAsSurface() {
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(mTextureTarget, tex);
   if (!mEGLImage) {
-    mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
+    mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   }
   gl()->fEGLImageTargetTexture2D(mTextureTarget, mEGLImage);
 

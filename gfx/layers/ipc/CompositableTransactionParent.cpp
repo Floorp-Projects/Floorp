@@ -222,12 +222,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     }
     case CompositableOperation::TOpUseTexture: {
       const OpUseTexture& op = aEdit.get_OpUseTexture();
-      if (op.textureID() == 0) {
-        NS_WARNING("Invalid texture ID");
-        break;
-      }
       CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = compositable->GetTextureHost(op.textureID());
+      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
 
       MOZ_ASSERT(tex.get());
       compositable->UseTextureHost(tex);
@@ -237,74 +233,16 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       break;
     }
-    case CompositableOperation::TOpAddTexture: {
-      const OpAddTexture& op = aEdit.get_OpAddTexture();
-      if (op.textureID() == 0) {
-        NS_WARNING("Invalid texture ID");
-        break;
-      }
-      CompositableHost* compositable = AsCompositable(op);
-      RefPtr<TextureHost> tex = TextureHost::Create(op.textureID(),
-                                                    op.data(),
-                                                    this,
-                                                    op.textureFlags());
-      MOZ_ASSERT(tex.get());
-      tex->SetCompositor(compositable->GetCompositor());
-      // set CompositableBackendSpecificData
-      // on gonk, create EGLImage if possible.
-      // create EGLImage during buffer swap could reduce the graphic driver's task
-      // during rendering.
-      compositable->AddTextureHost(tex);
-      MOZ_ASSERT(compositable->GetTextureHost(op.textureID()) == tex.get());
-      break;
-    }
-    case CompositableOperation::TOpRemoveTexture: {
-      const OpRemoveTexture& op = aEdit.get_OpRemoveTexture();
-      if (op.textureID() == 0) {
-        NS_WARNING("Invalid texture ID");
-        break;
-      }
-      CompositableHost* compositable = AsCompositable(op);
-
-      RefPtr<TextureHost> texture = compositable->GetTextureHost(op.textureID());
-      MOZ_ASSERT(texture);
-
-      TextureFlags flags = texture->GetFlags();
-
-      if (!(flags & TEXTURE_DEALLOCATE_CLIENT) &&
-          !(flags & TEXTURE_DEALLOCATE_DEFERRED)) {
-        texture->DeallocateSharedData();
-      }
-
-      compositable->RemoveTextureHost(texture);
-
-      // if it is not the host that deallocates the shared data, then we need
-      // to notfy the client side to tell when it is safe to deallocate or
-      // reuse it.
-      if (flags & TEXTURE_DEALLOCATE_CLIENT) {
-        replyv.push_back(ReplyTextureRemoved(op.compositableParent(), nullptr,
-                                             op.textureID()));
-      }
-
-      break;
-    }
     case CompositableOperation::TOpUpdateTexture: {
       const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
-      if (op.textureID() == 0) {
-        NS_WARNING("Invalid texture ID");
-        break;
-      }
       CompositableHost* compositable = AsCompositable(op);
       MOZ_ASSERT(compositable);
-      RefPtr<TextureHost> texture = compositable->GetTextureHost(op.textureID());
+      RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
       MOZ_ASSERT(texture);
 
       texture->Updated(op.region().type() == MaybeRegion::TnsIntRegion
                        ? &op.region().get_nsIntRegion()
                        : nullptr); // no region means invalidate the entire surface
-
-
-      compositable->UseTextureHost(texture);
 
       break;
     }

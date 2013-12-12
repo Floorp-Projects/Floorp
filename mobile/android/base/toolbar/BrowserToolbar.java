@@ -12,7 +12,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.SiteIdentityPopup;
+import org.mozilla.gecko.SiteIdentity;
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -141,6 +142,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private OnFilterListener mFilterListener;
     private OnStartEditingListener mStartEditingListener;
     private OnStopEditingListener mStopEditingListener;
+
+    private SiteIdentityPopup mSiteIdentityPopup;
 
     final private BrowserApp mActivity;
     private boolean mHasSoftMenuButton;
@@ -296,7 +299,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
-        mActivity.getSiteIdentityPopup().setAnchor(mSiteSecurity);
+
+        mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
+        mSiteIdentityPopup.setAnchor(mSiteSecurity);
 
         mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
 
@@ -425,14 +430,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 if (mSiteSecurity.getVisibility() != View.VISIBLE)
                     return;
 
-                JSONObject identityData = Tabs.getInstance().getSelectedTab().getIdentityData();
-                if (identityData == null) {
+                final Tab tab = Tabs.getInstance().getSelectedTab();
+
+                final SiteIdentity siteIdentity = tab.getSiteIdentity();
+                if (siteIdentity.getSecurityMode() == SecurityMode.UNKNOWN) {
                     Log.e(LOGTAG, "Selected tab has no identity data");
                     return;
                 }
-                SiteIdentityPopup siteIdentityPopup = mActivity.getSiteIdentityPopup();
-                siteIdentityPopup.updateIdentity(identityData);
-                siteIdentityPopup.show();
+
+                mSiteIdentityPopup.updateIdentity(siteIdentity);
+                mSiteIdentityPopup.show();
             }
         };
 
@@ -480,6 +487,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
             });
         }
+    }
+
+    public void refresh() {
+        dismissSiteIdentityPopup();
+    }
+
+    public boolean onBackPressed() {
+        return dismissSiteIdentityPopup();
     }
 
     public boolean onKey(int keyCode, KeyEvent event) {
@@ -558,6 +573,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             case RESTORED:
                 // TabCount fixup after OOM
             case SELECTED:
+                dismissSiteIdentityPopup();
                 updateTabCount(tabs.getDisplayCount());
                 mSwitchingTabs = true;
                 // Fall through.
@@ -594,7 +610,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case LOCATION_CHANGE:
                     // A successful location change will cause Tab to notify
                     // us of a title change, so we don't update the title here.
-                    refresh();
+                    refreshState();
                     break;
 
                 case CLOSED:
@@ -667,6 +683,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (animation.equals(mTitleSlideRight)) {
             mSiteSecurity.startAnimation(mLockFadeIn);
         }
+    }
+
+    private boolean dismissSiteIdentityPopup() {
+        if (mSiteIdentityPopup != null && mSiteIdentityPopup.isShowing()) {
+            mSiteIdentityPopup.dismiss();
+            return true;
+        }
+
+        return false;
     }
 
     private int getUrlBarEntryTranslation() {
@@ -957,11 +982,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mFavicon.setImageDrawable(null);
         }
     }
-
-    private void setSecurityMode(String mode) {
-        int imageLevel = SiteIdentityPopup.getSecurityImageLevel(mode);
-        mSiteSecurity.setImageLevel(imageLevel);
-        mShowSiteSecurity = (imageLevel != SiteIdentityPopup.LEVEL_UKNOWN);
+    
+    private void setSecurityMode(SecurityMode mode) {
+        mSiteSecurity.setImageLevel(mode.ordinal());
+        mShowSiteSecurity = (mode != SecurityMode.UNKNOWN);
 
         setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
     }
@@ -1534,7 +1558,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setVisibility(View.GONE);
     }
 
-    private void refresh() {
+    private void refreshState() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             setFavicon(tab.getFavicon());

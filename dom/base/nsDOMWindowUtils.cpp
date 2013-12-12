@@ -93,6 +93,7 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
+using namespace mozilla::gfx;
 
 class gfxContext;
 
@@ -1385,8 +1386,8 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
                                   aIgnoreRootScrollFrame, aFlushLayout, aReturn);
 }
 
-static already_AddRefed<gfxImageSurface>
-CanvasToImageSurface(nsIDOMHTMLCanvasElement* aCanvas)
+static TemporaryRef<DataSourceSurface>
+CanvasToDataSourceSurface(nsIDOMHTMLCanvasElement* aCanvas)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aCanvas);
   if (!node) {
@@ -1397,9 +1398,8 @@ CanvasToImageSurface(nsIDOMHTMLCanvasElement* aCanvas)
                     "An nsINode that implements nsIDOMHTMLCanvasElement should "
                     "be an element.");
   nsLayoutUtils::SurfaceFromElementResult result =
-    nsLayoutUtils::SurfaceFromElement(node->AsElement(),
-                                      nsLayoutUtils::SFE_WANT_IMAGE_SURFACE);
-  return result.mSurface.forget().downcast<gfxImageSurface>();
+    nsLayoutUtils::SurfaceFromElement(node->AsElement());
+  return result.mSourceSurface->GetDataSurface();
 }
 
 NS_IMETHODIMP
@@ -1417,8 +1417,8 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
       retVal == nullptr)
     return NS_ERROR_FAILURE;
 
-  nsRefPtr<gfxImageSurface> img1 = CanvasToImageSurface(aCanvas1);
-  nsRefPtr<gfxImageSurface> img2 = CanvasToImageSurface(aCanvas2);
+  RefPtr<DataSourceSurface> img1 = CanvasToDataSourceSurface(aCanvas1);
+  RefPtr<DataSourceSurface> img2 = CanvasToDataSourceSurface(aCanvas2);
 
   if (img1 == nullptr || img2 == nullptr ||
       img1->GetSize() != img2->GetSize() ||
@@ -1426,12 +1426,12 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
     return NS_ERROR_FAILURE;
 
   int v;
-  gfxIntSize size = img1->GetSize();
+  IntSize size = img1->GetSize();
   uint32_t stride = img1->Stride();
 
   // we can optimize for the common all-pass case
   if (stride == (uint32_t) size.width * 4) {
-    v = memcmp(img1->Data(), img2->Data(), size.width * size.height * 4);
+    v = memcmp(img1->GetData(), img2->GetData(), size.width * size.height * 4);
     if (v == 0) {
       if (aMaxDifference)
         *aMaxDifference = 0;
@@ -1444,8 +1444,8 @@ nsDOMWindowUtils::CompareCanvases(nsIDOMHTMLCanvasElement *aCanvas1,
   uint32_t different = 0;
 
   for (int j = 0; j < size.height; j++) {
-    unsigned char *p1 = img1->Data() + j*stride;
-    unsigned char *p2 = img2->Data() + j*stride;
+    unsigned char *p1 = img1->GetData() + j*stride;
+    unsigned char *p2 = img2->GetData() + j*stride;
     v = memcmp(p1, p2, stride);
 
     if (v) {

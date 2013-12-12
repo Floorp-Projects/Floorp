@@ -7,7 +7,9 @@ from __future__ import unicode_literals
 import hashlib
 import os
 import unittest
+import shutil
 import sys
+import tempfile
 
 from mozfile.mozfile import NamedTemporaryFile
 from mozunit import (
@@ -108,6 +110,40 @@ class TestFileAvoidWrite(unittest.TestCase):
             faw.write('content')
             self.assertEqual(faw.close(), (True, False))
 
+    def test_diff_not_default(self):
+        """Diffs are not produced by default."""
+
+        faw = FileAvoidWrite('doesnotexist')
+        faw.write('dummy')
+        faw.close()
+        self.assertIsNone(faw.diff)
+
+    def test_diff_update(self):
+        """Diffs are produced on file update."""
+
+        with MockedOpen({'file': 'old'}):
+            faw = FileAvoidWrite('file', capture_diff=True)
+            faw.write('new')
+            faw.close()
+
+            self.assertIsInstance(faw.diff, unicode)
+            self.assertIn('-old', faw.diff)
+            self.assertIn('+new', faw.diff)
+
+    def test_diff_create(self):
+        """Diffs are produced when files are created."""
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            path = os.path.join(tmpdir, 'file')
+            faw = FileAvoidWrite(path, capture_diff=True)
+            faw.write('new')
+            faw.close()
+
+            self.assertIsInstance(faw.diff, unicode)
+            self.assertIn('+new', faw.diff)
+        finally:
+            shutil.rmtree(tmpdir)
 
 class TestResolveTargetToMake(unittest.TestCase):
     def setUp(self):
