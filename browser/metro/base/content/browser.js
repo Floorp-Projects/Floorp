@@ -1429,7 +1429,7 @@ Tab.prototype = {
 
     browser.setAttribute("type", "content");
 
-    let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
+    let useRemote = Services.appinfo.browserTabsRemote;
     let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 

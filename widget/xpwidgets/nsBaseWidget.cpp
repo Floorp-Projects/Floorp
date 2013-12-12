@@ -935,7 +935,7 @@ CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
   for (size_t i = 0; i < aHints.Length(); ++i) {
     if (aHints[i] == LAYERS_BASIC &&
         !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false) &&
-        !Preferences::GetBool("browser.tabs.remote", false)) {
+        !BrowserTabsRemote()) {
       // basic compositor is not stable enough for regular use
       aHints[i] = LAYERS_NONE;
     }

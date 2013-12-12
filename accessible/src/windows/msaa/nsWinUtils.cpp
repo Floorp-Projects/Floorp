@@ -58,7 +58,7 @@ nsWinUtils::MaybeStartWindowEmulation()
   // with tabs.
   if (Compatibility::IsJAWS() || Compatibility::IsWE() ||
       Compatibility::IsDolphin() ||
-      Preferences::GetBool("browser.tabs.remote")) {
+      BrowserTabsRemote()) {
     RegisterNativeWindow(kClassNameTabContent);
     sHWNDCache = new nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>(4);
     return true;
