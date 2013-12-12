@@ -272,7 +272,7 @@ nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
                                         const JS::Value& aValue)
 {
   nsRefPtr<EventHandlerNonNull> handler;
-  JSObject* callable;
+  JS::Rooted<JSObject*> callable(aCx);
   if (aValue.isObject() &&
       JS_ObjectIsCallable(aCx, callable = &aValue.toObject())) {
     handler = new EventHandlerNonNull(callable, mozilla::dom::GetIncumbentGlobal());
