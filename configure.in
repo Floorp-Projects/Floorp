@@ -456,16 +456,17 @@ case "$target" in
 
         if test "$_CC_MAJOR_VERSION" = "16"; then
             _CC_SUITE=10
-            _MSVS_VERSION=2010
+            MSVS_VERSION=2010
         elif test "$_CC_MAJOR_VERSION" = "17"; then
             _CC_SUITE=11
-            _MSVS_VERSION=2012
+            MSVS_VERSION=2012
         elif test "$_CC_MAJOR_VERSION" = "18"; then
             _CC_SUITE=12
-            _MSVS_VERSION=2013
+            MSVS_VERSION=2013
         else
             AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
+	AC_SUBST(MSVS_VERSION)
 
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
@@ -5068,29 +5069,15 @@ AC_TRY_COMPILE([#include <linux/ethtool.h>],
                [ struct ethtool_cmd cmd; cmd.speed_hi = 0; ],
                MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI=1)
 
+AC_SUBST(MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI)
+
 # target_arch is from {ia32|x64|arm|ppc}
 case "$CPU_ARCH" in
-x86_64)
-    WEBRTC_TARGET_ARCH=x64
-    ;;
-
-arm*)
-    WEBRTC_TARGET_ARCH=arm
-    ;;
-
-x86)
-    WEBRTC_TARGET_ARCH=ia32
-    ;;
-
-ppc*)
-    WEBRTC_TARGET_ARCH=ppc
-    ;;
-ia64)
-    WEBRTC_TARGET_ARCH=ia64
+x86_64 | arm | x86 | ppc* | ia64)
+    :
     ;;
 *)
 # unsupported arch for webrtc
-    WEBRTC_TARGET_ARCH=unknown
     MOZ_WEBRTC=
     ;;
 
@@ -8837,161 +8824,6 @@ case "$host" in
     FIXED_EGREP="egrep"
     ;;
 esac
-
-# Generate Makefiles for WebRTC directly from .gyp files
-if test "${OS_TARGET}" = "WINNT"; then
-   if test "$HAVE_64BIT_OS"; then
-      OS_BITS=64
-   else
-      OS_BITS=32
-   fi
-   EXTRA_GYP_DEFINES="-D MSVS_VERSION=${_MSVS_VERSION} -D MSVS_OS_BITS=${OS_BITS}"
-
-elif test "${OS_TARGET}" = "Android"; then
-   if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
-      EXTRA_GYP_DEFINES="-G os=linux "
-   else
-      EXTRA_GYP_DEFINES="-D gtest_target_type=executable -D android_toolchain=${android_toolchain} -G os=android "
-   fi
-fi
-
-if test -n "$ARM_ARCH"; then
-    if test "$ARM_ARCH" -lt 7; then
-        EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
-    else
-        if test "${OS_TARGET}" = "Android"; then
-            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=1 "
-        else
-            dnl CPU detection for ARM works on Android only.  armv7 always uses CPU detection, so
-            dnl we have to set armv7=0 for non-Android target
-            EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D armv7=0 "
-        fi
-    fi
-fi
-
-# Keep libcubeb and audio_device backends in sync
-if test -n "$MOZ_ALSA"; then
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_alsa_audio=1"
-else
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_alsa_audio=0"
-fi
-if test -n "$MOZ_PULSEAUDIO"; then
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_pulse_audio=1"
-else
-   EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D include_pulse_audio=0"
-fi
-
-# Don't try to compile ssse3/sse4.1 code if toolchain doesn't support
-if test -n "$INTEL_ARCHITECTURE"; then
-  if test -z "$HAVE_TOOLCHAIN_SUPPORT_MSSSE3" -o -z "$HAVE_TOOLCHAIN_SUPPORT_MSSE4_1"; then
-    EXTRA_GYP_DEFINES="$EXTRA_GYP_DEFINES -D yuv_disable_asm=1"
-  fi
-fi
-
-if test -n "$MOZ_WEBRTC"; then
-   AC_MSG_RESULT("generating WebRTC Makefiles...")
-
-   if test "${MOZ_WIDGET_TOOLKIT}" = "gonk"; then
-      EXTRA_GYP_DEFINES="${EXTRA_GYP_DEFINES} -D build_with_gonk=1"
-   fi
-
-dnl Any --include files must also appear in -D FORCED_INCLUDE_FILE= entries
-dnl so that regeneration via dependencies works correctly
-   WEBRTC_CONFIG="-D build_with_mozilla=1 -D build_with_chromium=0 --include ${srcdir}/media/webrtc/webrtc_config.gypi -D FORCED_INCLUDE_FILE=${srcdir}/media/webrtc/webrtc_config.gypi"
-
-   if test -n HAVE_CLOCK_MONOTONIC; then
-      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=1"
-   else
-      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_clock_monotonic=0"
-   fi
-
-   if test -n "$MOZ_WEBRTC_HAVE_ETHTOOL_SPEED_HI"; then
-      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_ethtool_cmd_speed_hi=1"
-   else
-      WEBRTC_CONFIG="${WEBRTC_CONFIG} -D have_ethtool_cmd_speed_hi=0"
-   fi
-
-   if test -n "$CROSS_COMPILE"; then
-      case "$target" in
-      *-mingw*)
-      	GYP_MOZMAKE_OPTIONS="-G os=win"
-        ;;
-      *-darwin*)
-        GYP_MOZMAKE_OPTIONS="-G os=mac"
-        if test "$MACOS_SDK_DIR"; then
-           GYP_MOZMAKE_OPTIONS="${GYP_MOZMAKE_OPTIONS} -D mac_sdk_path=$MACOS_SDK_DIR"
-        fi
-        ;;
-      *-*linux*)
-        GYP_MOZMAKE_OPTIONS="-G os=linux"
-        ;;
-      *)
-        AC_MSG_ERROR([Don't know what options to give to WebRTC for cross-compilation])
-    	;;
-      esac
-   fi
-
-   GYP_WEBRTC_OPTIONS="--format=mozmake ${GYP_MOZMAKE_OPTIONS} ${WEBRTC_CONFIG} -D target_arch=${WEBRTC_TARGET_ARCH} ${EXTRA_GYP_DEFINES} --depth=${srcdir}/media/webrtc/trunk --toplevel-dir=${srcdir} -G OBJDIR=${_objdir}"
-
-   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
-     $GYP_WEBRTC_OPTIONS \
-     --generator-output=${_objdir}/media/webrtc/trunk \
-     ${srcdir}/media/webrtc/trunk/peerconnection.gyp
-   if test "$?" != 0; then
-      AC_MSG_ERROR([failed to generate WebRTC Makefiles])
-   fi
-
-   # XXX disable until we land the tranche with signaling
-   if test -n "$MOZ_WEBRTC_SIGNALING"; then
-     AC_MSG_RESULT("generating WebRTC/Signaling Makefiles...")
-     $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
-       $GYP_WEBRTC_OPTIONS \
-       -D build_for_test=0 \
-       --generator-output=${_objdir}/media/webrtc/signaling \
-       ${srcdir}/media/webrtc/signaling/signaling.gyp
-     if test "$?" != 0; then
-        AC_MSG_ERROR([failed to generate WebRTC/Signaling Makefiles])
-     fi
-
-     AC_MSG_RESULT("generating WebRTC/SignalingTest Makefiles...")
-     $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium --format=mozmake \
-       $GYP_WEBRTC_OPTIONS \
-       -D build_for_test=1 \
-       --generator-output=${_objdir}/media/webrtc/signalingtest \
-       ${srcdir}/media/webrtc/signaling/signaling.gyp
-     if test "$?" != 0; then
-       AC_MSG_ERROR([failed to generate WebRTC/SignalingTest Makefiles])
-     fi
-   fi
-
-   AC_MSG_RESULT("generating gtest Makefiles...")
-   # Ok to pass some extra -D's that are ignored here
-   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium \
-     $GYP_WEBRTC_OPTIONS \
-     --generator-output=${_objdir}/media/webrtc/trunk/testing/ \
-     ${srcdir}/media/webrtc/trunk/testing/gtest.gyp
-   if test "$?" != 0; then
-      AC_MSG_ERROR([failed to generate gtest Makefiles])
-   fi
-
-   AC_MSG_RESULT("generating nrappkit Makefiles...")
-   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium --format=mozmake \
-     $GYP_WEBRTC_OPTIONS \
-     --generator-output=${_objdir}/media/mtransport/third_party/nrappkit \
-     ${srcdir}/media/mtransport/third_party/nrappkit/nrappkit.gyp
-   if test "$?" != 0; then
-      AC_MSG_ERROR([failed to generate nrappkit Makefiles])
-   fi
-
-   AC_MSG_RESULT("generating nICEr Makefiles...")
-   $PYTHON ${srcdir}/media/webrtc/trunk/build/gyp_chromium --format=mozmake \
-     $GYP_WEBRTC_OPTIONS \
-     --generator-output=${_objdir}/media/mtransport/third_party/nICEr \
-     ${srcdir}/media/mtransport/third_party/nICEr/nicer.gyp
-   if test "$?" != 0; then
-      AC_MSG_ERROR([failed to generate nICEr Makefiles])
-   fi
-fi
 
 # Run jemalloc configure script
 

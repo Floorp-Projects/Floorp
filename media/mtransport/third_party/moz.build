@@ -4,4 +4,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_EXTERNAL_MAKE_DIRS += ['nrappkit', 'nICEr']
+include('/build/gyp.mozbuild')
+
+GYP_DIRS += [
+    'nICEr',
+    'nrappkit',
+]
+
+GYP_DIRS['nICEr'].input = 'nICEr/nicer.gyp'
+GYP_DIRS['nICEr'].variables = gyp_vars
+
+GYP_DIRS['nrappkit'].input = 'nrappkit/nrappkit.gyp'
+GYP_DIRS['nrappkit'].variables = gyp_vars

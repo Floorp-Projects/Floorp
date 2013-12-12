@@ -573,6 +573,31 @@ VARIABLES = {
         the $(DIST_SUBDIR) directory of the otherwise default value is used.
         """, 'libs'),
 
+    'GYP_DIRS': (StrictOrderingOnAppendListWithFlagsFactory({
+            'variables': dict,
+            'input': unicode,
+        }), list,
+        """Defines a list of object directories handled by gyp configurations.
+
+        Elements of this list give the relative object directory. For each
+        element of the list, GYP_DIRS may be accessed as a dictionary
+        (GYP_DIRS[foo]). The object this returns has attributes that need to be
+        set to further specify gyp processing:
+            - input, gives the path to the root gyp configuration file for that
+              object directory.
+            - variables, a dictionary containing variables and values to pass
+              to the gyp processor.
+
+        Typical use looks like:
+            GYP_DIRS += ['foo', 'bar']
+            GYP_DIRS['foo'].input = 'foo/foo.gyp'
+            GYP_DIRS['foo'].variables = {
+                'foo': 'bar',
+                (...)
+            }
+            (...)
+        """, None),
+
     'SPHINX_TREES': (dict, dict,
         """Describes what the Sphinx documentation tree will look like.
 

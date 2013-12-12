@@ -93,7 +93,6 @@ class BackendMakeFile(object):
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
-        self.fh.write('MOZBUILD_DERIVED := 1\n')
 
     def write(self, buf):
         self.fh.write(buf)
