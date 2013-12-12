@@ -8,7 +8,7 @@ let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 /* Push required permissions and test if |navigator.mozMobileMessage| exists.
  * Resolve if it does, reject otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   manager -- an reference to navigator.mozMobileMessage.
  *
  * Reject params: (none)
@@ -47,7 +47,7 @@ function ensureMobileMessage() {
 /* Send a SMS message to a single receiver.  Resolve if it succeeds, reject
  * otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   message -- the sent SmsMessage.
  *
  * Reject params:
@@ -75,7 +75,7 @@ function sendSmsWithSuccess(aReceiver, aText) {
 /* Send a MMS message with specified parameters.  Resolve if it fails, reject
  * otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   message -- the failed MmsMessage
  *
  * Reject params: (none)
@@ -102,7 +102,7 @@ function sendMmsWithFailure(aMmsParameters) {
 
 /* Retrieve messages from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   messages -- an array of {Sms,Mms}Message instances.
  *
  * Reject params:
@@ -138,7 +138,7 @@ function getMessages(aFilter, aReverse) {
 
 /* Retrieve all messages from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   messages -- an array of {Sms,Mms}Message instances.
  *
  * Reject params:
@@ -152,7 +152,7 @@ function getAllMessages() {
 
 /* Retrieve all threads from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   threads -- an array of MozMobileMessageThread instances.
  *
  * Reject params:
@@ -181,7 +181,7 @@ function getAllThreads() {
 
 /* Retrieve a single specified thread from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   thread -- a MozMobileMessageThread instance.
  *
  * Reject params:
@@ -206,7 +206,7 @@ function getThreadById(aThreadId) {
 
 /* Delete messages specified from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   result -- an array of boolean values indicating whether delesion was
  *             actually performed on the message record with corresponding id.
  *
@@ -236,7 +236,7 @@ function deleteMessagesById(aMessageIds) {
 
 /* Delete messages specified from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   result -- an array of boolean values indicating whether delesion was
  *             actually performed on the message record with corresponding id.
  *
@@ -254,7 +254,7 @@ function deleteMessages(aMessages) {
 
 /* Delete all messages from database.
  *
- * Forfill params:
+ * Fulfill params:
  *   ids -- an array of numeric values identifying those deleted
  *          {Sms,Mms}Messages.
  *
@@ -275,7 +275,7 @@ let pendingEmulatorCmdCount = 0;
  * end, so here comes with the pending counter.  Resolve when the emulator
  * gives positive response, and reject otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   result -- an array of emulator response lines.
  *
  * Reject params:
@@ -303,7 +303,7 @@ function runEmulatorCmdSafe(aCommand) {
 
 /* Send simple text SMS to emulator.
  *
- * Forfill params:
+ * Fulfill params:
  *   result -- an array of emulator response lines.
  *
  * Reject params:
@@ -318,7 +318,7 @@ function sendTextSmsToEmulator(aFrom, aText) {
 
 /* Send raw SMS TPDU to emulator.
  *
- * Forfill params:
+ * Fulfill params:
  *   result -- an array of emulator response lines.
  *
  * Reject params:
@@ -329,6 +329,62 @@ function sendTextSmsToEmulator(aFrom, aText) {
 function sendRawSmsToEmulator(aPdu) {
   let command = "sms pdu " + aPdu;
   return runEmulatorCmdSafe(command);
+}
+
+/* Name space for MobileMessageDB.jsm.  Only initialized after first call to
+ * newMobileMessageDB.
+ */
+let MMDB;
+
+// Create a new MobileMessageDB instance.
+function newMobileMessageDB() {
+  if (!MMDB) {
+    MMDB = Cu.import("resource://gre/modules/MobileMessageDB.jsm", {});
+    is(typeof MMDB.MobileMessageDB, "function", "MMDB.MobileMessageDB");
+  }
+
+  let mmdb = new MMDB.MobileMessageDB();
+  ok(mmdb, "MobileMessageDB instance");
+  return mmdb;
+}
+
+/* Initialize a MobileMessageDB.  Resolve if initialized with success, reject
+ * otherwise.
+ *
+ * Fulfill params: a MobileMessageDB instance.
+ * Reject params: a MobileMessageDB instance.
+ *
+ * @param aMmdb
+ *        A MobileMessageDB instance.
+ * @param aDbName
+ *        A string name for that database.
+ * @param aDbVersion
+ *        The version that MobileMessageDB should upgrade to. 0 for the lastest
+ *        version.
+ *
+ * @return A deferred promise.
+ */
+function initMobileMessageDB(aMmdb, aDbName, aDbVersion) {
+  let deferred = Promise.defer();
+
+  aMmdb.init(aDbName, aDbVersion, function(aError) {
+    if (aError) {
+      deferred.reject(aMmdb);
+    } else {
+      deferred.resolve(aMmdb);
+    }
+  });
+
+  return deferred.promise;
+}
+
+/* Close a MobileMessageDB.
+ *
+ * @return The passed MobileMessageDB instance.
+ */
+function closeMobileMessageDB(aMmdb) {
+  aMmdb.close();
+  return aMmdb;
 }
 
 /* Create a new array of id attribute of input messages.
@@ -343,6 +399,23 @@ function messagesToIds(aMessages) {
     ids.push(message.id);
   }
   return ids;
+}
+
+// A reference to a nsIUUIDGenerator service.
+let uuidGenerator;
+
+/* Generate a new UUID.
+ *
+ * @return A UUID string.
+ */
+function newUUID() {
+  if (!uuidGenerator) {
+    uuidGenerator = Cc["@mozilla.org/uuid-generator;1"]
+                    .getService(Ci.nsIUUIDGenerator);
+    ok(uuidGenerator, "uuidGenerator");
+  }
+
+  return uuidGenerator.generateUUID().toString();
 }
 
 /* Flush permission settings and call |finish()|.
@@ -360,13 +433,20 @@ function cleanUp() {
   });
 }
 
+function startTestBase(aTestCaseMain) {
+  Promise.resolve()
+         .then(aTestCaseMain)
+         .then(cleanUp, function() {
+           ok(false, 'promise rejects during test.');
+           cleanUp();
+         });
+}
+
 function startTestCommon(aTestCaseMain) {
-  ensureMobileMessage()
-    .then(deleteAllMessages)
-    .then(aTestCaseMain)
-    .then(deleteAllMessages)
-    .then(cleanUp, function() {
-      ok(false, 'promise rejects during test.');
-      cleanUp();
-    });
+  startTestBase(function() {
+    return ensureMobileMessage()
+      .then(deleteAllMessages)
+      .then(aTestCaseMain)
+      .then(deleteAllMessages);
+  });
 }
