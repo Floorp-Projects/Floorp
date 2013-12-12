@@ -283,8 +283,10 @@ GetScaleForValue(const nsStyleAnimation::Value& aValue,
     return gfxSize();
   }
 
-  nsCSSValueList* values = aValue.GetCSSValueListValue();
-  if (values->mValue.GetUnit() == eCSSUnit_None) {
+  nsCSSValueSharedList* list = aValue.GetCSSValueSharedListValue();
+  MOZ_ASSERT(list->mHead);
+
+  if (list->mHead->mValue.GetUnit() == eCSSUnit_None) {
     // There is an animation, but no actual transform yet.
     return gfxSize();
   }
@@ -292,7 +294,7 @@ GetScaleForValue(const nsStyleAnimation::Value& aValue,
   nsRect frameBounds = aFrame->GetRect();
   bool dontCare;
   gfx3DMatrix transform = nsStyleTransformMatrix::ReadTransforms(
-                            aValue.GetCSSValueListValue(),
+                            list->mHead,
                             aFrame->StyleContext(),
                             aFrame->PresContext(), dontCare, frameBounds,
                             aFrame->PresContext()->AppUnitsPerDevPixel());

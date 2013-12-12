@@ -338,12 +338,12 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
         animSegment->startState() = InfallibleTArray<TransformFunction>();
         animSegment->endState() = InfallibleTArray<TransformFunction>();
 
-        nsCSSValueList* list = segment->mFromValue.GetCSSValueListValue();
-        AddTransformFunctions(list, styleContext, presContext, bounds, scale,
+        nsCSSValueSharedList* list = segment->mFromValue.GetCSSValueSharedListValue();
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds, scale,
                               animSegment->startState().get_ArrayOfTransformFunction());
 
-        list = segment->mToValue.GetCSSValueListValue();
-        AddTransformFunctions(list, styleContext, presContext, bounds, scale,
+        list = segment->mToValue.GetCSSValueSharedListValue();
+        AddTransformFunctions(list->mHead, styleContext, presContext, bounds, scale,
                               animSegment->endState().get_ArrayOfTransformFunction());
       } else if (aProperty == eCSSProperty_opacity) {
         animSegment->startState() = segment->mFromValue.GetFloatValue();
