@@ -151,7 +151,6 @@ protected:
   // return the next texture ID
   uint64_t NextTextureID();
 
-  uint64_t mNextTextureID;
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
 };

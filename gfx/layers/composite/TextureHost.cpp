@@ -137,35 +137,32 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
 }
 
 // implemented in TextureHostOGL.cpp
-TemporaryRef<TextureHost> CreateTextureHostOGL(uint64_t aID,
-                                               const SurfaceDescriptor& aDesc,
+TemporaryRef<TextureHost> CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                                                ISurfaceAllocator* aDeallocator,
                                                TextureFlags aFlags);
 
 // implemented in TextureHostBasic.cpp
-TemporaryRef<TextureHost> CreateTextureHostBasic(uint64_t aID,
-                                               const SurfaceDescriptor& aDesc,
-                                               ISurfaceAllocator* aDeallocator,
-                                               TextureFlags aFlags);
+TemporaryRef<TextureHost> CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
+                                                 ISurfaceAllocator* aDeallocator,
+                                                 TextureFlags aFlags);
 
 // static
 TemporaryRef<TextureHost>
-TextureHost::Create(uint64_t aID,
-                    const SurfaceDescriptor& aDesc,
+TextureHost::Create(const SurfaceDescriptor& aDesc,
                     ISurfaceAllocator* aDeallocator,
                     TextureFlags aFlags)
 {
   switch (Compositor::GetBackend()) {
     case LAYERS_OPENGL:
-      return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
+      return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
     case LAYERS_BASIC:
-      return CreateTextureHostBasic(aID, aDesc, aDeallocator, aFlags);
+      return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
 #ifdef MOZ_WIDGET_GONK
     case LAYERS_NONE:
       // Power on video reqests to allocate TextureHost,
       // when Compositor is still not present. This is a very hacky workaround.
       // See Bug 944420.
-      return CreateTextureHostOGL(aID, aDesc, aDeallocator, aFlags);
+      return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
 #endif
 #ifdef XP_WIN
     case LAYERS_D3D11:
@@ -179,8 +176,7 @@ TextureHost::Create(uint64_t aID,
 }
 
 TemporaryRef<TextureHost>
-CreateBackendIndependentTextureHost(uint64_t aID,
-                                    const SurfaceDescriptor& aDesc,
+CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
                                     ISurfaceAllocator* aDeallocator,
                                     TextureFlags aFlags)
 {
@@ -188,8 +184,7 @@ CreateBackendIndependentTextureHost(uint64_t aID,
   switch (aDesc.type()) {
     case SurfaceDescriptor::TSurfaceDescriptorShmem: {
       const SurfaceDescriptorShmem& descriptor = aDesc.get_SurfaceDescriptorShmem();
-      result = new ShmemTextureHost(aID,
-                                    descriptor.data(),
+      result = new ShmemTextureHost(descriptor.data(),
                                     descriptor.format(),
                                     aDeallocator,
                                     aFlags);
@@ -197,8 +192,7 @@ CreateBackendIndependentTextureHost(uint64_t aID,
     }
     case SurfaceDescriptor::TSurfaceDescriptorMemory: {
       const SurfaceDescriptorMemory& descriptor = aDesc.get_SurfaceDescriptorMemory();
-      result = new MemoryTextureHost(aID,
-                                     reinterpret_cast<uint8_t*>(descriptor.data()),
+      result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(descriptor.data()),
                                      descriptor.format(),
                                      aFlags);
       break;
@@ -217,11 +211,8 @@ TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData*
 }
 
 
-TextureHost::TextureHost(uint64_t aID,
-                         TextureFlags aFlags)
-    : mID(aID)
-    , mNextTexture(nullptr)
-    , mFlags(aFlags)
+TextureHost::TextureHost(TextureFlags aFlags)
+    : mFlags(aFlags)
 {}
 
 TextureHost::~TextureHost()
@@ -335,10 +326,9 @@ DeprecatedTextureHost::SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* 
   mDeAllocator = aAllocator;
 }
 
-BufferTextureHost::BufferTextureHost(uint64_t aID,
-                                     gfx::SurfaceFormat aFormat,
+BufferTextureHost::BufferTextureHost(gfx::SurfaceFormat aFormat,
                                      TextureFlags aFlags)
-: TextureHost(aID, aFlags)
+: TextureHost(aFlags)
 , mCompositor(nullptr)
 , mFormat(aFormat)
 , mUpdateSerial(1)
@@ -557,12 +547,11 @@ BufferTextureHost::GetAsSurface()
   return result.forget();
 }
 
-ShmemTextureHost::ShmemTextureHost(uint64_t aID,
-                                   const ipc::Shmem& aShmem,
+ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
                                    gfx::SurfaceFormat aFormat,
                                    ISurfaceAllocator* aDeallocator,
                                    TextureFlags aFlags)
-: BufferTextureHost(aID, aFormat, aFlags)
+: BufferTextureHost(aFormat, aFlags)
 , mShmem(new ipc::Shmem(aShmem))
 , mDeallocator(aDeallocator)
 {
@@ -609,11 +598,10 @@ uint8_t* ShmemTextureHost::GetBuffer()
   return mShmem ? mShmem->get<uint8_t>() : nullptr;
 }
 
-MemoryTextureHost::MemoryTextureHost(uint64_t aID,
-                                     uint8_t* aBuffer,
+MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,
                                      gfx::SurfaceFormat aFormat,
                                      TextureFlags aFlags)
-: BufferTextureHost(aID, aFormat, aFlags)
+: BufferTextureHost(aFormat, aFlags)
 , mBuffer(aBuffer)
 {
   MOZ_COUNT_CTOR(MemoryTextureHost);
@@ -664,8 +652,7 @@ bool
 TextureParent::RecvInit(const SurfaceDescriptor& aSharedData,
                         const TextureFlags& aFlags)
 {
-  mTextureHost = TextureHost::Create(0, // XXX legacy texture id, see subsequent patch
-                                     aSharedData,
+  mTextureHost = TextureHost::Create(aSharedData,
                                      mAllocator,
                                      aFlags);
   return !!mTextureHost;
