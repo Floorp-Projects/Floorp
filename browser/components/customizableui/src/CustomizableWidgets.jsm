@@ -61,7 +61,6 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-history",
     shortcutId: "key_gotoHistory",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate our list of history
@@ -148,7 +147,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "privatebrowsing-button",
-    removable: true,
     shortcutId: "key_privatebrowsing",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
@@ -161,7 +159,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "save-page-button",
-    removable: true,
     shortcutId: "key_savePage",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -174,7 +171,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "find-button",
-    removable: true,
     shortcutId: "key_find",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -187,7 +183,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "open-file-button",
-    removable: true,
     shortcutId: "openFileKb",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -202,7 +197,6 @@ const CustomizableWidgets = [{
     id: "developer-button",
     type: "view",
     viewId: "PanelUI-developer",
-    removable: true,
     shortcutId: "key_devToolboxMenuItem",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
@@ -265,7 +259,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "add-ons-button",
-    removable: true,
     shortcutId: "key_openAddons",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -278,7 +271,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "preferences-button",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
 #ifdef XP_WIN
     label: "preferences-button.labelWin",
@@ -295,7 +287,6 @@ const CustomizableWidgets = [{
   }, {
     id: "zoom-controls",
     type: "custom",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       const kPanelId = "PanelUI-popup";
@@ -441,7 +432,6 @@ const CustomizableWidgets = [{
   }, {
     id: "edit-controls",
     type: "custom",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
@@ -536,7 +526,6 @@ const CustomizableWidgets = [{
     id: "feed-button",
     type: "view",
     viewId: "PanelUI-feeds",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onClick: function(aEvent) {
       let win = aEvent.target.ownerDocument.defaultView;
@@ -576,7 +565,6 @@ const CustomizableWidgets = [{
     id: "characterencoding-button",
     type: "view",
     viewId: "PanelUI-characterEncodingView",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     maybeDisableMenu: function(aDocument) {
       let window = aDocument.defaultView;
@@ -783,7 +771,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "email-link-button",
-    removable: true,
     onCommand: function(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);
@@ -801,7 +788,6 @@ if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
     id: "switch-to-metro-button",
     label: "switch-to-metro-button2.label",
     tooltiptext: metroTooltip,
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     showInPrivateBrowsing: false, /* See bug 928068 */
     onCommand: function(aEvent) {
