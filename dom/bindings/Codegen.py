@@ -9506,7 +9506,10 @@ class CGForwardDeclarations(CGWrapper):
             elif t.isCallbackInterface():
                 builder.addInMozillaDom(t.inner.identifier.name)
             elif t.isUnion():
-                builder.addInMozillaDom(str(t))
+                # Forward declare both the owning and non-owning version,
+                # since we don't know which one we might want
+                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, False))
+                builder.addInMozillaDom(CGUnionStruct.unionTypeName(t, True))
             # Don't need to do anything for void, primitive, string, any or object.
             # There may be some other cases we are missing.
 
@@ -9961,9 +9964,9 @@ class CGNativeMember(ClassMethod):
             return decl.define(), True, True
 
         if type.isUnion():
-            if type.nullable():
-                type = type.inner
-            return str(type), True, True
+            # unionTypeDecl will handle nullable types, so return False for
+            # auto-wrapping in Nullable
+            return CGUnionStruct.unionTypeDecl(type, isMember), True, False
 
         if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
