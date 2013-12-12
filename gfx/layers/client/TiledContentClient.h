@@ -254,10 +254,6 @@ public:
 
   void OnActorDestroy()
   {
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (mRetainedTiles[i].IsPlaceholderTile()) continue;
-      mRetainedTiles[i].mDeprecatedTextureClient->OnActorDestroy();
-    }
   }
 
 protected:
