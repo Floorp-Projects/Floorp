@@ -11,8 +11,10 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-#ifndef XP_WIN
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
 #define BROKEN_WM_Z_ORDER
+#endif
 #endif
 
 this.RecentWindow = {
