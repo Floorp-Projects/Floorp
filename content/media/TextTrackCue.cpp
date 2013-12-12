@@ -5,8 +5,6 @@
 
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/TextTrackCue.h"
-#include "nsIFrame.h"
-#include "nsVideoFrame.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 
@@ -99,58 +97,6 @@ TextTrackCue::StashDocument(nsISupports* aGlobal)
     return NS_ERROR_NOT_AVAILABLE;
   }
   return NS_OK;
-}
-
-void
-TextTrackCue::CreateCueOverlay()
-{
-  nsCOMPtr<nsINodeInfo> nodeInfo =
-    mDocument->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div,
-                                              nullptr,
-                                              kNameSpaceID_XHTML,
-                                              nsIDOMNode::ELEMENT_NODE);
-  mDisplayState = NS_NewHTMLDivElement(nodeInfo.forget());
-  mDisplayState->SetClassName(NS_LITERAL_STRING("caption-text"));
-}
-
-void
-TextTrackCue::RenderCue()
-{
-  nsRefPtr<DocumentFragment> frag = GetCueAsHTML();
-  if (!frag || !mTrackElement) {
-    return;
-  }
-
-  if (!mDisplayState) {
-    CreateCueOverlay();
-  }
-
-  HTMLMediaElement* parent = mTrackElement->mMediaParent;
-  if (!parent) {
-    return;
-  }
-
-  nsIFrame* frame = parent->GetPrimaryFrame();
-  if (!frame) {
-    return;
-  }
-
-  nsVideoFrame* videoFrame = do_QueryFrame(frame);
-  if (!videoFrame) {
-    return;
-  }
-
-  nsIContent* overlay =  videoFrame->GetCaptionOverlay();
-  if (!overlay) {
-    return;
-  }
-
-  ErrorResult rv;
-  nsContentUtils::SetNodeTextContent(overlay, EmptyString(), true);
-  nsContentUtils::SetNodeTextContent(mDisplayState, EmptyString(), true);
-
-  mDisplayState->nsINode::AppendChild(*frag, rv);
-  overlay->AppendChild(*mDisplayState, rv);
 }
 
 already_AddRefed<DocumentFragment>
