@@ -9,6 +9,7 @@
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
+<?xml-stylesheet href="chrome://branding/content/metro-about.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -384,7 +385,9 @@ Desktop browser's sync prefs.
     </appbar>
     <autoscroller class="autoscroller" id="autoscrollerid"/>
     <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
-      <label id="about-product-label" linewrap="true" value="&aboutHeader.product.label;"/>
+      <label align="start">
+        <html:img src="chrome://branding/content/metro-about-wordmark.png" alt="&aboutHeader.product.label;"/>
+      </label>
       <label value="&aboutHeader.company.label;" linewrap="true"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
       <vbox id="updateBox">
