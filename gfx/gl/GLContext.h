@@ -2482,25 +2482,6 @@ public:
      */
     virtual bool ReleaseTexImage() { return false; }
 
-    /**
-     * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
-     */
-    void ApplyFilterToBoundTexture(GraphicsFilter aFilter);
-
-    /**
-     * Applies aFilter to the texture currently bound to aTarget.
-     */
-    void ApplyFilterToBoundTexture(GLuint aTarget,
-                                   GraphicsFilter aFilter);
-
-    virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
-    virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
-
-#ifdef MOZ_WIDGET_GONK
-    virtual EGLImage CreateEGLImageForNativeBuffer(void* buffer) = 0;
-    virtual void DestroyEGLImage(EGLImage image) = 0;
-#endif
-
     // Before reads from offscreen texture
     void GuaranteeResolve();
 

@@ -206,6 +206,7 @@ ResidentFastDistinguishedAmount(int64_t* aN)
 
 #ifdef __FreeBSD__
 #include <libutil.h>
+#include <algorithm>
 
 static nsresult
 GetKinfoVmentrySelf(int64_t* prss, uint64_t* maxreg)
@@ -1416,7 +1417,6 @@ nsMemoryReporterManager::GetExplicit(int64_t* aAmount)
 #ifndef HAVE_JEMALLOC_STATS
     return NS_ERROR_NOT_AVAILABLE;
 #else
-    bool more;
 
     // For each reporter we call CollectReports and filter out the
     // non-explicit, non-NONHEAP measurements (except for "heap-allocated").

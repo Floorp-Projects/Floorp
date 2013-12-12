@@ -6176,7 +6176,7 @@ k12.vt.us
 k12.va.us
 k12.wa.us
 k12.wi.us
-k12.wv.us
+// k12.wv.us  Bug 947705 - Removed at request of Verne Britton <verne@wvnet.edu>
 k12.wy.us
 
 cc.ak.us

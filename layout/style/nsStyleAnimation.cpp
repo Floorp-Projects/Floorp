@@ -2277,8 +2277,11 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
     }
 
     case eUnit_Transform: {
-      const nsCSSValueList *list1 = aValue1.GetCSSValueListValue();
-      const nsCSSValueList *list2 = aValue2.GetCSSValueListValue();
+      const nsCSSValueList* list1 = aValue1.GetCSSValueSharedListValue()->mHead;
+      const nsCSSValueList* list2 = aValue2.GetCSSValueSharedListValue()->mHead;
+
+      MOZ_ASSERT(list1);
+      MOZ_ASSERT(list2);
 
       // We want to avoid the matrix decomposition when we can, since
       // avoiding it can produce better results both for compound
@@ -2332,8 +2335,7 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
         }
       }
 
-      aResultValue.SetAndAdoptCSSValueListValue(result.forget(),
-                                                eUnit_Transform);
+      aResultValue.SetTransformValue(new nsCSSValueSharedList(result.forget()));
       return true;
     }
     case eUnit_BackgroundPosition: {
@@ -2649,10 +2651,13 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     case eUnit_Dasharray:
     case eUnit_Shadow:
     case eUnit_Filter:
-    case eUnit_Transform:
     case eUnit_BackgroundPosition:
       aSpecifiedValue.
         SetDependentListValue(aComputedValue.GetCSSValueListValue());
+      break;
+    case eUnit_Transform:
+      aSpecifiedValue.
+        SetSharedListValue(aComputedValue.GetCSSValueSharedListValue());
       break;
     case eUnit_CSSValuePairList:
       aSpecifiedValue.
@@ -3308,7 +3313,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           if (display->mSpecifiedTransform) {
             // Clone, and convert all lengths (not percents) to pixels.
             nsCSSValueList **resultTail = getter_Transfers(result);
-            for (const nsCSSValueList *l = display->mSpecifiedTransform;
+            for (const nsCSSValueList *l = display->mSpecifiedTransform->mHead;
                  l; l = l->mNext) {
               nsCSSValueList *clone = new nsCSSValueList;
               *resultTail = clone;
@@ -3321,8 +3326,8 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             result->mValue.SetNoneValue();
           }
 
-          aComputedValue.SetAndAdoptCSSValueListValue(result.forget(),
-                                                      eUnit_Transform);
+          aComputedValue.SetTransformValue(
+              new nsCSSValueSharedList(result.forget()));
           break;
         }
 
@@ -3568,7 +3573,6 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
     case eUnit_Filter:
     case eUnit_Dasharray:
     case eUnit_Shadow:
-    case eUnit_Transform:
     case eUnit_BackgroundPosition:
       NS_ABORT_IF_FALSE(mUnit == eUnit_Shadow || mUnit == eUnit_Filter ||
                         aOther.mValue.mCSSValueList,
@@ -3581,6 +3585,10 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
       } else {
         mValue.mCSSValueList = nullptr;
       }
+      break;
+    case eUnit_Transform:
+      mValue.mCSSValueSharedList = aOther.mValue.mCSSValueSharedList;
+      mValue.mCSSValueSharedList->AddRef();
       break;
     case eUnit_CSSValuePairList:
       NS_ABORT_IF_FALSE(aOther.mValue.mCSSValuePairList,
@@ -3729,6 +3737,15 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 }
 
 void
+nsStyleAnimation::Value::SetTransformValue(nsCSSValueSharedList* aList)
+{
+  FreeValue();
+  mUnit = eUnit_Transform;
+  mValue.mCSSValueSharedList = aList;
+  mValue.mCSSValueSharedList->AddRef();
+}
+
+void
 nsStyleAnimation::Value::SetAndAdoptCSSValuePairListValue(
                            nsCSSValuePairList *aValuePairList)
 {
@@ -3745,6 +3762,8 @@ nsStyleAnimation::Value::FreeValue()
     delete mValue.mCSSValue;
   } else if (IsCSSValueListUnit(mUnit)) {
     delete mValue.mCSSValueList;
+  } else if (IsCSSValueSharedListValue(mUnit)) {
+    mValue.mCSSValueSharedList->Release();
   } else if (IsCSSValuePairUnit(mUnit)) {
     delete mValue.mCSSValuePair;
   } else if (IsCSSValueTripletUnit(mUnit)) {
@@ -3794,9 +3813,10 @@ nsStyleAnimation::Value::operator==(const Value& aOther) const
     case eUnit_Dasharray:
     case eUnit_Filter:
     case eUnit_Shadow:
-    case eUnit_Transform:
     case eUnit_BackgroundPosition:
       return *mValue.mCSSValueList == *aOther.mValue.mCSSValueList;
+    case eUnit_Transform:
+      return *mValue.mCSSValueSharedList == *aOther.mValue.mCSSValueSharedList;
     case eUnit_CSSValuePairList:
       return *mValue.mCSSValuePairList == *aOther.mValue.mCSSValuePairList;
     case eUnit_UnparsedString:

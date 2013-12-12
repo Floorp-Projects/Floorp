@@ -36,82 +36,22 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
 CompositableHost::~CompositableHost()
 {
   MOZ_COUNT_DTOR(CompositableHost);
-
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (!(it->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
-      it->DeallocateSharedData();
-    }
-    it = it->GetNextSibling();
-  }
 }
 
 void
-CompositableHost::AddTextureHost(TextureHost* aTexture)
+CompositableHost::UseTextureHost(TextureHost* aTexture)
 {
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(GetTextureHost(aTexture->GetID()) == nullptr,
-             "A texture is already present with this ID");
-  RefPtr<TextureHost> second = mFirstTexture;
-  mFirstTexture = aTexture;
-  aTexture->SetNextSibling(second);
+  if (!aTexture) {
+    return;
+  }
+  aTexture->SetCompositor(GetCompositor());
   aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
-}
-
-void
-CompositableHost::RemoveTextureHost(TextureHost* aTexture)
-{
-  uint64_t textureID = aTexture->GetID();
-  if (mFirstTexture && mFirstTexture->GetID() == textureID) {
-    mFirstTexture = mFirstTexture->GetNextSibling();
-    aTexture->SetNextSibling(nullptr);
-  }
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetNextSibling() &&
-        it->GetNextSibling()->GetID() == textureID) {
-      it->SetNextSibling(it->GetNextSibling()->GetNextSibling());
-      aTexture->SetNextSibling(nullptr);
-    }
-    it = it->GetNextSibling();
-  }
-  if (!mFirstTexture && mBackendData) {
-    mBackendData->ClearData();
-  }
-}
-
-TextureHost*
-CompositableHost::GetTextureHost(uint64_t aTextureID)
-{
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetID() == aTextureID) {
-      return it;
-    }
-    it = it->GetNextSibling();
-  }
-  return nullptr;
-}
-
-void
-CompositableHost::OnActorDestroy()
-{
-  TextureHost* it = mFirstTexture;
-  while (it) {
-    it->OnActorDestroy();
-    it = it->GetNextSibling();
-  }
 }
 
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (!!it) {
-    it->SetCompositor(aCompositor);
-    it = it->GetNextSibling();
-  }
 }
 
 bool
@@ -136,13 +76,11 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
 {
   RefPtr<TextureSource> source;
   RefPtr<DeprecatedTextureHost> oldHost = GetDeprecatedTextureHost();
-  if (oldHost) {
-    oldHost->Lock();
+  if (oldHost && oldHost->Lock()) {
     source = oldHost;
   } else {
     RefPtr<TextureHost> host = GetAsTextureHost();
-    if (host) {
-      host->Lock();
+    if (host && host->Lock()) {
       source = host->GetTextureSources();
     }
   }
@@ -266,13 +204,6 @@ void
 CompositableParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mHost) {
-    // XXX: sadness warning. We should be able to do this whenever we get ActorDestroy,
-    // not just for abnormal shutdowns (which is the only case we _need_ to - so that
-    // we don't double release our shmems). But, for some reason, that causes a
-    // crash, we don't know why. (Bug 925773).
-    if (why == AbnormalShutdown) {
-      mHost->OnActorDestroy();
-    }
     mHost->Detach(nullptr, CompositableHost::FORCE_DETACH);
   }
 }

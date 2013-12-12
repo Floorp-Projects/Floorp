@@ -3222,3 +3222,28 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
     return NS_STYLE_HINT_VISUAL;
   return NS_STYLE_HINT_NONE;
 }
+
+//-----------------------
+// nsStyleVariables
+//
+
+nsStyleVariables::nsStyleVariables()
+{
+  MOZ_COUNT_CTOR(nsStyleVariables);
+}
+
+nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
+{
+  MOZ_COUNT_CTOR(nsStyleVariables);
+}
+
+nsStyleVariables::~nsStyleVariables(void)
+{
+  MOZ_COUNT_DTOR(nsStyleVariables);
+}
+
+nsChangeHint
+nsStyleVariables::CalcDifference(const nsStyleVariables& aOther) const
+{
+  return nsChangeHint(0);
+}

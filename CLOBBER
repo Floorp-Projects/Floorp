@@ -18,4 +18,7 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 946067 required a clobber on Windows because bug 928195
+Bug 934646 needs a clobber -- the icon resources previously copied
+into $OBJDIR/mobile/android/base/res will conflict with those in
+$BRANDING_DIRECTORY/res.
+
