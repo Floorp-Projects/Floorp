@@ -14,6 +14,8 @@ class nsIRunnable;
 namespace mozilla {
 namespace ipc {
 
+class RawDBusConnection;
+
 /**
  * Starts the DBus thread, which handles returning signals to objects
  * that call asynchronous functions. This should be called from the
@@ -39,6 +41,9 @@ bool StopDBus();
  */
 nsresult
 DispatchToDBusThread(nsIRunnable* event);
+
+RawDBusConnection*
+GetDBusConnection(void);
 
 }
 }
