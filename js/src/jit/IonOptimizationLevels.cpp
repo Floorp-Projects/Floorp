@@ -56,23 +56,49 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     eliminateRedundantChecks_ = false;
 }
 
+uint32_t
+OptimizationInfo::usesBeforeCompile(JSScript *script, jsbytecode *pc) const
+{
+    JS_ASSERT(pc == nullptr || pc == script->code() || JSOp(*pc) == JSOP_LOOPENTRY);
+
+    if (pc == script->code())
+        pc = nullptr;
+
+    uint32_t minUses = usesBeforeCompile_;
+    if (js_JitOptions.forceDefaultIonUsesBeforeCompile)
+        minUses = js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+
+    // If the script is too large to compile on the main thread, we can still
+    // compile it off thread. In these cases, increase the use count threshold
+    // to improve the compilation's type information and hopefully avoid later
+    // recompilation.
+
+    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
+        minUses = minUses * (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
+
+    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
+    if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
+        minUses = minUses * (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
+
+    if (!pc || js_JitOptions.eagerCompilation)
+        return minUses;
+
+    // It's more efficient to enter outer loops, rather than inner loops, via OSR.
+    // To accomplish this, we use a slightly higher threshold for inner loops.
+    // Note that the loop depth is always > 0 so we will prefer non-OSR over OSR.
+    uint32_t loopDepth = GET_UINT8(pc);
+    JS_ASSERT(loopDepth > 0);
+    return minUses + loopDepth * 100;
+}
+
 OptimizationInfos::OptimizationInfos()
 {
     infos_[Optimization_Normal - 1].initNormalOptimizationInfo();
     infos_[Optimization_AsmJS - 1].initAsmjsOptimizationInfo();
-
-#ifdef DEBUG
-    OptimizationLevel prev = nextLevel(Optimization_DontCompile);
-    while (!isLastLevel(prev)) {
-        OptimizationLevel next = nextLevel(prev);
-        JS_ASSERT(get(prev)->usesBeforeCompile() < get(next)->usesBeforeCompile());
-        prev = next;
-    }
-#endif
 }
 
 OptimizationLevel
-OptimizationInfos::nextLevel(OptimizationLevel level)
+OptimizationInfos::nextLevel(OptimizationLevel level) const
 {
     JS_ASSERT(!isLastLevel(level));
     switch (level) {
@@ -83,21 +109,27 @@ OptimizationInfos::nextLevel(OptimizationLevel level)
     }
 }
 
+OptimizationLevel
+OptimizationInfos::firstLevel() const
+{
+    return nextLevel(Optimization_DontCompile);
+}
+
 bool
-OptimizationInfos::isLastLevel(OptimizationLevel level)
+OptimizationInfos::isLastLevel(OptimizationLevel level) const
 {
     return level == Optimization_Normal;
 }
 
 OptimizationLevel
-OptimizationInfos::levelForUseCount(uint32_t useCount)
+OptimizationInfos::levelForScript(JSScript *script, jsbytecode *pc) const
 {
     OptimizationLevel prev = Optimization_DontCompile;
 
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);
         const OptimizationInfo *info = get(level);
-        if (useCount < info->usesBeforeCompile())
+        if (script->getUseCount() < info->usesBeforeCompile(script, pc))
             return prev;
 
         prev = level;
