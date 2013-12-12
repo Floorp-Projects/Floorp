@@ -56,7 +56,10 @@ enum nsCSSProperty {
 
   // Extra dummy values for nsCSSParser internal use.
   eCSSPropertyExtra_x_none_value,
-  eCSSPropertyExtra_x_auto_value
+  eCSSPropertyExtra_x_auto_value,
+
+  // Extra value to represent custom properties (var-*).
+  eCSSPropertyExtra_variable
 };
 
 // The "descriptors" that can appear in a @font-face rule.

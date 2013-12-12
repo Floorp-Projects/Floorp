@@ -251,10 +251,18 @@ public:
     eEnabled,
     eAny
   };
+  // Looks up the property with name aProperty and returns its corresponding
+  // nsCSSProperty value.  If aProperty is the name of a custom property,
+  // then eCSSPropertyExtra_variable will be returned.
   static nsCSSProperty LookupProperty(const nsAString& aProperty,
                                       EnabledState aEnabled);
   static nsCSSProperty LookupProperty(const nsACString& aProperty,
                                       EnabledState aEnabled);
+  // Returns whether aProperty is a custom property name, i.e. begins with
+  // "var-" and has at least one more character.  This assumes that
+  // the CSS Variables pref has been enabled.
+  static bool IsCustomPropertyName(const nsAString& aProperty);
+  static bool IsCustomPropertyName(const nsACString& aProperty);
 
   static inline bool IsShorthand(nsCSSProperty aProperty) {
     NS_ABORT_IF_FALSE(0 <= aProperty && aProperty < eCSSProperty_COUNT,
