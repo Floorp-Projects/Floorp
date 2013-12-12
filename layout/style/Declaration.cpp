@@ -1007,6 +1007,10 @@ Declaration::AppendVariableAndValueToString(const nsAString& aName,
       aResult.AppendLiteral("inherit");
       break;
 
+    case CSSVariableDeclarations::eUnset:
+      aResult.AppendLiteral("unset");
+      break;
+
     default:
       MOZ_ASSERT(false, "unexpected variable value type");
   }
@@ -1221,6 +1225,10 @@ Declaration::GetVariableDeclaration(const nsAString& aName,
         aValue.AppendLiteral("inherit");
         break;
 
+      case CSSVariableDeclarations::eUnset:
+        aValue.AppendLiteral("unset");
+        break;
+
       default:
         MOZ_ASSERT(false, "unexpected variable value type");
     }
@@ -1279,6 +1287,11 @@ Declaration::AddVariableDeclaration(const nsAString& aName,
     case CSSVariableDeclarations::eInherit:
       MOZ_ASSERT(aValue.IsEmpty());
       variables->PutInherit(aName);
+      break;
+
+    case CSSVariableDeclarations::eUnset:
+      MOZ_ASSERT(aValue.IsEmpty());
+      variables->PutUnset(aName);
       break;
 
     default:
