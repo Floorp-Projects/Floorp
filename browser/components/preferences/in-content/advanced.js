@@ -275,7 +275,7 @@ var gAdvancedPane = {
   {
     openDialog("chrome://browser/content/preferences/connection.xul",
                "mozilla:connectionmanager",
-               "model=yes",
+               "modal=yes",
                null);
   },
 
@@ -441,7 +441,7 @@ var gAdvancedPane = {
                    introText        : bundlePreferences.getString("offlinepermissionstext") };
     openDialog("chrome://browser/content/preferences/permissions.xul",
                "Browser:Permissions",
-               "model=yes",
+               "modal=yes",
                params);
   },
 
@@ -814,7 +814,7 @@ var gAdvancedPane = {
   {
     openDialog("chrome://pippki/content/certManager.xul",
                "mozilla:certmanager",
-               "model=yes", null);
+               "modal=yes", null);
   },
 
   /**
@@ -824,7 +824,7 @@ var gAdvancedPane = {
   {
     openDialog("chrome://mozapps/content/preferences/ocsp.xul",
                "mozilla:crlmanager",
-               "model=yes", null);
+               "modal=yes", null);
   },
 
   /**
@@ -834,7 +834,7 @@ var gAdvancedPane = {
   {
     openDialog("chrome://pippki/content/device_manager.xul",
                "mozilla:devicemanager",
-               "model=yes", null);
+               "modal=yes", null);
   }
 #ifdef HAVE_SHELL_SERVICE
   ,
