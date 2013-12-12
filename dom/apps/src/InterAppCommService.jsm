@@ -50,177 +50,175 @@ const kMessages =["Webapps:Connect",
  */
 
 this.InterAppCommService = {
+  init: function() {
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "inter-app-comm-select-app-result", false);
 
-// For the convenience of review, will align init() by a follow-up patch.
-init: function() {
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
-  Services.obs.addObserver(this, "inter-app-comm-select-app-result", false);
+    kMessages.forEach(function(aMsg) {
+      ppmm.addMessageListener(aMsg, this);
+    }, this);
 
-  kMessages.forEach(function(aMsg) {
-    ppmm.addMessageListener(aMsg, this);
-  }, this);
+    // This matrix is used for saving the inter-app connection info registered in
+    // the app manifest. The object literal is defined as below:
+    //
+    // {
+    //   "keyword1": {
+    //     "subAppManifestURL1": {
+    //       /* subscribed info */
+    //     },
+    //     "subAppManifestURL2": {
+    //       /* subscribed info */
+    //     },
+    //     ...
+    //   },
+    //   "keyword2": {
+    //     "subAppManifestURL3": {
+    //       /* subscribed info */
+    //     },
+    //     ...
+    //   },
+    //   ...
+    // }
+    //
+    // For example:
+    //
+    // {
+    //   "foo": {
+    //     "app://subApp1.gaiamobile.org/manifest.webapp": {
+    //       pageURL: "app://subApp1.gaiamobile.org/handler.html",
+    //       description: "blah blah",
+    //       rules: { ... }
+    //     },
+    //     "app://subApp2.gaiamobile.org/manifest.webapp": {
+    //       pageURL: "app://subApp2.gaiamobile.org/handler.html",
+    //       description: "blah blah",
+    //       rules: { ... }
+    //     }
+    //   },
+    //   "bar": {
+    //     "app://subApp3.gaiamobile.org/manifest.webapp": {
+    //       pageURL: "app://subApp3.gaiamobile.org/handler.html",
+    //       description: "blah blah",
+    //       rules: { ... }
+    //     }
+    //   }
+    // }
+    //
+    // TODO Bug 908999 - Update registered connections when app gets uninstalled.
+    this._registeredConnections = {};
 
-  // This matrix is used for saving the inter-app connection info registered in
-  // the app manifest. The object literal is defined as below:
-  //
-  // {
-  //   "keyword1": {
-  //     "subAppManifestURL1": {
-  //       /* subscribed info */
-  //     },
-  //     "subAppManifestURL2": {
-  //       /* subscribed info */
-  //     },
-  //     ...
-  //   },
-  //   "keyword2": {
-  //     "subAppManifestURL3": {
-  //       /* subscribed info */
-  //     },
-  //     ...
-  //   },
-  //   ...
-  // }
-  //
-  // For example:
-  //
-  // {
-  //   "foo": {
-  //     "app://subApp1.gaiamobile.org/manifest.webapp": {
-  //       pageURL: "app://subApp1.gaiamobile.org/handler.html",
-  //       description: "blah blah",
-  //       rules: { ... }
-  //     },
-  //     "app://subApp2.gaiamobile.org/manifest.webapp": {
-  //       pageURL: "app://subApp2.gaiamobile.org/handler.html",
-  //       description: "blah blah",
-  //       rules: { ... }
-  //     }
-  //   },
-  //   "bar": {
-  //     "app://subApp3.gaiamobile.org/manifest.webapp": {
-  //       pageURL: "app://subApp3.gaiamobile.org/handler.html",
-  //       description: "blah blah",
-  //       rules: { ... }
-  //     }
-  //   }
-  // }
-  //
-  // TODO Bug 908999 - Update registered connections when app gets uninstalled.
-  this._registeredConnections = {};
+    // This matrix is used for saving the permitted connections, which allows
+    // the messaging between publishers and subscribers. The object literal is
+    // defined as below:
+    //
+    // {
+    //   "keyword1": {
+    //     "pubAppManifestURL1": [
+    //       "subAppManifestURL1",
+    //       "subAppManifestURL2",
+    //       ...
+    //     ],
+    //     "pubAppManifestURL2": [
+    //       "subAppManifestURL3",
+    //       "subAppManifestURL4",
+    //       ...
+    //     ],
+    //     ...
+    //   },
+    //   "keyword2": {
+    //     "pubAppManifestURL3": [
+    //       "subAppManifestURL5",
+    //       ...
+    //     ],
+    //     ...
+    //   },
+    //   ...
+    // }
+    //
+    // For example:
+    //
+    // {
+    //   "foo": {
+    //     "app://pubApp1.gaiamobile.org/manifest.webapp": [
+    //       "app://subApp1.gaiamobile.org/manifest.webapp",
+    //       "app://subApp2.gaiamobile.org/manifest.webapp"
+    //     ],
+    //     "app://pubApp2.gaiamobile.org/manifest.webapp": [
+    //       "app://subApp3.gaiamobile.org/manifest.webapp",
+    //       "app://subApp4.gaiamobile.org/manifest.webapp"
+    //     ]
+    //   },
+    //   "bar": {
+    //     "app://pubApp3.gaiamobile.org/manifest.webapp": [
+    //       "app://subApp5.gaiamobile.org/manifest.webapp",
+    //     ]
+    //   }
+    // }
+    //
+    // TODO Bug 908999 - Update allowed connections when app gets uninstalled.
+    this._allowedConnections = {};
 
-  // This matrix is used for saving the permitted connections, which allows
-  // the messaging between publishers and subscribers. The object literal is
-  // defined as below:
-  //
-  // {
-  //   "keyword1": {
-  //     "pubAppManifestURL1": [
-  //       "subAppManifestURL1",
-  //       "subAppManifestURL2",
-  //       ...
-  //     ],
-  //     "pubAppManifestURL2": [
-  //       "subAppManifestURL3",
-  //       "subAppManifestURL4",
-  //       ...
-  //     ],
-  //     ...
-  //   },
-  //   "keyword2": {
-  //     "pubAppManifestURL3": [
-  //       "subAppManifestURL5",
-  //       ...
-  //     ],
-  //     ...
-  //   },
-  //   ...
-  // }
-  //
-  // For example:
-  //
-  // {
-  //   "foo": {
-  //     "app://pubApp1.gaiamobile.org/manifest.webapp": [
-  //       "app://subApp1.gaiamobile.org/manifest.webapp",
-  //       "app://subApp2.gaiamobile.org/manifest.webapp"
-  //     ],
-  //     "app://pubApp2.gaiamobile.org/manifest.webapp": [
-  //       "app://subApp3.gaiamobile.org/manifest.webapp",
-  //       "app://subApp4.gaiamobile.org/manifest.webapp"
-  //     ]
-  //   },
-  //   "bar": {
-  //     "app://pubApp3.gaiamobile.org/manifest.webapp": [
-  //       "app://subApp5.gaiamobile.org/manifest.webapp",
-  //     ]
-  //   }
-  // }
-  //
-  // TODO Bug 908999 - Update allowed connections when app gets uninstalled.
-  this._allowedConnections = {};
+    // This matrix is used for saving the caller info from the content process,
+    // which is indexed by a random UUID, to know where to return the promise
+    // resolvser's callback when the prompt UI for allowing connections returns.
+    // An example of the object literal is shown as below:
+    //
+    // {
+    //   "fooID": {
+    //     outerWindowID: 12,
+    //     requestID: 34,
+    //     target: pubAppTarget1
+    //   },
+    //   "barID": {
+    //     outerWindowID: 56,
+    //     requestID: 78,
+    //     target: pubAppTarget2
+    //   }
+    // }
+    //
+    // where |outerWindowID| is the ID of the window requesting the connection,
+    //       |requestID| is the ID specifying the promise resolver to return,
+    //       |target| is the target of the process requesting the connection.
+    this._promptUICallers = {};
 
-  // This matrix is used for saving the caller info from the content process,
-  // which is indexed by a random UUID, to know where to return the promise
-  // resolvser's callback when the prompt UI for allowing connections returns.
-  // An example of the object literal is shown as below:
-  //
-  // {
-  //   "fooID": {
-  //     outerWindowID: 12,
-  //     requestID: 34,
-  //     target: pubAppTarget1
-  //   },
-  //   "barID": {
-  //     outerWindowID: 56,
-  //     requestID: 78,
-  //     target: pubAppTarget2
-  //   }
-  // }
-  //
-  // where |outerWindowID| is the ID of the window requesting the connection,
-  //       |requestID| is the ID specifying the promise resolver to return,
-  //       |target| is the target of the process requesting the connection.
-  this._promptUICallers = {};
-
-  // This matrix is used for saving the pair of message ports, which is indexed
-  // by a random UUID, so that each port can know whom it should talk to.
-  // An example of the object literal is shown as below:
-  //
-  // {
-  //   "UUID1": {
-  //     keyword: "keyword1",
-  //     publisher: {
-  //       manifestURL: "app://pubApp1.gaiamobile.org/manifest.webapp",
-  //       target: pubAppTarget1,
-  //       pageURL: "app://pubApp1.gaiamobile.org/caller.html",
-  //       messageQueue: [...]
-  //     },
-  //     subscriber: {
-  //       manifestURL: "app://subApp1.gaiamobile.org/manifest.webapp",
-  //       target: subAppTarget1,
-  //       pageURL: "app://pubApp1.gaiamobile.org/handler.html",
-  //       messageQueue: [...]
-  //     }
-  //   },
-  //   "UUID2": {
-  //     keyword: "keyword2",
-  //     publisher: {
-  //       manifestURL: "app://pubApp2.gaiamobile.org/manifest.webapp",
-  //       target: pubAppTarget2,
-  //       pageURL: "app://pubApp2.gaiamobile.org/caller.html",
-  //       messageQueue: [...]
-  //     },
-  //     subscriber: {
-  //       manifestURL: "app://subApp2.gaiamobile.org/manifest.webapp",
-  //       target: subAppTarget2,
-  //       pageURL: "app://pubApp2.gaiamobile.org/handler.html",
-  //       messageQueue: [...]
-  //     }
-  //   }
-  // }
-  this._messagePortPairs = {};
-},
+    // This matrix is used for saving the pair of message ports, which is indexed
+    // by a random UUID, so that each port can know whom it should talk to.
+    // An example of the object literal is shown as below:
+    //
+    // {
+    //   "UUID1": {
+    //     keyword: "keyword1",
+    //     publisher: {
+    //       manifestURL: "app://pubApp1.gaiamobile.org/manifest.webapp",
+    //       target: pubAppTarget1,
+    //       pageURL: "app://pubApp1.gaiamobile.org/caller.html",
+    //       messageQueue: [...]
+    //     },
+    //     subscriber: {
+    //       manifestURL: "app://subApp1.gaiamobile.org/manifest.webapp",
+    //       target: subAppTarget1,
+    //       pageURL: "app://pubApp1.gaiamobile.org/handler.html",
+    //       messageQueue: [...]
+    //     }
+    //   },
+    //   "UUID2": {
+    //     keyword: "keyword2",
+    //     publisher: {
+    //       manifestURL: "app://pubApp2.gaiamobile.org/manifest.webapp",
+    //       target: pubAppTarget2,
+    //       pageURL: "app://pubApp2.gaiamobile.org/caller.html",
+    //       messageQueue: [...]
+    //     },
+    //     subscriber: {
+    //       manifestURL: "app://subApp2.gaiamobile.org/manifest.webapp",
+    //       target: subAppTarget2,
+    //       pageURL: "app://pubApp2.gaiamobile.org/handler.html",
+    //       messageQueue: [...]
+    //     }
+    //   }
+    // }
+    this._messagePortPairs = {};
+  },
 
   /**
    * Registration of a page that wants to be connected to other apps through
