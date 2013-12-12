@@ -243,14 +243,6 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
         if (id == id___proto__(cx) || id == id_constructor(cx) || id == id_caller(cx))
             return true;
 
-        /*
-         * If we called in here while resolving a type constraint, we may be in the
-         * middle of resolving a standard class and the type sets will not be updated
-         * until the outer TypeSet::add finishes.
-         */
-        if (cx->compartment()->types.pendingCount)
-            return true;
-
         Type type = GetValueType(value);
 
         AutoEnterAnalysis enter(cx);
@@ -742,12 +734,12 @@ class TypeCompilerConstraint : public TypeConstraint
 
     void newType(JSContext *cx, TypeSet *source, Type type) {
         if (data.invalidateOnNewType(type))
-            cx->compartment()->types.addPendingRecompile(cx, compilation);
+            cx->zone()->types.addPendingRecompile(cx, compilation);
     }
 
     void newPropertyState(JSContext *cx, TypeSet *source) {
         if (data.invalidateOnNewPropertyState(source))
-            cx->compartment()->types.addPendingRecompile(cx, compilation);
+            cx->zone()->types.addPendingRecompile(cx, compilation);
     }
 
     void newObjectState(JSContext *cx, TypeObject *object) {
@@ -755,7 +747,16 @@ class TypeCompilerConstraint : public TypeConstraint
         // will be sent on changes to its state, so always invalidate any
         // associated compilations.
         if (object->unknownProperties() || data.invalidateOnNewObjectState(object))
-            cx->compartment()->types.addPendingRecompile(cx, compilation);
+            cx->zone()->types.addPendingRecompile(cx, compilation);
+    }
+
+    TypeConstraint *sweep(TypeZone &zone) {
+        if (data.shouldSweep() || compilation.shouldSweep(zone))
+            return nullptr;
+        TypeConstraint *res = zone.typeLifoAlloc.new_<TypeCompilerConstraint<T> >(compilation, data);
+        if (!res)
+            zone.setPendingNukeTypes();
+        return res;
     }
 };
 
@@ -908,13 +909,21 @@ class TypeConstraintFreezeStack : public TypeConstraint
 
     const char *kind() { return "freezeStack"; }
 
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
+    void newType(JSContext *cx, TypeSet *source, Type type) {
         /*
          * Unlike TypeConstraintFreeze, triggering this constraint once does
          * not disable it on future changes to the type set.
          */
-        cx->compartment()->types.addPendingRecompile(cx, script_);
+        cx->zone()->types.addPendingRecompile(cx, script_);
+    }
+
+    TypeConstraint *sweep(TypeZone &zone) {
+        if (IsScriptAboutToBeFinalized(&script_))
+            return nullptr;
+        TypeConstraint *res = zone.typeLifoAlloc.new_<TypeConstraintFreezeStack>(script_);
+        if (!res)
+            zone.setPendingNukeTypes();
+        return res;
     }
 };
 
@@ -929,15 +938,22 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
 
     CompilerOutput co(script, executionMode);
 
-    TypeCompartment &types = cx->compartment()->types;
-    if (!types.constrainedOutputs) {
-        types.constrainedOutputs = cx->new_< Vector<CompilerOutput> >(cx);
-        if (!types.constrainedOutputs)
+    TypeZone &types = cx->zone()->types;
+    if (!types.compilerOutputs) {
+        types.compilerOutputs = cx->new_< Vector<CompilerOutput> >(cx);
+        if (!types.compilerOutputs)
             return false;
     }
 
-    uint32_t index = types.constrainedOutputs->length();
-    if (!types.constrainedOutputs->append(co))
+#ifdef DEBUG
+    for (size_t i = 0; i < types.compilerOutputs->length(); i++) {
+        const CompilerOutput &co = (*types.compilerOutputs)[i];
+        JS_ASSERT_IF(co.isValid(), co.script() != script || co.mode() != executionMode);
+    }
+#endif
+
+    uint32_t index = types.compilerOutputs->length();
+    if (!types.compilerOutputs->append(co))
         return false;
 
     *precompileInfo = RecompileInfo(index);
@@ -979,8 +995,8 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
             array[i].add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeStack>(entry.script), false);
     }
 
-    if (!succeeded || types.constrainedOutputs->back().pendingInvalidation()) {
-        types.constrainedOutputs->back().invalidate();
+    if (!succeeded || types.compilerOutputs->back().pendingInvalidation()) {
+        types.compilerOutputs->back().invalidate();
         script->resetUseCount();
         return false;
     }
@@ -1009,6 +1025,8 @@ class ConstraintDataFreeze
                ? property.maybeTypes()->isSubset(expected)
                : property.maybeTypes()->empty();
     }
+
+    bool shouldSweep() { return false; }
 };
 
 } /* anonymous namespace */
@@ -1195,6 +1213,8 @@ class ConstraintDataFreezeObjectFlags
     {
         return !invalidateOnNewObjectState(property.object()->maybeType());
     }
+
+    bool shouldSweep() { return false; }
 };
 
 } /* anonymous namespace */
@@ -1289,6 +1309,8 @@ class ConstraintDataFreezeObjectForInlinedCall
     {
         return true;
     }
+
+    bool shouldSweep() { return false; }
 };
 
 // Constraint which triggers recompilation when the template object for a
@@ -1315,6 +1337,11 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     {
         return !invalidateOnNewObjectState(property.object()->maybeType());
     }
+
+    bool shouldSweep() {
+        // Note: |templateObject| is only used for equality testing.
+        return false;
+    }
 };
 
 // Constraint which triggers recompilation when the underlying data pointer for
@@ -1340,6 +1367,11 @@ class ConstraintDataFreezeObjectForTypedArrayBuffer
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
         return !invalidateOnNewObjectState(property.object()->maybeType());
+    }
+
+    bool shouldSweep() {
+        // Note: |viewData| is only used for equality testing.
+        return false;
     }
 };
 
@@ -1413,10 +1445,7 @@ namespace {
 class ConstraintDataFreezeConfiguredProperty
 {
   public:
-    TypeObjectKey *object;
-
-    ConstraintDataFreezeConfiguredProperty(TypeObjectKey *object)
-      : object(object)
+    ConstraintDataFreezeConfiguredProperty()
     {}
 
     const char *kind() { return "freezeConfiguredProperty"; }
@@ -1430,31 +1459,16 @@ class ConstraintDataFreezeConfiguredProperty
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        // Everywhere compiled code depends on definite properties associated
-        // with a type object's newScript, we need to make sure there are
-        // constraints in place which will mark those properties as configured
-        // should the definite properties be invalidated.
-        TypeObject *type = object->isSingleObject()
-                           ? object->asSingleObject()->type()
-                           : object->asTypeObject();
-        if (type->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
-            type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
-            if (type->hasNewScript()) {
-                CheckNewScriptProperties(cx, type, type->newScript()->fun);
-            } else {
-                JS_ASSERT(type->flags & OBJECT_FLAG_ADDENDUM_CLEARED);
-                type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
-            }
-        }
-
         return !property.maybeTypes()->configuredProperty();
     }
+
+    bool shouldSweep() { return false; }
 };
 
 } /* anonymous namespace */
 
 bool
-HeapTypeSetKey::configured(CompilerConstraintList *constraints, TypeObjectKey *type)
+HeapTypeSetKey::configured(CompilerConstraintList *constraints)
 {
     if (maybeTypes() && maybeTypes()->configuredProperty())
         return true;
@@ -1463,7 +1477,7 @@ HeapTypeSetKey::configured(CompilerConstraintList *constraints, TypeObjectKey *t
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeConfiguredProperty> T;
     constraints->add(alloc->new_<T>(alloc, *this,
-                                    ConstraintDataFreezeConfiguredProperty(type)));
+                                    ConstraintDataFreezeConfiguredProperty()));
     return false;
 }
 
@@ -1986,7 +2000,7 @@ PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
         if (type->unknownProperties())
             return true;
         HeapTypeSetKey index = type->property(JSID_VOID);
-        if (index.configured(constraints, type) || index.isOwnProperty(constraints))
+        if (index.configured(constraints) || index.isOwnProperty(constraints))
             return true;
         obj = obj->getProto();
     } while (obj);
@@ -2024,27 +2038,8 @@ types::TypeCanHaveExtraIndexedProperties(CompilerConstraintList *constraints,
     return PrototypeHasIndexedProperty(constraints, proto);
 }
 
-bool
-TypeCompartment::growPendingArray(JSContext *cx)
-{
-    unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = js_pod_calloc<PendingWork>(newCapacity);
-    if (!newArray) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
-        return false;
-    }
-
-    PodCopy(newArray, pendingArray, pendingCount);
-    js_free(pendingArray);
-
-    pendingArray = newArray;
-    pendingCapacity = newCapacity;
-
-    return true;
-}
-
 void
-TypeCompartment::processPendingRecompiles(FreeOp *fop)
+TypeZone::processPendingRecompiles(FreeOp *fop)
 {
     if (!pendingRecompiles)
         return;
@@ -2095,11 +2090,9 @@ TypeZone::nukeTypes(FreeOp *fop)
      */
     JS_ASSERT(pendingNukeTypes);
 
-    for (CompartmentsInZoneIter comp(zone()); !comp.done(); comp.next()) {
-        if (comp->types.pendingRecompiles) {
-            fop->free_(comp->types.pendingRecompiles);
-            comp->types.pendingRecompiles = nullptr;
-        }
+    if (pendingRecompiles) {
+        fop->free_(pendingRecompiles);
+        pendingRecompiles = nullptr;
     }
 
     inferenceEnabled = false;
@@ -2119,7 +2112,7 @@ TypeZone::nukeTypes(FreeOp *fop)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
+TypeZone::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
     CompilerOutput *co = info.compilerOutput(cx);
     if (!co || !co->isValid() || co->pendingInvalidation())
@@ -2145,7 +2138,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 }
 
 void
-TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
+TypeZone::addPendingRecompile(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script);
 
@@ -3146,6 +3139,15 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
     }
 
     void newType(JSContext *cx, TypeSet *source, Type type) {}
+
+    TypeConstraint *sweep(TypeZone &zone) {
+        if (IsTypeObjectAboutToBeFinalized(&object))
+            return nullptr;
+        TypeConstraint *res = zone.typeLifoAlloc.new_<TypeConstraintClearDefiniteGetterSetter>(object);
+        if (!res)
+            zone.setPendingNukeTypes();
+        return res;
+    }
 };
 
 bool
@@ -3191,6 +3193,15 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint
 
         if (source->baseFlags() || source->getObjectCount() > 1)
             object->clearAddendum(cx);
+    }
+
+    TypeConstraint *sweep(TypeZone &zone) {
+        if (IsTypeObjectAboutToBeFinalized(&object))
+            return nullptr;
+        TypeConstraint *res = zone.typeLifoAlloc.new_<TypeConstraintClearDefiniteSingle>(object);
+        if (!res)
+            zone.setPendingNukeTypes();
+        return res;
     }
 };
 
@@ -3941,8 +3952,19 @@ ConstraintTypeSet::sweep(Zone *zone)
         }
     }
 
-    /* All constraints are wiped out on each GC. */
+    /*
+     * Type constraints only hold weak references. Copy constraints referring
+     * to data that is still live into the zone's new arena.
+     */
+    TypeConstraint *constraint = constraintList;
     constraintList = nullptr;
+    while (constraint) {
+        if (TypeConstraint *copy = constraint->sweep(zone->types)) {
+            copy->next = constraintList;
+            constraintList = copy;
+        }
+        constraint = constraint->next;
+    }
 }
 
 inline void
@@ -3962,18 +3984,6 @@ TypeObject::clearProperties()
 inline void
 TypeObject::sweep(FreeOp *fop)
 {
-    if (singleton) {
-        JS_ASSERT(!hasNewScript());
-
-        /*
-         * All properties can be discarded. We will regenerate them as needed
-         * as code gets reanalyzed.
-         */
-        clearProperties();
-
-        return;
-    }
-
     if (!isMarked()) {
         if (addendum)
             fop->free_(addendum);
@@ -3996,6 +4006,14 @@ TypeObject::sweep(FreeOp *fop)
         for (unsigned i = 0; i < oldCapacity; i++) {
             Property *prop = oldArray[i];
             if (prop) {
+                if (singleton && !prop->types.constraintList) {
+                    /*
+                     * Don't copy over properties of singleton objects which
+                     * don't have associated constraints. The contents of these
+                     * type sets will be regenerated as necessary.
+                     */
+                    continue;
+                }
                 Property *newProp = typeLifoAlloc.new_<Property>(*prop);
                 if (newProp) {
                     Property **pentry =
@@ -4015,12 +4033,17 @@ TypeObject::sweep(FreeOp *fop)
         setBasePropertyCount(propertyCount);
     } else if (propertyCount == 1) {
         Property *prop = (Property *) propertySet;
-        Property *newProp = typeLifoAlloc.new_<Property>(*prop);
-        if (newProp) {
-            propertySet = (Property **) newProp;
-            newProp->types.sweep(zone());
+        if (singleton && !prop->types.constraintList) {
+            // Skip, as above.
+            clearProperties();
         } else {
-            zone()->types.setPendingNukeTypes();
+            Property *newProp = typeLifoAlloc.new_<Property>(*prop);
+            if (newProp) {
+                propertySet = (Property **) newProp;
+                newProp->types.sweep(zone());
+            } else {
+                zone()->types.setPendingNukeTypes();
+            }
         }
     }
 
@@ -4028,14 +4051,6 @@ TypeObject::sweep(FreeOp *fop)
         for (unsigned i = 0; i < basePropertyCount(); i++)
             JS_ASSERT(propertySet[i]);
     }
-
-    /*
-     * The GC will clear out the constraints ensuring the correctness of the
-     * newScript information, these constraints will need to be regenerated
-     * the next time we compile code which depends on this info.
-     */
-    if (hasNewScript())
-        flags |= OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
 }
 
 void
@@ -4119,52 +4134,6 @@ TypeCompartment::sweep(FreeOp *fop)
                 e.rekeyFront(key);
         }
     }
-
-    /*
-     * The pending array is reset on GC, it can grow large (75+ KB) and is easy
-     * to reallocate if the compartment becomes active again.
-     */
-    if (pendingArray)
-        fop->free_(pendingArray);
-
-    pendingArray = nullptr;
-    pendingCapacity = 0;
-}
-
-void
-TypeCompartment::sweepShapes(FreeOp *fop)
-{
-    /*
-     * Sweep any weak shape references that may be finalized even if a GC is
-     * preserving type information.
-     */
-    if (objectTypeTable) {
-        for (ObjectTypeTable::Enum e(*objectTypeTable); !e.empty(); e.popFront()) {
-            const ObjectTableKey &key = e.front().key();
-            ObjectTableEntry &entry = e.front().value();
-
-            if (IsShapeAboutToBeFinalized(entry.shape.unsafeGet())) {
-                fop->free_(key.properties);
-                fop->free_(entry.types);
-                e.removeFront();
-            }
-        }
-    }
-}
-
-void
-TypeCompartment::clearCompilerOutputs(FreeOp *fop)
-{
-    if (constrainedOutputs) {
-        fop->delete_(constrainedOutputs);
-        constrainedOutputs = nullptr;
-    }
-
-    if (pendingRecompiles) {
-        JS_ASSERT(pendingRecompiles->length() == 0);
-        fop->delete_(pendingRecompiles);
-        pendingRecompiles = nullptr;
-    }
 }
 
 void
@@ -4193,7 +4162,6 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
 
 TypeCompartment::~TypeCompartment()
 {
-    js_free(pendingArray);
     js_delete(arrayTypeTable);
     js_delete(objectTypeTable);
     js_delete(allocationSiteTable);
@@ -4212,12 +4180,6 @@ TypeScript::Sweep(FreeOp *fop, JSScript *script)
     /* Remove constraints and references to dead objects from the persistent type sets. */
     for (unsigned i = 0; i < num; i++)
         typeArray[i].sweep(compartment->zone());
-
-    /*
-     * Freeze constraints on stack type sets need to be regenerated the next
-     * time the script is analyzed.
-     */
-    script->clearHasFreezeConstraints();
 }
 
 void
@@ -4234,20 +4196,10 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePoo
 
 void
 TypeCompartment::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                        size_t *pendingArrays,
                                         size_t *allocationSiteTables,
                                         size_t *arrayTypeTables,
                                         size_t *objectTypeTables)
 {
-    /* Pending arrays are cleared on GC along with the analysis pool. */
-    *pendingArrays += mallocSizeOf(pendingArray);
-
-    /*
-     * TypeCompartment::pendingRecompiles is non-nullptr only while inference
-     * code is running.
-     */
-    JS_ASSERT(!pendingRecompiles);
-
     if (allocationSiteTable)
         *allocationSiteTables += allocationSiteTable->sizeOfIncludingThis(mallocSizeOf);
 
@@ -4289,6 +4241,8 @@ TypeObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 TypeZone::TypeZone(Zone *zone)
   : zone_(zone),
     typeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    compilerOutputs(nullptr),
+    pendingRecompiles(nullptr),
     pendingNukeTypes(false),
     inferenceEnabled(false)
 {
@@ -4296,6 +4250,8 @@ TypeZone::TypeZone(Zone *zone)
 
 TypeZone::~TypeZone()
 {
+    js_delete(compilerOutputs);
+    js_delete(pendingRecompiles);
 }
 
 void
@@ -4312,11 +4268,21 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
     LifoAlloc oldAlloc(typeLifoAlloc.defaultChunkSize());
     oldAlloc.steal(&typeLifoAlloc);
 
-    /*
-     * Sweep analysis information and everything depending on it from the
-     * compartment, including all remaining mjit code if inference is
-     * enabled in the compartment.
-     */
+    /* Sweep and find compressed indexes for each compiler output. */
+    size_t newCompilerOutputCount = 0;
+    if (compilerOutputs) {
+        for (size_t i = 0; i < compilerOutputs->length(); i++) {
+            CompilerOutput &output = (*compilerOutputs)[i];
+            if (output.isValid()) {
+                JSScript *script = output.script();
+                if (IsScriptAboutToBeFinalized(&script))
+                    output.invalidate();
+                else
+                    output.setSweepIndex(newCompilerOutputCount++);
+            }
+        }
+    }
+
     if (inferenceEnabled) {
         gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_TI);
 
@@ -4328,6 +4294,21 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
                 if (releaseTypes) {
                     script->types->destroy();
                     script->types = nullptr;
+
+                    /*
+                     * Freeze constraints on stack type sets need to be
+                     * regenerated the next time the script is analyzed.
+                     */
+                    script->clearHasFreezeConstraints();
+
+                    JS_ASSERT(!script->hasIonScript());
+                    JS_ASSERT(!script->hasParallelIonScript());
+                } else {
+                    /* Update the recompile indexes in any IonScripts still on the script. */
+                    if (script->hasIonScript())
+                        script->ionScript()->recompileInfoRef().shouldSweep(*this);
+                    if (script->hasParallelIonScript())
+                        script->parallelIonScript()->recompileInfoRef().shouldSweep(*this);
                 }
             }
         }
@@ -4345,6 +4326,20 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
 
         for (CompartmentsInZoneIter comp(zone()); !comp.done(); comp.next())
             comp->types.sweep(fop);
+    }
+
+    if (compilerOutputs) {
+        size_t sweepIndex = 0;
+        for (size_t i = 0; i < compilerOutputs->length(); i++) {
+            CompilerOutput output = (*compilerOutputs)[i];
+            if (output.isValid()) {
+                JS_ASSERT(sweepIndex == output.sweepIndex());
+                output.setSweepIndex(0);
+                (*compilerOutputs)[sweepIndex++] = output;
+            }
+        }
+        JS_ASSERT(sweepIndex == newCompilerOutputCount);
+        JS_ALWAYS_TRUE(compilerOutputs->resize(newCompilerOutputCount));
     }
 
     {
