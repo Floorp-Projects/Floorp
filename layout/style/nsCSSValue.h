@@ -12,6 +12,8 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
 #include "nsCSSKeywords.h"
@@ -187,6 +189,7 @@ enum nsCSSUnit {
   eCSSUnit_URL          = 40,     // (nsCSSValue::URL*) value
   eCSSUnit_Image        = 41,     // (nsCSSValue::Image*) value
   eCSSUnit_Gradient     = 42,     // (nsCSSValueGradient*) value
+  eCSSUnit_TokenStream  = 43,     // (nsCSSValueTokenStream*) value
 
   eCSSUnit_Pair         = 50,     // (nsCSSValuePair*) pair of values
   eCSSUnit_Triplet      = 51,     // (nsCSSValueTriplet*) triplet of values
@@ -249,6 +252,7 @@ enum nsCSSUnit {
 struct nsCSSValueGradient;
 struct nsCSSValuePair;
 struct nsCSSValuePair_heap;
+struct nsCSSValueTokenStream;
 struct nsCSSRect;
 struct nsCSSRect_heap;
 struct nsCSSValueList;
@@ -281,6 +285,7 @@ public:
   explicit nsCSSValue(mozilla::css::URLValue* aValue);
   explicit nsCSSValue(mozilla::css::ImageValue* aValue);
   explicit nsCSSValue(nsCSSValueGradient* aValue);
+  explicit nsCSSValue(nsCSSValueTokenStream* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue() { Reset(); }
 
@@ -419,6 +424,12 @@ public:
     return mValue.mGradient;
   }
 
+  nsCSSValueTokenStream* GetTokenStreamValue() const
+  {
+    NS_ABORT_IF_FALSE(mUnit == eCSSUnit_TokenStream, "not a token stream value");
+    return mValue.mTokenStream;
+  }
+
   // bodies of these are below
   inline nsCSSValuePair& GetPairValue();
   inline const nsCSSValuePair& GetPairValue() const;
@@ -484,6 +495,7 @@ public:
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
   void SetGradientValue(nsCSSValueGradient* aGradient);
+  void SetTokenStreamValue(nsCSSValueTokenStream* aTokenStream);
   void SetPairValue(const nsCSSValuePair* aPair);
   void SetPairValue(const nsCSSValue& xValue, const nsCSSValue& yValue);
   void SetDependentListValue(nsCSSValueList* aList);
@@ -539,6 +551,7 @@ protected:
     mozilla::css::URLValue* mURL;
     mozilla::css::ImageValue* mImage;
     nsCSSValueGradient* mGradient;
+    nsCSSValueTokenStream* mTokenStream;
     nsCSSValuePair_heap* mPair;
     nsCSSRect_heap* mRect;
     nsCSSValueTriplet_heap* mTriplet;
@@ -1128,6 +1141,66 @@ public:
 private:
   nsCSSValueGradient(const nsCSSValueGradient& aOther) MOZ_DELETE;
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) MOZ_DELETE;
+};
+
+struct nsCSSValueTokenStream {
+  nsCSSValueTokenStream();
+  ~nsCSSValueTokenStream();
+
+  bool operator==(const nsCSSValueTokenStream& aOther) const
+  {
+    bool eq;
+    return mPropertyID == aOther.mPropertyID &&
+           mShorthandPropertyID == aOther.mShorthandPropertyID &&
+           mTokenStream.Equals(aOther.mTokenStream) &&
+           (mBaseURI == aOther.mBaseURI ||
+            (mBaseURI && aOther.mBaseURI &&
+             NS_SUCCEEDED(mBaseURI->Equals(aOther.mBaseURI, &eq)) &&
+             eq)) &&
+           (mSheetURI == aOther.mSheetURI ||
+            (mSheetURI && aOther.mSheetURI &&
+             NS_SUCCEEDED(mSheetURI->Equals(aOther.mSheetURI, &eq)) &&
+             eq)) &&
+           (mSheetPrincipal == aOther.mSheetPrincipal ||
+            (mSheetPrincipal && aOther.mSheetPrincipal &&
+             NS_SUCCEEDED(mSheetPrincipal->Equals(aOther.mSheetPrincipal,
+                                                  &eq)) &&
+             eq));
+  }
+
+  bool operator!=(const nsCSSValueTokenStream& aOther) const
+  {
+    return !(*this == aOther);
+  }
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueTokenStream)
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  // The property that has mTokenStream as its unparsed specified value.
+  // When a variable reference is used in a shorthand property, a
+  // TokenStream value is stored as the specified value for each of its
+  // component longhand properties.
+  nsCSSProperty mPropertyID;
+
+  // The shorthand property that had a value with a variable reference,
+  // which caused the longhand property identified by mPropertyID to have
+  // a TokenStream value.
+  nsCSSProperty mShorthandPropertyID;
+
+  // The unparsed CSS corresponding to the specified value of the property.
+  // When the value of a shorthand property has a variable reference, the
+  // same mTokenStream value is used on each of the nsCSSValueTokenStream
+  // objects that will be set by parsing the shorthand.
+  nsString mTokenStream;
+
+  nsCOMPtr<nsIURI> mBaseURI;
+  nsCOMPtr<nsIURI> mSheetURI;
+  nsCOMPtr<nsIPrincipal> mSheetPrincipal;
+
+private:
+  nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
+  nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
 };
 
 struct nsCSSCornerSizes {
