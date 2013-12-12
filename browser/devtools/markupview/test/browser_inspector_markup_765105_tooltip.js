@@ -16,10 +16,10 @@ const PAGE_CONTENT = [
 ].join("\n");
 
 const TEST_NODES = [
-  "img.local",
-  "img.data",
-  "img.remote",
-  ".canvas"
+  {selector: "img.local", size: "192 x 192"},
+  {selector: "img.data", size: "64 x 64"},
+  {selector: "img.remote", size: "22 x 23"},
+  {selector: ".canvas", size: "600 x 600"}
 ];
 
 function test() {
@@ -77,8 +77,8 @@ function testImageTooltip(index) {
     return endTests();
   }
 
-  let node = contentDoc.querySelector(TEST_NODES[index]);
-  ok(node, "We have the [" + TEST_NODES[index] + "] image node to test for tooltip");
+  let node = contentDoc.querySelector(TEST_NODES[index].selector);
+  ok(node, "We have the [" + TEST_NODES[index].selector + "] image node to test for tooltip");
   let isImg = node.tagName.toLowerCase() === "img";
 
   let container = getContainerForRawNode(markup, node);
@@ -90,10 +90,14 @@ function testImageTooltip(index) {
 
   assertTooltipShownOn(target, () => {
     let images = markup.tooltip.panel.getElementsByTagName("image");
-    is(images.length, 1, "Tooltip for [" + TEST_NODES[index] + "] contains an image");
+    is(images.length, 1,
+      "Tooltip for [" + TEST_NODES[index].selector + "] contains an image");
+
+    let label = markup.tooltip.panel.querySelector(".devtools-tooltip-caption");
+    is(label.textContent, TEST_NODES[index].size,
+      "Tooltip label for [" + TEST_NODES[index].selector + "] displays the right image size")
 
     markup.tooltip.hide();
-
     testImageTooltip(index + 1);
   });
 }
