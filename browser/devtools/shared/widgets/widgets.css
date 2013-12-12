@@ -64,6 +64,10 @@
   display: none;
 }
 
+.variable-or-property[pseudo-item] > tooltip {
+  display: none;
+}
+
 *:not(:hover) .variables-view-delete,
 *:not(:hover) .variables-view-add-property {
   visibility: hidden;
