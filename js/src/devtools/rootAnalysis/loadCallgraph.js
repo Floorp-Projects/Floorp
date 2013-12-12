@@ -148,9 +148,7 @@ function loadCallgraph(file)
     // Any field call that has been resolved to all possible callees can be
     // trusted to not GC if all of those callees are known to not GC.
     for (var name in resolvedFunctions) {
-        if (!(name in gcFunctions)) {
+        if (!(name in gcFunctions))
             suppressedFunctions[name] = true;
-            printErr("Adding " + name);
-        }
     }
 }
