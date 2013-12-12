@@ -1969,12 +1969,10 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         JS_ASSERT(ptrImm >= 0);
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->output()));
-            if (size == 32) {
+            if (size == 32)
                 masm.ma_vldr(Operand(HeapReg, ptrImm), vd.singleOverlay(), Assembler::Always);
-                masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Always);
-            } else {
+            else
                 masm.ma_vldr(Operand(HeapReg, ptrImm), vd, Assembler::Always);
-            }
         }  else {
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->output()), Offset, Assembler::Always);
@@ -1987,12 +1985,10 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     if (mir->skipBoundsCheck()) {
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->output()));
-            if (size == 32) {
+            if (size == 32)
                 masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Always);
-                masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Always);
-            } else {
+            else
                 masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Always);
-            }
         } else {
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg,
                                   ToRegister(ins->output()), Offset, Assembler::Always);
@@ -2003,12 +1999,12 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
     BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
     if (isFloat) {
         FloatRegister dst = ToFloatRegister(ins->output());
-        masm.ma_vmov(NANReg, dst, Assembler::AboveOrEqual);
         VFPRegister vd(dst);
         if (size == 32) {
+            masm.convertDoubleToFloat(NANReg, dst, Assembler::AboveOrEqual);
             masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
-            masm.as_vcvt(vd, vd.singleOverlay(), false, Assembler::Below);
         } else {
+            masm.ma_vmov(NANReg, dst, Assembler::AboveOrEqual);
             masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
         }
     } else {
@@ -2044,12 +2040,10 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         JS_ASSERT(ptrImm >= 0);
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
-            if (size == 32) {
-                masm.as_vcvt(VFPRegister(ScratchFloatReg).singleOverlay(), vd, false, Assembler::Always);
-                masm.ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), Operand(HeapReg, ptrImm), Assembler::Always);
-            } else {
+            if (size == 32)
+                masm.ma_vstr(vd.singleOverlay(), Operand(HeapReg, ptrImm), Assembler::Always);
+            else
                 masm.ma_vstr(vd, Operand(HeapReg, ptrImm), Assembler::Always);
-            }
         } else {
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);
@@ -2064,7 +2058,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         if (isFloat) {
             VFPRegister vd(ToFloatRegister(ins->value()));
             if (size == 32)
-                masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Always);
+                masm.ma_vstr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Always);
             else
                 masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Always);
         } else {
@@ -2078,7 +2072,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
     if (isFloat) {
         VFPRegister vd(ToFloatRegister(ins->value()));
         if (size == 32)
-            masm.storeFloat(vd, HeapReg, ptrReg, Assembler::Below);
+            masm.ma_vstr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
         else
             masm.ma_vstr(vd, HeapReg, ptrReg, 0, Assembler::Below);
     } else {
@@ -2229,10 +2223,14 @@ CodeGeneratorARM::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
 {
     const MAsmJSLoadGlobalVar *mir = ins->mir();
     unsigned addr = mir->globalDataOffset();
-    if (mir->type() == MIRType_Int32)
+    if (mir->type() == MIRType_Int32) {
         masm.ma_dtr(IsLoad, GlobalReg, Imm32(addr), ToRegister(ins->output()));
-    else
+    } else if (mir->type() == MIRType_Float32) {
+        VFPRegister vd(ToFloatRegister(ins->output()));
+        masm.ma_vldr(Operand(GlobalReg, addr), vd.singleOverlay());
+    } else {
         masm.ma_vldr(Operand(GlobalReg, addr), ToFloatRegister(ins->output()));
+    }
     return true;
 }
 
@@ -2242,12 +2240,16 @@ CodeGeneratorARM::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
     const MAsmJSStoreGlobalVar *mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
+    JS_ASSERT(IsNumberType(type));
     unsigned addr = mir->globalDataOffset();
-    if (mir->value()->type() == MIRType_Int32)
+    if (mir->value()->type() == MIRType_Int32) {
         masm.ma_dtr(IsStore, GlobalReg, Imm32(addr), ToRegister(ins->value()));
-    else
+    } else if (mir->value()->type() == MIRType_Float32) {
+        VFPRegister vd(ToFloatRegister(ins->value()));
+        masm.ma_vstr(vd.singleOverlay(), Operand(GlobalReg, addr));
+    } else {
         masm.ma_vstr(ToFloatRegister(ins->value()), Operand(GlobalReg, addr));
+    }
     return true;
 }
 

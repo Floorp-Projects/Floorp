@@ -3300,7 +3300,7 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter *ins)
     if (abi.argInRegister())
         return defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
 
-    JS_ASSERT(ins->type() == MIRType_Int32 || ins->type() == MIRType_Double);
+    JS_ASSERT(IsNumberType(ins->type()));
     LAllocation::Kind argKind = ins->type() == MIRType_Int32
                                 ? LAllocation::INT_ARGUMENT
                                 : LAllocation::DOUBLE_ARGUMENT;
@@ -3312,7 +3312,7 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
 {
     MDefinition *rval = ins->getOperand(0);
     LAsmJSReturn *lir = new(alloc()) LAsmJSReturn;
-    if (rval->type() == MIRType_Double)
+    if (IsFloatingPointType(rval->type()))
         lir->setOperand(0, useFixed(rval, ReturnFloatReg));
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
@@ -3330,7 +3330,7 @@ LIRGenerator::visitAsmJSVoidReturn(MAsmJSVoidReturn *ins)
 bool
 LIRGenerator::visitAsmJSPassStackArg(MAsmJSPassStackArg *ins)
 {
-    if (ins->arg()->type() == MIRType_Double) {
+    if (IsFloatingPointType(ins->arg()->type())) {
         JS_ASSERT(!ins->arg()->isEmittedAtUses());
         return add(new(alloc()) LAsmJSPassStackArg(useRegisterAtStart(ins->arg())), ins);
     }

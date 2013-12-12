@@ -691,17 +691,28 @@ enum AsmJSImmKind
 #endif
     AsmJSImm_ModD,
     AsmJSImm_SinD,
+    AsmJSImm_SinF,
     AsmJSImm_CosD,
+    AsmJSImm_CosF,
     AsmJSImm_TanD,
+    AsmJSImm_TanF,
     AsmJSImm_ASinD,
+    AsmJSImm_ASinF,
     AsmJSImm_ACosD,
+    AsmJSImm_ACosF,
     AsmJSImm_ATanD,
+    AsmJSImm_ATanF,
     AsmJSImm_CeilD,
+    AsmJSImm_CeilF,
     AsmJSImm_FloorD,
+    AsmJSImm_FloorF,
     AsmJSImm_ExpD,
+    AsmJSImm_ExpF,
     AsmJSImm_LogD,
+    AsmJSImm_LogF,
     AsmJSImm_PowD,
-    AsmJSImm_ATan2D
+    AsmJSImm_ATan2D,
+    AsmJSImm_Invalid
 };
 
 // Pointer to be embedded as an immediate in asm.js code.
