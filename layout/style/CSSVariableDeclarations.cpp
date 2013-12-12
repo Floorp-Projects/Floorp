@@ -11,10 +11,12 @@
 #include "nsCSSScanner.h"
 #include "nsRuleData.h"
 
-// These two special string values are used to represent specified values of
-// 'initial' and 'inherit'.  (Note that neither is a valid variable value.)
+// These three special string values are used to represent specified values of
+// 'initial', 'inherit' and 'unset'.  (Note that none of these are valid
+// variable values.)
 #define INITIAL_VALUE "!"
 #define INHERIT_VALUE ";"
+#define UNSET_VALUE   ")"
 
 namespace mozilla {
 
@@ -86,6 +88,9 @@ CSSVariableDeclarations::Get(const nsAString& aName,
   } else if (value.EqualsLiteral(INHERIT_VALUE)) {
     aType = eInitial;
     aTokenStream.Truncate();
+  } else if (value.EqualsLiteral(UNSET_VALUE)) {
+    aType = eUnset;
+    aTokenStream.Truncate();
   } else {
     aType = eTokenStream;
     aTokenStream = value;
@@ -98,7 +103,8 @@ CSSVariableDeclarations::PutTokenStream(const nsAString& aName,
                                         const nsString& aTokenStream)
 {
   MOZ_ASSERT(!aTokenStream.EqualsLiteral(INITIAL_VALUE) &&
-             !aTokenStream.EqualsLiteral(INHERIT_VALUE));
+             !aTokenStream.EqualsLiteral(INHERIT_VALUE) &&
+             !aTokenStream.EqualsLiteral(UNSET_VALUE));
   mVariables.Put(aName, aTokenStream);
 }
 
@@ -112,6 +118,12 @@ void
 CSSVariableDeclarations::PutInherit(const nsAString& aName)
 {
   mVariables.Put(aName, NS_LITERAL_STRING(INHERIT_VALUE));
+}
+
+void
+CSSVariableDeclarations::PutUnset(const nsAString& aName)
+{
+  mVariables.Put(aName, NS_LITERAL_STRING(UNSET_VALUE));
 }
 
 void
@@ -163,11 +175,15 @@ CSSVariableDeclarations::EnumerateVariableForAddVariablesToResolver(
                   eCSSTokenSerialization_Nothing,
                   eCSSTokenSerialization_Nothing,
                   false);
-  } else if (aValue.EqualsLiteral(INHERIT_VALUE)) {
-    // Values of 'inherit' don't need any handling, since it means we just need
-    // to keep whatever value is currently in the resolver.  This is because
-    // the specified variable declarations already have only the winning
-    // declaration for the variable and no longer have any of the others.
+  } else if (aValue.EqualsLiteral(INHERIT_VALUE) ||
+             aValue.EqualsLiteral(UNSET_VALUE)) {
+    // Values of 'inherit' and 'unset' don't need any handling, since it means
+    // we just need to keep whatever value is currently in the resolver.
+    // Values of 'inherit' and 'unset' don't need any handling, since it means
+    // we just need to keep whatever value is currently in the resolver.  This
+    // is because the specified variable declarations already have only the
+    // winning declaration for the variable and no longer have any of the
+    // others.
   } else {
     // At this point, we don't know what token types are at the start and end
     // of the specified variable value.  These will be determined later during

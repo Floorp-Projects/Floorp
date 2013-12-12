@@ -693,7 +693,7 @@ protected:
                                 nsString& aValue);
 
   /**
-   * Parses a CSS variable value.  This could be 'initial', 'inherit'
+   * Parses a CSS variable value.  This could be 'initial', 'inherit', 'unset'
    * or a token stream, which may or may not include variable references.
    *
    * @param aType Out parameter into which the type of the variable value
@@ -12481,13 +12481,16 @@ CSSParserImpl::ParseValueWithVariables(CSSVariableDeclarations::Type* aType,
     }
   }
 
-  // Look for 'initial' or 'inherit' as the first non-white space token.
+  // Look for 'initial', 'inherit' or 'unset' as the first non-white space
+  // token.
   CSSVariableDeclarations::Type type = CSSVariableDeclarations::eTokenStream;
   if (mToken.mType == eCSSToken_Ident) {
     if (mToken.mIdent.LowerCaseEqualsLiteral("initial")) {
       type = CSSVariableDeclarations::eInitial;
     } else if (mToken.mIdent.LowerCaseEqualsLiteral("inherit")) {
       type = CSSVariableDeclarations::eInherit;
+    } else if (mToken.mIdent.LowerCaseEqualsLiteral("unset")) {
+      type = CSSVariableDeclarations::eUnset;
     }
   }
 
