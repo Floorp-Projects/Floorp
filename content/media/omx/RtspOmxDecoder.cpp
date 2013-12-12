@@ -22,44 +22,5 @@ MediaDecoderStateMachine* RtspOmxDecoder::CreateStateMachine()
                                   mResource->IsRealTime());
 }
 
-void RtspOmxDecoder::ApplyStateToStateMachine(PlayState aState)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  GetReentrantMonitor().AssertCurrentThreadIn();
-
-  MediaDecoder::ApplyStateToStateMachine(aState);
-
-
-  // Send play/pause commands here through the nsIStreamingProtocolController
-  // except seek command. We need to clear the decoded/un-decoded buffer data
-  // before sending seek command. So the seek calling path to controller is:
-  // mDecoderStateMachine::Seek-> RtspOmxReader::Seek-> RtspResource::SeekTime->
-  // controller->Seek(). RtspOmxReader::Seek will clear the decoded buffer and
-  // the RtspResource::SeekTime will clear the un-decoded buffer.
-
-  RtspMediaResource* rtspResource = mResource->GetRtspPointer();
-  MOZ_ASSERT(rtspResource);
-
-  nsIStreamingProtocolController* controller =
-    rtspResource->GetMediaStreamController();
-  if (mDecoderStateMachine) {
-    switch (aState) {
-      case PLAY_STATE_PLAYING:
-        if (controller) {
-          controller->Play();
-        }
-        break;
-      case PLAY_STATE_PAUSED:
-        if (controller) {
-          controller->Pause();
-        }
-        break;
-      default:
-        /* No action needed */
-        break;
-    }
-  }
-}
-
 } // namespace mozilla
 
