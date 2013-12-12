@@ -250,7 +250,7 @@ public:
 
   WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
     WidgetMouseEvent(aIsTrusted, aMessage, aWidget, NS_DRAG_EVENT, eReal),
-    userCancelled(false)
+    userCancelled(false), mDefaultPreventedOnContent(false)
   {
     mFlags.mCancelable =
       (aMessage != NS_DRAGDROP_EXIT_SYNTH &&
@@ -263,6 +263,8 @@ public:
 
   // If this is true, user has cancelled the drag operation.
   bool userCancelled;
+  // If this is true, the drag event's preventDefault() is called on content.
+  bool mDefaultPreventedOnContent;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignDragEventData(const WidgetDragEvent& aEvent, bool aCopyTargets)
@@ -272,6 +274,7 @@ public:
     dataTransfer = aEvent.dataTransfer;
     // XXX userCancelled isn't copied, is this instentionally?
     userCancelled = false;
+    mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
   }
 };
 
