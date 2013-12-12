@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 this.EXPORTED_SYMBOLS = ["DataStoreServiceInternal"];
 
 function debug(s) {
-  // dump('DEBUG DataStoreServiceInternal: ' + s + '\n');
+  //dump('DEBUG DataStoreServiceInternal: ' + s + '\n');
 }
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
