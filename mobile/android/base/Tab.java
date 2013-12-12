@@ -95,7 +95,7 @@ public class Tab {
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
-        mAboutHomePage = null;
+        mAboutHomePage = HomePager.Page.TOP_SITES;
         mTitle = title == null ? "" : title;
         mFavicon = null;
         mFaviconUrl = null;
@@ -154,6 +154,7 @@ public class Tab {
     private void setAboutHomePage(HomePager.Page page) {
         mAboutHomePage = page;
     }
+
 
     // may be null if user-entered query hasn't yet been resolved to a URI
     public synchronized String getURL() {
@@ -659,8 +660,6 @@ public class Tab {
         final String homePage = message.getString("aboutHomePage");
         if (!TextUtils.isEmpty(homePage)) {
             setAboutHomePage(HomePager.Page.valueOf(homePage));
-        } else {
-            setAboutHomePage(null);
         }
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
