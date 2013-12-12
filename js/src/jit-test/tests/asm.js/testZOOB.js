@@ -80,12 +80,12 @@ function testInt(ctor, shift, scale, disp) {
     }
 }
 
-function testFloat(ctor, shift, scale, disp) {
+function testFloat(ctor, shift, scale, disp, coercion) {
     var ab = new ArrayBuffer(4096);
     var arr = new ctor(ab);
     for (var i = 0; i < arr.length; i++)
         arr[i] = i;
-    var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); function f(i) {i=i|0; return +arr[((i<<' + scale + ')+' + disp + ')>>' + shift + '] } return f'), this, null, ab);
+    var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); var toF = glob.Math.fround; function f(i) {i=i|0; return ' + coercion + '(arr[((i<<' + scale + ')+' + disp + ')>>' + shift + ']) } return f'), this, null, ab);
     for (var i of [0,1,2,3,4,1023,1024,1025,4095,4096,4097])
         assertEq(f(i), +arr[((i<<scale)+disp)>>shift]);
 
@@ -94,7 +94,7 @@ function testFloat(ctor, shift, scale, disp) {
             assertEq(f(i+j), +arr[(((i+j)<<scale)+disp)>>shift]);
     }
 
-    var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); function f(i,j) {i=i|0;j=+j; arr[((i<<' + scale + ')+' + disp + ')>>' + shift + '] = j } return f'), this, null, ab);
+    var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + 'var arr=new glob.' + ctor.name + '(b); var toF = glob.Math.fround; function f(i,j) {i=i|0;j=+j; arr[((i<<' + scale + ')+' + disp + ')>>' + shift + '] = j } return f'), this, null, ab);
     for (var i of [0,1,2,3,4,1023,1024,1025,4095,4096,4097]) {
         var index = ((i<<scale)+disp)>>shift;
         var v = +arr[index];
@@ -114,6 +114,13 @@ function testFloat(ctor, shift, scale, disp) {
     }
 }
 
+function testFloat32(ctor, shift, scale, disp) {
+    testFloat(ctor, shift, scale, disp, "toF");
+}
+function testFloat64(ctor, shift, scale, disp) {
+    testFloat(ctor, shift, scale, disp, "+");
+}
+
 function test(tester, ctor, shift) {
     for (scale of [0,1,2,3]) {
         for (disp of [0,1,8,Math.pow(2,31)-1,Math.pow(2,31),Math.pow(2,32)-1])
@@ -127,5 +134,5 @@ test(testInt, Int16Array, 1);
 test(testInt, Uint16Array, 1);
 test(testInt, Int32Array, 2);
 test(testInt, Uint32Array, 2);
-test(testFloat, Float32Array, 2);
-test(testFloat, Float64Array, 3);
+test(testFloat32, Float32Array, 2);
+test(testFloat64, Float64Array, 3);
