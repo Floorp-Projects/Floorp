@@ -17,11 +17,9 @@ using namespace js;
 using namespace js::jit;
 
 MIRGenerator::MIRGenerator(CompileCompartment *compartment,
-                           TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
-                           const OptimizationInfo *optimizationInfo)
+                           TempAllocator *alloc, MIRGraph *graph, CompileInfo *info)
   : compartment(compartment),
     info_(info),
-    optimizationInfo_(optimizationInfo),
     alloc_(alloc),
     graph_(graph),
     error_(false),

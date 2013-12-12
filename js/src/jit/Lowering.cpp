@@ -523,7 +523,7 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
     if (!allowFloat32Optimizations())
         return true;
 
-    if (type != MIRType_Value && !js_JitOptions.eagerCompilation) {
+    if (type != MIRType_Value && !js_IonOptions.eagerCompilation) {
         JS_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
         JS_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }
@@ -3421,15 +3421,6 @@ LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
     return defineBox(lir, ins);
 }
 
-bool
-LIRGenerator::visitRecompileCheck(MRecompileCheck *ins)
-{
-    LRecompileCheck *lir = new(alloc()) LRecompileCheck(temp());
-    if (!add(lir, ins))
-        return false;
-    return assignSafepoint(lir, ins);
-}
-
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
@@ -3550,7 +3541,7 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!definePhis())
         return false;
 
-    if (gen->optimizationInfo().registerAllocator() == RegisterAllocator_LSRA) {
+    if (js_IonOptions.registerAllocator == RegisterAllocator_LSRA) {
         if (!add(new(alloc()) LLabel()))
             return false;
     }

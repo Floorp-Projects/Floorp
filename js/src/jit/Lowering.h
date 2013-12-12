@@ -261,7 +261,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSetDOMProperty(MSetDOMProperty *ins);
     bool visitGetDOMProperty(MGetDOMProperty *ins);
     bool visitGetDOMMember(MGetDOMMember *ins);
-    bool visitRecompileCheck(MRecompileCheck *ins);
 };
 
 } // namespace jit
