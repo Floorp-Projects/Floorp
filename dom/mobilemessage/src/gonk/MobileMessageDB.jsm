@@ -78,40 +78,7 @@ XPCOMUtils.defineLazyGetter(this, "MMS", function () {
 /**
  * MobileMessageDB
  */
-this.MobileMessageDB = function(aDbName, aDbVersion) {
-  this.dbName = aDbName;
-  this.dbVersion = aDbVersion || DB_VERSION;
-
-  let that = this;
-  this.newTxn(READ_ONLY, function(error, txn, messageStore){
-    if (error) {
-      return;
-    }
-    // In order to get the highest key value, we open a key cursor in reverse
-    // order and get only the first pointed value.
-    let request = messageStore.openCursor(null, PREV);
-    request.onsuccess = function onsuccess(event) {
-      let cursor = event.target.result;
-      if (!cursor) {
-        if (DEBUG) {
-          debug("Could not get the last key from mobile message database. " +
-                "Probably empty database");
-        }
-        return;
-      }
-      that.lastMessageId = cursor.key || 0;
-      if (DEBUG) debug("Last assigned message ID was " + that.lastMessageId);
-    };
-    request.onerror = function onerror(event) {
-      if (DEBUG) {
-        debug("Could not get the last key from mobile message database " +
-              event.target.errorCode);
-      }
-    };
-  });
-  this.updatePendingTransactionToError();
-};
-
+this.MobileMessageDB = function() {};
 MobileMessageDB.prototype = {
   dbName: null,
   dbVersion: null,
@@ -322,15 +289,83 @@ MobileMessageDB.prototype = {
   },
 
   /**
+   * Initialize this MobileMessageDB.
+   *
+   * @param aDbName
+   *        A string name for that database.
+   * @param aDbVersion
+   *        The version that mmdb should upgrade to. 0 for the lastest version.
+   * @param aCallback
+   *        A function when either the initialization transaction is completed
+   *        or any error occurs.  Should take only one argument -- null when
+   *        initialized with success or the error object otherwise.
+   */
+  init: function init(aDbName, aDbVersion, aCallback) {
+    this.dbName = aDbName;
+    this.dbVersion = aDbVersion || DB_VERSION;
+
+    let self = this;
+    this.newTxn(READ_ONLY, function(error, txn, messageStore){
+      if (error) {
+        if (aCallback) {
+          aCallback(error);
+        }
+        return;
+      }
+
+      if (aCallback) {
+        txn.oncomplete = function() {
+          aCallback(null);
+        };
+      }
+
+      // In order to get the highest key value, we open a key cursor in reverse
+      // order and get only the first pointed value.
+      let request = messageStore.openCursor(null, PREV);
+      request.onsuccess = function onsuccess(event) {
+        let cursor = event.target.result;
+        if (!cursor) {
+          if (DEBUG) {
+            debug("Could not get the last key from mobile message database. " +
+                  "Probably empty database");
+          }
+          return;
+        }
+        self.lastMessageId = cursor.key || 0;
+        if (DEBUG) debug("Last assigned message ID was " + self.lastMessageId);
+      };
+      request.onerror = function onerror(event) {
+        if (DEBUG) {
+          debug("Could not get the last key from mobile message database " +
+                event.target.errorCode);
+        }
+      };
+    });
+  },
+
+  close: function close() {
+    if (!this.db) {
+      return;
+    }
+
+    this.db.close();
+    this.db = null;
+    this.lastMessageId = 0;
+  },
+
+  /**
    * Sometimes user might reboot or remove battery while sending/receiving
    * message. This is function set the status of message records to error.
    */
-  updatePendingTransactionToError: function updatePendingTransactionToError() {
+  updatePendingTransactionToError:
+    function updatePendingTransactionToError(aError) {
+    if (aError) {
+      return;
+    }
+
     this.newTxn(READ_WRITE, function (error, txn, messageStore) {
-      if (DEBUG) {
-        txn.onerror = function onerror(event) {
-          debug("updatePendingTransactionToError fail, event = " + event);
-        };
+      if (error) {
+        return;
       }
 
       let deliveryIndex = messageStore.index("delivery");
