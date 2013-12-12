@@ -514,7 +514,6 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('final_target', RecursiveMakeBackend)
 
         final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"
-        print([x for x in os.walk(env.topobjdir)])
         expected = dict()
         expected[env.topobjdir] = []
         expected[mozpath.join(env.topobjdir, 'both')] = [
@@ -571,6 +570,17 @@ class TestRecursiveMakeBackend(BackendTester):
                 '  #     define   foo   baz qux   \n',
                 '#endif\n',
             ])
+
+    def test_jar_manifests(self):
+        env = self._consume('jar-manifests', RecursiveMakeBackend)
+
+        with open(os.path.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+
+        lines = [line.rstrip() for line in lines]
+
+        self.assertIn('JAR_MANIFEST := %s/jar.mn' % env.topsrcdir, lines)
+
 
 if __name__ == '__main__':
     main()

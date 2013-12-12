@@ -15,6 +15,7 @@ from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
+from mozbuild.util import DefaultOnReadDict
 
 import mozpack.path as mozpath
 
@@ -27,7 +28,7 @@ test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, 'data')
 
 
-CONFIGS = {
+CONFIGS = DefaultOnReadDict({
     'stub0': {
         'defines': [
             ('MOZ_TRUE_1', '1'),
@@ -50,51 +51,6 @@ CONFIGS = {
             ('MOZ_BAR', 'bar'),
         ],
     },
-    'variable_passthru': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'defines': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'exports': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'test-manifests-written': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'ipdl_sources': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'xpidl': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'local_includes': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'generated_includes': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'final_target': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
     'test_config': {
         'defines': [
             ('foo', 'baz qux'),
@@ -105,7 +61,11 @@ CONFIGS = {
             ('foo', 'bar baz'),
         ],
     },
-}
+}, global_default={
+    'defines': [],
+    'non_global_defines': [],
+    'substs': [],
+})
 
 
 class BackendTester(unittest.TestCase):

@@ -32,6 +32,7 @@ from ..frontend.data import (
     HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
+    JARManifest,
     JavaJarData,
     LibraryDefinition,
     LocalInclude,
@@ -404,6 +405,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
+
+        elif isinstance(obj, JARManifest):
+            backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
 
         elif isinstance(obj, IPDLFile):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
