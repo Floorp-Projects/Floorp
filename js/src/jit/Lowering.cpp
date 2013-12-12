@@ -3412,6 +3412,15 @@ LIRGenerator::visitGetDOMMember(MGetDOMMember *ins)
     return defineBox(lir, ins);
 }
 
+bool
+LIRGenerator::visitRecompileCheck(MRecompileCheck *ins)
+{
+    LRecompileCheck *lir = new(alloc()) LRecompileCheck(temp());
+    if (!add(lir, ins))
+        return false;
+    return assignSafepoint(lir, ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {
