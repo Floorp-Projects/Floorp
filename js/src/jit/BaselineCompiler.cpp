@@ -638,7 +638,8 @@ BaselineCompiler::emitUseCountIncrement()
 
     Label skipCall;
 
-    uint32_t minUses = UsesBeforeIonCompile(script, pc);
+    const OptimizationInfo *info = js_IonOptimizations.get(js_IonOptimizations.firstLevel());
+    uint32_t minUses = info->usesBeforeCompile(script, pc);
     masm.branch32(Assembler::LessThan, countReg, Imm32(minUses), &skipCall);
 
     masm.branchPtr(Assembler::Equal,

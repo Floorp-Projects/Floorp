@@ -180,7 +180,6 @@ TooManyArguments(unsigned nargs)
 
 void ForbidCompilation(JSContext *cx, JSScript *script);
 void ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode);
-uint32_t UsesBeforeIonCompile(JSScript *script, jsbytecode *pc);
 
 void PurgeCaches(JSScript *script, JS::Zone *zone);
 size_t SizeOfIonData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf);

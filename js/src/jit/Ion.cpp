@@ -1808,17 +1808,6 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
     return true;
 }
 
-// Longer scripts can only be compiled off thread, as these compilations
-// can be expensive and stall the main thread for too long.
-static const uint32_t MAX_OFF_THREAD_SCRIPT_SIZE = 100 * 1000;
-static const uint32_t MAX_MAIN_THREAD_SCRIPT_SIZE = 2 * 1000;
-static const uint32_t MAX_MAIN_THREAD_LOCALS_AND_ARGS = 256;
-
-// DOM Worker runtimes don't have off thread compilation, but can also compile
-// larger scripts since this doesn't stall the main thread.
-static const uint32_t MAX_DOM_WORKER_SCRIPT_SIZE = 16 * 1000;
-static const uint32_t MAX_DOM_WORKER_LOCALS_AND_ARGS = 2048;
-
 static MethodStatus
 CheckScriptSize(JSContext *cx, JSScript* script)
 {
@@ -1882,14 +1871,14 @@ CanIonCompileScript(JSContext *cx, HandleScript script, bool osr)
 }
 
 static OptimizationLevel
-GetOptimizationLevel(HandleScript script, ExecutionMode executionMode)
+GetOptimizationLevel(HandleScript script, jsbytecode *pc, ExecutionMode executionMode)
 {
     if (executionMode == ParallelExecution)
         return Optimization_Normal;
 
     JS_ASSERT(executionMode == SequentialExecution);
 
-    return js_IonOptimizations.levelForUseCount(script->getUseCount());
+    return js_IonOptimizations.levelForScript(script, pc);
 }
 
 static MethodStatus
@@ -1922,7 +1911,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     }
 
     bool recompile = false;
-    OptimizationLevel optimizationLevel = GetOptimizationLevel(script, executionMode);
+    OptimizationLevel optimizationLevel = GetOptimizationLevel(script, osrPc, executionMode);
     if (optimizationLevel == Optimization_DontCompile)
         return Method_Skipped;
 
@@ -2731,39 +2720,6 @@ jit::ForbidCompilation(JSContext *cx, JSScript *script, ExecutionMode mode)
     }
 
     MOZ_ASSUME_UNREACHABLE("No such execution mode");
-}
-
-uint32_t
-jit::UsesBeforeIonCompile(JSScript *script, jsbytecode *pc)
-{
-    JS_ASSERT(pc == script->code() || JSOp(*pc) == JSOP_LOOPENTRY);
-
-    OptimizationLevel level = js_IonOptimizations.nextLevel(Optimization_DontCompile);
-    const OptimizationInfo *info = js_IonOptimizations.get(level);
-
-    uint32_t minUses = info->usesBeforeCompile();
-
-    // If the script is too large to compile on the main thread, we can still
-    // compile it off thread. In these cases, increase the use count threshold
-    // to improve the compilation's type information and hopefully avoid later
-    // recompilation.
-
-    if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE)
-        minUses = minUses * (script->length() / (double) MAX_MAIN_THREAD_SCRIPT_SIZE);
-
-    uint32_t numLocalsAndArgs = analyze::TotalSlots(script);
-    if (numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
-        minUses = minUses * (numLocalsAndArgs / (double) MAX_MAIN_THREAD_LOCALS_AND_ARGS);
-
-    if (JSOp(*pc) != JSOP_LOOPENTRY || js_JitOptions.eagerCompilation)
-        return minUses;
-
-    // It's more efficient to enter outer loops, rather than inner loops, via OSR.
-    // To accomplish this, we use a slightly higher threshold for inner loops.
-    // Note that the loop depth is always > 0 so we will prefer non-OSR over OSR.
-    uint32_t loopDepth = GET_UINT8(pc);
-    JS_ASSERT(loopDepth > 0);
-    return minUses + loopDepth * 100;
 }
 
 void
