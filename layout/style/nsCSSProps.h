@@ -270,6 +270,9 @@ public:
     return (aProperty >= eCSSProperty_COUNT_no_shorthands);
   }
 
+  // Must be given a longhand property.
+  static bool IsInherited(nsCSSProperty aProperty);
+
   // Same but for @font-face descriptors
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
   static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
