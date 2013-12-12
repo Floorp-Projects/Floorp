@@ -185,41 +185,6 @@ public:
                               const gfx::IntPoint* aSrcOffset = nullptr);
 
     virtual void BindTexture(GLenum aTextureUnit) = 0;
-    virtual void ReleaseTexture() {}
-
-    void BindTextureAndApplyFilter(GLenum aTextureUnit) {
-        BindTexture(aTextureUnit);
-        ApplyFilter();
-    }
-
-    class ScopedBindTexture
-    {
-    public:
-        ScopedBindTexture(TextureImage *aTexture, GLenum aTextureUnit);
-
-        ~ScopedBindTexture()
-        {
-            if (mTexture) {
-                mTexture->ReleaseTexture();
-            }
-        }
-
-    protected:
-        TextureImage *mTexture;
-    };
-
-    class ScopedBindTextureAndApplyFilter
-        : public ScopedBindTexture
-    {
-    public:
-        ScopedBindTextureAndApplyFilter(TextureImage *aTexture, GLenum aTextureUnit) :
-          ScopedBindTexture(aTexture, aTextureUnit)
-        {
-            if (mTexture) {
-                mTexture->ApplyFilter();
-            }
-        }
-    };
 
     /**
      * Returns the image format of the texture. Only valid after a matching
@@ -246,12 +211,6 @@ public:
     GLenum GetWrapMode() const { return mWrapMode; }
 
     void SetFilter(GraphicsFilter aFilter) { mFilter = aFilter; }
-
-    /**
-     * Applies this TextureImage's filter, assuming that its texture is
-     * the currently bound texture.
-     */
-    virtual void ApplyFilter() = 0;
 
 protected:
     friend class GLContext;
@@ -345,9 +304,7 @@ public:
 
     virtual void Resize(const nsIntSize& aSize);
 
-    virtual void ApplyFilter();
 protected:
-
     GLuint mTexture;
     TextureState mTextureState;
     nsRefPtr<GLContext> mGLContext;
@@ -390,7 +347,6 @@ public:
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
     virtual bool InUpdate() const { return mInUpdate; }
     virtual void BindTexture(GLenum);
-    virtual void ApplyFilter();
 
 protected:
     virtual gfx::IntRect GetSrcTileRect();

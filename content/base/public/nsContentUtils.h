@@ -1545,6 +1545,7 @@ public:
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetSafeJSContext();
+  static JSContext *GetCurrentJSContextForThread();
   static JSContext *GetDefaultJSContextForThread();
 
   /**

@@ -11,6 +11,7 @@ include protocol PCompositor;
 include protocol PGrallocBuffer;
 include protocol PLayer;
 include protocol PRenderFrame;
+include protocol PTexture;
 
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
@@ -301,33 +302,12 @@ struct OpUpdatePictureRect {
 };
 
 /**
- * Provides the compositor side with enough information to create a
- * TextureHost.
- */
-struct OpAddTexture {
-  PCompositable compositable;
-  uint64_t textureID;
-  SurfaceDescriptor data;
-  uint32_t textureFlags;
-};
-
-/**
- * Tells the compositor-side to remove the corresponding TextureHost and
- * deallocate its data.
- */
-struct OpRemoveTexture {
-  PCompositable compositable;
-  uint64_t textureID;
-  uint32_t flags;
-};
-
-/**
  * Tells the compositor-side which texture to use (for example, as front buffer
  * if there is several textures for double buffering)
  */
 struct OpUseTexture {
   PCompositable compositable;
-  uint64_t textureID;
+  PTexture texture;
 };
 
 union MaybeRegion {
@@ -337,7 +317,7 @@ union MaybeRegion {
 
 struct OpUpdateTexture {
   PCompositable compositable;
-  uint64_t textureID;
+  PTexture texture;
   MaybeRegion region;
 };
 
@@ -354,8 +334,6 @@ union CompositableOperation {
 
   OpPaintTiledLayerBuffer;
 
-  OpAddTexture;
-  OpRemoveTexture;
   OpUpdateTexture;
   OpUseTexture;
 };
@@ -399,18 +377,11 @@ struct OpTextureSwap {
   SurfaceDescriptor image;
 };
 
-struct ReplyTextureRemoved {
-  PCompositable compositable;
-  uint64_t textureId;
-};
-
 // Unit of a "changeset reply".  This is a weird abstraction, probably
 // only to be used for buffer swapping.
 union EditReply {
   OpContentBufferSwap;
   OpTextureSwap;
-
-  ReplyTextureRemoved;
 };
 
 } // namespace

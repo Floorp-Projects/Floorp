@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 
 #include "nsCSSProperty.h"
+#include "nsCSSScanner.h"
 #include "nsCOMPtr.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
@@ -22,8 +23,10 @@ struct nsCSSSelectorList;
 class nsMediaList;
 class nsCSSKeyframeRule;
 class nsCSSValue;
+class nsRuleData;
 
 namespace mozilla {
+class CSSVariableValues;
 namespace css {
 class Rule;
 class Declaration;
@@ -126,6 +129,15 @@ public:
                          bool                aIsImportant,
                          bool                aIsSVGMode = false);
 
+  // The same as ParseProperty but for a variable.
+  nsresult ParseVariable(const nsAString&    aVariableName,
+                         const nsAString&    aPropValue,
+                         nsIURI*             aSheetURL,
+                         nsIURI*             aBaseURL,
+                         nsIPrincipal*       aSheetPrincipal,
+                         mozilla::css::Declaration* aDeclaration,
+                         bool*               aChanged,
+                         bool                aIsImportant);
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be
    * non-null, replacing its current contents.  If aHTMLMode is true,
@@ -196,6 +208,52 @@ public:
                                  nsIURI* aDocURL,
                                  nsIURI* aBaseURL,
                                  nsIPrincipal* aDocPrincipal);
+
+  typedef void (*VariableEnumFunc)(const nsAString&, void*);
+
+  /**
+   * Parses aPropertyValue as a property value and calls aFunc for each
+   * variable reference that is found.  Returns false if there was
+   * a syntax error in the use of variable references.
+   */
+  bool EnumerateVariableReferences(const nsAString& aPropertyValue,
+                                   VariableEnumFunc aFunc,
+                                   void* aData);
+
+  /**
+   * Parses aPropertyValue as a property value and resolves variable references
+   * using the values in aVariables.
+   */
+  bool ResolveVariableValue(const nsAString& aPropertyValue,
+                            const mozilla::CSSVariableValues* aVariables,
+                            nsString& aResult,
+                            nsCSSTokenSerializationType& aFirstToken,
+                            nsCSSTokenSerializationType& aLastToken);
+
+  /**
+   * Parses a string as a CSS token stream value for particular property,
+   * resolving any variable references.  The parsed property value is stored
+   * in the specified nsRuleData object.  If aShorthandPropertyID has a value
+   * other than eCSSProperty_UNKNOWN, this is the property that will be parsed;
+   * otherwise, aPropertyID will be parsed.  Either way, only aPropertyID,
+   * a longhand property, will be copied over to the rule data.
+   *
+   * If the property cannot be parsed, it will be treated as if 'initial' or
+   * 'inherit' were specified, for non-inherited and inherited properties
+   * respectively.
+   */
+  void ParsePropertyWithVariableReferences(
+                                   nsCSSProperty aPropertyID,
+                                   nsCSSProperty aShorthandPropertyID,
+                                   const nsAString& aValue,
+                                   const mozilla::CSSVariableValues* aVariables,
+                                   nsRuleData* aRuleData,
+                                   nsIURI* aDocURL,
+                                   nsIURI* aBaseURL,
+                                   nsIPrincipal* aDocPrincipal,
+                                   nsCSSStyleSheet* aSheet,
+                                   uint32_t aLineNumber,
+                                   uint32_t aLineOffset);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

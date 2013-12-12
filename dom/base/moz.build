@@ -59,6 +59,7 @@ EXPORTS.mozilla.dom += [
     'MessagePortList.h',
     'Navigator.h',
     'ScreenOrientation.h',
+    'ScriptSettings.h',
     'StructuredCloneTags.h',
     'URL.h',
 ]
@@ -94,6 +95,7 @@ UNIFIED_SOURCES += [
     'nsWindowMemoryReporter.cpp',
     'nsWindowRoot.cpp',
     'nsWrapperCache.cpp',
+    'ScriptSettings.cpp',
     'URL.cpp',
     'WindowNamedPropertiesHandler.cpp',
 ]

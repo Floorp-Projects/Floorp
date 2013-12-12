@@ -19,3 +19,8 @@
 #
 
 Bug 942231 needs a clobber -- JNI wrappers need to be re-generated.
+and
+Bug 934646 needs a clobber -- the icon resources previously copied
+into $OBJDIR/mobile/android/base/res will conflict with those in
+$BRANDING_DIRECTORY/res.
+

@@ -247,9 +247,9 @@ struct JSCompartment
     void markAllInitialShapeTableEntries(JSTracer *trc);
 
     /* Set of default 'new' or lazy types in the compartment. */
-    js::types::TypeObjectSet     newTypeObjects;
-    js::types::TypeObjectSet     lazyTypeObjects;
-    void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
+    js::types::TypeObjectWithNewScriptSet newTypeObjects;
+    js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
+    void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
 
     /*
      * Hash table of all manually call site-cloned functions from within
