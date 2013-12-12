@@ -71,8 +71,8 @@ LOCAL_INCLUDES += [
     '/content/media/omx/mediaresourcemanager',
     '/dom/events',
     '/dom/system/android',
-    '/gfx/skia/include/config',
-    '/gfx/skia/include/core',
+    '/gfx/skia/trunk/include/config',
+    '/gfx/skia/trunk/include/core',
     '/widget/shared',
     '/widget/xpwidgets',
 ]
