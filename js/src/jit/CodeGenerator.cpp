@@ -8043,5 +8043,24 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV *ins)
     return true;
 }
 
+typedef bool (*RecompileFn)(JSContext *);
+static const VMFunction RecompileFnInfo = FunctionInfo<RecompileFn>(Recompile);
+
+bool
+CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
+{
+    Register useCount = ToRegister(ins->scratch());
+
+    masm.movePtr(ImmPtr(ins->mir()->script()->addressOfUseCount()), useCount);
+    Address ptr(useCount, 0);
+    masm.add32(Imm32(1), ptr);
+
+    OutOfLineCode *ool = oolCallVM(RecompileFnInfo, ins, (ArgList()), StoreRegisterTo(useCount));
+    masm.branch32(Assembler::Above, ptr, Imm32(ins->mir()->useCount()), ool->entry());
+    masm.bind(ool->rejoin());
+
+    return true;
+}
+
 } // namespace jit
 } // namespace js
