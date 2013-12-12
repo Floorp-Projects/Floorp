@@ -10,6 +10,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.widget.ArrowPopup;
 import org.mozilla.gecko.widget.DoorHanger;
+import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,8 +28,7 @@ import android.widget.TextView;
  * SiteIdentityPopup is a singleton class that displays site identity data in
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
-public class SiteIdentityPopup extends ArrowPopup
-                               implements DoorHanger.OnButtonClickListener {
+public class SiteIdentityPopup extends ArrowPopup {
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
     public static final String UNKNOWN = "unknown";
@@ -57,10 +57,13 @@ public class SiteIdentityPopup extends ArrowPopup
 
     private DoorHanger mMixedContentNotification;
 
+    private final OnButtonClickListener mButtonClickListener;
+
     SiteIdentityPopup(BrowserApp activity) {
         super(activity);
 
         mResources = activity.getResources();
+        mButtonClickListener = new PopupButtonListener();
     }
 
     static int getSecurityImageLevel(String mode) {
@@ -126,20 +129,6 @@ public class SiteIdentityPopup extends ArrowPopup
         }
     }
 
-    @Override
-    public void onButtonClick(DoorHanger dh, String tag) {
-        try {
-            JSONObject data = new JSONObject();
-            data.put("allowMixedContent", tag.equals("disable"));
-            GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", data.toString());
-            GeckoAppShell.sendEventToGecko(e);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Exception creating message to enable/disable mixed content blocking", e);
-        }
-
-        dismiss();
-    }
-
     private void addMixedContentNotification(boolean blocked) {
         // Remove any exixting mixed content notification.
         removeMixedContentNotification();
@@ -157,11 +146,14 @@ public class SiteIdentityPopup extends ArrowPopup
 
         if (blocked) {
             mMixedContentNotification.setIcon(R.drawable.shield_doorhanger);
-            mMixedContentNotification.addButton(mActivity.getString(R.string.disable_protection), "disable", this);
-            mMixedContentNotification.addButton(mActivity.getString(R.string.keep_blocking), "keepBlocking", this);
+            mMixedContentNotification.addButton(mActivity.getString(R.string.disable_protection),
+                                                "disable", mButtonClickListener);
+            mMixedContentNotification.addButton(mActivity.getString(R.string.keep_blocking),
+                                                "keepBlocking", mButtonClickListener);
         } else {
             mMixedContentNotification.setIcon(R.drawable.warning_doorhanger);
-            mMixedContentNotification.addButton(mActivity.getString(R.string.enable_protection), "enable", this);
+            mMixedContentNotification.addButton(mActivity.getString(R.string.enable_protection),
+                                                "enable", mButtonClickListener);
         }
 
         mContent.addView(mMixedContentNotification);
@@ -205,5 +197,21 @@ public class SiteIdentityPopup extends ArrowPopup
     public void dismiss() {
         super.dismiss();
         removeMixedContentNotification();
+    }
+
+    private class PopupButtonListener implements OnButtonClickListener {
+        @Override
+        public void onButtonClick(DoorHanger dh, String tag) {
+            try {
+                JSONObject data = new JSONObject();
+                data.put("allowMixedContent", tag.equals("disable"));
+                GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", data.toString());
+                GeckoAppShell.sendEventToGecko(e);
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Exception creating message to enable/disable mixed content blocking", e);
+            }
+
+            dismiss();
+        }
     }
 }
