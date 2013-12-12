@@ -1450,29 +1450,21 @@ CanvasRenderingContext2D::CreatePattern(const HTMLImageOrCanvasOrVideoElement& e
     htmlElement = &element.GetAsHTMLVideoElement();
   }
 
+  EnsureTarget();
+
   // The canvas spec says that createPattern should use the first frame
   // of animated images
   nsLayoutUtils::SurfaceFromElementResult res =
     nsLayoutUtils::SurfaceFromElement(htmlElement,
-      nsLayoutUtils::SFE_WANT_FIRST_FRAME | nsLayoutUtils::SFE_WANT_NEW_SURFACE);
+      nsLayoutUtils::SFE_WANT_FIRST_FRAME, mTarget);
 
-  if (!res.mSurface) {
+  if (!res.mSourceSurface) {
     error.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
-
-  // Ignore nullptr cairo surfaces! See bug 666312.
-  if (!res.mSurface->CairoSurface() || res.mSurface->CairoStatus()) {
-    error.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
-  EnsureTarget();
-  RefPtr<SourceSurface> srcSurf =
-    gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, res.mSurface);
 
   nsRefPtr<CanvasPattern> pat =
-    new CanvasPattern(this, srcSurf, repeatMode, res.mPrincipal,
+    new CanvasPattern(this, res.mSourceSurface, repeatMode, res.mPrincipal,
                              res.mIsWriteOnly, res.mCORSUsed);
 
   return pat.forget();
@@ -3084,11 +3076,8 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
       element = video;
     }
 
-    gfxASurface* imgsurf =
+    srcSurf =
       CanvasImageCache::Lookup(element, mCanvasElement, &imgSize);
-    if (imgsurf) {
-      srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, imgsurf);
-    }
   }
 
   if (!srcSurf) {
@@ -3096,18 +3085,13 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     // of animated images
     uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME;
     nsLayoutUtils::SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromElement(element, sfeFlags);
+      nsLayoutUtils::SurfaceFromElement(element, sfeFlags, mTarget);
 
-    if (!res.mSurface) {
+    if (!res.mSourceSurface) {
       // Spec says to silently do nothing if the element is still loading.
       if (!res.mIsStillLoading) {
         error.Throw(NS_ERROR_NOT_AVAILABLE);
       }
-      return;
-    }
-
-    // Ignore cairo surfaces that are bad! See bug 666312.
-    if (res.mSurface->CairoStatus()) {
       return;
     }
 
@@ -3129,11 +3113,11 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     }
 
     if (res.mImageRequest) {
-      CanvasImageCache::NotifyDrawImage(element, mCanvasElement,
-                                        res.mImageRequest, res.mSurface, imgSize);
+      CanvasImageCache::NotifyDrawImage(element, mCanvasElement, res.mImageRequest,
+                                        res.mSourceSurface, imgSize);
     }
 
-    srcSurf = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mTarget, res.mSurface);
+    srcSurf = res.mSourceSurface;
   }
 
   if (optional_argc == 0) {

@@ -180,7 +180,7 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
 
   if (!mPattern) {
     mGfxPattern = new (mSurfacePattern.addr())
-      SurfacePattern(mSourceSurface, ToExtendMode(mExtend), mTransform);
+      SurfacePattern(mSourceSurface, ToExtendMode(mExtend), mTransform, mFilter);
     return mGfxPattern;
   }
 

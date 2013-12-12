@@ -388,6 +388,11 @@ inDOMUtils::IsInheritedProperty(const nsAString &aPropertyName, bool *_retval)
     return NS_OK;
   }
 
+  if (prop == eCSSPropertyExtra_variable) {
+    *_retval = true;
+    return NS_OK;
+  }
+
   if (nsCSSProps::IsShorthand(prop)) {
     prop = nsCSSProps::SubpropertyEntryFor(prop)[0];
   }
@@ -565,7 +570,9 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
   nsTArray<nsString> array;
   // We start collecting the values, BUT colors need to go in first, because array
   // needs to stay sorted, and the colors are sorted, so we just append them.
-  if (!nsCSSProps::IsShorthand(propertyID)) {
+  if (propertyID == eCSSPropertyExtra_variable) {
+    // No other values we can report.
+  } else if (!nsCSSProps::IsShorthand(propertyID)) {
     // Property is longhand.
     uint32_t propertyParserVariant = nsCSSProps::ParserVariant(propertyID);
     // Get colors first.

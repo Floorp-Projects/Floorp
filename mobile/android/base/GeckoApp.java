@@ -1374,7 +1374,7 @@ public abstract class GeckoApp
     }
 
     protected void initializeChrome() {
-        mDoorHangerPopup = new DoorHangerPopup(this, null);
+        mDoorHangerPopup = new DoorHangerPopup(this);
         mPluginContainer = (AbsoluteLayout) findViewById(R.id.plugin_container);
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
 

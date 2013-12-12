@@ -642,7 +642,7 @@ tools::
 endif
 
 ##############################################
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
+ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 ifdef MOZ_PROFILE_USE
 ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 # When building with PGO, we have to make sure to re-link

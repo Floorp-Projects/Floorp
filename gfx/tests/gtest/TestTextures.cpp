@@ -119,20 +119,17 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
   texture->Unlock();
 
   // client serialization
-  texture->SetID(1);
   SurfaceDescriptor descriptor;
   ASSERT_TRUE(texture->ToSurfaceDescriptor(descriptor));
 
   ASSERT_NE(descriptor.type(), SurfaceDescriptor::Tnull_t);
 
   // host deserialization
-  RefPtr<TextureHost> host = CreateBackendIndependentTextureHost(texture->GetID(),
-                                                                 descriptor, nullptr,
+  RefPtr<TextureHost> host = CreateBackendIndependentTextureHost(descriptor, nullptr,
                                                                  texture->GetFlags());
 
   ASSERT_TRUE(host.get() != nullptr);
   ASSERT_EQ(host->GetFlags(), texture->GetFlags());
-  ASSERT_EQ(host->GetID(), texture->GetID());
 
   // host read
   ASSERT_TRUE(host->Lock());
@@ -145,9 +142,6 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
                         hostDataSurface->Stride(),
                         SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
   AssertSurfacesEqual(surface, hostSurface.get());
-
-  // host deallocation
-  host->DeallocateSharedData();
 }
 
 // Same as above, for YCbCr surfaces
@@ -168,22 +162,19 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   client->Unlock();
 
   // client serialization
-  client->SetID(1);
   SurfaceDescriptor descriptor;
   ASSERT_TRUE(client->ToSurfaceDescriptor(descriptor));
 
   ASSERT_NE(descriptor.type(), SurfaceDescriptor::Tnull_t);
 
   // host deserialization
-  RefPtr<TextureHost> textureHost = CreateBackendIndependentTextureHost(client->GetID(),
-                                                                        descriptor, nullptr,
+  RefPtr<TextureHost> textureHost = CreateBackendIndependentTextureHost(descriptor, nullptr,
                                                                         client->GetFlags());
 
   RefPtr<BufferTextureHost> host = static_cast<BufferTextureHost*>(textureHost.get());
 
   ASSERT_TRUE(host.get() != nullptr);
   ASSERT_EQ(host->GetFlags(), client->GetFlags());
-  ASSERT_EQ(host->GetID(), client->GetID());
 
   // This will work iff the compositor is not BasicCompositor
   ASSERT_EQ(host->GetFormat(), mozilla::gfx::FORMAT_YUV);
@@ -213,9 +204,6 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
 
   AssertYCbCrSurfacesEqual(&ycbcrData, &data);
   host->Unlock();
-
-  // host deallocation
-  host->DeallocateSharedData();
 }
 
 TEST(Layers, TextureSerialization) {
@@ -234,7 +222,7 @@ TEST(Layers, TextureSerialization) {
     RefPtr<TextureClient> client
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
-                                TEXTURE_FLAGS_DEFAULT);
+                                TEXTURE_DEALLOCATE_CLIENT);
 
     TestTextureClientSurface(client, surface);
 
@@ -270,7 +258,7 @@ TEST(Layers, TextureYCbCrSerialization) {
   RefPtr<TextureClient> client
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::FORMAT_YUV,
-                              TEXTURE_FLAGS_DEFAULT);
+                              TEXTURE_DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
 
