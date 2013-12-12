@@ -98,6 +98,7 @@ EXPORTS.gfxipc += [
 ]
 
 EXPORTS.mozilla.layers += [
+    'AtomicRefCountedWithFinalize.h',
     'basic/BasicCompositor.h',
     'basic/MacIOSurfaceTextureHostBasic.h',
     'basic/TextureHostBasic.h',
@@ -186,6 +187,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
     UNIFIED_SOURCES += [
         'GrallocImages.cpp',
+        'opengl/EGLImageHelpers.cpp',
         'opengl/GrallocTextureClient.cpp',
         'opengl/GrallocTextureHost.cpp',
     ]
@@ -290,6 +292,7 @@ IPDL_SOURCES = [
     'ipc/PImageBridge.ipdl',
     'ipc/PLayer.ipdl',
     'ipc/PLayerTransaction.ipdl',
+    'ipc/PTexture.ipdl',
 ]
 
 MSVC_ENABLE_PGO = True

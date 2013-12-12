@@ -252,14 +252,6 @@ public:
   static BasicTiledLayerBuffer OpenDescriptor(ISurfaceAllocator* aAllocator,
                                               const SurfaceDescriptorTiles& aDescriptor);
 
-  void OnActorDestroy()
-  {
-    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-      if (mRetainedTiles[i].IsPlaceholderTile()) continue;
-      mRetainedTiles[i].mDeprecatedTextureClient->OnActorDestroy();
-    }
-  }
-
 protected:
   BasicTiledLayerTile ValidateTile(BasicTiledLayerTile aTile,
                                    const nsIntPoint& aTileRect,
@@ -348,12 +340,6 @@ public:
     LOW_PRECISION_TILED_BUFFER
   };
   void LockCopyAndWrite(TiledBufferType aType);
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE
-  {
-    mTiledBuffer.OnActorDestroy();
-    mLowPrecisionTiledBuffer.OnActorDestroy();
-  }
 
 private:
   BasicTiledLayerBuffer mTiledBuffer;
