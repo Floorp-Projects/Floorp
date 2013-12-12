@@ -7,7 +7,8 @@ JAR Manifests
 JAR Manifests are plaintext files in the tree that are used to package chrome
 files into the correct JARs, and create
 `Chrome Registration <https://developer.mozilla.org/en-US/docs/Chrome_Registration>`_
-manifests. JAR Manifests are named ``jar.mn``.
+manifests. JAR Manifests are commonly named ``jar.mn``. They are
+declared in ``moz.build`` files using the ``JAR_MANIFESTS`` variable.
 
 ``jar.mn`` files are automatically processed by the build system when building a
 source directory that contains one. The ``jar``.mn is run through the

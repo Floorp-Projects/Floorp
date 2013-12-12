@@ -440,6 +440,14 @@ VARIABLES = {
         distributed/shipped with the produced build.
         """, None),
 
+    'JAR_MANIFESTS': (StrictOrderingOnAppendList, list,
+        """JAR manifest files that should be processed as part of the build.
+
+        JAR manifests are files in the tree that define how to package files
+        into JARs and how chrome registration is performed. For more info,
+        see :ref:`jar_manifests`.
+        """, 'libs'),
+
     # IDL Generation.
     'XPIDL_SOURCES': (StrictOrderingOnAppendList, list,
         """XPCOM Interface Definition Files (xpidl).

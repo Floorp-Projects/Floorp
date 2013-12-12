@@ -447,6 +447,23 @@ class GeneratedInclude(SandboxDerived):
         self.path = path
 
 
+class JARManifest(SandboxDerived):
+    """Describes an individual JAR manifest file and how to process it.
+
+    This class isn't very useful for optimizing backends yet because we don't
+    capture defines. We can't capture defines safely until all of them are
+    defined in moz.build and not Makefile.in files.
+    """
+    __slots__ = (
+        'path',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.path = path
+
+
 class SandboxWrapped(SandboxDerived):
     """Generic sandbox container object for a wrapped rich object.
 
