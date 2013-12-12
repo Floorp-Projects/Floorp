@@ -85,6 +85,18 @@ let gTests = [
       ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
     }
   },
+  {
+    desc: "Ctrl+K should focus the search bar if it is in the navbar and not overflowing.",
+    run: function() {
+      let searchbar = document.getElementById("searchbar");
+      let placement = CustomizableUI.getPlacementOfWidget("search-container");
+      is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in nav-bar");
+
+      sendWebSearchKeyCommand();
+      logActiveElement();
+      is(document.activeElement, searchbar.textbox.inputField, "The searchbar should be focused");
+    },
+  },
 ];
 
 function test() {
