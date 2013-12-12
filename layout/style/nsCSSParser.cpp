@@ -828,6 +828,11 @@ protected:
   // some quirks during shorthand parsing
   bool          mParsingCompoundProperty : 1;
 
+  // True if we are in the middle of parsing an @supports condition.
+  // This is used to avoid recording the input stream when variable references
+  // are encountered in a property declaration in the @supports condition.
+  bool mInSupportsCondition : 1;
+
   // True if we are somewhere within a @supports rule whose condition is
   // false.
   bool mInFailingSupportsRule : 1;
@@ -906,6 +911,7 @@ CSSParserImpl::CSSParserImpl()
     mViewportUnitsEnabled(true),
     mHTMLMediaMode(false),
     mParsingCompoundProperty(false),
+    mInSupportsCondition(false),
     mInFailingSupportsRule(false),
     mSuppressErrors(false),
     mNextFree(nullptr)
@@ -3340,6 +3346,8 @@ CSSParserImpl::ParseSupportsRule(RuleAppendFunc aAppendFunc, void* aProcessData)
 bool
 CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 {
+  mInSupportsCondition = true;
+
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PESupportsConditionStartEOF2);
     return false;
@@ -3353,18 +3361,23 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
       mToken.mType == eCSSToken_Function ||
       mToken.mType == eCSSToken_URL ||
       mToken.mType == eCSSToken_Bad_URL) {
-    return ParseSupportsConditionInParens(aConditionMet) &&
-           ParseSupportsConditionTerms(aConditionMet) &&
-           !mScanner->SeenBadToken();
+    bool result = ParseSupportsConditionInParens(aConditionMet) &&
+                  ParseSupportsConditionTerms(aConditionMet) &&
+                  !mScanner->SeenBadToken();
+    mInSupportsCondition = false;
+    return result;
   }
 
   if (mToken.mType == eCSSToken_Ident &&
       mToken.mIdent.LowerCaseEqualsLiteral("not")) {
-    return ParseSupportsConditionNegation(aConditionMet) &&
-           !mScanner->SeenBadToken();
+    bool result = ParseSupportsConditionNegation(aConditionMet) &&
+                  !mScanner->SeenBadToken();
+    mInSupportsCondition = false;
+    return result;
   }
 
   REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedStart);
+  mInSupportsCondition = false;
   return false;
 }
 
