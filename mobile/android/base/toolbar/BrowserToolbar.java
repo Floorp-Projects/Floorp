@@ -141,6 +141,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private OnStartEditingListener mStartEditingListener;
     private OnStopEditingListener mStopEditingListener;
 
+    private SiteIdentityPopup mSiteIdentityPopup;
+
     final private BrowserApp mActivity;
     private boolean mHasSoftMenuButton;
 
@@ -295,7 +297,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
-        mActivity.getSiteIdentityPopup().setAnchor(mSiteSecurity);
+
+        mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
+        mSiteIdentityPopup.setAnchor(mSiteSecurity);
 
         mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
 
@@ -429,9 +433,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     Log.e(LOGTAG, "Selected tab has no identity data");
                     return;
                 }
-                SiteIdentityPopup siteIdentityPopup = mActivity.getSiteIdentityPopup();
-                siteIdentityPopup.updateIdentity(identityData);
-                siteIdentityPopup.show();
+
+                mSiteIdentityPopup.updateIdentity(identityData);
+                mSiteIdentityPopup.show();
             }
         };
 
@@ -479,6 +483,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
             });
         }
+    }
+
+    public void refresh() {
+        dismissSiteIdentityPopup();
+    }
+
+    public boolean onBackPressed() {
+        return dismissSiteIdentityPopup();
     }
 
     public boolean onKey(int keyCode, KeyEvent event) {
@@ -557,6 +569,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             case RESTORED:
                 // TabCount fixup after OOM
             case SELECTED:
+                dismissSiteIdentityPopup();
                 updateTabCount(tabs.getDisplayCount());
                 mSwitchingTabs = true;
                 // Fall through.
@@ -593,7 +606,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case LOCATION_CHANGE:
                     // A successful location change will cause Tab to notify
                     // us of a title change, so we don't update the title here.
-                    refresh();
+                    refreshState();
                     break;
 
                 case CLOSED:
@@ -666,6 +679,15 @@ public class BrowserToolbar extends GeckoRelativeLayout
         if (animation.equals(mTitleSlideRight)) {
             mSiteSecurity.startAnimation(mLockFadeIn);
         }
+    }
+
+    private boolean dismissSiteIdentityPopup() {
+        if (mSiteIdentityPopup != null && mSiteIdentityPopup.isShowing()) {
+            mSiteIdentityPopup.dismiss();
+            return true;
+        }
+
+        return false;
     }
 
     private int getUrlBarEntryTranslation() {
@@ -1533,7 +1555,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setVisibility(View.GONE);
     }
 
-    private void refresh() {
+    private void refreshState() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
             setFavicon(tab.getFavicon());
