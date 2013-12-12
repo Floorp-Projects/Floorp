@@ -973,6 +973,7 @@ public:
   }
 
   enum ScrollDirection {
+    NONE,
     VERTICAL,
     HORIZONTAL
   };
@@ -984,11 +985,9 @@ public:
    */
   void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir)
   {
-    if (mIsScrollbar ||
-        mScrollbarTargetId != aScrollId ||
+    if (mScrollbarTargetId != aScrollId ||
         mScrollbarDirection != aDir) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
-      mIsScrollbar = true;
       mScrollbarTargetId = aScrollId;
       mScrollbarDirection = aDir;
       Mutated();
@@ -1019,7 +1018,6 @@ public:
   FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
   const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
   const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
-  bool GetIsScrollbar() { return mIsScrollbar; }
   FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
   ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
   Layer* GetMaskLayer() const { return mMaskLayer; }
@@ -1393,7 +1391,6 @@ protected:
     LayerRect mInner;
   };
   nsAutoPtr<StickyPositionData> mStickyPositionData;
-  bool mIsScrollbar;
   FrameMetrics::ViewID mScrollbarTargetId;
   ScrollDirection mScrollbarDirection;
   DebugOnly<uint32_t> mDebugColorIndex;
