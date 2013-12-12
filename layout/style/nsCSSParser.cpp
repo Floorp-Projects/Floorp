@@ -42,6 +42,8 @@
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsRuleData.h"
+#include "mozilla/CSSVariableValues.h"
 
 using namespace mozilla;
 
@@ -197,6 +199,38 @@ public:
                             nsString& aResult,
                             nsCSSTokenSerializationType& aFirstToken,
                             nsCSSTokenSerializationType& aLastToken);
+
+  /**
+   * Parses a string as a CSS token stream value for particular property,
+   * resolving any variable references.  The parsed property value is stored
+   * in the specified nsRuleData object.  If aShorthandPropertyID has a value
+   * other than eCSSProperty_UNKNOWN, this is the property that will be parsed;
+   * otherwise, aPropertyID will be parsed.  Either way, only aPropertyID,
+   * a longhand property, will be copied over to the rule data.
+   *
+   * If the property cannot be parsed, it will be treated as if 'initial' or
+   * 'inherit' were specified, for non-inherited and inherited properties
+   * respectively.
+   *
+   * @param aPropertyID The ID of the longhand property whose value is to be
+   *   copied to the rule data.
+   * @param aShorthandPropertyID The ID of the shorthand property to be parsed.
+   *   If a longhand property is to be parsed, aPropertyID is that property,
+   *   and aShorthandPropertyID must be eCSSProperty_UNKNOWN.
+   * @param aValue The CSS token stream value.
+   * @param aVariables The set of variable values to use when resolving variable
+   *   references.
+   * @param aRuleData The rule data object into which parsed property value for
+   *   aPropertyID will be stored.
+   */
+  void ParsePropertyWithVariableReferences(nsCSSProperty aPropertyID,
+                                           nsCSSProperty aShorthandPropertyID,
+                                           const nsAString& aValue,
+                                           const CSSVariableValues* aVariables,
+                                           nsRuleData* aRuleData,
+                                           nsIURI* aDocURL,
+                                           nsIURI* aBaseURL,
+                                           nsIPrincipal* aDocPrincipal);
 
 protected:
   class nsAutoParseCompoundProperty;
@@ -1998,6 +2032,83 @@ CSSParserImpl::ResolveVariableValue(const nsAString& aPropertyValue,
 
   ReleaseScanner();
   return valid;
+}
+
+void
+CSSParserImpl::ParsePropertyWithVariableReferences(
+                                            nsCSSProperty aPropertyID,
+                                            nsCSSProperty aShorthandPropertyID,
+                                            const nsAString& aValue,
+                                            const CSSVariableValues* aVariables,
+                                            nsRuleData* aRuleData,
+                                            nsIURI* aDocURL,
+                                            nsIURI* aBaseURL,
+                                            nsIPrincipal* aDocPrincipal)
+{
+  mTempData.AssertInitialState();
+
+  bool valid;
+  nsString expandedValue;
+
+  // Resolve any variable references in the property value.
+  {
+    nsCSSScanner scanner(aValue, 0);
+    css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+    InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
+
+    nsCSSTokenSerializationType firstToken, lastToken;
+    valid = ResolveValueWithVariableReferences(aVariables, expandedValue,
+                                               firstToken, lastToken);
+    ReleaseScanner();
+  }
+
+  nsCSSProperty propertyToParse =
+    aShorthandPropertyID != eCSSProperty_UNKNOWN ? aShorthandPropertyID :
+                                                   aPropertyID;
+
+  // Parse the property with that resolved value.
+  {
+    nsCSSScanner scanner(expandedValue, 0);
+    css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aDocURL);
+    InitScanner(scanner, reporter, aDocURL, aBaseURL, aDocPrincipal);
+    bool parsedOK = ParseProperty(propertyToParse);
+    if (parsedOK && GetToken(true)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectEndValue);
+      parsedOK = false;
+    }
+    if (!parsedOK) {
+      NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(
+                                                              propertyToParse));
+      REPORT_UNEXPECTED_P(PEValueWithVariablesParsingError, propName);
+      if (nsCSSProps::IsInherited(aPropertyID)) {
+        REPORT_UNEXPECTED(PEValueWithVariablesFallbackInherit);
+      } else {
+        REPORT_UNEXPECTED(PEValueWithVariablesFallbackInitial);
+      }
+      OUTPUT_ERROR();
+      valid = false;
+    }
+    ReleaseScanner();
+  }
+
+  // If the property could not be parsed with the resolved value, then we
+  // treat it as if the value were 'initial' or 'inherit', depending on whether
+  // the property is an inherited property.
+  if (!valid) {
+    nsCSSValue defaultValue;
+    if (nsCSSProps::IsInherited(aPropertyID)) {
+      defaultValue.SetInheritValue();
+    } else {
+      defaultValue.SetInitialValue();
+    }
+    mTempData.AddLonghandProperty(aPropertyID, defaultValue);
+  }
+
+  // Copy the property value into the rule data.
+  mTempData.MapRuleInfoInto(aPropertyID, aRuleData);
+
+  mTempData.ClearProperty(propertyToParse);
+  mTempData.AssertInitialState();
 }
 
 //----------------------------------------------------------------------
@@ -12618,4 +12729,21 @@ nsCSSParser::ResolveVariableValue(const nsAString& aPropertyValue,
   return static_cast<CSSParserImpl*>(mImpl)->
     ResolveVariableValue(aPropertyValue, aVariables,
                          aResult, aFirstToken, aLastToken);
+}
+
+void
+nsCSSParser::ParsePropertyWithVariableReferences(
+                                            nsCSSProperty aPropertyID,
+                                            nsCSSProperty aShorthandPropertyID,
+                                            const nsAString& aValue,
+                                            const CSSVariableValues* aVariables,
+                                            nsRuleData* aRuleData,
+                                            nsIURI* aDocURL,
+                                            nsIURI* aBaseURL,
+                                            nsIPrincipal* aDocPrincipal)
+{
+  static_cast<CSSParserImpl*>(mImpl)->
+    ParsePropertyWithVariableReferences(aPropertyID, aShorthandPropertyID,
+                                        aValue, aVariables, aRuleData, aDocURL,
+                                        aBaseURL, aDocPrincipal);
 }

@@ -545,6 +545,22 @@ nsCSSExpandedDataBlock::DoTransferFromBlock(nsCSSExpandedDataBlock& aFromBlock,
   return changed;
 }
 
+void
+nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
+                                        nsRuleData* aRuleData) const
+{
+  MOZ_ASSERT(!nsCSSProps::IsShorthand(aPropID));
+
+  const nsCSSValue* src = PropertyAt(aPropID);
+  MOZ_ASSERT(src->GetUnit() != eCSSUnit_Null);
+
+  nsCSSValue* dest = aRuleData->ValueFor(aPropID);
+  MOZ_ASSERT(dest->GetUnit() == eCSSUnit_TokenStream &&
+             dest->GetTokenStreamValue()->mPropertyID == aPropID);
+
+  MapSinglePropertyInto(aPropID, src, dest, aRuleData);
+}
+
 #ifdef DEBUG
 void
 nsCSSExpandedDataBlock::DoAssertInitialState()

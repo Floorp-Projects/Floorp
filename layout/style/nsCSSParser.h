@@ -23,6 +23,7 @@ struct nsCSSSelectorList;
 class nsMediaList;
 class nsCSSKeyframeRule;
 class nsCSSValue;
+class nsRuleData;
 
 namespace mozilla {
 class CSSVariableValues;
@@ -219,6 +220,28 @@ public:
                             nsString& aResult,
                             nsCSSTokenSerializationType& aFirstToken,
                             nsCSSTokenSerializationType& aLastToken);
+
+  /**
+   * Parses a string as a CSS token stream value for particular property,
+   * resolving any variable references.  The parsed property value is stored
+   * in the specified nsRuleData object.  If aShorthandPropertyID has a value
+   * other than eCSSProperty_UNKNOWN, this is the property that will be parsed;
+   * otherwise, aPropertyID will be parsed.  Either way, only aPropertyID,
+   * a longhand property, will be copied over to the rule data.
+   *
+   * If the property cannot be parsed, it will be treated as if 'initial' or
+   * 'inherit' were specified, for non-inherited and inherited properties
+   * respectively.
+   */
+  void ParsePropertyWithVariableReferences(
+                                   nsCSSProperty aPropertyID,
+                                   nsCSSProperty aShorthandPropertyID,
+                                   const nsAString& aValue,
+                                   const mozilla::CSSVariableValues* aVariables,
+                                   nsRuleData* aRuleData,
+                                   nsIURI* aDocURL,
+                                   nsIURI* aBaseURL,
+                                   nsIPrincipal* aDocPrincipal);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this
