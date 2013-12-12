@@ -10,7 +10,7 @@
 #include "jsbytecode.h"
 #include "jstypes.h"
 
-#include "jit/IonOptions.h"
+#include "jit/JitOptions.h"
 #include "js/TypeDecls.h"
 
 namespace js {
@@ -99,41 +99,41 @@ class OptimizationInfo
     }
 
     bool inlineInterpreted() const {
-        return inlineInterpreted_ && !js_IonOptions.disableInlining;
+        return inlineInterpreted_ && !js_JitOptions.disableInlining;
     }
 
     bool inlineNative() const {
-        return inlineNative_ && !js_IonOptions.disableInlining;
+        return inlineNative_ && !js_JitOptions.disableInlining;
     }
 
     uint32_t usesBeforeCompile() const {
-        if (js_IonOptions.forceDefaultIonUsesBeforeCompile)
-            return js_IonOptions.forcedDefaultIonUsesBeforeCompile;
+        if (js_JitOptions.forceDefaultIonUsesBeforeCompile)
+            return js_JitOptions.forcedDefaultIonUsesBeforeCompile;
         return usesBeforeCompile_;
     }
 
     bool gvnEnabled() const {
-        return gvn_ && !js_IonOptions.disableGvn;
+        return gvn_ && !js_JitOptions.disableGvn;
     }
 
     bool licmEnabled() const {
-        return licm_ && !js_IonOptions.disableLicm;
+        return licm_ && !js_JitOptions.disableLicm;
     }
 
     bool uceEnabled() const {
-        return uce_ && !js_IonOptions.disableUce;
+        return uce_ && !js_JitOptions.disableUce;
     }
 
     bool rangeAnalysisEnabled() const {
-        return rangeAnalysis_ && !js_IonOptions.disableRangeAnalysis;
+        return rangeAnalysis_ && !js_JitOptions.disableRangeAnalysis;
     }
 
     bool eaaEnabled() const {
-        return eaa_ && !js_IonOptions.disableEaa;
+        return eaa_ && !js_JitOptions.disableEaa;
     }
 
     bool edgeCaseAnalysisEnabled() const {
-        return edgeCaseAnalysis_ && !js_IonOptions.disableEdgeCaseAnalysis;
+        return edgeCaseAnalysis_ && !js_JitOptions.disableEdgeCaseAnalysis;
     }
 
     bool eliminateRedundantChecksEnabled() const {
@@ -141,15 +141,15 @@ class OptimizationInfo
     }
 
     IonGvnKind gvnKind() const {
-        if (!js_IonOptions.forceGvnKind)
+        if (!js_JitOptions.forceGvnKind)
             return gvnKind_;
-        return js_IonOptions.forcedGvnKind;
+        return js_JitOptions.forcedGvnKind;
     }
 
     IonRegisterAllocator registerAllocator() const {
-        if (!js_IonOptions.forceRegisterAllocator)
+        if (!js_JitOptions.forceRegisterAllocator)
             return registerAllocator_;
-        return js_IonOptions.forcedRegisterAllocator;
+        return js_JitOptions.forcedRegisterAllocator;
     }
 
     uint32_t smallFunctionMaxInlineDepth() const {
