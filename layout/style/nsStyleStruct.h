@@ -12,7 +12,7 @@
 #define nsStyleStruct_h___
 
 #include "mozilla/Attributes.h"
-
+#include "mozilla/CSSVariableValues.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"
@@ -2519,6 +2519,8 @@ struct nsStyleVariables {
   static nsChangeHint MaxDifference() {
     return nsChangeHint(0);
   }
+
+  mozilla::CSSVariableValues mVariables;
 };
 
 #endif /* nsStyleStruct_h___ */
