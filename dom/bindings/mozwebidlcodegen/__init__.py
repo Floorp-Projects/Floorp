@@ -17,6 +17,7 @@ from copy import deepcopy
 
 from mach.mixin.logging import LoggingMixin
 
+from mozbuild.base import MozbuildObject
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
 from mozbuild.util import FileAvoidWrite
@@ -521,3 +522,44 @@ class WebIDLCodegenManager(LoggingMixin):
             result[1].add(path)
         else:
             result[2].add(path)
+
+
+def create_build_system_manager(topsrcdir, topobjdir, dist_dir):
+    """Create a WebIDLCodegenManager for use by the build system."""
+    src_dir = os.path.join(topsrcdir, 'dom', 'bindings')
+    obj_dir = os.path.join(topobjdir, 'dom', 'bindings')
+
+    with open(os.path.join(obj_dir, 'file-lists.json'), 'rb') as fh:
+        files = json.load(fh)
+
+    inputs = (files['webidls'], files['exported_stems'],
+        files['generated_events_stems'])
+
+    cache_dir = os.path.join(obj_dir, '_cache')
+    try:
+        os.makedirs(cache_dir)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    return WebIDLCodegenManager(
+        os.path.join(src_dir, 'Bindings.conf'),
+        inputs,
+        os.path.join(dist_dir, 'include', 'mozilla', 'dom'),
+        obj_dir,
+        os.path.join(obj_dir, 'codegen.json'),
+        cache_dir=cache_dir,
+        # The make rules include a codegen.pp file containing dependencies.
+        make_deps_path=os.path.join(obj_dir, 'codegen.pp'),
+        make_deps_target='codegen.pp',
+    )
+
+
+class BuildSystemWebIDL(MozbuildObject):
+    @property
+    def manager(self):
+        if not hasattr(self, '_webidl_manager'):
+            self._webidl_manager = create_build_system_manager(
+                self.topsrcdir, self.topobjdir, self.distdir)
+
+        return self._webidl_manager
