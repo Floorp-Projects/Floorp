@@ -43,6 +43,28 @@ CSSVariableValues::operator=(const CSSVariableValues& aOther)
 }
 
 bool
+CSSVariableValues::operator==(const CSSVariableValues& aOther) const
+{
+  if (mVariables.Length() != aOther.mVariables.Length()) {
+    return false;
+  }
+
+  for (size_t thisIndex = 0; thisIndex < mVariables.Length(); ++thisIndex) {
+    size_t otherIndex;
+    if (!aOther.mVariableIDs.Get(mVariables[thisIndex].mVariableName,
+                                 &otherIndex)) {
+      return false;
+    }
+    const nsString& otherValue = aOther.mVariables[otherIndex].mValue;
+    if (!mVariables[thisIndex].mValue.Equals(otherValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
 CSSVariableValues::Get(const nsAString& aName, nsString& aValue) const
 {
   size_t id;
