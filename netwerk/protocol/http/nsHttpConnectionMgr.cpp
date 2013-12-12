@@ -334,7 +334,6 @@ public: // intentional!
 
     bool mOverridesOK;
     uint32_t mParallelSpeculativeConnectLimit;
-    bool mIgnoreIdle;
     bool mIgnorePossibleSpdyConnections;
 
     // As above, added manually so we can use nsRefPtr without inheriting from
@@ -381,7 +380,6 @@ nsHttpConnectionMgr::SpeculativeConnect(nsHttpConnectionInfo *ci,
         args->mOverridesOK = true;
         overrider->GetParallelSpeculativeConnectLimit(
             &args->mParallelSpeculativeConnectLimit);
-        overrider->GetIgnoreIdle(&args->mIgnoreIdle);
         overrider->GetIgnorePossibleSpdyConnections(
             &args->mIgnorePossibleSpdyConnections);
     }
@@ -2590,16 +2588,14 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, void *param)
     uint32_t parallelSpeculativeConnectLimit =
         gHttpHandler->ParallelSpeculativeConnectLimit();
     bool ignorePossibleSpdyConnections = false;
-    bool ignoreIdle = false;
 
     if (args->mOverridesOK) {
         parallelSpeculativeConnectLimit = args->mParallelSpeculativeConnectLimit;
         ignorePossibleSpdyConnections = args->mIgnorePossibleSpdyConnections;
-        ignoreIdle = args->mIgnoreIdle;
     }
 
     if (mNumHalfOpenConns < parallelSpeculativeConnectLimit &&
-        (ignoreIdle || !ent->mIdleConns.Length()) &&
+        ent->mIdleConns.Length() < parallelSpeculativeConnectLimit &&
         !RestrictConnections(ent, ignorePossibleSpdyConnections) &&
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
         CreateTransport(ent, args->mTrans, args->mTrans->Caps(), true);

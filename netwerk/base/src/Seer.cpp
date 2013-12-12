@@ -306,13 +306,6 @@ Seer::Observe(nsISupports *subject, const char *topic,
 // Seer::nsISpeculativeConnectionOverrider
 
 NS_IMETHODIMP
-Seer::GetIgnoreIdle(bool *ignoreIdle)
-{
-  *ignoreIdle = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 Seer::GetIgnorePossibleSpdyConnections(bool *ignorePossibleSpdyConnections)
 {
   *ignorePossibleSpdyConnections = true;
@@ -903,7 +896,7 @@ Seer::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
     }
   }
 
-  mSpeculativeService->SpeculativeConnect(targetURI, this);
+  mSpeculativeService->SpeculativeConnect(targetURI, nullptr);
   if (verifier) {
     verifier->OnPredictPreconnect(targetURI);
   }
