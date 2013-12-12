@@ -438,11 +438,22 @@ endif
 OMNIJAR_DIR := $(dir $(OMNIJAR_NAME))
 OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
 
+# We force build an ap_ that does not check dependencies below.
+# Language repacks take advantage of this unchecked dependency ap_ to
+# insert additional resources (translated strings) into the ap_
+# without the build system's participation.  This can do the wrong
+# thing if there are resource changes in between build time and
+# package time.  We try to prevent mismatched resources by erroring
+# out if the compiled resource IDs are not the same as the resource
+# IDs being packaged.
+
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) \
-  make -C $(GECKO_APP_AP_PATH) gecko.ap_ && \
-  cp $(GECKO_APP_AP_PATH)/gecko.ap_ $(_ABS_DIST) && \
+  make -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
+  cp $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ $(_ABS_DIST)/gecko.ap_ && \
+  ( diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
+    (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1)) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     mkdir -p lib/$(ABI_DIR) && \
     mv libmozglue.so $(MOZ_CHILD_PROCESS_NAME) lib/$(ABI_DIR) && \
