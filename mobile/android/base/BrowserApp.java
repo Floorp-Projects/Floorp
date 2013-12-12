@@ -1618,6 +1618,10 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
+    private void showHomePager(HomePager.Page page) {
+        showHomePagerWithAnimator(page, null);
+    }
+
     @Override
     public void onLocaleReady(final String locale) {
         super.onLocaleReady(locale);
@@ -1630,10 +1634,6 @@ abstract public class BrowserApp extends GeckoApp
             mMenu.clear();
             onCreateOptionsMenu(mMenu);
         }
-    }
-
-    private void showHomePager(HomePager.Page page) {
-        showHomePagerWithAnimator(page, null);
     }
 
     private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
