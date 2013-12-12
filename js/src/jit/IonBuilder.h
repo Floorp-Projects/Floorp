@@ -325,6 +325,8 @@ class IonBuilder : public MIRGenerator
     bool resumeAfter(MInstruction *ins);
     bool maybeInsertResume();
 
+    void insertRecompileCheck();
+
     bool initParameters();
     void rewriteParameter(uint32_t slotIdx, MDefinition *param, int32_t argIndex);
     void rewriteParameters();
