@@ -69,6 +69,7 @@ protected:
   android::sp<android::GraphicBuffer> mGraphicBuffer;
   EGLImage mEGLImage;
   gfx::SurfaceFormat mFormat;
+  bool mNeedsReset;
 };
 
 class GrallocTextureHostOGL : public TextureHost
@@ -90,6 +91,8 @@ public:
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
   virtual void DeallocateSharedData() MOZ_OVERRIDE;
+
+  virtual void ForgetSharedData() MOZ_OVERRIDE;
 
   virtual void DeallocateDeviceData() MOZ_OVERRIDE;
 

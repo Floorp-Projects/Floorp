@@ -433,6 +433,12 @@ ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
                              nullptr, aTexture->GetIPDLActor()));
 }
 
+void
+ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
+{
+  aTexture->ForceRemove();
+}
+
 bool
 ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool* aSent)
 {

@@ -39,6 +39,12 @@ public:
   bool RecvInit(const SurfaceDescriptor& aSharedData,
                 const TextureFlags& aFlags) MOZ_OVERRIDE;
 
+  virtual bool RecvRemoveTexture() MOZ_OVERRIDE;
+
+  virtual bool RecvRemoveTextureSync() MOZ_OVERRIDE;
+
+  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+
   TextureHost* GetTextureHost() { return mTextureHost; }
 
   ISurfaceAllocator* mAllocator;
@@ -577,6 +583,16 @@ ShmemTextureHost::DeallocateSharedData()
     MOZ_ASSERT(mDeallocator,
                "Shared memory would leak without a ISurfaceAllocator");
     mDeallocator->DeallocShmem(*mShmem);
+    delete mShmem;
+    mShmem = nullptr;
+  }
+}
+
+void
+ShmemTextureHost::ForgetSharedData()
+{
+  if (mShmem) {
+    delete mShmem;
     mShmem = nullptr;
   }
 }
@@ -621,6 +637,12 @@ MemoryTextureHost::DeallocateSharedData()
   mBuffer = nullptr;
 }
 
+void
+MemoryTextureHost::ForgetSharedData()
+{
+  mBuffer = nullptr;
+}
+
 uint8_t* MemoryTextureHost::GetBuffer()
 {
   return mBuffer;
@@ -647,6 +669,47 @@ TextureParent::RecvInit(const SurfaceDescriptor& aSharedData,
                                      mAllocator,
                                      aFlags);
   return !!mTextureHost;
+}
+
+bool
+TextureParent::RecvRemoveTexture()
+{
+  return PTextureParent::Send__delete__(this);
+}
+
+bool
+TextureParent::RecvRemoveTextureSync()
+{
+  // we don't need to send a reply in the synchronous case since the child side
+  // has the guarantee that this message has been handled synchronously.
+  return PTextureParent::Send__delete__(this);
+}
+
+void
+TextureParent::ActorDestroy(ActorDestroyReason why)
+{
+  switch (why) {
+  case AncestorDeletion:
+    NS_WARNING("PTexture deleted after ancestor");
+    // fall-through to deletion path
+  case Deletion:
+    if (mTextureHost && mTextureHost->GetFlags() & !TEXTURE_DEALLOCATE_CLIENT) {
+      mTextureHost->DeallocateSharedData();
+    }
+    break;
+
+  case NormalShutdown:
+  case AbnormalShutdown:
+    if (mTextureHost) {
+      mTextureHost->OnActorDestroy();
+    }
+    break;
+
+  case FailedConstructor:
+    NS_RUNTIMEABORT("FailedConstructor isn't possible in PTexture");
+  }
+  mTextureHost->ForgetSharedData();
+  mTextureHost = nullptr;
 }
 
 } // namespace

@@ -489,10 +489,6 @@ ImageBridgeChild::EndTransaction()
         ->SetDescriptorFromReply(ots.textureId(), ots.image());
       break;
     }
-    case EditReply::TReplyTextureRemoved: {
-      // XXX - implemented in another patch of the same bug (897452).
-      break;
-    }
     default:
       NS_RUNTIMEABORT("not reached");
     }
@@ -914,6 +910,37 @@ PTextureChild*
 ImageBridgeChild::CreateEmptyTextureChild()
 {
   return SendPTextureConstructor();
+}
+
+static void RemoveTextureSync(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)
+{
+  aTexture->ForceRemove();
+
+  ReentrantMonitorAutoEnter autoMon(*aBarrier);
+  *aDone = true;
+  aBarrier->NotifyAll();
+}
+
+void ImageBridgeChild::RemoveTexture(TextureClient* aTexture)
+{
+  if (InImageBridgeChildThread()) {
+    aTexture->ForceRemove();
+    return;
+  }
+
+  ReentrantMonitor barrier("RemoveTexture Lock");
+  ReentrantMonitorAutoEnter autoMon(barrier);
+  bool done = false;
+
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&RemoveTextureSync, aTexture, &barrier, &done));
+
+  // should stop the thread until the ImageClient has been created on
+  // the other thread
+  while (!done) {
+    barrier.Wait();
+  }
 }
 
 } // layers

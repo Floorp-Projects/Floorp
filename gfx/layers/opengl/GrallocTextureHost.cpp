@@ -95,6 +95,7 @@ GrallocTextureSourceOGL::GrallocTextureSourceOGL(CompositorOGL* aCompositor,
   , mGraphicBuffer(aGraphicBuffer)
   , mEGLImage(0)
   , mFormat(aFormat)
+  , mNeedsReset(true)
 {
   MOZ_ASSERT(mGraphicBuffer.get());
 }
@@ -169,6 +170,14 @@ GrallocTextureSourceOGL::GetFormat() const {
 void
 GrallocTextureSourceOGL::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
 {
+  if (mCompositableBackendData != aBackendData) {
+    mNeedsReset = true;
+  }
+
+  if (!mNeedsReset) {
+    return;
+  }
+
   mCompositableBackendData = aBackendData;
 
   if (!mCompositor) {
@@ -187,6 +196,7 @@ GrallocTextureSourceOGL::SetCompositableBackendSpecificData(CompositableBackendS
   // create new EGLImage
   mEGLImage = gl()->CreateEGLImageForNativeBuffer(mGraphicBuffer->getNativeBuffer());
   gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
+  mNeedsReset = false;
 }
 
 gfx::IntSize
@@ -271,6 +281,14 @@ GrallocTextureHostOGL::DeallocateSharedData()
     mTextureSource->ForgetBuffer();
   }
   PGrallocBufferParent::Send__delete__(mGrallocActor);
+}
+
+void
+GrallocTextureHostOGL::ForgetSharedData()
+{
+  if (mTextureSource) {
+    mTextureSource->ForgetBuffer();
+  }
 }
 
 void
