@@ -215,8 +215,7 @@ void
 nsSpeechTask::SendAudioImpl(int16_t* aData, uint32_t aDataLen)
 {
   if (aDataLen == 0) {
-    // XXX: We should end the track too, an undetermined bug does not allow that.
-    mStream->Finish();
+    mStream->EndAllTrackAndFinish();
     return;
   }
 
