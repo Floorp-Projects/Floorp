@@ -88,44 +88,44 @@ FrameAnimator::AdvanceFrame(TimeStamp aTime)
   // If we're done decoding, we know we've got everything we're going to get.
   // If we aren't, we only display fully-downloaded frames; everything else
   // gets delayed.
-  bool needToWait = !mDoneDecoding &&
-                    mFrameBlender.RawGetFrame(nextFrameIndex) &&
-                    !mFrameBlender.RawGetFrame(nextFrameIndex)->ImageComplete();
+  bool canDisplay = mDoneDecoding ||
+                    (mFrameBlender.RawGetFrame(nextFrameIndex) &&
+                     mFrameBlender.RawGetFrame(nextFrameIndex)->ImageComplete());
 
-  if (needToWait) {
+  if (!canDisplay) {
     // Uh oh, the frame we want to show is currently being decoded (partial)
     // Wait until the next refresh driver tick and try again
     return ret;
-  } else {
-    // If we're done decoding the next frame, go ahead and display it now and
-    // reinit with the next frame's delay time.
-    if (mFrameBlender.GetNumFrames() == nextFrameIndex) {
-      // End of an animation loop...
+  }
 
-      // If we are not looping forever, initialize the loop counter
-      if (mLoopCounter < 0 && mFrameBlender.GetLoopCount() >= 0) {
-        mLoopCounter = mFrameBlender.GetLoopCount();
-      }
+  // If we're done decoding the next frame, go ahead and display it now and
+  // reinit with the next frame's delay time.
+  if (mFrameBlender.GetNumFrames() == nextFrameIndex) {
+    // End of an animation loop...
 
-      // If animation mode is "loop once", or we're at end of loop counter, it's time to stop animating
-      if (mAnimationMode == imgIContainer::kLoopOnceAnimMode || mLoopCounter == 0) {
-        ret.animationFinished = true;
-      }
-
-      nextFrameIndex = 0;
-
-      if (mLoopCounter > 0) {
-        mLoopCounter--;
-      }
-
-      // If we're done, exit early.
-      if (ret.animationFinished) {
-        return ret;
-      }
+    // If we are not looping forever, initialize the loop counter
+    if (mLoopCounter < 0 && mFrameBlender.GetLoopCount() >= 0) {
+      mLoopCounter = mFrameBlender.GetLoopCount();
     }
 
-    timeout = mFrameBlender.GetTimeoutForFrame(nextFrameIndex);
+    // If animation mode is "loop once", or we're at end of loop counter, it's time to stop animating
+    if (mAnimationMode == imgIContainer::kLoopOnceAnimMode || mLoopCounter == 0) {
+      ret.animationFinished = true;
+    }
+
+    nextFrameIndex = 0;
+
+    if (mLoopCounter > 0) {
+      mLoopCounter--;
+    }
+
+    // If we're done, exit early.
+    if (ret.animationFinished) {
+      return ret;
+    }
   }
+
+  timeout = mFrameBlender.GetTimeoutForFrame(nextFrameIndex);
 
   // Bad data
   if (timeout < 0) {
