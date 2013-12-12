@@ -4946,8 +4946,9 @@ nsGlobalWindow::RequestAnimationFrame(const JS::Value& aCallback,
     return NS_ERROR_INVALID_ARG;
   }
 
+  JS::Rooted<JSObject*> callbackObj(cx, &aCallback.toObject());
   nsRefPtr<FrameRequestCallback> callback =
-    new FrameRequestCallback(&aCallback.toObject(), GetIncumbentGlobal());
+    new FrameRequestCallback(callbackObj, GetIncumbentGlobal());
 
   ErrorResult rv;
   *aHandle = RequestAnimationFrame(*callback, rv);
@@ -13231,7 +13232,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const JS::Value &v) {           \
     nsRefPtr<EventHandlerNonNull> handler;                                   \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new EventHandlerNonNull(callable, GetIncumbentGlobal());     \
@@ -13261,7 +13262,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     }                                                                        \
                                                                              \
     nsRefPtr<OnErrorEventHandlerNonNull> handler;                            \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new OnErrorEventHandlerNonNull(callable, GetIncumbentGlobal()); \
@@ -13292,7 +13293,7 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     }                                                                        \
                                                                              \
     nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler;                     \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
       handler = new OnBeforeUnloadEventHandlerNonNull(callable, GetIncumbentGlobal()); \
