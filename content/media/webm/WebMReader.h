@@ -197,6 +197,7 @@ private:
   nsAutoPtr<OpusParser> mOpusParser;
   OpusMSDecoder *mOpusDecoder;
   int mSkip;        // Number of samples left to trim before playback.
+  uint64_t mSeekPreroll; // Number of nanoseconds that must be discarded after seeking.
 #endif
 
   // Queue of video and audio packets that have been read but not decoded. These

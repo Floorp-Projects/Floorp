@@ -409,6 +409,7 @@ public:
     void HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers) MOZ_OVERRIDE;
     void HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers) MOZ_OVERRIDE;
     void HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers) MOZ_OVERRIDE;
+    void HandleLongTapUp(const CSSIntPoint& aPoint, int32_t aModifiers) MOZ_OVERRIDE;
     void SendAsyncScrollDOMEvent(bool aIsRoot,
                                  const CSSRect& aContentRect,
                                  const CSSSize& aScrollableSize) MOZ_OVERRIDE;

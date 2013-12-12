@@ -87,8 +87,6 @@
   "infojobs.net": "\\(Mobile#(Android; Mobile",
   // bug 828399, antena3.com
   "antena3.com": "\\(Mobile#(Android; Mobile",
-  // bug 828401, ingdirect.es
-  "ingdirect.es": "\\(Mobile#(Android; Mobile",
   // bug 828403, fotocasa.es
   "fotocasa.es": "\\(Mobile#(Android; Mobile",
   // bug 828406, orange.es
@@ -107,8 +105,6 @@
   "movistar.com.ve": "\\(Mobile#(Android; Mobile",
   // bug 828445, bumeran.com.ve
   "bumeran.com.ve": "\\(Mobile#(Android; Mobile",
-  // bug 828448, petardas.com
-  "petardas.com": "\\(Mobile#(Android; Mobile",
   // bug 843112, movil.bankinter.es
   "movil.bankinter.es": "\\(Mobile#(Android; Mobile",
   // bug 843114, einforma.com
@@ -139,16 +135,12 @@
   "citibank.com": "\\(Mobile#(Android; Mobile",
   // bug 843153, games.com
   "games.com": "\\(Mobile#(Android; Mobile",
-  // bug 843156, orbitz.com
-  "orbitz.com": "\\(Mobile#(Android; Mobile",
   // bug 843160, ehow.com
   "ehow.com": "\\(Mobile#(Android; Mobile",
   // bug 843162, urbanspoon.com
   "urbanspoon.com": "\\(Mobile#(Android; Mobile",
   // bug 843165, virginatlantic.com
   "virginatlantic.com": "\\(Mobile#(Android; Mobile",
-  // bug 843168, cheaptickets.com
-  "cheaptickets.com": "\\(Mobile#(Android; Mobile",
   // bug 843172, zimbio.com
   "zimbio.com": "\\(Mobile#(Android; Mobile",
   // bug 843176, tylted.com
@@ -171,8 +163,6 @@
   "hazipatika.com": "\\(Mobile#(Android; Mobile",
   // bug 878234, hvg.hu
   "hvg.hu": "\\(Mobile#(Android; Mobile",
-  // bug 878236, jofogas.hu
-  "jofogas.hu": "\\(Mobile#(Android; Mobile",
   // bug 878238, koponyeg.hu
   "koponyeg.hu": "\\(Mobile#(Android; Mobile",
   // bug 878240, kuruc.info
@@ -205,16 +195,12 @@
   "mondo.rs": "\\(Mobile#(Android; Mobile",
   // bug 878277, naslovi.net
   "naslovi.net": "\\(Mobile#(Android; Mobile",
-  // bug 878284, softonic.com
-  "softonic.com": "\\(Mobile#(Android; Mobile",
   // bug 878630, ask.com
   "ask.com": "\\(Mobile#(Android; Mobile",
   // bug 878632, banorte.com
   "banorte.com": "\\(Mobile#(Android; Mobile",
   // bug 878637, eluniversal.com.mx
   "eluniversal.com.mx": "\\(Mobile#(Android; Mobile",
-  // bug 878640, hootsuite.com
-  "hootsuite.com": "\\(Mobile#(Android; Mobile",
   // bug 878642, mercadolibre.com.mx
   "mercadolibre.com.mx": "\\(Mobile#(Android; Mobile",
   // bug 878645, olx.com.mx

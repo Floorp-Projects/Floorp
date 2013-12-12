@@ -6,6 +6,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/ArrayUtils.h"
 #include <string.h>
 
 #ifdef XP_WIN
@@ -202,6 +203,31 @@ bool IsIPAddrLocal(const NetAddr *addr)
   // Not an IPv4/6 local address.
   return false;
 }
+
+bool
+NetAddr::operator == (const NetAddr& other) const
+{
+  if (this->raw.family != other.raw.family) {
+    return false;
+  } else if (this->raw.family == AF_INET) {
+    return (this->inet.port == other.inet.port) &&
+           (this->inet.ip == other.inet.ip);
+  } else if (this->raw.family == AF_INET6) {
+    return (this->inet6.port == other.inet6.port) &&
+           (this->inet6.flowinfo == other.inet6.flowinfo) &&
+           (memcmp(&this->inet6.ip, &other.inet6.ip,
+                   sizeof(this->inet6.ip)) == 0) &&
+           (this->inet6.scope_id == other.inet6.scope_id);
+#if defined(XP_UNIX) || defined(XP_OS2)
+  } else if (this->raw.family == AF_LOCAL) {
+    return PL_strncmp(this->local.path, other.local.path,
+                      ArrayLength(this->local.path));
+#endif
+  }
+  return false;
+}
+
+
 
 NetAddrElement::NetAddrElement(const PRNetAddr *prNetAddr)
 {

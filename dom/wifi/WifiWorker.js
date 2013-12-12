@@ -2770,8 +2770,6 @@ WifiWorker.prototype = {
     let network = msg.data.network;
     let info = msg.data.info;
 
-    netFromDOM(network, null);
-
     WifiManager.configureHttpProxy(network, info, function(ok) {
       if (ok) {
         // If configured network is current connected network
@@ -2793,8 +2791,6 @@ WifiWorker.prototype = {
     let self = this;
     let network = msg.data.network;
     let info = msg.data.info;
-
-    netFromDOM(network, null);
 
     // To compatiable with DHCP returned info structure, do translation here
     info.ipaddr_str = info.ipaddr;

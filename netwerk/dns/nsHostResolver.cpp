@@ -878,9 +878,9 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
 #include "windns.h"
 #include "windows.h"
 
-typedef DNS_STATUS (__stdcall * DnsQueryFunc) (PCTSTR lpstrName, WORD wType,
+typedef DNS_STATUS (__stdcall * DnsQueryFunc) (LPCSTR lpstrName, WORD wType,
                                                DWORD Options, PVOID pExtra,
-                                               PDNS_RECORD *ppQueryResultsSet,
+                                               PDNS_RECORDA *ppQueryResultsSet,
                                                PVOID *pReserved);
 
 class ExperimentFinishedRunner : public nsRunnable
@@ -1055,7 +1055,7 @@ public:
         }
 
         if (srvStatus == DNS_RCODE_NOERROR) {
-            DNS_SRV_DATA *srvData = &srvResults->Data.Srv;
+            DNS_SRV_DATAA *srvData = &srvResults->Data.Srv;
             if (_stricmp(srvData->pNameTarget, "success.http2test.mozilla.org") ||
                 srvData->wPort != 443 ||
                 srvData->wPriority != 100 ||
