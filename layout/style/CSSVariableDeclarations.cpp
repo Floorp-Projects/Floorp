@@ -7,6 +7,8 @@
 
 #include "CSSVariableDeclarations.h"
 
+#include "CSSVariableResolver.h"
+#include "nsCSSScanner.h"
 #include "nsRuleData.h"
 
 // These two special string values are used to represent specified values of
@@ -145,6 +147,45 @@ CSSVariableDeclarations::MapRuleInfoInto(nsRuleData* aRuleData)
     mVariables.EnumerateRead(EnumerateVariableForMapRuleInfoInto,
                              aRuleData->mVariables.get());
   }
+}
+
+/* static */ PLDHashOperator
+CSSVariableDeclarations::EnumerateVariableForAddVariablesToResolver(
+                                                         const nsAString& aName,
+                                                         nsString aValue,
+                                                         void* aData)
+{
+  CSSVariableResolver* resolver = static_cast<CSSVariableResolver*>(aData);
+  if (aValue.EqualsLiteral(INITIAL_VALUE)) {
+    // Values of 'initial' are treated the same as an invalid value in the
+    // variable resolver.
+    resolver->Put(aName, EmptyString(),
+                  eCSSTokenSerialization_Nothing,
+                  eCSSTokenSerialization_Nothing,
+                  false);
+  } else if (aValue.EqualsLiteral(INHERIT_VALUE)) {
+    // Values of 'inherit' don't need any handling, since it means we just need
+    // to keep whatever value is currently in the resolver.  This is because
+    // the specified variable declarations already have only the winning
+    // declaration for the variable and no longer have any of the others.
+  } else {
+    // At this point, we don't know what token types are at the start and end
+    // of the specified variable value.  These will be determined later during
+    // the resolving process.
+    resolver->Put(aName, aValue,
+                  eCSSTokenSerialization_Nothing,
+                  eCSSTokenSerialization_Nothing,
+                  false);
+  }
+  return PL_DHASH_NEXT;
+}
+
+void
+CSSVariableDeclarations::AddVariablesToResolver(
+                                           CSSVariableResolver* aResolver) const
+{
+  mVariables.EnumerateRead(EnumerateVariableForAddVariablesToResolver,
+                           aResolver);
 }
 
 static size_t

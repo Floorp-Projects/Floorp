@@ -43,6 +43,7 @@
 #include "nsStyleUtil.h"
 #include "nsIDocument.h"
 #include "prtime.h"
+#include "CSSVariableResolver.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -1660,6 +1661,18 @@ CheckTextCallback(const nsRuleData* aRuleData,
   }
 
   return aResult;
+}
+
+static nsRuleNode::RuleDetail
+CheckVariablesCallback(const nsRuleData* aRuleData,
+                       nsRuleNode::RuleDetail aResult)
+{
+  // We don't actually have any properties on nsStyleVariables, so we do
+  // all of the RuleDetail calculation in here.
+  if (aRuleData->mVariables) {
+    return nsRuleNode::eRulePartialMixed;
+  }
+  return nsRuleNode::eRuleNone;
 }
 
 #define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, pref_,          \
@@ -8295,7 +8308,14 @@ nsRuleNode::ComputeVariablesData(void* aStartStruct,
 {
   COMPUTE_START_INHERITED(Variables, (), variables, parentVariables)
 
-  // ...
+  MOZ_ASSERT(aRuleData->mVariables,
+             "shouldn't be in ComputeVariablesData if there were no variable "
+             "declarations specified");
+
+  CSSVariableResolver resolver(&variables->mVariables);
+  resolver.Resolve(&parentVariables->mVariables,
+                   aRuleData->mVariables);
+  canStoreInRuleTree = false;
 
   COMPUTE_END_INHERITED(Variables, variables)
 }

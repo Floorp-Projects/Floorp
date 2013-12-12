@@ -230,6 +230,13 @@ class nsCSSScanner {
   // input to aBuffer.
   void StopRecording(nsString& aBuffer);
 
+  // Returns the length of the current recording.
+  uint32_t RecordingLength() const;
+
+#ifdef DEBUG
+  bool IsRecording() const;
+#endif
+
   enum EOFCharacters {
     eEOFCharacters_None =                    0x0000,
 
@@ -253,11 +260,12 @@ class nsCSSScanner {
     eEOFCharacters_CloseParen =              0x0040,
   };
 
-  // Appends or drops any characters to/from the specified string
-  // the input stream to make the last token not rely on special EOF handling
-  // behavior.
-  static void AdjustTokenStreamForEOFCharacters(EOFCharacters aEOFCharacters,
-                                                nsAString& aString);
+  // Appends any characters to the specified string the input stream to make the
+  // last token not rely on special EOF handling behavior.
+  //
+  // If eEOFCharacters_DropBackslash is in aEOFCharacters, it is ignored.
+  static void AppendImpliedEOFCharacters(EOFCharacters aEOFCharacters,
+                                         nsAString& aString);
 
   EOFCharacters GetEOFCharacters() const {
 #ifdef DEBUG
