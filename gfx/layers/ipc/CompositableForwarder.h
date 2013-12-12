@@ -29,6 +29,8 @@ class ThebesBufferData;
 class DeprecatedTextureClient;
 class TextureClient;
 class BasicTiledLayerBuffer;
+class PTextureChild;
+class TextureClientData;
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -94,6 +96,14 @@ public:
                                        const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
+   * Create an unitialized TextureChild.
+   *
+   * This does not trigger the the creation of a TextureHost on the compositor
+   * side (see PTexture::Init).
+   */
+  virtual PTextureChild* CreateEmptyTextureChild() = 0;
+
+  /**
    * Communicate to the compositor that the texture identified by aCompositable
    * and aTextureId has been updated to aImage.
    */
@@ -150,25 +160,10 @@ public:
   virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) = 0;
 
   /**
-   * Tell the compositor side to create a TextureHost that corresponds to
-   * aClient.
+   * Tell the compositor side to delete the TextureHost corresponding to the
+   * TextureClient passed in parameter.
    */
-  virtual bool AddTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) = 0;
-
-  /**
-   * Tell the compositor side to delete the TextureHost corresponding to
-   * aTextureID.
-   * By default the shared Data is deallocated along with the TextureHost, but
-   * this behaviour can be overriden by the TextureFlags passed here.
-   * XXX - This is kind of bad, but for now we have to do this, because of some
-   * edge cases caused by the lifetime of the TextureHost being limited by the
-   * lifetime of the CompositableHost. We should be able to remove this flags
-   * parameter when we remove the lifetime constraint.
-   */
-  virtual void RemoveTexture(CompositableClient* aCompositable,
-                             uint64_t aTextureID,
-                             TextureFlags aFlags) = 0;
+  virtual void RemoveTexture(TextureClient* aTexture) = 0;
 
   /**
    * Tell the CompositableHost on the compositor side what texture to use for

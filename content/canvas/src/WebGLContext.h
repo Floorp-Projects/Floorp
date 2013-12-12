@@ -28,6 +28,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Scoped.h"
+#include "mozilla/gfx/2D.h"
 
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
@@ -420,18 +421,19 @@ public:
     {
         if (IsContextLost())
             return;
-        nsRefPtr<gfxImageSurface> isurf;
+        RefPtr<gfx::DataSourceSurface> data;
         WebGLTexelFormat srcFormat;
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
-        rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
+        rv = SurfaceFromElementResultToImageSurface(res, data,
                                                     &srcFormat);
-        if (rv.Failed() || !isurf)
+        if (rv.Failed() || !data)
             return;
 
-        uint32_t byteLength = isurf->Stride() * isurf->Height();
+        gfx::IntSize size = data->GetSize();
+        uint32_t byteLength = data->Stride() * size.height;
         return TexImage2D_base(target, level, internalformat,
-                               isurf->Width(), isurf->Height(), isurf->Stride(),
-                               0, format, type, isurf->Data(), byteLength,
+                               size.width, size.height, data->Stride(),
+                               0, format, type, data->GetData(), byteLength,
                                -1, srcFormat, mPixelStorePremultiplyAlpha);
     }
     void TexParameterf(GLenum target, GLenum pname, GLfloat param) {
@@ -459,19 +461,20 @@ public:
     {
         if (IsContextLost())
             return;
-        nsRefPtr<gfxImageSurface> isurf;
+        RefPtr<gfx::DataSourceSurface> data;
         WebGLTexelFormat srcFormat;
         nsLayoutUtils::SurfaceFromElementResult res = SurfaceFromElement(elt);
-        rv = SurfaceFromElementResultToImageSurface(res, getter_AddRefs(isurf),
+        rv = SurfaceFromElementResultToImageSurface(res, data,
                                                     &srcFormat);
-        if (rv.Failed() || !isurf)
+        if (rv.Failed() || !data)
             return;
 
-        uint32_t byteLength = isurf->Stride() * isurf->Height();
+        gfx::IntSize size = data->GetSize();
+        uint32_t byteLength = data->Stride() * size.height;
         return TexSubImage2D_base(target, level, xoffset, yoffset,
-                                  isurf->Width(), isurf->Height(),
-                                  isurf->Stride(), format, type,
-                                  isurf->Data(), byteLength,
+                                  size.width, size.height,
+                                  data->Stride(), format, type,
+                                  data->GetData(), byteLength,
                                   -1, srcFormat, mPixelStorePremultiplyAlpha);
         
     }
@@ -992,7 +995,7 @@ protected:
     nsLayoutUtils::SurfaceFromElementResult SurfaceFromElement(ElementType* aElement) {
         MOZ_ASSERT(aElement);
         uint32_t flags =
-            nsLayoutUtils::SFE_WANT_IMAGE_SURFACE;
+             nsLayoutUtils::SFE_WANT_IMAGE_SURFACE;
 
         if (mPixelStoreColorspaceConversion == LOCAL_GL_NONE)
             flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;
@@ -1007,7 +1010,7 @@ protected:
     }
 
     nsresult SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                                    gfxImageSurface **imageOut,
+                                                    RefPtr<gfx::DataSourceSurface>& imageOut,
                                                     WebGLTexelFormat *format);
 
     void CopyTexSubImage2D_base(GLenum target,

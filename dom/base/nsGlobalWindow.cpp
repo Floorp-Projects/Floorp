@@ -43,6 +43,7 @@
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
+#include "ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 
@@ -209,6 +210,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
 #include "nsIDOMMediaQueryList.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -4944,8 +4946,9 @@ nsGlobalWindow::RequestAnimationFrame(const JS::Value& aCallback,
     return NS_ERROR_INVALID_ARG;
   }
 
+  JS::Rooted<JSObject*> callbackObj(cx, &aCallback.toObject());
   nsRefPtr<FrameRequestCallback> callback =
-    new FrameRequestCallback(&aCallback.toObject());
+    new FrameRequestCallback(callbackObj, GetIncumbentGlobal());
 
   ErrorResult rv;
   *aHandle = RequestAnimationFrame(*callback, rv);
@@ -11211,18 +11214,18 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                                 aDialog, aNavigate, argv,
                                 getter_AddRefs(domReturn));
     } else {
-      // Push a null JSContext here so that the window watcher won't screw us
+      // Force a system caller here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
       // when searching.  Compare comments on
       // nsIDOMWindow::OpenWindow and nsIWindowWatcher::OpenWindow.
 
       // Note: Because nsWindowWatcher is so broken, it's actually important
-      // that we don't push a null cx here, because that screws it up when it
-      // tries to compute the caller principal to associate with dialog
+      // that we don't force a system caller here, because that screws it up
+      // when it tries to compute the caller principal to associate with dialog
       // arguments. That whole setup just really needs to be rewritten. :-(
-      nsCxPusher pusher;
+      Maybe<AutoSystemCaller> asc;
       if (!aContentModal) {
-        pusher.PushNull();
+        asc.construct();
       }
 
 
@@ -13229,10 +13232,10 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   NS_IMETHODIMP nsGlobalWindow::SetOn##name_(JSContext *cx,                  \
                                              const JS::Value &v) {           \
     nsRefPtr<EventHandlerNonNull> handler;                                   \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new EventHandlerNonNull(callable);                           \
+      handler = new EventHandlerNonNull(callable, GetIncumbentGlobal());     \
     }                                                                        \
     SetOn##name_(handler);                                                   \
     return NS_OK;                                                            \
@@ -13259,10 +13262,10 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     }                                                                        \
                                                                              \
     nsRefPtr<OnErrorEventHandlerNonNull> handler;                            \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnErrorEventHandlerNonNull(callable);                    \
+      handler = new OnErrorEventHandlerNonNull(callable, GetIncumbentGlobal()); \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \
@@ -13290,10 +13293,10 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
     }                                                                        \
                                                                              \
     nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler;                     \
-    JSObject *callable;                                                      \
+    JS::Rooted<JSObject*> callable(cx);                                      \
     if (v.isObject() &&                                                      \
         JS_ObjectIsCallable(cx, callable = &v.toObject())) {                 \
-      handler = new OnBeforeUnloadEventHandlerNonNull(callable);             \
+      handler = new OnBeforeUnloadEventHandlerNonNull(callable, GetIncumbentGlobal()); \
     }                                                                        \
     elm->SetEventHandler(handler);                                           \
     return NS_OK;                                                            \

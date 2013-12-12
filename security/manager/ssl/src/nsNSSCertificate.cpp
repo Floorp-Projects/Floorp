@@ -785,15 +785,25 @@ nsNSSCertificate::GetIssuer(nsIX509Cert * *aIssuer)
 
   NS_ENSURE_ARG(aIssuer);
   *aIssuer = nullptr;
-  ScopedCERTCertificate issuer;
-  issuer = CERT_FindCertIssuer(mCert, PR_Now(), certUsageSSLClient);
-  if (issuer) {
-    nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(issuer);
-    if (cert) {
-      *aIssuer = cert;
-      NS_ADDREF(*aIssuer);
-    }
+
+  nsCOMPtr<nsIArray> chain;
+  nsresult rv;
+  rv = GetChain(getter_AddRefs(chain));
+  NS_ENSURE_SUCCESS(rv, rv);
+  uint32_t length;
+  if (!chain || NS_FAILED(chain->GetLength(&length)) || length == 0) {
+    return NS_ERROR_UNEXPECTED;
   }
+  if (length == 1) { // No known issuer
+    return NS_OK;
+  }
+  nsCOMPtr<nsIX509Cert> cert;
+  chain->QueryElementAt(1, NS_GET_IID(nsIX509Cert), getter_AddRefs(cert));
+  if (!cert) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *aIssuer = cert;
+  NS_ADDREF(*aIssuer);
   return NS_OK;
 }
 
@@ -846,15 +856,23 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
                                  nullptr, /*XXX fixme*/
                                  CertVerifier::FLAG_LOCAL_ONLY,
                                  &pkixNssChain);
+  // This is the whitelist of all non-SSLServer usages that are supported by
+  // verifycert.
+  const int otherUsagesToTest = certificateUsageSSLClient |
+                                certificateUsageSSLCA |
+                                certificateUsageEmailSigner |
+                                certificateUsageEmailRecipient |
+                                certificateUsageObjectSigner |
+                                certificateUsageStatusResponder;
   for (int usage = certificateUsageSSLClient;
        usage < certificateUsageAnyCA && !pkixNssChain;
        usage = usage << 1) {
-    if (usage == certificateUsageSSLServer) {
+    if ((usage & otherUsagesToTest) == 0) {
       continue;
     }
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("pipnss: PKIX attempting chain(%d) for '%s'\n",usage, mCert->nickname));
     srv = certVerifier->VerifyCert(mCert,
-                                   certificateUsageSSLClient, PR_Now(),
+                                   usage, PR_Now(),
                                    nullptr, /*XXX fixme*/
                                    CertVerifier::FLAG_LOCAL_ONLY,
                                    &pkixNssChain);

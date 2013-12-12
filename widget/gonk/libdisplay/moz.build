@@ -33,7 +33,7 @@ elif CONFIG['ANDROID_VERSION'] == '15':
     SOURCES += [
         'GonkDisplayICS.cpp'
     ]
-elif CONFIG['COMPILE_ENVIRONMENT']:
+elif CONFIG['ANDROID_VERSION'] and CONFIG['COMPILE_ENVIRONMENT']:
     error('Unsupported platform version: %s' % (CONFIG['ANDROID_VERSION']))
 
 LIBRARY_NAME = 'display'

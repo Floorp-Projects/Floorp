@@ -453,6 +453,28 @@ class BuildMonitor(MozbuildObject):
 
         return finder_percent > 25, finder_percent
 
+    def have_excessive_swapping(self):
+        """Determine whether there was excessive swapping during the build.
+
+        Returns a tuple of (excessive, swap_in, swap_out). All values are None
+        if no swap information is available.
+        """
+        if not self.have_resource_usage:
+            return None, None, None
+
+        swap_in = sum(m.swap.sin for m in self.resources.measurements)
+        swap_out = sum(m.swap.sout for m in self.resources.measurements)
+
+        # The threshold of 1024 MB has been arbitrarily chosen.
+        #
+        # Choosing a proper value that is ideal for everyone is hard. We will
+        # likely iterate on the logic until people are generally satisfied.
+        # If a value is too low, the eventual warning produced does not carry
+        # much meaning. If the threshold is too high, people may not see the
+        # warning and the warning will thus be ineffective.
+        excessive = swap_in > 512 * 1048576 or swap_out > 512 * 1048576
+        return excessive, swap_in, swap_out
+
     @property
     def have_resource_usage(self):
         """Whether resource usage is available."""
@@ -479,6 +501,14 @@ class BuildMonitor(MozbuildObject):
 
         self._log_resource_usage('Overall system resources', 'resource_usage',
             self.end_time - self.start_time, cpu_percent, cpu_times, io)
+
+        excessive, sin, sout = self.have_excessive_swapping()
+        if excessive is not None and (sin or sout):
+            sin /= 1048576
+            sout /= 1048576
+            self.log(logging.WARNING, 'swap_activity',
+                {'sin': sin, 'sout': sout},
+                'Swap in/out (MB): {sin}/{sout}')
 
         o = dict(
             version=1,

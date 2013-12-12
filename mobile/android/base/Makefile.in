@@ -55,17 +55,6 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes db jars res sync services generated
 
-# Bug 567884 - Need a way to find appropriate icons during packaging
-ifeq ($(MOZ_APP_NAME),fennec)
-ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
-ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
-ICON_PATH_XHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_96x96.png
-ICON_PATH_XXHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_144x144.png
-else
-ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
-ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
-endif
-
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ALL_JARS = \
@@ -170,66 +159,81 @@ preprocessed_package_KEEP_PATH := 1
 
 PP_TARGETS += preprocessed_package
 
-res/drawable-mdpi/icon.png: $(ICON_PATH)
-	$(NSINSTALL) -D res/drawable-mdpi
-	cp $(ICON_PATH) $@
+include $(topsrcdir)/config/rules.mk
 
-res/drawable-hdpi/icon.png: $(ICON_PATH_HDPI)
-	$(NSINSTALL) -D res/drawable-hdpi
-	cp $(ICON_PATH_HDPI) $@
+# This uses the fact that Android resource directories list all
+# resource files one subdirectory below the parent resource directory.
+android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(ANDROID_RES_DIRS)))))
 
-res/drawable-xhdpi/icon.png: $(ICON_PATH_XHDPI)
-	$(NSINSTALL) -D res/drawable-xhdpi
-	cp $(ICON_PATH_XHDPI) $@
+$(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATED_RESFILES))))
 
-res/drawable-xxhdpi/icon.png: $(ICON_PATH_XXHDPI)
-	$(NSINSTALL) -D res/drawable-xxhdpi
-	cp $(ICON_PATH_XXHDPI) $@
+# [Comment 1/3] We don't have correct dependencies for strings.xml at
+# this point, so we always recursively invoke the submake to check the
+# dependencies.  Sigh.  And, with multilocale builds, there will be
+# multiple strings.xml files, and we need to rebuild gecko.ap_ if any
+# of them change.  But!  mobile/android/base/locales does not have
+# enough information to actually build res/values/strings.xml during a
+# language repack.  So rather than adding rules into the main
+# makefile, and trying to work around the lack of information, we
+# force a rebuild of gecko.ap_ during packaging.  See below.
 
-ANDROID_RESDIRS := $(subst resources/,res/,$(sort $(dir $(ANDROID_RESFILES))))
-
-$(call mkdir_deps,$(ANDROID_RESDIRS)): $(ANDROID_RESFILES) Makefile
-	$(RM) -r $(@D)
-	$(NSINSTALL) -D $(@D)
-	$(TOUCH) $@
-
-$(subst resources/,res/,$(ANDROID_RESFILES)): $(call mkdir_deps,$(ANDROID_RESDIRS)) $(ANDROID_RESFILES)
-	@echo 'creating $@'
-	$(NSINSTALL) $(subst res/,$(srcdir)/resources/,$@) $(dir $@)
-
-res/values/strings.xml: $(call mkdir_deps,res/values)
+res/values/strings.xml: FORCE
 	$(MAKE) -C locales
 
-# With multilocale builds, there will be multiple strings.xml files. We need to
-# rebuild gecko.ap_ if any of them change.
-MULTILOCALE_STRINGS_XML_FILES := $(wildcard res/values-*/strings.xml)
 all_resources = \
-  $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
-  $(subst resources/,res/,$(ANDROID_RESFILES)) \
+  $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
-# generated/org/mozilla/gecko/R.java and gecko.ap_ are both produced
-# by aapt; this saves an aapt invocation.
+# All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
+# produced by aapt; this saves aapt invocations.
 
 $(gecko_package_dir)/R.java: .aapt.deps
 gecko.ap_: .aapt.deps
+R.txt: .aapt.deps
 
-.aapt.deps: $(all_resources)
-	$(AAPT) package -f -M AndroidManifest.xml -I $(ANDROID_SDK)/android.jar -S res --custom-package org.mozilla.gecko --non-constant-id \
-		-J $(gecko_package_dir)/ \
-		-F gecko.ap_
-	@$(TOUCH) $@
+# [Comment 2/3] This tom-foolery provides a target that forces a
+# rebuild of gecko.ap_.  This is used during packaging to ensure that
+# resources are fresh.  The alternative would be complicated; see
+# [Comment 1/3].
+
+gecko-nodeps/R.java: .aapt.nodeps
+gecko-nodeps.ap_: .aapt.nodeps
+gecko-nodeps/R.txt: .aapt.nodeps
+
+# 1: target file.
+# 2: dependencies.
+# 3: name of ap_ file to write.
+# 4: directory to write R.java into.
+# 5: directory to write R.txt into.
+define aapt_command
+$(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
+	$$(AAPT) package -f -M AndroidManifest.xml -I $$(ANDROID_SDK)/android.jar \
+		--auto-add-overlay \
+		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
+		--custom-package org.mozilla.gecko --non-constant-id \
+		-F $(3) \
+		-J $(4) \
+		--output-text-symbols $(5)
+	@$$(TOUCH) $$@
+endef
+
+# [Comment 3/3] The first of these rules is used during regular
+# builds.  The second writes an ap_ file that is only used during
+# packaging.  It doesn't write the normal ap_, or R.java, since we
+# don't want the packaging step to write anything that would make a
+# further no-op build do work.  See also
+# toolkit/mozapps/installer/packager.mk.
+
+# .aapt.deps: $(all_resources)
+$(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,$(gecko_package_dir)/,./))
+
+# .aapt.nodeps: FORCE
+$(eval $(call aapt_command,.aapt.nodeps,FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
 fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
-
-# We process ANDROID_RESFILES specially for now; the following flag
-# disables the default processing.
-IGNORE_ANDROID_RESFILES=1
-
-include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
 include $(topsrcdir)/config/android-common.mk

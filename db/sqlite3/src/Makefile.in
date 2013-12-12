@@ -46,11 +46,6 @@ ifeq ($(OS_ARCH),WINNT)
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
-# disable PGO for Sun Studio
-ifdef SOLARIS_SUNPRO_CC
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others

@@ -129,7 +129,7 @@ BackgroundFileSaver::Init()
 
   rv = NS_NewPipe2(getter_AddRefs(mPipeInputStream),
                    getter_AddRefs(mPipeOutputStream), true, true, 0,
-                   HasInfiniteBuffer() ? UINT32_MAX : 0, nullptr);
+                   HasInfiniteBuffer() ? UINT32_MAX : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_GetCurrentThread(getter_AddRefs(mControlThread));

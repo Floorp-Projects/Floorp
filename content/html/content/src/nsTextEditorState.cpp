@@ -38,11 +38,11 @@
 #include "mozilla/Selection.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "nsTextNode.h"
 #include "nsIController.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1283,13 +1283,12 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
     // What follows is a bit of a hack.  The editor uses the public DOM APIs
     // for its content manipulations, and it causes it to fail some security
-    // checks deep inside when initializing.  So we push a null JSContext
-    // on the JS stack here to make it clear that we're native code.
+    // checks deep inside when initializing. So we explictly make it clear that
+    // we're native code.
     // Note that any script that's directly trying to access our value
     // has to be going through some scriptable object to do that and that
     // already does the relevant security checks.
-    nsCxPusher pusher;
-    pusher.PushNull();
+    AutoSystemCaller asc;
 
     rv = newEditor->Init(domdoc, GetRootNode(), mSelCon, editorFlags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1777,9 +1776,8 @@ nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const
     // XXXbz if we could just get the textContent of our anonymous content (eg
     // if plaintext editor didn't create <br> nodes all over), we wouldn't need
     // this.
-    { /* Scope for context pusher */
-      nsCxPusher pusher;
-      pusher.PushNull();
+    { /* Scope for AutoSystemCaller. */
+      AutoSystemCaller asc;
 
       mEditor->OutputToString(NS_LITERAL_STRING("text/plain"), flags,
                               aValue);
@@ -1857,9 +1855,8 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
       // Time to mess with our security context... See comments in GetValue()
       // for why this is needed.  Note that we have to do this up here, because
       // otherwise SelectAll() will fail.
-      { /* Scope for context pusher */
-        nsCxPusher pusher;
-        pusher.PushNull();
+      {
+        AutoSystemCaller asc;
 
         nsCOMPtr<nsISelection> domSel;
         nsCOMPtr<nsISelectionPrivate> selPriv;
