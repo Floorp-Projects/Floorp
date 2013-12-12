@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.home.HomeConfig.PageEntry;
-import org.mozilla.gecko.home.HomeConfig.PageType;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.Page;
 
@@ -18,16 +16,13 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.EnumMap;
 
 class HomeAdapter extends FragmentStatePagerAdapter {
 
     private final Context mContext;
     private final ArrayList<PageInfo> mPageInfos;
-    private final HashMap<String, Fragment> mPages;
-
-    private boolean mCanLoadHint;
+    private final EnumMap<Page, Fragment> mPages;
 
     private OnAddPageListener mAddPageListener;
 
@@ -35,14 +30,27 @@ class HomeAdapter extends FragmentStatePagerAdapter {
         public void onAddPage(String title);
     }
 
+    final class PageInfo {
+        private final Page page;
+        private final Class<?> clss;
+        private final Bundle args;
+        private final String title;
+
+        PageInfo(Page page, Class<?> clss, Bundle args, String title) {
+            this.page = page;
+            this.clss = clss;
+            this.args = args;
+            this.title = title;
+        }
+    }
+
     public HomeAdapter(Context context, FragmentManager fm) {
         super(fm);
 
         mContext = context;
-        mCanLoadHint = HomeFragment.DEFAULT_CAN_LOAD_HINT;
 
         mPageInfos = new ArrayList<PageInfo>();
-        mPages = new HashMap<String, Fragment>();
+        mPages = new EnumMap<Page, Fragment>(Page.class);
     }
 
     @Override
@@ -53,23 +61,19 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         PageInfo info = mPageInfos.get(position);
-        return Fragment.instantiate(mContext, info.getClassName(), info.getArgs());
+        return Fragment.instantiate(mContext, info.clss.getName(), info.args);
     }
 
     @Override
     public CharSequence getPageTitle(int position) {
-        if (mPageInfos.size() > 0) {
-            PageInfo info = mPageInfos.get(position);
-            return info.getTitle().toUpperCase();
-        }
-
-        return null;
+        PageInfo info = mPageInfos.get(position);
+        return info.title.toUpperCase();
     }
 
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         Fragment fragment = (Fragment) super.instantiateItem(container, position);
-        mPages.put(mPageInfos.get(position).getId(), fragment);
+        mPages.put(mPageInfos.get(position).page, fragment);
 
         return fragment;
     }
@@ -77,17 +81,37 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     @Override
     public void destroyItem(ViewGroup container, int position, Object object) {
         super.destroyItem(container, position, object);
-        mPages.remove(mPageInfos.get(position).getId());
+        mPages.remove(mPageInfos.get(position).page);
     }
 
     public void setOnAddPageListener(OnAddPageListener listener) {
         mAddPageListener = listener;
     }
 
+    public void addPage(Page page, Class<?> clss, Bundle args, String title) {
+        addPage(-1, page, clss, args, title);
+    }
+
+    public void addPage(int index, Page page, Class<?> clss, Bundle args, String title) {
+        PageInfo info = new PageInfo(page, clss, args, title);
+
+        if (index >= 0) {
+            mPageInfos.add(index, info);
+        } else {
+            mPageInfos.add(info);
+        }
+
+        notifyDataSetChanged();
+
+        if (mAddPageListener != null) {
+            mAddPageListener.onAddPage(title);
+        }
+    }
+
     public int getItemPosition(Page page) {
         for (int i = 0; i < mPageInfos.size(); i++) {
-            final Page infoPage = mPageInfos.get(i).toPage();
-            if (infoPage == page) {
+            PageInfo info = mPageInfos.get(i);
+            if (info.page == page) {
                 return i;
             }
         }
@@ -97,89 +121,19 @@ class HomeAdapter extends FragmentStatePagerAdapter {
 
     public Page getPageAtPosition(int position) {
         PageInfo info = mPageInfos.get(position);
-        return info.toPage();
-    }
-
-    private void addPage(PageInfo info) {
-        mPageInfos.add(info);
-
-        if (mAddPageListener != null) {
-            mAddPageListener.onAddPage(info.getTitle());
-        }
-    }
-
-    public void update(List<PageEntry> pageEntries) {
-        mPages.clear();
-        mPageInfos.clear();
-
-        if (pageEntries != null) {
-            for (PageEntry pageEntry : pageEntries) {
-                final PageInfo info = new PageInfo(pageEntry);
-                addPage(info);
-            }
-        }
-
-        notifyDataSetChanged();
-    }
-
-    public boolean getCanLoadHint() {
-        return mCanLoadHint;
+        return info.page;
     }
 
     public void setCanLoadHint(boolean canLoadHint) {
-        // We cache the last hint value so that we can use it when
-        // creating new pages. See PageInfo.getArgs().
-        mCanLoadHint = canLoadHint;
+        // Update fragment arguments for future instances
+        for (PageInfo info : mPageInfos) {
+            info.args.putBoolean(HomePager.CAN_LOAD_ARG, canLoadHint);
+        }
 
         // Enable/disable loading on all existing pages
         for (Fragment page : mPages.values()) {
             final HomeFragment homePage = (HomeFragment) page;
             homePage.setCanLoadHint(canLoadHint);
-        }
-    }
-
-    private final class PageInfo {
-        private final String mId;
-        private final PageEntry mPageEntry;
-
-        PageInfo(PageEntry pageEntry) {
-            mId = pageEntry.getType() + "-" + pageEntry.getId();
-            mPageEntry = pageEntry;
-        }
-
-        public String getId() {
-            return mId;
-        }
-
-        public String getTitle() {
-            return mPageEntry.getTitle();
-        }
-
-        public String getClassName() {
-            final PageType type = mPageEntry.getType();
-            return type.getPageClass().getName();
-        }
-
-        public Bundle getArgs() {
-            final Bundle args = new Bundle();
-
-            args.putBoolean(HomePager.CAN_LOAD_ARG, mCanLoadHint);
-
-            // Only list pages need the page entry
-            if (mPageEntry.getType() == PageType.LIST) {
-                args.putParcelable(HomePager.PAGE_ENTRY_ARG, mPageEntry);
-            }
-
-            return args;
-        }
-
-        public Page toPage() {
-            final PageType type = mPageEntry.getType();
-            if (type == PageType.LIST) {
-                return null;
-            }
-
-            return Page.valueOf(type);
         }
     }
 }
