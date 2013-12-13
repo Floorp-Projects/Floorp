@@ -696,7 +696,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
 
   nsRefPtr<gfxASurface> imgFrame =
     container->GetFrame(imgIContainer::FRAME_FIRST, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(imgFrame, NS_ERROR_FAILURE);
 
   nsRefPtr<gfxImageSurface> imageSurface;
   gfxIntSize size;
