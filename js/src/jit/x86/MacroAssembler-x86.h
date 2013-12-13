@@ -70,12 +70,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
 
-    enum Result {
-        GENERAL,
-        DOUBLE,
-        FLOAT
-    };
-
     MacroAssemblerX86()
       : inCall_(false),
         enoughMemory_(true)
@@ -1043,19 +1037,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from);
+    void passABIArg(const MoveOperand &from, MoveOp::Kind kind);
     void passABIArg(const Register &reg);
-    void passABIArg(const FloatRegister &reg);
+    void passABIArg(const FloatRegister &reg, MoveOp::Kind kind);
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, Result result);
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, Result result = GENERAL);
-    void callWithABI(AsmJSImmPtr fun, Result result = GENERAL);
-    void callWithABI(const Address &fun, Result result = GENERAL);
+    void callWithABI(void *fun, MoveOp::Kind result = MoveOp::GENERAL);
+    void callWithABI(AsmJSImmPtr fun, MoveOp::Kind result = MoveOp::GENERAL);
+    void callWithABI(const Address &fun, MoveOp::Kind result = MoveOp::GENERAL);
 
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandler(void *handler);
