@@ -6286,7 +6286,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     types::HeapTypeSetKey property = staticType->property(id);
     if (!property.maybeTypes() ||
         !property.maybeTypes()->definiteProperty() ||
-        property.configured(constraints()))
+        property.configured(constraints(), staticType))
     {
         // The property has been reconfigured as non-configurable, non-enumerable
         // or non-writable.
@@ -6376,7 +6376,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
     types::HeapTypeSetKey property = staticType->property(id);
     if (!property.maybeTypes() ||
         !property.maybeTypes()->definiteProperty() ||
-        property.configured(constraints()))
+        property.configured(constraints(), staticType))
     {
         // The property has been reconfigured as non-configurable, non-enumerable
         // or non-writable.
@@ -7826,7 +7826,7 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
     *property = type->property(id);
     return property->maybeTypes() &&
            property->maybeTypes()->definiteProperty() &&
-           !property->configured(constraints());
+           !property->configured(constraints(), type);
 }
 
 bool
