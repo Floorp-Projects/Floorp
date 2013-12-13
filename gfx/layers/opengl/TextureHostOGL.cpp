@@ -552,7 +552,7 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
 #endif
 
   AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
-  nsIntSize size = surf.Size();
+  gfx::IntSize size = surf.Size();
   TextureImage::ImageFormat format = surf.ImageFormat();
 
   if (!mTexture ||
