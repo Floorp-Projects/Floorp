@@ -193,14 +193,6 @@ this.SessionStore = {
     return SessionStoreInternal.duplicateTab(aWindow, aTab, aDelta);
   },
 
-  getNumberOfTabsClosedLast: function ss_getNumberOfTabsClosedLast(aWindow) {
-    return SessionStoreInternal.getNumberOfTabsClosedLast(aWindow);
-  },
-
-  setNumberOfTabsClosedLast: function ss_setNumberOfTabsClosedLast(aWindow, aNumber) {
-    return SessionStoreInternal.setNumberOfTabsClosedLast(aWindow, aNumber);
-  },
-
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {
     return SessionStoreInternal.getClosedTabCount(aWindow);
   },
@@ -1614,35 +1606,6 @@ let SessionStoreInternal = {
                      true /* Load this tab right away. */);
 
     return newTab;
-  },
-
-  setNumberOfTabsClosedLast: function ssi_setNumberOfTabsClosedLast(aWindow, aNumber) {
-    if (this._disabledForMultiProcess) {
-      return;
-    }
-
-    if (!("__SSi" in aWindow)) {
-      throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    return NumberOfTabsClosedLastPerWindow.set(aWindow, aNumber);
-  },
-
-  /* Used to undo batch tab-close operations. Defaults to 1. */
-  getNumberOfTabsClosedLast: function ssi_getNumberOfTabsClosedLast(aWindow) {
-    if (this._disabledForMultiProcess) {
-      return 0;
-    }
-
-    if (!("__SSi" in aWindow)) {
-      throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
-    }
-    // Blank tabs cannot be undo-closed, so the number returned by
-    // the NumberOfTabsClosedLastPerWindow can be greater than the
-    // return value of getClosedTabCount. We won't restore blank
-    // tabs, so we return the minimum of these two values.
-    return Math.min(NumberOfTabsClosedLastPerWindow.get(aWindow) || 1,
-                    this.getClosedTabCount(aWindow));
   },
 
   getClosedTabCount: function ssi_getClosedTabCount(aWindow) {
@@ -4028,11 +3991,6 @@ let DirtyWindows = {
     this._data.clear();
   }
 };
-
-// A map storing the number of tabs last closed per windoow. This only
-// stores the most recent tab-close operation, and is used to undo
-// batch tab-closing operations.
-let NumberOfTabsClosedLastPerWindow = new WeakMap();
 
 // This is used to help meter the number of restoring tabs. This is the control
 // point for telling the next tab to restore. It gets attached to each gBrowser
