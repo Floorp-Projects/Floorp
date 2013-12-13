@@ -20,6 +20,7 @@
 #include "mozilla/RefPtr.h"
 #include "GfxInfoCollector.h"
 
+#include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 
 #ifdef XP_OS2
@@ -619,7 +620,8 @@ public:
      * This method should not be called from the compositor thread.
      */
     bool PreferMemoryOverShmem() const;
-    bool UseDeprecatedTextures() const { return mLayersUseDeprecated; }
+    bool UseDeprecatedTextures() const;
+    void SetCompositorBackend(mozilla::layers::LayersBackend backend);
 
 protected:
     gfxPlatform();
@@ -736,6 +738,7 @@ private:
     bool mDrawLayerBorders;
     bool mDrawTileBorders;
     bool mDrawBigImageBorders;
+    mozilla::layers::LayersBackend mCompositorBackend;
 };
 
 #endif /* GFX_PLATFORM_H */
