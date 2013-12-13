@@ -315,6 +315,14 @@ public:
                                      bool           aDeletingEmptyFrames) MOZ_OVERRIDE;
 
   /**
+    * This is a special method that allows a child class of nsBlockFrame to
+    * return a special, customized nsStyleText object to the nsLineLayout
+    * constructor. It is used when the nsBlockFrame child needs to specify its
+    * custom rendering style.
+    */
+  virtual const nsStyleText* StyleTextForLineLayout();
+
+  /**
    * Determines whether the collapsed margin carried out of the last
    * line includes the margin-top of a line with clearance (in which
    * case we must avoid collapsing that margin with our bottom margin)
