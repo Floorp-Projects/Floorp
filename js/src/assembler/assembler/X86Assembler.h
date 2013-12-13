@@ -636,7 +636,7 @@ public:
 
     void xaddl_rm(RegisterID srcdest, int offset, RegisterID base, RegisterID index, int scale)
     {
-        spew("lock xaddl %s, %d(%s,%s,%d)",
+        spew("lock xaddl %s, %s0x%x(%s,%s,%d)",
             nameIReg(4, srcdest), PRETTY_PRINT_OFFSET(offset),
             nameIReg(base), nameIReg(index), 1<<scale);
         m_formatter.oneByteOp(PRE_LOCK);
