@@ -137,15 +137,6 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
 
     Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
-    /* ES5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    if (!extensible) {
-        obj->reportNotExtensible(cx);
-        return false;
-    }
-
     /*
      * Disallow mutating the [[Prototype]] of a proxy that wasn't simply
      * wrapping some other object.  Also disallow it on ArrayBuffer objects,
@@ -173,8 +164,14 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), &v, &dummy))
         return false;
 
-    if (!SetClassAndProto(cx, obj, obj->getClass(), newProto, true))
+    bool success;
+    if (!JSObject::setProto(cx, obj, newProto, &success))
         return false;
+
+    if (!success) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+        return false;
+    }
 
     args.rval().setUndefined();
     return true;
