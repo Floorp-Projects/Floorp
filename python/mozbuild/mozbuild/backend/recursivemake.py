@@ -5,12 +5,14 @@
 from __future__ import unicode_literals
 
 import itertools
+import json
 import logging
 import os
-import re
 import types
 
 from collections import namedtuple
+
+import mozwebidlcodegen
 
 import mozbuild.makeutil as mozmakeutil
 from mozpack.copier import FilePurger
@@ -25,9 +27,7 @@ from ..frontend.data import (
     Defines,
     DirectoryTraversal,
     Exports,
-    GeneratedEventWebIDLFile,
     GeneratedInclude,
-    GeneratedWebIDLFile,
     HostProgram,
     HostSimpleProgram,
     InstallationTarget,
@@ -35,17 +35,13 @@ from ..frontend.data import (
     JavaJarData,
     LibraryDefinition,
     LocalInclude,
-    PreprocessedTestWebIDLFile,
-    PreprocessedWebIDLFile,
     Program,
     SandboxDerived,
     SandboxWrapped,
     SimpleProgram,
-    TestWebIDLFile,
+    TestManifest,
     VariablePassthru,
     XPIDLFile,
-    TestManifest,
-    WebIDLFile,
 )
 from ..util import (
     ensureParentDir,
@@ -270,25 +266,27 @@ class RecursiveMakeBackend(CommonBackend):
 
         self._backend_files = {}
         self._ipdl_sources = set()
-        self._webidl_sources = set()
-        self._generated_events_webidl_sources = set()
-        self._test_webidl_sources = set()
-        self._preprocessed_test_webidl_sources = set()
-        self._preprocessed_webidl_sources = set()
-        self._generated_webidl_sources = set()
 
         def detailed(summary):
-            s = '{:d} total backend files. {:d} created; {:d} updated; {:d} unchanged'.format(
+            s = '{:d} total backend files; ' \
+                '{:d} created; {:d} updated; {:d} unchanged; ' \
+                '{:d} deleted; {:d} -> {:d} Makefile'.format(
                 summary.created_count + summary.updated_count +
-                summary.unchanged_count, summary.created_count,
-                summary.updated_count, summary.unchanged_count)
-            if summary.deleted_count:
-                s+= '; {:d} deleted'.format(summary.deleted_count)
+                summary.unchanged_count,
+                summary.created_count,
+                summary.updated_count,
+                summary.unchanged_count,
+                summary.deleted_count,
+                summary.makefile_in_count,
+                summary.makefile_out_count)
+
             return s
 
         # This is a little kludgy and could be improved with a better API.
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
+        self.summary.makefile_in_count = 0
+        self.summary.makefile_out_count = 0
 
         self._test_manifests = {}
 
@@ -409,33 +407,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, IPDLFile):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
-
-        elif isinstance(obj, WebIDLFile):
-            self._webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
-            self._process_webidl_basename(obj.basename)
-
-        elif isinstance(obj, GeneratedEventWebIDLFile):
-            self._generated_events_webidl_sources.add(mozpath.join(obj.srcdir, obj.basename))
-
-        elif isinstance(obj, TestWebIDLFile):
-            self._test_webidl_sources.add(mozpath.join(obj.srcdir,
-                                                       obj.basename))
-            # Test WebIDL files are not exported.
-
-        elif isinstance(obj, PreprocessedTestWebIDLFile):
-            self._preprocessed_test_webidl_sources.add(mozpath.join(obj.srcdir,
-                                                                    obj.basename))
-            # Test WebIDL files are not exported.
-
-        elif isinstance(obj, GeneratedWebIDLFile):
-            self._generated_webidl_sources.add(mozpath.join(obj.srcdir,
-                                                            obj.basename))
-            self._process_webidl_basename(obj.basename)
-
-        elif isinstance(obj, PreprocessedWebIDLFile):
-            self._preprocessed_webidl_sources.add(mozpath.join(obj.srcdir,
-                                                               obj.basename))
-            self._process_webidl_basename(obj.basename)
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
@@ -607,6 +578,9 @@ class RecursiveMakeBackend(CommonBackend):
                                  poison_windows_h=False,
                                  files_per_unified_file=16):
 
+        # In case it's a generator.
+        files = sorted(files)
+
         explanation = "\n" \
             "# We build files in 'unified' mode by including several files\n" \
             "# together into a single source file.  This cuts down on\n" \
@@ -632,7 +606,7 @@ class RecursiveMakeBackend(CommonBackend):
                 return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
 
             for i, unified_group in enumerate(grouper(files_per_unified_file,
-                                                      sorted(files))):
+                                                      files)):
                 just_the_filenames = list(filter_out_dummy(unified_group))
                 yield '%s%d.%s' % (unified_prefix, i, unified_suffix), just_the_filenames
 
@@ -698,6 +672,7 @@ class RecursiveMakeBackend(CommonBackend):
                 if not stub:
                     self.log(logging.DEBUG, 'substitute_makefile',
                         {'path': makefile}, 'Substituting makefile: {path}')
+                    self.summary.makefile_in_count += 1
 
                     for tier, skiplist in self._may_skip.items():
                         if tier in ('compile', 'binaries'):
@@ -750,42 +725,12 @@ class RecursiveMakeBackend(CommonBackend):
         with self._write_file(mozpath.join(ipdl_dir, 'ipdlsrcs.mk')) as ipdls:
             mk.dump(ipdls, removal_guard=False)
 
-        self._may_skip['compile'] -= set(['ipc/ipdl'])
-
-        # Write out master lists of WebIDL source files.
-        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom', 'bindings')
-
-        mk = mozmakeutil.Makefile()
-
-        def write_var(variable, sources):
-            files = [mozpath.basename(f) for f in sorted(sources)]
-            mk.add_statement('%s += %s' % (variable, ' '.join(files)))
-        write_var('webidl_files', self._webidl_sources)
-        write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
-        write_var('test_webidl_files', self._test_webidl_sources)
-        write_var('preprocessed_test_webidl_files', self._preprocessed_test_webidl_sources)
-        write_var('generated_webidl_files', self._generated_webidl_sources)
-        write_var('preprocessed_webidl_files', self._preprocessed_webidl_sources)
-
-        all_webidl_files = itertools.chain(iter(self._webidl_sources),
-                                           iter(self._generated_events_webidl_sources),
-                                           iter(self._generated_webidl_sources),
-                                           iter(self._preprocessed_webidl_sources))
-        all_webidl_files = [mozpath.basename(x) for x in all_webidl_files]
-        all_webidl_sources = [re.sub(r'\.webidl$', 'Binding.cpp', x) for x in all_webidl_files]
-
-        self._add_unified_build_rules(mk, all_webidl_sources,
-                                      bindings_dir,
-                                      unified_prefix='UnifiedBindings',
-                                      unified_files_makefile_variable='unified_binding_cpp_files',
-                                      poison_windows_h=True)
-
-        # Assume that Somebody Else has responsibility for correctly
-        # specifying removal dependencies for |all_webidl_sources|.
-        with self._write_file(mozpath.join(bindings_dir, 'webidlsrcs.mk')) as webidls:
-            mk.dump(webidls, removal_guard=False)
-
-        self._may_skip['compile'] -= set(['dom/bindings', 'dom/bindings/test'])
+        # These contain autogenerated sources that the build config doesn't
+        # yet know about.
+        # TODO Emit GENERATED_SOURCES so these special cases are dealt with
+        # the proper way.
+        self._may_skip['compile'] -= {'ipc/ipdl'}
+        self._may_skip['compile'] -= {'dom/bindings', 'dom/bindings/test'}
 
         self._fill_root_mk()
 
@@ -1026,10 +971,6 @@ class RecursiveMakeBackend(CommonBackend):
     def _process_host_simple_program(self, program, backend_file):
         backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)
 
-    def _process_webidl_basename(self, basename):
-        header = 'mozilla/dom/%sBinding.h' % mozpath.splitext(basename)[0]
-        self._install_manifests['dist_include'].add_optional_exists(header)
-
     def _process_test_manifest(self, obj, backend_file):
         # Much of the logic in this function could be moved to CommonBackend.
         self.backend_input_files.add(mozpath.join(obj.topsrcdir,
@@ -1171,3 +1112,88 @@ class RecursiveMakeBackend(CommonBackend):
             # Makefile.in files, the old file will get replaced with
             # the autogenerated one automatically.
             self.backend_input_files.add(obj.input_path)
+
+        self.summary.makefile_out_count += 1
+
+    def _handle_webidl_collection(self, webidls):
+        if not webidls.all_stems():
+            return
+
+        bindings_dir = mozpath.join(self.environment.topobjdir, 'dom',
+            'bindings')
+
+        all_inputs = set(webidls.all_static_sources())
+        for s in webidls.all_non_static_basenames():
+            all_inputs.add(mozpath.join(bindings_dir, s))
+
+        generated_events_stems = webidls.generated_events_stems()
+        exported_stems = webidls.all_regular_stems()
+
+        # The WebIDL manager reads configuration from a JSON file. So, we
+        # need to write this file early.
+        o = dict(
+            webidls=sorted(all_inputs),
+            generated_events_stems=sorted(generated_events_stems),
+            exported_stems=sorted(exported_stems),
+        )
+
+        file_lists = mozpath.join(bindings_dir, 'file-lists.json')
+        with self._write_file(file_lists) as fh:
+            json.dump(o, fh, sort_keys=True, indent=2)
+
+        manager = mozwebidlcodegen.create_build_system_manager(
+            self.environment.topsrcdir,
+            self.environment.topobjdir,
+            mozpath.join(self.environment.topobjdir, 'dist')
+        )
+
+        # The manager is the source of truth on what files are generated.
+        # Consult it for install manifests.
+        include_dir = mozpath.join(self.environment.topobjdir, 'dist',
+            'include')
+        for f in manager.expected_build_output_files():
+            if f.startswith(include_dir):
+                self._install_manifests['dist_include'].add_optional_exists(
+                    mozpath.relpath(f, include_dir))
+
+        # We pass WebIDL info to make via a completely generated make file.
+        mk = Makefile()
+        mk.add_statement('nonstatic_webidl_files := %s' % ' '.join(
+            sorted(webidls.all_non_static_basenames())))
+        mk.add_statement('globalgen_sources := %s' % ' '.join(
+            sorted(manager.GLOBAL_DEFINE_FILES)))
+        mk.add_statement('test_sources := %s' % ' '.join(
+            sorted('%sBinding.cpp' % s for s in webidls.all_test_stems())))
+
+        # Add rules to preprocess bindings.
+        # This should ideally be using PP_TARGETS. However, since the input
+        # filenames match the output filenames, the existing PP_TARGETS rules
+        # result in circular dependencies and other make weirdness. One
+        # solution is to rename the input or output files repsectively. See
+        # bug 928195 comment 129.
+        for source in sorted(webidls.all_preprocessed_sources()):
+            basename = os.path.basename(source)
+            rule = mk.create_rule([basename])
+            rule.add_dependencies([source, '$(GLOBAL_DEPS)'])
+            rule.add_commands([
+                # Remove the file before writing so bindings that go from
+                # static to preprocessed don't end up writing to a symlink,
+                # which would modify content in the source directory.
+                '$(RM) $@',
+                '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
+                    '$(XULPPFLAGS) $< -o $@)'
+            ])
+
+        # Bindings are compiled in unified mode to speed up compilation and
+        # to reduce linker memory size. Note that test bindings are separated
+        # from regular ones so tests bindings aren't shipped.
+        self._add_unified_build_rules(mk,
+            webidls.all_regular_cpp_basenames(),
+            bindings_dir,
+            unified_prefix='UnifiedBindings',
+            unified_files_makefile_variable='unified_binding_cpp_files',
+            poison_windows_h=True)
+
+        webidls_mk = mozpath.join(bindings_dir, 'webidlsrcs.mk')
+        with self._write_file(webidls_mk) as fh:
+            mk.dump(fh, removal_guard=False)

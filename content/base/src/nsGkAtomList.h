@@ -1471,13 +1471,6 @@ GK_ATOM(restart, "restart")
 GK_ATOM(to, "to")
 GK_ATOM(XML, "XML")
 
-// internal MathML attributes: different from columnalign_, columnlines_,
-// rowalign_ and rowlines_
-GK_ATOM(_moz_math_columnalign_, "_moz-math-columnalign")
-GK_ATOM(_moz_math_columnline_, "_moz-math-columnline")
-GK_ATOM(_moz_math_rowalign_, "_moz-math-rowalign")
-GK_ATOM(_moz_math_rowline_, "_moz-math-rowline")
-
 GK_ATOM(abs_, "abs")
 GK_ATOM(accent_, "accent")
 GK_ATOM(accentunder_, "accentunder")

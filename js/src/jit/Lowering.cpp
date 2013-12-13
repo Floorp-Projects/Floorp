@@ -161,13 +161,6 @@ LIRGenerator::visitNewSlots(MNewSlots *ins)
 }
 
 bool
-LIRGenerator::visitNewParallelArray(MNewParallelArray *ins)
-{
-    LNewParallelArray *lir = new(alloc()) LNewParallelArray();
-    return define(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new(alloc()) LNewArray();
@@ -312,6 +305,7 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 {
     MDefinition *opd = arg->getArgument();
     uint32_t argslot = getArgumentSlot(arg->getArgnum());
+    JS_ASSERT(arg->getArgnum() < prepareCallStack_.back()->argc());
 
     // Pass through the virtual register of the operand.
     // This causes snapshots to correctly copy the operand on the stack.
@@ -1689,7 +1683,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
 
       case MIRType_Float32:
       {
-        LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegister(opd));
+        LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegisterAtStart(opd));
         return define(lir, convert);
       }
 

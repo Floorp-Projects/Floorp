@@ -556,6 +556,8 @@ function ArrayKeys() {
     return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
+#ifdef ENABLE_PARALLEL_JS
+
 /*
  * Strawman spec:
  *   http://wiki.ecmascript.org/doku.php?id=strawman:data_parallelism
@@ -648,8 +650,6 @@ function ComputeAllSliceBounds(numItems, numSlices) {
   }
   return info;
 }
-
-#ifdef ENABLE_PARALLEL_JS
 
 /**
  * Creates a new array by applying |func(e, i, self)| for each element |e|

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=944847
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 944847</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 944847 **/
+
+    var e1 = document.createElement("div");
+    is(e1.onclick, null);
+    e1.setAttribute("onclick", "");
+    isnot(e1.onclick, null);
+
+    var e2 = document.implementation.createHTMLDocument(null, null).createElement("div");
+    is(e2.onclick, null);
+    e2.setAttribute("onclick", "");
+    is(e2.onclick, null);
+
+    var e3 = document.createElement("div");
+    is(e3.onclick, null);
+    e3.setAttribute("onclick", "");
+    e2.ownerDocument.adoptNode(e3);
+    is(e3.onclick, null);
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=944847">Mozilla Bug 944847</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

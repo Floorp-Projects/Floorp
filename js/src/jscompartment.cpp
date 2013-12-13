@@ -634,14 +634,6 @@ JSCompartment::setObjectMetadataCallback(js::ObjectMetadataCallback callback)
     // whether there is a creation callback.
     ReleaseAllJITCode(runtime_->defaultFreeOp());
 
-    // Turn off GGC while the metadata hook is present, to prevent
-    // nursery-allocated metadata from being used as a lookup key in
-    // InitialShapeTable entries.
-    if (callback)
-        JS::DisableGenerationalGC(runtime_);
-    else
-        JS::EnableGenerationalGC(runtime_);
-
     objectMetadataCallback = callback;
 }
 
