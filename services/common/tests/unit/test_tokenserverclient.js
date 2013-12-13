@@ -14,6 +14,7 @@ add_test(function test_working_bid_exchange() {
   _("Ensure that working BrowserID token exchange works as expected.");
 
   let service = "http://example.com/foo";
+  let duration = 300;
 
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
@@ -29,6 +30,7 @@ add_test(function test_working_bid_exchange() {
         key:          "key",
         api_endpoint: service,
         uid:          "uid",
+        duration:     duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -40,12 +42,12 @@ add_test(function test_working_bid_exchange() {
   client.getTokenFromBrowserIDAssertion(url, "assertion", cb);
   let result = cb.wait();
   do_check_eq("object", typeof(result));
-  do_check_attribute_count(result, 4);
+  do_check_attribute_count(result, 5);
   do_check_eq(service, result.endpoint);
   do_check_eq("id", result.id);
   do_check_eq("key", result.key);
   do_check_eq("uid", result.uid);
-
+  do_check_eq(duration, result.duration);
   server.stop(run_next_test);
 });
 
@@ -200,6 +202,7 @@ add_test(function test_403_no_urls() {
 add_test(function test_send_conditions_accepted() {
   _("Ensures that the condition acceptance header is sent when asked.");
 
+  let duration = 300;
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
       do_check_true(request.hasHeader("x-conditions-accepted"));
@@ -213,6 +216,7 @@ add_test(function test_send_conditions_accepted() {
         key:          "key",
         api_endpoint: "http://example.com/",
         uid:          "uid",
+        duration:     duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -384,6 +388,7 @@ add_test(function test_unhandled_media_type() {
 add_test(function test_rich_media_types() {
   _("Ensure that extra tokens in the media type aren't rejected.");
 
+  let duration = 300;
   let server = httpd_setup({
     "/foo": function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -394,6 +399,7 @@ add_test(function test_rich_media_types() {
         key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
+        duration:     duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -411,6 +417,7 @@ add_test(function test_rich_media_types() {
 add_test(function test_exception_during_callback() {
   _("Ensure that exceptions thrown during callback handling are handled.");
 
+  let duration = 300;
   let server = httpd_setup({
     "/foo": function(request, response) {
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -421,6 +428,7 @@ add_test(function test_exception_during_callback() {
         key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
+        duration:     duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }

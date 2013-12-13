@@ -11,13 +11,13 @@
 .devtools-monospace {
 %ifdef XP_MACOSX
   font-family: Menlo, monospace;
-%endif
-%ifdef XP_LINUX
-  font-family: monospace;
-  font-size: 80%;
-%endif
-%ifdef XP_WIN
+%elifdef XP_WIN
   font-family: Consolas, monospace;
+%else
+  font-family: monospace;
+%endif
+%if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+  font-size: 80%;
 %endif
 }
 
@@ -62,7 +62,7 @@
   background-image: linear-gradient(to bottom, hsla(209,18%,18%,0.9), hsl(210,11%,16%));
   border-radius: 3px;
   overflow-x: hidden;
-%ifdef XP_LINUX
+%if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
   max-height: 32rem;
 %else
   max-height: 40rem;
