@@ -646,7 +646,7 @@ let ContentScroll =  {
         isRoot = true;
       }
     } else {
-      var window = target.currentDoc.defaultView;
+      var window = target.ownerDocument.defaultView;
       var scrollOffset = this.getScrollOffsetForElement(target);
       var element = target;
     }
