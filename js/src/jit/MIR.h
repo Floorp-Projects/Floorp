@@ -1363,32 +1363,6 @@ class MThrow
     }
 };
 
-class MNewParallelArray : public MNullaryInstruction
-{
-    CompilerRootObject templateObject_;
-
-    MNewParallelArray(JSObject *templateObject)
-      : templateObject_(templateObject)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewParallelArray);
-
-    static MNewParallelArray *New(TempAllocator &alloc, JSObject *templateObject) {
-        return new(alloc) MNewParallelArray(templateObject);
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-
-    JSObject *templateObject() const {
-        return templateObject_;
-    }
-};
-
 // Fabricate a type set containing only the type of the specified object.
 types::TemporaryTypeSet *
 MakeSingletonTypeSet(JSObject *obj);
