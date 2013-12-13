@@ -39,6 +39,7 @@
 #include "runnable_utils.h"
 #include "gfxImageSurface.h"
 #include "libyuv/convert.h"
+#include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
 
@@ -858,7 +859,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     return;
   }
 
-  gfxIntSize size = img->GetSize();
+  gfx::IntSize size = img->GetSize();
   if ((size.width & 1) != 0 || (size.height & 1) != 0) {
     MOZ_ASSERT(false, "Can't handle odd-sized images");
     return;
@@ -948,7 +949,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     const_cast<layers::CairoImage *>(
           static_cast<const layers::CairoImage *>(img));
 
-    gfxIntSize size = rgb->GetSize();
+    gfx::IntSize size = rgb->GetSize();
     int half_width = (size.width + 1) >> 1;
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;
