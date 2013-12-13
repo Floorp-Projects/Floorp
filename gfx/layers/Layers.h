@@ -684,7 +684,13 @@ public:
      * transaction where there is no possibility of redrawing the content, so the
      * implementation should be ready for that.
      */
-    CONTENT_MAY_CHANGE_TRANSFORM = 0x08
+    CONTENT_MAY_CHANGE_TRANSFORM = 0x08,
+
+    /**
+     * Disable subpixel AA for this layer. This is used if the display isn't suited
+     * for subpixel AA like hidpi or rotated content.
+     */
+    CONTENT_DISABLE_SUBPIXEL_AA = 0x10
   };
   /**
    * CONSTRUCTION PHASE ONLY
