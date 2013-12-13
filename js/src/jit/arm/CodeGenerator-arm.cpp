@@ -1020,8 +1020,6 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     return true;
 }
 
-typedef MoveResolver::MoveOperand MoveOperand;
-
 MoveOperand
 CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
 {
