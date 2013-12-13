@@ -1195,7 +1195,7 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
           case LDefinition::BOX:
 #endif
           case LDefinition::GENERAL: kind = MoveOp::GENERAL; break;
-          case LDefinition::FLOAT32:
+          case LDefinition::FLOAT32: kind = MoveOp::FLOAT32; break;
           case LDefinition::DOUBLE:  kind = MoveOp::DOUBLE;  break;
           default: MOZ_ASSUME_UNREACHABLE("Unexpected move type");
         }
@@ -3954,7 +3954,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
     JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
 
     masm.setupUnalignedABICall(1, temp);
-    masm.passABIArg(input, MoveOp::DOUBLE);
+    masm.passABIArg(input, MoveOp::FLOAT32);
 
     void *funptr = nullptr;
     switch (ins->mir()->function()) {
@@ -3971,7 +3971,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
         MOZ_ASSUME_UNREACHABLE("Unknown or unsupported float32 math function");
     }
 
-    masm.callWithABI(funptr, MoveOp::DOUBLE);
+    masm.callWithABI(funptr, MoveOp::FLOAT32);
     return true;
 }
 
