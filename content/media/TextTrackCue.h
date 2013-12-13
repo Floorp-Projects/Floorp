@@ -220,6 +220,26 @@ public:
     CueChanged();
   }
 
+  AlignSetting PositionAlign() const
+  {
+    return mPositionAlign;
+  }
+
+  void SetPositionAlign(AlignSetting aPositionAlign, ErrorResult& aRv)
+  {
+    if (mPositionAlign == aPositionAlign)
+      return;
+
+    if (aPositionAlign == AlignSetting::Left ||
+        aPositionAlign == AlignSetting::Right) {
+      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
+    mReset = true;
+    mPositionAlign = aPositionAlign;
+    CueChanged();
+  }
+
   int32_t Size() const
   {
     return mSize;
@@ -344,6 +364,7 @@ private:
   nsRefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
   int32_t mPosition;
+  AlignSetting mPositionAlign;
   int32_t mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
