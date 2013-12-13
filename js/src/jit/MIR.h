@@ -9005,6 +9005,7 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
 
   private:
     friend class MBasicBlock;
+    friend void AssertBasicGraphCoherency(MIRGraph &graph);
 
     FixedList<MUse> operands_;
     uint32_t stackDepth_;
