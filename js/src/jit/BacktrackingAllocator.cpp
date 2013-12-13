@@ -1127,7 +1127,9 @@ BacktrackingAllocator::populateSafepoints()
             if (ins == reg->ins() && !reg->isTemp()) {
                 DebugOnly<LDefinition*> def = reg->def();
                 JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
-                             def->type() == LDefinition::GENERAL || def->type() == LDefinition::DOUBLE);
+                             def->type() == LDefinition::GENERAL ||
+                             def->type() == LDefinition::FLOAT32 ||
+                             def->type() == LDefinition::DOUBLE);
                 continue;
             }
 

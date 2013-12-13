@@ -196,10 +196,11 @@ static const char * const TypeChars[] =
 {
     "i",            // INTEGER
     "o",            // OBJECT
-    "f",            // DOUBLE
+    "f",            // FLOAT32
+    "d",            // DOUBLE
 #ifdef JS_NUNBOX32
     "t",            // TYPE
-    "d"             // PAYLOAD
+    "p"             // PAYLOAD
 #elif JS_PUNBOX64
     "x"             // BOX
 #endif
