@@ -988,8 +988,6 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
     WindowUsesOMTC();
 
-    gfxPlatform::GetPlatform()->SetCompositorBackend(textureFactoryIdentifier.mParentBackend);
-
     mLayerManager = lm;
     return;
   }

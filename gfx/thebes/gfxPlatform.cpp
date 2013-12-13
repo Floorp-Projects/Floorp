@@ -281,7 +281,6 @@ gfxPlatform::gfxPlatform()
   , mDrawLayerBorders(false)
   , mDrawTileBorders(false)
   , mDrawBigImageBorders(false)
-  , mCompositorBackend(LAYERS_NONE)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -2213,23 +2212,4 @@ gfxPlatform::ComponentAlphaEnabled()
 
   InitLayersAccelerationPrefs();
   return sComponentAlphaEnabled;
-}
-
-void
-gfxPlatform::SetCompositorBackend(mozilla::layers::LayersBackend backend)
-{
-  // The compositor backend should always be the same after one has been chosen.
-  MOZ_ASSERT(mCompositorBackend == LAYERS_NONE || mCompositorBackend == backend);
-  if (mCompositorBackend == LAYERS_NONE) {
-    mCompositorBackend = backend;
-  }
-}
-
-bool
-gfxPlatform::UseDeprecatedTextures() const
-{
-  if (mCompositorBackend == LAYERS_BASIC) {
-    return false;
-  }
-  return mLayersUseDeprecated;
 }
