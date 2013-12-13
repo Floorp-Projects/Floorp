@@ -11,6 +11,7 @@
 #include "ThebesLayerD3D9.h"
 #include "gfxPlatform.h"
 #include "gfxImageSurface.h"
+#include "gfx2DGlue.h"
 #include "yuv_convert.h"
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
