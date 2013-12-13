@@ -138,7 +138,6 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
   mBuffer->SetPaintWillResample(MayResample());
 
-  mBuffer->SetCompositor(mCompositeManager->GetCompositor());
   mBuffer->Composite(effectChain,
                      GetEffectiveOpacity(),
                      transform,
