@@ -20,6 +20,15 @@
 namespace mozilla {
 namespace dom {
 
+NS_IMPL_CYCLE_COLLECTION_1(URL, mSearchParams)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(URL)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(URL)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(URL)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 URL::URL(nsIURI* aURI)
   : mURI(aURI)
 {
@@ -212,6 +221,10 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
   }
 
   aRv = mURI->SetSpec(href);
+
+  if (mSearchParams) {
+    mSearchParams->Invalidate();
+  }
 }
 
 void
@@ -286,6 +299,33 @@ void
 URL::SetHost(const nsAString& aHost)
 {
   mURI->SetHostPort(NS_ConvertUTF16toUTF8(aHost));
+}
+
+void
+URL::URLSearchParamsUpdated()
+{
+  MOZ_ASSERT(mSearchParams && mSearchParams->IsValid());
+
+  nsAutoString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
+}
+
+void
+URL::URLSearchParamsNeedsUpdates()
+{
+  MOZ_ASSERT(mSearchParams);
+
+  nsAutoCString search;
+  nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
+  if (url) {
+    nsresult rv = url->GetQuery(search);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to get the query from a nsIURL.");
+    }
+  }
+
+  mSearchParams->ParseInput(search);
 }
 
 void
@@ -385,6 +425,16 @@ URL::GetSearch(nsString& aSearch) const
 void
 URL::SetSearch(const nsAString& aSearch)
 {
+  SetSearchInternal(aSearch);
+
+  if (mSearchParams) {
+    mSearchParams->Invalidate();
+  }
+}
+
+void
+URL::SetSearchInternal(const nsAString& aSearch)
+{
   nsCOMPtr<nsIURL> url(do_QueryInterface(mURI));
   if (!url) {
     // Ignore failures to be compatible with NS4.
@@ -392,6 +442,35 @@ URL::SetSearch(const nsAString& aSearch)
   }
 
   url->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
+}
+
+URLSearchParams*
+URL::GetSearchParams()
+{
+  CreateSearchParamsIfNeeded();
+  return mSearchParams;
+}
+
+void
+URL::SetSearchParams(URLSearchParams* aSearchParams)
+{
+  if (!aSearchParams) {
+    return;
+  }
+
+  if (!aSearchParams->HasURLAssociated()) {
+    MOZ_ASSERT(aSearchParams->IsValid());
+
+    mSearchParams = aSearchParams;
+    mSearchParams->SetObserver(this);
+  } else {
+    CreateSearchParamsIfNeeded();
+    mSearchParams->CopyFromURLSearchParams(*aSearchParams);
+  }
+
+  nsAutoString search;
+  mSearchParams->Serialize(search);
+  SetSearchInternal(search);
 }
 
 void
@@ -420,6 +499,16 @@ bool IsChromeURI(nsIURI* aURI)
   if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)))
       return isChrome;
   return false;
+}
+
+void
+URL::CreateSearchParamsIfNeeded()
+{
+  if (!mSearchParams) {
+    mSearchParams = new URLSearchParams();
+    mSearchParams->SetObserver(this);
+    mSearchParams->Invalidate();
+  }
 }
 
 }

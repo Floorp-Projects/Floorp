@@ -7,6 +7,3 @@ PARALLEL_DIRS = ['parallel']
 TEST_DIRS = ['test']
 TEST_TOOL_DIRS = ['test_tool']
 TOOL_DIRS = ['tool']
-EXTERNAL_MAKE_DIRS = ['external_make']
-PARALLEL_EXTERNAL_MAKE_DIRS = ['parallel_external_make']
-

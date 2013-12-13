@@ -102,8 +102,6 @@ class DirectoryTraversal(SandboxDerived):
         'test_tool_dirs',
         'tier_dirs',
         'tier_static_dirs',
-        'external_make_dirs',
-        'parallel_external_make_dirs',
     )
 
     def __init__(self, sandbox):
@@ -116,8 +114,6 @@ class DirectoryTraversal(SandboxDerived):
         self.test_tool_dirs = []
         self.tier_dirs = OrderedDict()
         self.tier_static_dirs = OrderedDict()
-        self.external_make_dirs = []
-        self.parallel_external_make_dirs = []
 
 
 class BaseConfigSubstitution(SandboxDerived):

@@ -3295,6 +3295,38 @@ js::NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values,
     return arr;
 }
 
+ArrayObject *
+js::NewDenseCopiedArrayWithTemplate(JSContext *cx, uint32_t length, const Value *values,
+                                    JSObject *templateObject)
+{
+    gc::AllocKind allocKind = GuessArrayGCKind(length);
+    JS_ASSERT(CanBeFinalizedInBackground(allocKind, &ArrayObject::class_));
+    allocKind = GetBackgroundAllocKind(allocKind);
+
+    RootedTypeObject type(cx, templateObject->type());
+    if (!type)
+        return nullptr;
+
+    RootedShape shape(cx, templateObject->lastProperty());
+    if (!shape)
+        return nullptr;
+
+    gc::InitialHeap heap = GetInitialHeap(GenericObject, &ArrayObject::class_);
+    Rooted<ArrayObject *> arr(cx, JSObject::createArray(cx, allocKind, heap, shape, type, length));
+    if (!arr)
+        return nullptr;
+
+    if (!EnsureNewArrayElements(cx, arr, length))
+        return nullptr;
+
+    arr->setDenseInitializedLength(length);
+    arr->initDenseElements(0, values, length);
+
+    probes::CreateObject(cx, arr);
+
+    return arr;
+}
+
 #ifdef DEBUG
 bool
 js_ArrayInfo(JSContext *cx, unsigned argc, Value *vp)

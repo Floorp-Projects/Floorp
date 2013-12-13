@@ -80,7 +80,7 @@
 #include "pldhash.h"
 #include "mozilla/dom/Touch.h"
 #include "nsIObserverService.h"
-#include "nsIDocShell.h"        // for reflow observation
+#include "nsDocShell.h"        // for reflow observation
 #include "nsIBaseWindow.h"
 #include "nsError.h"
 #include "nsLayoutUtils.h"
@@ -1369,8 +1369,7 @@ nsresult PresShell::SetPrefNoFramesRule(void)
   NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
   
   bool allowSubframes = true;
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();     
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(mPresContext->GetDocShell());
   if (docShell) {
     docShell->GetAllowSubframes(&allowSubframes);
   }
@@ -3645,11 +3644,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState)
   // content viewer's Hide() method...  by that point the docshell's
   // state could be wrong.  We should sort out a better ownership
   // model for the layout history state.
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (!container)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(mPresContext->GetDocShell());
   if (!docShell)
     return NS_ERROR_FAILURE;
 
@@ -5081,8 +5076,7 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
 
 static bool IsTransparentContainerElement(nsPresContext* aPresContext)
 {
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainerInternal();
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = aPresContext->GetDocShell();
   nsCOMPtr<nsPIDOMWindow> pwin(do_GetInterface(docShellItem));
   if (!pwin)
     return false;
@@ -5567,8 +5561,7 @@ PresShell::AssumeAllImagesVisible()
 
   if (!sImageVisibilityEnabled &&
       sImageVisibilityEnabledForBrowserElementsOnly) {
-    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-    nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(container));
+    nsCOMPtr<nsIDocShell> docshell(mPresContext->GetDocShell());
     if (!docshell || !docshell->GetIsInBrowserElement()) {
       return true;
     }
@@ -6006,13 +5999,13 @@ already_AddRefed<nsIPresShell>
 PresShell::GetParentPresShell()
 {
   NS_ENSURE_TRUE(mPresContext, nullptr);
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (!container) {
-    container = do_QueryReferent(mForwardingContainer);
-  }
 
   // Now, find the parent pres shell and send the event there
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = mPresContext->GetDocShell();
+  if (!treeItem) {
+    treeItem = mForwardingContainer.get();
+  }
+
   // Might have gone away, or never been around to start with
   NS_ENSURE_TRUE(treeItem, nullptr);
 
@@ -6327,8 +6320,8 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // would occur if the mouse button is held down while a tab change occurs.
       // If the docshell is visible, look for a scrolling container.
       bool vis;
-      nsCOMPtr<nsISupports> supports = mPresContext->GetContainer();
-      nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(supports));
+      nsCOMPtr<nsIBaseWindow> baseWin =
+        do_QueryInterface(mPresContext->GetContainerWeak());
       if (baseWin && NS_SUCCEEDED(baseWin->GetVisibility(&vis)) && vis) {
         captureRetarget = gCaptureInfo.mRetargetToElement;
         if (!captureRetarget) {
@@ -6702,8 +6695,7 @@ PresShell::GetTouchEventTargetDocument()
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> container = context->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem = context->GetDocShell();
   if (!shellAsTreeItem) {
     return nullptr;
   }
@@ -7183,7 +7175,7 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
   // and the js context is out of date. This check detects the case
   // that caused a crash in bug 41013, but there may be a better way
   // to handle this situation!
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainerWeak();
   if (container) {
 
     // Dispatch event to content
@@ -7204,7 +7196,7 @@ PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
   nsresult rv = NS_OK;
 
   PushCurrentEventInfo(nullptr, aTargetContent);
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainerWeak();
   if (container) {
     rv = nsEventDispatcher::DispatchDOMEvent(aTargetContent, nullptr, aEvent,
                                              mPresContext, aStatus);
@@ -7877,13 +7869,10 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   
   HandlePostedReflowCallbacks(aInterruptible);
 
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
-    if (docShell) {
-      DOMHighResTimeStamp now = GetPerformanceNow();
-      docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
-    }
+  nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
+  if (docShell) {
+    DOMHighResTimeStamp now = GetPerformanceNow();
+    docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
   }
 
   if (sSynthMouseMove) {
@@ -9628,7 +9617,7 @@ void nsIPresShell::ReleaseStatics()
 // Asks our docshell whether we're active.
 void PresShell::QueryIsActive()
 {
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainerWeak();
   if (mDocument) {
     nsIDocument* displayDoc = mDocument->GetDisplayDocument();
     if (displayDoc) {
@@ -9641,7 +9630,7 @@ void PresShell::QueryIsActive()
 
       nsIPresShell* displayPresShell = displayDoc->GetShell();
       if (displayPresShell) {
-        container = displayPresShell->GetPresContext()->GetContainer();
+        container = displayPresShell->GetPresContext()->GetContainerWeak();
       }
     }
   }

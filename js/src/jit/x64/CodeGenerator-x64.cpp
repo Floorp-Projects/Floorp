@@ -409,15 +409,6 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         srcAddr = Operand(HeapReg, ToRegister(ptr), TimesOne);
     }
 
-    if (vt == ArrayBufferView::TYPE_FLOAT32) {
-        FloatRegister dest = ToFloatRegister(ins->output());
-        uint32_t before = masm.size();
-        masm.loadFloat(srcAddr, dest);
-        uint32_t after = masm.size();
-        masm.cvtss2sd(dest, dest);
-        return skipNote || gen->noteHeapAccess(AsmJSHeapAccess(before, after, vt, ToAnyRegister(ins->output())));
-    }
-
     uint32_t before = masm.size();
     switch (vt) {
       case ArrayBufferView::TYPE_INT8:    masm.movsbl(srcAddr, ToRegister(ins->output())); break;
@@ -426,6 +417,7 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
       case ArrayBufferView::TYPE_UINT16:  masm.movzwl(srcAddr, ToRegister(ins->output())); break;
       case ArrayBufferView::TYPE_INT32:
       case ArrayBufferView::TYPE_UINT32:  masm.movl(srcAddr, ToRegister(ins->output())); break;
+      case ArrayBufferView::TYPE_FLOAT32: masm.loadFloat(srcAddr, ToFloatRegister(ins->output())); break;
       case ArrayBufferView::TYPE_FLOAT64: masm.loadDouble(srcAddr, ToFloatRegister(ins->output())); break;
       default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
@@ -453,14 +445,6 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
         dstAddr = Operand(HeapReg, ToRegister(ins->ptr()), TimesOne);
     }
 
-    if (vt == ArrayBufferView::TYPE_FLOAT32) {
-        masm.convertDoubleToFloat(ToFloatRegister(ins->value()), ScratchFloatReg);
-        uint32_t before = masm.size();
-        masm.storeFloat(ScratchFloatReg, dstAddr);
-        uint32_t after = masm.size();
-        return skipNote || gen->noteHeapAccess(AsmJSHeapAccess(before, after));
-    }
-
     uint32_t before = masm.size();
     if (ins->value()->isConstant()) {
         switch (vt) {
@@ -480,6 +464,7 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap *ins)
           case ArrayBufferView::TYPE_UINT16:  masm.movw(ToRegister(ins->value()), dstAddr); break;
           case ArrayBufferView::TYPE_INT32:
           case ArrayBufferView::TYPE_UINT32:  masm.movl(ToRegister(ins->value()), dstAddr); break;
+          case ArrayBufferView::TYPE_FLOAT32: masm.storeFloat(ToFloatRegister(ins->value()), dstAddr); break;
           case ArrayBufferView::TYPE_FLOAT64: masm.storeDouble(ToFloatRegister(ins->value()), dstAddr); break;
           default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
         }
@@ -508,7 +493,7 @@ CodeGeneratorX64::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
     MAsmJSStoreGlobalVar *mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
+    JS_ASSERT(IsNumberType(type));
 
     CodeOffsetLabel label;
     if (type == MIRType_Int32)
