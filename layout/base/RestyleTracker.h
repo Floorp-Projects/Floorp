@@ -52,7 +52,7 @@ public:
   void AddFrame(nsIFrame* aFrame) {
     uint32_t depth = aFrame->GetDepthInFrameTree();
     if (mEntryList.empty() ||
-        !mEntryList.contains(Entry(aFrame, depth, true))) {
+        !mEntryList.find(Entry(aFrame, depth, true))) {
       mEntryList.insert(new Entry(aFrame, depth, true));
     }
   }
@@ -66,7 +66,7 @@ public:
     }
 
     uint32_t depth = aFrame->GetDepthInFrameTree();
-    if (mEntryList.contains(Entry(aFrame, depth, false))) {
+    if (mEntryList.find(Entry(aFrame, depth, false))) {
       delete mEntryList.remove(Entry(aFrame, depth, false));
     }
   }
@@ -114,7 +114,7 @@ public:
       if (updateParent) {
         nsIFrame *parent = frame->GetParent();
         if (parent && parent != mSubtreeRoot) {
-          if (!mEntryList.contains(Entry(parent, entry->mDepth - 1, false))) {
+          if (!mEntryList.find(Entry(parent, entry->mDepth - 1, false))) {
             mEntryList.insert(new Entry(parent, entry->mDepth - 1, false));
           }
         }
