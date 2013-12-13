@@ -1106,6 +1106,19 @@ class AssemblerX86Shared
         masm.sarl_CLr(dest.code());
     }
 
+    void xaddl(const Register &srcdest, const Operand &mem) {
+        switch (mem.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.xaddl_rm(srcdest.code(), mem.disp(), mem.base());
+            break;
+          case Operand::MEM_SCALE:
+            masm.xaddl_rm(srcdest.code(), mem.disp(), mem.base(), mem.index(), mem.scale());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+
     void push(const Imm32 imm) {
         masm.push_i32(imm.value);
     }
