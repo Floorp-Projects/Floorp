@@ -13,11 +13,11 @@ namespace mozilla {
 namespace gfx {
 
 template <typename T>
-void ArcToBezier(T* aSink, const Point &aOrigin, float aRadius, float aStartAngle,
-                 float aEndAngle, bool aAntiClockwise)
+void ArcToBezier(T* aSink, const Point &aOrigin, const Size &aRadius,
+                 float aStartAngle, float aEndAngle, bool aAntiClockwise)
 {
-  Point startPoint(aOrigin.x + cos(aStartAngle) * aRadius,
-                   aOrigin.y + sin(aStartAngle) * aRadius);
+  Point startPoint(aOrigin.x + cos(aStartAngle) * aRadius.width,
+                   aOrigin.y + sin(aStartAngle) * aRadius.height);
 
   aSink->LineTo(startPoint);
 
@@ -56,23 +56,25 @@ void ArcToBezier(T* aSink, const Point &aOrigin, float aRadius, float aStartAngl
       currentEndAngle = currentStartAngle + arcSweepLeft * sweepDirection;
     }
 
-    Point currentStartPoint(aOrigin.x + cos(currentStartAngle) * aRadius,
-                            aOrigin.y + sin(currentStartAngle) * aRadius);
-    Point currentEndPoint(aOrigin.x + cos(currentEndAngle) * aRadius,
-                          aOrigin.y + sin(currentEndAngle) * aRadius);
+    Point currentStartPoint(aOrigin.x + cos(currentStartAngle) * aRadius.width,
+                            aOrigin.y + sin(currentStartAngle) * aRadius.height);
+    Point currentEndPoint(aOrigin.x + cos(currentEndAngle) * aRadius.width,
+                          aOrigin.y + sin(currentEndAngle) * aRadius.height);
 
     // Calculate kappa constant for partial curve. The sign of angle in the
     // tangent will actually ensure this is negative for a counter clockwise
     // sweep, so changing signs later isn't needed.
-    Float kappa = (4.0f / 3.0f) * tan((currentEndAngle - currentStartAngle) / 4.0f) * aRadius;
+    Float kappaFactor = (4.0f / 3.0f) * tan((currentEndAngle - currentStartAngle) / 4.0f);
+    Float kappaX = kappaFactor * aRadius.width;
+    Float kappaY = kappaFactor * aRadius.height;
 
     Point tangentStart(-sin(currentStartAngle), cos(currentStartAngle));
     Point cp1 = currentStartPoint;
-    cp1 += tangentStart * kappa;
+    cp1 += Point(tangentStart.x * kappaX, tangentStart.y * kappaY);
 
     Point revTangentEnd(sin(currentEndAngle), -cos(currentEndAngle));
     Point cp2 = currentEndPoint;
-    cp2 += revTangentEnd * kappa;
+    cp2 += Point(revTangentEnd.x * kappaX, revTangentEnd.y * kappaY);
 
     aSink->BezierTo(cp1, cp2, currentEndPoint);
 

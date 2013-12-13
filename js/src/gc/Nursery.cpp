@@ -75,9 +75,9 @@ js::Nursery::~Nursery()
 void
 js::Nursery::enable()
 {
+    JS_ASSERT(isEmpty());
     if (isEnabled())
         return;
-    JS_ASSERT_IF(runtime()->gcZeal_ != ZealGenerationalGCValue, position_ == start());
     numActiveChunks_ = 1;
     setCurrentChunk(0);
 #ifdef JS_GC_ZEAL
@@ -91,9 +91,17 @@ js::Nursery::disable()
 {
     if (!isEnabled())
         return;
-    JS_ASSERT_IF(runtime()->gcZeal_ != ZealGenerationalGCValue, position_ == start());
+    JS_ASSERT(isEmpty());
     numActiveChunks_ = 0;
     currentEnd_ = 0;
+}
+
+bool
+js::Nursery::isEmpty() const
+{
+    JS_ASSERT(runtime_);
+    JS_ASSERT_IF(runtime_->gcZeal_ != ZealGenerationalGCValue, currentStart_ == start());
+    return !isEnabled() || position() == currentStart_;
 }
 
 void *
@@ -355,8 +363,6 @@ js::Nursery::forwardBufferPointer(HeapSlot **pSlotsElems)
     JS_ASSERT(!isInside(*pSlotsElems));
 }
 
-namespace {
-
 // Structure for counting how many times objects of a particular type have been
 // tenured during a minor collection.
 struct TenureCount
@@ -364,8 +370,6 @@ struct TenureCount
     types::TypeObject *type;
     int count;
 };
-
-} // anonymous namespace
 
 // Keep rough track of how many times we tenure objects of particular types
 // during minor collections, using a fixed size hash for efficiency at the cost
@@ -598,10 +602,10 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     if (!isEnabled())
         return;
 
-    AutoStopVerifyingBarriers av(rt, false);
-
-    if (position() == start())
+    if (isEmpty())
         return;
+
+    AutoStopVerifyingBarriers av(rt, false);
 
     rt->gcHelperThread.waitBackgroundSweepEnd();
 
@@ -678,6 +682,9 @@ js::Nursery::sweep(JSRuntime *rt)
         /* Only reset the alloc point when we are close to the end. */
         if (currentChunk_ + 1 == NumNurseryChunks)
             setCurrentChunk(0);
+
+        /* Set current start position for isEmpty checks. */
+        currentStart_ = position();
 
         return;
     }

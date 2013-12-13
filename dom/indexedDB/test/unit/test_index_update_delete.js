@@ -18,9 +18,6 @@ function testSteps()
   let db = event.target.result;
   db.onerror = errorHandler;
 
-  // Bug 943409.
-  eval('');
-
   for each (let autoIncrement in [false, true]) {
     let objectStore =
       db.createObjectStore(autoIncrement, { keyPath: "id",

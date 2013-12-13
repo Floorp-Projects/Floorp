@@ -7,11 +7,8 @@
 if CONFIG['OS_ARCH'] in ('Darwin', 'Linux'):
     DIRS += ['dwarf']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'convert_UTF.c',
-]
-
-SOURCES += [
     'logging.cc',
     'module.cc',
     'pathname_stripper.cc',
@@ -20,7 +17,7 @@ SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] != 'WINNT':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'arm_ex_reader.cc',
         'arm_ex_to_module.cc',
         'dwarf/bytereader.cc',
@@ -34,7 +31,7 @@ if CONFIG['OS_TARGET'] != 'WINNT':
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'linux/dump_symbols.cc',
         'linux/elf_symbols_to_module.cc',
     ]
@@ -43,7 +40,7 @@ if CONFIG['OS_TARGET'] == 'Android':
     pass
 else:
     if CONFIG['OS_TARGET'] != 'WINNT':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'stabs_reader.cc',
             'stabs_to_module.cc',
         ]
@@ -69,11 +66,12 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_CRASHREPORTER']:
     ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'mac/dump_syms.mm',
     ]
 
 if CONFIG['OS_TARGET'] == 'Android':
+    # We don't support unifying assembly files.
     SOURCES += [
         'android/breakpad_getcontext.S',
     ]

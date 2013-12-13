@@ -592,13 +592,20 @@ class BuildReader(object):
     This is where the build system starts. You give it a tree configuration
     (the output of configuration) and it executes the moz.build files and
     collects the data they define.
+
+    The reader can optionally call a callable after each sandbox is evaluated
+    but before its evaluated content is processed. This gives callers the
+    opportunity to modify sandboxes before side-effects occur from their
+    content. This callback receives the ``Sandbox`` that was evaluated. The
+    return value is ignored.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, sandbox_post_eval_cb=None):
         self.config = config
         self.topsrcdir = config.topsrcdir
         self.topobjdir = config.topobjdir
 
+        self._sandbox_post_eval_cb = sandbox_post_eval_cb
         self._log = logging.getLogger(__name__)
         self._read_files = set()
         self._execution_stack = []
@@ -719,6 +726,10 @@ class BuildReader(object):
         sandbox = MozbuildSandbox(self.config, path, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
         sandbox.execution_time = time.time() - time_start
+
+        if self._sandbox_post_eval_cb:
+            self._sandbox_post_eval_cb(sandbox)
+
         var = metadata.get('var', None)
         forbidden = {
             'TOOL_DIRS': ['DIRS', 'PARALLEL_DIRS', 'TEST_DIRS'],
@@ -770,6 +781,9 @@ class BuildReader(object):
         # so until the library linking operations are moved out of it, at which
         # point PARALLEL_DIRS will be irrelevant anyways.
         for gyp_sandbox in gyp_sandboxes:
+            if self._sandbox_post_eval_cb:
+                self._sandbox_post_eval_cb(gyp_sandbox)
+
             sandbox['DIRS'].append(mozpath.relpath(gyp_sandbox['OBJDIR'], sandbox['OBJDIR']))
 
         yield sandbox

@@ -7,6 +7,7 @@
 #include "ImageContainer.h"
 #include <string.h>                     // for memcpy, memset
 #include "SharedTextureImage.h"         // for SharedTextureImage
+#include "gfx2DGlue.h"
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
@@ -16,6 +17,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
+#include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
 #include "GrallocImages.h"
 #endif
@@ -50,7 +52,7 @@ Atomic<int32_t> Image::sSerialCounter(0);
 already_AddRefed<Image>
 ImageFactory::CreateImage(const ImageFormat *aFormats,
                           uint32_t aNumFormats,
-                          const gfxIntSize &,
+                          const gfx::IntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
   if (!aNumFormats) {
@@ -287,7 +289,7 @@ ImageContainer::LockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::LockCurrentAsSurface(gfxIntSize *aSize, Image** aCurrentImage)
+ImageContainer::LockCurrentAsSurface(gfx::IntSize *aSize, Image** aCurrentImage)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -345,7 +347,7 @@ ImageContainer::UnlockCurrentImage()
 }
 
 already_AddRefed<gfxASurface>
-ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
+ImageContainer::GetCurrentAsSurface(gfx::IntSize *aSize)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -364,7 +366,7 @@ ImageContainer::GetCurrentAsSurface(gfxIntSize *aSize)
   return mActiveImage->GetAsSurface();
 }
 
-gfxIntSize
+gfx::IntSize
 ImageContainer::GetCurrentSize()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -556,9 +558,9 @@ PlanarYCbCrImage::GetAsSurface()
     return result.forget();
   }
 
-  gfxImageFormat format = GetOffscreenFormat();
-  gfxIntSize size(mSize);
-  gfxUtils::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
+  gfx::SurfaceFormat format = gfx::ImageFormatToSurfaceFormat(GetOffscreenFormat());
+  gfx::IntSize size(mSize);
+  gfx::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
     NS_ERROR("Illegal image dest width or height");
@@ -566,11 +568,9 @@ PlanarYCbCrImage::GetAsSurface()
   }
 
   nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(mSize, format);
+    new gfxImageSurface(gfx::ThebesIntSize(mSize), gfx::SurfaceFormatToImageFormat(format));
 
-  gfxUtils::ConvertYCbCrToRGB(mData, format, mSize,
-                              imageSurface->Data(),
-                              imageSurface->Stride());
+  gfx::ConvertYCbCrToRGB(mData, format, mSize, imageSurface->Data(), imageSurface->Stride());
 
   mSurface = imageSurface;
 

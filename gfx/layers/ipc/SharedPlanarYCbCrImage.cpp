@@ -7,7 +7,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdio.h>                      // for printf
 #include "ISurfaceAllocator.h"          // for ISurfaceAllocator, etc
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat::FORMAT_YUV
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
