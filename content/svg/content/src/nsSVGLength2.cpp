@@ -112,7 +112,7 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
 {
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
-                            NS_LITERAL_STRING("%g").get(),
+                            MOZ_UTF16("%g"),
                             (double)aValue);
   aValueAsString.Assign(buf);
 

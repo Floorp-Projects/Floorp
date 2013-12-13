@@ -2751,8 +2751,8 @@ static bool IsChineseOrJapanese(nsIFrame* aFrame)
     return false;
   }
   const PRUnichar *lang = language->GetUTF16String();
-  return (!nsCRT::strncmp(lang, NS_LITERAL_STRING("ja").get(), 2) ||
-          !nsCRT::strncmp(lang, NS_LITERAL_STRING("zh").get(), 2)) &&
+  return (!nsCRT::strncmp(lang, MOZ_UTF16("ja"), 2) ||
+          !nsCRT::strncmp(lang, MOZ_UTF16("zh"), 2)) &&
          (language->GetLength() == 2 || lang[2] == '-');
 }
 

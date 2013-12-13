@@ -683,8 +683,8 @@ nsIOService::SetOffline(bool offline)
         if (observerService) {
             (void)observerService->NotifyObservers(nullptr,
                 NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
-                NS_LITERAL_STRING("true").get() :
-                NS_LITERAL_STRING("false").get());
+                MOZ_UTF16("true") :
+                MOZ_UTF16("false"));
         }
     }
 

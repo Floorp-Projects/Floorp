@@ -2124,10 +2124,10 @@ nsP12Runnable::Run()
   //Build up the message that let's the user know we're trying to 
   //make PKCS12 backups of the new certs.
   nssComponent->GetPIPNSSBundleString("ForcedBackup1", final);
-  final.Append(NS_LITERAL_STRING("\n\n").get());
+  final.Append(MOZ_UTF16("\n\n"));
   nssComponent->GetPIPNSSBundleString("ForcedBackup2", temp);
   final.Append(temp.get());
-  final.Append(NS_LITERAL_STRING("\n\n").get());
+  final.Append(MOZ_UTF16("\n\n"));
 
   nssComponent->GetPIPNSSBundleString("ForcedBackup3", temp);
 

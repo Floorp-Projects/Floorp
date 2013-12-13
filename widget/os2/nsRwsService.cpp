@@ -315,7 +315,7 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       if (rc) {
         if (rc == RWSSRV_FUNCTIONFAILED) {
           *aHandle = 0;
-          AssignNLSString(NS_LITERAL_STRING("wpsDefaultOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("wpsDefaultOS2"), _retval);
           rv = NS_OK;
         }
         else
@@ -360,7 +360,7 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       case 0xbc2b: {
         rv = IsDescendedFrom(wpsFilePtr, "MMImage");
         if (NS_SUCCEEDED(rv))
-          AssignNLSString(NS_LITERAL_STRING("mmImageViewerOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("mmImageViewerOS2"), _retval);
         break;
       }
 
@@ -371,19 +371,19 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       case 0xbbe5: {  // Player
         rv = IsDescendedFrom(wpsFilePtr, "MMAudio");
         if (NS_SUCCEEDED(rv)) {
-          AssignNLSString(NS_LITERAL_STRING("mmAudioPlayerOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("mmAudioPlayerOS2"), _retval);
           break;
         }
 
         rv = IsDescendedFrom(wpsFilePtr, "MMVideo");
         if (NS_SUCCEEDED(rv)) {
-          AssignNLSString(NS_LITERAL_STRING("mmVideoPlayerOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("mmVideoPlayerOS2"), _retval);
           break;
         }
 
         rv = IsDescendedFrom(wpsFilePtr, "MMMIDI");
         if (NS_SUCCEEDED(rv))
-          AssignNLSString(NS_LITERAL_STRING("mmMidiPlayerOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("mmMidiPlayerOS2"), _retval);
 
         break;
       }
@@ -391,7 +391,7 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       case 0x7701: {
         rv = IsDescendedFrom(wpsFilePtr, "TSArcMgr");
         if (NS_SUCCEEDED(rv))
-          AssignNLSString(NS_LITERAL_STRING("odZipFolderOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("odZipFolderOS2"), _retval);
         break;
       }
 
@@ -401,7 +401,7 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       case 0xa742: {
         rv = IsDescendedFrom(wpsFilePtr, "TSEnhDataFile");
         if (NS_SUCCEEDED(rv))
-          AssignNLSString(NS_LITERAL_STRING("odTextViewOS2").get(), _retval);
+          AssignNLSString(MOZ_UTF16("odTextViewOS2"), _retval);
         break;
       }
     } // end switch
@@ -431,7 +431,7 @@ nsRwsService::HandlerFromPath(const char *aPath, uint32_t *aHandle,
       break;
 
     nsAutoString classViewer;
-    AssignNLSString(NS_LITERAL_STRING("classViewerOS2").get(), classViewer);
+    AssignNLSString(MOZ_UTF16("classViewerOS2"), classViewer);
     int pos = -1;
     if ((pos = classViewer.Find("%S")) > -1)
       classViewer.Replace(pos, 2, buffer.Elements());
@@ -747,7 +747,7 @@ static void AssignNLSString(const PRUnichar *aKey, nsAString& result)
     // if we can't fetch the requested string, try to get "WPS Default"
     rv = bundle->GetStringFromName(aKey, getter_Copies(title));
     if (NS_FAILED(rv))
-      rv = bundle->GetStringFromName(NS_LITERAL_STRING("wpsDefaultOS2").get(),
+      rv = bundle->GetStringFromName(MOZ_UTF16("wpsDefaultOS2"),
                                      getter_Copies(title));
   } while (0);
 

@@ -1779,7 +1779,7 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
                              params, 2, getter_Copies(killMessage));
 
     nsXPIDLString killTitle;
-    sb->FormatStringFromName(NS_LITERAL_STRING("restartTitle").get(),
+    sb->FormatStringFromName(MOZ_UTF16("restartTitle"),
                              params, 1, getter_Copies(killTitle));
 
     if (!killMessage || !killTitle)
@@ -1865,7 +1865,7 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
     sb->FormatStringFromName(kMissing, params, 2, getter_Copies(missingMessage));
   
     nsXPIDLString missingTitle;
-    sb->FormatStringFromName(NS_LITERAL_STRING("profileMissingTitle").get(),
+    sb->FormatStringFromName(MOZ_UTF16("profileMissingTitle"),
                              params, 1, getter_Copies(missingTitle));
   
     if (missingMessage && missingTitle) {
