@@ -112,8 +112,9 @@ namespace
 //----------------------------------------------------------------------
 // Helper class: AutoIntervalUpdateBatcher
 
-// RAII helper to set the mDeferIntervalUpdates flag on an nsSMILTimedElement
-// and perform the UpdateCurrentInterval when the object is destroyed.
+// Stack-based helper class to set the mDeferIntervalUpdates flag on an
+// nsSMILTimedElement and perform the UpdateCurrentInterval when the object is
+// destroyed.
 //
 // If several of these objects are allocated on the stack, the update will not
 // be performed until the last object for a given nsSMILTimedElement is
@@ -144,6 +145,31 @@ public:
 private:
   nsSMILTimedElement& mTimedElement;
   bool mDidSetFlag;
+};
+
+//----------------------------------------------------------------------
+// Helper class: AutoIntervalUpdater
+
+// Stack-based helper class to call UpdateCurrentInterval when it is destroyed
+// which helps avoid bugs where we forget to call UpdateCurrentInterval in the
+// case of early returns (e.g. due to parse errors).
+//
+// This can be safely used in conjunction with AutoIntervalUpdateBatcher; any
+// calls to UpdateCurrentInterval made by this class will simply be deferred if
+// there is an AutoIntervalUpdateBatcher on the stack.
+class MOZ_STACK_CLASS nsSMILTimedElement::AutoIntervalUpdater
+{
+public:
+  AutoIntervalUpdater(nsSMILTimedElement& aTimedElement)
+    : mTimedElement(aTimedElement) { }
+
+  ~AutoIntervalUpdater()
+  {
+    mTimedElement.UpdateCurrentInterval();
+  }
+
+private:
+  nsSMILTimedElement& mTimedElement;
 };
 
 //----------------------------------------------------------------------
@@ -918,8 +944,10 @@ nsSMILTimedElement::UnsetEndSpec(RemovalTestFunction aRemove)
 nsresult
 nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
 {
-  nsSMILTimeValue duration;
+  // Update the current interval before returning
+  AutoIntervalUpdater updater(*this);
 
+  nsSMILTimeValue duration;
   const nsAString& dur = nsSMILParserUtils::TrimWhitespace(aDurSpec);
 
   // SVG-specific: "For SVG's animation elements, if "media" is specified, the
@@ -939,7 +967,6 @@ nsSMILTimedElement::SetSimpleDuration(const nsAString& aDurSpec)
     "Setting unresolved simple duration");
 
   mSimpleDur = duration;
-  UpdateCurrentInterval();
 
   return NS_OK;
 }
@@ -954,8 +981,10 @@ nsSMILTimedElement::UnsetSimpleDuration()
 nsresult
 nsSMILTimedElement::SetMin(const nsAString& aMinSpec)
 {
-  nsSMILTimeValue duration;
+  // Update the current interval before returning
+  AutoIntervalUpdater updater(*this);
 
+  nsSMILTimeValue duration;
   const nsAString& min = nsSMILParserUtils::TrimWhitespace(aMinSpec);
 
   if (min.EqualsLiteral("media")) {
@@ -970,7 +999,6 @@ nsSMILTimedElement::SetMin(const nsAString& aMinSpec)
   NS_ABORT_IF_FALSE(duration.GetMillis() >= 0L, "Invalid duration");
 
   mMin = duration;
-  UpdateCurrentInterval();
 
   return NS_OK;
 }
@@ -985,8 +1013,10 @@ nsSMILTimedElement::UnsetMin()
 nsresult
 nsSMILTimedElement::SetMax(const nsAString& aMaxSpec)
 {
-  nsSMILTimeValue duration;
+  // Update the current interval before returning
+  AutoIntervalUpdater updater(*this);
 
+  nsSMILTimeValue duration;
   const nsAString& max = nsSMILParserUtils::TrimWhitespace(aMaxSpec);
 
   if (max.EqualsLiteral("media") || max.EqualsLiteral("indefinite")) {
@@ -1001,7 +1031,6 @@ nsSMILTimedElement::SetMax(const nsAString& aMaxSpec)
   }
 
   mMax = duration;
-  UpdateCurrentInterval();
 
   return NS_OK;
 }
@@ -1036,15 +1065,16 @@ nsSMILTimedElement::UnsetRestart()
 nsresult
 nsSMILTimedElement::SetRepeatCount(const nsAString& aRepeatCountSpec)
 {
+  // Update the current interval before returning
+  AutoIntervalUpdater updater(*this);
+
   nsSMILRepeatCount newRepeatCount;
 
   if (nsSMILParserUtils::ParseRepeatCount(aRepeatCountSpec, newRepeatCount)) {
     mRepeatCount = newRepeatCount;
-    UpdateCurrentInterval();
     return NS_OK;
   }
   mRepeatCount.Unset();
-  UpdateCurrentInterval();
   return NS_ERROR_FAILURE;
 }
 
@@ -1058,6 +1088,9 @@ nsSMILTimedElement::UnsetRepeatCount()
 nsresult
 nsSMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec)
 {
+  // Update the current interval before returning
+  AutoIntervalUpdater updater(*this);
+
   nsSMILTimeValue duration;
 
   const nsAString& repeatDur =
@@ -1073,7 +1106,6 @@ nsSMILTimedElement::SetRepeatDur(const nsAString& aRepeatDurSpec)
   }
 
   mRepeatDur = duration;
-  UpdateCurrentInterval();
 
   return NS_OK;
 }

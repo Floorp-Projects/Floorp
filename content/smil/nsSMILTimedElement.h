@@ -616,6 +616,9 @@ protected:
   bool mDoDeferredUpdate; // Set if an update to the current interval was
                           // requested while mDeferIntervalUpdates was set
 
+  // Stack-based helper class to call UpdateCurrentInterval when it is destroyed
+  class AutoIntervalUpdater;
+
   // Recursion depth checking
   uint8_t              mDeleteCount;
   uint8_t              mUpdateIntervalRecursionDepth;
