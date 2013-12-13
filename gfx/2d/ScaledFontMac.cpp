@@ -102,8 +102,13 @@ ScaledFontMac::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aT
 }
 
 void
-ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *)
+ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
 {
+  if (!(aBackendType == BACKEND_COREGRAPHICS || aBackendType == BACKEND_COREGRAPHICS_ACCELERATED)) {
+    ScaledFontBase::CopyGlyphsToBuilder(aBuffer, aBuilder, aBackendType, aTransformHint);
+    return;
+  }
+
   PathBuilderCG *pathBuilderCG =
     static_cast<PathBuilderCG*>(aBuilder);
   // XXX: check builder type

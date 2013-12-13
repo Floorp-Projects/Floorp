@@ -1328,6 +1328,12 @@ MediaStreamGraphImpl::ForceShutDown()
   }
 }
 
+void
+MediaStreamGraphImpl::Init()
+{
+  AudioStream::InitPreferredSampleRate();
+}
+
 namespace {
 
 class MediaStreamGraphInitThreadRunnable : public nsRunnable {
@@ -1340,6 +1346,7 @@ public:
   {
     char aLocal;
     profiler_register_thread("MediaStreamGraph", &aLocal);
+    mGraph->Init();
     mGraph->RunThread();
     return NS_OK;
   }

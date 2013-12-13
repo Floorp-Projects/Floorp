@@ -1276,7 +1276,8 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
     aTo.AppendPrintf(" [hscrollbar=%lld]", GetScrollbarTargetContainerId());
   }
   if (GetIsFixedPosition()) {
-    aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f]", mAnchor.x, mAnchor.y);
+    aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f margin=%f,%f,%f,%f]", mAnchor.x, mAnchor.y,
+                     mMargins.top, mMargins.right, mMargins.bottom, mMargins.left);
   }
   if (GetIsStickyPosition()) {
     aTo.AppendPrintf(" [isStickyPosition scrollId=%d outer=%f,%f %fx%f "

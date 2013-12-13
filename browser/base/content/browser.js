@@ -742,7 +742,7 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad: function() {
-    gMultiProcessBrowser = gPrefService.getBoolPref("browser.tabs.remote");
+    gMultiProcessBrowser = Services.appinfo.browserTabsRemote;
 
     var mustLoadSidebar = false;
 

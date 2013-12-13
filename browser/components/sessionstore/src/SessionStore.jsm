@@ -387,7 +387,7 @@ let SessionStoreInternal = {
       throw new Error("SessionStore.init() must only be called once!");
     }
 
-    this._disabledForMultiProcess = Services.prefs.getBoolPref("browser.tabs.remote");
+    this._disabledForMultiProcess = Services.appinfo.browserTabsRemote;
     if (this._disabledForMultiProcess) {
       this._deferredInitialized.resolve();
       return;
