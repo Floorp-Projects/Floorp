@@ -22,7 +22,6 @@
     _(TableSwitch)                  \
     _(TableSwitchV)                 \
     _(Goto)                         \
-    _(NewParallelArray)             \
     _(NewArray)                     \
     _(NewObject)                    \
     _(NewSlots)                     \

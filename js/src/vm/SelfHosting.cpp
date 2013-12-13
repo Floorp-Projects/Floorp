@@ -12,7 +12,6 @@
 #include "selfhosted.out.h"
 
 #include "builtin/Intl.h"
-#include "builtin/ParallelArray.h"
 #include "builtin/TypedObject.h"
 #include "gc/Marking.h"
 #include "vm/ForkJoin.h"
@@ -308,27 +307,6 @@ intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setInt32(ForkJoinSlices(cx));
-    return true;
-}
-
-/*
- * NewParallelArray(init, ...args): Creates a new parallel array using
- * an initialization function |init|. All subsequent arguments are
- * passed to |init|. The new instance will be passed as the |this|
- * argument.
- */
-bool
-js::intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    JS_ASSERT(args[0].isObject() && args[0].toObject().is<JSFunction>());
-
-    RootedFunction init(cx, &args[0].toObject().as<JSFunction>());
-    CallArgs args0 = CallArgsFromVp(argc - 1, vp + 1);
-    if (!js::ParallelArrayObject::constructHelper(cx, &init, args0))
-        return false;
-    args.rval().set(args0.rval());
     return true;
 }
 
@@ -640,7 +618,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
     JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
-    JS_FN("NewParallelArray",        intrinsic_NewParallelArray,        3,0),
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),

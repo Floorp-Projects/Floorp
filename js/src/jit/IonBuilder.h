@@ -645,16 +645,6 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineUnsafeSetReservedSlot(CallInfo &callInfo);
     InliningStatus inlineUnsafeGetReservedSlot(CallInfo &callInfo);
 
-    // Parallel intrinsics.
-    InliningStatus inlineNewParallelArray(CallInfo &callInfo);
-    InliningStatus inlineParallelArray(CallInfo &callInfo);
-    InliningStatus inlineParallelArrayTail(CallInfo &callInfo,
-                                           JSFunction *target,
-                                           MDefinition *ctor,
-                                           types::TemporaryTypeSet *ctorTypes,
-                                           uint32_t discards,
-                                           Native native);
-
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo &callInfo);
     InliningStatus inlineHaveSameClass(CallInfo &callInfo);

@@ -579,7 +579,6 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Iterator.js \
   $(srcdir)/builtin/Map.js \
   $(srcdir)/builtin/Number.js \
-  $(srcdir)/builtin/ParallelArray.js \
   $(srcdir)/builtin/String.js \
   $(srcdir)/builtin/Set.js \
   $(srcdir)/builtin/TypedObject.js \

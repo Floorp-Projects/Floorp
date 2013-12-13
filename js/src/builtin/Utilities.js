@@ -161,3 +161,33 @@ function IsObject(v) {
            typeof v === "function" ||
            (typeof v === "undefined" && v !== undefined);
 }
+
+#ifdef ENABLE_PARALLEL_JS
+
+/**
+ * Internal debugging tool: checks that the given `mode` permits
+ * sequential execution
+ */
+function AssertSequentialIsOK(mode) {
+  if (mode && mode.mode && mode.mode !== "seq" && ParallelTestsShouldPass())
+    ThrowError(JSMSG_WRONG_VALUE, "parallel execution", "sequential was forced");
+}
+
+function ForkJoinMode(mode) {
+  // WARNING: this must match the enum ForkJoinMode in ForkJoin.cpp
+  if (!mode || !mode.mode) {
+    return 0;
+  } else if (mode.mode === "compile") {
+    return 1;
+  } else if (mode.mode === "par") {
+    return 2;
+  } else if (mode.mode === "recover") {
+    return 3;
+  } else if (mode.mode === "bailout") {
+    return 4;
+  }
+  ThrowError(JSMSG_PAR_ARRAY_BAD_ARG);
+  return undefined;
+}
+
+#endif
