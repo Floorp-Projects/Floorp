@@ -879,30 +879,29 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
 //******************************************************************************
 /* [noscript] gfxASurface getFrame(in uint32_t aWhichFrame,
  *                                 in uint32_t aFlags); */
-NS_IMETHODIMP
+NS_IMETHODIMP_(already_AddRefed<gfxASurface>)
 RasterImage::GetFrame(uint32_t aWhichFrame,
-                      uint32_t aFlags,
-                      gfxASurface **_retval)
+                      uint32_t aFlags)
 {
+  MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
+
   if (aWhichFrame > FRAME_MAX_VALUE)
-    return NS_ERROR_INVALID_ARG;
+    return nullptr;
 
   if (mError)
-    return NS_ERROR_FAILURE;
+    return nullptr;
 
   // Disallowed in the API
   if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
-    return NS_ERROR_FAILURE;
-
-  nsresult rv = NS_OK;
+    return nullptr;
 
   if (!ApplyDecodeFlags(aFlags))
-    return NS_ERROR_NOT_AVAILABLE;
+    return nullptr;
 
   // If the caller requested a synchronous decode, do it
   if (aFlags & FLAG_SYNC_DECODE) {
-    rv = SyncDecode();
-    CONTAINER_ENSURE_SUCCESS(rv);
+    nsresult rv = SyncDecode();
+    CONTAINER_ENSURE_TRUE(NS_SUCCEEDED(rv), nullptr);
   }
 
   // Get the frame. If it's not there, it's probably the caller's fault for
@@ -912,8 +911,7 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
                           0 : GetCurrentImgFrameIndex();
   imgFrame *frame = GetDrawableImgFrame(frameIndex);
   if (!frame) {
-    *_retval = nullptr;
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   nsRefPtr<gfxASurface> framesurf;
@@ -924,19 +922,17 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
   if (framerect.x == 0 && framerect.y == 0 &&
       framerect.width == mSize.width &&
       framerect.height == mSize.height)
-    rv = frame->GetSurface(getter_AddRefs(framesurf));
+    frame->GetSurface(getter_AddRefs(framesurf));
 
   // The image doesn't have a surface because it's been optimized away. Create
   // one.
   if (!framesurf) {
     nsRefPtr<gfxImageSurface> imgsurf;
-    rv = CopyFrame(aWhichFrame, aFlags, getter_AddRefs(imgsurf));
+    CopyFrame(aWhichFrame, aFlags, getter_AddRefs(imgsurf));
     framesurf = imgsurf;
   }
 
-  *_retval = framesurf.forget().get();
-
-  return rv;
+  return framesurf.forget();
 }
 
 already_AddRefed<layers::Image>
@@ -949,13 +945,8 @@ RasterImage::GetCurrentImage()
     return nullptr;
   }
 
-  nsRefPtr<gfxASurface> imageSurface;
-  nsresult rv = GetFrame(FRAME_CURRENT, FLAG_NONE, getter_AddRefs(imageSurface));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  if (!imageSurface) {
-    return nullptr;
-  }
+  nsRefPtr<gfxASurface> imageSurface = GetFrame(FRAME_CURRENT, FLAG_NONE);
+  NS_ENSURE_TRUE(imageSurface, nullptr);
 
   if (!mImageContainer) {
     mImageContainer = LayerManager::CreateImageContainer();
