@@ -24,8 +24,14 @@ from mozbuild.util import FileAvoidWrite
 
 import mozpack.path as mozpath
 
-# There are various imports in this file in functions to avoid adding
-# dependencies to config.status. See bug 949875.
+import WebIDL
+from Codegen import (
+    CGBindingRoot,
+    CGEventRoot,
+    CGExampleRoot,
+    GlobalGenRoots,
+)
+from Configuration import Configuration
 
 
 class BuildResult(object):
@@ -299,16 +305,11 @@ class WebIDLCodegenManager(LoggingMixin):
 
     def generate_example_files(self, interface):
         """Generates example files for a given interface."""
-        from Codegen import CGExampleRoot
-
         root = CGExampleRoot(self.config, interface)
 
         return self._maybe_write_codegen(root, *self._example_paths(interface))
 
     def _parse_webidl(self):
-        import WebIDL
-        from Configuration import Configuration
-
         self.log(logging.INFO, 'webidl_parse',
             {'count': len(self._input_paths)},
             'Parsing {count} WebIDL files.')
@@ -327,8 +328,6 @@ class WebIDLCodegenManager(LoggingMixin):
         self._input_hashes = hashes
 
     def _write_global_derived(self):
-        from Codegen import GlobalGenRoots
-
         things = [('declare', f) for f in self.GLOBAL_DECLARE_FILES]
         things.extend(('define', f) for f in self.GLOBAL_DEFINE_FILES)
 
@@ -454,11 +453,6 @@ class WebIDLCodegenManager(LoggingMixin):
         return paths
 
     def _generate_build_files_for_webidl(self, filename):
-        from Codegen import (
-            CGBindingRoot,
-            CGEventRoot,
-        )
-
         self.log(logging.INFO, 'webidl_generate_build_for_input',
             {'filename': filename},
             'Generating WebIDL files derived from {filename}')
