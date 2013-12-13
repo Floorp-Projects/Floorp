@@ -15,8 +15,6 @@
 #include "onyxc_int.h"
 #include "vpx_mem/vpx_mem.h"
 
-typedef unsigned char uc;
-
 static void lf_init_lut(loop_filter_info_n *lfi)
 {
     int filt_lvl;
