@@ -752,10 +752,9 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<gfxASurface> surface;
-  aImage->GetFrame(imgIContainer::FRAME_FIRST,
-                   imgIContainer::FLAG_SYNC_DECODE,
-                   getter_AddRefs(surface));
+  nsRefPtr<gfxASurface> surface =
+    aImage->GetFrame(imgIContainer::FRAME_FIRST,
+                     imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
   nsRefPtr<gfxImageSurface> image(surface->GetAsReadableARGB32ImageSurface());

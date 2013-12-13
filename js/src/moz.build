@@ -96,7 +96,6 @@ UNIFIED_SOURCES += [
     'builtin/Intl.cpp',
     'builtin/MapObject.cpp',
     'builtin/Object.cpp',
-    'builtin/ParallelArray.cpp',
     'builtin/Profilers.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',

@@ -107,12 +107,9 @@ if CONFIG['MOZ_NFC']:
 if CONFIG['MOZ_B2G']:
     PARALLEL_DIRS += ['downloads']
 
-# bindings/test is here, because it needs to build after bindings/, and
-# we build subdirectories before ourselves.
 TEST_DIRS += [
     'tests',
     'imptests',
-    'bindings/test',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'cocoa', 'windows', 'android', 'qt', 'os2'):

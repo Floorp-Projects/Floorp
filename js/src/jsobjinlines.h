@@ -1019,8 +1019,11 @@ NewObjectMetadata(ExclusiveContext *cxArg, JSObject **pmetadata)
             !cx->compartment()->activeAnalysis &&
             !cx->runtime()->mainThread.activeCompilations)
         {
+            JS::DisableGenerationalGC(cx->runtime());
             gc::AutoSuppressGC suppress(cx);
-            return cx->compartment()->callObjectMetadataCallback(cx, pmetadata);
+            bool status = cx->compartment()->callObjectMetadataCallback(cx, pmetadata);
+            JS::EnableGenerationalGC(cx->runtime());
+            return status;
         }
     }
     return true;

@@ -9,7 +9,6 @@
 #include <stdint.h>                     // for uint8_t
 #include "ImageContainer.h"             // for ISharedImage, Image, etc
 #include "gfxTypes.h"
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -57,7 +56,7 @@ public:
 
   virtual uint8_t *GetBuffer() MOZ_OVERRIDE;
 
-  gfxIntSize GetSize();
+  gfx::IntSize GetSize();
   size_t GetBufferSize();
 
   static uint8_t BytesPerPixel(gfxImageFormat aImageFormat);
@@ -89,7 +88,7 @@ public:
   TextureClient* GetTextureClient() MOZ_OVERRIDE { return nullptr; }
 
 protected:
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
   gfxImageFormat mImageFormat;
   RefPtr<ISurfaceAllocator> mSurfaceAllocator;
 
@@ -114,7 +113,7 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
-  gfxIntSize GetSize();
+  gfx::IntSize GetSize();
 
   size_t GetBufferSize();
 
