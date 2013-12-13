@@ -27,7 +27,7 @@ public:
   already_AddRefed<nsIDocument> GetDocument()
     { nsCOMPtr<nsIDocument> copy = mDocument; return copy.forget(); }
 
-  bool GetScriptAccess() { return mScriptAccess; }
+  bool GetScriptAccess() const { return mScriptAccess; }
 
   nsIURI* DocumentURI() { return mDocument->GetDocumentURI(); }
 
