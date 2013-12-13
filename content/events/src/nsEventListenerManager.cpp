@@ -1347,7 +1347,9 @@ nsEventListenerManager::GetScriptGlobalAndDocument(nsIDocument** aDoc)
     // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
     // if that's the XBL document?
     doc = node->OwnerDoc();
-    MOZ_ASSERT(!doc->IsLoadedAsData(), "Should not get in here at all");
+    if (doc->IsLoadedAsData()) {
+      return nullptr;
+    }
 
     // We want to allow compiling an event handler even in an unloaded
     // document, so use GetScopeObject here, not GetScriptHandlingObject.
