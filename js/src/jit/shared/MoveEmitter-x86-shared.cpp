@@ -128,10 +128,17 @@ MoveEmitterX86::emit(const MoveResolver &moves)
         }
 
         // A normal move which is not part of a cycle.
-        if (move.kind() == MoveOp::DOUBLE)
+        switch (move.kind()) {
+          case MoveOp::FLOAT32:
+          case MoveOp::DOUBLE:
             emitDoubleMove(from, to);
-        else
+            break;
+          case MoveOp::GENERAL:
             emitGeneralMove(from, to);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
+        }
     }
 }
 
@@ -212,15 +219,21 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Kind kind)
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    if (kind == MoveOp::DOUBLE) {
+    switch (kind) {
+      case MoveOp::FLOAT32:
+      case MoveOp::DOUBLE:
         if (to.isMemory()) {
             masm.loadDouble(toAddress(to), ScratchFloatReg);
             masm.storeDouble(ScratchFloatReg, cycleSlot());
         } else {
             masm.storeDouble(to.floatReg(), cycleSlot());
         }
-    } else {
+        break;
+      case MoveOp::GENERAL:
         masm.Push(toOperand(to));
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 
@@ -233,19 +246,25 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Kind kind)
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    if (kind == MoveOp::DOUBLE) {
+    switch (kind) {
+      case MoveOp::FLOAT32:
+      case MoveOp::DOUBLE:
         if (to.isMemory()) {
             masm.loadDouble(cycleSlot(), ScratchFloatReg);
             masm.storeDouble(ScratchFloatReg, toAddress(to));
         } else {
             masm.loadDouble(cycleSlot(), to.floatReg());
         }
-    } else {
+        break;
+      case MoveOp::GENERAL:
         if (to.isMemory()) {
             masm.Pop(toPopOperand(to));
         } else {
             masm.Pop(to.reg());
         }
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 

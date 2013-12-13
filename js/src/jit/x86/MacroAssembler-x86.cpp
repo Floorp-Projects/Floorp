@@ -168,17 +168,12 @@ MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
     ++passedArgs_;
     MoveOperand to = MoveOperand(StackPointer, stackForCall_);
     switch (kind) {
-      case MoveOp::DOUBLE:
-        stackForCall_ += sizeof(double);
-        enoughMemory_ &= moveResolver_.addMove(from, to, MoveOp::DOUBLE);
-        break;
-      case MoveOp::GENERAL:
-        stackForCall_ += sizeof(int32_t);
-        enoughMemory_ &= moveResolver_.addMove(from, to, MoveOp::GENERAL);
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
+      case MoveOp::FLOAT32: stackForCall_ += sizeof(float); break;
+      case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
+      case MoveOp::GENERAL: stackForCall_ += sizeof(int32_t); break;
+      default: MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
     }
+    enoughMemory_ &= moveResolver_.addMove(from, to, kind);
 }
 
 void
@@ -243,8 +238,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
         fstp(Operand(esp, 0));
         loadDouble(Operand(esp, 0), ReturnFloatReg);
         freeStack(sizeof(double));
-    }
-    if (result == MoveOp::FLOAT32) {
+    } else if (result == MoveOp::FLOAT32) {
         reserveStack(sizeof(float));
         fstp32(Operand(esp, 0));
         loadFloat(Operand(esp, 0), ReturnFloatReg);

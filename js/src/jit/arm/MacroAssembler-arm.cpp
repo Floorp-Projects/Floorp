@@ -3515,18 +3515,20 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
     if (!enoughMemory_)
         return;
     switch (kind) {
+      case MoveOp::FLOAT32:
       case MoveOp::DOUBLE: {
         FloatRegister fr;
         if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
-            if (!from.isFloatReg() || from.floatReg() != fr) {
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), MoveOp::DOUBLE);
+            if (from.isFloatReg() && from.floatReg() == fr) {
+                // Nothing to do; the value is in the right register already
+                return;
             }
-            // else nothing to do; the value is in the right register already
+            to = MoveOperand(fr);
         } else {
             // If (and only if) the integer registers have started spilling, do we
-            // need to take the double register's alignment into account
+            // need to take the register's alignment into account
             uint32_t disp = GetFloatArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::DOUBLE);
+            to = MoveOperand(sp, disp);
         }
         usedFloatSlots_++;
         break;
@@ -3534,13 +3536,14 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
       case MoveOp::GENERAL: {
         Register r;
         if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
-            if (!from.isGeneralReg() || from.reg() != r) {
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), MoveOp::GENERAL);
+            if (from.isGeneralReg() && from.reg() == r) {
+                // Nothing to do; the value is in the right register already
+                return;
             }
-            // else nothing to do; the value is in the right register already
+            to = MoveOperand(r);
         } else {
             uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::GENERAL);
+            to = MoveOperand(sp, disp);
         }
         usedIntSlots_++;
         break;
@@ -3549,6 +3552,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
         MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
     }
 
+    enoughMemory_ = moveResolver_.addMove(from, to, kind);
 }
 
 #else
@@ -3566,6 +3570,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
         usedSlots_ = (usedSlots_ + 1) & ~1;
         increment = 2;
         break;
+      case MoveOp::FLOAT32:
       case MoveOp::GENERAL:
         break;
       default:
@@ -3575,7 +3580,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
     Register destReg;
     MoveOperand dest;
     if (GetIntArgReg(usedSlots_, 0, &destReg)) {
-        if (kind == MoveOp::DOUBLE) {
+        if (kind == MoveOp::DOUBLE || kind == MoveOp::FLOAT32) {
             floatArgsInGPR[destReg.code() >> 1] = from;
             floatArgsInGPRValid[destReg.code() >> 1] = true;
             useResolver = false;
