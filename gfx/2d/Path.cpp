@@ -121,7 +121,7 @@ void
 FlattenedPath::Arc(const Point &aOrigin, float aRadius, float aStartAngle,
                    float aEndAngle, bool aAntiClockwise)
 {
-  ArcToBezier(this, aOrigin, aRadius, aStartAngle, aEndAngle, aAntiClockwise);
+  ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle, aAntiClockwise);
 }
 
 Float
