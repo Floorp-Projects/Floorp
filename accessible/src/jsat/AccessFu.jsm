@@ -118,8 +118,8 @@ this.AccessFu = {
     Output.start();
     TouchAdapter.start();
 
-    Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
-    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
     Services.obs.addObserver(this, 'Accessibility:NextObject', false);
     Services.obs.addObserver(this, 'Accessibility:PreviousObject', false);
     Services.obs.addObserver(this, 'Accessibility:Focus', false);
@@ -162,8 +162,8 @@ this.AccessFu = {
     Utils.win.removeEventListener('TabClose', this);
     Utils.win.removeEventListener('TabSelect', this);
 
-    Services.obs.removeObserver(this, 'remote-browser-frame-shown');
-    Services.obs.removeObserver(this, 'in-process-browser-or-app-frame-shown');
+    Services.obs.removeObserver(this, 'remote-browser-shown');
+    Services.obs.removeObserver(this, 'inprocess-browser-shown');
     Services.obs.removeObserver(this, 'Accessibility:NextObject');
     Services.obs.removeObserver(this, 'Accessibility:PreviousObject');
     Services.obs.removeObserver(this, 'Accessibility:Focus');
@@ -304,11 +304,15 @@ this.AccessFu = {
       case 'Accessibility:MoveByGranularity':
         this.Input.moveByGranularity(JSON.parse(aData));
         break;
-      case 'remote-browser-frame-shown':
-      case 'in-process-browser-or-app-frame-shown':
+      case 'remote-browser-shown':
+      case 'inprocess-browser-shown':
       {
-        let mm = aSubject.QueryInterface(Ci.nsIFrameLoader).messageManager;
-        this._handleMessageManager(mm);
+        // Ignore notifications that aren't from a BrowserOrApp
+        let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
+        if (!frameLoader.ownerIsBrowserOrAppFrame) {
+          return;
+        }
+        this._handleMessageManager(frameLoader.messageManager);
         break;
       }
     }

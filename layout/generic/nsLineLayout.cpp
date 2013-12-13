@@ -82,7 +82,12 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
-  mStyleText = aOuterReflowState->frame->StyleText();
+  nsBlockFrame* blockFrame = do_QueryFrame(aOuterReflowState->frame);
+  if (blockFrame)
+    mStyleText = blockFrame->StyleTextForLineLayout();
+  else
+    mStyleText = aOuterReflowState->frame->StyleText();
+
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
@@ -201,7 +206,8 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   mTopEdge = aY;
 
-  psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap(LineContainerFrame());
+  psd->mNoWrap =
+    !mStyleText->WhiteSpaceCanWrapStyle() || LineContainerFrame()->IsSVGText();
   psd->mDirection = aDirection;
   psd->mChangedFrameDirection = false;
 

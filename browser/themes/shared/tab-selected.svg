@@ -20,7 +20,7 @@
 
 %ifdef XP_MACOSX
 %include ../osx/shared.inc
-%elifdef XP_LINUX
+%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
 %include ../linux/linuxShared.inc
 %else
 %include ../windows/windowsShared.inc

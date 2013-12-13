@@ -1,0 +1,139 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=948245
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for repeat duration calculation (Bug 948245)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank"
+href="https://bugzilla.mozilla.org/show_bug.cgi?id=948245">Mozilla Bug 948245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" onload="this.pauseAnimations()">
+  <rect>
+    <animate id="a"/>
+    <animate id="b" begin="a.end"/>
+  </rect>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  // Tests the calculation of the repeat duration which is one of the steps
+  // towards determining the active duration.
+  //
+  // The repeat duration is determined by the following three attributes:
+  //
+  // dur:         may be definite (e.g. '2s') or 'indefinite' (the default)
+  // repeatCount: may be definite (e.g. '2.5'), 'indefinite', or not set
+  // repeatDur:   may be definite (e.g. '5s'), 'indefinite', or not set
+  //
+  // That leaves 18 combinations to test.
+  var testCases =
+    [
+      // 1. repeatDur: definite, repeatCount: definite, dur: definite
+      // (Two test cases here to ensure we get the minimum)
+      { repeatDur: 15, repeatCount: 2, dur: 10, result: 15 },
+      { repeatDur: 25, repeatCount: 2, dur: 10, result: 20 },
+      // 2. repeatDur: indefinite, repeatCount: definite, dur: definite
+      { repeatDur: 'indefinite', repeatCount: 2, dur: 10, result: 20 },
+      // 3. repeatDur: not set, repeatCount: definite, dur: definite
+      { repeatCount: 2, dur: 10, result: 20 },
+      // 4. repeatDur: definite, repeatCount: indefinite, dur: definite
+      { repeatDur: 15, repeatCount: 'indefinite', dur: 10, result: 15 },
+      // 5. repeatDur: indefinite, repeatCount: indefinite, dur: definite
+      { repeatDur: 'indefinite', repeatCount: 'indefinite', dur: 10,
+        result: 'indefinite' },
+      // 6. repeatDur: not set, repeatCount: indefinite, dur: definite
+      { repeatCount: 'indefinite', dur: 10, result: 'indefinite' },
+      // 7. repeatDur: definite, repeatCount: not set, dur: definite
+      { repeatDur: 15, dur: 10, result: 15 },
+      // 8. repeatDur: indefinite, repeatCount: not set, dur: definite
+      { repeatDur: 'indefinite', dur: 10, result: 'indefinite' },
+      // 9. repeatDur: not set, repeatCount: not set, dur: definite
+      { dur: 10, result: 10 },
+      // 10. repeatDur: definite, repeatCount: definite, dur: indefinite
+      { repeatDur: 15, repeatCount: 2, dur: 'indefinite', result: 15 },
+      // 11. repeatDur: indefinite, repeatCount: definite, dur: indefinite
+      { repeatDur: 'indefinite', repeatCount: 2, dur: 'indefinite',
+        result: 'indefinite' },
+      // 12. repeatDur: not set, repeatCount: definite, dur: indefinite
+      { repeatCount: 2, dur: 'indefinite', result: 'indefinite' },
+      // 13. repeatDur: definite, repeatCount: indefinite, dur: indefinite
+      { repeatDur: 15, repeatCount: 'indefinite', dur: 'indefinite',
+        result: 15 },
+      // 14. repeatDur: indefinite, repeatCount: indefinite, dur: indefinite
+      { repeatDur: 'indefinite', repeatCount: 'indefinite', dur: 'indefinite',
+        result: 'indefinite' },
+      // 15. repeatDur: not set, repeatCount: indefinite, dur: indefinite
+      { repeatCount: 'indefinite', dur: 'indefinite', result: 'indefinite' },
+      // 16. repeatDur: definite, repeatCount: not set, dur: indefinite
+      { repeatDur: 15, dur: 'indefinite', result: 15 },
+      // 17. repeatDur: indefinite, repeatCount: not set, dur: indefinite
+      { repeatDur: 'indefinite', dur: 'indefinite', result: 'indefinite' },
+      // 18. repeatDur: not set, repeatCount: not set, dur: indefinite
+      { dur: 'indefinite', result: 'indefinite' }
+    ];
+
+  // We can test the repeat duration by setting these attributes on animation
+  // 'a' and checking the start time of 'b' which is defined to start when 'a'
+  // finishes.
+  //
+  // Since 'a' has no end/min/max attributes the end of its active interval
+  // should coincide with the end of its repeat duration.
+  //
+  // Sometimes the repeat duration is defined to be 'indefinite'. In this case
+  // calling getStartTime on b will throw an exception so we need to catch that
+  // exception and translate it to 'indefinite' as follows:
+  function getRepeatDuration() {
+    try {
+      return $('b').getStartTime();
+    } catch(e) {
+      if (e.name == "InvalidStateError" &&
+          e.code == DOMException.INVALID_STATE_ERR) {
+        return 'indefinite';
+      } else {
+        ok(false, "Unexpected exception: " + e);
+        return null;
+      }
+    }
+  }
+
+  // Animation doesn't start until onload
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", runTests, false);
+
+  // Run through each of the test cases
+  function runTests() {
+    ok($('svg').animationsPaused(), "should be paused by <svg> load handler");
+
+    testCases.forEach(function(test) {
+      var a = $('a');
+
+      // Set the attributes
+      var msgPieces = [];
+      [ 'repeatDur', 'repeatCount', 'dur' ].forEach(function(attr) {
+        if (typeof test[attr] != "undefined") {
+          a.setAttribute(attr, test[attr].toString());
+          msgPieces.push(attr + ': ' + test[attr].toString());
+        } else {
+          a.removeAttribute(attr);
+          msgPieces.push(attr + ': <not set>');
+        }
+      });
+      var msg = msgPieces.join(', ');
+
+      // Check the result
+      ise(getRepeatDuration(), test.result, msg);
+    });
+
+    SimpleTest.finish();
+  }
+</script>
+</pre>
+</body>
+</html>

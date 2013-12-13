@@ -687,6 +687,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
       printf("early return for single direction frame %p\n", (void*)frame);
 #endif
 #endif
+      frame->AddStateBits(NS_FRAME_IS_BIDI);
       return NS_OK;
     }
   }

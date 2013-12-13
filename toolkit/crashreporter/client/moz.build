@@ -8,18 +8,18 @@ if CONFIG['OS_TARGET'] != 'Android':
     PROGRAM = 'crashreporter'
 # The xpcshell test case here verifies that the CA certificate list
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'crashreporter.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'crashreporter_win.cpp',
     ]
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
 elif CONFIG['OS_ARCH'] == 'Darwin':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'crashreporter_unix_common.cpp',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
@@ -29,13 +29,13 @@ elif CONFIG['OS_ARCH'] == 'SunOS':
     ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'crashreporter_gtk_common.cpp',
         'crashreporter_linux.cpp',
         'crashreporter_unix_common.cpp'
         ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'crashreporter_osx.mm',
     ]

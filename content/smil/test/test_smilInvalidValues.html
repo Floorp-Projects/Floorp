@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=941315
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test invalid values cause the model to be updated (bug 941315)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=941315">Mozilla Bug 941315</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg width="100%" height="1" onload="this.pauseAnimations()">
+  <rect>
+    <animate id="a" dur="100s"/>
+    <animate id="b" dur="5s" begin="a.end"/>
+  </rect>
+  <circle cx="-100" cy="20" r="15" fill="blue" id="circle"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var a = $('a'),
+      b = $('b');
+
+  // Animation doesn't start until onload
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", runTests, false);
+
+  // Make testing getStartTime easier
+  SVGAnimationElement.prototype.safeGetStartTime = function() {
+    try {
+      return this.getStartTime();
+    } catch(e) {
+      if (e.name == "InvalidStateError" &&
+          e.code == DOMException.INVALID_STATE_ERR) {
+        return 'none';
+      } else {
+        ok(false, "Unexpected exception: " + e);
+        return null;
+      }
+    }
+  };
+
+  function runTests() {
+    [testSimpleDuration, testMin, testMax, testRepeatDur, testRepeatCount]
+      .forEach(function(test) {
+        ise(b.getStartTime(), 100, "initial state before running " + test.name);
+        test();
+        ise(b.getStartTime(), 100, "final state after running " + test.name);
+      });
+    SimpleTest.finish();
+  }
+
+  function testSimpleDuration() {
+    // Verify a valid value updates as expected
+    a.setAttribute("dur", "50s");
+    ise(b.safeGetStartTime(), 50, "valid simple duration");
+
+    // Check an invalid value also causes the model to be updated
+    a.setAttribute("dur", "abc"); // -> indefinite
+    ise(b.safeGetStartTime(), "none", "invalid simple duration");
+
+    // Restore state
+    a.setAttribute("dur", "100s");
+  }
+
+  function testMin() {
+    a.setAttribute("min", "200s");
+    ise(b.safeGetStartTime(), 200, "valid min duration");
+
+    a.setAttribute("min", "abc"); // -> indefinite
+    ise(b.safeGetStartTime(), 100, "invalid min duration");
+
+    a.removeAttribute("min");
+  }
+
+  function testMax() {
+    a.setAttribute("max", "50s");
+    ise(b.safeGetStartTime(), 50, "valid max duration");
+
+    a.setAttribute("max", "abc"); // -> indefinite
+    ise(b.safeGetStartTime(), 100, "invalid max duration");
+
+    a.removeAttribute("max");
+  }
+
+  function testRepeatDur() {
+    a.setAttribute("repeatDur", "200s");
+    ise(b.safeGetStartTime(), 200, "valid repeatDur duration");
+
+    a.setAttribute("repeatDur", "abc"); // -> indefinite
+    ise(b.safeGetStartTime(), 100, "invalid repeatDur duration");
+
+    a.removeAttribute("repeatDur");
+  }
+
+  function testRepeatCount() {
+    a.setAttribute("repeatCount", "2");
+    ise(b.safeGetStartTime(), 200, "valid repeatCount duration");
+
+    a.setAttribute("repeatCount", "abc"); // -> indefinite
+    ise(b.safeGetStartTime(), 100, "invalid repeatCount duration");
+
+    a.removeAttribute("repeatCount");
+  }
+</script>
+</pre>
+</body>
+</html>
