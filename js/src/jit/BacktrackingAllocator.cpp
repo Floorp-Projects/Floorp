@@ -835,6 +835,7 @@ BacktrackingAllocator::spill(LiveInterval *interval)
     IonSpew(IonSpew_RegAlloc, "Spilling interval");
 
     JS_ASSERT(interval->requirement()->kind() == Requirement::NONE);
+    JS_ASSERT(!interval->getAllocation()->isStackSlot());
 
     // We can't spill bogus intervals.
     JS_ASSERT(interval->hasVreg());
