@@ -2325,7 +2325,7 @@ struct GlyphBufferAzure {
         if (int(aDrawMode) & int(DrawMode::GLYPH_PATH)) {
             aThebesContext->EnsurePathBuilder();
 			Matrix mat = aDT->GetTransform();
-            aFont->CopyGlyphsToBuilder(buf, aThebesContext->mPathBuilder, &mat);
+            aFont->CopyGlyphsToBuilder(buf, aThebesContext->mPathBuilder, aDT->GetType(), &mat);
         }
         if ((int(aDrawMode) & (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
                               int(DrawMode::GLYPH_STROKE)) {

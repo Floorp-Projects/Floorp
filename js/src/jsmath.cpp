@@ -460,6 +460,16 @@ js::math_imul(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// Implements Math.fround (20.2.2.16) up to step 3
+bool
+js::RoundFloat32(JSContext *cx, Handle<Value> v, float *out)
+{
+    double d;
+    bool success = ToNumber(cx, v, &d);
+    *out = static_cast<float>(d);
+    return success;
+}
+
 bool
 js::math_fround(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -470,11 +480,10 @@ js::math_fround(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
+    float f;
+    if (!RoundFloat32(cx, args[0], &f))
         return false;
 
-    float f = x;
     args.rval().setDouble(static_cast<double>(f));
     return true;
 }

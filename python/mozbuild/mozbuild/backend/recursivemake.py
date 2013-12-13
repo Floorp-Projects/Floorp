@@ -93,7 +93,6 @@ class BackendMakeFile(object):
         self.fh = FileAvoidWrite(self.name, capture_diff=True)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
-        self.fh.write('MOZBUILD_DERIVED := 1\n')
 
     def write(self, buf):
         self.fh.write(buf)
@@ -891,17 +890,6 @@ class RecursiveMakeBackend(CommonBackend):
             fh.write('TOOL_DIRS += %s\n' % ' '.join(obj.test_tool_dirs))
             self._traversal.add(backend_file.relobjdir,
                                 tools=relativize(obj.test_tool_dirs))
-
-        if len(obj.external_make_dirs):
-            fh.write('DIRS += %s\n' % ' '.join(obj.external_make_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                dirs=relativize(obj.external_make_dirs))
-
-        if len(obj.parallel_external_make_dirs):
-            fh.write('PARALLEL_DIRS += %s\n' %
-                ' '.join(obj.parallel_external_make_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                parallel=relativize(obj.parallel_external_make_dirs))
 
         # The directory needs to be registered whether subdirectories have been
         # registered or not.

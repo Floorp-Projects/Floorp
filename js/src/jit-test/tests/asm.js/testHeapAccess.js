@@ -154,6 +154,7 @@ assertEq(new Float64Array(BUF_64KB)[1], 1.3);
 
 new Float32Array(BUF_64KB)[1] = 1.0;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +f32[(4&0xffff)>>2] } return f'), this, null, BUF_64KB)(), 1.0);
+assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'var toFloat32 = glob.Math.fround; function f() { return toFloat32(f32[(4&0xffff)>>2]) } return f'), this, null, BUF_64KB)(), 1.0);
 new Float64Array(BUF_64KB)[1] = 1.3;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +f64[(8&0xffff)>>3] } return f'), this, null, BUF_64KB)(), 1.3);
 
