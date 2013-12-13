@@ -233,7 +233,8 @@ LinearScanAllocator::resolveControlFlow()
         for (size_t j = 0; j < successor->numPhis(); j++) {
             LPhi *phi = successor->getPhi(j);
             JS_ASSERT(phi->numDefs() == 1);
-            LinearScanVirtualRegister *vreg = &vregs[phi->getDef(0)];
+            LDefinition *def = phi->getDef(0);
+            LinearScanVirtualRegister *vreg = &vregs[def];
             LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
@@ -245,14 +246,15 @@ LinearScanAllocator::resolveControlFlow()
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
-                if (!moveAtExit(predecessor, from, to))
+                if (!moveAtExit(predecessor, from, to, def->type()))
                     return false;
             }
 
             if (vreg->mustSpillAtDefinition() && !to->isSpill()) {
                 // Make sure this phi is spilled at the loop header.
                 LMoveGroup *moves = successor->getEntryMoveGroup(alloc());
-                if (!moves->add(to->getAllocation(), vregs[to->vreg()].canonicalSpill()))
+                if (!moves->add(to->getAllocation(), vregs[to->vreg()].canonicalSpill(),
+                                def->type()))
                     return false;
             }
         }
@@ -283,10 +285,10 @@ LinearScanAllocator::resolveControlFlow()
 
                 if (mSuccessor->numPredecessors() > 1) {
                     JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                    if (!moveAtExit(predecessor, from, to))
+                    if (!moveAtExit(predecessor, from, to, vreg->type()))
                         return false;
                 } else {
-                    if (!moveAtEntry(successor, from, to))
+                    if (!moveAtEntry(successor, from, to, vreg->type()))
                         return false;
                 }
             }
@@ -297,12 +299,13 @@ LinearScanAllocator::resolveControlFlow()
 }
 
 bool
-LinearScanAllocator::moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to)
+LinearScanAllocator::moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to,
+                                    LDefinition::Type type)
 {
     if (*from == *to)
         return true;
     LMoveGroup *moves = getInputMoveGroup(pos);
-    return moves->add(from, to);
+    return moves->add(from, to, type);
 }
 
 static inline void
@@ -350,7 +353,7 @@ LinearScanAllocator::reifyAllocations()
                 LiveInterval *to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
 
                 *static_cast<LAllocation *>(usePos->use) = *to->getAllocation();
-                if (!moveInput(usePos->pos, interval, to))
+                if (!moveInput(usePos->pos, interval, to, reg->type()))
                     return false;
             } else {
                 JS_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
@@ -376,7 +379,7 @@ LinearScanAllocator::reifyAllocations()
                 // it should use the fixed register instead.
                 SetOsiPointUses(interval, defEnd, LAllocation(fixedReg));
 
-                if (!moveAfter(defEnd, from, interval))
+                if (!moveAfter(defEnd, from, interval, def->type()))
                     return false;
                 spillFrom = from->getAllocation();
             } else {
@@ -387,7 +390,7 @@ LinearScanAllocator::reifyAllocations()
                     JS_ASSERT(!inputAlloc->isUse());
 
                     *inputAlloc = *interval->getAllocation();
-                    if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, inputAlloc))
+                    if (!moveInputAlloc(inputOf(reg->ins()), origAlloc, inputAlloc, def->type()))
                         return false;
                 }
 
@@ -417,7 +420,7 @@ LinearScanAllocator::reifyAllocations()
                 // or Nop instructions). Note that we explicitly ignore phis,
                 // which should have been handled in resolveControlFlow().
                 LMoveGroup *moves = getMoveGroupAfter(defEnd);
-                if (!moves->add(spillFrom, reg->canonicalSpill()))
+                if (!moves->add(spillFrom, reg->canonicalSpill(), def->type()))
                     return false;
             }
         }
@@ -443,10 +446,10 @@ LinearScanAllocator::reifyAllocations()
             JS_ASSERT(start == inputOf(data->ins()) || start == outputOf(data->ins()));
 
             if (start.subpos() == CodePosition::INPUT) {
-                if (!moveInput(inputOf(data->ins()), prevInterval, interval))
+                if (!moveInput(inputOf(data->ins()), prevInterval, interval, reg->type()))
                     return false;
             } else {
-                if (!moveAfter(outputOf(data->ins()), prevInterval, interval))
+                if (!moveAfter(outputOf(data->ins()), prevInterval, interval, reg->type()))
                     return false;
             }
 
