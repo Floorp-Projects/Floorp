@@ -1363,32 +1363,6 @@ class MThrow
     }
 };
 
-class MNewParallelArray : public MNullaryInstruction
-{
-    CompilerRootObject templateObject_;
-
-    MNewParallelArray(JSObject *templateObject)
-      : templateObject_(templateObject)
-    {
-        setResultType(MIRType_Object);
-    }
-
-  public:
-    INSTRUCTION_HEADER(NewParallelArray);
-
-    static MNewParallelArray *New(TempAllocator &alloc, JSObject *templateObject) {
-        return new(alloc) MNewParallelArray(templateObject);
-    }
-
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
-    }
-
-    JSObject *templateObject() const {
-        return templateObject_;
-    }
-};
-
 // Fabricate a type set containing only the type of the specified object.
 types::TemporaryTypeSet *
 MakeSingletonTypeSet(JSObject *obj);
@@ -2855,6 +2829,7 @@ class MPassArg
     // Set by the MCall.
     void setArgnum(uint32_t argnum) {
         argnum_ = argnum;
+        JS_ASSERT(argnum_ >= 0);
     }
     uint32_t getArgnum() const {
         JS_ASSERT(argnum_ >= 0);
@@ -9030,6 +9005,7 @@ class MResumePoint MOZ_FINAL : public MNode, public InlineForwardListNode<MResum
 
   private:
     friend class MBasicBlock;
+    friend void AssertBasicGraphCoherency(MIRGraph &graph);
 
     FixedList<MUse> operands_;
     uint32_t stackDepth_;

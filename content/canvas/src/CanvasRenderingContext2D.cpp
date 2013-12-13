@@ -1890,7 +1890,7 @@ CanvasRenderingContext2D::Arc(double x, double y, double r,
 
   EnsureWritablePath();
 
-  ArcToBezier(this, Point(x, y), r, startAngle, endAngle, anticlockwise);
+  ArcToBezier(this, Point(x, y), Size(r, r), startAngle, endAngle, anticlockwise);
 }
 
 void

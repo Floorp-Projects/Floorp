@@ -703,7 +703,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   }
   oldTransform.Translate(overscrollTranslation);
 
-  gfxSize underZoomScale(1.0f, 1.0f);
+  gfx::Size underZoomScale(1.0f, 1.0f);
   if (mContentRect.width * userZoom.scale < metrics.mCompositionBounds.width) {
     underZoomScale.width = (mContentRect.width * userZoom.scale) /
       metrics.mCompositionBounds.width;

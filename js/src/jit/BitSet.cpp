@@ -10,9 +10,9 @@ using namespace js;
 using namespace js::jit;
 
 BitSet *
-BitSet::New(TempAllocator &alloc, unsigned int max)
+BitSet::New(TempAllocator &alloc, unsigned int numBits)
 {
-    BitSet *result = new(alloc) BitSet(max);
+    BitSet *result = new(alloc) BitSet(numBits);
     if (!result->init(alloc))
         return nullptr;
     return result;
@@ -47,7 +47,7 @@ void
 BitSet::insertAll(const BitSet *other)
 {
     JS_ASSERT(bits_);
-    JS_ASSERT(other->max_ == max_);
+    JS_ASSERT(other->numBits_ == numBits_);
     JS_ASSERT(other->bits_);
 
     for (unsigned int i = 0; i < numWords(); i++)
@@ -58,7 +58,7 @@ void
 BitSet::removeAll(const BitSet *other)
 {
     JS_ASSERT(bits_);
-    JS_ASSERT(other->max_ == max_);
+    JS_ASSERT(other->numBits_ == numBits_);
     JS_ASSERT(other->bits_);
 
     for (unsigned int i = 0; i < numWords(); i++)
@@ -69,7 +69,7 @@ void
 BitSet::intersect(const BitSet *other)
 {
     JS_ASSERT(bits_);
-    JS_ASSERT(other->max_ == max_);
+    JS_ASSERT(other->numBits_ == numBits_);
     JS_ASSERT(other->bits_);
 
     for (unsigned int i = 0; i < numWords(); i++)
@@ -81,7 +81,7 @@ bool
 BitSet::fixedPointIntersect(const BitSet *other)
 {
     JS_ASSERT(bits_);
-    JS_ASSERT(other->max_ == max_);
+    JS_ASSERT(other->numBits_ == numBits_);
     JS_ASSERT(other->bits_);
 
     bool changed = false;
