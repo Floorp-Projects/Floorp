@@ -572,6 +572,11 @@ pref("media.preload.auto", 2);    // preload metadata if preload=auto
 pref("image.mem.decodeondraw", true);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
+#ifdef NIGHTLY_BUILD
+// Shumway component (SWF player) is disabled by default. Also see bug 904346.
+pref("shumway.disabled", true);
+#endif
+
 // enable touch events interfaces
 pref("dom.w3c_touch_events.enabled", 1);
 

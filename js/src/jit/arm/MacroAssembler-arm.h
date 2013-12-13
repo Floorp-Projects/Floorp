@@ -50,7 +50,8 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
-    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
+    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest,
+                              Condition c = Always);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
@@ -1494,11 +1495,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return as_cmp(bounded, Imm8(0));
     }
 
-    void storeFloat(VFPRegister src, Register base, Register index, Condition cond) {
-        as_vcvt(VFPRegister(ScratchFloatReg).singleOverlay(), src, false, cond);
-        ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), base, index, 0, cond);
-
-    }
     void moveFloat(FloatRegister src, FloatRegister dest) {
         as_vmov(VFPRegister(src).singleOverlay(), VFPRegister(dest).singleOverlay());
     }

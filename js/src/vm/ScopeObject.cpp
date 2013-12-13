@@ -1535,11 +1535,20 @@ DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
     /*
      * Strip the barriers from the type before inserting into the store buffer.
      * This will automatically ensure that barriers do not fire during GC.
+     *
+     * Some compilers complain about instantiating the WeakMap class for
+     * unbarriered type arguments, so we cast to a HashMap instead.  Because of
+     * WeakMap's multiple inheritace, We need to do this in two stages, first to
+     * the HashMap base class and then to the unbarriered version.
      */
-    typedef WeakMap<JSObject *, JSObject *> UnbarrieredMap;
+    ObjectWeakMap::Base *baseHashMap = static_cast<ObjectWeakMap::Base *>(map);
+
+    typedef HashMap<JSObject *, JSObject *> UnbarrieredMap;
+    UnbarrieredMap *unbarrieredMap = reinterpret_cast<UnbarrieredMap *>(baseHashMap);
+
     typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
     if (key && IsInsideNursery(rt, key))
-        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredMap *>(map), key.get()));
+        rt->gcStoreBuffer.putGeneric(Ref(unbarrieredMap, key.get()));
 #endif
 }
 
@@ -1591,8 +1600,28 @@ DebugScopes::sweep(JSRuntime *rt)
      * creating an uncollectable cycle with suspended generator frames.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        if (IsObjectAboutToBeFinalized(e.front().value().unsafeGet()))
+        DebugScopeObject **debugScope = e.front().value().unsafeGet();
+        if (IsObjectAboutToBeFinalized(debugScope)) {
+            /*
+             * Note that onPopCall and onPopBlock rely on missingScopes to find
+             * scope objects that we synthesized for the debugger's sake, and
+             * clean up the synthetic scope objects' entries in liveScopes. So
+             * if we remove an entry frcom missingScopes here, we must also
+             * remove the corresponding liveScopes entry.
+             *
+             * Since the DebugScopeObject is the only thing using its scope
+             * object, and the DSO is about to be finalized, you might assume
+             * that the synthetic SO is also about to be finalized too, and thus
+             * the loop below will take care of things. But complex GC behavior
+             * means that marks are only conservative approximations of
+             * liveness; we should assume that anything could be marked.
+             *
+             * Thus, we must explicitly remove the entries from both liveScopes
+             * and missingScopes here.
+             */
+            liveScopes.remove(&(*debugScope)->scope());
             e.removeFront();
+        }
     }
 
     for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {

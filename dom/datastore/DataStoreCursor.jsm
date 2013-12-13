@@ -9,7 +9,7 @@
 this.EXPORTED_SYMBOLS = ['DataStoreCursor'];
 
 function debug(s) {
-  // dump('DEBUG DataStoreCursor: ' + s + '\n');
+  //dump('DEBUG DataStoreCursor: ' + s + '\n');
 }
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;

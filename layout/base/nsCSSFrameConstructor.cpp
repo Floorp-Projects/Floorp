@@ -49,7 +49,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #ifdef XP_MACOSX
-#include "nsIDocShellTreeItem.h"
+#include "nsIDocShell.h"
 #endif
 #include "ChildIterator.h"
 #include "nsError.h"
@@ -4094,22 +4094,19 @@ const nsCSSFrameConstructor::FrameConstructionData*
 nsCSSFrameConstructor::FindXULMenubarData(Element* aElement,
                                           nsStyleContext* aStyleContext)
 {
-  nsCOMPtr<nsISupports> container =
-    aStyleContext->PresContext()->GetContainer();
-  if (container) {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(container));
-    if (treeItem) {
-      int32_t type;
-      treeItem->GetItemType(&type);
-      if (nsIDocShellTreeItem::typeChrome == type) {
-        nsCOMPtr<nsIDocShellTreeItem> parent;
-        treeItem->GetParent(getter_AddRefs(parent));
-        if (!parent) {
-          // This is the root.  Suppress the menubar, since on Mac
-          // window menus are not attached to the window.
-          static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
-          return &sSuppressData;
-        }
+  nsCOMPtr<nsIDocShell> treeItem =
+    aStyleContext->PresContext()->GetDocShell();
+  if (treeItem) {
+    int32_t type;
+    treeItem->GetItemType(&type);
+    if (nsIDocShellTreeItem::typeChrome == type) {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      treeItem->GetParent(getter_AddRefs(parent));
+      if (!parent) {
+        // This is the root.  Suppress the menubar, since on Mac
+        // window menus are not attached to the window.
+        static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
+        return &sSuppressData;
       }
     }
   }

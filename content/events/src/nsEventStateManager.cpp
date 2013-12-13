@@ -1455,7 +1455,7 @@ nsEventStateManager::GetAccessKeyLabelPrefix(nsAString& aPrefix)
   nsAutoString separator, modifierText;
   nsContentUtils::GetModifierSeparatorText(separator);
 
-  nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+  nsCOMPtr<nsISupports> container = mPresContext->GetContainerWeak();
   int32_t modifierMask = GetAccessModifierMaskFor(container);
 
   if (modifierMask & NS_MODIFIER_CONTROL) {
@@ -1489,7 +1489,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                      ProcessingAccessKeyState aAccessKeyState,
                                      int32_t aModifierMask)
 {
-  nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
+  nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainerWeak();
 
   // Alt or other accesskey modifier is down, we may need to do an accesskey
   if (mAccessKeys.Count() > 0 &&
@@ -2204,7 +2204,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
 {
   *aTargetNode = nullptr;
 
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainerWeak();
   nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
   if (!window)
     return;
@@ -2423,10 +2423,7 @@ nsEventStateManager::GetMarkupDocumentViewer(nsIMarkupDocumentViewer** aMv)
   nsPresContext *presContext = presShell->GetPresContext();
   if(!presContext) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsISupports> pcContainer = presContext->GetContainer();
-  if(!pcContainer) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docshell(do_QueryInterface(pcContainer));
+  nsCOMPtr<nsIDocShell> docshell(presContext->GetDocShell());
   if(!docshell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContentViewer> cv;
@@ -2487,7 +2484,7 @@ nsEventStateManager::ChangeFullZoom(int32_t change)
 void
 nsEventStateManager::DoScrollHistory(int32_t direction)
 {
-  nsCOMPtr<nsISupports> pcContainer(mPresContext->GetContainer());
+  nsCOMPtr<nsISupports> pcContainer(mPresContext->GetContainerWeak());
   if (pcContainer) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
     if (webNav) {
@@ -3571,9 +3568,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // For now, do this only for dragover.
         //XXXsmaug dragenter needs some more work.
         if (aEvent->message == NS_DRAGDROP_OVER && !isChromeDoc) {
-          // Someone has called preventDefault(), check whether is was content.
+          // Someone has called preventDefault(), check whether is was on
+          // content or chrome.
           dragSession->SetOnlyChromeDrop(
-            !aEvent->mFlags.mDefaultPreventedByContent);
+            !dragEvent->mDefaultPreventedOnContent);
         }
       } else if (aEvent->message == NS_DRAGDROP_OVER && !isChromeDoc) {
         // No one called preventDefault(), so handle drop only in chrome.
@@ -3786,8 +3784,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
 
   if (Preferences::GetBool("ui.use_activity_cursor", false)) {
     // Check whether or not to show the busy cursor
-    nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(pcContainer));
+    nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
     if (!docShell) return;
     uint32_t busyFlags = nsIDocShell::BUSY_FLAGS_NONE;
     docShell->GetBusyFlags(&busyFlags);

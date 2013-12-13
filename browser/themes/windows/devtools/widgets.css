@@ -273,6 +273,11 @@
 
 /* SideMenuWidget */
 
+.side-menu-widget-container {
+  /* Hack: force hardware acceleration */
+  transform: translateX(0px);
+}
+
 .side-menu-widget-container[theme="dark"] {
   background: url(background-noise-toolbar.png), hsl(208,11%,27%);
   color: #fff;
@@ -429,6 +434,11 @@
 
 /* VariablesView */
 
+.variables-view-container:not([empty]) {
+  /* Hack: force hardware acceleration */
+  transform: translateX(1px);
+}
+
 .variables-view-empty-notice {
   color: GrayText;
   padding: 2px;
@@ -443,32 +453,7 @@
   -moz-margin-end: 1px;
 }
 
-/* Generic traits applied to both variables and properties */
-
-.variable-or-property {
-  transition: background 1s ease-in-out, color 1s ease-in-out;
-}
-
-.variable-or-property[changed] {
-  color: black;
-  transition-duration: .4s;
-}
-
-.variable-or-property > .title > .value {
-  -moz-box-flex: 1;
-  -moz-padding-start: 6px;
-  -moz-padding-end: 4px;
-}
-
-.variable-or-property[editable] > .title > .value {
-  cursor: text;
-}
-
-.variable-or-property:not([untitled]) > .variables-view-element-details {
-  -moz-margin-start: 10px;
-}
-
-/* Custom variables and properties traits */
+/* Generic variables traits */
 
 .variables-view-variable {
   -moz-margin-start: 1px;
@@ -483,26 +468,70 @@
   font-weight: 600;
 }
 
+/* Generic variables *and* properties traits */
+
 .variable-or-property:focus > .title > label {
   color: inherit !important;
+}
+
+.variable-or-property > .title > .value {
+  -moz-box-flex: 1;
+}
+
+.variable-or-property:not([untitled]) > .variables-view-element-details {
+  -moz-margin-start: 10px;
+}
+
+/* Traits applied when variables or properties are changed or overridden */
+
+.variable-or-property:not([overridden]) {
+  transition: background 1s ease-in-out;
+}
+
+.variable-or-property:not([overridden])[changed] {
+  transition-duration: .4s;
+}
+
+.variable-or-property[overridden] {
+  background: rgba(128,128,128,0.05);
+}
+
+.variable-or-property[overridden] .title > label {
+  /* Cross out the title for this variable and all child properties. */
+  font-style: italic;
+  text-decoration: line-through;
+  border-bottom: none !important;
+  color: rgba(128,128,128,0.9);
+  opacity: 0.7;
+}
+
+/* Traits applied when variables or properties are editable */
+
+.variable-or-property[editable] > .title > .value {
+  cursor: text;
+}
+
+.variable-or-property[overridden] .title > .value {
+  /* Disallow editing this variable and all child properties. */
+  pointer-events: none;
 }
 
 /* Custom configurable/enumerable/writable or frozen/sealed/extensible
  * variables and properties */
 
-.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]):not([scope]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self]):not([pseudo-item]) > .title > .name {
   opacity: 0.6;
 }
 
-.variable-or-property[non-configurable] > .title > .name {
+.variable-or-property[non-configurable]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #99f;
 }
 
-.variable-or-property[non-writable] > .title > .name {
+.variable-or-property[non-writable]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #f99;
 }
 
-.variable-or-property[safe-getter] > .title > .name {
+.variable-or-property[safe-getter]:not([pseudo-item]) > .title > .name {
   border-bottom: 1px dashed #8b0;
 }
 
@@ -564,15 +593,20 @@
   margin: 0 2px 0 2px;
 }
 
-.variable-or-property[non-enumerable] > tooltip > label[value=enumerable],
-.variable-or-property[non-configurable] > tooltip > label[value=configurable],
-.variable-or-property[non-writable] > tooltip > label[value=writable],
-.variable-or-property[non-extensible] > tooltip > label[value=extensible] {
+.variable-or-property[non-enumerable] > tooltip > label.enumerable,
+.variable-or-property[non-configurable] > tooltip > label.configurable,
+.variable-or-property[non-writable] > tooltip > label.writable,
+.variable-or-property[non-extensible] > tooltip > label.extensible {
   color: #800;
   text-decoration: line-through;
 }
 
-.variable-or-property[safe-getter] > tooltip > label[value=WebIDL] {
+.variable-or-property[overridden] > tooltip > label.overridden {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+}
+
+.variable-or-property[safe-getter] > tooltip > label.WebIDL {
   -moz-padding-start: 4px;
   -moz-border-start: 1px dotted #000;
   color: #080;
@@ -607,7 +641,7 @@
 }
 
 .element-value-input {
-  -moz-margin-start: 4px !important;
+  -moz-margin-start: -2px !important;
   -moz-margin-end: 2px !important;
 }
 
@@ -620,6 +654,7 @@
 .element-value-input,
 .element-name-input {
   border: 1px solid rgba(128, 128, 128, .5) !important;
+  border-radius: 0;
   color: inherit;
 }
 

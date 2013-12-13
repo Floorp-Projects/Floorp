@@ -16,6 +16,7 @@ const LAZY_APPEND_BATCH = 100; // nodes
 const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;
 const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 300; // ms
+const ITEM_FLASH_DURATION = 300 // ms
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -117,6 +118,9 @@ VariablesView.prototype = {
   /**
    * Adds a scope to contain any inspected variables.
    *
+   * This new scope will be considered the parent of any other scope
+   * added afterwards.
+   *
    * @param string aName
    *        The scope's name (e.g. "Local", "Global" etc.).
    * @return Scope
@@ -131,6 +135,7 @@ VariablesView.prototype = {
     this._itemsByElement.set(scope._target, scope);
     this._currHierarchy.set(aName, scope);
     scope.header = !!aName;
+
     return scope;
   },
 
@@ -605,23 +610,6 @@ VariablesView.prototype = {
   },
 
   /**
-   * Searches for the scope in this container displayed by the specified node.
-   *
-   * @param nsIDOMNode aNode
-   *        The node to search for.
-   * @return Scope
-   *         The matched scope, or null if nothing is found.
-   */
-  getScopeForNode: function(aNode) {
-    let item = this._itemsByElement.get(aNode);
-    // Match only Scopes, not Variables or Properties.
-    if (item && !(item instanceof Variable)) {
-      return item;
-    }
-    return null;
-  },
-
-  /**
    * Recursively searches this container for the scope, variable or property
    * displayed by the specified node.
    *
@@ -632,6 +620,43 @@ VariablesView.prototype = {
    */
   getItemForNode: function(aNode) {
     return this._itemsByElement.get(aNode);
+  },
+
+  /**
+   * Gets the scope owning a Variable or Property.
+   *
+   * @param Variable | Property
+   *        The variable or property to retrieven the owner scope for.
+   * @return Scope
+   *         The owner scope.
+   */
+  getOwnerScopeForVariableOrProperty: function(aItem) {
+    if (!aItem) {
+      return null;
+    }
+    // If this is a Scope, return it.
+    if (!(aItem instanceof Variable)) {
+      return aItem;
+    }
+    // If this is a Variable or Property, find its owner scope.
+    if (aItem instanceof Variable && aItem.ownerView) {
+      return this.getOwnerScopeForVariableOrProperty(aItem.ownerView);
+    }
+    return null;
+  },
+
+  /**
+   * Gets the parent scopes for a specified Variable or Property.
+   * The returned list will not include the owner scope.
+   *
+   * @param Variable | Property
+   *        The variable or property for which to find the parent scopes.
+   * @return array
+   *         A list of parent Scopes.
+   */
+  getParentScopesForVariableOrProperty: function(aItem) {
+    let scope = this.getOwnerScopeForVariableOrProperty(aItem);
+    return this._store.slice(0, Math.max(this._store.indexOf(scope), 0));
   },
 
   /**
@@ -888,6 +913,7 @@ VariablesView.prototype = {
     label.className = "variables-view-empty-notice";
     label.setAttribute("value", this._emptyTextValue);
 
+    this._parent.setAttribute("empty", "");
     this._parent.appendChild(label);
     this._emptyTextNode = label;
   },
@@ -900,6 +926,7 @@ VariablesView.prototype = {
       return;
     }
 
+    this._parent.removeAttribute("empty");
     this._parent.removeChild(this._emptyTextNode);
     this._emptyTextNode = null;
   },
@@ -976,12 +1003,15 @@ VariablesView.prototype = {
   _window: null,
 
   _store: null,
+  _itemsByElement: null,
   _prevHierarchy: null,
   _currHierarchy: null,
+
   _enumVisible: true,
   _nonEnumVisible: true,
   _alignedValues: false,
   _actionsFirst: false,
+
   _parent: null,
   _list: null,
   _searchboxNode: null,
@@ -1244,6 +1274,7 @@ Scope.prototype = {
     this._variablesView._itemsByElement.set(child._target, child);
     this._variablesView._currHierarchy.set(child._absoluteName, child);
     child.header = !!aName;
+
     return child;
   },
 
@@ -1294,7 +1325,9 @@ Scope.prototype = {
     view._store.splice(view._store.indexOf(this), 1);
     view._itemsByElement.delete(this._target);
     view._currHierarchy.delete(this._nameString);
+
     this._target.remove();
+
     for (let variable of this._store.values()) {
       variable.remove();
     }
@@ -1725,7 +1758,8 @@ Scope.prototype = {
   _onClick: function(e) {
     if (e.button != 0 ||
         e.target == this._editNode ||
-        e.target == this._deleteNode) {
+        e.target == this._deleteNode ||
+        e.target == this._addPropertyNode) {
       return;
     }
     this.toggle();
@@ -1936,25 +1970,6 @@ Scope.prototype = {
   },
 
   /**
-   * Gets the first search results match in this scope.
-   * @return Variable | Property
-   */
-  get _firstMatch() {
-    for (let [, variable] of this._store) {
-      let match;
-      if (variable._isMatch) {
-        match = variable;
-      } else {
-        match = variable._firstMatch;
-      }
-      if (match) {
-        return match;
-      }
-    }
-    return null;
-  },
-
-  /**
    * Find the first item in the tree of visible items in this item that matches
    * the predicate. Searches in visual order (the order seen by the user).
    * Tests itself, then descends into first the enumerable children and then
@@ -2078,11 +2093,12 @@ Scope.prototype = {
   switch: null,
   delete: null,
   new: null,
-  editableValueTooltip: "",
+  preventDisableOnChange: false,
+  preventDescriptorModifiers: false,
   editableNameTooltip: "",
+  editableValueTooltip: "",
   editButtonTooltip: "",
   deleteButtonTooltip: "",
-  preventDescriptorModifiers: false,
   contextMenuId: "",
   separatorStr: "",
 
@@ -2178,7 +2194,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     this.ownerView._store.delete(this._nameString);
     this._variablesView._itemsByElement.delete(this._target);
     this._variablesView._currHierarchy.delete(this._absoluteName);
+
     this._target.remove();
+
     for (let property of this._store.values()) {
       property.remove();
     }
@@ -2356,6 +2374,37 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   /**
+   * Marks this variable as overridden.
+   *
+   * @param boolean aFlag
+   *        Whether this variable is overridden or not.
+   */
+  setOverridden: function(aFlag) {
+    if (aFlag) {
+      this._target.setAttribute("overridden", "");
+    } else {
+      this._target.removeAttribute("overridden");
+    }
+  },
+
+  /**
+   * Briefly flashes this variable.
+   *
+   * @param number aDuration [optional]
+   *        An optional flash animation duration.
+   */
+  flash: function(aDuration = ITEM_FLASH_DURATION) {
+    let fadeInDelay = this._variablesView.lazyEmptyDelay + 1;
+    let fadeOutDelay = fadeInDelay + aDuration;
+
+    setNamedTimeout("vview-flash-in" + this._absoluteName,
+      fadeInDelay, () => this._target.setAttribute("changed", ""));
+
+    setNamedTimeout("vview-flash-out" + this._absoluteName,
+      fadeOutDelay, () => this._target.removeAttribute("changed"));
+  },
+
+  /**
    * Initializes this variable's id, view and binds event listeners.
    *
    * @param string aName
@@ -2405,7 +2454,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     let separatorLabel = this._separatorLabel = document.createElement("label");
     separatorLabel.className = "plain separator";
-    separatorLabel.setAttribute("value", this.ownerView.separatorStr);
+    separatorLabel.setAttribute("value", this.ownerView.separatorStr + " ");
 
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "plain value";
@@ -2428,6 +2477,8 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       separatorLabel.hidden = true;
     }
 
+    // If this is a getter/setter property, create two child pseudo-properties
+    // called "get" and "set" that display the corresponding functions.
     if (descriptor.get || descriptor.set) {
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
@@ -2480,15 +2531,16 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       this._title.appendChild(deleteNode);
     }
 
-    let { actionsFirst } = this._variablesView;
-    if (ownerView.new || actionsFirst) {
+    if (ownerView.new) {
       let addPropertyNode = this._addPropertyNode = this.document.createElement("toolbarbutton");
       addPropertyNode.className = "plain variables-view-add-property";
       addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this), false);
-      if (actionsFirst && VariablesView.isPrimitive(descriptor)) {
+      this._title.appendChild(addPropertyNode);
+
+      // Can't add properties to primitive values, hide the node in those cases.
+      if (VariablesView.isPrimitive(descriptor)) {
         addPropertyNode.setAttribute("invisible", "");
       }
-      this._title.appendChild(addPropertyNode);
     }
 
     if (ownerView.contextMenuId) {
@@ -2554,11 +2606,12 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     let labels = [
       "configurable", "enumerable", "writable",
-      "frozen", "sealed", "extensible", "WebIDL"];
+      "frozen", "sealed", "extensible", "overridden", "WebIDL"];
 
-    for (let label of labels) {
+    for (let type of labels) {
       let labelElement = this.document.createElement("label");
-      labelElement.setAttribute("value", label);
+      labelElement.className = type;
+      labelElement.setAttribute("value", STR.GetStringFromName(type + "Tooltip"));
       tooltip.appendChild(labelElement);
     }
 
@@ -2623,17 +2676,25 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     if (descriptor && "getterValue" in descriptor) {
       target.setAttribute("safe-getter", "");
     }
+
     if (name == "this") {
       target.setAttribute("self", "");
     }
     else if (name == "<exception>") {
       target.setAttribute("exception", "");
+      target.setAttribute("pseudo-item", "");
     }
     else if (name == "<return>") {
       target.setAttribute("return", "");
+      target.setAttribute("pseudo-item", "");
     }
     else if (name == "__proto__") {
       target.setAttribute("proto", "");
+      target.setAttribute("pseudo-item", "");
+    }
+
+    if (Object.keys(descriptor).length == 0) {
+      target.setAttribute("pseudo-item", "");
     }
   },
 
@@ -2774,8 +2835,8 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   _absoluteName: "",
   _initialDescriptor: null,
   _separatorLabel: null,
-  _spacer: null,
   _valueLabel: null,
+  _spacer: null,
   _editNode: null,
   _deleteNode: null,
   _addPropertyNode: null,
@@ -2877,68 +2938,100 @@ VariablesView.prototype.createHierarchy = function() {
  * scope/variable/property hierarchies and reopen previously expanded nodes.
  */
 VariablesView.prototype.commitHierarchy = function() {
-  let prevHierarchy = this._prevHierarchy;
-  let currHierarchy = this._currHierarchy;
-
-  for (let [absoluteName, currVariable] of currHierarchy) {
-    // Ignore variables which were already commmitted.
-    if (currVariable._committed) {
-      continue;
-    }
+  for (let [, currItem] of this._currHierarchy) {
     // Avoid performing expensive operations.
-    if (this.commitHierarchyIgnoredItems[currVariable._nameString]) {
+    if (this.commitHierarchyIgnoredItems[currItem._nameString]) {
       continue;
     }
-
-    // Try to get the previous instance of the inspected variable to
-    // determine the difference in state.
-    let prevVariable = prevHierarchy.get(absoluteName);
-    let expanded = false;
-    let changed = false;
-
-    // If the inspected variable existed in a previous hierarchy, check if
-    // the displayed value (a representation of the grip) has changed and if
-    // it was previously expanded.
-    if (prevVariable) {
-      expanded = prevVariable._isExpanded;
-
-      // Only analyze Variables and Properties for displayed value changes.
-      if (currVariable instanceof Variable) {
-        changed = prevVariable._valueString != currVariable._valueString;
-      }
+    let overridden = this.isOverridden(currItem);
+    if (overridden) {
+      currItem.setOverridden(true);
     }
-
-    // Make sure this variable is not handled in ulteror commits for the
-    // same hierarchy.
-    currVariable._committed = true;
-
-    // Re-expand the variable if not previously collapsed.
+    let expanded = !currItem._committed && this.wasExpanded(currItem);
     if (expanded) {
-      currVariable.expand();
+      currItem.expand();
     }
-    // This variable was either not changed or removed, no need to continue.
-    if (!changed) {
-      continue;
+    let changed = !currItem._committed && this.hasChanged(currItem);
+    if (changed) {
+      currItem.flash();
     }
-
-    // Apply an attribute determining the flash type and duration.
-    // Dispatch this action after all the nodes have been drawn, so that
-    // the transition efects can take place.
-    this.window.setTimeout(function(aTarget) {
-      aTarget.addEventListener("transitionend", function onEvent() {
-        aTarget.removeEventListener("transitionend", onEvent, false);
-        aTarget.removeAttribute("changed");
-      }, false);
-      aTarget.setAttribute("changed", "");
-    }.bind(this, currVariable.target), this.lazyEmptyDelay + 1);
+    currItem._committed = true;
+  }
+  if (this.oncommit) {
+    this.oncommit(this);
   }
 };
 
 // Some variables are likely to contain a very large number of properties.
 // It would be a bad idea to re-expand them or perform expensive operations.
-VariablesView.prototype.commitHierarchyIgnoredItems = Object.create(null, {
-  "window": { value: true }
+VariablesView.prototype.commitHierarchyIgnoredItems = Heritage.extend(null, {
+  "window": true,
+  "this": true
 });
+
+/**
+ * Checks if the an item was previously expanded, if it existed in a
+ * previous hierarchy.
+ *
+ * @param Scope | Variable | Property aItem
+ *        The item to verify.
+ * @return boolean
+ *         Whether the item was expanded.
+ */
+VariablesView.prototype.wasExpanded = function(aItem) {
+  if (!(aItem instanceof Scope)) {
+    return false;
+  }
+  let prevItem = this._prevHierarchy.get(aItem._absoluteName || aItem._nameString);
+  return prevItem ? prevItem._isExpanded : false;
+};
+
+/**
+ * Checks if the an item's displayed value (a representation of the grip)
+ * has changed, if it existed in a previous hierarchy.
+ *
+ * @param Variable | Property aItem
+ *        The item to verify.
+ * @return boolean
+ *         Whether the item has changed.
+ */
+VariablesView.prototype.hasChanged = function(aItem) {
+  // Only analyze Variables and Properties for displayed value changes.
+  // Scopes are just collections of Variables and Properties and
+  // don't have a "value", so they can't change.
+  if (!(aItem instanceof Variable)) {
+    return false;
+  }
+  let prevItem = this._prevHierarchy.get(aItem._absoluteName);
+  return prevItem ? prevItem._valueString != aItem._valueString : false;
+};
+
+/**
+ * Checks if the an item was previously expanded, if it existed in a
+ * previous hierarchy.
+ *
+ * @param Scope | Variable | Property aItem
+ *        The item to verify.
+ * @return boolean
+ *         Whether the item was expanded.
+ */
+VariablesView.prototype.isOverridden = function(aItem) {
+  // Only analyze Variables for being overridden in different Scopes.
+  if (!(aItem instanceof Variable) || aItem instanceof Property) {
+    return false;
+  }
+  let currVariableName = aItem._nameString;
+  let parentScopes = this.getParentScopesForVariableOrProperty(aItem);
+
+  for (let otherScope of parentScopes) {
+    for (let [otherVariableName] of otherScope) {
+      if (otherVariableName == currVariableName) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
 
 /**
  * Returns true if the descriptor represents an undefined, null or
@@ -3247,9 +3340,6 @@ Editable.prototype = {
     let input = this._input = this._variable.document.createElement("textbox");
     input.className = "plain " + this.className;
     input.setAttribute("value", initialString);
-    if (!this._variable._variablesView.alignedValues) {
-      input.setAttribute("flex", "1");
-    }
 
     // Replace the specified label with a textbox input element.
     label.parentNode.replaceChild(input, label);

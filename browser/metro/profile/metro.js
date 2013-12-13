@@ -203,6 +203,8 @@ pref("layout.spellcheckDefault", 1);
 /* extension manager and xpinstall */
 // Completely disable extensions
 pref("extensions.defaultProviders.enabled", false);
+// Disable version checks making addons compatible by default
+pref("extensions.strictCompatibility", false);
 // Disable all add-on locations other than the profile
 pref("extensions.enabledScopes", 1);
 // Auto-disable any add-ons that are "dropped in" to the profile

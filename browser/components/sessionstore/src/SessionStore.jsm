@@ -86,10 +86,6 @@ const BROWSER_EVENTS = [
 // The number of milliseconds in a day
 const MS_PER_DAY = 1000.0 * 60.0 * 60.0 * 24.0;
 
-#ifndef XP_WIN
-#define BROKEN_WM_Z_ORDER
-#endif
-
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", this);
@@ -104,14 +100,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
-  "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
   "resource:///modules/sessionstore/PageStyle.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+  "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
+  "resource:///modules/devtools/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
   "resource:///modules/sessionstore/SessionSaver.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
@@ -389,7 +387,7 @@ let SessionStoreInternal = {
       throw new Error("SessionStore.init() must only be called once!");
     }
 
-    this._disabledForMultiProcess = Services.prefs.getBoolPref("browser.tabs.remote");
+    this._disabledForMultiProcess = Services.appinfo.browserTabsRemote;
     if (this._disabledForMultiProcess) {
       this._deferredInitialized.resolve();
       return;
@@ -2478,8 +2476,24 @@ let SessionStoreInternal = {
         this._windows[aWindow.__SSi].extData[key] = winData.extData[key];
       }
     }
+
+    let newClosedTabsData = winData._closedTabs || [];
+
     if (overwriteTabs || firstWindow) {
-      this._windows[aWindow.__SSi]._closedTabs = winData._closedTabs || [];
+      // Overwrite existing closed tabs data when overwriteTabs=true
+      // or we're the first window to be restored.
+      this._windows[aWindow.__SSi]._closedTabs = newClosedTabsData;
+    } else if (this._max_tabs_undo > 0) {
+      // If we merge tabs, we also want to merge closed tabs data. We'll assume
+      // the restored tabs were closed more recently and append the current list
+      // of closed tabs to the new one...
+      newClosedTabsData =
+        newClosedTabsData.concat(this._windows[aWindow.__SSi]._closedTabs);
+
+      // ... and make sure that we don't exceed the max number of closed tabs
+      // we can restore.
+      this._windows[aWindow.__SSi]._closedTabs =
+        newClosedTabsData.slice(0, this._max_tabs_undo);
     }
 
     this.restoreTabs(aWindow, tabs, winData.tabs,
@@ -3199,32 +3213,7 @@ let SessionStoreInternal = {
    * @returns Window reference
    */
   _getMostRecentBrowserWindow: function ssi_getMostRecentBrowserWindow() {
-    var win = Services.wm.getMostRecentWindow("navigator:browser");
-    if (!win)
-      return null;
-    if (!win.closed)
-      return win;
-
-#ifdef BROKEN_WM_Z_ORDER
-    win = null;
-    var windowsEnum = Services.wm.getEnumerator("navigator:browser");
-    // this is oldest to newest, so this gets a bit ugly
-    while (windowsEnum.hasMoreElements()) {
-      let nextWin = windowsEnum.getNext();
-      if (!nextWin.closed)
-        win = nextWin;
-    }
-    return win;
-#else
-    var windowsEnum =
-      Services.wm.getZOrderDOMWindowEnumerator("navigator:browser", true);
-    while (windowsEnum.hasMoreElements()) {
-      win = windowsEnum.getNext();
-      if (!win.closed)
-        return win;
-    }
-    return null;
-#endif
+    return RecentWindow.getMostRecentBrowserWindow({ allowPopups: true });
   },
 
   /**

@@ -11,7 +11,7 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 
 // Page for which the start UI is shown
-const kStartURI = "about:start";
+const kStartURI = "about:newtab";
 
 // allow panning after this timeout on pages with registered touch listeners
 const kTouchTimeout = 300;
@@ -1429,7 +1429,7 @@ Tab.prototype = {
 
     browser.setAttribute("type", "content");
 
-    let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
+    let useRemote = Services.appinfo.browserTabsRemote;
     let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 

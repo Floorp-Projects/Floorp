@@ -270,7 +270,7 @@ private:
         OP_GROUP2_Ev1                   = 0xD1,
         OP_GROUP2_EvCL                  = 0xD3,
         OP_FPU6                         = 0xDD,
-        OP_FLD32                        = 0xD9,
+        OP_FPU6_F32                     = 0xD9,
         OP_CALL_rel32                   = 0xE8,
         OP_JMP_rel32                    = 0xE9,
         PRE_SSE_F2                      = 0xF2,
@@ -732,7 +732,7 @@ public:
     void fld32_m(int offset, RegisterID base)
     {
         spew("fld        %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
-        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FLD, base, offset);
+        m_formatter.oneByteOp(OP_FPU6_F32, FPU6_OP_FLD, base, offset);
     }
     void fisttp_m(int offset, RegisterID base)
     {
@@ -747,7 +747,7 @@ public:
     void fstp32_m(int offset, RegisterID base)
     {
         spew("fstp32       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
-        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FSTP, base, offset);
+        m_formatter.oneByteOp(OP_FPU6_F32, FPU6_OP_FSTP, base, offset);
     }
 
     void negl_r(RegisterID dst)

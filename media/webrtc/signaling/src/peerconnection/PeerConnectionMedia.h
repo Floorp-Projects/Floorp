@@ -184,12 +184,13 @@ public:
     MOZ_ASSERT(mMediaStream);
   }
 
-  mozilla::RefPtr<mozilla::MediaPipeline> GetPipeline(int aTrack);
-  nsresult GetPipelineStats(DOMHighResTimeStamp now, int aTrack,
-    mozilla::dom::Sequence<mozilla::dom::RTCInboundRTPStreamStats > *inbound,
-    mozilla::dom::Sequence<mozilla::dom::RTCOutboundRTPStreamStats > *outbound);
+  // This method exists for stats and the unittests.
+  // It allows visibility into the pipelines and flows.
+  const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
+  GetPipelines() const { return mPipelines; }
+
 protected:
-  std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
+  std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
   nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
 };
