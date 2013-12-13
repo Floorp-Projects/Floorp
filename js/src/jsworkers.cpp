@@ -767,14 +767,14 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
     FinishOffThreadIonCompile(ionBuilder);
     ionBuilder = nullptr;
 
-    // Notify the main thread in case it is waiting for the compilation to finish.
-    state.notifyAll(WorkerThreadState::CONSUMER);
-
     // Ping the main thread so that the compiled code can be incorporated
     // at the next operation callback. Don't interrupt Ion code for this, as
     // this incorporation can be delayed indefinitely without affecting
     // performance as long as the main thread is actually executing Ion code.
     runtime->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
+
+    // Notify the main thread in case it is waiting for the compilation to finish.
+    state.notifyAll(WorkerThreadState::CONSUMER);
 }
 
 void
