@@ -24,7 +24,7 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gVariables = gDebugger.DebuggerView.Variables;
 
-    // Always expand all scopes between pauses.
+    // Always expand all items between pauses.
     gVariables.commitHierarchyIgnoredItems = Object.create(null);
 
     waitForSourceShown(gPanel, ".html")

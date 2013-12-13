@@ -1698,7 +1698,13 @@ Breakpoints.prototype = {
       // By default, new breakpoints are always enabled. Disabled breakpoints
       // are, in fact, removed from the server but preserved in the frontend,
       // so that they may not be forgotten across target navigations.
-      this._disabled.delete(identifier);
+      let disabledPromise = this._disabled.get(identifier);
+      if (disabledPromise) {
+        disabledPromise.then(({ conditionalExpression: previousValue }) => {
+          aBreakpointClient.conditionalExpression = previousValue;
+        });
+        this._disabled.delete(identifier);
+      }
 
       // Preserve information about the breakpoint's line text, to display it
       // in the sources pane without requiring fetching the source (for example,
