@@ -72,6 +72,7 @@
 #include "nsComputedDOMStyle.h"
 #include "ActiveLayerTracker.h"
 #include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 #include "mozilla/Preferences.h"
 
@@ -4961,14 +4962,14 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   if (!container)
     return result;
 
-  gfxIntSize size;
+  mozilla::gfx::IntSize size;
   nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
   if (!surf)
     return result;
 
   result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, surf);
   result.mCORSUsed = aElement->GetCORSMode() != CORS_NONE;
-  result.mSize = size;
+  result.mSize = ThebesIntSize(size);
   result.mPrincipal = principal.forget();
   result.mIsWriteOnly = false;
 

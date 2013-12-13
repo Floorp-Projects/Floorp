@@ -8,7 +8,6 @@
 #include "Layers.h"                     // for WriteSnapshotToDumpFile, etc
 #include "gfx2DGlue.h"                  // for ToFilter, ToMatrix4x4
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
