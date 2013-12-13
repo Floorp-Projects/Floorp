@@ -391,6 +391,7 @@ CodeGenerator *CompileBackEnd(MIRGenerator *mir, MacroAssembler *maybeMasm = nul
 
 void AttachFinishedCompilations(JSContext *cx);
 void FinishOffThreadBuilder(IonBuilder *builder);
+void StopAllOffThreadCompilations(JSCompartment *comp);
 
 static inline bool
 IsIonEnabled(JSContext *cx)
