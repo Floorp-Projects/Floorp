@@ -30,6 +30,10 @@ EXTRA_JS_MODULES += [
     'Sandbox.jsm',
 ]
 
+EXTRA_PP_JS_MODULES += [
+    'FirefoxAccounts.jsm',
+]
+
 FAIL_ON_WARNINGS = True
 
 FINAL_LIBRARY = 'xul'
