@@ -7,6 +7,8 @@ MARIONETTE_HEAD_JS = 'head.js';
 startTestBase(function testCaseMain() {
   log("Test init MobileMessageDB");
 
+  // TODO: bug 943233 - passing jsm exported objects to |Promise.resolve| gets
+  // empty object in return.
   let mmdb = newMobileMessageDB();
   let dbName = "test_mmdb_new";
   let dbVersion = 0;
