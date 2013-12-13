@@ -298,6 +298,8 @@ WEBIDL_FILES = [
     'PushManager.webidl',
     'Range.webidl',
     'Rect.webidl',
+    'ResourceStats.webidl',
+    'ResourceStatsManager.webidl',
     'RGBColor.webidl',
     'RTCConfiguration.webidl',
     'RTCIceCandidate.webidl',
