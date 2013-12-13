@@ -52,8 +52,11 @@ public:
   void AddFrame(nsIFrame* aFrame) {
     uint32_t depth = aFrame->GetDepthInFrameTree();
     if (mEntryList.empty() ||
-        !mEntryList.find(Entry(aFrame, depth, true))) {
-      mEntryList.insert(new Entry(aFrame, depth, true));
+        !mEntryList.find(Entry(aFrame, depth))) {
+      // All frames in mEntryList at this stage have STYLE_CHANGED so we don't
+      // need to worry about setting the STYLE_CHANGED flag if 'find'
+      // returns true.
+      mEntryList.insert(new Entry(aFrame, depth, STYLE_CHANGED));
     }
   }
 
@@ -66,8 +69,8 @@ public:
     }
 
     uint32_t depth = aFrame->GetDepthInFrameTree();
-    if (mEntryList.find(Entry(aFrame, depth, false))) {
-      delete mEntryList.remove(Entry(aFrame, depth, false));
+    if (mEntryList.find(Entry(aFrame, depth))) {
+      delete mEntryList.remove(Entry(aFrame, depth));
     }
   }
 
@@ -89,33 +92,42 @@ public:
   void Flush() {
     while (!mEntryList.empty()) {
       Entry *entry = mEntryList.removeMin();
-
       nsIFrame *frame = entry->mFrame;
 
-      bool updateParent = false;
-      if (entry->mInitial) {
+      bool overflowChanged;
+      if (entry->mFlags & CHILDREN_CHANGED) {
+        // Need to union the overflow areas of the children.
+        overflowChanged = frame->UpdateOverflow();
+      } else {
         nsOverflowAreas* pre = static_cast<nsOverflowAreas*>
           (frame->Properties().Get(frame->PreTransformOverflowAreasProperty()));
         if (pre) {
+          // Since we have the pre-transform-overflow-areas, we can take a
+          // faster path that doesn't require unioning the overflow areas
+          // of our children.
           // FinishAndStoreOverflow will change the overflow areas passed in,
           // so make a copy.
           nsOverflowAreas overflowAreas = *pre;
           frame->FinishAndStoreOverflow(overflowAreas, frame->GetSize());
-          // We can't tell if the overflow changed, so update the parent regardless
-          updateParent = true;
+          // We can't tell if the overflow changed, so be conservative
+          overflowChanged = true;
+        } else {
+          // We can't take the faster path here. Do it the hard way.
+          overflowChanged = frame->UpdateOverflow();
         }
       }
 
-      // If the overflow changed, then we want to also update the parent's
-      // overflow. We always update the parent for initial frames.
-      if (!updateParent) {
-        updateParent = frame->UpdateOverflow() || entry->mInitial;
-      }
-      if (updateParent) {
+      // If the frame style changed (e.g. positioning offsets)
+      // then we need to update the parent with the overflow areas of its
+      // children.
+      if (overflowChanged || (entry->mFlags & STYLE_CHANGED)) {
         nsIFrame *parent = frame->GetParent();
         if (parent && parent != mSubtreeRoot) {
-          if (!mEntryList.find(Entry(parent, entry->mDepth - 1, false))) {
-            mEntryList.insert(new Entry(parent, entry->mDepth - 1, false));
+          Entry* parentEntry = mEntryList.find(Entry(parent, entry->mDepth - 1));
+          if (parentEntry) {
+            parentEntry->mFlags |= CHILDREN_CHANGED;
+          } else {
+            mEntryList.insert(new Entry(parent, entry->mDepth - 1, CHILDREN_CHANGED));
           }
         }
       }
@@ -124,18 +136,26 @@ public:
   }
   
 private:
+  enum {
+    /**
+     * Set if the overflow areas of children have changed so we need to call
+     * UpdateOverflow on the frame.
+     */
+    CHILDREN_CHANGED = 0x01,
+    /**
+     * True if the frame was explicitly added and hence may have had a style
+     * change that changes its geometry relative to parent, without reflowing.
+     * In this case we must update overflow on the frame's parent even if
+     * this frame's overflow did not change.
+     */
+    STYLE_CHANGED = 0x02
+  };
   struct Entry : SplayTreeNode<Entry>
   {
-    Entry(nsIFrame* aFrame, bool aInitial)
-      : mFrame(aFrame)
-      , mDepth(aFrame->GetDepthInFrameTree())
-      , mInitial(aInitial)
-    {}
-    
-    Entry(nsIFrame* aFrame, uint32_t aDepth, bool aInitial)
+    Entry(nsIFrame* aFrame, uint32_t aDepth, uint8_t aFlags = 0)
       : mFrame(aFrame)
       , mDepth(aDepth)
-      , mInitial(aInitial)
+      , mFlags(aFlags)
     {}
 
     bool operator==(const Entry& aOther) const
@@ -169,11 +189,7 @@ private:
     nsIFrame* mFrame;
     /* Depth in the frame tree */
     uint32_t mDepth;
-    /**
-     * True if the frame had the actual style change, and we
-     * want to check for pre-transform overflow areas.
-     */
-    bool mInitial;
+    uint8_t mFlags;
   };
 
   /* A list of frames to process, sorted by their depth in the frame tree */
