@@ -587,8 +587,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             }
         }
 
-        // Second slot holds the return value.
+        // Make sure to add HAS_RVAL to flags here because setFlags() below
+        // will clobber it.
         returnValue = iter.read();
+        flags |= BaselineFrame::HAS_RVAL;
 
         // If script maybe has an arguments object, the third slot will hold it.
         if (script->argumentsHasVarBinding()) {
@@ -603,8 +605,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     IonSpew(IonSpew_BaselineBailouts, "      ReturnValue=%016llx", *((uint64_t *) &returnValue));
     blFrame->setReturnValue(returnValue);
 
-    // Do not need to initialize scratchValue or returnValue fields in BaselineFrame.
-
+    // Do not need to initialize scratchValue field in BaselineFrame.
     blFrame->setFlags(flags);
 
     // initArgsObjUnchecked modifies the frame's flags, so call it after setFlags.
