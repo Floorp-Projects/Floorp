@@ -713,6 +713,10 @@ public:
                                const nsDisplayList& aList,
                                FILE* aFile = stdout,
                                bool aDumpHtml = false);
+  static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
+                                  const nsDisplayListSet& aList,
+                                  FILE* aFile = stdout,
+                                  bool aDumpHtml = false);
 
 #endif
 };

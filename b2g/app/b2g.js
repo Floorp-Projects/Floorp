@@ -7,6 +7,9 @@
 pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.html");
 pref("browser.chromeURL", "chrome://browser/content/");
 
+// Bug 945235: Prevent all bars to be considered visible:
+pref("toolkit.defaultChromeFeatures", "chrome,dialog=no,close,resizable,scrollbars,extrachrome");
+
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
 
