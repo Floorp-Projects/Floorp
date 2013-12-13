@@ -105,7 +105,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       result = new SharedTextureHostOGL(aFlags,
                                         desc.shareType(),
                                         desc.handle(),
-                                        gfx::ToIntSize(desc.size()),
+                                        desc.size(),
                                         desc.inverted());
       break;
     }
@@ -649,8 +649,7 @@ SharedDeprecatedTextureHostOGL::SwapTexturesImpl(const SurfaceDescriptor& aImage
   SharedTextureDescriptor texture = aImage.get_SharedTextureDescriptor();
 
   SharedTextureHandle newHandle = texture.handle();
-  nsIntSize size = texture.size();
-  mSize = gfx::IntSize(size.width, size.height);
+  mSize = texture.size();
   if (texture.inverted()) {
     mFlags |= TEXTURE_NEEDS_Y_FLIP;
   }
