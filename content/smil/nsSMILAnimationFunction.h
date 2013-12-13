@@ -165,6 +165,15 @@ public:
   }
 
   /**
+   * Indicates if the animation is active.
+   *
+   * @return  true if the animation is active, false otherwise.
+   */
+  bool IsActive() const {
+    return mIsActive;
+  }
+
+  /**
    * Indicates if this animation will replace the passed in result rather than
    * adding to it. Animations that replace the underlying value may be called
    * without first calling lower priority animations.
