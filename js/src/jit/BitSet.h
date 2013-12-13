@@ -58,7 +58,7 @@ class BitSet : private TempObject
     // O(1): Check if this set contains the given value.
     bool contains(unsigned int value) const {
         JS_ASSERT(bits_);
-        JS_ASSERT(value <= max_);
+        JS_ASSERT(value < max_);
 
         return !!(bits_[wordForValue(value)] & bitForValue(value));
     }
@@ -69,7 +69,7 @@ class BitSet : private TempObject
     // O(1): Insert the given value into this set.
     void insert(unsigned int value) {
         JS_ASSERT(bits_);
-        JS_ASSERT(value <= max_);
+        JS_ASSERT(value < max_);
 
         bits_[wordForValue(value)] |= bitForValue(value);
     }
@@ -80,7 +80,7 @@ class BitSet : private TempObject
     // O(1): Remove the given value from this set.
     void remove(unsigned int value) {
         JS_ASSERT(bits_);
-        JS_ASSERT(value <= max_);
+        JS_ASSERT(value < max_);
 
         bits_[wordForValue(value)] &= ~bitForValue(value);
     }
@@ -137,7 +137,7 @@ class BitSet::Iterator
 
     inline Iterator& operator++(int dummy) {
         JS_ASSERT(more());
-        JS_ASSERT(index_ <= set_.max_);
+        JS_ASSERT(index_ < set_.max_);
 
         index_++;
         value_ >>= 1;
@@ -158,12 +158,12 @@ class BitSet::Iterator
         index_ += numZeros;
         value_ >>= numZeros;
 
-        JS_ASSERT_IF(index_ <= set_.max_, set_.contains(index_));
+        JS_ASSERT_IF(index_ < set_.max_, set_.contains(index_));
         return *this;
     }
 
     unsigned int operator *() {
-        JS_ASSERT(index_ <= set_.max_);
+        JS_ASSERT(index_ < set_.max_);
         return index_;
     }
 };

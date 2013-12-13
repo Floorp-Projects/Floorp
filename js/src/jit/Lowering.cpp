@@ -305,6 +305,7 @@ LIRGenerator::visitPassArg(MPassArg *arg)
 {
     MDefinition *opd = arg->getArgument();
     uint32_t argslot = getArgumentSlot(arg->getArgnum());
+    JS_ASSERT(arg->getArgnum() < prepareCallStack_.back()->argc());
 
     // Pass through the virtual register of the operand.
     // This causes snapshots to correctly copy the operand on the stack.

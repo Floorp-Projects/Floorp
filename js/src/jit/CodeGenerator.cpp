@@ -1139,6 +1139,7 @@ CodeGenerator::visitStackArgT(LStackArgT *lir)
     const LAllocation *arg = lir->getArgument();
     MIRType argType = lir->mir()->getArgument()->type();
     uint32_t argslot = lir->argslot();
+    JS_ASSERT(argslot - 1u < graph.argumentSlotCount());
 
     int32_t stack_offset = StackOffsetOfPassedArg(argslot);
     Address dest(StackPointer, stack_offset);
@@ -1150,7 +1151,9 @@ CodeGenerator::visitStackArgT(LStackArgT *lir)
     else
         masm.storeValue(*(arg->toConstant()), dest);
 
-    return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
+    uint32_t slot = StackOffsetToSlot(stack_offset);
+    JS_ASSERT(slot - 1u < graph.totalSlotCount());
+    return pushedArgumentSlots_.append(slot);
 }
 
 bool
@@ -1158,10 +1161,15 @@ CodeGenerator::visitStackArgV(LStackArgV *lir)
 {
     ValueOperand val = ToValue(lir, 0);
     uint32_t argslot = lir->argslot();
+    JS_ASSERT(argslot - 1u < graph.argumentSlotCount());
+
     int32_t stack_offset = StackOffsetOfPassedArg(argslot);
 
     masm.storeValue(val, Address(StackPointer, stack_offset));
-    return pushedArgumentSlots_.append(StackOffsetToSlot(stack_offset));
+
+    uint32_t slot = StackOffsetToSlot(stack_offset);
+    JS_ASSERT(slot - 1u < graph.totalSlotCount());
+    return pushedArgumentSlots_.append(slot);
 }
 
 bool
