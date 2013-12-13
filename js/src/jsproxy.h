@@ -47,6 +47,22 @@ class JS_FRIEND_API(Wrapper);
  * BaseProxyHandler provides implementations of the derived traps in terms of
  * the (pure virtual) fundamental traps.
  *
+ * In addition to the normal traps, there are two models for proxy prototype
+ * chains. First, proxies may opt to use the standard prototype mechanism used
+ * throughout the engine. To do so, simply pass a prototype to NewProxyObject()
+ * at creation time. All prototype accesses will then "just work" to treat the
+ * proxy as a "normal" object. Alternatively, if instead the proxy wishes to
+ * implement more complicated prototype semantics (if, for example, it wants to
+ * delegate the prototype lookup to a wrapped object), it may pass Proxy::LazyProto
+ * as the prototype at create time and opt in to the trapped prototype system,
+ * which guarantees that their trap will be called on any and every prototype
+ * chain access of the object.
+ *
+ * This system is implemented with two traps: {get,set}PrototypeOf. The default
+ * implementation of setPrototypeOf throws a TypeError. Since it is not possible
+ * to create an object without a sense of prototype chain, handler implementors
+ * must provide a getPrototypeOf trap if opting in to the dynamic prototype system.
+ *
  * To minimize code duplication, a set of abstract proxy handler classes is
  * provided, from which other handlers may inherit. These abstract classes
  * are organized in the following hierarchy:
@@ -167,6 +183,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
 
     // These two hooks must be overridden, or not overridden, in tandem -- no
     // overriding just one!
@@ -294,6 +311,7 @@ class Proxy
     static bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    static bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
 
     static bool watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable);
     static bool unwatch(JSContext *cx, HandleObject proxy, HandleId id);
