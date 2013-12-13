@@ -78,8 +78,8 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
       - aActualScrollOffset;
   }
 
-  // Finally, clamp the display port to the scrollable rect.
-  CSSRect scrollableRect = aFrameMetrics.mScrollableRect;
+  // Finally, clamp the display port to the expanded scrollable rect.
+  CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
   displayPort = scrollableRect.Intersect(displayPort + aActualScrollOffset)
     - aActualScrollOffset;
 }
