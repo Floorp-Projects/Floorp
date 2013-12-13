@@ -96,8 +96,9 @@ function loadCallgraph(file)
     // Find all functions reachable via an unsuppressed call chain, and remove
     // them from the suppressedFunctions set. Everything remaining is only
     // reachable when GC is suppressed.
-    while (worklist.length) {
-        name = worklist.pop();
+    var top = worklist.length;
+    while (top > 0) {
+        name = worklist[--top];
         if (shouldSuppressGC(name))
             continue;
         if (!(name in suppressedFunctions))
@@ -107,7 +108,7 @@ function loadCallgraph(file)
             continue;
         for (var entry of calleeGraph[name]) {
             if (!entry.suppressed)
-                worklist.push(entry.callee);
+                worklist[top++] = entry.callee;
         }
     }
 
