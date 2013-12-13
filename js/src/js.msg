@@ -433,3 +433,4 @@ MSG_DEF(JSMSG_NO_EXPORT_NAME,           378, 0, JSEXN_SYNTAXERR, "missing export
 MSG_DEF(JSMSG_DECLARATION_AFTER_EXPORT, 379, 0, JSEXN_SYNTAXERR, "missing declaration after 'export' keyword")
 MSG_DEF(JSMSG_INVALID_PROTOTYPE,        380, 0, JSEXN_TYPEERR, "prototype field is not an object")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_TO_UNSIZED, 381, 0, JSEXN_TYPEERR, "cannot create a handle to an unsized type")
+MSG_DEF(JSMSG_SETPROTOTYPEOF_FAIL,      382, 0, JSEXN_TYPEERR, "[[SetPrototypeOf]] failed")
