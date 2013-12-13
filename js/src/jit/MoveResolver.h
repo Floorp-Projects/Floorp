@@ -125,16 +125,10 @@ class MoveOp
   public:
     MoveOp()
     { }
-    MoveOp(const MoveOp &other)
-      : from_(other.from_),
-        to_(other.to_),
-        cycle_(other.cycle_),
-        kind_(other.kind_)
-    { }
-    MoveOp(const MoveOperand &from, const MoveOperand &to, Kind kind, bool cycle = false)
+    MoveOp(const MoveOperand &from, const MoveOperand &to, Kind kind)
       : from_(from),
         to_(to),
-        cycle_(cycle),
+        cycle_(false),
         kind_(kind)
     { }
 
@@ -163,14 +157,13 @@ class MoveResolver
         PendingMove()
         { }
         PendingMove(const MoveOperand &from, const MoveOperand &to, Kind kind)
-          : MoveOp(from, to, kind, false)
+          : MoveOp(from, to, kind)
         { }
-        
+
         void setInCycle() {
             JS_ASSERT(!inCycle());
             cycle_ = true;
         }
-
     };
 
     typedef InlineList<MoveResolver::PendingMove>::iterator PendingMoveIterator;
