@@ -372,10 +372,8 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
   }
 
   else {
-    nsRefPtr<gfxASurface> surface;
-    aImage->GetFrame(aWhichFrame,
-                     imgIContainer::FLAG_SYNC_DECODE,
-                     getter_AddRefs(surface));
+    nsRefPtr<gfxASurface> surface =
+      aImage->GetFrame(aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
     NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
     frame = surface->GetAsReadableARGB32ImageSurface();

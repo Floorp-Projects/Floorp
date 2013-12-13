@@ -50,7 +50,7 @@ DIRS += ['client']
 
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
     DIRS += ['injector']
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'InjectCrashReporter.cpp',
         'LoadLibraryRemote.cpp',
     ]
@@ -61,12 +61,12 @@ EXPORTS += [
     'nsExceptionHandler.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'nsExceptionHandler.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'Darwin':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'mac_utils.mm',
     ]
 

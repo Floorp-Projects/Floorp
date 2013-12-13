@@ -52,7 +52,7 @@ struct SurfaceDescriptorMacIOSurface {
 struct SharedTextureDescriptor {
   SharedTextureShareType shareType;
   SharedTextureHandle handle;
-  nsIntSize size;
+  IntSize size;
   bool inverted;
 };
 

@@ -14,9 +14,20 @@ MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 
+TEST_WEBIDL_FILES += [
+    'TestDictionary.webidl',
+    'TestJSImplInheritanceGen.webidl',
+    'TestTypedef.webidl',
+]
+
+PREPROCESSED_TEST_WEBIDL_FILES += [
+    'TestCodeGen.webidl',
+    'TestExampleGen.webidl',
+    'TestJSImplGen.webidl',
+]
+
 LOCAL_INCLUDES += [
     '/dom/bindings',
     '/js/xpconnect/src',
     '/js/xpconnect/wrappers',
 ]
-

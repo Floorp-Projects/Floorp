@@ -1253,29 +1253,19 @@ CheckPredecessorImpliesSuccessor(MBasicBlock *A, MBasicBlock *B)
 }
 
 static bool
-CheckOperandImpliesUse(MInstruction *ins, MDefinition *operand)
+CheckOperandImpliesUse(MNode *n, MDefinition *operand)
 {
     for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {
-        if (i->consumer()->isDefinition() && i->consumer()->toDefinition() == ins)
+        if (i->consumer() == n)
             return true;
     }
     return false;
 }
 
 static bool
-CheckUseImpliesOperand(MInstruction *ins, MUse *use)
+CheckUseImpliesOperand(MDefinition *def, MUse *use)
 {
-    MNode *consumer = use->consumer();
-    uint32_t index = use->index();
-
-    if (consumer->isDefinition()) {
-        MDefinition *def = consumer->toDefinition();
-        return (def->getOperand(index) == ins);
-    }
-
-    JS_ASSERT(consumer->isResumePoint());
-    MResumePoint *res = consumer->toResumePoint();
-    return (res->getOperand(index) == ins);
+    return use->consumer()->getOperand(use->index()) == def;
 }
 #endif // DEBUG
 
@@ -1283,10 +1273,26 @@ void
 jit::AssertBasicGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
+    JS_ASSERT(graph.entryBlock()->numPredecessors() == 0);
+    JS_ASSERT(graph.entryBlock()->phisEmpty());
+    JS_ASSERT(!graph.entryBlock()->unreachable());
+
+    if (MBasicBlock *osrBlock = graph.osrBlock()) {
+        JS_ASSERT(osrBlock->numPredecessors() == 0);
+        JS_ASSERT(osrBlock->phisEmpty());
+        JS_ASSERT(osrBlock != graph.entryBlock());
+        JS_ASSERT(!osrBlock->unreachable());
+    }
+
+    if (MResumePoint *resumePoint = graph.entryResumePoint())
+        JS_ASSERT(resumePoint->block() == graph.entryBlock());
+
     // Assert successor and predecessor list coherency.
     uint32_t count = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
         count++;
+
+        JS_ASSERT(&block->graph() == &graph);
 
         for (size_t i = 0; i < block->numSuccessors(); i++)
             JS_ASSERT(CheckSuccessorImpliesPredecessor(*block, block->getSuccessor(i)));
@@ -1295,13 +1301,30 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
             JS_ASSERT(CheckPredecessorImpliesSuccessor(*block, block->getPredecessor(i)));
 
         // Assert that use chains are valid for this instruction.
-        for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            for (uint32_t i = 0, e = ins->numOperands(); i < e; i++)
-                JS_ASSERT(CheckOperandImpliesUse(*ins, ins->getOperand(i)));
+        for (MDefinitionIterator iter(*block); iter; iter++) {
+            for (uint32_t i = 0, e = iter->numOperands(); i < e; i++)
+                JS_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
         }
-        for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++)
-                JS_ASSERT(CheckUseImpliesOperand(*ins, *i));
+        for (MResumePointIterator iter(block->resumePointsBegin()); iter != block->resumePointsEnd(); iter++) {
+            for (uint32_t i = 0, e = iter->numOperands(); i < e; i++) {
+                if (iter->getUseFor(i)->hasProducer())
+                    JS_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
+            }
+        }
+        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+            JS_ASSERT(phi->numOperands() == block->numPredecessors());
+        }
+        for (MDefinitionIterator iter(*block); iter; iter++) {
+            JS_ASSERT(iter->block() == *block);
+            for (MUseIterator i(iter->usesBegin()); i != iter->usesEnd(); i++)
+                JS_ASSERT(CheckUseImpliesOperand(*iter, *i));
+
+            if (iter->isInstruction()) {
+                if (MResumePoint *resume = iter->toInstruction()->resumePoint()) {
+                    if (MInstruction *ins = resume->instruction())
+                        JS_ASSERT(ins->block() == iter->block());
+                }
+            }
         }
     }
 

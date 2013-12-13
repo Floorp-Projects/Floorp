@@ -113,6 +113,24 @@ fails == mstyle-5.xhtml mstyle-5-ref.xhtml # Bug 787215
 == positive-namedspace.html positive-namedspace-ref.html
 == mtable-align-whitespace.html mtable-align-whitespace-ref.html
 == mtable-width.html mtable-width-ref.html
+== mtable-rowlines-single-mtable-dynamic.html mtable-rowlines-single-ref.html
+== mtable-rowlines-multi-mtable-dynamic.html mtable-rowlines-multi-ref.html
+== mtable-rowalign-single-mtr.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtr-dynamic.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtable.html mtable-rowalign-single-ref.html
+== mtable-rowalign-single-mtable-dynamic.html mtable-rowalign-single-ref.html
+== mtable-rowalign-multi-mtable.html mtable-rowalign-multi-ref.html
+== mtable-rowalign-multi-mtable-dynamic.html mtable-rowalign-multi-ref.html
+== mtable-columnlines-single-mtable-dynamic.html mtable-columnlines-single-ref.html
+== mtable-columnlines-multi-mtable-dynamic.html mtable-columnlines-multi-ref.html
+== mtable-columnalign-single-mtr.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtr-dynamic.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtable.html mtable-columnalign-single-ref.html
+== mtable-columnalign-single-mtable-dynamic.html mtable-columnalign-single-ref.html
+== mtable-columnalign-multi-mtr.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtr-dynamic.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtable.html mtable-columnalign-multi-ref.html
+== mtable-columnalign-multi-mtable-dynamic.html mtable-columnalign-multi-ref.html
 == maction-selection.html maction-selection-ref.html
 == maction-dynamic-embellished-op.html maction-dynamic-embellished-op-ref.html
 skip-if(B2G) == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
