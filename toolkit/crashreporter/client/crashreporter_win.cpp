@@ -35,6 +35,10 @@
 
 #define WM_UPLOADCOMPLETE WM_APP
 
+// Thanks, Windows.h :(
+#undef min
+#undef max
+
 using std::string;
 using std::wstring;
 using std::map;
