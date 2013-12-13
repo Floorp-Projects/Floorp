@@ -170,16 +170,17 @@ class CodeGeneratorShared : public LInstructionVisitor
         // A slot of 0 is permitted only to calculate %esp offset for calls.
         JS_ASSERT(slot >= 0 && slot <= int32_t(graph.argumentSlotCount()));
         int32_t offset = masm.framePushed() -
-                       (graph.localSlotCount() * STACK_SLOT_SIZE) -
+                       graph.paddedLocalSlotsSize() -
                        (slot * sizeof(Value));
+
         // Passed arguments go below A function's local stack storage.
         // When arguments are being pushed, there is nothing important on the stack.
         // Therefore, It is safe to push the arguments down arbitrarily.  Pushing
-        // by 8 is desirable since everything on the stack is a Value, which is 8
-        // bytes large.
-
-        offset &= ~7;
+        // by sizeof(Value) is desirable since everything on the stack is a Value.
+        // Note that paddedLocalSlotCount() aligns to at least a Value boundary
+        // specifically to support this.
         JS_ASSERT(offset >= 0);
+        JS_ASSERT(offset % sizeof(Value) == 0);
         return offset;
     }
 
