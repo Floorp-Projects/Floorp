@@ -32,11 +32,11 @@ function test() {
   is(parsed.scriptCount, 1,
     "There should be 1 script parsed in the parent source.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:0, length:261})",
+  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:0, length:261, index:0})",
     "The script location is correct (1).");
-  is(parsed.getScriptInfo(source.indexOf("<script>")).toSource(), "({start:0, length:261})",
+  is(parsed.getScriptInfo(source.indexOf("<script>")).toSource(), "({start:0, length:261, index:0})",
     "The script location is correct (2).");
-  is(parsed.getScriptInfo(source.indexOf("</script>")).toSource(), "({start:0, length:261})",
+  is(parsed.getScriptInfo(source.indexOf("</script>")).toSource(), "({start:0, length:261, index:0})",
     "The script location is correct (3).");
 
   finish();
