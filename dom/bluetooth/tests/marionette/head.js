@@ -151,6 +151,81 @@ function ensureBluetoothManager(aPermissions) {
   return deferred.promise;
 }
 
+/* Wait for one named BluetoothManager event.
+ *
+ * Resolve if that named event occurs.  Never reject.
+ *
+ * Forfill params: the DOMEvent passed.
+ *
+ * @return A deferred promise.
+ */
+function waitForManagerEvent(aEventName) {
+  let deferred = Promise.defer();
+
+  bluetoothManager.addEventListener(aEventName, function onevent(aEvent) {
+    bluetoothManager.removeEventListener(aEventName, onevent);
+
+    ok(true, "BluetoothManager event '" + aEventName + "' got.");
+    deferred.resolve(aEvent);
+  });
+
+  return deferred.promise;
+}
+
+/* Convenient function for setBluetoothEnabled and waitForManagerEvent
+ * combined.
+ *
+ * Resolve if that named event occurs.  Reject if we can't set settings.
+ *
+ * Forfill params: the DOMEvent passed.
+ * Reject params: (none)
+ *
+ * @return A deferred promise.
+ */
+function setBluetoothEnabledAndWait(aEnabled) {
+  return setBluetoothEnabled(aEnabled)
+    .then(waitForManagerEvent.bind(null, aEnabled ? "enabled" : "disabled"));
+}
+
+/* Get default adapter.
+ *
+ * Resolve if that default adapter is got, reject otherwise.
+ *
+ * Forfill params: a BluetoothAdapter instance.
+ * Reject params: a DOMError, or null if if there is no adapter ready yet.
+ *
+ * @return A deferred promise.
+ */
+function getDefaultAdapter() {
+  let deferred = Promise.defer();
+
+  let request = bluetoothManager.getDefaultAdapter();
+  request.onsuccess = function(aEvent) {
+    let adapter = aEvent.target.result;
+    if (!(adapter instanceof BluetoothAdapter)) {
+      ok(false, "no BluetoothAdapter ready yet.");
+      deferred.reject(null);
+      return;
+    }
+
+    ok(true, "BluetoothAdapter got.");
+    // TODO: We have an adapter instance now, but some of its attributes may
+    // still remain unassigned/out-dated.  Here we waste a few seconds to
+    // wait for the property changed events.
+    //
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=932914
+    window.setTimeout(function() {
+      deferred.resolve(adapter);
+    }, 3000);
+  };
+  request.onerror = function(aEvent) {
+    ok(false, "Failed to get default adapter.");
+    deferred.reject(aEvent.target.error);
+  };
+
+  return deferred.promise;
+}
+
 /* Flush permission settings and call |finish()|.
  */
 function cleanUp() {
@@ -169,4 +244,37 @@ function startBluetoothTestBase(aPermissions, aTestCaseMain) {
       ok(false, "Unhandled rejected promise.");
       cleanUp();
     });
+}
+
+function startBluetoothTest(aReenable, aTestCaseMain) {
+  startBluetoothTestBase(["settings-read", "settings-write"], function() {
+    let origEnabled, needEnable;
+
+    return getBluetoothEnabled()
+      .then(function(aEnabled) {
+        origEnabled = aEnabled;
+        needEnable = !aEnabled;
+        log("Original 'bluetooth.enabled' is " + origEnabled);
+
+        if (aEnabled && aReenable) {
+          log("  Disable 'bluetooth.enabled' ...");
+          needEnable = true;
+          return setBluetoothEnabledAndWait(false);
+        }
+      })
+      .then(function() {
+        if (needEnable) {
+          log("  Enable 'bluetooth.enabled' ...");
+          return setBluetoothEnabledAndWait(true)
+            .then(waitForManagerEvent.bind(null, "adapteradded"));
+        }
+      })
+      .then(getDefaultAdapter)
+      .then(aTestCaseMain)
+      .then(function() {
+        if (!origEnabled) {
+          return setBluetoothEnabledAndWait(false);
+        }
+      });
+  });
 }
