@@ -553,18 +553,6 @@ if CONFIG['MOZ_B2G_FM']:
         'FMRadio.webidl',
     ]
 
-if CONFIG['ENABLE_TESTS']:
-    TEST_WEBIDL_FILES += [
-        'TestDictionary.webidl',
-        'TestJSImplInheritanceGen.webidl',
-        'TestTypedef.webidl',
-    ]
-    PREPROCESSED_TEST_WEBIDL_FILES += [
-        'TestCodeGen.webidl',
-        'TestExampleGen.webidl',
-        'TestJSImplGen.webidl',
-    ]
-
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'CallGroupErrorEvent.webidl',
