@@ -501,11 +501,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
       common.stickyScrollRangeOuter() = mutant->GetStickyScrollRangeOuter();
       common.stickyScrollRangeInner() = mutant->GetStickyScrollRangeInner();
     }
-    common.isScrollbar() = mutant->GetIsScrollbar();
-    if (mutant->GetIsScrollbar()) {
-      common.scrollbarTargetContainerId() = mutant->GetScrollbarTargetContainerId();
-      common.scrollbarDirection() = mutant->GetScrollbarDirection();
-    }
+    common.scrollbarTargetContainerId() = mutant->GetScrollbarTargetContainerId();
+    common.scrollbarDirection() = mutant->GetScrollbarDirection();
     if (Layer* maskLayer = mutant->GetMaskLayer()) {
       common.maskLayerChild() = Shadow(maskLayer->AsShadowableLayer());
     } else {
