@@ -15,7 +15,6 @@
 
 #include "jsanalyze.h"
 
-#include "builtin/ParallelArray.h"
 #include "jit/ExecutionModeInlines.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
@@ -353,9 +352,6 @@ GetClassForProtoKey(JSProtoKey key)
 
       case JSProto_DataView:
         return &DataViewObject::class_;
-
-      case JSProto_ParallelArray:
-        return &ParallelArrayObject::class_;
 
       default:
         MOZ_ASSUME_UNREACHABLE("Bad proto key");

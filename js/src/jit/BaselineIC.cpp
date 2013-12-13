@@ -7868,19 +7868,6 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         return true;
     }
 
-    if (native == intrinsic_NewParallelArray || native == ParallelArrayObject::construct) {
-        res.set(ParallelArrayObject::newInstance(cx, TenuredObject));
-        if (!res)
-            return false;
-
-        types::TypeObject *type =
-            types::TypeScript::InitObject(cx, script, pc, JSProto_ParallelArray);
-        if (!type)
-            return false;
-        res->setType(type);
-        return true;
-    }
-
     return true;
 }
 

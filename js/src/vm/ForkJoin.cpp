@@ -191,7 +191,7 @@ namespace js {
 // of operation.
 enum ForkJoinMode {
     // WARNING: If you change this enum, you MUST update
-    // ForkJoinMode() in ParallelArray.js
+    // ForkJoinMode() in Utilities.js
 
     // The "normal" behavior: attempt parallel, fallback to
     // sequential.  If compilation is ongoing in a helper thread, then
