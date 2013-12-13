@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/FxAccountsConsts.js");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
   "resource://gre/modules/FxAccountsClient.jsm");
@@ -50,7 +50,9 @@ this.FxAccountsManager = {
     if (!aServerResponse || !aServerResponse.error || !aServerResponse.error.errno) {
       return;
     }
-    return SERVER_ERRNO_TO_ERROR[aServerResponse.error.errno];
+    let error = SERVER_ERRNO_TO_ERROR[aServerResponse.error.errno];
+    log.error(error);
+    return error;
   },
 
   _serverError: function(aServerResponse) {
@@ -69,18 +71,21 @@ this.FxAccountsManager = {
 
   _signInSignUp: function(aMethod, aAccountId, aPassword) {
     if (Services.io.offline) {
+      log.error(ERROR_OFFLINE);
       return Promise.reject({
         error: ERROR_OFFLINE
       });
     }
 
     if (!aAccountId) {
+      log.error(ERROR_INVALID_ACCOUNTID);
       return Promise.reject({
         error: ERROR_INVALID_ACCOUNTID
       });
     }
 
     if (!aPassword) {
+      log.error(ERROR_INVALID_PASSWORD);
       return Promise.reject({
         error: ERROR_INVALID_PASSWORD
       });
@@ -88,6 +93,7 @@ this.FxAccountsManager = {
 
     // Check that there is no signed in account first.
     if (this._activeSession) {
+      log.error(ERROR_ALREADY_SIGNED_IN_USER);
       return Promise.reject({
         error: ERROR_ALREADY_SIGNED_IN_USER,
         details: {
@@ -100,6 +106,7 @@ this.FxAccountsManager = {
     return this._fxAccounts.getSignedInUser().then(
       user => {
         if (user) {
+          log.error(ERROR_ALREADY_SIGNED_IN_USER);
           return Promise.reject({
             error: ERROR_ALREADY_SIGNED_IN_USER,
             details: {
@@ -113,6 +120,7 @@ this.FxAccountsManager = {
       user => {
         let error = this._getError(user);
         if (!user || !user.uid || !user.sessionToken || error) {
+          log.error(error ? error : ERROR_INTERNAL_INVALID_USER);
           return Promise.reject({
             error: error ? error : ERROR_INTERNAL_INVALID_USER,
             details: {
@@ -126,6 +134,8 @@ this.FxAccountsManager = {
         return this._fxAccounts.setSignedInUser(user, false).then(
           () => {
             this._activeSession = user;
+            log.debug("User signed in: " + JSON.stringify(this._user) +
+                      " - Account created " + (aMethod == "signUp"));
             return Promise.resolve({
               accountCreated: aMethod === "signUp",
               user: this._user
@@ -169,6 +179,7 @@ this.FxAccountsManager = {
                 details: result
               });
             }
+            log.debug("Signed out");
             return Promise.resolve();
           },
           reason => {
@@ -218,6 +229,7 @@ this.FxAccountsManager = {
         return this.verificationStatus(this._activeSession);
       }
 
+      log.debug("Account " + JSON.stringify(this._user));
       return Promise.resolve(this._user);
     }
 
@@ -225,6 +237,7 @@ this.FxAccountsManager = {
     return this._fxAccounts.getSignedInUser().then(
       user => {
         if (!user || !user.email) {
+          log.debug("No signed in account");
           return Promise.resolve(null);
         }
 
@@ -233,16 +246,20 @@ this.FxAccountsManager = {
         // we check this information with the server, update the stored
         // data if needed and finally return the account details.
         if (!user.verified && !Services.io.offline) {
+          log.debug("Unverified account");
           return this.verificationStatus(user);
         }
 
+        log.debug("Account " + JSON.stringify(this._user));
         return Promise.resolve(this._user);
       }
     );
   },
 
   queryAccount: function(aAccountId) {
+    log.debug("queryAccount " + aAccountId);
     if (Services.io.offline) {
+      log.error(ERROR_OFFLINE);
       return Promise.reject({
         error: ERROR_OFFLINE
       });
@@ -251,6 +268,7 @@ this.FxAccountsManager = {
     let deferred = Promise.defer();
 
     if (!aAccountId) {
+      log.error(ERROR_INVALID_ACCOUNTID);
       return Promise.reject({
         error: ERROR_INVALID_ACCOUNTID
       });
@@ -259,6 +277,7 @@ this.FxAccountsManager = {
     let client = this._createFxAccountsClient();
     return client.accountExists(aAccountId).then(
       result => {
+        log.debug("Account " + result ? "" : "does not" + " exists");
         let error = this._getError(result);
         if (error) {
           return Promise.reject({
@@ -276,7 +295,9 @@ this.FxAccountsManager = {
   },
 
   verificationStatus: function() {
+    log.debug("verificationStatus");
     if (!this._activeSession || !this._activeSession.sessionToken) {
+      log.error(ERROR_NO_TOKEN_SESSION);
       return Promise.reject({
         error: ERROR_NO_TOKEN_SESSION
       });
@@ -285,10 +306,12 @@ this.FxAccountsManager = {
     // There is no way to unverify an already verified account, so we just
     // return the account details of a verified account
     if (this._activeSession.verified) {
+      log.debug("Account already verified");
       return Promise.resolve(this._user);
     }
 
     if (Services.io.offline) {
+      log.error(ERROR_OFFLINE);
       return Promise.reject({
         error: ERROR_OFFLINE
       });
@@ -312,10 +335,12 @@ this.FxAccountsManager = {
           this._activeSession.verified = data.verified;
           return this._fxAccounts.setSignedInUser(this._activeSession).then(
             () => {
+              log.debug(JSON.stringify(this._user));
               return Promise.resolve(this._user);
             }
           );
         }
+        log.debug(JSON.stringify(this._user));
         return Promise.resolve(this._user);
       },
       reason => { return this._serverError(reason); }
@@ -323,13 +348,16 @@ this.FxAccountsManager = {
   },
 
   getAssertion: function(aAudience) {
+    log.debug("getAssertion " + aAudience);
     if (!aAudience) {
+      log.error(ERROR_INVALID_AUDIENCE);
       return Promise.reject({
         error: ERROR_INVALID_AUDIENCE
       });
     }
 
     if (Services.io.offline) {
+      log.error(ERROR_OFFLINE);
       return Promise.reject({
         error: ERROR_OFFLINE
       });
@@ -343,6 +371,7 @@ this.FxAccountsManager = {
             return this._getAssertion(aAudience);
           }
 
+          log.error(ERROR_UNVERIFIED_ACCOUNT);
           return Promise.reject({
             error: ERROR_UNVERIFIED_ACCOUNT,
             details: {
@@ -351,6 +380,7 @@ this.FxAccountsManager = {
           });
         }
 
+        log.debug("No signed in user");
         // If there is no currently signed in user, we trigger the signIn UI
         // flow.
         let ui = Cc["@mozilla.org/fxaccounts/fxaccounts-ui-glue;1"]
@@ -362,6 +392,8 @@ this.FxAccountsManager = {
             if (result && result.verified) {
               return this._getAssertion(aAudience);
             }
+
+            log.error(ERROR_UNVERIFIED_ACCOUNT);
             return Promise.reject({
               error: ERROR_UNVERIFIED_ACCOUNT,
               details: {
@@ -370,6 +402,7 @@ this.FxAccountsManager = {
             });
           },
           error => {
+            log.error(ERROR_UI_ERROR + " " + error);
             return Promise.reject({
               error: ERROR_UI_ERROR,
               details: error
