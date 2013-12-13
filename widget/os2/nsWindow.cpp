@@ -1334,10 +1334,9 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
-  nsRefPtr<gfxASurface> surface;
-  aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
-                    imgIContainer::FLAG_SYNC_DECODE,
-                    getter_AddRefs(surface));
+  nsRefPtr<gfxASurface> surface =
+    aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
+                      imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());

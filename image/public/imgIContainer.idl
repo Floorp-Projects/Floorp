@@ -55,6 +55,7 @@ native nsSize(nsSize);
 native Orientation(mozilla::image::Orientation);
 [ref] native TimeStamp(mozilla::TimeStamp);
 [ptr] native SVGImageContext(mozilla::SVGImageContext);
+native already_AddRefed_gfxASurface(already_AddRefed<gfxASurface>);
 
 
 /**
@@ -64,7 +65,7 @@ native Orientation(mozilla::image::Orientation);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(73340b79-e3ae-4f02-97d0-822db78017e5)]
+[scriptable, builtinclass, uuid(8b7db7dd-bfe9-40d3-9114-3a79c0658afd)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -172,7 +173,8 @@ interface imgIContainer : nsISupports
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety
    */
-  [noscript] gfxASurface getFrame(in uint32_t aWhichFrame,
+  [noscript, notxpcom] already_AddRefed_gfxASurface
+                         getFrame(in uint32_t aWhichFrame,
                                   in uint32_t aFlags);
 
   /**
