@@ -16,17 +16,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsConsts.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
-
-const DATA_FORMAT_VERSION = 1;
-const DEFAULT_STORAGE_FILENAME = "signedInUser.json";
-const ASSERTION_LIFETIME = 1000 * 60 * 5; // 5 minutes
-const KEY_LIFETIME = 1000 * 3600 * 12;    // 12 hours
-const CERT_LIFETIME = 1000 * 3600 * 6;    // 6 hours
-const POLL_SESSION = 1000 * 60 * 5;       // 5 minutes
-const POLL_STEP = 1000 * 3;               // 3 seconds
 
 // loglevel preference should be one of: "FATAL", "ERROR", "WARN", "INFO",
 // "CONFIG", "DEBUG", "TRACE" or "ALL". We will be logging error messages by
