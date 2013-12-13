@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<bindings id="testBindings" xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+  <binding id="testAllowScript">
+    <implementation>
+       <property name="someProp" onget="return 2;" readonly="true"></property>
+       <method name="someMethod"><body> return 3; </body></method>
+       <method name="startTest">
+         <body>
+         <![CDATA[
+           // Make sure we only get constructed when we're loaded from a domain
+           // with script enabled.
+           is(this.id, 'allow', "XBL should only be bound when the origin of the binding allows scripts");
+
+           var t = this;
+           doFinish = function() {
+             // Take a moment to make sure that other constructors don't run when they shouldn't.
+             if (t.id == 'allow')
+               setTimeout(SpecialPowers.wrap(window.parent).finish, 100);
+           }
+
+           onTestEvent = function(target) {
+             ok(true, 'called event handler');
+
+             // First, dispatch an event to the anonymous content. The event
+             // handlers on the AC should run, but they won't until bug 948000
+             // is fixed. So the check here is a todo().
+             var e = new MouseEvent('click');
+             document.getAnonymousNodes(target)[1].dispatchEvent(e);
+
+             // Now, dispatch a key event to test key handlers and move the test along.
+             var k = document.createEvent('KeyboardEvent');
+             k.initEvent('keyup', true, true);
+             target.dispatchEvent(k);
+           }
+
+           // Check the implementation.
+           is(this.someProp, 2, "Properties work");
+           is(this.someMethod(), 3, "Methods work");
+
+           // Kick over to the event handlers. This tests XBL event handlers,
+           // XBL key handlers, and event handlers on anonymous content.
+           this.dispatchEvent(new CustomEvent('testEvent'));
+         ]]>
+         </body>
+       </method>
+
+      <constructor>
+      <![CDATA[
+        win = XPCNativeWrapper.unwrap(window);
+        SpecialPowers = win.SpecialPowers;
+        ok = win.ok = SpecialPowers.wrap(window.parent).ok;
+        todo = win.todo = SpecialPowers.wrap(window.parent).todo;
+        is = win.is = SpecialPowers.wrap(window.parent).is;
+        info = win.info = SpecialPowers.wrap(window.parent).info;
+
+        info("Invoked constructor for " + this.id);
+
+        var t = this;
+        window.addEventListener('load', function loadListener() {
+          window.removeEventListener('load', loadListener);
+          // Wait two refresh-driver ticks to make sure that the constructor runs
+          // for both |allow| and |deny| if it's ever going to.
+          //
+          // See bug 944407 comment 37.
+          info("Invoked load listener for " + t.id);
+          window.requestAnimationFrame(function() { window.requestAnimationFrame(t.startTest.bind(t)); });
+        });
+      ]]>
+      </constructor>
+    </implementation>
+    <handlers>
+      <handler event="testEvent" action="onTestEvent(this)" allowuntrusted="true"/>
+      <handler event="keyup" action="ok(true, 'called key handler'); doFinish();" allowuntrusted="true"/>
+    </handlers>
+    <content>Anonymous Content<html:div onclick="todo(true, 'called event handler on ac, this needs bug 948000');"></html:div><html:b style="display:none"><children/></html:b></content>
+  </binding>
+</bindings>
