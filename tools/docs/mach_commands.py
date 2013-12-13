@@ -38,7 +38,14 @@ class Documentation(MachCommandBase):
         manager = SphinxManager(self.topsrcdir, os.path.join(self.topsrcdir,
             'tools', 'docs'), outdir)
 
-        reader = BuildReader(self.config_environment)
+        # We don't care about GYP projects, so don't process them. This makes
+        # scanning faster and may even prevent an exception.
+        def remove_gyp_dirs(sandbox):
+            sandbox['GYP_DIRS'][:] = []
+
+        reader = BuildReader(self.config_environment,
+            sandbox_post_eval_cb=remove_gyp_dirs)
+
         for sandbox in reader.walk_topsrcdir():
             for dest_dir, source_dir in sandbox['SPHINX_TREES'].items():
                 manager.add_tree(os.path.join(sandbox['RELATIVEDIR'],
