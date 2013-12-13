@@ -586,25 +586,24 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     size_t argDisp = 0;
 
     // Copy arguments.
-    if (f.explicitArgs) {
-        for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
-            MoveOperand from;
-            switch (f.argProperties(explicitArg)) {
-              case VMFunction::WordByValue:
-                if (f.argPassedInFloatReg(explicitArg))
-                    masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::FLOAT));
-                else
-                    masm.passABIArg(MoveOperand(argsBase, argDisp));
-                argDisp += sizeof(void *);
-                break;
-              case VMFunction::WordByRef:
-                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
-                argDisp += sizeof(void *);
-                break;
-              case VMFunction::DoubleByValue:
-              case VMFunction::DoubleByRef:
-                MOZ_ASSUME_UNREACHABLE("NYI: x64 callVM should not be used with 128bits values.");
-            }
+    for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
+        MoveOperand from;
+        switch (f.argProperties(explicitArg)) {
+          case VMFunction::WordByValue:
+            if (f.argPassedInFloatReg(explicitArg))
+                masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::DOUBLE);
+            else
+                masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+            argDisp += sizeof(void *);
+            break;
+          case VMFunction::WordByRef:
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
+                            MoveOp::GENERAL);
+            argDisp += sizeof(void *);
+            break;
+          case VMFunction::DoubleByValue:
+          case VMFunction::DoubleByRef:
+            MOZ_ASSUME_UNREACHABLE("NYI: x64 callVM should not be used with 128bits values.");
         }
     }
 
