@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'arch_utilities.cc',
     'bootstrap_compat.cc',
     'file_id.cc',
@@ -19,7 +19,7 @@ SOURCES += [
 # The host lib is used for dump_syms, and the target lib for the
 # crash reporter client.  Therefore, we don't need all the srcs in both.
 if CONFIG['MOZ_CRASHREPORTER']:
-    HOST_SOURCES += SOURCES
+    HOST_SOURCES += UNIFIED_SOURCES
     HOST_SOURCES += [
         'dump_syms.mm',
     ]

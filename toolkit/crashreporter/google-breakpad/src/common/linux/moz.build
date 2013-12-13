@@ -4,17 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'elfutils.cc',
-    'file_id.cc',
     'guid_creator.cc',
     'linux_libc_support.cc',
     'memory_mapped_file.cc',
     'safe_readlink.cc',
 ]
 
+# file_id.cc cannot be built in unified mode because it uses a custom STL_FLAGS
+SOURCES += [
+    'file_id.cc',
+]
+
 if CONFIG['OS_TARGET'] != 'Android':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'http_upload.cc',
     ]
 
