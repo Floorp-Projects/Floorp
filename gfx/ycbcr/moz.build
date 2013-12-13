@@ -7,12 +7,14 @@
 EXPORTS += [
     'chromium_types.h',
     'ycbcr_to_rgb565.h',
+    'YCbCrUtils.h',
     'yuv_convert.h',
     'yuv_row.h',
 ]
 
 UNIFIED_SOURCES += [
     'ycbcr_to_rgb565.cpp',
+    'YCbCrUtils.cpp',
     'yuv_convert.cpp',
     'yuv_row_c.cpp',
     'yuv_row_table.cpp',

@@ -1213,12 +1213,12 @@ IsCompilingAsmJS()
     IonContext *ictx = MaybeGetIonContext();
     return ictx && ictx->compartment == nullptr;
 }
-#endif
 
 static void
 AssumeUnreachable_(const char *output) {
     MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
+#endif
 
 void
 MacroAssembler::assumeUnreachable(const char *output)

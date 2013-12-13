@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/layers/TextureClientOGL.h"
+#include "SurfaceStream.h"
 #include "GLContext.h"                  // for GLContext, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/layers/ISurfaceAllocator.h"
@@ -64,6 +65,42 @@ bool
 SharedTextureClientOGL::IsAllocated() const
 {
   return mHandle != 0;
+}
+
+StreamTextureClientOGL::StreamTextureClientOGL(TextureFlags aFlags)
+  : TextureClient(aFlags)
+  , mStream(0)
+{
+}
+
+StreamTextureClientOGL::~StreamTextureClientOGL()
+{
+  // the data is owned externally.
+}
+
+bool
+StreamTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  if (!IsAllocated()) {
+    return false;
+  }
+
+  gfx::SurfaceStreamHandle handle = mStream->GetShareHandle();
+  aOutDescriptor = SurfaceStreamDescriptor(handle, false);
+  return true;
+}
+
+void
+StreamTextureClientOGL::InitWith(gfx::SurfaceStream* aStream)
+{
+  MOZ_ASSERT(!IsAllocated());
+  mStream = aStream;
+}
+
+bool
+StreamTextureClientOGL::IsAllocated() const
+{
+  return mStream != 0;
 }
 
 DeprecatedTextureClientSharedOGL::DeprecatedTextureClientSharedOGL(CompositableForwarder* aForwarder,
