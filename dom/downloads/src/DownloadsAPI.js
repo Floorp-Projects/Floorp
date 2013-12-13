@@ -198,6 +198,7 @@ function createDOMDownloadObject(aWindow, aDownload) {
 
 function DOMDownloadImpl() {
   debug("DOMDownloadImpl constructor ");
+
   this.wrappedJSObject = this;
   this.totalBytes = 0;
   this.currentBytes = 0;
@@ -205,8 +206,10 @@ function DOMDownloadImpl() {
   this.path = null;
   this.state = "stopped";
   this.contentType = null;
-  this.startTime = Date.now();
   this.error = null;
+
+  /* fields that require getters/setters */
+  this._startTime = new Date();
 
   /* private fields */
   this.id = null;
@@ -242,6 +245,19 @@ DOMDownloadImpl.prototype = {
 
   get onstatechange() {
     return this.__DOM_IMPL__.getEventHandler("onstatechange");
+  },
+
+  get startTime() {
+    return this._startTime;
+  },
+
+  set startTime(aStartTime) {
+    if (aStartTime instanceof Date) {
+      this._startTime = aStartTime;
+    }
+    else {
+      this._startTime = new Date(aStartTime);
+    }
   },
 
   _init: function(aWindow, aDownload) {
