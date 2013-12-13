@@ -16,7 +16,8 @@ namespace jit {
 
 // Provides constant time set insertion and removal, and fast linear
 // set operations such as intersection, difference, and union.
-// N.B. All set operations must be performed on sets with the same maximum.
+// N.B. All set operations must be performed on sets with the same number
+// of bits.
 class BitSet : private TempObject
 {
   public:
@@ -25,11 +26,11 @@ class BitSet : private TempObject
     }
 
   private:
-    BitSet(unsigned int max) :
-        max_(max),
+    BitSet(unsigned int numBits) :
+        numBits_(numBits),
         bits_(nullptr) {}
 
-    unsigned int max_;
+    unsigned int numBits_;
     uint32_t *bits_;
 
     static inline uint32_t bitForValue(unsigned int value) {
@@ -41,7 +42,7 @@ class BitSet : private TempObject
     }
 
     inline unsigned int numWords() const {
-        return RawLengthForBits(max_);
+        return RawLengthForBits(numBits_);
     }
 
     bool init(TempAllocator &alloc);
@@ -49,56 +50,56 @@ class BitSet : private TempObject
   public:
     class Iterator;
 
-    static BitSet *New(TempAllocator &alloc, unsigned int max);
+    static BitSet *New(TempAllocator &alloc, unsigned int numBits);
 
-    unsigned int getMax() const {
-        return max_;
+    unsigned int getNumBits() const {
+        return numBits_;
     }
 
     // O(1): Check if this set contains the given value.
     bool contains(unsigned int value) const {
         JS_ASSERT(bits_);
-        JS_ASSERT(value < max_);
+        JS_ASSERT(value < numBits_);
 
         return !!(bits_[wordForValue(value)] & bitForValue(value));
     }
 
-    // O(max): Check if this set contains any value.
+    // O(numBits): Check if this set contains any value.
     bool empty() const;
 
     // O(1): Insert the given value into this set.
     void insert(unsigned int value) {
         JS_ASSERT(bits_);
-        JS_ASSERT(value < max_);
+        JS_ASSERT(value < numBits_);
 
         bits_[wordForValue(value)] |= bitForValue(value);
     }
 
-    // O(max): Insert every element of the given set into this set.
+    // O(numBits): Insert every element of the given set into this set.
     void insertAll(const BitSet *other);
 
     // O(1): Remove the given value from this set.
     void remove(unsigned int value) {
         JS_ASSERT(bits_);
-        JS_ASSERT(value < max_);
+        JS_ASSERT(value < numBits_);
 
         bits_[wordForValue(value)] &= ~bitForValue(value);
     }
 
-    // O(max): Remove the every element of the given set from this set.
+    // O(numBits): Remove the every element of the given set from this set.
     void removeAll(const BitSet *other);
 
-    // O(max): Intersect this set with the given set.
+    // O(numBits): Intersect this set with the given set.
     void intersect(const BitSet *other);
 
-    // O(max): Intersect this set with the given set; return whether the
+    // O(numBits): Intersect this set with the given set; return whether the
     // intersection caused the set to change.
     bool fixedPointIntersect(const BitSet *other);
 
-    // O(max): Does inplace complement of the set.
+    // O(numBits): Does inplace complement of the set.
     void complement();
 
-    // O(max): Clear this set.
+    // O(numBits): Clear this set.
     void clear();
 
     uint32_t *raw() const {
@@ -137,7 +138,7 @@ class BitSet::Iterator
 
     inline Iterator& operator++(int dummy) {
         JS_ASSERT(more());
-        JS_ASSERT(index_ < set_.max_);
+        JS_ASSERT(index_ < set_.numBits_);
 
         index_++;
         value_ >>= 1;
@@ -158,12 +159,12 @@ class BitSet::Iterator
         index_ += numZeros;
         value_ >>= numZeros;
 
-        JS_ASSERT_IF(index_ < set_.max_, set_.contains(index_));
+        JS_ASSERT_IF(index_ < set_.numBits_, set_.contains(index_));
         return *this;
     }
 
     unsigned int operator *() {
-        JS_ASSERT(index_ < set_.max_);
+        JS_ASSERT(index_ < set_.numBits_);
         return index_;
     }
 };
