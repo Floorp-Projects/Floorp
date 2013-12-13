@@ -740,7 +740,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/browser.properties could not be loaded");
     nsXPIDLString title;
     if (bundle) {
-      bundle->GetStringFromName(NS_LITERAL_STRING("plainText.wordWrap").get(), getter_Copies(title));
+      bundle->GetStringFromName(MOZ_UTF16("plainText.wordWrap"), getter_Copies(title));
     }
     SetSelectedStyleSheetSet(title);
   }
