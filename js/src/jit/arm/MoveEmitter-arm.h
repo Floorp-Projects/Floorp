@@ -17,6 +17,9 @@ class CodeGenerator;
 
 class MoveEmitterARM
 {
+    typedef MoveResolver::Move Move;
+    typedef MoveResolver::MoveOperand MoveOperand;
+
     bool inCycle_;
     MacroAssemblerARMCompat &masm;
 
@@ -46,9 +49,9 @@ class MoveEmitterARM
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind);
-    void completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind);
-    void emit(const MoveOp &move);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
+    void emit(const Move &move);
 
   public:
     MoveEmitterARM(MacroAssemblerARMCompat &masm);

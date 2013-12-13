@@ -27,7 +27,7 @@ LIRGeneratorX86Shared::newLTableSwitch(const LAllocation &in, const LDefinition 
 LTableSwitchV *
 LIRGeneratorX86Shared::newLTableSwitchV(MTableSwitch *tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempDouble(), temp(), tableswitch);
+    return new(alloc()) LTableSwitchV(temp(), tempFloat(), temp(), tableswitch);
 }
 
 bool
@@ -333,7 +333,7 @@ LIRGeneratorX86Shared::lowerTruncateDToInt32(MTruncateToInt32 *ins)
     MDefinition *opd = ins->input();
     JS_ASSERT(opd->type() == MIRType_Double);
 
-    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempDouble();
+    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
     return define(new(alloc()) LTruncateDToInt32(useRegister(opd), maybeTemp), ins);
 }
 
@@ -343,6 +343,6 @@ LIRGeneratorX86Shared::lowerTruncateFToInt32(MTruncateToInt32 *ins)
     MDefinition *opd = ins->input();
     JS_ASSERT(opd->type() == MIRType_Float32);
 
-    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat32();
+    LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat();
     return define(new(alloc()) LTruncateFToInt32(useRegister(opd), maybeTemp), ins);
 }

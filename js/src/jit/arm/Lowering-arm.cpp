@@ -362,7 +362,7 @@ LIRGeneratorARM::newLTableSwitch(const LAllocation &in, const LDefinition &input
 LTableSwitchV *
 LIRGeneratorARM::newLTableSwitchV(MTableSwitch *tableswitch)
 {
-    return new(alloc()) LTableSwitchV(temp(), tempDouble(), tableswitch);
+    return new(alloc()) LTableSwitchV(temp(), tempFloat(), tableswitch);
 }
 
 bool

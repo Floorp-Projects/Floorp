@@ -767,7 +767,7 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
     }
 
     masm.setupUnalignedABICall(1, dest);
-    masm.passABIArg(src, MoveOp::DOUBLE);
+    masm.passABIArg(src);
     if (gen->compilingAsmJS())
         masm.callWithABI(AsmJSImm_ToInt32);
     else

@@ -28,9 +28,7 @@ StupidAllocator::stackLocation(uint32_t vreg)
     if (def->policy() == LDefinition::PRESET && def->output()->isArgument())
         return def->output();
 
-    return new(alloc()) LStackSlot(DefaultStackSlot(vreg),
-                                   def->type() == LDefinition::DOUBLE ||
-                                   def->type() == LDefinition::FLOAT32);
+    return new(alloc()) LStackSlot(DefaultStackSlot(vreg), def->type() == LDefinition::DOUBLE);
 }
 
 StupidAllocator::RegisterIndex
@@ -143,7 +141,7 @@ StupidAllocator::ensureHasRegister(LInstruction *ins, uint32_t vreg)
     }
 
     RegisterIndex best = allocateRegister(ins, vreg);
-    loadRegister(ins, vreg, best, virtualRegisters[vreg]->type());
+    loadRegister(ins, vreg, best);
 
     return registers[best].reg;
 }
@@ -164,7 +162,7 @@ StupidAllocator::allocateRegister(LInstruction *ins, uint32_t vreg)
     for (size_t i = 0; i < registerCount; i++) {
         AnyRegister reg = registers[i].reg;
 
-        if (reg.isFloat() != (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32))
+        if (reg.isFloat() != (def->type() == LDefinition::DOUBLE))
             continue;
 
         // Skip the register if it is in use for an allocated input or output.
@@ -192,7 +190,7 @@ StupidAllocator::syncRegister(LInstruction *ins, RegisterIndex index)
 
         uint32_t existing = registers[index].vreg;
         LAllocation *dest = stackLocation(existing);
-        input->addAfter(source, dest, registers[index].type);
+        input->addAfter(source, dest);
 
         registers[index].dirty = false;
     }
@@ -206,15 +204,14 @@ StupidAllocator::evictRegister(LInstruction *ins, RegisterIndex index)
 }
 
 void
-StupidAllocator::loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index, LDefinition::Type type)
+StupidAllocator::loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index)
 {
     // Load a vreg from its stack location to a register.
     LMoveGroup *input = getInputMoveGroup(ins->id());
     LAllocation *source = stackLocation(vreg);
     LAllocation *dest = new(alloc()) LAllocation(registers[index].reg);
-    input->addAfter(source, dest, type);
+    input->addAfter(source, dest);
     registers[index].set(vreg, ins);
-    registers[index].type = type;
 }
 
 StupidAllocator::RegisterIndex
@@ -313,7 +310,7 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
                 }
             }
 
-            group->add(source, dest, phi->getDef(0)->type());
+            group->add(source, dest);
         }
     }
 }
@@ -337,14 +334,14 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
             AnyRegister reg = ensureHasRegister(ins, vreg);
             alloc.replace(LAllocation(reg));
         } else if (use->policy() == LUse::FIXED) {
-            AnyRegister reg = GetFixedRegister(virtualRegisters[vreg], use);
+            AnyRegister reg = GetFixedRegister(virtualRegisters[use->virtualRegister()], use);
             RegisterIndex index = registerIndex(reg);
             if (registers[index].vreg != vreg) {
                 evictRegister(ins, index);
                 RegisterIndex existing = findExistingRegister(vreg);
                 if (existing != UINT32_MAX)
                     evictRegister(ins, existing);
-                loadRegister(ins, vreg, index, virtualRegisters[vreg]->type());
+                loadRegister(ins, vreg, index);
             }
             alloc.replace(LAllocation(reg));
         } else {
@@ -410,7 +407,6 @@ StupidAllocator::allocateForDefinition(LInstruction *ins, LDefinition *def)
                           : ins->getOperand(def->getReusedInput())->toRegister());
         evictRegister(ins, index);
         registers[index].set(vreg, ins, true);
-        registers[index].type = virtualRegisters[vreg]->type();
         def->setOutput(LAllocation(registers[index].reg));
     } else if (def->policy() == LDefinition::PRESET) {
         // The result must be a stack location.
@@ -419,7 +415,6 @@ StupidAllocator::allocateForDefinition(LInstruction *ins, LDefinition *def)
         // Find a register to hold the result of the instruction.
         RegisterIndex best = allocateRegister(ins, vreg);
         registers[best].set(vreg, ins, true);
-        registers[best].type = virtualRegisters[vreg]->type();
         def->setOutput(LAllocation(registers[best].reg));
     }
 }

@@ -1329,6 +1329,8 @@ CodeGeneratorX86Shared::visitUrshD(LUrshD *ins)
     return true;
 }
 
+typedef MoveResolver::MoveOperand MoveOperand;
+
 MoveOperand
 CodeGeneratorX86Shared::toMoveOperand(const LAllocation *a) const
 {

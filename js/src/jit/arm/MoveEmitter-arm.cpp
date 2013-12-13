@@ -58,7 +58,7 @@ MoveEmitterARM::spillSlot() const
 Operand
 MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
 {
-    if (operand.isMemoryOrEffectiveAddress()) {
+    if (operand.isMemory() || operand.isEffectiveAddress() || operand.isFloatAddress()) {
         if (operand.base() != StackPointer) {
             JS_ASSERT(operand.disp() < 1024 && operand.disp() > -1024);
             return Operand(operand.base(), operand.disp());
@@ -100,7 +100,7 @@ MoveEmitterARM::tempReg()
 }
 
 void
-MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -108,9 +108,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    switch (kind) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+    if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             FloatRegister temp = ScratchFloatReg;
             masm.ma_vldr(toOperand(to, true), temp);
@@ -118,8 +116,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
         } else {
             masm.ma_vstr(to.floatReg(), cycleSlot());
         }
-        break;
-      case MoveOp::GENERAL:
+    } else {
         // an non-vfp value
         if (to.isMemory()) {
             Register temp = tempReg();
@@ -133,14 +130,11 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
             }
             masm.ma_str(to.reg(), cycleSlot());
         }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 
 void
-MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -148,9 +142,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    switch (kind) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+    if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             FloatRegister temp = ScratchFloatReg;
             masm.ma_vldr(cycleSlot(), temp);
@@ -158,8 +150,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
         } else {
             masm.ma_vldr(cycleSlot(), to.floatReg());
         }
-        break;
-      case MoveOp::GENERAL:
+    } else {
         if (to.isMemory()) {
             Register temp = tempReg();
             masm.ma_ldr(cycleSlot(), temp);
@@ -171,9 +162,6 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             }
             masm.ma_ldr(cycleSlot(), to.reg());
         }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 
@@ -205,7 +193,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             MOZ_ASSUME_UNREACHABLE("strange move!");
         }
     } else if (to.isGeneralReg()) {
-        JS_ASSERT(from.isMemoryOrEffectiveAddress());
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
         if (from.isMemory())
             masm.ma_ldr(toOperand(from, false), to.reg());
         else
@@ -214,7 +202,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
         // Memory to memory gpr move.
         Register reg = tempReg();
 
-        JS_ASSERT(from.isMemoryOrEffectiveAddress());
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
         if (from.isMemory())
             masm.ma_ldr(toOperand(from, false), reg);
         else
@@ -244,7 +232,7 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterARM::emit(const MoveOp &move)
+MoveEmitterARM::emit(const Move &move)
 {
     const MoveOperand &from = move.from();
     const MoveOperand &to = move.to();
@@ -260,17 +248,10 @@ MoveEmitterARM::emit(const MoveOp &move)
         inCycle_ = true;
     }
 
-    switch (move.kind()) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+    if (move.kind() == Move::DOUBLE)
         emitDoubleMove(from, to);
-        break;
-      case MoveOp::GENERAL:
+    else
         emitMove(from, to);
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
-    }
 }
 
 void
