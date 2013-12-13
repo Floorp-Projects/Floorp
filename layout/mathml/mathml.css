@@ -143,53 +143,6 @@ mlabeledtr > mtd:first-child {
     display: none;
 }
 
-/***********************/
-/* -- mtd: columnalign */
-
-mtd[_moz-math-columnalign="left"],
-mtd[columnalign="left"] {
-  text-align: left;
-}
-mtd[_moz-math-columnalign="right"],
-mtd[columnalign="right"] {
-  text-align: right;
-}
-mtd[_moz-math-columnalign="center"],
-mtd[columnalign="center"] {
-  text-align: -moz-center;
-}
-
-/*************************/
-/* -- mtr, mtd: rowalign */
-
-mtr[_moz-math-rowalign="top"],
-mtr[rowalign="top"],
-mtd[rowalign="top"] {
-  vertical-align: top;
-}
-mtr[_moz-math-rowalign="bottom"],
-mtr[rowalign="bottom"],
-mtd[rowalign="bottom"] {
-  vertical-align: bottom;
-}
-mtr[_moz-math-rowalign="center"],
-mtr[rowalign="center"],
-mtd[rowalign="center"] {
-  vertical-align: middle;
-}
-mtr[_moz-math-rowalign="baseline"],
-mtr[rowalign="baseline"],
-mtd[rowalign="baseline"] {
-  vertical-align: baseline;
-}
-/* -- not yet supported --
-mtr[_moz-math-rowalign="axis"],
-mtr[rowalign="axis"],
-mtd[rowalign="axis"] {
-  vertical-align: mathline;
-}
-*/
-
 /**********************************************************************/
 /* rules to achieve the default spacing between cells. The back-end code
    will set the internal attributes depending on the cell's position.
@@ -232,32 +185,6 @@ mtable[frame="solid"] > mtr > mtd:last-child,
 mtable[frame="dashed"] > mtr > mtd:last-child {
   padding-right: 0.4em; /* framespacing.right */
 }
-
-/**********************************************************************/
-/* internal settings to support 'rowlines' and 'columnlines'. To
-   achieve the recommended behavior, the back-end code will avoid setting
-   unsuitable rules on the cells on the first row and the first column.
-   In general, however, authors can use the 'border' property of CSS to
-   achieve varying effects down to the level of the table cell. */
-mtr[_moz-math-rowline="none"] > mtd {
-  border-top: none;
-}
-mtr[_moz-math-rowline="solid"] > mtd {
-  border-top: solid thin;
-}
-mtr[_moz-math-rowline="dashed"] > mtd {
-  border-top: dashed thin;
-}
-mtd[_moz-math-columnline="none"] {
-  border-left: none;
-}
-mtd[_moz-math-columnline="solid"] {
-  border-left: solid thin;
-}
-mtd[_moz-math-columnline="dashed"] {
-  border-left: dashed thin;
-}
-
 
 /**************************************************************************/
 /* Style used for stretchy symbols *must* be normal to avoid misaligments */
