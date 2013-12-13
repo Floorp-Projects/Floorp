@@ -363,18 +363,18 @@ LInstruction::initSafepoint(TempAllocator &alloc)
 }
 
 bool
-LMoveGroup::add(LAllocation *from, LAllocation *to)
+LMoveGroup::add(LAllocation *from, LAllocation *to, LDefinition::Type type)
 {
 #ifdef DEBUG
     JS_ASSERT(*from != *to);
     for (size_t i = 0; i < moves_.length(); i++)
         JS_ASSERT(*to != *moves_[i].to());
 #endif
-    return moves_.append(LMove(from, to));
+    return moves_.append(LMove(from, to, type));
 }
 
 bool
-LMoveGroup::addAfter(LAllocation *from, LAllocation *to)
+LMoveGroup::addAfter(LAllocation *from, LAllocation *to, LDefinition::Type type)
 {
     // Transform the operands to this move so that performing the result
     // simultaneously with existing moves in the group will have the same
@@ -392,12 +392,12 @@ LMoveGroup::addAfter(LAllocation *from, LAllocation *to)
 
     for (size_t i = 0; i < moves_.length(); i++) {
         if (*to == *moves_[i].to()) {
-            moves_[i] = LMove(from, to);
+            moves_[i] = LMove(from, to, type);
             return true;
         }
     }
 
-    return add(from, to);
+    return add(from, to, type);
 }
 
 void
