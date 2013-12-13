@@ -149,12 +149,14 @@ LIRGeneratorShared::defineReturn(LInstruction *lir, MDefinition *mir)
 #endif
         break;
       case MIRType_Float32:
+        lir->setDef(0, LDefinition(vreg, LDefinition::FLOAT32, LFloatReg(ReturnFloatReg)));
+        break;
       case MIRType_Double:
         lir->setDef(0, LDefinition(vreg, LDefinition::DOUBLE, LFloatReg(ReturnFloatReg)));
         break;
       default:
         LDefinition::Type type = LDefinition::TypeFrom(mir->type());
-        JS_ASSERT(type != LDefinition::DOUBLE);
+        JS_ASSERT(type != LDefinition::DOUBLE && type != LDefinition::FLOAT32);
         lir->setDef(0, LDefinition(vreg, type, LGeneralReg(ReturnReg)));
         break;
     }
@@ -421,7 +423,13 @@ LIRGeneratorShared::tempFixed(Register reg)
 }
 
 LDefinition
-LIRGeneratorShared::tempFloat()
+LIRGeneratorShared::tempFloat32()
+{
+    return temp(LDefinition::FLOAT32);
+}
+
+LDefinition
+LIRGeneratorShared::tempDouble()
 {
     return temp(LDefinition::DOUBLE);
 }
