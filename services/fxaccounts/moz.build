@@ -5,7 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TEST_DIRS += ['tests']
+
 EXTRA_JS_MODULES += [
   'FxAccounts.jsm',
-  'FxAccountsClient.jsm'
+  'FxAccountsClient.jsm',
+  'FxAccountsConsts.js'
 ]
+
+# For now, we will only be using the FxA manager in B2G.
+if CONFIG['MOZ_B2G']:
+  EXTRA_JS_MODULES += ['FxAccountsManager.jsm']
