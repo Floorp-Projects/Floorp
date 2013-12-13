@@ -12,7 +12,7 @@ using namespace js;
 using namespace jit;
 
 static void
-AnalyzeLsh(TempAllocator &alloc, MBasicBlock *block, MLsh *lsh)
+AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
 {
     if (lsh->specialization() != MIRType_Int32)
         return;
@@ -86,7 +86,7 @@ AnalyzeLsh(TempAllocator &alloc, MBasicBlock *block, MLsh *lsh)
 
     MEffectiveAddress *eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
-    block->insertAfter(last, eaddr);
+    last->block()->insertAfter(last, eaddr);
 }
 
 // This analysis converts patterns of the form:
@@ -109,7 +109,7 @@ EffectiveAddressAnalysis::analyze()
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
             if (i->isLsh())
-                AnalyzeLsh(graph_.alloc(), *block, i->toLsh());
+                AnalyzeLsh(graph_.alloc(), i->toLsh());
         }
     }
     return true;
