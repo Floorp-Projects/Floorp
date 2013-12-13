@@ -91,4 +91,11 @@ WaiveXrayWrapper::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
            WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
 }
 
+bool
+WaiveXrayWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper, MutableHandleObject protop)
+{
+    return CrossCompartmentWrapper::getPrototypeOf(cx, wrapper, protop) &&
+           (!protop || WrapperFactory::WaiveXrayAndWrap(cx, protop));
+}
+
 }

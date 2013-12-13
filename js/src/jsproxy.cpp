@@ -516,6 +516,19 @@ DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandle
     return true;
 }
 
+bool
+DirectProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop)
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::getProto(cx, target, protop);
+}
+
+bool
+DirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp)
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::setProto(cx, target, proto, bp);
+}
 
 bool
 DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,

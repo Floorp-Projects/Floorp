@@ -75,18 +75,8 @@ WrapperFactory::CreateXrayWaiver(JSContext *cx, HandleObject obj)
     MOZ_ASSERT(!GetXrayWaiver(obj));
     XPCWrappedNativeScope *scope = GetObjectScope(obj);
 
-    // Get a waiver for the proto.
-    RootedObject proto(cx);
-    if (!js::GetObjectProto(cx, obj, &proto))
-        return nullptr;
-    if (proto && !(proto = WaiveXray(cx, proto)))
-        return nullptr;
-
-    // Create the waiver.
     JSAutoCompartment ac(cx, obj);
-    if (!JS_WrapObject(cx, &proto))
-        return nullptr;
-    JSObject *waiver = Wrapper::New(cx, obj, proto,
+    JSObject *waiver = Wrapper::New(cx, obj,
                                     JS_GetGlobalForObject(cx, obj),
                                     &XrayWaiver);
     if (!waiver)
@@ -409,10 +399,6 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     XrayType xrayType = GetXrayType(obj);
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;
 
-    // By default we use the wrapped proto of the underlying object as the
-    // prototype for our wrapper, but we may select something different below.
-    RootedObject proxyProto(cx, wrappedProto);
-
     Wrapper *wrapper;
     CompartmentPrivate *targetdata = EnsureCompartmentPrivate(target);
 
@@ -498,10 +484,10 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
 
     DEBUG_CheckUnwrapSafety(obj, wrapper, origin, target);
 
-    if (existing && proxyProto == wrappedProto)
+    if (existing)
         return Wrapper::Renew(cx, existing, obj, wrapper);
 
-    return Wrapper::New(cx, obj, proxyProto, parent, wrapper);
+    return Wrapper::New(cx, obj, parent, wrapper);
 }
 
 JSObject *
@@ -549,10 +535,22 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, MutableHandleValue vp)
     if (vp.isPrimitive())
         return JS_WrapValue(cx, vp);
 
-    JSObject *obj = js::UncheckedUnwrap(&vp.toObject());
+    RootedObject obj(cx, &vp.toObject());
+    if (!WaiveXrayAndWrap(cx, &obj))
+        return false;
+
+    vp.setObject(*obj);
+    return true;
+}
+
+bool
+WrapperFactory::WaiveXrayAndWrap(JSContext *cx, MutableHandleObject argObj)
+{
+    MOZ_ASSERT(argObj);
+    RootedObject obj(cx, js::UncheckedUnwrap(argObj));
     MOZ_ASSERT(!js::IsInnerObject(obj));
     if (js::IsObjectInContextCompartment(obj, cx)) {
-        vp.setObject(*obj);
+        argObj.set(obj);
         return true;
     }
 
@@ -570,24 +568,23 @@ WrapperFactory::WaiveXrayAndWrap(JSContext *cx, MutableHandleValue vp)
     if (!obj)
         return false;
 
-    vp.setObject(*obj);
-    return JS_WrapValue(cx, vp);
+    if (!JS_WrapObject(cx, &obj))
+        return false;
+    argObj.set(obj);
+    return true;
 }
 
 JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
 {
     RootedObject obj(cx, objArg);
-    RootedObject proto(cx);
 
     // If we're not allowing XBL scopes, that means we're running as a remote
     // XUL domain, in which we can't have SOWs. We should never be called in
     // that case.
     MOZ_ASSERT(xpc::AllowXBLScope(js::GetContextCompartment(cx)));
-    if (!JS_GetPrototype(cx, obj, &proto))
-        return nullptr;
     JSObject *wrapperObj =
-        Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
+        Wrapper::New(cx, obj, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
                      Opaque>::singleton);
     return wrapperObj;
@@ -603,11 +600,8 @@ WrapperFactory::IsComponentsObject(JSObject *obj)
 JSObject *
 WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
 {
-    RootedObject proto(cx);
-    if (!JS_GetPrototype(cx, obj, &proto))
-        return nullptr;
     JSObject *wrapperObj =
-        Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
+        Wrapper::New(cx, obj, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>::singleton);
 
     return wrapperObj;
