@@ -2470,7 +2470,7 @@ public:
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
+    NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const XPTMethodDescriptor *info,
@@ -2533,6 +2533,7 @@ protected:
                    nsXPCWrappedJS* root,
                    nsISupports* aOuter);
 
+    bool CanSkip();
     void Destroy();
     void Unlink();
 
