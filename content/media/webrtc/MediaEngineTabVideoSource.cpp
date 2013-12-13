@@ -6,6 +6,7 @@
 #include "nsPresContext.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "gfx2DGlue.h"
 #include "ImageContainer.h"
 #include "Layers.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -154,8 +155,8 @@ NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, 
   if (delta > 0) {
     // nullptr images are allowed
     if (image) {
-      gfxIntSize size = image->GetSize();
-      segment.AppendFrame(image.forget(), delta, size);
+      gfx::IntSize size = image->GetSize();
+      segment.AppendFrame(image.forget(), delta, gfx::ThebesIntSize(size));
     } else {
       segment.AppendFrame(nullptr, delta, gfxIntSize(0,0));
     }

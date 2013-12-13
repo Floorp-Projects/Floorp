@@ -37,7 +37,7 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
      * script in the context of another frame and the frame type is determined
      * by the context.
      */
-    flags_ = type | HAS_SCOPECHAIN | HAS_BLOCKCHAIN;
+    flags_ = type | HAS_SCOPECHAIN;
 
     JSObject *callee = nullptr;
     if (!(flags_ & (GLOBAL))) {
@@ -81,7 +81,6 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
     prev_ = nullptr;
     prevpc_ = nullptr;
     prevsp_ = nullptr;
-    blockChain_ = nullptr;
 
     JS_ASSERT_IF(evalInFramePrev, isDebuggerFrame());
     evalInFramePrev_ = evalInFramePrev;
@@ -123,9 +122,6 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
         if (doPostBarrier)
             HeapValue::writeBarrierPost(*dst, dst);
     }
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
@@ -153,27 +149,6 @@ StackFrame::writeBarrierPost()
     }
     if (hasReturnValue())
         HeapValue::writeBarrierPost(rval_, &rval_);
-}
-
-JSGenerator *
-StackFrame::maybeSuspendedGenerator(JSRuntime *rt)
-{
-    /*
-     * A suspended generator's frame is embedded inside the JSGenerator object
-     * and is not currently running.
-     */
-    if (!isGeneratorFrame() || !isSuspended())
-        return nullptr;
-
-    /*
-     * Once we know we have a suspended generator frame, there is a static
-     * offset from the frame's snapshot to beginning of the JSGenerator.
-     */
-    char *vp = reinterpret_cast<char *>(generatorArgsSnapshotBegin());
-    char *p = vp - offsetof(JSGenerator, stackSnapshot);
-    JSGenerator *gen = reinterpret_cast<JSGenerator *>(p);
-    JS_ASSERT(gen->fp == this);
-    return gen;
 }
 
 bool
@@ -297,7 +272,6 @@ void
 StackFrame::epilogue(JSContext *cx)
 {
     JS_ASSERT(!isYielding());
-    JS_ASSERT(!hasBlockChain());
 
     RootedScript script(cx, this->script());
     probes::ExitScript(cx, script, script->function(), hasPushedSPSFrame());
@@ -351,39 +325,23 @@ StackFrame::epilogue(JSContext *cx)
 bool
 StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
 {
-    JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
+    JS_ASSERT (block.needsClone());
 
-    if (block.needsClone()) {
-        Rooted<StaticBlockObject *> blockHandle(cx, &block);
-        ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
-        if (!clone)
-            return false;
+    Rooted<StaticBlockObject *> blockHandle(cx, &block);
+    ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
+    if (!clone)
+        return false;
 
-        pushOnScopeChain(*clone);
+    pushOnScopeChain(*clone);
 
-        blockChain_ = blockHandle;
-    } else {
-        blockChain_ = &block;
-    }
-
-    flags_ |= HAS_BLOCKCHAIN;
     return true;
 }
 
 void
 StackFrame::popBlock(JSContext *cx)
 {
-    JS_ASSERT(hasBlockChain());
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onPopBlock(cx, this);
-
-    if (blockChain_->needsClone()) {
-        JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
-        popOffScopeChain();
-    }
-
-    blockChain_ = blockChain_->enclosingBlock();
+    JS_ASSERT(scopeChain_->is<ClonedBlockObject>());
+    popOffScopeChain();
 }
 
 void
@@ -1284,8 +1242,7 @@ AbstractFramePtr::hasPushedSPSFrame() const
 
 #ifdef DEBUG
 void
-js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
-                        StaticBlockObject *maybeBlock, unsigned i)
+js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i)
 {
     if (!checkAliasing)
         return;
@@ -1294,13 +1251,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
     if (i < script->nfixed()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
-        unsigned depth = i - script->nfixed();
-        for (StaticBlockObject *b = maybeBlock; b; b = b->enclosingBlock()) {
-            if (b->containsVarAtDepth(depth)) {
-                JS_ASSERT(!b->isAliased(depth - b->stackDepth()));
-                break;
-            }
-        }
+        // FIXME: The callers of this function do not easily have the PC of the
+        // current frame, and so they do not know the block scope.
     }
 }
 #endif

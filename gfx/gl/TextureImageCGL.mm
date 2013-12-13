@@ -108,7 +108,7 @@ TextureImageCGL::FinishedSurfaceUpload()
 
 already_AddRefed<TextureImage>
 CreateTextureImageCGL(GLContext* gl,
-                      const nsIntSize& aSize,
+                      const gfx::IntSize& aSize,
                       TextureImage::ContentType aContentType,
                       GLenum aWrapMode,
                       TextureImage::Flags aFlags,

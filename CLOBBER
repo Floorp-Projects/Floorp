@@ -18,4 +18,9 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 887836 - webidl changes require a Windows clobber.
+# Are you updating CLOBBER because you think it's needed for your WebIDL
+# changes to stick? As of bug 928195, this shouldn't be necessary! Please
+# don't change CLOBBER for WebIDL changes any more.
+Bug 928195 rewrote WebIDL build system integration from the ground up. This
+will hopefully be the last required clobber due to WebIDLs poorly interacting
+with the build system.

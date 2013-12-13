@@ -2454,8 +2454,8 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
     IonSpew(IonSpew_Invalidate, "END invalidating activation");
 }
 
-static void
-StopOffThreadCompilation(JSCompartment *comp)
+void
+jit::StopAllOffThreadCompilations(JSCompartment *comp)
 {
     if (!comp->jitCompartment())
         return;
@@ -2467,7 +2467,7 @@ void
 jit::InvalidateAll(FreeOp *fop, Zone *zone)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        StopOffThreadCompilation(comp);
+        StopAllOffThreadCompilations(comp);
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone) {
@@ -2845,10 +2845,10 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
     FreeOp *fop = rt->defaultFreeOp();
 
     if (comp_) {
-        StopOffThreadCompilation(comp_);
+        StopAllOffThreadCompilations(comp_);
     } else {
         for (CompartmentsInZoneIter comp(zone_); !comp.done(); comp.next())
-            StopOffThreadCompilation(comp);
+            StopAllOffThreadCompilations(comp);
     }
 
     if (invalidateStack) {

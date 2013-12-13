@@ -15,7 +15,9 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 
+#include "nsDataHashtable.h"
 #include "nsFrameMessageManager.h"
+#include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "nsIDOMGeoPositionCallback.h"
@@ -27,7 +29,7 @@ class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
 class nsIMemoryReporter;
-template<class KeyClass,class DataType> class nsDataHashtable;
+class ParentIdleListener;
 
 namespace mozilla {
 
@@ -510,6 +512,9 @@ private:
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
+    virtual bool RecvAddIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
+    virtual bool RecvRemoveIdleObserver(const uint64_t& observerId, const uint32_t& aIdleTimeInS);
+
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
@@ -559,9 +564,25 @@ private:
 
     nsRefPtr<nsConsoleService>  mConsoleService;
     nsConsoleService* GetConsoleService();
+
+    nsDataHashtable<nsUint64HashKey, nsCOMPtr<ParentIdleListener> > mIdleListeners;
 };
 
 } // namespace dom
 } // namespace mozilla
+
+class ParentIdleListener : public nsIObserver {
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  ParentIdleListener(mozilla::dom::ContentParent* aParent, uint64_t aObserver)
+    : mParent(aParent), mObserver(aObserver)
+  {}
+  virtual ~ParentIdleListener() {}
+private:
+  nsRefPtr<mozilla::dom::ContentParent> mParent;
+  uint64_t mObserver;
+};
 
 #endif
