@@ -94,49 +94,12 @@ class GlobalHistory {
         GeckoAppShell.notifyUriVisited(uri);
     }
 
-    // Logic ported from nsNavHistory::CanAddURI.
-    // http://mxr.mozilla.org/mozilla-central/source/toolkit/components/places/nsNavHistory.cpp#1272
-    private boolean canAddURI(String uri) {
-        if (uri == null || uri.length() == 0)
-            return false;
-
-        // First, heck the most common cases (HTTP, HTTPS) to avoid most of the work.
-        if (uri.startsWith("http:") || uri.startsWith("https:"))
-            return true;
-
-        String scheme = Uri.parse(uri).getScheme();
-        if (scheme == null)
-            return false;
-
-        // Now check for all bad things.
-        if (scheme.equals("about") ||
-            scheme.equals("imap") ||
-            scheme.equals("news") ||
-            scheme.equals("mailbox") ||
-            scheme.equals("moz-anno") ||
-            scheme.equals("view-source") ||
-            scheme.equals("chrome") ||
-            scheme.equals("resource") ||
-            scheme.equals("data") ||
-            scheme.equals("wyciwyg") ||
-            scheme.equals("javascript"))
-            return false;
-
-        return true;
-    }
-
     public void add(String uri) {
-        if (!canAddURI(uri))
-            return;
-
         BrowserDB.updateVisitedHistory(GeckoAppShell.getContext().getContentResolver(), uri);
         addToGeckoOnly(uri);
     }
 
     public void update(String uri, String title) {
-        if (!canAddURI(uri))
-            return;
-
         BrowserDB.updateHistoryTitle(GeckoAppShell.getContext().getContentResolver(), uri, title);
     }
 
