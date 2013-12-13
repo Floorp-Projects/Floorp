@@ -491,7 +491,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
     receiveMessage: function(msg) {
       if (DEBUG) debug("setRadioEnabled: receiveMessage: " + JSON.stringify(msg));
       this.pendingMessages.push(msg);
-      if (this.pendingMessages.length === 1) {
+      if (this.pendingMessages.length === 1 && !this.isDeactivatingDataCalls()) {
         this._processNextMessage();
       }
     },
@@ -540,7 +540,6 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
       } else {
         this.request = (function() {
           radioInterface.receiveMessage(msg);
-          this._processNextMessage();
         }).bind(this);
 
         // In some DSDS architecture with only one modem, toggling one radio may
@@ -596,6 +595,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
         this.request();
         this.request = null;
       }
+      this._processNextMessage();
     }
   };
 });
