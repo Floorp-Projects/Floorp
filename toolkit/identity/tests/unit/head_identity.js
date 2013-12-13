@@ -34,11 +34,13 @@ XPCOMUtils.defineLazyServiceGetter(this,
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+const TEST_MESSAGE_MANAGER = "Mr McFeeley";
 const TEST_URL = "https://myfavoritebacon.com";
 const TEST_URL2 = "https://myfavoritebaconinacan.com";
 const TEST_USER = "user@mozilla.com";
 const TEST_PRIVKEY = "fake-privkey";
 const TEST_CERT = "fake-cert";
+const TEST_ASSERTION = "face-assertion";
 const TEST_IDPPARAMS = {
   domain: "myfavoriteflan.com",
   authentication: "/foo/authenticate.html",
@@ -74,12 +76,36 @@ function mock_doc(aIdentity, aOrigin, aDoFunc) {
   mockedDoc.loggedInUser = aIdentity;
   mockedDoc.origin = aOrigin;
   mockedDoc['do'] = aDoFunc;
+  mockedDoc._mm = TEST_MESSAGE_MANAGER;
   mockedDoc.doReady = partial(aDoFunc, 'ready');
   mockedDoc.doLogin = partial(aDoFunc, 'login');
   mockedDoc.doLogout = partial(aDoFunc, 'logout');
   mockedDoc.doError = partial(aDoFunc, 'error');
   mockedDoc.doCancel = partial(aDoFunc, 'cancel');
   mockedDoc.doCoffee = partial(aDoFunc, 'coffee');
+  mockedDoc.childProcessShutdown = partial(aDoFunc, 'child-process-shutdown');
+
+  mockedDoc.RP = mockedDoc;
+
+  return mockedDoc;
+}
+
+function mock_fxa_rp(aIdentity, aOrigin, aDoFunc) {
+  let mockedDoc = {};
+  mockedDoc.id = uuid();
+  mockedDoc.emailHint = aIdentity;
+  mockedDoc.origin = aOrigin;
+  mockedDoc.wantIssuer = "firefox-accounts";
+  mockedDoc._mm = TEST_MESSAGE_MANAGER;
+
+  mockedDoc.doReady = partial(aDoFunc, "ready");
+  mockedDoc.doLogin = partial(aDoFunc, "login");
+  mockedDoc.doLogout = partial(aDoFunc, "logout");
+  mockedDoc.doError = partial(aDoFunc, 'error');
+  mockedDoc.doCancel = partial(aDoFunc, 'cancel');
+  mockedDoc.childProcessShutdown = partial(aDoFunc, 'child-process-shutdown');
+
+  mockedDoc.RP = mockedDoc;
 
   return mockedDoc;
 }
@@ -181,4 +207,24 @@ function setup_provisioning(identity, afterSetupCallback, doneProvisioningCallba
 }
 
 // Switch debug messages on by default
+let initialPrefDebugValue = false;
+try {
+  initialPrefDebugValue = Services.prefs.getBoolPref("toolkit.identity.debug");
+} catch(noPref) {}
 Services.prefs.setBoolPref("toolkit.identity.debug", true);
+
+// Switch on firefox accounts
+let initialPrefFXAValue = false;
+try {
+  initialPrefFXAValue = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
+} catch(noPref) {}
+Services.prefs.setBoolPref("identity.fxaccounts.enabled", true);
+
+// after execution, restore prefs
+do_register_cleanup(function() {
+  log("restoring prefs to their initial values");
+  Services.prefs.setBoolPref("toolkit.identity.debug", initialPrefDebugValue);
+  Services.prefs.setBoolPref("identity.fxaccounts.enabled", initialPrefFXAValue);
+});
+
+

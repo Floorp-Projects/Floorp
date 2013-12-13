@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetter(this, "MinimalIDService",
@@ -5,6 +8,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "MinimalIDService",
                                   "IdentityService");
 
 Cu.import("resource://gre/modules/identity/LogUtils.jsm");
+Cu.import("resource://gre/modules/DOMIdentity.jsm");
 
 function log(...aMessageArgs) {
   Logger.log.apply(Logger, ["test_minimalidentity"].concat(aMessageArgs));
@@ -164,6 +168,40 @@ function test_unwatchBeforeWatch() {
   run_next_test();
 }
 
+/*
+ * Test that the RP flow is cleaned up on child process shutdown
+ */
+
+function test_childProcessShutdown() {
+  do_test_pending();
+  let UNIQUE_MESSAGE_MANAGER = "i am a beautiful snowflake";
+  let initialRPCount = Object.keys(MinimalIDService.RP._rpFlows).length;
+
+  let mockedDoc = mock_doc(null, TEST_URL, (action, params) => {
+    if (action == "child-process-shutdown") {
+      // since there's no actual dom window connection, we have to
+      // do this bit manually here.
+      MinimalIDService.RP.childProcessShutdown(UNIQUE_MESSAGE_MANAGER);
+    }
+  });
+  mockedDoc._mm = UNIQUE_MESSAGE_MANAGER;
+
+  makeObserver("identity-controller-watch", function (aSubject, aTopic, aData) {
+    DOMIdentity._childProcessShutdown(UNIQUE_MESSAGE_MANAGER);
+  });
+
+  makeObserver("identity-child-process-shutdown", (aTopic, aSubject, aData) => {
+    do_check_eq(Object.keys(MinimalIDService.RP._rpFlows).length, initialRPCount);
+    do_test_finished();
+    run_next_test();
+  });
+
+  // fake a dom window context
+  DOMIdentity.newContext(mockedDoc, UNIQUE_MESSAGE_MANAGER);
+
+  MinimalIDService.RP.watch(mockedDoc);
+}
+
 let TESTS = [
   test_overall,
   test_mock_doc,
@@ -175,6 +213,7 @@ let TESTS = [
   test_logoutBeforeWatch,
   test_requestBeforeWatch,
   test_unwatchBeforeWatch,
+  test_childProcessShutdown,
 ];
 
 TESTS.forEach(add_test);
