@@ -1014,22 +1014,25 @@ PickChunk(Zone *zone)
 extern void
 js::SetGCZeal(JSRuntime *rt, uint8_t zeal, uint32_t frequency)
 {
-    if (zeal == 0) {
-        if (rt->gcVerifyPreData)
-            VerifyBarriers(rt, PreBarrierVerifier);
-        if (rt->gcVerifyPostData)
-            VerifyBarriers(rt, PostBarrierVerifier);
+    if (rt->gcVerifyPreData)
+        VerifyBarriers(rt, PreBarrierVerifier);
+    if (rt->gcVerifyPostData)
+        VerifyBarriers(rt, PostBarrierVerifier);
+
+#ifdef JSGC_GENERATIONAL
+    if (rt->gcZeal_ == ZealGenerationalGCValue) {
+        MinorGC(rt, JS::gcreason::DEBUG_GC);
+        rt->gcNursery.leaveZealMode();
     }
+
+    if (zeal == ZealGenerationalGCValue)
+        rt->gcNursery.enterZealMode();
+#endif
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     rt->gcZeal_ = zeal;
     rt->gcZealFrequency = frequency;
     rt->gcNextScheduled = schedule ? frequency : 0;
-
-#ifdef JSGC_GENERATIONAL
-    if (zeal == ZealGenerationalGCValue)
-        rt->gcNursery.enterZealMode();
-#endif
 }
 
 static bool
