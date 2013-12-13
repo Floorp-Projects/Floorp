@@ -113,22 +113,22 @@ mozTXTToHTMLConv::UnescapeStr(const PRUnichar * aInString, int32_t aStartPos, in
     if (aInString[i] == '&')
     {
       subString = &aInString[i];
-      if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&lt;").get(), MinInt(4, aLength - remainingChars)))
+      if (!nsCRT::strncmp(subString, MOZ_UTF16("&lt;"), MinInt(4, aLength - remainingChars)))
       {
         aOutString.Append(PRUnichar('<'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&gt;").get(), MinInt(4, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&gt;"), MinInt(4, aLength - remainingChars)))
       {
         aOutString.Append(PRUnichar('>'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&amp;").get(), MinInt(5, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&amp;"), MinInt(5, aLength - remainingChars)))
       {
         aOutString.Append(PRUnichar('&'));
         i += 5;
       }
-      else if (!nsCRT::strncmp(subString, NS_LITERAL_STRING("&quot;").get(), MinInt(6, aLength - remainingChars)))
+      else if (!nsCRT::strncmp(subString, MOZ_UTF16("&quot;"), MinInt(6, aLength - remainingChars)))
       {
         aOutString.Append(PRUnichar('"'));
         i += 6;
@@ -169,12 +169,12 @@ mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, int32_t aI
   else if (aInString[pos] == '.')
   {
     if (ItMatchesDelimited(aInString, aInLength,
-                           NS_LITERAL_STRING("www.").get(), 4, LT_IGNORE, LT_IGNORE))
+                           MOZ_UTF16("www."), 4, LT_IGNORE, LT_IGNORE))
     {
       aOutString.AssignLiteral("http://");
       aOutString += aInString;
     }
-    else if (ItMatchesDelimited(aInString,aInLength, NS_LITERAL_STRING("ftp.").get(), 4, LT_IGNORE, LT_IGNORE))
+    else if (ItMatchesDelimited(aInString,aInLength, MOZ_UTF16("ftp."), 4, LT_IGNORE, LT_IGNORE))
     { 
       aOutString.AssignLiteral("ftp://");
       aOutString += aInString;
@@ -191,7 +191,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, int32_t aInLength,
   { // no breaks, because end of blocks is never reached
   case RFC1738:
   {
-    if (!nsCRT::strncmp(&aInString[MaxInt(pos - 4, 0)], NS_LITERAL_STRING("<URL:").get(), 5))
+    if (!nsCRT::strncmp(&aInString[MaxInt(pos - 4, 0)], MOZ_UTF16("<URL:"), 5))
     {
       start = pos + 1;
       return true;
@@ -202,7 +202,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, int32_t aInLength,
   case RFC2396E:
   {
     nsString temp(aInString, aInLength);
-    int32_t i = pos <= 0 ? kNotFound : temp.RFindCharInSet(NS_LITERAL_STRING("<>\"").get(), pos - 1);
+    int32_t i = pos <= 0 ? kNotFound : temp.RFindCharInSet(MOZ_UTF16("<>\""), pos - 1);
     if (i != kNotFound && (temp[uint32_t(i)] == '<' ||
                            temp[uint32_t(i)] == '"'))
     {
@@ -281,7 +281,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, int32_t aInStringLengt
   {
     nsString temp(aInString, aInStringLength);
 
-    int32_t i = temp.FindCharInSet(NS_LITERAL_STRING("<>\"").get(), pos + 1);
+    int32_t i = temp.FindCharInSet(MOZ_UTF16("<>\""), pos + 1);
     if (i != kNotFound && temp[uint32_t(i--)] ==
         (check == RFC1738 || temp[start - 1] == '<' ? '>' : '"'))
     {
@@ -919,7 +919,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, int32_t aInLength, bool 
   if (text0 == '+' || text1 == '+')
   {
     if (ItMatchesDelimited(aInString, aInLength,
-                           NS_LITERAL_STRING(" +/-").get(), 4,
+                           MOZ_UTF16(" +/-"), 4,
                            LT_IGNORE, LT_IGNORE))
     {
       aOutputString.AppendLiteral(" &plusmn;");
@@ -927,7 +927,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, int32_t aInLength, bool 
       return true;
     }
     if (col0 && ItMatchesDelimited(aInString, aInLength,
-                                   NS_LITERAL_STRING("+/-").get(), 3,
+                                   MOZ_UTF16("+/-"), 3,
                                    LT_IGNORE, LT_IGNORE))
     {
       aOutputString.AppendLiteral("&plusmn;");
@@ -1121,7 +1121,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, int32_t aInStringLength, 
       {
       case '*':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                            NS_LITERAL_STRING("*").get(), 1,
+                            MOZ_UTF16("*"), 1,
                             "b", "class=\"moz-txt-star\"",
                             aOutString, structPhrase_strong))
         {
@@ -1131,7 +1131,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, int32_t aInStringLength, 
         break;
       case '/':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                            NS_LITERAL_STRING("/").get(), 1,
+                            MOZ_UTF16("/"), 1,
                             "i", "class=\"moz-txt-slash\"",
                             aOutString, structPhrase_italic))
         {
@@ -1141,7 +1141,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, int32_t aInStringLength, 
         break;
       case '_':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                            NS_LITERAL_STRING("_").get(), 1,
+                            MOZ_UTF16("_"), 1,
                             "span" /* <u> is deprecated */,
                             "class=\"moz-txt-underscore\"",
                             aOutString, structPhrase_underline))
@@ -1152,7 +1152,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, int32_t aInStringLength, 
         break;
       case '|':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                            NS_LITERAL_STRING("|").get(), 1,
+                            MOZ_UTF16("|"), 1,
                             "code", "class=\"moz-txt-verticalline\"",
                             aOutString, structPhrase_code))
         {

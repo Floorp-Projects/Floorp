@@ -1074,8 +1074,8 @@ nsMathMLElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       (aNameSpaceID == kNameSpaceID_None ||
        aNameSpaceID == kNameSpaceID_XLink)) {
     if (aNameSpaceID == kNameSpaceID_XLink) {
-      WarnDeprecated(NS_LITERAL_STRING("xlink:href").get(),
-                     NS_LITERAL_STRING("href").get(), OwnerDoc());
+      WarnDeprecated(MOZ_UTF16("xlink:href"),
+                     MOZ_UTF16("href"), OwnerDoc());
     }
     Link::ResetLinkState(!!aNotify, true);
   }

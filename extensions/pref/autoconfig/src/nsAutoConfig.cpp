@@ -502,11 +502,11 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLString title;
-    rv = bundle->GetStringFromName(NS_LITERAL_STRING("emailPromptTitle").get(), getter_Copies(title));
+    rv = bundle->GetStringFromName(MOZ_UTF16("emailPromptTitle"), getter_Copies(title));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsXPIDLString err;
-    rv = bundle->GetStringFromName(NS_LITERAL_STRING("emailPromptMsg").get(), getter_Copies(err));
+    rv = bundle->GetStringFromName(MOZ_UTF16("emailPromptMsg"), getter_Copies(err));
     NS_ENSURE_SUCCESS(rv, rv);
     bool check = false;
     nsXPIDLString emailResult;
