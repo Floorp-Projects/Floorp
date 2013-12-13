@@ -285,10 +285,10 @@ TelemetryPing.prototype = {
   },
 
   getHistograms: function getHistograms(hls) {
-    let registered = Telemetry.registeredHistograms;
+    let registered = Telemetry.registeredHistograms([]);
     let ret = {};
 
-    for (let name in registered) {
+    for (name of registered) {
       for (let n of [name, "STARTUP_" + name]) {
         if (n in hls) {
           ret[n] = this.packHistogram(hls[n]);
@@ -541,9 +541,9 @@ TelemetryPing.prototype = {
    * Make a copy of interesting histograms at startup.
    */
   gatherStartupHistograms: function gatherStartupHistograms() {
-    let info = Telemetry.registeredHistograms;
+    let info = Telemetry.registeredHistograms([]);
     let snapshots = Telemetry.histogramSnapshots;
-    for (let name in info) {
+    for (let name of info) {
       // Only duplicate histograms with actual data.
       if (this.isInterestingStartupHistogram(name) && name in snapshots) {
         Telemetry.histogramFrom("STARTUP_" + name, name);
