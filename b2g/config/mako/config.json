@@ -23,7 +23,7 @@
         "MOZILLA_OFFICIAL": "1"
     },
     "b2g_manifest": "nexus-4.xml",
-    "b2g_manifest_branch": "master",
+    "b2g_manifest_branch": "v1.3",
     "additional_source_tarballs": [],
     "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
