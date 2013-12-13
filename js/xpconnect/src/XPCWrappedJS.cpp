@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "jsprf.h"
+#include "nsCCUncollectableMarker.h"
 #include "nsCxPusher.h"
 #include "nsContentUtils.h"
 #include "nsThreadUtils.h"
@@ -49,6 +50,42 @@ using namespace mozilla;
 // does not traverse any children of wrappers that are subject to finalization. This will
 // result in a leak if a wrapper in the non-rooting state has an aggregated native that
 // keeps alive the wrapper's JS object.  See bug 947049.
+
+
+// If traversing wrappedJS wouldn't release it, nor cause any other objects to be
+// added to the graph, there is no need to add it to the graph at all.
+bool
+nsXPCWrappedJS::CanSkip()
+{
+    if (!nsCCUncollectableMarker::sGeneration)
+        return false;
+
+    if (IsSubjectToFinalization())
+        return true;
+
+    // If this wrapper holds a gray object, need to trace it.
+    JSObject *obj = GetJSObjectPreserveColor();
+    if (obj && xpc_IsGrayGCThing(obj))
+        return false;
+
+    // For non-root wrappers, check if the root wrapper will be
+    // added to the CC graph.
+    if (!IsRootWrapper())
+        return mRoot->CanSkip();
+
+    // For the root wrapper, check if there is an aggregated
+    // native object that will be added to the CC graph.
+    if (!IsAggregatedToNative())
+        return true;
+
+    nsISupports* agg = GetAggregatedNativeObject();
+    nsXPCOMCycleCollectionParticipant* cp = nullptr;
+    CallQueryInterface(agg, &cp);
+    nsISupports* canonical = nullptr;
+    agg->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                        reinterpret_cast<void**>(&canonical));
+    return cp && canonical && cp->CanSkipThis(canonical);
+}
 
 NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
@@ -102,6 +139,20 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPCWrappedJS)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPCWrappedJS)
     tmp->Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+// XPCJSRuntime keeps a table of WJS, so we can remove them from
+// the purple buffer in between CCs.
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsXPCWrappedJS)
+    return true;
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsXPCWrappedJS)
+    return tmp->CanSkip();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsXPCWrappedJS)
+    return tmp->CanSkip();
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMETHODIMP
 nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)
