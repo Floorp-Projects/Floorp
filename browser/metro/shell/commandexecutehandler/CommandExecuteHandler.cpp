@@ -22,7 +22,7 @@
 #include <shellapi.h>
 #include <wininet.h>
 
-#ifdef SHOW_CONSOLE
+//#ifdef SHOW_CONSOLE
 #define DEBUG_DELAY_SHUTDOWN 1
 #endif
 
