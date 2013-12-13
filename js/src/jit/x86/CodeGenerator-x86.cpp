@@ -900,7 +900,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         saveVolatile(output);
 
         masm.setupUnalignedABICall(1, output);
-        masm.passABIArg(input);
+        masm.passABIArg(input, MoveOp::DOUBLE);
         if (gen->compilingAsmJS())
             masm.callWithABI(AsmJSImm_ToInt32);
         else
@@ -991,7 +991,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.push(input);
         masm.setupUnalignedABICall(1, output);
         masm.cvtss2sd(input, input);
-        masm.passABIArg(input);
+        masm.passABIArg(input, MoveOp::DOUBLE);
 
         if (gen->compilingAsmJS())
             masm.callWithABI(AsmJSImm_ToInt32);

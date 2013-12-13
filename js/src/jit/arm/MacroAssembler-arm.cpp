@@ -3508,13 +3508,14 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, const Register &sc
 }
 #ifdef JS_CPU_ARM_HARDFP
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
 {
     MoveOperand to;
     ++passedArgs_;
     if (!enoughMemory_)
         return;
-    if (from.isDouble()) {
+    switch (kind) {
+      case MoveOp::DOUBLE: {
         FloatRegister fr;
         if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
             if (!from.isFloatReg() || from.floatReg() != fr) {
@@ -3528,7 +3529,9 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
             enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::DOUBLE);
         }
         usedFloatSlots_++;
-    } else {
+        break;
+      }
+      case MoveOp::GENERAL: {
         Register r;
         if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
             if (!from.isGeneralReg() || from.reg() != r) {
@@ -3540,31 +3543,39 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
             enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::GENERAL);
         }
         usedIntSlots_++;
+        break;
+      }
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
     }
 
 }
 
 #else
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
 {
     MoveOperand to;
     uint32_t increment = 1;
     bool useResolver = true;
     ++passedArgs_;
-    MoveOp::Kind kind = MoveOp::GENERAL;
-    if (from.isDouble()) {
+    switch (kind) {
+      case MoveOp::DOUBLE:
         // Double arguments need to be rounded up to the nearest doubleword
         // boundary, even if it is in a register!
         usedSlots_ = (usedSlots_ + 1) & ~1;
         increment = 2;
-        kind = MoveOp::DOUBLE;
+        break;
+      case MoveOp::GENERAL:
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
     }
 
     Register destReg;
     MoveOperand dest;
     if (GetIntArgReg(usedSlots_, 0, &destReg)) {
-        if (from.isDouble()) {
+        if (kind == MoveOp::DOUBLE) {
             floatArgsInGPR[destReg.code() >> 1] = from;
             floatArgsInGPRValid[destReg.code() >> 1] = true;
             useResolver = false;
@@ -3588,13 +3599,13 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
 void
 MacroAssemblerARMCompat::passABIArg(const Register &reg)
 {
-    passABIArg(MoveOperand(reg));
+    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
 }
 
 void
-MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg)
+MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg, MoveOp::Kind kind)
 {
-    passABIArg(MoveOperand(freg));
+    passABIArg(MoveOperand(freg), kind);
 }
 
 void MacroAssemblerARMCompat::checkStackAlignment()
@@ -3642,7 +3653,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
             if (from.isFloatReg()) {
                 ma_vxfer(VFPRegister(from.floatReg()), to0, to1);
             } else {
-                JS_ASSERT(from.isFloatAddress());
+                JS_ASSERT(from.isMemory());
                 // Note: We can safely use the MoveOperand's displacement here,
                 // even if the base is SP: MoveEmitter::toOperand adjusts
                 // SP-relative operands by the difference between the current
@@ -3664,25 +3675,25 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
 }
 
 void
-MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, Result result)
+MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
 {
     if (secondScratchReg_ != lr)
         ma_mov(secondScratchReg_, lr);
 
     switch (result) {
-      case DOUBLE:
+      case MoveOp::DOUBLE:
 #ifndef JS_CPU_ARM_HARDFP
         // Move double from r0/r1 to ReturnFloatReg.
         as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
         break;
 #endif
-      case FLOAT:
+      case MoveOp::FLOAT32:
 #ifndef JS_CPU_ARM_HARDFP
         // Move float32 from r0 to ReturnFloatReg.
         as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), CoreToFloat);
         break;
 #endif
-      case GENERAL:
+      case MoveOp::GENERAL:
         break;
 
       default:
@@ -3702,7 +3713,7 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, Result result)
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
+MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Kind result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -3711,7 +3722,7 @@ MacroAssemblerARMCompat::callWithABI(void *fun, Result result)
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, Result result)
+MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Kind result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -3720,7 +3731,7 @@ MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, Result result)
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(const Address &fun, Result result)
+MacroAssemblerARMCompat::callWithABI(const Address &fun, MoveOp::Kind result)
 {
     // Load the callee in r12, no instruction between the ldr and call
     // should clobber it. Note that we can't use fun.base because it may
