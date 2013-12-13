@@ -25,6 +25,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsAppRunner.h"
@@ -193,7 +194,6 @@
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
-#include "mozilla/Preferences.h"
 #endif
 
 #include "base/command_line.h"
@@ -786,6 +786,16 @@ nsXULAppInfo::GetProcessType(uint32_t* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = XRE_GetProcessType();
+  return NS_OK;
+}
+
+static bool gBrowserTabsRemote = false;
+static bool gBrowserTabsRemoteInitialized = false;
+
+NS_IMETHODIMP
+nsXULAppInfo::GetBrowserTabsRemote(bool* aResult)
+{
+  *aResult = BrowserTabsRemote();
   return NS_OK;
 }
 
@@ -3864,6 +3874,11 @@ XREMain::XRE_mainRun()
   mDirProvider.DoStartup();
 
 #ifdef MOZ_CRASHREPORTER
+  if (BrowserTabsRemote()) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("DOMIPCEnabled"),
+                                       NS_LITERAL_CSTRING("1"));
+  }
+
   nsCString userAgentLocale;
   if (NS_SUCCEEDED(Preferences::GetCString("general.useragent.locale", &userAgentLocale))) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("useragent_locale"), userAgentLocale);
@@ -4366,6 +4381,17 @@ GeckoProcessType
 XRE_GetProcessType()
 {
   return mozilla::startup::sChildProcessType;
+}
+
+bool
+mozilla::BrowserTabsRemote()
+{
+  if (!gBrowserTabsRemoteInitialized) {
+    gBrowserTabsRemote = Preferences::GetBool("browser.tabs.remote", false);
+    gBrowserTabsRemoteInitialized = true;
+  }
+
+  return gBrowserTabsRemote;
 }
 
 void

@@ -475,7 +475,7 @@ class JavaPanZoomController
 
         case TOUCHING:
             // Don't allow panning if there is an element in full-screen mode. See bug 775511.
-            if (mTarget.isFullScreen() || panDistance(event) < PAN_THRESHOLD) {
+            if ((mTarget.isFullScreen() && !mSubscroller.scrolling()) || panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();

@@ -52,7 +52,7 @@
 }
 
 .theme-bg-contrast,
-.variable-or-property[changed] { /* contrast bg color to attract attention on a container */
+.variable-or-property:not([overridden])[changed] { /* contrast bg color to attract attention on a container */
   background: #a18650;
 }
 
@@ -92,7 +92,8 @@
 .theme-fg-color1,
 .cm-s-mozilla .cm-number,
 .variable-or-property .token-number,
-.variable-or-property[return] > .title > .name { /* green */
+.variable-or-property[return] > .title > .name,
+.variable-or-property[scope] > .title > .name { /* green */
   color: hsl(72,100%,27%);
 }
 
@@ -102,8 +103,7 @@
 .cm-s-mozilla .cm-def,
 .cm-s-mozilla .cm-property,
 .cm-s-mozilla .cm-qualifier,
-.variables-view-variable > .title > .name,
-.variable-or-property[scope] > .title > .name { /* blue */
+.variables-view-variable > .title > .name { /* blue */
   color: hsl(208,56%,40%);
 }
 
@@ -111,8 +111,7 @@
 .cm-s-mozilla .cm-variable,
 .cm-s-mozilla .cm-tag,
 .cm-s-mozilla .cm-header,
-.variables-view-property > .title > .name,
-.variable-or-property[safe-getter] > .title > .name { /* dark blue */
+.variables-view-property > .title > .name { /* dark blue */
   color: hsl(208,81%,21%)
 }
 

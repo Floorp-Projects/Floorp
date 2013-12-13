@@ -318,6 +318,13 @@ class RegExpCompartment
     typedef HashSet<RegExpShared *, DefaultHasher<RegExpShared*>, RuntimeAllocPolicy> PendingSet;
     PendingSet inUse_;
 
+    /*
+     * This is the template object where the result of re.exec() is based on,
+     * if there is a result. This is used in CreateRegExpMatchResult to set
+     * the input/index properties faster.
+     */
+    HeapPtrObject matchResultTemplateObject_;
+
   public:
     RegExpCompartment(JSRuntime *rt);
     ~RegExpCompartment();
@@ -330,6 +337,9 @@ class RegExpCompartment
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
+
+    /* Get or create template object used to base the result of .exec() on. */
+    HeapPtrObject &getOrCreateMatchResultTemplateObject(JSContext *cx);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };

@@ -4,13 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTERNAL_MAKE_DIRS += [
-    'trunk',
-    'signaling',
-]
+include('/build/gyp.mozbuild')
+
+GYP_DIRS += ['trunk']
+
+GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
+GYP_DIRS['trunk'].variables = gyp_vars
+
+if CONFIG['MOZ_WEBRTC_SIGNALING']:
+    GYP_DIRS += ['signaling']
+    GYP_DIRS['signaling'].input = 'signaling/signaling.gyp'
+    GYP_DIRS['signaling'].variables = gyp_vars.copy()
+    GYP_DIRS['signaling'].variables.update(
+        build_for_test=0
+    )
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    EXTERNAL_MAKE_DIRS += [
-        'trunk/testing',
-        'signalingtest',
-    ]
+    GYP_DIRS += ['trunk/testing']
+    GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'
+    GYP_DIRS['trunk/testing'].variables = gyp_vars
+
+    if CONFIG['MOZ_WEBRTC_SIGNALING']:
+        GYP_DIRS += ['signalingtest']
+        GYP_DIRS['signalingtest'].input = 'signaling/signaling.gyp'
+        GYP_DIRS['signalingtest'].variables = gyp_vars.copy()
+        GYP_DIRS['signalingtest'].variables.update(
+            build_for_test=1
+        )

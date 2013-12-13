@@ -227,6 +227,9 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg *ins)
     if (ins->type() == MIRType_Int32)
         return defineReuseInput(new(alloc()) LNegI(useRegisterAtStart(ins->input())), ins, 0);
 
+    if (ins->type() == MIRType_Float32)
+        return defineReuseInput(new(alloc()) LNegF(useRegisterAtStart(ins->input())), ins, 0);
+
     JS_ASSERT(ins->type() == MIRType_Double);
     return defineReuseInput(new(alloc()) LNegD(useRegisterAtStart(ins->input())), ins, 0);
 }

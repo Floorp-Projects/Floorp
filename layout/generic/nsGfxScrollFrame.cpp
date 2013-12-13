@@ -2491,7 +2491,7 @@ ScrollFrameHelper::GetScrollbarStylesFromFrame() const
   }
 
   ScrollbarStyles result = presContext->GetViewportOverflowOverride();
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
+  nsCOMPtr<nsISupports> container = presContext->GetContainerWeak();
   nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
   if (scrollable) {
     HandleScrollPref(scrollable, nsIScrollable::ScrollOrientation_X,

@@ -56,10 +56,15 @@
   display: none;
 }
 
-.variable-or-property:not([safe-getter]) > tooltip > label[value=WebIDL],
-.variable-or-property:not([non-extensible]) > tooltip > label[value=extensible],
-.variable-or-property:not([frozen]) > tooltip > label[value=frozen],
-.variable-or-property:not([sealed]) > tooltip > label[value=sealed] {
+.variable-or-property:not([safe-getter]) > tooltip > label.WebIDL,
+.variable-or-property:not([overridden]) > tooltip > label.overridden,
+.variable-or-property:not([non-extensible]) > tooltip > label.extensible,
+.variable-or-property:not([frozen]) > tooltip > label.frozen,
+.variable-or-property:not([sealed]) > tooltip > label.sealed {
+  display: none;
+}
+
+.variable-or-property[pseudo-item] > tooltip {
   display: none;
 }
 
@@ -73,6 +78,6 @@
   display: none;
 }
 
-.variables-view-container[aligned-values] .title > [optional-visibility] {
+.variables-view-container[aligned-values] [optional-visibility] {
   display: none;
 }

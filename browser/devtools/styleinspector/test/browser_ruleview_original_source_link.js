@@ -48,7 +48,7 @@ function highlightNode()
   inspector.once("inspector-updated", () => {
     is(inspector.selection.node, div, "selection matches the div element");
     testRuleViewLink();
-  }).then(null, console.error);
+  });
 }
 
 function testRuleViewLink() {

@@ -65,6 +65,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+#ifdef NIGHTLY_BUILD
+XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
+                                  "resource://shumway/ShumwayUtils.jsm");
+#endif
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -340,6 +345,9 @@ var BrowserApp = {
     Tabs.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
+#endif
+#ifdef NIGHTLY_BUILD
+    ShumwayUtils.init();
 #endif
 
     // Init LoginManager
