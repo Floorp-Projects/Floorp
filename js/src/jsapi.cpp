@@ -2374,7 +2374,16 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    return SetClassAndProto(cx, obj, obj->getClass(), proto, false);
+    bool succeeded;
+    if (!JSObject::setProto(cx, obj, proto, &succeeded))
+        return false;
+
+    if (!succeeded) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+        return false;
+    }
+
+    return true;
 }
 
 JS_PUBLIC_API(JSObject *)
