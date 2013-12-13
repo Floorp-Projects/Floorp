@@ -65,15 +65,7 @@ if __name__ == '__main__':
                            cmdargs=cmdargs,
                            env=env)
     runner.start(debug_args=debug_args, interactive=interactive)
-    status = runner.wait()
+    runner.wait()
     httpd.stop()
-    if status != 0:
-        status = 1      # normalize status, in case it's larger than 127
-
-    # Note:  the |finally| block below will always run.
-    # http://docs.python.org/2/library/sys.html#sys.exit says that sys.exit "is
-    # implemented by raising the SystemExit exception, so cleanup actions
-    # specified by finally clauses of try statements are honored".
-    sys.exit(status)
   finally:
     shutil.rmtree(profilePath)
