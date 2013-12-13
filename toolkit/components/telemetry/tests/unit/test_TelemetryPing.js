@@ -242,8 +242,8 @@ function checkPayload(request, reason, successfulPings) {
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms);
   do_check_true(READ_SAVED_PING_SUCCESS in payload.histograms);
-  let rh = Telemetry.registeredHistograms;
-  for (let name in rh) {
+  let rh = Telemetry.registeredHistograms([]);
+  for (let name of rh) {
     if (/SQLITE/.test(name) && name in payload.histograms) {
       do_check_true(("STARTUP_" + name) in payload.histograms); 
     }
