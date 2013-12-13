@@ -488,9 +488,8 @@ FormAutoCompleteResult.prototype = {
 };
 
 
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT &&
-    Services.prefs.prefHasUserValue("browser.tabs.remote") &&
-    Services.prefs.getBoolPref("browser.tabs.remote")) {
+let remote = Services.appinfo.browserTabsRemote;
+if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT && remote) {
   // Register the stub FormAutoComplete module in the child which will
   // forward messages to the parent through the process message manager.
   let component = [FormAutoCompleteChild];

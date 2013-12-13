@@ -498,7 +498,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   }
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
+  nsCOMPtr<nsISupports> container = presContext->GetContainerWeak();
   NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
@@ -554,12 +554,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
   if (!mObjectFrame) {
     return rv;
   }
-  nsCOMPtr<nsISupports> cont = mObjectFrame->PresContext()->GetContainer();
-  if (!cont) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont, &rv));
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem = mObjectFrame->PresContext()->GetDocShell();
   if (NS_FAILED(rv) || !docShellItem) {
     return rv;
   }

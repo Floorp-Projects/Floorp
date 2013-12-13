@@ -175,7 +175,7 @@ CONFIGURES := $(TOPSRCDIR)/configure
 CONFIGURES += $(TOPSRCDIR)/js/src/configure
 
 # Make targets that are going to be passed to the real build system
-OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_profiledbuild upload sdk installer package fast-package package-compare stage-package source-package l10n-check
+OBJDIR_TARGETS = install export libs clean realclean distclean maybe_clobber_profiledbuild upload sdk installer package package-compare stage-package source-package l10n-check
 
 #######################################################################
 # Rules
@@ -224,7 +224,7 @@ build_all: build
 clobber clobber_all: clean
 
 # helper target for mobile
-build_and_deploy: build fast-package install
+build_and_deploy: build package install
 
 # Do everything from scratch
 everything: clean build

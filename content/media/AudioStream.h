@@ -179,8 +179,11 @@ public:
   // Returns the maximum number of channels supported by the audio hardware.
   static int MaxNumberOfChannels();
 
-  // Returns the samplerate the systems prefer, because it is the
-  // samplerate the hardware/mixer supports.
+  // Queries the samplerate the hardware/mixer runs at, and stores it.
+  // Can be called on any thread. When this returns, it is safe to call
+  // PreferredSampleRate without locking.
+  static void InitPreferredSampleRate();
+  // Get the aformentionned sample rate. Does not lock.
   static int PreferredSampleRate();
 
   AudioStream();

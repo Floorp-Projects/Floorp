@@ -623,16 +623,12 @@ function findLocation(pre, line, node, offset, interlinePosition, result)
 function wrapLongLines()
 {
   var myWrap = window.content.document.body;
-
-  if (myWrap.className == '')
-    myWrap.className = 'wrap';
-  else
-    myWrap.className = '';
+  myWrap.classList.toggle("wrap");
 
   // Since multiple viewsource windows are possible, another window could have
   // affected the pref, so instead of determining the new pref value via the current
-  // pref value, we use myWrap.className.
-  Services.prefs.setBoolPref("view_source.wrap_long_lines", myWrap.className != '');
+  // pref value, we use myWrap.classList.
+  Services.prefs.setBoolPref("view_source.wrap_long_lines", myWrap.classList.contains("wrap"));
 }
 
 // Toggles syntax highlighting and sets the view_source.syntax_highlight
