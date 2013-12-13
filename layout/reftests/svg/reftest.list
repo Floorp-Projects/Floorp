@@ -319,7 +319,7 @@ HTTP(..) == text-scale-02.svg text-scale-02-ref.svg
 HTTP(..) == text-scale-03.svg text-scale-03-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
 fails-if(OSX==10.8) == stroke-dasharray-01.svg stroke-dasharray-01-ref.svg # bug 896487
-fuzzy-if(winWidget,12,7) == stroke-dasharray-02.svg pass.svg
+== stroke-dasharray-02.svg pass.svg
 == stroke-dasharray-and-pathLength-01.svg pass.svg
 == stroke-dasharray-and-text-01.svg stroke-dasharray-and-text-01-ref.svg 
 == stroke-dashoffset-01.svg pass.svg
