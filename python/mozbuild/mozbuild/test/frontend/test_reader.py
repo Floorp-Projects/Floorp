@@ -33,13 +33,13 @@ class TestBuildReader(unittest.TestCase):
 
         return MockConfig(path, **kwargs)
 
-    def reader(self, name, enable_tests=False):
+    def reader(self, name, enable_tests=False, **kwargs):
         extra = {}
         if enable_tests:
             extra['ENABLE_TESTS'] = '1'
         config = self.config(name, extra_substs=extra)
 
-        return BuildReader(config)
+        return BuildReader(config, **kwargs)
 
     def file_path(self, name, *args):
         return mozpath.join(data_path, name, *args)
@@ -265,6 +265,22 @@ class TestBuildReader(unittest.TestCase):
             ['', 'foo', 'foo/baz', 'bar'])
         self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
             ['foobar', 'foobar', 'foobar', 'foobar'])
+
+    def test_process_eval_callback(self):
+        def strip_dirs(sandbox):
+            sandbox['DIRS'][:] = []
+            count[0] += 1
+
+        reader = self.reader('traversal-simple',
+            sandbox_post_eval_cb=strip_dirs)
+
+        count = [0]
+
+        sandboxes = list(reader.read_topsrcdir())
+
+        self.assertEqual(len(sandboxes), 1)
+        self.assertEqual(len(count), 1)
+
 
 if __name__ == '__main__':
     main()
