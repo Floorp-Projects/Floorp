@@ -71,11 +71,13 @@ class LMove
 {
     LAllocation *from_;
     LAllocation *to_;
+    LDefinition::Type type_;
 
   public:
-    LMove(LAllocation *from, LAllocation *to)
+    LMove(LAllocation *from, LAllocation *to, LDefinition::Type type)
       : from_(from),
-        to_(to)
+        to_(to),
+        type_(type)
     { }
 
     LAllocation *from() {
@@ -89,6 +91,9 @@ class LMove
     }
     const LAllocation *to() const {
         return to_;
+    }
+    LDefinition::Type type() const {
+        return type_;
     }
 };
 
@@ -110,10 +115,10 @@ class LMoveGroup : public LInstructionHelper<0, 0, 0>
     void printOperands(FILE *fp);
 
     // Add a move which takes place simultaneously with all others in the group.
-    bool add(LAllocation *from, LAllocation *to);
+    bool add(LAllocation *from, LAllocation *to, LDefinition::Type type);
 
     // Add a move which takes place after existing moves in the group.
-    bool addAfter(LAllocation *from, LAllocation *to);
+    bool addAfter(LAllocation *from, LAllocation *to, LDefinition::Type type);
 
     size_t numMoves() const {
         return moves_.length();
