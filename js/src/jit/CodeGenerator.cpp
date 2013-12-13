@@ -1183,9 +1183,7 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
         JS_ASSERT(!from->isConstant());
         JS_ASSERT(from->isDouble() == to->isDouble());
 
-        MoveResolver::Move::Kind kind = from->isDouble()
-                                        ? MoveResolver::Move::DOUBLE
-                                        : MoveResolver::Move::GENERAL;
+        MoveOp::Kind kind = from->isDouble() ? MoveOp::DOUBLE : MoveOp::GENERAL;
 
         if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
             return false;
