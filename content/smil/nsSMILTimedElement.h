@@ -512,6 +512,7 @@ protected:
   const nsSMILInstanceTime* GetEffectiveBeginInstance() const;
   const nsSMILInterval* GetPreviousInterval() const;
   bool              HasPlayed() const { return !mOldIntervals.IsEmpty(); }
+  bool              HasClientInFillRange() const;
   bool              EndHasEventConditions() const;
   bool              AreEndTimesDependentOn(
                       const nsSMILInstanceTime* aBase) const;

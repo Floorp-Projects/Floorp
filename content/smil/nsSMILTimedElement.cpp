@@ -667,19 +667,32 @@ nsSMILTimedElement::DoSampleAt(nsSMILTime aContainerTime, bool aEndOnly)
           NS_ASSERTION(aContainerTime >= beginTime,
                        "Sample time should not precede current interval");
           nsSMILTime activeTime = aContainerTime - beginTime;
-          SampleSimpleTime(activeTime);
-          // We register our repeat times as milestones (except when we're
-          // seeking) so we should get a sample at exactly the time we repeat.
-          // (And even when we are seeking we want to update
-          // mCurrentRepeatIteration so we do that first before testing the seek
-          // state.)
-          uint32_t prevRepeatIteration = mCurrentRepeatIteration;
-          if (ActiveTimeToSimpleTime(activeTime, mCurrentRepeatIteration)==0 &&
+
+          // The 'min' attribute can cause the active interval to be longer than
+          // the 'repeating interval'.
+          // In that extended period we apply the fill mode.
+          if (GetRepeatDuration() <= nsSMILTimeValue(activeTime)) {
+            if (mClient && mClient->IsActive()) {
+              mClient->Inactivate(mFillMode == FILL_FREEZE);
+            }
+            SampleFillValue();
+          } else {
+            SampleSimpleTime(activeTime);
+
+            // We register our repeat times as milestones (except when we're
+            // seeking) so we should get a sample at exactly the time we repeat.
+            // (And even when we are seeking we want to update
+            // mCurrentRepeatIteration so we do that first before testing the
+            // seek state.)
+            uint32_t prevRepeatIteration = mCurrentRepeatIteration;
+            if (
+              ActiveTimeToSimpleTime(activeTime, mCurrentRepeatIteration)==0 &&
               mCurrentRepeatIteration != prevRepeatIteration &&
               mCurrentRepeatIteration &&
               mSeekState == SEEK_NOT_SEEKING) {
-            FireTimeEventAsync(NS_SMIL_REPEAT,
-                          static_cast<int32_t>(mCurrentRepeatIteration));
+              FireTimeEventAsync(NS_SMIL_REPEAT,
+                            static_cast<int32_t>(mCurrentRepeatIteration));
+            }
           }
         }
       }
@@ -1084,12 +1097,8 @@ nsSMILTimedElement::SetFillMode(const nsAString& aFillModeSpec)
             ? nsSMILFillMode(temp.GetEnumValue())
             : FILL_REMOVE;
 
-  // Check if we're in a fill-able state: i.e. we've played at least one
-  // interval and are now between intervals or at the end of all intervals
-  bool isFillable = HasPlayed() &&
-    (mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE);
-
-  if (mClient && mFillMode != previousFillMode && isFillable) {
+  // Update fill mode of client
+  if (mFillMode != previousFillMode && HasClientInFillRange()) {
     mClient->Inactivate(mFillMode == FILL_FREEZE);
     SampleFillValue();
   }
@@ -1102,9 +1111,9 @@ nsSMILTimedElement::UnsetFillMode()
 {
   uint16_t previousFillMode = mFillMode;
   mFillMode = FILL_REMOVE;
-  if ((mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE) &&
-      previousFillMode == FILL_FREEZE && mClient && HasPlayed())
+  if (previousFillMode == FILL_FREEZE && HasClientInFillRange()) {
     mClient->Inactivate(false);
+  }
 }
 
 void
@@ -1865,8 +1874,7 @@ nsSMILTimedElement::ApplyMinAndMax(const nsSMILTimeValue& aDuration) const
   if (aDuration > mMax) {
     result = mMax;
   } else if (aDuration < mMin) {
-    nsSMILTimeValue repeatDur = GetRepeatDuration();
-    result = mMin > repeatDur ? repeatDur : mMin;
+    result = mMin;
   } else {
     result = aDuration;
   }
@@ -2060,16 +2068,35 @@ nsSMILTimedElement::SampleFillValue()
   if (mFillMode != FILL_FREEZE || !mClient)
     return;
 
-  const nsSMILInterval* prevInterval = GetPreviousInterval();
-  NS_ABORT_IF_FALSE(prevInterval,
-      "Attempting to sample fill value but there is no previous interval");
-  NS_ABORT_IF_FALSE(prevInterval->End()->Time().IsDefinite() &&
-      prevInterval->End()->IsFixedTime(),
-      "Attempting to sample fill value but the endpoint of the previous "
-      "interval is not resolved and fixed");
+  nsSMILTime activeTime;
 
-  nsSMILTime activeTime = prevInterval->End()->Time().GetMillis() -
-                          prevInterval->Begin()->Time().GetMillis();
+  if (mElementState == STATE_WAITING || mElementState == STATE_POSTACTIVE) {
+    const nsSMILInterval* prevInterval = GetPreviousInterval();
+    NS_ABORT_IF_FALSE(prevInterval,
+        "Attempting to sample fill value but there is no previous interval");
+    NS_ABORT_IF_FALSE(prevInterval->End()->Time().IsDefinite() &&
+        prevInterval->End()->IsFixedTime(),
+        "Attempting to sample fill value but the endpoint of the previous "
+        "interval is not resolved and fixed");
+
+    activeTime = prevInterval->End()->Time().GetMillis() -
+                 prevInterval->Begin()->Time().GetMillis();
+
+    // If the interval's repeat duration was shorter than its active duration,
+    // use the end of the repeat duration to determine the frozen animation's
+    // state.
+    nsSMILTimeValue repeatDuration = GetRepeatDuration();
+    if (repeatDuration.IsDefinite()) {
+      activeTime = std::min(repeatDuration.GetMillis(), activeTime);
+    }
+  } else if (mElementState == STATE_ACTIVE) {
+    // If we are being asked to sample the fill value while active we *must*
+    // have a repeat duration shorter than the active duration so use that.
+    MOZ_ASSERT(GetRepeatDuration().IsDefinite(),
+        "Attempting to sample fill value of an active animation with "
+        "an indefinite repeat duration");
+    activeTime = GetRepeatDuration().GetMillis();
+  }
 
   uint32_t repeatIteration;
   nsSMILTime simpleTime =
@@ -2165,8 +2192,13 @@ nsSMILTimedElement::GetNextMilestone(nsSMILMilestone& aNextMilestone) const
       // Work out what comes next: the interval end or the next repeat iteration
       nsSMILTimeValue nextRepeat;
       if (mSeekState == SEEK_NOT_SEEKING && mSimpleDur.IsDefinite()) {
-        nextRepeat.SetMillis(mCurrentInterval->Begin()->Time().GetMillis() +
-            (mCurrentRepeatIteration + 1) * mSimpleDur.GetMillis());
+        nsSMILTime nextRepeatActiveTime =
+          (mCurrentRepeatIteration + 1) * mSimpleDur.GetMillis();
+        // Check that the repeat fits within the repeat duration
+        if (nsSMILTimeValue(nextRepeatActiveTime) < GetRepeatDuration()) {
+          nextRepeat.SetMillis(mCurrentInterval->Begin()->Time().GetMillis() +
+                               nextRepeatActiveTime);
+        }
       }
       nsSMILTimeValue nextMilestone =
         std::min(mCurrentInterval->End()->Time(), nextRepeat);
@@ -2273,6 +2305,15 @@ nsSMILTimedElement::GetPreviousInterval() const
   return mOldIntervals.IsEmpty()
     ? nullptr
     : mOldIntervals[mOldIntervals.Length()-1].get();
+}
+
+bool
+nsSMILTimedElement::HasClientInFillRange() const
+{
+  // Returns true if we have a client that is in the range where it will fill
+  return mClient &&
+         ((mElementState != STATE_ACTIVE && HasPlayed()) ||
+          (mElementState == STATE_ACTIVE && !mClient->IsActive()));
 }
 
 bool
