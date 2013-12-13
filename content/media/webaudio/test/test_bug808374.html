@@ -9,9 +9,12 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var ctx = new AudioContext();
-ctx.createBuffer(0, 1, ctx.sampleRate);
-ok(true, "The test should not crash during CC");
+try {
+  var ctx = new AudioContext();
+  ctx.createBuffer(0, 1, ctx.sampleRate);
+} catch (e) {
+  ok(true, "The test should not crash during CC");
+}
 
 </script>
 </pre>

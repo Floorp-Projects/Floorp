@@ -73,8 +73,9 @@ LBlock::lastId()
 {
     LInstruction *last = *instructions_.rbegin();
     JS_ASSERT(last->id());
-    if (last->numDefs())
-        return last->getDef(last->numDefs() - 1)->virtualRegister();
+    // The last instruction is a control flow instruction which does not have
+    // any output.
+    JS_ASSERT(last->numDefs() == 0);
     return last->id();
 }
 

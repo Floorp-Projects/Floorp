@@ -517,9 +517,6 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 #if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
 #endif
-#if ENABLE_PARALLEL_JS
-           js_InitParallelArrayClass(cx, global) &&
-#endif
            true;
 }
 

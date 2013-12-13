@@ -68,6 +68,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIFilePicker.h"
+#include "nsIIdleService.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIMutable.h"
@@ -1081,6 +1082,8 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         }
         obs->NotifyObservers((nsIPropertyBag2*) props, "ipc:content-shutdown", nullptr);
     }
+
+    mIdleListeners.Clear();
 
     // If the child process was terminated due to a SIGKIL, ShutDownProcess
     // might not have been called yet.  We must call it to ensure that our
@@ -3155,5 +3158,47 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
     return true;
 }
 
+bool
+ContentParent::RecvAddIdleObserver(const uint64_t& aObserver, const uint32_t& aIdleTimeInS)
+{
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<ParentIdleListener> listener = new ParentIdleListener(this, aObserver);
+  mIdleListeners.Put(aObserver, listener);
+  idleService->AddIdleObserver(listener, aIdleTimeInS);
+  return true;
+}
+
+bool
+ContentParent::RecvRemoveIdleObserver(const uint64_t& aObserver, const uint32_t& aIdleTimeInS)
+{
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<ParentIdleListener> listener;
+  bool found = mIdleListeners.Get(aObserver, &listener);
+  if (found) {
+    mIdleListeners.Remove(aObserver);
+    idleService->RemoveIdleObserver(listener, aIdleTimeInS);
+  }
+
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
+
+NS_IMPL_ISUPPORTS1(ParentIdleListener, nsIObserver)
+
+NS_IMETHODIMP
+ParentIdleListener::Observe(nsISupports*, const char* aTopic, const PRUnichar* aData) {
+  mozilla::unused << mParent->SendNotifyIdleObserver(mObserver,
+                                                     nsDependentCString(aTopic),
+                                                     nsDependentString(aData));
+  return NS_OK;
+}

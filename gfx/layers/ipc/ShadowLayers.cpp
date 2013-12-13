@@ -822,7 +822,7 @@ AutoOpenSurface::ImageFormat()
     mDescriptor, mMode, getter_AddRefs(mSurface));
 }
 
-gfxIntSize
+gfx::IntSize
 AutoOpenSurface::Size()
 {
   if (mSurface) {
