@@ -308,7 +308,7 @@ var BrowserUI = {
 
   isStartURI: function isStartURI(aURI) {
     aURI = aURI || Browser.selectedBrowser.currentURI.spec;
-    return aURI == kStartURI || aURI == "about:home";
+    return aURI == kStartURI || aURI == "about:start" || aURI == "about:home";
   },
 
   updateStartURIAttributes: function (aURI) {
