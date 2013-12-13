@@ -2829,6 +2829,7 @@ class MPassArg
     // Set by the MCall.
     void setArgnum(uint32_t argnum) {
         argnum_ = argnum;
+        JS_ASSERT(argnum_ >= 0);
     }
     uint32_t getArgnum() const {
         JS_ASSERT(argnum_ >= 0);
