@@ -280,7 +280,7 @@ GetFrameTime() {
 
 class FlingAnimation: public AsyncPanZoomAnimation {
 public:
-  FlingAnimation(AxisX aX, AxisY aY)
+  FlingAnimation(AxisX& aX, AxisY& aY)
     : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gFlingRepaintInterval))
     , mX(aX)
     , mY(aY)
@@ -295,8 +295,8 @@ public:
                       const TimeDuration& aDelta);
 
 private:
-  AxisX mX;
-  AxisY mY;
+  AxisX& mX;
+  AxisY& mY;
 };
 
 class ZoomAnimation: public AsyncPanZoomAnimation {
