@@ -149,7 +149,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
             to = MoveOperand(StackPointer, stackForCall_);
             stackForCall_ += sizeof(double);
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, Move::DOUBLE);
+        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::DOUBLE);
     } else {
         Register dest;
         if (GetIntArgReg(passedIntArgs_++, passedFloatArgs_, &dest)) {
@@ -162,7 +162,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
             to = MoveOperand(StackPointer, stackForCall_);
             stackForCall_ += sizeof(int64_t);
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, Move::GENERAL);
+        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::GENERAL);
     }
 }
 
@@ -264,7 +264,7 @@ MacroAssemblerX64::callWithABI(Address fun, Result result)
     if (IsIntArgReg(fun.base)) {
         // Callee register may be clobbered for an argument. Move the callee to
         // r10, a volatile, non-argument register.
-        moveResolver_.addMove(MoveOperand(fun.base), MoveOperand(r10), Move::GENERAL);
+        moveResolver_.addMove(MoveOperand(fun.base), MoveOperand(r10), MoveOp::GENERAL);
         fun.base = r10;
     }
 
