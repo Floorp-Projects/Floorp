@@ -29,12 +29,12 @@
 #tabs-container {
   background: @panel_dark_color@ @panel_dark_background@;
   padding: 0;
-  -moz-padding-start: @metro_spacing_xnormal@;
+  -moz-padding-start: @metro_spacing_normal@;
   width: 100%;
 }
 
 #tabs {
-  -moz-padding-start: @metro_spacing_large@;
+  -moz-padding-start: 0;
 }
 
 #tabs .tabs-list {
@@ -46,17 +46,22 @@
   overflow: auto;
 }
 
-#tabs > .tabs-scrollbox > .arrowscrollbox-scrollbox {
-  overflow: hidden;
+#tabs[input="precise"] > .tabs-scrollbox > .scrollbutton-up {
+  visibility: visible !important;
+}
+#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-up {
+  visibility: hidden !important;
+  pointer-events: none;
 }
 
-#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-up,
 #tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-down {
   visibility: collapse !important;
 }
+
 #tabs > .tabs-scrollbox > .scrollbutton-up {
   list-style-image: url("images/tab-arrows.png") !important;
   -moz-image-region: rect(15px 58px 63px 14px) !important;
+  padding-right: 13px;
 }
 #tabs > .tabs-scrollbox > .scrollbutton-up:hover {
   -moz-image-region: rect(14px 102px 62px 58px) !important;
@@ -71,6 +76,7 @@
 #tabs > .tabs-scrollbox > .scrollbutton-down {
   list-style-image: url("images/tab-arrows.png") !important;
   -moz-image-region: rect(73px 58px 121px 14px) !important;
+  padding-left: 16px;
 }
 #tabs > .tabs-scrollbox > .scrollbutton-down:hover {
   -moz-image-region: rect(72px 102px 120px 58px) !important;
@@ -182,7 +188,7 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url(chrome://browser/skin/images/newtab-default.png);
 
   /* Add some extra padding for a larger target */
-  padding: 18px 25px 30px;
+  padding: 18px 20px 30px 20px;
 }
 
 /* Start UI ----------------------------------------------------------------- */
@@ -1167,23 +1173,32 @@ flyoutpanel > settings:first-child {
 
 /* About flyout pane ------------------------------------------------------- */
 
+/* Colors are defined in /browser/branding/<dir>/content/metro-about.css */
+
 #about-flyoutpanel {
-  background-image:url('chrome://browser/skin/images/about-footer.png');
+  background-image: url('chrome://branding/content/metro-about-footer.png');
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: right bottom;
 }
 
-#about-product-label {
- font-weight: bold;
+#about-flyoutpanel .text-link {
+  color: inherit;
+}
+
+#about-flyoutpanel > .flyoutpanel-wrapper > .flyoutpanel-header,
+#about-flyoutpanel > .flyoutpanel-wrapper > .flyoutpanel-contents {
+  background-color: inherit;
+  border: none;
+}
+
+#about-policy-label {
+  padding: 1.5em @metro_spacing_large@;
+  margin: 1em -@metro_spacing_large@;
 }
 
 #about-version-label {
  margin-top: 11pt;
-}
-
-#about-policy-label {
- margin-top: 24pt;
 }
 
 #currentChannel {

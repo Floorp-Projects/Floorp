@@ -471,7 +471,7 @@ var gPrivacyPane = {
                    introText      : bundlePreferences.getString("cookiepermissionstext") };
     openDialog("chrome://browser/content/preferences/permissions.xul",
                "Browser:Permissions",
-               "model=yes", params);
+               "modal=yes", params);
   },
 
   /**
@@ -481,7 +481,7 @@ var gPrivacyPane = {
   {
     openDialog("chrome://browser/content/preferences/cookies.xul",
                "Browser:Cookies",
-               "model=yes", null);
+               "modal=yes", null);
   },
 
   // CLEAR PRIVATE DATA
@@ -500,7 +500,7 @@ var gPrivacyPane = {
   showClearPrivateDataSettings: function ()
   {
     openDialog("chrome://browser/content/preferences/sanitize.xul",
-               "model=yes", null);
+               "modal=yes", null);
   },
 
 

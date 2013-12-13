@@ -232,7 +232,7 @@ SessionStore.prototype = {
 
         // Clear all data about closed tabs
         for (let [ssid, win] in Iterator(this._windows))
-          win.closedTabs = [];
+          win._closedTabs = [];
 
         if (this._loadState == STATE_RUNNING) {
           // Save the purged state immediately
@@ -286,7 +286,7 @@ SessionStore.prototype = {
 
     // Assign it a unique identifier (timestamp) and create its data object
     aWindow.__SSID = "window" + Date.now();
-    this._windows[aWindow.__SSID] = { tabs: [], selected: 0, closedTabs: [] };
+    this._windows[aWindow.__SSID] = { tabs: [], selected: 0, _closedTabs: [] };
 
     // Perform additional initialization when the first window is loading
     if (this._loadState == STATE_STOPPED) {
@@ -374,12 +374,15 @@ SessionStore.prototype = {
       // NB: The access to aBrowser.__SS_extdata throws during automation (in
       // browser_msgmgr_01). See bug 888736.
       let data = aBrowser.__SS_data;
+      if (!data) {
+        return; // Cannot restore an empty tab.
+      }
       try { data.extData = aBrowser.__SS_extdata; } catch (e) { }
 
-      this._windows[aWindow.__SSID].closedTabs.unshift(data);
-      let length = this._windows[aWindow.__SSID].closedTabs.length;
+      this._windows[aWindow.__SSID]._closedTabs.unshift({ state: data });
+      let length = this._windows[aWindow.__SSID]._closedTabs.length;
       if (length > this._maxTabsUndo)
-        this._windows[aWindow.__SSID].closedTabs.splice(this._maxTabsUndo, length - this._maxTabsUndo);
+        this._windows[aWindow.__SSID]._closedTabs.splice(this._maxTabsUndo, length - this._maxTabsUndo);
     }
   },
 
@@ -577,21 +580,21 @@ SessionStore.prototype = {
     if (!aWindow || !aWindow.__SSID)
       return 0; // not a browser window, or not otherwise tracked by SS.
 
-    return this._windows[aWindow.__SSID].closedTabs.length;
+    return this._windows[aWindow.__SSID]._closedTabs.length;
   },
 
   getClosedTabData: function ss_getClosedTabData(aWindow) {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
-    return JSON.stringify(this._windows[aWindow.__SSID].closedTabs);
+    return JSON.stringify(this._windows[aWindow.__SSID]._closedTabs);
   },
 
   undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
-    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+    let closedTabs = this._windows[aWindow.__SSID]._closedTabs;
     if (!closedTabs)
       return null;
 
@@ -604,13 +607,13 @@ SessionStore.prototype = {
     let closedTab = closedTabs.splice(aIndex, 1).shift();
 
     // create a new tab and bring to front
-    let tab = aWindow.Browser.addTab(closedTab.entries[closedTab.index - 1].url, true);
+    let tab = aWindow.Browser.addTab(closedTab.state.entries[closedTab.state.index - 1].url, true);
 
     tab.browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", {
-      uri: closedTab.entries[closedTab.index - 1].url,
+      uri: closedTab.state.entries[closedTab.state.index - 1].url,
       flags: null,
-      entries: closedTab.entries,
-      index: closedTab.index
+      entries: closedTab.state.entries,
+      index: closedTab.state.index
     });
 
     // Put back the extra data
@@ -623,7 +626,7 @@ SessionStore.prototype = {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
-    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+    let closedTabs = this._windows[aWindow.__SSID]._closedTabs;
 
     // default to the most-recently closed tab
     aIndex = aIndex || 0;
@@ -723,6 +726,10 @@ SessionStore.prototype = {
 
         let tabs = data.windows[0].tabs;
         let selected = data.windows[0].selected;
+
+        if (data.windows[0]._closedTabs)
+          this._windows[window.__SSID]._closedTabs = data.windows[0]._closedTabs;
+
         if (selected > tabs.length) // Clamp the selected index if it's bogus
           selected = 1;
 
@@ -757,7 +764,7 @@ SessionStore.prototype = {
         }
     
         notifyObservers();
-      });
+      }.bind(this));
     } catch (ex) {
       Cu.reportError("SessionStore: Could not read from sessionstore.bak file: " + ex);
       notifyObservers("fail");
