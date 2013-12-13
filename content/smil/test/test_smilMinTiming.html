@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=948245
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 948245</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=948245">Mozilla Bug 948245</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<svg id="svg" onload="this.pauseAnimations()">
+  <rect fill="red" id="rect" x="0">
+    <animate attributeName="x" to="100" id="animation" dur="100s" min="200s"/>
+  </rect>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  // The 'min' attribute introduces a kind of additional state into the SMIL
+  // model. If the 'min' attribute extends the active duration, the additional
+  // time between the amount of time the animation normally runs for (called the
+  // 'repeat duration') and the extended active duration is filled using the
+  // fill mode.
+  //
+  // Below we refer to this period of time between the end of the repeat
+  // duration and the end of the active duration as the 'extended period'.
+  //
+  // This test verifies that as we jump in and out of these states we produce
+  // the correct values.
+  //
+  // The test animation above produces an active interval that is longer than
+  // the 'repeating duration' of the animation.
+  var rect      = $('rect'),
+      animation = $('animation');
+
+  // Animation doesn't start until onload
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", runTests, false);
+
+  function runTests() {
+    ok($('svg').animationsPaused(), "should be paused by <svg> load handler");
+
+    // In the extended period (t=150s) we should not be animating or filling
+    // since the default fill mode is "none".
+    animation.ownerSVGElement.setCurrentTime(150);
+    ise(rect.x.animVal.value, 0,
+        "Shouldn't fill in extended period with fill='none'");
+
+    // If we set the fill mode we should start filling.
+    animation.setAttribute("fill", "freeze");
+    ise(rect.x.animVal.value, 100,
+        "Should fill in extended period with fill='freeze'");
+
+    // If we unset the fill attribute we should stop filling.
+    animation.removeAttribute("fill");
+    ise(rect.x.animVal.value, 0, "Shouldn't fill after unsetting fill");
+
+    // If we jump back into the repeated interval (at t=50s) we should be
+    // animating.
+    animation.ownerSVGElement.setCurrentTime(50);
+    ise(rect.x.animVal.value, 50, "Should be active in repeating interval");
+
+    // If we jump to the boundary at the start of the extended period we should
+    // not be filling (since we removed the fill attribute above).
+    animation.ownerSVGElement.setCurrentTime(100);
+    ise(rect.x.animVal.value, 0,
+        "Shouldn't fill after seeking to boundary of extended period");
+
+    // If we apply a fill mode at this boundary point we should do regular fill
+    // behavior of using the last value in the interpolation range.
+    animation.setAttribute("fill", "freeze");
+    ise(rect.x.animVal.value, 100,
+        "Should fill at boundary to extended period");
+
+    // Check that if we seek past the interval we fill with the value at the end
+    // of the _repeat_duration_ not the value at the end of the
+    // _active_duration_.
+    animation.setAttribute("repeatCount", "1.5");
+    animation.ownerSVGElement.setCurrentTime(225);
+    ise(rect.x.animVal.value, 50,
+        "Should fill with the end of the repeat duration value");
+
+    SimpleTest.finish();
+  }
+</script>
+</pre>
+</body>
+</html>
