@@ -15,7 +15,7 @@
 #include <atlbase.h>
 #include <shlobj.h>
 
-#define SHOW_CONSOLE 1
+//#define SHOW_CONSOLE 1
 extern HANDLE sCon;
 extern LPCWSTR metroDX10Available;
 
