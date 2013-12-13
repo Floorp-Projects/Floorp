@@ -462,7 +462,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Used to work around the move resolver's lack of support for
     // moving into register pairs, which the softfp ABI needs.
-    mozilla::Array<MoveResolver::MoveOperand, 2> floatArgsInGPR;
+    mozilla::Array<MoveOperand, 2> floatArgsInGPR;
     mozilla::Array<bool, 2> floatArgsInGPRValid;
 
     // Compute space needed for the function call and set the properties of the
@@ -485,9 +485,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         setFramePushed(framePushed_ + value);
     }
   public:
-    typedef MoveResolver::MoveOperand MoveOperand;
-    typedef MoveResolver::Move Move;
-
     enum Result {
         GENERAL,
         DOUBLE,

@@ -169,10 +169,10 @@ MacroAssemblerX86::passABIArg(const MoveOperand &from)
     MoveOperand to = MoveOperand(StackPointer, stackForCall_);
     if (from.isDouble()) {
         stackForCall_ += sizeof(double);
-        enoughMemory_ &= moveResolver_.addMove(from, to, Move::DOUBLE);
+        enoughMemory_ &= moveResolver_.addMove(from, to, MoveOp::DOUBLE);
     } else {
         stackForCall_ += sizeof(int32_t);
-        enoughMemory_ &= moveResolver_.addMove(from, to, Move::GENERAL);
+        enoughMemory_ &= moveResolver_.addMove(from, to, MoveOp::GENERAL);
     }
 }
 

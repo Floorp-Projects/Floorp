@@ -49,7 +49,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
+    MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
     bool bailoutIf(Assembler::DoubleCondition condition, LSnapshot *snapshot);
