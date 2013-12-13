@@ -37,7 +37,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
 
       var cueList = trackElement.track.cues;
-      is(cueList.length, 4, "Cue list length should be 4.");
+      is(cueList.length, 6, "Cue list length should be 6.");
 
       // Check that the typedef of TextTrackCue works in Gecko.
       is(window.TextTrackCue, undefined, "TextTrackCue should be undefined.");
@@ -57,39 +57,43 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       // Check that all cue times were not rounded
       is(cueList[1].startTime, 1.2, "Second cue's start time should be 1.2.");
       is(cueList[1].endTime, 2.4, "Second cue's end time should be 2.4.");
-      is(cueList[2].startTime, 2.71, "Third cue's start time should be 2.71.");
-      is(cueList[2].endTime, 2.91, "Third cue's end time should be 2.91.");
-      is(cueList[3].startTime, 3.217, "Fourth cue's start time should be 3.217.");
-      is(cueList[3].endTime, 3.989, "Fourth cue's end time should be 3.989.");
+      is(cueList[2].startTime, 2, "Third cue's start time should be 2.");
+      is(cueList[2].endTime, 3.5, "Third cue's end time should be 3.5.");
+      is(cueList[3].startTime, 2.71, "Fourth cue's start time should be 2.71.");
+      is(cueList[3].endTime, 2.91, "Fourth cue's end time should be 2.91.");
+      is(cueList[4].startTime, 3.217, "Fifth cue's start time should be 3.217.");
+      is(cueList[4].endTime, 3.989, "Fifth cue's end time should be 3.989.");
+      is(cueList[5].startTime, 3.217, "Sixth cue's start time should be 3.217.");
+      is(cueList[5].endTime, 3.989, "Sixth cue's end time should be 3.989.");
 
       // Check that Cue setters are working correctly.
       cue.id = "Cue 01";
       is(cue.id, "Cue 01", "Cue's ID should be 'Cue 01'.");
-      cue.startTime = 1.5;
-      is(cue.startTime, 1.5, "Cue's start time should be 1.5.");
-      cue.endTime = 2.5;
-      is(cue.endTime, 2.5, "Cue's end time should be 2.5.");
+      cue.startTime = 0.51;
+      is(cue.startTime, 0.51, "Cue's start time should be 0.51.");
+      cue.endTime = 0.71;
+      is(cue.endTime, 0.71, "Cue's end time should be 0.71.");
       cue.pauseOnExit = true;
       is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
 
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
       trackElement.track.addCue(vttCue);
-      is(cueList.length, 5, "Cue list length should now be 5.");
+      is(cueList.length, 7, "Cue list length should now be 7.");
 
       // Check that new VTTCue was added correctly
-      cue = cueList[4];
+      cue = cueList[6];
       is(cue.startTime, 3.999, "Cue's start time should be 3.999.");
       is(cue.endTime, 4, "Cue's end time should be 4.");
       is(cue.text, "foo", "Cue's text should be foo.");
 
       // Adding the same cue again should not increase the cue count.
       trackElement.track.addCue(vttCue);
-      is(cueList.length, 5, "Cue list length should be 5.");
+      is(cueList.length, 7, "Cue list length should be 7.");
 
       // Check that we are able to remove cues.
       trackElement.track.removeCue(cue);
-      is(cueList.length, 4, "Cue list length should be 4.");
+      is(cueList.length, 6, "Cue list length should be 6.");
 
       var exceptionHappened = false;
       try {
@@ -106,9 +110,44 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       // when we shouln't have.
       ok(exceptionHappened, "Exception should have happened.");
 
-      is(cueList.length, 4, "Cue list length should be 4.");
+      is(cueList.length, 6, "Cue list length should be 6.");
 
-      SimpleTest.finish();
+      // Test TextTrack::ActiveCues.
+      var cueInfo = [
+        { startTime: 0.51, endTime: 0.71, ids: ["Cue 01"] },
+        { startTime: 0.72, endTime: 1.19, ids: [] },
+        { startTime: 1.2, endTime: 1.9, ids: [2] },
+        { startTime: 2, endTime: 2.4, ids: [2, 2.5] },
+        { startTime: 2.41, endTime: 2.70, ids: [2.5] },
+        { startTime: 2.71, endTime: 2.91, ids: [2.5, 3] },
+        { startTime: 2.92, endTime: 3.216, ids: [2.5] },
+        { startTime: 3.217, endTime: 3.5, ids: [2.5, 4, 5] },
+        { startTime: 3.51, endTime: 3.989, ids: [4, 5] },
+        { startTime: 3.99, endTime: 4, ids: [] }
+      ];
+
+      video.addEventListener("timeupdate", function() {
+        var activeCues = trackElement.track.activeCues,
+            found = false,
+            playbackTime = video.currentTime;
+
+        for (var i = 0; i < cueInfo.length; i++) {
+          var cue = cueInfo[i];
+          if (playbackTime >= cue.startTime && playbackTime <= cue.endTime) {
+            is(activeCues.length, cue.ids.length, "There should be " + cue.ids.length + " currently active cue(s).");
+            for (var j = 0; j < cue.ids.length; j++) {
+              isnot(activeCues.getCueById(cue.ids[j]), undefined, "The cue with ID " + cue.ids[j] + " should be active.");
+            }
+            break;
+          }
+        }
+      });
+
+      video.addEventListener("ended", function(){
+        SimpleTest.finish();
+      });
+
+      video.play();
     });
   }
 );
