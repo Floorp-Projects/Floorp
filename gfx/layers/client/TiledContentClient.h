@@ -14,7 +14,6 @@
 #include "Units.h"                      // for CSSPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxTypes.h"
-#include "gfxPoint.h"                   // for gfxSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
