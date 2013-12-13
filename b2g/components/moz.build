@@ -37,6 +37,7 @@ if CONFIG['MOZ_UPDATER']:
 
 EXTRA_JS_MODULES += [
     'ErrorPage.jsm',
+    'FxAccountsMgmtService.jsm',
     'SignInToWebsite.jsm',
     'TelURIParser.jsm',
     'WebappsUpdater.jsm',
