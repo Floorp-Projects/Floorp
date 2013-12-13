@@ -84,6 +84,10 @@ TextureHost::AsTextureHost(PTextureParent* actor)
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
                                                            uint32_t aDeprecatedTextureHostFlags,
                                                            uint32_t aTextureFlags);
+// implemented in BasicCompositor.cpp
+TemporaryRef<DeprecatedTextureHost> CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                                                             uint32_t aDeprecatedTextureHostFlags,
+                                                             uint32_t aTextureFlags);
 
 #ifdef XP_WIN
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
@@ -123,6 +127,10 @@ DeprecatedTextureHost::CreateDeprecatedTextureHost(SurfaceDescriptorType aDescri
                                           aDeprecatedTextureHostFlags,
                                           aTextureFlags);
 #endif
+    case LAYERS_BASIC:
+      return CreateBasicDeprecatedTextureHost(aDescriptorType,
+                                          aDeprecatedTextureHostFlags,
+                                          aTextureFlags);
     default:
       MOZ_CRASH("Couldn't create texture host");
   }

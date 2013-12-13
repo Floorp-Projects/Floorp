@@ -72,7 +72,6 @@
 #include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
-#include "gfxPlatform.h"
 
 #ifdef DEBUG
 #include "PCOMContentPermissionRequestChild.h"
@@ -2282,10 +2281,6 @@ TabChild::InitRenderingState()
           NS_WARNING("failed to properly allocate layer transaction");
           return false;
         }
-
-        // Track which compositor backend is in use (see bug 947038). This can
-        // be removed when deprecated textures are removed.
-        gfxPlatform::GetPlatform()->SetCompositorBackend(mTextureFactoryIdentifier.mParentBackend);
     } else {
         // Pushing transactions to the parent content.
         shadowManager = remoteFrame->SendPLayerTransactionConstructor();

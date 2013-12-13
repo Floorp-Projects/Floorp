@@ -63,6 +63,161 @@ public:
   RefPtr<gfx::DataSourceSurface> mSurface;
 };
 
+/**
+ * Texture source and host implementaion for software compositing.
+ */
+class DeprecatedTextureHostBasic : public DeprecatedTextureHost
+                                 , public TextureSourceBasic
+{
+public:
+  DeprecatedTextureHostBasic()
+  : mCompositor(nullptr)
+  {}
+
+  SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
+
+  SourceSurface *GetSurface() MOZ_OVERRIDE { return mSurface; }
+
+  virtual void SetCompositor(Compositor* aCompositor)
+  {
+    mCompositor = static_cast<BasicCompositor*>(aCompositor);
+  }
+
+  virtual const char *Name() { return "DeprecatedTextureHostBasic"; }
+
+protected:
+  virtual void UpdateImpl(const SurfaceDescriptor& aImage,
+                          nsIntRegion *aRegion,
+                          nsIntPoint*) MOZ_OVERRIDE
+  {
+    AutoOpenSurface surf(OPEN_READ_ONLY, aImage);
+    nsRefPtr<gfxASurface> surface = ShadowLayerForwarder::OpenDescriptor(OPEN_READ_ONLY, aImage);
+    nsRefPtr<gfxImageSurface> image = surface->GetAsImageSurface();
+    mFormat = ImageFormatToSurfaceFormat(image->Format());
+    mSize = IntSize(image->Width(), image->Height());
+    mSurface = Factory::CreateWrappingDataSourceSurface(image->Data(),
+                                                        image->Stride(),
+                                                        mSize,
+                                                        mFormat);
+  }
+
+  virtual bool EnsureSurface() {
+    return true;
+  }
+
+  virtual bool Lock() MOZ_OVERRIDE {
+    return EnsureSurface();
+  }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE {
+    if (!mSurface) {
+        return nullptr;
+    }
+    return mSurface->GetDataSurface();
+  }
+
+  BasicCompositor *mCompositor;
+  RefPtr<SourceSurface> mSurface;
+  IntSize mSize;
+  SurfaceFormat mFormat;
+};
+
+void
+DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, PlanarYCbCrData& aData)
+{
+  aData.mYChannel = aDeserializer.GetYData();
+  aData.mYStride = aDeserializer.GetYStride();
+  aData.mYSize = aDeserializer.GetYSize();
+  aData.mCbChannel = aDeserializer.GetCbData();
+  aData.mCrChannel = aDeserializer.GetCrData();
+  aData.mCbCrStride = aDeserializer.GetCbCrStride();
+  aData.mCbCrSize = aDeserializer.GetCbCrSize();
+  aData.mPicSize = aDeserializer.GetYSize();
+}
+
+class YCbCrDeprecatedTextureHostBasic : public DeprecatedTextureHostBasic
+{
+public:
+  virtual void UpdateImpl(const SurfaceDescriptor& aImage,
+                          nsIntRegion *aRegion,
+                          nsIntPoint*) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
+    mSurface = nullptr;
+    ConvertImageToRGB(aImage);
+  }
+
+  virtual void SwapTexturesImpl(const SurfaceDescriptor& aImage,
+                                nsIntRegion* aRegion) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
+    mSurface = nullptr;
+  }
+
+  virtual bool EnsureSurface() MOZ_OVERRIDE
+  {
+    if (mSurface) {
+      return true;
+    }
+    if (!mBuffer) {
+      return false;
+    }
+    return ConvertImageToRGB(*mBuffer);
+  }
+
+  bool ConvertImageToRGB(const SurfaceDescriptor& aImage)
+  {
+    YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
+    PlanarYCbCrData data;
+    DeserializerToPlanarYCbCrImageData(deserializer, data);
+
+    gfxImageFormat format = gfxImageFormatRGB24;
+    gfxIntSize size;
+    gfxUtils::GetYCbCrToRGBDestFormatAndSize(data, format, size);
+    if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
+        size.height > PlanarYCbCrImage::MAX_DIMENSION) {
+      NS_ERROR("Illegal image dest width or height");
+      return false;
+    }
+
+    mSize = ToIntSize(size);
+    mFormat = (format == gfxImageFormatRGB24)
+              ? FORMAT_B8G8R8X8
+              : FORMAT_B8G8R8A8;
+
+    RefPtr<DataSourceSurface> surface = Factory::CreateDataSourceSurface(mSize, mFormat);
+    gfxUtils::ConvertYCbCrToRGB(data, format, size,
+                                surface->GetData(),
+                                surface->Stride());
+
+    mSurface = surface;
+    return true;
+  }
+};
+
+TemporaryRef<DeprecatedTextureHost>
+CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
+                             uint32_t aTextureHostFlags,
+                             uint32_t aTextureFlags)
+{
+  RefPtr<DeprecatedTextureHost> result = nullptr;
+  if (aDescriptorType == SurfaceDescriptor::TYCbCrImage) {
+    result = new YCbCrDeprecatedTextureHostBasic();
+  } else {
+    MOZ_ASSERT(aDescriptorType == SurfaceDescriptor::TShmem ||
+               aDescriptorType == SurfaceDescriptor::TMemoryImage,
+               "We can only support Shmem currently");
+    result = new DeprecatedTextureHostBasic();
+  }
+
+  result->SetFlags(aTextureFlags);
+  return result.forget();
+}
+
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
   : mWidget(aWidget)
 {
