@@ -1798,13 +1798,18 @@ ContainerState::PopThebesLayerData()
     // mask layer for image and color layers
     SetupMaskLayer(layer, data->mItemClip);
   }
-  uint32_t flags;
+
+  uint32_t flags = 0;
+  nsIWidget* widget = mContainerReferenceFrame->PresContext()->GetRootWidget();
+  // Disable subpixelAA on hidpi
+  bool hidpi = widget && widget->GetDefaultScale().scale >= 2;
+  if (hidpi) {
+    flags |= Layer::CONTENT_DISABLE_SUBPIXEL_AA;
+  }
   if (isOpaque && !data->mForceTransparentSurface) {
-    flags = Layer::CONTENT_OPAQUE;
-  } else if (data->mNeedComponentAlpha) {
-    flags = Layer::CONTENT_COMPONENT_ALPHA;
-  } else {
-    flags = 0;
+    flags |= Layer::CONTENT_OPAQUE;
+  } else if (data->mNeedComponentAlpha && !hidpi) {
+    flags |= Layer::CONTENT_COMPONENT_ALPHA;
   }
   layer->SetContentFlags(flags);
 
