@@ -23,6 +23,9 @@ class CodeGenerator;
 
 class MoveEmitterX86
 {
+    typedef MoveResolver::Move Move;
+    typedef MoveResolver::MoveOperand MoveOperand;
+
     bool inCycle_;
     MacroAssemblerSpecific &masm;
 
@@ -45,8 +48,8 @@ class MoveEmitterX86
                                  bool allGeneralRegs, bool allFloatRegs, size_t swapCount);
     void emitGeneralMove(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &to, MoveOp::Kind kind);
-    void completeCycle(const MoveOperand &to, MoveOp::Kind kind);
+    void breakCycle(const MoveOperand &to, Move::Kind kind);
+    void completeCycle(const MoveOperand &to, Move::Kind kind);
 
   public:
     MoveEmitterX86(MacroAssemblerSpecific &masm);

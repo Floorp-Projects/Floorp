@@ -363,6 +363,10 @@ class LStackSlot : public LAllocation
       : LAllocation(isDouble ? DOUBLE_SLOT : STACK_SLOT, slot)
     { }
 
+    bool isDouble() const {
+        return kind() == DOUBLE_SLOT;
+    }
+
     uint32_t slot() const {
         return data();
     }
@@ -442,8 +446,7 @@ class LDefinition
         GENERAL,    // Generic, integer or pointer-width data (GPR).
         OBJECT,     // Pointer that may be collected as garbage (GPR).
         SLOTS,      // Slots/elements pointer that may be moved by minor GCs (GPR).
-        FLOAT32,    // 32-bit floating-point value (FPU).
-        DOUBLE,     // 64-bit floating-point value (FPU).
+        DOUBLE,     // 64-bit point value (FPU).
 #ifdef JS_NUNBOX32
         // A type virtual register must be followed by a payload virtual
         // register, as both will be tracked as a single gcthing.
@@ -537,9 +540,8 @@ class LDefinition
           case MIRType_Object:
             return LDefinition::OBJECT;
           case MIRType_Double:
-            return LDefinition::DOUBLE;
           case MIRType_Float32:
-            return LDefinition::FLOAT32;
+            return LDefinition::DOUBLE;
 #if defined(JS_PUNBOX64)
           case MIRType_Value:
             return LDefinition::BOX;
