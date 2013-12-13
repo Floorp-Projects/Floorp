@@ -23,7 +23,7 @@
         "ANDROIDFS_DIR": "{workdir}/helix-ics"
     },
     "b2g_manifest": "helix.xml",
-    "b2g_manifest_branch": "master",
+    "b2g_manifest_branch": "v1.3",
     "additional_source_tarballs": ["helix-ics.tar.xz"],
     "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {
