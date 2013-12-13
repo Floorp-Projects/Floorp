@@ -1502,6 +1502,33 @@ ContentChild::RecvNotifyPhoneStateChange(const nsString& aState)
   return true;
 }
 
+void
+ContentChild::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
+{
+  MOZ_ASSERT(aObserver, "null idle observer");
+  // Make sure aObserver isn't released while we wait for the parent
+  aObserver->AddRef();
+  SendAddIdleObserver(reinterpret_cast<uint64_t>(aObserver), aIdleTimeInS);
+}
+
+void
+ContentChild::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
+{
+  MOZ_ASSERT(aObserver, "null idle observer");
+  SendRemoveIdleObserver(reinterpret_cast<uint64_t>(aObserver), aIdleTimeInS);
+  aObserver->Release();
+}
+
+bool
+ContentChild::RecvNotifyIdleObserver(const uint64_t& aObserver,
+                                     const nsCString& aTopic,
+                                     const nsString& aTimeStr)
+{
+  nsIObserver* observer = reinterpret_cast<nsIObserver*>(aObserver);
+  observer->Observe(nullptr, aTopic.get(), aTimeStr.get());
+  return true;
+}
+
 bool
 ContentChild::RecvLoadAndRegisterSheet(const URIParams& aURI, const uint32_t& aType)
 {

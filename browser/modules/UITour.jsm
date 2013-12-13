@@ -464,6 +464,7 @@ this.UITour = {
         effect = this.highlightEffects[randomEffect];
       }
       highlighter.setAttribute("active", effect);
+      highlighter.parentElement.hidden = false;
 
       let targetRect = aTargetEl.getBoundingClientRect();
 
@@ -514,16 +515,15 @@ this.UITour = {
       let tooltipTitle = document.getElementById("UITourTooltipTitle");
       let tooltipDesc = document.getElementById("UITourTooltipDescription");
 
-      tooltip.hidePopup();
+      if (tooltip.state == "open") {
+        tooltip.hidePopup();
+      }
 
       tooltipTitle.textContent = aTitle;
       tooltipDesc.textContent = aDescription;
 
+      tooltip.hidden = false;
       let alignment = "bottomcenter topright";
-
-      if (tooltip.state == "open") {
-        tooltip.hidePopup();
-      }
       tooltip.openPopup(aAnchorEl, alignment);
     }
 

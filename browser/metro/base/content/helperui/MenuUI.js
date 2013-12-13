@@ -522,7 +522,6 @@ MenuPopup.prototype = {
           aEvent.charCode);  //  in unsigned long charCodeArg);
 
         ev.mine = true;
-        this.commands.dispatchEvent(ev);
 
         switch (aEvent.keyCode) {
           case aEvent.DOM_VK_ESCAPE:
@@ -537,6 +536,7 @@ MenuPopup.prototype = {
         if (Util.isNavigationKey(aEvent.keyCode)) {
           aEvent.stopPropagation();
           aEvent.preventDefault();
+          this.commands.dispatchEvent(ev);
         } else if (!this._wantTypeBehind) {
           // Hide the context menu so you can't type behind it.
           aEvent.stopPropagation();

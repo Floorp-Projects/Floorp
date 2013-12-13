@@ -34,6 +34,8 @@ private:
 
   nsDataHashtable<nsStringHashKey, nsTArray<mozilla::dom::Link *> *> mListeners;
   nsTPriorityQueue<nsString> mPendingURIs;
+
+  nsresult CanAddURI(nsIURI* aURI, bool* canAdd);
 };
 
 #endif

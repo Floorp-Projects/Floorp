@@ -67,3 +67,16 @@ index 16a735c..0387a71 100644
  #endif
 +
 +#endif
+diff --git a/media/libvpx/vp8/common/loopfilter.c b/media/libvpx/vp8/common/loopfilter.c
+index 19857a7..3c0fa63 100644
+--- a/media/libvpx/vp8/common/loopfilter.c
++++ b/media/libvpx/vp8/common/loopfilter.c
+@@ -15,8 +15,6 @@
+ #include "onyxc_int.h"
+ #include "vpx_mem/vpx_mem.h"
+ 
+-typedef unsigned char uc;
+-
+ static void lf_init_lut(loop_filter_info_n *lfi)
+ {
+     int filt_lvl;

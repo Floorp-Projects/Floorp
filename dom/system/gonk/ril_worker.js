@@ -4206,6 +4206,11 @@ let RIL = {
 
       this.sendChromeMessage(message);
 
+      // Update MWI Status into ICC if present.
+      if (message.mwi && ICCUtilsHelper.isICCServiceAvailable("MWIS")) {
+        SimRecordHelper.updateMWIS(message.mwi);
+      }
+
       // We will acknowledge receipt of the SMS after we try to store it
       // in the database.
       return MOZ_FCS_WAIT_FOR_EXPLICIT_ACK;
@@ -6163,7 +6168,7 @@ RIL[UNSOLICITED_RESPONSE_NEW_SMS_STATUS_REPORT] = function UNSOLICITED_RESPONSE_
 RIL[UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM] = function UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM(length) {
   let recordNumber = Buf.readInt32List()[0];
 
-  ICCRecordHelper.readSMS(
+  SimRecordHelper.readSMS(
     recordNumber,
     function onsuccess(message) {
       if (message && message.simStatus === 3) { //New Unread SMS
@@ -10937,6 +10942,7 @@ let ICCFileHelper = {
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       case ICC_EF_AD:
       case ICC_EF_MBDN:
+      case ICC_EF_MWIS:
       case ICC_EF_PLMNsel:
       case ICC_EF_SPN:
       case ICC_EF_SPDI:
@@ -10961,6 +10967,7 @@ let ICCFileHelper = {
       case ICC_EF_AD:
       case ICC_EF_FDN:
       case ICC_EF_MBDN:
+      case ICC_EF_MWIS:
       case ICC_EF_UST:
       case ICC_EF_MSISDN:
       case ICC_EF_SPN:
@@ -11916,6 +11923,13 @@ let SimRecordHelper = {
         if (DEBUG) debug("MDN: MDN service is not available");
       }
 
+      if (ICCUtilsHelper.isICCServiceAvailable("MWIS")) {
+        if (DEBUG) debug("MWIS: MWIS is available");
+        this.readMWIS();
+      } else {
+        if (DEBUG) debug("MWIS: MWIS is not available");
+      }
+
       if (ICCUtilsHelper.isICCServiceAvailable("SPDI")) {
         if (DEBUG) debug("SPDI: SPDI available.");
         this.readSPDI();
@@ -11983,6 +11997,91 @@ let SimRecordHelper = {
 
     ICCIOHelper.loadLinearFixedEF({fileId: ICC_EF_MBDN,
                                    callback: callback.bind(this)});
+  },
+
+  /**
+   * Read ICC MWIS. (Message Waiting Indication Status)
+   *
+   * @see TS 31.102, clause 4.2.63 for USIM and TS 51.011, clause 10.3.45 for SIM.
+   */
+  readMWIS: function readMWIS() {
+    function callback(options) {
+      let strLen = Buf.readInt32();
+      // Each octet is encoded into two chars.
+      let octetLen = strLen / 2;
+      let mwis = GsmPDUHelper.readHexOctetArray(octetLen);
+      Buf.readStringDelimiter(strLen);
+      if (!mwis) {
+        return;
+      }
+      RIL.iccInfoPrivate.mwis = mwis; //Keep raw MWIS for updateMWIS()
+
+      let mwi = {};
+      // b8 b7 B6 b5 b4 b3 b2 b1   4.2.63, TS 31.102 version 11.6.0
+      //  |  |  |  |  |  |  |  |__ Voicemail
+      //  |  |  |  |  |  |  |_____ Fax
+      //  |  |  |  |  |  |________ Electronic Mail
+      //  |  |  |  |  |___________ Other
+      //  |  |  |  |______________ Videomail
+      //  |__|__|_________________ RFU
+      mwi.active = ((mwis[0] & 0x01) != 0);
+
+      if (mwi.active) {
+        // In TS 23.040 msgCount is in the range from 0 to 255.
+        // The value 255 shall be taken to mean 255 or greater.
+        //
+        // However, There is no definition about 0 when MWI is active.
+        //
+        // Normally, when mwi is active, the msgCount must be larger than 0.
+        // Refer to other reference phone,
+        // 0 is usually treated as UNKNOWN for storing 2nd level MWI status (DCS).
+        mwi.msgCount = (mwis[1] === 0) ? GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN
+                                       : mwis[1];
+      } else {
+        mwi.msgCount = 0;
+      }
+
+      RIL.sendChromeMessage({ rilMessageType: "iccmwis",
+                              mwi: mwi });
+    }
+
+    ICCIOHelper.loadLinearFixedEF({ fileId: ICC_EF_MWIS,
+                                    recordNumber: 1, // Get 1st Subscriber Profile.
+                                    callback: callback });
+  },
+
+  /**
+   * Update ICC MWIS. (Message Waiting Indication Status)
+   *
+   * @see TS 31.102, clause 4.2.63 for USIM and TS 51.011, clause 10.3.45 for SIM.
+   */
+  updateMWIS: function updateMWIS(mwi) {
+    if (!RIL.iccInfoPrivate.mwis) {
+      return;
+    }
+
+    function dataWriter(recordSize) {
+      let mwis = RIL.iccInfoPrivate.mwis;
+
+      let msgCount =
+          (mwi.msgCount === GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN) ? 0 : mwi.msgCount;
+
+      [mwis[0], mwis[1]] = (mwi.active) ? [(mwis[0] | 0x01), msgCount]
+                                        : [(mwis[0] & 0xFE), 0];
+
+      let strLen = recordSize * 2;
+      Buf.writeInt32(strLen);
+
+      for (let i = 0; i < mwis.length; i++) {
+        GsmPDUHelper.writeHexOctet(mwis[i]);
+      }
+
+      Buf.writeStringDelimiter(strLen);
+    }
+
+    ICCIOHelper.updateLinearFixedEF({ fileId: ICC_EF_MWIS,
+                                      recordNumber: 1, // Update 1st Subscriber Profile.
+                                      dataWriter: dataWriter });
   },
 
   /**
