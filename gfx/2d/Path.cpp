@@ -407,7 +407,8 @@ FlattenBezier(const BezierControlPoints &aControlPoints,
     return;
   }
 
-  if (count == 0) {
+  // Check that at least one of the inflection points is inside [0..1]
+  if (count == 0 || ((t1 < 0 || t1 > 1.0) && ((t2 < 0 || t2 > 1.0) || count == 1)) ) {
     FlattenBezierCurveSegment(aControlPoints, aSink, aTolerance);
     return;
   }
