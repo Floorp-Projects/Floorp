@@ -111,7 +111,7 @@ class LinearScanAllocator
     AnyRegister::Code findBestFreeRegister(CodePosition *freeUntil);
     AnyRegister::Code findBestBlockedRegister(CodePosition *nextUsed);
     bool canCoexist(LiveInterval *a, LiveInterval *b);
-    bool moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to, LDefinition::Type type);
+    bool moveInputAlloc(CodePosition pos, LAllocation *from, LAllocation *to);
     void setIntervalRequirement(LiveInterval *interval);
     bool isSpilledAt(LiveInterval *interval, CodePosition pos);
 

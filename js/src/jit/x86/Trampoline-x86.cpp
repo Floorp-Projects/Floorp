@@ -538,6 +538,8 @@ JitRuntime::generateBailoutHandler(JSContext *cx)
 IonCode *
 JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
+    typedef MoveResolver::MoveOperand MoveOperand;
+
     JS_ASSERT(!StackKeptAligned);
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());
@@ -614,31 +616,31 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     size_t argDisp = 0;
 
     // Copy arguments.
-    for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
-        MoveOperand from;
-        switch (f.argProperties(explicitArg)) {
-          case VMFunction::WordByValue:
-            masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
-            argDisp += sizeof(void *);
-            break;
-          case VMFunction::DoubleByValue:
-            // We don't pass doubles in float registers on x86, so no need
-            // to check for argPassedInFloatReg.
-            masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
-            argDisp += sizeof(void *);
-            masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
-            argDisp += sizeof(void *);
-            break;
-          case VMFunction::WordByRef:
-            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
-                            MoveOp::GENERAL);
-            argDisp += sizeof(void *);
-            break;
-          case VMFunction::DoubleByRef:
-            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS),
-                            MoveOp::GENERAL);
-            argDisp += 2 * sizeof(void *);
-            break;
+    if (f.explicitArgs) {
+        for (uint32_t explicitArg = 0; explicitArg < f.explicitArgs; explicitArg++) {
+            MoveOperand from;
+            switch (f.argProperties(explicitArg)) {
+              case VMFunction::WordByValue:
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::DoubleByValue:
+                // We don't pass doubles in float registers on x86, so no need
+                // to check for argPassedInFloatReg.
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                masm.passABIArg(MoveOperand(argsBase, argDisp));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::WordByRef:
+                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                argDisp += sizeof(void *);
+                break;
+              case VMFunction::DoubleByRef:
+                masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
+                argDisp += 2 * sizeof(void *);
+                break;
+            }
         }
     }
 

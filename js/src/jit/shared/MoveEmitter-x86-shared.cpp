@@ -27,7 +27,7 @@ MoveEmitterX86::characterizeCycle(const MoveResolver &moves, size_t i,
     size_t swapCount = 0;
 
     for (size_t j = i; ; j++) {
-        const MoveOp &move = moves.getMove(j);
+        const Move &move = moves.getMove(j);
 
         // If it isn't a cycle of registers of the same kind, we won't be able
         // to optimize it.
@@ -56,7 +56,7 @@ MoveEmitterX86::characterizeCycle(const MoveResolver &moves, size_t i,
     }
 
     // Check that the last move cycles back to the first move.
-    const MoveOp &move = moves.getMove(i + swapCount);
+    const Move &move = moves.getMove(i + swapCount);
     if (move.from() != moves.getMove(i).to()) {
         *allGeneralRegs = false;
         *allFloatRegs = false;
@@ -99,7 +99,7 @@ void
 MoveEmitterX86::emit(const MoveResolver &moves)
 {
     for (size_t i = 0; i < moves.numMoves(); i++) {
-        const MoveOp &move = moves.getMove(i);
+        const Move &move = moves.getMove(i);
         const MoveOperand &from = move.from();
         const MoveOperand &to = move.to();
 
@@ -128,17 +128,10 @@ MoveEmitterX86::emit(const MoveResolver &moves)
         }
 
         // A normal move which is not part of a cycle.
-        switch (move.kind()) {
-          case MoveOp::FLOAT32:
-          case MoveOp::DOUBLE:
+        if (move.kind() == Move::DOUBLE)
             emitDoubleMove(from, to);
-            break;
-          case MoveOp::GENERAL:
+        else
             emitGeneralMove(from, to);
-            break;
-          default:
-            MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
-        }
     }
 }
 
@@ -177,7 +170,7 @@ MoveEmitterX86::toAddress(const MoveOperand &operand) const
 Operand
 MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
-    if (operand.isMemoryOrEffectiveAddress())
+    if (operand.isMemory() || operand.isEffectiveAddress() || operand.isFloatAddress())
         return Operand(toAddress(operand));
     if (operand.isGeneralReg())
         return Operand(operand.reg());
@@ -211,7 +204,7 @@ MoveEmitterX86::toPopOperand(const MoveOperand &operand) const
 }
 
 void
-MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterX86::breakCycle(const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -219,26 +212,20 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Kind kind)
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    switch (kind) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+    if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             masm.loadDouble(toAddress(to), ScratchFloatReg);
             masm.storeDouble(ScratchFloatReg, cycleSlot());
         } else {
             masm.storeDouble(to.floatReg(), cycleSlot());
         }
-        break;
-      case MoveOp::GENERAL:
+    } else {
         masm.Push(toOperand(to));
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 
 void
-MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterX86::completeCycle(const MoveOperand &to, Move::Kind kind)
 {
     // There is some pattern:
     //   (A -> B)
@@ -246,25 +233,19 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Kind kind)
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    switch (kind) {
-      case MoveOp::FLOAT32:
-      case MoveOp::DOUBLE:
+    if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
             masm.loadDouble(cycleSlot(), ScratchFloatReg);
             masm.storeDouble(ScratchFloatReg, toAddress(to));
         } else {
             masm.loadDouble(cycleSlot(), to.floatReg());
         }
-        break;
-      case MoveOp::GENERAL:
+    } else {
         if (to.isMemory()) {
             masm.Pop(toPopOperand(to));
         } else {
             masm.Pop(to.reg());
         }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
     }
 }
 
@@ -274,7 +255,7 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand &from, const MoveOperand &to)
     if (from.isGeneralReg()) {
         masm.mov(from.reg(), toOperand(to));
     } else if (to.isGeneralReg()) {
-        JS_ASSERT(from.isMemoryOrEffectiveAddress());
+        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
         if (from.isMemory())
             masm.loadPtr(toAddress(from), to.reg());
         else

@@ -654,6 +654,8 @@ JitRuntime::generateBailoutHandler(JSContext *cx)
 IonCode *
 JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
+    typedef MoveResolver::MoveOperand MoveOperand;
+
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());
     VMWrapperMap::AddPtr p = functionWrappers_->lookupForAdd(&f);
@@ -735,22 +737,22 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         MoveOperand from;
         switch (f.argProperties(explicitArg)) {
           case VMFunction::WordByValue:
-            masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::GENERAL);
+            masm.passABIArg(MoveOperand(argsBase, argDisp));
             argDisp += sizeof(void *);
             break;
           case VMFunction::DoubleByValue:
             // Values should be passed by reference, not by value, so we
             // assert that the argument is a double-precision float.
             JS_ASSERT(f.argPassedInFloatReg(explicitArg));
-            masm.passABIArg(MoveOperand(argsBase, argDisp), MoveOp::DOUBLE);
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::FLOAT));
             argDisp += sizeof(double);
             break;
           case VMFunction::WordByRef:
-            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS), MoveOp::GENERAL);
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
             argDisp += sizeof(void *);
             break;
           case VMFunction::DoubleByRef:
-            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE_ADDRESS), MoveOp::GENERAL);
+            masm.passABIArg(MoveOperand(argsBase, argDisp, MoveOperand::EFFECTIVE));
             argDisp += 2 * sizeof(void *);
             break;
         }

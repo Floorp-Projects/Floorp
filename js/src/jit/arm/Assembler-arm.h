@@ -2152,19 +2152,9 @@ GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *paddi
 }
 
 static inline uint32_t
-GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
-    JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
-    uint32_t intSlots = 0;
-    if (usedIntArgs > NumIntArgRegs)
-        intSlots = usedIntArgs - NumIntArgRegs;
-    uint32_t float32Slots = usedFloatArgs - NumFloatArgRegs;
-    return (intSlots + float32Slots + *padding) * STACK_SLOT_SIZE;
-}
 
-static inline uint32_t
-GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
-{
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs) {
