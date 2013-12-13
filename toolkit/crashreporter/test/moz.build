@@ -8,7 +8,7 @@ NO_DIST_INSTALL = True
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
 
-SOURCES += [
+UNIFIED_SOURCES += [
     '../google-breakpad/src/common/logging.cc',
     '../google-breakpad/src/common/pathname_stripper.cc',
     '../google-breakpad/src/processor/basic_code_modules.cc',
