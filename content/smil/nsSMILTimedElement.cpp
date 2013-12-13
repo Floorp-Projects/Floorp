@@ -1803,11 +1803,7 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
   NS_ABORT_IF_FALSE(aBegin.IsDefinite(),
     "Indefinite or unresolved begin time in CalcActiveEnd");
 
-  if (mRepeatDur.IsIndefinite()) {
-    result.SetIndefinite();
-  } else {
-    result = GetRepeatDuration();
-  }
+  result = GetRepeatDuration();
 
   if (aEnd.IsDefinite()) {
     nsSMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
@@ -1832,29 +1828,25 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
 nsSMILTimeValue
 nsSMILTimedElement::GetRepeatDuration() const
 {
-  nsSMILTimeValue result;
-
-  if (mRepeatCount.IsDefinite() && mRepeatDur.IsDefinite()) {
-    if (mSimpleDur.IsDefinite()) {
-      nsSMILTime activeDur =
-        nsSMILTime(mRepeatCount * double(mSimpleDur.GetMillis()));
-      result.SetMillis(std::min(activeDur, mRepeatDur.GetMillis()));
-    } else {
-      result = mRepeatDur;
-    }
-  } else if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
-    nsSMILTime activeDur =
-      nsSMILTime(mRepeatCount * double(mSimpleDur.GetMillis()));
-    result.SetMillis(activeDur);
-  } else if (mRepeatDur.IsDefinite()) {
-    result = mRepeatDur;
-  } else if (mRepeatCount.IsIndefinite()) {
-    result.SetIndefinite();
+  nsSMILTimeValue multipliedDuration;
+  if (mRepeatCount.IsDefinite() && mSimpleDur.IsDefinite()) {
+    multipliedDuration.SetMillis(
+      nsSMILTime(mRepeatCount * double(mSimpleDur.GetMillis())));
   } else {
-    result = mSimpleDur;
+    multipliedDuration.SetIndefinite();
   }
 
-  return result;
+  nsSMILTimeValue repeatDuration;
+
+  if (mRepeatDur.IsResolved()) {
+    repeatDuration = std::min(multipliedDuration, mRepeatDur);
+  } else if (mRepeatCount.IsSet()) {
+    repeatDuration = multipliedDuration;
+  } else {
+    repeatDuration = mSimpleDur;
+  }
+
+  return repeatDuration;
 }
 
 nsSMILTimeValue
