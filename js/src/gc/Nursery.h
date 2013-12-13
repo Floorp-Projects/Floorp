@@ -135,6 +135,12 @@ class Nursery
         if (isEnabled())
             numActiveChunks_ = NumNurseryChunks;
     }
+    void leaveZealMode() {
+        if (isEnabled()) {
+            JS_ASSERT(isEmpty());
+            setCurrentChunk(0);
+        }
+    }
 #endif
 
   private:
