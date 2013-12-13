@@ -830,10 +830,11 @@ MaybeVerifyPreBarriers(JSRuntime *rt, bool always)
 static void
 MaybeVerifyPostBarriers(JSRuntime *rt, bool always)
 {
+#ifdef JSGC_GENERATIONAL
     if (rt->gcZeal() != ZealVerifierPostValue)
         return;
 
-    if (rt->mainThread.suppressGC)
+    if (rt->mainThread.suppressGC || !rt->gcStoreBuffer.isEnabled())
         return;
 
     if (VerifyPostTracer *trc = (VerifyPostTracer *)rt->gcVerifyPostData) {
@@ -843,6 +844,7 @@ MaybeVerifyPostBarriers(JSRuntime *rt, bool always)
         EndVerifyPostBarriers(rt);
     }
     StartVerifyPostBarriers(rt);
+#endif
 }
 
 void
