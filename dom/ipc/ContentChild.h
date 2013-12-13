@@ -240,6 +240,12 @@ public:
     virtual bool RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType);
 
     virtual bool RecvNotifyPhoneStateChange(const nsString& state);
+
+    void AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
+    void RemoveIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS);
+    virtual bool RecvNotifyIdleObserver(const uint64_t& aObserver,
+                                        const nsCString& aTopic,
+                                        const nsString& aData);
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
