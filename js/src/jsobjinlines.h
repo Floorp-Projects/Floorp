@@ -413,6 +413,12 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
 /* static */ inline bool
 JSObject::setProto(JSContext *cx, JS::HandleObject obj, JS::HandleObject proto, bool *succeeded)
 {
+    /* Proxies live in their own little world. */
+    if (obj->getTaggedProto().isLazy()) {
+        JS_ASSERT(obj->is<js::ProxyObject>());
+        return js::Proxy::setPrototypeOf(cx, obj, proto, succeeded);
+    }
+
     /* ES6 9.1.2 step 5 forbids changing [[Prototype]] if not [[Extensible]]. */
     bool extensible;
     if (!JSObject::isExtensible(cx, obj, &extensible))
