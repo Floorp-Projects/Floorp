@@ -111,7 +111,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(5b9949dc-56f1-47b6-b6d2-3785bb90ed6d)]
+[scriptable, builtinclass, uuid(a723673b-a26e-4cc6-ae23-ec70df9d97c9)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -272,6 +272,11 @@ interface nsIFrameLoader : nsISupports
    * have a notion of visibility in the parent process when frames are OOP.
    */
   [infallible] attribute boolean visible;
+
+  /**
+   * Find out whether the owner content really is a browser or app frame
+   */
+  readonly attribute boolean ownerIsBrowserOrAppFrame;
 };
 
 %{C++
