@@ -692,8 +692,6 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
     assert(false && "Format not supported, and no suggestion from WASAPI.");
   } else if (hr == S_OK) {
     LOG("Requested format accepted by WASAPI.");
-  } else {
-    assert(false && "Not reached.");
   }
 }
 
