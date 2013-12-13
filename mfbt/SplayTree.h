@@ -63,20 +63,20 @@ class SplayTree
       return !root;
     }
 
-    bool contains(const T& v)
+    T* find(const T& v)
     {
       if (empty())
-        return false;
+        return nullptr;
 
       T* last = lookup(v);
       splay(last);
       checkCoherency(root, nullptr);
-      return Comparator::compare(v, *last) == 0;
+      return Comparator::compare(v, *last) == 0 ? last : nullptr;
     }
 
     bool insert(T* v)
     {
-      MOZ_ASSERT(!contains(*v), "Duplicate elements are not allowed.");
+      MOZ_ASSERT(!find(*v), "Duplicate elements are not allowed.");
 
       if (!root) {
         root = v;
