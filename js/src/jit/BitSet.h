@@ -21,8 +21,10 @@ namespace jit {
 class BitSet : private TempObject
 {
   public:
+    static const size_t BitsPerWord = 8 * sizeof(uint32_t);
+
     static size_t RawLengthForBits(size_t bits) {
-        return 1 + bits / (8 * sizeof(uint32_t));
+        return (bits + BitsPerWord - 1) / BitsPerWord;
     }
 
   private:
@@ -34,11 +36,11 @@ class BitSet : private TempObject
     uint32_t *bits_;
 
     static inline uint32_t bitForValue(unsigned int value) {
-        return 1l << (uint32_t)(value % (8 * sizeof(uint32_t)));
+        return 1l << uint32_t(value % BitsPerWord);
     }
 
     static inline unsigned int wordForValue(unsigned int value) {
-        return value / (8 * sizeof(uint32_t));
+        return value / BitsPerWord;
     }
 
     inline unsigned int numWords() const {
