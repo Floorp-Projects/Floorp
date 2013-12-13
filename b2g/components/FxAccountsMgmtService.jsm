@@ -25,6 +25,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
   "resource://gre/modules/FxAccountsManager.jsm");
@@ -66,6 +67,7 @@ this.FxAccountsMgmtService = {
 
   handleEvent: function(aEvent) {
     let msg = aEvent.detail;
+    log.debug("Got content msg " + JSON.stringify(msg));
     let self = FxAccountsMgmtService;
 
     if (!msg.id) {

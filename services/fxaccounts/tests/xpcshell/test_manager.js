@@ -6,7 +6,7 @@
 const Cm = Components.manager;
 
 Cu.import("resource://gre/modules/FxAccounts.jsm");
-Cu.import("resource://gre/modules/FxAccountsConsts.js");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsManager.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 

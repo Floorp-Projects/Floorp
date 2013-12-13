@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
@@ -43,6 +44,8 @@ FxAccountsUIGlue.prototype = {
         return;
       }
 
+      log.debug("Got content event " + JSON.stringify(msg));
+
       if (msg.error) {
         deferred.reject(msg);
       } else {
@@ -52,10 +55,12 @@ FxAccountsUIGlue.prototype = {
                                   onContentEvent);
     });
 
-    this._browser.shell.sendCustomEvent("mozFxAccountsRPChromeEvent", {
-      method: "openFlow",
-      id: id
-    });
+    let detail = {
+       method: "openFlow",
+       id: id
+    };
+    log.debug("Send chrome event " + JSON.stringify(detail));
+    this._browser.shell.sendCustomEvent("mozFxAccountsRPChromeEvent", detail);
 
     return deferred.promise;
   },
