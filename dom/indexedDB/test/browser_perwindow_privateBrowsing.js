@@ -17,6 +17,10 @@ function test1()
 {
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function () {
+    if (content.location != testPageURL) {
+      content.location = testPageURL;
+      return;
+    }
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
@@ -45,6 +49,10 @@ function test3(win)
 {
   win.gBrowser.selectedTab = win.gBrowser.addTab();
   win.gBrowser.selectedBrowser.addEventListener("load", function () {
+    if (win.content.location != testPageURL) {
+      win.content.location = testPageURL;
+      return;
+    }
     win.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
     setFinishedCallback(function(result, exception) {
