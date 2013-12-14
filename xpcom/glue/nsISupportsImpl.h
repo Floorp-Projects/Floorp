@@ -593,8 +593,8 @@ struct QITableEntry
 };
 
 NS_COM_GLUE nsresult NS_FASTCALL
-NS_TableDrivenQI(void* aThis, const QITableEntry* entries,
-                 REFNSIID aIID, void **aInstancePtr);
+NS_TableDrivenQI(void* aThis, REFNSIID aIID,
+                 void **aInstancePtr, const QITableEntry* entries);
 
 /**
  * Implement table-driven queryinterface
@@ -636,7 +636,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   { nullptr, 0 } };                                                           \
   static_assert((sizeof(table)/sizeof(table[0])) > 1, "need at least 1 interface"); \
   rv = NS_TableDrivenQI(static_cast<void*>(_ptr),                             \
-                        table, aIID, aInstancePtr);
+                        aIID, aInstancePtr, table);
 
 #define NS_INTERFACE_TABLE_END                                                \
   NS_INTERFACE_TABLE_END_WITH_PTR(this)
