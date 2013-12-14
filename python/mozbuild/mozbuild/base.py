@@ -590,6 +590,13 @@ class MachCommandConditions(object):
                    cls.substs.get('MOZ_WIDGET_TOOLKIT') != 'gonk'
         return False
 
+    @staticmethod
+    def is_android(cls):
+        """Must have an Android build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'android'
+        return False
+
 
 class PathArgument(object):
     """Parse a filesystem path argument and transform it in various ways."""
