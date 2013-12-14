@@ -340,7 +340,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 LibraryDefinition(sandbox, libname)
 
         if final_lib:
-            if sandbox.get('FORCE_STATIC_LIB'):
+            if isinstance(sandbox, MozbuildSandbox) and sandbox.get('FORCE_STATIC_LIB'):
                 raise SandboxValidationError('FINAL_LIBRARY implies FORCE_STATIC_LIB')
             self._final_libs.append((sandbox['OBJDIR'], libname, final_lib))
             passthru.variables['FORCE_STATIC_LIB'] = True
