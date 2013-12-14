@@ -1150,6 +1150,63 @@ nsDOMWindowUtils::SendNativeMouseScrollEvent(int32_t aScreenX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeTouchPoint(uint32_t aPointerId,
+                                       uint32_t aTouchState,
+                                       int32_t aScreenX,
+                                       int32_t aScreenY,
+                                       double aPressure,
+                                       uint32_t aOrientation)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aPressure < 0 || aPressure > 1 || aOrientation > 359) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return widget->SynthesizeNativeTouchPoint(aPointerId,
+                                            (nsIWidget::TouchPointerState)aTouchState,
+                                            nsIntPoint(aScreenX, aScreenY),
+                                            aPressure, aOrientation);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeTouchTap(int32_t aScreenX,
+                                     int32_t aScreenY,
+                                     bool aLongTap)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+  return widget->SynthesizeNativeTouchTap(nsIntPoint(aScreenX, aScreenY), aLongTap);
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ClearNativeTouchSequence()
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+  return widget->ClearNativeTouchSequence();
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
   if (!nsContentUtils::IsCallerChrome()) {
