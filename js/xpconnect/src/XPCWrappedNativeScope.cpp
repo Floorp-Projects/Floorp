@@ -546,27 +546,6 @@ XPCWrappedNativeScope::SystemIsBeingShutDown()
 /***************************************************************************/
 
 static PLDHashOperator
-WNProtoSecPolicyClearer(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                        uint32_t number, void *arg)
-{
-    XPCWrappedNativeProto* proto =
-        ((ClassInfo2WrappedNativeProtoMap::Entry*)hdr)->value;
-    *(proto->GetSecurityInfoAddr()) = nullptr;
-    return PL_DHASH_NEXT;
-}
-
-// static
-nsresult
-XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies()
-{
-    for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
-        cur->mWrappedNativeProtoMap->Enumerate(WNProtoSecPolicyClearer, nullptr);
-    }
-
-    return NS_OK;
-}
-
-static PLDHashOperator
 WNProtoRemover(PLDHashTable *table, PLDHashEntryHdr *hdr,
                uint32_t number, void *arg)
 {
