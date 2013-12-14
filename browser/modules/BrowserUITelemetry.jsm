@@ -66,7 +66,7 @@ const APPMENU_WHITELIST = [
     "appmenuitem_netmonitor",
     "appmenu_devToolbar",
     "appmenu_devAppMgr",
-    "appmenu_chromeDebugger",
+    "appmenu_browserToolbox",
     "appmenu_browserConsole",
     "appmenu_responsiveUI",
     "appmenu_scratchpad",
