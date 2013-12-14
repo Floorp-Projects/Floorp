@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1386360478000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1386891443000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -104,6 +104,10 @@
                   </emItem>
       <emItem  blockID="i72" os="WINNT" id="{4ED1F68A-5463-4931-9384-8FFF5ED91D92}">
                         <versionRange  minVersion="3.4.1" maxVersion="3.4.1.194" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i506" id="ext@bettersurfplus.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i100" id="{394DCBA4-1F92-4f8e-8EC9-8D2CB90CB69B}">
@@ -453,6 +457,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i507" id="4zffxtbr-bs@VideoDownloadConverter_4z.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
                         </emItem>
       <emItem  blockID="i485" id="/^brasilescape.*\@facebook\.com$//">
@@ -691,6 +699,10 @@
                   </emItem>
       <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
                         <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i505" id="extacylife@a.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i15" id="personas@christopher.beard">
