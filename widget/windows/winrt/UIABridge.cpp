@@ -315,10 +315,10 @@ UIABridge::get_BoundingRectangle(UiaRect * retVal)
   mWindow->get_Bounds(&bounds);
 
   // we need to return physical pixels
-  retVal->left = MetroUtils::LogToPhys(bounds.X);
-  retVal->top = MetroUtils::LogToPhys(bounds.Y);
-  retVal->width = MetroUtils::LogToPhys(bounds.Width);
-  retVal->height = MetroUtils::LogToPhys(bounds.Height);
+  retVal->left = WinUtils::LogToPhys(bounds.X);
+  retVal->top = WinUtils::LogToPhys(bounds.Y);
+  retVal->width = WinUtils::LogToPhys(bounds.Width);
+  retVal->height = WinUtils::LogToPhys(bounds.Height);
 
   return S_OK;
 }
