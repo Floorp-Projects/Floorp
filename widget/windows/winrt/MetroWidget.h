@@ -175,6 +175,8 @@ public:
   virtual void  FreeNativeData(void * data, uint32_t aDataType);
   virtual nsIntPoint WidgetToScreenOffset();
 
+  already_AddRefed<nsIPresShell> GetPresShell();
+
   void UserActivity();
 
 #ifdef ACCESSIBILITY

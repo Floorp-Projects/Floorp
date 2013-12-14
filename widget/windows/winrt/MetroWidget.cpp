@@ -1346,7 +1346,8 @@ MetroWidget::CSSIntPointToLayoutDeviceIntPoint(const CSSIntPoint &aCSSPoint)
   return devPx;
 }
 
-float MetroWidget::GetDPI()
+float
+MetroWidget::GetDPI()
 {
   if (!mView) {
     return 96.0;
@@ -1354,7 +1355,8 @@ float MetroWidget::GetDPI()
   return mView->GetDPI();
 }
 
-void MetroWidget::ChangedDPI()
+void
+MetroWidget::ChangedDPI()
 {
   if (mWidgetListener) {
     nsIPresShell* presShell = mWidgetListener->GetPresShell();
@@ -1362,6 +1364,16 @@ void MetroWidget::ChangedDPI()
       presShell->BackingScaleFactorChanged();
     }
   }
+}
+
+already_AddRefed<nsIPresShell>
+MetroWidget::GetPresShell()
+{
+  if (mWidgetListener) {
+    nsCOMPtr<nsIPresShell> ps = mWidgetListener->GetPresShell();
+    return ps.forget();
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
