@@ -876,13 +876,6 @@ nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
     return NS_OK;
 }
 
-/* void clearAllWrappedNativeSecurityPolicies (); */
-NS_IMETHODIMP
-nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
-{
-    return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies();
-}
-
 NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                            nsIXPConnectJSObjectHolder **_retval)
