@@ -629,69 +629,49 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(uint32_t aAction,
 
     nsCOMPtr<nsIPrincipal> objectPrincipal;
 
+    // Even though security wrappers have handled our cross-origin access policy
+    // since FF4, we've still always called into this function, and have relied
+    // on the CAPS policy mechanism to manually approve each cross-origin property
+    // based on a whitelist in all.js. This whitelist has drifted out of sync
+    // with the canonical one in AccessCheck.cpp, but it's always been more
+    // permissive, so we never noticed. This machinery is going away, so for now
+    // let's just skip the check for cross-origin property accesses that we know
+    // we get right.
+    //
+    // Note that while it would be nice to just rely on aClassName here, it
+    // isn't set reliably by callers. :-(
+    const char *className = aClassName;
+    if (!className && jsObject) {
+        className = JS_GetClass(jsObject)->name;
+    }
+    if (className &&
+        (!strcmp(className, "Window") || !strcmp(className, "Location")))
+    {
+        return NS_OK;
+    }
+
     // Hold the class info data here so we don't have to go back to virtual
     // methods all the time
     ClassInfoData classInfoData(aClassInfo, aClassName);
 
-    //-- Look up the security policy for this class and subject domain
-    SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, classInfoData, property, aAction,
-                      &securityLevel);
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (securityLevel.level == SCRIPT_SECURITY_UNDEFINED_ACCESS)
-    {
-        // No policy found for this property so use the default of last resort.
-        // If we were called from somewhere other than XPConnect
-        // (no XPC call context), assume this is a DOM class. Otherwise,
-        // ask the ClassInfo.
-        if (!aCallContext || classInfoData.IsDOMClass())
-            securityLevel.level = SCRIPT_SECURITY_SAME_ORIGIN_ACCESS;
-        else
-            securityLevel.level = SCRIPT_SECURITY_NO_ACCESS;
-    }
-
-    if (SECURITY_ACCESS_LEVEL_FLAG(securityLevel))
-    // This flag means securityLevel is allAccess, noAccess, or sameOrigin
-    {
-        switch (securityLevel.level)
-        {
-        case SCRIPT_SECURITY_NO_ACCESS:
-            rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-            break;
-
-        case SCRIPT_SECURITY_ALL_ACCESS:
-            rv = NS_OK;
-            break;
-
-        case SCRIPT_SECURITY_SAME_ORIGIN_ACCESS:
-            {
-                nsCOMPtr<nsIPrincipal> principalHolder;
-                if (jsObject)
-                {
-                    objectPrincipal = doGetObjectPrincipal(jsObject);
-                    if (!objectPrincipal)
-                        rv = NS_ERROR_DOM_SECURITY_ERR;
-                }
-                else
-                {
-                    NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
-                    return NS_ERROR_FAILURE;
-                }
-                if(NS_SUCCEEDED(rv))
-                    rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
-                                                aAction);
-                break;
-            }
-        default:
-            NS_ERROR("Bad Security Level Value");
+    // If we were called from somewhere other than XPConnect
+    // (no XPC call context), assume this is a DOM class. Otherwise,
+    // ask the ClassInfo.
+    if (aCallContext && !classInfoData.IsDOMClass()) {
+        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
+    } else {
+        if (!jsObject) {
+            NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
             return NS_ERROR_FAILURE;
         }
-    }
-    else // if SECURITY_ACCESS_LEVEL_FLAG is false, securityLevel is a capability
-    {
-        rv = SubjectIsPrivileged() ? NS_OK : NS_ERROR_DOM_SECURITY_ERR;
+        nsCOMPtr<nsIPrincipal> principalHolder;
+        objectPrincipal = doGetObjectPrincipal(jsObject);
+        if (!objectPrincipal)
+            rv = NS_ERROR_DOM_SECURITY_ERR;
+
+        if (NS_SUCCEEDED(rv))
+            rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
+                                        aAction);
     }
 
     if (NS_SUCCEEDED(rv))
@@ -1433,19 +1413,6 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
             return NS_OK;
         }
 
-        // Now check capability policies
-        static const char loadURIPrefGroup[] = "checkloaduri";
-        ClassInfoData nameData(nullptr, loadURIPrefGroup);
-
-        SecurityLevel secLevel;
-        rv = LookupPolicy(aPrincipal, nameData, EnabledID(),
-                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY, &secLevel);
-        if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
-        {
-            // OK for this site!
-            return NS_OK;
-        }
-
         if (reportErrors) {
             ReportError(nullptr, errorTag, sourceURI, aTargetURI);
         }
@@ -1588,29 +1555,7 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
     JS::RootedObject global(cx, js::UncheckedUnwrap(aGlobal, /* stopAtOuter = */ false));
 
     // Check the bits on the compartment private.
-    xpc::Scriptability& scriptability = xpc::Scriptability::Get(aGlobal);
-    if (!scriptability.Allowed()) {
-        return false;
-    }
-
-    // If the compartment is immune to script policy, we're done.
-    if (scriptability.IsImmuneToScriptPolicy()) {
-        return true;
-    }
-
-    // Check for a per-site policy.
-    static const char jsPrefGroupName[] = "javascript";
-    ClassInfoData nameData(nullptr, jsPrefGroupName);
-    SecurityLevel secLevel;
-    nsresult rv = LookupPolicy(doGetObjectPrincipal(global), nameData,
-                               EnabledID(),
-                               nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                               &secLevel);
-    if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS) {
-        return false;
-    }
-
-    return true;
+    return xpc::Scriptability::Get(aGlobal).Allowed();
 }
 
 ///////////////// Principals ///////////////////////
