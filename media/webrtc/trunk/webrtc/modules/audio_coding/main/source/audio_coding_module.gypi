@@ -78,7 +78,6 @@
         'acm_generic_codec.h',
         'acm_neteq.cc',
         'acm_neteq.h',
-# cheat until I get audio_coding_sources to work
         'acm_red.cc',
         'acm_red.h',
         'acm_resampler.cc',
