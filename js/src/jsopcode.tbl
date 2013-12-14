@@ -194,9 +194,9 @@ OPDEF(JSOP_UINT16,    88, "uint16",     NULL,         3,  0,  1,  JOF_UINT16)
  * shape, which can be set at the start and slots then filled in directly.
  * NEWINIT has an extra byte so it can be exchanged with NEWOBJECT during emit.
  */
-OPDEF(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8|JOF_TYPESET)
-OPDEF(JSOP_NEWARRAY,  90, "newarray",   NULL,         4,  0,  1, JOF_UINT24|JOF_TYPESET)
-OPDEF(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT|JOF_TYPESET)
+OPDEF(JSOP_NEWINIT,   89, "newinit",    NULL,         5,  0,  1, JOF_UINT8)
+OPDEF(JSOP_NEWARRAY,  90, "newarray",   NULL,         4,  0,  1, JOF_UINT24)
+OPDEF(JSOP_NEWOBJECT, 91, "newobject",  NULL,         5,  0,  1, JOF_OBJECT)
 OPDEF(JSOP_ENDINIT,   92, "endinit",    NULL,         1,  0,  0, JOF_BYTE)
 OPDEF(JSOP_INITPROP,  93, "initprop",   NULL,         5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING)
 
