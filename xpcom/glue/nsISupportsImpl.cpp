@@ -5,8 +5,8 @@
 #include "nsISupportsImpl.h"
 
 nsresult NS_FASTCALL
-NS_TableDrivenQI(void* aThis, const QITableEntry* entries,
-                 REFNSIID aIID, void **aInstancePtr)
+NS_TableDrivenQI(void* aThis, REFNSIID aIID, void **aInstancePtr,
+                 const QITableEntry* entries)
 {
   do {
     if (aIID.Equals(*entries->iid)) {
