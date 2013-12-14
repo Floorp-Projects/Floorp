@@ -79,18 +79,6 @@ nsIStringBundle *nsScriptSecurityManager::sStrBundle = nullptr;
 JSRuntime       *nsScriptSecurityManager::sRuntime   = 0;
 bool nsScriptSecurityManager::sStrictFileOriginPolicy = true;
 
-// Lazily initialized. Use the getter below.
-static jsid sEnabledID = JSID_VOID;
-static JS::HandleId
-EnabledID()
-{
-    if (sEnabledID != JSID_VOID)
-        return JS::HandleId::fromMarkedLocation(&sEnabledID);
-    AutoSafeJSContext cx;
-    sEnabledID = INTERNED_STRING_TO_JSID(cx, JS_InternString(cx, "enabled"));
-    return JS::HandleId::fromMarkedLocation(&sEnabledID);
-}
-
 bool
 nsScriptSecurityManager::SubjectIsPrivileged()
 {
@@ -1833,7 +1821,6 @@ nsScriptSecurityManager::Shutdown()
         JS_SetTrustedPrincipals(sRuntime, nullptr);
         sRuntime = nullptr;
     }
-    sEnabledID = JSID_VOID;
 
     NS_IF_RELEASE(sIOService);
     NS_IF_RELEASE(sStrBundle);
