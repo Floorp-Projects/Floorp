@@ -10,6 +10,7 @@ GYP_DIRS += ['trunk']
 
 GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
 GYP_DIRS['trunk'].variables = gyp_vars
+GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS += ['signaling']
@@ -18,6 +19,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS['signaling'].variables.update(
         build_for_test=0
     )
+    GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
