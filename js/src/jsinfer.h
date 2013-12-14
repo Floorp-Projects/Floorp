@@ -424,19 +424,18 @@ enum {
      */
     OBJECT_FLAG_PRE_TENURE            = 0x00400000,
 
-    /* Flags which indicate dynamic properties of represented objects. */
-    OBJECT_FLAG_DYNAMIC_MASK          = 0x007f0000,
-
     /*
      * Whether all properties of this object are considered unknown.
-     * If set, all flags in DYNAMIC_MASK will also be set.
+     * If set, all other flags in DYNAMIC_MASK will also be set.
      */
     OBJECT_FLAG_UNKNOWN_PROPERTIES    = 0x00800000,
+
+    /* Flags which indicate dynamic properties of represented objects. */
+    OBJECT_FLAG_DYNAMIC_MASK          = 0x00ff0000,
 
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =
         OBJECT_FLAG_DYNAMIC_MASK
-      | OBJECT_FLAG_UNKNOWN_PROPERTIES
       | OBJECT_FLAG_SETS_MARKED_UNKNOWN
 };
 typedef uint32_t TypeObjectFlags;
