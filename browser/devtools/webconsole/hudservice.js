@@ -11,9 +11,9 @@ const {Cc, Ci, Cu} = require("chrome");
 let WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
 let Heritage = require("sdk/core/heritage");
 
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
 loader.lazyGetter(this, "Telemetry", () => require("devtools/shared/telemetry"));
 loader.lazyGetter(this, "WebConsoleFrame", () => require("devtools/webconsole/webconsole").WebConsoleFrame);
-loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
@@ -110,7 +110,6 @@ HUD_SERVICE.prototype =
   function HS_openBrowserConsole(aTarget, aIframeWindow, aChromeWindow)
   {
     let hud = new BrowserConsole(aTarget, aIframeWindow, aChromeWindow);
-    this._browserConsoleID = hud.hudId;
     this.consoles.set(hud.hudId, hud);
     return hud.init();
   },
@@ -260,6 +259,7 @@ HUD_SERVICE.prototype =
     connect().then(getTarget).then(openWindow).then((aWindow) => {
       this.openBrowserConsole(target, aWindow, aWindow)
         .then((aBrowserConsole) => {
+          this._browserConsoleID = aBrowserConsole.hudId;
           this._browserConsoleDefer.resolve(aBrowserConsole);
           this._browserConsoleDefer = null;
         })

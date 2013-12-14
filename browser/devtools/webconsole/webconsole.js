@@ -14,7 +14,7 @@ loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
+loader.lazyGetter(this, "promise", () => require("sdk/core/promise"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 loader.lazyGetter(this, "AutocompletePopup",
                   () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
