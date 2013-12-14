@@ -1959,7 +1959,7 @@ nsScriptSecurityManager::ActivateDomainPolicy(nsIDomainPolicy** aRv)
         return NS_ERROR_SERVICE_NOT_AVAILABLE;
     }
 
-    mDomainPolicy = new mozilla::hotness::DomainPolicy();
+    mDomainPolicy = new DomainPolicy();
     nsCOMPtr<nsIDomainPolicy> ptr = mDomainPolicy;
     ptr.forget(aRv);
     return NS_OK;
