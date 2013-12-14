@@ -218,6 +218,23 @@ NfcContentHelper.prototype = {
     return request;
   },
 
+  sendFile: function sendFile(window, data, sessionToken) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = btoa(this.getRequestId(request));
+    this._requestMap[requestId] = window;
+
+    cpmm.sendAsyncMessage("NFC:SendFile", {
+      requestId: requestId,
+      sessionToken: sessionToken,
+      blob: data.blob
+    });
+    return request;
+  },
+
   registerTargetForPeerEvent: function registerTargetForPeerEvent(window,
                                                   appId, event, callback) {
     if (window == null) {
@@ -276,7 +293,6 @@ NfcContentHelper.prototype = {
   },
 
   // nsIObserver
-
   observe: function observe(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
       this.removeMessageListener();
