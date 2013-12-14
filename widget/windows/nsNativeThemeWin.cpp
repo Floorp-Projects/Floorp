@@ -2430,7 +2430,7 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
   if (NS_FAILED(rv))
     return rv;
 
-  HDC hdc = gfxWindowsPlatform::GetPlatform()->GetScreenDC();
+  HDC hdc = ::GetDC(nullptr);
   if (!hdc)
     return NS_ERROR_FAILURE;
 
@@ -2448,12 +2448,13 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* a
 
     case NS_THEME_MENUSEPARATOR:
     {
-      SIZE gutterSize(GetGutterSize(theme,hdc));
+      SIZE gutterSize(GetGutterSize(theme, hdc));
       aResult->width += gutterSize.cx;
       break;
     }
   }
 
+  ::ReleaseDC(nullptr, hdc);
   return NS_OK;
 }
 
