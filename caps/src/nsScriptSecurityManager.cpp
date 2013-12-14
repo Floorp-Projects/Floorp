@@ -539,7 +539,7 @@ nsScriptSecurityManager::CheckPropertyAccess(JSContext* cx,
 {
     return CheckPropertyAccessImpl(aAction, nullptr, cx, aJSObject,
                                    nullptr, nullptr,
-                                   aClassName, aProperty, nullptr);
+                                   aClassName, aProperty);
 }
 
 NS_IMETHODIMP
@@ -614,8 +614,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(uint32_t aAction,
                                                  JSContext* cx, JSObject* aJSObject,
                                                  nsISupports* aObj,
                                                  nsIClassInfo* aClassInfo,
-                                                 const char* aClassName, jsid aProperty,
-                                                 void** aCachedClassPolicy)
+                                                 const char* aClassName, jsid aProperty)
 {
     nsresult rv;
     JS::RootedObject jsObject(cx, aJSObject);
@@ -637,7 +636,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(uint32_t aAction,
     //-- Look up the security policy for this class and subject domain
     SecurityLevel securityLevel;
     rv = LookupPolicy(subjectPrincipal, classInfoData, property, aAction,
-                      (ClassPolicy**)aCachedClassPolicy, &securityLevel);
+                      &securityLevel);
     if (NS_FAILED(rv))
         return rv;
 
@@ -983,7 +982,6 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
                                       ClassInfoData& aClassData,
                                       JS::Handle<jsid> aProperty,
                                       uint32_t aAction,
-                                      ClassPolicy** aCachedClassPolicy,
                                       SecurityLevel* result)
 {
     AutoJSContext cx;
@@ -1072,28 +1070,13 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         aPrincipal->SetSecurityPolicy((void*)dpolicy);
     }
 
-    ClassPolicy* cpolicy = nullptr;
-
-    if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
-    {
-        // No per-domain policy for this principal (the more common case)
-        // so look for a cached class policy from the object wrapper
-        cpolicy = *aCachedClassPolicy;
-    }
-
-    if (!cpolicy)
-    { //-- No cached policy for this class, need to look it up
-        cpolicy = static_cast<ClassPolicy*>
+    ClassPolicy* cpolicy = static_cast<ClassPolicy*>
                              (PL_DHashTableOperate(dpolicy,
                                                       aClassData.GetName(),
                                                       PL_DHASH_LOOKUP));
 
-        if (PL_DHASH_ENTRY_IS_FREE(cpolicy))
-            cpolicy = NO_POLICY_FOR_CLASS;
-
-        if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
-            *aCachedClassPolicy = cpolicy;
-    }
+    if (PL_DHASH_ENTRY_IS_FREE(cpolicy))
+        cpolicy = NO_POLICY_FOR_CLASS;
 
     NS_ASSERTION(JSID_IS_INT(property) || JSID_IS_OBJECT(property) ||
                  JSID_IS_STRING(property), "Property must be a valid id");
@@ -1456,8 +1439,7 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
         SecurityLevel secLevel;
         rv = LookupPolicy(aPrincipal, nameData, EnabledID(),
-                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                          nullptr, &secLevel);
+                          nsIXPCSecurityManager::ACCESS_GET_PROPERTY, &secLevel);
         if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
         {
             // OK for this site!
@@ -1623,7 +1605,7 @@ nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
     nsresult rv = LookupPolicy(doGetObjectPrincipal(global), nameData,
                                EnabledID(),
                                nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                               nullptr, &secLevel);
+                               &secLevel);
     if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS) {
         return false;
     }
@@ -1840,8 +1822,7 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanCreateWrapper(JSContext *cx,
                                           const nsIID &aIID,
                                           nsISupports *aObj,
-                                          nsIClassInfo *aClassInfo,
-                                          void **aPolicy)
+                                          nsIClassInfo *aClassInfo)
 {
 // XXX Special case for nsIXPCException ?
     ClassInfoData objClassInfo = ClassInfoData(aClassInfo, nullptr);
@@ -1947,12 +1928,11 @@ nsScriptSecurityManager::CanAccess(uint32_t aAction,
                                    JSObject* aJSObject,
                                    nsISupports* aObj,
                                    nsIClassInfo* aClassInfo,
-                                   jsid aPropertyName,
-                                   void** aPolicy)
+                                   jsid aPropertyName)
 {
     return CheckPropertyAccessImpl(aAction, aCallContext, cx,
                                    aJSObject, aObj, aClassInfo,
-                                   nullptr, aPropertyName, aPolicy);
+                                   nullptr, aPropertyName);
 }
 
 nsresult
@@ -2218,11 +2198,6 @@ nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
 nsresult
 nsScriptSecurityManager::InitPolicies()
 {
-    // Clear any policies cached on XPConnect wrappers
-    nsresult rv =
-        nsXPConnect::XPConnect()->ClearAllWrappedNativeSecurityPolicies();
-    if (NS_FAILED(rv)) return rv;
-
     //-- Clear mOriginToPolicyMap: delete mapped DomainEntry items,
     //-- whose dtor decrements refcount of stored DomainPolicy object
     delete mOriginToPolicyMap;
@@ -2264,7 +2239,7 @@ nsScriptSecurityManager::InitPolicies()
 
     // Get a JS context - we need it to create internalized strings later.
     AutoSafeJSContext cx;
-    rv = InitDomainPolicy(cx, "default", mDefaultPolicy);
+    nsresult rv = InitDomainPolicy(cx, "default", mDefaultPolicy);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAdoptingCString policyNames =

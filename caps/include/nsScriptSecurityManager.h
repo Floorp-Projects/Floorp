@@ -396,8 +396,7 @@ private:
                             JSContext* cx, JSObject* aJSObject,
                             nsISupports* aObj,
                             nsIClassInfo* aClassInfo,
-                            const char* aClassName, jsid aProperty,
-                            void** aCachedClassPolicy);
+                            const char* aClassName, jsid aProperty);
 
     nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
@@ -409,7 +408,6 @@ private:
                  ClassInfoData& aClassData,
                  JS::Handle<jsid> aProperty,
                  uint32_t aAction,
-                 ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);
 
     nsresult
