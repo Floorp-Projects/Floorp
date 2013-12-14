@@ -413,34 +413,41 @@ MDefinition::emptyResultTypeSet() const
 }
 
 MConstant *
-MConstant::New(TempAllocator &alloc, const Value &v)
+MConstant::New(TempAllocator &alloc, const Value &v, types::CompilerConstraintList *constraints)
 {
-    return new(alloc) MConstant(v);
+    return new(alloc) MConstant(v, constraints);
 }
 
 MConstant *
 MConstant::NewAsmJS(TempAllocator &alloc, const Value &v, MIRType type)
 {
-    MConstant *constant = new(alloc) MConstant(v);
+    MConstant *constant = new(alloc) MConstant(v, nullptr);
     constant->setResultType(type);
     return constant;
 }
 
 types::TemporaryTypeSet *
-jit::MakeSingletonTypeSet(JSObject *obj)
+jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *obj)
 {
-    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
-    return alloc->new_<types::TemporaryTypeSet>(types::Type::ObjectType(obj));
+    // Invalidate when this object's TypeObject gets unknown properties. This
+    // happens for instance when we mutate an object's __proto__, in this case
+    // we want to invalidate and mark this TypeSet as containing AnyObject
+    // (because mutating __proto__ will change an object's TypeObject).
+    JS_ASSERT(constraints);
+    types::TypeObjectKey *objType = types::TypeObjectKey::get(obj);
+    objType->hasFlags(constraints, types::OBJECT_FLAG_UNKNOWN_PROPERTIES);
+
+    return GetIonContext()->temp->lifoAlloc()->new_<types::TemporaryTypeSet>(types::Type::ObjectType(obj));
 }
 
-MConstant::MConstant(const js::Value &vp)
+MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constraints)
   : value_(vp)
 {
     setResultType(MIRTypeFromValue(vp));
     if (vp.isObject()) {
         // Create a singleton type set for the object. This isn't necessary for
         // other types as the result type encodes all needed information.
-        setResultTypeSet(MakeSingletonTypeSet(&vp.toObject()));
+        setResultTypeSet(MakeSingletonTypeSet(constraints, &vp.toObject()));
     }
 
     setMovable();

@@ -287,9 +287,7 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
     if (!obj)
         return nullptr;
 
-    if (!type)
-        types::TypeScript::Monitor(cx, ObjectValue(*obj));
-    else
+    if (type)
         obj->setType(type);
 
     return obj;
@@ -306,9 +304,7 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
     if (!obj)
         return nullptr;
 
-    if (templateObject->hasSingletonType())
-        types::TypeScript::Monitor(cx, ObjectValue(*obj));
-    else
+    if (!templateObject->hasSingletonType())
         obj->setType(templateObject->type());
 
     return obj;
