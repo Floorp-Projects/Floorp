@@ -45,7 +45,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_candidate_pair.c,v 1.2 2008/04/28 17
 
 static char *nr_ice_cand_pair_states[]={"UNKNOWN","FROZEN","WAITING","IN_PROGRESS","FAILED","SUCCEEDED","CANCELLED"};
 
-static void nr_ice_candidate_pair_restart_stun_controlled_cb(NR_SOCKET s, int how, void *cb_arg);
+static void nr_ice_candidate_pair_restart_stun_role_change_cb(NR_SOCKET s, int how, void *cb_arg);
 static void nr_ice_candidate_pair_compute_codeword(nr_ice_cand_pair *pair,
   nr_ice_candidate *lcand, nr_ice_candidate *rcand);
 
@@ -159,7 +159,7 @@ int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp)
     }
 
     NR_async_timer_cancel(pair->stun_cb_timer);
-    NR_async_timer_cancel(pair->restart_controlled_cb_timer);
+    NR_async_timer_cancel(pair->restart_role_change_cb_timer);
     NR_async_timer_cancel(pair->restart_nominated_cb_timer);
 
     RFREE(pair);
@@ -202,13 +202,12 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
       case NR_STUN_CLIENT_STATE_FAILED:
         sres=pair->stun_client->response;
         if(sres && nr_stun_message_has_attribute(sres,NR_STUN_ATTR_ERROR_CODE,&attr)&&attr->u.error_code.number==487){
-          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/CAND-PAIR(%s): detected role conflict. Switching to controlled",pair->pctx->label,pair->codeword);
 
-          pair->pctx->controlling=0;
-
-          /* Only restart if we haven't tried this already */
-          if(!pair->restart_controlled_cb_timer)
-            NR_ASYNC_TIMER_SET(0,nr_ice_candidate_pair_restart_stun_controlled_cb,pair,&pair->restart_controlled_cb_timer);
+          /*
+           * Flip the controlling bit; subsequent 487s for other pairs will be
+           * ignored, since we abandon their STUN transactions.
+           */
+          nr_ice_peer_ctx_switch_controlling_role(pair->pctx);
 
           return;
         }
@@ -340,22 +339,20 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
     return;
   }
 
-int nr_ice_candidate_pair_start(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
+static void nr_ice_candidate_pair_restart(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
   {
     int r,_status;
     UINT4 mode;
 
     nr_ice_candidate_pair_set_state(pctx,pair,NR_ICE_PAIR_STATE_IN_PROGRESS);
 
-    /* Register the stun ctx for when responses come in*/
-    if(r=nr_ice_socket_register_stun_client(pair->local->isock,pair->stun_client,&pair->stun_client_handle))
-      ABORT(r);
-
     /* Start STUN */
     if(pair->pctx->controlling && (pair->pctx->ctx->flags & NR_ICE_CTX_FLAGS_AGGRESSIVE_NOMINATION))
       mode=NR_ICE_CLIENT_MODE_USE_CANDIDATE;
     else
       mode=NR_ICE_CLIENT_MODE_BINDING_REQUEST;
+
+    nr_stun_client_reset(pair->stun_client);
 
     if(r=nr_stun_client_start(pair->stun_client,mode,nr_ice_candidate_pair_stun_cb,pair))
       ABORT(r);
@@ -375,6 +372,21 @@ int nr_ice_candidate_pair_start(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
       NR_ASYNC_TIMER_SET(0,nr_ice_candidate_pair_stun_cb,pair, &pair->stun_cb_timer);
       _status=0;
     }
+  }
+
+int nr_ice_candidate_pair_start(nr_ice_peer_ctx *pctx, nr_ice_cand_pair *pair)
+  {
+    int r,_status;
+    UINT4 mode;
+
+    /* Register the stun ctx for when responses come in*/
+    if(r=nr_ice_socket_register_stun_client(pair->local->isock,pair->stun_client,&pair->stun_client_handle))
+      ABORT(r);
+
+    nr_ice_candidate_pair_restart(pctx, pair);
+
+    _status=0;
+  abort:
     return(_status);
   }
 
@@ -548,30 +560,29 @@ void nr_ice_candidate_pair_restart_stun_nominated_cb(NR_SOCKET s, int how, void 
     return;
   }
 
-static void nr_ice_candidate_pair_restart_stun_controlled_cb(NR_SOCKET s, int how, void *cb_arg)
-  {
+static void nr_ice_candidate_pair_restart_stun_role_change_cb(NR_SOCKET s, int how, void *cb_arg)
+ {
     nr_ice_cand_pair *pair=cb_arg;
-    int r,_status;
 
-    pair->restart_controlled_cb_timer=0;
+    pair->restart_role_change_cb_timer=0;
 
-    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s):COMP(%d): Restarting pair as CONTROLLED: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->as_string);
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/CAND-PAIR(%s):COMP(%d): Restarting pair as %s: %s",pair->pctx->label,pair->local->stream->label,pair->codeword,pair->remote->component->component_id,pair->pctx->controlling ? "CONTROLLING" : "CONTROLLED",pair->as_string);
 
-    nr_stun_client_reset(pair->stun_client);
-    pair->stun_client->params.ice_binding_request.control=NR_ICE_CONTROLLED;
-
-    if(r=nr_stun_client_start(pair->stun_client,NR_ICE_CLIENT_MODE_BINDING_REQUEST,nr_ice_candidate_pair_stun_cb,pair))
-      ABORT(r);
-
-    if(r=nr_ice_ctx_remember_id(pair->pctx->ctx, pair->stun_client->request))
-      ABORT(r);
-
-    _status=0;
-  abort:
-    return;
+    nr_ice_candidate_pair_restart(pair->pctx, pair);
   }
 
+void nr_ice_candidate_pair_role_change(nr_ice_cand_pair *pair)
+  {
+    pair->stun_client->params.ice_binding_request.control = pair->pctx->controlling ? NR_ICE_CONTROLLING : NR_ICE_CONTROLLED;
 
+    if(pair->state == NR_ICE_PAIR_STATE_IN_PROGRESS) {
+      /* We could try only restarting in-progress pairs when they receive their
+       * 487, but this ends up being simpler, because any extra 487 are dropped.
+       */
+      if(!pair->restart_role_change_cb_timer)
+        NR_ASYNC_TIMER_SET(0,nr_ice_candidate_pair_restart_stun_role_change_cb,pair,&pair->restart_role_change_cb_timer);
+    }
+  }
 
 static void nr_ice_candidate_pair_compute_codeword(nr_ice_cand_pair *pair,
   nr_ice_candidate *lcand, nr_ice_candidate *rcand)
