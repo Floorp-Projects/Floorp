@@ -70,6 +70,15 @@ public:
 class WinUtils {
 public:
   /**
+   * Functions to convert between logical pixels as used by most Windows APIs
+   * and physical (device) pixels.
+   */
+  static double LogToPhysFactor();
+  static double PhysToLogFactor();
+  static int32_t LogToPhys(double aValue);
+  static double PhysToLog(int32_t aValue);
+
+  /**
    * Logging helpers that dump output to prlog module 'Widget', console, and
    * OutputDebugString. Note these output in both debug and release builds.
    */
