@@ -1011,11 +1011,7 @@ static JSObject*
 NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> parent, bool isChrome)
 {
   JSAutoCompartment ac(cx, parent);
-  JS::Rooted<JSObject*> proto(cx);
-  if (!js::GetObjectProto(cx, parent, &proto))
-    return nullptr;
-
-  JSObject *obj = js::Wrapper::New(cx, parent, proto, parent,
+  JSObject *obj = js::Wrapper::New(cx, parent, parent,
                                    isChrome ? &nsChromeOuterWindowProxy::singleton
                                             : &nsOuterWindowProxy::singleton);
 
@@ -2103,26 +2099,11 @@ nsGlobalWindow::CreateOuterObject(nsGlobalWindow* aNewInner)
 
   js::SetProxyExtra(outer, 0, js::PrivateValue(ToSupports(this)));
 
-  return SetOuterObject(cx, outer);
-}
-
-nsresult
-nsGlobalWindow::SetOuterObject(JSContext* aCx, JS::Handle<JSObject*> aOuterObject)
-{
-  JSAutoCompartment ac(aCx, aOuterObject);
+  JSAutoCompartment ac(cx, outer);
 
   // Inform the nsJSContext, which is the canonical holder of the outer.
   MOZ_ASSERT(IsOuterWindow());
-  mContext->SetWindowProxy(aOuterObject);
-
-  // Set up the prototype for the outer object.
-  JS::Rooted<JSObject*> inner(aCx, JS_GetParent(aOuterObject));
-  JS::Rooted<JSObject*> proto(aCx);
-  if (!JS_GetPrototype(aCx, inner, &proto)) {
-    return NS_ERROR_FAILURE;
-  }
-  JS_SetPrototype(aCx, aOuterObject, proto);
-
+  mContext->SetWindowProxy(outer);
   return NS_OK;
 }
 
@@ -2457,8 +2438,9 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         JS_SetParent(cx, mJSObject, newInnerWindow->mJSObject);
 
         JS::Rooted<JSObject*> obj(cx, mJSObject);
-        rv = SetOuterObject(cx, obj);
-        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Inform the nsJSContext, which is the canonical holder of the outer.
+        mContext->SetWindowProxy(obj);
 
         NS_ASSERTION(!JS_IsExceptionPending(cx),
                      "We might overwrite a pending exception!");

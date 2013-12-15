@@ -3743,6 +3743,34 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+/*
+ * Internal class for testing hasPrototype easily.
+ * Uses passed in prototype instead of target's.
+ */
+class WrapperWithProto : public Wrapper
+{
+  public:
+    explicit WrapperWithProto(unsigned flags)
+      : Wrapper(flags, true)
+    { }
+
+    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
+                         Wrapper *handler);
+};
+
+/* static */ JSObject *
+WrapperWithProto::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent,
+                      Wrapper *handler)
+{
+    JS_ASSERT(parent);
+    AutoMarkInDeadZone amd(cx->zone());
+
+    RootedValue priv(cx, ObjectValue(*obj));
+    ProxyOptions options;
+    options.setCallable(obj->isCallable());
+    return NewProxyObject(cx, handler, priv, proto, parent, options);
+}
+
 static bool
 Wrap(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -3753,10 +3781,7 @@ Wrap(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     RootedObject obj(cx, JSVAL_TO_OBJECT(v));
-    RootedObject proto(cx);
-    if (!JSObject::getProto(cx, obj, &proto))
-        return false;
-    JSObject *wrapped = Wrapper::New(cx, obj, proto, &obj->global(),
+    JSObject *wrapped = Wrapper::New(cx, obj, &obj->global(),
                                      &Wrapper::singleton);
     if (!wrapped)
         return false;
@@ -3779,9 +3804,9 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSObject *wrapped = Wrapper::New(cx, &obj.toObject(), proto.toObjectOrNull(),
-                                     &obj.toObject().global(),
-                                     &Wrapper::singletonWithPrototype);
+    JSObject *wrapped = WrapperWithProto::New(cx, &obj.toObject(), proto.toObjectOrNull(),
+                                              &obj.toObject().global(),
+                                              &Wrapper::singletonWithPrototype);
     if (!wrapped)
         return false;
 
@@ -5542,25 +5567,16 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption("ion-compile-try-catch"))
         jit::js_IonOptions.compileTryCatch = true;
 
-#ifdef JS_THREADSAFE
-    bool parallelCompilation = false;
+    bool parallelCompilation = true;
     if (const char *str = op->getStringOption("ion-parallel-compile")) {
-        if (strcmp(str, "on") == 0) {
-            if (cx->runtime()->workerThreadCount() == 0) {
-                fprintf(stderr, "Parallel compilation not available without helper threads");
-                return EXIT_FAILURE;
-            }
-            parallelCompilation = true;
-        } else if (strcmp(str, "off") != 0) {
+        if (strcmp(str, "off") == 0)
+            parallelCompilation = false;
+        else if (strcmp(str, "on") != 0)
             return OptionFailure("ion-parallel-compile", str);
-        }
     }
-    /*
-     * Note: In shell builds, parallel compilation is only enabled with an
-     * explicit option.
-     */
+#ifdef JS_THREADSAFE
     cx->runtime()->setParallelIonCompilationEnabled(parallelCompilation);
-#endif /* JS_THREADSAFE */
+#endif
 
 #endif /* JS_ION */
 
@@ -5813,10 +5829,8 @@ main(int argc, char **argv, char **envp)
                                "  stupid: Simple block local register allocation")
         || !op.addBoolOption('\0', "ion-eager", "Always ion-compile methods (implies --baseline-eager)")
         || !op.addBoolOption('\0', "ion-compile-try-catch", "Ion-compile try-catch statements")
-#ifdef JS_THREADSAFE
         || !op.addStringOption('\0', "ion-parallel-compile", "on/off",
                                "Compile scripts off thread (default: off)")
-#endif
         || !op.addBoolOption('\0', "baseline", "Enable baseline compiler (default)")
         || !op.addBoolOption('\0', "no-baseline", "Disable baseline compiler")
         || !op.addBoolOption('\0', "baseline-eager", "Always baseline-compile methods")

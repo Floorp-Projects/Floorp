@@ -28,266 +28,7 @@ class nsIClassInfo;
 class nsIIOService;
 class nsIStringBundle;
 class nsSystemPrincipal;
-struct ClassPolicy;
 class ClassInfoData;
-class DomainPolicy;
-
-/////////////////////
-// PrincipalKey //
-/////////////////////
-
-class PrincipalKey : public PLDHashEntryHdr
-{
-public:
-    typedef const nsIPrincipal* KeyType;
-    typedef const nsIPrincipal* KeyTypePointer;
-
-    PrincipalKey(const nsIPrincipal* key)
-      : mKey(const_cast<nsIPrincipal*>(key))
-    {
-    }
-
-    PrincipalKey(const PrincipalKey& toCopy)
-      : mKey(toCopy.mKey)
-    {
-    } 
-
-    ~PrincipalKey()
-    {
-    }
-
-    KeyType GetKey() const
-    {
-        return mKey;
-    }
-
-    bool KeyEquals(KeyTypePointer aKey) const
-    {
-        bool eq;
-        mKey->Equals(const_cast<nsIPrincipal*>(aKey),
-                     &eq);
-        return eq;
-    }
-
-    static KeyTypePointer KeyToPointer(KeyType aKey)
-    {
-        return aKey;
-    }
-
-    static PLDHashNumber HashKey(KeyTypePointer aKey)
-    {
-        uint32_t hash;
-        const_cast<nsIPrincipal*>(aKey)->GetHashValue(&hash);
-        return PLDHashNumber(hash);
-    }
-
-    enum { ALLOW_MEMMOVE = true };
-
-private:
-    nsCOMPtr<nsIPrincipal> mKey;
-};
-
-////////////////////
-// Policy Storage //
-////////////////////
-
-// Property Policy
-union SecurityLevel
-{
-    intptr_t   level;
-    char*      capability;
-};
-
-// Security levels
-// These values all have the low bit set (except UNDEFINED_ACCESS)
-// to distinguish them from pointer values, because no pointer
-// to allocated memory ever has the low bit set. A SecurityLevel
-// contains either one of these constants or a pointer to a string
-// representing the name of a capability.
-
-#define SCRIPT_SECURITY_UNDEFINED_ACCESS 0
-#define SCRIPT_SECURITY_ACCESS_IS_SET_BIT 1
-#define SCRIPT_SECURITY_NO_ACCESS \
-  ((1 << 0) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
-#define SCRIPT_SECURITY_SAME_ORIGIN_ACCESS \
-  ((1 << 1) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
-#define SCRIPT_SECURITY_ALL_ACCESS \
-  ((1 << 2) | SCRIPT_SECURITY_ACCESS_IS_SET_BIT)
-
-#define SECURITY_ACCESS_LEVEL_FLAG(_sl) \
-           ((_sl.level == 0) || \
-            (_sl.level & SCRIPT_SECURITY_ACCESS_IS_SET_BIT))
-
-
-struct PropertyPolicy : public PLDHashEntryHdr
-{
-    JSString       *key;  // interned string
-    SecurityLevel  mGet;
-    SecurityLevel  mSet;
-};
-
-static bool
-InitPropertyPolicyEntry(PLDHashTable *table,
-                     PLDHashEntryHdr *entry,
-                     const void *key)
-{
-    PropertyPolicy* pp = (PropertyPolicy*)entry;
-    pp->key = (JSString *)key;
-    pp->mGet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
-    pp->mSet.level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
-    return true;
-}
-
-static void
-ClearPropertyPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    PropertyPolicy* pp = (PropertyPolicy*)entry;
-    pp->key = nullptr;
-}
-
-// Class Policy
-#define NO_POLICY_FOR_CLASS (ClassPolicy*)1
-
-struct ClassPolicy : public PLDHashEntryHdr
-{
-    char* key;
-    PLDHashTable* mPolicy;
-
-    // Note: the DomainPolicy owns us, so if if dies we will too.  Hence no
-    // need to refcount it here (and in fact, we'd probably leak if we tried).
-    DomainPolicy* mDomainWeAreWildcardFor;
-};
-
-static void
-ClearClassPolicyEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-    ClassPolicy* cp = (ClassPolicy *)entry;
-    if (cp->key)
-    {
-        PL_strfree(cp->key);
-        cp->key = nullptr;
-    }
-    PL_DHashTableDestroy(cp->mPolicy);
-}
-
-// Note: actual impl is going to be after the DomainPolicy class definition,
-// since we need to access members of DomainPolicy in the impl
-static void
-MoveClassPolicyEntry(PLDHashTable *table,
-                     const PLDHashEntryHdr *from,
-                     PLDHashEntryHdr *to);
-
-static bool
-InitClassPolicyEntry(PLDHashTable *table,
-                     PLDHashEntryHdr *entry,
-                     const void *key)
-{
-    static PLDHashTableOps classPolicyOps =
-    {
-        PL_DHashAllocTable,
-        PL_DHashFreeTable,
-        PL_DHashVoidPtrKeyStub,
-        PL_DHashMatchEntryStub,
-        PL_DHashMoveEntryStub,
-        ClearPropertyPolicyEntry,
-        PL_DHashFinalizeStub,
-        InitPropertyPolicyEntry
-    };
-
-    ClassPolicy* cp = (ClassPolicy*)entry;
-    cp->mDomainWeAreWildcardFor = nullptr;
-    cp->key = PL_strdup((const char*)key);
-    if (!cp->key)
-        return false;
-    cp->mPolicy = PL_NewDHashTable(&classPolicyOps, nullptr,
-                                   sizeof(PropertyPolicy), 16);
-    if (!cp->mPolicy) {
-        PL_strfree(cp->key);
-        cp->key = nullptr;
-        return false;
-    }
-    return true;
-}
-
-// Domain Policy
-class DomainPolicy : public PLDHashTable
-{
-public:
-    DomainPolicy() : mWildcardPolicy(nullptr),
-                     mRefCount(0)
-    {
-        mGeneration = sGeneration;
-    }
-
-    bool Init()
-    {
-        static const PLDHashTableOps domainPolicyOps =
-        {
-            PL_DHashAllocTable,
-            PL_DHashFreeTable,
-            PL_DHashStringKey,
-            PL_DHashMatchStringKey,
-            MoveClassPolicyEntry,
-            ClearClassPolicyEntry,
-            PL_DHashFinalizeStub,
-            InitClassPolicyEntry
-        };
-
-        return PL_DHashTableInit(this, &domainPolicyOps, nullptr,
-                                 sizeof(ClassPolicy), 16);
-    }
-
-    ~DomainPolicy()
-    {
-        PL_DHashTableFinish(this);
-        NS_ASSERTION(mRefCount == 0, "Wrong refcount in DomainPolicy dtor");
-    }
-
-    void Hold()
-    {
-        mRefCount++;
-    }
-
-    void Drop()
-    {
-        if (--mRefCount == 0)
-            delete this;
-    }
-    
-    static void InvalidateAll()
-    {
-        sGeneration++;
-    }
-    
-    bool IsInvalid()
-    {
-        return mGeneration != sGeneration; 
-    }
-    
-    ClassPolicy* mWildcardPolicy;
-
-private:
-    uint32_t mRefCount;
-    uint32_t mGeneration;
-    static uint32_t sGeneration;
-};
-
-static void
-MoveClassPolicyEntry(PLDHashTable *table,
-                     const PLDHashEntryHdr *from,
-                     PLDHashEntryHdr *to)
-{
-    memcpy(to, from, table->entrySize);
-
-    // Now update the mDefaultPolicy pointer that points to us, if any.
-    ClassPolicy* cp = static_cast<ClassPolicy*>(to);
-    if (cp->mDomainWeAreWildcardFor) {
-        NS_ASSERTION(cp->mDomainWeAreWildcardFor->mWildcardPolicy ==
-                     static_cast<const ClassPolicy*>(from),
-                     "Unexpected wildcard policy on mDomainWeAreWildcardFor");
-        cp->mDomainWeAreWildcardFor->mWildcardPolicy = cp;
-    }
-}
 
 /////////////////////////////
 // nsScriptSecurityManager //
@@ -396,21 +137,12 @@ private:
                             JSContext* cx, JSObject* aJSObject,
                             nsISupports* aObj,
                             nsIClassInfo* aClassInfo,
-                            const char* aClassName, jsid aProperty,
-                            void** aCachedClassPolicy);
+                            const char* aClassName, jsid aProperty);
 
     nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
                            nsIPrincipal* aObject,
                            uint32_t aAction);
-
-    nsresult
-    LookupPolicy(nsIPrincipal* principal,
-                 ClassInfoData& aClassData,
-                 JS::Handle<jsid> aProperty,
-                 uint32_t aAction,
-                 ClassPolicy** aCachedClassPolicy,
-                 SecurityLevel* result);
 
     nsresult
     GetCodebasePrincipalInternal(nsIURI* aURI, uint32_t aAppId,
@@ -470,24 +202,12 @@ private:
     nsresult
     InitPrefs();
 
-    nsresult
-    InitPolicies();
-
-    nsresult
-    InitDomainPolicy(JSContext* cx, const char* aPolicyName,
-                     DomainPolicy* aDomainPolicy);
-
     inline void
     ScriptSecurityPrefChanged();
-
-    nsObjectHashtable* mOriginToPolicyMap;
-    DomainPolicy* mDefaultPolicy;
-    nsObjectHashtable* mCapabilities;
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
     bool mPrefInitialized;
     bool mIsJavaScriptEnabled;
-    bool mPolicyPrefsChanged;
 
     // This machinery controls new-style domain policies. The old-style
     // policy machinery will be removed soon.
