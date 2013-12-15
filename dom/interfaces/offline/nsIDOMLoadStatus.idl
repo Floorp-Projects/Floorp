@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(2cb53a8a-d2f4-4ddf-874f-3bc2d595c41a)]
+[uuid(2cb53a8a-d2f4-4ddf-874f-3bc2d595c41a)]
 interface nsIDOMLoadStatus : nsISupports
 {
   readonly attribute nsIDOMNode source;

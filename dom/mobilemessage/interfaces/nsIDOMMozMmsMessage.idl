@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "domstubs.idl"
 #include "nsISupports.idl"
 
 interface nsIDOMBlob;
@@ -19,14 +20,14 @@ dictionary MmsDeliveryInfo
 {
   DOMString? receiver;
   DOMString? deliveryStatus;
-  jsval      deliveryTimestamp; // Date object; null if not available (e.g.,
-                                // |delivery| = "received" or not yet delivered).
+  DOMTimeStamp deliveryTimestamp; // 0 if not available (e.g.,
+                                  // |delivery| = "received" or not yet delivered).
   DOMString? readStatus;
-  jsval      readTimestamp; // Date object. null if not available (e.g.,
-                            // |delivery| = "received" or not yet read).
+  DOMTimeStamp readTimestamp; // 0 if not available (e.g.,
+                              // |delivery| = "received" or not yet read).
 };
 
-[scriptable, builtinclass, uuid(82ca2465-f967-4107-a4da-65b7a15d5dba)]
+[scriptable, builtinclass, uuid(4ca3a456-0e25-4331-974a-a8f11a5efb4b)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
   /**
@@ -58,8 +59,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   [implicit_jscontext]
   readonly attribute jsval     receivers;      // DOMString[]
 
-  [implicit_jscontext]
-  readonly attribute jsval     timestamp;      // Date object
+  readonly attribute DOMTimeStamp timestamp;
 
   readonly attribute boolean   read;
   readonly attribute DOMString subject;
@@ -68,9 +68,7 @@ interface nsIDOMMozMmsMessage : nsISupports
   [implicit_jscontext]
   readonly attribute jsval     attachments;    // MmsAttachment[]
 
-  [implicit_jscontext]
-  readonly attribute jsval     expiryDate;     // Date object
-                                               // Expiry date for an MMS to be
+  readonly attribute DOMTimeStamp expiryDate;  // Expiry date for an MMS to be
                                                // manually downloaded.
 
   // Request read report from sender or not.

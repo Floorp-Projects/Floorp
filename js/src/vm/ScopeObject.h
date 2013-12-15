@@ -597,11 +597,22 @@ class ScopeIterKey
     StaticBlockObject *block() const { return block_; }
     ScopeIter::Type type() const { return type_; }
     bool hasScopeObject() const { return hasScopeObject_; }
+    JSObject *enclosingScope() const { return cur_; }
+    JSObject *&enclosingScope() { return cur_; }
 
     /* For use as hash policy */
     typedef ScopeIterKey Lookup;
     static HashNumber hash(ScopeIterKey si);
     static bool match(ScopeIterKey si1, ScopeIterKey si2);
+    bool operator!=(const ScopeIterKey &other) const {
+        return frame_ != other.frame_ ||
+               cur_ != other.cur_ ||
+               block_ != other.block_ ||
+               type_ != other.type_;
+    }
+    static void rekey(ScopeIterKey &k, const ScopeIterKey& newKey) {
+        k = newKey;
+    }
 };
 
 class ScopeIterVal
@@ -613,7 +624,7 @@ class ScopeIterVal
     RelocatablePtr<StaticBlockObject> block_;
     ScopeIter::Type type_;
     bool hasScopeObject_;
-    
+
     static void staticAsserts();
 
   public:
@@ -704,6 +715,9 @@ class DebugScopes
                     ScopeIterKey,
                     RuntimeAllocPolicy> MissingScopeMap;
     MissingScopeMap missingScopes;
+    class MissingScopesRef;
+    static JS_ALWAYS_INLINE void missingScopesPostWriteBarrier(JSRuntime *rt, MissingScopeMap *map,
+                                                               const ScopeIterKey &key);
 
     /*
      * The map from scope objects of live frames to the live frame. This map

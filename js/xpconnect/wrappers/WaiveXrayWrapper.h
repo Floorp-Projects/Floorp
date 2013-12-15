@@ -38,6 +38,9 @@ class WaiveXrayWrapper : public js::CrossCompartmentWrapper {
     virtual bool nativeCall(JSContext *cx, JS::IsAcceptableThis test,
                             JS::NativeImpl impl, JS::CallArgs args) MOZ_OVERRIDE;
 
+    virtual bool getPrototypeOf(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                JS::MutableHandle<JSObject*> protop) MOZ_OVERRIDE;
+
     static WaiveXrayWrapper singleton;
 };
 

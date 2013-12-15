@@ -1643,7 +1643,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
     nsIXPCSecurityManager* sm = nsXPConnect::XPConnect()->GetDefaultSecurityManager();
     if (sm && NS_FAILED(sm->
                         CanCreateWrapper(cx, *iid, identity,
-                                         GetClassInfo(), GetSecurityInfoAddr()))) {
+                                         GetClassInfo()))) {
         // the security manager vetoed. It should have set an exception.
         NS_RELEASE(obj);
         aTearOff->SetInterface(nullptr);
@@ -1864,8 +1864,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                                       ccx.GetFlattenedJSObject(),
                                       ccx.GetWrapper()->GetIdentityObject(),
                                       ccx.GetWrapper()->GetClassInfo(),
-                                      ccx.GetMember()->GetName(),
-                                      ccx.GetWrapper()->GetSecurityInfoAddr()))) {
+                                      ccx.GetMember()->GetName()))) {
         // the security manager vetoed. It should have set an exception.
         return false;
     }
@@ -2668,13 +2667,6 @@ NS_IMETHODIMP XPCWrappedNative::FinishInitForWrappedGlobal()
     if (!success)
         return NS_ERROR_FAILURE;
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP XPCWrappedNative::GetSecurityInfoAddress(void*** securityInfoAddrPtr)
-{
-    NS_ENSURE_ARG_POINTER(securityInfoAddrPtr);
-    *securityInfoAddrPtr = GetSecurityInfoAddr();
     return NS_OK;
 }
 

@@ -187,8 +187,6 @@ struct JSCompartment
      */
     void adoptWorkerAllocator(js::Allocator *workerAllocator);
 
-
-    int64_t                      lastCodeRelease;
     bool                         activeAnalysis;
 
     /* Type information about the scripts and objects in this compartment. */
@@ -221,7 +219,6 @@ struct JSCompartment
 
   public:
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                size_t *tiPendingArrays,
                                 size_t *tiAllocationSiteTables,
                                 size_t *tiArrayTypeTables,
                                 size_t *tiObjectTypeTables,

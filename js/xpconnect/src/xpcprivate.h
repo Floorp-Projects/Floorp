@@ -1120,9 +1120,6 @@ public:
     static void
     MarkAllWrappedNativesAndProtos();
 
-    static nsresult
-    ClearAllWrappedNativeSecurityPolicies();
-
 #ifdef DEBUG
     static void
     ASSERT_NoInterfaceSetsAreMarked();
@@ -1836,9 +1833,6 @@ public:
     XPCNativeScriptableInfo*
     GetScriptableInfo()   {return mScriptableInfo;}
 
-    void**
-    GetSecurityInfoAddr() {return &mSecurityInfo;}
-
     uint32_t
     GetClassInfoFlags() const {return mClassInfoFlags;}
 
@@ -1929,7 +1923,6 @@ private:
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     uint32_t                 mClassInfoFlags;
     XPCNativeSet*            mSet;
-    void*                    mSecurityInfo;
     XPCNativeScriptableInfo* mScriptableInfo;
 };
 
@@ -2112,10 +2105,6 @@ public:
 
     nsIXPCScriptable*      // call this wrong and you deserve to crash
     GetScriptableCallback() const  {return mScriptableInfo->GetCallback();}
-
-    void**
-    GetSecurityInfoAddr() {return HasProto() ?
-                                   GetProto()->GetSecurityInfoAddr() : nullptr;}
 
     nsIClassInfo*
     GetClassInfo() const {return IsValid() && HasProto() ?
