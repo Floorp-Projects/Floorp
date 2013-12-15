@@ -410,7 +410,7 @@ class BytecodeParser
     }
 
     uint32_t numSlots() {
-        return 1 + (script_->function() ? script_->function()->nargs : 0) + script_->nfixed();
+        return 1 + (script_->function() ? script_->function()->nargs() : 0) + script_->nfixed();
     }
 
     uint32_t maximumStackDepth() {
@@ -1688,7 +1688,7 @@ JSAtom *
 ExpressionDecompiler::getVar(unsigned slot)
 {
     JS_ASSERT(fun);
-    slot += fun->nargs;
+    slot += fun->nargs();
     JS_ASSERT(slot < script->bindings.count());
     return (*localNames)[slot].name();
 }
