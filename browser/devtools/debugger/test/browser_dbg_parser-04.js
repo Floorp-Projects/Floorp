@@ -43,11 +43,11 @@ function test() {
   is(parsed.scriptCount, 1,
     "There should be 1 script parsed in the parent HTML source.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:-1, length:-1, index:-1})",
     "The first script shouldn't be considered valid.");
-  is(parsed.getScriptInfo(source.indexOf("let b")).toSource(), "({start:85, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let b")).toSource(), "({start:85, length:13, index:0})",
     "The second script was located correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:-1, length:-1, index:-1})",
     "The third script shouldn't be considered valid.");
 
   finish();
