@@ -183,13 +183,6 @@ endif
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,gkmedias,$(DIST)/lib)
 
 ifdef MOZ_WEBRTC
-ifdef MOZ_WEBRTC_SIGNALING
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/media/webrtc/signaling/signaling_ecc/$(LIB_PREFIX)ecc.$(LIB_SUFFIX) \
-  $(DEPTH)/media/webrtc/signaling/signaling_sipcc/$(LIB_PREFIX)sipcc.$(LIB_SUFFIX) \
-  $(NULL)
-endif
-
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS += \
   -LIBPATH:'$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)' \

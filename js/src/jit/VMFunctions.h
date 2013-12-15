@@ -663,6 +663,13 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
                                 HandleObject owner, int32_t offset);
 
 bool Recompile(JSContext *cx);
+
+#ifdef DEBUG
+void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
+void AssertValidStringPtr(JSContext *cx, JSString *str);
+void AssertValidValue(JSContext *cx, Value *v);
+#endif
+
 } // namespace jit
 } // namespace js
 

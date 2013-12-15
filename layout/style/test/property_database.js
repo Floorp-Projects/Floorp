@@ -1513,10 +1513,12 @@ var gCSSProperties = {
 		"radial-gradient(43px 50%, red, blue)",
 		"radial-gradient(50% 43px, red, blue)",
 		"radial-gradient(circle 43px, red, blue)",
+		"radial-gradient(43px circle, red, blue)",
 		"radial-gradient(ellipse 43px 43px, red, blue)",
 		"radial-gradient(ellipse 50% 50%, red, blue)",
 		"radial-gradient(ellipse 43px 50%, red, blue)",
 		"radial-gradient(ellipse 50% 43px, red, blue)",
+		"radial-gradient(50% 43px ellipse, red, blue)",
 
 		"radial-gradient(farthest-corner at top left, red, blue)",
 		"radial-gradient(ellipse closest-corner at 45px, red, blue)",
@@ -1817,6 +1819,14 @@ var gCSSProperties = {
 			"-moz-repeating-radial-gradient(to top left at 30% 40%, red, blue)",
 			"-moz-repeating-radial-gradient(ellipse at 45px closest-corner, red, blue)",
 			"-moz-repeating-radial-gradient(circle at 45px farthest-side, red, blue)",
+
+			"radial-gradient(circle 175px 20px, black, white)",
+			"radial-gradient(175px 20px circle, black, white)",
+			"radial-gradient(ellipse 175px, black, white)",
+			"radial-gradient(175px ellipse, black, white)",
+			"radial-gradient(50%, red, blue)",
+			"radial-gradient(circle 50%, red, blue)",
+			"radial-gradient(50% circle, red, blue)",
 
 			/* Valid only when prefixed */
 			"linear-gradient(top left, red, blue)",

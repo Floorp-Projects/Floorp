@@ -304,6 +304,7 @@ enum ExpandoSlots {
     JSSLOT_EXPANDO_NEXT = 0,
     JSSLOT_EXPANDO_ORIGIN,
     JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL,
+    JSSLOT_EXPANDO_PROTOTYPE,
     JSSLOT_EXPANDO_COUNT
 };
 
@@ -1790,6 +1791,56 @@ XrayWrapper<Base, Traits>::defaultValue(JSContext *cx, HandleObject wrapper,
     // NB: We don't have to worry about things with special [[DefaultValue]]
     // behavior like Date because we'll never have an XrayWrapper to them.
     return js::DefaultValue(cx, wrapper, hint, vp);
+}
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                          JS::MutableHandleObject protop)
+{
+    RootedObject target(cx, Traits::getTargetObject(wrapper));
+    RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
+
+    // We want to keep the Xray's prototype distinct from that of content, but only
+    // if there's been a set. If there's not an expando, or the expando slot is |undefined|,
+    // hand back content's proto, appropriately wrapped.
+    //
+    // NB: Our baseclass's getPrototypeOf() will appropriately wrap its return value, so there is
+    // no need for us to.
+
+    if (!expando)
+        return Base::getPrototypeOf(cx, wrapper, protop);
+
+    RootedValue v(cx);
+    {
+        JSAutoCompartment ac(cx, expando);
+        v = JS_GetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE);
+    }
+
+    if (v.isUndefined())
+        return Base::getPrototypeOf(cx, wrapper, protop);
+
+    protop.set(v.toObjectOrNull());
+    return JS_WrapObject(cx, protop);
+}
+
+template <typename Base, typename Traits>
+bool
+XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                          JS::HandleObject proto, bool *bp)
+{
+    RootedObject target(cx, Traits::getTargetObject(wrapper));
+    RootedObject expando(cx, Traits::singleton.ensureExpandoObject(cx, wrapper, target));
+
+    // The expando lives in the target's compartment, so do our installation there.
+    JSAutoCompartment ac(cx, target);
+
+    RootedValue v(cx, ObjectValue(*proto));
+    if (!JS_WrapValue(cx, &v))
+        return false;
+    JS_SetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE, v);
+    *bp = true;
+    return true;
 }
 
 

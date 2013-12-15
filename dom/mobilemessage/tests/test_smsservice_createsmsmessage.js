@@ -44,8 +44,7 @@ add_test(function test_interface() {
   do_check_eq(sms.sender, null);
   do_check_eq(sms.body, null);
   do_check_eq(sms.messageClass, "normal");
-  do_check_true(sms.timestamp instanceof Date);
-  do_check_true(sms.deliveryTimestamp === null);
+  do_check_eq(sms.deliveryTimestamp, 0);
   do_check_true(sms.read);
   run_next_test();
 });
@@ -66,8 +65,7 @@ add_test(function test_icc_id_not_available() {
   do_check_eq(sms.sender, null);
   do_check_eq(sms.body, null);
   do_check_eq(sms.messageClass, "normal");
-  do_check_true(sms.timestamp instanceof Date);
-  do_check_true(sms.deliveryTimestamp === null);
+  do_check_eq(sms.deliveryTimestamp, 0);
   do_check_true(sms.read);
   run_next_test();
 });
@@ -107,11 +105,11 @@ add_test(function test_readonly_attributes() {
   do_check_eq(sms.messageClass, "normal");
 
   let oldTimestamp = sms.timestamp;
-  sms.timestamp = new Date();
-  do_check_eq(sms.timestamp.getTime(), oldTimestamp.getTime());
+  sms.timestamp = Date.now();
+  do_check_eq(sms.timestamp, oldTimestamp);
 
   let oldDeliveryTimestamp = sms.deliveryTimestamp;
-  sms.deliveryTimestamp = new Date();
+  sms.deliveryTimestamp = Date.now();
   do_check_eq(sms.deliveryTimestamp, oldDeliveryTimestamp);
 
   sms.read = false;
@@ -136,9 +134,8 @@ add_test(function test_timestamp_number() {
   do_check_eq(sms.receiver, "the receiver");
   do_check_eq(sms.body, "the body");
   do_check_eq(sms.messageClass, "normal");
-  do_check_true(sms.timestamp instanceof Date);
-  do_check_eq(sms.timestamp.getTime(), ts);
-  do_check_true(sms.deliveryTimestamp === null);
+  do_check_eq(sms.timestamp, ts);
+  do_check_eq(sms.deliveryTimestamp, 0);
   do_check_true(sms.read);
   run_next_test();
 });
@@ -159,9 +156,8 @@ add_test(function test_timestamp_date() {
   do_check_eq(sms.receiver, "the receiver");
   do_check_eq(sms.body, "the body");
   do_check_eq(sms.messageClass, "normal");
-  do_check_true(sms.timestamp instanceof Date);
-  do_check_eq(sms.timestamp.getTime(), date.getTime());
-  do_check_true(sms.deliveryTimestamp === null);
+  do_check_eq(sms.timestamp, date.getTime());
+  do_check_eq(sms.deliveryTimestamp, 0);
   do_check_true(sms.read);
   run_next_test();
 });

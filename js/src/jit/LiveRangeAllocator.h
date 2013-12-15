@@ -136,7 +136,7 @@ static inline bool
 DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation alloc)
 {
     if (ins->isPhi()) {
-        if (def->type() == LDefinition::DOUBLE)
+        if (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32)
             return alloc.isFloatReg() || alloc.kind() == LAllocation::DOUBLE_SLOT;
         return alloc.isGeneralReg() || alloc.kind() == LAllocation::STACK_SLOT;
     }
@@ -145,7 +145,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
       case LDefinition::DEFAULT:
         if (!alloc.isRegister())
             return false;
-        return alloc.isFloatReg() == (def->type() == LDefinition::DOUBLE);
+        return alloc.isFloatReg() == (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32);
       case LDefinition::PRESET:
         return alloc == *def->output();
       case LDefinition::MUST_REUSE_INPUT:
@@ -473,7 +473,7 @@ class VirtualRegister
         return intervals_.insert(found, interval);
     }
     bool isDouble() const {
-        return def_->type() == LDefinition::DOUBLE;
+        return def_->type() == LDefinition::DOUBLE || def_->type() == LDefinition::FLOAT32;
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -633,37 +633,37 @@ class LiveRangeAllocator : protected RegisterAllocator
     }
 #endif
 
-    bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to) {
+    bool addMove(LMoveGroup *moves, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         JS_ASSERT(*from->getAllocation() != *to->getAllocation());
-        return moves->add(from->getAllocation(), to->getAllocation());
+        return moves->add(from->getAllocation(), to->getAllocation(), type);
     }
 
-    bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+    bool moveInput(CodePosition pos, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
         LMoveGroup *moves = getInputMoveGroup(pos);
-        return addMove(moves, from, to);
+        return addMove(moves, from, to, type);
     }
 
-    bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to) {
+    bool moveAfter(CodePosition pos, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
         LMoveGroup *moves = getMoveGroupAfter(pos);
-        return addMove(moves, from, to);
+        return addMove(moves, from, to, type);
     }
 
-    bool moveAtExit(LBlock *block, LiveInterval *from, LiveInterval *to) {
+    bool moveAtExit(LBlock *block, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
         LMoveGroup *moves = block->getExitMoveGroup(alloc());
-        return addMove(moves, from, to);
+        return addMove(moves, from, to, type);
     }
 
-    bool moveAtEntry(LBlock *block, LiveInterval *from, LiveInterval *to) {
+    bool moveAtEntry(LBlock *block, LiveInterval *from, LiveInterval *to, LDefinition::Type type) {
         if (*from->getAllocation() == *to->getAllocation())
             return true;
         LMoveGroup *moves = block->getEntryMoveGroup(alloc());
-        return addMove(moves, from, to);
+        return addMove(moves, from, to, type);
     }
 
     size_t findFirstNonCallSafepoint(CodePosition from) const

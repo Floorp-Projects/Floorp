@@ -1888,9 +1888,10 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
     const Class *bClass = b->getClass();
     Rooted<TaggedProto> aProto(cx, a->getTaggedProto());
     Rooted<TaggedProto> bProto(cx, b->getTaggedProto());
-    if (!SetClassAndProto(cx, a, bClass, bProto, false))
+    bool success;
+    if (!SetClassAndProto(cx, a, bClass, bProto, &success) || !success)
         return false;
-    if (!SetClassAndProto(cx, b, aClass, aProto, false))
+    if (!SetClassAndProto(cx, b, aClass, aProto, &success) || !success)
         return false;
 
     if (a->tenuredSizeOfThis() == b->tenuredSizeOfThis())
@@ -2898,10 +2899,9 @@ static const ClassInitializerOp lazy_prototype_init[JSProto_LIMIT] = {
 
 bool
 js::SetClassAndProto(JSContext *cx, HandleObject obj,
-                     const Class *clasp, Handle<js::TaggedProto> proto, bool checkForCycles)
+                     const Class *clasp, Handle<js::TaggedProto> proto,
+                     bool *succeeded)
 {
-    JS_ASSERT_IF(!checkForCycles, obj.get() != proto.raw());
-
     /*
      * Regenerate shapes for all of the scopes along the old prototype chain,
      * in case any entries were filled by looking up through obj. Stop when a
@@ -2921,6 +2921,7 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
      *
      * :XXX: bug 707717 make this code less brittle.
      */
+    *succeeded = false;
     RootedObject oldproto(cx, obj);
     while (oldproto && oldproto->isNative()) {
         if (oldproto->hasSingletonType()) {
@@ -2933,21 +2934,6 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
         oldproto = oldproto->getProto();
     }
 
-    if (checkForCycles) {
-        JS_ASSERT(!proto.isLazy());
-        RootedObject obj2(cx);
-        for (obj2 = proto.toObjectOrNull(); obj2; ) {
-            if (obj2 == obj) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CYCLIC_VALUE,
-                                     js_proto_str);
-                return false;
-            }
-
-            if (!JSObject::getProto(cx, obj2, &obj2))
-                return false;
-        }
-    }
-
     if (obj->hasSingletonType()) {
         /*
          * Just splice the prototype, but mark the properties as unknown for
@@ -2956,6 +2942,7 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
         if (!obj->splicePrototype(cx, clasp, proto))
             return false;
         MarkTypeObjectUnknownProperties(cx, obj->type());
+        *succeeded = true;
         return true;
     }
 
@@ -2981,6 +2968,7 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
     MarkTypeObjectUnknownProperties(cx, type, true);
 
     obj->setType(type);
+    *succeeded = true;
     return true;
 }
 
