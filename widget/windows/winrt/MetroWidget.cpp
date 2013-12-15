@@ -1331,33 +1331,10 @@ MetroWidget::GetAccessible()
 }
 #endif
 
-double MetroWidget::GetDefaultScaleInternal()
+double
+MetroWidget::GetDefaultScaleInternal()
 {
-  // Return the resolution scale factor reported by the metro environment.
-  // XXX TODO: also consider the desktop resolution setting, as IE appears to do?
-
-  ComPtr<IDisplayInformationStatics> dispInfoStatics;
-  if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayInformation).Get(),
-                                      dispInfoStatics.GetAddressOf()))) {
-    ComPtr<IDisplayInformation> dispInfo;
-    if (SUCCEEDED(dispInfoStatics->GetForCurrentView(&dispInfo))) {
-      ResolutionScale scale;
-      if (SUCCEEDED(dispInfo->get_ResolutionScale(&scale))) {
-        return (double)scale / 100.0;
-      }
-    }
-  }
-
-  ComPtr<IDisplayPropertiesStatics> dispProps;
-  if (SUCCEEDED(GetActivationFactory(HStringReference(RuntimeClass_Windows_Graphics_Display_DisplayProperties).Get(),
-                                     dispProps.GetAddressOf()))) {
-    ResolutionScale scale;
-    if (SUCCEEDED(dispProps->get_ResolutionScale(&scale))) {
-      return (double)scale / 100.0;
-    }
-  }
-
-  return 1.0;
+  return MetroUtils::ScaleFactor();
 }
 
 LayoutDeviceIntPoint
@@ -1369,7 +1346,8 @@ MetroWidget::CSSIntPointToLayoutDeviceIntPoint(const CSSIntPoint &aCSSPoint)
   return devPx;
 }
 
-float MetroWidget::GetDPI()
+float
+MetroWidget::GetDPI()
 {
   if (!mView) {
     return 96.0;
@@ -1377,7 +1355,8 @@ float MetroWidget::GetDPI()
   return mView->GetDPI();
 }
 
-void MetroWidget::ChangedDPI()
+void
+MetroWidget::ChangedDPI()
 {
   if (mWidgetListener) {
     nsIPresShell* presShell = mWidgetListener->GetPresShell();
@@ -1385,6 +1364,16 @@ void MetroWidget::ChangedDPI()
       presShell->BackingScaleFactorChanged();
     }
   }
+}
+
+already_AddRefed<nsIPresShell>
+MetroWidget::GetPresShell()
+{
+  if (mWidgetListener) {
+    nsCOMPtr<nsIPresShell> ps = mWidgetListener->GetPresShell();
+    return ps.forget();
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP

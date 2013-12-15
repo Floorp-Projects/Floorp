@@ -1679,26 +1679,13 @@
               throw new Error("Invalid argument: " + aCloseTabs);
           }
 
-          let maxUndo =
-            Services.prefs.getIntPref("browser.sessionstore.max_tabs_undo");
-          let warnOnCloseOtherTabs =
-            Services.prefs.getBoolPref("browser.tabs.warnOnCloseOtherTabs");
-          let warnOnCloseWindow =
-            Services.prefs.getBoolPref("browser.tabs.warnOnClose");
-          let isWindowClosing = aCloseTabs == this.closingTabsEnum.ALL;
+          if (tabsToClose <= 1)
+            return true;
 
-          let skipWarning =
-            // 1) If there is only one tab to close, we'll never warn the user.
-            tabsToClose <= 1 ||
-            // 2) If the whole window is going to be closed, don't warn the
-            //    user if the user has browser.tabs.warnOnClose set to false.
-            (isWindowClosing && !warnOnCloseWindow) ||
-            // 3) If the number of tabs are less than the undo threshold
-            //    or if the user has specifically opted-in to ignoring
-            //    this warning via the warnOnCloseOtherTabs pref.
-            (!isWindowClosing && (!warnOnCloseOtherTabs ||
-                                            tabsToClose <= maxUndo));
-          if (skipWarning)
+          const pref = aCloseTabs == this.closingTabsEnum.ALL ?
+                       "browser.tabs.warnOnClose" : "browser.tabs.warnOnCloseOtherTabs";
+          var shouldPrompt = Services.prefs.getBoolPref(pref);
+          if (!shouldPrompt)
             return true;
 
           var ps = Services.prompt;
@@ -1722,16 +1709,14 @@
                          + (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1),
                          bundle.getString("tabs.closeButtonMultiple"),
                          null, null,
-                         bundle.getString("tabs.closeWarningPromptMe"),
+                         aCloseTabs == this.closingTabsEnum.ALL ?
+                           bundle.getString("tabs.closeWarningPromptMe") : null,
                          warnOnClose);
           var reallyClose = (buttonPressed == 0);
 
           // don't set the pref unless they press OK and it's false
-          if (reallyClose && !warnOnClose.value) {
-            let pref = isWindowClosing ? "browser.tabs.warnOnClose" :
-                                         "browser.tabs.warnOnCloseOtherTabs";
+          if (aCloseTabs == this.closingTabsEnum.ALL && reallyClose && !warnOnClose.value)
             Services.prefs.setBoolPref(pref, false);
-          }
 
           return reallyClose;
         ]]>
@@ -1758,11 +1743,9 @@
           <![CDATA[
             if (this.warnAboutClosingTabs(this.closingTabsEnum.TO_END, aTab)) {
               let tabs = this.getTabsToTheEndFrom(aTab);
-              let numberOfTabsToClose = tabs.length;
-              for (let i = numberOfTabsToClose - 1; i >= 0; --i) {
+              for (let i = tabs.length - 1; i >= 0; --i) {
                 this.removeTab(tabs[i], {animate: true});
               }
-              SessionStore.setNumberOfTabsClosedLast(window, numberOfTabsToClose);
             }
           ]]>
         </body>
@@ -1779,14 +1762,10 @@
               let tabs = this.visibleTabs;
               this.selectedTab = aTab;
 
-              let closedTabs = 0;
               for (let i = tabs.length - 1; i >= 0; --i) {
-                if (tabs[i] != aTab && !tabs[i].pinned) {
+                if (tabs[i] != aTab && !tabs[i].pinned)
                   this.removeTab(tabs[i], {animate: true});
-                  closedTabs++;
-                }
               }
-              SessionStore.setNumberOfTabsClosedLast(window, closedTabs);
             }
           ]]>
         </body>
@@ -1814,8 +1793,6 @@
               var animate = aParams.animate;
               var byMouse = aParams.byMouse;
             }
-
-            SessionStore.setNumberOfTabsClosedLast(window, 1);
 
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
