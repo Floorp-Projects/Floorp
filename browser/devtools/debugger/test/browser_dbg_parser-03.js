@@ -33,44 +33,44 @@ function test() {
   is(parsed.scriptCount, 3,
     "There should be 3 scripts parsed in the parent HTML source.");
 
-  is(parsed.getScriptInfo(0).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(0).toSource(), "({start:-1, length:-1, index:-1})",
     "There is no script at the beginning of the parent source.");
-  is(parsed.getScriptInfo(source.length - 1).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.length - 1).toSource(), "({start:-1, length:-1, index:-1})",
     "There is no script at the end of the parent source.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:31, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let a")).toSource(), "({start:31, length:13, index:0})",
     "The first script was located correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let b")).toSource(), "({start:85, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let b")).toSource(), "({start:85, length:13, index:1})",
     "The second script was located correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:151, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let c")).toSource(), "({start:151, length:13, index:2})",
     "The third script was located correctly.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a") - 1).toSource(), "({start:31, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let a") - 1).toSource(), "({start:31, length:13, index:0})",
     "The left edge of the first script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let b") - 1).toSource(), "({start:85, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let b") - 1).toSource(), "({start:85, length:13, index:1})",
     "The left edge of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") - 1).toSource(), "({start:151, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let c") - 1).toSource(), "({start:151, length:13, index:2})",
     "The left edge of the third script was interpreted correctly.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a") - 2).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let a") - 2).toSource(), "({start:-1, length:-1, index:-1})",
     "The left outside of the first script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let b") - 2).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let b") - 2).toSource(), "({start:-1, length:-1, index:-1})",
     "The left outside of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") - 2).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let c") - 2).toSource(), "({start:-1, length:-1, index:-1})",
     "The left outside of the third script was interpreted correctly.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a") + 12).toSource(), "({start:31, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let a") + 12).toSource(), "({start:31, length:13, index:0})",
     "The right edge of the first script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let b") + 12).toSource(), "({start:85, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let b") + 12).toSource(), "({start:85, length:13, index:1})",
     "The right edge of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") + 12).toSource(), "({start:151, length:13})",
+  is(parsed.getScriptInfo(source.indexOf("let c") + 12).toSource(), "({start:151, length:13, index:2})",
     "The right edge of the third script was interpreted correctly.");
 
-  is(parsed.getScriptInfo(source.indexOf("let a") + 13).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let a") + 13).toSource(), "({start:-1, length:-1, index:-1})",
     "The right outside of the first script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let b") + 13).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let b") + 13).toSource(), "({start:-1, length:-1, index:-1})",
     "The right outside of the second script was interpreted correctly.");
-  is(parsed.getScriptInfo(source.indexOf("let c") + 13).toSource(), "({start:-1, length:-1})",
+  is(parsed.getScriptInfo(source.indexOf("let c") + 13).toSource(), "({start:-1, length:-1, index:-1})",
     "The right outside of the third script was interpreted correctly.");
 
   finish();
