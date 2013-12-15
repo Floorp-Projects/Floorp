@@ -1357,7 +1357,11 @@ VariableBubbleView.prototype = {
 
     let scriptLine = hoveredLine - scriptLineOffset;
     let scriptColumn = hoveredColumn - scriptColumnOffset;
-    let identifierInfo = parsedSource.getIdentifierAt(scriptLine + 1, scriptColumn);
+    let identifierInfo = parsedSource.getIdentifierAt({
+      line: scriptLine + 1,
+      column: scriptColumn,
+      scriptIndex: scriptInfo.index
+    });
 
     // If the info is null, we're not hovering any identifier.
     if (!identifierInfo) {

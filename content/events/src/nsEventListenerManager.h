@@ -20,7 +20,6 @@ class nsIDOMEvent;
 struct EventTypeData;
 class nsEventTargetChainItem;
 class nsPIDOMWindow;
-class nsCxPusher;
 class nsIEventListenerInfo;
 class nsIScriptContext;
 
@@ -301,8 +300,7 @@ public:
                    mozilla::WidgetEvent* aEvent, 
                    nsIDOMEvent** aDOMEvent,
                    mozilla::dom::EventTarget* aCurrentTarget,
-                   nsEventStatus* aEventStatus,
-                   nsCxPusher* aPusher)
+                   nsEventStatus* aEventStatus)
   {
     if (mListeners.IsEmpty() || aEvent->mFlags.mPropagationStopped) {
       return;
@@ -323,7 +321,7 @@ public:
       return;
     }
     HandleEventInternal(aPresContext, aEvent, aDOMEvent, aCurrentTarget,
-                        aEventStatus, aPusher);
+                        aEventStatus);
   }
 
   /**
@@ -413,13 +411,11 @@ protected:
                            mozilla::WidgetEvent* aEvent,
                            nsIDOMEvent** aDOMEvent,
                            mozilla::dom::EventTarget* aCurrentTarget,
-                           nsEventStatus* aEventStatus,
-                           nsCxPusher* aPusher);
+                           nsEventStatus* aEventStatus);
 
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEvent* aDOMEvent,
-                              mozilla::dom::EventTarget* aCurrentTarget,
-                              nsCxPusher* aPusher);
+                              mozilla::dom::EventTarget* aCurrentTarget);
 
   /**
    * Compile the "inline" event listener for aListenerStruct.  The
@@ -427,7 +423,6 @@ protected:
    * will look for it on mTarget.
    */
   nsresult CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                       nsCxPusher& aPusher,
                                        const nsAString* aBody);
 
   /**

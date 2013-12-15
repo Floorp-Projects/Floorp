@@ -88,20 +88,18 @@ function runTests() {
   for (i = 0; i < commands.length; i++)
     IsCommandEnabled(commands[i]);
 
-  // cut/copy/paste -- SpecialPowers required
-  SpecialPowers.setCharPref("capability.policy.policynames",                      "allowclipboard");
-  SpecialPowers.setCharPref("capability.policy.allowclipboard.sites",             "http://mochi.test:8888");
-  SpecialPowers.setCharPref("capability.policy.allowclipboard.Clipboard.cutcopy", "allAccess");
-  SpecialPowers.setCharPref("capability.policy.allowclipboard.Clipboard.paste",   "allAccess");
+  // These are privileged, and available only to chrome.
   commands = ["cut", "paste", "copy"];
   for (i = 0; i < commands.length; i++) {
     IsCommandEnabled(commands[i]);
-    document.execCommand(commands[i], false, false);
+    try {
+      document.execCommand(commands[i], false, false);
+      ok(false, "Thould have thrown: " + commands[i]);
+    } catch (e) {
+      ok(/insecure|denied/.test(e), "Threw correctly: " + commands[i] + " - " + e);
+    }
+    SpecialPowers.wrap(document).execCommand(commands[i], false, false);
   }
-  SpecialPowers.clearUserPref("capability.policy.policynames");
-  SpecialPowers.clearUserPref("capability.policy.allowclipboard.sites");
-  SpecialPowers.clearUserPref("capability.policy.allowclipboard.Clipboard.cutcopy");
-  SpecialPowers.clearUserPref("capability.policy.allowclipboard.Clipboard.paste");
 
   // delete/undo/redo -- we have to execute this commands because:
   //  * there's nothing to undo if we haven't modified the selection first

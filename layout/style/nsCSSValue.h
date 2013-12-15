@@ -1142,14 +1142,46 @@ struct nsCSSValueGradient {
 private:
   nsCSSValue mRadialValues[2];
 public:
-  nsCSSValue& GetRadialShape() { return mRadialValues[0]; }
-  const nsCSSValue& GetRadialShape() const { return mRadialValues[0]; }
-  nsCSSValue& GetRadialSize() { return mRadialValues[1]; }
-  const nsCSSValue& GetRadialSize() const { return mRadialValues[1]; }
-  nsCSSValue& GetRadiusX() { return mRadialValues[0]; }
-  const nsCSSValue& GetRadiusX() const { return mRadialValues[0]; }
-  nsCSSValue& GetRadiusY() { return mRadialValues[1]; }
-  const nsCSSValue& GetRadiusY() const { return mRadialValues[1]; }
+  nsCSSValue& GetRadialShape()
+  {
+    MOZ_ASSERT(!mIsExplicitSize);
+    return mRadialValues[0];
+  }
+  const nsCSSValue& GetRadialShape() const
+  {
+    MOZ_ASSERT(!mIsExplicitSize);
+    return mRadialValues[0];
+  }
+  nsCSSValue& GetRadialSize()
+  {
+    MOZ_ASSERT(!mIsExplicitSize);
+    return mRadialValues[1];
+  }
+  const nsCSSValue& GetRadialSize() const
+  {
+    MOZ_ASSERT(!mIsExplicitSize);
+    return mRadialValues[1];
+  }
+  nsCSSValue& GetRadiusX()
+  {
+    MOZ_ASSERT(mIsExplicitSize);
+    return mRadialValues[0];
+  }
+  const nsCSSValue& GetRadiusX() const
+  {
+    MOZ_ASSERT(mIsExplicitSize);
+    return mRadialValues[0];
+  }
+  nsCSSValue& GetRadiusY()
+  {
+    MOZ_ASSERT(mIsExplicitSize);
+    return mRadialValues[1];
+  }
+  const nsCSSValue& GetRadiusY() const
+  {
+    MOZ_ASSERT(mIsExplicitSize);
+    return mRadialValues[1];
+  }
 
   InfallibleTArray<nsCSSValueGradientStop> mStops;
 

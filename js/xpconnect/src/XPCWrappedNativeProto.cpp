@@ -25,7 +25,6 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
       mClassInfo(ClassInfo),
       mClassInfoFlags(ClassInfoFlags),
       mSet(Set),
-      mSecurityInfo(nullptr),
       mScriptableInfo(nullptr)
 {
     // This native object lives as long as its associated JSObject - killed
@@ -208,7 +207,6 @@ XPCWrappedNativeProto::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mScope @ %x", mScope));
         XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject.get()));
         XPC_LOG_ALWAYS(("mSet @ %x", mSet));
-        XPC_LOG_ALWAYS(("mSecurityInfo of %x", mSecurityInfo));
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
         if (depth && mScriptableInfo) {
             XPC_LOG_INDENT();

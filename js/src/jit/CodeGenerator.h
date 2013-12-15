@@ -428,6 +428,15 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool emitAssertRangeI(const Range *r, Register input);
     bool emitAssertRangeD(const Range *r, FloatRegister input, FloatRegister temp);
 
+#ifdef DEBUG
+    Vector<CodeOffsetLabel, 0, IonAllocPolicy> ionScriptLabels_;
+    bool branchIfInvalidated(Register temp, Label *invalidated);
+
+    bool emitDebugResultChecks(LInstruction *ins);
+    bool emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mir);
+    bool emitValueResultChecks(LInstruction *lir, MDefinition *mir);
+#endif
+
     // Script counts created when compiling code with no associated JSScript.
     IonScriptCounts *unassociatedScriptCounts_;
 

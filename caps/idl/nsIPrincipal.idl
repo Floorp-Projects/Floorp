@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(551bf53d-203c-4ac4-8c0b-40aa7b5f1ad6)]
+[scriptable, builtinclass, uuid(f09d8a53-a6c8-4f68-b329-9a76a709d24e)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -51,21 +51,6 @@ interface nsIPrincipal : nsISerializable
      * Returns a hash value for the principal.
      */
     [noscript] readonly attribute unsigned long hashValue;
-
-    /**
-     * The domain security policy of the principal.
-     */
-    // XXXcaa should this be here?  The script security manager is the only
-    // thing that should care about this.  Wouldn't storing this data in one
-    // of the hashtables in nsScriptSecurityManager be better?
-    // XXXbz why is this writable?  Who should have write access to this?  What
-    // happens if this principal is in our hashtable and we pass it out of the
-    // security manager and someone writes to this field?  Especially if they
-    // write garbage?  If we need to give someone other than the security
-    // manager a way to set this (which I question, since it can increase the
-    // permissions of a page) it should be a |void clearSecurityPolicy()|
-    // method.
-    [noscript] attribute voidPtr securityPolicy;
 
     /**
      * The codebase URI to which this principal pertains.  This is

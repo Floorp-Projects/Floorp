@@ -58,6 +58,8 @@ def attributeVariableTypeAndName(a):
         l = ["nsString %s" % a.name]
     elif a.realtype.nativeType('in').count("JS::Value"):
         l = ["JS::Value %s" % a.name]
+    elif a.realtype.nativeType('in').count("DOMTimeStamp"):
+        l = ["uint64_t /* DOMTimeStamp */ %s" % a.name]
     else:
         l = ["%s%s" % (a.realtype.nativeType('in'),
                        a.name)]
@@ -236,8 +238,6 @@ def init_value(attribute):
             return ""
         if realtype.count("nsACString"):
             return ""
-        if realtype.count("JS::Value"):
-            return "JSVAL_VOID"
         return "0"
     else:
         if realtype.count("double") and attribute.defvalue == "Infinity":
@@ -279,9 +279,7 @@ def write_getter(a, iface, fd):
     realtype = a.realtype.nativeType('in')
     fd.write("    NS_ENSURE_STATE(JS_GetPropertyById(aCx, aObj, %s, &v));\n"
              % get_jsid(a.name))
-    if realtype.count("JS::Value"):
-        fd.write("    aDict.%s = v;\n" % a.name)
-    elif realtype.count("bool"):
+    if realtype.count("bool"):
         fd.write("    aDict.%s = JS::ToBoolean(v);\n" % a.name)
     elif realtype.count("uint16_t"):
         fd.write("    uint32_t u;\n")
@@ -295,7 +293,7 @@ def write_getter(a, iface, fd):
         fd.write("    NS_ENSURE_STATE(JS::ToUint32(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("int32_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt32(aCx, v, &aDict.%s));\n" % a.name)
-    elif realtype.count("uint64_t"):
+    elif realtype.count("uint64_t") or realtype.count("DOMTimeStamp"):
         fd.write("    NS_ENSURE_STATE(JS::ToUint64(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("int64_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt64(aCx, v, &aDict.%s));\n" % a.name)
@@ -322,7 +320,7 @@ def write_getter(a, iface, fd):
         fd.write("    nsresult rv = xpc_qsUnwrapArg<%s>(aCx, v, &d, &ref.ptr, &v);\n" % realtype.strip('* '))
         fd.write("    NS_ENSURE_SUCCESS(rv, rv);\n")
         fd.write("    aDict.%s = d;\n" % a.name)
-    elif not realtype.count("JS::Value"):
+    else:
         raise BaseException("Unsupported type %s found in dictionary %s" % (realtype, iface.name))
 
 def write_cpp(iface, fd):
@@ -335,7 +333,7 @@ def write_cpp(iface, fd):
 
     if iface.base is not None or len(attributes) > 0:
         fd.write(" :\n")
-    
+
     if iface.base is not None:
         fd.write("  %s()" % iface.base)
         if len(attributes) > 0:

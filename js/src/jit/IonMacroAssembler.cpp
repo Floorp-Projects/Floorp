@@ -1234,7 +1234,7 @@ MacroAssembler::assumeUnreachable(const char *output)
         setupUnalignedABICall(1, temp);
         movePtr(ImmPtr(output), temp);
         passABIArg(temp);
-        callWithABI(JS_FUNC_TO_DATA_PTR(void *, AssumeUnreachable_));
+        callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, AssumeUnreachable_));
 
         PopRegsInMask(RegisterSet::Volatile());
     }
