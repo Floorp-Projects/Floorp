@@ -2857,13 +2857,9 @@ ShouldPreserveJITCode(JSCompartment *comp, int64_t currentTime)
 
     if (rt->alwaysPreserveCode)
         return true;
-    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime &&
-        comp->lastCodeRelease + (PRMJ_USEC_PER_SEC * 300) >= currentTime)
-    {
+    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
-    }
 
-    comp->lastCodeRelease = currentTime;
     return false;
 }
 
@@ -3942,12 +3938,12 @@ BeginSweepingZoneGroup(JSRuntime *rt)
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            c->sweep(&fop, releaseTypes);
+            c->sweep(&fop, releaseTypes && !c->zone()->isPreservingCode());
         }
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            zone->sweep(&fop, releaseTypes);
+            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode());
         }
     }
 
@@ -5304,10 +5300,6 @@ js::ReleaseAllJITCode(FreeOp *fop)
             jit::FinishDiscardBaselineScript(fop, script);
         }
     }
-
-    /* Sweep now invalidated compiler outputs from each compartment. */
-    for (CompartmentsIter comp(fop->runtime(), SkipAtoms); !comp.done(); comp.next())
-        comp->types.clearCompilerOutputs(fop);
 #endif
 }
 

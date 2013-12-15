@@ -60,7 +60,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     [notxpcom, nostdcall] JSObjectPtr GetJSObject();
 };
 
-[uuid(2d08015d-7556-4f12-9e89-4c756d129310)]
+[uuid(675b01ba-397b-472a-9b80-5716376a2ec6)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -84,13 +84,6 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      * globals.
      */
     void finishInitForWrappedGlobal();
-
-    /* 
-     * This returns a pointer into the instance and care should be taken
-     * to make sure the pointer is not kept past the life time of the
-     * object it points into.
-     */
-    voidPtrPtr GetSecurityInfoAddress();
 
     /*
      * NOTE: Add new IDL methods _before_ the C++ block below if you
@@ -282,7 +275,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(880be309-88a1-4e98-8621-7f7e42681b20)]
+[uuid(74109b69-de2f-4296-9e08-2a233eafa8f9)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -505,8 +498,6 @@ interface nsIXPConnect : nsISupports
                                  in nsISupports  aCOMObj);
     void
     rescueOrphansInScope(in JSContextPtr aJSContext, in JSObjectPtr  aScope);
-
-    void clearAllWrappedNativeSecurityPolicies();
 
     nsIXPConnectJSObjectHolder
     getWrappedNativePrototype(in JSContextPtr aJSContext,

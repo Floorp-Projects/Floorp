@@ -39,7 +39,7 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
 }
 
 JSObject *
-Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, Wrapper *handler)
+Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler)
 {
     JS_ASSERT(parent);
 
@@ -48,7 +48,7 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *proto, JSObject *parent, Wr
     RootedValue priv(cx, ObjectValue(*obj));
     ProxyOptions options;
     options.setCallable(obj->isCallable());
-    return NewProxyObject(cx, handler, priv, proto, parent, options);
+    return NewProxyObject(cx, handler, priv, Proxy::LazyProto, parent, options);
 }
 
 JSObject *
@@ -141,7 +141,8 @@ js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject 
 {
     // Allow wrapping outer window proxies.
     JS_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);
-    return Wrapper::New(cx, obj, wrappedProto, parent, &CrossCompartmentWrapper::singleton);
+    JS_ASSERT(wrappedProto == Proxy::LazyProto);
+    return Wrapper::New(cx, obj, parent, &CrossCompartmentWrapper::singleton);
 }
 
 ErrorCopier::~ErrorCopier()
@@ -578,11 +579,6 @@ bool
 CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
                                         MutableHandleObject protop)
 {
-    if (!wrapper->getTaggedProto().isLazy()) {
-        protop.set(wrapper->getTaggedProto().toObjectOrNull());
-        return true;
-    }
-
     {
         RootedObject wrapped(cx, wrappedObject(wrapper));
         AutoCompartment call(cx, wrapped);
@@ -593,6 +589,17 @@ CrossCompartmentWrapper::getPrototypeOf(JSContext *cx, HandleObject wrapper,
     }
 
     return cx->compartment()->wrap(cx, protop);
+}
+
+bool
+CrossCompartmentWrapper::setPrototypeOf(JSContext *cx, HandleObject wrapper,
+                                        HandleObject proto, bool *bp)
+{
+    RootedObject protoCopy(cx, proto);
+    PIERCE(cx, wrapper,
+           cx->compartment()->wrap(cx, &protoCopy),
+           Wrapper::setPrototypeOf(cx, wrapper, protoCopy, bp),
+           NOTHING);
 }
 
 CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
@@ -643,6 +650,15 @@ SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeIm
                                   CallArgs args)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
+    return false;
+}
+
+template <class Base>
+bool
+SecurityWrapper<Base>::setPrototypeOf(JSContext *cx, HandleObject wrapper,
+                                      HandleObject proto, bool *bp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
     return false;
 }
 

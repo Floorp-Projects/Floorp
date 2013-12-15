@@ -2481,7 +2481,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
 
 
 void
-jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
+jit::Invalidate(types::TypeZone &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses,
                 bool cancelOffThread)
 {
@@ -2564,7 +2564,7 @@ void
 jit::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses,
                 bool cancelOffThread)
 {
-    jit::Invalidate(cx->compartment()->types, cx->runtime()->defaultFreeOp(), invalid, resetUses,
+    jit::Invalidate(cx->zone()->types, cx->runtime()->defaultFreeOp(), invalid, resetUses,
                     cancelOffThread);
 }
 
@@ -2611,14 +2611,13 @@ FinishInvalidationOf(FreeOp *fop, JSScript *script, IonScript *ionScript, bool p
     else
         script->setIonScript(nullptr);
 
-    // If this script has Ion code on the stack, invalidation() will return
-    // true. In this case we have to wait until destroying it.
-    if (!ionScript->invalidated()) {
-        types::TypeCompartment &types = script->compartment()->types;
-        ionScript->recompileInfo().compilerOutput(types)->invalidate();
+    types::TypeZone &types = script->zone()->types;
+    ionScript->recompileInfo().compilerOutput(types)->invalidate();
 
+    // If this script has Ion code on the stack, invalidated() will return
+    // true. In this case we have to wait until destroying it.
+    if (!ionScript->invalidated())
         jit::IonScript::Destroy(fop, ionScript);
-    }
 }
 
 void
@@ -2637,8 +2636,6 @@ jit::FinishDiscardJitCode(FreeOp *fop, JSCompartment *comp)
     // Free optimized baseline stubs.
     if (comp->jitCompartment())
         comp->jitCompartment()->optimizedStubSpace()->free();
-
-    comp->types.clearCompilerOutputs(fop);
 }
 
 void

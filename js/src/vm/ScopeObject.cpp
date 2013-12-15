@@ -1570,6 +1570,37 @@ DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
 #endif
 }
 
+#ifdef JSGC_GENERATIONAL
+class DebugScopes::MissingScopesRef : public BufferableRef
+{
+    MissingScopeMap *map;
+    ScopeIterKey key;
+
+  public:
+    MissingScopesRef(MissingScopeMap *m, const ScopeIterKey &k) : map(m), key(k) {}
+
+    void mark(JSTracer *trc) {
+        ScopeIterKey prior = key;
+        MissingScopeMap::Ptr p = map->lookup(key);
+        if (!p)
+            return;
+        JS_SET_TRACING_LOCATION(trc, &const_cast<ScopeIterKey &>(p->key()).enclosingScope());
+        Mark(trc, &key.enclosingScope(), "MissingScopesRef");
+        map->rekeyIfMoved(prior, key);
+    }
+};
+#endif
+
+/* static */ JS_ALWAYS_INLINE void
+DebugScopes::missingScopesPostWriteBarrier(JSRuntime *rt, MissingScopeMap *map,
+                                           const ScopeIterKey &key)
+{
+#ifdef JSGC_GENERATIONAL
+    if (key.enclosingScope() && IsInsideNursery(rt, key.enclosingScope()))
+        rt->gcStoreBuffer.putGeneric(MissingScopesRef(map, key));
+#endif
+}
+
 /* static */ JS_ALWAYS_INLINE void
 DebugScopes::liveScopesPostWriteBarrier(JSRuntime *rt, LiveScopeMap *map, ScopeObject *key)
 {
@@ -1763,6 +1794,7 @@ DebugScopes::addDebugScope(JSContext *cx, const ScopeIter &si, DebugScopeObject 
         js_ReportOutOfMemory(cx);
         return false;
     }
+    missingScopesPostWriteBarrier(cx->runtime(), &scopes->missingScopes, si);
 
     JS_ASSERT(!scopes->liveScopes.has(&debugScope.scope()));
     if (!scopes->liveScopes.put(&debugScope.scope(), si)) {
