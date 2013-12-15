@@ -143,21 +143,8 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
   mSize = aData.mPicSize;
-  /* SetDataNoCopy is used to update YUV plane offsets without (re)allocating
-   * memory previously allocated with AllocateAndGetNewBuffer().
-   * serializer.GetData() returns the address of the memory previously allocated
-   * with AllocateAndGetNewBuffer(), that we subtract from the Y, Cb, Cr
-   * channels to compute 0-based offsets to pass to InitializeBufferInfo.
-   */
   YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
-  uint8_t *base = serializer.GetData();
-  uint32_t yOffset = aData.mYChannel - base;
-  uint32_t cbOffset = aData.mCbChannel - base;
-  uint32_t crOffset = aData.mCrChannel - base;
-  serializer.InitializeBufferInfo(yOffset,
-                                  cbOffset,
-                                  crOffset,
-                                  aData.mYSize,
+  serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,
                                   aData.mStereoMode);
 }
