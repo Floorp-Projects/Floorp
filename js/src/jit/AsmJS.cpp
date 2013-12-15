@@ -4089,6 +4089,7 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
       case AsmJSMathBuiltin_log:    arity = 1; doubleCallee = AsmJSImm_LogD; floatCallee = AsmJSImm_LogF;      break;
       case AsmJSMathBuiltin_pow:    arity = 2; doubleCallee = AsmJSImm_PowD; floatCallee = AsmJSImm_Invalid;   break;
       case AsmJSMathBuiltin_atan2:  arity = 2; doubleCallee = AsmJSImm_ATan2D; floatCallee = AsmJSImm_Invalid; break;
+      default: MOZ_ASSUME_UNREACHABLE("unexpected mathBuiltin");
     }
 
     if (retType == RetType::Float && floatCallee == AsmJSImm_Invalid)
