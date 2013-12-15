@@ -27,6 +27,9 @@ public class JSONRecordFetcher {
   protected JSONRecordFetchDelegate delegate;
 
   public JSONRecordFetcher(final String uri, final AuthHeaderProvider authHeaderProvider) {
+    if (uri == null) {
+      throw new IllegalArgumentException("uri must not be null");
+    }
     this.uri = uri;
     this.authHeaderProvider = authHeaderProvider;
   }
