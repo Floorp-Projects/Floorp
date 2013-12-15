@@ -15,6 +15,9 @@
 #include <string.h>
 
 #ifdef XP_WIN
+#if defined(MOZ_OPTIMIZE) && !defined(MOZ_PROFILING)
+#error "Optimized, DMD-enabled builds on Windows must be built with --enable-profiling"
+#endif
 #include <windows.h>
 #include <process.h>
 #else
