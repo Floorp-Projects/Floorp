@@ -582,10 +582,10 @@ class types::CompilerConstraintList
     // OOM during generation of some constraint.
     bool failed_;
 
+#ifdef JS_ION
     // Allocator used for constraints.
     LifoAlloc *alloc_;
 
-#ifdef JS_ION
     // Constraints generated on heap properties.
     Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
 
@@ -596,8 +596,8 @@ class types::CompilerConstraintList
   public:
     CompilerConstraintList(jit::TempAllocator &alloc)
       : failed_(false)
-      , alloc_(alloc.lifoAlloc())
 #ifdef JS_ION
+      , alloc_(alloc.lifoAlloc())
       , constraints(alloc)
       , frozenScripts(alloc)
 #endif
@@ -669,14 +669,22 @@ class types::CompilerConstraintList
         failed_ = true;
     }
     LifoAlloc *alloc() const {
+#ifdef JS_ION
         return alloc_;
+#else
+        MOZ_CRASH();
+#endif
     }
 };
 
 CompilerConstraintList *
 types::NewCompilerConstraintList(jit::TempAllocator &alloc)
 {
+#ifdef JS_ION
     return alloc.lifoAlloc()->new_<CompilerConstraintList>(alloc);
+#else
+    MOZ_CRASH();
+#endif
 }
 
 /* static */ bool
