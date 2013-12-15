@@ -4249,7 +4249,7 @@ struct AutoLastFrameCheck
 # define fast_getc getc
 #endif
 
-typedef Vector<char, 8, TempAllocPolicy> FileContents;
+typedef js::Vector<char, 8, TempAllocPolicy> FileContents;
 
 static bool
 ReadCompleteFile(JSContext *cx, FILE *fp, FileContents &buffer)
