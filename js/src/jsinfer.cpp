@@ -692,7 +692,7 @@ TypeScript::FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script
     }
 
     *pThisTypes = types + (ThisTypes(script) - existing);
-    *pArgTypes = (script->function() && script->function()->nargs)
+    *pArgTypes = (script->function() && script->function()->nargs())
                  ? (types + (ArgTypes(script, 0) - existing))
                  : nullptr;
     *pBytecodeTypes = types;
@@ -972,7 +972,7 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
 
         if (!CheckFrozenTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script)))
             succeeded = false;
-        unsigned nargs = entry.script->function() ? entry.script->function()->nargs : 0;
+        unsigned nargs = entry.script->function() ? entry.script->function()->nargs() : 0;
         for (size_t i = 0; i < nargs; i++) {
             if (!CheckFrozenTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i)))
                 succeeded = false;
@@ -3354,7 +3354,7 @@ void
 types::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                            bool constructing)
 {
-    unsigned nargs = callee->as<JSFunction>().nargs;
+    unsigned nargs = callee->as<JSFunction>().nargs();
     JSScript *script = callee->as<JSFunction>().nonLazyScript();
 
     if (!constructing)
@@ -3505,7 +3505,7 @@ JSScript::makeTypes(JSContext *cx)
     InferSpew(ISpewOps, "typeSet: %sT%p%s this #%u",
               InferSpewColor(thisTypes), thisTypes, InferSpewColorReset(),
               id());
-    unsigned nargs = function() ? function()->nargs : 0;
+    unsigned nargs = function() ? function()->nargs() : 0;
     for (unsigned i = 0; i < nargs; i++) {
         TypeSet *types = TypeScript::ArgTypes(this, i);
         InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u #%u",
@@ -4385,7 +4385,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
     fprintf(stderr, "\n    this:");
     TypeScript::ThisTypes(script)->print();
 
-    for (unsigned i = 0; script->function() && i < script->function()->nargs; i++) {
+    for (unsigned i = 0; script->function() && i < script->function()->nargs(); i++) {
         fprintf(stderr, "\n    arg%u:", i);
         TypeScript::ArgTypes(script, i)->print();
     }
