@@ -289,7 +289,7 @@ class FunctionBox : public ObjectBox, public SharedContext
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
 
     bool hasDefaults() const {
-        return length != function()->nargs - function()->hasRest();
+        return length != function()->nargs() - function()->hasRest();
     }
 
     // Return whether this function has either specified "use asm" or is

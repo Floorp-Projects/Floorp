@@ -37,7 +37,7 @@ CountArgSlots(JSScript *script, JSFunction *fun)
     // Slot x + n: Argument n.
 
     // Note: when updating this, please also update the assert in SnapshotWriter::startFrame
-    return StartArgSlot(script) + (fun ? fun->nargs + 1 : 0);
+    return StartArgSlot(script) + (fun ? fun->nargs() + 1 : 0);
 }
 
 // Contains information about the compilation source for IR being generated.
@@ -60,7 +60,7 @@ class CompileInfo
 
         nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
-        nargs_ = fun ? fun->nargs : 0;
+        nargs_ = fun ? fun->nargs() : 0;
         nlocals_ = script->nfixed();
         nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;

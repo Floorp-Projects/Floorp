@@ -4014,7 +4014,7 @@ JS_GetFunctionDisplayId(JSFunction *fun)
 JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction *fun)
 {
-    return fun->nargs;
+    return fun->nargs();
 }
 
 JS_PUBLIC_API(bool)

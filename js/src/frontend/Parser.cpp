@@ -847,7 +847,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
                                          generatorKind);
     if (!funbox)
         return null();
-    funbox->length = fun->nargs - fun->hasRest();
+    funbox->length = fun->nargs() - fun->hasRest();
     handler.setFunctionBox(fn, funbox);
 
     ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
@@ -2212,7 +2212,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
                                          generatorKind);
     if (!funbox)
         return null();
-    funbox->length = fun->nargs - fun->hasRest();
+    funbox->length = fun->nargs() - fun->hasRest();
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
@@ -2265,11 +2265,11 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     if (hasRest)
         fun->setHasRest();
 
-    if (type == Getter && fun->nargs > 0) {
+    if (type == Getter && fun->nargs() > 0) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
         return false;
     }
-    if (type == Setter && fun->nargs != 1) {
+    if (type == Setter && fun->nargs() != 1) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
         return false;
     }

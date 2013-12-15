@@ -1659,15 +1659,15 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
                 fprintf(stderr, "  scope chain: ");
             else if (i == 1)
                 fprintf(stderr, "  this: ");
-            else if (i - 2 < callee()->nargs)
+            else if (i - 2 < callee()->nargs())
                 fprintf(stderr, "  formal (arg %d): ", i - 2);
             else {
-                if (i - 2 == callee()->nargs && numActualArgs() > callee()->nargs) {
-                    DumpOp d(callee()->nargs);
+                if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
+                    DumpOp d(callee()->nargs());
                     forEachCanonicalActualArg(GetIonContext()->cx, d, d.i_, numActualArgs() - d.i_);
                 }
 
-                fprintf(stderr, "  slot %d: ", i - 2 - callee()->nargs);
+                fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
             }
         } else
             fprintf(stderr, "  slot %u: ", i);

@@ -668,7 +668,7 @@ BaselineCompiler::emitArgumentTypeChecks()
     if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
-    for (size_t i = 0; i < function()->nargs; i++) {
+    for (size_t i = 0; i < function()->nargs(); i++) {
         frame.pushArg(i);
         frame.popRegsAndSync(1);
 
