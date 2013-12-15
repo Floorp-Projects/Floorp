@@ -60,13 +60,12 @@ static JSObject *
 Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj,
      JS::HandleObject proto, JS::HandleObject parent, unsigned flags)
 {
-    return js::Wrapper::New(cx, obj, proto, parent, &js::CrossCompartmentWrapper::singleton);
+    return js::Wrapper::New(cx, obj, parent, &js::CrossCompartmentWrapper::singleton);
 }
 
 BEGIN_TEST(testBug604087)
 {
-    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
-                                               &OuterWrapper::singleton));
+    JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global, &OuterWrapper::singleton));
     JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
@@ -87,8 +86,7 @@ BEGIN_TEST(testBug604087)
     JS::RootedObject next(cx);
     {
         JSAutoCompartment ac(cx, compartment2);
-        next = js::Wrapper::New(cx, compartment2, compartment2->getProto(), compartment2,
-                                &OuterWrapper::singleton);
+        next = js::Wrapper::New(cx, compartment2, compartment2, &OuterWrapper::singleton);
         CHECK(next);
     }
 

@@ -11,10 +11,6 @@
     '../build/common.gypi',
     'audio_coding/codecs/cng/cng.gypi',
     'audio_coding/codecs/g711/g711.gypi',
-    'audio_coding/codecs/g722/g722.gypi',
-    'audio_coding/codecs/ilbc/ilbc.gypi',
-    'audio_coding/codecs/isac/main/source/isac.gypi',
-    'audio_coding/codecs/isac/fix/source/isacfix.gypi',
     'audio_coding/codecs/pcm16b/pcm16b.gypi',
     'audio_coding/main/source/audio_coding_module.gypi',
     'audio_coding/neteq/neteq.gypi',
@@ -36,13 +32,21 @@
     'video_render/video_render.gypi',
   ],
   'conditions': [
+    ['include_g722==1', {
+      'includes': ['audio_coding/codecs/g722/g722.gypi',],
+    }],
+    ['include_ilbc==1', {
+      'includes': ['audio_coding/codecs/ilbc/ilbc.gypi',],
+    }],
+    ['include_isac==1', {
+      'includes': ['audio_coding/codecs/isac/main/source/isac.gypi',
+                   'audio_coding/codecs/isac/fix/source/isacfix.gypi',],
+    }],
     ['include_opus==1', {
       'includes': ['audio_coding/codecs/opus/opus.gypi',],
     }],
     ['include_tests==1', {
       'includes': [
-        'audio_coding/codecs/isac/isac_test.gypi',
-        'audio_coding/codecs/isac/isacfix_test.gypi',
         'audio_processing/audio_processing_tests.gypi',
         'rtp_rtcp/test/testFec/test_fec.gypi',
         'video_coding/main/source/video_coding_test.gypi',
@@ -50,6 +54,12 @@
         'video_coding/codecs/test_framework/test_framework.gypi',
         'video_coding/codecs/tools/video_codecs_tools.gypi',
       ], # includes
+      'conditions': [
+        ['include_isac==1', {
+          'includes': ['audio_coding/codecs/isac/isac_test.gypi',
+                       'audio_coding/codecs/isac/isacfix_test.gypi',],
+        }],
+      ],
       'variables': {
         'conditions': [
           # Desktop capturer is supported only on Windows, OSX and Linux.

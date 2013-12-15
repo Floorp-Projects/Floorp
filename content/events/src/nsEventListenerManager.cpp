@@ -30,7 +30,6 @@
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsJSUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsCOMArray.h"
@@ -737,8 +736,7 @@ nsEventListenerManager::SetEventHandler(nsIAtom *aName,
                                                  aPermitUntrustedEvents);
 
   if (!aDeferCompilation) {
-    nsCxPusher pusher;
-    return CompileEventHandlerInternal(ls, pusher, &aBody);
+    return CompileEventHandlerInternal(ls, &aBody);
   }
 
   return NS_OK;
@@ -767,7 +765,6 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
 nsresult
 nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerStruct,
-                                                    nsCxPusher& aPusher,
                                                     const nsAString* aBody)
 {
   NS_PRECONDITION(aListenerStruct->GetJSListener(),
@@ -789,13 +786,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
   nsIScriptContext* context = global->GetScriptContext();
   NS_ENSURE_STATE(context);
 
-  JSContext *cx = context->GetNativeContext();
+  // Push a context to make sure exceptions are reported in the right place.
+  AutoPushJSContext cx(context->GetNativeContext());
   JS::Rooted<JSObject*> handler(cx);
-
-  nsCxPusher pusher;
-  if (aPusher.GetCurrentScriptContext() != context) {
-    pusher.Push(cx);
-  }
 
   if (aListenerStruct->mHandlerIsString) {
     // OK, we didn't find an existing compiled event handler.  Flag us
@@ -910,8 +903,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 nsresult
 nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
                                            nsIDOMEvent* aDOMEvent,
-                                           EventTarget* aCurrentTarget,
-                                           nsCxPusher* aPusher)
+                                           EventTarget* aCurrentTarget)
 {
   nsresult result = NS_OK;
   EventListenerHolder listener(aListenerStruct->mListener);  // strong ref
@@ -920,7 +912,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
   // compiled the event handler itself
   if ((aListenerStruct->mListenerType == eJSEventListener) &&
       aListenerStruct->mHandlerIsString) {
-    result = CompileEventHandlerInternal(aListenerStruct, *aPusher, nullptr);
+    result = CompileEventHandlerInternal(aListenerStruct, nullptr);
     aListenerStruct = nullptr;
   }
 
@@ -955,8 +947,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                             WidgetEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
                                             EventTarget* aCurrentTarget,
-                                            nsEventStatus* aEventStatus,
-                                            nsCxPusher* aPusher)
+                                            nsEventStatus* aEventStatus)
 {
   //Set the value of the internal PreventDefault flag properly based on aEventStatus
   if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
@@ -996,24 +987,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
             }
           }
 
-          // Push the appropriate context. Note that we explicitly don't push a
-          // context in the case that the listener is non-scripted, in which case
-          // it's the native code's responsibility to push a context if it ever
-          // enters JS. Ideally we'd do things this way for all scripted callbacks,
-          // but that would involve a lot of changes and context pushing is going
-          // away soon anyhow.
-          //
-          // NB: Since we're looping here, the no-RePush() case needs to actually be
-          // a Pop(), otherwise we might end up with whatever was pushed in a
-          // previous iteration.
-          if (ls->mListenerType == eNativeListener) {
-            aPusher->Pop();
-          } else if (!aPusher->RePush(aCurrentTarget)) {
-            continue;
-          }
-
-          if (NS_FAILED(HandleEventSubType(ls, *aDOMEvent, aCurrentTarget,
-                                           aPusher))) {
+          if (NS_FAILED(HandleEventSubType(ls, *aDOMEvent, aCurrentTarget))) {
             aEvent->mFlags.mExceptionHasBeenRisen = true;
           }
         }
@@ -1171,9 +1145,7 @@ nsEventListenerManager::GetListenerInfo(nsCOMArray<nsIEventListenerInfo>* aList)
     // If this is a script handler and we haven't yet
     // compiled the event handler itself go ahead and compile it
     if ((ls.mListenerType == eJSEventListener) && ls.mHandlerIsString) {
-      nsCxPusher pusher;
-      CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls),
-                                  pusher, nullptr);
+      CompileEventHandlerInternal(const_cast<nsListenerStruct*>(&ls), nullptr);
     }
     nsAutoString eventType;
     if (ls.mAllEvents) {
@@ -1282,8 +1254,7 @@ nsEventListenerManager::GetEventHandlerInternal(nsIAtom *aEventName,
   nsIJSEventListener *listener = ls->GetJSListener();
     
   if (ls->mHandlerIsString) {
-    nsCxPusher pusher;
-    CompileEventHandlerInternal(ls, pusher, nullptr);
+    CompileEventHandlerInternal(ls, nullptr);
   }
 
   const nsEventHandler& handler = listener->GetHandler();

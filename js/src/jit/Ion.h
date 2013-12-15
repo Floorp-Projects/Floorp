@@ -364,7 +364,7 @@ IonExecStatus IonCannon(JSContext *cx, RunState &state);
 IonExecStatus FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args);
 
 // Walk the stack and invalidate active Ion frames for the invalid scripts.
-void Invalidate(types::TypeCompartment &types, FreeOp *fop,
+void Invalidate(types::TypeZone &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses = true,
                 bool cancelOffThread = true);
 void Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses = true,

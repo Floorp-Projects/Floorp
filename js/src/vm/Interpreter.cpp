@@ -3092,7 +3092,6 @@ CASE(JSOP_NEWINIT)
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWINIT)
 
@@ -3106,7 +3105,6 @@ CASE(JSOP_NEWARRAY)
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWARRAY)
 
@@ -3122,7 +3120,6 @@ CASE(JSOP_NEWOBJECT)
         goto error;
 
     PUSH_OBJECT(*obj);
-    TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_NEWOBJECT)
 
