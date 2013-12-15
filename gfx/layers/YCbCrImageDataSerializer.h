@@ -114,6 +114,12 @@ public:
    * The provided pointer should point to the beginning of the (chunk of)
    * buffer on which we want to store the image.
    */
+  void InitializeBufferInfo(uint32_t aYOffset,
+                            uint32_t aCbOffset,
+                            uint32_t aCrOffset,
+                            const gfx::IntSize& aYSize,
+                            const gfx::IntSize& aCbCrSize,
+                            StereoMode aStereoMode);
   void InitializeBufferInfo(const gfx::IntSize& aYSize,
                             const gfx::IntSize& aCbCrSize,
                             StereoMode aStereoMode);
