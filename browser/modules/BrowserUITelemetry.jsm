@@ -221,6 +221,13 @@ const OTHER_MOUSEUP_MONITORED_ITEMS = [
    "star-button",
 ];
 
+// Weakly maps browser windows to objects whose keys are relative
+// timestamps for when some kind of session started. For example,
+// when a customization session started. That way, when the window
+// exits customization mode, we can determine how long the session
+// lasted.
+const WINDOW_DURATION_MAP = new WeakMap();
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
@@ -314,6 +321,8 @@ this.BrowserUITelemetry = {
         item.addEventListener("mouseup", this);
       }
     }
+
+    WINDOW_DURATION_MAP.set(aWindow, {});
   },
 
   _unregisterWindow: function(aWindow) {
@@ -441,6 +450,25 @@ this.BrowserUITelemetry = {
     this._countEvent("customize", aCustomizationEvent);
   },
 
+  startCustomizing: function(aWindow) {
+    this.countCustomizationEvent("start");
+    let durationMap = WINDOW_DURATION_MAP.get(aWindow);
+    durationMap.customization = aWindow.performance.now();
+  },
+
+  _durations: {
+    customization: [],
+  },
+
+  stopCustomizing: function(aWindow) {
+    let durationMap = WINDOW_DURATION_MAP.get(aWindow);
+    if ("customization" in durationMap) {
+      let duration = aWindow.performance.now() - durationMap.customization;
+      this._durations.customization.push(duration);
+      delete durationMap.customization;
+    }
+  },
+
   getToolbarMeasures: function() {
     // Grab the most recent non-popup, non-private browser window for us to
     // analyze the toolbars in...
@@ -529,6 +557,7 @@ this.BrowserUITelemetry = {
     result.hiddenTabs = hiddenTabs;
 
     result.countableEvents = this._countableEvents;
+    result.durations = this._durations;
 
     return result;
   },
