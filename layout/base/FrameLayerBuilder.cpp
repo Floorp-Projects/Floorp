@@ -263,6 +263,19 @@ public:
   const nsIFrame* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
   /**
+   * Add aHitRegion and aDispatchToContentHitRegion to the hit regions for
+   * this ThebesLayer.
+   */
+  void AccumulateEventRegions(const nsIntRegion& aHitRegion,
+                              const nsIntRegion& aMaybeHitRegion,
+                              const nsIntRegion& aDispatchToContentHitRegion)
+  {
+    mHitRegion.Or(mHitRegion, aHitRegion);
+    mMaybeHitRegion.Or(mMaybeHitRegion, aMaybeHitRegion);
+    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aDispatchToContentHitRegion);
+  }
+
+  /**
    * If this represents only a nsDisplayImage, and the image type
    * supports being optimized to an ImageLayer (TYPE_RASTER only) returns
    * an ImageContainer for the image.
@@ -342,6 +355,18 @@ public:
    * Same coordinate system as mVisibleRegion.
    */
   nsIntRegion  mOpaqueRegion;
+  /**
+   * The definitely-hit region for this ThebesLayer.
+   */
+  nsIntRegion  mHitRegion;
+  /**
+   * The maybe-hit region for this ThebesLayer.
+   */
+  nsIntRegion  mMaybeHitRegion;
+  /**
+   * The dispatch-to-content hit region for this ThebesLayer.
+   */
+  nsIntRegion  mDispatchToContentHitRegion;
   /**
    * The "active scrolled root" for all content in the layer. Must
    * be non-null; all content in a ThebesLayer must have the same
@@ -617,8 +642,6 @@ protected:
    */
   ThebesLayerData* FindThebesLayerFor(nsDisplayItem* aItem,
                                       const nsIntRect& aVisibleRect,
-                                      const nsIntRect& aDrawRect,
-                                      const DisplayItemClip& aClip,
                                       const nsIFrame* aAnimatedGeometryRoot,
                                       const nsPoint& aTopLeft);
   ThebesLayerData* GetTopThebesLayerData()
@@ -825,13 +848,15 @@ FrameLayerBuilder::Shutdown()
 }
 
 void
-FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager)
+FrameLayerBuilder::Init(nsDisplayListBuilder* aBuilder, LayerManager* aManager,
+                        ThebesLayerData* aLayerData)
 {
   mDisplayListBuilder = aBuilder;
   mRootPresContext = aBuilder->RootReferenceFrame()->PresContext()->GetRootPresContext();
   if (mRootPresContext) {
     mInitialDOMGeneration = mRootPresContext->GetDOMGeneration();
   }
+  mContainingThebesLayer = aLayerData;
   aManager->SetUserData(&gLayerManagerLayerBuilder, this);
 }
 
@@ -1686,6 +1711,34 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
       viewportFrame, viewportSize, aFixedPosFrame, presContext, mParameters);
 }
 
+static gfx3DMatrix
+GetTransformToRoot(Layer* aLayer)
+{
+  gfx3DMatrix transform = aLayer->GetTransform();
+  for (Layer* l = aLayer->GetParent(); l; l = l->GetParent()) {
+    transform = transform * l->GetTransform();
+  }
+  return transform;
+}
+
+static void
+AddTransformedBoundsToRegion(const nsIntRegion& aRegion,
+                             const gfx3DMatrix& aTransform,
+                             nsIntRegion* aDest)
+{
+  nsIntRect bounds = aRegion.GetBounds();
+  gfxRect transformed =
+    aTransform.TransformBounds(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
+  transformed.RoundOut();
+  nsIntRect intRect;
+  if (!gfxUtils::GfxRectToIntRect(transformed, &intRect)) {
+    // This should only fail if coordinates are too big to fit in an int32
+    *aDest = nsIntRect(-INT32_MAX/2, -INT32_MAX/2, INT32_MAX, INT32_MAX);
+    return;
+  }
+  aDest->Or(*aDest, intRect);
+}
+
 void
 ContainerState::PopThebesLayerData()
 {
@@ -1747,6 +1800,7 @@ ContainerState::PopThebesLayerData()
     nsIntRect emptyRect;
     data->mLayer->SetClipRect(&emptyRect);
     data->mLayer->SetVisibleRegion(nsIntRegion());
+    data->mLayer->SetEventRegions(EventRegions());
   } else {
     layer = data->mLayer;
     imageContainer = nullptr;
@@ -1795,9 +1849,10 @@ ContainerState::PopThebesLayerData()
     }
     userData->mForcedBackgroundColor = backgroundColor;
 
-    // use a mask layer for rounded rect clipping
-    int32_t commonClipCount = data->mCommonClipCount;
-    NS_ASSERTION(commonClipCount >= 0, "Inconsistent clip count.");
+    // use a mask layer for rounded rect clipping.
+    // data->mCommonClipCount may be -1 if we haven't put any actual
+    // drawable items in this layer (i.e. it's only catching events).
+    int32_t commonClipCount = std::max(0, data->mCommonClipCount);
     SetupMaskLayer(layer, data->mItemClip, commonClipCount);
     // copy commonClipCount to the entry
     FrameLayerBuilder::ThebesLayerItemsEntry* entry = mLayerBuilder->
@@ -1823,6 +1878,34 @@ ContainerState::PopThebesLayerData()
   layer->SetContentFlags(flags);
 
   SetFixedPositionLayerData(layer, fixedPosFrameForLayerData);
+
+  ThebesLayerData* containingThebesLayerData =
+     mLayerBuilder->GetContainingThebesLayerData();
+  if (containingThebesLayerData) {
+    gfx3DMatrix matrix = GetTransformToRoot(layer);
+    nsIntPoint translatedDest = GetTranslationForThebesLayer(containingThebesLayerData->mLayer);
+    matrix.TranslatePost(-gfxPoint3D(translatedDest.x, translatedDest.y, 0));
+    AddTransformedBoundsToRegion(data->mDispatchToContentHitRegion, matrix,
+                                 &containingThebesLayerData->mDispatchToContentHitRegion);
+    AddTransformedBoundsToRegion(data->mMaybeHitRegion, matrix,
+                                 &containingThebesLayerData->mMaybeHitRegion);
+    // Our definitely-hit region must go to the maybe-hit-region since
+    // this function is an approximation.
+    gfxMatrix matrix2D;
+    bool isPrecise = matrix.Is2D(&matrix2D) && !matrix2D.HasNonAxisAlignedTransform();
+    AddTransformedBoundsToRegion(data->mHitRegion, matrix,
+      isPrecise ? &containingThebesLayerData->mHitRegion
+                : &containingThebesLayerData->mMaybeHitRegion);
+  } else {
+    EventRegions regions;
+    regions.mHitRegion.Swap(&data->mHitRegion);
+    // Points whose hit-region status we're not sure about need to be dispatched
+    // to the content thread.
+    regions.mDispatchToContentHitRegion.Sub(data->mMaybeHitRegion, regions.mHitRegion);
+    regions.mDispatchToContentHitRegion.Or(regions.mDispatchToContentHitRegion,
+                                           data->mDispatchToContentHitRegion);
+    layer->SetEventRegions(regions);
+  }
 
   if (lastIndex > 0) {
     // Since we're going to pop off the last ThebesLayerData, the
@@ -1997,8 +2080,6 @@ ThebesLayerData::Accumulate(ContainerState* aState,
 ThebesLayerData*
 ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
                                    const nsIntRect& aVisibleRect,
-                                   const nsIntRect& aDrawRect,
-                                   const DisplayItemClip& aClip,
                                    const nsIFrame* aActiveScrolledRoot,
                                    const nsPoint& aTopLeft)
 {
@@ -2037,29 +2118,22 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     }
   }
 
-  nsRefPtr<ThebesLayer> layer;
   ThebesLayerData* thebesLayerData = nullptr;
   if (lowestUsableLayerWithScrolledRoot < 0) {
-    layer = CreateOrRecycleThebesLayer(aActiveScrolledRoot, aItem->ReferenceFrame(), aTopLeft);
-
-    NS_ASSERTION(!mNewChildLayers.Contains(layer), "Layer already in list???");
-    mNewChildLayers.AppendElement(layer);
+    nsRefPtr<ThebesLayer> layer =
+      CreateOrRecycleThebesLayer(aActiveScrolledRoot, aItem->ReferenceFrame(), aTopLeft);
 
     thebesLayerData = new ThebesLayerData();
     mThebesLayerDataStack.AppendElement(thebesLayerData);
     thebesLayerData->mLayer = layer;
     thebesLayerData->mAnimatedGeometryRoot = aActiveScrolledRoot;
     thebesLayerData->mReferenceFrame = aItem->ReferenceFrame();
+
+    NS_ASSERTION(!mNewChildLayers.Contains(layer), "Layer already in list???");
+    *mNewChildLayers.AppendElement() = layer.forget();
   } else {
     thebesLayerData = mThebesLayerDataStack[lowestUsableLayerWithScrolledRoot];
-    layer = thebesLayerData->mLayer;
   }
-
-  // check to see if the new item has rounded rect clips in common with
-  // other items in the layer
-  thebesLayerData->UpdateCommonClipCount(aClip);
-
-  thebesLayerData->Accumulate(this, aItem, aVisibleRect, aDrawRect, aClip);
 
   return thebesLayerData;
 }
@@ -2203,6 +2277,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     bool snap;
     nsRect itemContent = item->GetBounds(mBuilder, &snap);
     nsIntRect itemDrawRect = ScaleToOutsidePixels(itemContent, snap);
+    nsDisplayItem::Type itemType = item->GetType();
     nsIntRect clipRect;
     const DisplayItemClip& itemClip = item->GetClip();
     if (itemClip.HasClip()) {
@@ -2268,11 +2343,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         continue;
       }
 
-
-      nsDisplayItem::Type type = item->GetType();
-      bool setVisibleRegion = (type != nsDisplayItem::TYPE_TRANSFORM) &&
-        (type != nsDisplayItem::TYPE_SCROLL_LAYER);
-      if (type == nsDisplayItem::TYPE_TRANSFORM) {
+      bool setVisibleRegion = (itemType != nsDisplayItem::TYPE_TRANSFORM) &&
+        (itemType != nsDisplayItem::TYPE_SCROLL_LAYER);
+      if (itemType == nsDisplayItem::TYPE_TRANSFORM) {
         mParameters.mAncestorClipRect = itemClip.HasClip() ? &clipRect : nullptr;
       } else {
         mParameters.mAncestorClipRect = nullptr;
@@ -2372,21 +2445,28 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                          dummy);
     } else {
       ThebesLayerData* data =
-        FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, itemClip,
-                           animatedGeometryRoot, topLeft);
+        FindThebesLayerFor(item, itemVisibleRect, animatedGeometryRoot, topLeft);
 
-      nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
+      if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+        nsDisplayLayerEventRegions* eventRegions =
+            static_cast<nsDisplayLayerEventRegions*>(item);
+        data->AccumulateEventRegions(ScaleRegionToOutsidePixels(eventRegions->HitRegion()),
+                                     ScaleRegionToOutsidePixels(eventRegions->MaybeHitRegion()),
+                                     ScaleRegionToOutsidePixels(eventRegions->DispatchToContentHitRegion()));
+      } else {
+        // check to see if the new item has rounded rect clips in common with
+        // other items in the layer
+        data->UpdateCommonClipCount(itemClip);
+        data->Accumulate(this, item, itemVisibleRect, itemDrawRect, itemClip);
 
-      InvalidateForLayerChange(item, data->mLayer, itemClip, topLeft, geometry);
+        nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
+        InvalidateForLayerChange(item, data->mLayer, itemClip, topLeft, geometry);
 
-      mLayerBuilder->AddThebesDisplayItem(data->mLayer, item, itemClip,
-                                          mContainerFrame,
-                                          layerState, topLeft,
-                                          geometry);
-
-      // check to see if the new item has rounded rect clips in common with
-      // other items in the layer
-      data->UpdateCommonClipCount(itemClip);
+        mLayerBuilder->AddThebesDisplayItem(data, item, itemClip,
+                                            mContainerFrame,
+                                            layerState, topLeft,
+                                            geometry);
+      }
     }
   }
 }
@@ -2509,7 +2589,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
 }
 
 void
-FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
+FrameLayerBuilder::AddThebesDisplayItem(ThebesLayerData* aLayerData,
                                         nsDisplayItem* aItem,
                                         const DisplayItemClip& aClip,
                                         nsIFrame* aContainerLayerFrame,
@@ -2517,13 +2597,15 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
                                         const nsPoint& aTopLeft,
                                         nsAutoPtr<nsDisplayItemGeometry> aGeometry)
 {
+  ThebesLayer* layer = aLayerData->mLayer;
   ThebesDisplayItemLayerUserData* thebesData =
-    static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+    static_cast<ThebesDisplayItemLayerUserData*>
+      (layer->GetUserData(&gThebesDisplayItemLayerUserData));
   nsRefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
   bool hasClip = false;
   if (aLayerState != LAYER_NONE) {
-    DisplayItemData *data = GetDisplayItemDataForManager(aItem, aLayer->Manager());
+    DisplayItemData *data = GetDisplayItemDataForManager(aItem, layer->Manager());
     if (data) {
       tempManager = data->mInactiveManager;
     }
@@ -2546,9 +2628,9 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     }
   }
 
-  AddLayerDisplayItem(aLayer, aItem, aClip, aLayerState, aTopLeft, tempManager, aGeometry);
+  AddLayerDisplayItem(layer, aItem, aClip, aLayerState, aTopLeft, tempManager, aGeometry);
 
-  ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
+  ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(layer);
   if (entry) {
     entry->mContainerLayerFrame = aContainerLayerFrame;
     if (entry->mContainerLayerGeneration == 0) {
@@ -2556,7 +2638,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     }
     if (tempManager) {
       FrameLayerBuilder* layerBuilder = new FrameLayerBuilder();
-      layerBuilder->Init(mDisplayListBuilder, tempManager);
+      layerBuilder->Init(mDisplayListBuilder, tempManager, aLayerData);
 
       tempManager->BeginTransaction();
       if (mRetainingManager) {
@@ -2564,11 +2646,11 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       }
   
       nsAutoPtr<LayerProperties> props(LayerProperties::CloneFrom(tempManager->GetRoot()));
-      nsRefPtr<Layer> layer =
+      nsRefPtr<Layer> tmpLayer =
         aItem->BuildLayer(mDisplayListBuilder, tempManager, ContainerLayerParameters());
       // We have no easy way of detecting if this transaction will ever actually get finished.
       // For now, I've just silenced the warning with nested transactions in BasicLayers.cpp
-      if (!layer) {
+      if (!tmpLayer) {
         tempManager->EndTransaction(nullptr, nullptr);
         tempManager->SetUserData(&gLayerManagerLayerBuilder, nullptr);
         return;
@@ -2579,21 +2661,21 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       if (mRetainingManager) {
 #ifdef DEBUG_DISPLAY_ITEM_DATA
         LayerManagerData* parentLmd = static_cast<LayerManagerData*>
-          (aLayer->Manager()->GetUserData(&gLayerManagerUserData));
+          (layer->Manager()->GetUserData(&gLayerManagerUserData));
         LayerManagerData* lmd = static_cast<LayerManagerData*>
           (tempManager->GetUserData(&gLayerManagerUserData));
         lmd->mParent = parentLmd;
 #endif
-        layerBuilder->StoreDataForFrame(aItem, layer, LAYER_ACTIVE);
+        layerBuilder->StoreDataForFrame(aItem, tmpLayer, LAYER_ACTIVE);
       }
 
-      tempManager->SetRoot(layer);
+      tempManager->SetRoot(tmpLayer);
       layerBuilder->WillEndTransaction();
       tempManager->AbortTransaction();
 
-      nsIntPoint offset = GetLastPaintOffset(aLayer) - GetTranslationForThebesLayer(aLayer);
+      nsIntPoint offset = GetLastPaintOffset(layer) - GetTranslationForThebesLayer(layer);
       props->MoveBy(-offset);
-      nsIntRegion invalid = props->ComputeDifferences(layer, nullptr);
+      nsIntRegion invalid = props->ComputeDifferences(tmpLayer, nullptr);
       if (aLayerState == LAYER_SVG_EFFECTS) {
         invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
                                                                         aItem->ToReferenceFrame(),
@@ -2602,7 +2684,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
       if (!invalid.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
         if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-          printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), aLayer);
+          printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
         }
 #endif
         if (hasClip) {
@@ -2610,8 +2692,8 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
         }
 
         invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
-        InvalidatePostTransformRegion(aLayer, invalid,
-                                      GetTranslationForThebesLayer(aLayer));
+        InvalidatePostTransformRegion(layer, invalid,
+                                      GetTranslationForThebesLayer(layer));
       }
     }
     ClippedDisplayItem* cdi =
