@@ -143,6 +143,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
   "resource:///modules/TabCrashReporter.jsm");
 #endif
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
+  "resource:///modules/BrowserUITelemetry.jsm");
+
 let gInitialPages = [
   "about:blank",
   "about:newtab",
@@ -3323,6 +3326,8 @@ function BrowserCustomizeToolbar() {
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
+  BrowserUITelemetry.countCustomizationEvent("start");
+
   if (gCustomizeSheet) {
     let sheetFrame = document.createElement("iframe");
     let panel = document.getElementById("customizeToolbarSheetPopup");
@@ -3421,6 +3426,7 @@ function BrowserToolboxCustomizeChange(aType) {
     default:
       gHomeButton.updatePersonalToolbarStyle();
       BookmarkingUI.customizeChange();
+      BrowserUITelemetry.countCustomizationEvent(aType);
   }
 }
 

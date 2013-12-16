@@ -711,6 +711,7 @@ function onToolbarDrop(aEvent)
   while (toolbar.localName != "toolbar")
     toolbar = toolbar.parentNode;
 
+  let changeType;
   var draggedPaletteWrapper = document.getElementById("wrapper-"+draggedItemId);
   if (!draggedPaletteWrapper) {
     // The wrapper has been dragged from the toolbar.
@@ -739,6 +740,7 @@ function onToolbarDrop(aEvent)
       dropToolbar.insertBefore(wrapper, gCurrentDragOverItem);
     else
       dropToolbar.appendChild(wrapper);
+    changeType = "move";
   } else {
     // The item has been dragged from the palette
 
@@ -758,11 +760,12 @@ function onToolbarDrop(aEvent)
         draggedItemId != "spring" &&
         draggedItemId != "spacer")
       gPaletteBox.removeChild(draggedPaletteWrapper);
+    changeType = "add";
   }
 
   gCurrentDragOverItem = null;
 
-  toolboxChanged();
+  toolboxChanged(changeType);
 };
 
 function onPaletteDragOver(aEvent)
@@ -796,5 +799,5 @@ function onPaletteDrop(aEvent)
     wrapper.parentNode.removeChild(wrapper);
   }
 
-  toolboxChanged();
+  toolboxChanged("remove");
 }
