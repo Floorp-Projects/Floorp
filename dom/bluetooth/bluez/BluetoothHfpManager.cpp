@@ -327,6 +327,7 @@ Call::Reset()
 {
   mState = nsITelephonyProvider::CALL_STATE_DISCONNECTED;
   mDirection = false;
+  mIsConference = false;
   mNumber.Truncate();
   mType = TOA_UNKNOWN;
 }
@@ -753,7 +754,7 @@ BluetoothHfpManager::ReceiveSocketData(BluetoothSocket* aSocket,
 
     // If we get internal request for SCO connection,
     // setup SCO after Service Level Connection established.
-    if(mConnectScoRequest) {
+    if (mConnectScoRequest) {
       mConnectScoRequest = false;
       ConnectSco();
     }
@@ -1371,6 +1372,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             const nsAString& aError,
                                             const nsAString& aNumber,
                                             const bool aIsOutgoing,
+                                            const bool aIsConference,
                                             bool aSend)
 {
   if (!IsConnected()) {
@@ -1386,6 +1388,9 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
   uint16_t prevCallState = mCurrentCallArray[aCallIndex].mState;
   mCurrentCallArray[aCallIndex].mState = aCallState;
   mCurrentCallArray[aCallIndex].mDirection = !aIsOutgoing;
+
+  bool prevCallIsConference = mCurrentCallArray[aCallIndex].mIsConference;
+  mCurrentCallArray[aCallIndex].mIsConference = aIsConference;
 
   // Same logic as implementation in ril_worker.js
   if (aNumber.Length() && aNumber[0] == '+') {
@@ -1465,13 +1470,23 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
           UpdateCIND(CINDType::CALL, CallState::IN_PROGRESS, aSend);
           UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, aSend);
           break;
-
+        // User wants to add a held call to the conversation.
+        // The original connected call become a conference call here.
+        case nsITelephonyProvider::CALL_STATE_CONNECTED:
+          if (aIsConference) {
+            UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
+          }
+          break;
         case nsITelephonyProvider::CALL_STATE_HELD:
-          // The held call(s) become connected call(s).
-          if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_HELD)
-              && sCINDItems[CINDType::CALLHELD].value ==
-              CallHeldState::ONHOLD_NOACTIVE) {
+          if (!FindFirstCall(nsITelephonyProvider::CALL_STATE_HELD)) {
+            if (aIsConference && !prevCallIsConference) {
+              // The held call was merged and become a conference call.
               UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
+            } else if (sCINDItems[CINDType::CALLHELD].value ==
+                       CallHeldState::ONHOLD_NOACTIVE) {
+              // The held call(s) become connected call(s).
+              UpdateCIND(CINDType::CALLHELD, CallHeldState::NO_CALLHELD, aSend);
+            }
           }
           break;
 
