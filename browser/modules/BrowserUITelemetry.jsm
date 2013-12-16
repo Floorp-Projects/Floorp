@@ -512,6 +512,21 @@ this.BrowserUITelemetry = {
     result.nondefaultAdded = nondefaultAdded;
     result.defaultRemoved = defaultRemoved;
 
+    // Find out how many open tabs we have in each window
+    let winEnumerator = Services.wm.getEnumerator("navigator:browser");
+    let visibleTabs = [];
+    let hiddenTabs = [];
+    while (winEnumerator.hasMoreElements()) {
+      let someWin = winEnumerator.getNext();
+      if (someWin.gBrowser) {
+        let visibleTabsNum = someWin.gBrowser.visibleTabs.length;
+        visibleTabs.push(visibleTabsNum);
+        hiddenTabs.push(someWin.gBrowser.tabs.length - visibleTabsNum);
+      }
+    }
+    result.visibleTabs = visibleTabs;
+    result.hiddenTabs = hiddenTabs;
+
     result.countableEvents = this._countableEvents;
 
     return result;
