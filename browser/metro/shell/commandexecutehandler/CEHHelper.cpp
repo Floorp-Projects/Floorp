@@ -108,7 +108,11 @@ IsProcessRunning(const wchar_t *processName, bool bCheckIfMetro)
   return exists;
 }
 
-
+/*
+ * Retrieve the last front end ui we launched so we can target it
+ * again. This value is updated down in nsAppRunner when the browser
+ * starts up.
+ */
 AHE_TYPE
 GetLastAHE()
 {
@@ -117,12 +121,6 @@ GetLastAHE()
     return (AHE_TYPE) ahe;
   }
   return AHE_DESKTOP;
-}
-
-bool
-SetLastAHE(AHE_TYPE ahe)
-{
-  return SetDWORDRegKey(metroLastAHE, (DWORD) ahe);
 }
 
 bool

@@ -4237,6 +4237,36 @@ public:
   HRESULT mResult;
 };
 
+#ifndef AHE_TYPE
+enum AHE_TYPE {
+  AHE_DESKTOP = 0,
+  AHE_IMMERSIVE = 1
+};
+#endif
+
+/*
+ * The Windows launcher uses this value to decide what front end ui
+ * to launch. We always launch the same ui unless the user
+ * specifically asks to switch. Update the value on every startup
+ * based on the environment requested.
+ */
+void
+SetLastWinRunType(AHE_TYPE aType)
+{
+  HKEY key;
+  LONG result = RegOpenKeyExW(HKEY_CURRENT_USER,
+                              L"SOFTWARE\\Mozilla\\Firefox",
+                              0, KEY_WRITE, &key);
+  if (result != ERROR_SUCCESS) {
+    return;
+  }
+  DWORD value = (DWORD)aType;
+  result = RegSetValueEx(key, L"MetroLastAHE", 0, REG_DWORD,
+                         reinterpret_cast<LPBYTE>(&value),
+                         sizeof(DWORD));
+  RegCloseKey(key);
+}
+
 int
 XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
 {
@@ -4304,6 +4334,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, uint32_t aFlags)
 #else
   if (aFlags == XRE_MAIN_FLAG_USE_METRO) {
     SetWindowsEnvironment(WindowsEnvironmentType_Metro);
+    SetLastWinRunType(AHE_IMMERSIVE);
+  } else {
+    SetLastWinRunType(AHE_DESKTOP);
   }
 
   // Desktop
