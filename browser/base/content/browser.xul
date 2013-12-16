@@ -1096,7 +1096,6 @@
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox"/>
     <toolbar id="developer-toolbar"
-             class="devtools-toolbar"
              hidden="true">
 #ifdef XP_MACOSX
           <toolbarbutton id="developer-toolbar-closebutton"
