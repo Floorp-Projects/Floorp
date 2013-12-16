@@ -26,8 +26,6 @@
 #include "ImageContainer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
-#include "nsContentUtils.h"
-#include "MediaShutdownManager.h"
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
@@ -180,7 +178,7 @@ public:
   {
     ReentrantMonitorAutoEnter mon(mMonitor);
     NS_ASSERTION(mStateMachineThread, "Should have non-null state machine thread!");
-    return mStateMachineThread->GetThread();
+    return mStateMachineThread;
   }
 
   // Requests that a decode thread be created for aStateMachine. The thread
@@ -236,7 +234,7 @@ private:
   // Global state machine thread. Write on the main thread
   // only, read from the decoder threads. Synchronized via
   // the mMonitor.
-  nsRefPtr<StateMachineThread> mStateMachineThread;
+  nsIThread* mStateMachineThread;
 
   // Queue of state machines waiting for decode threads. Entries at the front
   // get their threads first.
@@ -260,8 +258,7 @@ void StateMachineTracker::EnsureGlobalStateMachine()
   ReentrantMonitorAutoEnter mon(mMonitor);
   if (mStateMachineCount == 0) {
     NS_ASSERTION(!mStateMachineThread, "Should have null state machine thread!");
-    mStateMachineThread = new StateMachineThread();
-    DebugOnly<nsresult> rv = mStateMachineThread->Init();
+    DebugOnly<nsresult> rv = NS_NewNamedThread("Media State", &mStateMachineThread);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't create media state machine thread");
   }
   mStateMachineCount++;
@@ -294,8 +291,11 @@ void StateMachineTracker::CleanupGlobalStateMachine()
     NS_ASSERTION(mPending.GetSize() == 0, "Shouldn't all requests be handled by now?");
     {
       ReentrantMonitorAutoEnter mon(mMonitor);
-      mStateMachineThread->Shutdown();
+      nsCOMPtr<nsIRunnable> event = new ShutdownThreadEvent(mStateMachineThread);
+      NS_RELEASE(mStateMachineThread);
       mStateMachineThread = nullptr;
+      NS_DispatchToMainThread(event);
+
       NS_ASSERTION(mDecodeThreadCount == 0, "Decode thread count must be zero.");
       sInstance = nullptr;
     }
