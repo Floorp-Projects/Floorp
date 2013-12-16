@@ -827,17 +827,17 @@ mount_operation_ask_password (GMountOperation   *mount_op,
     if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
       if (!realm.IsEmpty()) {
         const PRUnichar *strings[] = { realm.get(), dispHost.get() };
-        bundle->FormatStringFromName(NS_LITERAL_STRING("EnterLoginForRealm").get(),
+        bundle->FormatStringFromName(MOZ_UTF16("EnterLoginForRealm"),
                                      strings, 2, getter_Copies(nsmessage));
       } else {
         const PRUnichar *strings[] = { dispHost.get() };
-        bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
+        bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordFor"),
                                      strings, 1, getter_Copies(nsmessage));
       }
     } else {
       NS_ConvertUTF8toUTF16 userName(default_user);
       const PRUnichar *strings[] = { userName.get(), dispHost.get() };
-      bundle->FormatStringFromName(NS_LITERAL_STRING("EnterPasswordFor").get(),
+      bundle->FormatStringFromName(MOZ_UTF16("EnterPasswordFor"),
                                    strings, 2, getter_Copies(nsmessage));
     }
   } else {

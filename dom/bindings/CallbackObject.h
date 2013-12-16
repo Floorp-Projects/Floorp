@@ -102,6 +102,15 @@ protected:
     Init(aCallbackObject->mCallback, aCallbackObject->mIncumbentGlobal);
   }
 
+  bool operator==(const CallbackObject& aOther) const
+  {
+    JSObject* thisObj =
+      js::UncheckedUnwrap(CallbackPreserveColor());
+    JSObject* otherObj =
+      js::UncheckedUnwrap(aOther.CallbackPreserveColor());
+    return thisObj == otherObj;
+  }
+
 private:
   inline void Init(JSObject* aCallback, nsIGlobalObject* aIncumbentGlobal)
   {
@@ -304,11 +313,7 @@ public:
       return false;
     }
 
-    JSObject* thisObj =
-      js::UncheckedUnwrap(GetWebIDLCallback()->CallbackPreserveColor());
-    JSObject* otherObj =
-      js::UncheckedUnwrap(aOtherCallback->CallbackPreserveColor());
-    return thisObj == otherObj;
+    return *GetWebIDLCallback() == *aOtherCallback;
   }
 
   bool operator==(XPCOMCallbackT* aOtherCallback) const

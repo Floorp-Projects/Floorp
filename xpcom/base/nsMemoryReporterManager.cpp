@@ -1628,7 +1628,7 @@ public:
 
     if (mRemainingIters == 0) {
       os->NotifyObservers(nullptr, "after-minimize-memory-usage",
-                          NS_LITERAL_STRING("MinimizeMemoryUsageRunnable").get());
+                          MOZ_UTF16("MinimizeMemoryUsageRunnable"));
       if (mCallback) {
         mCallback->Run();
       }
@@ -1636,7 +1636,7 @@ public:
     }
 
     os->NotifyObservers(nullptr, "memory-pressure",
-                        NS_LITERAL_STRING("heap-minimize").get());
+                        MOZ_UTF16("heap-minimize"));
     mRemainingIters--;
     NS_DispatchToMainThread(this);
 

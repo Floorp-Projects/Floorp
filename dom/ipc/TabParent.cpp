@@ -1722,17 +1722,6 @@ TabParent::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
 }
 
 bool
-TabParent::RecvUpdateScrollOffset(const uint32_t& aPresShellId,
-                                  const ViewID& aViewId,
-                                  const CSSIntPoint& aScrollOffset)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->UpdateScrollOffset(aPresShellId, aViewId, aScrollOffset);
-  }
-  return true;
-}
-
-bool
 TabParent::RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
                                     const bool& aPreventDefault)
 {

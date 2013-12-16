@@ -871,7 +871,7 @@ nsGeolocationService::StartDevice(nsIPrincipal *aPrincipal)
 
   obs->NotifyObservers(mProvider,
                        "geolocation-device-events",
-                       NS_LITERAL_STRING("starting").get());
+                       MOZ_UTF16("starting"));
 
   return NS_OK;
 }
@@ -951,7 +951,7 @@ nsGeolocationService::StopDevice()
   mProvider->Shutdown();
   obs->NotifyObservers(mProvider,
                        "geolocation-device-events",
-                       NS_LITERAL_STRING("shutdown").get());
+                       MOZ_UTF16("shutdown"));
 }
 
 StaticRefPtr<nsGeolocationService> nsGeolocationService::sService;

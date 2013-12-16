@@ -55,7 +55,7 @@ nsSecurityWarningDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor 
 
   // The Telemetry clickthrough constant is 1 more than the constant for the dialog.
   rv = ConfirmDialog(ctx, nullptr, // No preference for this one - it's too important
-                     NS_LITERAL_STRING("PostToInsecureFromSecureMessage").get(),
+                     MOZ_UTF16("PostToInsecureFromSecureMessage"),
                      nullptr,
                      nsISecurityUITelemetry::WARNING_CONFIRM_POST_TO_INSECURE_FROM_SECURE,
                      _result);
@@ -106,7 +106,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
   // Get messages strings from localization file
   nsXPIDLString windowTitle, message, alertMe, cont;
 
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(),
+  mStringBundle->GetStringFromName(MOZ_UTF16("Title"),
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
@@ -114,7 +114,7 @@ nsSecurityWarningDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *
     mStringBundle->GetStringFromName(showAgainName,
                                      getter_Copies(alertMe));
   }
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Continue").get(),
+  mStringBundle->GetStringFromName(MOZ_UTF16("Continue"),
                                    getter_Copies(cont));
   // alertMe is allowed to be null
   if (!windowTitle || !message || !cont) return NS_ERROR_FAILURE;
