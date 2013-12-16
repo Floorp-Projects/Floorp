@@ -2157,7 +2157,7 @@ GetBrandName(nsXPIDLString& brandName)
 
     if (bundle)
         bundle->GetStringFromName(
-            NS_LITERAL_STRING("brandShortName").get(),
+            MOZ_UTF16("brandShortName"),
             getter_Copies(brandName));
 
     if (brandName.IsEmpty())

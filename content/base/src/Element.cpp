@@ -2407,58 +2407,14 @@ Element::GetLinkTarget(nsAString& aTarget)
   aTarget.Truncate();
 }
 
-// NOTE: The aPresContext pointer is NOT addrefed.
-// *aSelectorList might be null even if NS_OK is returned; this
-// happens when all the selectors were pseudo-element selectors.
-static nsresult
-ParseSelectorList(nsINode* aNode,
-                  const nsAString& aSelectorString,
-                  nsCSSSelectorList** aSelectorList)
-{
-  NS_ENSURE_ARG(aNode);
-
-  nsIDocument* doc = aNode->OwnerDoc();
-  nsCSSParser parser(doc->CSSLoader());
-
-  nsCSSSelectorList* selectorList;
-  nsresult rv = parser.ParseSelectorString(aSelectorString,
-                                           doc->GetDocumentURI(),
-                                           0, // XXXbz get the line number!
-                                           &selectorList);
-  if (NS_FAILED(rv)) {
-    // We hit this for syntax errors, which are quite common, so don't
-    // use NS_ENSURE_SUCCESS.  (For example, jQuery has an extended set
-    // of selectors, but it sees if we can parse them first.)
-    return rv;
-  }
-
-  // Filter out pseudo-element selectors from selectorList
-  nsCSSSelectorList** slot = &selectorList;
-  do {
-    nsCSSSelectorList* cur = *slot;
-    if (cur->mSelectors->IsPseudoElement()) {
-      *slot = cur->mNext;
-      cur->mNext = nullptr;
-      delete cur;
-    } else {
-      slot = &cur->mNext;
-    }
-  } while (*slot);
-  *aSelectorList = selectorList;
-
-  return NS_OK;
-}
-
-
 bool
 Element::MozMatchesSelector(const nsAString& aSelector,
                             ErrorResult& aError)
 {
-  nsAutoPtr<nsCSSSelectorList> selectorList;
-
-  aError = ParseSelectorList(this, aSelector, getter_Transfers(selectorList));
-
-  if (aError.Failed()) {
+  nsCSSSelectorList* selectorList = ParseSelectorList(aSelector, aError);
+  if (!selectorList) {
+    // Either we failed (and aError already has the exception), or this
+    // is a pseudo-element-only selector that matches nothing.
     return false;
   }
 

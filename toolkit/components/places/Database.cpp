@@ -872,25 +872,25 @@ Database::CreateBookmarkRoots()
   if (NS_FAILED(rv)) return rv;
 
   // Fetch the internationalized folder name from the string bundle.
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksMenuFolderTitle").get(),
+  rv = bundle->GetStringFromName(MOZ_UTF16("BookmarksMenuFolderTitle"),
                                  getter_Copies(rootTitle));
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("menu"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("BookmarksToolbarFolderTitle").get(),
+  rv = bundle->GetStringFromName(MOZ_UTF16("BookmarksToolbarFolderTitle"),
                                  getter_Copies(rootTitle));
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("toolbar"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("TagsFolderTitle").get(),
+  rv = bundle->GetStringFromName(MOZ_UTF16("TagsFolderTitle"),
                                  getter_Copies(rootTitle));
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("tags"), rootTitle);
   if (NS_FAILED(rv)) return rv;
 
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("UnsortedBookmarksFolderTitle").get(),
+  rv = bundle->GetStringFromName(MOZ_UTF16("UnsortedBookmarksFolderTitle"),
                                  getter_Copies(rootTitle));
   if (NS_FAILED(rv)) return rv;
   rv = CreateRoot(mMainConn, NS_LITERAL_CSTRING("unfiled"), rootTitle);
