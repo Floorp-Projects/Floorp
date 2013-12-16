@@ -77,6 +77,7 @@
 #include "gfxASurface.h"
 #include "nsRegion.h"
 #include "nsIFrameInlines.h"
+#include "nsEventListenerManager.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
@@ -1789,6 +1790,23 @@ public:
   }
 };
 
+static void
+CheckForTouchEventHandler(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
+{
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return;
+  }
+  nsEventListenerManager* elm = nsContentUtils::GetExistingListenerManagerForNode(content);
+  if (!elm) {
+    return;
+  }
+  if (elm->HasListenersFor(nsGkAtoms::ontouchstart) ||
+      elm->HasListenersFor(nsGkAtoms::ontouchmove)) {
+    aBuilder->SetAncestorHasTouchEventHandler(true);
+  }
+}
+
 void
 nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
                                              const nsRect&         aDirtyRect,
@@ -1878,6 +1896,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     DisplayListClipState::AutoSaveRestore nestedClipState(aBuilder);
     nsDisplayListBuilder::AutoInTransformSetter
       inTransformSetter(aBuilder, inTransform);
+    CheckForTouchEventHandler(aBuilder, this);
 
     if (usingSVGEffects) {
       dirtyRect =
@@ -1898,6 +1917,12 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       aBuilder->MarkPreserve3DFramesForDisplayList(this, aDirtyRect);
     }
 
+    if (aBuilder->IsBuildingLayerEventRegions()) {
+      nsDisplayLayerEventRegions* eventRegions =
+        new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+      aBuilder->SetLayerEventRegions(eventRegions);
+      set.BorderBackground()->AppendNewToTop(eventRegions);
+    }
     BuildDisplayList(aBuilder, dirtyRect, set);
   }
 
@@ -2187,6 +2212,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   nsDisplayListBuilder::AutoBuildingDisplayList
     buildingForChild(aBuilder, child, pseudoStackingContext);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
+  CheckForTouchEventHandler(aBuilder, child);
 
   if (savedOutOfFlowData) {
     clipState.SetClipForContainingBlockDescendants(
@@ -2231,6 +2257,10 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // THIS IS THE COMMON CASE.
       // Not a pseudo or real stacking context. Do the simple thing and
       // return early.
+      nsDisplayLayerEventRegions* eventRegions = aBuilder->GetLayerEventRegions();
+      if (eventRegions) {
+        eventRegions->AddFrame(aBuilder, child);
+      }
       child->BuildDisplayList(aBuilder, dirty, aLists);
       aBuilder->DisplayCaret(child, dirty, aLists.Content());
 #ifdef DEBUG
@@ -2244,6 +2274,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     // stacking context's positioned descendant list, because they might be
     // z-index:non-auto
     nsDisplayListCollection pseudoStack;
+    if (aBuilder->IsBuildingLayerEventRegions()) {
+      nsDisplayLayerEventRegions* eventRegions =
+        new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+      aBuilder->SetLayerEventRegions(eventRegions);
+      pseudoStack.BorderBackground()->AppendNewToTop(eventRegions);
+    }
     child->BuildDisplayList(aBuilder, dirty, pseudoStack);
     aBuilder->DisplayCaret(child, dirty, pseudoStack.Content());
 
