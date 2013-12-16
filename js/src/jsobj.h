@@ -474,7 +474,7 @@ class JSObject : public js::ObjectImpl
     bool uninlinedIsProxy() const;
     JSObject *getProto() const {
         JS_ASSERT(!uninlinedIsProxy());
-        return js::ObjectImpl::getProto();
+        return getTaggedProto().toObjectOrNull();
     }
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
                                 js::MutableHandleObject protop);

@@ -958,10 +958,11 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     JSScript *cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
     if (!cscript)
         return false;
-    targetFun->setScript(cscript);
     cscript->setFunction(targetFun);
+
     JS_ASSERT(sourceFun->nargs() == targetFun->nargs());
     targetFun->setFlags(sourceFun->flags() | JSFunction::EXTENDED);
+    targetFun->setScript(cscript);
     return true;
 }
 
