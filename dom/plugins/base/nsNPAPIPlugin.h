@@ -141,7 +141,7 @@ NPStringIdentifierIsPermanent(NPP npp, NPIdentifier id)
   return JS_StringHasBeenInterned(cx, NPIdentifierToString(id));
 }
 
-#define NPIdentifier_VOID (JSIdToNPIdentifier(JSID_VOID))
+#define NPIdentifier_VOID (JSIdToNPIdentifier(jsid::voidId()))
 
 NPObject* NP_CALLBACK
 _getwindowobject(NPP npp);

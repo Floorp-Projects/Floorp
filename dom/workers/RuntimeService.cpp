@@ -167,7 +167,7 @@ enum {
 };
 
 // These are jsids for the main runtime. Only touched on the main thread.
-jsid gStringIDs[ID_COUNT] = { JSID_VOID };
+jsid gStringIDs[ID_COUNT] = { jsid::voidId() };
 
 const char* gStringChars[] = {
   "Worker",
@@ -1050,7 +1050,7 @@ ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid
       JSString* str = JS_InternString(aCx, gStringChars[i]);
       if (!str) {
         while (i) {
-          gStringIDs[--i] = JSID_VOID;
+          gStringIDs[--i] = jsid::voidId();
         }
         return false;
       }

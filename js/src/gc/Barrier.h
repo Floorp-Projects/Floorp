@@ -995,7 +995,7 @@ class EncapsulatedId : public BarrieredId
 {
   public:
     explicit EncapsulatedId(jsid id) : BarrieredId(id) {}
-    explicit EncapsulatedId() : BarrieredId(JSID_VOID) {}
+    explicit EncapsulatedId() : BarrieredId(jsid::voidId()) {}
 
     EncapsulatedId &operator=(const EncapsulatedId &v) {
         if (v.value != value)
@@ -1009,7 +1009,7 @@ class EncapsulatedId : public BarrieredId
 class RelocatableId : public BarrieredId
 {
   public:
-    explicit RelocatableId() : BarrieredId(JSID_VOID) {}
+    explicit RelocatableId() : BarrieredId(jsid::voidId()) {}
     explicit inline RelocatableId(jsid id) : BarrieredId(id) {}
     ~RelocatableId() { pre(); }
 
@@ -1046,7 +1046,7 @@ class RelocatableId : public BarrieredId
 class HeapId : public BarrieredId
 {
   public:
-    explicit HeapId() : BarrieredId(JSID_VOID) {}
+    explicit HeapId() : BarrieredId(jsid::voidId()) {}
 
     explicit HeapId(jsid id)
       : BarrieredId(id)

@@ -1456,7 +1456,7 @@ JSStructuredCloneReader::readId(jsid *idp)
         return true;
     }
     if (tag == SCTAG_NULL) {
-        *idp = JSID_VOID;
+        *idp = jsid::voidId();
         return true;
     }
     JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
