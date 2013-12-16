@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsImageClipboard_h
+#define nsImageClipboard_h
+
 /* Things To Do 11/8/00
 
 Check image metrics, can we support them? Do we need to?
@@ -86,3 +89,5 @@ private:
   void CalcBitShift(bitFields * aColorMask);
 
 }; // nsImageFromClipboard
+
+#endif
