@@ -169,7 +169,7 @@ public class TestSyncAccounts extends AndroidSyncTestCase {
     assertNotNull(account);
 
     SharedPreferences prefs = Utils.getSharedPreferences(context, TEST_PRODUCT, TEST_USERNAME,
-        SyncAccounts.DEFAULT_SERVER, TEST_PROFILE, TEST_VERSION);
+        SyncConstants.DEFAULT_AUTH_SERVER, TEST_PROFILE, TEST_VERSION);
 
     // Verify that client record is set.
     assertEquals(TEST_GUID, prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null));
