@@ -14,6 +14,7 @@
 #include "nsIWebVTTParserWrapper.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -162,16 +163,29 @@ public:
     CueChanged();
   }
 
-  double Line() const
+  void GetLine(OwningLongOrAutoKeyword& aLine) const
   {
-    return mLine;
+    if (mLine.IsLong()) {
+      aLine.SetAsLong() = mLine.GetAsLong();
+      return;
+    }
+    aLine.SetAsAutoKeyword() = mLine.GetAsAutoKeyword();
   }
 
-  void SetLine(double aLine)
+  void SetLine(const LongOrAutoKeyword& aLine)
   {
-    //XXX: TODO Line position can be a keyword auto. bug882299
-    mReset = true;
-    mLine = aLine;
+    if (aLine.IsLong() &&
+        (mLine.IsAutoKeyword() || (aLine.GetAsLong() != mLine.GetAsLong()))) {
+      mLine.SetAsLong() = aLine.GetAsLong();
+      CueChanged();
+      mReset = true;
+      return;
+    }
+    if (mLine.IsLong()) {
+      mLine.SetAsAutoKeyword() = aLine.GetAsAutoKeyword();
+      CueChanged();
+      mReset = true;
+    }
   }
 
   AlignSetting LineAlign() const
@@ -342,7 +356,7 @@ private:
   bool mSnapToLines;
   nsString mRegionId;
   DirectionSetting mVertical;
-  int mLine;
+  LongOrAutoKeyword mLine;
   AlignSetting mAlign;
   AlignSetting mLineAlign;
 
