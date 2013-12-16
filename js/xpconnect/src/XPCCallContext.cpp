@@ -20,7 +20,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                JSContext* cx       /* = GetDefaultJSContext() */,
                                HandleObject obj    /* = nullptr               */,
                                HandleObject funobj /* = nullptr               */,
-                               HandleId name       /* = JSID_VOID             */,
+                               HandleId name       /* = jsid::voidId()        */,
                                unsigned argc       /* = NO_ARGS               */,
                                jsval *argv         /* = nullptr               */,
                                jsval *rval         /* = nullptr               */)

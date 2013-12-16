@@ -1594,7 +1594,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
 inline
 Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
   : base_(base),
-    propid_(JSID_EMPTY),
+    propid_(jsid::emptyId()),
     slotInfo(SHAPE_INVALID_SLOT | (nfixed << FIXED_SLOTS_SHIFT)),
     attrs(JSPROP_SHARED),
     flags(0),
