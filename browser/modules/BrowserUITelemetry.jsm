@@ -22,6 +22,10 @@ this.BrowserUITelemetry = {
                                          this.getToolbarMeasures.bind(this));
   },
 
+  countCustomizationEvent: function(aCustomizationEvent) {
+    UITelemetry.addEvent("customize:" + aCustomizationEvent, null);
+  },
+
   getToolbarMeasures: function() {
     // Grab the most recent non-popup, non-private browser window for us to
     // analyze the toolbars in...
