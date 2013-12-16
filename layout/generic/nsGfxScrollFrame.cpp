@@ -2384,10 +2384,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   } else {
     nsRect scrollRange = GetScrollRange();
     ScrollbarStyles styles = GetScrollbarStylesFromFrame();
-    bool hasScrollableOverflow =
-      (scrollRange.width > 0 || scrollRange.height > 0) &&
-      ((styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN && mHScrollbarBox) ||
-       (styles.mVertical   != NS_STYLE_OVERFLOW_HIDDEN && mVScrollbarBox));
+    bool isVScrollable = (scrollRange.height > 0)
+                      && (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
+    bool isHScrollable = (scrollRange.width > 0)
+                      && (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
+    bool wantLayerV = isVScrollable && mVScrollbarBox;
+    bool wantLayerH = isHScrollable && mHScrollbarBox;
     // TODO Turn this on for inprocess OMTC on all platforms
     bool wantSubAPZC = (XRE_GetProcessType() == GeckoProcessType_Content);
 #ifdef XP_WIN
@@ -2397,7 +2399,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
     shouldBuildLayer =
       wantSubAPZC &&
-      hasScrollableOverflow &&
+      (wantLayerV || wantLayerH) &&
       (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
   }
 
