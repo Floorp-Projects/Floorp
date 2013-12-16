@@ -486,8 +486,8 @@ void MP3FrameParser::Parse(const char* aBuffer, uint32_t aLength, uint64_t aOffs
   mOffset = offset + bytesRead;
 
   // If we've parsed lots of data and we still have nothing, just give up.
-  // We don't count ID3 headers towards that count, as MP3 files can have
-  // massive ID3 sections.
+  // We don't count ID3 headers towards the skipped bytes count, as MP3 files
+  // can have massive ID3 sections.
   if (!mID3Parser.IsParsed() && mMP3Offset < 0 &&
       mOffset - mTotalID3Size > MAX_SKIPPED_BYTES) {
     mIsMP3 = NOT_MP3;
@@ -498,8 +498,17 @@ int64_t MP3FrameParser::GetDuration()
 {
   MutexAutoLock mon(mLock);
 
-  if (mMP3Offset < 0) {
-    return -1; // Not a single frame decoded yet
+  if (!ParsedHeaders() || !mSamplesPerSecond) {
+    // Not a single frame decoded yet.
+    return -1;
+  }
+
+  MOZ_ASSERT(mFrameCount > 0 && mTotalFrameSize > 0,
+             "Frame parser should have seen at least one MP3 frame of positive length.");
+
+  if (!mFrameCount || !mTotalFrameSize) {
+    // This should never happen.
+    return -1;
   }
 
   double frames;
