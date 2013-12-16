@@ -35,6 +35,8 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
+class ContainerState;
+
 FrameLayerBuilder::DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey, 
                                                     Layer* aLayer, LayerState aLayerState, uint32_t aGeneration)
 
@@ -221,6 +223,210 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache()
 }
 
 /**
+ * We keep a stack of these to represent the ThebesLayers that are
+ * currently available to have display items added to.
+ * We use a stack here because as much as possible we want to
+ * assign display items to existing ThebesLayers, and to the lowest
+ * ThebesLayer in z-order. This reduces the number of layers and
+ * makes it more likely a display item will be rendered to an opaque
+ * layer, giving us the best chance of getting subpixel AA.
+ */
+class ThebesLayerData {
+public:
+  ThebesLayerData() :
+    mAnimatedGeometryRoot(nullptr), mReferenceFrame(nullptr),
+    mLayer(nullptr),
+    mIsSolidColorInVisibleRegion(false),
+    mNeedComponentAlpha(false),
+    mForceTransparentSurface(false),
+    mImage(nullptr),
+    mCommonClipCount(-1),
+    mAllDrawingAbove(false) {}
+  /**
+   * Record that an item has been added to the ThebesLayer, so we
+   * need to update our regions.
+   * @param aVisibleRect the area of the item that's visible
+   * @param aDrawRect the area of the item that would be drawn if it
+   * was completely visible
+   * @param aOpaqueRect if non-null, the area of the item that's opaque.
+   * We pass in a separate opaque rect because the opaque rect can be
+   * bigger than the visible rect, and we want to have the biggest
+   * opaque rect that we can.
+   * @param aSolidColor if non-null, the visible area of the item is
+   * a constant color given by *aSolidColor
+   */
+  void Accumulate(ContainerState* aState,
+                  nsDisplayItem* aItem,
+                  const nsIntRect& aVisibleRect,
+                  const nsIntRect& aDrawRect,
+                  const DisplayItemClip& aClip);
+  const nsIFrame* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
+
+  /**
+   * If this represents only a nsDisplayImage, and the image type
+   * supports being optimized to an ImageLayer (TYPE_RASTER only) returns
+   * an ImageContainer for the image.
+   */
+  already_AddRefed<ImageContainer> CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder);
+
+  void AddDrawAboveRegion(const nsIntRegion& aAbove)
+  {
+    if (!mAllDrawingAbove) {
+      mDrawAboveRegion.Or(mDrawAboveRegion, aAbove);
+      mDrawAboveRegion.SimplifyOutward(4);
+    }
+  }
+
+  void AddVisibleAboveRegion(const nsIntRegion& aAbove)
+  {
+    if (!mAllDrawingAbove) {
+      mVisibleAboveRegion.Or(mVisibleAboveRegion, aAbove);
+      mVisibleAboveRegion.SimplifyOutward(4);
+    }
+  }
+
+  void CopyAboveRegion(ThebesLayerData* aOther)
+  {
+    if (aOther->mAllDrawingAbove || mAllDrawingAbove) {
+      SetAllDrawingAbove();
+    } else {
+      mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleAboveRegion);
+      mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleRegion);
+      mVisibleAboveRegion.SimplifyOutward(4);
+      mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawAboveRegion);
+      mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawRegion);
+      mDrawAboveRegion.SimplifyOutward(4);
+   }
+  }
+
+  void SetAllDrawingAbove()
+  {
+    mAllDrawingAbove = true;
+    mDrawAboveRegion.SetEmpty();
+    mVisibleAboveRegion.SetEmpty();
+  }
+
+  bool IsBelow(const nsIntRect& aRect)
+  {
+    return mAllDrawingAbove || mDrawAboveRegion.Intersects(aRect);
+  }
+
+  bool IntersectsVisibleAboveRegion(const nsIntRegion& aVisibleRegion)
+  {
+    if (mAllDrawingAbove) {
+      return true;
+    }
+    nsIntRegion visibleAboveIntersection;
+    visibleAboveIntersection.And(mVisibleAboveRegion, aVisibleRegion);
+    if (visibleAboveIntersection.IsEmpty()) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * The region of visible content in the layer, relative to the
+   * container layer (which is at the snapped top-left of the display
+   * list reference frame).
+   */
+  nsIntRegion  mVisibleRegion;
+  /**
+   * The region containing the bounds of all display items in the layer,
+   * regardless of visbility.
+   * Same coordinate system as mVisibleRegion.
+   * This is a conservative approximation: it contains the true region.
+   */
+  nsIntRegion  mDrawRegion;
+  /**
+   * The region of visible content in the layer that is opaque.
+   * Same coordinate system as mVisibleRegion.
+   */
+  nsIntRegion  mOpaqueRegion;
+  /**
+   * The "active scrolled root" for all content in the layer. Must
+   * be non-null; all content in a ThebesLayer must have the same
+   * active scrolled root.
+   */
+  const nsIFrame* mAnimatedGeometryRoot;
+  const nsIFrame* mReferenceFrame;
+  ThebesLayer* mLayer;
+  /**
+   * If mIsSolidColorInVisibleRegion is true, this is the color of the visible
+   * region.
+   */
+  nscolor      mSolidColor;
+  /**
+   * True if every pixel in mVisibleRegion will have color mSolidColor.
+   */
+  bool mIsSolidColorInVisibleRegion;
+  /**
+   * True if there is any text visible in the layer that's over
+   * transparent pixels in the layer.
+   */
+  bool mNeedComponentAlpha;
+  /**
+   * Set if the layer should be treated as transparent, even if its entire
+   * area is covered by opaque display items. For example, this needs to
+   * be set if something is going to "punch holes" in the layer by clearing
+   * part of its surface.
+   */
+  bool mForceTransparentSurface;
+
+  /**
+   * Stores the pointer to the nsDisplayImage if we want to
+   * convert this to an ImageLayer.
+   */
+  nsDisplayImageContainer* mImage;
+  /**
+   * Stores the clip that we need to apply to the image or, if there is no
+   * image, a clip for SOME item in the layer. There is no guarantee which
+   * item's clip will be stored here and mItemClip should not be used to clip
+   * the whole layer - only some part of the clip should be used, as determined
+   * by ThebesDisplayItemLayerUserData::GetCommonClipCount() - which may even be
+   * no part at all.
+   */
+  DisplayItemClip mItemClip;
+  /**
+   * The first mCommonClipCount rounded rectangle clips are identical for
+   * all items in the layer.
+   * -1 if there are no items in the layer; must be >=0 by the time that this
+   * data is popped from the stack.
+   */
+  int32_t mCommonClipCount;
+  /*
+   * Updates mCommonClipCount by checking for rounded rect clips in common
+   * between the clip on a new item (aCurrentClip) and the common clips
+   * on items already in the layer (the first mCommonClipCount rounded rects
+   * in mItemClip).
+   */
+  void UpdateCommonClipCount(const DisplayItemClip& aCurrentClip);
+
+private:
+  /**
+   * The region of visible content above the layer and below the
+   * next ThebesLayerData currently in the stack, if any. Note that not
+   * all ThebesLayers for the container are in the ThebesLayerData stack.
+   * Same coordinate system as mVisibleRegion.
+   * This is a conservative approximation: it contains the true region.
+   */
+  nsIntRegion  mVisibleAboveRegion;
+  /**
+   * The region containing the bounds of all display items (regardless
+   * of visibility) in the layer and below the next ThebesLayerData
+   * currently in the stack, if any.
+   * Note that not all ThebesLayers for the container are in the
+   * ThebesLayerData stack.
+   * Same coordinate system as mVisibleRegion.
+   */
+  nsIntRegion  mDrawAboveRegion;
+  /**
+   * True if mDrawAboveRegion and mVisibleAboveRegion should be treated
+   * as infinite, and all display items should be considered 'above' this layer.
+   */
+  bool mAllDrawingAbove;
+};
+
+/**
  * This is a helper object used to build up the layer children for
  * a ContainerLayer.
  */
@@ -312,209 +518,6 @@ public:
   }
 
 protected:
-  /**
-   * We keep a stack of these to represent the ThebesLayers that are
-   * currently available to have display items added to.
-   * We use a stack here because as much as possible we want to
-   * assign display items to existing ThebesLayers, and to the lowest
-   * ThebesLayer in z-order. This reduces the number of layers and
-   * makes it more likely a display item will be rendered to an opaque
-   * layer, giving us the best chance of getting subpixel AA.
-   */
-  class ThebesLayerData {
-  public:
-    ThebesLayerData() :
-      mAnimatedGeometryRoot(nullptr), mReferenceFrame(nullptr),
-      mLayer(nullptr),
-      mIsSolidColorInVisibleRegion(false),
-      mNeedComponentAlpha(false),
-      mForceTransparentSurface(false),
-      mImage(nullptr),
-      mCommonClipCount(-1),
-      mAllDrawingAbove(false) {}
-    /**
-     * Record that an item has been added to the ThebesLayer, so we
-     * need to update our regions.
-     * @param aVisibleRect the area of the item that's visible
-     * @param aDrawRect the area of the item that would be drawn if it
-     * was completely visible
-     * @param aOpaqueRect if non-null, the area of the item that's opaque.
-     * We pass in a separate opaque rect because the opaque rect can be
-     * bigger than the visible rect, and we want to have the biggest
-     * opaque rect that we can.
-     * @param aSolidColor if non-null, the visible area of the item is
-     * a constant color given by *aSolidColor
-     */
-    void Accumulate(ContainerState* aState,
-                    nsDisplayItem* aItem,
-                    const nsIntRect& aVisibleRect,
-                    const nsIntRect& aDrawRect,
-                    const DisplayItemClip& aClip);
-    const nsIFrame* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
-
-    /**
-     * If this represents only a nsDisplayImage, and the image type
-     * supports being optimized to an ImageLayer (TYPE_RASTER only) returns
-     * an ImageContainer for the image.
-     */
-    already_AddRefed<ImageContainer> CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder);
-
-    void AddDrawAboveRegion(const nsIntRegion& aAbove)
-    {
-      if (!mAllDrawingAbove) {
-        mDrawAboveRegion.Or(mDrawAboveRegion, aAbove);
-        mDrawAboveRegion.SimplifyOutward(4);
-      }
-    }
-
-    void AddVisibleAboveRegion(const nsIntRegion& aAbove)
-    {
-      if (!mAllDrawingAbove) {
-        mVisibleAboveRegion.Or(mVisibleAboveRegion, aAbove);
-        mVisibleAboveRegion.SimplifyOutward(4);
-      }
-    }
-
-    void CopyAboveRegion(ThebesLayerData* aOther)
-    {
-      if (aOther->mAllDrawingAbove || mAllDrawingAbove) {
-        SetAllDrawingAbove();
-      } else {
-        mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleAboveRegion);
-        mVisibleAboveRegion.Or(mVisibleAboveRegion, aOther->mVisibleRegion);
-        mVisibleAboveRegion.SimplifyOutward(4);
-        mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawAboveRegion);
-        mDrawAboveRegion.Or(mDrawAboveRegion, aOther->mDrawRegion);
-        mDrawAboveRegion.SimplifyOutward(4);
-     }
-    }
-
-    void SetAllDrawingAbove()
-    {
-      mAllDrawingAbove = true;
-      mDrawAboveRegion.SetEmpty();
-      mVisibleAboveRegion.SetEmpty();
-    }
-
-    bool IsBelow(const nsIntRect& aRect)
-    {
-      return mAllDrawingAbove || mDrawAboveRegion.Intersects(aRect);
-    }
-
-    bool IntersectsVisibleAboveRegion(const nsIntRegion& aVisibleRegion)
-    {
-      if (mAllDrawingAbove) {
-        return true;
-      }
-      nsIntRegion visibleAboveIntersection;
-      visibleAboveIntersection.And(mVisibleAboveRegion, aVisibleRegion);
-      if (visibleAboveIntersection.IsEmpty()) {
-        return false;
-      }
-      return true;
-    }
-
-    /**
-     * The region of visible content in the layer, relative to the
-     * container layer (which is at the snapped top-left of the display
-     * list reference frame).
-     */
-    nsIntRegion  mVisibleRegion;
-    /**
-     * The region containing the bounds of all display items in the layer,
-     * regardless of visbility.
-     * Same coordinate system as mVisibleRegion.
-     * This is a conservative approximation: it contains the true region.
-     */
-    nsIntRegion  mDrawRegion;
-    /**
-     * The region of visible content in the layer that is opaque.
-     * Same coordinate system as mVisibleRegion.
-     */
-    nsIntRegion  mOpaqueRegion;
-    /**
-     * The "active scrolled root" for all content in the layer. Must
-     * be non-null; all content in a ThebesLayer must have the same
-     * active scrolled root.
-     */
-    const nsIFrame* mAnimatedGeometryRoot;
-    const nsIFrame* mReferenceFrame;
-    ThebesLayer* mLayer;
-    /**
-     * If mIsSolidColorInVisibleRegion is true, this is the color of the visible
-     * region.
-     */
-    nscolor      mSolidColor;
-    /**
-     * True if every pixel in mVisibleRegion will have color mSolidColor.
-     */
-    bool mIsSolidColorInVisibleRegion;
-    /**
-     * True if there is any text visible in the layer that's over
-     * transparent pixels in the layer.
-     */
-    bool mNeedComponentAlpha;
-    /**
-     * Set if the layer should be treated as transparent, even if its entire
-     * area is covered by opaque display items. For example, this needs to
-     * be set if something is going to "punch holes" in the layer by clearing
-     * part of its surface.
-     */
-    bool mForceTransparentSurface;
-
-    /**
-     * Stores the pointer to the nsDisplayImage if we want to
-     * convert this to an ImageLayer.
-     */
-    nsDisplayImageContainer* mImage;
-    /**
-     * Stores the clip that we need to apply to the image or, if there is no
-     * image, a clip for SOME item in the layer. There is no guarantee which
-     * item's clip will be stored here and mItemClip should not be used to clip
-     * the whole layer - only some part of the clip should be used, as determined
-     * by ThebesDisplayItemLayerUserData::GetCommonClipCount() - which may even be
-     * no part at all.
-     */
-    DisplayItemClip mItemClip;
-    /**
-     * The first mCommonClipCount rounded rectangle clips are identical for
-     * all items in the layer.
-     * -1 if there are no items in the layer; must be >=0 by the time that this
-     * data is popped from the stack.
-     */
-    int32_t mCommonClipCount;
-    /*
-     * Updates mCommonClipCount by checking for rounded rect clips in common
-     * between the clip on a new item (aCurrentClip) and the common clips
-     * on items already in the layer (the first mCommonClipCount rounded rects
-     * in mItemClip).
-     */
-    void UpdateCommonClipCount(const DisplayItemClip& aCurrentClip);
-
-  private:
-    /**
-     * The region of visible content above the layer and below the
-     * next ThebesLayerData currently in the stack, if any. Note that not
-     * all ThebesLayers for the container are in the ThebesLayerData stack.
-     * Same coordinate system as mVisibleRegion.
-     * This is a conservative approximation: it contains the true region.
-     */
-    nsIntRegion  mVisibleAboveRegion;
-    /**
-     * The region containing the bounds of all display items (regardless
-     * of visibility) in the layer and below the next ThebesLayerData
-     * currently in the stack, if any.
-     * Note that not all ThebesLayers for the container are in the
-     * ThebesLayerData stack.
-     * Same coordinate system as mVisibleRegion.
-     */
-    nsIntRegion  mDrawAboveRegion;
-    /**
-     * True if mDrawAboveRegion and mVisibleAboveRegion should be treated
-     * as infinite, and all display items should be considered 'above' this layer.
-     */
-    bool mAllDrawingAbove;
-  };
   friend class ThebesLayerData;
 
   /**
@@ -604,11 +607,11 @@ protected:
    * will be painted with aSolidColor by the item
    */
   ThebesLayerData* FindThebesLayerFor(nsDisplayItem* aItem,
-                                                   const nsIntRect& aVisibleRect,
-                                                   const nsIntRect& aDrawRect,
-                                                   const DisplayItemClip& aClip,
-                                                   const nsIFrame* aAnimatedGeometryRoot,
-                                                   const nsPoint& aTopLeft);
+                                      const nsIntRect& aVisibleRect,
+                                      const nsIntRect& aDrawRect,
+                                      const DisplayItemClip& aClip,
+                                      const nsIFrame* aAnimatedGeometryRoot,
+                                      const nsPoint& aTopLeft);
   ThebesLayerData* GetTopThebesLayerData()
   {
     return mThebesLayerDataStack.IsEmpty() ? nullptr
@@ -1596,7 +1599,7 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aThebesLayerIndex)
 }
 
 void
-ContainerState::ThebesLayerData::UpdateCommonClipCount(
+ThebesLayerData::UpdateCommonClipCount(
     const DisplayItemClip& aCurrentClip)
 {
   if (mCommonClipCount >= 0) {
@@ -1608,7 +1611,7 @@ ContainerState::ThebesLayerData::UpdateCommonClipCount(
 }
 
 already_AddRefed<ImageContainer>
-ContainerState::ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder)
+ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder)
 {
   if (!mImage) {
     return nullptr;
@@ -1855,11 +1858,11 @@ WindowHasTransparency(nsDisplayListBuilder* aBuilder)
 }
 
 void
-ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
-                                            nsDisplayItem* aItem,
-                                            const nsIntRect& aVisibleRect,
-                                            const nsIntRect& aDrawRect,
-                                            const DisplayItemClip& aClip)
+ThebesLayerData::Accumulate(ContainerState* aState,
+                            nsDisplayItem* aItem,
+                            const nsIntRect& aVisibleRect,
+                            const nsIntRect& aDrawRect,
+                            const DisplayItemClip& aClip)
 {
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
@@ -1982,7 +1985,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   }
 }
 
-ContainerState::ThebesLayerData*
+ThebesLayerData*
 ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
                                    const nsIntRect& aVisibleRect,
                                    const nsIntRect& aDrawRect,
