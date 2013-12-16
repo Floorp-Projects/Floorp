@@ -401,6 +401,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     if (subdocRootFrame) {
+      aBuilder->SetAncestorHasTouchEventHandler(false);
       subdocRootFrame->
         BuildDisplayListForStackingContext(aBuilder, dirty, &childItems);
     }
