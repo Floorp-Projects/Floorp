@@ -15,6 +15,8 @@
 #include "nsTArray.h"
 #include "prclist.h"
 #include "mozilla/Attributes.h"
+#include "nsWrapperCache.h"
+#include "mozilla/dom/MediaQueryListBinding.h"
 
 class nsPresContext;
 class nsMediaList;
@@ -23,6 +25,7 @@ namespace mozilla {
 namespace dom {
 
 class MediaQueryList MOZ_FINAL : public nsIDOMMediaQueryList,
+                                 public nsWrapperCache,
                                  public PRCList
 {
 public:
@@ -35,24 +38,39 @@ private:
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(MediaQueryList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaQueryList)
 
   NS_DECL_NSIDOMMEDIAQUERYLIST
+
+  nsISupports* GetParentObject() const;
+
+  typedef CallbackObjectHolder<mozilla::dom::MediaQueryListListener,
+                               nsIDOMMediaQueryListListener> CallbackType;
 
   struct HandleChangeData {
     nsRefPtr<MediaQueryList> mql;
     nsCOMPtr<nsIDOMMediaQueryListListener> listener;
+    nsCOMPtr<mozilla::dom::MediaQueryListListener> callback;
   };
 
   typedef FallibleTArray< nsCOMPtr<nsIDOMMediaQueryListListener> > ListenerList;
+  typedef FallibleTArray< nsRefPtr<mozilla::dom::MediaQueryListListener> > CallbackList;
   typedef FallibleTArray<HandleChangeData> NotifyList;
 
   // Appends listeners that need notification to aListenersToNotify
   void MediumFeaturesChanged(NotifyList &aListenersToNotify);
 
-  bool HasListeners() const { return !mListeners.IsEmpty(); }
+  bool HasListeners() const { return !mListeners.IsEmpty() || !mCallbacks.IsEmpty(); }
 
   void RemoveAllListeners();
+
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL methods
+  // The XPCOM GetMedia method is good
+  bool Matches();
+  void AddListener(mozilla::dom::MediaQueryListListener& aListener);
+  void RemoveListener(mozilla::dom::MediaQueryListListener& aListener);
 
 private:
   void RecomputeMatches();
@@ -77,6 +95,7 @@ private:
   bool mMatches;
   bool mMatchesValid;
   ListenerList mListeners;
+  CallbackList mCallbacks;
 };
 
 } // namespace dom

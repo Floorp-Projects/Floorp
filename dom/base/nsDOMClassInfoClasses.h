@@ -113,8 +113,6 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 
 DOMCI_CLASS(CSSPageRule)
 
-DOMCI_CLASS(MediaQueryList)
-
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozIccManager)
 #endif
