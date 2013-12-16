@@ -122,7 +122,7 @@ public:
       mLastEventTime = now;
       if (mLatency > MAX_LATENCY_S ||
           (mDroppingBuffers && mLatency > 0.0 &&
-           abs(latency - bufferDuration) < bufferDuration)) {
+           fabs(latency - bufferDuration) < bufferDuration)) {
         mDroppingBuffers = true;
         return;
       } else {
