@@ -520,7 +520,11 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
       }
       NS_ASSERTION(mFlushState == eInDocUpdate, 
         "Tried to perform tree op outside update batch.");
-      iter->Perform(this, &scriptElement);
+      nsresult rv = iter->Perform(this, &scriptElement);
+      if (NS_FAILED(rv)) {
+        MarkAsBroken(rv);
+        break;
+      }
 
       // Be sure not to check the deadline if the last op was just performed.
       if (MOZ_UNLIKELY(iter == last)) {
@@ -622,7 +626,11 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
     }
     NS_ASSERTION(mFlushState == eInDocUpdate, 
       "Tried to perform tree op outside update batch.");
-    iter->Perform(this, &scriptElement);
+    nsresult rv = iter->Perform(this, &scriptElement);
+    if (NS_FAILED(rv)) {
+      MarkAsBroken(rv);
+      break;
+    }
   }
 
   mOpQueue.Clear();
