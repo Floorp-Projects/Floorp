@@ -35,6 +35,7 @@ using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerRect from "Units.h";
 using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 
@@ -184,6 +185,7 @@ struct Animation {
 // Change a layer's attributes
 struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
+  EventRegions eventRegions;
   TransformMatrix transform;
   float postXScale;
   float postYScale;
