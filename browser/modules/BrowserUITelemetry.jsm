@@ -137,6 +137,66 @@ const APPMENU_PREFIX_WHITELIST = [
   'appmenu_charset',
 ];
 
+const DEFAULT_TOOLBAR_SETS = {
+#ifndef XP_MACOSX
+  "toolbar-menubar": [
+    "menubar-items"
+  ],
+#endif
+  "nav-bar": [
+    "unified-back-forward-button",
+    "urlbar-container",
+    "reload-button",
+    "stop-button",
+    "search-container",
+    "webrtc-status-button",
+    "bookmarks-menu-button",
+    "downloads-button",
+    "home-button",
+    "window-controls"
+  ],
+  "PersonalToolbar": [
+    "personal-bookmarks"
+  ],
+  "TabsToolbar": [
+#ifndef CAN_DRAW_IN_TITLEBAR
+    "appmenu-toolbar-button",
+#endif
+    "tabbrowser-tabs",
+    "new-tab-button",
+    "alltabs-button",
+    "tabs-closebutton"
+  ],
+  "addon-bar": [
+    "addonbar-closebutton",
+    "status-bar"
+  ],
+};
+
+const PALETTE_ITEMS = [
+  "print-button",
+  "history-button",
+  "bookmarks-button",
+  "new-window-button",
+  "fullscreen-button",
+  "zoom-controls",
+  "feed-button",
+  "cut-button",
+  "copy-button",
+  "paste-button",
+  "sync-button",
+  "navigator-throbber",
+  "tabview-button",
+];
+
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_ITEMS", function() {
+  let result = [];
+  for (let [, buttons] of Iterator(DEFAULT_TOOLBAR_SETS)) {
+    result = result.concat(buttons);
+  }
+  return result;
+});
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
@@ -233,6 +293,54 @@ this.BrowserUITelemetry = {
     // Determine if the add-on bar is currently visible
     let addonBar = document.getElementById("addon-bar");
     result.addonBarEnabled = addonBar && !addonBar.collapsed;
+
+    // Examine the default toolbars and see what default items
+    // are present and missing.
+    let defaultKept = [];
+    let defaultMoved = [];
+    let nondefaultAdded = [];
+
+    let toolbars = document.querySelectorAll("toolbar[customizable=true]");
+    for (let toolbar of toolbars) {
+      let toolbarID = toolbar.id;
+      let currentset = toolbar.currentSet;
+      // It's possible add-ons might have wiped out the currentSet property,
+      // so we'll be a little defensive here.
+      currentset = (currentset && currentset.split(",")) || [];
+
+      for (let item of currentset) {
+        // Is this a default item?
+        if (DEFAULT_ITEMS.indexOf(item) != -1) {
+          // Ok, it's a default item - but is it in its default
+          // toolbar? We use Array.isArray instead of checking for
+          // toolbarID in DEFAULT_TOOLBAR_SETS because an add-on might
+          // be clever and give itself the id of "toString" or something.
+          if (Array.isArray(DEFAULT_TOOLBAR_SETS[toolbarID]) &&
+              DEFAULT_TOOLBAR_SETS[toolbarID].indexOf(item) != -1) {
+            // The item is in its default toolbar
+            defaultKept.push(item);
+          } else {
+            defaultMoved.push(item);
+          }
+        } else if (PALETTE_ITEMS.indexOf(item) != -1) {
+          // It's a palette item that's been moved into a toolbar
+          nondefaultAdded.push(item);
+        }
+        // else, it's a generated item (like springs, spacers, etc), or
+        // provided by an add-on, and we won't record it.
+      }
+    }
+
+    // Now go through the items in the palette to see what default
+    // items are in there.
+    let paletteChildren = win.gNavToolbox.palette.childNodes;
+    let defaultRemoved = [node.id for (node of paletteChildren)
+                          if (DEFAULT_ITEMS.indexOf(node.id) != -1)];
+
+    result.defaultKept = defaultKept;
+    result.defaultMoved = defaultMoved;
+    result.nondefaultAdded = nondefaultAdded;
+    result.defaultRemoved = defaultRemoved;
 
     return result;
   },

@@ -8,7 +8,6 @@ TEST_DIRS += ['test']
 
 EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
-    'BrowserUITelemetry.jsm',
     'ContentClick.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
@@ -31,6 +30,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 EXTRA_PP_JS_MODULES += [
     'AboutHome.jsm',
+    'BrowserUITelemetry.jsm',
     'RecentWindow.jsm',
 ]
 
