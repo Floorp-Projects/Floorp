@@ -18,7 +18,8 @@ class ShadowLayersManager
 public:
     virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
                                      const TargetConfig& aTargetConfig,
-                                     bool isFirstPaint) = 0;
+                                     bool aIsFirstPaint,
+                                     bool aScheduleComposite) = 0;
 };
 
 } // layers

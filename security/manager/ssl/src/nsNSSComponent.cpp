@@ -1005,8 +1005,6 @@ void nsNSSComponent::setValidationOptions()
                                             OCSP_ENABLED_DEFAULT);
 
   bool ocspRequired = Preferences::GetBool("security.OCSP.require", false);
-  bool anyFreshRequired = Preferences::GetBool("security.fresh_revocation_info.require",
-                                               false);
   bool aiaDownloadEnabled = Preferences::GetBool("security.missing_cert_download.enabled",
                                                  false);
 
@@ -1025,7 +1023,7 @@ void nsNSSComponent::setValidationOptions()
                            : ocspMode_FailureIsNotAVerificationFailure);
 
   int OCSPTimeoutSeconds = 3;
-  if (ocspRequired || anyFreshRequired) {
+  if (ocspRequired) {
     OCSPTimeoutSeconds = 10;
   }
   CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
@@ -1043,8 +1041,6 @@ void nsNSSComponent::setValidationOptions()
         CertVerifier::ocsp_on : CertVerifier::ocsp_off,
       ocspRequired ? 
         CertVerifier::ocsp_strict : CertVerifier::ocsp_relaxed,
-      anyFreshRequired ?
-        CertVerifier::any_revo_strict : CertVerifier::any_revo_relaxed,
       ocspGetEnabled ?
         CertVerifier::ocsp_get_enabled : CertVerifier::ocsp_get_disabled);
 

@@ -81,11 +81,13 @@ protected:
   virtual bool RecvUpdate(const EditArray& cset,
                           const TargetConfig& targetConfig,
                           const bool& isFirstPaint,
+                          const bool& scheduleComposite,
                           EditReplyArray* reply) MOZ_OVERRIDE;
 
   virtual bool RecvUpdateNoSwap(const EditArray& cset,
                                 const TargetConfig& targetConfig,
-                                const bool& isFirstPaint) MOZ_OVERRIDE;
+                                const bool& isFirstPaint,
+                                const bool& scheduleComposite) MOZ_OVERRIDE;
 
   virtual bool RecvClearCachedResources() MOZ_OVERRIDE;
   virtual bool RecvGetOpacity(PLayerParent* aParent,

@@ -209,7 +209,7 @@ ClientLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
     mWidget->PrepareWindowEffects();
   }
   EndTransactionInternal(aCallback, aCallbackData, aFlags);
-  ForwardTransaction();
+  ForwardTransaction(!(aFlags & END_NO_REMOTE_COMPOSITE));
 
   if (mRepeatTransaction) {
     mRepeatTransaction = false;
@@ -239,7 +239,7 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
   if (mWidget) {
     mWidget->PrepareWindowEffects();
   }
-  ForwardTransaction();
+  ForwardTransaction(!(aFlags & END_NO_REMOTE_COMPOSITE));
   MakeSnapshotIfRequired();
   return true;
 }
@@ -252,6 +252,14 @@ ClientLayerManager::GetRemoteRenderer()
   }
 
   return mWidget->GetRemoteRenderer();
+}
+
+void
+ClientLayerManager::Composite()
+{
+  if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
+    remoteRenderer->SendForceComposite();
+  }
 }
 
 void 
@@ -328,14 +336,14 @@ ClientLayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
 }
 
 void
-ClientLayerManager::ForwardTransaction()
+ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 {
   mPhase = PHASE_FORWARD;
 
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
-  if (HasShadowManager() && mForwarder->EndTransaction(&replies, &sent)) {
+  if (HasShadowManager() && mForwarder->EndTransaction(&replies, aScheduleComposite, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
