@@ -474,6 +474,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     Mode aMode, bool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
+      mLayerEventRegions(nullptr),
       mCurrentTableItem(nullptr),
       mFinalTransparentRegion(nullptr),
       mCachedOffsetFrame(aReferenceFrame),
@@ -496,7 +497,8 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsPaintingToWindow(false),
       mIsCompositingCheap(false),
       mContainsPluginItem(false),
-      mContainsBlendMode(false)
+      mContainsBlendMode(false),
+      mAncestorHasTouchEventHandler(false)
 {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
   PL_InitArenaPool(&mPool, "displayListArena", 1024,
@@ -2496,6 +2498,40 @@ nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
   }
 
   aOutFrames->AppendElement(mFrame);
+}
+
+void
+nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
+                                     nsIFrame* aFrame)
+{
+  NS_ASSERTION(aBuilder->FindReferenceFrameFor(aFrame) == aBuilder->FindReferenceFrameFor(mFrame),
+               "Reference frame mismatch");
+  uint8_t pointerEvents = aFrame->StyleVisibility()->mPointerEvents;
+  if (pointerEvents == NS_STYLE_POINTER_EVENTS_NONE) {
+    return;
+  }
+  // XXX handle other pointerEvents values for SVG
+  // XXX Do something clever here for the common case where the border box
+  // is obviously entirely inside mHitRegion.
+  nsRect borderBox(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
+  const DisplayItemClip* clip = aBuilder->ClipState().GetCurrentCombinedClip(aBuilder);
+  bool borderBoxHasRoundedCorners =
+    nsLayoutUtils::HasNonZeroCorner(aFrame->StyleBorder()->mBorderRadius);
+  if (clip) {
+    borderBox = clip->ApplyNonRoundedIntersection(borderBox);
+    if (clip->GetRoundedRectCount() > 0) {
+      borderBoxHasRoundedCorners = true;
+    }
+  }
+  if (borderBoxHasRoundedCorners ||
+      (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+    mMaybeHitRegion.Or(mMaybeHitRegion, borderBox);
+  } else {
+    mHitRegion.Or(mHitRegion, borderBox);
+  }
+  if (aBuilder->GetAncestorHasTouchEventHandler()) {
+    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
+  }
 }
 
 void
