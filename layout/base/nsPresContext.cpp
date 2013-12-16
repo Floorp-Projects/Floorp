@@ -1858,7 +1858,14 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
         if (pusher.RePush(et)) {
           nsAutoMicroTask mt;
           MediaQueryList::HandleChangeData &d = notifyList[i];
-          d.listener->HandleChange(d.mql);
+          if (d.listener) {
+            d.listener->HandleChange(d.mql);
+          } else if (d.callback) {
+            ErrorResult result;
+            d.callback->Call(*d.mql, result);
+          } else {
+            MOZ_ASSERT(false, "How come we have no listener or callback?");
+          }
         }
       }
     }
@@ -1893,7 +1900,7 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   }
 }
 
-already_AddRefed<nsIDOMMediaQueryList>
+already_AddRefed<MediaQueryList>
 nsPresContext::MatchMedia(const nsAString& aMediaQueryList)
 {
   nsRefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
