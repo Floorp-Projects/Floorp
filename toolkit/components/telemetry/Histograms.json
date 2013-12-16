@@ -4693,5 +4693,10 @@
     "kind": "enumerated",
     "n_values": 8,
     "description": "Type of handshake (1=resumption, 2=false started, 3=chose not to false start, 4=not allowed to false start)"
+  },
+  "SSL_OCSP_STAPLING": {
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Status of OCSP stapling on this handshake (1=present, good; 2=none; 3=present, expired; 4=present, other error)"
   }
 }
