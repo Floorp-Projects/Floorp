@@ -29,11 +29,11 @@ class BitSet : private TempObject
 
   private:
     BitSet(unsigned int numBits) :
-        numBits_(numBits),
-        bits_(nullptr) {}
+        bits_(nullptr),
+        numBits_(numBits) {}
 
-    unsigned int numBits_;
     uint32_t *bits_;
+    const unsigned int numBits_;
 
     static inline uint32_t bitForValue(unsigned int value) {
         return 1l << uint32_t(value % BitsPerWord);
