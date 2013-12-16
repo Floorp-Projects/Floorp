@@ -685,6 +685,24 @@ struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::layers::EventRegions>
+{
+  typedef mozilla::layers::EventRegions paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHitRegion);
+    WriteParam(aMsg, aParam.mDispatchToContentHitRegion);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mHitRegion) &&
+            ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */

@@ -8,13 +8,15 @@
 #ifndef mozilla_layers_ShadowLayerUtilsX11_h
 #define mozilla_layers_ShadowLayerUtilsX11_h
 
-#include <X11/X.h>                      // for Drawable
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "nsCOMPtr.h"                   // for already_AddRefed
 
 #define MOZ_HAVE_SURFACEDESCRIPTORX11
 #define MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
+
+typedef unsigned long XID;
+typedef XID Drawable;
 
 class gfxXlibSurface;
 
