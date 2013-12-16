@@ -102,7 +102,9 @@ this.BrowserUITelemetry = {
 
     for (let areaID of CustomizableUI.areas) {
       let areaNode = document.getElementById(areaID);
-      (areaNode.customizationTarget || areaNode).addEventListener("mouseup", this);
+      if (areaNode) {
+        (areaNode.customizationTarget || areaNode).addEventListener("mouseup", this);
+      }
     }
   },
 
@@ -112,7 +114,9 @@ this.BrowserUITelemetry = {
 
     for (let areaID of CustomizableUI.areas) {
       let areaNode = document.getElementById(areaID);
-      (areaNode.customizationTarget || areaNode).removeEventListener("mouseup", this);
+      if (areaNode) {
+        (areaNode.customizationTarget || areaNode).removeEventListener("mouseup", this);
+      }
     }
   },
 
