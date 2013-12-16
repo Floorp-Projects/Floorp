@@ -450,7 +450,7 @@ JS_GetLinePCs(JSContext *cx, JSScript *script,
 JS_PUBLIC_API(unsigned)
 JS_GetFunctionArgumentCount(JSContext *cx, JSFunction *fun)
 {
-    return fun->nargs;
+    return fun->nargs();
 }
 
 JS_PUBLIC_API(bool)
