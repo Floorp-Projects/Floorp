@@ -552,7 +552,7 @@ OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, bool *out)
 bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
-    if (!cx->global()->getIntrinsicValue(cx, name, rval))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval))
         return false;
 
     // This function is called when we try to compile a cold getintrinsic
