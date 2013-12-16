@@ -212,6 +212,12 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
                       .concat(SPECIAL_CASES);
 });
 
+const OTHER_MOUSEUP_MONITORED_ITEMS = [
+   "appmenu-button",
+   "PlacesChevron",
+   "PlacesToolbarItems",
+];
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
@@ -243,14 +249,16 @@ this.BrowserUITelemetry = {
     aWindow.addEventListener("unload", this);
     let document = aWindow.document;
 
-    let appMenuButton = document.getElementById("appmenu-button");
-    if (appMenuButton) {
-      appMenuButton.addEventListener("mouseup", this);
-    }
-
     let toolbars = document.querySelectorAll("toolbar[customizable=true]");
     for (let toolbar of toolbars) {
       toolbar.addEventListener("mouseup", this);
+    }
+
+    for (let itemID of OTHER_MOUSEUP_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.addEventListener("mouseup", this);
+      }
     }
   },
 
@@ -258,14 +266,16 @@ this.BrowserUITelemetry = {
     aWindow.removeEventListener("unload", this);
     let document = aWindow.document;
 
-    let appMenuButton = document.getElementById("appmenu-button");
-    if (appMenuButton) {
-      appMenuButton.removeEventListener("mouseup", this);
-    }
-
     let toolbars = document.querySelectorAll("toolbar[customizable=true]");
     for (let toolbar of toolbars) {
       toolbar.removeEventListener("mouseup", this);
+    }
+
+    for (let itemID of OTHER_MOUSEUP_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.removeEventListener("mouseup", this);
+      }
     }
   },
 
@@ -286,6 +296,12 @@ this.BrowserUITelemetry = {
     switch (targetID) {
       case "appmenu-button":
         this._appmenuMouseUp(aEvent);
+        break;
+      case "PlacesToolbarItems":
+        this._PlacesToolbarItemsMouseUp(aEvent);
+        break;
+      case "PlacesChevron":
+        this._PlacesChevronMouseUp(aEvent);
         break;
       default:
         this._checkForBuiltinItem(aEvent);
@@ -319,6 +335,23 @@ this.BrowserUITelemetry = {
     }
 
     return "unrecognized";
+  },
+
+  _PlacesChevronMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let result = target.id == "PlacesChevron" ? "chevron" : "overflowed-item";
+    this._countEvent("click-bookmarks-bar", result);
+  },
+
+  _PlacesToolbarItemsMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    // If this isn't a bookmark-item, we don't care about it.
+    if (!target.classList.contains("bookmark-item")) {
+      return;
+    }
+
+    let result = target.hasAttribute("container") ? "container" : "item";
+    this._countEvent("click-bookmarks-bar", result);
   },
 
   _checkForBuiltinItem: function(aEvent) {
@@ -364,6 +397,10 @@ this.BrowserUITelemetry = {
     // Determine if the add-on bar is currently visible
     let addonBar = document.getElementById("addon-bar");
     result.addonBarEnabled = addonBar && !addonBar.collapsed;
+
+    // Determine if the Bookmarks bar is currently visible
+    let bookmarksBar = document.getElementById("PersonalToolbar");
+    result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
 
     // Examine the default toolbars and see what default items
     // are present and missing.
