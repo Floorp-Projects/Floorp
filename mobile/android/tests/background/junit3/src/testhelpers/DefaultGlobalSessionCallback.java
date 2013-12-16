@@ -60,4 +60,9 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   public boolean shouldBackOff() {
     return false;
   }
+
+  @Override
+  public String nodeWeaveURL() {
+    return null;
+  }
 }
