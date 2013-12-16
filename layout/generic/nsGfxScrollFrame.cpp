@@ -2242,6 +2242,19 @@ ScrollFrameHelper::ExpandRect(const nsRect& aRect) const
   return rect;
 }
 
+static bool IsFocused(nsIContent* aContent)
+{
+  // Some content elements, like the GetContent() of a scroll frame
+  // for a text input field, are inside anonymous subtrees, but the focus
+  // manager always reports a non-anonymous element as the focused one, so
+  // walk up the tree until we reach a non-anonymous element.
+  while (aContent && aContent->IsInAnonymousSubtree()) {
+    aContent = aContent->GetParent();
+  }
+
+  return aContent ? nsContentUtils::IsFocusedContent(aContent) : false;
+}
+
 void
 ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
@@ -2384,12 +2397,16 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   } else {
     nsRect scrollRange = GetScrollRange();
     ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+    bool isFocused = IsFocused(mOuter->GetContent());
     bool isVScrollable = (scrollRange.height > 0)
                       && (styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN);
     bool isHScrollable = (scrollRange.width > 0)
                       && (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN);
-    bool wantLayerV = isVScrollable && mVScrollbarBox;
-    bool wantLayerH = isHScrollable && mHScrollbarBox;
+    // The check for scroll bars was added in bug 825692 to prevent layerization
+    // of text inputs for performance reasons. However, if a text input is
+    // focused we want to layerize it so we can async scroll it (bug 946408).
+    bool wantLayerV = isVScrollable && (mVScrollbarBox || isFocused);
+    bool wantLayerH = isHScrollable && (mHScrollbarBox || isFocused);
     // TODO Turn this on for inprocess OMTC on all platforms
     bool wantSubAPZC = (XRE_GetProcessType() == GeckoProcessType_Content);
 #ifdef XP_WIN
