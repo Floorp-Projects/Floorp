@@ -49,14 +49,24 @@ function throwReadOnly(aWindow) {
     new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
 }
 
-function validateId(aId) {
-  // If string, it cannot be empty.
-  if (typeof(aId) == 'string') {
-    return aId.length;
+function parseIds(aId) {
+  function parseId(aId) {
+    aId = parseInt(aId);
+    return (isNaN(aId) || aId <= 0) ? null : aId;
   }
 
-  aId = parseInt(aId);
-  return (!isNaN(aId) && aId > 0);
+  if (!Array.isArray(aId)) {
+    return parseId(aId);
+  }
+
+  for (let i = 0; i < aId.length; ++i) {
+    aId[i] = parseId(aId[i]);
+    if (aId[i] === null) {
+      return null;
+    }
+  }
+
+  return aId;
 }
 
 /* DataStore object */
@@ -355,12 +365,10 @@ this.DataStore.prototype = {
     return this._readOnly;
   },
 
-  get: function() {
-    let ids = Array.prototype.slice.call(arguments);
-    for (let i = 0; i < ids.length; ++i) {
-      if (!validateId(ids[i])) {
-        return throwInvalidArg(this._window);
-      }
+  get: function(aId) {
+    aId = parseIds(aId);
+    if (aId === null) {
+      return throwInvalidArg(this._window);
     }
 
     let self = this;
@@ -368,16 +376,18 @@ this.DataStore.prototype = {
     // Promise<Object>
     return this.newDBPromise("readonly",
       function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-               self.getInternal(aStore, ids,
+               self.getInternal(aStore,
+                                Array.isArray(aId) ?  aId : [ aId ],
                                 function(aResults) {
-          aResolve(ids.length > 1 ? aResults : aResults[0]);
+          aResolve(Array.isArray(aId) ? aResults : aResults[0]);
         });
       }
     );
   },
 
   put: function(aObj, aId) {
-    if (!validateId(aId)) {
+    aId = parseInt(aId);
+    if (isNaN(aId) || aId <= 0) {
       return throwInvalidArg(this._window);
     }
 
@@ -397,7 +407,8 @@ this.DataStore.prototype = {
 
   add: function(aObj, aId) {
     if (aId) {
-      if (!validateId(aId)) {
+      aId = parseInt(aId);
+      if (isNaN(aId) || aId <= 0) {
         return throwInvalidArg(this._window);
       }
     }
@@ -417,7 +428,8 @@ this.DataStore.prototype = {
   },
 
   remove: function(aId) {
-    if (!validateId(aId)) {
+    aId = parseInt(aId);
+    if (isNaN(aId) || aId <= 0) {
       return throwInvalidArg(this._window);
     }
 
