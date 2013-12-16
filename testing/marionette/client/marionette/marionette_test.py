@@ -354,16 +354,17 @@ class MarionetteJSTestCase(CommonTestCase):
     inactivity_timeout_re = re.compile(r"MARIONETTE_INACTIVITY_TIMEOUT(\s*)=(\s*)(\d+);")
     match_re = re.compile(r"test_(.*)\.js$")
 
-    def __init__(self, marionette_weakref, methodName='runTest', jsFile=None):
+    def __init__(self, marionette_weakref, methodName='runTest', jsFile=None, **kwargs):
         assert(jsFile)
         self.jsFile = jsFile
         self._marionette_weakref = marionette_weakref
         self.marionette = None
+        self.oop = kwargs.pop('oop')
         CommonTestCase.__init__(self, methodName)
 
     @classmethod
     def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
-        suite.addTest(cls(weakref.ref(marionette), jsFile=filepath))
+        suite.addTest(cls(weakref.ref(marionette), jsFile=filepath, **kwargs))
 
     def runTest(self):
         if self.marionette.session is None:
@@ -394,6 +395,47 @@ class MarionetteJSTestCase(CommonTestCase):
                 head_js = head_js.group(3)
                 head = open(os.path.join(os.path.dirname(self.jsFile), head_js), 'r')
                 js = head.read() + js;
+
+        if self.oop:
+            print 'running oop'
+            result = self.marionette.execute_async_script("""
+let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
+setReq.onsuccess = function() {
+    let appsReq = navigator.mozApps.mgmt.getAll();
+    appsReq.onsuccess = function() {
+        let apps = appsReq.result;
+        for (let i = 0; i < apps.length; i++) {
+            let app = apps[i];
+            if (app.manifest.name === 'Test Container') {
+                app.launch();
+                window.addEventListener('apploadtime', function apploadtime(){
+                    window.removeEventListener('apploadtime', apploadtime);
+                    marionetteScriptFinished(true);
+                });
+                return;
+            }
+        }
+        marionetteScriptFinished(false);
+    }
+    appsReq.onerror = function() {
+        marionetteScriptFinished(false);
+    }
+}
+setReq.onerror = function() {
+    marionetteScriptFinished(false);
+}""", script_timeout=60000)
+            self.assertTrue(result)
+
+            self.marionette.switch_to_frame(
+                self.marionette.find_element(
+                    'css selector',
+                    'iframe[src*="app://test-container.gaiamobile.org/index.html"]'
+                ))
+
+            main_process = self.marionette.execute_script("""
+                return SpecialPowers.isMainProcess();
+                """)
+            self.assertFalse(main_process)
 
         context = self.context_re.search(js)
         if context:
