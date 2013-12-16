@@ -207,7 +207,8 @@ XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
     "urlbar-stop-button",
     "urlbar-go-button",
     "urlbar-reload-button",
-    "searchbar:child"
+    "searchbar:child",
+    "BMB_bookmarksPopup:child",
   ]
   return DEFAULT_ITEMS.concat(PALETTE_ITEMS)
                       .concat(SPECIAL_CASES);
