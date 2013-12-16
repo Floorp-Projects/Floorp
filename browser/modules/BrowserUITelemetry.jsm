@@ -541,6 +541,9 @@ this.BrowserUITelemetry = {
     result.nondefaultAdded = nondefaultAdded;
     result.defaultRemoved = defaultRemoved;
 
+    result.smallIcons = win.gNavToolbox.getAttribute("iconsize") == "small";
+    result.buttonMode = win.gNavToolbox.getAttribute("mode");
+
     // Find out how many open tabs we have in each window
     let winEnumerator = Services.wm.getEnumerator("navigator:browser");
     let visibleTabs = [];
