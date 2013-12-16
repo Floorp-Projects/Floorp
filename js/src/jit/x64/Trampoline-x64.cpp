@@ -363,7 +363,7 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
     // Load the number of |undefined|s to push into %rcx.
     masm.loadPtr(Address(rsp, IonRectifierFrameLayout::offsetOfCalleeToken()), rax);
-    masm.movzwl(Operand(rax, offsetof(JSFunction, nargs)), rcx);
+    masm.movzwl(Operand(rax, JSFunction::offsetOfNargs()), rcx);
     masm.subq(r8, rcx);
 
     // Copy the number of actual arguments
@@ -503,8 +503,6 @@ JitRuntime::generateBailoutHandler(JSContext *cx)
 IonCode *
 JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 {
-    typedef MoveResolver::MoveOperand MoveOperand;
-
     JS_ASSERT(!StackKeptAligned);
     JS_ASSERT(functionWrappers_);
     JS_ASSERT(functionWrappers_->initialized());

@@ -25,6 +25,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsAppRunner.h"
@@ -193,7 +194,6 @@
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
-#include "mozilla/Preferences.h"
 #endif
 
 #include "base/command_line.h"
@@ -574,6 +574,22 @@ ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
 }
 #endif
 
+/**
+ * Determines if there is support for showing the profile manager
+ *
+ * @return true in all environments except for Windows Metro
+*/
+static bool
+CanShowProfileManager()
+{
+#if defined(XP_WIN)
+  return XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop;
+#else
+  return true;
+#endif
+}
+
+
 bool gSafeMode = false;
 
 /**
@@ -786,6 +802,16 @@ nsXULAppInfo::GetProcessType(uint32_t* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = XRE_GetProcessType();
+  return NS_OK;
+}
+
+static bool gBrowserTabsRemote = false;
+static bool gBrowserTabsRemoteInitialized = false;
+
+NS_IMETHODIMP
+nsXULAppInfo::GetBrowserTabsRemote(bool* aResult)
+{
+  *aResult = BrowserTabsRemote();
   return NS_OK;
 }
 
@@ -1883,6 +1909,10 @@ static nsresult
 ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                    nsINativeAppSupport* aNative)
 {
+  if (!CanShowProfileManager()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv;
 
   nsCOMPtr<nsIFile> profD, profLD;
@@ -2233,7 +2263,10 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       PR_fprintf(PR_STDERR, "Error: argument -p is invalid when argument -osint is specified\n");
       return NS_ERROR_FAILURE;
     }
-    return ShowProfileManager(aProfileSvc, aNative);
+
+    if (CanShowProfileManager()) {
+      return ShowProfileManager(aProfileSvc, aNative);
+    }
   }
   if (ar) {
     ar = CheckArg("osint");
@@ -2261,14 +2294,16 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
 
-    return ShowProfileManager(aProfileSvc, aNative);
+    if (CanShowProfileManager()) {
+      return ShowProfileManager(aProfileSvc, aNative);
+    }
   }
 
   ar = CheckArg("profilemanager", true);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -profilemanager is invalid when argument -osint is specified\n");
     return NS_ERROR_FAILURE;
-  } else if (ar == ARG_FOUND) {
+  } else if (ar == ARG_FOUND && CanShowProfileManager()) {
     return ShowProfileManager(aProfileSvc, aNative);
   }
 
@@ -2293,8 +2328,9 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   }
 
   bool useDefault = true;
-  if (count > 1)
+  if (count > 1 && CanShowProfileManager()) {
     aProfileSvc->GetStartWithLastProfile(&useDefault);
+  }
 
   if (useDefault) {
     nsCOMPtr<nsIToolkitProfile> profile;
@@ -2347,6 +2383,10 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
+  }
+
+  if (!CanShowProfileManager()) {
+    return NS_ERROR_FAILURE;
   }
 
   return ShowProfileManager(aProfileSvc, aNative);
@@ -3864,6 +3904,11 @@ XREMain::XRE_mainRun()
   mDirProvider.DoStartup();
 
 #ifdef MOZ_CRASHREPORTER
+  if (BrowserTabsRemote()) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("DOMIPCEnabled"),
+                                       NS_LITERAL_CSTRING("1"));
+  }
+
   nsCString userAgentLocale;
   if (NS_SUCCEEDED(Preferences::GetCString("general.useragent.locale", &userAgentLocale))) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("useragent_locale"), userAgentLocale);
@@ -4057,12 +4102,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     // We have an application restart don't do any shutdown checks here
     // In particular we don't want to poison IO for checking late-writes.
     gShutdownChecks = SCM_NOTHING;
-
-    #if defined(MOZ_METRO) && defined(XP_WIN)
-    if (rv == NS_SUCCESS_RESTART_METRO_APP) {
-      LaunchDefaultMetroBrowser();
-    }
-    #endif
   }
 
   if (!mShuttingDown) {
@@ -4099,7 +4138,15 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     MOZ_gdk_display_close(mGdkDisplay);
 #endif
 
-    rv = LaunchChild(mNativeApp, true);
+#if defined(MOZ_METRO) && defined(XP_WIN)
+    if (rv == NS_SUCCESS_RESTART_METRO_APP) {
+      LaunchDefaultMetroBrowser();
+      rv = NS_OK;
+    } else
+#endif
+    {
+      rv = LaunchChild(mNativeApp, true);
+    }
 
 #ifdef MOZ_CRASHREPORTER
     if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
@@ -4366,6 +4413,17 @@ GeckoProcessType
 XRE_GetProcessType()
 {
   return mozilla::startup::sChildProcessType;
+}
+
+bool
+mozilla::BrowserTabsRemote()
+{
+  if (!gBrowserTabsRemoteInitialized) {
+    gBrowserTabsRemote = Preferences::GetBool("browser.tabs.remote", false);
+    gBrowserTabsRemoteInitialized = true;
+  }
+
+  return gBrowserTabsRemote;
 }
 
 void

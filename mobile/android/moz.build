@@ -17,6 +17,7 @@ DIRS += [
     'app',
     'fonts',
     'geckoview_library',
+    'extensions',
 ]
 
 if not CONFIG['LIBXUL_SDK']:

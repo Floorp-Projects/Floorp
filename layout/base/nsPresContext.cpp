@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIDocShell.h"
+#include "nsDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "nsStyleSet.h"
@@ -621,7 +621,7 @@ nsPresContext::GetDocumentColorPreferences()
 {
   int32_t useAccessibilityTheme = 0;
   bool usePrefColors = true;
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
   if (docShell) {
     int32_t docShellType;
     docShell->GetItemType(&docShellType);
@@ -894,7 +894,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
 {
   mPrefChangedTimer = nullptr;
 
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
   if (docShell) {
     int32_t docShellType;
     docShell->GetItemType(&docShellType);
@@ -1479,26 +1479,35 @@ nsPresContext::ScreenWidthInchesForFontInflation(bool* aChanged)
 }
 
 void
-nsPresContext::SetContainer(nsISupports* aHandler)
+nsPresContext::SetContainer(nsIDocShell* aDocShell)
 {
-  mContainer = do_GetWeakReference(aHandler);
+  if (aDocShell) {
+    mContainer = static_cast<nsDocShell*>(aDocShell)->asWeakPtr();
+  } else {
+    mContainer = WeakPtr<nsDocShell>();
+  }
   InvalidateIsChromeCache();
   if (mContainer) {
     GetDocumentColorPreferences();
   }
 }
 
-already_AddRefed<nsISupports>
-nsPresContext::GetContainerInternal() const
+nsISupports*
+nsPresContext::GetContainerWeakInternal() const
 {
-  nsCOMPtr<nsISupports> result = do_QueryReferent(mContainer);
-  return result.forget();
+  return static_cast<nsIDocShell*>(mContainer);
 }
 
-already_AddRefed<nsISupports>
-nsPresContext::GetContainerExternal() const
+nsISupports*
+nsPresContext::GetContainerWeakExternal() const
 {
-  return GetContainerInternal();
+  return GetContainerWeakInternal();
+}
+
+nsIDocShell*
+nsPresContext::GetDocShell() const
+{
+  return mContainer;
 }
 
 bool
@@ -1596,7 +1605,7 @@ nsPresContext::GetBidi() const
 bool
 nsPresContext::IsTopLevelWindowInactive()
 {
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(mContainer);
   if (!treeItem)
     return false;
 
@@ -1919,7 +1928,7 @@ nsPresContext::SetPrintSettings(nsIPrintSettings *aPrintSettings)
 bool
 nsPresContext::EnsureVisible()
 {
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(mContainer);
   if (docShell) {
     nsCOMPtr<nsIContentViewer> cv;
     docShell->GetContentViewer(getter_AddRefs(cv));
@@ -1953,16 +1962,12 @@ bool
 nsPresContext::IsChromeSlow() const
 {
   bool isChrome = false;
-  nsCOMPtr<nsISupports> container = GetContainer();
-  if (container) {
-    nsresult result;
-    nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(container, &result));
-    if (NS_SUCCEEDED(result) && docShell) {
-      int32_t docShellType;
-      result = docShell->GetItemType(&docShellType);
-      if (NS_SUCCEEDED(result)) {
-        isChrome = nsIDocShellTreeItem::typeChrome == docShellType;
-      }
+  nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);
+  if (docShell) {
+    int32_t docShellType;
+    nsresult result = docShell->GetItemType(&docShellType);
+    if (NS_SUCCEEDED(result)) {
+      isChrome = nsIDocShellTreeItem::typeChrome == docShellType;
     }
   }
   mIsChrome = isChrome;
@@ -2697,7 +2702,7 @@ bool
 nsPresContext::IsDeviceSizePageSize()
 {
   bool isDeviceSizePageSize = false;
-  nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
+  nsCOMPtr<nsIDocShell> docShell(mContainer);
   if (docShell) {
     isDeviceSizePageSize = docShell->GetDeviceSizeIsPageSize();
   }

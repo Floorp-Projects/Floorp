@@ -45,6 +45,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(Register::FromCode(intRegIndex_));
         intRegIndex_++;
         break;
+      case MIRType_Float32:
       case MIRType_Double:
         if (floatRegIndex_ == NumFloatArgRegs) {
             static const int align = sizeof(double) - 1;

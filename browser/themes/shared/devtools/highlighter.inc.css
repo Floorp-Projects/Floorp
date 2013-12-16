@@ -54,7 +54,7 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   padding: 0;
   width: 26px;
   min-height: 26px;
-%ifndef XP_LINUX
+%if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
   background-color: transparent;
 %endif
 }

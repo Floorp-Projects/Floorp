@@ -742,7 +742,7 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad: function() {
-    gMultiProcessBrowser = gPrefService.getBoolPref("browser.tabs.remote");
+    gMultiProcessBrowser = Services.appinfo.browserTabsRemote;
 
     var mustLoadSidebar = false;
 
@@ -2936,27 +2936,29 @@ const BrowserSearch = {
 
     let searchBar = this.searchBar;
     let placement = CustomizableUI.getPlacementOfWidget("search-container");
+    let focusSearchBar = () => {
+      searchBar = this.searchBar;
+      searchBar.select();
+      openSearchPageIfFieldIsNotActive(searchBar);
+    };
     if (placement && placement.area == CustomizableUI.AREA_PANEL) {
       PanelUI.show().then(() => {
         // The panel is not constructed until the first time it is shown.
-        searchBar = this.searchBar;
-        searchBar.select();
-        openSearchPageIfFieldIsNotActive(searchBar);
-      });
-      return;
-    } else if (placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
-               searchBar.parentNode.classList.contains("overflowedItem")) {
-      let navBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-      navBar.overflowable.show().then(() => {
-        // The searchBar gets moved when the overflow panel opens.
-        searchBar = this.searchBar;
-        searchBar.select();
-        openSearchPageIfFieldIsNotActive(searchBar);
+        focusSearchBar();
       });
       return;
     }
-    if (searchBar && window.fullScreen) {
-      FullScreen.mouseoverToggle(true);
+    if (placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
+        searchBar.parentNode.classList.contains("overflowedItem")) {
+      let navBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+      navBar.overflowable.show().then(() => {
+        focusSearchBar();
+      });
+      return;
+    }
+    if (searchBar) {
+      if (window.fullScreen)
+        FullScreen.mouseoverToggle(true);
       searchBar.select();
     }
     openSearchPageIfFieldIsNotActive(searchBar);
@@ -6099,33 +6101,16 @@ function undoCloseTab(aIndex) {
   if (gBrowser.tabs.length == 1 && isTabEmpty(gBrowser.selectedTab))
     blankTabToRemove = gBrowser.selectedTab;
 
-  let numberOfTabsToUndoClose = 0;
-  let index = Number(aIndex);
-
-
-  if (isNaN(index)) {
-    index = 0;
-    numberOfTabsToUndoClose = SessionStore.getNumberOfTabsClosedLast(window);
-  } else {
-    if (0 > index || index >= SessionStore.getClosedTabCount(window))
-      return null;
-    numberOfTabsToUndoClose = 1;
-  }
-
-  let tab = null;
-  while (numberOfTabsToUndoClose > 0 &&
-         numberOfTabsToUndoClose--) {
+  var tab = null;
+  if (SessionStore.getClosedTabCount(window) > (aIndex || 0)) {
     TabView.prepareUndoCloseTab(blankTabToRemove);
-    tab = SessionStore.undoCloseTab(window, index);
+    tab = SessionStore.undoCloseTab(window, aIndex || 0);
     TabView.afterUndoCloseTab();
-    if (blankTabToRemove) {
+
+    if (blankTabToRemove)
       gBrowser.removeTab(blankTabToRemove);
-      blankTabToRemove = null;
-    }
   }
 
-  // Reset the number of tabs closed last time to the default.
-  SessionStore.setNumberOfTabsClosedLast(window, 1);
   return tab;
 }
 
@@ -6948,13 +6933,8 @@ var TabContextMenu = {
       menuItem.disabled = disabled;
 
     // Session store
-    let undoCloseTabElement = document.getElementById("context_undoCloseTab");
-    let closedTabCount = SessionStore.getNumberOfTabsClosedLast(window);
-    undoCloseTabElement.disabled = closedTabCount == 0;
-    // Change the label of "Undo Close Tab" to specify if it will undo a batch-close
-    // or a single close.
-    let visibleLabel = closedTabCount <= 1 ? "singletablabel" : "multipletablabel";
-    undoCloseTabElement.setAttribute("label", undoCloseTabElement.getAttribute(visibleLabel));
+    document.getElementById("context_undoCloseTab").disabled =
+      SessionStore.getClosedTabCount(window) == 0;
 
     // Only one of pin/unpin should be visible
     document.getElementById("context_pinTab").hidden = this.contextTab.pinned;

@@ -274,6 +274,10 @@ class MozbuildObject(ProcessExecutionMixin):
         return os.path.join(self.topobjdir, 'dist', 'bin')
 
     @property
+    def includedir(self):
+        return os.path.join(self.topobjdir, 'dist', 'include')
+
+    @property
     def statedir(self):
         return os.path.join(self.topobjdir, '.mozbuild')
 
@@ -584,6 +588,13 @@ class MachCommandConditions(object):
         if hasattr(cls, 'substs'):
             return cls.substs.get('MOZ_BUILD_APP') == 'b2g' and \
                    cls.substs.get('MOZ_WIDGET_TOOLKIT') != 'gonk'
+        return False
+
+    @staticmethod
+    def is_android(cls):
+        """Must have an Android build."""
+        if hasattr(cls, 'substs'):
+            return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'android'
         return False
 
 

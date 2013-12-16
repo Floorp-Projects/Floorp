@@ -382,11 +382,9 @@ struct TelemetryHistogram {
   uint32_t bucketCount;
   uint32_t histogramType;
   uint32_t id_offset;
-  uint32_t comment_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;
-  const char *comment() const;
 };
 
 #include "TelemetryHistogramData.inc"
@@ -396,12 +394,6 @@ const char *
 TelemetryHistogram::id() const
 {
   return &gHistogramStringTable[this->id_offset];
-}
-
-const char *
-TelemetryHistogram::comment() const
-{
-  return &gHistogramStringTable[this->comment_offset];
 }
 
 bool
@@ -1951,25 +1943,19 @@ TelemetryImpl::GetLateWrites(JSContext *cx, JS::Value *ret)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetRegisteredHistograms(JSContext *cx, JS::Value *ret)
+TelemetryImpl::RegisteredHistograms(uint32_t *aCount, char*** aHistograms)
 {
   size_t count = ArrayLength(gHistograms);
-  JS::Rooted<JSObject*> info(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
-  if (!info)
-    return NS_ERROR_FAILURE;
+  char** histograms = static_cast<char**>(nsMemory::Alloc(count * sizeof(char*)));
 
   for (size_t i = 0; i < count; ++i) {
-    JSString *comment = JS_InternString(cx, gHistograms[i].comment());
-
-    if (!(comment
-          && JS_DefineProperty(cx, info, gHistograms[i].id(),
-                               STRING_TO_JSVAL(comment), nullptr, nullptr,
-                               JSPROP_ENUMERATE))) {
-      return NS_ERROR_FAILURE;
-    }
+    const char* h = gHistograms[i].id();
+    size_t len = strlen(h);
+    histograms[i] = static_cast<char*>(nsMemory::Clone(h, len+1));
   }
 
-  *ret = OBJECT_TO_JSVAL(info);
+  *aCount = count;
+  *aHistograms = histograms;
   return NS_OK;
 }
 

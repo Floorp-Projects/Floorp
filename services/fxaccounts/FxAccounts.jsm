@@ -16,33 +16,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
-
-const DATA_FORMAT_VERSION = 1;
-const DEFAULT_STORAGE_FILENAME = "signedInUser.json";
-const ASSERTION_LIFETIME = 1000 * 60 * 5; // 5 minutes
-const KEY_LIFETIME = 1000 * 3600 * 12;    // 12 hours
-const CERT_LIFETIME = 1000 * 3600 * 6;    // 6 hours
-const POLL_SESSION = 1000 * 60 * 5;       // 5 minutes
-const POLL_STEP = 1000 * 3;               // 3 seconds
-
-// loglevel preference should be one of: "FATAL", "ERROR", "WARN", "INFO",
-// "CONFIG", "DEBUG", "TRACE" or "ALL". We will be logging error messages by
-// default.
-const PREF_LOG_LEVEL = "identity.fxaccounts.loglevel";
-try {
-  this.LOG_LEVEL =
-    Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
-    && Services.prefs.getCharPref(PREF_LOG_LEVEL);
-} catch (e) {
-  this.LOG_LEVEL = Log.Level.Error;
-}
-
-let log = Log.repository.getLogger("Services.FxAccounts");
-log.level = LOG_LEVEL;
-log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
 InternalMethods = function(mock) {
   this.cert = null;
@@ -128,6 +105,14 @@ InternalMethods.prototype = {
         new Error("KeyFetch aborted; Another user signing in"));
       this.whenKeysReadyPromise = null;
     }
+  },
+
+  signOut: function signOut() {
+    this.abortExistingFlow();
+    this.signedInUser = null; // clear in-memory cache
+    return this.signedInUserStorage.set(null).then(() => {
+      this.notifyObservers("fxaccounts:onlogout");
+    });
   },
 
   /**
@@ -582,11 +567,7 @@ this.FxAccounts.prototype = Object.freeze({
    *         The promise is rejected if a storage error occurs.
    */
   signOut: function signOut() {
-    internal.abortExistingFlow();
-    internal.signedInUser = null; // clear in-memory cache
-    return internal.signedInUserStorage.set(null).then(() => {
-      internal.notifyObservers("fxaccounts:onlogout");
-    });
+    return internal.signOut();
   },
 
   // Return the URI of the remote UI flows.

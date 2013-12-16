@@ -338,8 +338,7 @@ nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell, nsIBaseWindow** aWi
 
     // don't allow resizing windows in content shells
     bool isChromeShell = false;
-    nsCOMPtr<nsISupports> cont = aPresShell->GetPresContext()->GetContainer();
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
+    nsCOMPtr<nsIDocShellTreeItem> dsti = aPresShell->GetPresContext()->GetDocShell();
     if (dsti) {
       int32_t type = -1;
       isChromeShell = (NS_SUCCEEDED(dsti->GetItemType(&type)) &&

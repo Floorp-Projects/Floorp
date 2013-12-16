@@ -72,6 +72,7 @@
 #include "nsComputedDOMStyle.h"
 #include "ActiveLayerTracker.h"
 #include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 #include "mozilla/Preferences.h"
 
@@ -1204,14 +1205,13 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
                                          const nsIFrame* aViewportFrame,
                                          nsSize aViewportSize,
                                          const nsIFrame* aFixedPosFrame,
-                                         const nsIFrame* aReferenceFrame,
                                          nsPresContext* aPresContext,
                                          const ContainerLayerParameters& aContainerParameters) {
   // Find out the rect of the viewport frame relative to the reference frame.
   // This, in conjunction with the container scale, will correspond to the
   // coordinate-space of the built layer.
   float factor = aPresContext->AppUnitsPerDevPixel();
-  nsPoint origin = aViewportFrame->GetOffsetToCrossDoc(aReferenceFrame);
+  nsPoint origin = aViewportFrame->GetOffsetToCrossDoc(aFixedPosFrame);
   LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
                          aContainerParameters.mXScale,
                        NSAppUnitsToFloatPixels(origin.y, factor) *
@@ -2376,8 +2376,29 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   if (builder.WillComputePluginGeometry()) {
+    nsRefPtr<LayerManager> layerManager;
+    nsIWidget* widget = aFrame->GetNearestWidget();
+    if (widget) {
+      layerManager = widget->GetLayerManager();
+    }
+
     rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
+
+    // We're not going to get a WillPaintWindow event here if we didn't do
+    // widget invalidation, so just apply the plugin geometry update here instead.
+    // We could instead have the compositor send back an equivalent to WillPaintWindow,
+    // but it should be close enough to now not to matter.
+    if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
+      rootPresContext->ApplyPluginGeometryUpdates();
+    }
+
+    // We told the compositor thread not to composite when it received the transaction because
+    // we wanted to update plugins first. Schedule the composite now.
+    if (layerManager) {
+      layerManager->Composite();
+    }
   }
+
 
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
@@ -4817,11 +4838,9 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
     frameFlags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
   if (aSurfaceFlags & SFE_NO_PREMULTIPLY_ALPHA)
     frameFlags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
-  nsRefPtr<gfxASurface> framesurf;
-  rv = imgContainer->GetFrame(whichFrame,
-                              frameFlags,
-                              getter_AddRefs(framesurf));
-  if (NS_FAILED(rv))
+  nsRefPtr<gfxASurface> framesurf =
+    imgContainer->GetFrame(whichFrame, frameFlags);
+  if (!framesurf)
     return result;
 
   int32_t imgWidth, imgHeight;
@@ -4964,14 +4983,14 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   if (!container)
     return result;
 
-  gfxIntSize size;
+  mozilla::gfx::IntSize size;
   nsRefPtr<gfxASurface> surf = container->GetCurrentAsSurface(&size);
   if (!surf)
     return result;
 
   result.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(aTarget, surf);
   result.mCORSUsed = aElement->GetCORSMode() != CORS_NONE;
-  result.mSize = size;
+  result.mSize = ThebesIntSize(size);
   result.mPrincipal = principal.forget();
   result.mIsWriteOnly = false;
 

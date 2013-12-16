@@ -5,7 +5,9 @@
 == flexbox-align-content-vert-1b.xhtml  flexbox-align-content-vert-1-ref.xhtml
 
 # Tests for cross-axis alignment (align-self / align-items properties)
-== flexbox-align-self-baseline-horiz-1.xhtml  flexbox-align-self-baseline-horiz-1-ref.xhtml
+== flexbox-align-self-baseline-horiz-1.xhtml flexbox-align-self-baseline-horiz-1-ref.xhtml
+== flexbox-align-self-baseline-horiz-2.xhtml flexbox-align-self-baseline-horiz-2-ref.xhtml
+== flexbox-align-self-baseline-horiz-3.xhtml flexbox-align-self-baseline-horiz-3-ref.xhtml
 
 == flexbox-align-self-stretch-vert-1.html flexbox-align-self-stretch-vert-1-ref.html
 
@@ -63,6 +65,9 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-break-request-vert-1b.html  flexbox-break-request-vert-1-ref.html
 == flexbox-break-request-vert-2a.html  flexbox-break-request-vert-2-ref.html
 == flexbox-break-request-vert-2b.html  flexbox-break-request-vert-2-ref.html
+
+# Tests for flex-flow shorthand property
+== flexbox-flex-flow-1.html flexbox-flex-flow-1-ref.html
 
 # Tests for flex-wrap property
 == flexbox-flex-wrap-horiz-1.html flexbox-flex-wrap-horiz-1-ref.html

@@ -19,10 +19,10 @@ import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
 public class MockGlobalSession extends MockPrefsGlobalSession {
 
-  public MockGlobalSession(String clusterURL, String username, String password,
+  public MockGlobalSession(String username, String password,
       KeyBundle syncKeyBundle, GlobalSessionCallback callback)
           throws SyncConfigurationException, IllegalArgumentException, IOException, ParseException, NonObjectJSONException {
-    super(clusterURL, username, password, null, syncKeyBundle, callback, /* context */ null, null, null);
+    super(username, password, null, syncKeyBundle, callback, /* context */ null, null, null);
   }
 
   @Override

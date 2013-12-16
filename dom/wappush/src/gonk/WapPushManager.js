@@ -123,6 +123,7 @@ this.WapPushManager = {
         contentType: contentType,
         content: data.array
       };
+      msg.content.length = data.array.length;
     }
 
     let sender = PhoneNumberUtils.normalize(options.sourceAddress, false);

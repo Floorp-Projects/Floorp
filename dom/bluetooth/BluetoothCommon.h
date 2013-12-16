@@ -108,6 +108,9 @@ extern bool gBluetoothDebugFlag;
 #define BLUETOOTH_ADDRESS_NONE   "00:00:00:00:00:00"
 #define BLUETOOTH_ADDRESS_BYTES  6
 
+// Bluetooth stack internal error, such as I/O error
+#define ERR_INTERNAL_ERROR "InternalError"
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 enum BluetoothSocketType {

@@ -102,8 +102,6 @@ class DirectoryTraversal(SandboxDerived):
         'test_tool_dirs',
         'tier_dirs',
         'tier_static_dirs',
-        'external_make_dirs',
-        'parallel_external_make_dirs',
     )
 
     def __init__(self, sandbox):
@@ -116,8 +114,6 @@ class DirectoryTraversal(SandboxDerived):
         self.test_tool_dirs = []
         self.tier_dirs = OrderedDict()
         self.tier_static_dirs = OrderedDict()
-        self.external_make_dirs = []
-        self.parallel_external_make_dirs = []
 
 
 class BaseConfigSubstitution(SandboxDerived):
@@ -292,6 +288,20 @@ class GeneratedWebIDLFile(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.basename = path
+
+
+class ExampleWebIDLInterface(SandboxDerived):
+    """An individual WebIDL interface to generate."""
+
+    __slots__ = (
+        'name',
+    )
+
+    def __init__(self, sandbox, name):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.name = name
+
 
 class BaseProgram(SandboxDerived):
     """Sandbox container object for programs, which is a unicode string.

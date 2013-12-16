@@ -113,6 +113,30 @@ public:
     return mCumulativeResolution / mResolution;
   }
 
+  // Ensure the scrollableRect is at least as big as the compositionBounds
+  // because the scrollableRect can be smaller if the content is not large
+  // and the scrollableRect hasn't been updated yet.
+  // We move the scrollableRect up because we don't know if we can move it
+  // down. i.e. we know that scrollableRect can go back as far as zero.
+  // but we don't know how much further ahead it can go.
+  CSSRect GetExpandedScrollableRect() const
+  {
+    CSSRect scrollableRect = mScrollableRect;
+    if (scrollableRect.width < mCompositionBounds.width) {
+      scrollableRect.x = std::max(0.f,
+                                  scrollableRect.x - (mCompositionBounds.width - scrollableRect.width));
+      scrollableRect.width = mCompositionBounds.width;
+    }
+
+    if (scrollableRect.height < mCompositionBounds.height) {
+      scrollableRect.y = std::max(0.f,
+                                  scrollableRect.y - (mCompositionBounds.height - scrollableRect.height));
+      scrollableRect.height = mCompositionBounds.height;
+    }
+
+    return scrollableRect;
+  }
+
   /**
    * Return the scale factor needed to fit the viewport
    * into its composition bounds.

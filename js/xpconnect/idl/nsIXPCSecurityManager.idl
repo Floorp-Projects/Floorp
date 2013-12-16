@@ -20,7 +20,7 @@ interface nsIClassInfo;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native JSStackFramePtr(JSStackFrame);
 
-[uuid(31431440-f1ce-11d2-985a-006008962422)]
+[uuid(852e1ea8-1c3f-49e1-b57c-c0f525a167d3)]
 interface nsIXPCSecurityManager : nsISupports
 {
     /**
@@ -34,8 +34,7 @@ interface nsIXPCSecurityManager : nsISupports
     void CanCreateWrapper(in JSContextPtr aJSContext,
                           in nsIIDRef aIID,
                           in nsISupports aObj,
-                          in nsIClassInfo aClassInfo,
-                          inout voidPtr aPolicy);
+                          in nsIClassInfo aClassInfo);
 
     void CanCreateInstance(in JSContextPtr aJSContext,
                            in nsCIDRef aCID);
@@ -56,6 +55,5 @@ interface nsIXPCSecurityManager : nsISupports
                    in JSObjectPtr aJSObject,
                    in nsISupports aObj,
                    in nsIClassInfo aClassInfo,
-                   in jsid aName,
-                   inout voidPtr aPolicy);
+                   in jsid aName);
 };

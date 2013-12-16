@@ -1120,9 +1120,6 @@ public:
     static void
     MarkAllWrappedNativesAndProtos();
 
-    static nsresult
-    ClearAllWrappedNativeSecurityPolicies();
-
 #ifdef DEBUG
     static void
     ASSERT_NoInterfaceSetsAreMarked();
@@ -1836,9 +1833,6 @@ public:
     XPCNativeScriptableInfo*
     GetScriptableInfo()   {return mScriptableInfo;}
 
-    void**
-    GetSecurityInfoAddr() {return &mSecurityInfo;}
-
     uint32_t
     GetClassInfoFlags() const {return mClassInfoFlags;}
 
@@ -1929,7 +1923,6 @@ private:
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     uint32_t                 mClassInfoFlags;
     XPCNativeSet*            mSet;
-    void*                    mSecurityInfo;
     XPCNativeScriptableInfo* mScriptableInfo;
 };
 
@@ -2112,10 +2105,6 @@ public:
 
     nsIXPCScriptable*      // call this wrong and you deserve to crash
     GetScriptableCallback() const  {return mScriptableInfo->GetCallback();}
-
-    void**
-    GetSecurityInfoAddr() {return HasProto() ?
-                                   GetProto()->GetSecurityInfoAddr() : nullptr;}
 
     nsIClassInfo*
     GetClassInfo() const {return IsValid() && HasProto() ?
@@ -2464,14 +2453,13 @@ class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public XPCRootSetElem
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
-    void DeleteCycleCollectable() {}
+    NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const XPTMethodDescriptor *info,
@@ -2513,12 +2501,9 @@ public:
     bool IsValid() const {return mJSObj != nullptr;}
     void SystemIsBeingShutDown();
 
-    // This is used by XPCJSRuntime::GCCallback to find wrappers that no
-    // longer root their JSObject and are only still alive because they
-    // were being used via nsSupportsWeakReference at the time when their
-    // last (outside) reference was released. Wrappers that fit into that
-    // category are only deleted when we see that their corresponding JSObject
-    // is to be finalized.
+    // These two methods are used by JSObject2WrappedJSMap::FindDyingJSObjects
+    // to find non-rooting wrappers for dying JS objects. See the top of
+    // XPCWrappedJS.cpp for more details.
     bool IsSubjectToFinalization() const {return IsValid() && mRefCnt == 1;}
     bool IsObjectAboutToBeFinalized() {return JS_IsAboutToBeFinalized(&mJSObj);}
 
@@ -2537,7 +2522,9 @@ protected:
                    nsXPCWrappedJS* root,
                    nsISupports* aOuter);
 
-   void Unlink();
+    bool CanSkip();
+    void Destroy();
+    void Unlink();
 
 private:
     JS::Heap<JSObject*> mJSObj;

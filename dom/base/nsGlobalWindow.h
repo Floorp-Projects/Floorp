@@ -341,7 +341,6 @@ public:
   virtual JSObject *GetGlobalJSObject();
 
   // nsIScriptGlobalObject
-  virtual nsIScriptContext *GetContext();
   JSObject *FastGetGlobalJSObject() const
   {
     return mJSObject;
@@ -528,11 +527,6 @@ public:
   bool ShouldPromptToBlockDialogs();
   // Inner windows only.
   bool DialogsAreBeingAbused();
-
-  // Ask the user if further dialogs should be blocked, if dialogs are currently
-  // being abused. This is used in the cases where we have no modifiable UI to
-  // show, in that case we show a separate dialog to ask this question.
-  bool ConfirmDialogIfNeeded();
 
   // These functions are used for controlling and determining whether dialogs
   // (alert, prompt, confirm) are currently allowed in this window.
@@ -946,6 +940,9 @@ public:
   JSObject* GetContent(JSContext* aCx, mozilla::ErrorResult& aError);
   JSObject* Get_content(JSContext* aCx, mozilla::ErrorResult& aError)
   {
+    if (mDoc) {
+      mDoc->WarnOnceAbout(nsIDocument::eWindow_Content);
+    }
     return GetContent(aCx, aError);
   }
 
@@ -1277,9 +1274,6 @@ protected:
   nsresult CloneStorageEvent(const nsAString& aType,
                              nsCOMPtr<nsIDOMStorageEvent>& aEvent);
 
-  // Implements Get{Real,Scriptable}Top.
-  nsresult GetTopImpl(nsIDOMWindow **aWindow, bool aScriptable);
-
   // Outer windows only.
   nsDOMWindowList* GetWindowList();
 
@@ -1317,6 +1311,11 @@ protected:
 
   already_AddRefed<nsIDOMWindow>
     GetContentInternal(mozilla::ErrorResult& aError);
+
+  // Ask the user if further dialogs should be blocked, if dialogs are currently
+  // being abused. This is used in the cases where we have no modifiable UI to
+  // show, in that case we show a separate dialog to ask this question.
+  bool ConfirmDialogIfNeeded();
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable

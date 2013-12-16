@@ -37,6 +37,7 @@
 #include "gfxColor.h"
 #ifdef MOZ_METRO
 #include "winrt/MetroInput.h"
+#include "winrt/MetroUtils.h"
 #endif // MOZ_METRO
 
 #ifdef NS_ENABLE_TSF
@@ -183,6 +184,47 @@ WinUtils::Log(const char *fmt, ...)
   PR_LOG(gWindowsLog, PR_LOG_ALWAYS, (buffer));
 #endif
   delete[] buffer;
+}
+
+/* static */
+double
+WinUtils::LogToPhysFactor()
+{
+  // dpi / 96.0
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+#ifdef MOZ_METRO
+    return MetroUtils::LogToPhysFactor();
+#else
+    return 1.0;
+#endif
+  } else {
+    HDC hdc = ::GetDC(nullptr);
+    double result = ::GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
+    ::ReleaseDC(nullptr, hdc);
+    return result;
+  }
+}
+
+/* static */
+double
+WinUtils::PhysToLogFactor()
+{
+  // 1.0 / (dpi / 96.0)
+  return 1.0 / LogToPhysFactor();
+}
+
+/* static */
+double
+WinUtils::PhysToLog(int32_t aValue)
+{
+  return double(aValue) * PhysToLogFactor();
+}
+
+/* static */
+int32_t
+WinUtils::LogToPhys(double aValue)
+{
+  return int32_t(NS_round(aValue * LogToPhysFactor()));
 }
 
 /* static */
@@ -694,9 +736,9 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
                                 getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<gfxASurface> imgFrame;
-  rv = container->GetFrame(imgIContainer::FRAME_FIRST, 0, getter_AddRefs(imgFrame));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<gfxASurface> imgFrame =
+    container->GetFrame(imgIContainer::FRAME_FIRST, 0);
+  NS_ENSURE_TRUE(imgFrame, NS_ERROR_FAILURE);
 
   nsRefPtr<gfxImageSurface> imageSurface;
   gfxIntSize size;

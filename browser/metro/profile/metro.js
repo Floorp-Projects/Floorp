@@ -203,6 +203,8 @@ pref("layout.spellcheckDefault", 1);
 /* extension manager and xpinstall */
 // Completely disable extensions
 pref("extensions.defaultProviders.enabled", false);
+// Disable version checks making addons compatible by default
+pref("extensions.strictCompatibility", false);
 // Disable all add-on locations other than the profile
 pref("extensions.enabledScopes", 1);
 // Auto-disable any add-ons that are "dropped in" to the profile
@@ -218,6 +220,7 @@ pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.org/%LOCALE%/blocklist/");
+pref("extensions.showMismatchUI", false);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);

@@ -102,9 +102,6 @@ class TestEmitterBasic(unittest.TestCase):
                 self.assertEqual(o.test_dirs, ['test'])
                 self.assertEqual(o.test_tool_dirs, ['test_tool'])
                 self.assertEqual(o.tool_dirs, ['tool'])
-                self.assertEqual(o.external_make_dirs, ['external_make'])
-                self.assertEqual(o.parallel_external_make_dirs,
-                    ['parallel_external_make'])
 
     def test_tier_simple(self):
         reader = self.reader('traversal-tier-simple')

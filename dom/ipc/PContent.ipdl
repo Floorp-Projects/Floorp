@@ -325,6 +325,11 @@ child:
     async UnregisterSheet(URIParams uri, uint32_t type);
 
     NotifyPhoneStateChange(nsString newState);
+
+    /**
+     * Notify idle observers in the child
+     */
+    NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
@@ -502,6 +507,8 @@ parent:
                                 bool isAudio,
                                 bool isVideo);
 
+    AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
+    RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);
