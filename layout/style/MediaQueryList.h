@@ -44,9 +44,6 @@ public:
 
   nsISupports* GetParentObject() const;
 
-  typedef CallbackObjectHolder<mozilla::dom::MediaQueryListListener,
-                               nsIDOMMediaQueryListListener> CallbackType;
-
   struct HandleChangeData {
     nsRefPtr<MediaQueryList> mql;
     nsCOMPtr<nsIDOMMediaQueryListListener> listener;

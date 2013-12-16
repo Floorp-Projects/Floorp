@@ -137,11 +137,8 @@ MediaQueryList::AddListener(MediaQueryListListener& aListener)
     RecomputeMatches();
   }
 
-  CallbackType callback(&aListener);
-
   for (uint32_t i = 0; i < mCallbacks.Length(); ++i) {
-    CallbackType thisCallback(mCallbacks[i]);
-    if (callback == thisCallback) {
+    if (aListener == *mCallbacks[i]) {
       // Already registered
       return;
     }
@@ -172,11 +169,8 @@ MediaQueryList::RemoveListener(nsIDOMMediaQueryListListener *aListener)
 void
 MediaQueryList::RemoveListener(MediaQueryListListener& aListener)
 {
-  CallbackType callback(&aListener);
-
   for (uint32_t i = 0; i < mCallbacks.Length(); ++i) {
-    CallbackType thisCallback(mCallbacks[i]);
-    if (callback == thisCallback) {
+    if (aListener == *mCallbacks[i]) {
       mCallbacks.RemoveElementAt(i);
       if (!HasListeners()) {
         // See NS_ADDREF_THIS() in AddListener.
