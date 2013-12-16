@@ -1033,6 +1033,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::ActivityCallback  activityCallback;
     void                 *activityCallbackArg;
+    void triggerActivityCallback(bool active);
 
 #ifdef JS_THREADSAFE
     /* The request depth for this thread. */
