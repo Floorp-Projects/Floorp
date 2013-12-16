@@ -5134,11 +5134,25 @@ if (!${obj}) {
                 preserveWrapper = "PreserveWrapper(self);\n"
             else:
                 preserveWrapper = ""
+            if self.idlNode.getExtendedAttribute("Frozen"):
+                assert self.idlNode.type.isSequence()
+                freezeValue = CGGeneric(
+                    "if (!JS_FreezeObject(cx, &args.rval().toObject())) {\n"
+                    "  return false;\n"
+                    "}")
+                if self.idlNode.type.nullable():
+                    freezeValue = CGIfWrapper(freezeValue,
+                                              "args.rval().isObject()")
+                freezeValue = freezeValue.define() + "\n"
+            else:
+                freezeValue = ""
+
             successCode = (
+                "%s"
                 "js::SetReservedSlot(reflector, %s, args.rval());\n"
                 "%s"
                 "break;" %
-                (memberReservedSlot(self.idlNode), preserveWrapper))
+                (freezeValue, memberReservedSlot(self.idlNode), preserveWrapper))
         else:
             successCode = None
 
