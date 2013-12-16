@@ -210,6 +210,20 @@ this.BrowserUITelemetry = {
     }
   },
 
+  _countableEvents: {},
+  _countEvent: function(aCategory, aAction) {
+    if (!(aCategory in this._countableEvents)) {
+      this._countableEvents[aCategory] = {};
+    }
+
+    let categoryEvents = this._countableEvents[aCategory];
+
+    if (!(aAction in categoryEvents)) {
+      categoryEvents[aAction] = 0;
+    }
+    categoryEvents[aAction]++;
+  },
+
   _registerWindow: function(aWindow) {
     aWindow.addEventListener("unload", this);
     let document = aWindow.document;
@@ -251,7 +265,7 @@ this.BrowserUITelemetry = {
       itemId = this._getAppmenuItemId(aEvent);
     }
 
-    UITelemetry.addEvent("appmenu:" + itemId, "mouseup");
+    this._countEvent("click-appmenu", itemId);
   },
 
   _getAppmenuItemId: function(aEvent) {
@@ -271,7 +285,7 @@ this.BrowserUITelemetry = {
   },
 
   countCustomizationEvent: function(aCustomizationEvent) {
-    UITelemetry.addEvent("customize:" + aCustomizationEvent, null);
+    this._countEvent("customize", aCustomizationEvent);
   },
 
   getToolbarMeasures: function() {
@@ -341,6 +355,8 @@ this.BrowserUITelemetry = {
     result.defaultMoved = defaultMoved;
     result.nondefaultAdded = nondefaultAdded;
     result.defaultRemoved = defaultRemoved;
+
+    result.countableEvents = this._countableEvents;
 
     return result;
   },
