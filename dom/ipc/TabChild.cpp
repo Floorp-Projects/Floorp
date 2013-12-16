@@ -299,53 +299,6 @@ TabChild::HandleEvent(nsIDOMEvent* aEvent)
     // This meta data may or may not have been a meta viewport tag. If it was,
     // we should handle it immediately.
     HandlePossibleViewportChange();
-  } else if (eventType.EqualsLiteral("scroll")) {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    aEvent->GetTarget(getter_AddRefs(target));
-
-    ViewID viewId;
-    uint32_t presShellId;
-
-    nsCOMPtr<nsIContent> content;
-    if (nsCOMPtr<nsIDocument> doc = do_QueryInterface(target))
-      content = doc->GetDocumentElement();
-    else
-      content = do_QueryInterface(target);
-
-    nsCOMPtr<nsIDOMWindowUtils> utils = APZCCallbackHelper::GetDOMWindowUtils(content);
-    utils->GetPresShellId(&presShellId);
-
-    if (!nsLayoutUtils::FindIDFor(content, &viewId))
-      return NS_ERROR_UNEXPECTED;
-
-    nsIScrollableFrame* scrollFrame = nsLayoutUtils::FindScrollableFrameFor(viewId);
-    if (!scrollFrame)
-      return NS_OK;
-
-    CSSIntPoint scrollOffset = scrollFrame->GetScrollPositionCSSPixels();
-
-    if (viewId == mLastRootMetrics.mScrollId) {
-      // We store the last metrics that was sent via the TabParent (This is
-      // updated in ProcessUpdateFrame and RecvUpdateFrame).
-      // We use this here to avoid sending APZC back a scroll event that
-      // originally came from APZC (besides being unnecessary, the event might
-      // be slightly out of date by the time it reaches APZC).
-      if (RoundedToInt(mLastRootMetrics.mScrollOffset) == scrollOffset) {
-        return NS_OK;
-      }
-
-      // Update the last scroll offset now, otherwise RecvUpdateDimensions()
-      // might trigger a scroll to the old offset before RecvUpdateFrame()
-      // gets a chance to update it.
-      mLastRootMetrics.mScrollOffset = scrollOffset;
-    } else if (viewId == mLastSubFrameMetrics.mScrollId) {
-      if (RoundedToInt(mLastSubFrameMetrics.mScrollOffset) == scrollOffset) {
-        return NS_OK;
-      }
-      mLastSubFrameMetrics.mScrollOffset = scrollOffset;
-    }
-
-    SendUpdateScrollOffset(presShellId, viewId, scrollOffset);
   }
 
   return NS_OK;
@@ -1549,7 +1502,6 @@ TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
     if (content) {
       FrameMetrics newSubFrameMetrics(aFrameMetrics);
       APZCCallbackHelper::UpdateSubFrame(content, newSubFrameMetrics);
-      mLastSubFrameMetrics = newSubFrameMetrics;
       return true;
     }
   }
@@ -2273,7 +2225,6 @@ TabChild::InitTabChildGlobal(FrameScriptLoading aScriptLoading)
     root->SetParentTarget(scope);
 
     chromeHandler->AddEventListener(NS_LITERAL_STRING("DOMMetaAdded"), this, false);
-    chromeHandler->AddEventListener(NS_LITERAL_STRING("scroll"), this, true);
   }
 
   if (aScriptLoading != DONT_LOAD_SCRIPTS && !mTriedBrowserInit) {
