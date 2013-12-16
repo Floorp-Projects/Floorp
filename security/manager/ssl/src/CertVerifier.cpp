@@ -24,13 +24,11 @@ CertVerifier::CertVerifier(missing_cert_download_config mcdc,
                            crl_download_config cdc,
                            ocsp_download_config odc,
                            ocsp_strict_config osc,
-                           any_revo_fresh_config arfc,
                            ocsp_get_config ogc)
   : mMissingCertDownloadEnabled(mcdc == missing_cert_download_on)
   , mCRLDownloadEnabled(cdc == crl_download_allowed)
   , mOCSPDownloadEnabled(odc == ocsp_on)
   , mOCSPStrict(osc == ocsp_strict)
-  , mRequireRevocationInfo(arfc == any_revo_strict)
   , mOCSPGETEnabled(ogc == ocsp_get_enabled)
 {
   MOZ_COUNT_CTOR(CertVerifier);
@@ -378,12 +376,7 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
   rev.leafTests.cert_rev_method_independent_flags =
   rev.chainTests.cert_rev_method_independent_flags =
     // avoiding the network is good, let's try local first
-    CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST
-
-    // is overall revocation requirement strict or relaxed?
-    | (mRequireRevocationInfo ?
-       CERT_REV_MI_REQUIRE_SOME_FRESH_INFO_AVAILABLE : CERT_REV_MI_NO_OVERALL_INFO_REQUIREMENT)
-    ;
+    CERT_REV_MI_TEST_ALL_LOCAL_INFORMATION_FIRST;
 
   // Skip EV parameters
   cvin[evParamLocation].type = cert_pi_end;
