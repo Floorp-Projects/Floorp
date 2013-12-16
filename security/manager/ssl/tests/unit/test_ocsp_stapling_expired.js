@@ -81,5 +81,19 @@ function run_test() {
                 getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE),
                 ocspResponseRevoked);
   add_test(function() { ocspResponder.stop(run_next_test); });
+  add_test(check_ocsp_stapling_telemetry);
+  run_next_test();
+}
+
+function check_ocsp_stapling_telemetry() {
+  let histogram = Cc["@mozilla.org/base/telemetry;1"]
+                    .getService(Ci.nsITelemetry)
+                    .getHistogramById("SSL_OCSP_STAPLING")
+                    .snapshot();
+  do_check_eq(histogram.counts[0], 0); // histogram bucket 0 is unused
+  do_check_eq(histogram.counts[1], 0); // 0 connections with a good response
+  do_check_eq(histogram.counts[2], 0); // 0 connections with no stapled resp.
+  do_check_eq(histogram.counts[3], 8); // 8 connections with an expired response
+  do_check_eq(histogram.counts[4], 0); // 0 connections with bad responses
   run_next_test();
 }

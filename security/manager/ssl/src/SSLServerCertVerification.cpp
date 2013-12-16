@@ -909,9 +909,20 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
       // We will fall back to fetching revocation information.
       PRErrorCode ocspErrorCode = PR_GetError();
       if (ocspErrorCode != SEC_ERROR_OCSP_OLD_RESPONSE) {
+        // stapled OCSP response present but invalid for some reason
+        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
         return rv;
+      } else {
+        // stapled OCSP response present but expired
+        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
       }
+    } else {
+      // stapled OCSP response present and good
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
     }
+  } else {
+    // no stapled OCSP response
+    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
   }
 
   CERTCertList *verifyCertChain = nullptr;
