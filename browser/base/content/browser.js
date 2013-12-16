@@ -3326,7 +3326,7 @@ function BrowserCustomizeToolbar() {
   var customizeURL = "chrome://global/content/customizeToolbar.xul";
   gCustomizeSheet = getBoolPref("toolbar.customization.usesheet", false);
 
-  BrowserUITelemetry.countCustomizationEvent("start");
+  BrowserUITelemetry.startCustomizing(window);
 
   if (gCustomizeSheet) {
     let sheetFrame = document.createElement("iframe");
@@ -3357,6 +3357,8 @@ function BrowserCustomizeToolbar() {
 }
 
 function BrowserToolboxCustomizeDone(aToolboxChanged) {
+  BrowserUITelemetry.stopCustomizing(window);
+
   if (gCustomizeSheet) {
     document.getElementById("customizeToolbarSheetPopup").hidePopup();
     let iframe = document.getElementById("customizeToolbarSheetIFrame");
