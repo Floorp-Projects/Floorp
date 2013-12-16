@@ -10928,13 +10928,13 @@ class CallbackMember(CGNativeMember):
             isCallbackReturnValue = "JSImpl"
         else:
             isCallbackReturnValue = "Callback"
+        sourceDescription = "return value of %s" % self.getPrettyName()
         convertType = instantiateJSToNativeConversion(
             getJSToNativeConversionInfo(self.retvalType,
                                         self.descriptorProvider,
                                         exceptionCode=self.exceptionCode,
                                         isCallbackReturnValue=isCallbackReturnValue,
-                                        # XXXbz we should try to do better here
-                                        sourceDescription="return value"),
+                                        sourceDescription=sourceDescription),
             replacements)
         assignRetval = string.Template(
             self.getRetvalInfo(self.retvalType,
@@ -11104,6 +11104,7 @@ class CallbackMethod(CallbackMember):
 
 class CallCallback(CallbackMethod):
     def __init__(self, callback, descriptorProvider):
+        self.callback = callback
         CallbackMethod.__init__(self, callback.signatures()[0], "Call",
                                 descriptorProvider, needThisHandling=True)
 
@@ -11112,6 +11113,9 @@ class CallCallback(CallbackMethod):
 
     def getCallableDecl(self):
         return "JS::Rooted<JS::Value> callable(cx, JS::ObjectValue(*mCallback));\n"
+
+    def getPrettyName(self):
+        return self.callback.identifier.name
 
 class CallbackOperationBase(CallbackMethod):
     """
@@ -11157,22 +11161,38 @@ class CallbackOperation(CallbackOperationBase):
     """
     def __init__(self, method, signature, descriptor):
         self.ensureASCIIName(method)
+        self.method = method
         jsName = method.identifier.name
         CallbackOperationBase.__init__(self, signature,
                                        jsName, MakeNativeName(jsName),
                                        descriptor, descriptor.interface.isSingleOperationInterface(),
                                        rethrowContentException=descriptor.interface.isJSImplemented())
 
-class CallbackGetter(CallbackMember):
-    def __init__(self, attr, descriptor):
+    def getPrettyName(self):
+        return "%s.%s" % (self.descriptorProvider.interface.identifier.name,
+                          self.method.identifier.name)
+
+class CallbackAccessor(CallbackMember):
+    """
+    Shared superclass for CallbackGetter and CallbackSetter.
+    """
+    def __init__(self, attr, sig, name, descriptor):
         self.ensureASCIIName(attr)
         self.attrName = attr.identifier.name
-        CallbackMember.__init__(self,
-                                (attr.type, []),
-                                callbackGetterName(attr),
-                                descriptor,
+        CallbackMember.__init__(self, sig, name, descriptor,
                                 needThisHandling=False,
                                 rethrowContentException=descriptor.interface.isJSImplemented())
+
+    def getPrettyName(self):
+        return "%s.%s" % (self.descriptorProvider.interface.identifier.name,
+                          self.attrName)
+
+class CallbackGetter(CallbackAccessor):
+    def __init__(self, attr, descriptor):
+        CallbackAccessor.__init__(self, attr,
+                                  (attr.type, []),
+                                  callbackGetterName(attr),
+                                  descriptor)
 
     def getRvalDecl(self):
         return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
@@ -11188,17 +11208,13 @@ class CallbackGetter(CallbackMember):
             '  return${errorReturn};\n'
             '}\n').substitute(replacements);
 
-class CallbackSetter(CallbackMember):
+class CallbackSetter(CallbackAccessor):
     def __init__(self, attr, descriptor):
-        self.ensureASCIIName(attr)
-        self.attrName = attr.identifier.name
-        CallbackMember.__init__(self,
-                                (BuiltinTypes[IDLBuiltinType.Types.void],
-                                 [FakeArgument(attr.type, attr)]),
-                                callbackSetterName(attr),
-                                descriptor,
-                                needThisHandling=False,
-                                rethrowContentException=descriptor.interface.isJSImplemented())
+        CallbackAccessor.__init__(self, attr,
+                                  (BuiltinTypes[IDLBuiltinType.Types.void],
+                                   [FakeArgument(attr.type, attr)]),
+                                  callbackSetterName(attr),
+                                  descriptor)
 
     def getRvalDecl(self):
         # We don't need an rval
@@ -11228,6 +11244,9 @@ class CGJSImplInitOperation(CallbackOperationBase):
         assert sig in descriptor.interface.ctor().signatures()
         CallbackOperationBase.__init__(self, (BuiltinTypes[IDLBuiltinType.Types.void], sig[1]),
                                        "__init", "__Init", descriptor, False, True)
+
+    def getPrettyName(self):
+        return "__init"
 
 class GlobalGenRoots():
     """
