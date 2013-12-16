@@ -992,23 +992,16 @@ nsFocusManager::FireDelayedEvents(nsIDocument* aDocument)
   NS_ENSURE_ARG(aDocument);
 
   // fire any delayed focus and blur events in the same order that they were added
-  for (uint32_t i = 0; i < mDelayedBlurFocusEvents.Length(); i++) {
-    if (mDelayedBlurFocusEvents[i].mDocument == aDocument) {
-      if (!aDocument->GetInnerWindow() ||
-          !aDocument->GetInnerWindow()->IsCurrentInnerWindow()) {
-        // If the document was navigated away from or is defunct, don't bother
-        // firing events on it. Note the symmetry between this condition and
-        // the similar one in nsDocument.cpp:FireOrClearDelayedEvents.
-        mDelayedBlurFocusEvents.RemoveElementAt(i);
-        --i;
-      } else if (!aDocument->EventHandlingSuppressed()) {
-        uint32_t type = mDelayedBlurFocusEvents[i].mType;
-        nsCOMPtr<EventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
-        nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
-        mDelayedBlurFocusEvents.RemoveElementAt(i);
-        SendFocusOrBlurEvent(type, presShell, aDocument, target, 0, false);
-        --i;
-      }
+  for (uint32_t i = 0; i < mDelayedBlurFocusEvents.Length(); i++)
+  {
+    if (mDelayedBlurFocusEvents[i].mDocument == aDocument &&
+        !aDocument->EventHandlingSuppressed()) {
+      uint32_t type = mDelayedBlurFocusEvents[i].mType;
+      nsCOMPtr<EventTarget> target = mDelayedBlurFocusEvents[i].mTarget;
+      nsCOMPtr<nsIPresShell> presShell = mDelayedBlurFocusEvents[i].mPresShell;
+      mDelayedBlurFocusEvents.RemoveElementAt(i);
+      SendFocusOrBlurEvent(type, presShell, aDocument, target, 0, false);
+      --i;
     }
   }
 
