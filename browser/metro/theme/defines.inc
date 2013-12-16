@@ -102,9 +102,12 @@
 %define metro_animation_duration 550ms
 %define metro_animation_easing cubic-bezier(0.1, 0.9, 0.2, 1)
 
-% this is meant to be slower than the system keyboard such
-% that the bars slide up after the keyboard is in place.
-%define appbar_keyboard_slideup_duration 750ms
+% duration and easing function to approximately match system keyboard
+% as animation cant be in lock-step with system OSK animation, some mismatch is inevitable
+% so we match velocity/cadence but delay to bring appbars in a tad after OSK
+%define appbar_keyboard_slideup_duration 420ms
+%define appbar_keyboard_slideup_delay 90ms
+%define appbar_keyboard_slideup_easing cubic-bezier(0, 1, 0.4, 0.96)
 
 % minimum resolution cutoffs for displaying 1.4x and 1.8x versions of icons
 % XXX currently, there's some weirdness with the dppx unit, as documented in
