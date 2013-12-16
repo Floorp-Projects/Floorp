@@ -17,7 +17,7 @@ function assertWidgetExists(aWindow, aExists) {
 let gTests = [
   {
     desc: "A widget that is created with showInPrivateBrowsing undefined should " +
-          "have that value default to false.",
+          "have that value default to true.",
     run: function() {
       let wrapper = CustomizableUI.createWidget({
         id: kWidgetId

@@ -1253,6 +1253,8 @@ let CustomizableUIInternal = {
   },
 
   getUnusedWidgets: function(aWindowPalette) {
+    let window = aWindowPalette.ownerDocument.defaultView;
+    let isWindowPrivate = PrivateBrowsingUtils.isWindowPrivate(window);
     // We use a Set because there can be overlap between the widgets in
     // gPalette and the items in the palette, especially after the first
     // customization, since programmatically generated widgets will remain
@@ -1264,7 +1266,9 @@ let CustomizableUIInternal = {
     // gPalette.
     for (let [id, widget] of gPalette) {
       if (!widget.currentArea) {
-        widgets.add(id);
+        if (widget.showInPrivateBrowsing || !isWindowPrivate) {
+          widgets.add(id);
+        }
       }
     }
 

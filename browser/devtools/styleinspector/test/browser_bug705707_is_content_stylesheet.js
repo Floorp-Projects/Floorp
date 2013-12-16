@@ -18,7 +18,7 @@ const XUL_PRINCIPAL =  Components.classes["@mozilla.org/scriptsecuritymanager;1"
                                  .getService(Ci.nsIScriptSecurityManager)
                                  .getNoAppCodebasePrincipal(XUL_URI);
 
-
+let inspector, ruleView;
 let {CssLogic} = devtools.require("devtools/styleinspector/css-logic");
 
 function test()
@@ -41,10 +41,46 @@ function testFromHTML()
 
   executeSoon(function() {
     checkSheets(target);
+    openRuleView((aInspector, aRuleView) => {
+      inspector = aInspector;
+      ruleView = aRuleView;
+      inspector.selection.setNode(target);
+      inspector.once("inspector-updated", testModifyRules);
+    });
+  });
+}
+
+function reselectElement(target, cb)
+{
+  inspector.selection.setNode(target.parentNode);
+  inspector.once("inspector-updated", ()=> {
+    inspector.selection.setNode(target);
+    inspector.once("inspector-updated", cb);
+  });
+}
+
+function testModifyRules()
+{
+  // Set a property on all rules, then refresh and make sure they are still
+  // there (and there wasn't an error on the server side)
+  for (let rule of ruleView._elementStyle.rules) {
+    rule.editor.addProperty("font-weight", "bold", "");
+  }
+
+  reselectElement(doc.querySelector("#target"), () => {
+
+    for (let rule of ruleView._elementStyle.rules) {
+      let lastRule = rule.textProps[rule.textProps.length - 1];
+
+      is (lastRule.name, "font-weight", "Last rule name is font-weight");
+      is (lastRule.value, "bold", "Last rule value is bold");
+    }
+
     gBrowser.removeCurrentTab();
     openXUL();
   });
 }
+
 
 function openXUL()
 {
@@ -96,7 +132,7 @@ function finishUp()
   info("finishing up");
   Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager)
     .addFromPrincipal(XUL_PRINCIPAL, 'allowXULXBL', Ci.nsIPermissionManager.DENY_ACTION);
-  doc = null;
+  doc = inspector = ruleView = null;
   gBrowser.removeCurrentTab();
   finish();
 }
