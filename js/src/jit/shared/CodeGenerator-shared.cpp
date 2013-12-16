@@ -49,8 +49,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
     sps_(&GetIonContext()->runtime->spsProfiler(), &lastPC_),
     osrEntryOffset_(0),
     skipArgCheckEntryOffset_(0),
-    frameDepth_(graph->localSlotCount() * sizeof(STACK_SLOT_SIZE) +
-                graph->argumentSlotCount() * sizeof(Value))
+    frameDepth_(graph->paddedLocalSlotsSize() + graph->argumentsSize())
 {
     if (!gen->compilingAsmJS())
         masm.setInstrumentation(&sps_);

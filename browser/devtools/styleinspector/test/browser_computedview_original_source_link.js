@@ -42,7 +42,7 @@ function highlightNode(aInspector, aComputedView)
     is(inspector.selection.node, div, "selection matches the div element");
 
     expandProperty(0, testComputedViewLink);
-  }).then(null, console.error);
+  });
 }
 
 function testComputedViewLink() {

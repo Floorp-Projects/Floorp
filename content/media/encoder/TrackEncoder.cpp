@@ -147,10 +147,8 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
     while (!iter.IsEnded()) {
       VideoChunk chunk = *iter;
       if (!chunk.IsNull()) {
-        gfxIntSize imgsize = chunk.mFrame.GetImage()->GetSize();
-        int width = (imgsize.width + 1) / 2 * 2;
-        int height = (imgsize.height + 1) / 2 * 2;
-        nsresult rv = Init(width, height, aTrackRate);
+        gfx::IntSize imgsize = chunk.mFrame.GetImage()->GetSize();
+        nsresult rv = Init(imgsize.width, imgsize.height, aTrackRate);
         if (NS_FAILED(rv)) {
           LOG("[VideoTrackEncoder]: Fail to initialize the encoder!");
           NotifyCancel();

@@ -43,7 +43,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
+    MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
@@ -176,10 +176,19 @@ class CodeGeneratorARM : public CodeGeneratorShared
     bool generateInvalidateEpilogue();
   protected:
     void postAsmJSCall(LAsmJSCall *lir) {
-#if  !defined(JS_CPU_ARM_HARDFP)
+#ifndef JS_CPU_ARM_HARDFP
         if (lir->mir()->callee().which() == MAsmJSCall::Callee::Builtin) {
-            if (lir->mir()->type() == MIRType_Double)
+            switch (lir->mir()->type()) {
+              case MIRType_Double:
                 masm.ma_vxfer(r0, r1, d0);
+                break;
+              case MIRType_Float32:
+                masm.as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(),
+                              Assembler::CoreToFloat);
+                break;
+              default:
+                break;
+            }
         }
 #endif
     }

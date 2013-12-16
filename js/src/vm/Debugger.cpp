@@ -3988,12 +3988,12 @@ DebuggerFrame_getType(JSContext *cx, unsigned argc, Value *vp)
 static bool
 DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_FRAME_OWNER(cx, argc, vp, "get environment", args, thisobj, frame, dbg);
+    THIS_FRAME_OWNER_ITER(cx, argc, vp, "get environment", args, thisobj, _, iter, dbg);
 
     Rooted<Env*> env(cx);
     {
-        AutoCompartment ac(cx, frame.scopeChain());
-        env = GetDebugScopeForFrame(cx, frame);
+        AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
+        env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
         if (!env)
             return false;
     }
@@ -4439,7 +4439,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         if (!iter->computeThis(cx))
             return false;
         thisv = iter->thisv();
-        env = GetDebugScopeForFrame(cx, iter->abstractFramePtr());
+        env = GetDebugScopeForFrame(cx, iter->abstractFramePtr(), iter->pc());
         if (!env)
             return false;
     } else {
@@ -4720,23 +4720,23 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedObject result(cx, NewDenseAllocatedArray(cx, fun->nargs));
+    RootedObject result(cx, NewDenseAllocatedArray(cx, fun->nargs()));
     if (!result)
         return false;
-    result->ensureDenseInitializedLength(cx, 0, fun->nargs);
+    result->ensureDenseInitializedLength(cx, 0, fun->nargs());
 
     if (fun->isInterpreted()) {
         RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
         if (!script)
             return false;
 
-        JS_ASSERT(fun->nargs == script->bindings.numArgs());
+        JS_ASSERT(fun->nargs() == script->bindings.numArgs());
 
-        if (fun->nargs > 0) {
+        if (fun->nargs() > 0) {
             BindingVector bindings(cx);
             if (!FillBindingVector(script, &bindings))
                 return false;
-            for (size_t i = 0; i < fun->nargs; i++) {
+            for (size_t i = 0; i < fun->nargs(); i++) {
                 Value v;
                 if (bindings[i].name()->length() == 0)
                     v = UndefinedValue();
@@ -4746,7 +4746,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
             }
         }
     } else {
-        for (size_t i = 0; i < fun->nargs; i++)
+        for (size_t i = 0; i < fun->nargs(); i++)
             result->setDenseElement(i, UndefinedValue());
     }
 

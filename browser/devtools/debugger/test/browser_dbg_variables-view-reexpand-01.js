@@ -23,6 +23,9 @@ function test() {
     gSources = gDebugger.DebuggerView.Sources;
     gVariables = gDebugger.DebuggerView.Variables;
 
+    // Always expand all items between pauses except 'window' variables.
+    gVariables.commitHierarchyIgnoredItems = Object.create(null, { window: { value: true } });
+
     waitForSourceShown(gPanel, ".html")
       .then(addBreakpoint)
       .then(() => ensureThreadClientState(gPanel, "resumed"))

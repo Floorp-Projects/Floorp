@@ -841,6 +841,16 @@ menuitem.bookmark-item {
   color: black;
 }
 
+#urlbar:-moz-lwtheme:hover:not([focused]):not([readonly]),
+.searchbar-textbox:-moz-lwtheme:hover:not([focused]) {
+  background-color: rgba(255,255,255,.9);
+}
+
+#urlbar:-moz-lwtheme[focused],
+.searchbar-textbox:-moz-lwtheme[focused] {
+  background-color: white;
+}
+
 @conditionalForwardWithUrlbar@ > #urlbar-wrapper {
   padding-left: @conditionalForwardWithUrlbarWidth@px;
   -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
@@ -896,11 +906,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 .searchbar-textbox:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input::-moz-placeholder {
   opacity: 1.0;
   color: #777;
-}
-
-#urlbar:-moz-lwtheme[focused="true"],
-.searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: white;
 }
 
 #urlbar-container {

@@ -347,6 +347,12 @@ let WebNavigation =  {
     let history = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
     for (let i = 0; i < history.count; i++) {
       let entry = this._serializeHistoryEntry(history.getEntryAtIndex(i, false));
+
+      // If someone directly navigates to one of these URLs and they switch to Desktop,
+      // we need to make the page load-able.
+      if (entry.url == "about:home" || entry.url == "about:start") {
+        entry.url = "about:newtab";
+      }
       entries.push(entry);
     }
     let index = history.index + 1;
@@ -646,7 +652,7 @@ let ContentScroll =  {
         isRoot = true;
       }
     } else {
-      var window = target.currentDoc.defaultView;
+      var window = target.ownerDocument.defaultView;
       var scrollOffset = this.getScrollOffsetForElement(target);
       var element = target;
     }

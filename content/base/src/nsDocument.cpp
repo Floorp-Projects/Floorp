@@ -6183,7 +6183,8 @@ nsDocument::DoNotifyPossibleTitleChange()
 
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
+    nsCOMPtr<nsISupports> container =
+      shell->GetPresContext()->GetContainerWeak();
     if (container) {
       nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
       if (docShellWin) {
@@ -9713,13 +9714,7 @@ nsDocument::MozCancelFullScreen()
 void
 nsIDocument::MozCancelFullScreen()
 {
-  // Only perform fullscreen changes if we're running in a webapp
-  // same-origin to the web app, or if we're in a user generated event
-  // handler.
-  if (NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
-      nsContentUtils::IsRequestFullScreenAllowed()) {
-    RestorePreviousFullScreenState();
-  }
+  RestorePreviousFullScreenState();
 }
 
 // Runnable to set window full-screen mode. Used as a script runner

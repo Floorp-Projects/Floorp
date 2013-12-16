@@ -398,7 +398,7 @@ class InlineFrameIteratorMaybeGC
             count = nactual - start;
 
         unsigned end = start + count;
-        unsigned nformal = callee()->nargs;
+        unsigned nformal = callee()->nargs();
 
         JS_ASSERT(start <= end && end <= nactual);
 

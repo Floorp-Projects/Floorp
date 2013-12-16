@@ -4125,7 +4125,7 @@ ICGetElemNativeCompiler::emitCallScripted(MacroAssembler &masm, Register objReg)
 
     // Handle arguments underflow.
     Label noUnderflow;
-    masm.load16ZeroExtend(Address(callee, offsetof(JSFunction, nargs)), scratch);
+    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch);
     masm.branch32(Assembler::Equal, scratch, Imm32(0), &noUnderflow);
     {
         // Call the arguments rectifier.
@@ -6682,7 +6682,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Handle arguments underflow.
     Label noUnderflow;
-    masm.load16ZeroExtend(Address(callee, offsetof(JSFunction, nargs)), scratch);
+    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch);
     masm.branch32(Assembler::Equal, scratch, Imm32(0), &noUnderflow);
     {
         // Call the arguments rectifier.
@@ -7591,7 +7591,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Handle arguments underflow.
     Label noUnderflow;
-    masm.load16ZeroExtend(Address(callee, offsetof(JSFunction, nargs)), scratch);
+    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch);
     masm.branch32(Assembler::BelowOrEqual, scratch, Imm32(1), &noUnderflow);
     {
         // Call the arguments rectifier.
@@ -7865,19 +7865,6 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
         res.set(StringObject::create(cx, emptyString, TenuredObject));
         if (!res)
             return false;
-        return true;
-    }
-
-    if (native == intrinsic_NewParallelArray || native == ParallelArrayObject::construct) {
-        res.set(ParallelArrayObject::newInstance(cx, TenuredObject));
-        if (!res)
-            return false;
-
-        types::TypeObject *type =
-            types::TypeScript::InitObject(cx, script, pc, JSProto_ParallelArray);
-        if (!type)
-            return false;
-        res->setType(type);
         return true;
     }
 
@@ -8551,7 +8538,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
 
     // Handle arguments underflow.
     Label noUnderflow;
-    masm.load16ZeroExtend(Address(callee, offsetof(JSFunction, nargs)), callee);
+    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), callee);
     masm.branch32(Assembler::AboveOrEqual, argcReg, callee, &noUnderflow);
     {
         // Call the arguments rectifier.
@@ -8807,7 +8794,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
     masm.Push(scratch);
 
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
-    masm.load16ZeroExtend(Address(target, offsetof(JSFunction, nargs)), scratch);
+    masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
     masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), target);
     masm.loadBaselineOrIonRaw(target, target, SequentialExecution, nullptr);
 
@@ -8918,7 +8905,7 @@ ICCall_ScriptedApplyArguments::Compiler::generateStubCode(MacroAssembler &masm)
     masm.Push(scratch);
 
     // Load nargs into scratch for underflow check, and then load jitcode pointer into target.
-    masm.load16ZeroExtend(Address(target, offsetof(JSFunction, nargs)), scratch);
+    masm.load16ZeroExtend(Address(target, JSFunction::offsetOfNargs()), scratch);
     masm.loadPtr(Address(target, JSFunction::offsetOfNativeOrScript()), target);
     masm.loadBaselineOrIonRaw(target, target, SequentialExecution, nullptr);
 

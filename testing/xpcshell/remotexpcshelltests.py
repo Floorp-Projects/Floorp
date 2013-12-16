@@ -188,8 +188,14 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 # via devicemanager.
 class XPCShellRemote(xpcshell.XPCShellTests, object):
 
-    def __init__(self, devmgr, options, args):
-        xpcshell.XPCShellTests.__init__(self)
+    def __init__(self, devmgr, options, args, log=None):
+        xpcshell.XPCShellTests.__init__(self, log)
+
+        # Add Android version (SDK level) to mozinfo so that manifest entries
+        # can be conditional on android_version.
+        androidVersion = devmgr.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
+        mozinfo.info['android_version'] = androidVersion
+
         self.localLib = options.localLib
         self.localBin = options.localBin
         self.options = options
@@ -563,11 +569,6 @@ def main():
     if options.interactive and not options.testPath:
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
-
-    # Add Android version (SDK level) to mozinfo so that manifest entries
-    # can be conditional on android_version.
-    androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
-    mozinfo.info['android_version'] = androidVersion
 
     xpcsh = XPCShellRemote(dm, options, args)
 

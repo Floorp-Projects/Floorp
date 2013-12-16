@@ -182,7 +182,7 @@ class FrameInfo
         return script->nfixed();
     }
     uint32_t nargs() const {
-        return script->function()->nargs;
+        return script->function()->nargs();
     }
 
   private:
@@ -283,9 +283,6 @@ class FrameInfo
     }
     Address addressOfScopeChain() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScopeChain());
-    }
-    Address addressOfBlockChain() const {
-        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfBlockChain());
     }
     Address addressOfFlags() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());

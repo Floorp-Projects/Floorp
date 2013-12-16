@@ -403,6 +403,24 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
       mScriptAccess = allow;
     }
     mIsChrome = true;
+  } else {
+    // If this binding isn't running with system principal, then it's running
+    // from a remote-XUL whitelisted domain. This is already a not-really-
+    // supported configuration (among other things, we don't use XBL scopes in
+    // that configuration for compatibility reasons). But we should still at
+    // least make an effort to prevent binding code from running if content
+    // script is disabled or if the source domain is blacklisted (since the
+    // source domain for remote XBL must always be the same as the source domain
+    // of the bound content).
+    //
+    // If we just ask the binding document if script is enabled, it will
+    // discover that it has no inner window, and return false. So instead, we
+    // short-circuit the normal compartment-managed script-disabling machinery,
+    // and query the policy for the URI directly.
+    bool allow;
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    nsresult rv = ssm->PolicyAllowsScript(uri, &allow);
+    mScriptAccess = NS_SUCCEEDED(rv) && allow;
   }
 }
 

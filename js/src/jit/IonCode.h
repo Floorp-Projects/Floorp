@@ -256,7 +256,7 @@ struct IonScript
     uint32_t backedgeEntries_;
 
     // Number of references from invalidation records.
-    size_t refcount_;
+    uint32_t refcount_;
 
     // Identifier of the compilation which produced this code.
     types::RecompileInfo recompileInfo_;
@@ -347,6 +347,9 @@ struct IonScript
     }
     static inline size_t offsetOfSkipArgCheckEntryOffset() {
         return offsetof(IonScript, skipArgCheckEntryOffset_);
+    }
+    static inline size_t offsetOfRefcount() {
+        return offsetof(IonScript, refcount_);
     }
 
   public:
@@ -524,6 +527,9 @@ struct IonScript
             Destroy(fop, this);
     }
     const types::RecompileInfo& recompileInfo() const {
+        return recompileInfo_;
+    }
+    types::RecompileInfo& recompileInfoRef() {
         return recompileInfo_;
     }
     uint32_t incrOsrPcMismatchCounter() {

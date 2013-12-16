@@ -178,15 +178,17 @@ LayerTransactionParent::Destroy()
 bool
 LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
                                          const TargetConfig& targetConfig,
-                                         const bool& isFirstPaint)
+                                         const bool& isFirstPaint,
+                                         const bool& scheduleComposite)
 {
-  return RecvUpdate(cset, targetConfig, isFirstPaint, nullptr);
+  return RecvUpdate(cset, targetConfig, isFirstPaint, scheduleComposite, nullptr);
 }
 
 bool
 LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const TargetConfig& targetConfig,
                                    const bool& isFirstPaint,
+                                   const bool& scheduleComposite,
                                    InfallibleTArray<EditReply>* reply)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
@@ -280,10 +282,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                      common.stickyScrollRangeOuter(),
                                      common.stickyScrollRangeInner());
       }
-      if (common.isScrollbar()) {
-        layer->SetScrollbarData(common.scrollbarTargetContainerId(),
-          static_cast<Layer::ScrollDirection>(common.scrollbarDirection()));
-      }
+      layer->SetScrollbarData(common.scrollbarTargetContainerId(),
+        static_cast<Layer::ScrollDirection>(common.scrollbarDirection()));
       if (PLayerParent* maskLayer = common.maskLayerParent()) {
         layer->SetMaskLayer(cast(maskLayer)->AsLayer());
       } else {
@@ -452,7 +452,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   // other's buffer contents.
   LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
 
-  mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint);
+  mShadowLayersManager->ShadowLayersUpdated(this, targetConfig, isFirstPaint, scheduleComposite);
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   int compositeTime = (int)(mozilla::TimeStamp::Now() - updateStart).ToMilliseconds();

@@ -52,7 +52,6 @@
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
-#include "builtin/ParallelArray.h"
 #include "builtin/RegExp.h"
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
@@ -2375,7 +2374,16 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, proto);
 
-    return SetClassAndProto(cx, obj, obj->getClass(), proto, false);
+    bool succeeded;
+    if (!JSObject::setProto(cx, obj, proto, &succeeded))
+        return false;
+
+    if (!succeeded) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+        return false;
+    }
+
+    return true;
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4006,7 +4014,7 @@ JS_GetFunctionDisplayId(JSFunction *fun)
 JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction *fun)
 {
-    return fun->nargs;
+    return fun->nargs();
 }
 
 JS_PUBLIC_API(bool)
@@ -4241,7 +4249,7 @@ struct AutoLastFrameCheck
 # define fast_getc getc
 #endif
 
-typedef Vector<char, 8, TempAllocPolicy> FileContents;
+typedef js::Vector<char, 8, TempAllocPolicy> FileContents;
 
 static bool
 ReadCompleteFile(JSContext *cx, FILE *fp, FileContents &buffer)

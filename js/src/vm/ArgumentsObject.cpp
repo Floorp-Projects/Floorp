@@ -96,7 +96,7 @@ struct CopyIonJSFrameArgs
 
     void copyArgs(JSContext *, HeapValue *dstBase, unsigned totalArgs) const {
         unsigned numActuals = frame_->numActualArgs();
-        unsigned numFormals = jit::CalleeTokenToFunction(frame_->calleeToken())->nargs;
+        unsigned numFormals = jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
         JS_ASSERT(numActuals <= totalArgs);
         JS_ASSERT(numFormals <= totalArgs);
         JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
@@ -144,7 +144,7 @@ struct CopyScriptFrameIterArgs
 
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
-        unsigned numFormals = iter_.callee()->nargs;
+        unsigned numFormals = iter_.callee()->nargs();
         JS_ASSERT(numActuals <= totalArgs);
         JS_ASSERT(numFormals <= totalArgs);
         JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
@@ -192,7 +192,7 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!shape)
         return nullptr;
 
-    unsigned numFormals = callee->nargs;
+    unsigned numFormals = callee->nargs();
     unsigned numDeletedWords = NumWordsForBitArrayOfLength(numActuals);
     unsigned numArgs = Max(numActuals, numFormals);
     unsigned numBytes = offsetof(ArgumentsData, args) +
@@ -341,7 +341,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
             argsobj.setElement(cx, arg, vp);
-            if (arg < script->function()->nargs)
+            if (arg < script->function()->nargs())
                 types::TypeScript::SetArgument(cx, script, arg, vp);
             return true;
         }

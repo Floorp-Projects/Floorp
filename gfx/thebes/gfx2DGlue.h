@@ -55,6 +55,12 @@ inline Matrix ToMatrix(const gfxMatrix &aMatrix)
                 Float(aMatrix.yy), Float(aMatrix.x0), Float(aMatrix.y0));
 }
 
+inline gfxMatrix ThebesMatrix(const Matrix &aMatrix)
+{
+  return gfxMatrix(aMatrix._11, aMatrix._12, aMatrix._21,
+                   aMatrix._22, aMatrix._31, aMatrix._32);
+}
+
 inline Point ToPoint(const gfxPoint &aPoint)
 {
   return Point(Float(aPoint.x), Float(aPoint.y));
@@ -197,18 +203,6 @@ inline JoinStyle ToJoinStyle(gfxContext::GraphicsLineJoin aStyle)
     return JOIN_ROUND;
   }
   MOZ_CRASH("Incomplete switch");
-}
-
-inline gfxMatrix ThebesMatrix(const Matrix &aMatrix)
-{
-  return gfxMatrix(aMatrix._11, aMatrix._12, aMatrix._21,
-                   aMatrix._22, aMatrix._31, aMatrix._32);
-}
-
-inline Matrix MatrixForThebesMatrix(const gfxMatrix &aMatrix)
-{
-  return Matrix(aMatrix.xx, aMatrix.yx, aMatrix.xy,
-                aMatrix.yy, aMatrix.x0, aMatrix.y0);
 }
 
 inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
