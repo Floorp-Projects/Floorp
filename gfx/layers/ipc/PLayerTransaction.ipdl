@@ -72,7 +72,7 @@ parent:
 
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
-  sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint)
+  sync Update(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint, bool scheduleComposite)
     returns (EditReply[] reply);
 
   sync GetOpacity(PLayer layer) returns (float opacity);
@@ -80,7 +80,7 @@ parent:
 
   // We don't need to send a sync transaction if
   // no transaction operate require a swap.
-  async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint);
+  async UpdateNoSwap(Edit[] cset, TargetConfig targetConfig, bool isFirstPaint, bool scheduleComposite);
 
   // Drop any front buffers that might be retained on the compositor
   // side.
