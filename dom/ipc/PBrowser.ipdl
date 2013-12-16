@@ -303,13 +303,6 @@ parent:
     UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId, bool aIsRoot,
                           bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
 
-    /**
-     * Notifies the parent about a scroll event. The pres shell ID and
-     * view ID identify which scrollable (sub-)frame was scrolled, and
-     * the new scroll offset for that frame is sent.
-     */
-    UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, CSSIntPoint aScrollOffset);
-
     __delete__();
 
 child:

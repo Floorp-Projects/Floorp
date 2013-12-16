@@ -1589,27 +1589,7 @@ NS_IMETHODIMP
 MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
 {
   NS_ENSURE_ARG_POINTER(topic);
-  if (!strcmp(topic, "apzc-scroll-offset-changed")) {
-    uint64_t scrollId;
-    int32_t presShellId;
-    CSSIntPoint scrollOffset;
-    int matched = sscanf(NS_LossyConvertUTF16toASCII(data).get(),
-                         "%llu %d (%d, %d)",
-                         &scrollId,
-                         &presShellId,
-                         &scrollOffset.x,
-                         &scrollOffset.y);
-    if (matched != 4) {
-      NS_WARNING("Malformed scroll-offset-changed message");
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (!mController) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    mController->UpdateScrollOffset(ScrollableLayerGuid(mRootLayerTreeId, presShellId, scrollId),
-                                    scrollOffset);
-  }
-  else if (!strcmp(topic, "apzc-zoom-to-rect")) {
+  if (!strcmp(topic, "apzc-zoom-to-rect")) {
     CSSRect rect = CSSRect();
     uint64_t viewId = 0;
     int32_t presShellId = 0;

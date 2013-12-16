@@ -171,7 +171,6 @@ public:
                                            const bool& aAllowZoom,
                                            const CSSToScreenScale& aMinZoom,
                                            const CSSToScreenScale& aMaxZoom);
-    virtual bool RecvUpdateScrollOffset(const uint32_t& aPresShellId, const ViewID& aViewId, const CSSIntPoint& aScrollOffset);
     virtual bool RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
                                           const bool& aPreventDefault);
     virtual PContentDialogParent* AllocPContentDialogParent(const uint32_t& aType,

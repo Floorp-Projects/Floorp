@@ -563,9 +563,6 @@ let ContentScroll =  {
   init: function() {
     addMessageListener("Content:SetWindowSize", this);
 
-    if (Services.prefs.getBoolPref("layers.async-pan-zoom.enabled")) {
-      addEventListener("scroll", this, true);
-    }
     addEventListener("pagehide", this, false);
     addEventListener("MozScrolledAreaChanged", this, false);
   },
@@ -601,11 +598,6 @@ let ContentScroll =  {
         this._scrollOffset = { x: 0, y: 0 };
         break;
 
-      case "scroll": {
-        this.notifyChromeAboutContentScroll(aEvent.target);
-        break;
-      }
-
       case "MozScrolledAreaChanged": {
         let doc = aEvent.originalTarget;
         if (content != doc.defaultView) // We are only interested in root scroll pane changes
@@ -627,47 +619,6 @@ let ContentScroll =  {
         break;
       }
     }
-  },
-
-  /*
-  * DOM scroll handler - if we receive this, content or the dom scrolled
-  * content without going through the apz. This can happen in a lot of
-  * cases, keyboard shortcuts, scroll wheel, or content script. Messages
-  * chrome via a sync call which messages the apz about the update.
-  */
-  notifyChromeAboutContentScroll: function (target) {
-    let isRoot = false;
-    if (target instanceof Ci.nsIDOMDocument) {
-      var window = target.defaultView;
-      var scrollOffset = this.getScrollOffset(window);
-      var element = target.documentElement;
-
-      if (target == content.document) {
-        if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y) {
-          // Don't send a scroll message back to APZC if it's the same as the
-          // last one.
-          return;
-        }
-        this._scrollOffset = scrollOffset;
-        isRoot = true;
-      }
-    } else {
-      var window = target.ownerDocument.defaultView;
-      var scrollOffset = this.getScrollOffsetForElement(target);
-      var element = target;
-    }
-
-    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let presShellId = {};
-    utils.getPresShellId(presShellId);
-    let viewId = utils.getViewId(element);
-    // Must be synchronous to prevent redraw getting out of sync from
-    // composition.
-    sendSyncMessage("Browser:ContentScroll",
-      { presShellId: presShellId.value,
-        viewId: viewId,
-        scrollOffset: scrollOffset,
-        isRoot: isRoot });
   }
 };
 

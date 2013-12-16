@@ -42,7 +42,6 @@ public:
   virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid);
   
   void SetWidgetListener(nsIWidgetListener* aWidgetListener);
-  void UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId, CSSIntPoint& aScrollOffset);
 
   bool HitTestAPZC(mozilla::ScreenIntPoint& aPoint);
   void TransformCoordinateToGecko(const mozilla::ScreenIntPoint& aPoint,
@@ -60,8 +59,6 @@ public:
 
 private:
   nsIWidgetListener* mWidgetListener;
-  ScrollableLayerGuid mLastScrollLayerGuid;
-  CSSIntPoint mLastScrollOffset;
 };
 
 } } }
