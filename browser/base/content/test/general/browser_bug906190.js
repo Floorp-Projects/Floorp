@@ -212,7 +212,8 @@ function test1C() {
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1C");
 
   // remove tabs
-  gTestWin.gBrowser.removeAllTabsBut(mainTab);
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
   gTestWin.gBrowser.selectTabAtIndex(0);
 
   var childTabLink = gHttpTestRoot2 + "file_bug906190_2.html";
@@ -269,7 +270,8 @@ function test2C() {
   is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 2C");
 
   // remove tabs
-  gTestWin.gBrowser.removeAllTabsBut(mainTab);
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
   gTestWin.gBrowser.selectTabAtIndex(0);
 
   // file_bug906190_3_4.html redirects to page test1.example.com/* using meta-refresh
@@ -336,7 +338,8 @@ function test3E() {
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 3E");
 
   // remove tabs
-  gTestWin.gBrowser.removeAllTabsBut(mainTab);
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
   gTestWin.gBrowser.selectTabAtIndex(0);
 
   var childTabLink = gHttpTestRoot1 + "file_bug906190_3_4.html";
@@ -403,7 +406,8 @@ function test4E() {
   is(actual, "Mixed Content Blocker enabled", "OK: Blocked mixed script in Test 4E");
 
   // remove tabs
-  gTestWin.gBrowser.removeAllTabsBut(mainTab);
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
   gTestWin.gBrowser.selectTabAtIndex(0);
 
   // the sjs files returns a 302 redirect- note, same origins
@@ -462,7 +466,8 @@ function test5C() {
   todo_is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 5C!");
 
   // remove tabs
-  gTestWin.gBrowser.removeAllTabsBut(mainTab);
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[2], {animate: false});
+  gTestWin.gBrowser.removeTab(gTestWin.gBrowser.tabs[1], {animate: false});
   gTestWin.gBrowser.selectTabAtIndex(0);
 
   // the sjs files returns a 302 redirect - note, different origins
