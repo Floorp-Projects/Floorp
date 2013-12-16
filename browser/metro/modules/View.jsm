@@ -85,10 +85,10 @@ View.prototype = {
     if ("string" == typeof aIconUri) {
       aIconUri = makeURI(aIconUri);
     }
-    aItem.iconSrc = aIconUri.spec;
     let faviconURL = (PlacesUtils.favicons.getFaviconLinkForIcon(aIconUri)).spec;
-    let xpFaviconURI = makeURI(faviconURL.replace("moz-anno:favicon:",""));
+    aItem.iconSrc = faviconURL;
 
+    let xpFaviconURI = makeURI(faviconURL.replace("moz-anno:favicon:",""));
     Task.spawn(function() {
       let colorInfo = yield ColorUtils.getForegroundAndBackgroundIconColors(xpFaviconURI);
       if (!(colorInfo && colorInfo.background && colorInfo.foreground)) {

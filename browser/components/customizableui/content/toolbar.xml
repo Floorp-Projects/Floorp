@@ -375,7 +375,7 @@
       <constructor><![CDATA[
           // Reading these immediately so nobody messes with them anymore:
           this._delegatingToolbar = this.getAttribute("toolbar-delegate");
-          this._wasCollapsed = this.getAttribute("collapsed");
+          this._wasCollapsed = this.getAttribute("collapsed") == "true";
           // Leaving those in here to unbreak some code:
           if (document.readyState == "complete") {
             this._init();

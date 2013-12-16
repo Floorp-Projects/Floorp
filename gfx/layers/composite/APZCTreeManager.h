@@ -173,14 +173,6 @@ public:
                              const CSSToScreenScale& aMaxScale);
 
   /**
-   * Update mFrameMetrics.mScrollOffset to the given offset.
-   * This is necessary in cases where a scroll is not caused by user
-   * input (for example, a content scrollTo()).
-   */
-  void UpdateScrollOffset(const ScrollableLayerGuid& aGuid,
-                          const CSSPoint& aScrollOffset);
-
-  /**
    * Cancels any currently running animation. Note that all this does is set the
    * state of the AsyncPanZoomController back to NOTHING, but it is the
    * animation's responsibility to check this before advancing.
