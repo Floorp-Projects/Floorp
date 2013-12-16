@@ -100,6 +100,7 @@ SocialUI = {
           SocialStatus.removeProvider(data);
           break;
         case "social:provider-reload":
+          SocialStatus.reloadProvider(data);
           // if the reloaded provider is our current provider, fall through
           // to social:provider-set so the ui will be reset
           if (!Social.provider || Social.provider.origin != data)
@@ -1351,6 +1352,13 @@ SocialStatus = {
       return;
     this._removeFrame(origin);
     this._toolbarHelper.removeProviderButton(origin);
+  },
+
+  reloadProvider: function(origin) {
+    let button = document.getElementById(this._toolbarHelper.idFromOrigin(origin));
+    if (button && button.getAttribute("open") == "true")
+      document.getElementById("social-notification-panel").hidePopup();
+    this._removeFrame(origin);
   },
 
   _removeFrame: function(origin) {
