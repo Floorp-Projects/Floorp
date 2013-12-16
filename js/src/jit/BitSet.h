@@ -122,14 +122,16 @@ class BitSet::Iterator
 
     void skipEmpty() {
         // Skip words containing only zeros.
+        unsigned numWords = set_.numWords();
+        const uint32_t *bits = set_.bits_;
         while (value_ == 0) {
             word_++;
-            if (!more())
+            if (word_ == numWords)
                 return;
 
             JS_STATIC_ASSERT(sizeof(value_) * 8 == BitSet::BitsPerWord);
             index_ = word_ * sizeof(value_) * 8;
-            value_ = set_.bits_[word_];
+            value_ = bits[word_];
         }
 
         // Be careful: the result of CountTrailingZeroes32 is undefined if the
