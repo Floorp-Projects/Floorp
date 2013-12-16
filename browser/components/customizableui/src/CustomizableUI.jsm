@@ -3039,6 +3039,12 @@ function OverflowableToolbar(aToolbarNode) {
   this._enabled = true;
 
   this._toolbar.setAttribute("overflowable", "true");
+  let doc = this._toolbar.ownerDocument;
+  this._target = this._toolbar.customizationTarget;
+  this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
+  this._list.toolbox = this._toolbar.toolbox;
+  this._list.customizationTarget = this._list;
+
   Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 }
 
@@ -3055,12 +3061,7 @@ OverflowableToolbar.prototype = {
   },
 
   init: function() {
-    this._target = this._toolbar.customizationTarget;
     let doc = this._toolbar.ownerDocument;
-    this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
-    this._list.toolbox = this._toolbar.toolbox;
-    this._list.customizationTarget = this._list;
-
     let window = doc.defaultView;
     window.addEventListener("resize", this);
     window.gNavToolbox.addEventListener("customizationstarting", this);
