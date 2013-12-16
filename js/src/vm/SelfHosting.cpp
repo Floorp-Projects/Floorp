@@ -1011,7 +1011,7 @@ JSFunction *
 js::SelfHostedFunction(JSContext *cx, HandlePropertyName propName)
 {
     RootedValue func(cx);
-    if (!cx->global()->getIntrinsicValue(cx, propName, &func))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), propName, &func))
         return nullptr;
 
     JS_ASSERT(func.isObject());
