@@ -5,8 +5,8 @@
 
 /* implements DOM interface for querying and observing media queries */
 
-#ifndef nsDOMMediaQueryList_h_
-#define nsDOMMediaQueryList_h_
+#ifndef mozilla_dom_MediaQueryList_h
+#define mozilla_dom_MediaQueryList_h
 
 #include "nsIDOMMediaQueryList.h"
 #include "nsCycleCollectionParticipant.h"
@@ -19,25 +19,28 @@
 class nsPresContext;
 class nsMediaList;
 
-class nsDOMMediaQueryList MOZ_FINAL : public nsIDOMMediaQueryList,
-                                      public PRCList
+namespace mozilla {
+namespace dom {
+
+class MediaQueryList MOZ_FINAL : public nsIDOMMediaQueryList,
+                                 public PRCList
 {
 public:
   // The caller who constructs is responsible for calling Evaluate
   // before calling any other methods.
-  nsDOMMediaQueryList(nsPresContext *aPresContext,
-                      const nsAString &aMediaQueryList);
+  MediaQueryList(nsPresContext *aPresContext,
+                 const nsAString &aMediaQueryList);
 private:
-  ~nsDOMMediaQueryList();
+  ~MediaQueryList();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMMediaQueryList)
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaQueryList)
 
   NS_DECL_NSIDOMMEDIAQUERYLIST
 
   struct HandleChangeData {
-    nsRefPtr<nsDOMMediaQueryList> mql;
+    nsRefPtr<MediaQueryList> mql;
     nsCOMPtr<nsIDOMMediaQueryListListener> listener;
   };
 
@@ -76,4 +79,7 @@ private:
   ListenerList mListeners;
 };
 
-#endif /* !defined(nsDOMMediaQueryList_h_) */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* !defined(mozilla_dom_MediaQueryList_h) */
