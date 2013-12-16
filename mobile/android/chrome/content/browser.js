@@ -3980,6 +3980,23 @@ Tab.prototype = {
     let oldBrowserWidth = this.browserWidth;
     this.setBrowserSize(viewportW, viewportH);
 
+    // This change to the zoom accounts for all types of changes I can conceive:
+    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
+    //    or a fixed size viewport)
+    // 2. screen size changes, CSS viewport also does (pages with a device-width
+    //    viewport)
+    // 3. screen size remains constant, but CSS viewport changes (meta viewport
+    //    tag is added or removed)
+    // 4. neither screen size nor CSS viewport changes
+    //
+    // In all of these cases, we maintain how much actual content is visible
+    // within the screen width. Note that "actual content" may be different
+    // with respect to CSS pixels because of the CSS viewport size changing.
+    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
+    let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
+    this.setResolution(zoom, false);
+    this.setScrollClampingSize(zoom);
+
     // if this page has not been painted yet, then this must be getting run
     // because a meta-viewport element was added (via the DOMMetaAdded handler).
     // in this case, we should not do anything that forces a reflow (see bug 759678)
@@ -4016,29 +4033,20 @@ Tab.prototype = {
     }
     minScale = this.clampZoom(minScale);
     viewportH = Math.max(viewportH, screenH / minScale);
+
+    // In general we want to keep calls to setBrowserSize and setScrollClampingSize
+    // together because setBrowserSize could mark the viewport size as dirty, creating
+    // a pending resize event for content. If that resize gets dispatched (which happens
+    // on the next reflow) without setScrollClampingSize having being called, then
+    // content might be exposed to incorrect innerWidth/innerHeight values.
     this.setBrowserSize(viewportW, viewportH);
+    this.setScrollClampingSize(zoom);
 
     // Avoid having the scroll position jump around after device rotation.
     let win = this.browser.contentWindow;
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    // This change to the zoom accounts for all types of changes I can conceive:
-    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-    //    or a fixed size viewport)
-    // 2. screen size changes, CSS viewport also does (pages with a device-width
-    //    viewport)
-    // 3. screen size remains constant, but CSS viewport changes (meta viewport
-    //    tag is added or removed)
-    // 4. neither screen size nor CSS viewport changes
-    //
-    // In all of these cases, we maintain how much actual content is visible
-    // within the screen width. Note that "actual content" may be different
-    // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-    let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
-    this.setResolution(zoom, false);
-    this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
 
     // Store the page size that was used to calculate the viewport so that we
