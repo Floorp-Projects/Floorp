@@ -253,7 +253,7 @@ InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript
     JSFunction *fun = &args.callee().as<JSFunction>();
 
     JS_ASSERT(fun->nonLazyScript() == script);
-    unsigned nformal = fun->nargs;
+    unsigned nformal = fun->nargs();
     unsigned nvals = script->nslots();
 
     if (args.length() >= nformal) {
