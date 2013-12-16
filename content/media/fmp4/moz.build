@@ -30,7 +30,7 @@ EXPORTS.mp4_demuxer += [
     'demuxer/video_util.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'BlankDecoderModule.cpp',
     'demuxer/aac.cc',
     'demuxer/audio_decoder_config.cc',
@@ -58,7 +58,7 @@ if CONFIG['MOZ_WMF']:
       'wmf/WMFDecoderModule.h',
       'wmf/WMFVideoDecoder.h',
   ]
-  SOURCES += [
+  UNIFIED_SOURCES += [
       'wmf/MFTDecoder.cpp',
       'wmf/WMFAudioDecoder.cpp',
       'wmf/WMFDecoderModule.cpp',
