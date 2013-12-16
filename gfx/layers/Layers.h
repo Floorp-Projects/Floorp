@@ -883,8 +883,6 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Tell this layer what its transform should be. The transformation
    * is applied when compositing the layer into its parent container.
-   * XXX Currently only transformations corresponding to 2D affine transforms
-   * are supported.
    */
   void SetBaseTransform(const gfx3DMatrix& aMatrix)
   {
