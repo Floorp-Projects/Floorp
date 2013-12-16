@@ -184,24 +184,33 @@ public class testMasterPassword extends PixelTest {
         String option [] = {"Save", "Don't save"};
 
         doorhangerDisplayed(LOGIN_URL);// Check that the doorhanger is displayed
+
+        // TODO: Remove this hack -- see bug 915449
+        mSolo.sleep(2000);
+
         for (String item:option) {
             if (item.equals("Save")) {
-                mAsserter.ok(mSolo.waitForText("Save"), "Checking if Save option is present", "Save option is present");
-                mSolo.clickOnButton(item);
+                final String OK_BUTTON_LABEL = "^OK$";
+                final String SAVE_BUTTON_LABEL = "^Save$";
+                mAsserter.ok(mSolo.waitForText(SAVE_BUTTON_LABEL), "Checking if Save option is present", "Save option is present");
+                mSolo.clickOnButton(SAVE_BUTTON_LABEL);
 
                 // Verify that the Master Password isn't deactivated when the password field is empty
                 closeTabletKeyboard();
-                mSolo.clickOnButton("OK");
+                waitForText(OK_BUTTON_LABEL);
+                mSolo.clickOnButton(OK_BUTTON_LABEL);
 
                 // Verify that the Master Password isn't deactivated when using the wrong password
                 closeTabletKeyboard();
                 editPasswordField(0, badPassword);
-                mSolo.clickOnButton("OK");
+                waitForText(OK_BUTTON_LABEL);
+                mSolo.clickOnButton(OK_BUTTON_LABEL);
 
                 // Verify that the Master Password is deactivated when using the right password
                 closeTabletKeyboard();
                 editPasswordField(0, password);
-                mSolo.clickOnButton("OK");
+                waitForText(OK_BUTTON_LABEL);
+                mSolo.clickOnButton(OK_BUTTON_LABEL);
 
                 // Verify that the Master Password is triggered once per session
                 noDoorhangerDisplayed(LOGIN_URL);// Check that the doorhanger isn't displayed
