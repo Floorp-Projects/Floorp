@@ -208,8 +208,6 @@ FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame)
   props.Delete(LayerManagerDataProperty());
 }
 
-namespace {
-
 // a global cache of image containers used for mask layers
 static MaskLayerImageCache* gMaskLayerImageCache = nullptr;
 
@@ -804,8 +802,6 @@ ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
   return static_cast<ThebesDisplayItemLayerUserData*>(
     aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
 }
-
-} // anonymous namespace
 
 /* static */ void
 FrameLayerBuilder::Shutdown()
