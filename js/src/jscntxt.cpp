@@ -290,7 +290,9 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
     JS_ASSERT(reportp);
     if ((!callback || callback == js_GetErrorMessage) &&
         reportp->errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
+    {
         reportp->flags |= JSREPORT_EXCEPTION;
+    }
 
     /*
      * Call the error reporter only if an exception wasn't raised.
@@ -300,9 +302,9 @@ ReportError(JSContext *cx, const char *message, JSErrorReport *reportp,
      * propagates out of scope.  This is needed for compatibility
      * with the old scheme.
      */
-    if (!JS_IsRunning(cx) ||
-        !js_ErrorToException(cx, message, reportp, callback, userRef)) {
-        js_ReportErrorAgain(cx, message, reportp);
+    if (!JS_IsRunning(cx) || !js_ErrorToException(cx, message, reportp, callback, userRef)) {
+        if (message)
+            CallErrorReporter(cx, message, reportp);
     } else if (JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook) {
         /*
          * If we've already chewed up all the C stack, don't call into the
@@ -875,26 +877,21 @@ js_ReportErrorNumberUCArray(JSContext *cx, unsigned flags, JSErrorCallback callb
     return warning;
 }
 
-JS_FRIEND_API(void)
-js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *reportp)
+void
+js::CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *reportp)
 {
-    JSErrorReporter onError;
+    JS_ASSERT(message);
+    JS_ASSERT(reportp);
 
-    if (!message)
-        return;
-
-    onError = cx->errorReporter;
-
-    /*
-     * If debugErrorHook is present then we give it a chance to veto
-     * sending the error on to the regular ErrorReporter.
-     */
-    if (onError) {
+    // If debugErrorHook is present, give it a chance to veto sending the error
+    // on to the regular ErrorReporter.
+    if (cx->errorReporter) {
         JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook;
         if (hook && !hook(cx, message, reportp, cx->runtime()->debugHooks.debugErrorHookData))
-            onError = nullptr;
+            return;
     }
-    if (onError)
+
+    if (JSErrorReporter onError = cx->errorReporter)
         onError(cx, message, reportp);
 }
 

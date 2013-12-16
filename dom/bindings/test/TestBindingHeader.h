@@ -169,6 +169,9 @@ public:
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
   void PassVariadicByte(const Sequence<int8_t>&);
   int8_t CachedByte();
+  int8_t CachedConstantByte();
+  int8_t CachedWritableByte();
+  void SetCachedWritableByte(int8_t);
 
   int16_t ReadonlyShort();
   int16_t WritableShort();
@@ -342,6 +345,9 @@ public:
   // Sequence types
   void GetReadonlySequence(nsTArray<int32_t>&);
   void GetReadonlySequenceOfDictionaries(JSContext*, nsTArray<Dict>&);
+  void GetReadonlyNullableSequenceOfDictionaries(JSContext*, Nullable<nsTArray<Dict> >&);
+  void GetReadonlyFrozenSequence(JSContext*, nsTArray<Dict>&);
+  void GetReadonlyFrozenNullableSequence(JSContext*, Nullable<nsTArray<Dict>>&);
   void ReceiveSequence(nsTArray<int32_t>&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&);
   void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&);

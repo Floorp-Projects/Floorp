@@ -987,11 +987,11 @@ EventSource::ConsoleError()
 
   if (mReadyState == CONNECTING && !mInterrupted) {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                             NS_LITERAL_STRING("connectionFailure").get(),
+                             MOZ_UTF16("connectionFailure"),
                              formatStrings, ArrayLength(formatStrings));
   } else {
     rv = PrintErrorOnConsole("chrome://global/locale/appstrings.properties",
-                             NS_LITERAL_STRING("netInterrupt").get(),
+                             MOZ_UTF16("netInterrupt"),
                              formatStrings, ArrayLength(formatStrings));
   }
   NS_ENSURE_SUCCESS(rv, rv);

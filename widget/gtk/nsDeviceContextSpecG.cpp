@@ -820,7 +820,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     printerFeatures.SetCanChangePlex(false);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     DO_PR_DEBUG_LOG(("setting default plex to '%s'\n", "default"));
-    aPrintSettings->SetPlexName(NS_LITERAL_STRING("default").get());
+    aPrintSettings->SetPlexName(MOZ_UTF16("default"));
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     printerFeatures.SetPlexRecord(0, "default");
     printerFeatures.SetNumPlexRecords(1);
@@ -831,7 +831,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     printerFeatures.SetCanChangeResolutionName(false);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     DO_PR_DEBUG_LOG(("setting default resolution to '%s'\n", "default"));
-    aPrintSettings->SetResolutionName(NS_LITERAL_STRING("default").get());
+    aPrintSettings->SetResolutionName(MOZ_UTF16("default"));
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     printerFeatures.SetResolutionNameRecord(0, "default");
     printerFeatures.SetNumResolutionNameRecords(1);
@@ -842,7 +842,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
     printerFeatures.SetCanChangeColorspace(false);
 #endif /* SET_PRINTER_FEATURES_VIA_PREFS */
     DO_PR_DEBUG_LOG(("setting default colorspace to '%s'\n", "default"));
-    aPrintSettings->SetColorspace(NS_LITERAL_STRING("default").get());
+    aPrintSettings->SetColorspace(MOZ_UTF16("default"));
 #ifdef SET_PRINTER_FEATURES_VIA_PREFS
     printerFeatures.SetColorspaceRecord(0, "default");
     printerFeatures.SetNumColorspaceRecords(1);
