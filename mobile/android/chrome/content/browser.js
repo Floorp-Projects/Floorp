@@ -3131,29 +3131,20 @@ Tab.prototype = {
     let screenWidth = gScreenWidth;
     let screenHeight = gScreenHeight;
 
-    let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument,
-                                                   viewportWidth, viewportHeight);
-
-    // Check if the page would fit into either of the viewport dimensions minus
-    // the margins and shrink the screen size accordingly so that the aspect
-    // ratio calculation below works correctly in these situations.
-    // We take away the margin size over two to account for rounding errors,
-    // as the browser size set in updateViewportSize doesn't allow for any
-    // size between these two values (and thus anything between them is
-    // attributable to rounding error).
-    if ((pageHeight * zoom) < gScreenHeight - (gViewportMargins.top + gViewportMargins.bottom) / 2) {
+    // Shrink the viewport appropriately if the margins are excluded
+    if (this.viewportExcludesVerticalMargins) {
       screenHeight = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
       viewportHeight = screenHeight / zoom;
     }
-    if ((pageWidth * zoom) < gScreenWidth - (gViewportMargins.left + gViewportMargins.right) / 2) {
+    if (this.viewportExcludesHorizontalMargins) {
       screenWidth = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
       viewportWidth = screenWidth / zoom;
     }
 
     // Make sure the aspect ratio of the screen is maintained when setting
     // the clamping scroll-port size.
-    let factor = Math.min(viewportWidth / screenWidth, pageWidth / screenWidth,
-                          viewportHeight / screenHeight, pageHeight / screenHeight);
+    let factor = Math.min(viewportWidth / screenWidth,
+                          viewportHeight / screenHeight);
     let scrollPortWidth = screenWidth * factor;
     let scrollPortHeight = screenHeight * factor;
 
@@ -3971,8 +3962,6 @@ Tab.prototype = {
     let screenW = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
     let screenH = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
     let viewportW, viewportH;
-    this.viewportExcludesHorizontalMargins = true;
-    this.viewportExcludesVerticalMargins = true;
 
     let metadata = this.metadata;
     if (metadata.autoSize) {
@@ -4018,6 +4007,8 @@ Tab.prototype = {
       return;
     }
 
+    this.viewportExcludesHorizontalMargins = true;
+    this.viewportExcludesVerticalMargins = true;
     let minScale = 1.0;
     if (this.browser.contentDocument) {
       // this may get run during a Viewport:Change message while the document
