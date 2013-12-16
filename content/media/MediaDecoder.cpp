@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "nsContentUtils.h"
 #include "ImageContainer.h"
 #include "MediaResource.h"
 #include "nsError.h"
@@ -22,7 +23,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include <algorithm>
-#include "MediaShutdownManager.h"
 
 #ifdef MOZ_WMF
 #include "WMFDecoder.h"
@@ -444,7 +444,7 @@ bool MediaDecoder::Init(MediaDecoderOwner* aOwner)
   MOZ_ASSERT(NS_IsMainThread());
   mOwner = aOwner;
   mVideoFrameContainer = aOwner->GetVideoFrameContainer();
-  MediaShutdownManager::Instance().Register(this);
+  nsContentUtils::RegisterShutdownObserver(this);
   return true;
 }
 
@@ -480,7 +480,7 @@ void MediaDecoder::Shutdown()
   StopProgress();
   mOwner = nullptr;
 
-  MediaShutdownManager::Instance().Unregister(this);
+  nsContentUtils::UnregisterShutdownObserver(this);
 }
 
 MediaDecoder::~MediaDecoder()
