@@ -530,4 +530,15 @@ public class Utils {
   public static String obfuscateEmail(final String in) {
     return in.replaceAll("[^@\\.]", "X");
   }
+
+  public static String nodeWeaveURL(String serverURL, String username) {
+    String userPart = username + "/node/weave";
+    if (serverURL == null) {
+      return SyncConstants.DEFAULT_AUTH_SERVER + "user/1.0/" + userPart;
+    }
+    if (!serverURL.endsWith("/")) {
+      serverURL = serverURL + "/";
+    }
+    return serverURL + "user/1.0/" + userPart;
+  }
 }
