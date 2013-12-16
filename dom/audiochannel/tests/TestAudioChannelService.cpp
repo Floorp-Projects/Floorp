@@ -47,9 +47,15 @@ public:
     }
   }
 
-  nsresult Init()
+  nsresult Init(bool video=false)
   {
-    nsresult rv = mAgent->InitWithWeakCallback(mType, this);
+    nsresult rv = NS_OK;
+    if (video) {
+      rv = mAgent->InitWithVideo(mType, this, true);
+    }
+    else {
+      rv = mAgent->InitWithWeakCallback(mType, this);
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     return mAgent->SetVisibilityState(false);
@@ -530,6 +536,87 @@ TestPriorities()
   return rv;
 }
 
+nsresult
+TestOneVideoNormalChannel()
+{
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsresult rv = agent1->Init(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_CONTENT);
+  rv = agent2->Init(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AudioChannelState playable;
+  rv = agent1->StartPlaying(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_MUTED,
+    "Test6: A video normal channel invisible agent1 must be muted");
+
+  rv = agent2->StartPlaying(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A content channel invisible agent2 must be playable");
+
+  // one video normal channel in foreground and one content channel in background
+  rv = agent1->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = agent1->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A video normal channel visible agent1 must be playable");
+
+  rv = agent2->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_MUTED,
+    "Test6: A content channel invisible agent2 must be muted");
+
+  // both one video normal channel and one content channel in foreground
+  rv = agent2->SetVisibilityState(true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = agent1->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A video normal channel visible agent1 must be playable");
+
+  rv = agent2->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A content channel visible agent2 must be playable");
+
+  // one video normal channel in background and one content channel in foreground
+  rv = agent1->SetVisibilityState(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = agent1->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_MUTED,
+    "Test6: A video normal channel invisible agent1 must be muted");
+
+  rv = agent2->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A content channel visible agent2 must be playable");
+
+  // both one video normal channel and one content channel in background
+  rv = agent2->SetVisibilityState(false);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = agent1->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_MUTED,
+    "Test6: A video normal channel invisible agent1 must be muted");
+
+  rv = agent2->GetCanPlay(&playable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
+    "Test6: A content channel invisible agent2 must be playable");
+
+  return rv;
+}
+
 int main(int argc, char** argv)
 {
   ScopedXPCOM xpcom("AudioChannelService");
@@ -554,6 +641,15 @@ int main(int argc, char** argv)
   }
 
   if (NS_FAILED(TestFadedState())) {
+    return 1;
+  }
+
+  // Channel type with AUDIO_CHANNEL_TELEPHONY cannot be unregistered until the
+  // main thread has chances to process 1500 millisecond timer. In order to
+  // skip ambiguous return value of ChannelsActiveWithHigherPriorityThan(), new
+  // test cases are added before any test case that registers the channel type
+  // with AUDIO_CHANNEL_TELEPHONY channel.
+  if (NS_FAILED(TestOneVideoNormalChannel())) {
     return 1;
   }
 
