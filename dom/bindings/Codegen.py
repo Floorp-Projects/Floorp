@@ -11001,20 +11001,26 @@ class CallbackMember(CGNativeMember):
             result = argval
             prepend = ""
 
-        conversion = prepend + wrapForType(
-            arg.type, self.descriptorProvider,
-            {
-                'result' : result,
-                'successCode' : "continue;" if arg.variadic else "break;",
-                'jsvalRef' : "argv.handleAt(%s)" % jsvalIndex,
-                'jsvalHandle' : "argv.handleAt(%s)" % jsvalIndex,
-                # XXXbz we don't have anything better to use for 'obj',
-                # really...  It's OK to use CallbackPreserveColor because
-                # CallSetup already handled the unmark-gray bits for us.
-                'obj' : 'CallbackPreserveColor()',
-                'returnsNewObject': False,
-                'exceptionCode' : self.exceptionCode
-                })
+        try:
+            conversion = prepend + wrapForType(
+                arg.type, self.descriptorProvider,
+                {
+                    'result' : result,
+                    'successCode' : "continue;" if arg.variadic else "break;",
+                    'jsvalRef' : "argv.handleAt(%s)" % jsvalIndex,
+                    'jsvalHandle' : "argv.handleAt(%s)" % jsvalIndex,
+                    # XXXbz we don't have anything better to use for 'obj',
+                    # really...  It's OK to use CallbackPreserveColor because
+                    # CallSetup already handled the unmark-gray bits for us.
+                    'obj' : 'CallbackPreserveColor()',
+                    'returnsNewObject': False,
+                    'exceptionCode' : self.exceptionCode
+                    })
+        except MethodNotNewObjectError as err:
+            raise TypeError("%s being passed as an argument to %s but is not "
+                            "wrapper cached, so can't be reliably converted to "
+                            "a JS object." %
+                            (err.typename, self.getPrettyName()))
         if arg.variadic:
             conversion = string.Template(
                 "for (uint32_t idx = 0; idx < ${arg}.Length(); ++idx) {\n" +
