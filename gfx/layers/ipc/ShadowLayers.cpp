@@ -440,7 +440,7 @@ ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
 }
 
 bool
-ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool* aSent)
+ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool aScheduleComposite, bool* aSent)
 {
   *aSent = false;
 
@@ -546,7 +546,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
     if (!HasShadowManager() ||
         !mShadowManager->SendUpdate(cset, targetConfig, mIsFirstPaint,
-                                    aReplies)) {
+                                    aScheduleComposite, aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -556,7 +556,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies, bool
     MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
     if (!HasShadowManager() ||
-        !mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint)) {
+        !mShadowManager->SendUpdateNoSwap(cset, targetConfig, mIsFirstPaint, aScheduleComposite)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }

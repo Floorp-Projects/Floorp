@@ -14,6 +14,7 @@ from .base import BuildBackend
 
 from ..frontend.data import (
     ConfigFileSubstitution,
+    ExampleWebIDLInterface,
     HeaderFileSubstitution,
     GeneratedEventWebIDLFile,
     GeneratedWebIDLFile,
@@ -70,6 +71,7 @@ class WebIDLCollection(object):
         self.preprocessed_sources = set()
         self.test_sources = set()
         self.preprocessed_test_sources = set()
+        self.example_interfaces = set()
 
     def all_regular_sources(self):
         return self.sources | self.generated_sources | \
@@ -214,6 +216,9 @@ class CommonBackend(BuildBackend):
         elif isinstance(obj, PreprocessedWebIDLFile):
             self._webidls.preprocessed_sources.add(mozpath.join(
                 obj.srcdir, obj.basename))
+
+        elif isinstance(obj, ExampleWebIDLInterface):
+            self._webidls.example_interfaces.add(obj.name)
 
         else:
             return

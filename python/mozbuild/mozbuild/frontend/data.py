@@ -289,6 +289,20 @@ class GeneratedWebIDLFile(SandboxDerived):
 
         self.basename = path
 
+
+class ExampleWebIDLInterface(SandboxDerived):
+    """An individual WebIDL interface to generate."""
+
+    __slots__ = (
+        'name',
+    )
+
+    def __init__(self, sandbox, name):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.name = name
+
+
 class BaseProgram(SandboxDerived):
     """Sandbox container object for programs, which is a unicode string.
 
