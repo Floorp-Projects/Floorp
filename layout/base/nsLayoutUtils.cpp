@@ -2376,8 +2376,29 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   if (builder.WillComputePluginGeometry()) {
+    nsRefPtr<LayerManager> layerManager;
+    nsIWidget* widget = aFrame->GetNearestWidget();
+    if (widget) {
+      layerManager = widget->GetLayerManager();
+    }
+
     rootPresContext->ComputePluginGeometryUpdates(aFrame, &builder, &list);
+
+    // We're not going to get a WillPaintWindow event here if we didn't do
+    // widget invalidation, so just apply the plugin geometry update here instead.
+    // We could instead have the compositor send back an equivalent to WillPaintWindow,
+    // but it should be close enough to now not to matter.
+    if (layerManager && !layerManager->NeedsWidgetInvalidation()) {
+      rootPresContext->ApplyPluginGeometryUpdates();
+    }
+
+    // We told the compositor thread not to composite when it received the transaction because
+    // we wanted to update plugins first. Schedule the composite now.
+    if (layerManager) {
+      layerManager->Composite();
+    }
   }
+
 
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
