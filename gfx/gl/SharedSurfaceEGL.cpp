@@ -170,14 +170,18 @@ SharedSurface_EGLImage::Fence()
         }
 
         if (!mPixels) {
-            gfxImageFormat format =
-                  HasAlpha() ? gfxImageFormatARGB32
-                             : gfxImageFormatRGB24;
-            mPixels = new gfxImageSurface(ThebesIntSize(Size()), format);
+            SurfaceFormat format =
+                  HasAlpha() ? FORMAT_B8G8R8A8
+                             : FORMAT_B8G8R8X8;
+            mPixels = Factory::CreateDataSourceSurface(Size(), format);
         }
 
-        mPixels->Flush();
-        mGL->ReadScreenIntoImageSurface(mPixels);
+        nsRefPtr<gfxImageSurface> wrappedData =
+            new gfxImageSurface(mPixels->GetData(),
+                                ThebesIntSize(mPixels->GetSize()),
+                                mPixels->Stride(),
+                                SurfaceFormatToImageFormat(mPixels->GetFormat()));
+        mGL->ReadScreenIntoImageSurface(wrappedData);
         mPixels->MarkDirty();
         return;
     }
@@ -270,7 +274,7 @@ SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL)
     return 0;
 }
 
-gfxImageSurface*
+DataSourceSurface*
 SharedSurface_EGLImage::GetPixels() const
 {
     MutexAutoLock lock(mMutex);
