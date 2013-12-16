@@ -5,14 +5,19 @@
 
 /* implements DOM interface for querying and observing media queries */
 
-#include "nsDOMMediaQueryList.h"
+#include "mozilla/dom/MediaQueryList.h"
 #include "nsPresContext.h"
 #include "nsIMediaList.h"
 #include "nsCSSParser.h"
 #include "nsDOMClassInfoID.h" // DOMCI_DATA
 
-nsDOMMediaQueryList::nsDOMMediaQueryList(nsPresContext *aPresContext,
-                                         const nsAString &aMediaQueryList)
+DOMCI_DATA(MediaQueryList, mozilla::dom::MediaQueryList)
+
+namespace mozilla {
+namespace dom {
+
+MediaQueryList::MediaQueryList(nsPresContext *aPresContext,
+                               const nsAString &aMediaQueryList)
   : mPresContext(aPresContext),
     mMediaList(new nsMediaList),
     mMatchesValid(false)
@@ -23,21 +28,21 @@ nsDOMMediaQueryList::nsDOMMediaQueryList(nsPresContext *aPresContext,
   parser.ParseMediaList(aMediaQueryList, nullptr, 0, mMediaList, false);
 }
 
-nsDOMMediaQueryList::~nsDOMMediaQueryList()
+MediaQueryList::~MediaQueryList()
 {
   if (mPresContext) {
     PR_REMOVE_LINK(this);
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMMediaQueryList)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MediaQueryList)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMediaQueryList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaQueryList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresContext)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMediaQueryList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaQueryList)
 if (tmp->mPresContext) {
   PR_REMOVE_LINK(tmp);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPresContext)
@@ -45,27 +50,25 @@ if (tmp->mPresContext) {
 tmp->RemoveAllListeners();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-DOMCI_DATA(MediaQueryList, nsDOMMediaQueryList)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMMediaQueryList)
+NS_INTERFACE_MAP_BEGIN(MediaQueryList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaQueryList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMMediaQueryList)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(MediaQueryList)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MediaQueryList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMediaQueryList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMediaQueryList)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MediaQueryList)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MediaQueryList)
 
 NS_IMETHODIMP
-nsDOMMediaQueryList::GetMedia(nsAString &aMedia)
+MediaQueryList::GetMedia(nsAString &aMedia)
 {
   mMediaList->GetText(aMedia);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMediaQueryList::GetMatches(bool *aMatches)
+MediaQueryList::GetMatches(bool *aMatches)
 {
   if (!mMatchesValid) {
     NS_ABORT_IF_FALSE(!HasListeners(),
@@ -78,7 +81,7 @@ nsDOMMediaQueryList::GetMatches(bool *aMatches)
 }
 
 NS_IMETHODIMP
-nsDOMMediaQueryList::AddListener(nsIDOMMediaQueryListListener *aListener)
+MediaQueryList::AddListener(nsIDOMMediaQueryListListener *aListener)
 {
   if (!aListener) {
     return NS_OK;
@@ -108,7 +111,7 @@ nsDOMMediaQueryList::AddListener(nsIDOMMediaQueryListListener *aListener)
 }
 
 NS_IMETHODIMP
-nsDOMMediaQueryList::RemoveListener(nsIDOMMediaQueryListListener *aListener)
+MediaQueryList::RemoveListener(nsIDOMMediaQueryListListener *aListener)
 {
   bool removed = mListeners.RemoveElement(aListener);
   NS_ABORT_IF_FALSE(!mListeners.Contains(aListener),
@@ -123,7 +126,7 @@ nsDOMMediaQueryList::RemoveListener(nsIDOMMediaQueryListListener *aListener)
 }
 
 void
-nsDOMMediaQueryList::RemoveAllListeners()
+MediaQueryList::RemoveAllListeners()
 {
   bool hadListeners = HasListeners();
   mListeners.Clear();
@@ -134,7 +137,7 @@ nsDOMMediaQueryList::RemoveAllListeners()
 }
 
 void
-nsDOMMediaQueryList::RecomputeMatches()
+MediaQueryList::RecomputeMatches()
 {
   if (!mPresContext) {
     return;
@@ -145,7 +148,7 @@ nsDOMMediaQueryList::RecomputeMatches()
 }
 
 void
-nsDOMMediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
+MediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
 {
   mMatchesValid = false;
 
@@ -163,3 +166,6 @@ nsDOMMediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
     }
   }
 }
+
+} // namespace dom
+} // namespace mozilla
