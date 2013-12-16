@@ -4465,14 +4465,6 @@ extern JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, JS::HandleValue v);
 
 /*
- * Given a reported error's message and JSErrorReport struct pointer, throw
- * the corresponding exception on cx.
- */
-extern JS_PUBLIC_API(bool)
-JS_ThrowReportedError(JSContext *cx, const char *message,
-                      JSErrorReport *reportp);
-
-/*
  * Throws a StopIteration exception on cx.
  */
 extern JS_PUBLIC_API(bool)

@@ -5,8 +5,8 @@
 
 /* implements DOM interface for querying and observing media queries */
 
-#ifndef nsDOMMediaQueryList_h_
-#define nsDOMMediaQueryList_h_
+#ifndef mozilla_dom_MediaQueryList_h
+#define mozilla_dom_MediaQueryList_h
 
 #include "nsIDOMMediaQueryList.h"
 #include "nsCycleCollectionParticipant.h"
@@ -15,41 +15,59 @@
 #include "nsTArray.h"
 #include "prclist.h"
 #include "mozilla/Attributes.h"
+#include "nsWrapperCache.h"
+#include "mozilla/dom/MediaQueryListBinding.h"
 
 class nsPresContext;
 class nsMediaList;
 
-class nsDOMMediaQueryList MOZ_FINAL : public nsIDOMMediaQueryList,
-                                      public PRCList
+namespace mozilla {
+namespace dom {
+
+class MediaQueryList MOZ_FINAL : public nsIDOMMediaQueryList,
+                                 public nsWrapperCache,
+                                 public PRCList
 {
 public:
   // The caller who constructs is responsible for calling Evaluate
   // before calling any other methods.
-  nsDOMMediaQueryList(nsPresContext *aPresContext,
-                      const nsAString &aMediaQueryList);
+  MediaQueryList(nsPresContext *aPresContext,
+                 const nsAString &aMediaQueryList);
 private:
-  ~nsDOMMediaQueryList();
+  ~MediaQueryList();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(nsDOMMediaQueryList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaQueryList)
 
   NS_DECL_NSIDOMMEDIAQUERYLIST
 
+  nsISupports* GetParentObject() const;
+
   struct HandleChangeData {
-    nsRefPtr<nsDOMMediaQueryList> mql;
+    nsRefPtr<MediaQueryList> mql;
     nsCOMPtr<nsIDOMMediaQueryListListener> listener;
+    nsCOMPtr<mozilla::dom::MediaQueryListListener> callback;
   };
 
   typedef FallibleTArray< nsCOMPtr<nsIDOMMediaQueryListListener> > ListenerList;
+  typedef FallibleTArray< nsRefPtr<mozilla::dom::MediaQueryListListener> > CallbackList;
   typedef FallibleTArray<HandleChangeData> NotifyList;
 
   // Appends listeners that need notification to aListenersToNotify
   void MediumFeaturesChanged(NotifyList &aListenersToNotify);
 
-  bool HasListeners() const { return !mListeners.IsEmpty(); }
+  bool HasListeners() const { return !mListeners.IsEmpty() || !mCallbacks.IsEmpty(); }
 
   void RemoveAllListeners();
+
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL methods
+  // The XPCOM GetMedia method is good
+  bool Matches();
+  void AddListener(mozilla::dom::MediaQueryListListener& aListener);
+  void RemoveListener(mozilla::dom::MediaQueryListListener& aListener);
 
 private:
   void RecomputeMatches();
@@ -74,6 +92,10 @@ private:
   bool mMatches;
   bool mMatchesValid;
   ListenerList mListeners;
+  CallbackList mCallbacks;
 };
 
-#endif /* !defined(nsDOMMediaQueryList_h_) */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* !defined(mozilla_dom_MediaQueryList_h) */

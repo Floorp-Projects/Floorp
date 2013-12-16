@@ -659,8 +659,6 @@ class ParseNode
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
-#define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
-#define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
 #define PNX_POPVAR      0x04            /* PNK_VAR or PNK_CONST last result
                                            needs popping */
 #define PNX_GROUPINIT   0x08            /* var [a, b] = [c, d]; unit list */

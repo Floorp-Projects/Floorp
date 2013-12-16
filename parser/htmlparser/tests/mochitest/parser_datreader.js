@@ -148,10 +148,6 @@ function addLevels(walker, buf, indent) {
             var attrs = walker.currentNode.attributes;
             for (var i = 0; i < attrs.length; ++i) {
               var localName = attrs[i].localName;
-              if (localName.indexOf("_moz-") == 0) {
-                // Skip bogus attributes added by the MathML implementation
-                continue;
-              }
               var name;
               var attrNs = attrs[i].namespaceURI;
               if (null == attrNs) {

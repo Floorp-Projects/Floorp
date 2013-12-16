@@ -270,14 +270,20 @@ function run() {
     subroot.offsetWidth; // flush layout
 
     var mql = subwin.matchMedia("(min-width: 150px)");
-    mql.addListener(null);
+    SimpleTest.doesThrow(function() {
+      mql.addListener(null);
+    }, "expected an exception");
 
     iframe.style.width = "100px";
     subroot.offsetWidth; // flush layout
     // With the bug, we crash here.  No need for test assertions.
 
-    mql.removeListener(null);
-    mql.removeListener(null);
+    SimpleTest.doesThrow(function() {
+      mql.removeListener(null);
+    }, "expected an exception");
+    SimpleTest.doesThrow(function() {
+      mql.removeListener(null);
+    }, "expected an exception");
   })();
 
   /* Bug 753777: test that things work in a freshly-created iframe */

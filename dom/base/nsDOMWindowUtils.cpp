@@ -1637,23 +1637,6 @@ nsDOMWindowUtils::GetScrollXY(bool aFlushLayout, int32_t* aScrollX, int32_t* aSc
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::ScrollToCSSPixelsApproximate(float aX, float aY, bool* aRetVal)
-{
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsIScrollableFrame* sf = static_cast<nsGlobalWindow*>(window.get())->GetScrollFrame();
-  if (sf) {
-    sf->ScrollToCSSPixelsApproximate(CSSPoint(aX, aY));
-  }
-  if (aRetVal) {
-    *aRetVal = (sf != nullptr);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetScrollXYFloat(bool aFlushLayout, float* aScrollX, float* aScrollY)
 {
   nsPoint scrollPos(0,0);

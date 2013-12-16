@@ -405,6 +405,8 @@ CacheFile::Init(const nsACString &aKey,
 {
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mHandle);
+  MOZ_ASSERT(!(aCreateNew && aKeyIsHash));
+  MOZ_ASSERT(!(aMemoryOnly && aKeyIsHash));
 
   nsresult rv;
 
@@ -706,6 +708,13 @@ CacheFile::OnMetadataRead(nsresult aResult)
 
   bool isNew = false;
   if (NS_SUCCEEDED(aResult)) {
+    MOZ_ASSERT(!mMetadata->KeyIsHash());
+
+    if (mKeyIsHash) {
+      mMetadata->GetKey(mKey);
+      mKeyIsHash = false;
+    }
+
     mReady = true;
     mDataSize = mMetadata->Offset();
     if (mDataSize == 0 && mMetadata->ElementsSize() == 0) {

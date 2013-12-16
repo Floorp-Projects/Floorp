@@ -1326,15 +1326,6 @@ bool
 js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
                    const js::Class *clasp = nullptr);
 
-/*
- * Find or create a property named by id in obj's scope, with the given getter
- * and setter, slot, attributes, and other members.
- */
-extern js::Shape *
-js_AddNativeProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                     JSPropertyOp getter, JSStrictPropertyOp setter, uint32_t slot,
-                     unsigned attrs, unsigned flags, int shortid);
-
 namespace js {
 
 extern bool
