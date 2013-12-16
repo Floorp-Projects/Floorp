@@ -37,13 +37,13 @@ interface Gamepad {
    * The current state of all buttons on the device, an
    * array of GamepadButton.
    */
-  [Pure, Cached]
+  [Pure, Cached, Frozen]
   readonly attribute sequence<GamepadButton> buttons;
 
   /**
    * The current position of all axes on the device, an
    * array of doubles.
    */
-  [Pure, Cached]
+  [Pure, Cached, Frozen]
   readonly attribute sequence<double> axes;
 };
