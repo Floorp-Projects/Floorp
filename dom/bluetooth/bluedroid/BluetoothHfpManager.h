@@ -95,7 +95,8 @@ public:
    */
   void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aError, const nsAString& aNumber,
-                              const bool aIsOutgoing, bool aSend);
+                              const bool aIsOutgoing, const bool aIsConference,
+                              bool aSend);
   void HandleIccInfoChanged(uint32_t aClientId);
   void HandleVoiceConnectionChanged(uint32_t aClientId);
 
