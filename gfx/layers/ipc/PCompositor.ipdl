@@ -64,6 +64,9 @@ parent:
   // block until they are completed.
   sync FlushRendering();
 
+  // Schedule a composite if one isn't already scheduled.
+  async ForceComposite();
+
   sync StartFrameTimeRecording(int32_t bufferSize)
     returns (uint32_t startIndex);
 
