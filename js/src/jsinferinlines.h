@@ -617,7 +617,7 @@ TypeScript::ThisTypes(JSScript *script)
 /* static */ inline StackTypeSet *
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
-    JS_ASSERT(i < script->function()->nargs);
+    JS_ASSERT(i < script->function()->nargs());
     return script->types->typeArray() + script->nTypeSets() + js::analyze::ArgSlot(i);
 }
 

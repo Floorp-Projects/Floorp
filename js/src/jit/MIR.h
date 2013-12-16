@@ -4939,7 +4939,7 @@ struct LambdaFunctionInfo
     bool useNewTypeForClone;
 
     LambdaFunctionInfo(JSFunction *fun)
-      : fun(fun), flags(fun->flags),
+      : fun(fun), flags(fun->flags()),
         scriptOrLazyScript(fun->hasScript()
                            ? (gc::Cell *) fun->nonLazyScript()
                            : (gc::Cell *) fun->lazyScript()),

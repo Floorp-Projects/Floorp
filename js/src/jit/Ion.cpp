@@ -2018,7 +2018,7 @@ jit::CanEnter(JSContext *cx, RunState &state)
             return Method_CantCompile;
         }
 
-        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs)) {
+        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs())) {
             IonSpew(IonSpew_Abort, "too many args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
@@ -2165,7 +2165,7 @@ jit::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numAct
 
     // Don't handle arguments underflow, to make this work we would have to pad
     // missing arguments with |undefined|.
-    if (numActualArgs < script->function()->nargs)
+    if (numActualArgs < script->function()->nargs())
         return Method_Skipped;
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
@@ -2226,7 +2226,7 @@ jit::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoVal
 
     if (state.isInvoke()) {
         CallArgs &args = state.asInvoke()->args();
-        unsigned numFormals = state.script()->function()->nargs;
+        unsigned numFormals = state.script()->function()->nargs();
         data.constructing = state.asInvoke()->constructing();
         data.numActualArgs = args.length();
         data.maxArgc = Max(args.length(), numFormals) + 1;
@@ -2309,7 +2309,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     void *calleeToken = CalleeToToken(fun);
 
     RootedValue result(cx, Int32Value(args.length()));
-    JS_ASSERT(args.length() >= fun->nargs);
+    JS_ASSERT(args.length() >= fun->nargs());
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     enter(jitcode, args.length() + 1, args.array() - 1, nullptr, calleeToken,
