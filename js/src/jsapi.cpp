@@ -5914,15 +5914,6 @@ JS_ErrorFromException(JSContext *cx, HandleValue value)
 }
 
 JS_PUBLIC_API(bool)
-JS_ThrowReportedError(JSContext *cx, const char *message,
-                      JSErrorReport *reportp)
-{
-    AssertHeapIsIdle(cx);
-    return JS_IsRunning(cx) &&
-           js_ErrorToException(cx, message, reportp, nullptr, nullptr);
-}
-
-JS_PUBLIC_API(bool)
 JS_ThrowStopIteration(JSContext *cx)
 {
     AssertHeapIsIdle(cx);
