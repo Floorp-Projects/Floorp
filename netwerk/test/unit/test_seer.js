@@ -287,6 +287,12 @@ var tests = [
 ];
 
 function run_test() {
+  let prefs = Cc["@mozilla.org/preferences-service;1"]
+                .getService(Components.interfaces.nsIPrefBranch);
+  if (!prefs.getBoolPref("network.seer.enabled")) {
+    return;
+  }
+
   tests.forEach(add_test);
   profile = do_get_profile();
   seer = Cc["@mozilla.org/network/seer;1"].getService(Ci.nsINetworkSeer);
