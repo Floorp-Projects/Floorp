@@ -624,7 +624,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
         JS_ASSERT(iter.slots() >= CountArgSlots(script, fun));
         IonSpew(IonSpew_BaselineBailouts, "      frame slots %u, nargs %u, nfixed %u",
-                iter.slots(), fun->nargs, script->nfixed());
+                iter.slots(), fun->nargs(), script->nfixed());
 
         if (!callerPC) {
             // This is the first frame. Store the formals in a Vector until we
@@ -633,11 +633,11 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             // locals may still reference the original argument slot
             // (MParameter/LArgument) and expect the original Value.
             JS_ASSERT(startFrameFormals.empty());
-            if (!startFrameFormals.resize(fun->nargs))
+            if (!startFrameFormals.resize(fun->nargs()))
                 return false;
         }
 
-        for (uint32_t i = 0; i < fun->nargs; i++) {
+        for (uint32_t i = 0; i < fun->nargs(); i++) {
             Value arg = iter.read();
             IonSpew(IonSpew_BaselineBailouts, "      arg %d = %016llx",
                         (int) i, *((uint64_t *) &arg));
@@ -1108,7 +1108,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 
     // If actualArgc >= fun->nargs, then we are done.  Otherwise, we need to push on
     // a reconstructed rectifier frame.
-    if (actualArgc >= calleeFun->nargs)
+    if (actualArgc >= calleeFun->nargs())
         return true;
 
     // Push a reconstructed rectifier frame.
@@ -1147,7 +1147,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
 #endif
 
     // Push undefined for missing arguments.
-    for (unsigned i = 0; i < (calleeFun->nargs - actualArgc); i++) {
+    for (unsigned i = 0; i < (calleeFun->nargs() - actualArgc); i++) {
         if (!builder.writeValue(UndefinedValue(), "FillerVal"))
             return false;
     }
