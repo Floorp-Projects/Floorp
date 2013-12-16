@@ -20,7 +20,6 @@
 #include <strsafe.h>
 #include <io.h>
 #include <shellapi.h>
-#include <wininet.h>
 
 #ifdef SHOW_CONSOLE
 #define DEBUG_DELAY_SHUTDOWN 1
@@ -264,13 +263,14 @@ public:
     Log(L"IExecuteCommandApplicationHostEnvironment::GetValue()");
     *aLaunchType = GetLaunchType();
     mIsDesktopRequest = (*aLaunchType == AHE_DESKTOP);
-    SetLastAHE(*aLaunchType);
     return S_OK;
   }
 
   /**
    * Choose the appropriate launch type based on the user's previously chosen
    * host environment, along with system constraints.
+   * AHE_DESKTOP	= 0
+   * AHE_IMMERSIVE	= 1
    */
   AHE_TYPE GetLaunchType() {
     AHE_TYPE ahe = GetLastAHE();
