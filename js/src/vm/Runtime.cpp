@@ -754,6 +754,24 @@ JSRuntime::getDefaultLocale()
 }
 
 void
+JSRuntime::triggerActivityCallback(bool active)
+{
+    if (!activityCallback)
+        return;
+
+    /*
+     * The activity callback must not trigger a GC: it would create a cirular
+     * dependency between entering a request and Rooted's requirement of being
+     * in a request. In practice this callback already cannot trigger GC. The
+     * suppression serves to inform the exact rooting hazard analysis of this
+     * property and ensures that it remains true in the future.
+     */
+    AutoSuppressGC suppress(this);
+
+    activityCallback(activityCallbackArg, active);
+}
+
+void
 JSRuntime::setGCMaxMallocBytes(size_t value)
 {
     /*
