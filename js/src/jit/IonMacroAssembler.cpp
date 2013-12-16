@@ -1780,8 +1780,8 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
 {
     // 16-bit loads are slow and unaligned 32-bit loads may be too so
     // perform an aligned 32-bit load and adjust the bitmask accordingly.
-    JS_STATIC_ASSERT(offsetof(JSFunction, nargs) % sizeof(uint32_t) == 0);
-    JS_STATIC_ASSERT(offsetof(JSFunction, flags) == offsetof(JSFunction, nargs) + 2);
+    JS_ASSERT(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0);
+    JS_ASSERT(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2);
     JS_STATIC_ASSERT(IS_LITTLE_ENDIAN);
 
     // Emit code for the following test:
@@ -1792,7 +1792,7 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
     // }
 
     // First, ensure it's a scripted function.
-    load32(Address(fun, offsetof(JSFunction, nargs)), scratch);
+    load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
     branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::INTERPRETED << 16), label);
 
     // Common case: if both IS_FUN_PROTO and SELF_HOSTED are not set,
