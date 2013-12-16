@@ -170,7 +170,7 @@ IdToTypeId(jsid id)
      * negative integers.
      */
     if (JSID_IS_INT(id))
-        return JSID_VOID;
+        return jsid::voidId();
 
     /*
      * Check for numeric strings, as in js_StringIsIndex, but allow negative
@@ -184,12 +184,12 @@ IdToTypeId(jsid id)
                 if (!JS7_ISDEC(cp[i]))
                     return id;
             }
-            return JSID_VOID;
+            return jsid::voidId();
         }
         return id;
     }
 
-    return JSID_VOID;
+    return jsid::voidId();
 }
 
 const char * TypeIdStringImpl(jsid id);

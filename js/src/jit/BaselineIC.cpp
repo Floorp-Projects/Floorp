@@ -1469,7 +1469,7 @@ DoTypeUpdateFallback(JSContext *cx, BaselineFrame *frame, ICUpdatedStub *stub, H
       case ICStub::SetElem_Dense:
       case ICStub::SetElem_DenseAdd: {
         JS_ASSERT(obj->isNative());
-        id = JSID_VOID;
+        id = jsid::voidId();
         types::AddTypePropertyId(cx, obj, id, value);
         break;
       }

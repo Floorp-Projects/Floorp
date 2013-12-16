@@ -1255,7 +1255,7 @@ TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags fla
             return true;
     }
 
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = property(jsid::emptyId());
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> T;
@@ -1299,7 +1299,7 @@ TypeObject::initialHeap(CompilerConstraintList *constraints)
     if (!canPreTenure())
         return gc::DefaultHeap;
 
-    HeapTypeSetKey objectProperty = TypeObjectKey::get(this)->property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = TypeObjectKey::get(this)->property(jsid::emptyId());
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> T;
@@ -1406,7 +1406,7 @@ class ConstraintDataFreezeObjectForTypedArrayBuffer
 void
 TypeObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraints)
 {
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = property(jsid::emptyId());
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForInlinedCall> T;
@@ -1417,7 +1417,7 @@ void
 TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints)
 {
     JSObject *templateObject = asTypeObject()->newScript()->templateObject;
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = property(jsid::emptyId());
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> T;
@@ -1429,7 +1429,7 @@ void
 TypeObjectKey::watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints)
 {
     void *viewData = asSingleObject()->as<TypedArrayObject>().viewData();
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    HeapTypeSetKey objectProperty = property(jsid::emptyId());
     LifoAlloc *alloc = constraints->alloc();
 
     typedef CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayBuffer> T;
@@ -1444,7 +1444,7 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
         return;
 
     /* All constraints listening to state changes are on the empty id. */
-    HeapTypeSet *types = object->maybeGetProperty(JSID_EMPTY);
+    HeapTypeSet *types = object->maybeGetProperty(jsid::emptyId());
 
     /* Mark as unknown after getting the types, to avoid assertion. */
     if (markingUnknown) {
@@ -1556,7 +1556,7 @@ TemporaryTypeSet::convertDoubleElements(CompilerConstraintList *constraints)
             continue;
         }
 
-        HeapTypeSetKey property = type->property(JSID_VOID);
+        HeapTypeSetKey property = type->property(jsid::voidId());
         property.freeze(constraints);
 
         // We can't convert to double elements for objects which do not have
@@ -2035,7 +2035,7 @@ PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
             return true;
         if (type->unknownProperties())
             return true;
-        HeapTypeSetKey index = type->property(JSID_VOID);
+        HeapTypeSetKey index = type->property(jsid::voidId());
         if (index.configured(constraints) || index.isOwnProperty(constraints))
             return true;
         if (!obj->hasTenuredProto())
@@ -2366,7 +2366,7 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
         obj->setType(objType);
 
         if (!objType->unknownProperties())
-            objType->addPropertyType(cx, JSID_VOID, elementType);
+            objType->addPropertyType(cx, jsid::voidId(), elementType);
 
         key.proto = objProto;
         if (!p.add(*arrayTypeTable, key, objType)) {
@@ -2716,7 +2716,7 @@ UpdatePropertyType(ExclusiveContext *cx, HeapTypeSet *types, JSObject *obj, Shap
 
         /*
          * Don't add initial undefined types for properties of global objects
-         * that are not collated into the JSID_VOID property (see propertySet
+         * that are not collated into the jsid::voidId() property (see propertySet
          * comment).
          */
         if (indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) {
@@ -2872,7 +2872,7 @@ TypeObject::addPropertyType(ExclusiveContext *cx, jsid id, const Value &value)
 void
 TypeObject::addPropertyType(ExclusiveContext *cx, const char *name, Type type)
 {
-    jsid id = JSID_VOID;
+    jsid id = jsid::voidId();
     if (name) {
         JSAtom *atom = Atomize(cx, name, strlen(name));
         if (!atom) {
@@ -2919,7 +2919,7 @@ TypeObject::markStateChange(ExclusiveContext *cxArg)
         return;
 
     AutoEnterAnalysis enter(cxArg);
-    HeapTypeSet *types = maybeGetProperty(JSID_EMPTY);
+    HeapTypeSet *types = maybeGetProperty(jsid::emptyId());
     if (types) {
         if (JSContext *cx = cxArg->maybeJSContext()) {
             TypeConstraint *constraint = types->constraintList;
