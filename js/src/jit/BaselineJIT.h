@@ -289,8 +289,8 @@ struct BaselineScript
 
     void toggleSPS(bool enable);
 
-    void noteAccessedGetter(uint32_t pcOffset);
-    void noteArrayWriteHole(uint32_t pcOffset);
+    void noteAccessedGetter(JSContext *cx, uint32_t pcOffset);
+    void noteArrayWriteHole(JSContext *cx, uint32_t pcOffset);
 
     static size_t offsetOfFlags() {
         return offsetof(BaselineScript, flags_);

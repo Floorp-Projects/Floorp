@@ -2804,7 +2804,13 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
     JS_ASSERT(fun->isInterpreted());
-    fun->setScript(bce->script);
+
+    if (fun->isInterpretedLazy()) {
+        AutoLockForCompilation lock(cx);
+        fun->setUnlazifiedScript(bce->script);
+    } else {
+        fun->setScript(bce->script);
+    }
 
     bce->tellDebuggerAboutCompiledScript(cx);
 

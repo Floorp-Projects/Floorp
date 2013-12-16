@@ -946,7 +946,7 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
 
     JS_ASSERT_IF(!obj->hasLazyType(),
-                 obj->type()->clasp == obj->lastProperty()->getObjectClass());
+                 obj->type()->clasp() == obj->lastProperty()->getObjectClass());
 
     if (obj->isTenured()) {
         JS_ASSERT(obj->isAligned());
