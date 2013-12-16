@@ -18,6 +18,12 @@ function check_webm(v, enabled) {
   check("video/webm; codecs=\"vp8.0, vorbis\"", "probably");
   check("video/webm; codecs=vp8", "probably");
   check("video/webm; codecs=vp8.0", "probably");
+  check("video/webm; codecs=\"vp9, vorbis\"", "probably");
+  check("video/webm; codecs=\"vp9.0, vorbis\"", "probably");
+  check("video/webm; codecs=\"vp9, opus\"", "probably");
+  check("video/webm; codecs=\"vp9.0, opus\"", "probably");
+  check("video/webm; codecs=vp9", "probably");
+  check("video/webm; codecs=vp9.0", "probably");
 
   // Unsupported WebM codecs
   check("video/webm; codecs=xyz", "");
