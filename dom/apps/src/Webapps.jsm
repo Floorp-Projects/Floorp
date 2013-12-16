@@ -2958,8 +2958,15 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
       if (Components.isSuccessCode(result)) {
         isSigned = true;
-      } else if (result == Cr.NS_ERROR_FILE_CORRUPTED) {
+      } else if (result == Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING) {
         throw "APP_PACKAGE_CORRUPTED";
+      } else if (result == Cr.NS_ERROR_FILE_CORRUPTED ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_INVALID ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID) {
+        throw "APP_PACKAGE_INVALID";
       } else if ((!aIsLocalFileInstall || isLaterThanBuildTime) &&
                  (result != Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED)) {
         throw "INVALID_SIGNATURE";

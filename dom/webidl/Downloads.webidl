@@ -59,7 +59,7 @@ interface DOMDownload : EventTarget {
 
   // A DOM error object, that will be not null when a download is stopped
   // because something failed.
-  readonly attribute DOMError error;
+  readonly attribute DOMError? error;
 
   // Pauses the download.
   Promise pause();

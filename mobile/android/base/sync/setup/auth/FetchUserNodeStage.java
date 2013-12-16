@@ -12,9 +12,9 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
-import org.mozilla.gecko.sync.setup.Constants;
 
 import ch.boye.httpclientandroidlib.HttpResponse;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
@@ -61,7 +61,7 @@ public class FetchUserNodeStage implements AuthenticatorStage {
         aa.abort(AuthenticationResult.FAILURE_OTHER, e);
       }
     };
-    String nodeRequestUrl = aa.nodeServer + Constants.AUTH_NODE_PATHNAME + Constants.AUTH_NODE_VERSION + aa.username + "/" + Constants.AUTH_NODE_SUFFIX;
+    String nodeRequestUrl = Utils.nodeWeaveURL(aa.nodeServer, aa.username);
     // Might contain a plaintext username in the case of old Sync accounts.
     Logger.pii(LOG_TAG, "NodeUrl: " + nodeRequestUrl);
     final BaseResource httpResource = makeFetchNodeRequest(callbackDelegate, nodeRequestUrl);
