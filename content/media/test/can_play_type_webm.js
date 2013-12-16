@@ -12,6 +12,8 @@ function check_webm(v, enabled) {
   check("video/webm; codecs=vorbis", "probably");
   check("video/webm; codecs=vorbis,vp8", "probably");
   check("video/webm; codecs=vorbis,vp8.0", "probably");
+  check("audio/webm; codecs=opus", "probably");
+  check("video/webm; codecs=opus", "probably");
   check("video/webm; codecs=\"vorbis,vp8\"", "probably");
   check("video/webm; codecs=\"vorbis,vp8.0\"", "probably");
   check("video/webm; codecs=\"vp8, vorbis\"", "probably");
