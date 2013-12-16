@@ -4492,5 +4492,10 @@
     "kind": "enumerated",
     "n_values": 32,
     "description": "Symmetric cipher used in resumed handshake (null=0, rc4=1, 3des=4, aes-cbc=7, camellia=8, seed=9, aes-gcm=10)"
+  },
+  "SSL_OCSP_STAPLING": {
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Status of OCSP stapling on this handshake (1=present, good; 2=none; 3=present, expired; 4=present, other error)"
   }
 }
