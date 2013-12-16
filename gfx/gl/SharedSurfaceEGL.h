@@ -40,7 +40,7 @@ protected:
     GLLibraryEGL* const mEGL;
     const GLFormats mFormats;
     GLuint mProdTex;
-    nsRefPtr<gfxImageSurface> mPixels;
+    RefPtr<gfx::DataSourceSurface> mPixels;
     GLuint mProdTexForPipe; // Moves to mProdTex when mPipeActive becomes true.
     EGLImage mImage;
     GLContext* mCurConsGL;
@@ -82,7 +82,7 @@ public:
     GLuint AcquireConsumerTexture(GLContext* consGL);
 
     // Will be void if AcquireConsumerTexture returns non-zero.
-    gfxImageSurface* GetPixels() const;
+    gfx::DataSourceSurface* GetPixels() const;
 };
 
 
