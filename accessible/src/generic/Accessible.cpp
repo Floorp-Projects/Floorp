@@ -3267,12 +3267,12 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
     return;
 
   nsAutoString separator;
-  keyStringBundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(),
+  keyStringBundle->GetStringFromName(MOZ_UTF16("MODIFIER_SEPARATOR"),
                                      getter_Copies(separator));
 
   nsAutoString modifierName;
   if (mModifierMask & kControl) {
-    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(),
+    keyStringBundle->GetStringFromName(MOZ_UTF16("VK_CONTROL"),
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -3280,7 +3280,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kAlt) {
-    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(),
+    keyStringBundle->GetStringFromName(MOZ_UTF16("VK_ALT"),
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -3288,7 +3288,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kShift) {
-    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(),
+    keyStringBundle->GetStringFromName(MOZ_UTF16("VK_SHIFT"),
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);
@@ -3296,7 +3296,7 @@ KeyBinding::ToPlatformFormat(nsAString& aValue) const
   }
 
   if (mModifierMask & kMeta) {
-    keyStringBundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(),
+    keyStringBundle->GetStringFromName(MOZ_UTF16("VK_META"),
                                        getter_Copies(modifierName));
 
     aValue.Append(modifierName);

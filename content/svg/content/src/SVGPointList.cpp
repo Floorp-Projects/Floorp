@@ -33,7 +33,7 @@ SVGPointList::GetValueAsString(nsAString& aValue) const
     // Would like to use aValue.AppendPrintf("%f,%f", item.mX, item.mY),
     // but it's not possible to always avoid trailing zeros.
     nsTextFormatter::snprintf(buf, ArrayLength(buf),
-                              NS_LITERAL_STRING("%g,%g").get(),
+                              MOZ_UTF16("%g,%g"),
                               double(mItems[i].mX), double(mItems[i].mY));
     // We ignore OOM, since it's not useful for us to return an error.
     aValue.Append(buf);

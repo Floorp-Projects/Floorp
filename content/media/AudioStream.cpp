@@ -138,6 +138,7 @@ AudioStream::AudioStream()
   , mInRate(0)
   , mOutRate(0)
   , mChannels(0)
+  , mOutChannels(0)
   , mWritten(0)
   , mAudioClock(MOZ_THIS_IN_INITIALIZER_LIST())
   , mLatencyRequest(HighLatency)
@@ -194,12 +195,12 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
   mMonitor.AssertCurrentThreadOwns();
   if (!mTimeStretcher) {
     // SoundTouch does not support a number of channels > 2
-    if (mChannels > 2) {
+    if (mOutChannels > 2) {
       return NS_ERROR_FAILURE;
     }
     mTimeStretcher = new soundtouch::SoundTouch();
     mTimeStretcher->setSampleRate(mInRate);
-    mTimeStretcher->setChannels(mChannels);
+    mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);
   }
   return NS_OK;
@@ -331,7 +332,7 @@ WriteDumpFile(FILE* aDumpFile, AudioStream* aStream, uint32_t aFrames,
   if (!aDumpFile)
     return;
 
-  uint32_t samples = aStream->GetChannels()*aFrames;
+  uint32_t samples = aStream->GetOutChannels()*aFrames;
   if (AUDIO_OUTPUT_FORMAT == AUDIO_FORMAT_S16) {
     fwrite(aBuffer, 2, samples, aDumpFile);
     return;
@@ -364,13 +365,14 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
     ("%s  channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate));
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
+  mOutChannels = (aNumChannels > 2) ? 2 : aNumChannels;
   mLatencyRequest = aLatencyRequest;
 
   mDumpFile = OpenDumpFile(this);
 
   cubeb_stream_params params;
   params.rate = aRate;
-  params.channels = aNumChannels;
+  params.channels = mOutChannels;
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
   params.stream_type = ConvertChannelToCubebType(aAudioChannelType);
@@ -387,7 +389,7 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   } else {
     params.format = CUBEB_SAMPLE_FLOAT32NE;
   }
-  mBytesPerFrame = sizeof(AudioDataValue) * aNumChannels;
+  mBytesPerFrame = sizeof(AudioDataValue) * mOutChannels;
 
   mAudioClock.Init();
 
@@ -453,6 +455,14 @@ AudioStream::Write(const AudioDataValue* aBuf, uint32_t aFrames, TimeStamp *aTim
   }
   NS_ASSERTION(mState == INITIALIZED || mState == STARTED,
     "Stream write in unexpected state.");
+
+  // Downmix to Stereo.
+  if (mChannels > 2 && mChannels <= 8) {
+    DownmixAudioToStereo(const_cast<AudioDataValue*> (aBuf), mChannels, aFrames);
+  }
+  else if (mChannels > 8) {
+    return NS_ERROR_FAILURE;
+  }
 
   const uint8_t* src = reinterpret_cast<const uint8_t*>(aBuf);
   uint32_t bytesToCopy = FramesToBytes(aFrames);
@@ -801,7 +811,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
     }
     float scaled_volume = float(GetVolumeScale() * mVolume);
 
-    ScaleAudioSamples(output, aFrames * mChannels, scaled_volume);
+    ScaleAudioSamples(output, aFrames * mOutChannels, scaled_volume);
 
     NS_ABORT_IF_FALSE(mBuffer.Length() % mBytesPerFrame == 0, "Must copy complete frames");
 

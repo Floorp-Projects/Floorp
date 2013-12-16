@@ -43,7 +43,7 @@ nsEntityConverter::LoadVersionPropertyFile()
 
     nsAutoString key;
     nsXPIDLString value;
-    rv = entities->GetStringFromName(NS_LITERAL_STRING("length").get(),
+    rv = entities->GetStringFromName(MOZ_UTF16("length"),
                                      getter_Copies(value));
     NS_ASSERTION(NS_SUCCEEDED(rv),"nsEntityConverter: malformed entity table\n");
     if (NS_FAILED(rv)) return rv;

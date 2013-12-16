@@ -784,14 +784,14 @@ ReportUsageError(JSContext *cx, HandleObject callee, const char *msg);
 extern bool
 PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
            bool reportWarnings);
-} /* namespace js */
 
 /*
- * Report an exception using a previously composed JSErrorReport.
- * XXXbe remove from "friend" API
+ * Send a JSErrorReport to the errorReporter callback.
  */
-extern JS_FRIEND_API(void)
-js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
+void
+CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+
+} /* namespace js */
 
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);

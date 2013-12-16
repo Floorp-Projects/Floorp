@@ -279,26 +279,10 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
         if (!list)
             return nullptr;
         list->append(pn2);
-        if (kind == PNK_ADD) {
-            if (pn1->isKind(PNK_STRING))
-                list->pn_xflags |= PNX_STRCAT;
-            else if (!pn1->isKind(PNK_NUMBER))
-                list->pn_xflags |= PNX_CANTFOLD;
-            if (pn2->isKind(PNK_STRING))
-                list->pn_xflags |= PNX_STRCAT;
-            else if (!pn2->isKind(PNK_NUMBER))
-                list->pn_xflags |= PNX_CANTFOLD;
-        }
     }
 
     list->append(right);
     list->pn_pos.end = right->pn_pos.end;
-    if (kind == PNK_ADD) {
-        if (right->isKind(PNK_STRING))
-            list->pn_xflags |= PNX_STRCAT;
-        else if (!right->isKind(PNK_NUMBER))
-            list->pn_xflags |= PNX_CANTFOLD;
-    }
 
     return list;
 }
@@ -324,24 +308,6 @@ ParseNode::newBinaryOrAppend(ParseNodeKind kind, JSOp op, ParseNode *left, Parse
      */
     if (left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC))
         return append(kind, op, left, right, handler);
-
-    /*
-     * Fold constant addition immediately, to conserve node space and, what's
-     * more, so js::FoldConstants never sees mixed addition and concatenation
-     * operations with more than one leading non-string operand in a PN_LIST
-     * generated for expressions such as 1 + 2 + "pt" (which should evaluate
-     * to "3pt", not "12pt").
-     */
-    if (kind == PNK_ADD &&
-        left->isKind(PNK_NUMBER) &&
-        right->isKind(PNK_NUMBER) &&
-        foldConstants)
-    {
-        left->pn_dval += right->pn_dval;
-        left->pn_pos.end = right->pn_pos.end;
-        handler->freeTree(right);
-        return left;
-    }
 
     return handler->new_<BinaryNode>(kind, op, left, right);
 }
