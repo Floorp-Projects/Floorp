@@ -106,6 +106,11 @@ class XrayWrapper : public Base {
                               JSType hint, JS::MutableHandleValue vp)
                               MOZ_OVERRIDE;
 
+    virtual bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                JS::MutableHandleObject protop) MOZ_OVERRIDE;
+    virtual bool setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                                JS::HandleObject proto, bool *bp) MOZ_OVERRIDE;
+
     static XrayWrapper singleton;
 
   private:

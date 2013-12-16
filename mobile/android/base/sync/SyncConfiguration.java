@@ -175,12 +175,9 @@ public class SyncConfiguration {
     }
   }
 
-  public static final String DEFAULT_USER_API = "https://auth.services.mozilla.com/user/1.0/";
-
   private static final String LOG_TAG = "SyncConfiguration";
 
   // These must be set in GlobalSession's constructor.
-  public URI             serverURL;
   public URI             clusterURL;
   public KeyBundle       syncKeyBundle;
 
@@ -451,21 +448,6 @@ public class SyncConfiguration {
 
   public void setCollectionKeys(CollectionKeys k) {
     collectionKeys = k;
-  }
-
-  public String nodeWeaveURL() {
-    return this.nodeWeaveURL((this.serverURL == null) ? null : this.serverURL.toASCIIString());
-  }
-
-  public String nodeWeaveURL(String serverURL) {
-    String userPart = username + "/node/weave";
-    if (serverURL == null) {
-      return DEFAULT_USER_API + userPart;
-    }
-    if (!serverURL.endsWith("/")) {
-      serverURL = serverURL + "/";
-    }
-    return serverURL + "user/1.0/" + userPart;
   }
 
   protected String infoBaseURL() {

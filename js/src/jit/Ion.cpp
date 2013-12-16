@@ -2018,7 +2018,7 @@ jit::CanEnter(JSContext *cx, RunState &state)
             return Method_CantCompile;
         }
 
-        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs)) {
+        if (TooManyArguments(invoke.args().callee().as<JSFunction>().nargs())) {
             IonSpew(IonSpew_Abort, "too many args");
             ForbidCompilation(cx, script);
             return Method_CantCompile;
@@ -2165,7 +2165,7 @@ jit::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numAct
 
     // Don't handle arguments underflow, to make this work we would have to pad
     // missing arguments with |undefined|.
-    if (numActualArgs < script->function()->nargs)
+    if (numActualArgs < script->function()->nargs())
         return Method_Skipped;
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
@@ -2226,7 +2226,7 @@ jit::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoVal
 
     if (state.isInvoke()) {
         CallArgs &args = state.asInvoke()->args();
-        unsigned numFormals = state.script()->function()->nargs;
+        unsigned numFormals = state.script()->function()->nargs();
         data.constructing = state.asInvoke()->constructing();
         data.numActualArgs = args.length();
         data.maxArgc = Max(args.length(), numFormals) + 1;
@@ -2309,7 +2309,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     void *calleeToken = CalleeToToken(fun);
 
     RootedValue result(cx, Int32Value(args.length()));
-    JS_ASSERT(args.length() >= fun->nargs);
+    JS_ASSERT(args.length() >= fun->nargs());
 
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
     enter(jitcode, args.length() + 1, args.array() - 1, nullptr, calleeToken,
@@ -2454,8 +2454,8 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
     IonSpew(IonSpew_Invalidate, "END invalidating activation");
 }
 
-static void
-StopOffThreadCompilation(JSCompartment *comp)
+void
+jit::StopAllOffThreadCompilations(JSCompartment *comp)
 {
     if (!comp->jitCompartment())
         return;
@@ -2467,7 +2467,7 @@ void
 jit::InvalidateAll(FreeOp *fop, Zone *zone)
 {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
-        StopOffThreadCompilation(comp);
+        StopAllOffThreadCompilations(comp);
 
     for (JitActivationIterator iter(fop->runtime()); !iter.done(); ++iter) {
         if (iter.activation()->compartment()->zone() == zone) {
@@ -2481,7 +2481,7 @@ jit::InvalidateAll(FreeOp *fop, Zone *zone)
 
 
 void
-jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
+jit::Invalidate(types::TypeZone &types, FreeOp *fop,
                 const Vector<types::RecompileInfo> &invalid, bool resetUses,
                 bool cancelOffThread)
 {
@@ -2564,7 +2564,7 @@ void
 jit::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool resetUses,
                 bool cancelOffThread)
 {
-    jit::Invalidate(cx->compartment()->types, cx->runtime()->defaultFreeOp(), invalid, resetUses,
+    jit::Invalidate(cx->zone()->types, cx->runtime()->defaultFreeOp(), invalid, resetUses,
                     cancelOffThread);
 }
 
@@ -2611,14 +2611,13 @@ FinishInvalidationOf(FreeOp *fop, JSScript *script, IonScript *ionScript, bool p
     else
         script->setIonScript(nullptr);
 
-    // If this script has Ion code on the stack, invalidation() will return
-    // true. In this case we have to wait until destroying it.
-    if (!ionScript->invalidated()) {
-        types::TypeCompartment &types = script->compartment()->types;
-        ionScript->recompileInfo().compilerOutput(types)->invalidate();
+    types::TypeZone &types = script->zone()->types;
+    ionScript->recompileInfo().compilerOutput(types)->invalidate();
 
+    // If this script has Ion code on the stack, invalidated() will return
+    // true. In this case we have to wait until destroying it.
+    if (!ionScript->invalidated())
         jit::IonScript::Destroy(fop, ionScript);
-    }
 }
 
 void
@@ -2637,8 +2636,6 @@ jit::FinishDiscardJitCode(FreeOp *fop, JSCompartment *comp)
     // Free optimized baseline stubs.
     if (comp->jitCompartment())
         comp->jitCompartment()->optimizedStubSpace()->free();
-
-    comp->types.clearCompilerOutputs(fop);
 }
 
 void
@@ -2845,10 +2842,10 @@ AutoDebugModeInvalidation::~AutoDebugModeInvalidation()
     FreeOp *fop = rt->defaultFreeOp();
 
     if (comp_) {
-        StopOffThreadCompilation(comp_);
+        StopAllOffThreadCompilations(comp_);
     } else {
         for (CompartmentsInZoneIter comp(zone_); !comp.done(); comp.next())
-            StopOffThreadCompilation(comp);
+            StopAllOffThreadCompilations(comp);
     }
 
     if (invalidateStack) {

@@ -21,8 +21,6 @@ var gTest = {
 
     var source = context.createBufferSource();
     source.buffer = buffer;
-
-    var sp = context.createScriptProcessor(2048 * 4, 1);
     source.start(0);
     source.loop = true;
     source.loopStart = buffer.duration * 0.25;

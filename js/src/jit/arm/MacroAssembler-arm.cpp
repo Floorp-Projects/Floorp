@@ -74,9 +74,10 @@ MacroAssemblerARM::convertUInt32ToFloat32(const Register &src, const FloatRegist
     as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
-void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest)
+void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest,
+                                             Condition c)
 {
-    as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src));
+    as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src), false, c);
 }
 
 // there are two options for implementing emitTruncateDouble.
@@ -3517,26 +3518,26 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
         FloatRegister fr;
         if (GetFloatArgReg(usedIntSlots_, usedFloatSlots_, &fr)) {
             if (!from.isFloatReg() || from.floatReg() != fr) {
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), Move::DOUBLE);
+                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(fr), MoveOp::DOUBLE);
             }
             // else nothing to do; the value is in the right register already
         } else {
             // If (and only if) the integer registers have started spilling, do we
             // need to take the double register's alignment into account
             uint32_t disp = GetFloatArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::DOUBLE);
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::DOUBLE);
         }
         usedFloatSlots_++;
     } else {
         Register r;
         if (GetIntArgReg(usedIntSlots_, usedFloatSlots_, &r)) {
             if (!from.isGeneralReg() || from.reg() != r) {
-                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), Move::GENERAL);
+                enoughMemory_ = moveResolver_.addMove(from, MoveOperand(r), MoveOp::GENERAL);
             }
             // else nothing to do; the value is in the right register already
         } else {
             uint32_t disp = GetIntArgStackDisp(usedIntSlots_, usedFloatSlots_, &padding_);
-            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), Move::GENERAL);
+            enoughMemory_ = moveResolver_.addMove(from, MoveOperand(sp, disp), MoveOp::GENERAL);
         }
         usedIntSlots_++;
     }
@@ -3551,13 +3552,13 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from)
     uint32_t increment = 1;
     bool useResolver = true;
     ++passedArgs_;
-    Move::Kind kind = Move::GENERAL;
+    MoveOp::Kind kind = MoveOp::GENERAL;
     if (from.isDouble()) {
         // Double arguments need to be rounded up to the nearest doubleword
         // boundary, even if it is in a register!
         usedSlots_ = (usedSlots_ + 1) & ~1;
         increment = 2;
-        kind = Move::DOUBLE;
+        kind = MoveOp::DOUBLE;
     }
 
     Register destReg;

@@ -47,7 +47,7 @@ public:
 
     virtual bool InUpdate() const { return !!mUpdateSurface; }
 
-    virtual void Resize(const nsIntSize& aSize);
+    virtual void Resize(const gfx::IntSize& aSize);
 
     bool BindTexImage();
 
@@ -79,7 +79,7 @@ protected:
 
 already_AddRefed<TextureImage>
 CreateTextureImageEGL(GLContext *gl,
-                      const nsIntSize& aSize,
+                      const gfx::IntSize& aSize,
                       TextureImage::ContentType aContentType,
                       GLenum aWrapMode,
                       TextureImage::Flags aFlags,

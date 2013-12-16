@@ -57,7 +57,7 @@ function assertAsmDirectiveFail(str)
         eval(str);
     } catch (e) {
         if ((''+e).indexOf(ASM_DIRECTIVE_FAIL_STRING) == -1)
-            throw new Error("Didn't catch the expected directive failure error; instead caught: " + e);
+            throw new Error("Didn't catch the expected directive failure error; instead caught: " + e + "\nStack: " + new Error().stack);
         caught = true;
     }
     if (!caught)
@@ -85,7 +85,7 @@ function assertAsmTypeFail()
         Function.apply(null, arguments);
     } catch (e) {
         if ((''+e).indexOf(ASM_TYPE_FAIL_STRING) == -1)
-            throw new Error("Didn't catch the expected type failure error; instead caught: " + e);
+            throw new Error("Didn't catch the expected type failure error; instead caught: " + e + "\nStack: " + new Error().stack);
         caught = true;
     }
     if (!caught)

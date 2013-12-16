@@ -161,13 +161,6 @@ td > ol:-moz-only-whitespace:-moz-last-node, th > ol:-moz-only-whitespace:-moz-l
 }
 
 
-/* Quirk: support the ways of making PRE have wrapping */
-
-pre[wrap], pre[cols], pre[width] {
-  white-space: pre-wrap;
-}
-
-
 /* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
 
 :not(dl) > dd {

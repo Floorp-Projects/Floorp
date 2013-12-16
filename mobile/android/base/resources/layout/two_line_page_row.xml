@@ -20,7 +20,7 @@
         <org.mozilla.gecko.home.FadedTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 gecko:fadeWidth="30dp"/>
 

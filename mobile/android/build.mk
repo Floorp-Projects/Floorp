@@ -10,9 +10,6 @@ installer:
 package:
 	@$(MAKE) -C mobile/android/installer
 
-fast-package:
-	@$(MAKE) package MOZ_FAST_PACKAGE=1
-
 ifeq ($(OS_TARGET),Android)
 ifneq ($(MOZ_ANDROID_INSTALL_TARGET),)
 ANDROID_SERIAL = $(MOZ_ANDROID_INSTALL_TARGET)

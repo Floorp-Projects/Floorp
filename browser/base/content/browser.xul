@@ -115,8 +115,7 @@
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_undoCloseTab"
-                singletablabel="&undoCloseTab.label;"
-                multipletablabel="&undoCloseTabs.label;"
+                label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
@@ -197,6 +196,7 @@
     <!-- UI tour experience -->
     <panel id="UITourTooltip"
            type="arrow"
+           hidden="true"
            noautofocus="true"
            noautohide="true"
            align="start"
@@ -206,6 +206,7 @@
       <description id="UITourTooltipDescription" flex="1"/>
     </panel>
     <panel id="UITourHighlightContainer"
+           hidden="true"
            noautofocus="true"
            noautohide="true"
            consumeoutsideclicks="false">
@@ -461,7 +462,7 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
-#ifdef XP_LINUX
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
              autohide="true"
 #endif
 #endif

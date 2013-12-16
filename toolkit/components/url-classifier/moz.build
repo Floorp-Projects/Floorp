@@ -17,18 +17,26 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'url-classifier'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ChunkSet.cpp',
     'Classifier.cpp',
-    'HashStore.cpp',
     'LookupCache.cpp',
     'nsCheckSummedOutputStream.cpp',
     'nsUrlClassifierDBService.cpp',
-    'nsUrlClassifierPrefixSet.cpp',
     'nsUrlClassifierProxies.cpp',
-    'nsUrlClassifierStreamUpdater.cpp',
     'nsUrlClassifierUtils.cpp',
     'ProtocolParser.cpp',
+]
+
+# define conflicting LOG() macros
+SOURCES += [
+    'nsUrlClassifierPrefixSet.cpp',
+    'nsUrlClassifierStreamUpdater.cpp',
+]
+
+# contains variables that conflict with LookupCache.cpp
+SOURCES += [
+    'HashStore.cpp',
 ]
 
 EXTRA_COMPONENTS += [

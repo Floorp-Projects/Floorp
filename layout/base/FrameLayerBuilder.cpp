@@ -1674,8 +1674,7 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
   }
 
   nsLayoutUtils::SetFixedPositionLayerData(aLayer,
-      viewportFrame, viewportSize, aFixedPosFrame, mContainerReferenceFrame,
-      presContext, mParameters);
+      viewportFrame, viewportSize, aFixedPosFrame, presContext, mParameters);
 }
 
 void
@@ -1799,13 +1798,18 @@ ContainerState::PopThebesLayerData()
     // mask layer for image and color layers
     SetupMaskLayer(layer, data->mItemClip);
   }
-  uint32_t flags;
+
+  uint32_t flags = 0;
+  nsIWidget* widget = mContainerReferenceFrame->PresContext()->GetRootWidget();
+  // Disable subpixelAA on hidpi
+  bool hidpi = widget && widget->GetDefaultScale().scale >= 2;
+  if (hidpi) {
+    flags |= Layer::CONTENT_DISABLE_SUBPIXEL_AA;
+  }
   if (isOpaque && !data->mForceTransparentSurface) {
-    flags = Layer::CONTENT_OPAQUE;
-  } else if (data->mNeedComponentAlpha) {
-    flags = Layer::CONTENT_COMPONENT_ALPHA;
-  } else {
-    flags = 0;
+    flags |= Layer::CONTENT_OPAQUE;
+  } else if (data->mNeedComponentAlpha && !hidpi) {
+    flags |= Layer::CONTENT_COMPONENT_ALPHA;
   }
   layer->SetContentFlags(flags);
 
@@ -2840,11 +2844,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
 
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   gfxSize scale;
-  bool isRetained = aLayer->Manager()->IsWidgetLayerManager();
-  // Only fiddle with scale factors for the retaining layer manager, since
-  // it only matters for retained layers
   // XXX Should we do something for 3D transforms?
-  if (canDraw2D && isRetained) {
+  if (canDraw2D) {
     // If the container's transform is animated off main thread, then use the
     // maximum scale.
     if (aContainerFrame->GetContent() &&
@@ -2906,6 +2907,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       aOutgoingScale.mInActiveTransformedSubtree = true;
     }
   }
+  bool isRetained = aLayer->Manager()->IsWidgetLayerManager();
   if (isRetained && (!canDraw2D || transform2d.HasNonIntegerTranslation())) {
     aOutgoingScale.mDisableSubpixelAntialiasingInDescendants = true;
   }

@@ -445,6 +445,10 @@ public:
   {
     mConsumers.RemoveElement(aPort);
   }
+  uint32_t ConsumerCount()
+  {
+    return mConsumers.Length();
+  }
   const StreamBuffer& GetStreamBuffer() { return mBuffer; }
   GraphTime GetStreamBufferStartTime() { return mBufferStartTime; }
   /**
@@ -943,6 +947,10 @@ public:
   bool HasInputPort(MediaInputPort* aPort)
   {
     return mInputs.Contains(aPort);
+  }
+  uint32_t InputPortCount()
+  {
+    return mInputs.Length();
   }
   virtual void DestroyImpl();
   /**

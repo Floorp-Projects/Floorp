@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(e70ba4cc-7ccd-41fe-a75c-e4042233a8cb)]
+[scriptable, uuid(cb97b7b4-dce6-45fa-be6a-47e436a9aef9)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -129,12 +129,11 @@ interface nsITelemetry : nsISupports
   readonly attribute jsval lateWrites;
 
   /**
-   * An object whose properties are the names of histograms defined in
-   * TelemetryHistograms.h and whose corresponding values are the textual
-   * comments associated with said histograms.
+   * Returns an array whose values are the names of histograms defined
+   * in Histograms.json.
    */
-  [implicit_jscontext]
-  readonly attribute jsval registeredHistograms;
+  void registeredHistograms(out uint32_t count,
+                            [retval, array, size_is(count)] out string histograms);
 
   /** 
    * Create and return a histogram.  Parameters:

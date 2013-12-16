@@ -1014,22 +1014,25 @@ PickChunk(Zone *zone)
 extern void
 js::SetGCZeal(JSRuntime *rt, uint8_t zeal, uint32_t frequency)
 {
-    if (zeal == 0) {
-        if (rt->gcVerifyPreData)
-            VerifyBarriers(rt, PreBarrierVerifier);
-        if (rt->gcVerifyPostData)
-            VerifyBarriers(rt, PostBarrierVerifier);
+    if (rt->gcVerifyPreData)
+        VerifyBarriers(rt, PreBarrierVerifier);
+    if (rt->gcVerifyPostData)
+        VerifyBarriers(rt, PostBarrierVerifier);
+
+#ifdef JSGC_GENERATIONAL
+    if (rt->gcZeal_ == ZealGenerationalGCValue) {
+        MinorGC(rt, JS::gcreason::DEBUG_GC);
+        rt->gcNursery.leaveZealMode();
     }
+
+    if (zeal == ZealGenerationalGCValue)
+        rt->gcNursery.enterZealMode();
+#endif
 
     bool schedule = zeal >= js::gc::ZealAllocValue;
     rt->gcZeal_ = zeal;
     rt->gcZealFrequency = frequency;
     rt->gcNextScheduled = schedule ? frequency : 0;
-
-#ifdef JSGC_GENERATIONAL
-    if (zeal == ZealGenerationalGCValue)
-        rt->gcNursery.enterZealMode();
-#endif
 }
 
 static bool
@@ -2854,13 +2857,9 @@ ShouldPreserveJITCode(JSCompartment *comp, int64_t currentTime)
 
     if (rt->alwaysPreserveCode)
         return true;
-    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime &&
-        comp->lastCodeRelease + (PRMJ_USEC_PER_SEC * 300) >= currentTime)
-    {
+    if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
-    }
 
-    comp->lastCodeRelease = currentTime;
     return false;
 }
 
@@ -3939,12 +3938,12 @@ BeginSweepingZoneGroup(JSRuntime *rt)
         bool releaseTypes = ReleaseObservedTypes(rt);
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            c->sweep(&fop, releaseTypes);
+            c->sweep(&fop, releaseTypes && !c->zone()->isPreservingCode());
         }
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoSCC scc(rt->gcStats, rt->gcZoneGroupIndex);
-            zone->sweep(&fop, releaseTypes);
+            zone->sweep(&fop, releaseTypes && !zone->isPreservingCode());
         }
     }
 
@@ -5267,8 +5266,16 @@ void
 js::ReleaseAllJITCode(FreeOp *fop)
 {
 #ifdef JS_ION
-    for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
 
+# ifdef JSGC_GENERATIONAL
+    /*
+     * Scripts can entrain nursery things, inserting references to the script
+     * into the store buffer. Clear the store buffer before discarding scripts.
+     */
+    MinorGC(fop->runtime(), JS::gcreason::EVICT_NURSERY);
+# endif
+
+    for (ZonesIter zone(fop->runtime(), SkipAtoms); !zone.done(); zone.next()) {
 # ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
         for (CellIter i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
@@ -5293,10 +5300,6 @@ js::ReleaseAllJITCode(FreeOp *fop)
             jit::FinishDiscardBaselineScript(fop, script);
         }
     }
-
-    /* Sweep now invalidated compiler outputs from each compartment. */
-    for (CompartmentsIter comp(fop->runtime(), SkipAtoms); !comp.done(); comp.next())
-        comp->types.clearCompilerOutputs(fop);
 #endif
 }
 
