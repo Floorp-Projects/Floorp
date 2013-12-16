@@ -305,6 +305,10 @@ interface TestInterface {
   readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
   [Cached, Pure]
   readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<Dict> readonlyFrozenSequence;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<Dict>? readonlyFrozenNullableSequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();
