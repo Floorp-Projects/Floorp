@@ -83,17 +83,12 @@ GetDOMTargets(uint64_t aScrollId,
 class RequestContentRepaintEvent : public nsRunnable
 {
   typedef mozilla::layers::FrameMetrics FrameMetrics;
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
 public:
   RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics,
-                             nsIWidgetListener* aListener,
-                             CSSIntPoint* aLastOffsetOut,
-                             ScrollableLayerGuid* aLastScrollId) :
+                             nsIWidgetListener* aListener) :
     mFrameMetrics(aFrameMetrics),
-    mWidgetListener(aListener),
-    mLastOffsetOut(aLastOffsetOut),
-    mLastScrollIdOut(aLastScrollId)
+    mWidgetListener(aListener)
   {
   }
 
@@ -135,16 +130,6 @@ public:
       if (utils) {
         APZCCallbackHelper::UpdateRootFrame(utils, mFrameMetrics);
 
-        // Return the actual scroll value so we can use it to filter
-        // out scroll messages triggered by setting the display port.
-        if (mLastOffsetOut) {
-          *mLastOffsetOut = mozilla::gfx::RoundedToInt(mFrameMetrics.mScrollOffset);
-        }
-        if (mLastScrollIdOut) {
-          mLastScrollIdOut->mScrollId = mFrameMetrics.mScrollId;
-          mLastScrollIdOut->mPresShellId = mFrameMetrics.mPresShellId;
-        }
-
 #ifdef DEBUG_CONTROLLER
         WinUtils::Log("APZController: %I64d mDisplayPort: %0.2f %0.2f %0.2f %0.2f",
           mFrameMetrics.mScrollId,
@@ -160,8 +145,6 @@ public:
 protected:
   FrameMetrics mFrameMetrics;
   nsIWidgetListener* mWidgetListener;
-  CSSIntPoint* mLastOffsetOut;
-  ScrollableLayerGuid* mLastScrollIdOut;
 };
 
 void
@@ -241,41 +224,12 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
     aFrameMetrics.mScrollId);
 #endif
   nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics,
-                                                            mWidgetListener,
-                                                            &mLastScrollOffset,
-                                                            &mLastScrollLayerGuid);
+                                                            mWidgetListener);
   if (!NS_IsMainThread()) {
     NS_DispatchToMainThread(r1);
   } else {
     r1->Run();
   }
-}
-
-// Content send us this when it detect content has scrolled via
-// a dom scroll event. Note we get these in response to dom scroll
-// events and as a result of apzc scrolling which we filter out.
-void
-APZController::UpdateScrollOffset(const mozilla::layers::ScrollableLayerGuid& aScrollLayerId,
-                                  CSSIntPoint& aScrollOffset)
-{
-#ifdef DEBUG_CONTROLLER
-  WinUtils::Log("APZController::UpdateScrollOffset: scrollid:%I64d == %I64d offsets: %d,%d == %d,%d",
-    aScrollLayerId.mScrollId, aScrollLayerId.mScrollId,
-    aScrollOffset.x, aScrollOffset.y,
-    mLastScrollOffset.x, mLastScrollOffset.y);
-#endif
-
-  // Bail if this the same scroll guid the apzc just scrolled and the offsets
-  // equal the offset the apzc set.
-  if (!sAPZC || (mLastScrollLayerGuid.mScrollId == aScrollLayerId.mScrollId &&
-                 mLastScrollLayerGuid.mPresShellId == aScrollLayerId.mPresShellId &&
-                 mLastScrollOffset == aScrollOffset)) {
-#ifdef DEBUG_CONTROLLER
-    WinUtils::Log("Skipping UpdateScrollOffset");
-#endif
-    return;
-  }
-  sAPZC->UpdateScrollOffset(aScrollLayerId, aScrollOffset);
 }
 
 void

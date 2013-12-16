@@ -121,10 +121,6 @@ public:
                              const CSSToScreenScale& aMinZoom,
                              const CSSToScreenScale& aMaxZoom);
 
-  void UpdateScrollOffset(uint32_t aPresShellId,
-                          ViewID aViewId,
-                          const CSSIntPoint& aScrollOffset);
-
   bool HitTest(const nsRect& aRect);
 
 protected:

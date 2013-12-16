@@ -251,13 +251,6 @@ public:
    */
   static void SetFrameTime(const TimeStamp& aMilliseconds);
 
-  /**
-   * Update mFrameMetrics.mScrollOffset to the given offset.
-   * This is necessary in cases where a scroll is not caused by user
-   * input (for example, a content scrollTo()).
-   */
-  void UpdateScrollOffset(const CSSPoint& aScrollOffset);
-
   void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
