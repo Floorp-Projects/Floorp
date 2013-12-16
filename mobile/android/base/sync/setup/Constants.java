@@ -51,10 +51,6 @@ public class Constants {
     Intent.FLAG_ACTIVITY_NO_ANIMATION;
 
   // Constants for Account Authentication.
-  public static final String AUTH_NODE_DEFAULT    = "https://auth.services.mozilla.com/";
-  public static final String AUTH_NODE_PATHNAME   = "user/";
-  public static final String AUTH_NODE_VERSION    = "1.0/";
-  public static final String AUTH_NODE_SUFFIX     = "node/weave";
   public static final String AUTH_SERVER_VERSION  = "1.1/";
   public static final String AUTH_SERVER_SUFFIX   = "info/collections/";
 
