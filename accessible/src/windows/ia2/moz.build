@@ -15,7 +15,7 @@ EXPORTS += [
     'ia2AccessibleValue.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'ia2Accessible.cpp',
     'ia2AccessibleAction.cpp',
     'ia2AccessibleComponent.cpp',
@@ -24,15 +24,10 @@ UNIFIED_SOURCES += [
     'ia2AccessibleHypertext.cpp',
     'ia2AccessibleImage.cpp',
     'ia2AccessibleRelation.cpp',
-    'ia2AccessibleText.cpp',
-    'ia2AccessibleValue.cpp',
-]
-
-# These files cannot be built in unified mode because they both include
-# AccessibleTable2_i.c.
-SOURCES += [
     'ia2AccessibleTable.cpp',
     'ia2AccessibleTableCell.cpp',
+    'ia2AccessibleText.cpp',
+    'ia2AccessibleValue.cpp',
 ]
 
 LOCAL_INCLUDES += [

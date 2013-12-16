@@ -14,7 +14,7 @@ EXPORTS.mozilla.a11y += [
     'HyperTextAccessibleWrap.h',
 ]
 
-UNIFIED_SOURCES += [
+SOURCES += [
     'AccessibleWrap.cpp',
     'ApplicationAccessibleWrap.cpp',
     'ARIAGridAccessibleWrap.cpp',
@@ -34,7 +34,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_XUL']:
-    UNIFIED_SOURCES += [
+    SOURCES += [
         'XULListboxAccessibleWrap.cpp',
         'XULMenuAccessibleWrap.cpp',
         'XULTreeGridAccessibleWrap.cpp',
