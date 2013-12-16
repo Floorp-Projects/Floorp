@@ -139,11 +139,12 @@ const APPMENU_PREFIX_WHITELIST = [
 ];
 
 const DEFAULT_TOOLBAR_SETS = {
-#ifndef XP_MACOSX
+  // It's true that toolbar-menubar is not visible
+  // on OS X, but the XUL node is definitely present
+  // in the document.
   "toolbar-menubar": [
     "menubar-items"
   ],
-#endif
   "nav-bar": [
     "unified-back-forward-button",
     "urlbar-container",
@@ -196,6 +197,10 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_ITEMS", function() {
     result = result.concat(buttons);
   }
   return result;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_TOOLBARS", function() {
+  return Object.keys(DEFAULT_TOOLBAR_SETS);
 });
 
 XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
@@ -498,6 +503,7 @@ this.BrowserUITelemetry = {
     let defaultKept = [];
     let defaultMoved = [];
     let nondefaultAdded = [];
+    let customToolbars = 0;
 
     let toolbars = document.querySelectorAll("toolbar[customizable=true]");
     for (let toolbar of toolbars) {
@@ -528,6 +534,10 @@ this.BrowserUITelemetry = {
         // else, it's a generated item (like springs, spacers, etc), or
         // provided by an add-on, and we won't record it.
       }
+      // Finally, let's see if this is a custom toolbar.
+      if (toolbar.hasAttribute("customindex")) {
+        customToolbars++;
+      }
     }
 
     // Now go through the items in the palette to see what default
@@ -536,10 +546,14 @@ this.BrowserUITelemetry = {
     let defaultRemoved = [node.id for (node of paletteChildren)
                           if (DEFAULT_ITEMS.indexOf(node.id) != -1)];
 
+    let addonToolbars = toolbars.length - DEFAULT_TOOLBARS.length - customToolbars;
+
     result.defaultKept = defaultKept;
     result.defaultMoved = defaultMoved;
     result.nondefaultAdded = nondefaultAdded;
     result.defaultRemoved = defaultRemoved;
+    result.customToolbars = customToolbars;
+    result.addonToolbars = addonToolbars;
 
     result.smallIcons = win.gNavToolbox.getAttribute("iconsize") == "small";
     result.buttonMode = win.gNavToolbox.getAttribute("mode");
