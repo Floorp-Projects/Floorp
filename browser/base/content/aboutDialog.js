@@ -133,15 +133,21 @@ function appUpdater()
     return;
   }
 
-  // If app.update.enabled is false, we don't pop up an update dialog
-  // automatically, but opening the About dialog is considered manually
-  // checking for updates, so we always check.
-  // If app.update.auto is false, we ask before downloading though,
-  // in onCheckComplete.
-  this.selectPanel("checkingForUpdates");
-  this.isChecking = true;
-  this.checker.checkForUpdates(this.updateCheckListener, true);
-  // after checking, onCheckComplete() is called
+  // Honor the "Never check for updates" option by not only disabling background
+  // update checks, but also in the About dialog, by presenting a
+  // "Check for updates" button.
+  // If updates are found, the user is then asked if he wants to "Update to <version>".
+  if (!this.updateEnabled) {
+    this.selectPanel("checkForUpdates");
+    return;
+  }
+
+  // That leaves the options
+  // "Check for updates, but let me choose whether to install them", and
+  // "Automatically install updates".
+  // In both cases, we check for updates without asking.
+  // In the "let me choose" case, we ask before downloading though, in onCheckComplete.
+  this.checkForUpdates();
 }
 
 appUpdater.prototype =
@@ -232,6 +238,16 @@ appUpdater.prototype =
     } else {
       this.updateDeck.selectedPanel = panel;
     }
+  },
+
+  /**
+   * Check for updates
+   */
+  checkForUpdates: function() {
+    this.selectPanel("checkingForUpdates");
+    this.isChecking = true;
+    this.checker.checkForUpdates(this.updateCheckListener, true);
+    // after checking, onCheckComplete() is called
   },
 
   /**
