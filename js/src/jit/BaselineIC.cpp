@@ -176,14 +176,14 @@ ICStub::trace(JSTracer *trc)
         ICTypeMonitor_Fallback *lastMonStub = toMonitoredFallbackStub()->fallbackMonitorStub();
         for (ICStubConstIterator iter = lastMonStub->firstMonitorStub(); !iter.atEnd(); iter++) {
             JS_ASSERT_IF(iter->next() == nullptr, *iter == lastMonStub);
-            iter->markCode(trc, "baseline-monitor-stub-ioncode");
+            iter->trace(trc);
         }
     }
 
     if (isUpdated()) {
         for (ICStubConstIterator iter = toUpdatedStub()->firstUpdateStub(); !iter.atEnd(); iter++) {
             JS_ASSERT_IF(iter->next() == nullptr, iter->isTypeUpdate_Fallback());
-            iter->markCode(trc, "baseline-update-stub-ioncode");
+            iter->trace(trc);
         }
     }
 
