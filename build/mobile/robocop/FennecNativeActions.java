@@ -73,7 +73,7 @@ public class FennecNativeActions implements Actions {
                 public void handleMessage(final String event, final JSONObject message) {
                     FennecNativeDriver.log(FennecNativeDriver.LogLevel.DEBUG,
                             "handleMessage called for: " + event + "; expecting: " + mGeckoEvent);
-                    mAsserter.is(event, mGeckoEvent, "Given message occurred for registered event");
+                    mAsserter.is(event, mGeckoEvent, "Given message occurred for registered event: " + message);
 
                     expecter.notifyOfEvent(message);
                 }
