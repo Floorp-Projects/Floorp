@@ -105,7 +105,7 @@ public:
         if (observerService) {
           observerService->NotifyObservers(
             nullptr, "screen-state-changed",
-            mIsOn ? NS_LITERAL_STRING("on").get() : NS_LITERAL_STRING("off").get()
+            mIsOn ? MOZ_UTF16("on") : MOZ_UTF16("off")
           );
         }
 

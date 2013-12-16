@@ -260,7 +260,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLString title;
-  rv = bundle->GetStringFromName(NS_LITERAL_STRING("PrintToFile").get(), getter_Copies(title));
+  rv = bundle->GetStringFromName(MOZ_UTF16("PrintToFile"), getter_Copies(title));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIWindowWatcher> wwatch =

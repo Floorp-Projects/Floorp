@@ -1047,6 +1047,7 @@ BluetoothHfpManager::HandleCallStateChanged(uint32_t aCallIndex,
                                             const nsAString& aError,
                                             const nsAString& aNumber,
                                             const bool aIsOutgoing,
+                                            const bool aIsConference,
                                             bool aSend)
 {
   if (!IsConnected()) {

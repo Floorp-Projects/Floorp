@@ -143,7 +143,7 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
                               const PRUnichar *someData)
 {
     NS_ASSERTION(NS_strcmp(someData,
-                   NS_LITERAL_STRING("gfx.color_mangement.force_srgb").get()),
+                   MOZ_UTF16("gfx.color_mangement.force_srgb")),
                  "Restarting CMS on wrong pref!");
     ShutdownCMS();
     return NS_OK;

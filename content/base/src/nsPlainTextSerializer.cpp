@@ -570,7 +570,7 @@ nsPlainTextSerializer::DoOpenContainer(nsIAtom* aTag)
     // importable, we use a TAB.
     if (GetLastBool(mHasWrittenCellsForRow)) {
       // Bypass |Write| so that the TAB isn't compressed away.
-      AddToLine(NS_LITERAL_STRING("\t").get(), 1);
+      AddToLine(MOZ_UTF16("\t"), 1);
       mInWhitespace = true;
     }
     else if (mHasWrittenCellsForRow.IsEmpty()) {
@@ -1173,7 +1173,7 @@ static bool
 IsSpaceStuffable(const PRUnichar *s)
 {
   if (s[0] == '>' || s[0] == ' ' || s[0] == kNBSP ||
-      nsCRT::strncmp(s, NS_LITERAL_STRING("From ").get(), 5) == 0)
+      nsCRT::strncmp(s, MOZ_UTF16("From "), 5) == 0)
     return true;
   else
     return false;
