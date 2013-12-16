@@ -2844,11 +2844,8 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
 
   bool canDraw2D = transform.CanDraw2D(&transform2d);
   gfxSize scale;
-  bool isRetained = aLayer->Manager()->IsWidgetLayerManager();
-  // Only fiddle with scale factors for the retaining layer manager, since
-  // it only matters for retained layers
   // XXX Should we do something for 3D transforms?
-  if (canDraw2D && isRetained) {
+  if (canDraw2D) {
     // If the container's transform is animated off main thread, then use the
     // maximum scale.
     if (aContainerFrame->GetContent() &&
@@ -2910,6 +2907,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       aOutgoingScale.mInActiveTransformedSubtree = true;
     }
   }
+  bool isRetained = aLayer->Manager()->IsWidgetLayerManager();
   if (isRetained && (!canDraw2D || transform2d.HasNonIntegerTranslation())) {
     aOutgoingScale.mDisableSubpixelAntialiasingInDescendants = true;
   }
