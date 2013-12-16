@@ -504,6 +504,7 @@ this.BrowserUITelemetry = {
     let defaultMoved = [];
     let nondefaultAdded = [];
     let customToolbars = 0;
+    let addonBarItems = 0;
 
     let toolbars = document.querySelectorAll("toolbar[customizable=true]");
     for (let toolbar of toolbars) {
@@ -531,6 +532,16 @@ this.BrowserUITelemetry = {
           // It's a palette item that's been moved into a toolbar
           nondefaultAdded.push(item);
         }
+        // While we're here, if we're in the add-on bar, we're interested in
+        // counting how many items (built-in AND add-on provided) are in the
+        // toolbar, not counting the addonbar-closebutton and status-bar. We
+        // ignore springs, spacers and separators though.
+        if (toolbarID == "addon-bar" &&
+            DEFAULT_TOOLBAR_SETS["addon-bar"].indexOf(item) == -1 &&
+            !isSpecialToolbarItem(item)) {
+          addonBarItems++;
+        }
+
         // else, it's a generated item (like springs, spacers, etc), or
         // provided by an add-on, and we won't record it.
       }
@@ -554,6 +565,7 @@ this.BrowserUITelemetry = {
     result.defaultRemoved = defaultRemoved;
     result.customToolbars = customToolbars;
     result.addonToolbars = addonToolbars;
+    result.addonBarItems = addonBarItems;
 
     result.smallIcons = win.gNavToolbox.getAttribute("iconsize") == "small";
     result.buttonMode = win.gNavToolbox.getAttribute("mode");
@@ -601,4 +613,16 @@ function getIDBasedOnFirstIDedAncestor(aNode, aLimitID) {
   }
 
   return aNode.id + ":child";
+}
+
+/**
+ * Returns whether or not the toolbar item ID being passed in is one of
+ * our "special" items (spring, spacer, separator).
+ *
+ * @param aItemID the item ID to check.
+ */
+function isSpecialToolbarItem(aItemID) {
+  return aItemID == "spring" ||
+         aItemID == "spacer" ||
+         aItemID == "separator";
 }
