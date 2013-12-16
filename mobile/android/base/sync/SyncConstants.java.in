@@ -53,4 +53,6 @@ public class SyncConstants {
    * Account type.
    */
   public static final String PER_ACCOUNT_TYPE_PERMISSION = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE";
+
+  public static final String DEFAULT_AUTH_SERVER = "https://auth.services.mozilla.com/";
 }
