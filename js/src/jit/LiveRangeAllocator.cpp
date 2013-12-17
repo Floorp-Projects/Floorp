@@ -467,6 +467,7 @@ AddRegisterToSafepoint(LSafepoint *safepoint, AnyRegister reg, const LDefinition
     safepoint->addLiveRegister(reg);
 
     JS_ASSERT(def.type() == LDefinition::GENERAL ||
+              def.type() == LDefinition::INT32 ||
               def.type() == LDefinition::DOUBLE ||
               def.type() == LDefinition::FLOAT32 ||
               def.type() == LDefinition::OBJECT);
