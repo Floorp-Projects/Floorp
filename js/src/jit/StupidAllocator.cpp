@@ -28,9 +28,7 @@ StupidAllocator::stackLocation(uint32_t vreg)
     if (def->policy() == LDefinition::PRESET && def->output()->isArgument())
         return def->output();
 
-    return new(alloc()) LStackSlot(DefaultStackSlot(vreg),
-                                   def->type() == LDefinition::DOUBLE ||
-                                   def->type() == LDefinition::FLOAT32);
+    return new(alloc()) LStackSlot(DefaultStackSlot(vreg));
 }
 
 StupidAllocator::RegisterIndex

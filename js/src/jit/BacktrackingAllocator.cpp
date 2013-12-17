@@ -869,7 +869,7 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         stackSlot = stackSlotAllocator.allocateSlot();
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
-    LStackSlot alloc(stackSlot, reg->isDouble());
+    LStackSlot alloc(stackSlot);
     interval->setAllocation(alloc);
 
     IonSpew(IonSpew_RegAlloc, "  Allocating spill location %s", alloc.toString());
