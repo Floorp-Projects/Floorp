@@ -445,14 +445,28 @@ OMNIJAR_NAME := $(notdir $(OMNIJAR_NAME))
 # thing if there are resource changes in between build time and
 # package time.  We try to prevent mismatched resources by erroring
 # out if the compiled resource IDs are not the same as the resource
-# IDs being packaged.
+# IDs being packaged.  If we're doing a single locale repack, however,
+# we don't have a complete object directory, so we can't compare
+# resource IDs.
+
+# A note on the res/ directory.  We unzip the ap_ during packaging,
+# which produces the res/ directory.  This directory is then included
+# in the final package.  When we unpack (during locale repacks), we
+# need to remove the res/ directory because these resources confuse
+# the l10n packaging script that updates omni.ja: the script tries to
+# localize the contents of the res/ directory, which fails.  Instead,
+# after the l10n packaging script completes, we build the ap_
+# described above (which includes freshly localized Android resources)
+# and the res/ directory is taken from the ap_ as part of the regular
+# packaging.
 
 PKG_SUFFIX      = .apk
 INNER_MAKE_PACKAGE	= \
   $(if $(ALREADY_SZIPPED),,$(foreach lib,$(SZIP_LIBRARIES),host/bin/szip $(MOZ_SZIP_FLAGS) $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH)/$(lib) && )) \
   make -C $(GECKO_APP_AP_PATH) gecko-nodeps.ap_ && \
   cp $(GECKO_APP_AP_PATH)/gecko-nodeps.ap_ $(_ABS_DIST)/gecko.ap_ && \
-  ( diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
+  ( (test ! -f $(GECKO_APP_AP_PATH)/R.txt && echo "*** Warning: The R.txt that is being packaged might not agree with the R.txt that was built. This is normal during l10n repacks.") || \
+    diff $(GECKO_APP_AP_PATH)/R.txt $(GECKO_APP_AP_PATH)/gecko-nodeps/R.txt >/dev/null || \
     (echo "*** Error: The R.txt that was built and the R.txt that is being packaged are not the same. Rebuild mobile/android/base and re-package." && exit 1)) && \
   ( cd $(STAGEPATH)$(MOZ_PKG_DIR)$(_BINPATH) && \
     mkdir -p lib/$(ABI_DIR) && \
@@ -487,6 +501,7 @@ INNER_UNMAKE_PACKAGE	= \
     mv lib/$(ABI_DIR)/libmozglue.so . && \
     mv lib/$(ABI_DIR)/*plugin-container* $(MOZ_CHILD_PROCESS_NAME) && \
     rm -rf lib/$(ABI_DIR) \
+    rm -rf res \
     $(if $(filter-out ./,$(OMNIJAR_DIR)), \
       && mv $(OMNIJAR_DIR)$(OMNIJAR_NAME) $(OMNIJAR_NAME)) )
 endif

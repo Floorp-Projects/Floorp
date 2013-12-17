@@ -1398,6 +1398,7 @@ class AutoSuppressGC
   public:
     AutoSuppressGC(ExclusiveContext *cx);
     AutoSuppressGC(JSCompartment *comp);
+    AutoSuppressGC(JSRuntime *rt);
 
     ~AutoSuppressGC()
     {
