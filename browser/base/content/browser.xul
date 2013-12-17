@@ -213,33 +213,6 @@
       <box id="UITourHighlight"></box>
     </panel>
 
-    <panel id="socialActivatedNotification"
-           type="arrow"
-           hidden="true"
-           align="start"
-           orient="horizontal"
-           role="alert">
-      <image id="social-activation-icon" class="popup-notification-icon"/>
-      <vbox flex="1">
-        <description id="social-activation-message" class="popup-notification-description">&social.activated.description;</description>
-        <spacer flex="1"/>
-        <hbox pack="start" align="center" class="popup-notification-button-container">
-          <label  id="social-undoactivation-button"
-                  class="text-link"
-                  value="&social.activated.undo.label;"
-                  accesskey="&social.activated.undo.accesskey;"
-                  onclick="SocialUI.undoActivation(this);"/>
-          <spacer flex="1"/>
-          <button id="social-activation-button"
-                  default="true"
-                  autofocus="autofocus"
-                  label="&social.ok.label;"
-                  accesskey="&social.ok.accesskey;"
-                  oncommand="SocialUI.activationPanel.hidePopup();"/>
-        </hbox>
-      </vbox>
-    </panel>
-
     <panel id="social-share-panel"
            class="social-panel"
            type="arrow"
