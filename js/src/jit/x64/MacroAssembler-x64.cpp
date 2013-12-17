@@ -134,10 +134,10 @@ MacroAssemblerX64::setupUnalignedABICall(uint32_t args, const Register &scratch)
 }
 
 void
-MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
+MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
-    switch (kind) {
+    switch (type) {
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE: {
         FloatRegister dest;
@@ -149,10 +149,10 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
             to = MoveOperand(dest);
         } else {
             to = MoveOperand(StackPointer, stackForCall_);
-            switch (kind) {
+            switch (type) {
               case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
               case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
-              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument kind");
+              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument type");
             }
         }
         break;
@@ -172,10 +172,10 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
 
-    enoughMemory_ = moveResolver_.addMove(from, to, kind);
+    enoughMemory_ = moveResolver_.addMove(from, to, type);
 }
 
 void
@@ -185,9 +185,9 @@ MacroAssemblerX64::passABIArg(const Register &reg)
 }
 
 void
-MacroAssemblerX64::passABIArg(const FloatRegister &reg, MoveOp::Kind kind)
+MacroAssemblerX64::passABIArg(const FloatRegister &reg, MoveOp::Type type)
 {
-    passABIArg(MoveOperand(reg), kind);
+    passABIArg(MoveOperand(reg), type);
 }
 
 void
@@ -231,7 +231,7 @@ MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
 }
 
 void
-MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
+MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
 {
     freeStack(stackAdjust);
     if (dynamicAlignment_)
@@ -242,7 +242,7 @@ MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerX64::callWithABI(void *fun, MoveOp::Kind result)
+MacroAssemblerX64::callWithABI(void *fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -251,7 +251,7 @@ MacroAssemblerX64::callWithABI(void *fun, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, MoveOp::Kind result)
+MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -271,7 +271,7 @@ IsIntArgReg(Register reg)
 }
 
 void
-MacroAssemblerX64::callWithABI(Address fun, MoveOp::Kind result)
+MacroAssemblerX64::callWithABI(Address fun, MoveOp::Type result)
 {
     if (IsIntArgReg(fun.base)) {
         // Callee register may be clobbered for an argument. Move the callee to

@@ -1194,7 +1194,7 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
         JS_ASSERT(*from != *to);
         JS_ASSERT(!from->isConstant());
 
-        MoveOp::Kind kind;
+        MoveOp::Type moveType;
         switch (type) {
           case LDefinition::OBJECT:
           case LDefinition::SLOTS:
@@ -1204,13 +1204,13 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
 #else
           case LDefinition::BOX:
 #endif
-          case LDefinition::GENERAL: kind = MoveOp::GENERAL; break;
-          case LDefinition::FLOAT32: kind = MoveOp::FLOAT32; break;
-          case LDefinition::DOUBLE:  kind = MoveOp::DOUBLE;  break;
+          case LDefinition::GENERAL: moveType = MoveOp::GENERAL; break;
+          case LDefinition::FLOAT32: moveType = MoveOp::FLOAT32; break;
+          case LDefinition::DOUBLE:  moveType = MoveOp::DOUBLE;  break;
           default: MOZ_ASSUME_UNREACHABLE("Unexpected move type");
         }
 
-        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), kind))
+        if (!resolver.addMove(toMoveOperand(from), toMoveOperand(to), moveType))
             return false;
     }
 
