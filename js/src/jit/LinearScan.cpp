@@ -830,7 +830,7 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
 
     if (IsNunbox(reg))
         return stackSlotAllocator.allocateValueSlot();
-    if (reg->isDouble())
+    if (reg->isFloatReg())
         return stackSlotAllocator.allocateDoubleSlot();
     return stackSlotAllocator.allocateSlot();
 }
@@ -949,7 +949,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
 
     // Compute free-until positions for all registers
     CodePosition freeUntilPos[AnyRegister::Total];
-    bool needFloat = vregs[current->vreg()].isDouble();
+    bool needFloat = vregs[current->vreg()].isFloatReg();
     for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
         AnyRegister reg = regs.takeAny(needFloat);
         freeUntilPos[reg.code()] = CodePosition::MAX;
@@ -1044,7 +1044,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
 
     // Compute next-used positions for all registers
     CodePosition nextUsePos[AnyRegister::Total];
-    bool needFloat = vregs[current->vreg()].isDouble();
+    bool needFloat = vregs[current->vreg()].isFloatReg();
     for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
         AnyRegister reg = regs.takeAny(needFloat);
         nextUsePos[reg.code()] = CodePosition::MAX;
