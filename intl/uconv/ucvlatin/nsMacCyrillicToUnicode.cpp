@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsMacCyrillicToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsMacCyrillicToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "maccyril.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_MACCYRILLIC, true);
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
