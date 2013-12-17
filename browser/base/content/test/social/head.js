@@ -242,14 +242,6 @@ function checkSocialUI(win) {
   isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
   isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
-  isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
-  if (active) {
-    if (!enabled || (Social.defaultProvider.statusURL && Social.allowMultipleWorkers)) {
-      _ok(!win.SocialToolbar.button.style.listStyleImage, "toolbar button is default icon");
-    } else {
-      _is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
-    }
-  }
   // the menus should always have the provider name
   if (provider) {
     let contextMenus = [
