@@ -57,7 +57,7 @@ SurfaceStream::CreateForType(SurfaceStreamType type, mozilla::gl::GLContext* glC
 }
 
 void
-SurfaceStream::New(SurfaceFactory* factory, const gfx::IntSize& size,
+SurfaceStream::New(SurfaceFactory* factory, const gfxIntSize& size,
                    SharedSurface*& surf)
 {
     MOZ_ASSERT(!surf);
@@ -170,7 +170,7 @@ SurfaceStream::SwapConsumer()
 }
 
 SharedSurface*
-SurfaceStream::Resize(SurfaceFactory* factory, const gfx::IntSize& size)
+SurfaceStream::Resize(SurfaceFactory* factory, const gfxIntSize& size)
 {
     MonitorAutoLock lock(mMonitor);
 
@@ -220,7 +220,7 @@ SurfaceStream_SingleBuffer::SurrenderSurfaces(SharedSurface*& producer,
 
 SharedSurface*
 SurfaceStream_SingleBuffer::SwapProducer(SurfaceFactory* factory,
-                                         const gfx::IntSize& size)
+                                         const gfxIntSize& size)
 {
     MonitorAutoLock lock(mMonitor);
     if (mConsumer) {
@@ -313,7 +313,7 @@ SurfaceStream_TripleBuffer_Copy::SurrenderSurfaces(SharedSurface*& producer,
 
 SharedSurface*
 SurfaceStream_TripleBuffer_Copy::SwapProducer(SurfaceFactory* factory,
-                                              const gfx::IntSize& size)
+                                              const gfxIntSize& size)
 {
     MonitorAutoLock lock(mMonitor);
 
@@ -407,7 +407,7 @@ SurfaceStream_TripleBuffer::SurrenderSurfaces(SharedSurface*& producer,
 
 SharedSurface*
 SurfaceStream_TripleBuffer::SwapProducer(SurfaceFactory* factory,
-                                         const gfx::IntSize& size)
+                                         const gfxIntSize& size)
 {
     PROFILER_LABEL("SurfaceStream_TripleBuffer", "SwapProducer");
 
