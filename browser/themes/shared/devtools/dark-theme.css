@@ -11,6 +11,11 @@
   color: #8fa1b2;
 }
 
+::-moz-selection {
+  background-color: #1d4f73;
+  color: #f5f7fa;
+}
+
 .theme-twisty {
   cursor: pointer;
   width: 14px;
