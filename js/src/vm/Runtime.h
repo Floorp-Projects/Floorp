@@ -863,11 +863,19 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     void addCompilationThread() {
+#ifdef JS_WORKER_THREADS
         numCompilationThreads++;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
     }
     void removeCompilationThread() {
+#ifdef JS_WORKER_THREADS
         JS_ASSERT(numCompilationThreads);
         numCompilationThreads--;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
     }
 
     bool compilationThreadsPresent() const {
