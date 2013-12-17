@@ -2853,17 +2853,18 @@ Parser<ParseHandler>::bindVarOrConst(BindData<ParseHandler> *data,
         if (pc->sc->isFunctionBox()) {
             FunctionBox *funbox = pc->sc->asFunctionBox();
             funbox->setMightAliasLocals();
-
-            /*
-             * This definition isn't being added to the parse context's
-             * declarations, so make sure to indicate the need to deoptimize
-             * the script's arguments object. Mark the function as if it
-             * contained a debugger statement, which will deoptimize arguments
-             * as much as possible.
-             */
-            if (name == cx->names().arguments)
-                funbox->setHasDebuggerStatement();
         }
+
+        /*
+         * This definition isn't being added to the parse context's
+         * declarations, so make sure to indicate the need to deoptimize
+         * the script's arguments object. Mark the function as if it
+         * contained a debugger statement, which will deoptimize arguments
+         * as much as possible.
+         */
+        if (name == cx->names().arguments)
+            pc->sc->setHasDebuggerStatement();
+
         return true;
     }
 

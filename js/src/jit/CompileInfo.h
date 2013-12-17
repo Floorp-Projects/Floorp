@@ -45,9 +45,9 @@ class CompileInfo
 {
   public:
     CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
-                ExecutionMode executionMode)
+                ExecutionMode executionMode, bool scriptNeedsArgsObj)
       : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
-        executionMode_(executionMode)
+        executionMode_(executionMode), scriptNeedsArgsObj_(scriptNeedsArgsObj)
     {
         JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
 
@@ -68,7 +68,7 @@ class CompileInfo
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr), constructing_(false),
-        executionMode_(executionMode)
+        executionMode_(executionMode), scriptNeedsArgsObj_(false)
     {
         nimplicit_ = 0;
         nargs_ = 0;
@@ -250,10 +250,10 @@ class CompileInfo
         return script()->argumentsAliasesFormals();
     }
     bool needsArgsObj() const {
-        return script()->needsArgsObj();
+        return scriptNeedsArgsObj_;
     }
     bool argsObjAliasesFormals() const {
-        return script()->argsObjAliasesFormals();
+        return scriptNeedsArgsObj_ && !script()->strict();
     }
 
     ExecutionMode executionMode() const {
@@ -275,6 +275,11 @@ class CompileInfo
     jsbytecode *osrPc_;
     bool constructing_;
     ExecutionMode executionMode_;
+
+    // Whether a script needs an arguments object is unstable over compilation
+    // since the arguments optimization could be marked as failed on the main
+    // thread, so cache a value here and use it throughout for consistency.
+    bool scriptNeedsArgsObj_;
 };
 
 } // namespace jit

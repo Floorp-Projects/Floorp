@@ -393,6 +393,9 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
 inline void
 JSObject::setType(js::types::TypeObject *newType)
 {
+    // Note: This is usually called for newly created objects that haven't
+    // escaped to script yet, so don't require that the compilation lock be
+    // held here.
     JS_ASSERT(newType);
     JS_ASSERT(!hasSingletonType());
     type_ = newType;
@@ -405,7 +408,7 @@ JSObject::getProto(JSContext *cx, js::HandleObject obj, js::MutableHandleObject 
         JS_ASSERT(obj->is<js::ProxyObject>());
         return js::Proxy::getPrototypeOf(cx, obj, protop);
     } else {
-        protop.set(obj->js::ObjectImpl::getProto());
+        protop.set(obj->getTaggedProto().toObjectOrNull());
         return true;
     }
 }
@@ -461,11 +464,11 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
      * make sure their presence is consistent with the shape.
      */
     JS_ASSERT(shape && type);
-    JS_ASSERT(type->clasp == shape->getObjectClass());
-    JS_ASSERT(type->clasp != &js::ArrayObject::class_);
-    JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp) == shape->numFixedSlots());
-    JS_ASSERT_IF(type->clasp->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
-    JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
+    JS_ASSERT(type->clasp() == shape->getObjectClass());
+    JS_ASSERT(type->clasp() != &js::ArrayObject::class_);
+    JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
+    JS_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
+    JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
     JS_ASSERT_IF(extantSlots, dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()));
 
     js::HeapSlot *slots = extantSlots;
@@ -495,7 +498,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     obj->slots = slots;
     obj->elements = js::emptyObjectElements;
 
-    const js::Class *clasp = type->clasp;
+    const js::Class *clasp = type->clasp();
     if (clasp->hasPrivate())
         obj->privateRef(shape->numFixedSlots()) = nullptr;
 
@@ -512,9 +515,9 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
                       uint32_t length)
 {
     JS_ASSERT(shape && type);
-    JS_ASSERT(type->clasp == shape->getObjectClass());
-    JS_ASSERT(type->clasp == &js::ArrayObject::class_);
-    JS_ASSERT_IF(type->clasp->finalize, heap == js::gc::TenuredHeap);
+    JS_ASSERT(type->clasp() == shape->getObjectClass());
+    JS_ASSERT(type->clasp() == &js::ArrayObject::class_);
+    JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
 
     /*
      * Arrays use their fixed slots to store elements, and must have enough
@@ -979,8 +982,11 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
     JS_ASSERT(!global->nativeLookup(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
-    global->setConstructor(key, ObjectValue(*ctor));
-    global->setPrototype(key, ObjectValue(*proto));
+    {
+        AutoLockForCompilation lock(cx);
+        global->setConstructor(key, ObjectValue(*ctor));
+        global->setPrototype(key, ObjectValue(*proto));
+    }
     global->setConstructorPropertySlot(key, ObjectValue(*ctor));
 
     if (!global->addDataProperty(cx, id, GlobalObject::constructorPropertySlot(key), 0)) {
