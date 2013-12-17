@@ -862,11 +862,7 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         }
     }
 
-    uint32_t stackSlot;
-    if (reg->isFloatReg())
-        stackSlot = stackSlotAllocator.allocateDoubleSlot();
-    else
-        stackSlot = stackSlotAllocator.allocateSlot();
+    uint32_t stackSlot = stackSlotAllocator.allocateSlot(reg->type());
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
     LStackSlot alloc(stackSlot);
