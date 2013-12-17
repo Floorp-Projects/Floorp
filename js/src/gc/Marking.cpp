@@ -1129,23 +1129,17 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
             PushMarkStack(gcmarker, JSID_TO_STRING(prop->id));
     }
 
-    if (TaggedProto(type->proto).isObject())
-        PushMarkStack(gcmarker, type->proto);
+    if (type->proto().isObject())
+        PushMarkStack(gcmarker, type->proto().toObject());
 
     if (type->singleton && !type->lazy())
         PushMarkStack(gcmarker, type->singleton);
 
-    if (type->addendum) {
-        switch (type->addendum->kind) {
-          case types::TypeObjectAddendum::NewScript:
-            PushMarkStack(gcmarker, type->newScript()->fun);
-            PushMarkStack(gcmarker, type->newScript()->templateObject);
-            break;
-
-          case types::TypeObjectAddendum::TypedObject:
-            PushMarkStack(gcmarker, type->typedObject()->typeRepr->ownerObject());
-            break;
-        }
+    if (type->hasNewScript()) {
+        PushMarkStack(gcmarker, type->newScript()->fun);
+        PushMarkStack(gcmarker, type->newScript()->templateObject);
+    } else if (type->hasTypedObject()) {
+        PushMarkStack(gcmarker, type->typedObject()->typeRepr->ownerObject());
     }
 
     if (type->interpretedFunction)
@@ -1162,23 +1156,17 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
             MarkId(trc, &prop->id, "type_prop");
     }
 
-    if (TaggedProto(type->proto).isObject())
-        MarkObject(trc, &type->proto, "type_proto");
+    if (type->proto().isObject())
+        MarkObject(trc, &type->protoRaw(), "type_proto");
 
     if (type->singleton && !type->lazy())
         MarkObject(trc, &type->singleton, "type_singleton");
 
-    if (type->addendum) {
-        switch (type->addendum->kind) {
-          case types::TypeObjectAddendum::NewScript:
-            MarkObject(trc, &type->newScript()->fun, "type_new_function");
-            MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
-            break;
-
-          case types::TypeObjectAddendum::TypedObject:
-            type->typedObject()->typeRepr->mark(trc);
-            break;
-        }
+    if (type->hasNewScript()) {
+        MarkObject(trc, &type->newScript()->fun, "type_new_function");
+        MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
+    } else if (type->hasTypedObject()) {
+        type->typedObject()->typeRepr->mark(trc);
     }
 
     if (type->interpretedFunction)
@@ -1441,7 +1429,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         PushMarkStack(this, shape);
 
         /* Call the trace hook if necessary. */
-        const Class *clasp = type->clasp;
+        const Class *clasp = type->clasp();
         if (clasp->trace) {
             JS_ASSERT_IF(runtime->gcMode() == JSGC_MODE_INCREMENTAL &&
                          runtime->gcIncrementalEnabled,

@@ -29,7 +29,7 @@ endif
 endif # WINNT
 
 ifdef .PYMAKE
-include_deps = $(eval -includedeps $(1))
+include_deps = $(eval $(if $(2),,-)includedeps $(1))
 else
-include_deps = $(eval -include $(1))
+include_deps = $(eval $(if $(2),,-)include $(1))
 endif

@@ -2903,6 +2903,12 @@ class XPCJSSourceHook: public js::SourceHook {
     }
 };
 
+static const JSWrapObjectCallbacks WrapObjectCallbacks = {
+    xpc::WrapperFactory::Rewrap,
+    xpc::WrapperFactory::WrapForSameCompartment,
+    xpc::WrapperFactory::PrepareForWrapping
+};
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
    mJSContextStack(new XPCJSContextStack()),
@@ -3031,10 +3037,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_SetFinalizeCallback(runtime, FinalizeCallback);
-    JS_SetWrapObjectCallbacks(runtime,
-                              xpc::WrapperFactory::Rewrap,
-                              xpc::WrapperFactory::WrapForSameCompartment,
-                              xpc::WrapperFactory::PrepareForWrapping);
+    JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER
     JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);

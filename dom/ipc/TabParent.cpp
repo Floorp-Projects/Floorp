@@ -484,10 +484,6 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
     mOrientation = orientation;
 
     unused << SendUpdateDimensions(mRect, mDimensions, mOrientation);
-    if (RenderFrameParent* rfp = GetRenderFrame()) {
-      rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
-        gfx::IntSize(mDimensions.width, mDimensions.height)));
-    }
   }
 }
 
@@ -1687,12 +1683,6 @@ TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
                                        TextureFactoryIdentifier* factoryIdentifier,
                                        uint64_t* layersId)
 {
-  RenderFrameParent* rfp = GetRenderFrame();
-  if (mDimensions != nsIntSize() && rfp) {
-    rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
-      gfx::IntSize(mDimensions.width, mDimensions.height)));
-  }
-
   return true;
 }
 
@@ -1717,17 +1707,6 @@ TabParent::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
 {
   if (RenderFrameParent* rfp = GetRenderFrame()) {
     rfp->UpdateZoomConstraints(aPresShellId, aViewId, aIsRoot, aAllowZoom, aMinZoom, aMaxZoom);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvUpdateScrollOffset(const uint32_t& aPresShellId,
-                                  const ViewID& aViewId,
-                                  const CSSIntPoint& aScrollOffset)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->UpdateScrollOffset(aPresShellId, aViewId, aScrollOffset);
   }
   return true;
 }

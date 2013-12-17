@@ -3015,7 +3015,10 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 
     JS_ASSERT(!script->isGenerator());
 
-    script->needsArgsObj_ = true;
+    {
+        AutoLockForCompilation lock(cx);
+        script->needsArgsObj_ = true;
+    }
 
 #ifdef JS_ION
     /*

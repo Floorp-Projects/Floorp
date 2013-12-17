@@ -31,7 +31,7 @@ LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
     if (param->index() == MParameter::THIS_SLOT)
-        offset = THIS_FRAME_SLOT;
+        offset = THIS_FRAME_ARGSLOT;
     else
         offset = 1 + param->index();
 
@@ -42,14 +42,14 @@ LIRGenerator::visitParameter(MParameter *param)
     offset *= sizeof(Value);
 #if defined(JS_NUNBOX32)
 # if defined(IS_BIG_ENDIAN)
-    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
-    ins->getDef(1)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset + 4));
+    ins->getDef(0)->setOutput(LArgument(offset));
+    ins->getDef(1)->setOutput(LArgument(offset + 4));
 # else
-    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset + 4));
-    ins->getDef(1)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
+    ins->getDef(0)->setOutput(LArgument(offset + 4));
+    ins->getDef(1)->setOutput(LArgument(offset));
 # endif
 #elif defined(JS_PUNBOX64)
-    ins->getDef(0)->setOutput(LArgument(LAllocation::INT_ARGUMENT, offset));
+    ins->getDef(0)->setOutput(LArgument(offset));
 #endif
 
     return true;
@@ -3295,10 +3295,7 @@ LIRGenerator::visitAsmJSParameter(MAsmJSParameter *ins)
         return defineFixed(new(alloc()) LAsmJSParameter, ins, LAllocation(abi.reg()));
 
     JS_ASSERT(IsNumberType(ins->type()));
-    LAllocation::Kind argKind = ins->type() == MIRType_Int32
-                                ? LAllocation::INT_ARGUMENT
-                                : LAllocation::DOUBLE_ARGUMENT;
-    return defineFixed(new(alloc()) LAsmJSParameter, ins, LArgument(argKind, abi.offsetFromArgBase()));
+    return defineFixed(new(alloc()) LAsmJSParameter, ins, LArgument(abi.offsetFromArgBase()));
 }
 
 bool

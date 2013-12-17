@@ -394,7 +394,7 @@ CodeGeneratorShared::markSafepoint(LInstruction *ins)
 bool
 CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction *ins)
 {
-    JS_ASSERT_IF(safepointIndices_.length(),
+    JS_ASSERT_IF(!safepointIndices_.empty(),
                  offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
     return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
 }
@@ -763,11 +763,11 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 
     if (ool->needFloat32Conversion()) {
         masm.push(src);
-        masm.convertFloatToDouble(src, src);
+        masm.convertFloat32ToDouble(src, src);
     }
 
     masm.setupUnalignedABICall(1, dest);
-    masm.passABIArg(src);
+    masm.passABIArg(src, MoveOp::DOUBLE);
     if (gen->compilingAsmJS())
         masm.callWithABI(AsmJSImm_ToInt32);
     else
@@ -804,8 +804,7 @@ CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
 void
 CodeGeneratorShared::dropArguments(unsigned argc)
 {
-    for (unsigned i = 0; i < argc; i++)
-        pushedArgumentSlots_.popBack();
+    pushedArgumentSlots_.shrinkBy(argc);
 }
 
 bool

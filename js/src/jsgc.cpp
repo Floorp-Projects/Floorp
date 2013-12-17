@@ -5129,6 +5129,9 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
 void
 gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
 {
+    // Don't allow debugger-visible compartments to be merged
+    JS_ASSERT(source->options_.invisibleToDebugger());
+
     JSRuntime *rt = source->runtimeFromMainThread();
 
     AutoPrepareForTracing prepare(rt, SkipAtoms);
@@ -5516,6 +5519,12 @@ AutoSuppressGC::AutoSuppressGC(ExclusiveContext *cx)
 
 AutoSuppressGC::AutoSuppressGC(JSCompartment *comp)
   : suppressGC_(comp->runtimeFromMainThread()->mainThread.suppressGC)
+{
+    suppressGC_++;
+}
+
+AutoSuppressGC::AutoSuppressGC(JSRuntime *rt)
+  : suppressGC_(rt->mainThread.suppressGC)
 {
     suppressGC_++;
 }

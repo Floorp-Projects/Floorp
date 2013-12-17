@@ -1124,25 +1124,21 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         // THING_ROOT_LAZY_SCRIPT).
         AutoSuppressGC suppressGC(cx);
 
-        fun->flags_ &= ~INTERPRETED_LAZY;
-        fun->flags_ |= INTERPRETED;
-
         RootedScript script(cx, lazy->maybeScript());
 
         if (script) {
-            fun->initScript(script);
+            AutoLockForCompilation lock(cx);
+            fun->setUnlazifiedScript(script);
             return true;
         }
 
-        fun->initScript(nullptr);
-
         if (fun != lazy->function()) {
             script = lazy->function()->getOrCreateScript(cx);
-            if (!script) {
-                fun->initLazyScript(lazy);
+            if (!script)
                 return false;
-            }
-            fun->initScript(script);
+
+            AutoLockForCompilation lock(cx);
+            fun->setUnlazifiedScript(script);
             return true;
         }
 
@@ -1162,16 +1158,18 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         if (script) {
             RootedObject enclosingScope(cx, lazy->enclosingScope());
             RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, fun, script));
-            if (!clonedScript) {
-                fun->initLazyScript(lazy);
+            if (!clonedScript)
                 return false;
-            }
 
             clonedScript->setSourceObject(lazy->sourceObject());
 
             fun->initAtom(script->function()->displayAtom());
-            fun->initScript(clonedScript);
             clonedScript->setFunction(fun);
+
+            {
+                AutoLockForCompilation lock(cx);
+                fun->setUnlazifiedScript(clonedScript);
+            }
 
             CallNewScriptHook(cx, clonedScript, fun);
 
@@ -1184,18 +1182,14 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         // Parse and compile the script from source.
         SourceDataCache::AutoSuppressPurge asp(cx);
         const jschar *chars = lazy->source()->chars(cx, asp);
-        if (!chars) {
-            fun->initLazyScript(lazy);
+        if (!chars)
             return false;
-        }
 
         const jschar *lazyStart = chars + lazy->begin();
         size_t lazyLength = lazy->end() - lazy->begin();
 
-        if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength)) {
-            fun->initLazyScript(lazy);
+        if (!frontend::CompileLazyFunction(cx, lazy, lazyStart, lazyLength))
             return false;
-        }
 
         script = fun->nonLazyScript();
 

@@ -360,7 +360,7 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 
     MarkShape(trc, &shape_, "shape");
 
-    const Class *clasp = type_->clasp;
+    const Class *clasp = type_->clasp();
     JSObject *obj = asObjectPtr();
     if (clasp->trace)
         clasp->trace(trc, obj);
@@ -538,7 +538,7 @@ js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
     if (obj->getPrivate())
         return static_cast<JSObject *>(obj->getPrivate());
     JSObject *delegate = NewObjectWithGivenProto(cx, &JSObject::class_,
-                                                 obj->getProto(), nullptr);
+                                                 obj->getTaggedProto(), nullptr);
     obj->setPrivateGCThing(delegate);
     return delegate;
 }
@@ -684,7 +684,7 @@ js::GetProperty(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> rece
 
         /* No property?  Recur or bottom out. */
         if (desc.isUndefined()) {
-            current = current->getProto();
+            current = current->getTaggedProto().toObjectOrNull();
             if (current)
                 continue;
 
@@ -746,7 +746,7 @@ js::GetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
 
         /* No property?  Recur or bottom out. */
         if (desc.isUndefined()) {
-            current = current->getProto();
+            current = current->getTaggedProto().toObjectOrNull();
             if (current)
                 continue;
 
@@ -811,7 +811,7 @@ js::HasElement(JSContext *cx, Handle<ObjectImpl*> obj, uint32_t index, unsigned 
             return true;
         }
 
-        current = current->getProto();
+        current = current->getTaggedProto().toObjectOrNull();
         if (current)
             continue;
 
@@ -1009,7 +1009,7 @@ js::SetElement(JSContext *cx, Handle<ObjectImpl*> obj, Handle<ObjectImpl*> recei
             MOZ_ASSUME_UNREACHABLE("NYI: setting PropertyOp-based property");
         }
 
-        current = current->getProto();
+        current = current->getTaggedProto().toObjectOrNull();
         if (current)
             continue;
 

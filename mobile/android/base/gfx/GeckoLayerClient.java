@@ -383,9 +383,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
                 if (!oldMetrics.fuzzyEquals(newMetrics)) {
                     abortPanZoomAnimation();
                 }
-                mPanZoomController.updateScrollOffset(
-                		messageMetrics.viewportRectLeft / messageMetrics.zoomFactor,
-                		messageMetrics.viewportRectTop / messageMetrics.zoomFactor);
                 break;
             case PAGE_SIZE:
                 // adjust the page dimensions to account for differences in zoom

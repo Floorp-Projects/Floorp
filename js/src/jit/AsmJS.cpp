@@ -2537,9 +2537,8 @@ class FunctionCompiler
   private:
     ParseNode *popLoop()
     {
-        ParseNode *pn = loopStack_.back();
+        ParseNode *pn = loopStack_.popCopy();
         JS_ASSERT(!unlabeledContinues_.has(pn));
-        loopStack_.popBack();
         breakableStack_.popBack();
         return pn;
     }
@@ -5839,7 +5838,7 @@ StackDecrementForCall(MacroAssembler &masm, const VectorT &argTypes, unsigned ex
     return AlignBytes(alreadyPushed + extraBytes + argBytes, StackAlignment) - alreadyPushed;
 }
 
-static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * STACK_SLOT_SIZE +
+static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
                                              NonVolatileRegs.fpus().size() * sizeof(double);
 
 static bool
@@ -5936,7 +5935,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Float:
-        masm.convertFloatToDouble(ReturnFloatReg, ReturnFloatReg);
+        masm.convertFloat32ToDouble(ReturnFloatReg, ReturnFloatReg);
         // Fall through as ReturnFloatReg now contains a Double
       case RetType::Double:
         masm.canonicalizeDouble(ReturnFloatReg);

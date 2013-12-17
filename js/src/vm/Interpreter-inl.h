@@ -210,7 +210,7 @@ inline bool
 GetIntrinsicOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 {
     RootedPropertyName name(cx, cx->currentScript()->getName(pc));
-    return cx->global()->getIntrinsicValue(cx, name, vp);
+    return GlobalObject::getIntrinsicValue(cx, cx->global(), name, vp);
 }
 
 inline bool

@@ -98,7 +98,6 @@ namespace jit {
     _(JSOP_GETELEM)            \
     _(JSOP_SETELEM)            \
     _(JSOP_CALLELEM)           \
-    _(JSOP_ENUMELEM)           \
     _(JSOP_DELELEM)            \
     _(JSOP_IN)                 \
     _(JSOP_GETGNAME)           \

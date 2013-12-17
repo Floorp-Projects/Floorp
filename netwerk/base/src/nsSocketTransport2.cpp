@@ -748,7 +748,7 @@ nsSocketTransport::nsSocketTransport()
     , mResolving(false)
     , mNetAddrIsSet(false)
     , mLock("nsSocketTransport.mLock")
-    , mFD(nullptr)
+    , mFD(MOZ_THIS_IN_INITIALIZER_LIST())
     , mFDref(0)
     , mFDconnected(false)
     , mInput(MOZ_THIS_IN_INITIALIZER_LIST())
@@ -891,7 +891,7 @@ nsSocketTransport::InitWithFilename(const char *filename)
 nsresult
 nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 {
-    NS_ASSERTION(!mFD, "already initialized");
+    NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
 
     char buf[kNetAddrMaxCStrBufSize];
     NetAddrToString(addr, buf, sizeof(buf));
@@ -913,15 +913,19 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
     mState = STATE_TRANSFERRING;
     mNetAddrIsSet = true;
 
-    mFD = fd;
-    mFDref = 1;
-    mFDconnected = 1;
+    {
+        MutexAutoLock lock(mLock);
+
+        mFD = fd;
+        mFDref = 1;
+        mFDconnected = 1;
+    }
 
     // make sure new socket is non-blocking
     PRSocketOptionData opt;
     opt.option = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = true;
-    PR_SetSocketOption(mFD, &opt);
+    PR_SetSocketOption(fd, &opt);
 
     SOCKET_LOG(("nsSocketTransport::InitWithConnectedSocket [this=%p addr=%s:%hu]\n",
         this, mHost.get(), mPort));
@@ -1209,7 +1213,7 @@ nsSocketTransport::InitiateSocket()
     //
     // if we already have a connected socket, then just attach and return.
     //
-    if (mFD) {
+    if (mFD.IsInitialized()) {
         rv = gSocketTransportService->AttachSocket(mFD, this);
         if (NS_SUCCEEDED(rv))
             mAttached = true;
@@ -1533,7 +1537,7 @@ nsSocketTransport::OnSocketConnected()
     // to trample over mFDref if mFD is already set.
     {
         MutexAutoLock lock(mLock);
-        NS_ASSERTION(mFD, "no socket");
+        NS_ASSERTION(mFD.IsInitialized(), "no socket");
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = true;
     }
@@ -1546,11 +1550,13 @@ nsSocketTransport::OnSocketConnected()
 PRFileDesc *
 nsSocketTransport::GetFD_Locked()
 {
+    mLock.AssertCurrentThreadOwns();
+
     // mFD is not available to the streams while disconnected.
     if (!mFDconnected)
         return nullptr;
 
-    if (mFD)
+    if (mFD.IsInitialized())
         mFDref++;
 
     return mFD;
@@ -1587,6 +1593,8 @@ STS_PRCloseOnSocketTransport(PRFileDesc *fd)
 void
 nsSocketTransport::ReleaseFD_Locked(PRFileDesc *fd)
 {
+    mLock.AssertCurrentThreadOwns();
+
     NS_ASSERTION(mFD == fd, "wrong fd");
     SOCKET_LOG(("JIMB: ReleaseFD_Locked: mFDref = %d\n", mFDref));
 
@@ -1855,7 +1863,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     nsCOMPtr<nsITransportEventSink> ourEventSink;
     {
         MutexAutoLock lock(mLock);
-        if (mFD) {
+        if (mFD.IsInitialized()) {
             ReleaseFD_Locked(mFD);
             // flag mFD as unusable; this prevents other consumers from 
             // acquiring a reference to mFD.
@@ -2074,14 +2082,10 @@ nsSocketTransport::IsAlive(bool *result)
 {
     *result = false;
 
-    PRFileDesc* fd = nullptr;
-    {
-        MutexAutoLock lock(mLock);
-        if (NS_FAILED(mCondition))
-            return NS_OK;
-        fd = GetFD_Locked();
-        if (!fd)
-            return NS_OK;
+    nsresult conditionWhileLocked = NS_OK;
+    PRFileDescAutoLock fd(this, &conditionWhileLocked);
+    if (NS_FAILED(conditionWhileLocked) || !fd.IsInitialized()) {
+        return NS_OK;
     }
 
     // XXX do some idle-time based checks??
@@ -2092,10 +2096,6 @@ nsSocketTransport::IsAlive(bool *result)
     if ((rval > 0) || (rval < 0 && PR_GetError() == PR_WOULD_BLOCK_ERROR))
         *result = true;
 
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
     return NS_OK;
 }
 
@@ -2138,13 +2138,8 @@ nsSocketTransport::GetSelfAddr(NetAddr *addr)
     // while holding mLock since those methods might re-enter
     // socket transport code.
 
-    PRFileDesc *fd;
-    {
-        MutexAutoLock lock(mLock);
-        fd = GetFD_Locked();
-    }
-
-    if (!fd) {
+    PRFileDescAutoLock fd(this);
+    if (!fd.IsInitialized()) {
         return NS_ERROR_NOT_CONNECTED;
     }
 
@@ -2162,11 +2157,6 @@ nsSocketTransport::GetSelfAddr(NetAddr *addr)
     nsresult rv =
         (PR_GetSockName(fd, &prAddr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
     PRNetAddrToNetAddr(&prAddr, addr);
-
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
 
     return rv;
 }
@@ -2244,106 +2234,70 @@ nsSocketTransport::GetQoSBits(uint8_t *aQoSBits)
 NS_IMETHODIMP
 nsSocketTransport::GetRecvBufferSize(uint32_t *aSize)
 {
-    PRFileDesc *fd;
-    {
-        MutexAutoLock lock(mLock);
-        fd = GetFD_Locked();
-    }
-
-    if (!fd)
+    PRFileDescAutoLock fd(this);
+    if (!fd.IsInitialized())
         return NS_ERROR_NOT_CONNECTED;
 
     nsresult rv = NS_OK;
     PRSocketOptionData opt;
     opt.option = PR_SockOpt_RecvBufferSize;
-    if (PR_GetSocketOption(mFD, &opt) == PR_SUCCESS)
+    if (PR_GetSocketOption(fd, &opt) == PR_SUCCESS)
         *aSize = opt.value.recv_buffer_size;
     else
         rv = NS_ERROR_FAILURE;
 
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
     return rv;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::GetSendBufferSize(uint32_t *aSize)
 {
-    PRFileDesc *fd;
-    {
-        MutexAutoLock lock(mLock);
-        fd = GetFD_Locked();
-    }
-
-    if (!fd)
+    PRFileDescAutoLock fd(this);
+    if (!fd.IsInitialized())
         return NS_ERROR_NOT_CONNECTED;
 
     nsresult rv = NS_OK;
     PRSocketOptionData opt;
     opt.option = PR_SockOpt_SendBufferSize;
-    if (PR_GetSocketOption(mFD, &opt) == PR_SUCCESS)
+    if (PR_GetSocketOption(fd, &opt) == PR_SUCCESS)
         *aSize = opt.value.send_buffer_size;
     else
         rv = NS_ERROR_FAILURE;
 
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
     return rv;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::SetRecvBufferSize(uint32_t aSize)
 {
-    PRFileDesc *fd;
-    {
-        MutexAutoLock lock(mLock);
-        fd = GetFD_Locked();
-    }
-
-    if (!fd)
+    PRFileDescAutoLock fd(this);
+    if (!fd.IsInitialized())
         return NS_ERROR_NOT_CONNECTED;
 
     nsresult rv = NS_OK;
     PRSocketOptionData opt;
     opt.option = PR_SockOpt_RecvBufferSize;
     opt.value.recv_buffer_size = aSize;
-    if (PR_SetSocketOption(mFD, &opt) != PR_SUCCESS)
+    if (PR_SetSocketOption(fd, &opt) != PR_SUCCESS)
         rv = NS_ERROR_FAILURE;
 
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
     return rv;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::SetSendBufferSize(uint32_t aSize)
 {
-    PRFileDesc *fd;
-    {
-        MutexAutoLock lock(mLock);
-        fd = GetFD_Locked();
-    }
-
-    if (!fd)
+    PRFileDescAutoLock fd(this);
+    if (!fd.IsInitialized())
         return NS_ERROR_NOT_CONNECTED;
 
     nsresult rv = NS_OK;
     PRSocketOptionData opt;
     opt.option = PR_SockOpt_SendBufferSize;
     opt.value.send_buffer_size = aSize;
-    if (PR_SetSocketOption(mFD, &opt) != PR_SUCCESS)
+    if (PR_SetSocketOption(fd, &opt) != PR_SUCCESS)
         rv = NS_ERROR_FAILURE;
 
-    {
-        MutexAutoLock lock(mLock);
-        ReleaseFD_Locked(fd);
-    }
     return rv;
 }
 

@@ -162,6 +162,42 @@ function IsObject(v) {
            (typeof v === "undefined" && v !== undefined);
 }
 
+
+/********** Testing code **********/
+
+// This code enables testing of the custom allow-nothing wrappers used for
+// objects and functions crossing the self-hosting compartment boundaries.
+// Functions marked as wrappable won't be cloned into content compartments;
+// they're called inside the self-hosting compartment itself. Calling is the
+// only valid operation on them. In turn, the only valid way they can use their
+// object arguments is as keys in maps. Doing anything else with them throws.
+var wrappersTestMap = new WeakMap();
+function testWrappersAllowUseAsKey(o) {
+  wrappersTestMap.set(o, o);
+  var mappedO = wrappersTestMap.get(o);
+  wrappersTestMap.clear();
+  return mappedO;
+}
+function testWrappersForbidAccess(o, operation) {
+  try {
+    switch (operation) {
+      case 'get': var result = o.prop; break;
+      case 'set': o.prop2 = 'value'; break;
+      case 'call': o(); break;
+      case '__proto__':
+        Object.getOwnPropertyDescriptor(Object.prototype, '__proto__').set.call(o, new Object());
+        break;
+    }
+  } catch (e) {
+    // Got the expected exception.
+    return /denied/.test(e);
+  }
+  return false;
+}
+
+MakeWrappable(testWrappersAllowUseAsKey);
+MakeWrappable(testWrappersForbidAccess);
+
 #ifdef ENABLE_PARALLEL_JS
 
 /**

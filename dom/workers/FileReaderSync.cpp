@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/Base64.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "nsContentUtils.h"
 #include "mozilla/dom/FileReaderSyncBinding.h"
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
@@ -16,12 +17,9 @@
 #include "nsDOMClassInfoID.h"
 #include "nsError.h"
 #include "nsIDOMFile.h"
-#include "nsICharsetDetector.h"
 #include "nsIConverterInputStream.h"
 #include "nsIInputStream.h"
-#include "nsIPlatformCharset.h"
 #include "nsISeekableStream.h"
-#include "nsISupportsImpl.h"
 #include "nsISupportsImpl.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -33,13 +31,6 @@ USING_WORKERS_NAMESPACE
 using namespace mozilla;
 using mozilla::dom::Optional;
 using mozilla::dom::GlobalObject;
-
-NS_IMPL_ADDREF(FileReaderSync)
-NS_IMPL_RELEASE(FileReaderSync)
-
-NS_INTERFACE_MAP_BEGIN(FileReaderSync)
-  NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
-NS_INTERFACE_MAP_END
 
 // static
 already_AddRefed<FileReaderSync>
@@ -159,37 +150,57 @@ FileReaderSync::ReadAsText(JS::Handle<JSObject*> aBlob,
     return;
   }
 
-  nsCString charsetGuess;
-  if (!aEncoding.WasPassed() || aEncoding.Value().IsEmpty()) {
-    rv = GuessCharset(stream, charsetGuess);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-
-    nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(stream);
-    if (!seekable) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    // Seek to 0 because guessing the charset advances the stream.
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(rv);
-      return;
-    }
-  } else {
-    CopyUTF16toUTF8(aEncoding.Value(), charsetGuess);
-  }
-
-  nsCString charset;
-  if (!EncodingUtils::FindEncodingForLabel(charsetGuess, charset)) {
-    aRv.Throw(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+  nsAutoCString encoding;
+  unsigned char sniffBuf[3] = { 0, 0, 0 };
+  uint32_t numRead;
+  rv = stream->Read(reinterpret_cast<char*>(sniffBuf),
+                    sizeof(sniffBuf), &numRead);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
     return;
   }
 
-  rv = ConvertStream(stream, charset.get(), aResult);
+  // The BOM sniffing is baked into the "decode" part of the Encoding
+  // Standard, which the File API references.
+  if (!nsContentUtils::CheckForBOM(sniffBuf, numRead, encoding)) {
+    // BOM sniffing failed. Try the API argument.
+    if (!aEncoding.WasPassed() ||
+        !EncodingUtils::FindEncodingForLabel(aEncoding.Value(),
+                                             encoding)) {
+      // API argument failed. Try the type property of the blob.
+      nsAutoString type16;
+      blob->GetType(type16);
+      NS_ConvertUTF16toUTF8 type(type16);
+      nsAutoCString specifiedCharset;
+      bool haveCharset;
+      int32_t charsetStart, charsetEnd;
+      NS_ExtractCharsetFromContentType(type,
+                                       specifiedCharset,
+                                       &haveCharset,
+                                       &charsetStart,
+                                       &charsetEnd);
+      if (!EncodingUtils::FindEncodingForLabel(specifiedCharset, encoding)) {
+        // Type property failed. Use UTF-8.
+        encoding.AssignLiteral("UTF-8");
+      }
+    }
+  }
+
+  nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(stream);
+  if (!seekable) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  // Seek to 0 because to undo the BOM sniffing advance. UTF-8 and UTF-16
+  // decoders will swallow the BOM.
+  rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  rv = ConvertStream(stream, encoding.get(), aResult);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -283,91 +294,3 @@ FileReaderSync::ConvertStream(nsIInputStream *aStream,
   return rv;
 }
 
-nsresult
-FileReaderSync::GuessCharset(nsIInputStream *aStream, nsACString &aCharset)
-{
-  // First try the universal charset detector
-  nsCOMPtr<nsICharsetDetector> detector
-    = do_CreateInstance(NS_CHARSET_DETECTOR_CONTRACTID_BASE
-                        "universal_charset_detector");
-  if (!detector) {
-    RuntimeService* runtime = RuntimeService::GetService();
-    NS_ASSERTION(runtime, "This should never be null!");
-
-    // No universal charset detector, try the default charset detector
-    const nsACString& detectorName = runtime->GetDetectorName();
-
-    if (!detectorName.IsEmpty()) {
-      nsAutoCString detectorContractID;
-      detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      detectorContractID += detectorName;
-      detector = do_CreateInstance(detectorContractID.get());
-    }
-  }
-
-  nsresult rv;
-  if (detector) {
-    detector->Init(this);
-
-    bool done;
-    uint32_t numRead;
-    do {
-      char readBuf[4096];
-      rv = aStream->Read(readBuf, sizeof(readBuf), &numRead);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (numRead <= 0) {
-        break;
-      }
-      rv = detector->DoIt(readBuf, numRead, &done);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } while (!done);
-
-    rv = detector->Done();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // no charset detector available, check the BOM
-    unsigned char sniffBuf[4];
-    uint32_t numRead;
-    rv = aStream->Read(reinterpret_cast<char*>(sniffBuf),
-                       sizeof(sniffBuf), &numRead);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (numRead >= 2 &&
-        sniffBuf[0] == 0xfe &&
-        sniffBuf[1] == 0xff) {
-      mCharset = "UTF-16BE";
-    } else if (numRead >= 2 &&
-               sniffBuf[0] == 0xff &&
-               sniffBuf[1] == 0xfe) {
-      mCharset = "UTF-16LE";
-    } else if (numRead >= 3 &&
-               sniffBuf[0] == 0xef &&
-               sniffBuf[1] == 0xbb &&
-               sniffBuf[2] == 0xbf) {
-      mCharset = "UTF-8";
-    }
-  }
-
-  if (mCharset.IsEmpty()) {
-    RuntimeService* runtime = RuntimeService::GetService();
-    mCharset = runtime->GetSystemCharset();
-  }
-
-  if (mCharset.IsEmpty()) {
-    // no sniffed or default charset, try UTF-8
-    mCharset.AssignLiteral("UTF-8");
-  }
-
-  aCharset = mCharset;
-  mCharset.Truncate();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-FileReaderSync::Notify(const char* aCharset, nsDetectionConfident aConf)
-{
-  mCharset.Assign(aCharset);
-
-  return NS_OK;
-}

@@ -36,6 +36,7 @@ struct SmsMessageData
   nsString       body;
   MessageClass   messageClass;
   uint64_t       timestamp;         // ms since epoch.
+  uint64_t       sentTimestamp;     // ms since epoch.
   uint64_t       deliveryTimestamp; // ms since epoch.
   bool           read;
 };
@@ -65,12 +66,13 @@ struct MmsMessageData
   MmsDeliveryInfoData[] deliveryInfo;
   nsString              sender;
   nsString[]            receivers;
-  uint64_t              timestamp;
+  uint64_t              timestamp;     // ms since epoch.
+  uint64_t              sentTimestamp; // ms since epoch.
   bool                  read;
   nsString              subject;
   nsString              smil;
   MmsAttachmentData[]   attachments;
-  uint64_t              expiryDate;
+  uint64_t              expiryDate;    // ms since epoch.
   bool                  readReportRequested;
 };
 

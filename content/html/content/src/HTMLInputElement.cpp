@@ -5077,18 +5077,18 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
   }
 
   if (aSelectionStart == -1 && aSelectionEnd == -1) {
-      aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
-      if (aRv.Failed()) {
-        nsTextEditorState* state = GetEditorState();
-        if (state && state->IsSelectionCached()) {
-          aSelectionStart = state->GetSelectionProperties().mStart;
-          aSelectionEnd = state->GetSelectionProperties().mEnd;
-          aRv = NS_OK;
-        }
+    aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
+    if (aRv.Failed()) {
+      nsTextEditorState* state = GetEditorState();
+      if (state && state->IsSelectionCached()) {
+        aSelectionStart = state->GetSelectionProperties().mStart;
+        aSelectionEnd = state->GetSelectionProperties().mEnd;
+        aRv = NS_OK;
       }
+    }
   }
 
-  if (aStart < aEnd) {
+  if (aStart <= aEnd) {
     value.Replace(aStart, aEnd - aStart, aReplacement);
     SetValueInternal(value, false, false);
   }
@@ -5115,15 +5115,17 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
     break;
     case mozilla::dom::SelectionMode::Preserve:
     {
-      if ((uint32_t)aSelectionStart > aEnd)
+      if ((uint32_t)aSelectionStart > aEnd) {
         aSelectionStart += delta;
-      else if ((uint32_t)aSelectionStart > aStart)
-       aSelectionStart = aStart;
+      } else if ((uint32_t)aSelectionStart > aStart) {
+        aSelectionStart = aStart;
+      }
 
-      if ((uint32_t)aSelectionEnd > aEnd)
+      if ((uint32_t)aSelectionEnd > aEnd) {
         aSelectionEnd += delta;
-      else if ((uint32_t)aSelectionEnd > aStart)
+      } else if ((uint32_t)aSelectionEnd > aStart) {
         aSelectionEnd = newEnd;
+      }
     }
     break;
   }
@@ -7026,15 +7028,15 @@ HTMLInputElement::SetFilePickerFiltersFromAccept(nsIFilePicker* filePicker)
     // First, check for image/audio/video filters...
     if (token.EqualsLiteral("image/*")) {
       filterMask = nsIFilePicker::filterImages;
-      filterBundle->GetStringFromName(NS_LITERAL_STRING("imageFilter").get(),
+      filterBundle->GetStringFromName(MOZ_UTF16("imageFilter"),
                                       getter_Copies(extensionListStr));
     } else if (token.EqualsLiteral("audio/*")) {
       filterMask = nsIFilePicker::filterAudio;
-      filterBundle->GetStringFromName(NS_LITERAL_STRING("audioFilter").get(),
+      filterBundle->GetStringFromName(MOZ_UTF16("audioFilter"),
                                       getter_Copies(extensionListStr));
     } else if (token.EqualsLiteral("video/*")) {
       filterMask = nsIFilePicker::filterVideo;
-      filterBundle->GetStringFromName(NS_LITERAL_STRING("videoFilter").get(),
+      filterBundle->GetStringFromName(MOZ_UTF16("videoFilter"),
                                       getter_Copies(extensionListStr));
     } else {
       //... if no image/audio/video filter is found, check mime types filters
