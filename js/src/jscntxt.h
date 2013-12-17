@@ -426,7 +426,7 @@ struct JSContext : public js::ExclusiveContext,
   private:
     /* Exception state -- the exception member is a GC root by definition. */
     bool                throwing;            /* is there a pending exception? */
-    js::Value           exception;           /* most-recently-thrown exception */
+    js::Value           unwrappedException_; /* most-recently-thrown exception */
 
     /* Per-context options. */
     JS::ContextOptions  options_;
@@ -467,9 +467,6 @@ struct JSContext : public js::ExclusiveContext,
         JS_ASSERT(!options().noDefaultCompartmentObject());
         return defaultCompartmentObject_;
     }
-
-    /* Wrap cx->exception for the current compartment. */
-    void wrapPendingException();
 
     /* State for object and array toSource conversion. */
     js::ObjectSet       cycleDetectorSet;
@@ -583,16 +580,13 @@ struct JSContext : public js::ExclusiveContext,
         return throwing;
     }
 
-    js::Value getPendingException() {
-        JS_ASSERT(throwing);
-        return exception;
-    }
+    bool getPendingException(JS::MutableHandleValue rval);
 
     void setPendingException(js::Value v);
 
     void clearPendingException() {
         throwing = false;
-        exception.setUndefined();
+        unwrappedException_.setUndefined();
     }
 
 #ifdef DEBUG
