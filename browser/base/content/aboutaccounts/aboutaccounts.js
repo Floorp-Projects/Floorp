@@ -54,23 +54,15 @@ let wrapper = {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
     fxAccounts.setSignedInUser(accountData).then(
-      () => this.injectData("message", { status: "login" }),
-      (err) => this.injectData("message", { status: "error", error: err })
-    );
-  },
-
-  /**
-   * onVerified handler receives user credentials from the jelly after
-   * sucessful account creation and email verification
-   * and stores it in the fxaccounts service
-   *
-   * @param accountData the user's account data and credentials
-   */
-  onVerified: function (accountData) {
-    log("Received: 'verified'. Data:" + JSON.stringify(accountData));
-
-    fxAccounts.setSignedInUser(accountData).then(
-      () => this.injectData("message", { status: "verified" }),
+      () => {
+        this.injectData("message", { status: "login" });
+        // until we sort out a better UX, we open the sync-progress page.
+        // We currently do it on a timeout as a concession to the tests, so
+        // it has time to act on our "login" message.
+        setTimeout(function() {
+          window.location = "about:sync-progress";
+        }, 0);
+      },
       (err) => this.injectData("message", { status: "error", error: err })
     );
   },
@@ -107,9 +99,6 @@ let wrapper = {
     switch (evt.detail.command) {
       case "login":
         this.onLogin(data);
-        break;
-      case "verified":
-        this.onVerified(data);
         break;
       case "session_status":
         this.onSessionStatus(data);
