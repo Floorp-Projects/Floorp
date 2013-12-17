@@ -196,6 +196,8 @@ browser.jar:
   skin/classic/browser/social/services-64@2x.png            (social/services-64@2x.png)
   skin/classic/browser/social/chat-icons.png                             (social/chat-icons.png)
   skin/classic/browser/social/chat-icons@2x.png                          (social/chat-icons@2x.png)
+  skin/classic/browser/social/gear_default.png                           (../shared/social/gear_default.png)
+  skin/classic/browser/social/gear_clicked.png                           (../shared/social/gear_clicked.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon.png             (tabbrowser/alltabs-box-bkgnd-icon.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted.png    (tabbrowser/alltabs-box-bkgnd-icon-inverted.png)
   skin/classic/browser/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png (tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png)
