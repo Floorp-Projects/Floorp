@@ -19,6 +19,14 @@ let tests = [
 {
   info: "Check account verification",
   event: "verified",
+  data: {
+    email: "foo@example.com",
+    uid: "1234@lcip.org",
+    assertion: "foobar",
+    sessionToken: "dead",
+    kA: "beef",
+    kB: "cafe",
+  },
   payloadType: "message",
   validateResponse: function(payload) {
     return checkStatusValue(payload, "verified");
@@ -27,6 +35,15 @@ let tests = [
 {
   info: "Check account log in",
   event: "login",
+  data: {
+    email: "foo@example.com",
+    uid: "1234@lcip.org",
+    assertion: "foobar",
+    sessionToken: "dead",
+    kA: "beef",
+    kB: "cafe",
+    isVerified: true
+  },
   payloadType: "message",
   validateResponse: function(payload) {
     return checkStatusValue(payload, "login");
@@ -53,7 +70,7 @@ function doTest(evt) {
   }
   // start the next test if there are any left
   if (tests[++currentTest])
-    sendToBrowser(tests[currentTest].event);
+    sendToBrowser(tests[currentTest].event, tests[currentTest].data);
   else
     reportFinished();
 }
@@ -68,8 +85,8 @@ function reportFinished(cmd) {
   window.parent.postMessage(data, "*");
 }
 
-function sendToBrowser(type) {
-  let event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type, data: {}}, bubbles: true});
+function sendToBrowser(type, data) {
+  let event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type, data: data}, bubbles: true});
   document.dispatchEvent(event);
 }
 
