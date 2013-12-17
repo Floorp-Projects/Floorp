@@ -110,8 +110,6 @@ public:
                         ScrollableLayerGuid* aOutTargetGuid,
                         WidgetInputEvent* aOutEvent);
 
-  void NotifyDimensionsChanged(ScreenIntSize size);
-
   void ZoomToRect(uint32_t aPresShellId, ViewID aViewId, const CSSRect& aRect);
 
   void ContentReceivedTouch(const ScrollableLayerGuid& aGuid,

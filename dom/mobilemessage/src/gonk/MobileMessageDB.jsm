@@ -23,7 +23,7 @@ const DEBUG = false;
 const DISABLE_MMS_GROUPING_FOR_RECEIVING = true;
 
 
-const DB_VERSION = 20;
+const DB_VERSION = 21;
 const MESSAGE_STORE_NAME = "sms";
 const THREAD_STORE_NAME = "thread";
 const PARTICIPANT_STORE_NAME = "participant";
@@ -218,6 +218,10 @@ MobileMessageDB.prototype = {
             self.upgradeSchema19(event.target.transaction, next);
             break;
           case 20:
+            if (DEBUG) debug("Upgrade to version 21. Add sentTimestamp.");
+            self.upgradeSchema20(event.target.transaction, next);
+            break;
+          case 21:
             // This will need to be moved for each new version
             if (DEBUG) debug("Upgrade finished.");
             break;
@@ -1265,6 +1269,32 @@ MobileMessageDB.prototype = {
     };
   },
 
+  /**
+   * Add sentTimestamp.
+   */
+  upgradeSchema20: function upgradeSchema20(transaction, next) {
+    let messageStore = transaction.objectStore(MESSAGE_STORE_NAME);
+    messageStore.openCursor().onsuccess = function(event) {
+      let cursor = event.target.result;
+      if (!cursor) {
+        next();
+        return;
+      }
+
+      let messageRecord = cursor.value;
+      messageRecord.sentTimestamp = 0;
+
+      // We can still have changes to assign |sentTimestamp| for the existing
+      // MMS message records.
+      if (messageRecord.type == "mms" && messageRecord.headers["date"]) {
+        messageRecord.sentTimestamp = messageRecord.headers["date"].getTime();
+      }
+
+      cursor.update(messageRecord);
+      cursor.continue();
+    };
+  },
+
   matchParsedPhoneNumbers: function matchParsedPhoneNumbers(addr1, parsedAddr1,
                                                             addr2, parsedAddr2) {
     if ((parsedAddr1.internationalNumber &&
@@ -1328,6 +1358,7 @@ MobileMessageDB.prototype = {
                                                     aMessageRecord.body,
                                                     aMessageRecord.messageClass,
                                                     aMessageRecord.timestamp,
+                                                    aMessageRecord.sentTimestamp,
                                                     aMessageRecord.deliveryTimestamp,
                                                     aMessageRecord.read);
     } else if (aMessageRecord.type == "mms") {
@@ -1383,6 +1414,7 @@ MobileMessageDB.prototype = {
                                                     aMessageRecord.sender,
                                                     aMessageRecord.receivers,
                                                     aMessageRecord.timestamp,
+                                                    aMessageRecord.sentTimestamp,
                                                     aMessageRecord.read,
                                                     subject,
                                                     smil,
@@ -1884,6 +1916,13 @@ MobileMessageDB.prototype = {
           messageRecord.delivery = delivery;
           messageRecord.deliveryIndex = [delivery, messageRecord.timestamp];
           isRecordUpdated = true;
+
+          // When updating an message's delivey state to 'sent', we also update
+          // its |sentTimestamp| by the current device timestamp to represent
+          // when the message is successfully sent.
+          if (delivery == DELIVERY_SENT) {
+            messageRecord.sentTimestamp = Date.now();
+          }
         }
 
         // Attempt to update |deliveryStatus| and |deliveryTimestamp| of:
@@ -2080,6 +2119,11 @@ MobileMessageDB.prototype = {
     aMessage.readIndex = [FILTER_READ_UNREAD, timestamp];
     aMessage.read = FILTER_READ_UNREAD;
 
+    // If |sentTimestamp| is not specified, use 0 as default.
+    if (aMessage.sentTimestamp == undefined) {
+      aMessage.sentTimestamp = 0;
+    }
+
     if (aMessage.type == "mms") {
       aMessage.transactionIdIndex = aMessage.headers["x-mms-transaction-id"];
       aMessage.isReadReportSent = false;
@@ -2170,6 +2214,9 @@ MobileMessageDB.prototype = {
     aMessage.delivery = DELIVERY_SENDING;
     aMessage.messageClass = MESSAGE_CLASS_NORMAL;
     aMessage.read = FILTER_READ_READ;
+
+    // |sentTimestamp| is not available when the message is still sedning.
+    aMessage.sentTimestamp = 0;
 
     let addresses;
     if (aMessage.type == "sms") {

@@ -36,10 +36,11 @@ SmsMessage::SmsMessage(int32_t aId,
                        const nsString& aBody,
                        MessageClass aMessageClass,
                        uint64_t aTimestamp,
+                       uint64_t aSentTimestamp,
                        uint64_t aDeliveryTimestamp,
                        bool aRead)
   : mData(aId, aThreadId, aIccId, aDelivery, aDeliveryStatus,
-          aSender, aReceiver, aBody, aMessageClass, aTimestamp,
+          aSender, aReceiver, aBody, aMessageClass, aTimestamp, aSentTimestamp,
           aDeliveryTimestamp, aRead)
 {
 }
@@ -60,6 +61,7 @@ SmsMessage::Create(int32_t aId,
                    const nsAString& aBody,
                    const nsAString& aMessageClass,
                    const JS::Value& aTimestamp,
+                   const JS::Value& aSentTimestamp,
                    const JS::Value& aDeliveryTimestamp,
                    const bool aRead,
                    JSContext* aCx,
@@ -118,6 +120,10 @@ SmsMessage::Create(int32_t aId,
 
   // Set |timestamp|.
   nsresult rv = convertTimeToInt(aCx, aTimestamp, data.timestamp());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set |sentTimestamp|.
+  rv = convertTimeToInt(aCx, aSentTimestamp, data.sentTimestamp());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set |deliveryTimestamp|.
@@ -260,9 +266,16 @@ SmsMessage::GetMessageClass(nsAString& aMessageClass)
 }
 
 NS_IMETHODIMP
-SmsMessage::GetTimestamp(DOMTimeStamp* aDate)
+SmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
 {
-  *aDate = mData.timestamp();
+  *aTimestamp = mData.timestamp();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+{
+  *aSentTimestamp = mData.sentTimestamp();
   return NS_OK;
 }
 
