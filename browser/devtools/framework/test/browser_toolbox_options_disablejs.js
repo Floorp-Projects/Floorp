@@ -4,7 +4,7 @@
 // Tests that disabling JavaScript for a tab works as it should.
 
 const TEST_URI = "http://example.com/browser/browser/devtools/framework/" +
-                 "test/browser_toolbox_options_disable_js.html";
+                 "test/browser_toolbox_options_disablejs.html";
 
 let doc;
 let toolbox;
@@ -123,9 +123,6 @@ function testJSDisabledIframe() {
 }
 
 function finishUp() {
-  toolbox.destroy().then(function() {
-    gBrowser.removeCurrentTab();
-    toolbox = doc = null;
-    finish();
-  });
+  doc = toolbox = null;
+  finish();
 }

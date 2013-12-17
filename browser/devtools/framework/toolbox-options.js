@@ -41,7 +41,7 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.isReady = false;
 
   EventEmitter.decorate(this);
-}
+};
 
 OptionsPanel.prototype = {
 
@@ -50,35 +50,20 @@ OptionsPanel.prototype = {
   },
 
   open: function() {
-    let targetPromise;
+    let deferred = promise.defer();
 
-    // For local debugging we need to make the target remote.
-    if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
-    } else {
-      targetPromise = promise.resolve(this.target);
-    }
+    this.setupToolsList();
+    this.populatePreferences();
 
-    return targetPromise.then(() => {
-      this.setupToolsList();
-      this.populatePreferences();
+    this._disableJSClicked = this._disableJSClicked.bind(this);
 
-      this._disableJSClicked = this._disableJSClicked.bind(this);
-      this._disableCacheClicked = this._disableCacheClicked.bind(this);
+    let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
+    disableJSNode.addEventListener("click", this._disableJSClicked, false);
 
-      let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
-      disableJSNode.addEventListener("click", this._disableJSClicked, false);
-
-      let disableCacheNode = this.panelDoc.getElementById("devtools-disable-cache");
-      disableCacheNode.addEventListener("click", this._disableCacheClicked, false);
-    }).then(() => {
-      this.isReady = true;
-      this.emit("ready");
-      return this;
-    }).then(null, function onError(aReason) {
-      Cu.reportError("OptionsPanel open failed. " +
-                     aReason.error + ": " + aReason.message);
-    });
+    this.isReady = true;
+    this.emit("ready");
+    deferred.resolve(this);
+    return deferred.promise;
   },
 
   setupToolsList: function() {
@@ -211,24 +196,6 @@ OptionsPanel.prototype = {
         gDevTools.emit("pref-changed", data);
       }.bind(menulist));
     }
-
-    this.target.client.attachTab(this.target.client.activeTab._actor, (response) => {
-      this._origJavascriptEnabled = response.javascriptEnabled;
-      this._origCacheEnabled = response.cacheEnabled;
-
-      this._populateDisableJSCheckbox();
-      this._populateDisableCacheCheckbox();
-    });
-  },
-
-  _populateDisableJSCheckbox: function() {
-    let cbx = this.panelDoc.getElementById("devtools-disable-javascript");
-    cbx.checked = !this._origJavascriptEnabled;
-  },
-
-  _populateDisableCacheCheckbox: function() {
-    let cbx = this.panelDoc.getElementById("devtools-disable-cache");
-    cbx.checked = !this._origCacheEnabled;
   },
 
   /**
@@ -243,59 +210,22 @@ OptionsPanel.prototype = {
    */
   _disableJSClicked: function(event) {
     let checked = event.target.checked;
+    let linkedBrowser = this.toolbox._host.hostTab.linkedBrowser;
+    let win = linkedBrowser.contentWindow;
+    let docShell = linkedBrowser.docShell;
 
-    let options = {
-      "javascriptEnabled": !checked
-    };
-
-    this.target.client.reconfigureTab(options);
-  },
-
-  /**
-   * Disables the cache for the currently loaded tab.
-   *
-   * @param {Event} event
-   *        The event sent by checking / unchecking the disable cache checkbox.
-   */
-  _disableCacheClicked: function(event) {
-    let checked = event.target.checked;
-
-    let options = {
-      "cacheEnabled": !checked
-    };
-
-    this.target.client.reconfigureTab(options);
-  },
-
-  destroy: function() {
-    if (this.destroyPromise) {
-      return this.destroyPromise;
+    if (typeof this.toolbox._origAllowJavascript == "undefined") {
+      this.toolbox._origAllowJavascript = docShell.allowJavascript;
     }
 
-    let deferred = promise.defer();
+    docShell.allowJavascript = !checked;
+    win.location.reload();
+  },
 
-    this.destroyPromise = deferred.promise;
-
+  destroy: function OP_destroy() {
     let disableJSNode = this.panelDoc.getElementById("devtools-disable-javascript");
     disableJSNode.removeEventListener("click", this._disableJSClicked, false);
 
-    let disableCacheNode = this.panelDoc.getElementById("devtools-disable-cache");
-    disableCacheNode.removeEventListener("click", this._disableCacheClicked, false);
-
-    this.panelWin = this.panelDoc = null;
-    this._disableJSClicked = this._disableCacheClicked = null;
-
-    // If the cache or JavaScript is disabled we need to revert them to their
-    // original values.
-    let options = {
-      "cacheEnabled": this._origCacheEnabled,
-      "javascriptEnabled": this._origJavascriptEnabled
-    };
-    this.target.client.reconfigureTab(options, () => {
-      this.toolbox = null;
-      deferred.resolve();
-    }, true);
-
-    return deferred.promise;
+    this.panelWin = this.panelDoc = this.toolbox = this._disableJSClicked = null;
   }
 };
