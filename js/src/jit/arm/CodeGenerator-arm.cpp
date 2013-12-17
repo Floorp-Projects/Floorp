@@ -1340,7 +1340,7 @@ CodeGeneratorARM::visitBoxFloatingPoint(LBoxFloatingPoint *box)
 
     FloatRegister reg = ToFloatRegister(in);
     if (box->type() == MIRType_Float32) {
-        masm.convertFloatToDouble(reg, ScratchFloatReg);
+        masm.convertFloat32ToDouble(reg, ScratchFloatReg);
         reg = ScratchFloatReg;
     }
 
@@ -1999,7 +1999,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
         FloatRegister dst = ToFloatRegister(ins->output());
         VFPRegister vd(dst);
         if (size == 32) {
-            masm.convertDoubleToFloat(NANReg, dst, Assembler::AboveOrEqual);
+            masm.convertDoubleToFloat32(NANReg, dst, Assembler::AboveOrEqual);
             masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
         } else {
             masm.ma_vmov(NANReg, dst, Assembler::AboveOrEqual);

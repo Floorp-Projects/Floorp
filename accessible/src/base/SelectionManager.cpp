@@ -120,7 +120,7 @@ SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
   // Fire caret move event if there's a caret in the selection.
   nsINode* caretCntrNode =
     nsCoreUtils::GetDOMNodeFromDOMPoint(sel->GetFocusNode(),
-                                        sel->GetFocusOffset());
+                                        sel->FocusOffset());
   if (!caretCntrNode)
     return;
 

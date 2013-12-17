@@ -324,7 +324,7 @@ function test14() {
 function test15() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   var doc = gTestBrowser.contentDocument;
-  var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  var mainBox = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
   ok(mainBox, "Test 15, Plugin with id=" + plugin.id + " overlay should exist");
 
   prepareTest(runAfterPluginBindingAttached(test17), gTestRoot + "plugin_bug749455.html");
@@ -356,8 +356,8 @@ function test18a() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "Test 18a, plugin fallback type should be PLUGIN_VULNERABLE_UPDATABLE");
   ok(!objLoadingContent.activated, "Test 18a, Plugin should not be activated");
-  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 18a, Plugin overlay should exist, not be hidden");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay.classList.contains("visible"), "Test 18a, Plugin overlay should exist, not be hidden");
   var updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
   ok(updateLink.style.visibility != "hidden", "Test 18a, Plugin should have an update link");
 
@@ -380,8 +380,8 @@ function test18b() {
   var plugin = doc.getElementById("test");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "Test 18b, Plugin should not be activated");
-  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 18b, Plugin overlay should exist, not be hidden");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay.classList.contains("visible"), "Test 18b, Plugin overlay should exist, not be hidden");
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableNoUpdate.xml",
   function() {
@@ -399,8 +399,8 @@ function test18c() {
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_NO_UPDATE, "Test 18c, plugin fallback type should be PLUGIN_VULNERABLE_NO_UPDATE");
   ok(!objLoadingContent.activated, "Test 18c, Plugin should not be activated");
-  var overlay = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
-  ok(overlay.style.visibility != "hidden", "Test 18c, Plugin overlay should exist, not be hidden");
+  var overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(overlay.classList.contains("visible"), "Test 18c, Plugin overlay should exist, not be hidden");
   var updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
   ok(updateLink.style.display != "block", "Test 18c, Plugin should not have an update link");
 
@@ -528,7 +528,7 @@ function test20a() {
   ok(!clickToPlayNotification, "Test 20a, Should not have a click-to-play notification");
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("plugin");
-  var mainBox = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox");
+  var mainBox = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
   ok(mainBox, "Test 20a, plugin overlay should not be null");
   var pluginRect = mainBox.getBoundingClientRect();
   ok(pluginRect.width == 0, "Test 20a, plugin should have an overlay with 0px width");
@@ -551,7 +551,7 @@ function test20b() {
   ok(clickToPlayNotification, "Test 20b, Should now have a click-to-play notification");
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("plugin");
-  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
   ok(pluginRect.width == 200, "Test 20b, plugin should have an overlay with 200px width");
   ok(pluginRect.height == 200, "Test 20b, plugin should have an overlay with 200px height");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -575,7 +575,7 @@ function test20c() {
 function test20d() {
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("plugin");
-  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+  var pluginRect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
   ok(pluginRect.width == 0, "Test 20d, plugin should have click-to-play overlay with zero width");
   ok(pluginRect.height == 0, "Test 20d, plugin should have click-to-play overlay with zero height");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -595,7 +595,7 @@ function test21a() {
   var ids = ["test", "secondtestA", "secondtestB"];
   for (var id of ids) {
     var plugin = doc.getElementById(id);
-    var rect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+    var rect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
     ok(rect.width == 200, "Test 21a, Plugin with id=" + plugin.id + " overlay rect should have 200px width before being clicked");
     ok(rect.height == 200, "Test 21a, Plugin with id=" + plugin.id + " overlay rect should have 200px height before being clicked");
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -645,7 +645,7 @@ function test21c() {
 
   var doc = gTestBrowser.contentDocument;
   var plugin = doc.getElementById("test");
-  var rect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+  var rect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
   ok(rect.width == 0, "Test 21c, Plugin with id=" + plugin.id + " overlay rect should have 0px width after being clicked");
   ok(rect.height == 0, "Test 21c, Plugin with id=" + plugin.id + " overlay rect should have 0px height after being clicked");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -654,7 +654,7 @@ function test21c() {
   var ids = ["secondtestA", "secondtestB"];
   for (var id of ids) {
     var plugin = doc.getElementById(id);
-    var rect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+    var rect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
     ok(rect.width == 200, "Test 21c, Plugin with id=" + plugin.id + " overlay rect should have 200px width before being clicked");
     ok(rect.height == 200, "Test 21c, Plugin with id=" + plugin.id + " overlay rect should have 200px height before being clicked");
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -699,7 +699,7 @@ function test21e() {
   var ids = ["test", "secondtestA", "secondtestB"];
   for (var id of ids) {
     var plugin = doc.getElementById(id);
-    var rect = doc.getAnonymousElementByAttribute(plugin, "class", "mainBox").getBoundingClientRect();
+    var rect = doc.getAnonymousElementByAttribute(plugin, "anonid", "main").getBoundingClientRect();
     ok(rect.width == 0, "Test 21e, Plugin with id=" + plugin.id + " overlay rect should have 0px width after being clicked");
     ok(rect.height == 0, "Test 21e, Plugin with id=" + plugin.id + " overlay rect should have 0px height after being clicked");
     var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
@@ -870,6 +870,56 @@ function test27() {
   let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
 
   waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
-    finishTest,
+    () => {
+      getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+      prepareTest(test28, gTestRoot + "plugin_overlayed.html");
+    },
     "Test 27, expected to not have a plugin notification bar");
+}
+
+function test28() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 28: There should be a plugin notification");
+
+  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
+    test28b,
+    "Test 28, expected the plugin infobar to be triggered when plugin was overlayed");
+}
+
+function test28b()
+{
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  ok(plugin, "Test 28b, Found plugin in page");
+  plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 28b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
+  ok(!plugin.activated, "Test 28b, Plugin should not be activated");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(!overlay.classList.contains("visible"), "Test 28b, Plugin overlay should be hidden");
+
+  prepareTest(test29, gTestRoot + "plugin_positioned.html");
+}
+
+function test29() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 29: There should be a plugin notification");
+
+  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
+    test29b,
+    "Test 29, expected the plugin infobar to be triggered when plugin was overlayed");
+}
+
+function test29b() {
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  ok(plugin, "Test 29b, Found plugin in page");
+  plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 29b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
+  ok(!plugin.activated, "Test 29b, Plugin should not be activated");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(!overlay.classList.contains("visible"), "Test 29b, Plugin overlay should be hidden");
+
+  finishTest();
 }

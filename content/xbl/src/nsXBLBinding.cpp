@@ -1082,7 +1082,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JS::Handle<JSObject*> global,
 bool
 nsXBLBinding::AllowScripts()
 {
-  return mPrototypeBinding->GetAllowScripts();
+  return mBoundElement && mPrototypeBinding->GetAllowScripts();
 }
 
 nsXBLBinding*
