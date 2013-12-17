@@ -981,7 +981,7 @@ CodeGenerator::visitTableSwitch(LTableSwitch *ins)
     Label *defaultcase = mir->getDefault()->lir()->label();
     const LAllocation *temp;
 
-    if (ins->index()->isDouble()) {
+    if (mir->getOperand(0)->type() != MIRType_Int32) {
         temp = ins->tempInt()->output();
 
         // The input is a double, so try and convert it to an integer.
@@ -1193,7 +1193,6 @@ CodeGenerator::visitMoveGroup(LMoveGroup *group)
         // No bogus moves.
         JS_ASSERT(*from != *to);
         JS_ASSERT(!from->isConstant());
-        JS_ASSERT(from->isDouble() == to->isDouble());
 
         MoveOp::Kind kind;
         switch (type) {

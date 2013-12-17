@@ -452,7 +452,7 @@ PartFromStream(CompactBufferReader &stream, NunboxPartKind kind, uint32_t info)
         return LStackSlot(info);
 
     JS_ASSERT(kind == Part_Arg);
-    return LArgument(LAllocation::INT_ARGUMENT, info);
+    return LArgument(info);
 }
 
 bool
