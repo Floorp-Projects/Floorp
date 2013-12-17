@@ -176,7 +176,7 @@ ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
 #ifdef MOZ_B2G
       aHint == SCROLLABLE &&
 #endif
-      Preferences::GetBool("layers.force-tiles") && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
+      gfxPlatform::GetPrefLayersEnableTiles() && AsShadowForwarder()->GetCompositorBackendType() == LAYERS_OPENGL) {
     nsRefPtr<ClientTiledThebesLayer> layer =
       new ClientTiledThebesLayer(this);
     CREATE_SHADOW(Thebes);
