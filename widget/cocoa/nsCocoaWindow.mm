@@ -1995,6 +1995,16 @@ void nsCocoaWindow::SetWindowAnimationType(nsIWidget::WindowAnimationType aType)
   mAnimationType = aType;
 }
 
+void
+nsCocoaWindow::SetDrawsTitle(bool aDrawTitle)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [mWindow setWantsTitleDrawn:aDrawTitle];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetNonClientMargins(nsIntMargin &margins)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -2630,6 +2640,7 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mDPI = GetDPI(self);
   mTrackingArea = nil;
   mBeingShown = NO;
+  mDrawTitle = NO;
   [self updateTrackingArea];
 
   return self;
@@ -2701,6 +2712,16 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (BOOL)drawsContentsIntoWindowFrame
 {
   return mDrawsIntoWindowFrame;
+}
+
+- (void)setWantsTitleDrawn:(BOOL)aDrawTitle
+{
+  mDrawTitle = aDrawTitle;
+}
+
+- (BOOL)wantsTitleDrawn
+{
+  return mDrawTitle;
 }
 
 // Pass nil here to get the default appearance.
@@ -3090,8 +3111,9 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 
 - (NSRect)titlebarRect
 {
-  return NSMakeRect(0, [[self contentView] bounds].size.height,
-                    [self frame].size.width, [self titlebarHeight]);
+  CGFloat titlebarHeight = [self titlebarHeight];
+  return NSMakeRect(0, [self frame].size.height - titlebarHeight,
+                    [self frame].size.width, titlebarHeight);
 }
 
 // Returns the unified height of titlebar + toolbar.
@@ -3153,6 +3175,12 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
     // we'll send a mouse move event with the correct new position.
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
   }
+}
+
+- (void)setWantsTitleDrawn:(BOOL)aDrawTitle
+{
+  [super setWantsTitleDrawn:aDrawTitle];
+  [self setTitlebarNeedsDisplayInRect:[self titlebarRect]];
 }
 
 - (void)placeWindowButtons:(NSRect)aRect
