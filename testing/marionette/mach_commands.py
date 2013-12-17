@@ -36,11 +36,11 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     address=None, bin=None, topsrcdir=None):
     from marionette.runtests import (
         MarionetteTestRunner,
-        MarionetteTestOptions,
+        BaseMarionetteOptions,
         startTestRunner
     )
 
-    parser = MarionetteTestOptions()
+    parser = BaseMarionetteOptions()
     options, args = parser.parse_args()
 
     if not tests:
