@@ -1693,17 +1693,19 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
 
 bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)
 {
-  return aGuid == ScrollableLayerGuid(mLayersId, mFrameMetrics);
+  return aGuid == GetGuid();
 }
 
 void AsyncPanZoomController::GetGuid(ScrollableLayerGuid* aGuidOut)
 {
-  if (!aGuidOut) {
-    return;
+  if (aGuidOut) {
+    *aGuidOut = GetGuid();
   }
-  aGuidOut->mLayersId = mLayersId;
-  aGuidOut->mScrollId = mFrameMetrics.mScrollId;
-  aGuidOut->mPresShellId = mFrameMetrics.mPresShellId;
+}
+
+ScrollableLayerGuid AsyncPanZoomController::GetGuid()
+{
+  return ScrollableLayerGuid(mLayersId, mFrameMetrics);
 }
 
 }
