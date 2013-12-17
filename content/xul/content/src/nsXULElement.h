@@ -680,6 +680,7 @@ protected:
     void SetTitlebarColor(nscolor aColor, bool aActive);
 
     void SetDrawsInTitlebar(bool aState);
+    void SetDrawsTitle(bool aState);
 
     void RemoveBroadcaster(const nsAString & broadcasterId);
 
