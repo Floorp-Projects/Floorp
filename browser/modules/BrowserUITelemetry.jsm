@@ -23,6 +23,11 @@ const ALL_BUILTIN_ITEMS = [
   "switch-to-metro-button",
 ];
 
+const OTHER_MOUSEUP_MONITORED_ITEMS = [
+  "PlacesChevron",
+  "PlacesToolbarItems",
+];
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
@@ -106,6 +111,13 @@ this.BrowserUITelemetry = {
         (areaNode.customizationTarget || areaNode).addEventListener("mouseup", this);
       }
     }
+
+    for (let itemID of OTHER_MOUSEUP_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.addEventListener("mouseup", this);
+      }
+    }
   },
 
   _unregisterWindow: function(aWindow) {
@@ -116,6 +128,13 @@ this.BrowserUITelemetry = {
       let areaNode = document.getElementById(areaID);
       if (areaNode) {
         (areaNode.customizationTarget || areaNode).removeEventListener("mouseup", this);
+      }
+    }
+
+    for (let itemID of OTHER_MOUSEUP_MONITORED_ITEMS) {
+      let item = document.getElementById(itemID);
+      if (item) {
+        item.removeEventListener("mouseup", this);
       }
     }
   },
@@ -132,6 +151,38 @@ this.BrowserUITelemetry = {
   },
 
   _handleMouseUp: function(aEvent) {
+    let targetID = aEvent.currentTarget.id;
+
+    switch (targetID) {
+      case "PlacesToolbarItems":
+        this._PlacesToolbarItemsMouseUp(aEvent);
+        break;
+      case "PlacesChevron":
+        this._PlacesChevronMouseUp(aEvent);
+        break;
+      default:
+        this._checkForBuiltinItem(aEvent);
+    }
+  },
+
+  _PlacesChevronMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    let result = target.id == "PlacesChevron" ? "chevron" : "overflowed-item";
+    this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
+  },
+
+  _PlacesToolbarItemsMouseUp: function(aEvent) {
+    let target = aEvent.originalTarget;
+    // If this isn't a bookmark-item, we don't care about it.
+    if (!target.classList.contains("bookmark-item")) {
+      return;
+    }
+
+    let result = target.hasAttribute("container") ? "container" : "item";
+    this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
+  },
+
+  _checkForBuiltinItem: function(aEvent) {
     let item = aEvent.originalTarget;
     // Perhaps we're seeing one of the default toolbar items
     // being clicked.
@@ -157,6 +208,10 @@ this.BrowserUITelemetry = {
 
     let document = win.document;
     let result = {};
+
+    // Determine if the Bookmarks bar is currently visible
+    let bookmarksBar = document.getElementById("PersonalToolbar");
+    result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
 
     result.countableEvents = this._countableEvents;
 
