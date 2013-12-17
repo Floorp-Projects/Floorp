@@ -1114,7 +1114,7 @@ class MTableSwitch MOZ_FINAL
 
     size_t addSuccessor(MBasicBlock *successor) {
         JS_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
-        JS_ASSERT(successors_.length() != 0);
+        JS_ASSERT(!successors_.empty());
         successors_.append(successor);
         return successors_.length() - 1;
     }
@@ -1158,7 +1158,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     size_t addDefault(MBasicBlock *block) {
-        JS_ASSERT(successors_.length() == 0);
+        JS_ASSERT(successors_.empty());
         successors_.append(block);
         return 0;
     }

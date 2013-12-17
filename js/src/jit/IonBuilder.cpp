@@ -262,7 +262,7 @@ bool
 IonBuilder::getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
                                ObjectVector &targets, uint32_t maxTargets, bool *gotLambda)
 {
-    JS_ASSERT(targets.length() == 0);
+    JS_ASSERT(targets.empty());
     JS_ASSERT(gotLambda);
     *gotLambda = false;
 
@@ -3934,7 +3934,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     returnBlock->pop();
 
     // Accumulate return values.
-    if (returns.length() == 0) {
+    if (returns.empty()) {
         // Inlining of functions that have no exit is not supported.
         calleeScript->setUninlineable();
         abortReason_ = AbortReason_Inlining;
@@ -4205,7 +4205,7 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
     if (!inliningEnabled())
         return InliningStatus_NotInlined;
 
-    if (targets.length() == 0)
+    if (targets.empty())
         return InliningStatus_NotInlined;
 
     // Is the function provided by an MGetPropertyCache?
@@ -4992,7 +4992,7 @@ IonBuilder::jsop_funapplyarguments(uint32_t argc)
     // Arguments
     MDefinitionVector args(alloc());
     if (inliningDepth_) {
-        if (!args.append(inlineCallInfo_->argv().begin(), inlineCallInfo_->argv().end()))
+        if (!args.appendAll(inlineCallInfo_->argv()))
             return false;
     }
     callInfo.setArgs(&args);

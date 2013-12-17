@@ -4296,6 +4296,11 @@ pref("memory.ghost_window_timeout_seconds", 60);
 // Disable freeing dirty pages when minimizing memory.
 pref("memory.free_dirty_pages", false);
 
+// Disable the Linux-specific, system-wide memory reporter.
+#ifdef XP_LINUX
+pref("memory.system_memory_reporter", false);
+#endif
+
 pref("social.enabled", false);
 // comma separated list of domain origins (e.g. https://domain.com) for
 // providers that can install from their own website without user warnings.
