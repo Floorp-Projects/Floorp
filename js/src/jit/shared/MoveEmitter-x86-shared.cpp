@@ -170,7 +170,7 @@ MoveEmitterX86::toAddress(const MoveOperand &operand) const
 Operand
 MoveEmitterX86::toOperand(const MoveOperand &operand) const
 {
-    if (operand.isMemory() || operand.isEffectiveAddress() || operand.isFloatAddress())
+    if (operand.isMemoryOrEffectiveAddress())
         return Operand(toAddress(operand));
     if (operand.isGeneralReg())
         return Operand(operand.reg());
@@ -255,7 +255,7 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand &from, const MoveOperand &to)
     if (from.isGeneralReg()) {
         masm.mov(from.reg(), toOperand(to));
     } else if (to.isGeneralReg()) {
-        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        JS_ASSERT(from.isMemoryOrEffectiveAddress());
         if (from.isMemory())
             masm.loadPtr(toAddress(from), to.reg());
         else
