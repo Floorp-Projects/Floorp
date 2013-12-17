@@ -163,17 +163,17 @@ MacroAssemblerX86::setupUnalignedABICall(uint32_t args, const Register &scratch)
 }
 
 void
-MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
+MacroAssemblerX86::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     ++passedArgs_;
     MoveOperand to = MoveOperand(StackPointer, stackForCall_);
-    switch (kind) {
+    switch (type) {
       case MoveOp::FLOAT32: stackForCall_ += sizeof(float); break;
       case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
       case MoveOp::GENERAL: stackForCall_ += sizeof(int32_t); break;
-      default: MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
+      default: MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
-    enoughMemory_ &= moveResolver_.addMove(from, to, kind);
+    enoughMemory_ &= moveResolver_.addMove(from, to, type);
 }
 
 void
@@ -183,9 +183,9 @@ MacroAssemblerX86::passABIArg(const Register &reg)
 }
 
 void
-MacroAssemblerX86::passABIArg(const FloatRegister &reg, MoveOp::Kind kind)
+MacroAssemblerX86::passABIArg(const FloatRegister &reg, MoveOp::Type type)
 {
-    passABIArg(MoveOperand(reg), kind);
+    passABIArg(MoveOperand(reg), type);
 }
 
 void
@@ -230,7 +230,7 @@ MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
 }
 
 void
-MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
+MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
 {
     freeStack(stackAdjust);
     if (result == MoveOp::DOUBLE) {
@@ -252,7 +252,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerX86::callWithABI(void *fun, MoveOp::Kind result)
+MacroAssemblerX86::callWithABI(void *fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -261,7 +261,7 @@ MacroAssemblerX86::callWithABI(void *fun, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerX86::callWithABI(AsmJSImmPtr fun, MoveOp::Kind result)
+MacroAssemblerX86::callWithABI(AsmJSImmPtr fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -270,7 +270,7 @@ MacroAssemblerX86::callWithABI(AsmJSImmPtr fun, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerX86::callWithABI(const Address &fun, MoveOp::Kind result)
+MacroAssemblerX86::callWithABI(const Address &fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);

@@ -1037,19 +1037,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from, MoveOp::Kind kind);
+    void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(const Register &reg);
-    void passABIArg(const FloatRegister &reg, MoveOp::Kind kind);
+    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result);
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, MoveOp::Kind result = MoveOp::GENERAL);
-    void callWithABI(AsmJSImmPtr fun, MoveOp::Kind result = MoveOp::GENERAL);
-    void callWithABI(const Address &fun, MoveOp::Kind result = MoveOp::GENERAL);
+    void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(AsmJSImmPtr fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(const Address &fun, MoveOp::Type result = MoveOp::GENERAL);
 
     // Used from within an Exit frame to handle a pending exception.
     void handleFailureWithHandler(void *handler);

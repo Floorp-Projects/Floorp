@@ -113,23 +113,23 @@ class MoveOp
     bool cycle_;
 
   public:
-    enum Kind {
+    enum Type {
         GENERAL,
         FLOAT32,
         DOUBLE
     };
 
   protected:
-    Kind kind_;
+    Type type_;
 
   public:
     MoveOp()
     { }
-    MoveOp(const MoveOperand &from, const MoveOperand &to, Kind kind)
+    MoveOp(const MoveOperand &from, const MoveOperand &to, Type type)
       : from_(from),
         to_(to),
         cycle_(false),
-        kind_(kind)
+        type_(type)
     { }
 
     bool inCycle() const {
@@ -141,8 +141,8 @@ class MoveOp
     const MoveOperand &to() const {
         return to_;
     }
-    Kind kind() const {
-        return kind_;
+    Type type() const {
+        return type_;
     }
 };
 
@@ -156,8 +156,8 @@ class MoveResolver
     {
         PendingMove()
         { }
-        PendingMove(const MoveOperand &from, const MoveOperand &to, Kind kind)
-          : MoveOp(from, to, kind)
+        PendingMove(const MoveOperand &from, const MoveOperand &to, Type type)
+          : MoveOp(from, to, type)
         { }
 
         void setInCycle() {
@@ -193,7 +193,7 @@ class MoveResolver
     //
     // After calling addMove() for each parallel move, resolve() performs the
     // cycle resolution algorithm. Calling addMove() again resets the resolver.
-    bool addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind);
+    bool addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
     bool resolve();
 
     size_t numMoves() const {

@@ -3508,13 +3508,13 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, const Register &sc
 }
 #ifdef JS_CPU_ARM_HARDFP
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
     ++passedArgs_;
     if (!enoughMemory_)
         return;
-    switch (kind) {
+    switch (type) {
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE: {
         FloatRegister fr;
@@ -3549,21 +3549,21 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
         break;
       }
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
 
-    enoughMemory_ = moveResolver_.addMove(from, to, kind);
+    enoughMemory_ = moveResolver_.addMove(from, to, type);
 }
 
 #else
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
     uint32_t increment = 1;
     bool useResolver = true;
     ++passedArgs_;
-    switch (kind) {
+    switch (type) {
       case MoveOp::DOUBLE:
         // Double arguments need to be rounded up to the nearest doubleword
         // boundary, even if it is in a register!
@@ -3574,13 +3574,13 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
       case MoveOp::GENERAL:
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
 
     Register destReg;
     MoveOperand dest;
     if (GetIntArgReg(usedSlots_, 0, &destReg)) {
-        if (kind == MoveOp::DOUBLE || kind == MoveOp::FLOAT32) {
+        if (type == MoveOp::DOUBLE || type == MoveOp::FLOAT32) {
             floatArgsInGPR[destReg.code() >> 1] = from;
             floatArgsInGPRValid[destReg.code() >> 1] = true;
             useResolver = false;
@@ -3596,7 +3596,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
     }
 
     if (useResolver)
-        enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, kind);
+        enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, type);
     usedSlots_ += increment;
 }
 #endif
@@ -3608,9 +3608,9 @@ MacroAssemblerARMCompat::passABIArg(const Register &reg)
 }
 
 void
-MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg, MoveOp::Kind kind)
+MacroAssemblerARMCompat::passABIArg(const FloatRegister &freg, MoveOp::Type type)
 {
-    passABIArg(MoveOperand(freg), kind);
+    passABIArg(MoveOperand(freg), type);
 }
 
 void MacroAssemblerARMCompat::checkStackAlignment()
@@ -3680,7 +3680,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
 }
 
 void
-MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result)
+MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
 {
     if (secondScratchReg_ != lr)
         ma_mov(secondScratchReg_, lr);
@@ -3718,7 +3718,7 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Kind resu
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Kind result)
+MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -3727,7 +3727,7 @@ MacroAssemblerARMCompat::callWithABI(void *fun, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Kind result)
+MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -3736,7 +3736,7 @@ MacroAssemblerARMCompat::callWithABI(AsmJSImmPtr imm, MoveOp::Kind result)
 }
 
 void
-MacroAssemblerARMCompat::callWithABI(const Address &fun, MoveOp::Kind result)
+MacroAssemblerARMCompat::callWithABI(const Address &fun, MoveOp::Type result)
 {
     // Load the callee in r12, no instruction between the ldr and call
     // should clobber it. Note that we can't use fun.base because it may

@@ -100,7 +100,7 @@ MoveEmitterARM::tempReg()
 }
 
 void
-MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // There is some pattern:
     //   (A -> B)
@@ -108,7 +108,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    switch (kind) {
+    switch (type) {
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
@@ -135,12 +135,12 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
     }
 }
 
 void
-MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind)
+MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // There is some pattern:
     //   (A -> B)
@@ -148,7 +148,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    switch (kind) {
+    switch (type) {
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
@@ -173,7 +173,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
         }
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
     }
 }
 
@@ -251,16 +251,16 @@ MoveEmitterARM::emit(const MoveOp &move)
 
     if (move.inCycle()) {
         if (inCycle_) {
-            completeCycle(from, to, move.kind());
+            completeCycle(from, to, move.type());
             inCycle_ = false;
             return;
         }
 
-        breakCycle(from, to, move.kind());
+        breakCycle(from, to, move.type());
         inCycle_ = true;
     }
 
-    switch (move.kind()) {
+    switch (move.type()) {
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         emitDoubleMove(from, to);
@@ -269,7 +269,7 @@ MoveEmitterARM::emit(const MoveOp &move)
         emitMove(from, to);
         break;
       default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected move kind");
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
     }
 }
 
