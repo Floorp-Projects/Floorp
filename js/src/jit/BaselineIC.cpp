@@ -5490,7 +5490,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         if (LIRGenerator::allowFloat32Optimizations() &&
             type_ == ScalarTypeRepresentation::TYPE_FLOAT32)
         {
-            masm.convertDoubleToFloat(FloatReg0, ScratchFloatReg);
+            masm.convertDoubleToFloat32(FloatReg0, ScratchFloatReg);
             masm.storeToTypedFloatArray(type_, ScratchFloatReg, dest);
         } else {
             masm.storeToTypedFloatArray(type_, FloatReg0, dest);

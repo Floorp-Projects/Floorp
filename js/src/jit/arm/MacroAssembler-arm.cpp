@@ -74,8 +74,8 @@ MacroAssemblerARM::convertUInt32ToFloat32(const Register &src, const FloatRegist
     as_vcvt(VFPRegister(dest).singleOverlay(), dest.uintOverlay());
 }
 
-void MacroAssemblerARM::convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest,
-                                             Condition c)
+void MacroAssemblerARM::convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest,
+                                               Condition c)
 {
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src), false, c);
 }
@@ -156,7 +156,7 @@ MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, const Registe
 }
 
 void
-MacroAssemblerARM::convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
+MacroAssemblerARM::convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest) {
     as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
 }
 
@@ -2183,13 +2183,13 @@ MacroAssemblerARMCompat::loadFloatAsDouble(const BaseIndex &src, const FloatRegi
 }
 
 void
-MacroAssemblerARMCompat::loadFloat(const Address &address, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloat32(const Address &address, const FloatRegister &dest)
 {
     ma_vldr(Operand(address), VFPRegister(dest).singleOverlay());
 }
 
 void
-MacroAssemblerARMCompat::loadFloat(const BaseIndex &src, const FloatRegister &dest)
+MacroAssemblerARMCompat::loadFloat32(const BaseIndex &src, const FloatRegister &dest)
 {
     // VFP instructions don't even support register Base + register Index modes, so
     // just add the index, then handle the offset like normal

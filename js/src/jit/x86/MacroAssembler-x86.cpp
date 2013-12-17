@@ -241,7 +241,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
     } else if (result == MoveOp::FLOAT32) {
         reserveStack(sizeof(float));
         fstp32(Operand(esp, 0));
-        loadFloat(Operand(esp, 0), ReturnFloatReg);
+        loadFloat32(Operand(esp, 0), ReturnFloatReg);
         freeStack(sizeof(float));
     }
     if (dynamicAlignment_)

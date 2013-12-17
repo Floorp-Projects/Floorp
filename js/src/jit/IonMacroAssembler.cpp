@@ -377,14 +377,14 @@ StoreToTypedFloatArray(MacroAssembler &masm, int arrayType, const S &value, cons
     switch (arrayType) {
       case ScalarTypeRepresentation::TYPE_FLOAT32:
         if (LIRGenerator::allowFloat32Optimizations()) {
-            masm.storeFloat(value, dest);
+            masm.storeFloat32(value, dest);
         } else {
 #ifdef JS_MORE_DETERMINISTIC
             // See the comment in ToDoubleForTypedArray.
             masm.canonicalizeDouble(value);
 #endif
-            masm.convertDoubleToFloat(value, ScratchFloatReg);
-            masm.storeFloat(ScratchFloatReg, dest);
+            masm.convertDoubleToFloat32(value, ScratchFloatReg);
+            masm.storeFloat32(ScratchFloatReg, dest);
         }
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT64:
@@ -450,7 +450,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, AnyRegister dest
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT32:
         if (LIRGenerator::allowFloat32Optimizations()) {
-            loadFloat(src, dest.fpu());
+            loadFloat32(src, dest.fpu());
             canonicalizeFloat(dest.fpu());
         } else {
             loadFloatAsDouble(src, dest.fpu());
@@ -515,7 +515,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
         loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(),
                            nullptr);
         if (LIRGenerator::allowFloat32Optimizations())
-            convertFloatToDouble(ScratchFloatReg, ScratchFloatReg);
+            convertFloat32ToDouble(ScratchFloatReg, ScratchFloatReg);
         boxDouble(ScratchFloatReg, dest);
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT64:
@@ -1400,7 +1400,7 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
     bind(&isDouble);
     unboxDouble(value, output);
     if (outputType == MIRType_Float32)
-        convertDoubleToFloat(output, output);
+        convertDoubleToFloat32(output, output);
     bind(&done);
 }
 
@@ -1515,10 +1515,10 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
         break;
       case MIRType_Float32:
         if (outputIsDouble) {
-            convertFloatToDouble(src.typedReg().fpu(), output);
+            convertFloat32ToDouble(src.typedReg().fpu(), output);
         } else {
             if (src.typedReg().fpu() != output)
-                moveFloat(src.typedReg().fpu(), output);
+                moveFloat32(src.typedReg().fpu(), output);
         }
         break;
       case MIRType_Double:
@@ -1526,7 +1526,7 @@ MacroAssembler::convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, Flo
             if (src.typedReg().fpu() != output)
                 moveDouble(src.typedReg().fpu(), output);
         } else {
-            convertDoubleToFloat(src.typedReg().fpu(), output);
+            convertDoubleToFloat32(src.typedReg().fpu(), output);
         }
         break;
       case MIRType_Object:
@@ -1749,7 +1749,7 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
         break;
       case MIRType_Float32:
         // Conversion to Double simplifies implementation at the expense of performance.
-        convertFloatToDouble(src.typedReg().fpu(), temp);
+        convertFloat32ToDouble(src.typedReg().fpu(), temp);
         convertDoubleToInt(temp, output, temp, nullptr, fail, behavior);
         break;
       case MIRType_String:
