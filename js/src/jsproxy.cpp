@@ -2109,7 +2109,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
     if (desc.object()) {
         if (IsDataDescriptor(desc) && desc.isPermanent() && desc.isReadonly()) {
             bool same;
-            if (!SameValue(cx, vp, desc.value(), &same))
+            if (!SameValue(cx, trapResult, desc.value(), &same))
                 return false;
             if (!same) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_MUST_REPORT_SAME_VALUE);
