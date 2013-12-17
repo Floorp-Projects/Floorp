@@ -43,6 +43,7 @@ class MoveEmitterX86
                              bool *allGeneralRegs, bool *allFloatRegs);
     bool maybeEmitOptimizedCycle(const MoveResolver &moves, size_t i,
                                  bool allGeneralRegs, bool allFloatRegs, size_t swapCount);
+    void emitInt32Move(const MoveOperand &from, const MoveOperand &to);
     void emitGeneralMove(const MoveOperand &from, const MoveOperand &to);
     void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
