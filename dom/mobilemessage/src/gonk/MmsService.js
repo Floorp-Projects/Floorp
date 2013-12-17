@@ -1504,7 +1504,10 @@ MmsService.prototype = {
   mergeRetrievalConfirmation: function mergeRetrievalConfirmation(mmsConnection,
                                                                   intermediate,
                                                                   savable) {
+    // Prepare timestamp/sentTimestamp.
     savable.timestamp = Date.now();
+    savable.sentTimestamp = intermediate.headers["date"].getTime();
+
     savable.receivers = [];
     // We don't have Bcc in recevied MMS message.
     for each (let type in ["cc", "to"]) {
@@ -1572,19 +1575,20 @@ MmsService.prototype = {
     // because the system message mechamism will rewrap the object
     // based on the content window, which needs to know the properties.
     gSystemMessenger.broadcastMessage(aName, {
-      type:         aDomMessage.type,
-      id:           aDomMessage.id,
-      threadId:     aDomMessage.threadId,
-      delivery:     aDomMessage.delivery,
-      deliveryInfo: aDomMessage.deliveryInfo,
-      sender:       aDomMessage.sender,
-      receivers:    aDomMessage.receivers,
-      timestamp:    aDomMessage.timestamp,
-      read:         aDomMessage.read,
-      subject:      aDomMessage.subject,
-      smil:         aDomMessage.smil,
-      attachments:  aDomMessage.attachments,
-      expiryDate:   aDomMessage.expiryDate
+      type:          aDomMessage.type,
+      id:            aDomMessage.id,
+      threadId:      aDomMessage.threadId,
+      delivery:      aDomMessage.delivery,
+      deliveryInfo:  aDomMessage.deliveryInfo,
+      sender:        aDomMessage.sender,
+      receivers:     aDomMessage.receivers,
+      timestamp:     aDomMessage.timestamp,
+      sentTimestamp: aDomMessage.sentTimestamp,
+      read:          aDomMessage.read,
+      subject:       aDomMessage.subject,
+      smil:          aDomMessage.smil,
+      attachments:   aDomMessage.attachments,
+      expiryDate:    aDomMessage.expiryDate
     });
   },
 

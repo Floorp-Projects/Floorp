@@ -4,11 +4,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "vm/SelfHosting.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsobj.h"
+#include "jswrapper.h"
 #include "selfhosted.out.h"
 
 #include "builtin/Intl.h"
@@ -988,6 +991,63 @@ JSRuntime::cloneSelfHostedValue(JSContext *cx, Handle<PropertyName*> name, Mutab
     vp.set(val);
     return true;
 }
+
+class OpaqueWrapper : public CrossCompartmentSecurityWrapper
+{
+  public:
+    OpaqueWrapper() : CrossCompartmentSecurityWrapper(0) {}
+    virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id,
+                       Wrapper::Action act, bool *bp) MOZ_OVERRIDE
+    {
+        *bp = false;
+        return false;
+    }
+    static OpaqueWrapper singleton;
+};
+
+OpaqueWrapper OpaqueWrapper::singleton;
+
+class OpaqueWrapperWithCall : public OpaqueWrapper
+{
+  public:
+    OpaqueWrapperWithCall() : OpaqueWrapper() {}
+    virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id,
+                       Wrapper::Action act, bool *bp) MOZ_OVERRIDE
+    {
+        if (act != Wrapper::CALL) {
+            *bp = false;
+            return false;
+        }
+        return true;
+    }
+    static OpaqueWrapperWithCall singleton;
+};
+
+OpaqueWrapperWithCall OpaqueWrapperWithCall::singleton;
+
+static JSObject *
+SelfHostingWrapObjectCallback(JSContext *cx, HandleObject existing, HandleObject obj,
+                              HandleObject proto, HandleObject parent, unsigned flags)
+{
+    RootedObject objGlobal(cx, &obj->global());
+    bool wrappingSelfHostedFunction = cx->runtime()->isSelfHostingGlobal(objGlobal);
+    JS_ASSERT_IF(!wrappingSelfHostedFunction, cx->runtime()->isSelfHostingGlobal(cx->global()));
+
+    OpaqueWrapper *handler = wrappingSelfHostedFunction
+                             ? &OpaqueWrapperWithCall::singleton
+                             : &OpaqueWrapper::singleton;
+    if (existing)
+        return Wrapper::Renew(cx, existing, obj, handler);
+    else
+        return Wrapper::New(cx, obj, parent, handler);
+}
+
+const JSWrapObjectCallbacks
+js::SelfHostingWrapObjectCallbacks = {
+    SelfHostingWrapObjectCallback,
+    nullptr,
+    nullptr
+};
 
 bool
 JSRuntime::maybeWrappedSelfHostedFunction(JSContext *cx, HandleId id, MutableHandleValue funVal)

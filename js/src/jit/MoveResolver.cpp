@@ -21,14 +21,14 @@ MoveResolver::resetState()
 }
 
 bool
-MoveResolver::addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Kind kind)
+MoveResolver::addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // Assert that we're not doing no-op moves.
     JS_ASSERT(!(from == to));
     PendingMove *pm = movePool_.allocate();
     if (!pm)
         return false;
-    new (pm) PendingMove(from, to, kind);
+    new (pm) PendingMove(from, to, type);
     pending_.pushBack(pm);
     return true;
 }

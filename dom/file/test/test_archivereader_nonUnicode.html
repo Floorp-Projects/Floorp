@@ -59,17 +59,11 @@
   {
     var binaryFile = createNonUnicodeData();
 
-    var r = new ArchiveReader(binaryFile, { encoding: "random stuff" });
-    isnot(r, null, "ArchiveReader cannot be null");
-
-    // GetFilename
-    var handle = r.getFilenames();
-    isnot(handle, null, "ArchiveReader.getFilenames() cannot be null");
-    handle.onsuccess = function() {
-      ok(true, "ArchiveReader.getFilenames() should return a 'success'");
-      is(this.result instanceof Array, true, "ArchiveReader.getFilenames() should return an array");
-      is(this.result.length, 0, "ArchiveReader.getFilenames(): the array contains 0 item");
-      ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
+    try {
+      new ArchiveReader(binaryFile, { encoding: "random stuff" });
+      ok(false, "Should have thrown for bogus encoding label.");
+    } catch (e) {
+      ok(e instanceof TypeError, "Expected a TypeError");
       finishTest();
     }
   }

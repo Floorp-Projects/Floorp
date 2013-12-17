@@ -18,41 +18,87 @@ class StackSlotAllocator
     js::Vector<uint32_t, 4, SystemAllocPolicy> doubleSlots;
     uint32_t height_;
 
-  public:
-    StackSlotAllocator() : height_(0)
-    { }
-
     void freeSlot(uint32_t index) {
         normalSlots.append(index);
     }
     void freeDoubleSlot(uint32_t index) {
         doubleSlots.append(index);
     }
-    void freeValueSlot(uint32_t index) {
-        freeDoubleSlot(index);
-    }
 
     uint32_t allocateDoubleSlot() {
         if (!doubleSlots.empty())
             return doubleSlots.popCopy();
-        if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT))
-            normalSlots.append(++height_);
-        height_ += (sizeof(double) / STACK_SLOT_SIZE);
-        return height_;
+        if (height_ % 8 != 0)
+            normalSlots.append(height_ += 4);
+        return height_ += 8;
     }
     uint32_t allocateSlot() {
         if (!normalSlots.empty())
             return normalSlots.popCopy();
         if (!doubleSlots.empty()) {
             uint32_t index = doubleSlots.popCopy();
-            normalSlots.append(index - 1);
+            normalSlots.append(index - 4);
             return index;
         }
-        return ++height_;
+        return height_ += 4;
     }
-    uint32_t allocateValueSlot() {
-        return allocateDoubleSlot();
+
+  public:
+    StackSlotAllocator() : height_(0)
+    { }
+
+    void freeSlot(LDefinition::Type type, uint32_t index) {
+        switch (type) {
+#if JS_BITS_PER_WORD == 32
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
+          case LDefinition::INT32:
+          case LDefinition::FLOAT32: return freeSlot(index);
+#if JS_BITS_PER_WORD == 64
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
+#ifdef JS_PUNBOX64
+          case LDefinition::BOX:
+#endif
+#ifdef JS_NUNBOX32
+          case LDefinition::TYPE:
+          case LDefinition::PAYLOAD:
+#endif
+          case LDefinition::DOUBLE:  return freeDoubleSlot(index);
+          default: MOZ_ASSUME_UNREACHABLE("Unknown slot type");
+        }
     }
+
+    uint32_t allocateSlot(LDefinition::Type type) {
+        switch (type) {
+#if JS_BITS_PER_WORD == 32
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
+          case LDefinition::INT32:
+          case LDefinition::FLOAT32: return allocateSlot();
+#if JS_BITS_PER_WORD == 64
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
+#ifdef JS_PUNBOX64
+          case LDefinition::BOX:
+#endif
+#ifdef JS_NUNBOX32
+          case LDefinition::TYPE:
+          case LDefinition::PAYLOAD:
+#endif
+          case LDefinition::DOUBLE:  return allocateDoubleSlot();
+          default: MOZ_ASSUME_UNREACHABLE("Unknown slot type");
+        }
+    }
+
     uint32_t stackHeight() const {
         return height_;
     }
