@@ -7,6 +7,10 @@
 #include "AndroidBridge.h"
 #include "Link.h"
 #include "nsIURI.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
+
+#define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
 
 using namespace mozilla;
 using mozilla::dom::Link;
@@ -78,6 +82,29 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
   return NS_OK;
 }
 
+void
+nsAndroidHistory::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
+  if (mRecentlyVisitedURIs.Length() < RECENTLY_VISITED_URI_SIZE) {
+    // Append a new element while the array is not full.
+    mRecentlyVisitedURIs.AppendElement(aURI);
+  } else {
+    // Otherwise, replace the oldest member.
+    mRecentlyVisitedURIsNextIndex %= RECENTLY_VISITED_URI_SIZE;
+    mRecentlyVisitedURIs.ElementAt(mRecentlyVisitedURIsNextIndex) = aURI;
+    mRecentlyVisitedURIsNextIndex++;
+  }
+}
+
+inline bool
+nsAndroidHistory::IsRecentlyVisitedURI(nsIURI* aURI) {
+  bool equals = false;
+  RecentlyVisitedArray::index_type i;
+  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
+    aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
+  }
+  return equals;
+}
+
 NS_IMETHODIMP
 nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
 {
@@ -90,6 +117,16 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {
     return NS_OK;
+  }
+
+  if (aLastVisitedURI) {
+    bool same;
+    rv = aURI->Equals(aLastVisitedURI, &same);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (same && IsRecentlyVisitedURI(aURI)) {
+      // Do not save refresh visits if we have visited this URI recently.
+      return NS_OK;
+    }
   }
 
   if (!(aFlags & VisitFlags::TOP_LEVEL))
@@ -106,6 +143,16 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
   GeckoAppShell::MarkURIVisited(uriString);
+
+  AppendToRecentlyVisitedURIs(aURI);
+
+  // Finally, notify that we've been visited.
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
+  }
+
   return NS_OK;
 }
 

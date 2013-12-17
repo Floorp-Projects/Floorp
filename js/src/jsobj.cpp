@@ -1273,7 +1273,7 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
     if (!NewObjectMetadata(cx, &metadata))
         return nullptr;
 
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(type->proto),
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, type->proto(),
                                                       parent, metadata, kind));
     if (!shape)
         return nullptr;
@@ -1457,7 +1457,7 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
     NewObjectCache &cache = cx->runtime()->newObjectCache;
 
     NewObjectCache::EntryIndex entry = -1;
-    if (parent == type->proto->getParent() &&
+    if (parent == type->proto().toObject()->getParent() &&
         newKind == GenericObject &&
         !cx->compartment()->hasObjectMetadataCallback())
     {
@@ -1985,9 +1985,12 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
      * Swap the object's types, to restore their initial type information.
      * The prototypes and classes of the objects were swapped in ReserveForTradeGuts.
      */
-    TypeObject *tmp = a->type_;
-    a->type_ = b->type_;
-    b->type_ = tmp;
+    {
+        AutoLockForCompilation lock(cx);
+        TypeObject *tmp = a->type_;
+        a->type_ = b->type_;
+        b->type_ = tmp;
+    }
 
     /* Don't try to swap a JSFunction for a plain function JSObject. */
     JS_ASSERT_IF(a->is<JSFunction>(), a->tenuredSizeOfThis() == b->tenuredSizeOfThis());
@@ -2019,9 +2022,12 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         char tmp[mozilla::tl::Max<sizeof(JSFunction), sizeof(JSObject_Slots16)>::value];
         JS_ASSERT(size <= sizeof(tmp));
 
-        js_memcpy(tmp, a, size);
-        js_memcpy(a, b, size);
-        js_memcpy(b, tmp, size);
+        {
+            AutoLockForCompilation lock(cx);
+            js_memcpy(tmp, a, size);
+            js_memcpy(a, b, size);
+            js_memcpy(b, tmp, size);
+        }
 
 #ifdef JSGC_GENERATIONAL
         /*
@@ -2059,9 +2065,12 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b, TradeGutsReserved &
         void *bpriv = b->hasPrivate() ? b->getPrivate() : nullptr;
 
         char tmp[sizeof(JSObject)];
-        js_memcpy(&tmp, a, sizeof tmp);
-        js_memcpy(a, b, sizeof tmp);
-        js_memcpy(b, &tmp, sizeof tmp);
+        {
+            AutoLockForCompilation lock(cx);
+            js_memcpy(&tmp, a, sizeof tmp);
+            js_memcpy(a, b, sizeof tmp);
+            js_memcpy(b, &tmp, sizeof tmp);
+        }
 
         if (a->isNative())
             a->shape_->setNumFixedSlots(reserved.newafixed);
@@ -2967,7 +2976,11 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
     MarkTypeObjectUnknownProperties(cx, obj->type(), true);
     MarkTypeObjectUnknownProperties(cx, type, true);
 
-    obj->setType(type);
+    {
+        AutoLockForCompilation lock(cx);
+        obj->setType(type);
+    }
+
     *succeeded = true;
     return true;
 }
@@ -4030,7 +4043,7 @@ NativeGetInline(JSContext *cx,
               case JSOP_GETPROP:
               case JSOP_CALLPROP:
               case JSOP_LENGTH:
-                script->baselineScript()->noteAccessedGetter(script->pcToOffset(pc));
+                script->baselineScript()->noteAccessedGetter(cx, script->pcToOffset(pc));
                 break;
               default:
                 break;

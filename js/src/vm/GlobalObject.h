@@ -513,25 +513,31 @@ class GlobalObject : public JSObject
         return &getSlotRefForCompilation(INTRINSICS).toObject();
     }
 
-    bool maybeGetIntrinsicValue(PropertyName *name, Value *vp) {
+    bool maybeGetIntrinsicValue(jsid id, Value *vp) {
+        JS_ASSERT(CurrentThreadCanReadCompilationData());
         JSObject *holder = intrinsicsHolder();
-        if (Shape *shape = holder->nativeLookupPure(name)) {
+        if (Shape *shape = holder->nativeLookupPure(id)) {
             *vp = holder->getSlot(shape->slot());
             return true;
         }
         return false;
     }
+    bool maybeGetIntrinsicValue(PropertyName *name, Value *vp) {
+        return maybeGetIntrinsicValue(NameToId(name), vp);
+    }
 
-    bool getIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue value) {
-        if (maybeGetIntrinsicValue(name, value.address()))
+    static bool getIntrinsicValue(JSContext *cx, Handle<GlobalObject*> global,
+                                  HandlePropertyName name, MutableHandleValue value)
+    {
+        if (global->maybeGetIntrinsicValue(name, value.address()))
             return true;
-        Rooted<GlobalObject*> self(cx, this);
         if (!cx->runtime()->cloneSelfHostedValue(cx, name, value))
             return false;
-        RootedObject holder(cx, self->intrinsicsHolder());
         RootedId id(cx, NameToId(name));
-        return JS_DefinePropertyById(cx, holder, id, value, nullptr, nullptr, 0);
+        return global->addIntrinsicValue(cx, id, value);
     }
+
+    bool addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value);
 
     bool setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue value) {
 #ifdef DEBUG

@@ -18,6 +18,8 @@ using mozilla::DebugOnly;
 bool
 SetElemICInspector::sawOOBDenseWrite() const
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!icEntry_)
         return false;
 
@@ -38,6 +40,8 @@ SetElemICInspector::sawOOBDenseWrite() const
 bool
 SetElemICInspector::sawOOBTypedArrayWrite() const
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!icEntry_)
         return false;
 
@@ -54,6 +58,8 @@ SetElemICInspector::sawOOBTypedArrayWrite() const
 bool
 SetElemICInspector::sawDenseWrite() const
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!icEntry_)
         return false;
 
@@ -68,6 +74,8 @@ SetElemICInspector::sawDenseWrite() const
 bool
 SetElemICInspector::sawTypedArrayWrite() const
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!icEntry_)
         return false;
 
@@ -82,6 +90,8 @@ SetElemICInspector::sawTypedArrayWrite() const
 bool
 BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, ShapeVector &shapes)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     // Return a list of shapes seen by the baseline IC for the current op.
     // An empty list indicates no shapes are known, or there was an uncacheable
     // access.
@@ -139,6 +149,8 @@ BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, ShapeVector &shapes)
 ICStub *
 BaselineInspector::monomorphicStub(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return nullptr;
 
@@ -156,6 +168,8 @@ BaselineInspector::monomorphicStub(jsbytecode *pc)
 bool
 BaselineInspector::dimorphicStub(jsbytecode *pc, ICStub **pfirst, ICStub **psecond)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return false;
 
@@ -176,6 +190,8 @@ BaselineInspector::dimorphicStub(jsbytecode *pc, ICStub **pfirst, ICStub **pseco
 MIRType
 BaselineInspector::expectedResultType(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     // Look at the IC entries for this op to guess what type it will produce,
     // returning MIRType_None otherwise.
 
@@ -222,6 +238,8 @@ CanUseInt32Compare(ICStub::Kind kind)
 MCompare::CompareType
 BaselineInspector::expectedCompareType(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     ICStub *first = monomorphicStub(pc), *second = nullptr;
     if (!first && !dimorphicStub(pc, &first, &second))
         return MCompare::Compare_Unknown;
@@ -304,6 +322,8 @@ TryToSpecializeBinaryArithOp(ICStub **stubs,
 MIRType
 BaselineInspector::expectedBinaryArithSpecialization(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     MIRType result;
     ICStub *stubs[2];
 
@@ -332,6 +352,8 @@ BaselineInspector::expectedBinaryArithSpecialization(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenNonNativeGetElement(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return false;
 
@@ -346,6 +368,8 @@ BaselineInspector::hasSeenNonNativeGetElement(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return false;
 
@@ -360,6 +384,8 @@ BaselineInspector::hasSeenNegativeIndexGetElement(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return false;
 
@@ -374,6 +400,8 @@ BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenNonStringIterNext(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     JS_ASSERT(JSOp(*pc) == JSOP_ITERNEXT);
 
     if (!hasBaselineScript())
@@ -388,6 +416,8 @@ BaselineInspector::hasSeenNonStringIterNext(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenDoubleResult(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return false;
 
@@ -407,6 +437,8 @@ BaselineInspector::hasSeenDoubleResult(jsbytecode *pc)
 JSObject *
 BaselineInspector::getTemplateObject(jsbytecode *pc)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return nullptr;
 
@@ -434,6 +466,8 @@ BaselineInspector::getTemplateObject(jsbytecode *pc)
 JSObject *
 BaselineInspector::getTemplateObjectForNative(jsbytecode *pc, Native native)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     if (!hasBaselineScript())
         return nullptr;
 
@@ -467,6 +501,8 @@ BaselineInspector::templateCallObject()
 JSObject *
 BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonGetter)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     const ICEntry &entry = icEntryFromPC(pc);
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isGetProp_CallScripted() || stub->isGetProp_CallNative()) {
@@ -482,6 +518,8 @@ BaselineInspector::commonGetPropFunction(jsbytecode *pc, Shape **lastProperty, J
 JSObject *
 BaselineInspector::commonSetPropFunction(jsbytecode *pc, Shape **lastProperty, JSFunction **commonSetter)
 {
+    JS_ASSERT(CurrentThreadCanReadCompilationData());
+
     const ICEntry &entry = icEntryFromPC(pc);
     for (ICStub *stub = entry.firstStub(); stub; stub = stub->next()) {
         if (stub->isSetProp_CallScripted() || stub->isSetProp_CallNative()) {
