@@ -135,17 +135,6 @@ public:
                                   LayoutDeviceIntPoint* aOutTransformedPoint);
 
   /**
-   * Updates the composition bounds on the root APZC for the given layers id.
-   * See FrameMetrics::mCompositionBounds for the definition of what the
-   * composition bounds are. This function is only meant for updating the
-   * composition bounds on the root APZC because that is the one that is
-   * zoomable, and the zoom may need to be adjusted immediately upon a change
-   * in the composition bounds.
-   */
-  void UpdateRootCompositionBounds(const uint64_t& aLayersId,
-                                   const ScreenIntRect& aCompositionBounds);
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up. |aRect| must be given in CSS pixels, relative to the document.
@@ -171,14 +160,6 @@ public:
                              bool aAllowZoom,
                              const CSSToScreenScale& aMinScale,
                              const CSSToScreenScale& aMaxScale);
-
-  /**
-   * Update mFrameMetrics.mScrollOffset to the given offset.
-   * This is necessary in cases where a scroll is not caused by user
-   * input (for example, a content scrollTo()).
-   */
-  void UpdateScrollOffset(const ScrollableLayerGuid& aGuid,
-                          const CSSPoint& aScrollOffset);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the
@@ -271,17 +252,12 @@ public:
   */
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScrollableLayerGuid& aGuid);
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint);
-  void GetRootAPZCsFor(const uint64_t& aLayersId,
-                       nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   void GetInputTransforms(AsyncPanZoomController *aApzc, gfx3DMatrix& aTransformToApzcOut,
                           gfx3DMatrix& aTransformToGeckoOut);
 private:
   /* Helpers */
   AsyncPanZoomController* FindTargetAPZC(AsyncPanZoomController* aApzc, const ScrollableLayerGuid& aGuid);
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
-  void FindRootAPZCs(AsyncPanZoomController* aApzc,
-                     const uint64_t& aLayersId,
-                     nsTArray< nsRefPtr<AsyncPanZoomController> >* aOutRootApzcs);
   already_AddRefed<AsyncPanZoomController> CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   already_AddRefed<AsyncPanZoomController> RootAPZCForLayersId(AsyncPanZoomController* aApzc);
   already_AddRefed<AsyncPanZoomController> GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);

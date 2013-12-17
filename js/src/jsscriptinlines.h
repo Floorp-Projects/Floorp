@@ -125,11 +125,14 @@ JSScript::setIsCallsiteClone(JSObject *fun) {
 }
 
 inline void
-JSScript::setBaselineScript(js::jit::BaselineScript *baselineScript) {
+JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript) {
 #ifdef JS_ION
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(tenuredZone(), baseline);
 #endif
+    mozilla::Maybe<js::AutoLockForCompilation> lock;
+    if (maybecx)
+        lock.construct(maybecx);
     baseline = baselineScript;
     updateBaselineOrIonRaw();
 }

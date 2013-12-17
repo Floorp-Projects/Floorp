@@ -286,6 +286,7 @@ HTMLTableElement::HTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mTableInheritedAttributes(TABLE_ATTRS_DIRTY)
 {
+  SetHasWeirdParserInsertionMode();
 }
 
 HTMLTableElement::~HTMLTableElement()

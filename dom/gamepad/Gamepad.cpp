@@ -19,7 +19,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Gamepad)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(Gamepad, mParent, mButtonsVariant)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(Gamepad, mParent, mButtons)
 
 Gamepad::Gamepad(nsISupports* aParent,
                  const nsAString& aID, uint32_t aIndex,
@@ -64,75 +64,10 @@ void
 Gamepad::SetAxis(uint32_t aAxis, double aValue)
 {
   MOZ_ASSERT(aAxis < mAxes.Length());
-  mAxes[aAxis] = aValue;
-}
-
-nsresult
-Gamepad::GetButtons(nsIVariant** aButtons)
-{
-  if (mButtonsVariant) {
-    NS_ADDREF(*aButtons = mButtonsVariant);
-    return NS_OK;
+  if (mAxes[aAxis] != aValue) {
+    mAxes[aAxis] = aValue;
+    GamepadBinding::ClearCachedAxesValue(this);
   }
-
-  nsRefPtr<nsVariant> out = new nsVariant();
-  NS_ENSURE_STATE(out);
-
-  if (mButtons.Length() == 0) {
-    nsresult rv = out->SetAsEmptyArray();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Note: The resulting nsIVariant dupes both the array and its elements.
-    GamepadButton** array = reinterpret_cast<GamepadButton**>
-                      (NS_Alloc(mButtons.Length() * sizeof(GamepadButton*)));
-    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
-
-    for (uint32_t i = 0; i < mButtons.Length(); ++i) {
-      array[i] = mButtons[i].get();
-    }
-
-    nsresult rv = out->SetAsArray(nsIDataType::VTYPE_INTERFACE,
-                                  nullptr,
-                                  mButtons.Length(),
-                                  reinterpret_cast<void*>(array));
-    NS_Free(array);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  mButtonsVariant = out;
-  *aButtons = out.forget().get();
-  return NS_OK;
-}
-
-nsresult
-Gamepad::GetAxes(nsIVariant** aAxes)
-{
-  nsRefPtr<nsVariant> out = new nsVariant();
-  NS_ENSURE_STATE(out);
-
-  if (mAxes.Length() == 0) {
-    nsresult rv = out->SetAsEmptyArray();
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Note: The resulting nsIVariant dupes both the array and its elements.
-    double* array = reinterpret_cast<double*>
-                              (NS_Alloc(mAxes.Length() * sizeof(double)));
-    NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
-
-    for (uint32_t i = 0; i < mAxes.Length(); ++i) {
-      array[i] = mAxes[i];
-    }
-
-    nsresult rv = out->SetAsArray(nsIDataType::VTYPE_DOUBLE,
-                                  nullptr,
-                                  mAxes.Length(),
-                                  reinterpret_cast<void*>(array));
-    NS_Free(array);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  *aAxes = out.forget().get();
-  return NS_OK;
 }
 
 void
@@ -148,8 +83,13 @@ Gamepad::SyncState(Gamepad* aOther)
     mButtons[i]->SetPressed(aOther->mButtons[i]->Pressed());
     mButtons[i]->SetValue(aOther->mButtons[i]->Value());
   }
+  bool changed = false;
   for (uint32_t i = 0; i < mAxes.Length(); ++i) {
+    changed = changed || (mAxes[i] != aOther->mAxes[i]);
     mAxes[i] = aOther->mAxes[i];
+  }
+  if (changed) {
+    GamepadBinding::ClearCachedAxesValue(this);
   }
 }
 

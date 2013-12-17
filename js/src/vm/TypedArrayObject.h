@@ -276,7 +276,7 @@ class ArrayBufferViewObject : public JSObject
 
     void prependToViews(ArrayBufferViewObject *viewsHead);
 
-    void neuter();
+    void neuter(JSContext *cx);
 
     static void trace(JSTracer *trc, JSObject *obj);
 };
@@ -353,7 +353,7 @@ class TypedArrayObject : public ArrayBufferViewObject
     inline bool isArrayIndex(jsid id, uint32_t *ip = nullptr);
     void copyTypedArrayElement(uint32_t index, MutableHandleValue vp);
 
-    void neuter();
+    void neuter(JSContext *cx);
 
     static uint32_t slotWidth(int atype) {
         switch (atype) {

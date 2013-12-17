@@ -49,6 +49,8 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::Maybe;
+
 // Global variables.
 IonOptions jit::js_IonOptions;
 
@@ -516,6 +518,8 @@ JitCompartment::ensureIonStubsExist(JSContext *cx)
 void
 jit::FinishOffThreadBuilder(IonBuilder *builder)
 {
+    builder->script()->runtimeFromMainThread()->removeCompilationThread();
+
     ExecutionMode executionMode = builder->info().executionMode();
 
     // Clear the recompiling flag if it would have failed.
@@ -1563,6 +1567,9 @@ AttachFinishedCompilations(JSContext *cx)
                 // operation callback and can't propagate failures.
                 cx->clearPendingException();
             }
+        } else {
+            if (builder->abortReason() == AbortReason_Disable)
+                SetIonScript(builder->script(), builder->info().executionMode(), ION_DISABLED_SCRIPT);
         }
 
         FinishOffThreadBuilder(builder);
@@ -1663,11 +1670,13 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_Alloc;
 
     CompileInfo *info = alloc->new_<CompileInfo>(script, script->function(), osrPc, constructing,
-                                                 executionMode);
+                                                 executionMode, script->needsArgsObj());
     if (!info)
         return AbortReason_Alloc;
 
-    BaselineInspector inspector(script);
+    BaselineInspector *inspector = alloc->new_<BaselineInspector>(script);
+    if (!inspector)
+        return AbortReason_Alloc;
 
     BaselineFrameInspector *baselineFrameInspector = nullptr;
     if (baselineFrame) {
@@ -1686,7 +1695,7 @@ IonCompile(JSContext *cx, JSScript *script,
     IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr,
                                                   CompileCompartment::get(cx->compartment()),
                                                   temp, graph, constraints,
-                                                  &inspector, info, baselineFrameInspector);
+                                                  inspector, info, baselineFrameInspector);
     if (!builder)
         return AbortReason_Alloc;
 
@@ -1695,28 +1704,6 @@ IonCompile(JSContext *cx, JSScript *script,
 
     RootedScript builderScript(cx, builder->script());
     IonSpewNewFunction(graph, builderScript);
-
-    mozilla::Maybe<AutoProtectHeapForCompilation> protect;
-    if (js_IonOptions.checkThreadSafety &&
-        cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL &&
-        !cx->runtime()->profilingScripts &&
-        !cx->runtime()->spsProfiler.enabled())
-    {
-        protect.construct(cx->runtime());
-    }
-
-    bool succeeded = builder->build();
-    builder->clearForBackEnd();
-
-    if (!succeeded) {
-        if (cx->isExceptionPending()) {
-            IonSpew(IonSpew_Abort, "Builder raised exception.");
-            return AbortReason_Error;
-        }
-
-        IonSpew(IonSpew_Abort, "Builder failed to build.");
-        return builder->abortReason();
-    }
 
     // If possible, compile the script off thread.
     if (OffThreadCompilationAvailable(cx)) {
@@ -1739,6 +1726,24 @@ IonCompile(JSContext *cx, JSScript *script,
         return AbortReason_NoAbort;
     }
 
+    Maybe<AutoEnterIonCompilation> ionCompiling;
+    ionCompiling.construct();
+
+    Maybe<AutoProtectHeapForIonCompilation> protect;
+    if (js_IonOptions.checkThreadSafety &&
+        cx->runtime()->gcIncrementalState == gc::NO_INCREMENTAL &&
+        !cx->runtime()->profilingScripts &&
+        !cx->runtime()->spsProfiler.enabled())
+    {
+        protect.construct(cx->runtime());
+    }
+
+    bool succeeded = builder->build();
+    builder->clearForBackEnd();
+
+    if (!succeeded)
+        return builder->abortReason();
+
     ScopedJSDeletePtr<CodeGenerator> codegen(CompileBackEnd(builder));
     if (!codegen) {
         IonSpew(IonSpew_Abort, "Failed during back-end compilation.");
@@ -1747,6 +1752,7 @@ IonCompile(JSContext *cx, JSScript *script,
 
     if (!protect.empty())
         protect.destroy();
+    ionCompiling.destroy();
 
     bool success = codegen->link(cx, builder->constraints());
 

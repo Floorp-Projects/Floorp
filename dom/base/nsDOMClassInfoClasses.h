@@ -22,9 +22,6 @@ DOMCI_CLASS(CSSRuleList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
 
-// Range classes
-DOMCI_CLASS(Selection)
-
 // XUL classes
 #ifdef MOZ_XUL
 DOMCI_CLASS(XULCommandDispatcher)
@@ -112,8 +109,6 @@ DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
 
 DOMCI_CLASS(CSSPageRule)
-
-DOMCI_CLASS(MediaQueryList)
 
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozIccManager)

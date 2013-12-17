@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "APZCCallbackHelper.h"
+#include "gfxPlatform.h" // For gfxPlatform::GetPrefLayersEnableTiles
 #include "mozilla/Preferences.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
@@ -71,7 +72,7 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
 
   // Expand the display port to the next tile boundaries, if tiled thebes layers
   // are enabled.
-  if (Preferences::GetBool("layers.force-tiles")) {
+  if (gfxPlatform::GetPrefLayersEnableTiles()) {
     displayPort =
       ExpandDisplayPortToTileBoundaries(displayPort + aActualScrollOffset,
                                         aFrameMetrics.LayersPixelsPerCSSPixel())
@@ -82,6 +83,25 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
   CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
   displayPort = scrollableRect.Intersect(displayPort + aActualScrollOffset)
     - aActualScrollOffset;
+}
+
+static CSSPoint
+ScrollFrameTo(nsIScrollableFrame* aFrame, const CSSPoint& aPoint)
+{
+  if (!aFrame) {
+    return CSSPoint();
+  }
+
+  // If the scrollable frame got a scroll request from something other than us
+  // since the last layers update, then we don't want to push our scroll request
+  // because we'll clobber that one, which is bad.
+  if (!aFrame->OriginOfLastScroll() || aFrame->OriginOfLastScroll() == nsGkAtoms::apz) {
+    aFrame->ScrollToCSSPixelsApproximate(aPoint, nsGkAtoms::apz);
+  }
+  // Return the final scroll position after setting it so that anything that relies
+  // on it can have an accurate value. Note that even if we set it above re-querying it
+  // is a good idea because it may have gotten clamped or rounded.
+  return CSSPoint::FromAppUnits(aFrame->GetScrollPosition());
 }
 
 void
@@ -105,12 +125,8 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     aUtils->SetScrollPositionClampingScrollPortSize(scrollPort.width, scrollPort.height);
 
     // Scroll the window to the desired spot
-    aUtils->ScrollToCSSPixelsApproximate(aMetrics.mScrollOffset.x, aMetrics.mScrollOffset.y, nullptr);
-
-    // Re-query the scroll position after setting it so that anything that relies on it
-    // can have an accurate value.
-    CSSPoint actualScrollOffset;
-    aUtils->GetScrollXYFloat(false, &actualScrollOffset.x, &actualScrollOffset.y);
+    nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.mScrollId);
+    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.mScrollOffset);
 
     // Correct the display port due to the difference between mScrollOffset and the
     // actual scroll offset, possibly align it to tile boundaries (if tiled layers are
@@ -167,12 +183,8 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
     // We currently do not support zooming arbitrary subframes. They can only
     // be scrolled, so here we only have to set the scroll position and displayport.
 
-    CSSPoint actualScrollOffset;
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aMetrics.mScrollId);
-    if (sf) {
-        sf->ScrollToCSSPixelsApproximate(aMetrics.mScrollOffset);
-        actualScrollOffset = CSSPoint::FromAppUnits(sf->GetScrollPosition());
-    }
+    CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.mScrollOffset);
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
     if (element) {

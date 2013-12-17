@@ -642,14 +642,12 @@ bool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
 {
-    /*
-     * Tell our caller to report immediately if this report is just a warning.
-     */
+    // Tell our caller to report immediately if this report is just a warning.
     JS_ASSERT(reportp);
     if (JSREPORT_IS_WARNING(reportp->flags))
         return false;
 
-    /* Find the exception index associated with this error. */
+    // Find the exception index associated with this error.
     JSErrNum errorNumber = static_cast<JSErrNum>(reportp->errorNumber);
     const JSErrorFormatString *errorString;
     if (!callback || callback == js_GetErrorMessage)
@@ -659,48 +657,47 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     JSExnType exnType = errorString ? static_cast<JSExnType>(errorString->exnType) : JSEXN_NONE;
     MOZ_ASSERT(exnType < JSEXN_LIMIT);
 
-    /*
-     * Return false (no exception raised) if no exception is associated
-     * with the given error number.
-     */
+    // Return false (no exception raised) if no exception is associated
+    // with the given error number.
     if (exnType == JSEXN_NONE)
         return false;
 
-    /* Prevent infinite recursion. */
+    // Prevent infinite recursion.
     if (cx->generatingError)
         return false;
     AutoScopedAssign<bool> asa(&cx->generatingError, true);
 
+    // Create an exception object.
     RootedString messageStr(cx, reportp->ucmessage ? JS_NewUCStringCopyZ(cx, reportp->ucmessage)
                                                    : JS_NewStringCopyZ(cx, message));
     if (!messageStr)
-        return false;
+        return cx->isExceptionPending();
 
     RootedString fileName(cx, JS_NewStringCopyZ(cx, reportp->filename));
     if (!fileName)
-        return false;
+        return cx->isExceptionPending();
 
     uint32_t lineNumber = reportp->lineno;
     uint32_t columnNumber = reportp->column;
 
     RootedString stack(cx, ComputeStackString(cx));
     if (!stack)
-        return false;
+        return cx->isExceptionPending();
 
     js::ScopedJSFreePtr<JSErrorReport> report(CopyErrorReport(cx, reportp));
     if (!report)
-        return false;
+        return cx->isExceptionPending();
 
     RootedObject errObject(cx, ErrorObject::create(cx, exnType, stack, fileName,
-                                                   lineNumber, columnNumber, &report,
-                                                   messageStr));
+                                                   lineNumber, columnNumber, &report, messageStr));
     if (!errObject)
-        return false;
+        return cx->isExceptionPending();
 
+    // Throw it.
     RootedValue errValue(cx, ObjectValue(*errObject));
     JS_SetPendingException(cx, errValue);
 
-    /* Flag the error report passed in to indicate an exception was raised. */
+    // Flag the error report passed in to indicate an exception was raised.
     reportp->flags |= JSREPORT_EXCEPTION;
     return true;
 }
@@ -838,7 +835,7 @@ js_ReportUncaughtException(JSContext *cx)
 
         /* Pass the exception object. */
         JS_SetPendingException(cx, exn);
-        js_ReportErrorAgain(cx, bytes, reportp);
+        CallErrorReporter(cx, bytes, reportp);
     }
 
     JS_ClearPendingException(cx);

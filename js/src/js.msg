@@ -391,7 +391,7 @@ MSG_DEF(JSMSG_DATE_NOT_FINITE,        337, 0, JSEXN_RANGEERR, "date value is not
 MSG_DEF(JSMSG_USE_ASM_DIRECTIVE_FAIL, 338, 0, JSEXN_SYNTAXERR, "\"use asm\" is only meaningful in the Directive Prologue of a function body")
 MSG_DEF(JSMSG_USE_ASM_TYPE_FAIL,      339, 1, JSEXN_TYPEERR, "asm.js type error: {0}")
 MSG_DEF(JSMSG_USE_ASM_LINK_FAIL,      340, 1, JSEXN_TYPEERR, "asm.js link error: {0}")
-MSG_DEF(JSMSG_USE_ASM_TYPE_OK,        341, 1, JSEXN_ERR,     "successfully compiled asm.js code ({0})")
+MSG_DEF(JSMSG_USE_ASM_TYPE_OK,        341, 1, JSEXN_NONE,    "Successfully compiled asm.js code ({0})")
 MSG_DEF(JSMSG_BAD_ARROW_ARGS,         342, 0, JSEXN_SYNTAXERR, "invalid arrow-function arguments (parentheses around the arrow-function may help)")
 MSG_DEF(JSMSG_YIELD_IN_ARROW,         343, 0, JSEXN_SYNTAXERR, "arrow function may not contain yield")
 MSG_DEF(JSMSG_WRONG_VALUE,            344, 2, JSEXN_ERR, "expected {0} but found {1}")

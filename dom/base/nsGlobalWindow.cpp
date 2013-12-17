@@ -209,7 +209,7 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
-#include "nsIDOMMediaQueryList.h"
+#include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -5017,7 +5017,7 @@ nsGlobalWindow::GetMozAnimationStartTime(int64_t *aTime)
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsIDOMMediaQueryList>
+already_AddRefed<MediaQueryList>
 nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
                            ErrorResult& aError)
 {
@@ -5052,11 +5052,10 @@ nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
 
 NS_IMETHODIMP
 nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
-                           nsIDOMMediaQueryList** aResult)
+                           nsISupports** aResult)
 {
   ErrorResult rv;
-  nsCOMPtr<nsIDOMMediaQueryList> mediaQueryList =
-    MatchMedia(aMediaQueryList, rv);
+  nsRefPtr<MediaQueryList> mediaQueryList = MatchMedia(aMediaQueryList, rv);
   mediaQueryList.forget(aResult);
 
   return rv.ErrorCode();
@@ -8820,7 +8819,7 @@ nsGlobalWindow::UpdateCommands(const nsAString& anAction)
   return NS_OK;
 }
 
-nsISelection*
+Selection*
 nsGlobalWindow::GetSelection(ErrorResult& aError)
 {
   FORWARD_TO_OUTER_OR_THROW(GetSelection, (aError), aError, nullptr);
@@ -8833,8 +8832,8 @@ nsGlobalWindow::GetSelection(ErrorResult& aError)
   if (!presShell) {
     return nullptr;
   }
-    
-  return presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+
+  return static_cast<Selection*>(presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL));
 }
 
 NS_IMETHODIMP
@@ -8899,7 +8898,7 @@ nsGlobalWindow::Find(const nsAString& aString, bool aCaseSensitive,
     nsCOMPtr<nsIDOMWindow> findDialog;
 
     if (windowMediator) {
-      windowMediator->GetMostRecentWindow(NS_LITERAL_STRING("findInPage").get(),
+      windowMediator->GetMostRecentWindow(MOZ_UTF16("findInPage"),
                                           getter_AddRefs(findDialog));
     }
 

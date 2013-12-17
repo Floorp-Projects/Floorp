@@ -111,7 +111,7 @@ bool nsCharsetConverterManager::IsInternal(const nsACString& aCharset)
   nsAutoString str;
   // fully qualify to possibly avoid vtable call
   nsresult rv = GetCharsetDataImpl(PromiseFlatCString(aCharset).get(),
-                                   NS_LITERAL_STRING(".isInternal").get(),
+                                   MOZ_UTF16(".isInternal"),
                                    str);
 
   return NS_SUCCEEDED(rv);
@@ -345,7 +345,7 @@ nsCharsetConverterManager::GetCharsetLangGroupRaw(const char * aCharset,
   nsAutoString langGroup;
   // fully qualify to possibly avoid vtable call
   nsresult rv = nsCharsetConverterManager::GetCharsetData(
-      aCharset, NS_LITERAL_STRING(".LangGroup").get(), langGroup);
+      aCharset, MOZ_UTF16(".LangGroup"), langGroup);
 
   if (NS_SUCCEEDED(rv)) {
     ToLowerCase(langGroup); // use lowercase for all language atoms

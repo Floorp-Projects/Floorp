@@ -474,7 +474,7 @@ class JSObject : public js::ObjectImpl
     bool uninlinedIsProxy() const;
     JSObject *getProto() const {
         JS_ASSERT(!uninlinedIsProxy());
-        return js::ObjectImpl::getProto();
+        return getTaggedProto().toObjectOrNull();
     }
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
                                 js::MutableHandleObject protop);
@@ -1325,15 +1325,6 @@ js_IdentifyClassPrototype(JSObject *obj);
 bool
 js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
                    const js::Class *clasp = nullptr);
-
-/*
- * Find or create a property named by id in obj's scope, with the given getter
- * and setter, slot, attributes, and other members.
- */
-extern js::Shape *
-js_AddNativeProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
-                     JSPropertyOp getter, JSStrictPropertyOp setter, uint32_t slot,
-                     unsigned attrs, unsigned flags, int shortid);
 
 namespace js {
 

@@ -68,10 +68,9 @@
     let frame = document.getElementById("amFrame");
     frame.focus();
 
-    let aIsVerbose = true;
     let doc = frame.contentWindow.document;
     let verbosity = doc.getElementById("verbose");
-    verbosity.checked = aIsVerbose;
+    verbosity.checked = true;
 
     function getFilePath(aFilename) {
       let file = Cc["@mozilla.org/file/directory_service;1"]
@@ -229,10 +228,6 @@ Other Measurements\n\
 \n\
 End of Main Process (pid NNN)\n\
 Other-only process\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
 Other Measurements\n\
 \n\
 200,000 B (100.0%) -- a\n\
@@ -290,30 +285,18 @@ Other Measurements\n\
 \n\
 End of P\n\
 P2 (pid NNN)\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
 Other Measurements\n\
 \n\
 11 B ── z 0xNNN\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
 Other Measurements\n\
 \n\
 -55 B ── p3 [-]\n\
 \n\
 End of P3\n\
 P4\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
 Other Measurements\n\
 \n\
 66 B ── p4 [+]\n\

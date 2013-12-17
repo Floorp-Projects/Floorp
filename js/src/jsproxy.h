@@ -324,8 +324,6 @@ class Proxy
     /* IC entry path for handling __noSuchMethod__ on access. */
     static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,
                          MutableHandleValue vp);
-
-    static JSObject * const LazyProto;
 };
 
 // Use these in places where you don't want to #include vm/ProxyObject.h.

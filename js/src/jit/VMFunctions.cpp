@@ -552,7 +552,7 @@ OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, bool *out)
 bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
-    if (!cx->global()->getIntrinsicValue(cx, name, rval))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval))
         return false;
 
     // This function is called when we try to compile a cold getintrinsic
@@ -946,7 +946,7 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
 
     JS_ASSERT_IF(!obj->hasLazyType(),
-                 obj->type()->clasp == obj->lastProperty()->getObjectClass());
+                 obj->type()->clasp() == obj->lastProperty()->getObjectClass());
 
     if (obj->isTenured()) {
         JS_ASSERT(obj->isAligned());

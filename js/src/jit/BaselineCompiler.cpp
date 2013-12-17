@@ -186,10 +186,8 @@ BaselineCompiler::compile()
     baselineScript->setMethod(code);
     baselineScript->setTemplateScope(templateScope);
 
-    script->setBaselineScript(baselineScript);
-
     IonSpew(IonSpew_BaselineScripts, "Created BaselineScript %p (raw %p) for %s:%d",
-            (void *) script->baselineScript(), (void *) code->raw(),
+            (void *) baselineScript, (void *) code->raw(),
             script->filename(), script->lineno());
 
 #ifdef JS_ION_PERF
@@ -253,6 +251,8 @@ BaselineCompiler::compile()
 
     if (script->compartment()->debugMode())
         baselineScript->setDebugMode();
+
+    script->setBaselineScript(cx, baselineScript);
 
     return Method_Compiled;
 }
@@ -694,7 +694,7 @@ BaselineCompiler::emitDebugTrap()
 
 #ifdef DEBUG
     // Patchable call offset has to match the pc mapping offset.
-    PCMappingEntry &entry = pcMappingEntries_[pcMappingEntries_.length() - 1];
+    PCMappingEntry &entry = pcMappingEntries_.back();
     JS_ASSERT((&offset)->offset() == entry.nativeOffset);
 #endif
 
@@ -1724,25 +1724,6 @@ BaselineCompiler::emit_JSOP_SETELEM()
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
-    return true;
-}
-
-bool
-BaselineCompiler::emit_JSOP_ENUMELEM()
-{
-    // ENUMELEM is a SETELEM with a different stack arrangement.
-    // Instead of:   OBJ ID RHS
-    // The stack is: RHS OBJ ID
-
-    // Keep object and index in R0 and R1, and keep RHS on the stack.
-    frame.popRegsAndSync(2);
-
-    // Call IC.
-    ICSetElem_Fallback::Compiler stubCompiler(cx);
-    if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
-        return false;
-
-    frame.pop();
     return true;
 }
 

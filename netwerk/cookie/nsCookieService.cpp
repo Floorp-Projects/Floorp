@@ -1563,7 +1563,7 @@ nsCookieService::Observe(nsISupports     *aSubject,
     // The profile is about to change,
     // or is going away because the application is shutting down.
     if (mDBState && mDBState->dbConn &&
-        !nsCRT::strcmp(aData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+        !nsCRT::strcmp(aData, MOZ_UTF16("shutdown-cleanse"))) {
       // Clear the cookie db if we're in the default DBState.
       RemoveAll();
     }
@@ -1656,7 +1656,7 @@ nsCookieService::SetCookieString(nsIURI     *aHostURI,
         do_GetService("@mozilla.org/consoleservice;1");
     if (aConsoleService) {
       aConsoleService->LogStringMessage(
-        NS_LITERAL_STRING("Non-null prompt ignored by nsCookieService.").get());
+        MOZ_UTF16("Non-null prompt ignored by nsCookieService."));
     }
   }
   return SetCookieStringCommon(aHostURI, aCookieHeader, nullptr, aChannel,
@@ -1679,7 +1679,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
         do_GetService("@mozilla.org/consoleservice;1");
     if (aConsoleService) {
       aConsoleService->LogStringMessage(
-        NS_LITERAL_STRING("Non-null prompt ignored by nsCookieService.").get());
+        MOZ_UTF16("Non-null prompt ignored by nsCookieService."));
     }
   }
   return SetCookieStringCommon(aHostURI, aCookieHeader, aServerTime, aChannel,
@@ -1865,7 +1865,7 @@ nsCookieService::NotifyThirdParty(nsIURI *aHostURI, bool aIsAccepted, nsIChannel
   // This can fail for a number of reasons, in which kind we fallback to "?"
   mObserverService->NotifyObservers(aHostURI,
                                     topic,
-                                    NS_LITERAL_STRING("?").get());
+                                    MOZ_UTF16("?"));
 }
 
 // notify observers that the cookie list changed. there are five possible
@@ -1964,7 +1964,7 @@ nsCookieService::RemoveAll()
     }
   }
 
-  NotifyChanged(nullptr, NS_LITERAL_STRING("cleared").get());
+  NotifyChanged(nullptr, MOZ_UTF16("cleared"));
   return NS_OK;
 }
 
@@ -2090,7 +2090,7 @@ nsCookieService::Remove(const nsACString& aHost, uint32_t aAppId,
 
   if (cookie) {
     // Everything's done. Notify observers.
-    NotifyChanged(cookie, NS_LITERAL_STRING("deleted").get());
+    NotifyChanged(cookie, MOZ_UTF16("deleted"));
   }
 
   return NS_OK;
@@ -3024,7 +3024,7 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
       if (aCookie->Expiry() <= currentTime) {
         COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
           "previously stored cookie was deleted");
-        NotifyChanged(oldCookie, NS_LITERAL_STRING("deleted").get());
+        NotifyChanged(oldCookie, MOZ_UTF16("deleted"));
         return;
       }
 
@@ -3075,11 +3075,11 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
   // Now that list mutations are complete, notify observers. We do it here
   // because observers may themselves attempt to mutate the list.
   if (purgedList) {
-    NotifyChanged(purgedList, NS_LITERAL_STRING("batch-deleted").get());
+    NotifyChanged(purgedList, MOZ_UTF16("batch-deleted"));
   }
 
-  NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
-                                     : NS_LITERAL_STRING("added").get());
+  NotifyChanged(aCookie, foundCookie ? MOZ_UTF16("changed")
+                                     : MOZ_UTF16("added"));
 }
 
 /******************************************************************************

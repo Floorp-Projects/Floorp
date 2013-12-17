@@ -465,7 +465,7 @@ SerializedNameSize(PropertyName *name)
 static uint8_t *
 SerializeName(uint8_t *cursor, PropertyName *name)
 {
-    JS_ASSERT_IF(name, name->length() != 0);
+    JS_ASSERT_IF(name, !name->empty());
     if (name) {
         cursor = WriteScalar<uint32_t>(cursor, name->length());
         cursor = WriteBytes(cursor, name->chars(), name->length() * sizeof(jschar));

@@ -78,14 +78,11 @@ bool
 EXIFParser::ParseTIFFHeader(uint32_t& aIFD0OffsetOut)
 {
   // Determine byte order.
-  if (MatchString("MM", 2))
+  if (MatchString("MM\0*", 4))
     mByteOrder = ByteOrder::BigEndian;
-  else if (MatchString("II", 2))
+  else if (MatchString("II*\0", 4))
     mByteOrder = ByteOrder::LittleEndian;
   else
-    return false;
-
-  if (!MatchString("\0*", 2))
     return false;
 
   // Determine offset of the 0th IFD. (It shouldn't be greater than 64k, which
