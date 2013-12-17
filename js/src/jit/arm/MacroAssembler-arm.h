@@ -485,12 +485,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         setFramePushed(framePushed_ + value);
     }
   public:
-    enum Result {
-        GENERAL,
-        DOUBLE,
-        FLOAT
-    };
-
     MacroAssemblerARMCompat()
       : inCall_(false),
         enoughMemory_(true),
@@ -1409,9 +1403,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from);
+    void passABIArg(const MoveOperand &from, MoveOp::Kind kind);
     void passABIArg(const Register &reg);
-    void passABIArg(const FloatRegister &reg);
+    void passABIArg(const FloatRegister &reg, MoveOp::Kind kind);
     void passABIArg(const ValueOperand &regs);
 
   protected:
@@ -1419,13 +1413,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, Result result);
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Kind result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, Result result = GENERAL);
-    void callWithABI(AsmJSImmPtr imm, Result result = GENERAL);
-    void callWithABI(const Address &fun, Result result = GENERAL);
+    void callWithABI(void *fun, MoveOp::Kind result = MoveOp::GENERAL);
+    void callWithABI(AsmJSImmPtr imm, MoveOp::Kind result = MoveOp::GENERAL);
+    void callWithABI(const Address &fun, MoveOp::Kind result = MoveOp::GENERAL);
 
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());
