@@ -962,11 +962,7 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
 #endif
 
   LayoutDeviceIntPoint refPoint;
-  bool hitTestChrome = TransformRefPoint(aPoint, refPoint);
-  if (!hitTestChrome) {
-    // Let APZC handle tap/doubletap detection for content.
-    return;
-  }
+  TransformRefPoint(aPoint, refPoint);
 
   WidgetMouseEvent* mouseEvent =
     new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
