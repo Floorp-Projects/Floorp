@@ -516,7 +516,7 @@ class ICStubIterator
         return currentStub_ == (ICStub *) fallbackStub_;
     }
 
-    void unlink(Zone *zone);
+    void unlink(JSContext *cx);
 };
 
 //
@@ -687,6 +687,8 @@ class ICStub
     }
 
     inline void setNext(ICStub *stub) {
+        // Note: next_ only needs to be changed under the compilation lock for
+        // non-type-monitor/update ICs.
         next_ = stub;
     }
 
@@ -833,7 +835,8 @@ class ICFallbackStub : public ICStub
     }
 
     // Add a new stub to the IC chain terminated by this fallback stub.
-    void addNewStub(ICStub *stub) {
+    void addNewStub(JSContext *cx, ICStub *stub) {
+        AutoLockForCompilation lock(cx);
         JS_ASSERT(*lastStubPtrAddr_ == this);
         JS_ASSERT(stub->next() == nullptr);
         stub->setNext(this);
@@ -2439,13 +2442,15 @@ class ICBinaryArith_Fallback : public ICFallbackStub
     bool sawDoubleResult() const {
         return extra_ & SAW_DOUBLE_RESULT_BIT;
     }
-    void setSawDoubleResult() {
+    void setSawDoubleResult(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= SAW_DOUBLE_RESULT_BIT;
     }
     bool hadUnoptimizableOperands() const {
         return extra_ & UNOPTIMIZABLE_OPERANDS_BIT;
     }
-    void noteUnoptimizableOperands() {
+    void noteUnoptimizableOperands(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= UNOPTIMIZABLE_OPERANDS_BIT;
     }
 
@@ -2846,14 +2851,16 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
         return space->allocate<ICGetElem_Fallback>(code);
     }
 
-    void noteNonNativeAccess() {
+    void noteNonNativeAccess(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= EXTRA_NON_NATIVE;
     }
     bool hasNonNativeAccess() const {
         return extra_ & EXTRA_NON_NATIVE;
     }
 
-    void noteNegativeIndex() {
+    void noteNegativeIndex(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= EXTRA_NEGATIVE_INDEX;
     }
     bool hasNegativeIndex() const {
@@ -3441,7 +3448,8 @@ class ICSetElem_Fallback : public ICFallbackStub
         return space->allocate<ICSetElem_Fallback>(code);
     }
 
-    void noteArrayWriteHole() {
+    void noteArrayWriteHole(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ = 1;
     }
     bool hasArrayWriteHole() const {
@@ -4016,14 +4024,16 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
     static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
     static const size_t ACCESSED_GETTER_BIT = 1;
 
-    void noteUnoptimizableAccess() {
+    void noteUnoptimizableAccess(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
     bool hadUnoptimizableAccess() const {
         return extra_ & (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
 
-    void noteAccessedGetter() {
+    void noteAccessedGetter(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= (1u << ACCESSED_GETTER_BIT);
     }
     bool hasAccessedGetter() const {
@@ -4830,7 +4840,8 @@ class ICSetProp_Fallback : public ICFallbackStub
     }
 
     static const size_t UNOPTIMIZABLE_ACCESS_BIT = 0;
-    void noteUnoptimizableAccess() {
+    void noteUnoptimizableAccess(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         extra_ |= (1u << UNOPTIMIZABLE_ACCESS_BIT);
     }
     bool hadUnoptimizableAccess() const {
@@ -5721,7 +5732,8 @@ class ICIteratorNext_Fallback : public ICFallbackStub
         return space->allocate<ICIteratorNext_Fallback>(code);
     }
 
-    void setHasNonStringResult() {
+    void setHasNonStringResult(JSContext *cx) {
+        AutoLockForCompilation lock(cx);
         JS_ASSERT(extra_ == 0);
         extra_ = 1;
     }

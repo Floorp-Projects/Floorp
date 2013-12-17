@@ -977,7 +977,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * that needsArgsObj is only called after the script has been analyzed.
      */
     bool analyzedArgsUsage() const { return !needsArgsAnalysis_; }
-    bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
+    bool needsArgsObj() const {
+        JS_ASSERT(analyzedArgsUsage());
+        JS_ASSERT(js::CurrentThreadCanReadCompilationData());
+        return needsArgsObj_;
+    }
     void setNeedsArgsObj(bool needsArgsObj);
     static bool argumentsOptimizationFailed(JSContext *cx, js::HandleScript script);
 
@@ -1027,6 +1031,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     bool hasBaselineScript() const {
+        JS_ASSERT(js::CurrentThreadCanReadCompilationData());
         return baseline && baseline != BASELINE_DISABLED_SCRIPT;
     }
     bool canBaselineCompile() const {
@@ -1036,7 +1041,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         JS_ASSERT(hasBaselineScript());
         return baseline;
     }
-    inline void setBaselineScript(js::jit::BaselineScript *baselineScript);
+    inline void setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript);
 
     void updateBaselineOrIonRaw();
 

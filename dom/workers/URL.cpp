@@ -4,24 +4,24 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "URL.h"
-#include "File.h"
-
-#include "WorkerPrivate.h"
-#include "nsThreadUtils.h"
-
-#include "nsPIDOMWindow.h"
-#include "nsGlobalWindow.h"
-#include "nsHostObjectProtocolHandler.h"
-#include "nsServiceManagerUtils.h"
 
 #include "nsIDocument.h"
 #include "nsIDOMFile.h"
+#include "nsIIOService.h"
+#include "nsPIDOMWindow.h"
 
 #include "mozilla/dom/URL.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParams.h"
-#include "nsIIOService.h"
+#include "nsGlobalWindow.h"
+#include "nsHostObjectProtocolHandler.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
+
+#include "File.h"
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 
 BEGIN_WORKERS_NAMESPACE
 using mozilla::dom::GlobalObject;
@@ -67,43 +67,7 @@ class URLRunnable : public nsRunnable
 {
 protected:
   WorkerPrivate* mWorkerPrivate;
-  uint32_t mSyncQueueKey;
-
-private:
-  class ResponseRunnable : public WorkerSyncRunnable
-  {
-    uint32_t mSyncQueueKey;
-
-  public:
-    ResponseRunnable(WorkerPrivate* aWorkerPrivate,
-                     uint32_t aSyncQueueKey)
-    : WorkerSyncRunnable(aWorkerPrivate, aSyncQueueKey, false),
-      mSyncQueueKey(aSyncQueueKey)
-    {
-      NS_ASSERTION(aWorkerPrivate, "Don't hand me a null WorkerPrivate!");
-    }
-
-    bool
-    WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-    {
-      aWorkerPrivate->StopSyncLoop(mSyncQueueKey, true);
-      return true;
-    }
-
-    bool
-    PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
-    {
-      AssertIsOnMainThread();
-      return true;
-    }
-
-    void
-    PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                 bool aDispatchResult)
-    {
-      AssertIsOnMainThread();
-    }
-  };
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
 
 protected:
   URLRunnable(WorkerPrivate* aWorkerPrivate)
@@ -117,15 +81,17 @@ public:
   Dispatch(JSContext* aCx)
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
+
     AutoSyncLoopHolder syncLoop(mWorkerPrivate);
-    mSyncQueueKey = syncLoop.SyncQueueKey();
+
+    mSyncLoopTarget = syncLoop.EventTarget();
 
     if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
       JS_ReportError(aCx, "Failed to dispatch to main thread!");
       return false;
     }
 
-    return syncLoop.RunAndForget(aCx);
+    return syncLoop.Run();
   }
 
 private:
@@ -135,8 +101,10 @@ private:
 
     MainThreadRun();
 
-    nsRefPtr<ResponseRunnable> response =
-      new ResponseRunnable(mWorkerPrivate, mSyncQueueKey);
+    nsRefPtr<MainThreadStopSyncLoopRunnable> response =
+      new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
+                                         mSyncLoopTarget.forget(),
+                                         true);
     if (!response->Dispatch(nullptr)) {
       NS_WARNING("Failed to dispatch response!");
     }

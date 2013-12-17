@@ -669,7 +669,7 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     RootedId shId(cx, AtomToId(selfHostedName));
     RootedObject holder(cx, cx->global()->intrinsicsHolder());
 
-    if (HasDataProperty(cx, holder, shId, funVal.address()))
+    if (cx->global()->maybeGetIntrinsicValue(shId, funVal.address()))
         return true;
 
     if (!cx->runtime()->maybeWrappedSelfHostedFunction(cx, shId, funVal))
@@ -685,5 +685,31 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     fun->setExtendedSlot(0, StringValue(selfHostedName));
     funVal.setObject(*fun);
 
-    return JSObject::defineGeneric(cx, holder, shId, funVal, nullptr, nullptr, 0);
+    return cx->global()->addIntrinsicValue(cx, shId, funVal);
+}
+
+bool
+GlobalObject::addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value)
+{
+    RootedObject holder(cx, intrinsicsHolder());
+
+    // Work directly with the shape machinery underlying the object, so that we
+    // don't take the compilation lock until we are ready to update the object
+    // without triggering a GC.
+
+    uint32_t slot = holder->slotSpan();
+    RootedShape last(cx, holder->lastProperty());
+    Rooted<UnownedBaseShape*> base(cx, last->base()->unowned());
+
+    StackShape child(base, id, slot, holder->numFixedSlots(), 0, 0, 0);
+    RootedShape shape(cx, cx->compartment()->propertyTree.getChild(cx, last, holder->numFixedSlots(), child));
+    if (!shape)
+        return false;
+
+    AutoLockForCompilation lock(cx);
+    if (!JSObject::setLastProperty(cx, holder, shape))
+        return false;
+
+    holder->setSlot(shape->slot(), value);
+    return true;
 }
