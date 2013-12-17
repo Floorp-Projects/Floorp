@@ -675,7 +675,7 @@ DelayedExecuteThread(LPVOID param)
   if (GetDefaultBrowserAppModelID(appModelID)) {
     Log(L"Activating application");
     DWORD processID;
-    HRESULT hr = activateMgr->ActivateApplication(appModelID, L"", AO_NOSPLASHSCREEN, &processID);
+    HRESULT hr = activateMgr->ActivateApplication(appModelID, L"", AO_NOERRORUI, &processID);
     if (SUCCEEDED(hr)) {
       Log(L"Activate application succeeded");
     } else {
