@@ -2950,13 +2950,11 @@ const BrowserSearch = {
       openSearchPageIfFieldIsNotActive(searchBar);
     };
     if (placement && placement.area == CustomizableUI.AREA_PANEL) {
-      PanelUI.show().then(() => {
-        // The panel is not constructed until the first time it is shown.
-        focusSearchBar();
-      });
+      // The panel is not constructed until the first time it is shown.
+      PanelUI.show().then(focusSearchBar);
       return;
     }
-    if (placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
+    if (placement && placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
         searchBar.parentNode.classList.contains("overflowedItem")) {
       let navBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
       navBar.overflowable.show().then(() => {
