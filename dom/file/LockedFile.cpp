@@ -1040,25 +1040,26 @@ ReadTextHelper::GetSuccessResult(JSContext* aCx,
 {
   nsresult rv;
 
-  nsCString charsetGuess;
-  if (!mEncoding.IsEmpty()) {
-    CopyUTF16toUTF8(mEncoding, charsetGuess);
-  }
-  else {
-    const nsCString& data = mStream->Data();
-    uint32_t dataLen = data.Length();
-    rv = nsContentUtils::GuessCharset(data.get(), dataLen, charsetGuess);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCString charset;
-  if (!EncodingUtils::FindEncodingForLabel(charsetGuess, charset)) {
-    return NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR;
+  nsAutoCString encoding;
+  const nsCString& data = mStream->Data();
+  // The BOM sniffing is baked into the "decode" part of the Encoding
+  // Standard, which the File API references.
+  if (!nsContentUtils::CheckForBOM(
+        reinterpret_cast<const unsigned char *>(data.get()),
+        data.Length(),
+        encoding)) {
+    // BOM sniffing failed. Try the API argument.
+    if (!EncodingUtils::FindEncodingForLabel(mEncoding, encoding)) {
+      // API argument failed. Since we are dealing with a file system file,
+      // we don't have a meaningful type attribute for the blob available,
+      // so proceeding to the next step, which is defaulting to UTF-8.
+      encoding.AssignLiteral("UTF-8");
+    }
   }
 
   nsString tmpString;
-  rv = nsContentUtils::ConvertStringFromCharset(charset, mStream->Data(),
-                                                tmpString);
+  rv = nsContentUtils::ConvertStringFromEncoding(encoding, data,
+                                                 tmpString);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JS::Value> rval(aCx);

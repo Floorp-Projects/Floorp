@@ -161,7 +161,7 @@ BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
     // already grouped with reg0 or reg1.
     BacktrackingVirtualRegister *reg0 = &vregs[vreg0], *reg1 = &vregs[vreg1];
 
-    if (reg0->isDouble() != reg1->isDouble())
+    if (reg0->isFloatReg() != reg1->isFloatReg())
         return true;
 
     VirtualRegisterGroup *group0 = reg0->group(), *group1 = reg1->group();
@@ -636,7 +636,7 @@ BacktrackingAllocator::tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegi
     if (!r.allocatable)
         return true;
 
-    if (r.reg.isFloat() != vregs[group->registers[0]].isDouble())
+    if (r.reg.isFloat() != vregs[group->registers[0]].isFloatReg())
         return true;
 
     bool allocatable = true;
@@ -686,7 +686,7 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
         return true;
 
     BacktrackingVirtualRegister *reg = &vregs[interval->vreg()];
-    if (reg->isDouble() != r.reg.isFloat())
+    if (reg->isFloatReg() != r.reg.isFloat())
         return true;
 
     JS_ASSERT_IF(interval->requirement()->kind() == Requirement::FIXED,
@@ -862,14 +862,10 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         }
     }
 
-    uint32_t stackSlot;
-    if (reg->isDouble())
-        stackSlot = stackSlotAllocator.allocateDoubleSlot();
-    else
-        stackSlot = stackSlotAllocator.allocateSlot();
+    uint32_t stackSlot = stackSlotAllocator.allocateSlot(reg->type());
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
-    LStackSlot alloc(stackSlot, reg->isDouble());
+    LStackSlot alloc(stackSlot);
     interval->setAllocation(alloc);
 
     IonSpew(IonSpew_RegAlloc, "  Allocating spill location %s", alloc.toString());
@@ -1130,6 +1126,7 @@ BacktrackingAllocator::populateSafepoints()
                 DebugOnly<LDefinition*> def = reg->def();
                 JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
                              def->type() == LDefinition::GENERAL ||
+                             def->type() == LDefinition::INT32 ||
                              def->type() == LDefinition::FLOAT32 ||
                              def->type() == LDefinition::DOUBLE);
                 continue;

@@ -393,7 +393,7 @@ IonCache::attachStub(MacroAssembler &masm, StubAttacher &attacher, Handle<IonCod
 
     // Replace the STUB_ADDR constant by the address of the generated stub, such
     // as it can be kept alive even if the cache is flushed (see
-    // MarkIonExitFrame).
+    // MarkJitExitFrame).
     attacher.patchStubCodePointer(masm, code);
 }
 
