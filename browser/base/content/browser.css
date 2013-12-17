@@ -729,12 +729,39 @@ toolbarbutton[type="badged"] {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#toolbarbutton-badged");
 }
 
+toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbutton-badge-container {
+  padding: 5px;
+}
+
 toolbarbutton[type="socialmark"] {
   -moz-binding: url("chrome://browser/content/socialmarks.xml#toolbarbutton-marks");
 }
+
+toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
 toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+}
+toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+  max-width: 32px;
+  max-height: 32px;
+}
+
+@media (min-resolution: 2dppx) {
+  toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+  toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
+    max-width: 32px;
+    max-height: 32px;
+  }
+  toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
+    max-width: 64px;
+    max-height: 64px;
+  }
+}
+
+panelview > .social-panel-frame {
+  width: auto;
+  height: auto;
 }
 
 /* Note the chatbox 'width' values are duplicated in socialchat.xml */

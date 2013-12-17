@@ -123,6 +123,8 @@ browser.jar:
   skin/classic/browser/social/share-button.png        (social/share-button.png)
   skin/classic/browser/social/share-button-active.png (social/share-button-active.png)
   skin/classic/browser/social/chat-icons.png          (social/chat-icons.png)
+  skin/classic/browser/social/gear_default.png        (../shared/social/gear_default.png)
+  skin/classic/browser/social/gear_clicked.png        (../shared/social/gear_clicked.png)
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab.png             (tabbrowser/tab.png)
