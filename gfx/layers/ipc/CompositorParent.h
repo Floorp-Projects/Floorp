@@ -205,6 +205,10 @@ public:
     nsRefPtr<GeckoContentController> mController;
     CompositorParent* mParent;
     LayerManagerComposite* mLayerManager;
+    // Pointer to the CrossProcessCompositorParent. Used by APZCs to share
+    // their FrameMetrics with the corresponding child process that holds
+    // the PCompositorChild
+    PCompositorParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
   };
 
