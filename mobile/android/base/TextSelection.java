@@ -124,6 +124,9 @@ class TextSelection extends Layer implements GeckoEventListener {
                         if (mActionModeTimerTask != null)
                             mActionModeTimerTask.cancel();
                         showActionMode(message.getJSONArray("actions"));
+
+                        if (handles.length() > 1)
+                            GeckoAppShell.performHapticFeedback(true);
                     } else if (event.equals("TextSelection:Update")) {
                         if (mActionModeTimerTask != null)
                             mActionModeTimerTask.cancel();
