@@ -209,7 +209,6 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsITabChild.h"
-#include "nsIDOMMediaQueryList.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
 
@@ -5053,11 +5052,10 @@ nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
 
 NS_IMETHODIMP
 nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
-                           nsIDOMMediaQueryList** aResult)
+                           nsISupports** aResult)
 {
   ErrorResult rv;
-  nsCOMPtr<nsIDOMMediaQueryList> mediaQueryList =
-    MatchMedia(aMediaQueryList, rv);
+  nsRefPtr<MediaQueryList> mediaQueryList = MatchMedia(aMediaQueryList, rv);
   mediaQueryList.forget(aResult);
 
   return rv.ErrorCode();

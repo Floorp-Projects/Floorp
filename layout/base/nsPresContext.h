@@ -65,7 +65,6 @@ struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
 class nsAnimationManager;
-class nsIDOMMediaQueryList;
 class nsRefreshDriver;
 class nsIWidget;
 class nsDeviceContext;
