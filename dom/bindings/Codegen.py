@@ -4662,9 +4662,21 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         name = returnType.unroll().identifier.name
         return CGGeneric("nsRefPtr<%s>" % name), False, None, None
     if returnType.isAny():
-        return CGGeneric("JS::Value"), False, None, None
+        result = CGGeneric("JS::Value")
+        if isMember:
+            resultArgs = None
+        else:
+            result = CGTemplatedType("JS::Rooted", result)
+            resultArgs = "cx"
+        return result, False, None, resultArgs
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
-        return CGGeneric("JSObject*"), False, None, None
+        result = CGGeneric("JSObject*")
+        if isMember:
+            resultArgs = None
+        else:
+            result = CGTemplatedType("JS::Rooted", result)
+            resultArgs = "cx"
+        return result, False, None, resultArgs
     if returnType.isSequence():
         nullable = returnType.nullable()
         if nullable:
