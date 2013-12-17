@@ -138,6 +138,7 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
 {
     MoveOperand to;
     switch (kind) {
+      case MoveOp::FLOAT32:
       case MoveOp::DOUBLE: {
         FloatRegister dest;
         if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
@@ -149,11 +150,11 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
         } else {
             to = MoveOperand(StackPointer, stackForCall_);
             switch (kind) {
+              case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
               case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
               default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument kind");
             }
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::DOUBLE);
         break;
       }
       case MoveOp::GENERAL: {
@@ -168,12 +169,13 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Kind kind)
             to = MoveOperand(StackPointer, stackForCall_);
             stackForCall_ += sizeof(int64_t);
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::GENERAL);
         break;
       }
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected argument kind");
     }
+
+    enoughMemory_ = moveResolver_.addMove(from, to, kind);
 }
 
 void
