@@ -20,10 +20,8 @@ function test() {
 
         let nextIndex = index + 1;
         if (nextIndex >= toolIds.length) {
-          toolbox.destroy().then(function() {
-            gBrowser.removeCurrentTab();
-            finish();
-          });
+          toolbox.destroy();
+          finish();
         }
         else {
           open(nextIndex);
