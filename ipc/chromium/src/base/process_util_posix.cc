@@ -251,7 +251,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
     // The dead process originally spawned from Nuwa might be taken as not
     // crashed because the above waitpid() call returns -1 and ECHILD. The
     // caller shouldn't behave incorrectly because of this false negative.
-    LOG(ERROR) << "waitpid failed pid:" << handle << " errno:" << errno;
+    CHROMIUM_LOG(ERROR) << "waitpid failed pid:" << handle << " errno:" << errno;
     if (child_exited)
       *child_exited = false;
     return false;

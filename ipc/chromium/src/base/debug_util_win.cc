@@ -116,13 +116,13 @@ class SymbolContext {
   }
 
   // Returns the error code of a failed initialization.  This should only be
-  // called if Init() has been called.  We do not LOG(FATAL) here because
-  // this code is called might be triggered by a LOG(FATAL) itself.  Instead,
+  // called if Init() has been called.  We do not CHROMIUM_LOG(FATAL) here because
+  // this code is called might be triggered by a CHROMIUM_LOG(FATAL) itself.  Instead,
   // we log an ERROR, and return ERROR_INVALID_DATA.
   DWORD init_error() {
     if (!initialized_) {
-      LOG(ERROR) << "Calling GetInitError() before Init() was called.  "
-                 << "Returning ERROR_INVALID_DATA.";
+      CHROMIUM_LOG(ERROR) << "Calling GetInitError() before Init() was called.  "
+                          << "Returning ERROR_INVALID_DATA.";
       return ERROR_INVALID_DATA;
     }
 
@@ -130,13 +130,13 @@ class SymbolContext {
   }
 
   // Returns the process this was initialized for.  This should only be
-  // called if Init() has been called.  We LOG(ERROR) in this situation.
-  // LOG(FATAL) is not used because this code is might be triggered 
-  // by a LOG(FATAL) itself.
+  // called if Init() has been called.  We CHROMIUM_LOG(ERROR) in this situation.
+  // CHROMIUM_LOG(FATAL) is not used because this code is might be triggered 
+  // by a CHROMIUM_LOG(FATAL) itself.
   HANDLE process() {
     if (!initialized_) {
-      LOG(ERROR) << "Calling process() before Init() was called. "
-                 << "Returning NULL.";
+      CHROMIUM_LOG(ERROR) << "Calling process() before Init() was called. "
+                          << "Returning NULL.";
       return NULL;
     }
 
@@ -149,8 +149,8 @@ class SymbolContext {
   //    <tab>SymbolName[0xAddress+Offset] (FileName:LineNo)
   // 
   // This function should only be called if Init() has been called.  We do not
-  // LOG(FATAL) here because this code is called might be triggered by a
-  // LOG(FATAL) itself.
+  // CHROMIUM_LOG(FATAL) here because this code is called might be triggered by a
+  // CHROMIUM_LOG(FATAL) itself.
   void OutputTraceToStream(const std::vector<void*>& trace, std::ostream* os) {
     AutoLock lock(lock_);
 
