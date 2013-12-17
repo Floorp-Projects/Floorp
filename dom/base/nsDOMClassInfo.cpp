@@ -115,7 +115,6 @@
 #include "nsIDOMCRMFObject.h"
 #endif
 #include "nsIControllers.h"
-#include "nsISelection.h"
 #include "nsIBoxObject.h"
 #ifdef MOZ_XUL
 #include "nsITreeSelection.h"
@@ -350,9 +349,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-
-  NS_DEFINE_CLASSINFO_DATA(Selection, nsDOMGenericSH,
-                           DEFAULT_SCRIPTABLE_FLAGS)
 
   // XUL classes
 #ifdef MOZ_XUL
@@ -1039,10 +1035,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(CSSStyleSheet, nsIDOMCSSStyleSheet)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleSheet)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(Selection, nsISelection)
-    DOM_CLASSINFO_MAP_ENTRY(nsISelection)
   DOM_CLASSINFO_MAP_END
 
 #ifdef MOZ_XUL
