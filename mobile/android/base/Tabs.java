@@ -7,7 +7,6 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
@@ -724,7 +723,8 @@ public class Tabs implements GeckoEventListener {
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
             args.put("selected", !background);
-            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? HomePager.Page.READING_LIST : "");
+            // XXX: Dirty hack to pass reading list page id - let's get rid of this code path in bug 949178.
+            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? "reading_list-reading_list" : "");
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();
