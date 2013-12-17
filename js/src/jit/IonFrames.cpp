@@ -922,7 +922,7 @@ JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
 }
 
 static void
-MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
+MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
     // Ignore fake exit frames created by EnsureExitFrame.
     if (frame.isFakeExitFrame())
@@ -1077,7 +1077,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
     for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
-            MarkIonExitFrame(trc, frames);
+            MarkJitExitFrame(trc, frames);
             break;
           case IonFrame_BaselineJS:
             frames.baselineFrame()->trace(trc);
