@@ -25,6 +25,7 @@
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
+#include "DecodeStrategy.h"
 #include "DiscardTracker.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
@@ -308,6 +309,8 @@ public:
     eShutdownIntent_AllCount    = 3
   };
 
+  // Decode strategy
+
 private:
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
@@ -400,7 +403,7 @@ private:
      * Decode aImg for a short amount of time, and post the remainder to the
      * queue.
      */
-    void DecodeABitOf(RasterImage* aImg);
+    void DecodeABitOf(RasterImage* aImg, DecodeStrategy aStrategy);
 
     /**
      * Ask the DecodePool to stop decoding this image.  Internally, we also
@@ -449,6 +452,7 @@ private:
      * UNTIL_DONE_BYTES, decode until all bytesToDecode bytes are decoded.
      */
     nsresult DecodeSomeOfImage(RasterImage* aImg,
+                               DecodeStrategy aStrategy,
                                DecodeType aDecodeType = DECODE_TYPE_UNTIL_TIME,
                                uint32_t bytesToDecode = 0);
 
@@ -699,8 +703,8 @@ private: // data
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
-  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount);
-  nsresult DecodeSomeData(uint32_t aMaxBytes);
+  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  nsresult DecodeSomeData(uint32_t aMaxBytes, DecodeStrategy aStrategy);
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
