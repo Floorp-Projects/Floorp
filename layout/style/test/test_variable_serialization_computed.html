@@ -25,7 +25,7 @@ var values = [
   ["var-a: var(b)", "var-a", ""],
   ["var-a: var(b); var-b: 1px", "var-a", "  1px"],
   ["var-a: var(b, 1px)", "var-a", "  1px"],
-  ["var-a: var(a, 1px)", "var-a", "  1px"],
+  ["var-a: var(a, 1px)", "var-a", ""],
   ["var-a: something 3px url(whereever) calc(var(a) + 1px)", "var-a", ""],
   ["var-a: something 3px url(whereever) calc(var(b,1em) + 1px)", "var-a", " something 3px url(whereever) calc(1em + 1px)"],
   ["var-a: var(b, var(c, var(d, Black)))", "var-a", "    Black"],
