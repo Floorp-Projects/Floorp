@@ -12,15 +12,15 @@
 #include "DBusUtils.h"
 #include "RawDBusConnection.h"
 
-#ifdef LOG
-#undef LOG
+#ifdef CHROMIUM_LOG
+#undef CHROMIUM_LOG
 #endif
 
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args);
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args);
 #else
-#define LOG(args...)  printf(args);
+#define CHROMIUM_LOG(args...)  printf(args);
 #endif
 
 /* TODO: Remove BlueZ constant */
@@ -288,13 +288,13 @@ DBusMessage* RawDBusConnection::BuildDBusMessage(const char* aPath,
   DBusMessage* msg = dbus_message_new_method_call(BLUEZ_DBUS_BASE_IFC,
                                                   aPath, aIntf, aFunc);
   if (!msg) {
-    LOG("Could not allocate D-Bus message object!");
+    CHROMIUM_LOG("Could not allocate D-Bus message object!");
     return nullptr;
   }
 
   /* append arguments */
   if (!dbus_message_append_args_valist(msg, aFirstArgType, aArgs)) {
-    LOG("Could not append argument to method call!");
+    CHROMIUM_LOG("Could not append argument to method call!");
     dbus_message_unref(msg);
     return nullptr;
   }

@@ -24,13 +24,13 @@
 
 static const size_t MAX_READ_SIZE = 1 << 16;
 
-#undef LOG
+#undef CHROMIUM_LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkDBus", args);
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkDBus", args);
 #else
 #define BTDEBUG true
-#define LOG(args...) if (BTDEBUG) printf(args);
+#define CHROMIUM_LOG(args...) if (BTDEBUG) printf(args);
 #endif
 
 static const int SOCKET_RETRY_TIME_MS = 1000;
@@ -515,14 +515,14 @@ UnixSocketImpl::Accept()
 
     if (bind(mFd.get(), (struct sockaddr*)&mAddr, mAddrSize)) {
 #ifdef DEBUG
-      LOG("...bind(%d) gave errno %d", mFd.get(), errno);
+      CHROMIUM_LOG("...bind(%d) gave errno %d", mFd.get(), errno);
 #endif
       return;
     }
 
     if (listen(mFd.get(), 1)) {
 #ifdef DEBUG
-      LOG("...listen(%d) gave errno %d", mFd.get(), errno);
+      CHROMIUM_LOG("...listen(%d) gave errno %d", mFd.get(), errno);
 #endif
       return;
     }
@@ -609,12 +609,12 @@ UnixSocketImpl::Connect()
         this);
 
 #ifdef DEBUG
-      LOG("UnixSocket Connection delayed!");
+      CHROMIUM_LOG("UnixSocket Connection delayed!");
 #endif
       return;
     }
 #if DEBUG
-    LOG("Socket connect errno=%d\n", errno);
+    CHROMIUM_LOG("Socket connect errno=%d\n", errno);
 #endif
     mFd.reset(-1);
     nsRefPtr<OnSocketEventTask> t =

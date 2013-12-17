@@ -17,7 +17,7 @@ FileDescriptorSet::~FileDescriptorSet() {
   if (consumed_descriptor_highwater_ == descriptors_.size())
     return;
 
-  LOG(WARNING) << "FileDescriptorSet destroyed with unconsumed descriptors";
+  CHROMIUM_LOG(WARNING) << "FileDescriptorSet destroyed with unconsumed descriptors";
   // We close all the descriptors where the close flag is set. If this
   // message should have been transmitted, then closing those with close
   // flags set mirrors the expected behaviour.
