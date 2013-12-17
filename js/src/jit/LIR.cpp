@@ -195,8 +195,10 @@ LInstruction::printName(FILE *fp)
 
 static const char * const TypeChars[] =
 {
-    "i",            // INTEGER
+    "g",            // GENERAL
+    "i",            // INT32
     "o",            // OBJECT
+    "s",            // SLOTS
     "f",            // FLOAT32
     "d",            // DOUBLE
 #ifdef JS_NUNBOX32
@@ -269,15 +271,9 @@ LAllocation::toString() const
         JS_snprintf(buf, sizeof(buf), "=%s", toFloatReg()->reg().name());
         return buf;
       case LAllocation::STACK_SLOT:
-        JS_snprintf(buf, sizeof(buf), "stack:i%d", toStackSlot()->slot());
+        JS_snprintf(buf, sizeof(buf), "stack:%d", toStackSlot()->slot());
         return buf;
-      case LAllocation::DOUBLE_SLOT:
-        JS_snprintf(buf, sizeof(buf), "stack:d%d", toStackSlot()->slot());
-        return buf;
-      case LAllocation::INT_ARGUMENT:
-        JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
-        return buf;
-      case LAllocation::DOUBLE_ARGUMENT:
+      case LAllocation::ARGUMENT_SLOT:
         JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
         return buf;
       case LAllocation::USE:

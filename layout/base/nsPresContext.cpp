@@ -1858,14 +1858,8 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
         if (pusher.RePush(et)) {
           nsAutoMicroTask mt;
           MediaQueryList::HandleChangeData &d = notifyList[i];
-          if (d.listener) {
-            d.listener->HandleChange(d.mql);
-          } else if (d.callback) {
-            ErrorResult result;
-            d.callback->Call(*d.mql, result);
-          } else {
-            MOZ_ASSERT(false, "How come we have no listener or callback?");
-          }
+          ErrorResult result;
+          d.callback->Call(*d.mql, result);
         }
       }
     }
