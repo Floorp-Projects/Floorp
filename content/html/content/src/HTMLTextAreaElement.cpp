@@ -949,7 +949,7 @@ HTMLTextAreaElement::SetRangeText(const nsAString& aReplacement,
       }
   }
 
-  if (aStart < aEnd) {
+  if (aStart <= aEnd) {
     value.Replace(aStart, aEnd - aStart, aReplacement);
     SetValueInternal(value, false);
   }
