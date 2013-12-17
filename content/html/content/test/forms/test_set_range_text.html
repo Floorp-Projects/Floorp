@@ -90,15 +90,59 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
         ok(false, "input event should NOT be fired for " + + aEvent.target.id);
       }, false);
 
-      //test setRange(replacement)
+      var test = " setRange(replacement), shrink";
       elem.value = "0123456789ABCDEF";
       elem.setSelectionRange(1, 6);
       elem.setRangeText("xyz");
-      is(elem.value, "0xyz6789ABCDEF", msg + ".value == \"0xyz6789ABCDEF\"");
-      is(elem.selectionStart, 1, msg + ".selectionStart == 1");
-      is(elem.selectionEnd, 4, msg + ".selectionEnd == 4");
+      is(elem.value, "0xyz6789ABCDEF", msg + test);
+      is(elem.selectionStart, 1, msg + test);
+      is(elem.selectionEnd, 4, msg + test);
       elem.setRangeText("mnk");
-      is(elem.value, "0mnk6789ABCDEF", msg + ".value == \"0mnk6789ABCDEF\"");
+      is(elem.value, "0mnk6789ABCDEF", msg + test);
+      expectedNumOfSelectCalls += 2;
+
+      test = " setRange(replacement), expand";
+      elem.value = "0123456789ABCDEF";
+      elem.setSelectionRange(1, 2);
+      elem.setRangeText("xyz");
+      is(elem.value, "0xyz23456789ABCDEF", msg + test);
+      is(elem.selectionStart, 1, msg + test);
+      is(elem.selectionEnd, 4, msg + test);
+      elem.setRangeText("mnk");
+      is(elem.value, "0mnk23456789ABCDEF", msg + test);
+      expectedNumOfSelectCalls += 2;
+
+      test = " setRange(replacement) pure insertion at start";
+      elem.value = "0123456789ABCDEF";
+      elem.setSelectionRange(0, 0);
+      elem.setRangeText("xyz");
+      is(elem.value, "xyz0123456789ABCDEF", msg + test);
+      is(elem.selectionStart, 0, msg + test);
+      is(elem.selectionEnd, 0, msg + test);
+      elem.setRangeText("mnk");
+      is(elem.value, "mnkxyz0123456789ABCDEF", msg + test);
+      expectedNumOfSelectCalls += 2;
+
+      test = " setRange(replacement) pure insertion in the middle";
+      elem.value = "0123456789ABCDEF";
+      elem.setSelectionRange(4, 4);
+      elem.setRangeText("xyz");
+      is(elem.value, "0123xyz456789ABCDEF", msg + test);
+      is(elem.selectionStart, 4, msg + test);
+      is(elem.selectionEnd, 4, msg + test);
+      elem.setRangeText("mnk");
+      is(elem.value, "0123mnkxyz456789ABCDEF", msg + test);
+      expectedNumOfSelectCalls += 2;
+
+      test = " setRange(replacement) pure insertion at the end";
+      elem.value = "0123456789ABCDEF";
+      elem.setSelectionRange(16, 16);
+      elem.setRangeText("xyz");
+      is(elem.value, "0123456789ABCDEFxyz", msg + test);
+      is(elem.selectionStart, 16, msg + test);
+      is(elem.selectionEnd, 16, msg + test);
+      elem.setRangeText("mnk");
+      is(elem.value, "0123456789ABCDEFmnkxyz", msg + test);
       expectedNumOfSelectCalls += 2;
 
       //test SetRange(replacement, start, end, mode) with start > end

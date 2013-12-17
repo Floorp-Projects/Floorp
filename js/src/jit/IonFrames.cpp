@@ -32,6 +32,45 @@
 namespace js {
 namespace jit {
 
+// Given a slot index, returns the offset, in bytes, of that slot from an
+// IonJSFrameLayout. Slot distances are uniform across architectures, however,
+// the distance does depend on the size of the frame header.
+static inline int32_t
+OffsetOfFrameSlot(int32_t slot)
+{
+    return -slot;
+}
+
+static inline uintptr_t
+ReadFrameSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline double
+ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline double
+ReadFrameFloat32Slot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(float *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline int32_t
+ReadFrameInt32Slot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(int32_t *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline bool
+ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
 IonFrameIterator::IonFrameIterator(JSContext *cx)
   : current_(cx->mainThread().ionTop),
     type_(IonFrame_Exit),
@@ -922,7 +961,7 @@ JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
 }
 
 static void
-MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
+MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
     // Ignore fake exit frames created by EnsureExitFrame.
     if (frame.isFakeExitFrame())
@@ -1077,7 +1116,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
     for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
-            MarkIonExitFrame(trc, frames);
+            MarkJitExitFrame(trc, frames);
             break;
           case IonFrame_BaselineJS:
             frames.baselineFrame()->trace(trc);
@@ -1237,8 +1276,20 @@ SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
     return machine_.read(loc.reg());
 }
 
-Value
-SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
+static Value
+FromObjectPayload(uintptr_t payload)
+{
+    return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+}
+
+static Value
+FromStringPayload(uintptr_t payload)
+{
+    return StringValue(reinterpret_cast<JSString *>(payload));
+}
+
+static Value
+FromTypedPayload(JSValueType type, uintptr_t payload)
 {
     switch (type) {
       case JSVAL_TYPE_INT32:
@@ -1246,9 +1297,9 @@ SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
       case JSVAL_TYPE_BOOLEAN:
         return BooleanValue(!!payload);
       case JSVAL_TYPE_STRING:
-        return StringValue(reinterpret_cast<JSString *>(payload));
+        return FromStringPayload(payload);
       case JSVAL_TYPE_OBJECT:
-        return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+        return FromObjectPayload(payload);
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type - needs payload");
     }
@@ -1276,11 +1327,6 @@ SnapshotIterator::slotReadable(const Slot &slot)
     }
 }
 
-typedef union {
-    double d;
-    float f;
-} PunDoubleFloat;
-
 Value
 SnapshotIterator::slotValue(const Slot &slot)
 {
@@ -1290,31 +1336,38 @@ SnapshotIterator::slotValue(const Slot &slot)
 
       case SnapshotReader::FLOAT32_REG:
       {
-        PunDoubleFloat pdf;
-        pdf.d = machine_.read(slot.floatReg());
+        union {
+            double d;
+            float f;
+        } pun;
+        pun.d = machine_.read(slot.floatReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
-        float asFloat = pdf.f;
-        return DoubleValue(asFloat);
+        return Float32Value(pun.f);
       }
 
       case SnapshotReader::FLOAT32_STACK:
-      {
-        PunDoubleFloat pdf;
-        pdf.d = ReadFrameDoubleSlot(fp_, slot.stackSlot());
-        float asFloat = pdf.f; // no conversion, see comment above.
-        return DoubleValue(asFloat);
-      }
+        return Float32Value(ReadFrameFloat32Slot(fp_, slot.stackSlot()));
 
       case SnapshotReader::TYPED_REG:
         return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
 
       case SnapshotReader::TYPED_STACK:
       {
-        JSValueType type = slot.knownType();
-        if (type == JSVAL_TYPE_DOUBLE)
+        switch (slot.knownType()) {
+          case JSVAL_TYPE_DOUBLE:
             return DoubleValue(ReadFrameDoubleSlot(fp_, slot.stackSlot()));
-        return FromTypedPayload(type, ReadFrameSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_INT32:
+            return Int32Value(ReadFrameInt32Slot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_BOOLEAN:
+            return BooleanValue(ReadFrameBooleanSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_STRING:
+            return FromStringPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_OBJECT:
+            return FromObjectPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        }
       }
 
       case SnapshotReader::UNTYPED:
@@ -1725,6 +1778,27 @@ IonFrameIterator::dump() const
         break;
     };
     fputc('\n', stderr);
+}
+
+IonJSFrameLayout *
+InvalidationBailoutStack::fp() const
+{
+    return (IonJSFrameLayout *) (sp() + ionScript_->frameSize());
+}
+
+void
+InvalidationBailoutStack::checkInvariants() const
+{
+#ifdef DEBUG
+    IonJSFrameLayout *frame = fp();
+    CalleeToken token = frame->calleeToken();
+    JS_ASSERT(token);
+
+    uint8_t *rawBase = ionScript()->method()->raw();
+    uint8_t *rawLimit = rawBase + ionScript()->method()->instructionsSize();
+    uint8_t *osiPoint = osiPointReturnAddress();
+    JS_ASSERT(rawBase <= osiPoint && osiPoint <= rawLimit);
+#endif
 }
 
 } // namespace jit

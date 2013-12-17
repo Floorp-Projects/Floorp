@@ -95,6 +95,24 @@ this.FileUtils = {
   },
 
   /**
+   * Opens an atomic file output stream for writing.
+   * @param   file
+   *          The file to write to.
+   * @param   modeFlags
+   *          (optional) File open flags. Can be undefined.
+   * @returns nsIFileOutputStream to write to.
+   * @note The stream is initialized with the DEFER_OPEN behavior flag.
+   *       See nsIFileOutputStream.
+   *       OpeanAtomicFileOutputStream is generally better than openSafeFileOutputStream
+   *       baecause flushing is not needed in most of the issues.
+   */
+  openAtomicFileOutputStream: function FileUtils_openAtomicFileOutputStream(file, modeFlags) {
+    var fos = Cc["@mozilla.org/network/atomic-file-output-stream;1"].
+              createInstance(Ci.nsIFileOutputStream);
+    return this._initFileOutputStream(fos, file, modeFlags);
+  },
+
+  /**
    * Opens a safe file output stream for writing.
    * @param   file
    *          The file to write to.
@@ -115,6 +133,23 @@ this.FileUtils = {
       modeFlags = this.MODE_WRONLY | this.MODE_CREATE | this.MODE_TRUNCATE;
     fos.init(file, modeFlags, this.PERMS_FILE, fos.DEFER_OPEN);
     return fos;
+  },
+
+  /**
+   * Closes an atomic file output stream.
+   * @param   stream
+   *          The stream to close.
+   */
+  closeAtomicFileOutputStream: function FileUtils_closeAtomicFileOutputStream(stream) {
+    if (stream instanceof Ci.nsISafeOutputStream) {
+      try {
+        stream.finish();
+        return;
+      }
+      catch (e) {
+      }
+    }
+    stream.close();
   },
 
   /**
