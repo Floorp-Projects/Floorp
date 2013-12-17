@@ -70,6 +70,16 @@ var Browser = {
       dump("###########" + e + "\n");
     }
 
+    if (!Services.metro) {
+      // Services.metro is only available on Windows Metro. We want to be able
+      // to test metro on other platforms, too, so we provide a minimal shim.
+      Services.metro = {
+        activationURI: "",
+        pinTileAsync: function () {},
+        unpinTileAsync: function () {}
+      };
+    }
+
     /* handles dispatching clicks on browser into clicks in content or zooms */
     Elements.browsers.customDragger = new Browser.MainDragger();
 
