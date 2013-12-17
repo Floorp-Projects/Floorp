@@ -3455,9 +3455,9 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
       GetScrollPositionClampingScrollPortSize();
   }
 
-  nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame, scrollFrameSize,
-                                           mStickyPosFrame,
-                                           presContext, aContainerParameters);
+  nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame,
+    nsRect(scrollFrame->GetOffsetToCrossDoc(ReferenceFrame()), scrollFrameSize),
+    mStickyPosFrame, presContext, aContainerParameters);
 
   ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
