@@ -394,7 +394,7 @@ CodeGeneratorShared::markSafepoint(LInstruction *ins)
 bool
 CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction *ins)
 {
-    JS_ASSERT_IF(safepointIndices_.length(),
+    JS_ASSERT_IF(!safepointIndices_.empty(),
                  offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
     return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
 }
@@ -804,8 +804,7 @@ CodeGeneratorShared::emitPreBarrier(Address address, MIRType type)
 void
 CodeGeneratorShared::dropArguments(unsigned argc)
 {
-    for (unsigned i = 0; i < argc; i++)
-        pushedArgumentSlots_.popBack();
+    pushedArgumentSlots_.shrinkBy(argc);
 }
 
 bool

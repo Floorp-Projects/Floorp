@@ -213,33 +213,6 @@
       <box id="UITourHighlight"></box>
     </panel>
 
-    <panel id="socialActivatedNotification"
-           type="arrow"
-           hidden="true"
-           align="start"
-           orient="horizontal"
-           role="alert">
-      <image id="social-activation-icon" class="popup-notification-icon"/>
-      <vbox flex="1">
-        <description id="social-activation-message" class="popup-notification-description">&social.activated.description;</description>
-        <spacer flex="1"/>
-        <hbox pack="start" align="center" class="popup-notification-button-container">
-          <label  id="social-undoactivation-button"
-                  class="text-link"
-                  value="&social.activated.undo.label;"
-                  accesskey="&social.activated.undo.accesskey;"
-                  onclick="SocialUI.undoActivation(this);"/>
-          <spacer flex="1"/>
-          <button id="social-activation-button"
-                  default="true"
-                  autofocus="autofocus"
-                  label="&social.ok.label;"
-                  accesskey="&social.ok.accesskey;"
-                  oncommand="SocialUI.activationPanel.hidePopup();"/>
-        </hbox>
-      </vbox>
-    </panel>
-
     <panel id="social-share-panel"
            class="social-panel"
            type="arrow"
@@ -828,58 +801,6 @@
                        tooltiptext="&sharePageCmd.label;"
                        cui-areatype="toolbar"
                        command="Social:SharePage"/>
-
-        <toolbaritem id="social-toolbar-item"
-                     class="chromeclass-toolbar-additional toolbaritem-with-separator"
-                     removable="false"
-                     title="&socialToolbar.title;"
-                     hidden="true"
-                     overflows="false"
-                     cui-areatype="toolbar"
-                     observes="socialActiveBroadcaster">
-        <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
-                   oncommand="PopupNotifications._reshowNotifications(this,
-                                document.getElementById('social-sidebar-browser'));"/>
-          <toolbarbutton id="social-provider-button"
-                         class="toolbarbutton-1"
-                         type="menu">
-            <menupopup id="social-statusarea-popup">
-              <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
-                        observes="socialBroadcaster_userDetails"
-                        oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-                <image class="social-statusarea-user-portrait"
-                       observes="socialBroadcaster_userDetails"/>
-                <vbox>
-                  <label class="social-statusarea-loggedInStatus"
-                         observes="socialBroadcaster_userDetails"/>
-                </vbox>
-              </menuitem>
-#ifndef XP_WIN
-              <menuseparator class="social-statusarea-separator"/>
-#endif
-              <menuitem class="social-toggle-sidebar-menuitem"
-                        type="checkbox"
-                        autocheck="false"
-                        command="Social:ToggleSidebar"
-                        label="&social.toggleSidebar.label;"
-                        accesskey="&social.toggleSidebar.accesskey;"/>
-              <menuitem class="social-toggle-notifications-menuitem"
-                        type="checkbox"
-                        autocheck="false"
-                        command="Social:ToggleNotifications"
-                        label="&social.toggleNotifications.label;"
-                        accesskey="&social.toggleNotifications.accesskey;"/>
-              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-              <menuseparator/>
-              <menuseparator class="social-provider-menu" hidden="true"/>
-              <menuitem class="social-addons-menuitem" command="Social:Addons"
-                        label="&social.addons.label;"/>
-              <menuitem label="&social.learnMore.label;"
-                        accesskey="&social.learnMore.accesskey;"
-                        oncommand="SocialUI.showLearnMore();"/>
-            </menupopup>
-          </toolbarbutton>
-        </toolbaritem>
       </hbox>
 
       <toolbarbutton id="nav-bar-overflow-button"
@@ -1050,6 +971,37 @@
             class="chromeclass-extrachrome"
             observes="socialSidebarBroadcaster"
             persist="width">
+
+        <sidebarheader id="social-sidebar-header" class="sidebar-header" align="center">
+          <image id="social-sidebar-favico"/>
+          <label id="social-sidebar-title" class="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <button id="social-sidebar-button"
+                         type="menu">
+            <menupopup id="social-statusarea-popup" position="after_end">
+              <menuitem class="social-toggle-sidebar-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleSidebar"
+                        label="&social.toggleSidebar.label;"
+                        accesskey="&social.toggleSidebar.accesskey;"/>
+              <menuitem class="social-toggle-notifications-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleNotifications"
+                        label="&social.toggleNotifications.label;"
+                        accesskey="&social.toggleNotifications.accesskey;"/>
+              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+              <menuseparator/>
+              <menuseparator class="social-provider-menu" hidden="true"/>
+              <menuitem class="social-addons-menuitem" command="Social:Addons"
+                        label="&social.addons.label;"/>
+              <menuitem label="&social.learnMore.label;"
+                        accesskey="&social.learnMore.accesskey;"
+                        oncommand="SocialUI.showLearnMore();"/>
+            </menupopup>
+          </button>
+        </sidebarheader>
+
         <browser id="social-sidebar-browser"
                  type="content"
                  context="contentAreaContextMenu"

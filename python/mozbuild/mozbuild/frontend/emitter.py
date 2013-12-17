@@ -206,37 +206,36 @@ class TreeMetadataEmitter(LoggingMixin):
         # them. We should aim to keep this set small because it violates the
         # desired abstraction of the build definition away from makefiles.
         passthru = VariablePassthru(sandbox)
-        varmap = dict(
-            # Makefile.in : moz.build
-            ANDROID_GENERATED_RESFILES='ANDROID_GENERATED_RESFILES',
-            ANDROID_RES_DIRS='ANDROID_RES_DIRS',
-            CPP_UNIT_TESTS='CPP_UNIT_TESTS',
-            EXPORT_LIBRARY='EXPORT_LIBRARY',
-            EXTRA_ASSEMBLER_FLAGS='EXTRA_ASSEMBLER_FLAGS',
-            EXTRA_COMPILE_FLAGS='EXTRA_COMPILE_FLAGS',
-            EXTRA_COMPONENTS='EXTRA_COMPONENTS',
-            EXTRA_JS_MODULES='EXTRA_JS_MODULES',
-            EXTRA_PP_COMPONENTS='EXTRA_PP_COMPONENTS',
-            EXTRA_PP_JS_MODULES='EXTRA_PP_JS_MODULES',
-            FAIL_ON_WARNINGS='FAIL_ON_WARNINGS',
-            FILES_PER_UNIFIED_FILE='FILES_PER_UNIFIED_FILE',
-            FORCE_SHARED_LIB='FORCE_SHARED_LIB',
-            FORCE_STATIC_LIB='FORCE_STATIC_LIB',
-            GENERATED_FILES='GENERATED_FILES',
-            HOST_LIBRARY_NAME='HOST_LIBRARY_NAME',
-            IS_COMPONENT='IS_COMPONENT',
-            IS_GYP_DIR='IS_GYP_DIR',
-            JS_MODULES_PATH='JS_MODULES_PATH',
-            LIBS='LIBS',
-            LIBXUL_LIBRARY='LIBXUL_LIBRARY',
-            MSVC_ENABLE_PGO='MSVC_ENABLE_PGO',
-            NO_DIST_INSTALL='NO_DIST_INSTALL',
-            OS_LIBS='OS_LIBS',
-            SDK_LIBRARY='SDK_LIBRARY',
-        )
-        for mak, moz in varmap.items():
-            if moz in sandbox and sandbox[moz]:
-                passthru.variables[mak] = sandbox[moz]
+        varlist = [
+            'ANDROID_GENERATED_RESFILES',
+            'ANDROID_RES_DIRS',
+            'CPP_UNIT_TESTS',
+            'EXPORT_LIBRARY',
+            'EXTRA_ASSEMBLER_FLAGS',
+            'EXTRA_COMPILE_FLAGS',
+            'EXTRA_COMPONENTS',
+            'EXTRA_JS_MODULES',
+            'EXTRA_PP_COMPONENTS',
+            'EXTRA_PP_JS_MODULES',
+            'FAIL_ON_WARNINGS',
+            'FILES_PER_UNIFIED_FILE',
+            'FORCE_SHARED_LIB',
+            'FORCE_STATIC_LIB',
+            'GENERATED_FILES',
+            'HOST_LIBRARY_NAME',
+            'IS_COMPONENT',
+            'IS_GYP_DIR',
+            'JS_MODULES_PATH',
+            'LIBS',
+            'LIBXUL_LIBRARY',
+            'MSVC_ENABLE_PGO',
+            'NO_DIST_INSTALL',
+            'OS_LIBS',
+            'SDK_LIBRARY',
+        ]
+        for v in varlist:
+            if v in sandbox and sandbox[v]:
+                passthru.variables[v] = sandbox[v]
 
         # NO_VISIBILITY_FLAGS is slightly different
         if sandbox['NO_VISIBILITY_FLAGS']:

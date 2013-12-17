@@ -654,7 +654,7 @@ this.SocialService = {
         if (!manifest)
           throw new Error("Cannot install provider without manifest data");
         installer = new AddonInstaller(sourceURI, manifest, installCallback);
-        installer.install();
+        this._showInstallNotification(aDOMDocument, installer);
         break;
       default:
         throw new Error("SocialService.installProvider: Invalid install type "+installType+"\n");
