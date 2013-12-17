@@ -2200,6 +2200,9 @@ JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32_t value);
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key);
 
+extern JS_PUBLIC_API(void)
+JS_SetGCParametersBasedOnAvailableMemory(JSRuntime *rt, uint32_t availMem);
+
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,
  * memory requiring application-specific finalization.
