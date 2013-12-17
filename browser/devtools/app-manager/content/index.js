@@ -95,7 +95,6 @@ let UI = {
       let newSelection = document.querySelector("." + panel + "-" + type);
       if (oldSelection) oldSelection.removeAttribute("selected");
       if (newSelection) {
-        newSelection.scrollIntoView(false);
         newSelection.setAttribute("selected", "true");
         if (newSelection.classList.contains("toolbox")) {
           isToolboxTab = true;
