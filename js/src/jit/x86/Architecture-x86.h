@@ -11,8 +11,6 @@
 
 namespace js {
 namespace jit {
-static const ptrdiff_t STACK_SLOT_SIZE       = 4;
-static const uint32_t DOUBLE_STACK_ALIGNMENT   = 2;
 
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
@@ -22,9 +20,6 @@ static const uint32_t ION_FRAME_SLACK_SIZE    = 20;
 
 // Only Win64 requires shadow stack space.
 static const uint32_t ShadowStackSpace = 0;
-
-// An offset that is illegal for a local variable's stack allocation.
-static const int32_t INVALID_STACK_SLOT       = -1;
 
 // These offsets are specific to nunboxing, and capture offsets into the
 // components of a js::Value.

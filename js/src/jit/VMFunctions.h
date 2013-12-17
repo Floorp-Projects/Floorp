@@ -326,7 +326,7 @@ template <> struct TypeToPassInFloatReg<double> {
     static const uint32_t result = 1;
 };
 
-// Convert argument types to root types used by the gc, see MarkIonExitFrame.
+// Convert argument types to root types used by the gc, see MarkJitExitFrame.
 template <class T> struct TypeToRootType {
     static const uint32_t result = VMFunction::RootNone;
 };

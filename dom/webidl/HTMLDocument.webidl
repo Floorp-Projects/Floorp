@@ -4,8 +4,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface Selection;
-
 [OverrideBuiltins]
 interface HTMLDocument : Document {
            [Throws]
@@ -79,7 +77,7 @@ interface HTMLDocument : Document {
 
   // https://dvcs.w3.org/hg/editing/raw-file/tip/editing.html#selections
   [Throws]
-  Selection getSelection();
+  Selection? getSelection();
 
   // @deprecated These are old Netscape 4 methods. Do not use,
   //             the implementation is no-op.
