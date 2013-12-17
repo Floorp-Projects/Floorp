@@ -5,6 +5,9 @@
 
 #include "nsUCConstructors.h"
 #include "nsKOI8RToUnicode.h"
+#include "mozilla/Telemetry.h"
+
+using namespace mozilla;
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -17,6 +20,7 @@ nsKOI8RToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
 #include "koi8r.ut"
   };
 
+  Telemetry::Accumulate(Telemetry::DECODER_INSTANTIATED_KOI8R, true);
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
