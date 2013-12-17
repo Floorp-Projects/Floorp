@@ -178,7 +178,7 @@ ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
     // COWs fail silently for GETs, and that also happens to be the only case
     // where we might want to redirect the lookup to the home prototype chain.
     *bp = (act == Wrapper::GET);
-    if (!*bp || id == jsid::voidId())
+    if (!*bp || id == JSID_VOID)
         return false;
 
     // Note that PropIsFromStandardPrototype needs to invoke getPropertyDescriptor

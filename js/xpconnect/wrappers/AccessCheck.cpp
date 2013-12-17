@@ -217,12 +217,12 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, JSObject *wrapperArg, j
     RootedObject wrapper(cx, wrapperArg);
     RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
 
-    // Enumerate-like operations pass jsid::voidId() to |enter|, since there isn't
+    // Enumerate-like operations pass JSID_VOID to |enter|, since there isn't
     // another sane value to pass. For XOWs, we generally want to deny such
     // operations but fail silently (see CrossOriginAccessiblePropertiesOnly::
     // deny). We could just fall through here and rely on the fact that none
-    // of the whitelisted properties below will match jsid::voidId(), but EIBTI.
-    if (id == jsid::voidId())
+    // of the whitelisted properties below will match JSID_VOID, but EIBTI.
+    if (id == JSID_VOID)
         return false;
 
     const char *name;
@@ -315,7 +315,7 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
         return false;
     }
 
-    if (id == jsid::voidId())
+    if (id == JSID_VOID)
         return true;
 
     RootedValue exposedProps(cx);

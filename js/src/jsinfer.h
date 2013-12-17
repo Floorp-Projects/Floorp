@@ -330,7 +330,7 @@ public:
     virtual void newPropertyState(JSContext *cx, TypeSet *source) {}
 
     /*
-     * For constraints attached to the jsid::emptyId() type set on an object,
+     * For constraints attached to the JSID_EMPTY type set on an object,
      * indicate a change in one of the object's dynamic property flags or other
      * state.
      */
@@ -731,7 +731,7 @@ inline bool isInlinableCall(jsbytecode *pc);
 /* Type information about a property. */
 struct Property
 {
-    /* Identifier for this property, jsid::voidId() for the aggregate integer index property. */
+    /* Identifier for this property, JSID_VOID for the aggregate integer index property. */
     HeapId id;
 
     /* Possible types for this property, including types inherited from prototypes. */
@@ -1005,8 +1005,8 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 
   private:
     /*
-     * Properties of this object. This may contain jsid::voidId(), representing the
-     * types of all integer indexes of the object, and/or jsid::emptyId(), holding
+     * Properties of this object. This may contain JSID_VOID, representing the
+     * types of all integer indexes of the object, and/or JSID_EMPTY, holding
      * constraints listening to changes to the object's state.
      *
      * The type sets in the properties of a type object describe the possible
@@ -1381,7 +1381,7 @@ class HeapTypeSetKey
 
   public:
     HeapTypeSetKey()
-      : object_(nullptr), id_(jsid::emptyId()), maybeTypes_(nullptr)
+      : object_(nullptr), id_(JSID_EMPTY), maybeTypes_(nullptr)
     {}
 
     TypeObjectKey *object() const { return object_; }

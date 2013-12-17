@@ -196,7 +196,7 @@ def print_cpp_file(fd, conf):
     fd.write("\nusing namespace mozilla::idl;\n\n")
 
     for a in attrnames:
-        fd.write("static jsid %s = jsid::voidId();\n"% get_jsid(a))
+        fd.write("static jsid %s = JSID_VOID;\n"% get_jsid(a))
 
     fd.write("\n"
              "static bool\n"

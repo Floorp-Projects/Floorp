@@ -1408,9 +1408,9 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
       }
     } while (++ids, (++spec)->name);
 
-    // We ran out of ids for that pref.  Put a jsid::voidId() in on the id
+    // We ran out of ids for that pref.  Put a JSID_VOID in on the id
     // corresponding to the list terminator for the pref.
-    *ids = jsid::voidId();
+    *ids = JSID_VOID;
     ++ids;
   } while ((++prefableSpecs)->specs);
 

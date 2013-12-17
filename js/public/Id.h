@@ -10,17 +10,16 @@
 // A jsid is an identifier for a property or method of an object which is
 // either a 31-bit signed integer, interned string or object.
 //
-// Also, there is an additional jsid value, jsid::voidId(), which does not occur in
+// Also, there is an additional jsid value, JSID_VOID, which does not occur in
 // JS scripts but may be used to indicate the absence of a valid jsid.  A void
 // jsid is not a valid id and only arises as an exceptional API return value,
-// such as in JS_NextProperty. Embeddings must not pass jsid::voidId() into JSAPI
-// entry points expecting a jsid and do not need to handle jsid::voidId() in hooks
+// such as in JS_NextProperty. Embeddings must not pass JSID_VOID into JSAPI
+// entry points expecting a jsid and do not need to handle JSID_VOID in hooks
 // receiving a jsid except when explicitly noted in the API contract.
 //
 // A jsid is not implicitly convertible to or from a jsval; JS_ValueToId or
 // JS_IdToValue must be used instead.
 
-#include "mozilla/Attributes.h"
 #include "mozilla/NullPtr.h"
  
 #include "jstypes.h"
@@ -29,34 +28,19 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
+struct jsid
+{
+    size_t asBits;
+    bool operator==(jsid rhs) const { return asBits == rhs.asBits; }
+    bool operator!=(jsid rhs) const { return asBits != rhs.asBits; }
+};
+#define JSID_BITS(id) (id.asBits)
+
 #define JSID_TYPE_STRING                 0x0
 #define JSID_TYPE_INT                    0x1
 #define JSID_TYPE_VOID                   0x2
 #define JSID_TYPE_OBJECT                 0x4
 #define JSID_TYPE_MASK                   0x7
-
-struct jsid
-{
-    size_t asBits;
-
-    jsid() {}
-
-#if !defined(_MSC_VER) && !defined(__sparc)
-    // jsid must be POD so that MSVC and SPARC will pass it and return it by
-    // value.  (See also bug 689101 and bug 737344, for this problem with
-    // respect to JS::Value, which also has a comment like this next to it.)
-  private:
-#endif
-    MOZ_CONSTEXPR jsid(size_t bits) : asBits(bits) {}
-
-  public:
-    static MOZ_CONSTEXPR jsid voidId() { return jsid(JSID_TYPE_VOID); }
-    static MOZ_CONSTEXPR jsid emptyId() { return jsid(JSID_TYPE_OBJECT); }
-
-    bool operator==(jsid rhs) const { return asBits == rhs.asBits; }
-    bool operator!=(jsid rhs) const { return asBits != rhs.asBits; }
-};
-#define JSID_BITS(id) (id.asBits)
 
 // Avoid using canonical 'id' for jsid parameters since this is a magic word in
 // Objective-C++ which, apparently, wants to be able to #include jsapi.h.
@@ -164,6 +148,9 @@ JSID_IS_EMPTY(const jsid id)
 
 #undef id
 
+extern JS_PUBLIC_DATA(const jsid) JSID_VOID;
+extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
+
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_EMPTYHANDLE;
 
@@ -181,7 +168,7 @@ IsPoisonedId(jsid iden)
 
 template <> struct GCMethods<jsid>
 {
-    static jsid initial() { return jsid::voidId(); }
+    static jsid initial() { return JSID_VOID; }
     static ThingRootKind kind() { return THING_ROOT_ID; }
     static bool poisoned(jsid id) { return IsPoisonedId(id); }
     static bool needsPostBarrier(jsid id) { return false; }

@@ -21,7 +21,7 @@ using namespace JS;
 namespace mozilla {
 namespace dom {
 
-jsid s_length_id = jsid::voidId();
+jsid s_length_id = JSID_VOID;
 
 bool
 DefineStaticJSVals(JSContext* cx)

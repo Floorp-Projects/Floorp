@@ -5522,7 +5522,7 @@ IonBuilder::jsop_initelem_array()
         if (!initializer->hasFlags(constraints(), types::OBJECT_FLAG_NON_PACKED))
             needStub = true;
     } else if (!initializer->unknownProperties()) {
-        types::HeapTypeSetKey elemTypes = initializer->property(jsid::voidId());
+        types::HeapTypeSetKey elemTypes = initializer->property(JSID_VOID);
         if (!TypeSetIncludes(elemTypes.maybeTypes(), value->type(), value->resultTypeSet())) {
             elemTypes.freeze(constraints());
             needStub = true;
@@ -7627,7 +7627,7 @@ IonBuilder::jsop_setelem_dense(types::TemporaryTypeSet::DoubleConversion convers
     }
 
     // Determine whether a write barrier is required.
-    if (obj->resultTypeSet()->propertyNeedsBarrier(constraints(), jsid::voidId()))
+    if (obj->resultTypeSet()->propertyNeedsBarrier(constraints(), JSID_VOID))
         store->setNeedsBarrier();
 
     if (elementType != MIRType_None && packed)

@@ -209,7 +209,7 @@ GetMethodInfo(JSContext *cx, jsval *vp, const char **ifaceNamep, jsid *memberIdp
     MOZ_ASSERT(JS_ObjectIsFunction(cx, funobj),
                "JSNative callee should be Function object");
     RootedString str(cx, JS_GetFunctionId(JS_GetObjectFunction(funobj)));
-    RootedId methodId(cx, str ? INTERNED_STRING_TO_JSID(cx, str) : jsid::voidId());
+    RootedId methodId(cx, str ? INTERNED_STRING_TO_JSID(cx, str) : JSID_VOID);
     GetMemberInfo(JSVAL_TO_OBJECT(vp[1]), methodId, ifaceNamep);
     *memberIdp = methodId;
 }
@@ -353,7 +353,7 @@ void
 xpc_qsThrowBadArgWithDetails(JSContext *cx, nsresult rv, unsigned paramnum,
                              const char *ifaceName, const char *memberName)
 {
-    ThrowBadArg(cx, rv, ifaceName, jsid::voidId(), memberName, paramnum);
+    ThrowBadArg(cx, rv, ifaceName, JSID_VOID, memberName, paramnum);
 }
 
 void

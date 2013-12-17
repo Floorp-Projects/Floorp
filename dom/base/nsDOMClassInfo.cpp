@@ -573,15 +573,15 @@ nsIScriptSecurityManager *nsDOMClassInfo::sSecMan = nullptr;
 bool nsDOMClassInfo::sIsInitialized = false;
 
 
-jsid nsDOMClassInfo::sLocation_id        = jsid::voidId();
-jsid nsDOMClassInfo::sConstructor_id     = jsid::voidId();
-jsid nsDOMClassInfo::sLength_id          = jsid::voidId();
-jsid nsDOMClassInfo::sItem_id            = jsid::voidId();
-jsid nsDOMClassInfo::sNamedItem_id       = jsid::voidId();
-jsid nsDOMClassInfo::sEnumerate_id       = jsid::voidId();
-jsid nsDOMClassInfo::sTop_id             = jsid::voidId();
-jsid nsDOMClassInfo::sDocument_id        = jsid::voidId();
-jsid nsDOMClassInfo::sWrappedJSObject_id = jsid::voidId();
+jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
+jsid nsDOMClassInfo::sConstructor_id     = JSID_VOID;
+jsid nsDOMClassInfo::sLength_id          = JSID_VOID;
+jsid nsDOMClassInfo::sItem_id            = JSID_VOID;
+jsid nsDOMClassInfo::sNamedItem_id       = JSID_VOID;
+jsid nsDOMClassInfo::sEnumerate_id       = JSID_VOID;
+jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
+jsid nsDOMClassInfo::sDocument_id        = JSID_VOID;
+jsid nsDOMClassInfo::sWrappedJSObject_id = JSID_VOID;
 
 static const JSClass *sObjectClass = nullptr;
 
@@ -1945,14 +1945,14 @@ nsDOMClassInfo::ShutDown()
     }
   }
 
-  sLocation_id        = jsid::voidId();
-  sConstructor_id     = jsid::voidId();
-  sLength_id          = jsid::voidId();
-  sItem_id            = jsid::voidId();
-  sEnumerate_id       = jsid::voidId();
-  sTop_id             = jsid::voidId();
-  sDocument_id        = jsid::voidId();
-  sWrappedJSObject_id = jsid::voidId();
+  sLocation_id        = JSID_VOID;
+  sConstructor_id     = JSID_VOID;
+  sLength_id          = JSID_VOID;
+  sItem_id            = JSID_VOID;
+  sEnumerate_id       = JSID_VOID;
+  sTop_id             = JSID_VOID;
+  sDocument_id        = JSID_VOID;
+  sWrappedJSObject_id = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
