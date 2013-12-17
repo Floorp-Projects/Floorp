@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+function boom()
+{
+  var frameWin =  document.getElementById("f").contentWindow;
+  Object.create(frameWin).self;
+}
+</script>
+</head>
+<body onload="boom()">
+<iframe id="f" src="data:text/html,3"></iframe>
+</body>
+</html>
