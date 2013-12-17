@@ -19,7 +19,7 @@ def startTestRunner(runner_class, options, tests):
     runner.run_tests(tests)
     return runner
 
-def cli(runner_class=MarionetteTestRunner, parser_class=BaseMarionetteOptions):
+def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteTestOptions):
     parser = parser_class(usage='%prog [options] test_file_or_dir <test_file_or_dir> ...')
     options, tests = parser.parse_args()
     parser.verify_usage(options, tests)
