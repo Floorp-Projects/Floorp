@@ -189,7 +189,7 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
 }
 
 void
-nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
+nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy)
 {
     NS_ABORT_IF_FALSE(!HasError(), "Shouldn't call WriteInternal after error!");
 
