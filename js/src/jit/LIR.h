@@ -486,6 +486,9 @@ class LDefinition
     Type type() const {
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
+    bool isFloatReg() const {
+        return type() == FLOAT32 || type() == DOUBLE;
+    }
     uint32_t virtualRegister() const {
         return (bits_ >> VREG_SHIFT) & VREG_MASK;
     }
