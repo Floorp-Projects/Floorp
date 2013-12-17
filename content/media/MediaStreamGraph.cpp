@@ -347,7 +347,6 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     // listeners that streams have ended still needs to run.
   }
 
-  nsTArray<MediaStream*> streamsReadyToFinish;
   for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     MediaStream* stream = mStreams[i];
 
@@ -383,20 +382,8 @@ MediaStreamGraphImpl::UpdateCurrentTime()
       }
     }
 
-    if (stream->mFinished && !stream->mNotifiedFinished) {
-      streamsReadyToFinish.AppendElement(stream);
-    }
-    LOG(PR_LOG_DEBUG+1, ("MediaStream %p bufferStartTime=%f blockedTime=%f",
-                         stream, MediaTimeToSeconds(stream->mBufferStartTime),
-                         MediaTimeToSeconds(blockedTime)));
-  }
-
-  mCurrentTime = nextCurrentTime;
-
-  // Do this after setting mCurrentTime so that StreamTimeToGraphTime works properly.
-  for (uint32_t i = 0; i < streamsReadyToFinish.Length(); ++i) {
-    MediaStream* stream = streamsReadyToFinish[i];
-    if (StreamTimeToGraphTime(stream, stream->GetBufferEnd()) <= mCurrentTime) {
+    if (stream->mFinished && !stream->mNotifiedFinished &&
+        stream->mBufferStartTime + stream->GetBufferEnd() <= nextCurrentTime) {
       stream->mNotifiedFinished = true;
       stream->mLastPlayedVideoFrame.SetNull();
       for (uint32_t j = 0; j < stream->mListeners.Length(); ++j) {
@@ -404,7 +391,13 @@ MediaStreamGraphImpl::UpdateCurrentTime()
         l->NotifyFinished(this);
       }
     }
+
+    LOG(PR_LOG_DEBUG+1, ("MediaStream %p bufferStartTime=%f blockedTime=%f",
+                         stream, MediaTimeToSeconds(stream->mBufferStartTime),
+                         MediaTimeToSeconds(blockedTime)));
   }
+
+  mCurrentTime = nextCurrentTime;
 }
 
 bool
