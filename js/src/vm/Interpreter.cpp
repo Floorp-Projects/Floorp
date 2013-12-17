@@ -1294,7 +1294,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
         if ((uint32_t)i >= length) {
             // Annotate script if provided with information (e.g. baseline)
             if (script && script->hasBaselineScript() && *pc == JSOP_SETELEM)
-                script->baselineScript()->noteArrayWriteHole(script->pcToOffset(pc));
+                script->baselineScript()->noteArrayWriteHole(cx, script->pcToOffset(pc));
         }
     }
 #endif
