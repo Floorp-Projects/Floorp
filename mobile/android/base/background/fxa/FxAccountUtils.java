@@ -6,9 +6,12 @@ package org.mozilla.gecko.background.fxa;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.crypto.HKDF;
+import org.mozilla.gecko.sync.crypto.KeyBundle;
 
 public class FxAccountUtils {
   public static final int SALT_LENGTH_BYTES = 32;
@@ -67,5 +70,14 @@ public class FxAccountUtils {
     int byteLength = (N.bitLength() + 7) / 8;
     int hexLength = 2 * byteLength;
     return Utils.byte2Hex(Utils.hex2Byte((x.mod(N)).toString(16), byteLength), hexLength);
+  }
+
+  public static KeyBundle generateSyncKeyBundle(final byte[] kB) throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
+    byte[] encryptionKey = new byte[32];
+    byte[] hmacKey = new byte[32];
+    byte[] derived = HKDF.derive(kB, new byte[0], FxAccountUtils.KW("oldsync"), 2*32);
+    System.arraycopy(derived, 0*32, encryptionKey, 0, 1*32);
+    System.arraycopy(derived, 1*32, hmacKey, 0, 1*32);
+    return new KeyBundle(encryptionKey, hmacKey);
   }
 }

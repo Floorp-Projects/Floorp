@@ -535,7 +535,7 @@ public class FxAccountClient {
   }
 
   @SuppressWarnings("unchecked")
-  public void sign(final byte[] sessionToken, final ExtendedJSONObject publicKey, int durationInSeconds, final RequestDelegate<String> delegate) {
+  public void sign(final byte[] sessionToken, final ExtendedJSONObject publicKey, long durationInSeconds, final RequestDelegate<String> delegate) {
     final JSONObject body = new JSONObject();
     body.put("publicKey", publicKey);
     body.put("duration", durationInSeconds);

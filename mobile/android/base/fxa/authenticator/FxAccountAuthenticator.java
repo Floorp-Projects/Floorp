@@ -7,6 +7,9 @@ package org.mozilla.gecko.fxa.authenticator;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountSetupActivity;
+import org.mozilla.gecko.fxa.sync.FxAccount;
+import org.mozilla.gecko.sync.Utils;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -15,10 +18,18 @@ import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   public static final String LOG_TAG = FxAccountAuthenticator.class.getSimpleName();
+
+  public static final String JSON_KEY_UID = "uid";
+  public static final String JSON_KEY_SESSION_TOKEN = "session_token";
+  public static final String JSON_KEY_KA = "kA";
+  public static final String JSON_KEY_KB = "kB";
+  public static final String JSON_KEY_IDP_ENDPOINT = "idp_endpoint";
+  public static final String JSON_KEY_AUTH_ENDPOINT = "auth_endpoint";
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -27,6 +38,37 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     super(context);
     this.context = context;
     this.accountManager = AccountManager.get(context);
+  }
+
+  protected static void enableSyncing(Context context, Account account) {
+    for (String authority : new String[] {
+        AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
+        AppConstants.ANDROID_PACKAGE_NAME + ".db.formhistory",
+        AppConstants.ANDROID_PACKAGE_NAME + ".db.tabs",
+        AppConstants.ANDROID_PACKAGE_NAME + ".db.passwords",
+    }) {
+      ContentResolver.setSyncAutomatically(account, authority, true);
+      ContentResolver.setIsSyncable(account, authority, 1);
+    }
+  }
+
+  public static Account addAccount(Context context, String email, String uid, String sessionToken, String kA, String kB) {
+    final AccountManager accountManager = AccountManager.get(context);
+    final Account account = new Account(email, FxAccountConstants.ACCOUNT_TYPE);
+    final Bundle userData = new Bundle();
+    userData.putString(JSON_KEY_UID, uid);
+    userData.putString(JSON_KEY_SESSION_TOKEN, sessionToken);
+    userData.putString(JSON_KEY_KA, kA);
+    userData.putString(JSON_KEY_KB, kB);
+    userData.putString(JSON_KEY_IDP_ENDPOINT, FxAccountConstants.DEFAULT_IDP_ENDPOINT);
+    userData.putString(JSON_KEY_AUTH_ENDPOINT, FxAccountConstants.DEFAULT_AUTH_ENDPOINT);
+    if (!accountManager.addAccountExplicitly(account, sessionToken, userData)) {
+      Logger.warn(LOG_TAG, "Error adding account named " + account.name + " of type " + account.type);
+      return null;
+    }
+    // Enable syncing by default.
+    enableSyncing(context, account);
+    return account;
   }
 
   @Override
@@ -44,31 +86,8 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
       return res;
     }
 
-    final Account account = new Account("test@test.com", FxAccountConstants.ACCOUNT_TYPE);
-    final String password = "password";
-    final Bundle userData = Bundle.EMPTY;
-
-    if (!accountManager.addAccountExplicitly(account, password, userData)) {
-      res.putInt(AccountManager.KEY_ERROR_CODE, -1);
-      res.putString(AccountManager.KEY_ERROR_MESSAGE, "Failed to add account explicitly.");
-      return res;
-    }
-
-    Logger.info(LOG_TAG, "Added account named " + account.name + " of type " + account.type);
-
-    // Enable syncing by default.
-    for (String authority : new String[] {
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.formhistory",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.tabs",
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.passwords",
-        }) {
-      ContentResolver.setSyncAutomatically(account, authority, true);
-      ContentResolver.setIsSyncable(account, authority, 1);
-    }
-
-    res.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-    res.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+    Intent intent = new Intent(context, FxAccountSetupActivity.class);
+    res.putParcelable(AccountManager.KEY_INTENT, intent);
     return res;
   }
 
@@ -120,5 +139,25 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     Logger.debug(LOG_TAG, "updateCredentials");
 
     return null;
+  }
+
+  /**
+   * Extract an FxAccount from an Android Account object.
+   *
+   * @param context to use for AccountManager.
+   * @param account to extract FxAccount from.
+   * @return FxAccount instance.
+   */
+  public static FxAccount fromAndroidAccount(Context context, Account account) {
+    AccountManager accountManager = AccountManager.get(context);
+
+    final byte[] sessionTokenBytes = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_SESSION_TOKEN));
+    final byte[] kA = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_KA), 16);
+    final byte[] kB = Utils.hex2Byte(accountManager.getUserData(account, JSON_KEY_KB), 16);
+
+    final String idpEndpoint = accountManager.getUserData(account, JSON_KEY_IDP_ENDPOINT);
+    final String authEndpoint = accountManager.getUserData(account, JSON_KEY_AUTH_ENDPOINT);
+
+    return new FxAccount(account.name, sessionTokenBytes, kA, kB, idpEndpoint, authEndpoint);
   }
 }
