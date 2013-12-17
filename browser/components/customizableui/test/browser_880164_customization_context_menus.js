@@ -18,7 +18,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToPanel", true],
+    [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
     ["---"]
   ];
@@ -49,7 +49,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToPanel", false],
+    [".customize-context-moveToPanel", false],
     [".customize-context-removeFromToolbar", false],
     ["---"]
   ];
@@ -111,7 +111,7 @@ add_task(function() {
   is(PanelUI.panel.state, "open", "The PanelUI should still be open.");
 
   let expectedEntries = [
-    [".customize-context-addToToolbar", true],
+    [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
     [".viewCustomizeToolbar", true]
@@ -138,7 +138,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToPanel", true],
+    [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
     ["---"]
   ];
@@ -187,7 +187,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToToolbar", true],
+    [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
     [".viewCustomizeToolbar", false]
@@ -214,7 +214,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToToolbar", true],
+    [".customize-context-moveToToolbar", true],
     [".customize-context-removeFromPanel", true],
     ["---"],
     [".viewCustomizeToolbar", false]
@@ -254,7 +254,7 @@ add_task(function() {
   yield shownPromise;
 
   let expectedEntries = [
-    [".customize-context-addToPanel", true],
+    [".customize-context-moveToPanel", true],
     [".customize-context-removeFromToolbar", true],
     ["---"]
   ];
