@@ -709,18 +709,18 @@ AllLocalsAliased(StaticBlockObject &obj)
 #endif
 
 static bool
-ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, StaticBlockObject &blockObj)
+ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlockObject *> blockObj)
 {
-    uint32_t depthPlusFixed = blockObj.stackDepth();
+    uint32_t depthPlusFixed = blockObj->stackDepth();
     if (!AdjustBlockSlot(cx, bce, &depthPlusFixed))
         return false;
 
-    for (unsigned i = 0; i < blockObj.slotCount(); i++) {
-        Definition *dn = blockObj.maybeDefinitionParseNode(i);
+    for (unsigned i = 0; i < blockObj->slotCount(); i++) {
+        Definition *dn = blockObj->maybeDefinitionParseNode(i);
 
         /* Beware the empty destructuring dummy. */
         if (!dn) {
-            blockObj.setAliased(i, bce->sc->allLocalsAliased());
+            blockObj->setAliased(i, bce->sc->allLocalsAliased());
             continue;
         }
 
@@ -738,10 +738,10 @@ ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, StaticBlockObjec
         }
 #endif
 
-        blockObj.setAliased(i, bce->isAliasedName(dn));
+        blockObj->setAliased(i, bce->isAliasedName(dn));
     }
 
-    JS_ASSERT_IF(bce->sc->allLocalsAliased(), AllLocalsAliased(blockObj));
+    JS_ASSERT_IF(bce->sc->allLocalsAliased(), AllLocalsAliased(*blockObj));
 
     return true;
 }
@@ -809,18 +809,18 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, O
         parent = stmt->blockScopeIndex;
     }
 
-    StaticBlockObject &blockObj = objbox->object->as<StaticBlockObject>();
+    Rooted<StaticBlockObject *> blockObj(cx, &objbox->object->as<StaticBlockObject>());
 
     uint32_t scopeObjectIndex = bce->objectList.add(objbox);
 
-    int depth = bce->stackDepth - (blockObj.slotCount() + extraSlots);
+    int depth = bce->stackDepth - (blockObj->slotCount() + extraSlots);
     JS_ASSERT(depth >= 0);
-    blockObj.setStackDepth(depth);
+    blockObj->setStackDepth(depth);
 
     if (!ComputeAliasedSlots(cx, bce, blockObj))
         return false;
 
-    if (blockObj.needsClone()) {
+    if (blockObj->needsClone()) {
         if (!EmitInternedObjectOp(cx, scopeObjectIndex, JSOP_PUSHBLOCKSCOPE, bce))
             return false;
     }
@@ -830,8 +830,8 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt, O
         return false;
 
     PushStatementBCE(bce, stmt, STMT_BLOCK, bce->offset());
-    blockObj.initEnclosingStaticScope(EnclosingStaticScope(bce));
-    FinishPushBlockScope(bce, stmt, blockObj);
+    blockObj->initEnclosingStaticScope(EnclosingStaticScope(bce));
+    FinishPushBlockScope(bce, stmt, *blockObj);
 
     JS_ASSERT(stmt->isBlockScope);
 
@@ -2384,7 +2384,7 @@ EmitSwitch(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * If there are hoisted let declarations, their stack slots go under the
      * discriminant's value so push their slots now and enter the block later.
      */
-    StaticBlockObject *blockObj = nullptr;
+    Rooted<StaticBlockObject *> blockObj(cx, nullptr);
     if (pn2->isKind(PNK_LEXICALSCOPE)) {
         blockObj = &pn2->pn_objbox->object->as<StaticBlockObject>();
         for (uint32_t i = 0; i < blockObj->slotCount(); ++i) {
@@ -2804,7 +2804,13 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
     RootedFunction fun(cx, bce->script->function());
     JS_ASSERT(fun->isInterpreted());
-    fun->setScript(bce->script);
+
+    if (fun->isInterpretedLazy()) {
+        AutoLockForCompilation lock(cx);
+        fun->setUnlazifiedScript(bce->script);
+    } else {
+        fun->setScript(bce->script);
+    }
 
     bce->tellDebuggerAboutCompiledScript(cx);
 

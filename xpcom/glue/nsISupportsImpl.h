@@ -609,8 +609,15 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                reinterpret_cast<char*>((_class*) 0x1000))                     \
   },
 
+/*
+ * XXX: we want to use mozilla::ArrayLength (or equivalent,
+ * MOZ_ARRAY_LENGTH) in this condition, but some versions of GCC don't
+ * see that the static_assert condition is actually constant in those
+ * cases, even with constexpr support (?).
+ */
 #define NS_INTERFACE_TABLE_END_WITH_PTR(_ptr)                                 \
   { nullptr, 0 } };                                                           \
+  static_assert((sizeof(table)/sizeof(table[0])) > 1, "need at least 1 interface"); \
   rv = NS_TableDrivenQI(static_cast<void*>(_ptr),                             \
                         table, aIID, aInstancePtr);
 
