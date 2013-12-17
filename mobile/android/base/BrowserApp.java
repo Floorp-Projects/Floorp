@@ -1607,7 +1607,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (isAboutHome(tab)) {
-            showHomePager(tab.getAboutHomePage());
+            showHomePager(tab.getAboutHomePageId());
 
             if (isDynamicToolbarEnabled()) {
                 // Show the toolbar.
@@ -1632,8 +1632,8 @@ abstract public class BrowserApp extends GeckoApp
         }
     }
 
-    private void showHomePager(HomePager.Page page) {
-        showHomePagerWithAnimator(page, null);
+    private void showHomePager(String pageId) {
+        showHomePagerWithAnimator(pageId, null);
     }
 
     private void showHomePagerWithAnimator(PropertyAnimator animator) {
@@ -1642,7 +1642,7 @@ abstract public class BrowserApp extends GeckoApp
         showHomePagerWithAnimator(null, animator);
     }
 
-    private void showHomePagerWithAnimator(HomePager.Page page, PropertyAnimator animator) {
+    private void showHomePagerWithAnimator(String pageId, PropertyAnimator animator) {
         if (isHomePagerVisible()) {
             return;
         }
@@ -1663,7 +1663,7 @@ abstract public class BrowserApp extends GeckoApp
 
         mHomePager.show(getSupportLoaderManager(),
                         getSupportFragmentManager(),
-                        page, animator);
+                        pageId, animator);
 
         // Hide the web content so it cannot be focused by screen readers.
         hideWebContentOnPropertyAnimationEnd(animator);

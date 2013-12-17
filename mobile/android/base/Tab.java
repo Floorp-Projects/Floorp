@@ -8,7 +8,6 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -52,7 +51,7 @@ public class Tab {
     private int mHistoryIndex;
     private int mHistorySize;
     private int mParentId;
-    private HomePager.Page mAboutHomePage;
+    private String mAboutHomePageId;
     private boolean mExternal;
     private boolean mBookmark;
     private boolean mReadingListItem;
@@ -95,7 +94,7 @@ public class Tab {
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
-        mAboutHomePage = null;
+        mAboutHomePageId = null;
         mTitle = title == null ? "" : title;
         mFavicon = null;
         mFaviconUrl = null;
@@ -147,12 +146,12 @@ public class Tab {
         return mParentId;
     }
 
-    public HomePager.Page getAboutHomePage() {
-        return mAboutHomePage;
+    public String getAboutHomePageId() {
+        return mAboutHomePageId;
     }
 
-    private void setAboutHomePage(HomePager.Page page) {
-        mAboutHomePage = page;
+    private void setAboutHomePageId(String pageId) {
+        mAboutHomePageId = pageId;
     }
 
     // may be null if user-entered query hasn't yet been resolved to a URI
@@ -656,11 +655,11 @@ public class Tab {
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
         setErrorType(ErrorType.NONE);
 
-        final String homePage = message.getString("aboutHomePage");
-        if (!TextUtils.isEmpty(homePage)) {
-            setAboutHomePage(HomePager.Page.valueOf(homePage));
+        final String homePageId = message.getString("aboutHomePage");
+        if (!TextUtils.isEmpty(homePageId)) {
+            setAboutHomePageId(homePageId);
         } else {
-            setAboutHomePage(null);
+            setAboutHomePageId(null);
         }
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
