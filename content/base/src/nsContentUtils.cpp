@@ -6460,9 +6460,9 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   }
 
   nsCOMPtr<nsINode> anchorNode = aSelection->GetAnchorNode();
-  int32_t anchorOffset = aSelection->GetAnchorOffset();
+  uint32_t anchorOffset = aSelection->AnchorOffset();
   nsCOMPtr<nsINode> focusNode = aSelection->GetFocusNode();
-  int32_t focusOffset = aSelection->GetFocusOffset();
+  uint32_t focusOffset = aSelection->FocusOffset();
 
   // We have at most two children, consisting of an optional text node followed
   // by an optional <br>.

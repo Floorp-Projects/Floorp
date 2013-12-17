@@ -62,6 +62,7 @@ PluginArray implements LegacyQueryInterface;
 ProcessingInstruction implements LegacyQueryInterface;
 Range implements LegacyQueryInterface;
 Rect implements LegacyQueryInterface;
+Selection implements LegacyQueryInterface;
 SVGAnimatedEnumeration implements LegacyQueryInterface;
 SVGAnimatedInteger implements LegacyQueryInterface;
 SVGAnimatedNumber implements LegacyQueryInterface;
