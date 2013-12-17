@@ -119,6 +119,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
             masm.ma_vstr(to.floatReg(), cycleSlot());
         }
         break;
+      case MoveOp::INT32:
       case MoveOp::GENERAL:
         // an non-vfp value
         if (to.isMemory()) {
@@ -159,6 +160,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             masm.ma_vldr(cycleSlot(), to.floatReg());
         }
         break;
+      case MoveOp::INT32:
       case MoveOp::GENERAL:
         if (to.isMemory()) {
             Register temp = tempReg();
@@ -290,6 +292,7 @@ MoveEmitterARM::emit(const MoveOp &move)
       case MoveOp::DOUBLE:
         emitDoubleMove(from, to);
         break;
+      case MoveOp::INT32:
       case MoveOp::GENERAL:
         emitMove(from, to);
         break;

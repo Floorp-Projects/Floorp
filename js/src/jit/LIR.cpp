@@ -195,8 +195,10 @@ LInstruction::printName(FILE *fp)
 
 static const char * const TypeChars[] =
 {
-    "i",            // INTEGER
+    "g",            // GENERAL
+    "i",            // INT32
     "o",            // OBJECT
+    "s",            // SLOTS
     "f",            // FLOAT32
     "d",            // DOUBLE
 #ifdef JS_NUNBOX32

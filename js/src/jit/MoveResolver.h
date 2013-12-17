@@ -115,6 +115,7 @@ class MoveOp
   public:
     enum Type {
         GENERAL,
+        INT32,
         FLOAT32,
         DOUBLE
     };

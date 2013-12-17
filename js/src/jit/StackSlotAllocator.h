@@ -54,6 +54,7 @@ class StackSlotAllocator
           case LDefinition::OBJECT:
           case LDefinition::SLOTS:
 #endif
+          case LDefinition::INT32:
           case LDefinition::FLOAT32: return freeSlot(index);
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:
@@ -79,6 +80,7 @@ class StackSlotAllocator
           case LDefinition::OBJECT:
           case LDefinition::SLOTS:
 #endif
+          case LDefinition::INT32:
           case LDefinition::FLOAT32: return allocateSlot();
 #if JS_BITS_PER_WORD == 64
           case LDefinition::GENERAL:

@@ -430,6 +430,7 @@ class LDefinition
 
     enum Type {
         GENERAL,    // Generic, integer or pointer-width data (GPR).
+        INT32,      // int32 data (GPR).
         OBJECT,     // Pointer that may be collected as garbage (GPR).
         SLOTS,      // Slots/elements pointer that may be moved by minor GCs (GPR).
         FLOAT32,    // 32-bit floating-point value (FPU).
@@ -525,7 +526,10 @@ class LDefinition
         switch (type) {
           case MIRType_Boolean:
           case MIRType_Int32:
-            return LDefinition::GENERAL;
+            // The stack slot allocator doesn't currently support allocating
+            // 1-byte slots, so for now we lower MIRType_Boolean into INT32.
+            static_assert(sizeof(bool) <= sizeof(int32_t), "bool doesn't fit in an int32 slot");
+            return LDefinition::INT32;
           case MIRType_String:
           case MIRType_Object:
             return LDefinition::OBJECT;
