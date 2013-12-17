@@ -162,7 +162,7 @@ StupidAllocator::allocateRegister(LInstruction *ins, uint32_t vreg)
     for (size_t i = 0; i < registerCount; i++) {
         AnyRegister reg = registers[i].reg;
 
-        if (reg.isFloat() != (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32))
+        if (reg.isFloat() != def->isFloatReg())
             continue;
 
         // Skip the register if it is in use for an allocated input or output.
