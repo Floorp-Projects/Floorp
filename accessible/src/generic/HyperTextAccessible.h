@@ -449,35 +449,6 @@ protected:
                              EWordMovementType aWordMovementType = eDefaultBehavior);
 
   /**
-    * Provides information for substring that is defined by the given start
-    * and end offsets for this hyper text.
-    *
-    * @param  aStartOffset  [inout] the start offset into the hyper text. This
-    *                       is also an out parameter used to return the offset
-    *                       into the start frame's rendered text content
-    *                       (start frame is the @return)
-    *
-    * @param  aEndOffset    [inout] the end offset into the hyper text. This is
-    *                       also an out parameter used to return
-    *                       the offset into the end frame's rendered
-    *                       text content.
-    *
-    * @param  aText         [out, optional] return the substring's text
-    * @param  aEndFrame     [out, optional] return the end frame for this
-    *                       substring
-    * @param  aStartAcc     [out, optional] return the start accessible for this
-    *                       substring
-    * @param  aEndAcc       [out, optional] return the end accessible for this
-    *                       substring
-    * @return               the start frame for this substring
-    */
-  nsIFrame* GetPosAndText(int32_t& aStartOffset, int32_t& aEndOffset,
-                          nsAString *aText = nullptr,
-                          nsIFrame **aEndFrame = nullptr,
-                          Accessible** aStartAcc = nullptr,
-                          Accessible** aEndAcc = nullptr);
-
-  /**
    * Return the boundaries of the substring in case of textual frame or
    * frame boundaries in case of non textual frame, offsets are ignored.
    */
