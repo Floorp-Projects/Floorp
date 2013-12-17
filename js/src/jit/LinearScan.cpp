@@ -875,7 +875,7 @@ LinearScanAllocator::spill()
     }
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
-    return assign(LStackSlot(stackSlot, reg->isDouble()));
+    return assign(LStackSlot(stackSlot));
 }
 
 void
@@ -884,7 +884,8 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
     LinearScanVirtualRegister *mine = &vregs[interval->vreg()];
     if (!IsNunbox(mine)) {
         if (alloc->isStackSlot()) {
-            if (alloc->toStackSlot()->isDouble())
+            LDefinition::Type type = mine->type();
+            if (type == LDefinition::DOUBLE || type == LDefinition::FLOAT32)
                 finishedDoubleSlots_.append(interval);
             else
                 finishedSlots_.append(interval);

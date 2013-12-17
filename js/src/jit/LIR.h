@@ -60,7 +60,7 @@ class LAllocation : public TempObject
     static const uintptr_t TAG_BIT = 1;
     static const uintptr_t TAG_SHIFT = 0;
     static const uintptr_t TAG_MASK = 1 << TAG_SHIFT;
-    static const uintptr_t KIND_BITS = 4;
+    static const uintptr_t KIND_BITS = 3;
     static const uintptr_t KIND_SHIFT = TAG_SHIFT + TAG_BIT;
     static const uintptr_t KIND_MASK = (1 << KIND_BITS) - 1;
 
@@ -76,10 +76,8 @@ class LAllocation : public TempObject
         CONSTANT_INDEX, // Constant arbitrary index.
         GPR,            // General purpose register.
         FPU,            // Floating-point register.
-        STACK_SLOT,     // 32-bit stack slot.
-        DOUBLE_SLOT,    // 64-bit stack slot.
-        INT_ARGUMENT,   // Argument slot that gets loaded into a GPR.
-        DOUBLE_ARGUMENT // Argument slot to be loaded into an FPR
+        STACK_SLOT,     // Stack slot.
+        ARGUMENT_SLOT   // Argument slot.
     };
 
   protected:
@@ -155,10 +153,10 @@ class LAllocation : public TempObject
         return kind() == FPU;
     }
     bool isStackSlot() const {
-        return kind() == STACK_SLOT || kind() == DOUBLE_SLOT;
+        return kind() == STACK_SLOT;
     }
     bool isArgument() const {
-        return kind() == INT_ARGUMENT || kind() == DOUBLE_ARGUMENT;
+        return kind() == ARGUMENT_SLOT;
     }
     bool isRegister() const {
         return isGeneralReg() || isFloatReg();
@@ -168,9 +166,6 @@ class LAllocation : public TempObject
     }
     bool isMemory() const {
         return isStackSlot() || isArgument();
-    }
-    bool isDouble() const {
-        return kind() == DOUBLE_SLOT || kind() == FPU || kind() == DOUBLE_ARGUMENT;
     }
     inline LUse *toUse();
     inline const LUse *toUse() const;
@@ -359,8 +354,8 @@ class LConstantIndex : public LAllocation
 class LStackSlot : public LAllocation
 {
   public:
-    explicit LStackSlot(uint32_t slot, bool isDouble = false)
-      : LAllocation(isDouble ? DOUBLE_SLOT : STACK_SLOT, slot)
+    explicit LStackSlot(uint32_t slot)
+      : LAllocation(STACK_SLOT, slot)
     { }
 
     uint32_t slot() const {
@@ -374,11 +369,9 @@ class LStackSlot : public LAllocation
 class LArgument : public LAllocation
 {
   public:
-    explicit LArgument(LAllocation::Kind kind, int32_t index)
-      : LAllocation(kind, index)
-    {
-        JS_ASSERT(kind == INT_ARGUMENT || kind == DOUBLE_ARGUMENT);
-    }
+    explicit LArgument(int32_t index)
+      : LAllocation(ARGUMENT_SLOT, index)
+    { }
 
     int32_t index() const {
         return data();

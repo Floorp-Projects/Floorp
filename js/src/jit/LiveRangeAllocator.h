@@ -137,7 +137,7 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
 {
     if (ins->isPhi()) {
         if (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32)
-            return alloc.isFloatReg() || alloc.kind() == LAllocation::DOUBLE_SLOT;
+            return alloc.isFloatReg() || alloc.kind() == LAllocation::STACK_SLOT;
         return alloc.isGeneralReg() || alloc.kind() == LAllocation::STACK_SLOT;
     }
 
