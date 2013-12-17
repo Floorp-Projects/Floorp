@@ -69,6 +69,7 @@ gTests.push({
   }
 });
 
+/* Double-tap is disabled (bug 950832).
 gTests.push({
   desc: "double tap transforms",
   setUp: setUp,
@@ -93,6 +94,7 @@ gTests.push({
     clearNativeTouchSequence();
   }
 });
+*/
 
 gTests.push({
   desc: "scroll transforms",
