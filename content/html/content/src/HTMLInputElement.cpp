@@ -5077,15 +5077,15 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
   }
 
   if (aSelectionStart == -1 && aSelectionEnd == -1) {
-      aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
-      if (aRv.Failed()) {
-        nsTextEditorState* state = GetEditorState();
-        if (state && state->IsSelectionCached()) {
-          aSelectionStart = state->GetSelectionProperties().mStart;
-          aSelectionEnd = state->GetSelectionProperties().mEnd;
-          aRv = NS_OK;
-        }
+    aRv = GetSelectionRange(&aSelectionStart, &aSelectionEnd);
+    if (aRv.Failed()) {
+      nsTextEditorState* state = GetEditorState();
+      if (state && state->IsSelectionCached()) {
+        aSelectionStart = state->GetSelectionProperties().mStart;
+        aSelectionEnd = state->GetSelectionProperties().mEnd;
+        aRv = NS_OK;
       }
+    }
   }
 
   if (aStart <= aEnd) {
@@ -5115,15 +5115,17 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
     break;
     case mozilla::dom::SelectionMode::Preserve:
     {
-      if ((uint32_t)aSelectionStart > aEnd)
+      if ((uint32_t)aSelectionStart > aEnd) {
         aSelectionStart += delta;
-      else if ((uint32_t)aSelectionStart > aStart)
-       aSelectionStart = aStart;
+      } else if ((uint32_t)aSelectionStart > aStart) {
+        aSelectionStart = aStart;
+      }
 
-      if ((uint32_t)aSelectionEnd > aEnd)
+      if ((uint32_t)aSelectionEnd > aEnd) {
         aSelectionEnd += delta;
-      else if ((uint32_t)aSelectionEnd > aStart)
+      } else if ((uint32_t)aSelectionEnd > aStart) {
         aSelectionEnd = newEnd;
+      }
     }
     break;
   }
