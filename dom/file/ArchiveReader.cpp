@@ -15,6 +15,7 @@
 #include "mozilla/dom/ArchiveReaderBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -35,13 +36,20 @@ ArchiveReader::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
+  nsAutoCString encoding;
+  if (!EncodingUtils::FindEncodingForLabel(aOptions.mEncoding, encoding) ||
+      encoding.EqualsLiteral("replacement")) {
+    aError.ThrowTypeError(MSG_ENCODING_NOT_SUPPORTED, &aOptions.mEncoding);
+    return nullptr;
+  }
+
   nsRefPtr<ArchiveReader> reader =
-    new ArchiveReader(aBlob, window, aOptions.mEncoding);
+    new ArchiveReader(aBlob, window, encoding);
   return reader.forget();
 }
 
 ArchiveReader::ArchiveReader(nsIDOMBlob* aBlob, nsPIDOMWindow* aWindow,
-                             const nsString& aEncoding)
+                             const nsACString& aEncoding)
   : mBlob(aBlob)
   , mWindow(aWindow)
   , mStatus(NOT_STARTED)
