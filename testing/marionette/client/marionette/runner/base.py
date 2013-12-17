@@ -795,9 +795,8 @@ class BaseMarionetteTestRunner(object):
             manifest = TestManifest()
             manifest.read(filepath)
 
-            all_tests = manifest.active_tests(exists=False, disabled=False)
-            manifest_tests = manifest.active_tests(exists=False,
-                                                   disabled=False,
+            all_tests = manifest.active_tests(disabled=False)
+            manifest_tests = manifest.active_tests(disabled=False,
                                                    device=self.device,
                                                    app=self.appName)
             skip_tests = list(set([x['path'] for x in all_tests]) -
