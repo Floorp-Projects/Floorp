@@ -549,21 +549,24 @@
 #toolbox-tabs .devtools-tab[selected=true] {
   color: #f5f7fa;
   background-color: #1a4666;
-  border-width: 0;
   box-shadow: 0 2px 0 #d7f1ff inset,
               0 8px 3px -5px #2b82bf inset,
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
-.devtools-tab[selected=true]:not(:first-child) {
+.devtools-tab[selected=true]:not(:first-child),
+.devtools-tab.highlighted:not(:first-child) {
+  border-width: 0;
   -moz-padding-start: 1px;
 }
 
-.devtools-tab[selected=true]:last-child {
+.devtools-tab[selected=true]:last-child,
+.devtools-tab.highlighted:last-child {
   -moz-padding-end: 1px;
 }
 
-.devtools-tab[selected=true] + .devtools-tab {
+.devtools-tab[selected=true] + .devtools-tab,
+.devtools-tab.highlighted + .devtools-tab {
   -moz-border-start-width: 0;
   -moz-padding-start: 1px;
 }
