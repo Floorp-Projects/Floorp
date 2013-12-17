@@ -130,6 +130,10 @@ var gPluginHandler = {
                    [right, bottom],
                    [centerX, centerY]];
 
+    if (right <= 0 || top <= 0) {
+      return false;
+    }
+
     for (let [x, y] of points) {
       let el = plugin.ownerDocument.elementFromPoint(x, y);
       if (el !== plugin) {

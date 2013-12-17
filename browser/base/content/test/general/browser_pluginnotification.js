@@ -898,5 +898,28 @@ function test28b()
   let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
   ok(!overlay.classList.contains("visible"), "Test 28b, Plugin overlay should be hidden");
 
+  prepareTest(test29, gTestRoot + "plugin_positioned.html");
+}
+
+function test29() {
+  let notification = PopupNotifications.getNotification("click-to-play-plugins");
+  ok(notification, "Test 29: There should be a plugin notification");
+
+  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
+    test29b,
+    "Test 29, expected the plugin infobar to be triggered when plugin was overlayed");
+}
+
+function test29b() {
+  let doc = gTestBrowser.contentDocument;
+  let plugin = doc.getElementById("test");
+  ok(plugin, "Test 29b, Found plugin in page");
+  plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  is(plugin.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY, "Test 29b, plugin fallback type should be PLUGIN_CLICK_TO_PLAY");
+  ok(!plugin.activated, "Test 29b, Plugin should not be activated");
+  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+  ok(!overlay.classList.contains("visible"), "Test 29b, Plugin overlay should be hidden");
+
   finishTest();
 }
