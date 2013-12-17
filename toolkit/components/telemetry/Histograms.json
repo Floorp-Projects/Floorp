@@ -2986,6 +2986,10 @@
     "kind": "flag",
     "description": "Whether the decoder for IBM862 has been instantiated in this session."
   },
+  "DECODER_INSTANTIATED_IBM866": {
+    "kind": "flag",
+    "description": "Whether the decoder for IBM866 has been instantiated in this session."
+  },
   "DECODER_INSTANTIATED_MACGREEK": {
     "kind": "flag",
     "description": "Whether the decoder for MACGREEK has been instantiated in this session."
@@ -3013,6 +3017,10 @@
   "DECODER_INSTANTIATED_MACCROATIAN": {
     "kind": "flag",
     "description": "Whether the decoder for MACCROATIAN has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_MACCYRILLIC": {
+    "kind": "flag",
+    "description": "Whether the decoder for MACCYRILLIC has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_MACROMANIAN": {
     "kind": "flag",
@@ -3053,6 +3061,18 @@
   "DECODER_INSTANTIATED_VIETVPS": {
     "kind": "flag",
     "description": "Whether the decoder for VIETVPS has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_KOI8R": {
+    "kind": "flag",
+    "description": "Whether the decoder for KOI8R has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_KOI8U": {
+    "kind": "flag",
+    "description": "Whether the decoder for KOI8U has been instantiated in this session."
+  },
+  "DECODER_INSTANTIATED_ISO_8859_5": {
+    "kind": "flag",
+    "description": "Whether the decoder for ISO-8859-5 has been instantiated in this session."
   },
   "XUL_FOREGROUND_REFLOW_MS": {
     "kind": "exponential",
