@@ -2616,17 +2616,36 @@ class CastableObjectUnwrapper():
     If isCallbackReturnValue is "JSImpl" and our descriptor is also
     JS-implemented, fall back to just creating the right object if what we
     have isn't one already.
+
+    If allowCrossOriginObj is True, then we'll first do an
+    UncheckedUnwrap and then operate on the result.
     """
     def __init__(self, descriptor, source, target, codeOnFailure,
-                 exceptionCode=None, isCallbackReturnValue=False):
+                 exceptionCode=None, isCallbackReturnValue=False,
+                 allowCrossOriginObj=False):
         if not exceptionCode:
             exceptionCode = codeOnFailure
         self.substitution = { "type" : descriptor.nativeType,
                               "protoID" : "prototypes::id::" + descriptor.name,
-                              "source" : source,
                               "target" : target,
                               "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure)).define(),
                               "exceptionCode" : CGIndenter(CGGeneric(exceptionCode), 4).define() }
+        if allowCrossOriginObj:
+            self.substitution["uncheckedObjDecl"] = (
+                "\n  JS::Rooted<JSObject*> uncheckedObj(cx, js::UncheckedUnwrap(%s));" % source)
+            self.substitution["source"] = "uncheckedObj"
+            xpconnectUnwrap = (
+                "nsresult rv;\n"
+                "{ // Scope for the JSAutoCompartment, because we only\n"
+                "  // want to be in that compartment for the UnwrapArg call.\n"
+                "  JSAutoCompartment ac(cx, ${source});\n"
+                "  rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+                "}\n")
+        else:
+            self.substitution["uncheckedObjDecl"] = ""
+            self.substitution["source"] = source
+            xpconnectUnwrap = "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+
         if descriptor.hasXPConnectImpls:
             # We don't use xpc_qsUnwrapThis because it will always throw on
             # unwrap failure, whereas we want to control whether we throw or
@@ -2634,8 +2653,8 @@ class CastableObjectUnwrapper():
             self.substitution["codeOnFailure"] = CGIndenter(CGGeneric(string.Template(
                 "${type} *objPtr;\n"
                 "SelfRef objRef;\n"
-                "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n"
-                "nsresult rv = UnwrapArg<${type}>(cx, val, &objPtr, &objRef.ptr, &val);\n"
+                "JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*${source}));\n" +
+                xpconnectUnwrap +
                 "if (NS_FAILED(rv)) {\n"
                 "${codeOnFailure}\n"
                 "}\n"
@@ -2668,7 +2687,7 @@ class CastableObjectUnwrapper():
     def __str__(self):
         codeOnFailure = self.substitution["codeOnFailure"] % {'securityError': 'rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO'}
         return string.Template(
-"""{
+"""{${uncheckedObjDecl}
   nsresult rv = UnwrapObject<${protoID}, ${type}>(${source}, ${target});
   if (NS_FAILED(rv)) {
 ${codeOnFailure}
@@ -5736,18 +5755,11 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
                 CGGeneric("%s* self;" % self.descriptor.nativeType)
                 ], "\n")
 
-        objName = "uncheckedObj" if self.allowCrossOriginThis else "obj"
         unwrapThis = CGGeneric(
             str(CastableObjectUnwrapper(
                         self.descriptor,
-                        objName, "self", self.unwrapFailureCode)))
-        if self.allowCrossOriginThis:
-            unwrapThis = CGWrapper(
-                CGIndenter(unwrapThis),
-                pre=("{ // Scope for the uncheckedObj JSAutoCompartment\n"
-                     "  JS::Rooted<JSObject*> uncheckedObj(cx, js::UncheckedUnwrap(obj));\n"
-                     "  JSAutoCompartment ac(cx, uncheckedObj);\n"),
-                post="\n}")
+                        "obj", "self", self.unwrapFailureCode,
+                        allowCrossOriginObj=self.allowCrossOriginThis)))
         return CGList([ CGIndenter(getThis), CGIndenter(unwrapThis),
                         self.generate_code() ], "\n").define()
 
