@@ -19,6 +19,7 @@ public:
   HTMLTableCaptionElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetHasWeirdParserInsertionMode();
   }
   virtual ~HTMLTableCaptionElement();
 

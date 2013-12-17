@@ -1307,6 +1307,9 @@ private:
     NodeHandlingClick,
     // Set if the node has had :hover selectors matched against it
     NodeHasRelevantHoverRules,
+    // Set if the element has a parser insertion mode other than "in body",
+    // per the HTML5 "Parse state" section.
+    ElementHasWeirdParserInsertionMode,
     // Guard value
     BooleanFlagCount
   };
@@ -1466,6 +1469,9 @@ protected:
   void ClearHasLockedStyleStates() { ClearBoolFlag(ElementHasLockedStyleStates); }
   bool HasLockedStyleStates() const
     { return GetBoolFlag(ElementHasLockedStyleStates); }
+  void SetHasWeirdParserInsertionMode() { SetBoolFlag(ElementHasWeirdParserInsertionMode); }
+  bool HasWeirdParserInsertionMode() const
+  { return GetBoolFlag(ElementHasWeirdParserInsertionMode); }
   bool HandlingClick() const { return GetBoolFlag(NodeHandlingClick); }
   void SetHandlingClick() { SetBoolFlag(NodeHandlingClick); }
   void ClearHandlingClick() { ClearBoolFlag(NodeHandlingClick); }
