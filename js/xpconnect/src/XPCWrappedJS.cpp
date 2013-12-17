@@ -225,7 +225,8 @@ nsXPCWrappedJS::AddRef(void)
         MOZ_CRASH();
 
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-    nsrefcnt cnt = mRefCnt.incr();
+    nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
+    nsrefcnt cnt = mRefCnt.incr(base);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
     if (2 == cnt && IsValid()) {
@@ -254,7 +255,7 @@ nsXPCWrappedJS::Release(void)
             mRefCnt.stabilizeForDeletion();
             DeleteCycleCollectable();
         } else {
-            mRefCnt.incr();
+            mRefCnt.incr(base);
             Destroy();
             mRefCnt.decr(base);
         }
