@@ -12,12 +12,12 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#undef LOG
+#undef CHROMIUM_LOG
 #if (defined(MOZ_WIDGET_GONK) && defined(DEBUG))
 #include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #else
-#define LOG(args...)
+#define CHROMIUM_LOG(args...)
 #endif
 
 #include "jsfriendapi.h"
@@ -328,20 +328,20 @@ void
 NfcConsumer::OnConnectSuccess()
 {
     // Nothing to do here.
-    LOG("NFC: %s\n", __FUNCTION__);
+    CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
 }
 
 void
 NfcConsumer::OnConnectError()
 {
-    LOG("NFC: %s\n", __FUNCTION__);
+    CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
     CloseSocket();
 }
 
 void
 NfcConsumer::OnDisconnect()
 {
-    LOG("NFC: %s\n", __FUNCTION__);
+    CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
     if (!mShutdown) {
         ConnectSocket(new NfcConnector(), mAddress.get(), 1000);
     }
