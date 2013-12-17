@@ -1314,10 +1314,6 @@ pref("security.csp.speccompliant", true);
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
-// The URL where remote content that composes the UI for Firefox Accounts should
-// be fetched. Must use HTTPS.
-pref("firefox.accounts.remoteUrl", "https://accounts.dev.lcip.org/flow");
-
 // Override the Gecko-default value of false for Firefox.
 pref("plain_text.wrap_long_lines", true);
 
@@ -1334,6 +1330,10 @@ pref("network.disable.ipc.security", true);
 
 // CustomizableUI debug logging.
 pref("browser.uiCustomization.debug", false);
+
+// The URL where remote content that composes the UI for Firefox Accounts should
+// be fetched. Must use HTTPS.
+pref("firefox.accounts.remoteUrl", "https://accounts.dev.lcip.org/flow?moar_native=true");
 
 // The URL of the Firefox Accounts auth server backend
 pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
