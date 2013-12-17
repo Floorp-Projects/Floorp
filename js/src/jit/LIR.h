@@ -363,10 +363,6 @@ class LStackSlot : public LAllocation
       : LAllocation(isDouble ? DOUBLE_SLOT : STACK_SLOT, slot)
     { }
 
-    bool isDouble() const {
-        return kind() == DOUBLE_SLOT;
-    }
-
     uint32_t slot() const {
         return data();
     }
