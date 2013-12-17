@@ -763,7 +763,7 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 
     if (ool->needFloat32Conversion()) {
         masm.push(src);
-        masm.convertFloatToDouble(src, src);
+        masm.convertFloat32ToDouble(src, src);
     }
 
     masm.setupUnalignedABICall(1, dest);

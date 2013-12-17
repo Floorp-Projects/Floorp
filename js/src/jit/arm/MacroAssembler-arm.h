@@ -50,15 +50,15 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
-    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest,
-                              Condition c = Always);
+    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest,
+                                Condition c = Always);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
     void convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                                bool negativeZeroCheck = true);
 
-    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest);
+    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail);
     void convertInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertInt32ToFloat32(const Address &src, FloatRegister dest);
@@ -1271,8 +1271,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
     void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
-    void loadFloat(const Address &addr, const FloatRegister &dest);
-    void loadFloat(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloat32(const Address &addr, const FloatRegister &dest);
+    void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
 
     void store8(const Register &src, const Address &address);
     void store8(const Imm32 &imm, const Address &address);
@@ -1308,10 +1308,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_vmov(src, dest);
     }
 
-    void storeFloat(FloatRegister src, Address addr) {
+    void storeFloat32(FloatRegister src, Address addr) {
         ma_vstr(VFPRegister(src).singleOverlay(), Operand(addr));
     }
-    void storeFloat(FloatRegister src, BaseIndex addr) {
+    void storeFloat32(FloatRegister src, BaseIndex addr) {
         // Harder cases not handled yet.
         JS_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
@@ -1486,7 +1486,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return as_cmp(bounded, Imm8(0));
     }
 
-    void moveFloat(FloatRegister src, FloatRegister dest) {
+    void moveFloat32(FloatRegister src, FloatRegister dest) {
         as_vmov(VFPRegister(src).singleOverlay(), VFPRegister(dest).singleOverlay());
     }
 };

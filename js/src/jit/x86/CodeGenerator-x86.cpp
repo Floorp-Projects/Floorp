@@ -119,7 +119,7 @@ CodeGeneratorX86::visitBoxFloatingPoint(LBoxFloatingPoint *box)
 
     FloatRegister reg = ToFloatRegister(in);
     if (box->type() == MIRType_Float32) {
-        masm.convertFloatToDouble(reg, ScratchFloatReg);
+        masm.convertFloat32ToDouble(reg, ScratchFloatReg);
         reg = ScratchFloatReg;
     }
     masm.boxDouble(reg, out);
@@ -693,7 +693,7 @@ CodeGeneratorX86::postAsmJSCall(LAsmJSCall *lir)
     if (mir->type() == MIRType_Float32) {
         Operand op(esp, -sizeof(float));
         masm.fstp32(op);
-        masm.loadFloat(op, ReturnFloatReg);
+        masm.loadFloat32(op, ReturnFloatReg);
     } else {
         Operand op(esp, -sizeof(double));
         masm.fstp(op);
@@ -926,7 +926,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
     if (Assembler::HasSSE3()) {
         // Push float32, but subtracts 64 bits so that the value popped by fisttp fits
         masm.subl(Imm32(sizeof(uint64_t)), esp);
-        masm.storeFloat(input, Operand(esp, 0));
+        masm.storeFloat32(input, Operand(esp, 0));
 
         static const uint32_t EXPONENT_MASK = FloatExponentBits;
         static const uint32_t EXPONENT_SHIFT = FloatExponentShift;
