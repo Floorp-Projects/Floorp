@@ -21,7 +21,7 @@ namespace gl {
 SharedSurface_EGLImage*
 SharedSurface_EGLImage::Create(GLContext* prodGL,
                                const GLFormats& formats,
-                               const gfx::IntSize& size,
+                               const gfxIntSize& size,
                                bool hasAlpha,
                                EGLContext context)
 {
@@ -52,7 +52,7 @@ SharedSurface_EGLImage::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
 
 SharedSurface_EGLImage::SharedSurface_EGLImage(GLContext* gl,
                                                GLLibraryEGL* egl,
-                                               const gfx::IntSize& size,
+                                               const gfxIntSize& size,
                                                bool hasAlpha,
                                                const GLFormats& formats,
                                                GLuint prodTex)
@@ -123,7 +123,7 @@ SharedSurface_EGLImage::LockProdImpl()
 
 static bool
 CreateTexturePipe(GLLibraryEGL* const egl, GLContext* const gl,
-                  const GLFormats& formats, const gfx::IntSize& size,
+                  const GLFormats& formats, const gfxIntSize& size,
                   GLuint* const out_tex, EGLImage* const out_image)
 {
     MOZ_ASSERT(out_tex && out_image);
@@ -170,18 +170,14 @@ SharedSurface_EGLImage::Fence()
         }
 
         if (!mPixels) {
-            SurfaceFormat format =
-                  HasAlpha() ? FORMAT_B8G8R8A8
-                             : FORMAT_B8G8R8X8;
-            mPixels = Factory::CreateDataSourceSurface(Size(), format);
+            gfxImageFormat format =
+                  HasAlpha() ? gfxImageFormatARGB32
+                             : gfxImageFormatRGB24;
+            mPixels = new gfxImageSurface(Size(), format);
         }
 
-        nsRefPtr<gfxImageSurface> wrappedData =
-            new gfxImageSurface(mPixels->GetData(),
-                                ThebesIntSize(mPixels->GetSize()),
-                                mPixels->Stride(),
-                                SurfaceFormatToImageFormat(mPixels->GetFormat()));
-        mGL->ReadScreenIntoImageSurface(wrappedData);
+        mPixels->Flush();
+        mGL->ReadScreenIntoImageSurface(mPixels);
         mPixels->MarkDirty();
         return;
     }
@@ -274,7 +270,7 @@ SharedSurface_EGLImage::AcquireConsumerTexture(GLContext* consGL)
     return 0;
 }
 
-DataSourceSurface*
+gfxImageSurface*
 SharedSurface_EGLImage::GetPixels() const
 {
     MutexAutoLock lock(mMutex);
