@@ -41,7 +41,7 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-  runSocialTestWithProvider(manifest, function () {
+  runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function () {
       Services.prefs.clearUserPref("social.remote-install.enabled");
       // just in case the tests failed, clear these here as well
@@ -49,7 +49,7 @@ function test() {
       Services.prefs.clearUserPref("social.whitelist");
       ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
       CustomizableUI.reset();
-      finish();
+      finishcb();
     });
   });
 }

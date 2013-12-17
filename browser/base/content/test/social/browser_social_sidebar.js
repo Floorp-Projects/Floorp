@@ -21,7 +21,7 @@ function doTest(finishcb) {
 
   let command = document.getElementById("Social:ToggleSidebar");
   let sidebar = document.getElementById("social-sidebar-box");
-  let browser = sidebar.firstChild;
+  let browser = sidebar.lastChild;
 
   function checkShown(shouldBeShown) {
     is(command.getAttribute("checked"), shouldBeShown ? "true" : "false",

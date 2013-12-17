@@ -14,7 +14,7 @@ function postTestCleanup(callback) {
   tabsToRemove = [];
   // theses tests use the notification panel but don't bother waiting for it
   // to fully open - the end result is that the panel might stay open
-  SocialUI.activationPanel.hidePopup();
+  //SocialUI.activationPanel.hidePopup();
 
   Services.prefs.clearUserPref("social.whitelist");
 
@@ -141,19 +141,27 @@ function clickAddonRemoveButton(tab, aCallback) {
 }
 
 function activateOneProvider(manifest, finishActivation, aCallback) {
+  let panel = document.getElementById("servicesInstall-notification");
+  PopupNotifications.panel.addEventListener("popupshown", function onpopupshown() {
+    PopupNotifications.panel.removeEventListener("popupshown", onpopupshown);
+    info("servicesInstall-notification panel opened");
+    if (finishActivation)
+      panel.button.click();
+    else
+      panel.closebutton.click();
+  });
+
   activateProvider(manifest.origin, function() {
-    waitForProviderLoad(function() {
-      ok(!SocialUI.activationPanel.hidden, "activation panel is showing");
-      is(Social.provider.origin, manifest.origin, "new provider is active");
-      checkSocialUI();
-
-      if (finishActivation)
-        document.getElementById("social-activation-button").click();
-      else
-        document.getElementById("social-undoactivation-button").click();
-
+    if (!finishActivation) {
+      ok(panel.hidden, "activation panel is not showing");
       executeSoon(aCallback);
-    });
+    } else {
+      waitForProviderLoad(function() {
+        is(Social.provider.origin, manifest.origin, "new provider is active");
+        checkSocialUI();
+        executeSoon(aCallback);
+      });
+    }
   });
 }
 
@@ -194,7 +202,8 @@ var tests = {
     Services.prefs.setBoolPref("social.remote-install.enabled", false);
     activateProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
-      ok(SocialUI.activationPanel.hidden, "activation panel still hidden");
+      let panel = document.getElementById("servicesInstall-notification");
+      ok(panel.hidden, "activation panel still hidden");
       checkSocialUI();
       Services.prefs.clearUserPref("social.remote-install.enabled");
       next();
@@ -206,7 +215,8 @@ var tests = {
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
       ok(!Social.provider, "provider is not installed");
-      ok(SocialUI.activationPanel.hidden, "activation panel still hidden");
+      let panel = document.getElementById("servicesInstall-notification");
+      ok(panel.hidden, "activation panel still hidden");
       checkSocialUI();
       Services.prefs.clearUserPref("social.whitelist");
       next();
@@ -258,38 +268,6 @@ var tests = {
           Services.prefs.clearUserPref("social.whitelist");
           resetBuiltinManifestPref(prefname);
           next();
-        });
-      });
-    });
-  },
-
-  testRemoveNonCurrentProvider: function(next) {
-    Services.prefs.setCharPref("social.whitelist", gTestDomains.join(","));
-    SocialService.addProvider(gProviders[0], function() {
-      SocialService.addProvider(gProviders[1], function() {
-        Social.provider = Social.providers[1];
-        checkSocialUI();
-        // activate the last provider.
-        let prefname = addBuiltinManifest(gProviders[2]);
-        activateProvider(gTestDomains[2], function() {
-          waitForProviderLoad(function() {
-            ok(!SocialUI.activationPanel.hidden, "activation panel is showing");
-            is(Social.provider.origin, gTestDomains[2], "new provider is active");
-            checkSocialUI();
-            // A bit contrived, but set a new provider current while the
-            // activation ui is up.
-            Social.provider = Social.providers[1];
-            // hit "undo"
-            document.getElementById("social-undoactivation-button").click();
-            executeSoon(function() {
-              // we deactivated - the same provider should be enabled.
-              is(Social.provider.origin, Social.providers[1].origin, "original provider still be active");
-              checkSocialUI();
-              Services.prefs.clearUserPref("social.whitelist");
-              resetBuiltinManifestPref(prefname);
-              next();
-            });
-          });
         });
       });
     });
