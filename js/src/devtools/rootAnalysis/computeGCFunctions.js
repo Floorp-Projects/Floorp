@@ -23,17 +23,21 @@ printErr("Writing " + gcFunctions_filename);
 redirect(gcFunctions_filename);
 for (var name in gcFunctions) {
     print("");
-    print("GC Function: " + name);
+    print("GC Function: " + name + "|" + readableNames[name][0]);
     do {
         name = gcFunctions[name];
-        print("    " + name);
+        if (name in readableNames)
+            print("    " + readableNames[name][0]);
+        else
+            print("    " + name);
     } while (name in gcFunctions);
 }
 
 printErr("Writing " + gcFunctionsList_filename);
 redirect(gcFunctionsList_filename);
 for (var name in gcFunctions) {
-    print(name);
+    for (var readable of readableNames[name])
+        print(name + "|" + readable);
 }
 
 // gcEdges is a list of edges that can GC for more specific reasons than just
