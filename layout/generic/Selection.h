@@ -15,6 +15,7 @@
 #include "nsRange.h"
 #include "nsThreadUtils.h"
 #include "mozilla/TextRange.h"
+#include "nsWrapperCache.h"
 
 struct CachedOffsetForFrame;
 class nsAutoScrollTimer;
@@ -22,6 +23,10 @@ class nsIContentIterator;
 class nsIFrame;
 class nsFrameSelection;
 struct SelectionDetails;
+
+namespace mozilla {
+class ErrorResult;
+}
 
 struct RangeData
 {
@@ -41,17 +46,20 @@ struct RangeData
 namespace mozilla {
 
 class Selection : public nsISelectionPrivate,
+                  public nsWrapperCache,
                   public nsSupportsWeakReference
 {
 public:
   Selection();
   Selection(nsFrameSelection *aList);
   virtual ~Selection();
-  
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(Selection, nsISelectionPrivate)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Selection, nsISelectionPrivate)
   NS_DECL_NSISELECTION
   NS_DECL_NSISELECTIONPRIVATE
+
+  nsIDocument* GetParentObject() const;
 
   // utility methods for scrolling the selection into view
   nsPresContext* GetPresContext() const;
@@ -98,15 +106,6 @@ public:
   nsRange*      GetRangeAt(int32_t aIndex);
   int32_t GetRangeCount() { return mRanges.Length(); }
 
-  // methods for convenience. Note, these don't addref
-  nsINode*     GetAnchorNode();
-  int32_t      GetAnchorOffset();
-
-  nsINode*     GetFocusNode();
-  int32_t      GetFocusOffset();
-
-  bool IsCollapsed();
-
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const {
@@ -131,6 +130,65 @@ public:
                                     uint32_t aDelay);
 
   nsresult     StopAutoScrollTimer();
+
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL methods
+  nsINode*     GetAnchorNode();
+  uint32_t     AnchorOffset();
+  nsINode*     GetFocusNode();
+  uint32_t     FocusOffset();
+
+  bool IsCollapsed();
+  void Collapse(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+  void CollapseToStart(mozilla::ErrorResult& aRv);
+  void CollapseToEnd(mozilla::ErrorResult& aRv);
+
+  void Extend(nsINode& aNode, uint32_t aOffset, mozilla::ErrorResult& aRv);
+
+  void SelectAllChildren(nsINode& aNode, mozilla::ErrorResult& aRv);
+  void DeleteFromDocument(mozilla::ErrorResult& aRv);
+
+  uint32_t RangeCount() const
+  {
+    return mRanges.Length();
+  }
+  nsRange* GetRangeAt(uint32_t aIndex, mozilla::ErrorResult& aRv);
+  void AddRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void RemoveRange(nsRange& aRange, mozilla::ErrorResult& aRv);
+  void RemoveAllRanges(mozilla::ErrorResult& aRv);
+
+  void Stringify(nsAString& aResult);
+
+  bool ContainsNode(nsINode* aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
+
+  void Modify(const nsAString& aAlter, const nsAString& aDirection,
+              const nsAString& aGranularity, mozilla::ErrorResult& aRv);
+
+  bool GetInterlinePosition(mozilla::ErrorResult& aRv);
+  void SetInterlinePosition(bool aValue, mozilla::ErrorResult& aRv);
+
+  void ToStringWithFormat(const nsAString& aFormatType,
+                          uint32_t aFlags,
+                          int32_t aWrapColumn,
+                          nsAString& aReturn,
+                          mozilla::ErrorResult& aRv);
+  void AddSelectionListener(nsISelectionListener* aListener,
+                            mozilla::ErrorResult& aRv);
+  void RemoveSelectionListener(nsISelectionListener* aListener,
+                               mozilla::ErrorResult& aRv);
+
+  int16_t Type() const { return mType; }
+
+  void GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
+                            nsINode& aEndNode, int32_t aEndOffset,
+                            bool aAllowAdjacent,
+                            nsTArray<nsRefPtr<nsRange>>& aReturn,
+                            mozilla::ErrorResult& aRv);
+
+  void ScrollIntoView(int16_t aRegion, bool aIsSynchronous,
+                      int16_t aVPercent, int16_t aHPercent,
+                      mozilla::ErrorResult& aRv);
 
 private:
   friend class ::nsAutoScrollTimer;

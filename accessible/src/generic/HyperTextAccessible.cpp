@@ -1159,7 +1159,7 @@ HyperTextAccessible::CaretOffset() const
   NS_ENSURE_TRUE(domSel, -1);
 
   nsINode* focusNode = domSel->GetFocusNode();
-  int32_t focusOffset = domSel->GetFocusOffset();
+  uint32_t focusOffset = domSel->FocusOffset();
 
   // No caret if this DOM node is inside of focused node but the selection's
   // focus point is not inside of this DOM node.
@@ -1201,7 +1201,7 @@ HyperTextAccessible::CaretLineNumber()
     return -1;
 
   int32_t returnOffsetUnused;
-  int32_t caretOffset = domSel->GetFocusOffset();
+  uint32_t caretOffset = domSel->FocusOffset();
   nsFrameSelection::HINT hint = frameSelection->GetHint();
   nsIFrame *caretFrame = frameSelection->GetFrameForNodeOffset(caretContent, caretOffset,
                                                                hint, &returnOffsetUnused);
