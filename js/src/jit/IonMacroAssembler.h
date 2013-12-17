@@ -397,7 +397,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(src.type())) {
             FloatRegister reg = src.typedReg().fpu();
             if (src.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             storeDouble(reg, dest);
@@ -545,7 +545,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(v.type())) {
             FloatRegister reg = v.typedReg().fpu();
             if (v.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             Push(reg);
@@ -865,12 +865,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
-    void callWithABINoProfiling(const T &fun, Result result = GENERAL) {
+    void callWithABINoProfiling(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         MacroAssemblerSpecific::callWithABI(fun, result);
     }
 
     template <typename T>
-    void callWithABI(const T &fun, Result result = GENERAL) {
+    void callWithABI(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         leaveSPSFrame();
         callWithABINoProfiling(fun, result);
         reenterSPSFrame();

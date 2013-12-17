@@ -1152,6 +1152,13 @@ class nsIWidget : public nsISupports {
      */
     virtual void SetWindowAnimationType(WindowAnimationType aType) = 0;
 
+    /**
+     * Specifies whether the window title should be drawn even if the window
+     * contents extend into the titlebar. Ignored on windows that don't draw
+     * in the titlebar. Only implemented on OS X.
+     */
+    virtual void SetDrawsTitle(bool aDrawTitle) {}
+
     /** 
      * Hide window chrome (borders, buttons) for this widget.
      *

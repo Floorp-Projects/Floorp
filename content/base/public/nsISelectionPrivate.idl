@@ -28,24 +28,24 @@ template<class T> class nsTArray;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(3ede44eb-2df8-41de-ab79-6f3dbd10090b)]
+[scriptable, builtinclass, uuid(52629837-7b3f-4434-940d-a14de7ef9b7a)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
     const short STARTOFNEXTLINE=1;
-    
+
     attribute boolean interlinePosition;
 
     /* startBatchChanges
        match this up with endbatchChanges. will stop ui updates while multiple selection methods are called
     */
-    void  startBatchChanges();
-    
+    [noscript] void  startBatchChanges();
+
     /* endBatchChanges
        match this up with startBatchChanges
     */
-    void  endBatchChanges();
-		
+    [noscript] void  endBatchChanges();
+
     DOMString  toStringWithFormat(in string formatType, in unsigned long flags, in int32_t wrapColumn);
     void  addSelectionListener(in nsISelectionListener newListener);
     void  removeSelectionListener(in nsISelectionListener listenerToRemove);
@@ -55,19 +55,19 @@ interface nsISelectionPrivate : nsISelection
        items in nsFrameSelection  to a
        new nsITableSelection interface
     */
-    const long TABLESELECTION_NONE     = 0; 
-    const long TABLESELECTION_CELL     = 1; 
-    const long TABLESELECTION_ROW      = 2; 
-    const long TABLESELECTION_COLUMN   = 3; 
-    const long TABLESELECTION_TABLE    = 4; 
+    const long TABLESELECTION_NONE     = 0;
+    const long TABLESELECTION_CELL     = 1;
+    const long TABLESELECTION_ROW      = 2;
+    const long TABLESELECTION_COLUMN   = 3;
+    const long TABLESELECTION_TABLE    = 4;
     const long TABLESELECTION_ALLCELLS = 5;
 
     /** Test if supplied range points to a single table element:
       *    Result is one of above constants. "None" means
       *    a table element isn't selected.
       */
-    long getTableSelectionType(in nsIDOMRange range);
-    
+    [noscript] long getTableSelectionType(in nsIDOMRange range);
+
     /* canCacheFrameOffset
      * Frame Offset cache can be used just during calling nsEditor::EndPlaceHolderTransaction.
      * EndPlaceHolderTransaction will give rise to reflow/refreshing view/scroll, and call times
@@ -155,5 +155,12 @@ interface nsISelectionPrivate : nsISelection
                                            in boolean aIsSynchronous,
                                            in ScrollAxis aVertical,
                                            in ScrollAxis aHorizontal);
+
+    /**
+     * Modifies the cursor Bidi level after a change in keyboard direction
+     * @param langRTL is PR_TRUE if the new language is right-to-left or
+     *                PR_FALSE if the new language is left-to-right.
+     */
+    [noscript] void selectionLanguageChange(in boolean langRTL);
 };
 
