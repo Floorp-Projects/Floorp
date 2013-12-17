@@ -252,9 +252,6 @@ function checkSocialUI(win) {
   }
   // the menus should always have the provider name
   if (provider) {
-    for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
-      _is(document.getElementById(id).getAttribute("label"), Social.provider.name, "element has the provider name");
-
     let contextMenus = [
       {
         type: "link",
@@ -299,8 +296,6 @@ function checkSocialUI(win) {
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
 
-  // broadcasters.
-  isbool(!doc.getElementById("socialActiveBroadcaster").hidden, active, "socialActiveBroadcaster hidden?");
   // and report on overall success of failure of the various checks here.
   is(numGoodTests, numTests, "The Social UI tests succeeded.")
 }

@@ -1352,8 +1352,6 @@ var gBrowserInit = {
       }
     }
 
-    SocialUI.nonBrowserWindowInit();
-
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
       document.getElementById("macDockMenuNewWindow").hidden = true;
     }
