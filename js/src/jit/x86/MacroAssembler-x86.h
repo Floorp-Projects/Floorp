@@ -676,7 +676,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void setStackArg(const Register &reg, uint32_t arg) {
-        movl(reg, Operand(esp, arg * STACK_SLOT_SIZE));
+        movl(reg, Operand(esp, arg * sizeof(intptr_t)));
     }
 
     // Type testing instructions can take a tag in a register or a

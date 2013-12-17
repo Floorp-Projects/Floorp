@@ -31,7 +31,7 @@ LIRGenerator::visitParameter(MParameter *param)
 {
     ptrdiff_t offset;
     if (param->index() == MParameter::THIS_SLOT)
-        offset = THIS_FRAME_SLOT;
+        offset = THIS_FRAME_ARGSLOT;
     else
         offset = 1 + param->index();
 
