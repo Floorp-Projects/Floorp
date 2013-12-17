@@ -14,11 +14,14 @@
 
 #include <string>
 
+#include "base/debug_util.h"
 #include "base/eintr_wrapper.h"
 #include "base/logging.h"
 #include "base/rand_util.h"
 #include "base/string_util.h"
 #include "base/time.h"
+
+static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
@@ -171,6 +174,9 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (!spawn_succeeded || !process_handle_valid) {
     retval = false;
   } else {
+    gProcessLog.print("==> process %d launched child process %d\n",
+                      GetCurrentProcId(), pid);
+
     if (wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 
