@@ -272,8 +272,8 @@ nsHttpConnection::EnsureNPNComplete()
     if (NS_FAILED(rv))
         goto npnComplete;
 
-    LOG(("nsHttpConnection::EnsureNPNComplete %p negotiated to '%s'\n",
-         this, negotiatedNPN.get()));
+    LOG(("nsHttpConnection::EnsureNPNComplete %p [%s] negotiated to '%s'\n",
+         this, mConnInfo->Host(), negotiatedNPN.get()));
 
     uint8_t spdyVersion;
     rv = gHttpHandler->SpdyInfo()->GetNPNVersionIndex(negotiatedNPN,

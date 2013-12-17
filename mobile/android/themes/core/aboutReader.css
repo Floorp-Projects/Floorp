@@ -356,10 +356,6 @@ body {
   background-repeat: no-repeat;
 }
 
-.button:active {
-  background-color: #ff9500;
-}
-
 .dropdown {
   text-align: center;
   display: inline-block;
