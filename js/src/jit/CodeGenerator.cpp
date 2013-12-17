@@ -6041,7 +6041,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // In parallel execution mode, when we first compile a script, we
     // don't know that its potential callees are compiled, so set a
     // flag warning that the callees may not be fully compiled.
-    if (callTargets.length() != 0)
+    if (!callTargets.empty())
         ionScript->setHasUncompiledCallTarget();
 
     invalidateEpilogueData_.fixup(&masm);

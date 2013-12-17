@@ -2402,11 +2402,13 @@ sidebarheader {
   -moz-margin-end: -3px;
 }
 
+.sidebar-title,
 #sidebar-title {
   color: #535f6d;
   font-weight: bold;
 }
 
+.sidebar-throbber[loading="true"],
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
