@@ -18,38 +18,39 @@ namespace jit {
 // guaranteed that Operand looks like this on all ISAs.
 class MoveOperand
 {
+  public:
     enum Kind {
+        // A register in the "integer", aka "general purpose", class.
         REG,
+        // A register in the "float" register class.
         FLOAT_REG,
-        ADDRESS,
-        FLOAT_ADDRESS,
+        // A memory region.
+        MEMORY,
+        // The address of a memory region.
         EFFECTIVE_ADDRESS
     };
 
+  private:
     Kind kind_;
     uint32_t code_;
     int32_t disp_;
 
   public:
-    enum AddressKind {
-        MEMORY = ADDRESS,
-        EFFECTIVE = EFFECTIVE_ADDRESS,
-        FLOAT = FLOAT_ADDRESS
-    };
-
     MoveOperand()
     { }
     explicit MoveOperand(const Register &reg) : kind_(REG), code_(reg.code())
     { }
     explicit MoveOperand(const FloatRegister &reg) : kind_(FLOAT_REG), code_(reg.code())
     { }
-    MoveOperand(const Register &reg, int32_t disp, AddressKind addrKind = MEMORY)
-        : kind_((Kind) addrKind),
+    MoveOperand(const Register &reg, int32_t disp, Kind kind = MEMORY)
+        : kind_(kind),
         code_(reg.code()),
         disp_(disp)
     {
+        JS_ASSERT(isMemoryOrEffectiveAddress());
+
         // With a zero offset, this is a plain reg-to-reg move.
-        if (disp == 0 && addrKind == EFFECTIVE)
+        if (disp == 0 && kind_ == EFFECTIVE_ADDRESS)
             kind_ = REG;
     }
     MoveOperand(const MoveOperand &other)
@@ -63,17 +64,14 @@ class MoveOperand
     bool isGeneralReg() const {
         return kind_ == REG;
     }
-    bool isDouble() const {
-        return kind_ == FLOAT_REG || kind_ == FLOAT_ADDRESS;
-    }
     bool isMemory() const {
-        return kind_ == ADDRESS;
-    }
-    bool isFloatAddress() const {
-        return kind_ == FLOAT_ADDRESS;
+        return kind_ == MEMORY;
     }
     bool isEffectiveAddress() const {
         return kind_ == EFFECTIVE_ADDRESS;
+    }
+    bool isMemoryOrEffectiveAddress() const {
+        return isMemory() || isEffectiveAddress();
     }
     Register reg() const {
         JS_ASSERT(isGeneralReg());
@@ -84,10 +82,11 @@ class MoveOperand
         return FloatRegister::FromCode(code_);
     }
     Register base() const {
-        JS_ASSERT(isMemory() || isEffectiveAddress() || isFloatAddress());
+        JS_ASSERT(isMemoryOrEffectiveAddress());
         return Register::FromCode(code_);
     }
     int32_t disp() const {
+        JS_ASSERT(isMemoryOrEffectiveAddress());
         return disp_;
     }
 
@@ -96,7 +95,7 @@ class MoveOperand
             return false;
         if (code_ != other.code_)
             return false;
-        if (isMemory() || isEffectiveAddress())
+        if (isMemoryOrEffectiveAddress())
             return disp_ == other.disp_;
         return true;
     }
