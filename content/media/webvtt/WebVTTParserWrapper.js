@@ -52,7 +52,7 @@ WebVTTParserWrapper.prototype =
 
   processCues: function(window, cues, overlay)
   {
-    // TODO: Call prcoess cues on vtt.js
+    WebVTTParser.processCues(window, cues, null, overlay);
   },
 
   classDescription: "Wrapper for the JS WebVTTParser (vtt.js)",
