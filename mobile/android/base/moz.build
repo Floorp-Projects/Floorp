@@ -276,6 +276,8 @@ gbjar.sources += [
     'preferences/GeckoPreferences.java',
     'preferences/LinkPreference.java',
     'preferences/MultiChoicePreference.java',
+    'preferences/PanelsPreference.java',
+    'preferences/PanelsPreferenceCategory.java',
     'preferences/PrivateDataPreference.java',
     'preferences/SearchEnginePreference.java',
     'preferences/SearchPreferenceCategory.java',
