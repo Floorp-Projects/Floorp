@@ -6,6 +6,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
                   xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
+
     <PreferenceScreen android:title="@string/pref_category_search" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
@@ -13,6 +14,16 @@
             <extra
                 android:name="resource"
                 android:value="preferences_search" />
+        </intent>
+    </PreferenceScreen>
+
+    <PreferenceScreen android:title="@string/pref_category_home" >
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                android:name="resource"
+                android:value="preferences_home" />
         </intent>
     </PreferenceScreen>
 

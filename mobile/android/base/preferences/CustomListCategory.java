@@ -34,7 +34,7 @@ public abstract class CustomListCategory extends PreferenceCategory {
      * Set the default to some available list item. Used if the current default is removed or
      * disabled.
      */
-    private void setFallbackDefault() {
+    protected void setFallbackDefault() {
         if (getPreferenceCount() > 0) {
             CustomListPreference aItem = (CustomListPreference) getPreference(0);
             setDefault(aItem);
@@ -62,7 +62,10 @@ public abstract class CustomListCategory extends PreferenceCategory {
      * @param item The intended new default.
      */
     public void setDefault(CustomListPreference item) {
-        mDefaultReference.setIsDefault(false);
+        if (mDefaultReference != null) {
+            mDefaultReference.setIsDefault(false);
+        }
+
         item.setIsDefault(true);
         mDefaultReference = item;
     }

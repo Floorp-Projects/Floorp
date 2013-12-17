@@ -85,6 +85,9 @@
 <!ENTITY pref_developer_remotedebugging_docs "Learn more">
 <!ENTITY pref_remember_signons "Remember passwords">
 
+<!ENTITY pref_category_home "Home">
+<!ENTITY pref_category_home_panels "Panels">
+
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_customize "Customize">
 <!ENTITY pref_header_display "Display">
@@ -157,6 +160,9 @@ size. -->
 <!ENTITY pref_dialog_remove "Remove">
 
 <!ENTITY pref_search_last_toast "You can\'t remove or disable your last search engine.">
+
+<!ENTITY pref_panels_show "Show">
+<!ENTITY pref_panels_hide "Hide">
 
 <!ENTITY datareporting_notification_title "&brandShortName; stats &amp; data">
 <!ENTITY datareporting_notification_action_long "Choose what information to share">
