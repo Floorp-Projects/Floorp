@@ -48,7 +48,7 @@ SPECIALID_TO_JSID(const SpecialId &sid);
  * (PropertyName, see vm/String.h); and by various special values.
  *
  * Special values are encoded using SpecialId, which is layout-compatible but
- * non-interconvertible with jsid.  A SpecialId is used for jsid::voidId(), which
+ * non-interconvertible with jsid.  A SpecialId is used for JSID_VOID, which
  * does not occur in JS scripts but may be used to indicate the absence of a
  * valid identifier.  In the future, a SpecialId may also be an object used by
  * Harmony-proposed private names.

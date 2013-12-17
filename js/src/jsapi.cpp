@@ -3753,7 +3753,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
 
         if (!shape->previous()) {
             JS_ASSERT(shape->isEmptyShape());
-            *idp = jsid::voidId();
+            *idp = JSID_VOID;
         } else {
             iterobj->setPrivateGCThing(const_cast<Shape *>(shape->previous().get()));
             *idp = shape->propid();
@@ -3764,7 +3764,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
         JS_ASSERT(i <= ida->length);
         STATIC_ASSUME(i <= ida->length);
         if (i == 0) {
-            *idp = jsid::voidId();
+            *idp = JSID_VOID;
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Value(i));

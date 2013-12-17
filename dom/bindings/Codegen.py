@@ -1426,7 +1426,7 @@ class PropertyDefiner:
                    ',\n'.join(prefableSpecs) + "\n" +
                    "};\n\n") % (specType, name, specType, name))
         if doIdArrays:
-            arrays += ("static jsid %s_ids[%i] = { jsid::voidId() };\n\n" %
+            arrays += ("static jsid %s_ids[%i] = { JSID_VOID };\n\n" %
                        (name, len(specs)))
         return arrays
 
@@ -1832,14 +1832,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             if len(idsToInit) > 1:
                 initIds = CGWrapper(initIds, pre="(", post=")", reindent=True)
             initIds = CGList(
-                [CGGeneric("%s_ids[0] == jsid::voidId() &&" % idsToInit[0]),
+                [CGGeneric("%s_ids[0] == JSID_VOID &&" % idsToInit[0]),
                  CGGeneric("NS_IsMainThread() &&"),
                  initIds],
                 "\n")
             initIds = CGWrapper(initIds, pre="if (", post=") {", reindent=True)
             initIds = CGList(
                 [initIds,
-                 CGGeneric(("  %s_ids[0] = jsid::voidId();\n"
+                 CGGeneric(("  %s_ids[0] = JSID_VOID;\n"
                             "  return;") % idsToInit[0]),
                  CGGeneric("}")],
                 "\n")
@@ -11297,7 +11297,7 @@ class GlobalGenRoots():
             classMembers = [ClassMember(m.identifier.name + "_id",
                                         "jsid",
                                         visibility="public",
-                                        body="jsid::voidId()") for m in dictMembers]
+                                        body="JSID_VOID") for m in dictMembers]
 
             structName = dict.identifier.name + "Atoms"
             structs.append((structName,

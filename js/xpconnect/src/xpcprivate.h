@@ -3448,7 +3448,7 @@ public:
     CreateObjectInOptions(JSContext *cx = xpc_GetSafeJSContext(),
                           JSObject* options = nullptr)
         : OptionsBase(cx, options)
-        , defineAs(cx, jsid::voidId())
+        , defineAs(cx, JSID_VOID)
     { }
 
     virtual bool Parse() { return ParseId("defineAs", &defineAs); };
@@ -3461,7 +3461,7 @@ public:
     ExportOptions(JSContext *cx = xpc_GetSafeJSContext(),
                   JSObject* options = nullptr)
         : OptionsBase(cx, options)
-        , defineAs(cx, jsid::voidId())
+        , defineAs(cx, JSID_VOID)
     { }
 
     virtual bool Parse() { return ParseId("defineAs", &defineAs); };

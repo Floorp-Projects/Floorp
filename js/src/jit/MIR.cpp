@@ -2870,7 +2870,7 @@ jit::DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinit
         if (object->unknownProperties())
             return MIRType_None;
 
-        types::HeapTypeSetKey elementTypes = object->property(jsid::voidId());
+        types::HeapTypeSetKey elementTypes = object->property(JSID_VOID);
 
         MIRType type = MIRTypeFromValueType(elementTypes.knownTypeTag(constraints));
         if (type == MIRType_None)
@@ -2899,7 +2899,7 @@ PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
     if (object->unknownProperties() || observed->empty())
         return true;
 
-    jsid id = name ? NameToId(name) : jsid::voidId();
+    jsid id = name ? NameToId(name) : JSID_VOID;
     types::HeapTypeSetKey property = object->property(id);
     if (property.maybeTypes() && !TypeSetIncludes(observed, MIRType_Value, property.maybeTypes()))
         return true;
@@ -3073,7 +3073,7 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
         if (object->unknownProperties())
             return observed->addType(types::Type::AnyObjectType(), alloc);
 
-        jsid id = name ? NameToId(name) : jsid::voidId();
+        jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
         types::HeapTypeSet *types = property.maybeTypes();
         if (!types)
@@ -3114,7 +3114,7 @@ TryAddTypeBarrierForWrite(TempAllocator &alloc, types::CompilerConstraintList *c
         if (object->unknownProperties())
             return false;
 
-        jsid id = name ? NameToId(name) : jsid::voidId();
+        jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
         if (!property.maybeTypes())
             return false;
@@ -3224,7 +3224,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
         if (IsTypedArrayClass(object->clasp()))
             continue;
 
-        jsid id = name ? NameToId(name) : jsid::voidId();
+        jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
         if (!TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
             // Either pobj or pvalue needs to be modified to filter out the
@@ -3256,7 +3256,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
         if (IsTypedArrayClass(object->clasp()))
             continue;
 
-        jsid id = name ? NameToId(name) : jsid::voidId();
+        jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
         if (TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet()))
             continue;

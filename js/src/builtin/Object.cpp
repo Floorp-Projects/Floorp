@@ -605,7 +605,7 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
         if (!ValueToId<CanGC>(cx, args[0], &id))
             return false;
     } else {
-        id = jsid::voidId();
+        id = JSID_VOID;
     }
 
     if (!JSObject::unwatch(cx, obj, id))

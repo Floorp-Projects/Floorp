@@ -226,7 +226,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 bool
 BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     JS_ASSERT(props.length() == 0);
 
     if (!getOwnPropertyNames(cx, proxy, props))
@@ -255,7 +255,7 @@ BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 bool
 BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
 
     AutoIdVector props(cx);
     if ((flags & JSITER_OWNONLY)
@@ -318,7 +318,7 @@ BaseProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl im
 bool
 BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue val(cx, ObjectValue(*proxy.get()));
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, val, NullPtr());
@@ -376,7 +376,7 @@ bool
 BaseProxyHandler::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
                         HandleObject result)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
 
     RootedId id(cx);
     RootedValue value(cx);
@@ -451,7 +451,7 @@ bool
 DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                         AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN, &props);
 }
@@ -468,7 +468,7 @@ bool
 DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
                               AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, 0, &props);
@@ -477,7 +477,7 @@ DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
 bool
 DirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue target(cx, proxy->as<ProxyObject>().private_());
     return Invoke(cx, args.thisv(), target, args.length(), args.array(), args.rval());
 }
@@ -485,7 +485,7 @@ DirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args
 bool
 DirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedValue target(cx, proxy->as<ProxyObject>().private_());
     return InvokeConstructor(cx, target, args.length(), args.array(), args.rval().address());
 }
@@ -507,7 +507,7 @@ bool
 DirectProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                                 bool *bp)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     bool b;
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     if (!JS_HasInstance(cx, target, v, &b))
@@ -541,7 +541,7 @@ DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
 const char *
 DirectProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return JSObject::className(cx, target);
 }
@@ -550,7 +550,7 @@ JSString *
 DirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy,
                                  unsigned indent)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return fun_toStringHelper(cx, target, indent);
 }
@@ -620,7 +620,7 @@ DirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver
 bool
 DirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, JSITER_OWNONLY, &props);
 }
@@ -629,7 +629,7 @@ bool
 DirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                             MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetIterator(cx, target, flags, vp);
@@ -1046,7 +1046,7 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
 bool
 ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
     JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
     RootedValue call(cx, ccHolder->getReservedSlot(0));
@@ -1057,7 +1057,7 @@ ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const Call
 bool
 ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
     JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
     RootedValue construct(cx, ccHolder->getReservedSlot(1));
@@ -1076,7 +1076,7 @@ ScriptedIndirectProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, N
 JSString *
 ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
-    assertEnteredPolicy(cx, proxy, jsid::voidId());
+    assertEnteredPolicy(cx, proxy, JSID_VOID);
     if (!proxy->isCallable()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_INCOMPATIBLE_PROTO,

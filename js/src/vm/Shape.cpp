@@ -688,7 +688,7 @@ js::NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
     js::AutoIdVector ids(cx);
     {
         for (unsigned i = 0; i <= shape->slot(); i++) {
-            if (!ids.append(jsid::voidId()))
+            if (!ids.append(JSID_VOID))
                 return nullptr;
         }
         Shape *nshape = shape;

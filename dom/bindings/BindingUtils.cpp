@@ -941,7 +941,7 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
       // Set i to be the index into our full list of ids/specs that we're
       // looking at now.
       size_t i = attributes->specs - attributeSpecs;
-      for ( ; attributeIds[i] != jsid::voidId(); ++i) {
+      for ( ; attributeIds[i] != JSID_VOID; ++i) {
         if (id == attributeIds[i]) {
           const JSPropertySpec& attrSpec = attributeSpecs[i];
           // Because of centralization, we need to make sure we fault in the
@@ -1020,7 +1020,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         // Set i to be the index into our full list of ids/specs that we're
         // looking at now.
         size_t i = method->specs - methodsSpecs;
-        for ( ; methodIds[i] != jsid::voidId(); ++i) {
+        for ( ; methodIds[i] != JSID_VOID; ++i) {
           if (id == methodIds[i]) {
             const JSFunctionSpec& methodSpec = methodsSpecs[i];
             JSFunction *fun;
@@ -1084,7 +1084,7 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         // Set i to be the index into our full list of ids/specs that we're
         // looking at now.
         size_t i = constant->specs - nativeProperties->constantSpecs;
-        for ( ; nativeProperties->constantIds[i] != jsid::voidId(); ++i) {
+        for ( ; nativeProperties->constantIds[i] != JSID_VOID; ++i) {
           if (id == nativeProperties->constantIds[i]) {
             desc.setAttributes(JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT);
             desc.object().set(wrapper);
@@ -1226,7 +1226,7 @@ XrayEnumerateAttributes(JSContext* cx, JS::Handle<JSObject*> wrapper,
       // Set i to be the index into our full list of ids/specs that we're
       // looking at now.
       size_t i = attributes->specs - attributeSpecs;
-      for ( ; attributeIds[i] != jsid::voidId(); ++i) {
+      for ( ; attributeIds[i] != JSID_VOID; ++i) {
         if (((flags & JSITER_HIDDEN) ||
              (attributeSpecs[i].flags & JSPROP_ENUMERATE)) &&
             !props.append(attributeIds[i])) {
@@ -1264,7 +1264,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
         // Set i to be the index into our full list of ids/specs that we're
         // looking at now.
         size_t i = method->specs - methodsSpecs;
-        for ( ; methodIds[i] != jsid::voidId(); ++i) {
+        for ( ; methodIds[i] != JSID_VOID; ++i) {
           if (((flags & JSITER_HIDDEN) ||
                (methodsSpecs[i].flags & JSPROP_ENUMERATE)) &&
               !props.append(methodIds[i])) {
@@ -1310,7 +1310,7 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
         // Set i to be the index into our full list of ids/specs that we're
         // looking at now.
         size_t i = constant->specs - nativeProperties->constantSpecs;
-        for ( ; nativeProperties->constantIds[i] != jsid::voidId(); ++i) {
+        for ( ; nativeProperties->constantIds[i] != JSID_VOID; ++i) {
           if (!props.append(nativeProperties->constantIds[i])) {
             return false;
           }

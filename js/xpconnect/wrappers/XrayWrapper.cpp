@@ -1648,7 +1648,7 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
                                                AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, jsid::voidId());
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
@@ -1675,7 +1675,7 @@ bool
 XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsigned flags,
                                      AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, jsid::voidId());
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     if (!AccessCheck::wrapperSubsumes(wrapper)) {
         JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
         return false;
@@ -1768,7 +1768,7 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::call(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
-    assertEnteredPolicy(cx, wrapper, jsid::voidId());
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::call(cx, wrapper, args, Base::singleton);
 }
 
@@ -1776,7 +1776,7 @@ template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::construct(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
-    assertEnteredPolicy(cx, wrapper, jsid::voidId());
+    assertEnteredPolicy(cx, wrapper, JSID_VOID);
     return Traits::construct(cx, wrapper, args, Base::singleton);
 }
 
