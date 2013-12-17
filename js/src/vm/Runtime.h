@@ -863,11 +863,19 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     void addCompilationThread() {
+#ifdef JS_WORKER_THREADS
         numCompilationThreads++;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
     }
     void removeCompilationThread() {
+#ifdef JS_WORKER_THREADS
         JS_ASSERT(numCompilationThreads);
         numCompilationThreads--;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
     }
 
     bool compilationThreadsPresent() const {
@@ -1619,9 +1627,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Tables of strings that are pre-allocated in the atomsCompartment. */
     js::StaticStrings   staticStrings;
 
-    JSWrapObjectCallback                   wrapObjectCallback;
-    JSSameCompartmentWrapObjectCallback    sameCompartmentWrapObjectCallback;
-    JSPreWrapCallback                      preWrapObjectCallback;
+    const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
     // Table of bytecode and other data that may be shared across scripts

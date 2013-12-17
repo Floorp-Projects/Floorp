@@ -221,8 +221,7 @@ struct IonScript
     uint32_t safepointsStart_;
     uint32_t safepointsSize_;
 
-    // Number of STACK_SLOT_SIZE-length slots this function reserves on the
-    // stack.
+    // Number of bytes this function reserves on the stack.
     uint32_t frameSlots_;
 
     // Frame size is the value that can be added to the StackPointer along
