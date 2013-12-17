@@ -12,9 +12,6 @@
 namespace js {
 namespace jit {
 
-static const ptrdiff_t STACK_SLOT_SIZE       = 8;
-static const uint32_t DOUBLE_STACK_ALIGNMENT   = 1;
-
 // In bytes: slots needed for potential memory->memory move spills.
 //   +8 for cycles
 //   +8 for gpr spills
@@ -26,9 +23,6 @@ static const uint32_t ShadowStackSpace = 32;
 #else
 static const uint32_t ShadowStackSpace = 0;
 #endif
-
-// An offset that is illegal for a local variable's stack allocation.
-static const int32_t INVALID_STACK_SLOT       = -1;
 
 class Registers {
   public:

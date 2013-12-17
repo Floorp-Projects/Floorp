@@ -33,6 +33,7 @@ namespace dom {
 HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
+  SetHasWeirdParserInsertionMode();
 }
 
 nsresult

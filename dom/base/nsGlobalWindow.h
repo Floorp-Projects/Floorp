@@ -104,6 +104,7 @@ struct nsRect;
 class nsWindowSizes;
 
 namespace mozilla {
+class Selection;
 namespace dom {
 class BarProp;
 class Function;
@@ -846,7 +847,7 @@ public:
             mozilla::ErrorResult& aError);
   nsIDOMStorage* GetSessionStorage(mozilla::ErrorResult& aError);
   nsIDOMStorage* GetLocalStorage(mozilla::ErrorResult& aError);
-  nsISelection* GetSelection(mozilla::ErrorResult& aError);
+  mozilla::Selection* GetSelection(mozilla::ErrorResult& aError);
   mozilla::dom::indexedDB::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
