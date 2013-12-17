@@ -6,8 +6,6 @@
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
-XPIDL_MODULE = 'dom_speakermanager'
-
 EXPORTS += [
     'SpeakerManager.h',
     'SpeakerManagerService.h',

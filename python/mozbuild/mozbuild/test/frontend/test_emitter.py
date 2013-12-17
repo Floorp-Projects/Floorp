@@ -427,6 +427,13 @@ class TestEmitterBasic(unittest.TestCase):
             reader = self.reader('jar-manifests-multiple-files')
             self.read_topsrcdir(reader)
 
+    def test_xpidl_module_no_sources(self):
+        """XPIDL_MODULE without XPIDL_SOURCES should be rejected."""
+        with self.assertRaisesRegexp(SandboxValidationError, 'XPIDL_MODULE '
+            'cannot be defined'):
+            reader = self.reader('xpidl-module-no-sources')
+            self.read_topsrcdir(reader)
+
 
 if __name__ == '__main__':
     main()
