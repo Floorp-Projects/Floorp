@@ -5928,7 +5928,7 @@ main(int argc, char **argv, char **envp)
 #endif
 
     size_t availMem = op.getIntOption("available-memory");
-    if (availMem >= 0)
+    if (availMem > 0)
         JS_SetGCParametersBasedOnAvailableMemory(rt, availMem);
 
     /* Set the initial counter to 1 so the principal will never be destroyed. */
