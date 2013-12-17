@@ -485,8 +485,8 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     cx = jsdthreadstate->context;
     JS_ASSERT(cx);
 
-    exceptionState = JS_SaveExceptionState(cx);
     JS::RootedValue v(cx, val);
+    exceptionState = JS_SaveExceptionState(cx);
     retval = JS::ToString(cx, v);
     JS_RestoreExceptionState(cx, exceptionState);
 
