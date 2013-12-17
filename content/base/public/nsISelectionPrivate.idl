@@ -28,7 +28,7 @@ template<class T> class nsTArray;
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
 
-[scriptable, builtinclass, uuid(3ede44eb-2df8-41de-ab79-6f3dbd10090b)]
+[scriptable, builtinclass, uuid(fb883d4c-9ddc-423c-b3e2-bb8b93a271cd)]
 interface nsISelectionPrivate : nsISelection
  {
     const short ENDOFPRECEDINGLINE=0;
@@ -155,5 +155,12 @@ interface nsISelectionPrivate : nsISelection
                                            in boolean aIsSynchronous,
                                            in ScrollAxis aVertical,
                                            in ScrollAxis aHorizontal);
+
+    /**
+     * Modifies the cursor Bidi level after a change in keyboard direction
+     * @param langRTL is PR_TRUE if the new language is right-to-left or
+     *                PR_FALSE if the new language is left-to-right.
+     */
+    [noscript] void selectionLanguageChange(in boolean langRTL);
 };
 
