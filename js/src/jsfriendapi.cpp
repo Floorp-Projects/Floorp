@@ -647,6 +647,17 @@ js::AreGCGrayBitsValid(JSRuntime *rt)
     return rt->gcGrayBitsValid;
 }
 
+JS_FRIEND_API(bool)
+js::ZoneGlobalsAreAllGray(JS::Zone *zone)
+{
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        JSObject *obj = comp->maybeGlobal();
+        if (!obj || !JS::GCThingIsMarkedGray(obj))
+            return false;
+    }
+    return true;
+}
+
 JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void *thing)
 {
