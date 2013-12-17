@@ -220,6 +220,11 @@ for k,v in vars(args).items():
 if args.tag and not args.buildcommand:
     args.buildcommand="build.%s" % args.tag
 
+if args.jobs is not None:
+    data['jobs'] = args.jobs
+if not data.get('jobs'):
+    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1'])
+
 if args.buildcommand:
     data['buildcommand'] = args.buildcommand
 elif 'BUILD' in os.environ:
@@ -232,6 +237,9 @@ if 'ANALYZED_OBJDIR' in os.environ:
 
 if 'SOURCE' in os.environ:
     data['source'] = os.environ['SOURCE']
+if not data.get('source') and data.get('sixgill_bin'):
+    path = subprocess.check_output(['sh', '-c', data['sixgill_bin'] + '/xdbkeys file_source.xdb | grep jsapi.cpp'])
+    data['source'] = path.replace("/js/src/jsapi.cpp", "")
 
 steps = [ 'dbs',
           'callgraph',
