@@ -866,14 +866,14 @@ class CallInfo
         fun_ = callInfo.fun();
         thisArg_ = callInfo.thisArg();
 
-        if (!args_.append(callInfo.argv().begin(), callInfo.argv().end()))
+        if (!args_.appendAll(callInfo.argv()))
             return false;
 
         return true;
     }
 
     bool init(MBasicBlock *current, uint32_t argc) {
-        JS_ASSERT(args_.length() == 0);
+        JS_ASSERT(args_.empty());
 
         // Get the arguments in the right order
         if (!args_.reserve(argc))
@@ -909,8 +909,8 @@ class CallInfo
     }
 
     void setArgs(MDefinitionVector *args) {
-        JS_ASSERT(args_.length() == 0);
-        args_.append(args->begin(), args->end());
+        JS_ASSERT(args_.empty());
+        args_.appendAll(*args);
     }
 
     MDefinitionVector &argv() {

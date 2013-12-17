@@ -54,7 +54,7 @@ TypeRepresentationSetBuilder::insert(TypeRepresentation *typeRepr)
     if (invalid_)
         return true;
 
-    if (entries_.length() == 0)
+    if (entries_.empty())
         return entries_.append(typeRepr);
 
     // Check that this new type repr is of the same basic kind as the

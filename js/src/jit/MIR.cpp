@@ -795,7 +795,7 @@ MPhi::removeOperand(size_t index)
 MDefinition *
 MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
-    JS_ASSERT(inputs_.length() != 0);
+    JS_ASSERT(!inputs_.empty());
 
     MDefinition *first = getOperand(0);
 
