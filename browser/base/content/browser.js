@@ -4257,10 +4257,10 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   }
 
 
-  let addToPanel = popup.querySelector(".customize-context-addToPanel");
+  let moveToPanel = popup.querySelector(".customize-context-moveToPanel");
   let removeFromToolbar = popup.querySelector(".customize-context-removeFromToolbar");
-  // View -> Toolbars menu doesn't have the addToPanel or removeFromToolbar items.
-  if (!addToPanel || !removeFromToolbar) {
+  // View -> Toolbars menu doesn't have the moveToPanel or removeFromToolbar items.
+  if (!moveToPanel || !removeFromToolbar) {
     return;
   }
 
@@ -4287,10 +4287,10 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
   let movable = toolbarItem && toolbarItem.parentNode &&
                 CustomizableUI.isWidgetRemovable(toolbarItem);
   if (movable) {
-    addToPanel.removeAttribute("disabled");
+    moveToPanel.removeAttribute("disabled");
     removeFromToolbar.removeAttribute("disabled");
   } else {
-    addToPanel.setAttribute("disabled", true);
+    moveToPanel.setAttribute("disabled", true);
     removeFromToolbar.setAttribute("disabled", true);
   }
 }
