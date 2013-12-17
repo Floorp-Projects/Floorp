@@ -17,22 +17,6 @@ function checkStatusValue(payload, expectedValue) {
 
 let tests = [
 {
-  info: "Check account verification",
-  event: "verified",
-  data: {
-    email: "foo@example.com",
-    uid: "1234@lcip.org",
-    assertion: "foobar",
-    sessionToken: "dead",
-    kA: "beef",
-    kB: "cafe",
-  },
-  payloadType: "message",
-  validateResponse: function(payload) {
-    return checkStatusValue(payload, "verified");
-  },
-},
-{
   info: "Check account log in",
   event: "login",
   data: {
