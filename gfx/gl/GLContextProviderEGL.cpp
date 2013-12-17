@@ -539,7 +539,7 @@ public:
 
     bool BindTex2DOffscreen(GLContext *aOffscreen);
     void UnbindTex2DOffscreen(GLContext *aOffscreen);
-    bool ResizeOffscreen(const gfx::IntSize& aNewSize);
+    bool ResizeOffscreen(const gfxIntSize& aNewSize);
     void BindOffscreenFramebuffer();
 
     static already_AddRefed<GLContextEGL>
@@ -613,9 +613,9 @@ protected:
 };
 
 bool
-GLContextEGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
+GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 {
-    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
+	return ResizeScreenBuffer(aNewSize);
 }
 
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {

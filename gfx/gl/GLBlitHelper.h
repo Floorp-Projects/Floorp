@@ -11,7 +11,8 @@
 #include "GLConsts.h"
 #include "nsSize.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/gfx/Point.h"
+
+struct nsIntSize;
 
 namespace mozilla {
 namespace gl {
@@ -25,7 +26,7 @@ class GLContext;
  * See mozilla::gl::CreateTexture.
  */
 GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                 const gfx::IntSize& aSize);
+                                 const gfxIntSize& aSize);
 
 /**
  * Helper function that creates a 2D texture aSize.width x aSize.height with
@@ -38,7 +39,7 @@ GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
  *    GL_TEXTURE_WRAP_T = GL_CLAMP_TO_EDGE
  */
 GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
-                     GLenum aType, const gfx::IntSize& aSize);
+                     GLenum aType, const gfxIntSize& aSize);
 
 /**
  * Helper function to create, potentially, multisample render buffers suitable
@@ -46,7 +47,7 @@ GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
  * storage specified by aFormat. returns GL render buffer object id.
  */
 GLuint CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
-                          const gfx::IntSize& aSize);
+                          const gfxIntSize& aSize);
 
 /**
  * Helper function to create, potentially, multisample render buffers suitable
@@ -55,7 +56,7 @@ GLuint CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
  * aColorMSRB, aDepthRB, and aStencilRB
  */
 void CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                     const gfx::IntSize& aSize, bool aMultisample,
+                                     const gfxIntSize& aSize, bool aMultisample,
                                      GLuint* aColorMSRB, GLuint* aDepthRB,
                                      GLuint* aStencilRB);
 
@@ -76,7 +77,7 @@ class GLBlitHelper MOZ_FINAL
     void UseBlitProgram();
     void SetBlitFramebufferForDestTexture(GLuint aTexture);
 
-    bool UseTexQuadProgram(GLenum target, const gfx::IntSize& srcSize);
+    bool UseTexQuadProgram(GLenum target, const nsIntSize& srcSize);
     bool InitTexQuadProgram(GLenum target = LOCAL_GL_TEXTURE_2D);
     void DeleteTexBlitProgram();
 
@@ -89,23 +90,23 @@ public:
     // then you'll need the framebuffer_blit extensions to use
     // the first BlitFramebufferToFramebuffer.
     void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                      const gfx::IntSize& srcSize,
-                                      const gfx::IntSize& destSize);
+                                      const nsIntSize& srcSize,
+                                      const nsIntSize& destSize);
     void BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                      const gfx::IntSize& srcSize,
-                                      const gfx::IntSize& destSize,
+                                      const nsIntSize& srcSize,
+                                      const nsIntSize& destSize,
                                       const GLFormats& srcFormats);
     void BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
-                                  const gfx::IntSize& srcSize,
-                                  const gfx::IntSize& destSize,
+                                  const nsIntSize& srcSize,
+                                  const nsIntSize& destSize,
                                   GLenum srcTarget = LOCAL_GL_TEXTURE_2D);
     void BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
-                                  const gfx::IntSize& srcSize,
-                                  const gfx::IntSize& destSize,
+                                  const nsIntSize& srcSize,
+                                  const nsIntSize& destSize,
                                   GLenum destTarget = LOCAL_GL_TEXTURE_2D);
     void BlitTextureToTexture(GLuint srcTex, GLuint destTex,
-                              const gfx::IntSize& srcSize,
-                              const gfx::IntSize& destSize,
+                              const nsIntSize& srcSize,
+                              const nsIntSize& destSize,
                               GLenum srcTarget = LOCAL_GL_TEXTURE_2D,
                               GLenum destTarget = LOCAL_GL_TEXTURE_2D);
 };

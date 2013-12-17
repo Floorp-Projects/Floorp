@@ -159,17 +159,21 @@ CanvasLayerD3D10::UpdateSurface()
           return;
         }
 
-        gfx::DataSourceSurface* frameData = shareSurf->GetData();
-        // Scope for DrawTarget, so it's destroyed before Unmap.
+        gfxImageSurface* frameData = shareSurf->GetData();
+        // Scope for gfxContext, so it's destroyed before Unmap.
         {
-          RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
-                                                                   (uint8_t*)map.pData,
-                                                                   shareSurf->Size(),
-                                                                   map.RowPitch,
-                                                                   FORMAT_B8G8R8A8);
-          Rect drawRect(0, 0, shareSurf->Size().width, shareSurf->Size().height);
-          dt->DrawSurface(frameData, drawRect, drawRect);
-          dt->Flush();
+          nsRefPtr<gfxImageSurface> mapSurf = 
+              new gfxImageSurface((uint8_t*)map.pData,
+                                  shareSurf->Size(),
+                                  map.RowPitch,
+                                  gfxImageFormatARGB32);
+
+          nsRefPtr<gfxContext> ctx = new gfxContext(mapSurf);
+          ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+          ctx->SetSource(frameData);
+          ctx->Paint();
+
+          mapSurf->Flush();
         }
 
         mTexture->Unmap(0);
