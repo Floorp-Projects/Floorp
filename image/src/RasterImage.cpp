@@ -1723,12 +1723,13 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
   if (NS_FAILED(aStatus))
     finalStatus = aStatus;
 
-  nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
-  statusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
-
   // We just recorded OnStopRequest; we need to inform our listeners.
   {
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
+
+    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
+    statusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
+
     FinishedSomeDecoding();
   }
 
