@@ -126,4 +126,65 @@ public class JSONWebTokenUtils {
     long durationInMilliseconds = DEFAULT_ASSERTION_DURATION_IN_MILLISECONDS;
     return createAssertion(privateKeyToSignWith, certificate, audience, issuer, issuedAt, durationInMilliseconds);
   }
+
+  /**
+   * For debugging only!
+   *
+   * @param input certificate to dump.
+   * @return true if the certificate is well-formed.
+   */
+  public static boolean dumpCertificate(String input) {
+    try {
+      String[] parts = input.split("\\.");
+      if (parts.length != 3) {
+        throw new IllegalArgumentException("certificate must have three parts");
+      }
+      String cHeader = new String(Base64.decodeBase64(parts[0]));
+      String cPayload = new String(Base64.decodeBase64(parts[1]));
+      String cSignature = Utils.byte2Hex(Base64.decodeBase64(parts[2]));
+      System.out.println("certificate header:    " + cHeader);
+      System.out.println("certificate payload:   " + cPayload);
+      System.out.println("certificate signature: " + cSignature);
+      return true;
+    } catch (Exception e) {
+      System.out.println("Malformed certificate -- got exception trying to dump contents.");
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+  /**
+   * For debugging only!
+   *
+   * @param input assertion to dump.
+   * @return true if the assertion is well-formed.
+   */
+  public static boolean dumpAssertion(String input) {
+    try {
+      String[] parts = input.split("~");
+      if (parts.length != 2) {
+        throw new IllegalArgumentException("input must have two parts");
+      }
+      String certificate = parts[0];
+      String assertion = parts[1];
+      parts = assertion.split("\\.");
+      if (parts.length != 3) {
+        throw new IllegalArgumentException("assertion must have three parts");
+      }
+      String aHeader = new String(Base64.decodeBase64(parts[0]));
+      String aPayload = new String(Base64.decodeBase64(parts[1]));
+      String aSignature = Utils.byte2Hex(Base64.decodeBase64(parts[2]));
+      // We do all the assertion parsing *before* dumping the certificate in
+      // case there's a malformed assertion.
+      dumpCertificate(certificate);
+      System.out.println("assertion   header:    " + aHeader);
+      System.out.println("assertion   payload:   " + aPayload);
+      System.out.println("assertion   signature: " + aSignature);
+      return true;
+    } catch (Exception e) {
+      System.out.println("Malformed assertion -- got exception trying to dump contents.");
+      e.printStackTrace();
+      return false;
+    }
+  }
 }
