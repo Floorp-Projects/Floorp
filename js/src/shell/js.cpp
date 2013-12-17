@@ -5852,6 +5852,8 @@ main(int argc, char **argv, char **envp)
 #ifdef JSGC_GENERATIONAL
         || !op.addBoolOption('\0', "no-ggc", "Disable Generational GC")
 #endif
+        || !op.addIntOption('\0', "available-memory", "SIZE",
+                            "Select GC settings based on available memory (MB)", 0)
     )
     {
         return EXIT_FAILURE;
@@ -5924,6 +5926,10 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption("no-ggc"))
         JS::DisableGenerationalGC(rt);
 #endif
+
+    size_t availMem = op.getIntOption("available-memory");
+    if (availMem >= 0)
+        JS_SetGCParametersBasedOnAvailableMemory(rt, availMem);
 
     /* Set the initial counter to 1 so the principal will never be destroyed. */
     JSPrincipals shellTrustedPrincipals;
