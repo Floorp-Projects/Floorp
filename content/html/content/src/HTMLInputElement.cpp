@@ -5088,7 +5088,7 @@ HTMLInputElement::SetRangeText(const nsAString& aReplacement, uint32_t aStart,
       }
   }
 
-  if (aStart < aEnd) {
+  if (aStart <= aEnd) {
     value.Replace(aStart, aEnd - aStart, aReplacement);
     SetValueInternal(value, false, false);
   }
