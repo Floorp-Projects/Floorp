@@ -7,7 +7,6 @@ MOCHITEST_FILES := \
   test_collapseToStartEnd.html.json \
   test_extend.html.json \
   test_getSelection.html.json \
-  test_interfaces.html.json \
   test_removeAllRanges.html.json \
   test_selectAllChildren.html.json \
   $(NULL)
