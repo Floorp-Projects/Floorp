@@ -373,18 +373,6 @@ public:
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
   /**
-   * Determines if this item is scrolled by content-document display-port
-   * scrolling. aAnimatedGeometryRoot will be set to the animated geometry root
-   * of the item. This may not necessarily correspond to the animated geometry
-   * root of the item's underlying frame.
-   * If specified, aOverrideAnimatedGeometryRoot will be treated as the active
-   * scrolled root.
-   */
-  bool IsFixedItem(nsDisplayItem* aItem,
-                   const nsIFrame** aAnimatedGeometryRoot = nullptr,
-                   const nsIFrame* aOverrideAnimatedGeometryScrolledRoot = nullptr);
-
-  /**
    * @return true if images have been set to decode synchronously.
    */
   bool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
