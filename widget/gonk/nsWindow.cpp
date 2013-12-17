@@ -176,8 +176,9 @@ nsWindow::nsWindow()
         sUsingOMTC = ShouldUseOffMainThreadCompositing();
 
         property_get("ro.display.colorfill", propValue, "0");
-        sUsingHwc = Preferences::GetBool("layers.composer2d.enabled",
-                                         atoi(propValue) == 1);
+
+        //Update sUsingHwc whenever layers.composer2d.enabled changes
+        Preferences::AddBoolVarCache(&sUsingHwc, "layers.composer2d.enabled");
 
         if (sUsingOMTC) {
           sOMTCSurface = new gfxImageSurface(gfxIntSize(1, 1),
