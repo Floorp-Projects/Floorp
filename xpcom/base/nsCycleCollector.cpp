@@ -71,7 +71,30 @@
 //
 // The second problem is that objects in the graph can be changed, say by
 // being addrefed or released, or by having a field updated, after the object
-// has been added to the graph. This will be addressed in bug 937818.
+// has been added to the graph. The problem is that ICC can miss a newly
+// created reference to an object, and end up unlinking an object that is
+// actually alive.
+//
+// The basic idea of the solution, from "An on-the-fly Reference Counting
+// Garbage Collector for Java" by Levanoni and Petrank, is to notice if an
+// object has had an additional reference to it created during the collection,
+// and if so, don't collect it during the current collection. This avoids having
+// to rerun the scan as in Bacon & Rajan 2001.
+//
+// For cycle collected C++ objects, we modify AddRef to place the object in
+// the purple buffer, in addition to Release. Then, in the CC, we treat any
+// objects in the purple buffer as being alive, after graph building has
+// completed. Because they are in the purple buffer, they will be suspected
+// in the next CC, so there's no danger of leaks. This is imprecise, because
+// we will treat as live an object that has been Released but not AddRefed
+// during graph building, but that's probably rare enough that the additional
+// bookkeeping overhead is not worthwhile.
+//
+// For JS objects, the cycle collector is only looking at gray objects. If a
+// gray object is touched during ICC, it will be made black by UnmarkGray.
+// Thus, if a JS object has become black during the ICC, we treat it as live.
+// Merged JS zones have to be handled specially: we scan all zone globals.
+// If any are black, we treat the zone as being black.
 
 
 // Safety
