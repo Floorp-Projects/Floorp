@@ -103,9 +103,7 @@ function getStorageEntryCount(device, goon) {
 }
 
 function get_cache_for_private_window () {
-  let win = OpenBrowserWindow({private: true});
-  win.addEventListener("load", function () {
-    win.removeEventListener("load", arguments.callee, false);
+  let win = whenNewWindowLoaded({private: true}, function() {
 
     executeSoon(function() {
 
@@ -135,5 +133,5 @@ function get_cache_for_private_window () {
         });
       }, true);
     });
-  }, false);
+  });
 }
