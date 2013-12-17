@@ -40,6 +40,18 @@ XPCOMUtils.defineLazyGetter(this, "sizeSocialPanelToContent", function() {
   return tmp.sizeSocialPanelToContent;
 });
 
+XPCOMUtils.defineLazyGetter(this, "CreateSocialStatusWidget", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/Social.jsm", tmp);
+  return tmp.CreateSocialStatusWidget;
+});
+
+XPCOMUtils.defineLazyGetter(this, "CreateSocialMarkWidget", function() {
+  let tmp = {};
+  Cu.import("resource:///modules/Social.jsm", tmp);
+  return tmp.CreateSocialMarkWidget;
+});
+
 SocialUI = {
   // Called on delayed startup to initialize the UI
   init: function SocialUI_init() {
@@ -1298,9 +1310,17 @@ SocialSidebar = {
 //
 // On startup, we create the button widgets of any enabled provider.
 // CustomizableUI handles placement and persistence of placement.
-function ToolbarHelper(type, createButtonFn) {
+function ToolbarHelper(type, createButtonFn, listener) {
   this._createButton = createButtonFn;
   this._type = type;
+
+  if (listener) {
+    CustomizableUI.addListener(listener);
+    // remove this listener on window close
+    window.addEventListener("unload", () => {
+      CustomizableUI.removeListener(listener);
+    });
+  }
 }
 
 ToolbarHelper.prototype = {
@@ -1330,13 +1350,34 @@ ToolbarHelper.prototype = {
     // as a part of the UI (otherwise they belong in the palette).
     for (let provider of Social.providers) {
       let id = this.idFromOrigin(provider.origin);
-      let widget = CustomizableUI.getWidget(id);
-      // The widget is only null if we've created then destroyed the widget.
-      // Once we've actually called createWidget the provider will be set to
-      // PROVIDER_API.
-      if (!widget || widget.provider != CustomizableUI.PROVIDER_API)
-        this._createButton(provider);
+      this._createButton(id, provider);
     }
+  }
+}
+
+let SocialStatusWidgetListener = {
+  _getNodeOrigin: function(aWidgetId) {
+    // we rely on the button id being the same as the widget.
+    let node = document.getElementById(aWidgetId);
+    if (!node)
+      return null
+    if (!node.classList.contains("social-status-button"))
+      return null
+    return node.getAttribute("origin");
+  },
+  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
+    let origin = this._getNodeOrigin(aWidgetId);
+    if (origin)
+      SocialStatus.updateButton(origin);
+  },
+  onWidgetRemoved: function(aWidgetId, aPrevArea) {
+    let origin = this._getNodeOrigin(aWidgetId);
+    if (!origin)
+      return;
+    // When a widget is demoted to the palette ('removed'), it's visual
+    // style should change.
+    SocialStatus.updateButton(origin);
+    SocialStatus._removeFrame(origin);
   }
 }
 
@@ -1372,7 +1413,9 @@ SocialStatus = {
 
   get _toolbarHelper() {
     delete this._toolbarHelper;
-    this._toolbarHelper = new ToolbarHelper("social-status-button", this._createButton.bind(this));
+    this._toolbarHelper = new ToolbarHelper("social-status-button",
+                                            CreateSocialStatusWidget,
+                                            SocialStatusWidgetListener);
     return this._toolbarHelper;
   },
 
@@ -1382,46 +1425,25 @@ SocialStatus = {
     return this._dynamicResizer;
   },
 
-  _createButton: function(provider) {
-    if (!provider.statusURL)
-      return;
-    let aId = this._toolbarHelper.idFromOrigin(provider.origin);
-    CustomizableUI.createWidget({
-      id: aId,
-      type: 'custom',
-      removable: true,
-      defaultArea: CustomizableUI.AREA_NAVBAR,
-      onBuild: function(document) {
-        let window = document.defaultView;
-
-        let node = document.createElement('toolbarbutton');
-
-        node.id = this.id;
-        node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-status-button');
-        node.setAttribute('type', "badged");
-        node.style.listStyleImage = "url(" + provider.iconURL + ")";
-        node.setAttribute("origin", provider.origin);
-
-        node.setAttribute("label", provider.name);
-        node.setAttribute("tooltiptext", provider.name);
-        node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
-        return node;
-      }
-    });
-  },
-
   // status panels are one-per button per-process, we swap the docshells between
   // windows when necessary
-  _attachNotificatonPanel: function(aButton, provider) {
-    let panel = document.getElementById("social-notification-panel");
-    panel.hidden = !SocialUI.enabled;
+  _attachNotificatonPanel: function(aParent, aButton, provider) {
+    aParent.hidden = !SocialUI.enabled;
     let notificationFrameId = "social-status-" + provider.origin;
     let frame = document.getElementById(notificationFrameId);
+
+    // If the button was customized to a new location, we we'll destroy the
+    // iframe and start fresh.
+    if (frame && frame.parentNode != aParent) {
+      SharedFrame.forgetGroup(frame.id);
+      frame.parentNode.removeChild(frame);
+      frame = null;
+    }
 
     if (!frame) {
       frame = SharedFrame.createFrame(
         notificationFrameId, /* frame name */
-        panel, /* parent */
+        aParent, /* parent */
         {
           "type": "content",
           "mozbrowser": "true",
@@ -1429,6 +1451,7 @@ SocialStatus = {
           "id": notificationFrameId,
           "tooltip": "aHTMLTooltip",
           "context": "contentAreaContextMenu",
+          "flex": "1",
 
           // work around bug 793057 - by making the panel roughly the final size
           // we are more likely to have the anchor in the correct position.
@@ -1455,29 +1478,32 @@ SocialStatus = {
   updateButton: function(origin) {
     if (!Social.allowMultipleWorkers)
       return;
-    let provider = Social._getProviderFromOrigin(origin);
-    let button = document.getElementById(this._toolbarHelper.idFromOrigin(provider.origin));
+    let id = this._toolbarHelper.idFromOrigin(origin);
+    let widget = CustomizableUI.getWidget(id);
+    if (!widget)
+      return;
+    let button = widget.forWindow(window).node;
     if (button) {
       // we only grab the first notification, ignore all others
+      let place = CustomizableUI.getPlaceForItem(button);
+      let provider = Social._getProviderFromOrigin(origin);
       let icons = provider.ambientNotificationIcons;
       let iconNames = Object.keys(icons);
       let notif = icons[iconNames[0]];
 
       // The image and tooltip need to be updated for both
       // ambient notification and profile changes.
-      let iconURL, tooltiptext;
-      if (notif) {
-        iconURL = notif.iconURL;
-        tooltiptext = notif.label;
-      }
-      button.setAttribute("image", iconURL || provider.iconURL);
-      button.setAttribute("tooltiptext", tooltiptext || provider.name);
-
-      if (!notif) {
+      let iconURL = provider.icon32URL || provider.iconURL;
+      let tooltiptext;
+      if (!notif || place == "palette") {
+        button.style.listStyleImage = "url(" + iconURL + ")";
         button.setAttribute("badge", "");
         button.setAttribute("aria-label", "");
+        button.setAttribute("tooltiptext", provider.name);
         return;
       }
+      button.style.listStyleImage = "url(" + (notif.iconURL || iconURL) + ")";
+      button.setAttribute("tooltiptext", notif.label || provider.name);
 
       let badge = notif.counter || "";
       button.setAttribute("badge", badge);
@@ -1496,9 +1522,24 @@ SocialStatus = {
     // attach our notification panel if necessary
     let origin = aToolbarButton.getAttribute("origin");
     let provider = Social._getProviderFromOrigin(origin);
-    this._attachNotificatonPanel(aToolbarButton, provider);
 
-    let panel = document.getElementById("social-notification-panel");
+    // if we're a slice in the hamburger, use that panel instead
+    let widgetGroup = CustomizableUI.getWidget(aToolbarButton.getAttribute("id"));
+    let widget = widgetGroup.forWindow(window);
+    let panel, showingEvent, hidingEvent;
+    let inMenuPanel = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
+    if (inMenuPanel) {
+      panel = document.getElementById("PanelUI-socialapi");
+      this._attachNotificatonPanel(panel, aToolbarButton, provider);
+      widget.node.setAttribute("noautoclose", "true");
+      showingEvent = "ViewShowing";
+      hidingEvent = "ViewHiding";
+    } else {
+      panel = document.getElementById("social-notification-panel");
+      this._attachNotificatonPanel(panel, aToolbarButton, provider);
+      showingEvent = "popupshown";
+      hidingEvent = "popuphidden";
+    }
     let notificationFrameId = aToolbarButton.getAttribute("notificationFrameId");
     let notificationFrame = document.getElementById(notificationFrameId);
 
@@ -1519,47 +1560,56 @@ SocialStatus = {
       notificationFrame.contentDocument.documentElement.dispatchEvent(evt);
     }
 
-    let dynamicResizer = this._dynamicResizer;
-    panel.addEventListener("popuphidden", function onpopuphiding() {
-      panel.removeEventListener("popuphidden", onpopuphiding);
+    // we only use a dynamic resizer when we're located the toolbar.
+    let dynamicResizer = inMenuPanel ? null : this._dynamicResizer;
+    panel.addEventListener(hidingEvent, function onpopuphiding() {
+      panel.removeEventListener(hidingEvent, onpopuphiding);
       aToolbarButton.removeAttribute("open");
-      dynamicResizer.stop();
+      if (dynamicResizer)
+        dynamicResizer.stop();
       notificationFrame.docShell.isActive = false;
       dispatchPanelEvent("socialFrameHide");
     });
 
-    panel.addEventListener("popupshown", function onpopupshown() {
-      panel.removeEventListener("popupshown", onpopupshown);
+    panel.addEventListener(showingEvent, function onpopupshown() {
+      panel.removeEventListener(showingEvent, onpopupshown);
       // This attribute is needed on both the button and the
       // containing toolbaritem since the buttons on OS X have
       // moz-appearance:none, while their container gets
       // moz-appearance:toolbarbutton due to the way that toolbar buttons
       // get combined on OS X.
-      aToolbarButton.setAttribute("open", "true");
-      notificationFrame.docShell.isActive = true;
-      notificationFrame.docShell.isAppTab = true;
-      if (notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
-        dynamicResizer.start(panel, notificationFrame);
+      let initFrameShow = () => {
+        notificationFrame.docShell.isActive = true;
+        notificationFrame.docShell.isAppTab = true;
+        if (dynamicResizer)
+          dynamicResizer.start(panel, notificationFrame);
         dispatchPanelEvent("socialFrameShow");
+      };
+      if (!inMenuPanel)
+        aToolbarButton.setAttribute("open", "true");
+      if (notificationFrame.contentDocument &&
+          notificationFrame.contentDocument.readyState == "complete" && wasAlive) {
+        initFrameShow();
       } else {
         // first time load, wait for load and dispatch after load
         notificationFrame.addEventListener("load", function panelBrowserOnload(e) {
           notificationFrame.removeEventListener("load", panelBrowserOnload, true);
-          dynamicResizer.start(panel, notificationFrame);
-          dispatchPanelEvent("socialFrameShow");
+          initFrameShow();
         }, true);
       }
     });
 
-    let navBar = document.getElementById("nav-bar");
-    let anchor = navBar.getAttribute("mode") == "text" ?
-                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-text") :
-                   document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-badge-container");
-    // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
-    // handling from preventing it being opened in some cases.
-    setTimeout(function() {
-      panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-    }, 0);
+    if (inMenuPanel) {
+      PanelUI.showSubView("PanelUI-socialapi", widget.node,
+                          CustomizableUI.AREA_PANEL);
+    } else {
+      let anchor = document.getAnonymousElementByAttribute(aToolbarButton, "class", "toolbarbutton-badge-container");
+      // Bug 849216 - open the popup in a setTimeout so we avoid the auto-rollup
+      // handling from preventing it being opened in some cases.
+      setTimeout(function() {
+        panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+      }, 0);
+    }
   },
 
   setPanelErrorMessage: function(aNotificationFrame) {
@@ -1663,33 +1713,8 @@ SocialMarks = {
 
   get _toolbarHelper() {
     delete this._toolbarHelper;
-    this._toolbarHelper = new ToolbarHelper("social-mark-button", this._createButton.bind(this));
+    this._toolbarHelper = new ToolbarHelper("social-mark-button", CreateSocialMarkWidget);
     return this._toolbarHelper;
-  },
-
-  _createButton: function(provider) {
-    if (!provider.markURL)
-      return;
-    let aId = this._toolbarHelper.idFromOrigin(provider.origin);
-    CustomizableUI.createWidget({
-      id: aId,
-      type: 'custom',
-      removable: true,
-      defaultArea: CustomizableUI.AREA_NAVBAR,
-      onBuild: function(document) {
-        let window = document.defaultView;
-
-        let node = document.createElement('toolbarbutton');
-
-        node.id = this.id;
-        node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-mark-button');
-        node.setAttribute('type', "socialmark");
-        node.style.listStyleImage = "url(" + provider.iconURL + ")";
-        node.setAttribute("origin", provider.origin);
-
-        return node;
-      }
-    });
   },
 
   markLink: function(aOrigin, aUrl) {
