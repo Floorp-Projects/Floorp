@@ -263,66 +263,13 @@ SocialUI = {
       }
     }
     Social.installProvider(targetDoc, data, function(manifest) {
-      this.doActivation(manifest.origin);
-    }.bind(this));
-  },
-
-  doActivation: function SocialUI_doActivation(origin) {
-    // Keep track of the old provider in case of undo
-    let oldOrigin = Social.provider ? Social.provider.origin : "";
-
-    // Enable the social functionality, and indicate that it was activated
-    Social.activateFromOrigin(origin, function(provider) {
-      // Provider to activate may not have been found
-      if (!provider)
-        return;
-
-      // Show a warning, allow undoing the activation
-      let description = document.getElementById("social-activation-message");
-      let labels = description.getElementsByTagName("label");
-      let uri = Services.io.newURI(provider.origin, null, null)
-      labels[0].setAttribute("value", uri.host);
-      labels[1].setAttribute("onclick", "BrowserOpenAddonsMgr('addons://list/service'); SocialUI.activationPanel.hidePopup();")
-
-      let icon = document.getElementById("social-activation-icon");
-      if (provider.icon64URL || provider.icon32URL) {
-        icon.setAttribute('src', provider.icon64URL || provider.icon32URL);
-        icon.hidden = false;
-      } else {
-        icon.removeAttribute('src');
-        icon.hidden = true;
-      }
-
-      let notificationPanel = SocialUI.activationPanel;
-      // Set the origin being activated and the previously active one, to allow undo
-      notificationPanel.setAttribute("origin", provider.origin);
-      notificationPanel.setAttribute("oldorigin", oldOrigin);
-
-      // Show the panel
-      notificationPanel.hidden = false;
-      // XXX addressed in patch part 2
-      //setTimeout(function () {
-      //  notificationPanel.openPopup(SocialToolbar.button, "bottomcenter topright");
-      //}, 0);
+      Social.activateFromOrigin(manifest.origin);
     });
   },
 
-  undoActivation: function SocialUI_undoActivation() {
-    let origin = this.activationPanel.getAttribute("origin");
-    let oldOrigin = this.activationPanel.getAttribute("oldorigin");
-    Social.deactivateFromOrigin(origin, oldOrigin);
-    this.activationPanel.hidePopup();
-    Social.uninstallProvider(origin);
-  },
-
   showLearnMore: function() {
-    this.activationPanel.hidePopup();
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "social-api";
     openUILinkIn(url, "tab");
-  },
-
-  get activationPanel() {
-    return document.getElementById("socialActivatedNotification");
   },
 
   closeSocialPanelForLinkTraversal: function (target, linkNode) {
