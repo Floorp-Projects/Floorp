@@ -130,6 +130,8 @@ MoveEmitterX86::emit(const MoveResolver &moves)
         // A normal move which is not part of a cycle.
         switch (move.type()) {
           case MoveOp::FLOAT32:
+            emitFloat32Move(from, to);
+            break;
           case MoveOp::DOUBLE:
             emitDoubleMove(from, to);
             break;
@@ -221,6 +223,13 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
     // the original move to continue.
     switch (type) {
       case MoveOp::FLOAT32:
+        if (to.isMemory()) {
+            masm.loadFloat32(toAddress(to), ScratchFloatReg);
+            masm.storeFloat32(ScratchFloatReg, cycleSlot());
+        } else {
+            masm.storeFloat32(to.floatReg(), cycleSlot());
+        }
+        break;
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
             masm.loadDouble(toAddress(to), ScratchFloatReg);
@@ -248,6 +257,13 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
     // saved value of B, to A.
     switch (type) {
       case MoveOp::FLOAT32:
+        if (to.isMemory()) {
+            masm.loadFloat32(cycleSlot(), ScratchFloatReg);
+            masm.storeFloat32(ScratchFloatReg, toAddress(to));
+        } else {
+            masm.loadFloat32(cycleSlot(), to.floatReg());
+        }
+        break;
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
             masm.loadDouble(cycleSlot(), ScratchFloatReg);
@@ -309,6 +325,24 @@ MoveEmitterX86::emitGeneralMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
+MoveEmitterX86::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
+{
+    if (from.isFloatReg()) {
+        if (to.isFloatReg())
+            masm.moveFloat32(from.floatReg(), to.floatReg());
+        else
+            masm.storeFloat32(from.floatReg(), toAddress(to));
+    } else if (to.isFloatReg()) {
+        masm.loadFloat32(toAddress(from), to.floatReg());
+    } else {
+        // Memory to memory move.
+        JS_ASSERT(from.isMemory());
+        masm.loadFloat32(toAddress(from), ScratchFloatReg);
+        masm.storeFloat32(ScratchFloatReg, toAddress(to));
+    }
+}
+
+void
 MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
@@ -319,7 +353,7 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
     } else if (to.isFloatReg()) {
         masm.loadDouble(toAddress(from), to.floatReg());
     } else {
-        // Memory to memory float move.
+        // Memory to memory move.
         JS_ASSERT(from.isMemory());
         masm.loadDouble(toAddress(from), ScratchFloatReg);
         masm.storeDouble(ScratchFloatReg, toAddress(to));
