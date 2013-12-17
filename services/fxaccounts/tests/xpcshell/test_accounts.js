@@ -262,7 +262,8 @@ add_test(function test_polling_timeout() {
   });
 });
 
-add_task(function test_getKeys() {
+add_test(function test_getKeys() {
+  do_test_pending();
   let fxa = new MockFxAccounts();
   let user = getTestUser("eusebius");
 
@@ -272,19 +273,21 @@ add_task(function test_getKeys() {
   fxa.setSignedInUser(user).then(() => {
     fxa.getSignedInUser().then((user) => {
       // Before getKeys, we have no keys
-      do_check_eq(!!data.kA, false);
-      do_check_eq(!!data.kB, false);
+      do_check_eq(!!user.kA, false);
+      do_check_eq(!!user.kB, false);
       // And we still have a key-fetch token to use
-      do_check_eq(!!data.keyFetchToken, true);
+      do_check_eq(!!user.keyFetchToken, true);
 
       fxa.internal.getKeys().then(() => {
         fxa.getSignedInUser().then((user) => {
           // Now we should have keys
-          do_check_eq(fxa.internal.isUserEmailVerified(data), true);
-          do_check_eq(!!data.isVerified, true);
-          do_check_eq(data.kA, expandHex("11"));
-          do_check_eq(data.kB, expandHex("66"));
-          do_check_eq(data.keyFetchToken, undefined);
+          do_check_eq(fxa.internal.isUserEmailVerified(user), true);
+          do_check_eq(!!user.isVerified, true);
+          do_check_eq(user.kA, expandHex("11"));
+          do_check_eq(user.kB, expandHex("66"));
+          do_check_eq(user.keyFetchToken, undefined);
+          do_test_finished();
+          run_next_test();
         });
       });
     });
