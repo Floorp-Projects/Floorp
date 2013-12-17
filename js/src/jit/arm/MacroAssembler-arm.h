@@ -1143,22 +1143,22 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // The following functions are exposed for use in platform-shared code.
     void Push(const Register &reg) {
         ma_push(reg);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const Imm32 imm) {
         push(imm);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const ImmWord imm) {
         push(imm);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const ImmPtr imm) {
         Push(ImmWord(uintptr_t(imm.value)));
     }
     void Push(const ImmGCPtr ptr) {
         push(ptr);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const FloatRegister &t) {
         VFPRegister r = VFPRegister(t);
@@ -1176,19 +1176,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void PushWithPadding(const Register &reg, const Imm32 extraSpace) {
         pushWithPadding(reg, extraSpace);
-        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
+        adjustFrame(sizeof(intptr_t) + extraSpace.value);
     }
     void PushWithPadding(const Imm32 imm, const Imm32 extraSpace) {
         pushWithPadding(imm, extraSpace);
-        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
+        adjustFrame(sizeof(intptr_t) + extraSpace.value);
     }
 
     void Pop(const Register &reg) {
         ma_pop(reg);
-        adjustFrame(-STACK_SLOT_SIZE);
+        adjustFrame(-sizeof(intptr_t));
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        JS_ASSERT(args % sizeof(intptr_t) == 0);
         adjustFrame(-args);
     }
     uint32_t framePushed() const {

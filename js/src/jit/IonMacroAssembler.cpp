@@ -243,13 +243,13 @@ void
 MacroAssembler::PushRegsInMask(RegisterSet set)
 {
     int32_t diffF = set.fpus().size() * sizeof(double);
-    int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     // On x86, always use push to push the integer registers, as it's fast
     // on modern hardware and it's a small instruction.
     for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-        diffG -= STACK_SLOT_SIZE;
+        diffG -= sizeof(intptr_t);
         Push(*iter);
     }
 #elif defined(JS_CPU_ARM)
@@ -257,21 +257,21 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
         adjustFrame(diffG);
         startDataTransferM(IsStore, StackPointer, DB, WriteBack);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-            diffG -= STACK_SLOT_SIZE;
+            diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
     } else {
         reserveStack(diffG);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-            diffG -= STACK_SLOT_SIZE;
+            diffG -= sizeof(intptr_t);
             storePtr(*iter, Address(StackPointer, diffG));
         }
     }
 #else
     reserveStack(diffG);
     for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-        diffG -= STACK_SLOT_SIZE;
+        diffG -= sizeof(intptr_t);
         storePtr(*iter, Address(StackPointer, diffG));
     }
 #endif
@@ -293,7 +293,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set)
 void
 MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 {
-    int32_t diffG = set.gprs().size() * STACK_SLOT_SIZE;
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
     int32_t diffF = set.fpus().size() * sizeof(double);
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
@@ -322,7 +322,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     // instruction.
     if (ignore.empty(false)) {
         for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); iter++) {
-            diffG -= STACK_SLOT_SIZE;
+            diffG -= sizeof(intptr_t);
             Pop(*iter);
         }
     } else
@@ -331,7 +331,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     if (set.gprs().size() > 1 && ignore.empty(false)) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-            diffG -= STACK_SLOT_SIZE;
+            diffG -= sizeof(intptr_t);
             transferReg(*iter);
         }
         finishDataTransfer();
@@ -340,7 +340,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
 #endif
     {
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-            diffG -= STACK_SLOT_SIZE;
+            diffG -= sizeof(intptr_t);
             if (!ignore.has(*iter))
                 loadPtr(Address(StackPointer, diffG), *iter);
         }

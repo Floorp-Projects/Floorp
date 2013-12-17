@@ -196,7 +196,7 @@ MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
 
     if (dynamicAlignment_) {
         *stackAdjust = stackForCall_
-                     + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,
+                     + ComputeByteAlignment(stackForCall_ + sizeof(intptr_t),
                                             StackAlignment);
     } else {
         *stackAdjust = stackForCall_

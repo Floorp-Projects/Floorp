@@ -32,6 +32,29 @@
 namespace js {
 namespace jit {
 
+// Given a slot index, returns the offset, in bytes, of that slot from an
+// IonJSFrameLayout. Slot distances are uniform across architectures, however,
+// the distance does depend on the size of the frame header.
+static inline int32_t
+OffsetOfFrameSlot(int32_t slot)
+{
+    if (slot <= 0)
+        return -slot;
+    return -(slot * STACK_SLOT_SIZE);
+}
+
+static inline uintptr_t
+ReadFrameSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline double
+ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
 IonFrameIterator::IonFrameIterator(JSContext *cx)
   : current_(cx->mainThread().ionTop),
     type_(IonFrame_Exit),

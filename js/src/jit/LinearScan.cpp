@@ -799,6 +799,16 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
     SlotList *freed;
     if (reg->type() == LDefinition::DOUBLE)
         freed = &finishedDoubleSlots_;
+#if JS_BITS_PER_WORD == 64
+    else if (reg->type() == LDefinition::GENERAL ||
+             reg->type() == LDefinition::OBJECT ||
+             reg->type() == LDefinition::SLOTS)
+        freed = &finishedDoubleSlots_;
+#endif
+#ifdef JS_PUNBOX64
+    else if (reg->type() == LDefinition::BOX)
+        freed = &finishedDoubleSlots_;
+#endif
 #ifdef JS_NUNBOX32
     else if (IsNunbox(reg))
         freed = &finishedNunboxSlots_;
@@ -882,6 +892,16 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
         if (alloc->isStackSlot()) {
             if (mine->type() == LDefinition::DOUBLE)
                 finishedDoubleSlots_.append(interval);
+#if JS_BITS_PER_WORD == 64
+            else if (mine->type() == LDefinition::GENERAL ||
+                     mine->type() == LDefinition::OBJECT ||
+                     mine->type() == LDefinition::SLOTS)
+                finishedDoubleSlots_.append(interval);
+#endif
+#ifdef JS_PUNBOX64
+            else if (mine->type() == LDefinition::BOX)
+                finishedDoubleSlots_.append(interval);
+#endif
             else
                 finishedSlots_.append(interval);
         }
