@@ -53,6 +53,12 @@ ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
     return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
 }
 
+static inline double
+ReadFrameFloat32Slot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(float *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
 static inline int32_t
 ReadFrameInt32Slot(IonJSFrameLayout *fp, int32_t slot)
 {
@@ -1321,11 +1327,6 @@ SnapshotIterator::slotReadable(const Slot &slot)
     }
 }
 
-typedef union {
-    double d;
-    float f;
-} PunDoubleFloat;
-
 Value
 SnapshotIterator::slotValue(const Slot &slot)
 {
@@ -1335,21 +1336,18 @@ SnapshotIterator::slotValue(const Slot &slot)
 
       case SnapshotReader::FLOAT32_REG:
       {
-        PunDoubleFloat pdf;
-        pdf.d = machine_.read(slot.floatReg());
+        union {
+            double d;
+            float f;
+        } pun;
+        pun.d = machine_.read(slot.floatReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
-        float asFloat = pdf.f;
-        return DoubleValue(asFloat);
+        return Float32Value(pun.f);
       }
 
       case SnapshotReader::FLOAT32_STACK:
-      {
-        PunDoubleFloat pdf;
-        pdf.d = ReadFrameDoubleSlot(fp_, slot.stackSlot());
-        float asFloat = pdf.f; // no conversion, see comment above.
-        return DoubleValue(asFloat);
-      }
+        return Float32Value(ReadFrameFloat32Slot(fp_, slot.stackSlot()));
 
       case SnapshotReader::TYPED_REG:
         return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
