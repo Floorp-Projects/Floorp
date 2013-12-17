@@ -1207,6 +1207,7 @@ nsresult
 RasterImage::SetSize(int32_t aWidth, int32_t aHeight, Orientation aOrientation)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mDecodingMonitor.AssertCurrentThreadIn();
 
   if (mError)
     return NS_ERROR_FAILURE;
@@ -1583,10 +1584,8 @@ RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
   // write the data directly to the decoder. (If we haven't gotten the size,
   // we'll queue up the data and write it out when we do.)
   if (!StoringSourceData() && mHasSize) {
-    {
-      rv = WriteToDecoder(aBuffer, aCount, DECODE_SYNC);
-      CONTAINER_ENSURE_SUCCESS(rv);
-    }
+    rv = WriteToDecoder(aBuffer, aCount, DECODE_SYNC);
+    CONTAINER_ENSURE_SUCCESS(rv);
 
     // We're not storing source data, so this data is probably coming straight
     // from the network. In this case, we want to display data as soon as we
@@ -2824,9 +2823,12 @@ RasterImage::DoError()
     return;
   }
 
+  // Calling FinishedSomeDecoding and CurrentStatusTracker requires us to be in
+  // the decoding monitor.
+  ReentrantMonitorAutoEnter lock(mDecodingMonitor);
+
   // If we're mid-decode, shut down the decoder.
   if (mDecoder) {
-    ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     FinishedSomeDecoding(eShutdownIntent_Error);
   }
 
