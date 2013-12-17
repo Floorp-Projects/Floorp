@@ -28,19 +28,19 @@ class StackSlotAllocator
     uint32_t allocateDoubleSlot() {
         if (!doubleSlots.empty())
             return doubleSlots.popCopy();
-        if (height_ % 2 != 0)
-            normalSlots.append(++height_);
-        return height_ += 2;
+        if (height_ % 8 != 0)
+            normalSlots.append(height_ += 4);
+        return height_ += 8;
     }
     uint32_t allocateSlot() {
         if (!normalSlots.empty())
             return normalSlots.popCopy();
         if (!doubleSlots.empty()) {
             uint32_t index = doubleSlots.popCopy();
-            normalSlots.append(index - 1);
+            normalSlots.append(index - 4);
             return index;
         }
-        return ++height_;
+        return height_ += 4;
     }
 
   public:
