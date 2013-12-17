@@ -47,6 +47,7 @@ abstract class ContentProviderTest extends BaseTest {
     protected ChangeRecordingMockContentResolver mResolver;
     protected ClassLoader mClassLoader;
     protected ArrayList<Runnable> mTests;
+    protected String mDatabaseName;
     protected Class mProviderClass;
     protected Class mProviderContract;
     protected String mProviderAuthority;
@@ -228,15 +229,16 @@ abstract class ContentProviderTest extends BaseTest {
 
     @Override
     public void setUp() throws Exception {
-        throw new Exception("You should call setUp(providerClassName, authorityUriField) instead");
+        throw new Exception("You should call setUp(providerClassName, authorityUriField, databaseName) instead");
     }
 
     // TODO: Take the actual class as an arg.
-    public void setUp(String providerClassName, String authorityUriField) throws Exception {
+    public void setUp(String providerClassName, String authorityUriField, String databaseName) throws Exception {
         super.setUp();
 
         mClassLoader = getInstrumentation().getContext().getClassLoader();
         mTests = new ArrayList<Runnable>();
+        mDatabaseName = databaseName;
 
         setUpProviderClassAndAuthority(providerClassName, authorityUriField);
         setUpContentProvider();
@@ -248,16 +250,9 @@ abstract class ContentProviderTest extends BaseTest {
             mProvider.shutdown();
         }
 
-        String databaseName = null;
-        Method getDatabasePath =
-                mProviderClass.getDeclaredMethod("getDatabasePath", String.class, boolean.class);
-
-        String defaultProfile = "default";
-        ContentProvider targetProvider = (ContentProvider) mProviderClass.newInstance();
-        databaseName = (String) getDatabasePath.invoke(targetProvider, defaultProfile, true /* is test */);
-
-        if (databaseName != null)
-            mProviderContext.deleteDatabase(databaseName);
+        if (mDatabaseName != null) {
+            mProviderContext.deleteDatabase(mDatabaseName);
+        }
 
         super.tearDown();
     }

@@ -95,6 +95,8 @@
 
     </panelview>
 
+    <panelview id="PanelUI-socialapi" flex="1"/>
+
     <panelview id="PanelUI-feeds" flex="1" oncommand="FeedHandler.subscribeToFeed(null, event);"></panelview>
 
     <panelview id="PanelUI-helpView" flex="1">

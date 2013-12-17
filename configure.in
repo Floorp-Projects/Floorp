@@ -7212,7 +7212,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
     STDCXX_COMPAT=1)
 
 if test -n "$STDCXX_COMPAT"; then
-   eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON $_topsrcdir/build/autoconf/libstdcxx.py)
+   eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON -m mozbuild.configure.libstdcxx)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
 fi

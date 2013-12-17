@@ -135,10 +135,6 @@ Other Measurements\n\
 \n\
 End of Main Process (pid NNN)\n\
 Other-only process\n\
-\n\
-WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
-Explicit Allocations\n\
-\n\
 Other Measurements\n\
 \n\
 0.19 MB (100.0%) -- a\n\
