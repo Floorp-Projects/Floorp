@@ -1202,8 +1202,8 @@ nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv)
     service->GetCookieString(codebaseURI, mChannel, getter_Copies(cookie));
     // CopyUTF8toUTF16 doesn't handle error
     // because it assumes that the input is valid.
-    nsContentUtils::ConvertStringFromCharset(NS_LITERAL_CSTRING("utf-8"),
-                                             cookie, aCookie);
+    nsContentUtils::ConvertStringFromEncoding(NS_LITERAL_CSTRING("UTF-8"),
+                                              cookie, aCookie);
   }
 }
 

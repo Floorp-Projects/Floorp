@@ -506,13 +506,14 @@ public:
                                             nsIURI* aBaseURI);
 
   /**
-   * Convert aInput (in charset aCharset) to UTF16 in aOutput.
+   * Convert aInput (in encoding aEncoding) to UTF16 in aOutput.
    *
-   * @param aCharset the name of the charset; if empty, we assume UTF8
+   * @param aEncoding the Gecko-canonical name of the encoding or the empty
+   *                  string (meaning UTF-8)
    */
-  static nsresult ConvertStringFromCharset(const nsACString& aCharset,
-                                           const nsACString& aInput,
-                                           nsAString& aOutput);
+  static nsresult ConvertStringFromEncoding(const nsACString& aEncoding,
+                                            const nsACString& aInput,
+                                            nsAString& aOutput);
 
   /**
    * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,
@@ -525,9 +526,6 @@ public:
    */
   static bool CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
                           nsACString& aCharset);
-
-  static nsresult GuessCharset(const char *aData, uint32_t aDataLen,
-                               nsACString &aCharset);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,

@@ -8847,7 +8847,9 @@ nsDocument::ScrollToRef()
     if (NS_FAILED(rv)) {
       const nsACString &docCharset = GetDocumentCharacterSet();
 
-      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
+      rv = nsContentUtils::ConvertStringFromEncoding(docCharset,
+                                                     unescapedRef,
+                                                     ref);
 
       if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
         rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
