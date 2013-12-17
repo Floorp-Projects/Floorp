@@ -5935,7 +5935,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Float:
-        masm.convertFloatToDouble(ReturnFloatReg, ReturnFloatReg);
+        masm.convertFloat32ToDouble(ReturnFloatReg, ReturnFloatReg);
         // Fall through as ReturnFloatReg now contains a Double
       case RetType::Double:
         masm.canonicalizeDouble(ReturnFloatReg);
