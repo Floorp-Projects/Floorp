@@ -534,7 +534,7 @@ class BaseMarionetteTestRunner(object):
 
         if testvars:
             if not os.path.exists(testvars):
-                raise Exception('--testvars file does not exist')
+                raise IOError('--testvars file does not exist')
 
             import json
             with open(testvars) as f:
@@ -816,6 +816,8 @@ class BaseMarionetteTestRunner(object):
             if self.shuffle:
                 random.shuffle(target_tests)
             for i in target_tests:
+                if not os.path.exists(i["path"]):
+                    raise IOError("test file: %s does not exist" % i["path"])
                 self.run_test(i["path"], i["expected"])
                 if self.marionette.check_for_crash():
                     return
