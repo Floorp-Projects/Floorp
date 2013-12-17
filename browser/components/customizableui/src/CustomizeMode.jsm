@@ -527,6 +527,11 @@ CustomizeMode.prototype = {
       aNode.removeAttribute("command");
     }
 
+    if (aNode.hasAttribute("observes")) {
+      wrapper.setAttribute("itemobserves", aNode.getAttribute("observes"));
+      aNode.removeAttribute("observes");
+    }
+
     if (aNode.checked) {
       wrapper.setAttribute("itemchecked", "true");
       aNode.checked = false;
@@ -600,6 +605,10 @@ CustomizeMode.prototype = {
       ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
       aWrapper.remove();
       return null;
+    }
+
+    if (aWrapper.hasAttribute("itemobserves")) {
+      toolbarItem.setAttribute("observes", aWrapper.getAttribute("itemobserves"));
     }
 
     if (aWrapper.hasAttribute("itemchecked")) {
