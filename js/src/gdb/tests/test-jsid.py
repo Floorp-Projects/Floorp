@@ -6,7 +6,7 @@ run_fragment('jsid.simple')
 
 assert_pretty('string_id', '$jsid("moon")')
 assert_pretty('int_id', '$jsid(1729)')
-assert_pretty('void_id', 'jsid::voidId()')
+assert_pretty('void_id', 'JSID_VOID')
 assert_pretty('object_id', '$jsid((JSObject *)  [object global] delegate)')
 
 run_fragment('jsid.handles')

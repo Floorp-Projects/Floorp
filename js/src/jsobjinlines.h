@@ -153,7 +153,7 @@ JSObject::setShouldConvertDoubleElements()
 inline bool
 JSObject::setDenseElementIfHasType(uint32_t index, const js::Value &val)
 {
-    if (!js::types::HasTypePropertyId(this, jsid::voidId(), val))
+    if (!js::types::HasTypePropertyId(this, JSID_VOID, val))
         return false;
     setDenseElementMaybeConvertDouble(index, val);
     return true;
@@ -167,7 +167,7 @@ JSObject::setDenseElementWithType(js::ExclusiveContext *cx, uint32_t index,
     // of the previous element.
     js::types::Type thisType = js::types::GetValueType(val);
     if (index == 0 || js::types::GetValueType(elements[index - 1]) != thisType)
-        js::types::AddTypePropertyId(cx, this, jsid::voidId(), thisType);
+        js::types::AddTypePropertyId(cx, this, JSID_VOID, thisType);
     setDenseElementMaybeConvertDouble(index, val);
 }
 
@@ -176,7 +176,7 @@ JSObject::initDenseElementWithType(js::ExclusiveContext *cx, uint32_t index,
                                    const js::Value &val)
 {
     JS_ASSERT(!shouldConvertDoubleElements());
-    js::types::AddTypePropertyId(cx, this, jsid::voidId(), val);
+    js::types::AddTypePropertyId(cx, this, JSID_VOID, val);
     initDenseElement(index, val);
 }
 

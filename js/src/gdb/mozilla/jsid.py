@@ -46,7 +46,7 @@ class jsid(object):
         elif tag & jsid.TYPE_INT:
             body = bits >> 1
         elif tag == jsid.TYPE_VOID:
-            return "jsid::voidId()"
+            return "JSID_VOID"
         elif tag == jsid.TYPE_OBJECT:
             body = ((bits & ~jsid.TYPE_MASK)
                     .cast(self.cache.JSObject_ptr_t))

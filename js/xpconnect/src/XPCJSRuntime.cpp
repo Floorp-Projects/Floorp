@@ -2908,7 +2908,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mJSContextStack(new XPCJSContextStack()),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
-   mResolveName(jsid::voidId()),
+   mResolveName(JSID_VOID),
    mResolvingWrapper(nullptr),
    mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_SIZE)),
    mWrappedJSClassMap(IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_SIZE)),
@@ -2933,7 +2933,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     DOM_InitInterfaces();
 
     // these jsids filled in later when we have a JSContext to work with.
-    mStrIDs[0] = jsid::voidId();
+    mStrIDs[0] = JSID_VOID;
 
     MOZ_ASSERT(Runtime());
     JSRuntime* runtime = Runtime();
@@ -3134,7 +3134,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
         for (unsigned i = 0; i < IDX_TOTAL_COUNT; i++) {
             str = JS_InternString(cx, mStrings[i]);
             if (!str) {
-                mStrIDs[0] = jsid::voidId();
+                mStrIDs[0] = JSID_VOID;
                 return false;
             }
             mStrIDs[i] = INTERNED_STRING_TO_JSID(cx, str);

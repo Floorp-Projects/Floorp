@@ -785,7 +785,7 @@ struct ClearJSHolder : TraceCallbacks
 
   virtual void Trace(JS::Heap<jsid>* aPtr, const char*, void*) const MOZ_OVERRIDE
   {
-    *aPtr = jsid::voidId();
+    *aPtr = JSID_VOID;
   }
 
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char*, void*) const MOZ_OVERRIDE

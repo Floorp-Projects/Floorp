@@ -130,7 +130,7 @@ class JS_FRIEND_API(BaseProxyHandler)
      *
      * enter() allows the policy to specify whether the caller may perform |act|
      * on the proxy's |id| property. In the case when |act| is CALL, |id| is
-     * generally jsid::voidId().
+     * generally JSID_VOID.
      *
      * The |act| parameter to enter() specifies the action being performed.
      * If |bp| is false, the trap suggests that the caller throw (though it
