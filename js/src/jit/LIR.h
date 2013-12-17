@@ -1436,10 +1436,10 @@ class LIRGraph
         // case that's greater, because StackOffsetOfPassedArg rounds argument
         // slots to 8-byte boundaries.
         size_t Alignment = Max(sizeof(StackAlignment), sizeof(Value));
-        return AlignBytes(localSlotCount(), Alignment / STACK_SLOT_SIZE);
+        return AlignBytes(localSlotCount(), Alignment);
     }
     size_t paddedLocalSlotsSize() const {
-        return paddedLocalSlotCount() * STACK_SLOT_SIZE;
+        return paddedLocalSlotCount();
     }
     void setArgumentSlotCount(uint32_t argumentSlotCount) {
         argumentSlotCount_ = argumentSlotCount;
@@ -1448,11 +1448,10 @@ class LIRGraph
         return argumentSlotCount_;
     }
     size_t argumentsSize() const {
-        JS_STATIC_ASSERT(sizeof(Value) >= size_t(STACK_SLOT_SIZE));
         return argumentSlotCount() * sizeof(Value);
     }
     uint32_t totalSlotCount() const {
-        return paddedLocalSlotCount() + (argumentsSize() / STACK_SLOT_SIZE);
+        return paddedLocalSlotCount() + argumentsSize();
     }
     bool addConstantToPool(const Value &v, uint32_t *index);
     size_t numConstants() const {
@@ -1610,8 +1609,8 @@ static inline unsigned
 OffsetOfNunboxSlot(LDefinition::Type type)
 {
     if (type == LDefinition::PAYLOAD)
-        return NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE;
-    return NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE;
+        return NUNBOX32_PAYLOAD_OFFSET;
+    return NUNBOX32_TYPE_OFFSET;
 }
 
 // Note that stack indexes for LStackSlot are modelled backwards, so a
@@ -1620,8 +1619,8 @@ static inline unsigned
 BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
 {
     if (type == LDefinition::PAYLOAD)
-        return slot + (NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE);
-    return slot + (NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE);
+        return slot + NUNBOX32_PAYLOAD_OFFSET;
+    return slot + NUNBOX32_TYPE_OFFSET;
 }
 #endif
 

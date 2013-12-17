@@ -14,11 +14,7 @@ using namespace js::jit;
 static inline uint32_t
 DefaultStackSlot(uint32_t vreg)
 {
-#if JS_BITS_PER_WORD == 32
-    return vreg * 2 + 2;
-#else
-    return vreg + 1;
-#endif
+    return vreg * sizeof(Value);
 }
 
 LAllocation *
@@ -243,7 +239,7 @@ StupidAllocator::go()
     // not track liveness we cannot determine that two vregs have disjoint
     // lifetimes. Thus, the maximum stack height is the number of vregs (scaled
     // by two on 32 bit platforms to allow storing double values).
-    graph.setLocalSlotCount(DefaultStackSlot(graph.numVirtualRegisters() - 1) + 1);
+    graph.setLocalSlotCount(DefaultStackSlot(graph.numVirtualRegisters()));
 
     if (!init())
         return false;

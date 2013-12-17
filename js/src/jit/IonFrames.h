@@ -19,13 +19,6 @@
 namespace js {
 namespace jit {
 
-// The size of a stack "slot". Multiple adjacent slots are allocated together
-// when larger stack allocations are needed.
-static const uint32_t STACK_SLOT_SIZE = 4;
-
-// The number of stack slots needed for a double value.
-static const uint32_t DOUBLE_STACK_ALIGNMENT = 2;
-
 typedef void * CalleeToken;
 
 enum CalleeTokenTag
@@ -391,7 +384,7 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     // Computes a reference to a slot, where a slot is a distance from the base
     // frame pointer (as would be used for LStackSlot).
     uintptr_t *slotRef(uint32_t slot) {
-        return (uintptr_t *)((uint8_t *)this - (slot * STACK_SLOT_SIZE));
+        return (uintptr_t *)((uint8_t *)this - slot);
     }
 
     static inline size_t Size() {

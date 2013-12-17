@@ -38,9 +38,7 @@ namespace jit {
 static inline int32_t
 OffsetOfFrameSlot(int32_t slot)
 {
-    if (slot <= 0)
-        return -slot;
-    return -(slot * STACK_SLOT_SIZE);
+    return -slot;
 }
 
 static inline uintptr_t
