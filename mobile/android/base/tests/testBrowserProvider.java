@@ -323,7 +323,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("org.mozilla.gecko.db.BrowserProvider", "AUTHORITY");
+        super.setUp("org.mozilla.gecko.db.BrowserProvider", "AUTHORITY", "browser.db");
         loadContractInfo();
 
         mTests.add(new TestSpecialFolders());
