@@ -2266,7 +2266,7 @@ nsChildView::UpdateTitlebarCGContext()
   [NSGraphicsContext setCurrentContext:context];
 
   // Draw the title string.
-  if ([frameView respondsToSelector:@selector(_drawTitleBar:)]) {
+  if ([window wantsTitleDrawn] && [frameView respondsToSelector:@selector(_drawTitleBar:)]) {
     [frameView _drawTitleBar:[frameView bounds]];
   }
 
@@ -3710,7 +3710,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)drawTitleString
 {
-  NSView* frameView = [[[self window] contentView] superview];
+  BaseWindow* window = (BaseWindow*)[self window];
+  if (![window wantsTitleDrawn]) {
+    return;
+  }
+
+  NSView* frameView = [[window contentView] superview];
   if (![frameView respondsToSelector:@selector(_drawTitleBar:)]) {
     return;
   }
