@@ -33,6 +33,10 @@ case $cmd in
 	${MKDIR} -p ${tgtpath}/intl
 	cp -t ${tgtpath}/intl -dRp ${SRCDIR}/../../intl/icu
 
+	# copy autoconf config directory.
+	${MKDIR} -p ${tgtpath}/build
+	cp -t ${tgtpath}/build -dRp ${SRCDIR}/../../build/autoconf
+
 	# put in js itself
 	cp -t ${tgtpath} -dRp ${SRCDIR}/../../mfbt
 	cp -t ${tgtpath}/js -dRp ${SRCDIR}/../jsd ${SRCDIR}/../public
