@@ -2418,7 +2418,7 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customizing] {
+#main-window[customize-entered] {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
 }
