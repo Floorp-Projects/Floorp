@@ -724,7 +724,7 @@ class IonBuilder : public MIRGenerator
     }
 
     // A builder is inextricably tied to a particular script.
-    HeapPtrScript script_;
+    JSScript *script_;
 
     // If off thread compilation is successful, the final code generator is
     // attached here. Code has been generated, but not linked (there is not yet
@@ -735,7 +735,7 @@ class IonBuilder : public MIRGenerator
   public:
     void clearForBackEnd();
 
-    JSScript *script() const { return script_.get(); }
+    JSScript *script() const { return script_; }
 
     CodeGenerator *backgroundCodegen() const { return backgroundCodegen_; }
     void setBackgroundCodegen(CodeGenerator *codegen) { backgroundCodegen_ = codegen; }
@@ -764,6 +764,17 @@ class IonBuilder : public MIRGenerator
 
     // Constraints for recording dependencies on type information.
     types::CompilerConstraintList *constraints_;
+
+    mozilla::Maybe<AutoLockForCompilation> lock_;
+
+    void lock() {
+        if (!analysisContext)
+            lock_.construct(compartment);
+    }
+    void unlock() {
+        if (!analysisContext)
+            lock_.destroy();
+    }
 
     // Basic analysis information about the script.
     BytecodeAnalysis analysis_;

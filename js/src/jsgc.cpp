@@ -5520,6 +5520,12 @@ AutoSuppressGC::AutoSuppressGC(JSCompartment *comp)
     suppressGC_++;
 }
 
+AutoSuppressGC::AutoSuppressGC(JSRuntime *rt)
+  : suppressGC_(rt->mainThread.suppressGC)
+{
+    suppressGC_++;
+}
+
 bool
 js::UninlinedIsInsideNursery(JSRuntime *rt, const void *thing)
 {
