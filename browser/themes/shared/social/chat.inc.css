@@ -4,6 +4,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+#social-sidebar-header {
+  padding: 3px;
+}
+
+#social-sidebar-button {
+  -moz-appearance: none;
+  list-style-image: url(chrome://browser/skin/social/gear_default.png);
+  min-width: 16px;
+  padding: 0;
+  margin: 2px;
+}
+#social-sidebar-button:hover,
+#social-sidebar-button:hover:active {
+  list-style-image: url(chrome://browser/skin/social/gear_clicked.png);
+}
+#social-sidebar-button > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+#social-sidebar-button[loading="true"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+#social-sidebar-favico {
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+  margin: 2px;
+}
+
 .chat-status-icon {
   max-height: 16px;
   max-width: 16px;
