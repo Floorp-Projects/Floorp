@@ -20,7 +20,9 @@ let outSmsId = 0;
 let inThreadId = 0;
 let outThreadId = 0;
 let inSmsTimeStamp;
+let inSmsSentTimeStamp;
 let outSmsTimeStamp;
+let outSmsSentTimeStamp;
 
 function verifyInitialState() {
   log("Verifying initial state.");
@@ -49,6 +51,7 @@ function simulateIncomingSms() {
     is(incomingSms.sender, REMOTE, "sender");
     is(incomingSms.messageClass, "normal", "messageClass");
     inSmsTimeStamp = incomingSms.timestamp;
+    inSmsSentTimeStamp = incomingSms.sentTimestamp;
     sendSms();
   };
   // Simulate incoming sms sent from remoteNumber to our emulator
@@ -77,6 +80,7 @@ function sendSms() {
     is(sentSms.sender, EMULATOR, "sender");
     is(sentSms.messageClass, "normal", "messageClass");
     outSmsTimeStamp = sentSms.timestamp;
+    outSmsSentTimeStamp = sentSms.sentTimestamp;
     is(sentSms.deliveryTimestamp, 0, "deliveryTimestamp is 0");
 
     if (gotSmsOnsent && gotReqOnsuccess) { getReceivedSms(); }
@@ -127,6 +131,7 @@ function getReceivedSms() {
     is(foundSms.sender, REMOTE, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     is(foundSms.timestamp, inSmsTimeStamp, "timestamp matches");
+    is(foundSms.sentTimestamp, inSmsSentTimeStamp, "sentTimestamp matches");
     getSentSms();
   };
 
@@ -160,6 +165,7 @@ function getSentSms() {
     is(foundSms.sender, EMULATOR, "sender");
     is(foundSms.messageClass, "normal", "messageClass");
     is(foundSms.timestamp, outSmsTimeStamp, "timestamp matches");
+    is(foundSms.sentTimestamp, outSmsSentTimeStamp, "sentTimestamp matches");
     deleteMsgs();
   };
 
