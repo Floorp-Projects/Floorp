@@ -32,7 +32,6 @@ EXPORTS += [
     'nsDOMCSSAttrDeclaration.h',
     'nsDOMCSSDeclaration.h',
     'nsDOMCSSRGBColor.h',
-    'nsDOMMediaQueryList.h',
     'nsICSSDeclaration.h',
     'nsICSSLoaderObserver.h',
     'nsICSSPseudoComparator.h',
@@ -67,6 +66,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.dom += [
     'CSS.h',
     'CSSValue.h',
+    'MediaQueryList.h',
 ]
 
 EXPORTS.mozilla.css += [
@@ -91,6 +91,7 @@ UNIFIED_SOURCES += [
     'ErrorReporter.cpp',
     'ImageLoader.cpp',
     'Loader.cpp',
+    'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
     'nsCSSAnonBoxes.cpp',
@@ -109,7 +110,6 @@ UNIFIED_SOURCES += [
     'nsDOMCSSRect.cpp',
     'nsDOMCSSRGBColor.cpp',
     'nsDOMCSSValueList.cpp',
-    'nsDOMMediaQueryList.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsLayoutStylesheetCache.cpp',

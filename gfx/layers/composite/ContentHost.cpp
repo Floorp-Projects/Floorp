@@ -242,9 +242,11 @@ ContentHostBase::UseTextureHost(TextureHost* aTexture)
   if (aTexture->GetFlags() & TEXTURE_ON_WHITE) {
     mTextureHost = nullptr;
     mTextureHostOnWhite = aTexture;
+    mTextureHostOnWhite->SetCompositor(GetCompositor());
   } else {
     mTextureHostOnWhite = nullptr;
     mTextureHost = aTexture;
+    mTextureHost->SetCompositor(GetCompositor());
   }
 }
 

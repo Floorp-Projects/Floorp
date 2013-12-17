@@ -3347,7 +3347,7 @@ nsTextStore::Initialize(void)
 
   if (sTsfThreadMgr && !sFlushTIPInputMessage) {
     sFlushTIPInputMessage = ::RegisterWindowMessageW(
-        NS_LITERAL_STRING("Flush TIP Input Message").get());
+        L"Flush TIP Input Message");
   }
 
   if (!sTsfThreadMgr) {

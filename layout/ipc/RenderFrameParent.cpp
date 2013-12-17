@@ -911,15 +911,6 @@ RenderFrameParent::NotifyInputEvent(const WidgetInputEvent& aEvent,
 }
 
 void
-RenderFrameParent::NotifyDimensionsChanged(ScreenIntSize size)
-{
-  if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateRootCompositionBounds(
-      mLayersId, ScreenIntRect(ScreenIntPoint(), size));
-  }
-}
-
-void
 RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mLayersId != 0) {
@@ -1112,15 +1103,6 @@ RenderFrameParent::UpdateZoomConstraints(uint32_t aPresShellId,
   if (GetApzcTreeManager()) {
     GetApzcTreeManager()->UpdateZoomConstraints(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
                                                 aAllowZoom, aMinZoom, aMaxZoom);
-  }
-}
-
-void
-RenderFrameParent::UpdateScrollOffset(uint32_t aPresShellId, ViewID aViewId, const CSSIntPoint& aScrollOffset)
-{
-  if (GetApzcTreeManager()) {
-    GetApzcTreeManager()->UpdateScrollOffset(ScrollableLayerGuid(mLayersId, aPresShellId, aViewId),
-                                             aScrollOffset);
   }
 }
 

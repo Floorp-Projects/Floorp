@@ -795,7 +795,7 @@ MPhi::removeOperand(size_t index)
 MDefinition *
 MPhi::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
-    JS_ASSERT(inputs_.length() != 0);
+    JS_ASSERT(!inputs_.empty());
 
     MDefinition *first = getOperand(0);
 
@@ -2929,7 +2929,13 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
     // If this access has never executed, try to add types to the observed set
     // according to any property which exists on the object or its prototype.
     if (updateObserved && observed->empty() && name) {
-        JSObject *obj = object->singleton() ? object->singleton() : object->proto().toObjectOrNull();
+        JSObject *obj;
+        if (object->singleton())
+            obj = object->singleton();
+        else if (object->hasTenuredProto())
+            obj = object->proto().toObjectOrNull();
+        else
+            obj = nullptr;
 
         while (obj) {
             if (!obj->getClass()->isNative())
@@ -2953,6 +2959,8 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
                 }
             }
 
+            if (!obj->hasTenuredProto())
+                break;
             obj = obj->getProto();
         }
     }
@@ -3004,7 +3012,11 @@ jit::PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *cons
         types::TypeObjectKey *object = types->getObject(i);
         if (!object)
             continue;
-        while (object->proto().isObject()) {
+        while (true) {
+            if (!object->hasTenuredProto())
+                return true;
+            if (!object->proto().isObject())
+                break;
             object = types::TypeObjectKey::get(object->proto().toObject());
             if (PropertyReadNeedsTypeBarrier(constraints, object, name, observed))
                 return true;

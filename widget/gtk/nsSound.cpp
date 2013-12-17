@@ -128,7 +128,7 @@ ca_context_get_default()
                                     getter_AddRefs(brandingBundle));
         if (brandingBundle) {
             nsAutoString wbrand;
-            brandingBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+            brandingBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
                                               getter_Copies(wbrand));
             NS_ConvertUTF16toUTF8 brand(wbrand);
 

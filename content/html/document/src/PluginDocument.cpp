@@ -165,7 +165,7 @@ PluginDocument::StartDocumentLoad(const char*         aCommand,
   nsCOMPtr<nsIDocShellTreeItem> dsti (do_QueryInterface(aContainer));
   if (dsti) {
     bool isMsgPane = false;
-    dsti->NameEquals(NS_LITERAL_STRING("messagepane").get(), &isMsgPane);
+    dsti->NameEquals(MOZ_UTF16("messagepane"), &isMsgPane);
     if (isMsgPane) {
       return NS_ERROR_FAILURE;
     }

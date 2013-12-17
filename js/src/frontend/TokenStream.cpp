@@ -579,18 +579,8 @@ CompileError::throwError(JSContext *cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    if (!js_ErrorToException(cx, message, &report, nullptr, nullptr)) {
-        // If debugErrorHook is present then we give it a chance to veto
-        // sending the error on to the regular error reporter.
-        bool reportError = true;
-        if (JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook) {
-            reportError = hook(cx, message, &report, cx->runtime()->debugHooks.debugErrorHookData);
-        }
-
-        // Report the error.
-        if (reportError && cx->errorReporter)
-            cx->errorReporter(cx, message, &report);
-    }
+    if (!js_ErrorToException(cx, message, &report, nullptr, nullptr))
+        CallErrorReporter(cx, message, &report);
 }
 
 CompileError::~CompileError()

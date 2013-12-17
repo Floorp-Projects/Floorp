@@ -56,12 +56,13 @@ SPSProfiler::enable(bool enabled)
     if (enabled_ == enabled)
         return;
 
-    enabled_ = enabled;
     /*
      * Ensure all future generated code will be instrumented, or that all
      * currently instrumented code is discarded
      */
     ReleaseAllJITCode(rt->defaultFreeOp());
+
+    enabled_ = enabled;
 
 #ifdef JS_ION
     /* Toggle SPS-related jumps on baseline jitcode.

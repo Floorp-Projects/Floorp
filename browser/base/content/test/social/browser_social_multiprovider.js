@@ -29,8 +29,8 @@ let gProviders = [
 
 var tests = {
   testProviderSwitch: function(next) {
+    let menu = document.getElementById("social-statusarea-popup");
     function checkProviderMenu(selectedProvider) {
-      let menu = document.getElementById("social-statusarea-popup");
       let menuProviders = menu.querySelectorAll(".social-provider-menuitem");
       is(menuProviders.length, gProviders.length, "correct number of providers listed in the menu");
       // Find the selectedProvider's menu item
@@ -39,57 +39,42 @@ var tests = {
       is(el[0].getAttribute("checked"), "true", "selected provider menu item is checked");
     }
 
-    checkProviderMenu(gProviders[0]);
+    // the menu is not populated until onpopupshowing, so wait for popupshown
+    function theTest() {
+      checkProviderMenu(gProviders[0]);
 
-    // Now wait for the initial provider profile to be set
-    waitForProviderLoad(function() {
-      checkUIStateMatchesProvider(gProviders[0]);
+      // Now wait for the initial provider profile to be set
+      waitForProviderLoad(function() {
+        menu.removeEventListener("popupshown", theTest, true);
+        checkUIStateMatchesProvider(gProviders[0]);
 
-      // Now activate "provider 2"
-      observeProviderSet(function () {
-        waitForProviderLoad(function() {
-          checkUIStateMatchesProvider(gProviders[1]);
-          // disable social, click on the provider menuitem to switch providers
-          Social.enabled = false;
-          let menu = document.getElementById("social-statusarea-popup");
-          let el = menu.getElementsByAttribute("origin", gProviders[0].origin);
-          is(el.length, 1, "selected provider menu item exists");
-          el[0].click();
+        // Now activate "provider 2"
+        observeProviderSet(function () {
           waitForProviderLoad(function() {
-            checkUIStateMatchesProvider(gProviders[0]);
-            next();
+            checkUIStateMatchesProvider(gProviders[1]);
+            // disable social, click on the provider menuitem to switch providers
+            Social.enabled = false;
+            let el = menu.getElementsByAttribute("origin", gProviders[0].origin);
+            is(el.length, 1, "selected provider menu item exists");
+            el[0].click();
+            waitForProviderLoad(function() {
+              checkUIStateMatchesProvider(gProviders[0]);
+              next();
+            });
           });
         });
+        Social.activateFromOrigin("https://test1.example.com");
       });
-      Social.activateFromOrigin("https://test1.example.com");
-    });
+    };
+    menu.addEventListener("popupshown", theTest, true);
+    let button = document.getElementById("social-sidebar-button");
+    EventUtils.synthesizeMouseAtCenter(button, {});
   }
 }
 
 function checkUIStateMatchesProvider(provider) {
-  let profileData = getExpectedProfileData(provider);
-  // The toolbar
-  let loginStatus = document.getElementsByClassName("social-statusarea-loggedInStatus");
-  for (let label of loginStatus) {
-    is(label.value, profileData.userName, "username name matches provider profile");
-  }
   // Sidebar
   is(document.getElementById("social-sidebar-browser").getAttribute("src"), provider.sidebarURL, "side bar URL is set");
-}
-
-function getExpectedProfileData(provider) {
-  // This data is defined in social_worker.js
-  if (provider.origin == "https://test1.example.com") {
-    return {
-      displayName: "Test1 User",
-      userName: "tester"
-    };
-  }
-
-  return {
-    displayName: "Kuma Lisa",
-    userName: "trickster"
-  };
 }
 
 function observeProviderSet(cb) {

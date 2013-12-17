@@ -4162,7 +4162,7 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsCOMPtr<nsINode> node = selection->GetAnchorNode();
-  int32_t offset = selection->GetAnchorOffset();
+  uint32_t offset = selection->AnchorOffset();
 
   nsCOMPtr<nsIDOMNode> newNode;
   result = CreateNode(aTag, node->AsDOMNode(), offset,
@@ -4248,14 +4248,14 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode()
                  "fix the caller");
     NS_ENSURE_STATE(node->GetParentNode());
 
-    int32_t offset = selection->GetAnchorOffset();
+    uint32_t offset = selection->AnchorOffset();
 
     if (offset == 0) {
       res = selection->Collapse(node->GetParentNode(),
                                 node->GetParentNode()->IndexOf(node));
       MOZ_ASSERT(NS_SUCCEEDED(res));
       NS_ENSURE_SUCCESS(res, res);
-    } else if (offset == (int32_t)node->Length()) {
+    } else if (offset == node->Length()) {
       res = selection->Collapse(node->GetParentNode(),
                                 node->GetParentNode()->IndexOf(node) + 1);
       MOZ_ASSERT(NS_SUCCEEDED(res));

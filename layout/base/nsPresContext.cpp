@@ -45,7 +45,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMessageManager.h"
-#include "nsDOMMediaQueryList.h"
+#include "mozilla/dom/MediaQueryList.h"
 #include "nsSMILAnimationController.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/TabChild.h"
@@ -345,7 +345,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   // methods.
   for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
        l != &tmp->mDOMMediaQueryLists; l = PR_NEXT_LINK(l)) {
-    nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+    MediaQueryList *mql = static_cast<MediaQueryList*>(l);
     if (mql->HasListeners()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mDOMMediaQueryLists item");
       cb.NoteXPCOMChild(mql);
@@ -374,7 +374,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
   for (PRCList *l = PR_LIST_HEAD(&tmp->mDOMMediaQueryLists);
        l != &tmp->mDOMMediaQueryLists; ) {
     PRCList *next = PR_NEXT_LINK(l);
-    nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+    MediaQueryList *mql = static_cast<MediaQueryList*>(l);
     mql->RemoveAllListeners();
     l = next;
   }
@@ -1842,10 +1842,10 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
     // Note that we intentionally send the notifications to media query
     // list in the order they were created and, for each list, to the
     // listeners in the order added.
-    nsDOMMediaQueryList::NotifyList notifyList;
+    MediaQueryList::NotifyList notifyList;
     for (PRCList *l = PR_LIST_HEAD(&mDOMMediaQueryLists);
          l != &mDOMMediaQueryLists; l = PR_NEXT_LINK(l)) {
-      nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+      MediaQueryList *mql = static_cast<MediaQueryList*>(l);
       mql->MediumFeaturesChanged(notifyList);
     }
 
@@ -1857,8 +1857,9 @@ nsPresContext::MediaFeatureValuesChanged(StyleRebuildType aShouldRebuild,
       for (uint32_t i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
         if (pusher.RePush(et)) {
           nsAutoMicroTask mt;
-          nsDOMMediaQueryList::HandleChangeData &d = notifyList[i];
-          d.listener->HandleChange(d.mql);
+          MediaQueryList::HandleChangeData &d = notifyList[i];
+          ErrorResult result;
+          d.callback->Call(*d.mql, result);
         }
       }
     }
@@ -1893,11 +1894,10 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   }
 }
 
-already_AddRefed<nsIDOMMediaQueryList>
+already_AddRefed<MediaQueryList>
 nsPresContext::MatchMedia(const nsAString& aMediaQueryList)
 {
-  nsRefPtr<nsDOMMediaQueryList> result =
-    new nsDOMMediaQueryList(this, aMediaQueryList);
+  nsRefPtr<MediaQueryList> result = new MediaQueryList(this, aMediaQueryList);
 
   // Insert the new item at the end of the linked list.
   PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);

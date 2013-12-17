@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(38740b7e-095e-4198-a012-cf5f9e102a6a)]
+[scriptable, uuid(c6efd629-7282-4f0d-9db8-0fa59c191dd5)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -749,13 +749,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see nsIDOMWindow::scrollX/Y
    */
   void getScrollXYFloat(in boolean aFlushLayout, out float aScrollX, out float aScrollY);
-
-  /**
-   * Sets the scroll position of the root scroll frame of the window.
-   * Returns true on success, false on error (if the window didn't have a root
-   * scroll frame).
-   */
-  boolean scrollToCSSPixelsApproximate(in float aX, in float aY);
 
   /**
    * Returns the scrollbar width of the window's scroll frame.

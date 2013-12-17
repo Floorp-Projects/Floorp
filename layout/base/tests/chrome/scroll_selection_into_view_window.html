@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scrolling selection into view</title>
+</head>
+<body onload="opener.doTest();">
+
+<div id="c1" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:0;">
+  <div style="height:400px;"></div>
+  <div><span id="target1"
+        style="display:inline-block; vertical-align:top; height:20px;">target</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+<div id="c2" style="overflow:hidden; width:200px; height:200px; position:absolute; top:200px; left:200px;">
+  <div style="height:400px;"></div>
+  <div><span id="target2"
+        style="display:inline-block; vertical-align:top; height:20px;">target2</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+<div id="c3" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:400px;">
+  <div style="height:400px;"></div>
+  <div><span id="target3"
+        style="display:inline-block; vertical-align:top; height:300px;">target3</span>
+  </div>
+  <div style="height:400px;"></div>
+</div>
+<div id="c4" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:200px; left:600px;">
+  <iframe id="target4" style="border:none; width:100%; height:1100px; display:block;"
+          src="data:text/html,
+               <body style='margin:0; overflow:hidden;'>
+                 <div style='height:400px;'></div>
+                 <div><span id='target4'
+                            style='display:inline-block; vertical-align:top; height:300px;'>target4</span>
+                 </div>
+                 <div style='height:400px;'></div>">
+  </iframe>
+</div>
+<div id="c5" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:400px; left:0;">
+  <div style="-moz-transform:translateY(400px); transform:translateY(400px)">
+    <span id="target5" style="display:inline-block; vertical-align:top; height:20px;">target</span>
+  </div>
+  <div style="height:800px;"></div>
+</div>
+<div id="c6" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:400px; left:200px;">
+  <div style="height:200px"></div>
+  <div style="height:100px; -moz-transform:scale(2); transform:scale(2)">
+    <span id="target6" style="display:inline-block; vertical-align:top; height:20px;">target</span>
+  </div>
+  <div style="height:800px;"></div>
+</div>
+<div id="c7" style="overflow-y:scroll; width:200px; height:200px; position:absolute; top:400px; left:400px;">
+  <div style="overflow:auto; height:200px; -moz-transform:translateY(400px); transform:translateY(400px)">
+    <div style="height:200px;"></div>
+    <div>
+      <span id="target7" style="display:inline-block; vertical-align:top; height:20px;">target</span>
+    </div>
+    <div style="height:800px;"></div>
+  </div>
+  <div style="height:800px;"></div>
+</div>
+
+</body>
+
+</html>

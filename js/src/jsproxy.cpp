@@ -2748,7 +2748,7 @@ Proxy::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHandl
     return proxy->as<ProxyObject>().handler()->defaultValue(cx, proxy, hint, vp);
 }
 
-JSObject * const Proxy::LazyProto = reinterpret_cast<JSObject *>(0x1);
+JSObject * const TaggedProto::LazyProto = reinterpret_cast<JSObject *>(0x1);
 
 bool
 Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject proto)

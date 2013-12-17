@@ -2795,6 +2795,10 @@ class IDLAttribute(IDLInterfaceMember):
                 raise WebIDLError("[LenientThis] is not allowed in combination "
                                   "with [%s]" % identifier,
                                   [attr.location, self.location])
+        elif identifier == "Frozen":
+            if not self.type.isSequence():
+                raise WebIDLError("[Frozen] is only allowed on sequence-valued "
+                                  "attributes", [attr.location, self.location])
         elif (identifier == "Pref" or
               identifier == "SetterThrows" or
               identifier == "Pure" or

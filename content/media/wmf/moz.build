@@ -12,7 +12,7 @@ EXPORTS += [
     'WMFUtils.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DXVA2Manager.cpp',
     'WMFByteStream.cpp',
     'WMFDecoder.cpp',

@@ -292,12 +292,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
     void loadObjClass(Register objReg, Register dest) {
         loadPtr(Address(objReg, JSObject::offsetOfType()), dest);
-        loadPtr(Address(dest, offsetof(types::TypeObject, clasp)), dest);
+        loadPtr(Address(dest, types::TypeObject::offsetOfClasp()), dest);
     }
     void branchTestObjClass(Condition cond, Register obj, Register scratch, const js::Class *clasp,
                             Label *label) {
         loadPtr(Address(obj, JSObject::offsetOfType()), scratch);
-        branchPtr(cond, Address(scratch, offsetof(types::TypeObject, clasp)), ImmPtr(clasp), label);
+        branchPtr(cond, Address(scratch, types::TypeObject::offsetOfClasp()), ImmPtr(clasp), label);
     }
     void branchTestObjShape(Condition cond, Register obj, const Shape *shape, Label *label) {
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), ImmGCPtr(shape), label);
@@ -353,7 +353,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void loadObjProto(Register obj, Register dest) {
         loadPtr(Address(obj, JSObject::offsetOfType()), dest);
-        loadPtr(Address(dest, offsetof(types::TypeObject, proto)), dest);
+        loadPtr(Address(dest, types::TypeObject::offsetOfProto()), dest);
     }
 
     void loadStringLength(Register str, Register dest) {
@@ -397,7 +397,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(src.type())) {
             FloatRegister reg = src.typedReg().fpu();
             if (src.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             storeDouble(reg, dest);
@@ -545,7 +545,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(v.type())) {
             FloatRegister reg = v.typedReg().fpu();
             if (v.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             Push(reg);
@@ -865,12 +865,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
-    void callWithABINoProfiling(const T &fun, Result result = GENERAL) {
+    void callWithABINoProfiling(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         MacroAssemblerSpecific::callWithABI(fun, result);
     }
 
     template <typename T>
-    void callWithABI(const T &fun, Result result = GENERAL) {
+    void callWithABI(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         leaveSPSFrame();
         callWithABINoProfiling(fun, result);
         reenterSPSFrame();

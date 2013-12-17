@@ -53,6 +53,8 @@ EXTRA_DSO_LDOPTS += \
 		-lutils \
 		-L$(DEPTH)/media/omx-plugin/lib/ics/libstagefright \
 		-lstagefright \
+		-L$(DEPTH)/media/omx-plugin/lib/ics/libvideoeditorplayer \
+		-lvideoeditorplayer \
 		$(NULL)
 
 INCLUDES        += \

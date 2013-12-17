@@ -34,7 +34,6 @@ var APZCObserver = {
     window.addEventListener("SizeChanged", this, true);
     Elements.tabList.addEventListener("TabSelect", this, true);
     Elements.browsers.addEventListener("pageshow", this, true);
-    messageManager.addMessageListener("Browser:ContentScroll", this);
     messageManager.addMessageListener("Content:ZoomToRect", this);
   },
 
@@ -49,7 +48,6 @@ var APZCObserver = {
     window.removeEventListener("SizeChanged", this, true);
     Elements.tabList.removeEventListener("TabSelect", this, true);
     Elements.browsers.removeEventListener("pageshow", this, true);
-    messageManager.removeMessageListener("Browser:ContentScroll", this);
     messageManager.removeMessageListener("Content:ZoomToRect", this);
   },
 
@@ -85,16 +83,6 @@ var APZCObserver = {
     let json = aMessage.json;
     let browser = aMessage.target;
     switch (aMessage.name) {
-       // Content notifies us here (syncronously) if it has scrolled
-       // independent of the apz. This can happen in a lot of
-       // cases: keyboard shortcuts, scroll wheel, or content script.
-       // Let the apz know about this change so that it can update
-       // its scroll offset data.
-      case "Browser:ContentScroll": {
-        let data = json.viewId + " " + json.presShellId + " (" + json.scrollOffset.x + ", " + json.scrollOffset.y + ")";
-        Services.obs.notifyObservers(null, "apzc-scroll-offset-changed", data);
-        break;
-      }
       case "Content:ZoomToRect": {
         let { presShellId, viewId } = json;
         let rect = Rect.fromRect(json.rect);

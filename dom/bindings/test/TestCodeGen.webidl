@@ -126,6 +126,10 @@ interface TestInterface {
   void passVariadicByte(byte... arg);
   [StoreInSlot, Pure]
   readonly attribute byte cachedByte;
+  [StoreInSlot, Constant]
+  readonly attribute byte cachedConstantByte;
+  [StoreInSlot, Pure]
+  attribute byte cachedWritableByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
@@ -299,6 +303,12 @@ interface TestInterface {
   readonly attribute sequence<long> readonlySequence;
   [Cached, Pure]
   readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
+  [Cached, Pure]
+  readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<Dict> readonlyFrozenSequence;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<Dict>? readonlyFrozenNullableSequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();

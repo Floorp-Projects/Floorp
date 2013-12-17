@@ -104,10 +104,12 @@ struct nsRect;
 class nsWindowSizes;
 
 namespace mozilla {
+class Selection;
 namespace dom {
 class BarProp;
 class Function;
 class Gamepad;
+class MediaQueryList;
 class Navigator;
 class SpeechSynthesis;
 namespace indexedDB {
@@ -845,13 +847,13 @@ public:
             mozilla::ErrorResult& aError);
   nsIDOMStorage* GetSessionStorage(mozilla::ErrorResult& aError);
   nsIDOMStorage* GetLocalStorage(mozilla::ErrorResult& aError);
-  nsISelection* GetSelection(mozilla::ErrorResult& aError);
+  mozilla::Selection* GetSelection(mozilla::ErrorResult& aError);
   mozilla::dom::indexedDB::IDBFactory* GetIndexedDB(mozilla::ErrorResult& aError);
   already_AddRefed<nsICSSDeclaration>
     GetComputedStyle(mozilla::dom::Element& aElt, const nsAString& aPseudoElt,
                      mozilla::ErrorResult& aError);
-  already_AddRefed<nsIDOMMediaQueryList> MatchMedia(const nsAString& aQuery,
-                                                    mozilla::ErrorResult& aError);
+  already_AddRefed<mozilla::dom::MediaQueryList> MatchMedia(const nsAString& aQuery,
+                                                            mozilla::ErrorResult& aError);
   nsScreen* GetScreen(mozilla::ErrorResult& aError);
   void MoveTo(int32_t aXPos, int32_t aYPos, mozilla::ErrorResult& aError);
   void MoveBy(int32_t aXDif, int32_t aYDif, mozilla::ErrorResult& aError);

@@ -700,9 +700,7 @@ StartRequest(JSContext *cx)
     } else {
         /* Indicate that a request is running. */
         rt->requestDepth = 1;
-
-        if (rt->activityCallback)
-            rt->activityCallback(rt->activityCallbackArg, true);
+        rt->triggerActivityCallback(true);
     }
 }
 
@@ -718,9 +716,7 @@ StopRequest(JSContext *cx)
     } else {
         rt->conservativeGC.updateForRequestEnd();
         rt->requestDepth = 0;
-
-        if (rt->activityCallback)
-            rt->activityCallback(rt->activityCallbackArg, false);
+        rt->triggerActivityCallback(false);
     }
 }
 #endif /* JS_THREADSAFE */
@@ -916,17 +912,10 @@ JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback)
     rt->compartmentNameCallback = callback;
 }
 
-JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallbacks(JSRuntime *rt,
-                          JSWrapObjectCallback callback,
-                          JSSameCompartmentWrapObjectCallback sccallback,
-                          JSPreWrapCallback precallback)
+JS_PUBLIC_API(void)
+JS_SetWrapObjectCallbacks(JSRuntime *rt, const JSWrapObjectCallbacks *callbacks)
 {
-    JSWrapObjectCallback old = rt->wrapObjectCallback;
-    rt->wrapObjectCallback = callback;
-    rt->sameCompartmentWrapObjectCallback = sccallback;
-    rt->preWrapObjectCallback = precallback;
-    return old;
+    rt->wrapObjectCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(JSCompartment *)
@@ -2089,6 +2078,61 @@ JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key)
     JS_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
     return 0;
 }
+
+static const size_t NumGCConfigs = 14;
+struct JSGCConfig {
+    JSGCParamKey key;
+    uint32_t value;
+};
+
+JS_PUBLIC_API(void)
+JS_SetGCParametersBasedOnAvailableMemory(JSRuntime *rt, uint32_t availMem)
+{
+    static const JSGCConfig minimal[NumGCConfigs] = {
+        {JSGC_MAX_MALLOC_BYTES, 6 * 1024 * 1024},
+        {JSGC_SLICE_TIME_BUDGET, 30},
+        {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+        {JSGC_HIGH_FREQUENCY_HIGH_LIMIT, 40},
+        {JSGC_HIGH_FREQUENCY_LOW_LIMIT, 0},
+        {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, 300},
+        {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, 120},
+        {JSGC_LOW_FREQUENCY_HEAP_GROWTH, 120},
+        {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+        {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+        {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+        {JSGC_ALLOCATION_THRESHOLD, 1},
+        {JSGC_DECOMMIT_THRESHOLD, 1},
+        {JSGC_MODE, JSGC_MODE_INCREMENTAL}
+    };
+
+    const JSGCConfig *config = minimal;
+    if (availMem > 512) {
+        static const JSGCConfig nominal[NumGCConfigs] = {
+            {JSGC_MAX_MALLOC_BYTES, 6 * 1024 * 1024},
+            {JSGC_SLICE_TIME_BUDGET, 30},
+            {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1000},
+            // This are the current default settings but this is likely inverted as
+            // explained for the computation of Next_GC in Bug 863398 comment 21.
+            {JSGC_HIGH_FREQUENCY_HIGH_LIMIT, 100},
+            {JSGC_HIGH_FREQUENCY_LOW_LIMIT, 500},
+            {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, 300},
+            {JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, 150},
+            {JSGC_LOW_FREQUENCY_HEAP_GROWTH, 150},
+            {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+            {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+            {JSGC_HIGH_FREQUENCY_TIME_LIMIT, 1500},
+            {JSGC_ALLOCATION_THRESHOLD, 30},
+            {JSGC_DECOMMIT_THRESHOLD, 32},
+            {JSGC_MODE, JSGC_MODE_COMPARTMENT}
+        };
+
+        config = nominal;
+    }
+
+    for (size_t i = 0; i < NumGCConfigs; i++)
+        JS_SetGCParameter(rt, config[i].key, config[i].value);
+}
+
 
 JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length,
@@ -5911,15 +5955,6 @@ JS_ErrorFromException(JSContext *cx, HandleValue value)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
     return js_ErrorFromException(value);
-}
-
-JS_PUBLIC_API(bool)
-JS_ThrowReportedError(JSContext *cx, const char *message,
-                      JSErrorReport *reportp)
-{
-    AssertHeapIsIdle(cx);
-    return JS_IsRunning(cx) &&
-           js_ErrorToException(cx, message, reportp, nullptr, nullptr);
 }
 
 JS_PUBLIC_API(bool)

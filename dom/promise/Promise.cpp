@@ -15,6 +15,7 @@
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 #include "nsJSPrincipals.h"
 #include "nsJSUtils.h"
 #include "nsPIDOMWindow.h"
@@ -60,8 +61,7 @@ class WorkerPromiseTask MOZ_FINAL : public WorkerRunnable
 {
 public:
   WorkerPromiseTask(WorkerPrivate* aWorkerPrivate, Promise* aPromise)
-    : WorkerRunnable(aWorkerPrivate, WorkerThread,
-                     UnchangedBusyCount, SkipWhenClearing)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mPromise(aPromise)
   {
     MOZ_ASSERT(aPromise);
@@ -169,8 +169,7 @@ public:
                             Promise* aPromise,
                             JS::Handle<JS::Value> aValue,
                             Promise::PromiseState aState)
-    : WorkerRunnable(aWorkerPrivate, WorkerThread,
-                     UnchangedBusyCount, SkipWhenClearing),
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
       PromiseResolverMixin(aPromise, aValue, aState)
   {}
 

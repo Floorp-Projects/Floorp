@@ -37,7 +37,7 @@ class MSnapshot;
 
 static const uint32_t VREG_INCREMENT = 1;
 
-static const uint32_t THIS_FRAME_SLOT = 0;
+static const uint32_t THIS_FRAME_ARGSLOT = 0;
 
 #if defined(JS_NUNBOX32)
 # define BOX_PIECES         2
@@ -60,7 +60,7 @@ class LAllocation : public TempObject
     static const uintptr_t TAG_BIT = 1;
     static const uintptr_t TAG_SHIFT = 0;
     static const uintptr_t TAG_MASK = 1 << TAG_SHIFT;
-    static const uintptr_t KIND_BITS = 4;
+    static const uintptr_t KIND_BITS = 3;
     static const uintptr_t KIND_SHIFT = TAG_SHIFT + TAG_BIT;
     static const uintptr_t KIND_MASK = (1 << KIND_BITS) - 1;
 
@@ -76,10 +76,8 @@ class LAllocation : public TempObject
         CONSTANT_INDEX, // Constant arbitrary index.
         GPR,            // General purpose register.
         FPU,            // Floating-point register.
-        STACK_SLOT,     // 32-bit stack slot.
-        DOUBLE_SLOT,    // 64-bit stack slot.
-        INT_ARGUMENT,   // Argument slot that gets loaded into a GPR.
-        DOUBLE_ARGUMENT // Argument slot to be loaded into an FPR
+        STACK_SLOT,     // Stack slot.
+        ARGUMENT_SLOT   // Argument slot.
     };
 
   protected:
@@ -155,10 +153,10 @@ class LAllocation : public TempObject
         return kind() == FPU;
     }
     bool isStackSlot() const {
-        return kind() == STACK_SLOT || kind() == DOUBLE_SLOT;
+        return kind() == STACK_SLOT;
     }
     bool isArgument() const {
-        return kind() == INT_ARGUMENT || kind() == DOUBLE_ARGUMENT;
+        return kind() == ARGUMENT_SLOT;
     }
     bool isRegister() const {
         return isGeneralReg() || isFloatReg();
@@ -168,9 +166,6 @@ class LAllocation : public TempObject
     }
     bool isMemory() const {
         return isStackSlot() || isArgument();
-    }
-    bool isDouble() const {
-        return kind() == DOUBLE_SLOT || kind() == FPU || kind() == DOUBLE_ARGUMENT;
     }
     inline LUse *toUse();
     inline const LUse *toUse() const;
@@ -354,35 +349,26 @@ class LConstantIndex : public LAllocation
     }
 };
 
-// Stack slots are indexes into the stack, given that each slot is size
-// STACK_SLOT_SIZE.
+// Stack slots are indices into the stack. The indices are byte indices.
 class LStackSlot : public LAllocation
 {
   public:
-    explicit LStackSlot(uint32_t slot, bool isDouble = false)
-      : LAllocation(isDouble ? DOUBLE_SLOT : STACK_SLOT, slot)
+    explicit LStackSlot(uint32_t slot)
+      : LAllocation(STACK_SLOT, slot)
     { }
-
-    bool isDouble() const {
-        return kind() == DOUBLE_SLOT;
-    }
 
     uint32_t slot() const {
         return data();
     }
 };
 
-// Arguments are reverse indexes into the stack, and as opposed to LStackSlot,
-// each index is measured in bytes because we have to index the middle of a
-// Value on 32 bits architectures.
+// Arguments are reverse indices into the stack. The indices are byte indices.
 class LArgument : public LAllocation
 {
   public:
-    explicit LArgument(LAllocation::Kind kind, int32_t index)
-      : LAllocation(kind, index)
-    {
-        JS_ASSERT(kind == INT_ARGUMENT || kind == DOUBLE_ARGUMENT);
-    }
+    explicit LArgument(int32_t index)
+      : LAllocation(ARGUMENT_SLOT, index)
+    { }
 
     int32_t index() const {
         return data();
@@ -444,6 +430,7 @@ class LDefinition
 
     enum Type {
         GENERAL,    // Generic, integer or pointer-width data (GPR).
+        INT32,      // int32 data (GPR).
         OBJECT,     // Pointer that may be collected as garbage (GPR).
         SLOTS,      // Slots/elements pointer that may be moved by minor GCs (GPR).
         FLOAT32,    // 32-bit floating-point value (FPU).
@@ -497,6 +484,9 @@ class LDefinition
     Type type() const {
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
+    bool isFloatReg() const {
+        return type() == FLOAT32 || type() == DOUBLE;
+    }
     uint32_t virtualRegister() const {
         return (bits_ >> VREG_SHIFT) & VREG_MASK;
     }
@@ -536,7 +526,10 @@ class LDefinition
         switch (type) {
           case MIRType_Boolean:
           case MIRType_Int32:
-            return LDefinition::GENERAL;
+            // The stack slot allocator doesn't currently support allocating
+            // 1-byte slots, so for now we lower MIRType_Boolean into INT32.
+            static_assert(sizeof(bool) <= sizeof(int32_t), "bool doesn't fit in an int32 slot");
+            return LDefinition::INT32;
           case MIRType_String:
           case MIRType_Object:
             return LDefinition::OBJECT;
@@ -986,7 +979,7 @@ class LSafepoint : public TempObject
     // For call instructions, the live regs are empty. Call instructions may
     // have register inputs or temporaries, which will *not* be in the live
     // registers: if passed to the call, the values passed will be marked via
-    // MarkIonExitFrame, and no registers can be live after the instruction
+    // MarkJitExitFrame, and no registers can be live after the instruction
     // except its outputs.
     RegisterSet liveRegs_;
 
@@ -1443,10 +1436,10 @@ class LIRGraph
         // case that's greater, because StackOffsetOfPassedArg rounds argument
         // slots to 8-byte boundaries.
         size_t Alignment = Max(sizeof(StackAlignment), sizeof(Value));
-        return AlignBytes(localSlotCount(), Alignment / STACK_SLOT_SIZE);
+        return AlignBytes(localSlotCount(), Alignment);
     }
     size_t paddedLocalSlotsSize() const {
-        return paddedLocalSlotCount() * STACK_SLOT_SIZE;
+        return paddedLocalSlotCount();
     }
     void setArgumentSlotCount(uint32_t argumentSlotCount) {
         argumentSlotCount_ = argumentSlotCount;
@@ -1455,11 +1448,10 @@ class LIRGraph
         return argumentSlotCount_;
     }
     size_t argumentsSize() const {
-        JS_STATIC_ASSERT(sizeof(Value) >= size_t(STACK_SLOT_SIZE));
         return argumentSlotCount() * sizeof(Value);
     }
     uint32_t totalSlotCount() const {
-        return paddedLocalSlotCount() + (argumentsSize() / STACK_SLOT_SIZE);
+        return paddedLocalSlotCount() + argumentsSize();
     }
     bool addConstantToPool(const Value &v, uint32_t *index);
     size_t numConstants() const {
@@ -1617,8 +1609,8 @@ static inline unsigned
 OffsetOfNunboxSlot(LDefinition::Type type)
 {
     if (type == LDefinition::PAYLOAD)
-        return NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE;
-    return NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE;
+        return NUNBOX32_PAYLOAD_OFFSET;
+    return NUNBOX32_TYPE_OFFSET;
 }
 
 // Note that stack indexes for LStackSlot are modelled backwards, so a
@@ -1627,8 +1619,8 @@ static inline unsigned
 BaseOfNunboxSlot(LDefinition::Type type, unsigned slot)
 {
     if (type == LDefinition::PAYLOAD)
-        return slot + (NUNBOX32_PAYLOAD_OFFSET / STACK_SLOT_SIZE);
-    return slot + (NUNBOX32_TYPE_OFFSET / STACK_SLOT_SIZE);
+        return slot + NUNBOX32_PAYLOAD_OFFSET;
+    return slot + NUNBOX32_TYPE_OFFSET;
 }
 #endif
 

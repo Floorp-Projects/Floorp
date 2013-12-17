@@ -96,6 +96,7 @@ class GlobalNamespace(dict):
         'False': False,
         'True': True,
         'sorted': alphabetical_sorted,
+        'int': int,
     })
 
     def __init__(self, allowed_variables=None, builtins=None):
