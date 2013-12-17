@@ -317,6 +317,7 @@ public:
 private:
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
+    mDecodingMonitor.AssertCurrentThreadIn();
     nsRefPtr<imgStatusTracker> statusTracker;
     statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
                                    : mStatusTracker;
