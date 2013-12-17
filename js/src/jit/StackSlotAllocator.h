@@ -28,10 +28,9 @@ class StackSlotAllocator
     uint32_t allocateDoubleSlot() {
         if (!doubleSlots.empty())
             return doubleSlots.popCopy();
-        if (ComputeByteAlignment(height_, DOUBLE_STACK_ALIGNMENT))
+        if (height_ % 2 != 0)
             normalSlots.append(++height_);
-        height_ += (sizeof(double) / STACK_SLOT_SIZE);
-        return height_;
+        return height_ += 2;
     }
     uint32_t allocateSlot() {
         if (!normalSlots.empty())
@@ -50,13 +49,20 @@ class StackSlotAllocator
 
     void freeSlot(LDefinition::Type type, uint32_t index) {
         switch (type) {
-          case LDefinition::FLOAT32:
+#if JS_BITS_PER_WORD == 32
+          case LDefinition::GENERAL:
           case LDefinition::OBJECT:
           case LDefinition::SLOTS:
+#endif
+          case LDefinition::FLOAT32: return freeSlot(index);
+#if JS_BITS_PER_WORD == 64
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
 #ifdef JS_PUNBOX64
           case LDefinition::BOX:
 #endif
-          case LDefinition::GENERAL: return freeSlot(index);
 #ifdef JS_NUNBOX32
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:
@@ -68,13 +74,20 @@ class StackSlotAllocator
 
     uint32_t allocateSlot(LDefinition::Type type) {
         switch (type) {
-          case LDefinition::FLOAT32:
+#if JS_BITS_PER_WORD == 32
+          case LDefinition::GENERAL:
           case LDefinition::OBJECT:
           case LDefinition::SLOTS:
+#endif
+          case LDefinition::FLOAT32: return allocateSlot();
+#if JS_BITS_PER_WORD == 64
+          case LDefinition::GENERAL:
+          case LDefinition::OBJECT:
+          case LDefinition::SLOTS:
+#endif
 #ifdef JS_PUNBOX64
           case LDefinition::BOX:
 #endif
-          case LDefinition::GENERAL: return allocateSlot();
 #ifdef JS_NUNBOX32
           case LDefinition::TYPE:
           case LDefinition::PAYLOAD:

@@ -198,7 +198,7 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename T>
     void Push(const T &t) {
         push(t);
-        framePushed_ += STACK_SLOT_SIZE;
+        framePushed_ += sizeof(intptr_t);
     }
     void Push(const FloatRegister &t) {
         push(t);
@@ -215,14 +215,14 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename T>
     void Pop(const T &t) {
         pop(t);
-        framePushed_ -= STACK_SLOT_SIZE;
+        framePushed_ -= sizeof(intptr_t);
     }
     void Pop(const FloatRegister &t) {
         pop(t);
         framePushed_ -= sizeof(double);
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        JS_ASSERT(args % sizeof(intptr_t) == 0);
         framePushed_ -= args;
     }
     uint32_t framePushed() const {

@@ -14,9 +14,10 @@
 namespace js {
 namespace jit {
 
+// Layout of the frame prefix. This assumes the stack architecture grows down.
+// If this is ever not the case, we'll have to refactor.
 class IonCommonFrameLayout
 {
-  private:
     uint8_t *returnAddress_;
     uintptr_t descriptor_;
 
@@ -52,15 +53,15 @@ class IonCommonFrameLayout
 
 class IonJSFrameLayout : public IonCommonFrameLayout
 {
-    void *calleeToken_;
+    CalleeToken calleeToken_;
     uintptr_t numActualArgs_;
 
   public:
     CalleeToken calleeToken() const {
         return calleeToken_;
     }
-    void replaceCalleeToken(void *value) {
-        calleeToken_ = value;
+    void replaceCalleeToken(CalleeToken calleeToken) {
+        calleeToken_ = calleeToken;
     }
 
     static size_t offsetOfCalleeToken() {
@@ -103,6 +104,7 @@ class IonJSFrameLayout : public IonCommonFrameLayout
     }
 };
 
+// this is the layout of the frame that is used when we enter Ion code from platform ABI code
 class IonEntryFrameLayout : public IonJSFrameLayout
 {
   public:
@@ -124,6 +126,9 @@ class IonUnwoundRectifierFrameLayout : public IonRectifierFrameLayout
 {
   public:
     static inline size_t Size() {
+        // It is not necessary to accout for an extra callee token here because
+        // sizeof(IonExitFrameLayout) == sizeof(IonRectifierFrameLayout) due to
+        // extra padding.
         return sizeof(IonUnwoundRectifierFrameLayout);
     }
 };
@@ -161,6 +166,7 @@ class IonOOLPropertyOpExitFrameLayout;
 class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
+// this is the frame layout when we are exiting ion code, and about to enter platform ABI code
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
     inline uint8_t *top() {
@@ -234,6 +240,8 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     }
 };
 
+// Cannot inherit implementa<tion since we need to extend the top of
+// IonExitFrameLayout.
 class IonNativeExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
@@ -241,7 +249,7 @@ class IonNativeExitFrameLayout
     IonExitFrameLayout exit_;
     uintptr_t argc_;
 
-    // We need to split the Value in 2 field of 32 bits, otherwise the C++
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -284,7 +292,7 @@ class IonOOLNativeExitFrameLayout
 
   public:
     static inline size_t Size(size_t argc) {
-        // The Frame accounts for the callee/result and |this|, so we only needs args.
+        // The frame accounts for the callee/result and |this|, so we only need args.
         return sizeof(IonOOLNativeExitFrameLayout) + (argc * sizeof(Value));
     }
 
@@ -409,7 +417,7 @@ class IonDOMExitFrameLayout
     IonExitFrameLayout exit_;
     JSObject *thisObj;
 
-    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -463,6 +471,7 @@ class IonDOMMethodExitFrameLayout
     }
 
     inline Value *vp() {
+        // The code in visitCallDOMNative depends on this static assert holding
         JS_STATIC_ASSERT(offsetof(IonDOMMethodExitFrameLayout, loCalleeResult_) ==
                          (offsetof(IonDOMMethodExitFrameLayout, argc_) + sizeof(uintptr_t)));
         return reinterpret_cast<Value*>(&loCalleeResult_);
@@ -538,7 +547,7 @@ class InvalidationBailoutStack
     void checkInvariants() const;
 };
 
-}
-}
+} // namespace jit
+} // namespace js
 
 #endif /* jit_shared_IonFrames_x86_shared_h */

@@ -7,12 +7,13 @@
 #ifndef jit_arm_IonFrames_arm_h
 #define jit_arm_IonFrames_arm_h
 
+#include <stdint.h>
+
 #include "jit/shared/IonFrames-shared.h"
 
 namespace js {
 namespace jit {
 
-class IonFramePrefix;
 // Layout of the frame prefix. This assumes the stack architecture grows down.
 // If this is ever not the case, we'll have to refactor.
 class IonCommonFrameLayout
@@ -50,26 +51,16 @@ class IonCommonFrameLayout
     }
 };
 
-// this is the layout of the frame that is used when we enter Ion code from EABI code
-class IonEntryFrameLayout : public IonCommonFrameLayout
+class IonJSFrameLayout : public IonCommonFrameLayout
 {
-  public:
-    static inline size_t Size() {
-        return sizeof(IonEntryFrameLayout);
-    }
-};
-
-class IonJSFrameLayout : public IonEntryFrameLayout
-{
-  protected:
-    void *calleeToken_;
+    CalleeToken calleeToken_;
     uintptr_t numActualArgs_;
 
   public:
-    void *calleeToken() const {
+    CalleeToken calleeToken() const {
         return calleeToken_;
     }
-    void replaceCalleeToken(void *calleeToken) {
+    void replaceCalleeToken(CalleeToken calleeToken) {
         calleeToken_ = calleeToken;
     }
 
@@ -113,6 +104,15 @@ class IonJSFrameLayout : public IonEntryFrameLayout
     }
 };
 
+// this is the layout of the frame that is used when we enter Ion code from platform ABI code
+class IonEntryFrameLayout : public IonJSFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonEntryFrameLayout);
+    }
+};
+
 class IonRectifierFrameLayout : public IonJSFrameLayout
 {
   public:
@@ -121,13 +121,14 @@ class IonRectifierFrameLayout : public IonJSFrameLayout
     }
 };
 
-class IonUnwoundRectifierFrameLayout : public IonJSFrameLayout
+// The callee token is now dead.
+class IonUnwoundRectifierFrameLayout : public IonRectifierFrameLayout
 {
   public:
     static inline size_t Size() {
-        // On X86, there is a +sizeof(uintptr_t) to account for an extra callee token.
-        // This is not needed here because sizeof(IonExitFrame) == sizeof(IonRectifierFrame)
-        // due to extra padding.
+        // It is not necessary to accout for an extra callee token here because
+        // sizeof(IonExitFrameLayout) == sizeof(IonRectifierFrameLayout) due to
+        // extra padding.
         return sizeof(IonUnwoundRectifierFrameLayout);
     }
 };
@@ -159,43 +160,13 @@ class IonExitFooterFrame
     }
 };
 
-class IonOsrFrameLayout : public IonJSFrameLayout
-{
-  public:
-    static inline size_t Size() {
-        return sizeof(IonOsrFrameLayout);
-    }
-};
-
-class ICStub;
-
-class IonBaselineStubFrameLayout : public IonCommonFrameLayout
-{
-  public:
-    static inline size_t Size() {
-        return sizeof(IonBaselineStubFrameLayout);
-    }
-
-    static inline int reverseOffsetOfStubPtr() {
-        return -int(sizeof(void *));
-    }
-    static inline int reverseOffsetOfSavedFramePtr() {
-        return -int(2 * sizeof(void *));
-    }
-
-    inline ICStub *maybeStubPtr() {
-        uint8_t *fp = reinterpret_cast<uint8_t *>(this);
-        return *reinterpret_cast<ICStub **>(fp + reverseOffsetOfStubPtr());
-    }
-};
-
 class IonNativeExitFrameLayout;
 class IonOOLNativeExitFrameLayout;
 class IonOOLPropertyOpExitFrameLayout;
 class IonOOLProxyExitFrameLayout;
 class IonDOMExitFrameLayout;
 
-// this is the frame layout when we are exiting ion code, and about to enter EABI code
+// this is the frame layout when we are exiting ion code, and about to enter platform ABI code
 class IonExitFrameLayout : public IonCommonFrameLayout
 {
     inline uint8_t *top() {
@@ -273,6 +244,7 @@ class IonExitFrameLayout : public IonCommonFrameLayout
 // IonExitFrameLayout.
 class IonNativeExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     uintptr_t argc_;
@@ -300,6 +272,7 @@ class IonNativeExitFrameLayout
 
 class IonOOLNativeExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
@@ -343,6 +316,7 @@ class IonOOLNativeExitFrameLayout
 
 class IonOOLPropertyOpExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
 
@@ -438,11 +412,12 @@ class IonOOLProxyExitFrameLayout
 
 class IonDOMExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     JSObject *thisObj;
 
-    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -470,6 +445,7 @@ struct IonDOMMethodExitFrameLayoutTraits;
 
 class IonDOMMethodExitFrameLayout
 {
+  protected: // only to silence a clang warning about unused private fields
     IonExitFooterFrame footer_;
     IonExitFrameLayout exit_;
     // This must be the last thing pushed, so as to stay common with
@@ -478,7 +454,7 @@ class IonDOMMethodExitFrameLayout
     Value *argv_;
     uintptr_t argc_;
 
-    // We need to split the Value in 2 fields of 32 bits, otherwise the C++
+    // We need to split the Value into 2 fields of 32 bits, otherwise the C++
     // compiler may add some padding between the fields.
     uint32_t loCalleeResult_;
     uint32_t hiCalleeResult_;
@@ -512,6 +488,36 @@ struct IonDOMMethodExitFrameLayoutTraits {
     static const size_t offsetOfArgcFromArgv =
         offsetof(IonDOMMethodExitFrameLayout, argc_) -
         offsetof(IonDOMMethodExitFrameLayout, argv_);
+};
+
+class IonOsrFrameLayout : public IonJSFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonOsrFrameLayout);
+    }
+};
+
+class ICStub;
+
+class IonBaselineStubFrameLayout : public IonCommonFrameLayout
+{
+  public:
+    static inline size_t Size() {
+        return sizeof(IonBaselineStubFrameLayout);
+    }
+
+    static inline int reverseOffsetOfStubPtr() {
+        return -int(sizeof(void *));
+    }
+    static inline int reverseOffsetOfSavedFramePtr() {
+        return -int(2 * sizeof(void *));
+    }
+
+    inline ICStub *maybeStubPtr() {
+        uint8_t *fp = reinterpret_cast<uint8_t *>(this);
+        return *reinterpret_cast<ICStub **>(fp + reverseOffsetOfStubPtr());
+    }
 };
 
 // An invalidation bailout stack is at the stack pointer for the callee frame.

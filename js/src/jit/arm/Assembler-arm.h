@@ -2211,7 +2211,7 @@ static inline uint32_t
 GetArgStackDisp(uint32_t arg)
 {
     JS_ASSERT(arg >= NumIntArgRegs);
-    return (arg - NumIntArgRegs) * STACK_SLOT_SIZE;
+    return (arg - NumIntArgRegs) * sizeof(intptr_t);
 }
 
 #endif
