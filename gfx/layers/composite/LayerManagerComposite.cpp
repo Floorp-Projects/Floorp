@@ -118,7 +118,6 @@ bool
 LayerManagerComposite::Initialize()
 {
   bool result = mCompositor->Initialize();
-  mComposer2D = mCompositor->GetWidget()->GetComposer2D();
   return result;
 }
 
@@ -357,7 +356,10 @@ LayerManagerComposite::Render()
     this->Dump();
   }
 
-  if (mComposer2D && mComposer2D->TryRender(mRoot, mWorldMatrix)) {
+  /** Our more efficient but less powerful alter ego, if one is available. */
+  nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
+
+  if (composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
     mCompositor->EndFrameForExternalComposition(mWorldMatrix);
     return;
   }
