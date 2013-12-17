@@ -7,8 +7,7 @@ Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/util.js");
 
-let mockUser = {assertion: 'assertion',
-                email: 'email',
+let mockUser = {email: 'email',
                 kA: 'kA',
                 kB: 'kB',
                 sessionToken: 'sessionToken',
@@ -19,11 +18,14 @@ let _MockFXA = function(blob) {
   this.user = blob;
 };
 _MockFXA.prototype = {
-  __proto__: FxAccounts.prototype,
   getSignedInUser: function getSignedInUser() {
-    let deferred = Promise.defer();
-    deferred.resolve(this.user);
-    return deferred.promise;
+    return Promise.resolve(this.user);
+  },
+  whenVerified: function whenVerified(userData) {
+    return Promise.resolve(this.user);
+  },
+  getAssertion: function getAssertion(audience) {
+    return Promise.resolve("assertion");
   },
 };
 let mockFXA = new _MockFXA(mockUser);
@@ -42,6 +44,9 @@ let mockTSC = { // TokenServerClient
 };
 
 let browseridManager = new BrowserIDManager(mockFXA, mockTSC);
+// Set the "account" of the browserId manager to be the "email" of the
+// logged in user of the mockFXA service.
+browseridManager._account = mockUser.email;
 
 function run_test() {
   initTestLogging("Trace");
@@ -53,7 +58,6 @@ add_test(function test_initial_state() {
     _("Verify initial state");
     do_check_false(!!browseridManager._token);
     do_check_false(browseridManager.hasValidToken());
-    do_check_false(!!browseridManager.account);
     run_next_test();
   }
 );
@@ -71,16 +75,16 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true(output.headers.authorization.startsWith('Hawk'));
     _("Expected internal state after successful call.");
     do_check_eq(browseridManager._token.uid, mockToken.uid);
-    do_check_eq(browseridManager.account, browseridManager._normalizeAccountValue(mockUser.email));
+    do_check_eq(browseridManager.account, mockUser.email);
     run_next_test();
   }
 );
 
-add_test(function test_getRequestAuthenticator() {
-    _("BrowserIDManager supplies a Request Authenticator callback which sets a Hawk header on a request object.");
+add_test(function test_getRESTRequestAuthenticator() {
+    _("BrowserIDManager supplies a REST Request Authenticator callback which sets a Hawk header on a request object.");
     let request = new SyncStorageRequest(
       "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = browseridManager.getRequestAuthenticator();
+    let authenticator = browseridManager.getRESTRequestAuthenticator();
     do_check_true(!!authenticator);
     let output = authenticator(request, 'GET');
     do_check_eq(request.uri, output.uri);
@@ -94,6 +98,7 @@ add_test(function test_getRequestAuthenticator() {
 add_test(function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
     let bimExp = new BrowserIDManager(mockFXA, mockTSC);
+    bimExp._account = mockUser.email;
 
     let authenticator = bimExp.getResourceAuthenticator();
     do_check_true(!!authenticator);
@@ -121,9 +126,10 @@ add_test(function test_userChangeAndLogOut() {
     _("BrowserIDManager notices when the FxAccounts.getSignedInUser().email changes.");
     let mockFXA2 = new _MockFXA(mockUser);
     let bidUser = new BrowserIDManager(mockFXA2, mockTSC);
+    bidUser._account = mockUser.email;
     let request = new SyncStorageRequest(
       "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = bidUser.getRequestAuthenticator();
+    let authenticator = bidUser.getRESTRequestAuthenticator();
     do_check_true(!!authenticator);
     let output = authenticator(request, 'GET');
     do_check_true(!!output);
