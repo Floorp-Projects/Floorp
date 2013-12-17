@@ -325,9 +325,9 @@ class Actions(object):
          corner of the element.
         :param y1: Starting y-coordinate of flick, relative to the top left
          corner of the element.
-        :param x1: Ending x-coordinate of flick, relative to the top left
+        :param x2: Ending x-coordinate of flick, relative to the top left
          corner of the element.
-        :param x1: Ending y-coordinate of flick, relative to the top left
+        :param y2: Ending y-coordinate of flick, relative to the top left
          corner of the element.
         :param duration: Time needed for the flick gesture for complete (in
          milliseconds).
