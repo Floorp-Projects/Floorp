@@ -375,11 +375,28 @@ public:
   static bool IsAncestorFrameCrossDoc(const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
                                         const nsIFrame* aCommonAncestor = nullptr);
 
+  /**
+   * Sets the fixed-pos metadata properties on aLayer.
+   * aAnchorRect is the basic anchor rectangle. If aFixedPosFrame is not a viewport
+   * frame, then we pick a corner of aAnchorRect to as the anchor point for the
+   * fixed-pos layer (i.e. the point to remain stable during zooming), based
+   * on which of the fixed-pos frame's CSS absolute positioning offset
+   * properties (top, left, right, bottom) are auto. aAnchorRect is in the
+   * coordinate space of aLayer's container layer (i.e. relative to the reference
+   * frame of the display item which is building aLayer's container layer).
+   */
   static void SetFixedPositionLayerData(Layer* aLayer, const nsIFrame* aViewportFrame,
-                                        nsSize aViewportSize,
+                                        const nsRect& aAnchorRect,
                                         const nsIFrame* aFixedPosFrame,
                                         nsPresContext* aPresContext,
                                         const ContainerLayerParameters& aContainerParameters);
+
+  /**
+   * Return true if aPresContext's viewport has a displayport.
+   * Fills in aDisplayPort with the displayport rectangle if non-null.
+   */
+  static bool ViewportHasDisplayPort(nsPresContext* aPresContext,
+                                     nsRect* aDisplayPort = nullptr);
 
   /**
    * Return true if aFrame is a fixed-pos frame and is a child of a viewport
