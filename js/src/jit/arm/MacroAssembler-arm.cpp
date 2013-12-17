@@ -1417,6 +1417,12 @@ MacroAssemblerARM::ma_vmov(FloatRegister src, FloatRegister dest, Condition cc)
 }
 
 void
+MacroAssemblerARM::ma_vmov_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vmov(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
+void
 MacroAssemblerARM::ma_vneg(FloatRegister src, FloatRegister dest, Condition cc)
 {
     as_vneg(dest, src, cc);
