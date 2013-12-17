@@ -1571,7 +1571,7 @@ DebugScopes::proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
 }
 
 #ifdef JSGC_GENERATIONAL
-class DebugScopes::MissingScopesRef : public BufferableRef
+class DebugScopes::MissingScopesRef : public gc::BufferableRef
 {
     MissingScopeMap *map;
     ScopeIterKey key;
