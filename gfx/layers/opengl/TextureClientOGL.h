@@ -15,12 +15,6 @@
 #include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient, etc
 
 namespace mozilla {
-namespace gfx {
-class SurfaceStream;
-}
-}
-
-namespace mozilla {
 namespace layers {
 
 class CompositableForwarder;
@@ -61,30 +55,6 @@ protected:
   gfx::IntSize mSize;
   gl::SharedTextureShareType mShareType;
   bool mInverted;
-};
-
-/**
- * A TextureClient implementation to share SurfaceStream.
- */
-class StreamTextureClientOGL : public TextureClient
-{
-public:
-  StreamTextureClientOGL(TextureFlags aFlags);
-
-  ~StreamTextureClientOGL();
-
-  virtual bool IsAllocated() const MOZ_OVERRIDE;
-
-  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
-
-  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE { return nullptr; }
-
-  void InitWith(gfx::SurfaceStream* aStream);
-
-  virtual gfx::IntSize GetSize() const { return gfx::IntSize(); }
-
-protected:
-  gfx::SurfaceStream* mStream;
 };
 
 class DeprecatedTextureClientSharedOGL : public DeprecatedTextureClient
