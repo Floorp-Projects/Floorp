@@ -436,8 +436,14 @@ function CreateSocialMarkWidget(aId, aProvider) {
       node.id = this.id;
       node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-mark-button');
       node.setAttribute('type', "socialmark");
-      node.style.listStyleImage = "url(" + aProvider.iconURL + ")";
+      node.style.listStyleImage = "url(" + (aProvider.unmarkedIcon || aProvider.icon32URL || aProvider.iconURL) + ")";
       node.setAttribute("origin", aProvider.origin);
+      node.setAttribute("oncommand", "this.markCurrentPage();");
+
+      let window = aDocument.defaultView;
+      let menuLabel = window.gNavigatorBundle.getFormattedString("social.markpageMenu.label", [aProvider.name]);
+      node.setAttribute("label", menuLabel);
+      node.setAttribute("tooltiptext", menuLabel);
 
       return node;
     }
