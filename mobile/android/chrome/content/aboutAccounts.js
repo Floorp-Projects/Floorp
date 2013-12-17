@@ -36,6 +36,10 @@ try {
   log.error(e);
 }
 
+function sendMessageToJava(message) {
+  return Services.androidBridge.handleGeckoMessage(JSON.stringify(message));
+}
+
 let wrapper = {
   iframe: null,
 
@@ -63,16 +67,28 @@ let wrapper = {
   onLogin: function (data) {
     log.debug("Received: 'login'. Data:" + JSON.stringify(data));
     this.injectData("message", { status: "login" });
+    sendMessageToJava({
+      type: "FxAccount:Login",
+      data: data,
+    });
   },
 
   onCreate: function (data) {
     log.debug("Received: 'create'. Data:" + JSON.stringify(data));
     this.injectData("message", { status: "create" });
+    sendMessageToJava({
+      type: "FxAccount:Create",
+      data: data,
+    });
   },
 
   onVerified: function (data) {
     log.debug("Received: 'verified'. Data:" + JSON.stringify(data));
     this.injectData("message", { status: "verified" });
+    sendMessageToJava({
+      type: "FxAccount:Verified",
+      data: data,
+    });
   },
 
   get accountsURI() {

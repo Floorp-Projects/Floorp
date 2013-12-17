@@ -176,6 +176,8 @@ abstract public class BrowserApp extends GeckoApp
 
     private OrderedBroadcastHelper mOrderedBroadcastHelper;
 
+    private FirefoxAccountsHelper mFirefoxAccountsHelper;
+
     private BrowserHealthReporter mBrowserHealthReporter;
 
     // The tab to be selected on editing mode exit.
@@ -541,6 +543,7 @@ abstract public class BrowserApp extends GeckoApp
         JavaAddonManager.getInstance().init(getApplicationContext());
         mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
+        mFirefoxAccountsHelper = new FirefoxAccountsHelper(getApplicationContext());
         mBrowserHealthReporter = new BrowserHealthReporter();
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
@@ -831,6 +834,11 @@ abstract public class BrowserApp extends GeckoApp
         if (mOrderedBroadcastHelper != null) {
             mOrderedBroadcastHelper.uninit();
             mOrderedBroadcastHelper = null;
+        }
+
+        if (mFirefoxAccountsHelper != null) {
+            mFirefoxAccountsHelper.uninit();
+            mFirefoxAccountsHelper = null;
         }
 
         if (mBrowserHealthReporter != null) {
