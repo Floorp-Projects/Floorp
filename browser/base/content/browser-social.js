@@ -68,6 +68,7 @@ SocialUI = {
     Services.prefs.addObserver("social.toast-notifications.enabled", this, false);
 
     gBrowser.addEventListener("ActivateSocialFeature", this._activationEventHandler.bind(this), true, true);
+    document.getElementById("PanelUI-popup").addEventListener("popupshown", SocialMarks.updatePanelButtons, true);
 
     if (!Social.initialized) {
       Social.init();
@@ -92,6 +93,8 @@ SocialUI = {
 
     Services.prefs.removeObserver("social.sidebar.open", this);
     Services.prefs.removeObserver("social.toast-notifications.enabled", this);
+
+    document.getElementById("PanelUI-popup").removeEventListener("popupshown", SocialMarks.updatePanelButtons, true);
   },
 
   _matchesCurrentProvider: function (origin) {
@@ -1639,6 +1642,22 @@ SocialMarks = {
     let currentButtons = document.querySelectorAll('toolbarbutton[type="socialmark"]');
     for (let elt of currentButtons)
       elt.update();
+  },
+
+  updatePanelButtons: function() {
+    // querySelectorAll does not work on the menu panel the panel, so we have to
+    // do this the hard way.
+    let providers = SocialMarks.getProviders();
+    let panel =  document.getElementById("PanelUI-popup");
+    for (let p of providers) {
+      let widgetId = SocialMarks._toolbarHelper.idFromOrigin(p.origin);
+      let widget = CustomizableUI.getWidget(widgetId);
+      if (!widget)
+        continue;
+      let node = widget.forWindow(window).node;
+      if (node)
+        node.update();
+    }
   },
 
   getProviders: function() {
