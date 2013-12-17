@@ -22,6 +22,7 @@ public:
   HTMLTableRowElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetHasWeirdParserInsertionMode();
   }
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableRowElement, tr)

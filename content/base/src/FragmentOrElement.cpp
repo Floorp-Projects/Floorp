@@ -2613,6 +2613,28 @@ FragmentOrElement::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
   }
 }
 
+static bool
+ContainsMarkup(const nsAString& aStr)
+{
+  // Note: we can't use FindCharInSet because null is one of the characters we
+  // want to search for.
+  const PRUnichar* start = aStr.BeginReading();
+  const PRUnichar* end = aStr.EndReading();
+
+  while (start != end) {
+    PRUnichar c = *start;
+    if (c == PRUnichar('<') ||
+        c == PRUnichar('&') ||
+        c == PRUnichar('\r') ||
+        c == PRUnichar('\0')) {
+      return true;
+    }
+    ++start;
+  }
+
+  return false;
+}
+
 void
 FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError)
 {
@@ -2623,6 +2645,19 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
       static_cast<HTMLTemplateElement*>(target)->Content();
     MOZ_ASSERT(frag);
     target = frag;
+  }
+
+  // Fast-path for strings with no markup. Limit this to short strings, to
+  // avoid ContainsMarkup taking too long. The choice for 100 is based on
+  // gut feeling.
+  //
+  // Don't do this for elements with a weird parser insertion mode, for
+  // instance setting innerHTML = "" on a <html> element should add the
+  // optional <head> and <body> elements.
+  if (!target->HasWeirdParserInsertionMode() &&
+      aInnerHTML.Length() < 100 && !ContainsMarkup(aInnerHTML)) {
+    aError = nsContentUtils::SetNodeTextContent(target, aInnerHTML, false);
+    return;
   }
 
   nsIDocument* doc = target->OwnerDoc();
