@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
 
 // Avoid leaks by using tmp for imports...
 let tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
-Cu.import("resource://gre/modules/Task.jsm", tmp);
 Cu.import("resource:///modules/CustomizableUI.jsm", tmp);
-let {Promise, Task, CustomizableUI} = tmp;
+let {Promise, CustomizableUI} = tmp;
 
 let ChromeUtils = {};
 let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
@@ -109,7 +109,7 @@ function todoAssertAreaPlacements(areaId, expectedPlacements) {
     }
   }
   todo(isPassing, "The area placements for " + areaId +
-                  " should equal the expected placements.")
+                  " should equal the expected placements.");
 }
 
 function getAreaWidgetIds(areaId) {
@@ -128,8 +128,10 @@ function endCustomizing(aWindow=window) {
   if (aWindow.document.documentElement.getAttribute("customizing") != "true") {
     return true;
   }
+  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   let deferredEndCustomizing = Promise.defer();
   function onCustomizationEnds() {
+    Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
     aWindow.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
     deferredEndCustomizing.resolve();
   }
@@ -163,9 +165,11 @@ function startCustomizing(aWindow=window) {
   if (aWindow.document.documentElement.getAttribute("customizing") == "true") {
     return;
   }
+  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   let deferred = Promise.defer();
   function onCustomizing() {
     aWindow.gNavToolbox.removeEventListener("customizationready", onCustomizing);
+    Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", false);
     deferred.resolve();
   }
   aWindow.gNavToolbox.addEventListener("customizationready", onCustomizing);
@@ -266,39 +270,4 @@ function waitFor(aTimeout=100) {
   let deferred = Promise.defer();
   setTimeout(function() deferred.resolve(), aTimeout);
   return deferred.promise;
-}
-
-function testRunner(testAry, asyncCleanup) {
-  Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
-  for (let test of testAry) {
-    info(test.desc);
-
-    if (test.setup)
-      yield test.setup();
-
-    info("Running test");
-    try {
-      yield test.run();
-    } catch (ex) {
-      ok(false, "Unexpected exception occurred while running the test:\n" + ex);
-    }
-    info("Cleanup");
-    if (test.teardown)
-      yield test.teardown();
-    ok(!document.getElementById(CustomizableUI.AREA_NAVBAR).hasAttribute("overflowing"), "Shouldn't overflow");
-  }
-  if (asyncCleanup) {
-    yield asyncCleanup();
-  }
-  ok(CustomizableUI.inDefaultState, "Should remain in default state");
-  Services.prefs.clearUserPref("browser.uiCustomization.disableAnimation");
-}
-
-function runTests(testAry, asyncCleanup) {
-  Task.spawn(testRunner(gTests, asyncCleanup)).then(finish, ex => {
-    // The stack of ok() here is misleading due to Promises. The stack of the
-    // actual exception is likely much more valuable, hence concatentating it.
-    ok(false, "Unexpected exception: " + ex + " With stack: " + ex.stack);
-    finish();
-  }).then(null, Cu.reportError);
 }
