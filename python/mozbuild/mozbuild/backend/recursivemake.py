@@ -32,6 +32,7 @@ from ..frontend.data import (
     HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
+    JARManifest,
     JavaJarData,
     LibraryDefinition,
     LocalInclude,
@@ -405,6 +406,9 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
 
+        elif isinstance(obj, JARManifest):
+            backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
+
         elif isinstance(obj, IPDLFile):
             self._ipdl_sources.add(mozpath.join(obj.srcdir, obj.basename))
 
@@ -682,11 +686,6 @@ class RecursiveMakeBackend(CommonBackend):
                 else:
                     self.log(logging.DEBUG, 'stub_makefile',
                         {'path': makefile}, 'Creating stub Makefile: {path}')
-
-                # Can't skip directories with a jar.mn for the 'libs' tier.
-                if bf.relobjdir in self._may_skip['libs'] and \
-                        os.path.exists(mozpath.join(srcdir, 'jar.mn')):
-                    self._may_skip['libs'].remove(bf.relobjdir)
 
                 obj = self.Substitution()
                 obj.output_path = makefile

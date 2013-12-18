@@ -1749,23 +1749,18 @@ CodeGenerator::visitCallNative(LCallNative *call)
     switch (executionMode) {
       case SequentialExecution:
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
-
-        // Test for failure.
-        masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
         break;
 
       case ParallelExecution:
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->parallelNative()));
-
-        // ParallelResult has more nuanced failure, but for now we fail on
-        // anything that's != TP_SUCCESS.
-        masm.branch32(Assembler::NotEqual, ReturnReg, Imm32(TP_SUCCESS),
-                      masm.failureLabel(executionMode));
         break;
 
       default:
         MOZ_ASSUME_UNREACHABLE("No such execution mode");
     }
+
+    // Test for failure.
+    masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
 
     // Load the outparam vp[0] into output register(s).
     masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);

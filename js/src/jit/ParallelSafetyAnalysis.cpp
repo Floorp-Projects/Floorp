@@ -146,7 +146,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(CallDirectEval)
     SAFE_OP(BitNot)
     UNSAFE_OP(TypeOf)
-    SAFE_OP(ToId)
+    UNSAFE_OP(ToId)
     SAFE_OP(BitAnd)
     SAFE_OP(BitOr)
     SAFE_OP(BitXor)

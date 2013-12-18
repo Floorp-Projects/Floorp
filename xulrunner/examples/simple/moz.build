@@ -7,3 +7,5 @@
 DIRS += ['components']
 
 XPI_NAME = 'simple'
+
+JAR_MANIFESTS += ['jar.mn']
