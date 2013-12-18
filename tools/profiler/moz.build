@@ -45,12 +45,24 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
-	# These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
+        UNIFIED_SOURCES += [
+            'AutoObjectMapper.cpp',
+            'LulCommon.cpp',
+            'LulDwarf.cpp',
+            'LulDwarfSummariser.cpp',
+            'LulElf.cpp',
+            'LulMain.cpp',
+            'LulRWLock.cpp',
+        ]
+        # These files cannot be built in unified mode because of name clashes with mozglue headers on Android.
         SOURCES += [
             'platform-linux.cc',
             'shared-libraries-linux.cc',
         ]
         if CONFIG['CPU_ARCH'] == 'arm':
+            UNIFIED_SOURCES += [
+                'LulExidx.cpp',
+            ]
             SOURCES += [
                 'EHABIStackWalk.cpp',
             ]
@@ -81,6 +93,9 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
 
     if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
         DEFINES['ARCH_ARMV6'] = True
+
+    if CONFIG['ENABLE_TESTS']:
+        DIRS += ['tests/gtest']
 
     FINAL_LIBRARY = 'xul'
 
