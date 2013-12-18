@@ -47,10 +47,6 @@
 #endif
 #include "GeckoProfiler.h"
 
-#ifdef MOZ_WIDGET_ANDROID
-#include "GfxInfo.h"
-#endif
-
 #define BUFFER_OFFSET(i) ((char *)nullptr + (i))
 
 namespace mozilla {
@@ -382,10 +378,6 @@ CompositorOGL::Initialize()
 #ifdef MOZ_WIDGET_ANDROID
   if (!mGLContext)
     NS_RUNTIMEABORT("We need a context on Android");
-
-  // on Android, the compositor's GLContext is used to get GL strings for GfxInfo
-  nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-  static_cast<widget::GfxInfo*>(gfxInfo.get())->InitializeGLStrings(mGLContext);
 #endif
 
   if (!mGLContext)
