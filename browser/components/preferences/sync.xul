@@ -45,48 +45,22 @@
           </description>
           <separator/>
           <label class="text-link"
-                 onclick="event.stopPropagation(); gSyncPane.openSetup(null);"
+                 onclick="event.stopPropagation(); gSyncPane.openAccountsPage();"
                  value="&setupButton.label;"/>
-          <separator/>
-          <label class="text-link"
-                 onclick="event.stopPropagation(); gSyncPane.openSetup('pair');"
-                 value="&pairDevice.label;"/>
           <spacer flex="3"/>
         </vbox>
 
         <vbox id="hasAccount">
           <groupbox class="syncGroupBox">
             <!-- label is set to account name -->
-            <caption id="accountCaption" align="center">
+            <caption id="accountCaption" align="center" flex="1">
               <image id="accountCaptionImage"/>
-              <label id="accountName" value=""/>
+              <label id="accountName" value="" flex="1"/>
+
+              <label class="text-link"
+                     onclick="event.stopPropagation();gSyncUtils.openAccountsPage();"
+                     value="&accountsLink.label;"/>
             </caption>
-
-            <hbox>
-              <button type="menu"
-                      label="&manageAccount.label;"
-                      accesskey="&manageAccount.accesskey;">
-                <menupopup>
-                  <menuitem label="&viewQuota.label;"
-                            oncommand="gSyncPane.openQuotaDialog();"/>
-                  <menuseparator/>
-                  <menuitem label="&changePassword2.label;"
-                            oncommand="gSyncUtils.changePassword();"/>
-                  <menuitem label="&myRecoveryKey.label;"
-                            oncommand="gSyncUtils.resetPassphrase();"/>
-                  <menuseparator/>
-                  <menuitem label="&resetSync2.label;"
-                            oncommand="gSyncPane.resetSync();"/>
-                </menupopup>
-              </button>
-            </hbox>
-
-            <hbox>
-              <label id="syncAddDeviceLabel"
-                     class="text-link"
-                     onclick="gSyncPane.openAddDevice(); return false;"
-                     value="&pairDevice.label;"/>
-            </hbox>
 
             <vbox>
               <label value="&syncMy.label;" />
@@ -143,11 +117,6 @@
                 </row>
               </rows>
             </grid>
-            <hbox>
-              <label class="text-link"
-                     onclick="gSyncPane.startOver(true); return false;"
-                     value="&unlinkDevice.label;"/>
-            </hbox>
           </groupbox>
           <hbox id="tosPP" pack="center">
             <label class="text-link"
@@ -157,21 +126,6 @@
                    onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
                    value="&prefs.ppLink.label;"/>
           </hbox>
-        </vbox>
-
-        <vbox id="needsUpdate" align="center" pack="center">
-          <hbox>
-            <label id="loginError" value=""/>
-            <label class="text-link"
-                   onclick="gSyncPane.updatePass(); return false;"
-                   value="&updatePass.label;"/>
-            <label class="text-link"
-                   onclick="gSyncPane.resetPass(); return false;"
-                   value="&resetPass.label;"/>
-          </hbox>
-          <label class="text-link"
-                 onclick="gSyncPane.startOver(true); return false;"
-                 value="&unlinkDevice.label;"/>
         </vbox>
       </deck>
   </prefpane>
