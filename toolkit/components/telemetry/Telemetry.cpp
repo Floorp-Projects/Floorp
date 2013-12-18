@@ -939,8 +939,8 @@ mFailedLockCount(0)
     "addons.sqlite", "content-prefs.sqlite", "cookies.sqlite",
     "downloads.sqlite", "extensions.sqlite", "formhistory.sqlite",
     "index.sqlite", "healthreport.sqlite", "permissions.sqlite",
-    "places.sqlite", "search.sqlite", "signons.sqlite", "urlclassifier3.sqlite",
-    "webappsstore.sqlite"
+    "places.sqlite", "search.sqlite", "seer.sqlite", "signons.sqlite",
+    "urlclassifier3.sqlite", "webappsstore.sqlite"
   };
 
   for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
@@ -2183,28 +2183,28 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
 {
   if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
-  
-  nsAutoCString dbNameComment;
-  dbNameComment.AppendPrintf(" /* %s */", dbName.BeginReading());
-  
+
   bool isFirefoxDB = sTelemetry->mTrackedDBs.Contains(dbName);
   if (isFirefoxDB) {
     nsAutoCString sanitizedSQL(SanitizeSQL(sql));
     if (sanitizedSQL.Length() > kMaxSlowStatementLength) {
       sanitizedSQL.SetLength(kMaxSlowStatementLength);
       sanitizedSQL += "...";
-      sanitizedSQL += dbNameComment;
     }
+    sanitizedSQL.AppendPrintf(" /* %s */", nsPromiseFlatCString(dbName).get());
     StoreSlowSQL(sanitizedSQL, delay, Sanitized);
   } else {
     // Report aggregate DB-level statistics for addon DBs
     nsAutoCString aggregate;
-    aggregate.AppendPrintf("Untracked SQL for %s", dbName.BeginReading());
+    aggregate.AppendPrintf("Untracked SQL for %s",
+                           nsPromiseFlatCString(dbName).get());
     StoreSlowSQL(aggregate, delay, Sanitized);
   }
 
-  nsAutoCString fullSQL(sql);
-  fullSQL += dbNameComment;
+  nsAutoCString fullSQL;
+  fullSQL.AppendPrintf("%s /* %s */",
+                       nsPromiseFlatCString(sql).get(),
+                       nsPromiseFlatCString(dbName).get());
   StoreSlowSQL(fullSQL, delay, Unsanitized);
 }
 
