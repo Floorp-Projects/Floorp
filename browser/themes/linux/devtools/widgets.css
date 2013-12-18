@@ -271,7 +271,7 @@
 
 .side-menu-widget-container {
   /* Hack: force hardware acceleration */
-  transform: translateX(0px);
+  transform: translateZ(1px);
 }
 
 .side-menu-widget-container[theme="dark"] {
@@ -437,9 +437,9 @@
 
 /* VariablesView */
 
-.variables-view-container:not([empty]) {
+.variables-view-container {
   /* Hack: force hardware acceleration */
-  transform: translateX(1px);
+  transform: translateZ(1px);
 }
 
 .variables-view-empty-notice {
