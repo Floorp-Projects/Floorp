@@ -2406,8 +2406,9 @@ private:
 
 struct scanVisitor
 {
-    scanVisitor(uint32_t &aWhiteNodeCount, bool &aFailed)
-        : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed)
+    scanVisitor(uint32_t &aWhiteNodeCount, bool &aFailed, bool aWasIncremental)
+        : mWhiteNodeCount(aWhiteNodeCount), mFailed(aFailed),
+          mWasIncremental(aWasIncremental)
     {
     }
 
@@ -2418,8 +2419,16 @@ struct scanVisitor
 
     MOZ_NEVER_INLINE void VisitNode(PtrInfo *pi)
     {
-        if (pi->mInternalRefs > pi->mRefCount && pi->mRefCount > 0)
-            Fault("traversed refs exceed refcount", pi);
+        if (pi->mInternalRefs > pi->mRefCount && pi->mRefCount > 0) {
+            // If we found more references to an object than its ref count, then
+            // the object should have already been marked as an incremental
+            // root. Note that this is imprecise, because pi could have been
+            // marked black for other reasons. Always fault if we weren't
+            // incremental, as there were no incremental roots in that case.
+            if (!mWasIncremental || pi->mColor != black) {
+                Fault("traversed refs exceed refcount", pi);
+            }
+        }
 
         if (pi->mInternalRefs == pi->mRefCount || pi->mRefCount == 0) {
             pi->mColor = white;
@@ -2438,6 +2447,7 @@ struct scanVisitor
 private:
     uint32_t &mWhiteNodeCount;
     bool &mFailed;
+    bool mWasIncremental;
 };
 
 // Iterate over the WeakMaps.  If we mark anything while iterating
@@ -2606,7 +2616,8 @@ nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
     // probably faster to use a GraphWalker than a
     // NodePool::Enumerator.
     bool failed = false;
-    GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount, failed)).WalkFromRoots(mGraph);
+    scanVisitor sv(mWhiteNodeCount, failed, !aFullySynchGraphBuild);
+    GraphWalker<scanVisitor>(sv).WalkFromRoots(mGraph);
     timeLog.Checkpoint("ScanRoots::WalkFromRoots");
 
     if (failed) {
