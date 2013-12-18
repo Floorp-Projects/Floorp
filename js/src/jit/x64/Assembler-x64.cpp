@@ -89,7 +89,7 @@ Assembler::writeRelocation(JmpSrc src, Relocation::Kind reloc)
         // patch later.
         jumpRelocations_.writeFixedUint32_t(0);
     }
-    if (reloc == Relocation::IONCODE) {
+    if (reloc == Relocation::JITCODE) {
         jumpRelocations_.writeUnsigned(src.offset());
         jumpRelocations_.writeUnsigned(jumps_.length());
     }
@@ -102,7 +102,7 @@ Assembler::addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc)
 
     // Emit reloc before modifying the jump table, since it computes a 0-based
     // index. This jump is not patchable at runtime.
-    if (reloc == Relocation::IONCODE)
+    if (reloc == Relocation::JITCODE)
         writeRelocation(src, reloc);
     enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), target.value, reloc));
 }
@@ -121,7 +121,7 @@ Assembler::addPatchableJump(JmpSrc src, Relocation::Kind reloc)
 
 /* static */
 uint8_t *
-Assembler::PatchableJumpAddress(IonCode *code, size_t index)
+Assembler::PatchableJumpAddress(JitCode *code, size_t index)
 {
     // The assembler stashed the offset into the code of the fragments used
     // for far jumps at the start of the relocation table.
@@ -151,7 +151,7 @@ Assembler::finish()
     extendedJumpTable_ = masm.size();
 
     // Now that we know the offset to the jump table, squirrel it into the
-    // jump relocation buffer if any IonCode references exist and must be
+    // jump relocation buffer if any JitCode references exist and must be
     // tracked for GC.
     JS_ASSERT_IF(jumpRelocations_.length(), jumpRelocations_.length() >= sizeof(uint32_t));
     if (jumpRelocations_.length())
@@ -237,8 +237,8 @@ class RelocationIterator
     }
 };
 
-IonCode *
-Assembler::CodeFromJump(IonCode *code, uint8_t *jump)
+JitCode *
+Assembler::CodeFromJump(JitCode *code, uint8_t *jump)
 {
     uint8_t *target = (uint8_t *)JSC::X86Assembler::getRel32Target(jump);
     if (target >= code->raw() && target < code->raw() + code->instructionsSize()) {
@@ -249,16 +249,16 @@ Assembler::CodeFromJump(IonCode *code, uint8_t *jump)
         target = (uint8_t *)JSC::X86Assembler::getPointer(target + SizeOfExtendedJump);
     }
 
-    return IonCode::FromExecutable(target);
+    return JitCode::FromExecutable(target);
 }
 
 void
-Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
-        IonCode *child = CodeFromJump(code, code->raw() + iter.offset());
-        MarkIonCodeUnbarriered(trc, &child, "rel32");
+        JitCode *child = CodeFromJump(code, code->raw() + iter.offset());
+        MarkJitCodeUnbarriered(trc, &child, "rel32");
         JS_ASSERT(child == CodeFromJump(code, code->raw() + iter.offset()));
     }
 }
