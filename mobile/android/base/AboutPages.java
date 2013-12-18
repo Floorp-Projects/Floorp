@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.StringUtils;
+
 public class AboutPages {
     // All of our special pages.
     public static final String ADDONS          = "about:addons";
@@ -25,12 +27,22 @@ public class AboutPages {
     }
 
     public static final boolean isTitlelessAboutPage(final String url) {
-        return HOME.equals(url) ||
+        return isAboutHome(url) ||
                PRIVATEBROWSING.equals(url);
     }
 
     public static final boolean isAboutHome(final String url) {
-        return HOME.equals(url);
+        if (url == null || !url.startsWith(HOME)) {
+            return false;
+        }
+        // We sometimes append a parameter to "about:home" to specify which page to
+        // show when we open the home pager. Discard this parameter when checking
+        // whether or not this URL is "about:home".
+        return HOME.equals(url.split("\\?")[0]);
+    }
+
+    public static final String getPageIdFromAboutHomeUrl(final String aboutHomeUrl) {
+        return StringUtils.getQueryParameter(aboutHomeUrl, "page");
     }
 
     public static final boolean isAboutReader(final String url) {

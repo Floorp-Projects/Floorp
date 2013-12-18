@@ -54,7 +54,7 @@ setup_nss_functions(void *nss_handle,
     return FAILURE;
   }
 #define GETFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(nss_handle, #name); \
-                      if (!f_ ##name) return FAILURE;
+  if (!f_ ##name) { __android_log_print(ANDROID_LOG_ERROR, "GeckoJNI", "missing %s", #name);  return FAILURE; }
   GETFUNC(NSS_Initialize);
   GETFUNC(NSS_Shutdown);
   GETFUNC(PK11SDR_Encrypt);
@@ -65,13 +65,13 @@ setup_nss_functions(void *nss_handle,
   GETFUNC(SECITEM_ZfreeItem);
 #undef GETFUNC
 #define NSPRFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(nspr_handle, #name); \
-                       if (!f_ ##name) return FAILURE;
+  if (!f_ ##name) { __android_log_print(ANDROID_LOG_ERROR, "GeckoJNI", "missing %s", #name);  return FAILURE; }
   NSPRFUNC(PR_ErrorToString);
   NSPRFUNC(PR_GetError);
   NSPRFUNC(PR_Free);
 #undef NSPRFUNC
 #define PLCFUNC(name) f_ ## name = (name ## _t) (uintptr_t) __wrap_dlsym(plc_handle, #name); \
-                      if (!f_ ##name) return FAILURE;
+  if (!f_ ##name) { __android_log_print(ANDROID_LOG_ERROR, "GeckoJNI", "missing %s", #name);  return FAILURE; }
   PLCFUNC(PL_Base64Encode);
   PLCFUNC(PL_Base64Decode);
   PLCFUNC(PL_strfree);
