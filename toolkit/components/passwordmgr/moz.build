@@ -33,3 +33,5 @@ EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
     'LoginManagerContent.jsm',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

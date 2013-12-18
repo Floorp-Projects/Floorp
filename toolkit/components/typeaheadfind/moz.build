@@ -15,3 +15,5 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = 'toolkitcomps'
+
+JAR_MANIFESTS += ['jar.mn']

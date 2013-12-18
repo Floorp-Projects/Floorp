@@ -30,6 +30,7 @@ from .data import (
     HostSimpleProgram,
     InstallationTarget,
     IPDLFile,
+    JARManifest,
     LibraryDefinition,
     LocalInclude,
     PreprocessedTestWebIDLFile,
@@ -380,6 +381,25 @@ class TreeMetadataEmitter(LoggingMixin):
             for path in sandbox.get('%s_MANIFESTS' % prefix, []):
                 for obj in self._process_test_manifest(sandbox, info, path):
                     yield obj
+
+        jar_manifests = sandbox.get('JAR_MANIFESTS', [])
+        if len(jar_manifests) > 1:
+            raise SandboxValidationError('While JAR_MANIFESTS is a list, '
+                'it is currently limited to one value.')
+
+        for path in jar_manifests:
+            yield JARManifest(sandbox, mozpath.join(sandbox['SRCDIR'], path))
+
+        # Temporary test to look for jar.mn files that creep in without using
+        # the new declaration. Before, we didn't require jar.mn files to
+        # declared anywhere (they were discovered). This will detect people
+        # relying on the old behavior.
+        if os.path.exists(os.path.join(sandbox['SRCDIR'], 'jar.mn')):
+            if 'jar.mn' not in jar_manifests:
+                raise SandboxValidationError('A jar.mn exists in %s but it '
+                    'is not referenced in the corresponding moz.build file. '
+                    'Please define JAR_MANIFESTS in the moz.build file.' %
+                    sandbox['SRCDIR'])
 
         for name, jar in sandbox.get('JAVA_JAR_TARGETS', {}).items():
             yield SandboxWrapped(sandbox, jar)

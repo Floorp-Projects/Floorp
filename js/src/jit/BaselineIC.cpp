@@ -3271,7 +3271,6 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
     shape.set(nullptr);
     holder.set(nullptr);
 
-    bool isDOMProxy = false;
     if (checkDOMProxy)
         *checkDOMProxy = false;
 
@@ -3281,7 +3280,7 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
         JS_ASSERT(domProxyHasGeneration);
         JS_ASSERT(shadowsResult);
 
-        *checkDOMProxy = isDOMProxy = true;
+        *checkDOMProxy = true;
         if (obj->hasUncacheableProto())
             return true;
 
@@ -3298,6 +3297,8 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
         *domProxyHasGeneration = (*shadowsResult == DoesntShadowUnique);
 
         checkObj = GetDOMProxyProto(obj);
+        if (!checkObj)
+            return true;
     } else if (obj->is<TypedArrayObject>() && obj->getProto()) {
         // Typed array objects are non-native, but don't have any named
         // properties. Just forward the lookup to the prototype, to allow

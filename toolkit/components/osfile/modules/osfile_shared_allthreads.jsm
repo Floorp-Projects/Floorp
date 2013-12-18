@@ -968,7 +968,8 @@ function declareLazyFFI(object, field, ...declareFFIArgs) {
       }
       return undefined;
     },
-    configurable: true
+    configurable: true,
+    enumerable: true
   });
 }
 exports.declareLazyFFI = declareLazyFFI;
