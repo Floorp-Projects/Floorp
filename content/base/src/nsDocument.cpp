@@ -3162,7 +3162,7 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
   if (!ptFrame) {
     return nullptr;
@@ -3217,7 +3217,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
 
   nsAutoTArray<nsIFrame*,8> outFrames;
   nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
 
   // Used to filter out repeated elements in sequence.
@@ -9459,7 +9459,7 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION);
+      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
     return nullptr;
   }
