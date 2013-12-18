@@ -2090,9 +2090,6 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
       builder.SetIgnoreScrollFrame(rootScrollFrame);
     }
   }
-  if (aFlags & IGNORE_CROSS_DOC) {
-    builder.SetDescendIntoSubdocuments(false);
-  }
 
   builder.EnterPresShell(aFrame, target);
   aFrame->BuildDisplayListForStackingContext(&builder, target, &list);
