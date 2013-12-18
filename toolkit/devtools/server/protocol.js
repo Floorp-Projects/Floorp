@@ -1058,7 +1058,7 @@ let Front = Class({
 
     // Remaining packets must be responses.
     if (this._requests.length === 0) {
-      let msg = "Unexpected packet from " + this.actorID + ", " + packet.type;
+      let msg = "Unexpected packet " + this.actorID + ", " + JSON.stringify(packet);
       let err = Error(msg);
       console.error(err);
       throw err;
