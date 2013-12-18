@@ -52,3 +52,10 @@ addMessageListener("ss-test:setAuthorStyleDisabled", function (msg) {
   markupDocumentViewer.authorStyleDisabled = msg.data;
   sendSyncMessage("ss-test:setAuthorStyleDisabled");
 });
+
+addMessageListener("ss-test:setUsePrivateBrowsing", function (msg) {
+  let loadContext =
+    docShell.QueryInterface(Ci.nsILoadContext);
+  loadContext.usePrivateBrowsing = msg.data;
+  sendAsyncMessage("ss-test:setUsePrivateBrowsing");
+});
