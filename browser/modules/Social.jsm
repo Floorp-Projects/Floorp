@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/commonjs/sdk/core/promise.js");
+  "resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
                                    "@mozilla.org/feed-unescapehtml;1",
