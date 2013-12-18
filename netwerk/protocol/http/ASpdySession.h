@@ -32,6 +32,10 @@ public:
 
   virtual void PrintDiagnostics (nsCString &log) = 0;
 
+  bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
+    return true;
+  }
+
   const static uint32_t kSendingChunkSize = 4096;
   const static uint32_t kTCPSendBufferSize = 131072;
 
