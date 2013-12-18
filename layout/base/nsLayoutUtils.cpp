@@ -5118,6 +5118,28 @@ nsLayoutUtils::AssertTreeOnlyEmptyNextInFlows(nsIFrame *aSubtreeRoot)
 }
 #endif
 
+static void
+GetFontFacesForFramesInner(nsIFrame* aFrame, nsFontFaceList* aFontFaceList)
+{
+  NS_PRECONDITION(aFrame, "NULL frame pointer");
+
+  if (aFrame->GetType() == nsGkAtoms::textFrame) {
+    nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, false, aFontFaceList);
+    return;
+  }
+
+  nsIFrame::ChildListID childLists[] = { nsIFrame::kPrincipalList,
+                                         nsIFrame::kPopupList };
+  for (size_t i = 0; i < ArrayLength(childLists); ++i) {
+    nsFrameList children(aFrame->GetChildList(childLists[i]));
+    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+      child = nsPlaceholderFrame::GetRealFrameFor(child);
+      GetFontFacesForFramesInner(child, aFontFaceList);
+    }
+  }
+}
+
 /* static */
 nsresult
 nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
@@ -5125,26 +5147,8 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
 {
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
-  if (aFrame->GetType() == nsGkAtoms::textFrame) {
-    return GetFontFacesForText(aFrame, 0, INT32_MAX, false,
-                               aFontFaceList);
-  }
-
   while (aFrame) {
-    nsIFrame::ChildListID childLists[] = { nsIFrame::kPrincipalList,
-                                           nsIFrame::kPopupList };
-    for (size_t i = 0; i < ArrayLength(childLists); ++i) {
-      nsFrameList children(aFrame->GetChildList(childLists[i]));
-      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
-        nsIFrame* child = e.get();
-        if (child->GetPrevContinuation()) {
-          continue;
-        }
-        child = nsPlaceholderFrame::GetRealFrameFor(child);
-        nsresult rv = GetFontFacesForFrames(child, aFontFaceList);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
+    GetFontFacesForFramesInner(aFrame, aFontFaceList);
     aFrame = GetNextContinuationOrSpecialSibling(aFrame);
   }
 
