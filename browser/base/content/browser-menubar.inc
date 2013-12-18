@@ -452,7 +452,7 @@
                         label="&syncSetup.label;"
                         accesskey="&syncSetup.accesskey;"
                         observes="sync-setup-state"
-                        oncommand="gSyncUI.openAccountsPage()"/>
+                        oncommand="gSyncUI.openSetup()"/>
               <menuitem id="sync-syncnowitem"
                         label="&syncSyncNowItem.label;"
                         accesskey="&syncSyncNowItem.accesskey;"
