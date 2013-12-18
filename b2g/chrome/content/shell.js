@@ -1065,7 +1065,7 @@ let RemoteDebugger = {
         if ("nsIProfiler" in Ci) {
           DebuggerServer.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
         }
-        DebuggerServer.registerModule("devtools/server/actors/inspector")
+        DebuggerServer.registerModule("devtools/server/actors/inspector");
         DebuggerServer.registerModule("devtools/server/actors/styleeditor");
         DebuggerServer.enableWebappsContentActor = true;
       }
