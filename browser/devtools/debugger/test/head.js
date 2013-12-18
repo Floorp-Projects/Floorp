@@ -488,8 +488,6 @@ function prepareDebugger(aDebugger) {
   if ("target" in aDebugger) {
     let variables = aDebugger.panelWin.DebuggerView.Variables;
     variables.lazyEmpty = false;
-    variables.lazyAppend = false;
-    variables.lazyExpand = false;
     variables.lazySearch = false;
   } else {
     // Nothing to do here yet.
