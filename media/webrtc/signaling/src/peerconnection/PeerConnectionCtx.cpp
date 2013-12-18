@@ -80,12 +80,14 @@ MediaConstraintsExternal::MediaConstraintsExternal(
   }
   Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
         true);
+  Apply(aSrc.mMandatory.mMozBundleOnly, &c->moz_bundle_only, true);
   if (aSrc.mOptional.WasPassed()) {
     const Sequence<MediaConstraintSet> &array = aSrc.mOptional.Value();
     for (uint32_t i = 0; i < array.Length(); i++) {
       Apply(array[i].mOfferToReceiveAudio, &c->offer_to_receive_audio);
       Apply(array[i].mOfferToReceiveVideo, &c->offer_to_receive_video);
       Apply(array[i].mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
+      Apply(array[i].mMozBundleOnly, &c->moz_bundle_only);
     }
   }
 #endif

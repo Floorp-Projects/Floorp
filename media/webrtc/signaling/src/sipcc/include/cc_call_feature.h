@@ -177,7 +177,11 @@ cc_return_t CC_CallFeature_SetRemoteDescription(cc_call_handle_t call_handle,
 
 cc_return_t CC_CallFeature_SetPeerConnection(cc_call_handle_t call_handle, cc_peerconnection_t pc);
 
-cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle, cc_media_stream_id_t stream_id, cc_media_track_id_t id, cc_media_type_t media_type);
+cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle,
+                                     cc_media_stream_id_t stream_id,
+                                     cc_media_track_id_t id,
+                                     cc_media_type_t media_type,
+                                     cc_media_constraints_t *constraints);
 
 cc_return_t CC_CallFeature_RemoveStream(cc_call_handle_t call_handle, cc_media_stream_id_t stream_id, cc_media_track_id_t id, cc_media_type_t media_type);
 
