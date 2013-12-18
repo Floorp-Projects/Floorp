@@ -271,7 +271,7 @@ var SelectionHandler = {
     // Figure out the distance between the selection and the click
     let positions = this._getHandlePositions(scroll);
 
-    if (aOptions.mode == this.SELECT_AT_POINT && !this.selectionNearClick(scroll.X + aOptions.x,
+    if (aOptions.mode == this.SELECT_AT_POINT && !this._selectionNearClick(scroll.X + aOptions.x,
                                                                       scroll.Y + aOptions.y,
                                                                       positions)) {
         this._closeSelection();
