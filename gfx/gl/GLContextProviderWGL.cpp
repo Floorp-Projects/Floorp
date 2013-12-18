@@ -320,6 +320,10 @@ public:
         if (!mDC || !mContext)
             return false;
 
+        // see bug 929506 comment 29. wglGetProcAddress requires a current context.
+        if (!sWGLLib[mLibType].fMakeCurrent(mDC, mContext))
+            return false;
+
         SetupLookupFunction();
         if (!InitWithPrefix("gl", true))
             return false;
