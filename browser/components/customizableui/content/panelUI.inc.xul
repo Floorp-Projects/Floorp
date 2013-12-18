@@ -36,6 +36,12 @@
 
     <panelview id="PanelUI-history" flex="1">
       <label value="&appMenuHistory.label;"/>
+      <toolbarbutton id="appMenuViewHistorySidebar" tabindex="0"
+                     label="&appMenuHistory.viewSidebar.label;"
+                     type="checkbox"
+                     oncommand="toggleSidebar('viewHistorySidebar'); PanelUI.hide();">
+        <observes element="viewHistorySidebar" attribute="checked"/>
+      </toolbarbutton>
       <toolbarbutton id="appMenuClearRecentHistory" tabindex="0"
                      label="&appMenuHistory.clearRecent.label;"
                      command="Tools:Sanitize"/>
