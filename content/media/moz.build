@@ -123,6 +123,7 @@ UNIFIED_SOURCES += [
     'MediaDecoderStateMachine.cpp',
     'MediaRecorder.cpp',
     'MediaResource.cpp',
+    'MediaShutdownManager.cpp',
     'MediaStreamGraph.cpp',
     'MediaStreamTrack.cpp',
     'MP3FrameParser.cpp',
