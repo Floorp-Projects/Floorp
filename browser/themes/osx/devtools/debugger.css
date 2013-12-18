@@ -12,7 +12,7 @@
 }
 
 #sources-and-editor-splitter {
-  border-color: transparent;
+  -moz-border-start-color: transparent;
 }
 
 /* Sources toolbar */
@@ -376,7 +376,7 @@
 }
 
 #globalsearch + .devtools-horizontal-splitter {
-  border-color: #bfbfbf;
+  -moz-border-top-colors: #bfbfbf;
 }
 
 .dbg-source-results {
