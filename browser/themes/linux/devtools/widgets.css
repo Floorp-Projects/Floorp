@@ -451,17 +451,7 @@
   color: #fff;
 }
 
-.variables-view-scope > .variables-view-element-details:not(:empty) {
-  -moz-margin-start: 2px;
-  -moz-margin-end: 1px;
-}
-
 /* Generic variables traits */
-
-.variables-view-variable {
-  -moz-margin-start: 1px;
-  -moz-margin-end: 1px;
-}
 
 .variables-view-variable:not(:last-child) {
   border-bottom: 1px solid rgba(128, 128, 128, .15);
@@ -481,8 +471,12 @@
   -moz-box-flex: 1;
 }
 
+.variable-or-property > .title > .arrow {
+  -moz-margin-start: 3px;
+}
+
 .variable-or-property:not([untitled]) > .variables-view-element-details {
-  -moz-margin-start: 10px;
+  -moz-margin-start: 7px;
 }
 
 /* Traits applied when variables or properties are changed or overridden */
