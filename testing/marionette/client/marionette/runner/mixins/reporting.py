@@ -10,8 +10,8 @@ import os
 import pkg_resources
 import sys
 
-from py.xml import html
-from py.xml import raw
+from xmlgen import html
+from xmlgen import raw
 
 
 class HTMLReportingTestRunnerMixin(object):
