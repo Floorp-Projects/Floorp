@@ -56,8 +56,10 @@ public:
   void RemoveTextTrack(TextTrack* aTrack);
   void DidSeek();
 
-  nsresult DispatchTrackEvent(TrackEvent* aEvent);
+  nsresult DispatchTrackEvent(nsIDOMEvent* aEvent);
+  void CreateAndDispatchChangeEvent();
 
+  IMPL_EVENT_HANDLER(change)
   IMPL_EVENT_HANDLER(addtrack)
   IMPL_EVENT_HANDLER(removetrack)
 

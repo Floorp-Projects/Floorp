@@ -95,7 +95,7 @@ TextTrackList::DidSeek()
 class TrackEventRunner MOZ_FINAL: public nsRunnable
 {
 public:
-  TrackEventRunner(TextTrackList* aList, TrackEvent* aEvent)
+  TrackEventRunner(TextTrackList* aList, nsIDOMEvent* aEvent)
     : mList(aList)
     , mEvent(aEvent)
   {}
@@ -107,13 +107,35 @@ public:
 
 private:
   nsRefPtr<TextTrackList> mList;
-  nsRefPtr<TrackEvent> mEvent;
+  nsRefPtr<nsIDOMEvent> mEvent;
 };
 
 nsresult
-TextTrackList::DispatchTrackEvent(TrackEvent* aEvent)
+TextTrackList::DispatchTrackEvent(nsIDOMEvent* aEvent)
 {
   return DispatchTrustedEvent(aEvent);
+}
+
+void
+TextTrackList::CreateAndDispatchChangeEvent()
+{
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv = NS_NewDOMEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create the error event!");
+    return;
+  }
+
+  rv = event->InitEvent(NS_LITERAL_STRING("change"), false, false);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to init the change event!");
+    return;
+  }
+
+  event->SetTrusted(true);
+
+  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
+  NS_DispatchToMainThread(eventRunner, NS_DISPATCH_NORMAL);
 }
 
 void
@@ -124,12 +146,12 @@ TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
   eventInit.mBubbles = false;
   eventInit.mCancelable = false;
   eventInit.mTrack = aTrack;
-  nsRefPtr<TrackEvent> trackEvent =
+  nsRefPtr<TrackEvent> event =
     TrackEvent::Constructor(this, aEventName, eventInit);
 
   // Dispatch the TrackEvent asynchronously.
-  nsCOMPtr<nsIRunnable> event = new TrackEventRunner(this, trackEvent);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);
+  NS_DispatchToMainThread(eventRunner, NS_DISPATCH_NORMAL);
 }
 
 } // namespace dom
