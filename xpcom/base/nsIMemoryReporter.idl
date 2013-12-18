@@ -179,7 +179,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(2b61d644-1520-420a-8f52-d06e615c1ff6)]
+[scriptable, builtinclass, uuid(e4e4ca56-13e0-46f1-b3c5-62d2c09fc98e)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -190,16 +190,27 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Register the given nsIMemoryReporter.  The Manager service will hold a
    * strong reference to the given reporter, and will be responsible for freeing
-   * the reporter at shutdown.
+   * the reporter at shutdown.  You may manually unregister the reporter with
+   * unregisterStrongReporter() at any point.
    */
   void registerStrongReporter(in nsIMemoryReporter reporter);
 
   /*
    * Like registerReporter, but the Manager service will hold a weak reference
-   * to the given reporter.  The reporter should be unregistered before
-   * shutdown.
+   * via a raw pointer to the given reporter.  The reporter should be
+   * unregistered before shutdown.
+   * You cannot register JavaScript components with this function!  Always
+   * register your JavaScript components with registerStrongReporter().
    */
   void registerWeakReporter(in nsIMemoryReporter reporter);
+
+  /*
+   * Unregister the given memory reporter, which must have been registered with
+   * registerStrongReporter().  You normally don't need to unregister your
+   * strong reporters, as nsIMemoryReporterManager will take care of that at
+   * shutdown.
+   */
+  void unregisterStrongReporter(in nsIMemoryReporter reporter);
 
   /*
    * Unregister the given memory reporter, which must have been registered with
