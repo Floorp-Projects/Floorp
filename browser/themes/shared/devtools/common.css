@@ -26,23 +26,23 @@
   -moz-appearance: none;
   background-image: none;
   background-color: transparent;
-  border: 0;
-  border-bottom: 1px solid black;
+  border: 1px solid black;
+  border-width: 1px 0 0 0;
   min-height: 3px;
   height: 3px;
-  margin-top: -2px;
+  margin-bottom: -3px;
   position: relative;
 }
 
 .devtools-side-splitter {
   -moz-appearance: none;
   background-image: none;
-  background-color: transparent;
   border: 0;
-  -moz-border-end: 1px solid black;
-  min-width: 3px;
+  -moz-border-start: 1px solid black;
+  min-width: 0;
   width: 3px;
-  -moz-margin-start: -3px;
+  background-color: transparent;
+  -moz-margin-end: -3px;
   position: relative;
   cursor: e-resize;
 }

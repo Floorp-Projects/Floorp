@@ -270,7 +270,7 @@
 
 .side-menu-widget-container {
   /* Hack: force hardware acceleration */
-  transform: translateZ(1px);
+  transform: translateX(0px);
 }
 
 .side-menu-widget-container[theme="dark"] {
@@ -430,9 +430,9 @@
 
 /* VariablesView */
 
-.variables-view-container {
+.variables-view-container:not([empty]) {
   /* Hack: force hardware acceleration */
-  transform: translateZ(1px);
+  transform: translateX(1px);
 }
 
 .variables-view-empty-notice {
