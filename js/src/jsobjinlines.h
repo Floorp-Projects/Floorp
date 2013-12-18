@@ -53,7 +53,7 @@ JSObject::deleteProperty(JSContext *cx, js::HandleObject obj, js::HandleProperty
 /* static */ inline bool
 JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, bool *succeeded)
 {
-    jsid id;
+    JS::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
     js::types::MarkTypePropertyConfigured(cx, obj, id);
@@ -621,7 +621,7 @@ JSObject::getElement(JSContext *cx, js::HandleObject obj, js::HandleObject recei
         return op(cx, obj, receiver, index, vp);
 
     JS::RootedId id(cx);
-    if (!js::IndexToId(cx, index, id.address()))
+    if (!js::IndexToId(cx, index, &id))
         return false;
     return getGeneric(cx, obj, receiver, id, vp);
 }
@@ -634,10 +634,9 @@ JSObject::getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
     if (op)
         return false;
 
-    jsid id;
-    if (!js::IndexToId(cx, index, &id))
+    if (index > JSID_INT_MAX)
         return false;
-    return getGenericNoGC(cx, obj, receiver, id, vp);
+    return getGenericNoGC(cx, obj, receiver, INT_TO_JSID(index), vp);
 }
 
 inline js::GlobalObject &

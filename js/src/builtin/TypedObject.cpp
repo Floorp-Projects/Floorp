@@ -2336,7 +2336,7 @@ TypedDatum::obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
                                bool *succeeded)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
 
     if (IsOwnId(cx, obj, id))

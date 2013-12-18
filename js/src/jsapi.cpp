@@ -2805,7 +2805,7 @@ JS_LookupElement(JSContext *cx, JSObject *objArg, uint32_t index, MutableHandleV
     RootedObject obj(cx, objArg);
     CHECK_REQUEST(cx);
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return JS_LookupPropertyById(cx, obj, id, vp);
 }
@@ -2880,7 +2880,7 @@ JS_HasElement(JSContext *cx, JSObject *objArg, uint32_t index, bool *foundp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return JS_HasPropertyById(cx, obj, id, foundp);
 }
@@ -2936,7 +2936,7 @@ JS_AlreadyHasOwnElement(JSContext *cx, JSObject *objArg, uint32_t index, bool *f
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return JS_AlreadyHasOwnPropertyById(cx, obj, id, foundp);
 }
@@ -3078,7 +3078,7 @@ JS_DefineElement(JSContext *cx, JSObject *objArg, uint32_t index, jsval valueArg
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
     return DefinePropertyById(cx, obj, id, value, GetterWrapper(getter),
                               SetterWrapper(setter), attrs, 0, 0);
@@ -6049,7 +6049,7 @@ BOOL WINAPI DllMain (HINSTANCE hDLL, DWORD dwReason, LPVOID lpReserved)
 JS_PUBLIC_API(bool)
 JS_IndexToId(JSContext *cx, uint32_t index, MutableHandleId id)
 {
-    return IndexToId(cx, index, id.address());
+    return IndexToId(cx, index, id);
 }
 
 JS_PUBLIC_API(bool)
