@@ -6,7 +6,6 @@
 /* Generic pane helpers */
 
 .generic-toggled-side-pane {
-  min-width: 50px;
   -moz-margin-start: 0px !important;
   /* Unfortunately, transitions don't work properly with locale-aware properties,
      so both the left and right margins are set via js, while the start margin
