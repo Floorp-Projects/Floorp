@@ -882,6 +882,9 @@ pref("network.http.default-socket-type", "");
 // the packet is lost or delayed on the route.
 pref("network.http.keep-alive.timeout", 115);
 
+// Timeout connections if an initial response is not received after 10 mins.
+pref("network.http.response.timeout", 300);
+
 // Limit the absolute number of http connections.
 // Note: the socket transport service will clamp the number below 256 if the OS
 // cannot allocate that many FDs, and it also always tries to reserve up to 250
