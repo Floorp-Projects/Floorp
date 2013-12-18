@@ -3433,7 +3433,7 @@ EditableNameAndValue.create = Editable.create;
 
 EditableNameAndValue.prototype = Heritage.extend(EditableName.prototype, {
   _reset: function(e) {
-    // Hide the Varible or Property if the user presses escape.
+    // Hide the Variable or Property if the user presses escape.
     this._variable.remove();
     this.deactivate();
   },
