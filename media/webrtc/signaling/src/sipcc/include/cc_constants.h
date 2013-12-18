@@ -585,6 +585,7 @@ typedef struct {
   cc_boolean_constraint_t offer_to_receive_audio;
   cc_boolean_constraint_t offer_to_receive_video;
   cc_boolean_constraint_t moz_dont_offer_datachannel;
+  cc_boolean_constraint_t moz_bundle_only;
 } cc_media_constraints_t;
 
 #endif /* _CC_CONSTANTS_H_ */

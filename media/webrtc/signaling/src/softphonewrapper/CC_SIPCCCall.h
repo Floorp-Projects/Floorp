@@ -123,7 +123,10 @@ namespace CSF
         virtual void setRemoteDescription(cc_jsep_action_t action, const std::string & sdp, Timecard *);
         virtual void setPeerConnection(const std::string& handle);
         virtual const std::string& getPeerConnection() const;
-        virtual void addStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
+        virtual void addStream(cc_media_stream_id_t stream_id,
+                               cc_media_track_id_t track_id,
+                               cc_media_type_t media_type,
+                               cc_media_constraints_t *constraints);
         virtual void removeStream(cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
         virtual CC_SIPCCCallMediaDataPtr getMediaData();
         virtual void addICECandidate(const std::string & candidate, const std::string & mid, unsigned short level, Timecard *);
