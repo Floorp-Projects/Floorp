@@ -463,6 +463,8 @@ let MessageQueue = {
     // request.
     let sendMessage = sync ? sendRpcMessage : sendAsyncMessage;
 
+    let durationMs = Date.now();
+
     let data = {};
     for (let [key, id] of this._lastUpdated) {
       // There is no data for the given key anymore because
@@ -482,8 +484,17 @@ let MessageQueue = {
       data[key] = this._data.get(key)();
     }
 
+    durationMs = Date.now() - durationMs;
+    let telemetry = {
+      FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS: durationMs
+    }
+
     // Send all data to the parent process.
-    sendMessage("SessionStore:update", {id: this._id, data: data});
+    sendMessage("SessionStore:update", {
+      id: this._id,
+      data: data,
+      telemetry: telemetry
+    });
 
     // Increase our unique message ID.
     this._id++;
