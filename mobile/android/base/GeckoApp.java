@@ -1411,21 +1411,13 @@ public abstract class GeckoApp
             if (!mShouldRestore) {
                 // Show about:home if we aren't restoring previous session and
                 // there's no external URL.
-                loadHomePage(Tabs.LOADURL_NEW_TAB);
+                Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_NEW_TAB);
             }
         } else {
             // If given an external URL, load it
             int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
             Tabs.getInstance().loadUrl(url, flags);
         }
-    }
-
-    protected Tab loadHomePage() {
-        return loadHomePage(Tabs.LOADURL_NONE);
-    }
-
-    protected Tab loadHomePage(int flags) {
-        return Tabs.getInstance().loadUrl(AboutPages.HOME, flags);
     }
 
     private void initialize() {

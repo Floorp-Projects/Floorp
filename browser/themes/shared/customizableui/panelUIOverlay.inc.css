@@ -519,12 +519,14 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 #PanelUI-developerItems > toolbarbutton[checked="true"],
 #PanelUI-bookmarks > toolbarbutton[checked="true"],
+#PanelUI-history > toolbarbutton[checked="true"],
 .PanelUI-characterEncodingView-list > toolbarbutton[current] {
   -moz-padding-start: 4px;
 }
 
 #PanelUI-developerItems > toolbarbutton[checked="true"] > .toolbarbutton-text,
 #PanelUI-bookmarks > toolbarbutton[checked="true"] > .toolbarbutton-text,
+#PanelUI-history > toolbarbutton[checked="true"] > .toolbarbutton-text,
 .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
 #customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
   -moz-padding-start: 0px;
@@ -532,6 +534,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 #BMB_bookmarksPopup > menuitem[checked="true"]::before,
 #PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-history > toolbarbutton[checked="true"]::before,
 #PanelUI-developerItems > toolbarbutton[checked="true"]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   content: "✓";
@@ -540,6 +543,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 #PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-history > toolbarbutton[checked="true"]::before,
 #PanelUI-developerItems > toolbarbutton[checked="true"]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   -moz-margin-end: -2px;

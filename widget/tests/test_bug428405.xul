@@ -26,8 +26,6 @@
 
     SimpleTest.waitForExplicitFinish();
 
-    var gUtils;
-
     var gCmdOptYReceived = false;
 
     // Look for a cmd-opt-y event.
@@ -41,8 +39,6 @@
     }
 
     function setGlobals() {
-      gUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                      getInterface(Components.interfaces.nsIDOMWindowUtils);
       var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
                           getService(Components.interfaces.nsIWindowMediator);
       gChromeWindow = wm.getMostRecentWindow("navigator:browser");
@@ -147,11 +143,11 @@
     // DebugEventsPlugin v1.01 from bmo bug 441880.
 
     function synthesizeNativeReturnKey() {
-      gUtils.sendNativeKeyEvent(0, MAC_VK_Return, 0, "\u000a", "\u000a");
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Return, {}, "\u000a", "\u000a");
     }
 
     function synthesizeNativeCmdOptY() {
-      gUtils.sendNativeKeyEvent(0, MAC_VK_ANSI_Y, 0x5000, "y", "y");
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Y, {metaKey:1, altKey:1}, "y", "y");
     }
 
   ]]></script>
