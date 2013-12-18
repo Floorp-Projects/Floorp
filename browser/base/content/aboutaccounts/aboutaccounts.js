@@ -56,12 +56,13 @@ let wrapper = {
     fxAccounts.setSignedInUser(accountData).then(
       () => {
         this.injectData("message", { status: "login" });
-        // until we sort out a better UX, we open the sync-progress page.
-        // We currently do it on a timeout as a concession to the tests, so
-        // it has time to act on our "login" message.
-        setTimeout(function() {
-          window.location = "about:sync-progress";
-        }, 0);
+        // until we sort out a better UX, just leave the jelly page in place.
+        // If the account email is not yet verified, it will tell the user to
+        // go check their email, but then it will *not* change state after
+        // the verification completes (the browser will begin syncing, but
+        // won't notify the user). If the email has already been verified,
+        // the jelly will say "Welcome! You are successfully signed in as
+        // EMAIL", but it won't then say "syncing started".
       },
       (err) => this.injectData("message", { status: "error", error: err })
     );
