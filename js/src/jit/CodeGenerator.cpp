@@ -6078,7 +6078,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
 #ifdef DEBUG
     for (size_t i = 0; i < ionScriptLabels_.length(); i++) {
-        ionScriptLabels_[i].fixup(&masm);
         Assembler::patchDataWithValueCheck(CodeLocationLabel(code, ionScriptLabels_[i]),
                                            ImmPtr(ionScript),
                                            ImmPtr((void*)-1));
