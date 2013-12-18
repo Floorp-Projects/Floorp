@@ -3131,20 +3131,6 @@ nsIDocument::ElementFromPoint(float aX, float aY)
   return ElementFromPointHelper(aX, aY, false, true);
 }
 
-static nsIContent*
-GetNonanonymousContent(nsIFrame* aFrame)
-{
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetParentOrPlaceholderFor(f)) {
-    nsIContent* content = f->GetContent();
-    if (content && !content->IsInAnonymousSubtree()) {
-      return content;
-    }
-  }
-
-  return nullptr;
-}
-
 Element*
 nsDocument::ElementFromPointHelper(float aX, float aY,
                                    bool aIgnoreRootScrollFrame,
@@ -3176,14 +3162,13 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
   if (!ptFrame) {
     return nullptr;
   }
 
-  nsIContent* elem = GetNonanonymousContent(ptFrame);
-  NS_ASSERTION(!elem || elem->OwnerDoc() == this, "Wrong document");
+  nsIContent* elem = GetContentInThisDocument(ptFrame);
   if (elem && !elem->IsElement()) {
     elem = elem->GetParent();
   }
@@ -3232,15 +3217,14 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
 
   nsAutoTArray<nsIFrame*,8> outFrames;
   nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
 
   // Used to filter out repeated elements in sequence.
   nsIContent* lastAdded = nullptr;
 
   for (uint32_t i = 0; i < outFrames.Length(); i++) {
-    nsIContent* node = GetNonanonymousContent(outFrames[i]);
-    NS_ASSERTION(!node || node->OwnerDoc() == this, "Wrong document");
+    nsIContent* node = GetContentInThisDocument(outFrames[i]);
 
     if (node && !node->IsElement() && !node->IsNodeOfType(nsINode::eTEXT)) {
       // We have a node that isn't an element or a text node,
@@ -8082,6 +8066,27 @@ nsDocument::DoUnblockOnload()
       loadGroup->RemoveRequest(mOnloadBlocker, nullptr, NS_OK);
     }
   }
+}
+
+nsIContent*
+nsDocument::GetContentInThisDocument(nsIFrame* aFrame) const
+{
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+    nsIContent* content = f->GetContent();
+    if (!content || content->IsInAnonymousSubtree())
+      continue;
+
+    if (content->OwnerDoc() == this) {
+      return content;
+    }
+    // We must be in a subdocument so jump directly to the root frame.
+    // GetParentOrPlaceholderForCrossDoc gets called immediately to jump up to
+    // the containing document.
+    f = f->PresContext()->GetPresShell()->GetRootFrame();
+  }
+
+  return nullptr;
 }
 
 void
