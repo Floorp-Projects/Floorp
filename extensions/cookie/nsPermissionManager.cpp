@@ -958,13 +958,6 @@ nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const char* aType,
                                                       uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, true, true);
 }
 
@@ -973,15 +966,6 @@ nsPermissionManager::TestExactPermanentPermission(nsIPrincipal* aPrincipal,
                                                   const char* aType,
                                                   uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  // System principals do not have URI so we can't try to get
-  // retro-compatibility here.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, true, false);
 }
 
@@ -1022,15 +1006,6 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const char* aType,
                                                  uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  // System principals do not have URI so we can't try to get
-  // retro-compatibility here.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, false, true);
 }
 
@@ -1100,6 +1075,11 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aType);
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    *aPermission = nsIPermissionManager::ALLOW_ACTION;
+    return NS_OK;
+  }
 
   // set the default
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
