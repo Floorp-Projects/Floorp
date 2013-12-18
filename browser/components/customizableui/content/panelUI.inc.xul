@@ -126,9 +126,9 @@
        see bug 492960 comment 20. -->
   <menupopup id="customizationPanelItemContextMenu">
     <menuitem oncommand="gCustomizeMode.addToToolbar(document.popupNode)"
-              class="customize-context-addToToolbar"
-              accesskey="&customizeMenu.addToToolbar.accesskey;"
-              label="&customizeMenu.addToToolbar.label;"/>
+              class="customize-context-moveToToolbar"
+              accesskey="&customizeMenu.moveToToolbar.accesskey;"
+              label="&customizeMenu.moveToToolbar.label;"/>
     <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
               class="customize-context-removeFromPanel"
               accesskey="&customizeMenu.removeFromMenu.accesskey;"
