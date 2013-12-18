@@ -5,11 +5,9 @@
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
   runSocialTestWithProvider(gProviders, function (finishcb) {
     Social.enabled = true;
     runSocialTests(tests, undefined, undefined, function() {
-      Services.prefs.clearUserPref("social.allowMultipleWorkers");
       finishcb();
     });
   });
@@ -58,44 +56,13 @@ var tests = {
     waitForCondition(function() messageReceived == Social.providers.length,
                      next, "received messages from all workers");
   },
+
   testWorkerDisabling: function(next) {
     Social.enabled = false;
     is(Social.providers.length, gProviders.length, "providers still available");
     for (let p of Social.providers) {
       ok(!p.enabled, "provider disabled");
       ok(!p.getWorkerPort(), "worker disabled");
-    }
-    next();
-  },
-
-  testSingleWorkerEnabling: function(next) {
-    // test that only one worker is enabled when we limit workers
-    Services.prefs.setBoolPref("social.allowMultipleWorkers", false);
-    Social.enabled = true;
-    for (let p of Social.providers) {
-      if (p == Social.provider) {
-        ok(p.enabled, "primary provider enabled");
-        let port = p.getWorkerPort();
-        ok(port, "primary worker enabled");
-        port.close();
-      } else {
-        ok(!p.enabled, "secondary provider is not enabled");
-        ok(!p.getWorkerPort(), "secondary worker disabled");
-      }
-    }
-    next();
-  },
-
-  testMultipleWorkerEnabling: function(next) {
-    // test that all workers are enabled when we allow multiple workers
-    Social.enabled = false;
-    Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-    Social.enabled = true;
-    for (let p of Social.providers) {
-      ok(p.enabled, "provider enabled");
-      let port = p.getWorkerPort();
-      ok(port, "worker enabled");
-      port.close();
     }
     next();
   }
