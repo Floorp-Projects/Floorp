@@ -3685,14 +3685,16 @@ js::SetCallOperation(JSContext *cx)
 bool
 js::GetAndClearException(JSContext *cx, MutableHandleValue res)
 {
-    // Check the interrupt flag to allow interrupting deeply nested exception
-    // handling.
-    if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))
-        return false;
-
     bool status = cx->getPendingException(res);
     cx->clearPendingException();
-    return status;
+    if (!status)
+        return false;
+
+    // Check the interrupt flag to allow interrupting deeply nested exception
+    // handling.
+    if (cx->runtime()->interrupt)
+        return js_HandleExecutionInterrupt(cx);
+    return true;
 }
 
 template <bool strict>
