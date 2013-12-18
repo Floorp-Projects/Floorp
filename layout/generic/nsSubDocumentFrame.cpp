@@ -288,8 +288,9 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
-  if (!mInnerView)
+  if (!mInnerView || !aBuilder->GetDescendIntoSubdocuments()) {
     return;
+  }
 
   nsFrameLoader* frameLoader = FrameLoader();
   if (frameLoader) {
