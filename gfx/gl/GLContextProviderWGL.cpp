@@ -111,11 +111,16 @@ WGLLibrary::EnsureInitialized(bool aUseMesaLlvmPipe)
     
     mozilla::ScopedGfxFeatureReporter reporter("WGL", aUseMesaLlvmPipe);
 
-    const char* libGLFilename = aUseMesaLlvmPipe 
+    std::string libGLFilename = aUseMesaLlvmPipe
                                 ? "mesallvmpipe.dll" 
                                 : "Opengl32.dll";
+    // SU_SPIES_DIRECTORY is for AMD CodeXL/gDEBugger
+    if (PR_GetEnv("SU_SPIES_DIRECTORY") && !aUseMesaLlvmPipe) {
+        libGLFilename = std::string(PR_GetEnv("SU_SPIES_DIRECTORY")) + "\\opengl32.dll";
+    }
+
     if (!mOGLLibrary) {
-        mOGLLibrary = PR_LoadLibrary(libGLFilename);
+        mOGLLibrary = PR_LoadLibrary(&libGLFilename[0]);
         if (!mOGLLibrary) {
             NS_WARNING("Couldn't load OpenGL library.");
             return false;
@@ -469,26 +474,17 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
         };
 
         context = sWGLLib[libToUse].fCreateContextAttribs(dc,
-                                                    shareContext ? shareContext->Context() : nullptr,
-                                                    attribs);
-        if (!context && shareContext) {
-            context = sWGLLib[libToUse].fCreateContextAttribs(dc, nullptr, attribs);
-            if (context) {
-                shareContext = nullptr;
-            }
-        } else {
-            context = sWGLLib[libToUse].fCreateContext(dc);
-            if (context && shareContext && !sWGLLib[libToUse].fShareLists(shareContext->Context(), context)) {
-                shareContext = nullptr;
-            }
-        }
+                                                          shareContext ? shareContext->Context() : nullptr,
+                                                          attribs);
     } else {
         context = sWGLLib[libToUse].fCreateContext(dc);
         if (context &&
             shareContext &&
             !sWGLLib[libToUse].fShareLists(shareContext->Context(), context))
         {
-            shareContext = nullptr;
+            printf_stderr("WGL context creation failed for window: wglShareLists returned false!");
+            sWGLLib[libToUse].fDeleteContext(context);
+            context = nullptr;
         }
     }
 
@@ -514,7 +510,8 @@ GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
 
 static already_AddRefed<GLContextWGL>
 CreatePBufferOffscreenContext(const gfxIntSize& aSize,
-                              LibType aLibToUse)
+                              LibType aLibToUse,
+                              GLContextWGL *aShareContext)
 {
     WGLLibrary& wgl = sWGLLib[aLibToUse];
 
@@ -575,9 +572,16 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
             0
         };
 
-        context = wgl.fCreateContextAttribs(pbdc, nullptr, attribs);
+        context = wgl.fCreateContextAttribs(pbdc, aShareContext->Context(), attribs);
     } else {
         context = wgl.fCreateContext(pbdc);
+        if (context && aShareContext) {
+            if (!wgl.fShareLists(aShareContext->Context(), context)) {
+                wgl.fDeleteContext(context);
+                context = nullptr;
+                printf_stderr("ERROR - creating pbuffer context failed because wglShareLists returned FALSE");
+            }
+        }
     }
 
     if (!context) {
@@ -587,7 +591,8 @@ CreatePBufferOffscreenContext(const gfxIntSize& aSize,
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
     nsRefPtr<GLContextWGL> glContext = new GLContextWGL(dummyCaps,
-                                                        nullptr, true,
+                                                        aShareContext,
+                                                        true,
                                                         pbuffer,
                                                         pbdc,
                                                         context,
@@ -667,7 +672,7 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& size,
         sWGLLib[libToUse].fChoosePixelFormat)
     {
         gfxIntSize dummySize = gfxIntSize(16, 16);
-        glContext = CreatePBufferOffscreenContext(dummySize, libToUse);
+        glContext = CreatePBufferOffscreenContext(dummySize, libToUse, GetGlobalContextWGL());
     }
 
     // If it failed, then create a window context and use a FBO.
