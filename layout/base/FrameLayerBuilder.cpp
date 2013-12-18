@@ -2261,11 +2261,12 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
 
       nsDisplayItem::Type type = item->GetType();
-      bool setVisibleRegion = type != nsDisplayItem::TYPE_TRANSFORM;
-      if (setVisibleRegion) {
-        mParameters.mAncestorClipRect = nullptr;
-      } else {
+      bool setVisibleRegion = (type != nsDisplayItem::TYPE_TRANSFORM) &&
+        (type != nsDisplayItem::TYPE_SCROLL_LAYER);
+      if (type == nsDisplayItem::TYPE_TRANSFORM) {
         mParameters.mAncestorClipRect = itemClip.HasClip() ? &clipRect : nullptr;
+      } else {
+        mParameters.mAncestorClipRect = nullptr;
       }
 
       // Just use its layer.

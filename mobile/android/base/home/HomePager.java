@@ -286,6 +286,7 @@ public class HomePager extends ViewPager {
         // Use the default page as defined in the HomePager's configuration
         // if the initial page wasn't explicitly set by the show() caller.
         if (mInitialPageId != null) {
+            // XXX: Handle the case where the desired page isn't currently in the adapter (bug 949178)
             setCurrentItem(adapter.getItemPosition(mInitialPageId), false);
             mInitialPageId = null;
         } else {
