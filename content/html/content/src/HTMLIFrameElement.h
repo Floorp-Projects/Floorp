@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLFrameElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
+#include "nsDOMSettableTokenList.h"
 
 namespace mozilla {
 namespace dom {
@@ -77,9 +78,9 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::name, aName, aError);
   }
-  void GetSandbox(DOMString& aSandbox)
+  nsDOMSettableTokenList* Sandbox()
   {
-    GetHTMLAttr(nsGkAtoms::sandbox, aSandbox);
+    return GetTokenList(nsGkAtoms::sandbox);
   }
   bool AllowFullscreen() const
   {

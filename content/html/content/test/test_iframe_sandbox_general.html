@@ -91,8 +91,8 @@ function doTest() {
   ok_wrapper("sandbox" in ifr, "a new iframe should have a sandbox attribute");
 
   // passes if good
-  // 11) test that the sandbox attribute's default value is an empty string
-  ok_wrapper(ifr.sandbox === "", "default sandbox attribute should be an empty string");
+  // 11) test that the sandbox attribute's default stringyfied value is an empty string
+  ok_wrapper(ifr.sandbox.length === 0 && ifr.sandbox == "", "default sandbox attribute should be an empty string");
 
   // passes if good
   // 12) test that a sandboxed iframe with 'allow-forms' can submit forms

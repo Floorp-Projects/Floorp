@@ -43,7 +43,6 @@ NS_IMPL_STRING_ATTR(HTMLIFrameElement, Scrolling, scrolling)
 NS_IMPL_URI_ATTR(HTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Width, width)
 NS_IMPL_BOOL_ATTR(HTMLIFrameElement, AllowFullscreen, allowfullscreen)
-NS_IMPL_STRING_ATTR(HTMLIFrameElement, Sandbox, sandbox)
 NS_IMPL_STRING_ATTR(HTMLIFrameElement, Srcdoc, srcdoc)
 
 void
@@ -97,6 +96,10 @@ HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID,
     }
     if (aAttribute == nsGkAtoms::align) {
       return ParseAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsGkAtoms::sandbox) {
+      aResult.ParseAtomArray(aValue);
+      return true;
     }
   }
 
@@ -211,20 +214,11 @@ HTMLIFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                                 const nsAttrValue* aValue,
                                 bool aNotify)
 {
-  if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None) {
-    // If we have an nsFrameLoader, parse the new value of the sandbox
-    // attribute and apply the new sandbox flags.
-    if (mFrameLoader) {
-      // If a nullptr aValue is passed in, we want to clear the sandbox flags
-      // which we will do by setting them to 0.
-      uint32_t newFlags = 0;
-      if (aValue) {
-        nsAutoString strValue;
-        aValue->ToString(strValue);
-        newFlags = nsContentUtils::ParseSandboxAttributeToFlags(strValue);
-      }   
-      mFrameLoader->ApplySandboxFlags(newFlags);
-    }
+  if (aName == nsGkAtoms::sandbox && aNameSpaceID == kNameSpaceID_None && mFrameLoader) {
+    // If we have an nsFrameLoader, apply the new sandbox flags.
+    // Since this is called after the setter, the sandbox flags have
+    // alreay been updated.
+    mFrameLoader->ApplySandboxFlags(GetSandboxFlags());
   }
   return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
                                             aNotify);
