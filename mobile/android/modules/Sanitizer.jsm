@@ -148,12 +148,6 @@ Sanitizer.prototype = {
         }
         catch (e) { }
 
-        // Clear last URL of the Open Web Location dialog
-        try {
-          Services.prefs.clearUserPref("general.open_location.last_url");
-        }
-        catch (e) { }
-
         try {
           var seer = Cc["@mozilla.org/network/seer;1"].getService(Ci.nsINetworkSeer);
           seer.reset();
@@ -171,16 +165,6 @@ Sanitizer.prototype = {
     formdata: {
       clear: function ()
       {
-        //Clear undo history of all searchBars
-        var windows = Services.wm.getEnumerator("navigator:browser");
-        while (windows.hasMoreElements()) {
-          var searchBar = windows.getNext().document.getElementById("searchbar");
-          if (searchBar) {
-            searchBar.value = "";
-            searchBar.textbox.editor.transactionManager.clear();
-          }
-        }
-
         FormHistory.update({ op: "remove" });
       },
 
