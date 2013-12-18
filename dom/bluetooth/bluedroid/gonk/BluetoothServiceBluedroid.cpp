@@ -289,19 +289,18 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 }
 
 /**
- * AdapterPropertiesChangeCallback will be called after enable() but before
- * AdapterStateChangeCallback sIsBtEnabled get updated.
- * At that moment, both BluetoothManager/BluetoothAdapter does not register
- * observer yet.
+ * AdapterPropertiesCallback will be called after enable() but before
+ * AdapterStateChangeCallback sIsBtEnabled get updated. At that moment, both
+ * BluetoothManager/BluetoothAdapter does not register observer yet.
  */
 static void
-AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
-                                bt_property_t *aProperties)
+AdapterPropertiesCallback(bt_status_t aStatus, int aNumProperties,
+                          bt_property_t *aProperties)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
   BluetoothValue propertyValue;
-  InfallibleTArray<BluetoothNamedValue> propertiesArray;
+  InfallibleTArray<BluetoothNamedValue> props;
 
   for (int i = 0; i < aNumProperties; i++) {
     bt_property_t p = aProperties[i];
@@ -309,14 +308,14 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
     if (p.type == BT_PROPERTY_BDADDR) {
       BdAddressTypeToString((bt_bdaddr_t*)p.val, sAdapterBdAddress);
       propertyValue = sAdapterBdAddress;
-      propertiesArray.AppendElement(
+      props.AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("Address"), propertyValue));
     } else if (p.type == BT_PROPERTY_BDNAME) {
       // Construct nsCString here because Bd name returned from bluedroid
       // is missing a null terminated character after SetProperty.
       propertyValue = sAdapterBdName = NS_ConvertUTF8toUTF16(
         nsCString((char*)p.val, p.len));
-      propertiesArray.AppendElement(
+      props.AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("Name"), propertyValue));
     } else if (p.type == BT_PROPERTY_ADAPTER_SCAN_MODE) {
       bt_scan_mode_t newMode = *(bt_scan_mode_t*)p.val;
@@ -327,11 +326,11 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
         propertyValue = sAdapterDiscoverable = false;
       }
 
-      propertiesArray.AppendElement(
+      props.AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("Discoverable"), propertyValue));
     } else if (p.type == BT_PROPERTY_ADAPTER_DISCOVERY_TIMEOUT) {
       propertyValue = sAdapterDiscoverableTimeout = *(uint32_t*)p.val;
-      propertiesArray.AppendElement(
+      props.AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("DiscoverableTimeout"),
                             propertyValue));
     } else if (p.type == BT_PROPERTY_ADAPTER_BONDED_DEVICES) {
@@ -352,7 +351,7 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
       }
 
       propertyValue = sAdapterBondedAddressArray;
-      propertiesArray.AppendElement(
+      props.AppendElement(
         BluetoothNamedValue(NS_LITERAL_STRING("Devices"), propertyValue));
     } else if (p.type == BT_PROPERTY_UUIDS) {
       //FIXME: This will be implemented in the later patchset
@@ -363,9 +362,9 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
     }
   }
 
-  NS_ENSURE_TRUE_VOID(propertiesArray.Length() > 0);
+  NS_ENSURE_TRUE_VOID(props.Length() > 0);
 
-  BluetoothValue value(propertiesArray);
+  BluetoothValue value(props);
   BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
                          NS_LITERAL_STRING(KEY_ADAPTER), value);
   nsRefPtr<DistributeBluetoothSignalTask>
@@ -382,17 +381,14 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
   }
 }
 
-/*
- * RemoteDevicePropertiesChangeCallback will be called, as the
- * following conditions:
+/**
+ * RemoteDevicePropertiesCallback will be called, as the following conditions:
  * 1. When BT is turning on, bluedroid automatically execute this callback
  * 2. When get_remote_device_properties()
  */
 static void
-RemoteDevicePropertiesChangeCallback(bt_status_t aStatus,
-                                     bt_bdaddr_t *aBdAddress,
-                                     int aNumProperties,
-                                     bt_property_t *aProperties)
+RemoteDevicePropertiesCallback(bt_status_t aStatus, bt_bdaddr_t *aBdAddress,
+                               int aNumProperties, bt_property_t *aProperties)
 {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -429,6 +425,15 @@ RemoteDevicePropertiesChangeCallback(bt_status_t aStatus,
     } else {
       BT_LOGD("Other non-handled device properties. Type: %d", p.type);
     }
+  }
+
+  // Update to registered BluetoothDevice objects
+  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                         remoteDeviceBdAddress, props);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 
   // Use address as the index
@@ -655,8 +660,8 @@ bt_callbacks_t sBluetoothCallbacks =
 {
   sizeof(sBluetoothCallbacks),
   AdapterStateChangeCallback,
-  AdapterPropertiesChangeCallback,
-  RemoteDevicePropertiesChangeCallback,
+  AdapterPropertiesCallback,
+  RemoteDevicePropertiesCallback,
   DeviceFoundCallback,
   DiscoveryStateChangedCallback,
   PinRequestCallback,
