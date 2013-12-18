@@ -2371,6 +2371,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     this._valueLabel.classList.add(this._valueClassName);
     this._valueLabel.setAttribute("value", this._valueString);
+    this._separatorLabel.hidden = false;
   },
 
   /**
@@ -2454,7 +2455,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
     let separatorLabel = this._separatorLabel = document.createElement("label");
     separatorLabel.className = "plain separator";
-    separatorLabel.setAttribute("value", this.ownerView.separatorStr + " ");
+    separatorLabel.setAttribute("value", this.separatorStr + " ");
 
     let valueLabel = this._valueLabel = document.createElement("label");
     valueLabel.className = "plain value";
