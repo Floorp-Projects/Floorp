@@ -182,6 +182,12 @@ interface nsIHttpChannelInternal : nsISupports
     attribute boolean loadUnblocked;
 
     /**
+     * This attribute en/disables the timeout for the first byte of an HTTP
+     * response. Enabled by default.
+     */
+    attribute boolean responseTimeoutEnabled;
+
+    /**
      * Get value of the URI passed to nsIHttpChannel.redirectTo() if any.
      * May return null when redirectTo() has not been called.
      */

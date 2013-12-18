@@ -156,6 +156,8 @@ public:
   NS_IMETHOD GetApiRedirectToURI(nsIURI * *aApiRedirectToURI);
   NS_IMETHOD AddSecurityMessage(const nsAString &aMessageTag, const nsAString &aMessageCategory);
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages);
+  NS_IMETHOD GetResponseTimeoutEnabled(bool *aEnable);
+  NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable);
 
   inline void CleanRedirectCacheChainIfNecessary()
   {
@@ -297,6 +299,7 @@ protected:
   uint32_t                          mAllowSpdy                  : 1;
   uint32_t                          mLoadAsBlocking             : 1;
   uint32_t                          mLoadUnblocked              : 1;
+  uint32_t                          mResponseTimeoutEnabled     : 1;
 
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;

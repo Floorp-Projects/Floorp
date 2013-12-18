@@ -57,6 +57,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mAllowSpdy(true)
   , mLoadAsBlocking(false)
   , mLoadUnblocked(false)
+  , mResponseTimeoutEnabled(true)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
   , mContentDispositionHint(UINT32_MAX)
@@ -1529,6 +1530,23 @@ HttpBaseChannel::GetApiRedirectToURI(nsIURI ** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   NS_IF_ADDREF(*aResult = mAPIRedirectToURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetResponseTimeoutEnabled(bool *aEnable)
+{
+  if (NS_WARN_IF(!aEnable)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aEnable = mResponseTimeoutEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetResponseTimeoutEnabled(bool aEnable)
+{
+  mResponseTimeoutEnabled = aEnable;
   return NS_OK;
 }
 
