@@ -5,10 +5,6 @@
 
 /* Sources and breakpoints pane */
 
-#sources-pane {
-  min-width: 50px;
-}
-
 #sources-pane > tabs {
   -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
 }
@@ -72,7 +68,8 @@
 #black-boxed-message,
 #source-progress-container {
   background: url(background-noise-toolbar.png) rgb(61,69,76);
-  /* Prevent the container deck from aquiring the height from this message. */
+  /* Prevent the container deck from aquiring the size from this message. */
+  min-width: 1px;
   min-height: 1px;
   color: white;
 }
