@@ -992,16 +992,7 @@ Toolbox.prototype = {
     gDevTools.off("tool-registered", this._toolRegistered);
     gDevTools.off("tool-unregistered", this._toolUnregistered);
 
-    // Revert docShell.allowJavascript back to its original value if it was
-    // changed via the Disable JS option.
-    if (typeof this._origAllowJavascript != "undefined") {
-      let docShell = this._host.hostTab.linkedBrowser.docShell;
-      docShell.allowJavascript = this._origAllowJavascript;
-      this._origAllowJavascript = undefined;
-    }
-
     let outstanding = [];
-
     for (let [id, panel] of this._toolPanels) {
       try {
         outstanding.push(panel.destroy());

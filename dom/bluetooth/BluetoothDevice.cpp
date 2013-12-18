@@ -181,14 +181,14 @@ BluetoothDevice::Notify(const BluetoothSignal& aData)
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("PropertyChanged")) {
-    NS_ASSERTION(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue,
-                 "PropertyChanged: Invalid value type");
+    MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+
     const InfallibleTArray<BluetoothNamedValue>& arr =
       v.get_ArrayOfBluetoothNamedValue();
 
-    NS_ASSERTION(arr.Length() == 1,
-                 "Got more than one property in a change message!");
-    SetPropertyByValue(arr[0]);
+    for (uint32_t i = 0, propCount = arr.Length(); i < propCount; ++i) {
+      SetPropertyByValue(arr[i]);
+    }
   } else {
 #ifdef DEBUG
     nsCString warningMsg;
