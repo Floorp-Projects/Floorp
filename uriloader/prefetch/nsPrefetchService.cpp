@@ -114,7 +114,7 @@ nsPrefetchQueueEnumerator::GetNext(nsISupports **aItem)
 {
     if (!mCurrent) return NS_ERROR_FAILURE;
 
-    NS_ADDREF(*aItem = static_cast<nsIDOMLoadStatus*>(mCurrent.get()));
+    NS_ADDREF(*aItem = static_cast<nsIStreamListener*>(mCurrent.get()));
 
     Increment();
 
@@ -171,7 +171,6 @@ nsPrefetchNode::nsPrefetchNode(nsPrefetchService *aService,
     , mReferrerURI(aReferrerURI)
     , mService(aService)
     , mChannel(nullptr)
-    , mState(nsIDOMLoadStatus::UNINITIALIZED)
     , mBytesRead(0)
 {
     mSource = do_GetWeakReference(aSource);
@@ -208,8 +207,6 @@ nsPrefetchNode::OpenChannel()
     rv = mChannel->AsyncOpen(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mState = nsIDOMLoadStatus::REQUESTED;
-
     return NS_OK;
 }
 
@@ -219,8 +216,6 @@ nsPrefetchNode::CancelChannel(nsresult error)
     mChannel->Cancel(error);
     mChannel = nullptr;
 
-    mState = nsIDOMLoadStatus::UNINITIALIZED;
-
     return NS_OK;
 }
 
@@ -228,8 +223,7 @@ nsPrefetchNode::CancelChannel(nsresult error)
 // nsPrefetchNode::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS6(nsPrefetchNode,
-                   nsIDOMLoadStatus,
+NS_IMPL_ISUPPORTS5(nsPrefetchNode,
                    nsIRequestObserver,
                    nsIStreamListener,
                    nsIInterfaceRequestor,
@@ -280,8 +274,6 @@ nsPrefetchNode::OnStartRequest(nsIRequest *aRequest,
         }
     }
 
-    mState = nsIDOMLoadStatus::RECEIVING;
-
     return NS_OK;
 }
 
@@ -306,8 +298,6 @@ nsPrefetchNode::OnStopRequest(nsIRequest *aRequest,
                               nsresult aStatus)
 {
     LOG(("done prefetching [status=%x]\n", aStatus));
-
-    mState = nsIDOMLoadStatus::LOADED;
 
     if (mBytesRead == 0 && aStatus == NS_OK) {
         // we didn't need to read (because LOAD_ONLY_IF_MODIFIED was
@@ -487,7 +477,7 @@ nsPrefetchService::NotifyLoadRequested(nsPrefetchNode *node)
     if (!observerService)
       return;
 
-    observerService->NotifyObservers(static_cast<nsIDOMLoadStatus*>(node),
+    observerService->NotifyObservers(static_cast<nsIStreamListener*>(node),
                                      "prefetch-load-requested", nullptr);
 }
 
@@ -499,7 +489,7 @@ nsPrefetchService::NotifyLoadCompleted(nsPrefetchNode *node)
     if (!observerService)
       return;
 
-    observerService->NotifyObservers(static_cast<nsIDOMLoadStatus*>(node),
+    observerService->NotifyObservers(static_cast<nsIStreamListener*>(node),
                                      "prefetch-load-completed", nullptr);
 }
 
@@ -762,84 +752,6 @@ nsPrefetchService::EnumerateQueue(nsISimpleEnumerator **aEnumerator)
 
     NS_ADDREF(*aEnumerator);
 
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsPrefetchNode::nsIDOMLoadStatus
-//-----------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrefetchNode::GetSource(nsIDOMNode **aSource)
-{
-    *aSource = nullptr;
-    nsCOMPtr<nsIDOMNode> source = do_QueryReferent(mSource);
-    if (source)
-        source.swap(*aSource);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchNode::GetUri(nsAString &aURI)
-{
-    nsAutoCString spec;
-    nsresult rv = mURI->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    CopyUTF8toUTF16(spec, aURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchNode::GetTotalSize(int32_t *aTotalSize)
-{
-    if (mChannel) {
-        int64_t size64;
-        nsresult rv = mChannel->GetContentLength(&size64);
-        NS_ENSURE_SUCCESS(rv, rv);
-        *aTotalSize = int32_t(size64); // XXX - loses precision
-        return NS_OK;
-    }
-
-    *aTotalSize = -1;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchNode::GetLoadedSize(int32_t *aLoadedSize)
-{
-    *aLoadedSize = int32_t(mBytesRead); // XXX - loses precision
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchNode::GetReadyState(uint16_t *aReadyState)
-{
-    *aReadyState = mState;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPrefetchNode::GetStatus(uint16_t *aStatus)
-{
-    if (!mChannel) {
-        *aStatus = 0;
-        return NS_OK;
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t httpStatus;
-    rv = httpChannel->GetResponseStatus(&httpStatus);
-    if (rv == NS_ERROR_NOT_AVAILABLE) {
-        *aStatus = 0;
-        return NS_OK;
-    }
-
-    NS_ENSURE_SUCCESS(rv, rv);
-    *aStatus = uint16_t(httpStatus);
     return NS_OK;
 }
 
