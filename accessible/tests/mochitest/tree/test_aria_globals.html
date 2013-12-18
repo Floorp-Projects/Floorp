@@ -47,8 +47,9 @@
       }
 
       // Unfocusable elements, having ARIA global state or property with a valid
-      // IDREF value, and an inherited presentation role.
-      ok(!isAccessible("td_nothing"),
+      // IDREF value, and an inherited presentation role. A generic accessible
+      // is created (to prevent table cells text jamming).
+      ok(!isAccessible("td_nothing", nsIAccessibleTableCell),
          "inherited presentation role takes a place");
 
       for (var idx = 0; idx < globalIds.length; idx++) {
