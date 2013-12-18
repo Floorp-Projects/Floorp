@@ -51,7 +51,6 @@ public class Tab {
     private int mHistoryIndex;
     private int mHistorySize;
     private int mParentId;
-    private String mAboutHomePageId;
     private boolean mExternal;
     private boolean mBookmark;
     private boolean mReadingListItem;
@@ -94,7 +93,6 @@ public class Tab {
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
-        mAboutHomePageId = null;
         mTitle = title == null ? "" : title;
         mFavicon = null;
         mFaviconUrl = null;
@@ -144,14 +142,6 @@ public class Tab {
 
     public int getParentId() {
         return mParentId;
-    }
-
-    public String getAboutHomePageId() {
-        return mAboutHomePageId;
-    }
-
-    private void setAboutHomePageId(String pageId) {
-        mAboutHomePageId = pageId;
     }
 
     // may be null if user-entered query hasn't yet been resolved to a URI
@@ -654,13 +644,6 @@ public class Tab {
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
         setErrorType(ErrorType.NONE);
-
-        final String homePageId = message.getString("aboutHomePage");
-        if (!TextUtils.isEmpty(homePageId)) {
-            setAboutHomePageId(homePageId);
-        } else {
-            setAboutHomePageId(null);
-        }
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
