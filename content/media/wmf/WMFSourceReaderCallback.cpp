@@ -11,16 +11,16 @@ namespace mozilla {
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gWMFSourceReaderCallbackLog = nullptr;
-#define LOG(...) PR_LOG(gWMFSourceReaderCallbackLog, PR_LOG_DEBUG, (__VA_ARGS__))
+#define WMF_CB_LOG(...) PR_LOG(gWMFSourceReaderCallbackLog, PR_LOG_DEBUG, (__VA_ARGS__))
 #else
-#define LOG(...)
+#define WMF_CB_LOG(...)
 #endif
 
 // IUnknown Methods
 STDMETHODIMP
 WMFSourceReaderCallback::QueryInterface(REFIID aIId, void **aInterface)
 {
-  LOG("WMFSourceReaderCallback::QueryInterface %s", GetGUIDName(aIId).get());
+  WMF_CB_LOG("WMFSourceReaderCallback::QueryInterface %s", GetGUIDName(aIId).get());
 
   if (aIId == IID_IMFSourceReaderCallback) {
     return DoGetInterface(static_cast<WMFSourceReaderCallback*>(this), aInterface);
@@ -96,8 +96,8 @@ WMFSourceReaderCallback::OnReadSample(HRESULT aReadStatus,
                                       LONGLONG aTimestamp,
                                       IMFSample *aSample)
 {
-  LOG("WMFSourceReaderCallback::OnReadSample() hr=0x%x flags=0x%x time=%lld sample=%p",
-      aReadStatus, aStreamFlags, aTimestamp, aSample);
+  WMF_CB_LOG("WMFSourceReaderCallback::OnReadSample() hr=0x%x flags=0x%x time=%lld sample=%p",
+             aReadStatus, aStreamFlags, aTimestamp, aSample);
   return NotifyReadComplete(aReadStatus,
                             aStreamIndex,
                             aStreamFlags,
@@ -108,7 +108,7 @@ WMFSourceReaderCallback::OnReadSample(HRESULT aReadStatus,
 HRESULT
 WMFSourceReaderCallback::Cancel()
 {
-  LOG("WMFSourceReaderCallback::Cancel()");
+  WMF_CB_LOG("WMFSourceReaderCallback::Cancel()");
   return NotifyReadComplete(E_ABORT,
                             0,
                             0,
@@ -134,12 +134,12 @@ WMFSourceReaderCallback::Wait(DWORD* aStreamFlags,
                               IMFSample** aSample)
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
-  LOG("WMFSourceReaderCallback::Wait() starting wait");
+  WMF_CB_LOG("WMFSourceReaderCallback::Wait() starting wait");
   while (!mReadFinished) {
     mon.Wait();
   }
   mReadFinished = false;
-  LOG("WMFSourceReaderCallback::Wait() done waiting");
+  WMF_CB_LOG("WMFSourceReaderCallback::Wait() done waiting");
 
   *aStreamFlags = mStreamFlags;
   *aTimeStamp = mTimestamp;

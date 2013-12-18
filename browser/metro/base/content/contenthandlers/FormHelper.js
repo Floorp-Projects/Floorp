@@ -560,6 +560,7 @@ FormAssistant.prototype = {
     return result;
   }
 };
+this.FormAssistant = FormAssistant;
 
 
 /******************************************************************************
@@ -688,6 +689,7 @@ SelectWrapper.prototype = {
     }, 0);
   }
 };
+this.SelectWrapper = SelectWrapper;
 
 
 // bug 559792
@@ -745,3 +747,4 @@ MenulistWrapper.prototype = {
     }, 0);
   }
 };
+this.MenulistWrapper = MenulistWrapper;

@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.home.HomePager.Page;
-
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -29,25 +27,6 @@ final class HomeConfig {
         PageType(String id, Class<?> pageClass) {
             mId = id;
             mPageClass = pageClass;
-        }
-
-        public static PageType valueOf(Page page) {
-            switch(page) {
-                case TOP_SITES:
-                    return PageType.TOP_SITES;
-
-                case BOOKMARKS:
-                    return PageType.BOOKMARKS;
-
-                case HISTORY:
-                    return PageType.HISTORY;
-
-                case READING_LIST:
-                    return PageType.READING_LIST;
-
-                default:
-                    throw new IllegalArgumentException("Could not convert unrecognized Page");
-            }
         }
 
         public static PageType fromId(String id) {

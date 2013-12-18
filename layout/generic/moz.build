@@ -121,3 +121,5 @@ LOCAL_INCLUDES += [
     '../tables',
     '../xul',
 ]
+
+JAR_MANIFESTS += ['jar.mn']
