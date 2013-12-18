@@ -5124,7 +5124,10 @@ GetFontFacesForFramesInner(nsIFrame* aFrame, nsFontFaceList* aFontFaceList)
   NS_PRECONDITION(aFrame, "NULL frame pointer");
 
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
-    nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, false, aFontFaceList);
+    if (!aFrame->GetPrevContinuation()) {
+      nsLayoutUtils::GetFontFacesForText(aFrame, 0, INT32_MAX, true,
+                                         aFontFaceList);
+    }
     return;
   }
 
@@ -5173,13 +5176,25 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
     int32_t fstart = std::max(curr->GetContentOffset(), aStartOffset);
     int32_t fend = std::min(curr->GetContentEnd(), aEndOffset);
     if (fstart >= fend) {
+      curr = static_cast<nsTextFrame*>(curr->GetNextContinuation());
       continue;
     }
 
-    // overlapping with the offset we want
+    // curr is overlapping with the offset we want
     gfxSkipCharsIterator iter = curr->EnsureTextRun(nsTextFrame::eInflated);
     gfxTextRun* textRun = curr->GetTextRun(nsTextFrame::eInflated);
     NS_ENSURE_TRUE(textRun, NS_ERROR_OUT_OF_MEMORY);
+
+    // include continuations in the range that share the same textrun
+    nsTextFrame* next = nullptr;
+    if (aFollowContinuations && fend < aEndOffset) {
+      next = static_cast<nsTextFrame*>(curr->GetNextContinuation());
+      while (next && next->GetTextRun(nsTextFrame::eInflated) == textRun) {
+        fend = std::min(next->GetContentEnd(), aEndOffset);
+        next = fend < aEndOffset ?
+          static_cast<nsTextFrame*>(next->GetNextContinuation()) : nullptr;
+      }
+    }
 
     uint32_t skipStart = iter.ConvertOriginalToSkipped(fstart);
     uint32_t skipEnd = iter.ConvertOriginalToSkipped(fend);
@@ -5187,8 +5202,8 @@ nsLayoutUtils::GetFontFacesForText(nsIFrame* aFrame,
                                        skipStart,
                                        skipEnd - skipStart,
                                        curr);
-  } while (aFollowContinuations &&
-           (curr = static_cast<nsTextFrame*>(curr->GetNextContinuation())));
+    curr = next;
+  } while (aFollowContinuations && curr);
 
   return NS_OK;
 }
