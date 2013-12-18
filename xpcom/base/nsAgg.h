@@ -144,7 +144,7 @@ _class::Internal::AddRef(void)                                              \
     _class* agg = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Downcast(this);    \
     MOZ_ASSERT(int32_t(agg->mRefCnt) >= 0, "illegal refcnt");               \
     NS_ASSERT_OWNINGTHREAD_AGGREGATE(agg, _class);                          \
-    nsrefcnt count = agg->mRefCnt.incr();                                   \
+    nsrefcnt count = agg->mRefCnt.incr(this);                               \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*agg));                      \
     return count;                                                           \
 }                                                                           \
