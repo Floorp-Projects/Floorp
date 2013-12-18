@@ -61,14 +61,14 @@ function test() {
 
         is(tabpanel.querySelectorAll(".variables-view-scope").length, 1,
           "There should be 1 json scope displayed in this tabpanel.");
-        is(tabpanel.querySelectorAll(".variables-view-property").length, 6057,
-          "There should be 6057 json properties displayed in this tabpanel.");
+        is(tabpanel.querySelectorAll(".variables-view-property").length, 6143,
+          "There should be 6143 json properties displayed in this tabpanel.");
         is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
           "The empty notice should not be displayed in this tabpanel.");
 
         let jsonScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
-        let names = ".variables-view-property .name";
-        let values = ".variables-view-property .value";
+        let names = ".variables-view-property > .title > .name";
+        let values = ".variables-view-property > .title > .value";
 
         is(jsonScope.querySelector(".name").getAttribute("value"),
           L10N.getStr("jsonScopeName"),
@@ -83,11 +83,6 @@ function test() {
           "greeting", "The second json property name was incorrect.");
         is(jsonScope.querySelectorAll(values)[1].getAttribute("value"),
           "\"Hello long string JSON!\"", "The second json property value was incorrect.");
-
-        is(Array.slice(jsonScope.querySelectorAll(names), -1).shift().getAttribute("value"),
-          "__proto__", "The last json property name was incorrect.");
-        is(Array.slice(jsonScope.querySelectorAll(values), -1).shift().getAttribute("value"),
-          "Object", "The last json property value was incorrect.");
       }
     });
 
