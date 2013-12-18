@@ -28,7 +28,7 @@ class nsDOMNavigationTiming;
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 
-[scriptable, builtinclass, uuid(b9d92b8b-5623-4079-ae11-36bb341f322e)]
+[scriptable, builtinclass, uuid(1b22be51-efe8-42ac-a9a0-06f50f39beee)]
 interface nsIContentViewer : nsISupports
 {
 
@@ -49,6 +49,14 @@ interface nsIContentViewer : nsISupports
    *        ignored.
    */
   boolean permitUnload([optional] in boolean aCallerClosesWindow);
+
+  /**
+   * As above, but this passes around the aShouldPrompt argument to keep
+   * track of whether the user has responded to a prompt.
+   * Used internally by the scriptable version to ensure we only prompt once.
+   */
+  [noscript,nostdcall] boolean permitUnloadInternal(in boolean aCallerClosesWindow,
+                                                    inout boolean aShouldPrompt);
 
   /**
    * Works in tandem with permitUnload, if the caller decides not to close the
