@@ -80,13 +80,13 @@ TiledContentHost::PaintedTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                           const SurfaceDescriptorTiles& aTiledDescriptor)
 {
   if (aTiledDescriptor.resolution() < 1) {
-    mLowPrecisionMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor, nullptr);
+    mLowPrecisionMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor);
     mLowPrecisionRegionToUpload.Or(mLowPrecisionRegionToUpload,
                                    mLowPrecisionMainMemoryTiledBuffer.GetPaintedRegion());
     mLowPrecisionMainMemoryTiledBuffer.ClearPaintedRegion();
     mPendingLowPrecisionUpload = true;
   } else {
-    mMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor, nullptr);
+    mMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor);
     mRegionToUpload.Or(mRegionToUpload, mMainMemoryTiledBuffer.GetPaintedRegion());
     mMainMemoryTiledBuffer.ClearPaintedRegion();
     mPendingUpload = true;
