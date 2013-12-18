@@ -43,11 +43,11 @@
                      label="&appMenuHistory.restoreSession.label;"
                      command="Browser:RestoreLastSession"/>
       <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
-      <vbox id="PanelUI-recentlyClosedTabs"/>
+      <vbox id="PanelUI-recentlyClosedTabs" tooltip="bhTooltip"/>
       <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
-      <vbox id="PanelUI-recentlyClosedWindows"/>
+      <vbox id="PanelUI-recentlyClosedWindows" tooltip="bhTooltip"/>
       <menuseparator id="PanelUI-historyItems-separator"/>
-      <vbox id="PanelUI-historyItems"/>
+      <vbox id="PanelUI-historyItems" tooltip="bhTooltip"/>
       <label value="&appMenuHistory.showAll.label;"
              id="PanelUI-historyMore"
              class="text-link"

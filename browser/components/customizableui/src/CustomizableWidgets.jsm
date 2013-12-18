@@ -99,6 +99,7 @@ const CustomizableWidgets = [{
               let item = doc.createElementNS(kNSXUL, "toolbarbutton");
               item.setAttribute("label", title || uri);
               item.setAttribute("tabindex", "0");
+              item.setAttribute("targetURI", uri);
               item.addEventListener("command", function (aEvent) {
                 onHistoryVisit(uri, aEvent, item);
               });
