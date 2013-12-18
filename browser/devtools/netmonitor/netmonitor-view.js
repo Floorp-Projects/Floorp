@@ -1750,8 +1750,7 @@ NetworkDetailsView.prototype = {
 
     return promise.all(aResponse.headers.map(header => {
       let headerVar = headersScope.addItem(header.name, {}, true);
-      return gNetwork.getString(header.value)
-             .then(aString => headerVar.setGrip(aString));
+      return gNetwork.getString(header.value).then(aString => headerVar.setGrip(aString));
     }));
   },
 
