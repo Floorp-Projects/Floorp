@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=845057
+-->
+<head>
+  <title>Test for Bug 845057</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=845057">Mozilla Bug 845057</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="iframe" sandbox="allow-scripts"></iframe>
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var iframe = document.getElementById("iframe"),
+      attr = iframe.sandbox;
+  // Security enforcement tests for iframe sandbox are in test_iframe_*
+
+  function eq(a, b) {
+    // check if two attributes are qual modulo permutation
+    return ((a+'').split(" ").sort()+'') == ((b+'').split(" ").sort()+'');
+  }
+
+  ok(attr instanceof DOMSettableTokenList,
+     "Iframe sandbox attribute is instace of DOMSettableTokenList");
+  ok(eq(attr, "allow-scripts") &&
+     eq(iframe.getAttribute("sandbox"), "allow-scripts"),
+     "Stringyfied sandbox attribute is same as that of the DOM element");
+
+  ok(attr.contains("allow-scripts") && !attr.contains("allow-same-origin"),
+     "Set membership of attribute elements is ok");
+
+  attr.add("allow-same-origin");
+
+  ok(attr.contains("allow-scripts") && attr.contains("allow-same-origin"),
+     "Attribute contains added atom");
+  ok(eq(attr, "allow-scripts allow-same-origin") &&
+     eq(iframe.getAttribute("sandbox"), "allow-scripts allow-same-origin"),
+     "Stringyfied attribute with new atom is correct");
+
+  attr.add("allow-forms");
+  attr.remove("allow-scripts");
+
+  ok(!attr.contains("allow-scripts") && attr.contains("allow-forms") &&
+     attr.contains("allow-same-origin"),
+     "Attribute does not contain removed atom");
+  ok(eq(attr, "allow-forms allow-same-origin") &&
+     eq(iframe.getAttribute("sandbox"), "allow-forms allow-same-origin"),
+     "Stringyfied attribute with removed atom is correct");
+</script>
+</pre>
+</body>
+</html>
+
