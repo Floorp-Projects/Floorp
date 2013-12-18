@@ -78,14 +78,10 @@ let modules = {
     privileged: true
   },
 #endif
-#ifndef NO_FIREFOX_ACCOUNTS
-# This is reversed for easy application and testing.  We should create
-# a new top-level define and set it in mobile/android/confvars.sh.
   accounts: {
     uri: "chrome://browser/content/aboutAccounts.xhtml",
     privileged: true
   },
-#endif
 }
 
 function AboutRedirector() {}
