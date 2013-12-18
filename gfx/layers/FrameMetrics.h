@@ -124,16 +124,17 @@ public:
   CSSRect GetExpandedScrollableRect() const
   {
     CSSRect scrollableRect = mScrollableRect;
-    if (scrollableRect.width < mCompositionBounds.width) {
+    CSSRect compBounds = CalculateCompositedRectInCssPixels();
+    if (scrollableRect.width < compBounds.width) {
       scrollableRect.x = std::max(0.f,
-                                  scrollableRect.x - (mCompositionBounds.width - scrollableRect.width));
-      scrollableRect.width = mCompositionBounds.width;
+                                  scrollableRect.x - (compBounds.width - scrollableRect.width));
+      scrollableRect.width = compBounds.width;
     }
 
-    if (scrollableRect.height < mCompositionBounds.height) {
+    if (scrollableRect.height < compBounds.height) {
       scrollableRect.y = std::max(0.f,
-                                  scrollableRect.y - (mCompositionBounds.height - scrollableRect.height));
-      scrollableRect.height = mCompositionBounds.height;
+                                  scrollableRect.y - (compBounds.height - scrollableRect.height));
+      scrollableRect.height = compBounds.height;
     }
 
     return scrollableRect;
