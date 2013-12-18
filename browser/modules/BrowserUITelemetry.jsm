@@ -21,6 +21,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
 const ALL_BUILTIN_ITEMS = [
   "fullscreen-button",
   "switch-to-metro-button",
+  "bookmarks-menu-button",
 ];
 
 const OTHER_MOUSEUP_MONITORED_ITEMS = [
@@ -182,8 +183,43 @@ this.BrowserUITelemetry = {
     this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
   },
 
+  _bookmarksMenuButtonMouseUp: function(aEvent) {
+    let bookmarksWidget = CustomizableUI.getWidget("bookmarks-menu-button");
+    if (bookmarksWidget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+      // In the menu panel, only the star is visible, and that opens up the
+      // bookmarks subview.
+      this._countMouseUpEvent("click-bookmarks-menu-button", "in-panel",
+                              aEvent.button);
+    } else {
+      let clickedItem = aEvent.originalTarget;
+      // Did we click on the star, or the dropmarker? The star
+      // has an anonid of "button". If we don't find that, we'll
+      // assume we clicked on the dropmarker.
+      let action = "menu";
+      if (clickedItem.getAttribute("anonid") == "button") {
+        // We clicked on the star - now we just need to record
+        // whether or not we're adding a bookmark or editing an
+        // existing one.
+        let bookmarksMenuNode =
+          bookmarksWidget.forWindow(aEvent.target.ownerGlobal).node;
+        action = bookmarksMenuNode.hasAttribute("starred") ? "edit" : "add";
+      }
+      this._countMouseUpEvent("click-bookmarks-menu-button", action,
+                              aEvent.button);
+    }
+  },
+
   _checkForBuiltinItem: function(aEvent) {
     let item = aEvent.originalTarget;
+
+    // We special-case the bookmarks-menu-button, since we want to
+    // monitor more than just clicks on it.
+    if (item.id == "bookmarks-menu-button" ||
+        getIDBasedOnFirstIDedAncestor(item) == "bookmarks-menu-button") {
+      this._bookmarksMenuButtonMouseUp(aEvent);
+      return;
+    }
+
     // Perhaps we're seeing one of the default toolbar items
     // being clicked.
     if (ALL_BUILTIN_ITEMS.indexOf(item.id) != -1) {
@@ -218,3 +254,20 @@ this.BrowserUITelemetry = {
     return result;
   },
 };
+
+/**
+ * Returns the id of the first ancestor of aNode that has an id. If aNode
+ * has no parent, or no ancestor has an id, returns null.
+ *
+ * @param aNode the node to find the first ID'd ancestor of
+ */
+function getIDBasedOnFirstIDedAncestor(aNode) {
+  while (!aNode.id) {
+    aNode = aNode.parentNode;
+    if (!aNode) {
+      return null;
+    }
+  }
+
+  return aNode.id;
+}
