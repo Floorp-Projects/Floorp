@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* The following are used by both sync/setup.xul and sync/genericChange.xul */
+.status {
+  color: -moz-dialogtext;
+}
+
+.statusIcon {
+  -moz-margin-start: 4px;
+  max-height: 16px;
+  max-width: 16px;
+}
+
+.statusIcon[status="active"] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+.statusIcon[status="error"] {
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=menu");
+}
+
+.statusIcon[status="success"] {
+  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=menu");
+}
+
+/* .data is only used by sync/genericChange.xul, but it seems unnecessary to have
+   a separate stylesheet for it. */
+.data {
+  font-size: 90%;
+  font-weight: bold;
+}
+
+dialog#change-dialog {
+  width: 40em;
+}
+
+image#syncIcon {
+  list-style-image: url("chrome://browser/skin/sync-32.png");
+}
+
+#introText {
+  margin-top: 2px;
+}
+
+#feedback {
+  height: 2em;
+}
