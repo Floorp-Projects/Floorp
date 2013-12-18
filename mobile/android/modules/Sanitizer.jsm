@@ -153,6 +153,11 @@ Sanitizer.prototype = {
           Services.prefs.clearUserPref("general.open_location.last_url");
         }
         catch (e) { }
+
+        try {
+          var seer = Cc["@mozilla.org/network/seer;1"].getService(Ci.nsINetworkSeer);
+          seer.reset();
+        } catch (e) { }
       },
 
       get canClear()
