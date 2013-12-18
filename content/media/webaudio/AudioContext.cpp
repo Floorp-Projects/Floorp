@@ -547,7 +547,9 @@ AudioContext::Shutdown()
   // We mute rather than suspending, because the delay between the ::Shutdown
   // call and the CC would make us overbuffer in the MediaStreamGraph.
   // See bug 936784 for details.
-  Mute();
+  if (!mIsOffline) {
+    Mute();
+  }
 
   mDecoder.Shutdown();
 
