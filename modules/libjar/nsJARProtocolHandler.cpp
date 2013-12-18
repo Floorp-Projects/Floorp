@@ -39,6 +39,8 @@ nsJARProtocolHandler::nsJARProtocolHandler()
 
 nsJARProtocolHandler::~nsJARProtocolHandler()
 {
+    MOZ_ASSERT(gJarHandler == this);
+    gJarHandler = nullptr;
 }
 
 nsresult
