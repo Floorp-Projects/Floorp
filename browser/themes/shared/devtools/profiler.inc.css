@@ -13,7 +13,7 @@
 }
 
 .devtools-toolbar {
-  min-height: 33px; 
+  min-height: 33px;
 }
 
 .profiler-sidebar {
@@ -21,7 +21,7 @@
 }
 
 .profiler-sidebar + .devtools-side-splitter {
-  -moz-border-start-color: transparent;
+  border-color: transparent;
 }
 
 .profiler-sidebar-item {
