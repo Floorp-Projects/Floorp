@@ -435,7 +435,7 @@ public:
 
   ~nsPingListener();
 
-  NS_IMETHODIMP StartTimeout();
+  nsresult StartTimeout();
 
 private:
   bool mRequireSameHost;
@@ -451,11 +451,11 @@ nsPingListener::~nsPingListener()
 {
   if (mTimer) {
     mTimer->Cancel();
-    mTimer = 0;
+    mTimer = nullptr;
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsPingListener::StartTimeout()
 {
   nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
@@ -492,7 +492,13 @@ NS_IMETHODIMP
 nsPingListener::OnStopRequest(nsIRequest *request, nsISupports *context,
                               nsresult status)
 {
-  mLoadGroup = 0;
+  mLoadGroup = nullptr;
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
   return NS_OK;
 }
 
@@ -656,8 +662,7 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   if (!pingListener)
     return;
 
-  nsCOMPtr<nsIStreamListener> listener =
-    static_cast<nsIStreamListener*>(pingListener);
+  nsCOMPtr<nsIStreamListener> listener(pingListener);
 
   // Observe redirects as well:
   nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(listener);
