@@ -188,12 +188,18 @@ let WebConsoleUtils = {
    *
    * @param string aSourceURL
    *        The source URL to shorten.
+   * @param object [aOptions]
+   *        Options:
+   *        - onlyCropQuery: boolean that tells if the URL abbreviation function
+   *        should only remove the query parameters and the hash fragment from
+   *        the given URL.
    * @return string
    *         The abbreviated form of the source URL.
    */
-  abbreviateSourceURL: function WCU_abbreviateSourceURL(aSourceURL)
+  abbreviateSourceURL:
+  function WCU_abbreviateSourceURL(aSourceURL, aOptions = {})
   {
-    if (aSourceURL.substr(0, 5) == "data:") {
+    if (!aOptions.onlyCropQuery && aSourceURL.substr(0, 5) == "data:") {
       let commaIndex = aSourceURL.indexOf(",");
       if (commaIndex > -1) {
         aSourceURL = "data:" + aSourceURL.substring(commaIndex + 1);
@@ -214,13 +220,15 @@ let WebConsoleUtils = {
 
     // Remove a trailing "/".
     if (aSourceURL[aSourceURL.length - 1] == "/") {
-      aSourceURL = aSourceURL.substring(0, aSourceURL.length - 1);
+      aSourceURL = aSourceURL.replace(/\/+$/, "");
     }
 
     // Remove all but the last path component.
-    let slashIndex = aSourceURL.lastIndexOf("/");
-    if (slashIndex > -1) {
-      aSourceURL = aSourceURL.substring(slashIndex + 1);
+    if (!aOptions.onlyCropQuery) {
+      let slashIndex = aSourceURL.lastIndexOf("/");
+      if (slashIndex > -1) {
+        aSourceURL = aSourceURL.substring(slashIndex + 1);
+      }
     }
 
     return aSourceURL;
