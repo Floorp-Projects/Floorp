@@ -798,7 +798,6 @@ var BrowserApp = {
 
     let tab = this.getTabForBrowser(aBrowser);
     if (tab) {
-      if (!tab.aboutHomePage) tab.aboutHomePage = ("aboutHomePage" in aParams) ? aParams.aboutHomePage : "";
       if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
     }
 
@@ -1392,7 +1391,6 @@ var BrowserApp = {
           flags: flags,
           tabID: data.tabID,
           isPrivate: (data.isPrivate === true),
-          aboutHomePage: ("aboutHomePage" in data) ? data.aboutHomePage : "",
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
           desktopMode: (data.desktopMode === true)
@@ -2126,7 +2124,11 @@ var NativeWindow = {
         BrowserEventHandler._cancelTapHighlight();
 
         if (SelectionHandler.canSelect(target)) {
-          if (!SelectionHandler.startSelection(target, aX, aY)) {
+          if (!SelectionHandler.startSelection(target, {
+              mode: SelectionHandler.SELECT_AT_POINT,
+              x: aX,
+              y: aY
+            })) {
             SelectionHandler.attachCaret(target);
           }
         }
@@ -2625,7 +2627,6 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.aboutHomePage = null;
   this.savedArticle = null;
   this.hasTouchListener = false;
   this.browserWidth = 0;
@@ -3816,7 +3817,6 @@ Tab.prototype = {
       uri: fixedURI.spec,
       userSearch: this.userSearch || "",
       baseDomain: baseDomain,
-      aboutHomePage: this.aboutHomePage || "",
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
@@ -6226,22 +6226,6 @@ var ClipboardHelper = {
     }
   },
 
-  selectWord: function(aElement, aX, aY) {
-    SelectionHandler.startSelection(aElement, aX, aY);
-  },
-
-  selectAll: function(aElement, aX, aY) {
-    SelectionHandler.selectAll(aElement, aX, aY);
-  },
-
-  searchWith: function(aElement) {
-    SelectionHandler.searchSelection(aElement);
-  },
-
-  share: function() {
-    SelectionHandler.shareSelection();
-  },
-
   paste: function(aElement) {
     if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
       return;
@@ -6277,15 +6261,6 @@ var ClipboardHelper = {
         }
         return false;
       }
-    }
-  },
-
-  selectWordContext: {
-    matches: function selectWordContextMatches(aElement) {
-      if (NativeWindow.contextmenus.textContext.matches(aElement))
-        return aElement.textLength > 0;
-
-      return false;
     }
   },
 
