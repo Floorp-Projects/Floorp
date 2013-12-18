@@ -97,6 +97,7 @@ UNIFIED_SOURCES += [
     'builtin/MapObject.cpp',
     'builtin/Object.cpp',
     'builtin/Profilers.cpp',
+    'builtin/SIMD.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
     'builtin/TypeRepresentation.cpp',
