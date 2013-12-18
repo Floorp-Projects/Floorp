@@ -1,0 +1,127 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+wizard {
+  -moz-appearance: none;
+  width: 55em;
+  height: 45em;
+  padding: 0;
+  background-color: Window;
+}
+
+.wizard-page-box {
+  -moz-appearance: none;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0;
+}
+
+wizardpage {
+  -moz-box-pack: center;
+  -moz-box-align: center;
+  margin: 0;
+  padding: 0 6em;
+  background-color: Window;
+}
+
+.wizard-header {
+  -moz-appearance: none;
+  border: none;
+  padding: 2em 0 1em 0;
+  text-align: center;
+}
+.wizard-header-label {
+  font-size: 24pt;
+  font-weight: normal;
+}
+
+.wizard-buttons {
+  background-color: rgba(0,0,0,0.1);
+  padding: 1em;
+}
+
+.wizard-buttons-separator {
+  visibility: collapse;
+}
+
+.wizard-header-icon {
+  visibility: collapse;
+}
+
+.accountChoiceButton {
+  font: menu;
+}
+
+.confirm {
+  border: 1px solid black;
+  padding: 1em;
+  border-radius: 5px;
+}
+
+/* Override the text-link style from global.css */
+description > .text-link,
+description > .text-link:focus {
+  margin: 0px;
+  padding: 0px;
+  border: 0px;
+}
+
+
+.success,
+.error {
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.error {
+  background-color: #FF0000 !important;
+  color: #FFFFFF !important;
+}
+
+.success {
+  background-color: #00FF00 !important;
+}
+
+.warning {
+  font-weight: bold;
+  font-size: 100%;
+  color: red;
+}
+
+.mainDesc {
+  font-weight: bold;
+  font-size: 100%;
+}
+
+.normal {
+  font-size: 100%;
+}
+
+.inputColumn {
+  -moz-margin-end: 2px
+}
+
+.pin {
+  font-size: 18pt;
+  width: 4em;
+  text-align: center; 
+}
+
+#passphraseHelpSpacer {
+  width: 0.5em;
+}
+
+#pairDeviceThrobber > image,
+#login-throbber > image {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
+}
+
+#captchaFeedback {
+  visibility: hidden;
+}
+
+#successPageIcon {
+  /* TODO replace this with a 128px version (bug 591122) */
+  list-style-image: url("chrome://browser/skin/sync-32.png");
+}
