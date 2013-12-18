@@ -76,22 +76,10 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     }
 
     template<typename KeyInput, typename ValueInput>
-    bool putNew(const KeyInput &k, const ValueInput &v) {
-        JS_ASSERT(v->compartment() == Base::compartment);
-        JS_ASSERT(!k->compartment()->options_.invisibleToDebugger());
-        if (!incZoneCount(k->zone()))
-            return false;
-        bool ok = Base::putNew(k, v);
-        if (!ok)
-            decZoneCount(k->zone());
-        return ok;
-    }
-
-    template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         JS_ASSERT(v->compartment() == Base::compartment);
         JS_ASSERT(!k->compartment()->options_.invisibleToDebugger());
-        JS_ASSERT(!p.found());
+        JS_ASSERT(!Base::has(k));
         if (!incZoneCount(k->zone()))
             return false;
         bool ok = Base::relookupOrAdd(p, k, v);

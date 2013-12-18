@@ -908,7 +908,7 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
     }
     if (!clone)
         return nullptr;
-    if (!p.add(clonedObjects, srcObj, clone))
+    if (!p.add(cx, clonedObjects, srcObj, clone))
         return nullptr;
     if (!CloneProperties(cx, srcObj, clone, clonedObjects)) {
         clonedObjects.remove(srcObj);

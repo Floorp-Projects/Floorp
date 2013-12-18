@@ -683,7 +683,7 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
             return false;
         envobj->setPrivateGCThing(env);
         envobj->setReservedSlot(JSSLOT_DEBUGENV_OWNER, ObjectValue(*object));
-        if (!p.add(environments, env, envobj)) {
+        if (!p.add(cx, environments, env, envobj)) {
             js_ReportOutOfMemory(cx);
             return false;
         }
@@ -726,7 +726,7 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
             dobj->setPrivateGCThing(obj);
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
 
-            if (!p.add(objects, obj, dobj)) {
+            if (!p.add(cx, objects, obj, dobj)) {
                 js_ReportOutOfMemory(cx);
                 return false;
             }
@@ -2812,7 +2812,7 @@ Debugger::wrapScript(JSContext *cx, HandleScript script)
         if (!scriptobj)
             return nullptr;
 
-        if (!p.add(scripts, script, scriptobj)) {
+        if (!p.add(cx, scripts, script, scriptobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
@@ -3705,7 +3705,7 @@ Debugger::wrapSource(JSContext *cx, HandleScriptSource source)
         if (!sourceobj)
             return nullptr;
 
-        if (!p.add(sources, source, sourceobj)) {
+        if (!p.add(cx, sources, source, sourceobj)) {
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
