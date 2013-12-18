@@ -1222,7 +1222,8 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void addTab() {
-        super.loadHomePage(Tabs.LOADURL_NEW_TAB);
+        // Always load about:home when opening a new tab.
+        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_NEW_TAB);
     }
 
     @Override
@@ -1394,7 +1395,7 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openReadingList() {
-        super.loadHomePage(Tabs.LOADURL_READING_LIST);
+        Tabs.getInstance().loadUrl(AboutPages.HOME, Tabs.LOADURL_READING_LIST);
     }
 
     /* Favicon stuff. */
