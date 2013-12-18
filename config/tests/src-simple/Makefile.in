@@ -5,7 +5,9 @@
 
 LOCALE_SRCDIR = $(srcdir)/l10n
 
+EXTERNALLY_MANAGED_MAKE_FILE := 1
 STANDALONE_MAKEFILE := 1
+JAR_MANIFEST := $(srcdir)/jar.mn
 
 include $(topsrcdir)/config/config.mk
 

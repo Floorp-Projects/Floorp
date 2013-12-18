@@ -53,7 +53,7 @@ class MessageManagerCallback
 public:
   virtual ~MessageManagerCallback() {}
 
-  virtual bool DoLoadFrameScript(const nsAString& aURL)
+  virtual bool DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
   {
     return true;
   }
@@ -296,6 +296,7 @@ protected:
   nsAutoPtr<mozilla::dom::ipc::MessageManagerCallback> mOwnedCallback;
   nsFrameMessageManager* mParentManager;
   nsTArray<nsString> mPendingScripts;
+  nsTArray<bool> mPendingScriptsGlobalStates;
 public:
   static nsFrameMessageManager* sParentProcessManager;
   static nsFrameMessageManager* sChildProcessManager;
@@ -314,14 +315,24 @@ private:
 
 class nsScriptCacheCleaner;
 
-struct nsFrameJSScriptExecutorHolder
+struct nsFrameScriptObjectExecutorHolder
 {
-  nsFrameJSScriptExecutorHolder(JSScript* aScript) : mScript(aScript)
-  { MOZ_COUNT_CTOR(nsFrameJSScriptExecutorHolder); }
-  ~nsFrameJSScriptExecutorHolder()
-  { MOZ_COUNT_DTOR(nsFrameJSScriptExecutorHolder); }
+  nsFrameScriptObjectExecutorHolder(JSScript* aScript) : mScript(aScript), mFunction(nullptr)
+  { MOZ_COUNT_CTOR(nsFrameScriptObjectExecutorHolder); }
+  nsFrameScriptObjectExecutorHolder(JSObject* aFunction) : mScript(nullptr), mFunction(aFunction)
+  { MOZ_COUNT_CTOR(nsFrameScriptObjectExecutorHolder); }
+  ~nsFrameScriptObjectExecutorHolder()
+  { MOZ_COUNT_DTOR(nsFrameScriptObjectExecutorHolder); }
+
+  bool WillRunInGlobalScope() { return mScript; }
+
+  // We use JS_AddNamed{Script,Object}Root to root these fields explicitly, so
+  // no need for Heap<T>.
   JSScript* mScript;
+  JSObject* mFunction;
 };
+
+class nsFrameScriptObjectExecutorStackHolder;
 
 class nsFrameScriptExecutor
 {
@@ -339,14 +350,18 @@ protected:
   ~nsFrameScriptExecutor()
   { MOZ_COUNT_DTOR(nsFrameScriptExecutor); }
   void DidCreateGlobal();
-  void LoadFrameScriptInternal(const nsAString& aURL);
-  enum CacheFailedBehavior { EXECUTE_IF_CANT_CACHE, DONT_EXECUTE };
+  void LoadFrameScriptInternal(const nsAString& aURL, bool aRunInGlobalScope);
   void TryCacheLoadAndCompileScript(const nsAString& aURL,
-                                    CacheFailedBehavior aBehavior = DONT_EXECUTE);
+                                    bool aRunInGlobalScope,
+                                    bool aShouldCache,
+                                    JS::MutableHandle<JSScript*> aScriptp,
+                                    JS::MutableHandle<JSObject*> aFunp);
+  void TryCacheLoadAndCompileScript(const nsAString& aURL,
+                                    bool aRunInGlobalScope);
   bool InitTabChildGlobalInternal(nsISupports* aScope, const nsACString& aID);
   nsCOMPtr<nsIXPConnectJSObjectHolder> mGlobal;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  static nsDataHashtable<nsStringHashKey, nsFrameJSScriptExecutorHolder*>* sCachedScripts;
+  static nsDataHashtable<nsStringHashKey, nsFrameScriptObjectExecutorHolder*>* sCachedScripts;
   static nsScriptCacheCleaner* sScriptCacheCleaner;
 };
 

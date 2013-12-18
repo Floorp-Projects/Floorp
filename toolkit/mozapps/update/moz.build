@@ -45,3 +45,5 @@ if CONFIG['MOZ_UPDATER']:
         'nsUpdateService.js',
         'nsUpdateServiceStub.js',
     ]
+
+JAR_MANIFESTS += ['jar.mn']
