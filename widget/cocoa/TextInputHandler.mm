@@ -527,6 +527,24 @@ TISInputSourceWrapper::InitByLayoutID(SInt32 aLayoutID,
     case 5:
       InitByInputSourceID("com.apple.keylayout.Thai");
       break;
+    case 6:
+      InitByInputSourceID("com.apple.keylayout.Arabic");
+      break;
+    case 7:
+      InitByInputSourceID("com.apple.keylayout.French");
+      break;
+    case 8:
+      InitByInputSourceID("com.apple.keylayout.Hebrew");
+      break;
+    case 9:
+      InitByInputSourceID("com.apple.keylayout.Lithuanian");
+      break;
+    case 10:
+      InitByInputSourceID("com.apple.keylayout.Norwegian");
+      break;
+    case 11:
+      InitByInputSourceID("com.apple.keylayout.Spanish");
+      break;
     default:
       Clear();
       break;

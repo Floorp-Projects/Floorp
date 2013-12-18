@@ -1638,7 +1638,7 @@ TemporaryTypeSet::isDOMClass()
             return false;
     }
 
-    return true;
+    return count > 0;
 }
 
 bool

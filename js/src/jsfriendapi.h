@@ -339,6 +339,9 @@ TraceWeakMaps(WeakMapTracer *trc);
 extern JS_FRIEND_API(bool)
 AreGCGrayBitsValid(JSRuntime *rt);
 
+extern JS_FRIEND_API(bool)
+ZoneGlobalsAreAllGray(JS::Zone *zone);
+
 typedef void
 (*GCThingCallback)(void *closure, void *gcthing);
 
