@@ -1485,6 +1485,26 @@ gfxWindowsPlatform::IsOptimus()
   return GetModuleHandleA("nvumdshim.dll");
 }
 
+int
+gfxWindowsPlatform::GetScreenDepth() const
+{
+    // if the system doesn't have all displays with the same
+    // pixel format, just return 24 and move on with life.
+    if (!GetSystemMetrics(SM_SAMEDISPLAYFORMAT))
+        return 24;
+
+    HDC hdc = GetDC(nullptr);
+    if (!hdc)
+        return 24;
+
+    int depth = GetDeviceCaps(hdc, BITSPIXEL) *
+                GetDeviceCaps(hdc, PLANES);
+
+    ReleaseDC(nullptr, hdc);
+
+    return depth;
+}
+
 IDXGIAdapter1*
 gfxWindowsPlatform::GetDXGIAdapter()
 {
