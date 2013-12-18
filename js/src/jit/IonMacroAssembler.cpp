@@ -875,8 +875,7 @@ MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
                                             Label *fail)
 {
     movePtr(ImmPtr(GetIonContext()->runtime->addressOfInterrupt()), tempReg);
-    load32(Address(tempReg, 0), tempReg);
-    branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
+    branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
 }
 
 static void
