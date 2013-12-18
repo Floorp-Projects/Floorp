@@ -6230,22 +6230,6 @@ var ClipboardHelper = {
     }
   },
 
-  selectWord: function(aElement, aX, aY) {
-    SelectionHandler.startSelection(aElement, {
-      mode: SelectionHandler.SELECT_AT_POINT,
-      x: aX,
-      y: aY
-    });
-  },
-
-  searchWith: function(aElement) {
-    SelectionHandler.searchSelection(aElement);
-  },
-
-  share: function() {
-    SelectionHandler.shareSelection();
-  },
-
   paste: function(aElement) {
     if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
       return;
@@ -6281,15 +6265,6 @@ var ClipboardHelper = {
         }
         return false;
       }
-    }
-  },
-
-  selectWordContext: {
-    matches: function selectWordContextMatches(aElement) {
-      if (NativeWindow.contextmenus.textContext.matches(aElement))
-        return aElement.textLength > 0;
-
-      return false;
     }
   },
 
