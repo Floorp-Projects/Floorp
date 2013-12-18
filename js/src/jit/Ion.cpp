@@ -1967,7 +1967,12 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
     }
 
     // Compilation succeeded or we invalidated right away or an inlining/alloc abort
-    return HasIonScript(script, executionMode) ? Method_Compiled : Method_Skipped;
+    if (HasIonScript(script, executionMode)) {
+        if (osrPc && script->ionScript()->osrPc() != osrPc)
+            return Method_Skipped;
+        return Method_Compiled;
+    }
+    return Method_Skipped;
 }
 
 } // namespace jit
