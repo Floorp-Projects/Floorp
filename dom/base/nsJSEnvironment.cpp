@@ -2337,6 +2337,17 @@ ShouldTriggerCC(uint32_t aSuspected)
           sLastCCEndTime + NS_CC_FORCED < PR_Now());
 }
 
+static uint32_t
+TimeToNextCC()
+{
+  if (sIncrementalCC) {
+    return NS_CC_DELAY - kMaxICCDuration;
+  }
+  return NS_CC_DELAY;
+}
+
+static_assert(NS_CC_DELAY > kMaxICCDuration, "ICC shouldn't reduce CC delay to 0");
+
 static void
 CCTimerFired(nsITimer *aTimer, void *aClosure)
 {
@@ -2346,7 +2357,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
   static uint32_t ccDelay = NS_CC_DELAY;
   if (sCCLockedOut) {
-    ccDelay = NS_CC_DELAY / 3;
+    ccDelay = TimeToNextCC() / 3;
 
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
@@ -2369,7 +2380,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   // During early timer fires, we only run forgetSkippable. During the first
   // late timer fire, we decide if we are going to have a second and final
   // late timer fire, where we may begin to run the CC.
-  const uint32_t numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
+  uint32_t numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
   bool isLateTimerFire = sCCTimerFireCount > numEarlyTimerFires;
   uint32_t suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
@@ -2392,7 +2403,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   }
 
   if (isLateTimerFire) {
-    ccDelay = NS_CC_DELAY;
+    ccDelay = TimeToNextCC();
 
     // We have either just run the CC or decided we don't want to run the CC
     // next time, so kill the timer.
