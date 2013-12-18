@@ -99,6 +99,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
+XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
+  "@mozilla.org/base/telemetry;1", "nsITelemetry");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
@@ -608,6 +610,7 @@ let SessionStoreInternal = {
         TabState.setSyncHandler(browser, aMessage.objects.handler);
         break;
       case "SessionStore:update":
+        this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
         break;
@@ -617,6 +620,18 @@ let SessionStoreInternal = {
     }
 
     this._clearRestoringWindows();
+  },
+
+  /**
+   * Record telemetry measurements stored in an object.
+   * @param telemetry
+   *        {histogramID: value, ...} An object mapping histogramIDs to the
+   *        value to be recorded for that ID,
+   */
+  recordTelemetry: function (telemetry) {
+    for (let histogramId in telemetry){
+      Telemetry.getHistogramById(histogramId).add(telemetry[histogramId]);
+    }
   },
 
   /* ........ Window Event Handlers .............. */
