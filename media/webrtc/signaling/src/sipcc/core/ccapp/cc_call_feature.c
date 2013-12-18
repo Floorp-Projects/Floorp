@@ -344,9 +344,11 @@ cc_return_t CC_CallFeature_SetPeerConnection(cc_call_handle_t call_handle,cc_pee
                                    0, 0, NO_STREAM, 0, constraints, pc, NULL, NULL);
 }
 
-cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle, cc_media_stream_id_t stream_id,
-                                            cc_media_track_id_t track_id, cc_media_type_t media_type) {
-    cc_media_constraints_t *constraints = NULL;
+cc_return_t CC_CallFeature_AddStream(cc_call_handle_t call_handle,
+                                     cc_media_stream_id_t stream_id,
+                                     cc_media_track_id_t track_id,
+                                     cc_media_type_t media_type,
+                                     cc_media_constraints_t *constraints) {
     CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
             GET_LINE_ID(call_handle), __FUNCTION__));
 

@@ -158,6 +158,11 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
         dcb_p->media_cap_tbl->cap[CC_VIDEO_1].support_security = TRUE;
         dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].support_security = TRUE;
 
+        /* By default, all channels are "bundle only" */
+        dcb_p->media_cap_tbl->cap[CC_AUDIO_1].bundle_only = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_VIDEO_1].bundle_only = TRUE;
+        dcb_p->media_cap_tbl->cap[CC_DATACHANNEL_1].bundle_only = TRUE;
+
         /* We initialize as RECVONLY to allow the application to
            display incoming media streams, even if it doesn't
            plan to send media for those streams. This will be

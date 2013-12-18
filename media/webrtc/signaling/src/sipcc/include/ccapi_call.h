@@ -74,7 +74,11 @@ cc_return_t CCAPI_SetRemoteDescription(cc_call_handle_t handle,
 
 cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t pc);
 
-cc_return_t CCAPI_AddStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
+cc_return_t CCAPI_AddStream(cc_call_handle_t handle,
+                            cc_media_stream_id_t stream_id,
+                            cc_media_track_id_t track_id,
+                            cc_media_type_t media_type,
+                            cc_media_constraints_t *constraints);
 
 cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type);
 

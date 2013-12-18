@@ -46,7 +46,8 @@ interface PeerConnectionImpl  {
 
   /* Adds the stream created by GetUserMedia */
   [Throws]
-  void addStream(MediaStream stream);
+  void addStream(MediaStream stream,
+                 optional MediaConstraintsInternal constraints);
   [Throws]
   void removeStream(MediaStream stream);
   [Throws]

@@ -865,7 +865,14 @@ class SignalingAgent {
   void AddStream(uint32_t hint =
          DOMMediaStream::HINT_CONTENTS_AUDIO |
          DOMMediaStream::HINT_CONTENTS_VIDEO,
-       MediaStream *stream = nullptr) {
+       MediaStream *stream = nullptr,
+       sipcc::MediaConstraints *constraints = nullptr
+       ) {
+
+    sipcc::MediaConstraints noConstraints;
+    if (!constraints) {
+      constraints = &noConstraints;
+    }
 
     nsRefPtr<DOMMediaStream> domMediaStream;
     if (stream) {
@@ -875,7 +882,7 @@ class SignalingAgent {
     }
 
     domMediaStream->SetHintContents(hint);
-    ASSERT_EQ(pc->AddStream(*domMediaStream), NS_OK);
+    ASSERT_EQ(pc->AddStream(*domMediaStream, *constraints), NS_OK);
     domMediaStream_ = domMediaStream;
   }
 
