@@ -5970,6 +5970,19 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 
     JS_ASSERT_IF(HasIonScript(script, executionMode), executionMode == SequentialExecution);
 
+    // We finished the new IonScript. Invalidate the current active IonScript,
+    // so we can replace it with this new (probably higher optimized) version.
+    if (HasIonScript(script, executionMode)) {
+        JS_ASSERT(GetIonScript(script, executionMode)->isRecompiling());
+        // Do a normal invalidate, except don't cancel offThread compilations,
+        // since that will cancel this compilation too.
+        if (!Invalidate(cx, script, SequentialExecution,
+                        /* resetUses */ false, /* cancelOffThread*/ false))
+        {
+            return false;
+        }
+    }
+
     // Check to make sure we didn't have a mid-build invalidation. If so, we
     // will trickle to jit::Compile() and return Method_Skipped.
     types::RecompileInfo recompileInfo;
@@ -6033,21 +6046,6 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     // If SPS is enabled, mark IonScript as having been instrumented with SPS
     if (sps_.enabled())
         ionScript->setHasSPSInstrumentation();
-
-    // We finished the new IonScript. Invalidate the current active IonScript,
-    // so we can replace it with this new (probably higher optimized) version.
-    if (HasIonScript(script, executionMode)) {
-        JS_ASSERT(GetIonScript(script, executionMode)->isRecompiling());
-        // Do a normal invalidate, except don't cancel offThread compilations,
-        // since that will cancel this compilation too.
-        if (!Invalidate(cx, script, SequentialExecution,
-                        /* resetUses */ false, /* cancelOffThread*/ false))
-        {
-            js_free(ionScript);
-            recompileInfo.compilerOutput(cx->zone()->types)->invalidate();
-            return false;
-        }
-    }
 
     SetIonScript(script, executionMode, ionScript);
 
