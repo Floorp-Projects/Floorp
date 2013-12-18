@@ -8,11 +8,7 @@ chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
-#ifndef NO_FIREFOX_ACCOUNTS
-# This is reversed for easy application and testing.  We should create
-# a new top-level define and set it in mobile/android/confvars.sh.
   skin/aboutAccounts.css                    (aboutAccounts.css)
-#endif
   skin/aboutAddons.css                      (aboutAddons.css)
   skin/aboutApps.css                        (aboutApps.css)
   skin/aboutBase.css                        (aboutBase.css)
