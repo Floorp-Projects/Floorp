@@ -2299,9 +2299,9 @@ void foo()
 static void
 UseItOrLoseIt(void* a)
 {
-  if (a == 0) {
-    fprintf(stderr, "UseItOrLoseIt: %p\n", a);
-  }
+  char buf[64];
+  sprintf(buf, "%p\n", a);
+  fwrite(buf, 1, strlen(buf) + 1, stderr);
 }
 
 // The output from this should be compared against test-expected.dmd.  It's
@@ -2516,12 +2516,21 @@ RunTestMode(FILE* fp)
 // Stress testing microbenchmark
 //---------------------------------------------------------------------------
 
+// This stops otherwise-unused variables from being optimized away.
+static void
+UseItOrLoseIt2(void* a)
+{
+  if (a == (void*)0x42) {
+    printf("UseItOrLoseIt2\n");
+  }
+}
+
 MOZ_NEVER_INLINE static void
 stress5()
 {
   for (int i = 0; i < 10; i++) {
     void* x = malloc(64);
-    UseItOrLoseIt(x);
+    UseItOrLoseIt2(x);
     if (i & 1) {
       free(x);
     }
