@@ -2497,7 +2497,7 @@ BrowserObj.prototype = {
    *        frame to load the script in
    */
   loadFrameScript: function BO_loadFrameScript(script, frame) {
-    frame.window.messageManager.loadFrameScript(script, true);
+    frame.window.messageManager.loadFrameScript(script, true, true);
     Services.prefs.setBoolPref("marionette.contentListener", true);
   },
 
