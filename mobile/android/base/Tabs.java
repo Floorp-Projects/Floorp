@@ -61,7 +61,6 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DESKTOP      = 1 << 5;
     public static final int LOADURL_BACKGROUND   = 1 << 6;
     public static final int LOADURL_EXTERNAL     = 1 << 7;
-    public static final int LOADURL_READING_LIST = 1 << 8;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
@@ -723,8 +722,6 @@ public class Tabs implements GeckoEventListener {
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
             args.put("selected", !background);
-            // XXX: Dirty hack to pass reading list page id - let's get rid of this code path in bug 949178.
-            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? "reading_list-reading_list" : "");
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();
