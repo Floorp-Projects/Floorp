@@ -11,6 +11,8 @@ const Cu = Components.utils;
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
 const LAZY_EXPAND_DELAY = 50; // ms
+const SCROLL_PAGE_SIZE_DEFAULT = 0;
+const APPEND_PAGE_SIZE_DEFAULT = 500;
 const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;
 const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 300; // ms
@@ -227,6 +229,19 @@ VariablesView.prototype = {
    * Specifies if nodes in this view may be searched lazily.
    */
   lazySearch: true,
+
+  /**
+   * The number of elements in this container to jump when Page Up or Page Down
+   * keys are pressed. If falsy, then the page size will be based on the
+   * container height.
+   */
+  scrollPageSize: SCROLL_PAGE_SIZE_DEFAULT,
+
+  /**
+   * The maximum number of elements allowed in a scope, variable or property
+   * that allows pagination when appending children.
+   */
+  appendPageSize: APPEND_PAGE_SIZE_DEFAULT,
 
   /**
    * Function called each time a variable or property's value is changed via
@@ -807,14 +822,14 @@ VariablesView.prototype = {
 
       case e.DOM_VK_PAGE_UP:
         // Rewind a certain number of elements based on the container height.
-        this.focusItemAtDelta(-(this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+        this.focusItemAtDelta(-(this.scrollPageSize || Math.min(Math.floor(this._list.scrollHeight /
           PAGE_SIZE_SCROLL_HEIGHT_RATIO),
           PAGE_SIZE_MAX_JUMPS)));
         return;
 
       case e.DOM_VK_PAGE_DOWN:
         // Advance a certain number of elements based on the container height.
-        this.focusItemAtDelta(+(this.pageSize || Math.min(Math.floor(this._list.scrollHeight /
+        this.focusItemAtDelta(+(this.scrollPageSize || Math.min(Math.floor(this._list.scrollHeight /
           PAGE_SIZE_SCROLL_HEIGHT_RATIO),
           PAGE_SIZE_MAX_JUMPS)));
         return;
@@ -867,13 +882,6 @@ VariablesView.prototype = {
       }
     }
   },
-
-  /**
-   * The number of elements in this container to jump when Page Up or Page Down
-   * keys are pressed. If falsy, then the page size will be based on the
-   * container height.
-   */
-  pageSize: 0,
 
   /**
    * Sets the text displayed in this container when there are no available items.
@@ -1190,6 +1198,8 @@ function Scope(aView, aName, aFlags = {}) {
 
   // Inherit properties and flags from the parent view. You can override
   // each of these directly onto any scope, variable or property instance.
+  this.scrollPageSize = aView.scrollPageSize;
+  this.appendPageSize = aView.appendPageSize;
   this.eval = aView.eval;
   this.switch = aView.switch;
   this.delete = aView.delete;
@@ -1211,6 +1221,11 @@ Scope.prototype = {
    * Whether this Scope should be prefetched when it is remoted.
    */
   shouldPrefetch: true,
+
+  /**
+   * Whether this Scope should paginate its contents.
+   */
+  allowPaginate: false,
 
   /**
    * The class name applied to this scope's target element.
@@ -1289,14 +1304,84 @@ Scope.prototype = {
    *        Additional options for adding the properties. Supported options:
    *        - sorted: true to sort all the properties before adding them
    *        - callback: function invoked after each item is added
+   * @param string aKeysType [optional]
+   *        Helper argument in the case of paginated items. Can be either
+   *        "just-strings" or "just-numbers". Humans shouldn't use this argument.
    */
-  addItems: function(aItems, aOptions = {}) {
+  addItems: function(aItems, aOptions = {}, aKeysType = "") {
     let names = Object.keys(aItems);
 
+    // Building the view when inspecting an object with a very large number of
+    // properties may take a long time. To avoid blocking the UI, group
+    // the items into several lazily populated pseudo-items.
+    let exceedsThreshold = names.length >= this.appendPageSize;
+    let shouldPaginate = exceedsThreshold && aKeysType != "just-strings";
+    if (shouldPaginate && this.allowPaginate) {
+      // Group the items to append into two separate arrays, one containing
+      // number-like keys, the other one containing string keys.
+      if (aKeysType == "just-numbers") {
+        var numberKeys = names;
+        var stringKeys = [];
+      } else {
+        var numberKeys = [];
+        var stringKeys = [];
+        for (let name of names) {
+          // Be very careful. Avoid Infinity, NaN and non Natural number keys.
+          let coerced = +name;
+          if (Number.isInteger(coerced) && coerced > -1) {
+            numberKeys.push(name);
+          } else {
+            stringKeys.push(name);
+          }
+        }
+      }
+
+      // This object contains a very large number of properties, but they're
+      // almost all strings that can't be coerced to numbers. Don't paginate.
+      if (numberKeys.length < this.appendPageSize) {
+        this.addItems(aItems, aOptions, "just-strings");
+        return;
+      }
+
+      // Slices a section of the { name: descriptor } data properties.
+      let paginate = (aArray, aBegin = 0, aEnd = aArray.length) => {
+        let store = {}
+        for (let i = aBegin; i < aEnd; i++) {
+          let name = aArray[i];
+          store[name] = aItems[name];
+        }
+        return store;
+      };
+
+      // Creates a pseudo-item that populates itself with the data properties
+      // from the corresponding page range.
+      let createRangeExpander = (aArray, aBegin, aEnd, aOptions, aKeyTypes) => {
+        let rangeVar = this.addItem(aArray[aBegin] + Scope.ellipsis + aArray[aEnd - 1]);
+        rangeVar.onexpand = () => {
+          let pageItems = paginate(aArray, aBegin, aEnd);
+          rangeVar.addItems(pageItems, aOptions, aKeyTypes);
+        }
+        rangeVar.showArrow();
+        rangeVar.target.setAttribute("pseudo-item", "");
+      };
+
+      // Divide the number keys into quarters.
+      let page = +Math.round(numberKeys.length / 4).toPrecision(1);
+      createRangeExpander(numberKeys, 0, page, aOptions, "just-numbers");
+      createRangeExpander(numberKeys, page, page * 2, aOptions, "just-numbers");
+      createRangeExpander(numberKeys, page * 2, page * 3, aOptions, "just-numbers");
+      createRangeExpander(numberKeys, page * 3, numberKeys.length, aOptions, "just-numbers");
+
+      // Append all the string keys together.
+      this.addItems(paginate(stringKeys), aOptions, "just-strings");
+      return;
+    }
+
     // Sort all of the properties before adding them, if preferred.
-    if (aOptions.sorted) {
+    if (aOptions.sorted && aKeysType != "just-numbers") {
       names.sort();
     }
+
     // Add the properties to the current scope.
     for (let name of names) {
       let descriptor = aItems[name];
@@ -2017,6 +2102,10 @@ DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_store", Map);
 DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_enumItems", Array);
 DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_nonEnumItems", Array);
 
+// An ellipsis symbol (usually "…") used for localization.
+XPCOMUtils.defineLazyGetter(Scope, "ellipsis", () =>
+  Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data);
+
 /**
  * A Variable is a Scope holding Property instances.
  * Iterable via "for (let [name, property] of instance) { }".
@@ -2048,10 +2137,17 @@ function Variable(aScope, aName, aDescriptor) {
 
 Variable.prototype = Heritage.extend(Scope.prototype, {
   /**
-   * Whether this Scope should be prefetched when it is remoted.
+   * Whether this Variable should be prefetched when it is remoted.
    */
-  get shouldPrefetch(){
+  get shouldPrefetch() {
     return this.name == "window" || this.name == "this";
+  },
+
+  /**
+   * Whether this Variable should paginate its contents.
+   */
+  get allowPaginate() {
+    return this.name != "window" && this.name != "this";
   },
 
   /**
@@ -3113,7 +3209,6 @@ let generateId = (function() {
     return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
   };
 })();
-
 
 /**
  * An Editable encapsulates the UI of an edit box that overlays a label,
