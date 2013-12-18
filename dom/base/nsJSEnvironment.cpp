@@ -2000,6 +2000,8 @@ struct CycleCollectorStats
     mAnyLockedOut = false;
   }
 
+  void PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls = 0);
+
   // Time the current slice began, including any GC finishing.
   PRTime mBeginSliceTime;
 
@@ -2042,21 +2044,21 @@ ICCSliceTime()
   return kICCSliceBudget;
 }
 
-static void
-PrepareForCycleCollection(int32_t aExtraForgetSkippableCalls = 0)
+void
+CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls)
 {
-  gCCStats.mBeginSliceTime = PR_Now();
+  mBeginSliceTime = PR_Now();
 
   // Before we begin the cycle collection, make sure there is no active GC.
   PRTime endGCTime;
   if (sCCLockedOut) {
-    gCCStats.mAnyLockedOut = true;
+    mAnyLockedOut = true;
     FinishAnyIncrementalGC();
     endGCTime = PR_Now();
-    uint32_t gcTime = TimeBetween(gCCStats.mBeginSliceTime, endGCTime);
-    gCCStats.mMaxGCDuration = std::max(gCCStats.mMaxGCDuration, gcTime);
+    uint32_t gcTime = TimeBetween(mBeginSliceTime, endGCTime);
+    mMaxGCDuration = std::max(mMaxGCDuration, gcTime);
   } else {
-    endGCTime = gCCStats.mBeginSliceTime;
+    endGCTime = mBeginSliceTime;
   }
 
   // Run forgetSkippable synchronously to reduce the size of the CC graph. This
@@ -2074,9 +2076,9 @@ PrepareForCycleCollection(int32_t aExtraForgetSkippableCalls = 0)
     }
 
     if (ranSyncForgetSkippable) {
-      gCCStats.mMaxSkippableDuration =
-        std::max(gCCStats.mMaxSkippableDuration, TimeBetween(endGCTime, PR_Now()));
-      gCCStats.mRanSyncForgetSkippable = true;
+      mMaxSkippableDuration =
+        std::max(mMaxSkippableDuration, TimeBetween(endGCTime, PR_Now()));
+      mRanSyncForgetSkippable = true;
     }
 
   }
@@ -2092,7 +2094,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
   }
 
   PROFILER_LABEL("CC", "CycleCollectNow");
-  PrepareForCycleCollection(aExtraForgetSkippableCalls);
+  gCCStats.PrepareForCycleCollectionSlice(aExtraForgetSkippableCalls);
   nsCycleCollector_collect(aListener);
 }
 
@@ -2108,7 +2110,7 @@ nsJSContext::ScheduledCycleCollectNow(int64_t aSliceTime)
 
   // Ideally, the slice time would be decreased by the amount of
   // time spent on PrepareForCycleCollection().
-  PrepareForCycleCollection();
+  gCCStats.PrepareForCycleCollectionSlice();
   nsCycleCollector_scheduledCollect(aSliceTime);
 }
 
