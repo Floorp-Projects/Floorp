@@ -356,27 +356,29 @@ AdapterPropertiesChangeCallback(bt_status_t aStatus, int aNumProperties,
         BluetoothNamedValue(NS_LITERAL_STRING("Devices"), propertyValue));
     } else if (p.type == BT_PROPERTY_UUIDS) {
       //FIXME: This will be implemented in the later patchset
-      return;
+      continue;
     } else {
       BT_LOGD("Unhandled adapter property type: %d", p.type);
-      return;
+      continue;
     }
+  }
 
-    BluetoothValue value(propertiesArray);
-    BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
-                           NS_LITERAL_STRING(KEY_ADAPTER), value);
-    nsRefPtr<DistributeBluetoothSignalTask>
-      t = new DistributeBluetoothSignalTask(signal);
-    if (NS_FAILED(NS_DispatchToMainThread(t))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
+  NS_ENSURE_TRUE_VOID(propertiesArray.Length() > 0);
 
-    // bluedroid BTU task was stored in the task queue, see GKI_send_msg
-    if (!sSetPropertyRunnableArray.IsEmpty()) {
-      DispatchBluetoothReply(sSetPropertyRunnableArray[0], BluetoothValue(true),
-                             EmptyString());
-      sSetPropertyRunnableArray.RemoveElementAt(0);
-    }
+  BluetoothValue value(propertiesArray);
+  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                         NS_LITERAL_STRING(KEY_ADAPTER), value);
+  nsRefPtr<DistributeBluetoothSignalTask>
+    t = new DistributeBluetoothSignalTask(signal);
+  if (NS_FAILED(NS_DispatchToMainThread(t))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+  }
+
+  // bluedroid BTU task was stored in the task queue, see GKI_send_msg
+  if (!sSetPropertyRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sSetPropertyRunnableArray[0], BluetoothValue(true),
+                           EmptyString());
+    sSetPropertyRunnableArray.RemoveElementAt(0);
   }
 }
 
