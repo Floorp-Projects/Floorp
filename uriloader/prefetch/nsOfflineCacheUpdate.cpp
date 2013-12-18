@@ -309,8 +309,7 @@ nsManifestCheck::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
 // nsOfflineCacheUpdateItem::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS6(nsOfflineCacheUpdateItem,
-                   nsIDOMLoadStatus,
+NS_IMPL_ISUPPORTS5(nsOfflineCacheUpdateItem,
                    nsIRequestObserver,
                    nsIStreamListener,
                    nsIRunnable,
@@ -332,7 +331,7 @@ nsOfflineCacheUpdateItem::nsOfflineCacheUpdateItem(nsIURI *aURI,
     , mPreviousApplicationCache(aPreviousApplicationCache)
     , mItemType(type)
     , mChannel(nullptr)
-    , mState(nsIDOMLoadStatus::UNINITIALIZED)
+    , mState(LoadStatus::UNINITIALIZED)
     , mBytesRead(0)
 {
 }
@@ -409,7 +408,7 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
 
     mUpdate = aUpdate;
 
-    mState = nsIDOMLoadStatus::REQUESTED;
+    mState = LoadStatus::REQUESTED;
 
     return NS_OK;
 }
@@ -422,7 +421,7 @@ nsOfflineCacheUpdateItem::Cancel()
         mChannel = nullptr;
     }
 
-    mState = nsIDOMLoadStatus::UNINITIALIZED;
+    mState = LoadStatus::UNINITIALIZED;
 
     return NS_OK;
 }
@@ -435,7 +434,7 @@ NS_IMETHODIMP
 nsOfflineCacheUpdateItem::OnStartRequest(nsIRequest *aRequest,
                                          nsISupports *aContext)
 {
-    mState = nsIDOMLoadStatus::RECEIVING;
+    mState = LoadStatus::RECEIVING;
 
     return NS_OK;
 }
@@ -512,7 +511,7 @@ nsOfflineCacheUpdateItem::Run()
     // take this item as already finished and finish the update process too
     // early when ProcessNextURI() would get called between OnStopRequest()
     // and Run() of this item.  Finish() would then have been called twice.
-    mState = nsIDOMLoadStatus::LOADED;
+    mState = LoadStatus::LOADED;
 
     nsRefPtr<nsOfflineCacheUpdate> update;
     update.swap(mUpdate);
@@ -591,57 +590,6 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
     return NS_OK;
 }
 
-//-----------------------------------------------------------------------------
-// nsOfflineCacheUpdateItem::nsIDOMLoadStatus
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateItem::GetSource(nsIDOMNode **aSource)
-{
-    *aSource = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateItem::GetUri(nsAString &aURI)
-{
-    nsAutoCString spec;
-    nsresult rv = mURI->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    CopyUTF8toUTF16(spec, aURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateItem::GetTotalSize(int32_t *aTotalSize)
-{
-    if (mChannel) {
-      int64_t size64;
-      nsresult rv = mChannel->GetContentLength(&size64);
-      NS_ENSURE_SUCCESS(rv, rv);
-      *aTotalSize = int32_t(size64); // XXX - loses precision
-      return NS_OK;
-    }
-
-    *aTotalSize = -1;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateItem::GetLoadedSize(int32_t *aLoadedSize)
-{
-    *aLoadedSize = int32_t(mBytesRead); // XXX - loses precision
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOfflineCacheUpdateItem::GetReadyState(uint16_t *aReadyState)
-{
-    *aReadyState = mState;
-    return NS_OK;
-}
-
 nsresult
 nsOfflineCacheUpdateItem::GetRequestSucceeded(bool * succeeded)
 {
@@ -681,23 +629,23 @@ nsOfflineCacheUpdateItem::GetRequestSucceeded(bool * succeeded)
 bool
 nsOfflineCacheUpdateItem::IsScheduled()
 {
-    return mState == nsIDOMLoadStatus::UNINITIALIZED;
+    return mState == LoadStatus::UNINITIALIZED;
 }
 
 bool
 nsOfflineCacheUpdateItem::IsInProgress()
 {
-    return mState == nsIDOMLoadStatus::REQUESTED ||
-           mState == nsIDOMLoadStatus::RECEIVING;
+    return mState == LoadStatus::REQUESTED ||
+           mState == LoadStatus::RECEIVING;
 }
 
 bool
 nsOfflineCacheUpdateItem::IsCompleted()
 {
-    return mState == nsIDOMLoadStatus::LOADED;
+    return mState == LoadStatus::LOADED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsOfflineCacheUpdateItem::GetStatus(uint16_t *aStatus)
 {
     if (!mChannel) {
