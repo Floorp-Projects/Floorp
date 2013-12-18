@@ -607,7 +607,11 @@ public:
      * When set, clipping due to the root scroll frame (and any other viewport-
      * related clipping) is ignored.
      */
-    IGNORE_ROOT_SCROLL_FRAME = 0x02
+    IGNORE_ROOT_SCROLL_FRAME = 0x02,
+    /**
+     * When set, return only content in the same document as aFrame.
+     */
+    IGNORE_CROSS_DOC = 0x04
   };
 
   /**
