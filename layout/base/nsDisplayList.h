@@ -283,6 +283,11 @@ public:
    */
   void SetPaintingToWindow(bool aToWindow) { mIsPaintingToWindow = aToWindow; }
   bool IsPaintingToWindow() const { return mIsPaintingToWindow; }
+  /**
+   * Call this to prevent descending into subdocuments.
+   */
+  void SetDescendIntoSubdocuments(bool aDescend) { mDescendIntoSubdocuments = aDescend; }
+  bool GetDescendIntoSubdocuments() { return mDescendIntoSubdocuments; }
 
   /**
    * Returns true if merging and flattening of display lists should be
@@ -647,6 +652,7 @@ private:
   bool                           mHadToIgnoreSuppression;
   bool                           mIsAtRootOfPseudoStackingContext;
   bool                           mIncludeAllOutOfFlows;
+  bool                           mDescendIntoSubdocuments;
   bool                           mSelectedFramesOnly;
   bool                           mAccurateVisibleRegions;
   bool                           mAllowMergingAndFlattening;
