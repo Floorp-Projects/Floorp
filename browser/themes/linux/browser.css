@@ -1839,7 +1839,7 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customizing] #tab-view-deck {
+#main-window[customize-entered] #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
                     linear-gradient(to bottom, #bcbcbc, #b5b5b5);

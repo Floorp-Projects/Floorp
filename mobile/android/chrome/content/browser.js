@@ -3368,8 +3368,6 @@ Tab.prototype = {
       case "DOMContentLoaded": {
         let target = aEvent.originalTarget;
 
-        LoginManagerContent.onContentLoaded(aEvent);
-
         // ignore on frames and other documents
         if (target != this.browser.contentDocument)
           return;
