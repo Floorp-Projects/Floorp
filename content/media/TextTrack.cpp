@@ -89,7 +89,12 @@ TextTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 TextTrack::SetMode(TextTrackMode aValue)
 {
-  mMode = aValue;
+  if (mMode != aValue) {
+    mMode = aValue;
+    if (mMediaElement) {
+      mMediaElement->TextTracks()->CreateAndDispatchChangeEvent();
+    }
+  }
 }
 
 void
