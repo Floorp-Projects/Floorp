@@ -35,6 +35,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'Transport_win.h',
     ]
     SOURCES += [
+        'CrossProcessMutex_windows.cpp',
         'SharedMemory_windows.cpp',
         'Transport_win.cpp',
         'WindowsMessageLoop.cpp',
@@ -44,21 +45,9 @@ else:
         'Transport_posix.h',
     ]
     UNIFIED_SOURCES += [
+        'CrossProcessMutex_unimplemented.cpp',
         'SharedMemory_posix.cpp',
         'Transport_posix.cpp',
-    ]
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    UNIFIED_SOURCES += [
-        'CrossProcessMutex_windows.cpp',
-    ]
-elif CONFIG['OS_ARCH'] == 'Linux':
-    UNIFIED_SOURCES += [
-        'CrossProcessMutex_posix.cpp',
-    ]
-else:
-    UNIFIED_SOURCES += [
-        'CrossProcessMutex_unimplemented.cpp',
     ]
 
 # Android has its own,
