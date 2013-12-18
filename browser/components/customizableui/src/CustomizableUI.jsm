@@ -150,8 +150,7 @@ let CustomizableUIInternal = {
       "fullscreen-button",
       "find-button",
       "preferences-button",
-      "add-ons-button",
-      "developer-button",
+      "add-ons-button"
     ];
 
     if (gPalette.has("switch-to-metro-button")) {
