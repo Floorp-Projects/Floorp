@@ -16,3 +16,5 @@ EXTRA_JS_MODULES += [
     'TraversalRules.jsm',
     'Utils.jsm'
 ]
+
+JAR_MANIFESTS += ['jar.mn']

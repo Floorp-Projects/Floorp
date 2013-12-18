@@ -13,7 +13,7 @@ ScopedTempDir::ScopedTempDir() {
 
 ScopedTempDir::~ScopedTempDir() {
   if (!path_.empty() && !file_util::Delete(path_, true))
-    LOG(ERROR) << "ScopedTempDir unable to delete " << path_.value();
+    CHROMIUM_LOG(ERROR) << "ScopedTempDir unable to delete " << path_.value();
 }
 
 bool ScopedTempDir::CreateUniqueTempDir() {

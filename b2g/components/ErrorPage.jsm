@@ -161,7 +161,7 @@ let ErrorPage = {
     // This won't happen from dom/ipc/preload.js in non-OOP builds.
     try {
       if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
-        mm.loadFrameScript(kErrorPageFrameScript, true);
+        mm.loadFrameScript(kErrorPageFrameScript, true, true);
       }
     } catch (e) {
       dump('Error loading ' + kErrorPageFrameScript + ' as frame script: ' + e + '\n');

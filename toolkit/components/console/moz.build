@@ -10,3 +10,5 @@ EXTRA_COMPONENTS += [
     'jsconsole-clhandler.js',
     'jsconsole-clhandler.manifest',
 ]
+
+JAR_MANIFESTS += ['jar.mn']
