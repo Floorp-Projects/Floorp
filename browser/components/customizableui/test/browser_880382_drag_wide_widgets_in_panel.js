@@ -22,8 +22,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, printButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -48,8 +47,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -72,8 +70,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -95,8 +92,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, historyPanelMenu);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -122,8 +118,7 @@ add_task(function() {
                              "zoom-controls",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(zoomControls, preferencesButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -136,10 +131,10 @@ add_task(function() {
 // Dragging an item from the palette to before the zoom-controls should move it and two other buttons before the zoom controls.
 add_task(function() {
   yield startCustomizing();
-  let openFileButton = document.getElementById("open-file-button");
+  let developerButton = document.getElementById("developer-button");
   let zoomControls = document.getElementById("zoom-controls");
   let placementsAfterInsert = ["edit-controls",
-                               "open-file-button",
+                               "developer-button",
                                "new-window-button",
                                "privatebrowsing-button",
                                "zoom-controls",
@@ -149,10 +144,9 @@ add_task(function() {
                                "fullscreen-button",
                                "find-button",
                                "preferences-button",
-                               "add-ons-button",
-                               "developer-button"];
+                               "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterInsert);
-  simulateItemDrag(openFileButton, zoomControls);
+  simulateItemDrag(developerButton, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
@@ -163,9 +157,9 @@ add_task(function() {
      "feed-button should be a child of wrapper-feed-button");
   is(feedWrapper.getAttribute("place"), "palette",
      "The feed-button wrapper should have it's place set to 'palette'");
-  simulateItemDrag(openFileButton, palette);
-  is(openFileButton.parentNode.tagName, "toolbarpaletteitem",
-     "The open-file-button should be wrapped by a toolbarpaletteitem");
+  simulateItemDrag(developerButton, palette);
+  is(developerButton.parentNode.tagName, "toolbarpaletteitem",
+     "The developer-button should be wrapped by a toolbarpaletteitem");
   let newWindowButton = document.getElementById("new-window-button");
   simulateItemDrag(zoomControls, newWindowButton);
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
@@ -175,9 +169,9 @@ add_task(function() {
 // should move it and two other buttons before the edit and zoom controls.
 add_task(function() {
   yield startCustomizing();
-  let openFileButton = document.getElementById("open-file-button");
+  let developerButton = document.getElementById("developer-button");
   let editControls = document.getElementById("edit-controls");
-  let placementsAfterInsert = ["open-file-button",
+  let placementsAfterInsert = ["developer-button",
                                "new-window-button",
                                "privatebrowsing-button",
                                "edit-controls",
@@ -188,10 +182,9 @@ add_task(function() {
                                "fullscreen-button",
                                "find-button",
                                "preferences-button",
-                               "add-ons-button",
-                               "developer-button"];
+                               "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterInsert);
-  simulateItemDrag(openFileButton, editControls);
+  simulateItemDrag(developerButton, editControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
   let palette = document.getElementById("customization-palette");
@@ -202,9 +195,9 @@ add_task(function() {
      "feed-button should be a child of wrapper-feed-button");
   is(feedWrapper.getAttribute("place"), "palette",
      "The feed-button wrapper should have it's place set to 'palette'");
-  simulateItemDrag(openFileButton, palette);
-  is(openFileButton.parentNode.tagName, "toolbarpaletteitem",
-     "The open-file-button should be wrapped by a toolbarpaletteitem");
+  simulateItemDrag(developerButton, palette);
+  is(developerButton.parentNode.tagName, "toolbarpaletteitem",
+     "The developer-button should be wrapped by a toolbarpaletteitem");
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
@@ -224,8 +217,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, zoomControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -248,8 +240,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, newWindowButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -275,8 +266,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, privateBrowsingButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -302,8 +292,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, savePageButton);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -328,8 +317,7 @@ add_task(function() {
                              "find-button",
                              "preferences-button",
                              "add-ons-button",
-                             "edit-controls",
-                             "developer-button"];
+                             "edit-controls"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -353,8 +341,7 @@ add_task(function() {
                              "fullscreen-button",
                              "find-button",
                              "preferences-button",
-                             "add-ons-button",
-                             "developer-button"];
+                             "add-ons-button"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   let paletteChildElementCount = palette.childElementCount;
   simulateItemDrag(editControls, palette);
@@ -378,7 +365,7 @@ add_task(function() {
   yield startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
-  let numPlaceholders = isInWin8() ? 1 : 2;
+  let numPlaceholders = isInWin8() ? 2 : 3;
   for (let i = 0; i < numPlaceholders; i++) {
     // NB: We can't just iterate over all of the placeholders
     // because each drag-drop action recreates them.
@@ -393,8 +380,7 @@ add_task(function() {
                                "find-button",
                                "preferences-button",
                                "add-ons-button",
-                               "edit-controls",
-                               "developer-button"];
+                               "edit-controls"];
     addSwitchToMetroButtonInWindows8(placementsAfterMove);
     simulateItemDrag(editControls, placeholder);
     assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
@@ -404,15 +390,15 @@ add_task(function() {
   }
 });
 
-// Dragging the open-file-button back on to itself should work.
+// Dragging the developer-button back on to itself should work.
 add_task(function() {
   yield startCustomizing();
-  let openFileButton = document.getElementById("open-file-button");
-  is(openFileButton.parentNode.tagName, "toolbarpaletteitem",
-     "open-file-button should be wrapped by a toolbarpaletteitem");
-  simulateItemDrag(openFileButton, openFileButton);
-  is(openFileButton.parentNode.tagName, "toolbarpaletteitem",
-     "open-file-button should be wrapped by a toolbarpaletteitem");
+  let developerButton = document.getElementById("developer-button");
+  is(developerButton.parentNode.tagName, "toolbarpaletteitem",
+     "developer-button should be wrapped by a toolbarpaletteitem");
+  simulateItemDrag(developerButton, developerButton);
+  is(developerButton.parentNode.tagName, "toolbarpaletteitem",
+     "developer-button should be wrapped by a toolbarpaletteitem");
   let editControls = document.getElementById("edit-controls");
   is(editControls.parentNode.tagName, "toolbarpaletteitem",
      "edit-controls should be wrapped by a toolbarpaletteitem");
@@ -435,14 +421,17 @@ add_task(function() {
                              "find-button",
                              "preferences-button",
                              "add-ons-button",
-                             "edit-controls",
-                             "developer-button"];
+                             "edit-controls"];
   addSwitchToMetroButtonInWindows8(placementsAfterMove);
   simulateItemDrag(editControls, target);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
   let itemToDrag = "sync-button";
   let button = document.getElementById(itemToDrag);
-  placementsAfterMove.splice(11, 0, itemToDrag);
+  if (!isInWin8()) {
+    placementsAfterMove.push(itemToDrag);
+  } else {
+    placementsAfterMove.splice(11, 0, itemToDrag);
+  }
   simulateItemDrag(button, editControls);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
 
