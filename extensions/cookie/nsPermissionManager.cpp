@@ -208,6 +208,13 @@ public:
 
 NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
 
+static bool
+IsExpandedPrincipal(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+  return !!ep;
+}
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -644,6 +651,11 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Permissions may not be added to expanded principals.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   return AddInternal(aPrincipal, nsDependentCString(aType), aPermission, 0,
                      aExpireType, aExpireTime, eNotify, eWriteToDB);
 }
@@ -874,6 +886,11 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Permissions may not be added to expanded principals.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // AddInternal() handles removal, just let it do the work
   return AddInternal(aPrincipal,
                      nsDependentCString(aType),
@@ -1024,6 +1041,11 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Querying the permission object of an nsEP is non-sensical.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsAutoCString host;
   nsresult rv = GetHostForPrincipal(aPrincipal, host);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1078,6 +1100,34 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     *aPermission = nsIPermissionManager::ALLOW_ACTION;
+    return NS_OK;
+  }
+
+  // For expanded principals, we want to iterate over the whitelist and see
+  // if the permission is granted for any of them.
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+  if (ep) {
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist;
+    nsresult rv = ep->GetWhiteList(&whitelist);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Start with DENY_ACTION. If we get PROMPT_ACTION, keep going to see if
+    // we get ALLOW_ACTION from another principal.
+    *aPermission = nsIPermissionManager::DENY_ACTION;
+    for (size_t i = 0; i < whitelist->Length(); ++i) {
+      uint32_t perm;
+      rv = CommonTestPermission(whitelist->ElementAt(i), aType, &perm, aExactHostMatch,
+                                aIncludingSession);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (perm == nsIPermissionManager::ALLOW_ACTION) {
+        *aPermission = perm;
+        return NS_OK;
+      } else if (perm == nsIPermissionManager::PROMPT_ACTION) {
+        // Store it, but keep going to see if we can do better.
+        *aPermission = perm;
+      }
+    }
+
     return NS_OK;
   }
 
@@ -1816,6 +1866,11 @@ nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return NS_OK;
+  }
+
+  // Setting the expire time of an nsEP is non-sensical.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsAutoCString host;
