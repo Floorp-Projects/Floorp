@@ -88,7 +88,7 @@ function onLoad(aEvent) {
 
   let elmts = document.querySelectorAll("[pref]");
   for (let i = 0; i < elmts.length; i++) {
-    elmts[i]..addEventListener("click",  openLink,  false));
+    elmts[i].addEventListener("click",  openLink,  false);
   }
 
   navigator.mozApps.mgmt.oninstall = onInstall;
