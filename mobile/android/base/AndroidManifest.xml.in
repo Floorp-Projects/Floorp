@@ -248,7 +248,6 @@
                   android:excludeFromRecents="true"/>
 
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
-                  android:label="@string/sync_configure_engines_title_bookmarks"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
 
