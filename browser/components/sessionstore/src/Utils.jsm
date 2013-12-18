@@ -64,5 +64,16 @@ this.Utils = Object.freeze({
       map.set(otherKey, value);
       map.delete(key);
     }
+  },
+
+  // Copies all properties of a given object to a new one and returns it.
+  copy: function (from) {
+    let to = {};
+
+    for (let key of Object.keys(from)) {
+      to[key] = from[key];
+    }
+
+    return to;
   }
 });
