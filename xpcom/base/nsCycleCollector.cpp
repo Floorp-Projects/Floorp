@@ -1178,7 +1178,8 @@ private:
 
     void BeginCollection(ccType aCCType, nsICycleCollectorListener *aManualListener);
     void MarkRoots(SliceBudget &aBudget);
-    void ScanRoots();
+    void ScanRoots(bool aFullySynchGraphBuild);
+    void ScanIncrementalRoots();
     void ScanWeakMaps();
 
     // returns whether anything was collected
@@ -2303,6 +2304,16 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
                                   bool aAsyncSnowWhiteFreeing)
 {
     CheckThreadSafety();
+
+    // If we remove things from the purple buffer during graph building, we may
+    // lose track of an object that was mutated during graph building. This should
+    // only happen when somebody calls nsJSContext::CycleCollectNow explicitly
+    // requesting extra forget skippable calls, during an incremental collection.
+    // See bug 950949 for fixing this so we actually run the forgetSkippable calls.
+    if (mIncrementalPhase != IdlePhase) {
+        return;
+    }
+
     if (mJSRuntime) {
         mJSRuntime->PrepareForForgetSkippable();
     }
@@ -2474,28 +2485,138 @@ nsCycleCollector::ScanWeakMaps()
     }
 }
 
+// Flood black from any objects in the purple buffer that are in the CC graph.
+class PurpleScanBlackVisitor
+{
+public:
+    PurpleScanBlackVisitor(GCGraph &aGraph, uint32_t &aCount, bool &aFailed)
+        : mGraph(aGraph), mCount(aCount), mFailed(aFailed)
+    {
+    }
+
+    void
+    Visit(nsPurpleBuffer &aBuffer, nsPurpleBufferEntry *aEntry)
+    {
+        MOZ_ASSERT(aEntry->mObject, "Entries with null mObject shouldn't be in the purple buffer.");
+        MOZ_ASSERT(aEntry->mRefCnt->get() != 0, "Snow-white objects shouldn't be in the purple buffer.");
+
+        void *obj = aEntry->mObject;
+        if (!aEntry->mParticipant) {
+            obj = CanonicalizeXPCOMParticipant(static_cast<nsISupports*>(obj));
+            MOZ_ASSERT(obj, "Don't add objects that don't participate in collection!");
+        }
+
+        PtrInfo *pi = mGraph.FindNode(obj);
+        if (!pi) {
+            return;
+        }
+        MOZ_ASSERT(pi->mParticipant, "No dead objects should be in the purple buffer.");
+        if (pi->mColor == black) {
+            return;
+        }
+        GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mCount, mFailed)).Walk(pi);
+    }
+
+private:
+    GCGraph &mGraph;
+    uint32_t &mCount;
+    bool &mFailed;
+};
+
+// Objects that have been stored somewhere since the start of incremental graph building must
+// be treated as live for this cycle collection, because we may not have accurate information
+// about who holds references to them.
 void
-nsCycleCollector::ScanRoots()
+nsCycleCollector::ScanIncrementalRoots()
 {
     TimeLog timeLog;
+
+    // Reference counted objects:
+    // We cleared the purple buffer at the start of the current ICC, so if a
+    // refcounted object is purple, it may have been AddRef'd during the current
+    // ICC. (It may also have only been released.) If that is the case, we cannot
+    // be sure that the set of things pointing to the object in the CC graph
+    // is accurate. Therefore, for safety, we treat any purple objects as being
+    // live during the current CC. We don't remove anything from the purple
+    // buffer here, so these objects will be suspected and freed in the next CC
+    // if they are garbage.
+    bool failed = false;
+    PurpleScanBlackVisitor purpleScanBlackVisitor(mGraph, mWhiteNodeCount, failed);
+    mPurpleBuf.VisitEntries(purpleScanBlackVisitor);
+    timeLog.Checkpoint("ScanIncrementalRoots::fix purple");
+
+    // Garbage collected objects:
+    // If a GCed object was added to the graph with a refcount of zero, and is
+    // now marked black by the GC, it was probably gray before and was exposed
+    // to active JS, so it may have been stored somewhere, so it needs to be
+    // treated as live.
+    if (mJSRuntime) {
+        nsCycleCollectionParticipant *jsParticipant = mJSRuntime->GCThingParticipant();
+        nsCycleCollectionParticipant *zoneParticipant = mJSRuntime->ZoneParticipant();
+        NodePool::Enumerator etor(mGraph.mNodes);
+
+        while (!etor.IsDone()) {
+            PtrInfo *pi = etor.GetNext();
+
+            if (pi->mRefCount != 0 || pi->mColor == black) {
+                continue;
+            }
+
+            if (pi->mParticipant == jsParticipant) {
+                if (xpc_GCThingIsGrayCCThing(pi->mPointer)) {
+                    continue;
+                }
+            } else if (pi->mParticipant == zoneParticipant) {
+                JS::Zone *zone = static_cast<JS::Zone*>(pi->mPointer);
+                if (js::ZoneGlobalsAreAllGray(zone)) {
+                    continue;
+                }
+            } else {
+                MOZ_ASSERT(false, "Non-JS thing with 0 refcount? Treating as live.");
+            }
+
+            GraphWalker<ScanBlackVisitor>(ScanBlackVisitor(mWhiteNodeCount, failed)).Walk(pi);
+        }
+
+        timeLog.Checkpoint("ScanIncrementalRoots::fix JS");
+    }
+
+    if (failed) {
+        NS_ASSERTION(false, "Ran out of memory in ScanIncrementalRoots");
+        CC_TELEMETRY(_OOM, true);
+    }
+}
+
+void
+nsCycleCollector::ScanRoots(bool aFullySynchGraphBuild)
+{
     AutoRestore<bool> ar(mScanInProgress);
     MOZ_ASSERT(!mScanInProgress);
     mScanInProgress = true;
     mWhiteNodeCount = 0;
     MOZ_ASSERT(mIncrementalPhase == ScanAndCollectWhitePhase);
 
+    if (!aFullySynchGraphBuild) {
+        ScanIncrementalRoots();
+    }
+
+    TimeLog timeLog;
+
     // On the assumption that most nodes will be black, it's
     // probably faster to use a GraphWalker than a
     // NodePool::Enumerator.
     bool failed = false;
     GraphWalker<scanVisitor>(scanVisitor(mWhiteNodeCount, failed)).WalkFromRoots(mGraph);
+    timeLog.Checkpoint("ScanRoots::WalkFromRoots");
 
     if (failed) {
         NS_ASSERTION(false, "Ran out of memory in ScanRoots");
         CC_TELEMETRY(_OOM, true);
     }
 
+    // Scanning weak maps must be done last.
     ScanWeakMaps();
+    timeLog.Checkpoint("ScanRoots::ScanWeakMaps");
 
     if (mListener) {
         mListener->BeginResults();
@@ -2526,9 +2647,8 @@ nsCycleCollector::ScanRoots()
 
         mListener->End();
         mListener = nullptr;
+        timeLog.Checkpoint("ScanRoots::listener");
     }
-
-    timeLog.Checkpoint("ScanRoots()");
 }
 
 
@@ -2891,7 +3011,7 @@ nsCycleCollector::Collect(ccType aCCType,
             // promoted to a strong reference after ScanRoots has finished.
             // See bug 926533.
             PrintPhase("ScanRoots");
-            ScanRoots();
+            ScanRoots(startedIdle);
             PrintPhase("CollectWhite");
             collectedAny = CollectWhite();
             break;
