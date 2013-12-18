@@ -11,9 +11,6 @@
   <!ENTITY % syncProgressDTD
     SYSTEM "chrome://browser/locale/syncProgress.dtd">
     %syncProgressDTD;
-  <!ENTITY % syncSetupDTD
-    SYSTEM "chrome://browser/locale/syncSetup.dtd">
-    %syncSetupDTD;
   <!ENTITY % globalDTD 
     SYSTEM "chrome://global/locale/global.dtd">
     %globalDTD;
@@ -33,10 +30,10 @@
             src="chrome://browser/content/sync/progress.js"/>
   </head>
   <body onload="onLoad(event)" onunload="onUnload(event)" dir="&locale.dir;">
-    <title>&setup.successPage.title;</title>
+    <title>&syncProgress.headline;</title>
     <div id="floatingBox" class="main-content">
       <div id="title">
-        <h1>&setup.successPage.title;</h1>
+        <h1>&syncProgress.headline;</h1>
       </div>
       <div id="successLogo">
         <img id="brandSyncLogo" src="chrome://browser/skin/sync-128.png" alt="&syncProgress.logoAltText;" />

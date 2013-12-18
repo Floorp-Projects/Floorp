@@ -205,7 +205,7 @@ let gSyncUI = {
     buttons.push(new Weave.NotificationButton(
       this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.label"),
       this._stringBundle.GetStringFromName("error.sync.viewQuotaButton.accesskey"),
-      function() { gSyncUI.openQuotaDialog(); return true; }
+      function() { gSyncUI.openAccountsPage(); return true; }
     ));
 
     let notification = new Weave.Notification(
@@ -253,6 +253,10 @@ let gSyncUI = {
     window.openUILinkIn(statusURL, "tab");
   },
 
+  openAccountsPage: function () {
+    switchToTabHavingURI("about:accounts", true);
+  },
+
   // Commands
   doSync: function SUI_doSync() {
     setTimeout(function() Weave.Service.errorHandler.syncAndReportErrors(), 0);
@@ -260,61 +264,14 @@ let gSyncUI = {
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
     if (this._needsSetup())
-      this.openSetup();
+      this.openAccountsPage();
     else
       this.doSync();
-  },
-
-  //XXXzpao should be part of syncCommon.js - which we might want to make a module...
-  //        To be fixed in a followup (bug 583366)
-
-  /**
-   * Invoke the Sync setup wizard.
-   *
-   * @param wizardType
-   *        Indicates type of wizard to launch:
-   *          null    -- regular set up wizard
-   *          "pair"  -- pair a device first
-   *          "reset" -- reset sync
-   */
-
-  openSetup: function SUI_openSetup(wizardType) {
-    let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
-    if (win)
-      win.focus();
-    else {
-      window.openDialog("chrome://browser/content/sync/setup.xul",
-                        "weaveSetup", "centerscreen,chrome,resizable=no",
-                        wizardType);
-    }
-  },
-
-  openAddDevice: function () {
-    if (!Weave.Utils.ensureMPUnlocked())
-      return;
-
-    let win = Services.wm.getMostRecentWindow("Sync:AddDevice");
-    if (win)
-      win.focus();
-    else
-      window.openDialog("chrome://browser/content/sync/addDevice.xul",
-                        "syncAddDevice", "centerscreen,chrome,resizable=no");
-  },
-
-  openQuotaDialog: function SUI_openQuotaDialog() {
-    let win = Services.wm.getMostRecentWindow("Sync:ViewQuota");
-    if (win)
-      win.focus();
-    else
-      Services.ww.activeWindow.openDialog(
-        "chrome://browser/content/sync/quota.xul", "",
-        "centerscreen,chrome,dialog,modal");
   },
 
   openPrefs: function SUI_openPrefs() {
     openPreferences("paneSync");
   },
-
 
   // Helpers
   _updateLastSyncTime: function SUI__updateLastSyncTime() {
@@ -406,7 +363,7 @@ let gSyncUI = {
           "error.sync.viewQuotaButton.label"),
         this._stringBundle.GetStringFromName(
           "error.sync.viewQuotaButton.accesskey"),
-        function() { gSyncUI.openQuotaDialog(); return true; } )
+        function() { gSyncUI.openAccountsPage(); return true; } )
       );
     }
     else if (Weave.Status.enforceBackoff) {
