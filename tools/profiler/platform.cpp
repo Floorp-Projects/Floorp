@@ -237,7 +237,6 @@ bool sps_version2()
   return version == 2;
 }
 
-#if !defined(ANDROID)
 /* Has MOZ_PROFILER_VERBOSE been set? */
 bool moz_profiler_verbose()
 {
@@ -253,7 +252,6 @@ bool moz_profiler_verbose()
 
   return status == 2;
 }
-#endif
 
 static inline const char* name_UnwMode(UnwMode m)
 {
@@ -367,6 +365,7 @@ void read_profiler_env_vars()
     LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
         (int)sUnwindStackScan);
     LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
+    LOG( "SPS: Note that MOZ_PROFILER_MODE=help sets all values to defaults.");
     LOG( "SPS:");
   }
 }
@@ -394,7 +393,11 @@ void profiler_usage() {
   LOG( "SPS:   The number of dubious (stack-scanned) frames allowed");
   LOG( "SPS: ");
   LOG( "SPS:   MOZ_PROFILER_NEW");
-  LOG( "SPS:   Needs to be set to use Breakpad-based unwinding.");
+  LOG( "SPS:   Needs to be set to use LUL-based unwinding.");
+  LOG( "SPS: ");
+  LOG( "SPS:   MOZ_PROFILER_LUL_TEST");
+  LOG( "SPS:   If set to any value, runs LUL unit tests at startup of");
+  LOG( "SPS:   the unwinder thread, and prints a short summary of results.");
   LOG( "SPS: ");
   LOGF("SPS:   This platform %s native unwinding.",
        is_native_unwinding_avail() ? "supports" : "does not support");
@@ -415,6 +418,7 @@ void profiler_usage() {
   LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
        (int)sUnwindStackScan);
   LOG( "SPS: Use env var MOZ_PROFILER_MODE=help for further information.");
+  LOG( "SPS: Note that MOZ_PROFILER_MODE=help sets all values to defaults.");
   LOG( "SPS:");
 
   return;
@@ -614,6 +618,8 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
                            const char** aThreadNameFilters, uint32_t aFilterCount)
 
 {
+  LOG("BEGIN mozilla_sampler_start");
+
   if (!stack_key_initialized)
     profiler_init(nullptr);
 
@@ -686,15 +692,20 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-started", nullptr);
+
+  LOG("END   mozilla_sampler_start");
 }
 
 void mozilla_sampler_stop()
 {
+  LOG("BEGIN mozilla_sampler_stop");
+
   if (!stack_key_initialized)
     profiler_init(nullptr);
 
   TableTicker *t = tlsTicker.get();
   if (!t) {
+    LOG("END   mozilla_sampler_stop-early");
     return;
   }
 
@@ -732,6 +743,8 @@ void mozilla_sampler_stop()
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
+
+  LOG("END   mozilla_sampler_stop");
 }
 
 bool mozilla_sampler_is_paused() {
