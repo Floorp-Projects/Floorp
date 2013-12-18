@@ -242,9 +242,6 @@ nsSubDocumentFrame::GetSubdocumentSize()
 bool
 nsSubDocumentFrame::PassPointerEventsToChildren()
 {
-  if (StyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
-    return true;
-  }
   // Limit use of mozpasspointerevents to documents with embedded:apps/chrome
   // permission, because this could be used by the parent document to discover
   // which parts of the subdocument are transparent to events (if subdocument
@@ -277,19 +274,29 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return;
 
-  // If mozpasspointerevents is set, then we should allow subdocument content
-  // to handle events even if we're pointer-events:none.
-  if (aBuilder->IsForEventDelivery() && !PassPointerEventsToChildren())
-    return;
-
   // If we are pointer-events:none then we don't need to HitTest background
-  if (!aBuilder->IsForEventDelivery() ||
-      StyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
+  bool pointerEventsNone = StyleVisibility()->mPointerEvents == NS_STYLE_POINTER_EVENTS_NONE;
+  if (!aBuilder->IsForEventDelivery() || !pointerEventsNone) {
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
 
-  if (!mInnerView)
+  bool passPointerEventsToChildren = false;
+  if (aBuilder->IsForEventDelivery()) {
+    passPointerEventsToChildren = PassPointerEventsToChildren();
+    // If mozpasspointerevents is set, then we should allow subdocument content
+    // to handle events even if we're pointer-events:none.
+    if (pointerEventsNone && !passPointerEventsToChildren) {
+      return;
+    }
+  }
+
+  // If we're passing pointer events to children then we have to descend into
+  // subdocuments no matter what, to determine which parts are transparent for
+  // elementFromPoint.
+  if (!mInnerView ||
+      (!aBuilder->GetDescendIntoSubdocuments() && !passPointerEventsToChildren)) {
     return;
+  }
 
   nsFrameLoader* frameLoader = FrameLoader();
   if (frameLoader) {
