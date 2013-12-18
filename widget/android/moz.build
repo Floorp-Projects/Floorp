@@ -15,7 +15,6 @@ EXPORTS += [
     'AndroidJavaWrappers.h',
     'AndroidJNIWrapper.h',
     'GeneratedJNIWrappers.h',
-    'GfxInfo.h',
 ]
 
 SOURCES += [
