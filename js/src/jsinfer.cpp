@@ -2367,7 +2367,7 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
             objType->addPropertyType(cx, JSID_VOID, elementType);
 
         key.proto = objProto;
-        if (!p.add(*arrayTypeTable, key, objType)) {
+        if (!p.add(cx, *arrayTypeTable, key, objType)) {
             cx->compartment()->types.setPendingNukeTypes(cx);
             return;
         }
