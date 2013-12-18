@@ -123,11 +123,47 @@ nsPresContext::MakeColorPref(const nsString& aColor)
     : NS_RGB(0, 0, 0);
 }
 
+static void DumpPresContextState(nsPresContext* aPC)
+{
+  printf_stderr("PresContext(%p) ", aPC);
+  nsIURI* uri = aPC->Document()->GetDocumentURI();
+  if (uri) {
+    nsAutoCString uriSpec;
+    nsresult rv = uri->GetSpec(uriSpec);
+    if (NS_SUCCEEDED(rv)) {
+      printf_stderr("%s ", uriSpec.get());
+    }
+  }
+  nsIPresShell* shell = aPC->GetPresShell();
+  if (shell) {
+    printf_stderr("PresShell(%p) - IsDestroying(%i) IsFrozen(%i) IsActive(%i) IsVisible(%i) IsNeverPainting(%i) GetRootFrame(%p)",
+                  shell->IsDestroying(),
+                  shell->IsFrozen(),
+                  shell->IsActive(),
+                  shell->IsVisible(),
+                  shell->IsNeverPainting(),
+                  shell->GetRootFrame());
+  }
+  printf_stderr("\n");
+}
+
 bool
 nsPresContext::IsDOMPaintEventPending() 
 {
   if (mFireAfterPaintEvents) {
     return true;
+  }
+  if (!GetDisplayRootPresContext() ||
+      !GetDisplayRootPresContext()->GetRootPresContext()) {
+    printf_stderr("Failed to find root pres context, dumping pres context and ancestors\n");
+    nsPresContext* pc = this;
+    for (;;) {
+      DumpPresContextState(pc);
+      nsPresContext* parent = pc->GetParentPresContext();
+      if (!parent)
+        break;
+      pc = parent;
+    }
   }
   if (GetDisplayRootPresContext()->GetRootPresContext()->mRefreshDriver->ViewManagerFlushIsPending()) {
     // Since we're promising that there will be a MozAfterPaint event
