@@ -796,7 +796,7 @@ Toolbox.prototype = {
    */
   highlightTool: function(id) {
     let tab = this.doc.getElementById("toolbox-tab-" + id);
-    tab && tab.setAttribute("highlighted", "true");
+    tab && tab.classList.add("highlighted");
   },
 
   /**
@@ -807,7 +807,7 @@ Toolbox.prototype = {
    */
   unhighlightTool: function(id) {
     let tab = this.doc.getElementById("toolbox-tab-" + id);
-    tab && tab.removeAttribute("highlighted");
+    tab && tab.classList.remove("highlighted");
   },
 
   /**
