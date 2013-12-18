@@ -747,18 +747,6 @@ toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbut
   max-height: 32px;
 }
 
-@media (min-resolution: 2dppx) {
-  toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
-  toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
-    max-width: 32px;
-    max-height: 32px;
-  }
-  toolbarpaletteitem[place="palette"] > toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon {
-    max-width: 64px;
-    max-height: 64px;
-  }
-}
-
 panelview > .social-panel-frame {
   width: auto;
   height: auto;
