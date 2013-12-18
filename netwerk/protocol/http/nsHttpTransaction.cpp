@@ -29,6 +29,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsICancelable.h"
 #include "nsIEventTarget.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIInputStream.h"
 #include "nsITransport.h"
 #include "nsIOService.h"
@@ -118,6 +119,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mHttpResponseMatched(false)
     , mPreserveStream(false)
     , mDispatchedAsBlocking(false)
+    , mResponseTimeoutEnabled(true)
     , mReportedStart(false)
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
@@ -245,6 +247,16 @@ nsHttpTransaction::Init(uint32_t caps,
             new nsMainThreadPtrHolder<nsINetworkInterface>(activeNetwork);
     }
 #endif
+
+    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+        do_QueryInterface(eventsink);
+    if (httpChannelInternal) {
+        rv = httpChannelInternal->GetResponseTimeoutEnabled(
+            &mResponseTimeoutEnabled);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+    }
 
     // create transport event sink proxy. it coalesces all events if and only
     // if the activity observer is not active. when the observer is active

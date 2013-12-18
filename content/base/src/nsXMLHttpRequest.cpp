@@ -2758,6 +2758,9 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     // potential deadlock where server generation of CSS/JS requires
     // an XHR signal.
     internalHttpChannel->SetLoadUnblocked(true);
+
+    // Disable Necko-internal response timeouts.
+    internalHttpChannel->SetResponseTimeoutEnabled(false);
   }
 
   nsCOMPtr<nsIStreamListener> listener = this;

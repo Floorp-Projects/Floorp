@@ -278,6 +278,8 @@ private:
 
     // The capabailities associated with the most recent transaction
     uint32_t                        mTransactionCaps;
+
+    bool                            mResponseTimeoutEnabled;
 };
 
 #endif // nsHttpConnection_h__
