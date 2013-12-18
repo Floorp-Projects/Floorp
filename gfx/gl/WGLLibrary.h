@@ -80,6 +80,8 @@ public:
     LibraryType GetLibraryType() const { return mLibType; }
     static LibraryType SelectLibrary(const ContextFlags& aFlags);
     
+    PRLibrary *GetOGLLibrary() { return mOGLLibrary; }
+
 private:
     bool mInitialized;
     PRLibrary *mOGLLibrary;

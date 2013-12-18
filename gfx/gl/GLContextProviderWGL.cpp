@@ -372,6 +372,12 @@ public:
 
     bool SetupLookupFunction()
     {
+        // Make sure that we have a ref to the OGL library;
+        // when run under CodeXL, wglGetProcAddress won't return
+        // the right thing for some core functions.
+        MOZ_ASSERT(mLibrary == nullptr);
+
+        mLibrary = sWGLLib[mLibType].GetOGLLibrary();
         mLookupFunc = (PlatformLookupFunction)sWGLLib[mLibType].fGetProcAddress;
         return true;
     }
