@@ -117,6 +117,7 @@ public:
 
   static void MaybePokeCC();
   static void KillCCTimer();
+  static void KillICCTimer();
   static void KillFullGCTimer();
   static void KillInterSliceGCTimer();
 
