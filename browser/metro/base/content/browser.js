@@ -1218,16 +1218,17 @@ var SessionHistoryObserver = {
     if (aTopic != "browser:purge-session-history")
       return;
 
-    let back = document.getElementById("cmd_back");
-    back.setAttribute("disabled", "true");
-    let forward = document.getElementById("cmd_forward");
-    forward.setAttribute("disabled", "true");
-
-    let urlbar = document.getElementById("urlbar-edit");
-    if (urlbar) {
-      // Clear undo history of the URL bar
-      urlbar.editor.transactionManager.clear();
+    let newTab = Browser.addTab("about:start", true);
+    let tab = Browser._tabs[0];
+    while(tab != newTab) {
+      Browser.closeTab(tab, { forceClose: true } );
+      tab = Browser._tabs[0];
     }
+
+    PlacesUtils.history.removeAllPages();
+
+    // Clear undo history of the URL bar
+    BrowserUI._edit.editor.transactionManager.clear();
   }
 };
 

@@ -620,10 +620,47 @@ function _parseNativeModifiers(aModifiers)
     modifiers |=
       (navigator.platform.indexOf("Mac") == 0) ? 0x00008000 : 0x00000800;
   }
+  if (aModifiers.altGrKey) {
+    modifiers |=
+      (navigator.platform.indexOf("Win") == 0) ? 0x00002800 : 0x00001000;
+  }
   return modifiers;
 }
 
-const KEYBOARD_LAYOUT_EN_US = 0;
+// Mac: Any unused number is okay for adding new keyboard layout.
+//      When you add new keyboard layout here, you need to modify
+//      TISInputSourceWrapper::InitByLayoutID().
+// Win: These constants can be found by inspecting registry keys under
+//      HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Keyboard Layouts
+
+const KEYBOARD_LAYOUT_ARABIC =
+  { name: "Arabic",             Mac: 6,    Win: 0x00000401 };
+const KEYBOARD_LAYOUT_BRAZILIAN_ABNT =
+  { name: "Brazilian ABNT",     Mac: null, Win: 0x00000416 };
+const KEYBOARD_LAYOUT_DVORAK_QWERTY =
+  { name: "Dvorak-QWERTY",      Mac: 4,    Win: null       };
+const KEYBOARD_LAYOUT_EN_US =
+  { name: "US",                 Mac: 0,    Win: 0x00000409 };
+const KEYBOARD_LAYOUT_FRENCH =
+  { name: "French",             Mac: 7,    Win: 0x0000040C };
+const KEYBOARD_LAYOUT_GREEK =
+  { name: "Greek",              Mac: 1,    Win: 0x00000408 };
+const KEYBOARD_LAYOUT_GERMAN =
+  { name: "German",             Mac: 2,    Win: 0x00000407 };
+const KEYBOARD_LAYOUT_HEBREW =
+  { name: "Hebrew",             Mac: 8,    Win: 0x0000040D };
+const KEYBOARD_LAYOUT_JAPANESE =
+  { name: "Japanese",           Mac: null, Win: 0x00000411 };
+const KEYBOARD_LAYOUT_LITHUANIAN =
+  { name: "Lithuanian",         Mac: 9,    Win: 0x00010427 };
+const KEYBOARD_LAYOUT_NORWEGIAN =
+  { name: "Norwegian",          Mac: 10,   Win: 0x00000414 };
+const KEYBOARD_LAYOUT_SPANISH =
+  { name: "Spanish",            Mac: 11,   Win: 0x0000040A };
+const KEYBOARD_LAYOUT_SWEDISH =
+  { name: "Swedish",            Mac: 3,    Win: 0x0000041D };
+const KEYBOARD_LAYOUT_THAI =
+  { name: "Thai",               Mac: 5,    Win: 0x0002041E };
 
 /**
  * synthesizeNativeKey() dispatches native key event on active window.
@@ -651,24 +688,13 @@ function synthesizeNativeKey(aKeyboardLayout, aNativeKeyCode, aModifiers,
   if (!utils) {
     return false;
   }
-  var nativeKeyboardLayout;
+  var nativeKeyboardLayout = null;
   if (navigator.platform.indexOf("Mac") == 0) {
-    switch (aKeyboardLayout) {
-      case KEYBOARD_LAYOUT_EN_US:
-        nativeKeyboardLayout = 0;
-        break;
-      default:
-        return false;
-    }
+    nativeKeyboardLayout = aKeyboardLayout.Mac;
   } else if (navigator.platform.indexOf("Win") == 0) {
-    switch (aKeyboardLayout) {
-      case KEYBOARD_LAYOUT_EN_US:
-        nativeKeyboardLayout = 0x409;
-        break;
-      default:
-        return false;
-    }
-  } else {
+    nativeKeyboardLayout = aKeyboardLayout.Win;
+  }
+  if (nativeKeyboardLayout === null) {
     return false;
   }
   utils.sendNativeKeyEvent(nativeKeyboardLayout, aNativeKeyCode,
