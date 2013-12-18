@@ -5,7 +5,7 @@
 
 package org.mozilla.gecko;
 
-import android.text.TextUtils;
+import org.mozilla.gecko.util.StringUtils;
 
 public class AboutPages {
     // All of our special pages.
@@ -42,32 +42,7 @@ public class AboutPages {
     }
 
     public static final String getPageIdFromAboutHomeUrl(final String aboutHomeUrl) {
-        if (aboutHomeUrl == null) {
-            return null;
-        }
-
-        final String[] urlParts = aboutHomeUrl.split("\\?");
-        if (urlParts.length < 2) {
-            return null;
-        }
-
-        final String query = urlParts[1];
-        for (final String param : query.split("&")) {
-            final String pair[] = param.split("=");
-            final String key = pair[0];
-
-            // Key is empty or not "page", discard
-            if (TextUtils.isEmpty(key) || !key.equals("page")) {
-                continue;
-            }
-            // No value associated with key, discard
-            if (pair.length < 2) {
-                continue;
-            }
-            return pair[1];
-        }
-
-        return null;
+        return StringUtils.getQueryParameter(aboutHomeUrl, "page");
     }
 
     public static final boolean isAboutReader(final String url) {
