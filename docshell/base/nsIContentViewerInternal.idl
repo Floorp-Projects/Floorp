@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[builtinclass, uuid(55732fda-6576-41c0-b181-1d2c1a2e676a)]
+interface nsIContentViewerInternal : nsISupports
+{
+  /**
+   * As in nsIContentViewer::permitUnload, but this passes around the
+   * aShouldPrompt argument to keep track of whether the user has responded to
+   * a prompt. Used internally by the nsIContentViewer version to ensure we only
+   * prompt once.
+   */
+  [nostdcall] boolean permitUnloadInternal(in boolean aCallerClosesWindow,
+                                           inout boolean aShouldPrompt);
+};
