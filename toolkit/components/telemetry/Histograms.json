@@ -77,6 +77,12 @@
     "n_buckets": 50,
     "description": "Full pause time for one cycle collection, including preparation (ms)"
   },
+  "CYCLE_COLLECTOR_MAX_PAUSE": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Longest pause for an individual slice of one cycle collection, including preparation (ms)"
+  },
   "CYCLE_COLLECTOR_FINISH_IGC": {
     "kind": "boolean",
     "description": "Cycle collection finished an incremental GC"
