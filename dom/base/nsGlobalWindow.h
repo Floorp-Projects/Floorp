@@ -978,7 +978,7 @@ protected:
 
   // Object Management
   virtual ~nsGlobalWindow();
-  void ClearDelayedEventsAndDropDocument();
+  void DropOuterWindowDocs();
   void CleanUp();
   void ClearControllers();
   nsresult FinalClose();
@@ -1471,6 +1471,12 @@ protected:
 
   nsAutoPtr<nsJSThingHashtable<nsPtrHashKey<nsXBLPrototypeHandler>, JSObject*> > mCachedXBLPrototypeHandlers;
 
+  // mSuspendedDoc is only set on outer windows. It's useful when we get matched
+  // EnterModalState/LeaveModalState calls, in which case the outer window is
+  // responsible for unsuspending events on the document. If we don't (for
+  // example, if the outer window is closed before the LeaveModalState call),
+  // then the inner window whose mDoc is our mSuspendedDoc is responsible for
+  // unsuspending it.
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
   nsRefPtr<mozilla::dom::indexedDB::IDBFactory> mIndexedDB;
