@@ -4862,6 +4862,8 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
     scaleX = transform.xx;
     scaleY = transform.yy;
     aDestinationCtx->IdentityMatrix();
+  } else {
+    transform = gfxMatrix();
   }
 
   gfxPoint blurStdDev = ComputeBlurStdDev(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
