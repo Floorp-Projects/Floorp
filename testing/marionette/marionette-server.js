@@ -543,10 +543,13 @@ MarionetteServerConnection.prototype = {
           'handlesAlerts': false,
           'javascriptEnabled': true,
           'nativeEvents': false,
-          'platform': Services.appinfo.OS,
+          'platformName': Services.appinfo.OS,
+          'platformVersion': Services.appinfo.platformVersion,
+          'secureSsl': false,
           'device': qemu == "1" ? "qemu" : (!device ? "desktop" : device),
           'rotatable': rotatable,
-          'takesScreenshot': false,
+          'takesScreenshot': true,
+          'takesElementScreenshot': true,
           'version': Services.appinfo.version
     };
 
