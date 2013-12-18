@@ -798,7 +798,6 @@ var BrowserApp = {
 
     let tab = this.getTabForBrowser(aBrowser);
     if (tab) {
-      if (!tab.aboutHomePage) tab.aboutHomePage = ("aboutHomePage" in aParams) ? aParams.aboutHomePage : "";
       if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
     }
 
@@ -1392,7 +1391,6 @@ var BrowserApp = {
           flags: flags,
           tabID: data.tabID,
           isPrivate: (data.isPrivate === true),
-          aboutHomePage: ("aboutHomePage" in data) ? data.aboutHomePage : "",
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
           desktopMode: (data.desktopMode === true)
@@ -2629,7 +2627,6 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.aboutHomePage = null;
   this.savedArticle = null;
   this.hasTouchListener = false;
   this.browserWidth = 0;
@@ -3820,7 +3817,6 @@ Tab.prototype = {
       uri: fixedURI.spec,
       userSearch: this.userSearch || "",
       baseDomain: baseDomain,
-      aboutHomePage: this.aboutHomePage || "",
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
