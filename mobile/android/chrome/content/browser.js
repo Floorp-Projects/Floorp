@@ -2126,7 +2126,11 @@ var NativeWindow = {
         BrowserEventHandler._cancelTapHighlight();
 
         if (SelectionHandler.canSelect(target)) {
-          if (!SelectionHandler.startSelection(target, aX, aY)) {
+          if (!SelectionHandler.startSelection(target, {
+              mode: SelectionHandler.SELECT_AT_POINT,
+              x: aX,
+              y: aY
+            })) {
             SelectionHandler.attachCaret(target);
           }
         }
@@ -6227,11 +6231,11 @@ var ClipboardHelper = {
   },
 
   selectWord: function(aElement, aX, aY) {
-    SelectionHandler.startSelection(aElement, aX, aY);
-  },
-
-  selectAll: function(aElement, aX, aY) {
-    SelectionHandler.selectAll(aElement, aX, aY);
+    SelectionHandler.startSelection(aElement, {
+      mode: SelectionHandler.SELECT_AT_POINT,
+      x: aX,
+      y: aY
+    });
   },
 
   searchWith: function(aElement) {
