@@ -79,7 +79,7 @@ namespace JS {
  * - Scripts are also compartment-local and cannot be shared. A script points to
  *   its compartment.
  *
- * - Type objects and IonCode objects belong to a compartment and cannot be
+ * - Type objects and JitCode objects belong to a compartment and cannot be
  *   shared. However, there is no mechanism to obtain their compartments.
  *
  * A zone remains alive as long as any GC things in the zone are alive. A

@@ -29,7 +29,7 @@ class UnownedBaseShape;
 template<class, typename> class HeapPtr;
 
 namespace jit {
-class IonCode;
+class JitCode;
 class IonScript;
 class VMFunction;
 }
@@ -93,7 +93,7 @@ bool Is##base##AboutToBeFinalized(BarrieredPtr<type> *thingp);                  
 
 DeclMarker(BaseShape, BaseShape)
 DeclMarker(BaseShape, UnownedBaseShape)
-DeclMarker(IonCode, jit::IonCode)
+DeclMarker(JitCode, jit::JitCode)
 DeclMarker(Object, ArgumentsObject)
 DeclMarker(Object, ArrayBufferObject)
 DeclMarker(Object, ArrayBufferViewObject)
@@ -277,9 +277,9 @@ Mark(JSTracer *trc, BarrieredPtrScript *o, const char *name)
 }
 
 inline void
-Mark(JSTracer *trc, HeapPtr<jit::IonCode> *code, const char *name)
+Mark(JSTracer *trc, HeapPtr<jit::JitCode> *code, const char *name)
 {
-    MarkIonCode(trc, code, name);
+    MarkJitCode(trc, code, name);
 }
 
 /* For use by WeakMap's HashKeyRef instantiation. */
@@ -349,16 +349,16 @@ inline bool
 IsAboutToBeFinalized(const js::jit::VMFunction **vmfunc)
 {
     /*
-     * Preserves entries in the WeakCache<VMFunction, IonCode>
-     * iff the IonCode has been marked.
+     * Preserves entries in the WeakCache<VMFunction, JitCode>
+     * iff the JitCode has been marked.
      */
     return true;
 }
 
 inline bool
-IsAboutToBeFinalized(ReadBarriered<js::jit::IonCode> code)
+IsAboutToBeFinalized(ReadBarriered<js::jit::JitCode> code)
 {
-    return IsIonCodeAboutToBeFinalized(code.unsafeGet());
+    return IsJitCodeAboutToBeFinalized(code.unsafeGet());
 }
 #endif
 

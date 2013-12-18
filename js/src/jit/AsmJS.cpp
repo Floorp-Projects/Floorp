@@ -1736,7 +1736,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->allocateAndCopyCode(cx_, masm_))
             return false;
 
-        // c.f. IonCode::copyFrom
+        // c.f. JitCode::copyFrom
         JS_ASSERT(masm_.jumpRelocationTableBytes() == 0);
         JS_ASSERT(masm_.dataRelocationTableBytes() == 0);
         JS_ASSERT(masm_.preBarrierTableBytes() == 0);
@@ -5332,7 +5332,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     if (!m.maybeReportCompileTime(func))
         return false;
 
-    // Unlike regular IonMonkey which links and generates a new IonCode for
+    // Unlike regular IonMonkey which links and generates a new JitCode for
     // every function, we accumulate all the functions in the module in a
     // single MacroAssembler and link at end. Linking asm.js doesn't require a
     // CodeGenerator so we can destroy it now.

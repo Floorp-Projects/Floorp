@@ -162,7 +162,7 @@ IonFrameIterator::isNative() const
 {
     if (type_ != IonFrame_Exit || isFakeExitFrame())
         return false;
-    return exitFrame()->footer()->ionCode() == nullptr;
+    return exitFrame()->footer()->jitCode() == nullptr;
 }
 
 bool
@@ -170,7 +170,7 @@ IonFrameIterator::isOOLNative() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_NATIVE;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_NATIVE;
 }
 
 bool
@@ -178,7 +178,7 @@ IonFrameIterator::isOOLPropertyOp() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROPERTY_OP;
 }
 
 bool
@@ -186,7 +186,7 @@ IonFrameIterator::isOOLProxy() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROXY;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROXY;
 }
 
 bool
@@ -974,9 +974,9 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
     // Mark the code of the code handling the exit path.  This is needed because
     // invalidated script are no longer marked because data are erased by the
     // invalidation and relocation data are no longer reliable.  So the VM
-    // wrapper or the invalidation code may be GC if no IonCode keep reference
+    // wrapper or the invalidation code may be GC if no JitCode keep reference
     // on them.
-    JS_ASSERT(uintptr_t(footer->ionCode()) != uintptr_t(-1));
+    JS_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
 
     // This correspond to the case where we have build a fake exit frame in
     // CodeGenerator.cpp which handle the case of a native function call. We
@@ -991,7 +991,7 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLNative()) {
         IonOOLNativeExitFrameLayout *oolnative = frame.exitFrame()->oolNativeExit();
-        gc::MarkIonCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
+        gc::MarkJitCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
         gc::MarkValueRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
         gc::MarkValueRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
@@ -1000,7 +1000,7 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLPropertyOp()) {
         IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
-        gc::MarkIonCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
+        gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
         gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
@@ -1009,7 +1009,7 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLProxy()) {
         IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->oolProxyExit();
-        gc::MarkIonCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
+        gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
         gc::MarkValueRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
         gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
@@ -1032,7 +1032,7 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         return;
     }
 
-    MarkIonCodeRoot(trc, footer->addressOfIonCode(), "ion-exit-code");
+    MarkJitCodeRoot(trc, footer->addressOfJitCode(), "ion-exit-code");
 
     const VMFunction *f = footer->function();
     if (f == nullptr)
