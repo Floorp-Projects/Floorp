@@ -70,11 +70,11 @@ class PerfSpewer
     bool endBasicBlock(MacroAssembler &masm);
     bool noteEndInlineCode(MacroAssembler &masm);
 
-    void writeProfile(JSScript *script, IonCode *code, MacroAssembler &masm);
+    void writeProfile(JSScript *script, JitCode *code, MacroAssembler &masm);
 };
 
-void writePerfSpewerBaselineProfile(JSScript *script, IonCode *code);
-void writePerfSpewerIonCodeProfile(IonCode *code, const char *msg);
+void writePerfSpewerBaselineProfile(JSScript *script, JitCode *code);
+void writePerfSpewerJitCodeProfile(JitCode *code, const char *msg);
 
 class AsmJSPerfSpewer : public PerfSpewer
 {

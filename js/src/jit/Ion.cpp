@@ -52,8 +52,8 @@ using namespace js::jit;
 
 using mozilla::Maybe;
 
-// Assert that IonCode is gc::Cell aligned.
-JS_STATIC_ASSERT(sizeof(IonCode) % gc::CellSize == 0);
+// Assert that JitCode is gc::Cell aligned.
+JS_STATIC_ASSERT(sizeof(JitCode) % gc::CellSize == 0);
 
 #ifdef JS_THREADSAFE
 static bool IonTLSInitialized = false;
@@ -240,7 +240,7 @@ JitRuntime::initialize(JSContext *cx)
             FrameSizeClass class_ = FrameSizeClass::FromClass(id);
             if (class_ == FrameSizeClass::ClassLimit())
                 break;
-            bailoutTables_.infallibleAppend((IonCode *)nullptr);
+            bailoutTables_.infallibleAppend((JitCode *)nullptr);
             bailoutTables_[id] = generateBailoutTable(cx, id);
             if (!bailoutTables_[id])
                 return false;
@@ -298,7 +298,7 @@ JitRuntime::initialize(JSContext *cx)
     return true;
 }
 
-IonCode *
+JitCode *
 JitRuntime::debugTrapHandler(JSContext *cx)
 {
     if (!debugTrapHandler_) {
@@ -553,9 +553,9 @@ JitRuntime::Mark(JSTracer *trc)
 {
     JS_ASSERT(!trc->runtime->isHeapMinorCollecting());
     Zone *zone = trc->runtime->atomsCompartment()->zone();
-    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_IONCODE); !i.done(); i.next()) {
-        IonCode *code = i.get<IonCode>();
-        MarkIonCodeRoot(trc, &code, "wrapper");
+    for (gc::CellIterUnderGC i(zone, gc::FINALIZE_JITCODE); !i.done(); i.next()) {
+        JitCode *code = i.get<JitCode>();
+        MarkJitCodeRoot(trc, &code, "wrapper");
     }
 }
 
@@ -587,21 +587,21 @@ JitCompartment::sweep(FreeOp *fop)
     if (!stubCodes_->lookup(static_cast<uint32_t>(ICStub::SetProp_Fallback)))
         baselineSetPropReturnAddr_ = nullptr;
 
-    if (stringConcatStub_ && !IsIonCodeMarked(stringConcatStub_.unsafeGet()))
+    if (stringConcatStub_ && !IsJitCodeMarked(stringConcatStub_.unsafeGet()))
         stringConcatStub_ = nullptr;
 
-    if (parallelStringConcatStub_ && !IsIonCodeMarked(parallelStringConcatStub_.unsafeGet()))
+    if (parallelStringConcatStub_ && !IsJitCodeMarked(parallelStringConcatStub_.unsafeGet()))
         parallelStringConcatStub_ = nullptr;
 }
 
-IonCode *
+JitCode *
 JitRuntime::getBailoutTable(const FrameSizeClass &frameClass) const
 {
     JS_ASSERT(frameClass != FrameSizeClass::None());
     return bailoutTables_[frameClass.classId()];
 }
 
-IonCode *
+JitCode *
 JitRuntime::getVMWrapper(const VMFunction &f) const
 {
     JS_ASSERT(functionWrappers_);
@@ -613,33 +613,33 @@ JitRuntime::getVMWrapper(const VMFunction &f) const
 }
 
 template <AllowGC allowGC>
-IonCode *
-IonCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
+JitCode *
+JitCode::New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
 {
-    IonCode *codeObj = gc::NewGCThing<IonCode, allowGC>(cx, gc::FINALIZE_IONCODE, sizeof(IonCode), gc::DefaultHeap);
+    JitCode *codeObj = gc::NewGCThing<JitCode, allowGC>(cx, gc::FINALIZE_JITCODE, sizeof(JitCode), gc::DefaultHeap);
     if (!codeObj) {
         pool->release();
         return nullptr;
     }
 
-    new (codeObj) IonCode(code, bufferSize, pool);
+    new (codeObj) JitCode(code, bufferSize, pool);
     return codeObj;
 }
 
 template
-IonCode *
-IonCode::New<CanGC>(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
+JitCode *
+JitCode::New<CanGC>(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
 
 template
-IonCode *
-IonCode::New<NoGC>(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
+JitCode *
+JitCode::New<NoGC>(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
 
 void
-IonCode::copyFrom(MacroAssembler &masm)
+JitCode::copyFrom(MacroAssembler &masm)
 {
-    // Store the IonCode pointer right before the code buffer, so we can
+    // Store the JitCode pointer right before the code buffer, so we can
     // recover the gcthing from relocation tables.
-    *(IonCode **)(code_ - sizeof(IonCode *)) = this;
+    *(JitCode **)(code_ - sizeof(JitCode *)) = this;
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 
@@ -656,7 +656,7 @@ IonCode::copyFrom(MacroAssembler &masm)
 }
 
 void
-IonCode::trace(JSTracer *trc)
+JitCode::trace(JSTracer *trc)
 {
     // Note that we cannot mark invalidated scripts, since we've basically
     // corrupted the code stream by injecting bailouts.
@@ -676,7 +676,7 @@ IonCode::trace(JSTracer *trc)
 }
 
 void
-IonCode::finalize(FreeOp *fop)
+JitCode::finalize(FreeOp *fop)
 {
     // Make sure this can't race with an interrupting thread, which may try
     // to read the contents of the pool we are releasing references in.
@@ -702,7 +702,7 @@ IonCode::finalize(FreeOp *fop)
 }
 
 void
-IonCode::togglePreBarriers(bool enabled)
+JitCode::togglePreBarriers(bool enabled)
 {
     uint8_t *start = code_ + preBarrierTableOffset();
     CompactBufferReader reader(start, start + preBarrierTableBytes_);
@@ -860,10 +860,10 @@ void
 IonScript::trace(JSTracer *trc)
 {
     if (method_)
-        MarkIonCode(trc, &method_, "method");
+        MarkJitCode(trc, &method_, "method");
 
     if (deoptTable_)
-        MarkIonCode(trc, &deoptTable_, "deoptimizationTable");
+        MarkJitCode(trc, &deoptTable_, "deoptimizationTable");
 
     for (size_t i = 0; i < numConstants(); i++)
         gc::MarkValue(trc, &getConstant(i), "constant");
@@ -918,7 +918,7 @@ IonScript::copyCallTargetEntries(JSScript **callTargets)
 }
 
 void
-IonScript::copyPatchableBackedges(JSContext *cx, IonCode *code,
+IonScript::copyPatchableBackedges(JSContext *cx, JitCode *code,
                                   PatchableBackedgeInfo *backedges)
 {
     for (size_t i = 0; i < backedgeEntries_; i++) {
@@ -2226,7 +2226,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(!data.osrFrame);
 
-    EnterIonCode enter = cx->runtime()->jitRuntime()->enterIon();
+    EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
 
     // Caller must construct |this| before invoking the Ion function.
     JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
@@ -2335,7 +2335,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
     JS_CHECK_RECURSION(cx, return IonExec_Error);
 
     IonScript *ion = fun->nonLazyScript()->ionScript();
-    IonCode *code = ion->method();
+    JitCode *code = ion->method();
     void *jitcode = code->raw();
 
     JS_ASSERT(jit::IsIonEnabled(cx));
@@ -2343,7 +2343,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 
     JitActivation activation(cx, /* firstFrameIsConstructing = */false);
 
-    EnterIonCode enter = cx->runtime()->jitRuntime()->enterIon();
+    EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
     void *calleeToken = CalleeToToken(fun);
 
     RootedValue result(cx, Int32Value(args.length()));
@@ -2458,13 +2458,13 @@ InvalidateActivation(FreeOp *fop, uint8_t *ionTop, bool invalidateAll)
         ionScript->incref();
 
         const SafepointIndex *si = ionScript->getSafepointIndex(it.returnAddressToFp());
-        IonCode *ionCode = ionScript->method();
+        JitCode *ionCode = ionScript->method();
 
         JS::Zone *zone = script->zone();
         if (zone->needsBarrier()) {
             // We're about to remove edges from the JSScript to gcthings
-            // embedded in the IonCode. Perform one final trace of the
-            // IonCode for the incremental GC, as it must know about
+            // embedded in the JitCode. Perform one final trace of the
+            // JitCode for the incremental GC, as it must know about
             // those edges.
             ionCode->trace(zone->barrierTracer());
         }

@@ -1754,12 +1754,12 @@ MacroAssemblerARMCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
 }
 
 void
-MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
+MacroAssemblerARMCompat::callWithExitFrame(JitCode *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
     Push(Imm32(descriptor)); // descriptor
 
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::IONCODE);
+    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     RelocStyle rs;
     if (hasMOVWT())
         rs = L_MOVWT;
@@ -1771,13 +1771,13 @@ MacroAssemblerARMCompat::callWithExitFrame(IonCode *target)
 }
 
 void
-MacroAssemblerARMCompat::callWithExitFrame(IonCode *target, Register dynStack)
+MacroAssemblerARMCompat::callWithExitFrame(JitCode *target, Register dynStack)
 {
     ma_add(Imm32(framePushed()), dynStack);
     makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
     Push(dynStack); // descriptor
 
-    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::IONCODE);
+    addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     RelocStyle rs;
     if (hasMOVWT())
         rs = L_MOVWT;
@@ -3767,7 +3767,7 @@ MacroAssemblerARMCompat::handleFailureWithHandler(void *handler)
     passABIArg(r0);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
+    JitCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     branch(excTail);
 }
 
@@ -3980,11 +3980,11 @@ MacroAssemblerARMCompat::toggledJump(Label *label)
 }
 
 CodeOffsetLabel
-MacroAssemblerARMCompat::toggledCall(IonCode *target, bool enabled)
+MacroAssemblerARMCompat::toggledCall(JitCode *target, bool enabled)
 {
     BufferOffset bo = nextOffset();
     CodeOffsetLabel offset(bo.getOffset());
-    addPendingJump(bo, ImmPtr(target->raw()), Relocation::IONCODE);
+    addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
     ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);

@@ -1222,7 +1222,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
                  AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop()));
     }
 
-    void callWithExitFrame(IonCode *target, Register dynStack) {
+    void callWithExitFrame(JitCode *target, Register dynStack) {
         addPtr(Imm32(framePushed()), dynStack);
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);
