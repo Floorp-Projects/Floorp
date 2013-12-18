@@ -1,5 +1,7 @@
 // |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
 var BUGNUMBER = 938728;
+var float32x4 = SIMD.float32x4;
+var int32x4 = SIMD.int32x4;
 var summary = 'float32x4 setting';
 
 /*
@@ -8,7 +10,6 @@ var summary = 'float32x4 setting';
  */
 
 var ArrayType = TypedObject.ArrayType;
-var float32x4 = TypedObject.float32x4;
 
 function test() {
   print(BUGNUMBER + ": " + summary);
@@ -39,7 +40,6 @@ function test() {
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);
-  print("Tests complete");
 }
 
 test();
