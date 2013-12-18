@@ -182,9 +182,6 @@ let TabStateInternal = {
         tabData.index = history.index;
       }
 
-      // Copy data from the persistent cache.
-      this._copyFromPersistentCache(tab, tabData);
-
       // If we're still the latest async collection for the given tab and
       // the cache hasn't been filled by collect() in the meantime, let's
       // fill the cache with the data we received.
@@ -192,6 +189,16 @@ let TabStateInternal = {
         TabStateCache.set(tab, tabData);
         this._pendingCollections.delete(browser);
       }
+
+      // Copy data from the persistent cache. We need to create an explicit
+      // copy of the |tabData| object so that the properties injected by
+      // |_copyFromPersistentCache| don't end up in the non-persistent cache.
+      // The persistent cache does not store "null" values, so any values that
+      // have been cleared by the frame script would not be overriden by
+      // |_copyFromPersistentCache|. These two caches are only an interim
+      // solution and the non-persistent one will go away soon.
+      tabData = Utils.copy(tabData);
+      this._copyFromPersistentCache(tab, tabData);
 
       throw new Task.Result(tabData);
     }.bind(this));
@@ -219,7 +226,16 @@ let TabStateInternal = {
       throw new TypeError("Expecting a tab");
     }
     if (TabStateCache.has(tab)) {
-      return TabStateCache.get(tab);
+      // Copy data from the persistent cache. We need to create an explicit
+      // copy of the |tabData| object so that the properties injected by
+      // |_copyFromPersistentCache| don't end up in the non-persistent cache.
+      // The persistent cache does not store "null" values, so any values that
+      // have been cleared by the frame script would not be overriden by
+      // |_copyFromPersistentCache|. These two caches are only an interim
+      // solution and the non-persistent one will go away soon.
+      let tabData = Utils.copy(TabStateCache.get(tab));
+      this._copyFromPersistentCache(tab, tabData);
+      return tabData;
     }
 
     let tabData = this._collectSyncUncached(tab);
@@ -227,6 +243,16 @@ let TabStateInternal = {
     if (this._tabCachingAllowed(tab)) {
       TabStateCache.set(tab, tabData);
     }
+
+    // Copy data from the persistent cache. We need to create an explicit
+    // copy of the |tabData| object so that the properties injected by
+    // |_copyFromPersistentCache| don't end up in the non-persistent cache.
+    // The persistent cache does not store "null" values, so any values that
+    // have been cleared by the frame script would not be overriden by
+    // |_copyFromPersistentCache|. These two caches are only an interim
+    // solution and the non-persistent one will go away soon.
+    tabData = Utils.copy(tabData);
+    this._copyFromPersistentCache(tab, tabData);
 
     // Prevent all running asynchronous collections from filling the cache.
     // Every asynchronous data collection started before a collectSync() call
@@ -262,7 +288,13 @@ let TabStateInternal = {
    *                   up-to-date.
    */
   clone: function (tab) {
-    return this._collectSyncUncached(tab, {includePrivateData: true});
+    let options = {includePrivateData: true};
+    let tabData = this._collectSyncUncached(tab, options);
+
+    // Copy data from the persistent cache.
+    this._copyFromPersistentCache(tab, tabData, options);
+
+    return tabData;
   },
 
   /**
@@ -304,9 +336,6 @@ let TabStateInternal = {
     if ("index" in history) {
       tabData.index = history.index;
     }
-
-    // Copy data from the persistent cache.
-    this._copyFromPersistentCache(tab, tabData, options);
 
     return tabData;
   },
