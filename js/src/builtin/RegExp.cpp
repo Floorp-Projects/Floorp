@@ -611,8 +611,8 @@ ExecuteRegExp(JSContext *cx, CallArgs args, MatchConduit &matches)
 
 /* ES5 15.10.6.2. */
 static bool
-regexp_exec_impl(JSContext *cx, HandleObject regexp, HandleString string,
-                 RegExpStaticsUpdate staticsUpdate, MutableHandleValue rval)
+regexp_exec_impl(JSContext *cx, CallArgs args, HandleObject regexp, HandleString string,
+                 RegExpStaticsUpdate staticsUpdate)
 {
     /* Execute regular expression and gather matches. */
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
@@ -624,11 +624,11 @@ regexp_exec_impl(JSContext *cx, HandleObject regexp, HandleString string,
         return false;
 
     if (status == RegExpRunStatus_Success_NotFound) {
-        rval.setNull();
+        args.rval().setNull();
         return true;
     }
 
-    return CreateRegExpMatchResult(cx, string, matches, rval);
+    return CreateRegExpMatchResult(cx, string, matches, args.rval());
 }
 
 static bool
@@ -639,7 +639,7 @@ regexp_exec_impl(JSContext *cx, CallArgs args)
     if (!string)
         return false;
 
-    return regexp_exec_impl(cx, regexp, string, UpdateRegExpStatics, args.rval());
+    return regexp_exec_impl(cx, args, regexp, string, UpdateRegExpStatics);
 }
 
 bool
@@ -647,14 +647,6 @@ js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod(cx, IsRegExp, regexp_exec_impl, args);
-}
-
-/* Separate interface for use by IonMonkey. */
-bool
-js::regexp_exec_raw(JSContext *cx, HandleObject regexp, HandleString input, Value *vp)
-{
-    MutableHandleValue vpHandle = MutableHandleValue::fromMarkedLocation(vp);
-    return regexp_exec_impl(cx, regexp, input, UpdateRegExpStatics, vpHandle);
 }
 
 bool
@@ -668,7 +660,7 @@ js::regexp_exec_no_statics(JSContext *cx, unsigned argc, Value *vp)
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());
 
-    return regexp_exec_impl(cx, regexp, string, DontUpdateRegExpStatics, args.rval());
+    return regexp_exec_impl(cx, args, regexp, string, DontUpdateRegExpStatics);
 }
 
 /* ES5 15.10.6.3. */
