@@ -62,7 +62,8 @@ function onFramesAdded()
 function onExecuteFooObj(msg)
 {
   ok(msg, "output message found");
-  isnot(msg.textContent.indexOf("[object Object]"), -1, "message text check");
+  isnot(msg.textContent.indexOf('{testProp2: "testValue2"}'), -1,
+        "message text check");
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");

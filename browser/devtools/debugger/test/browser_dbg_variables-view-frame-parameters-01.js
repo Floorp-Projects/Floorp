@@ -89,14 +89,16 @@ function testExpandVariables() {
   waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_PROPERTIES, 3).then(() => {
     is(thisVar.get("window").target.querySelector(".name").getAttribute("value"), "window",
       "Should have the right property name for 'window'.");
-    is(thisVar.get("window").target.querySelector(".value").getAttribute("value"), "Window",
+    is(thisVar.get("window").target.querySelector(".value").getAttribute("value"),
+      "Window \u2192 doc_frame-parameters.html",
       "Should have the right property value for 'window'.");
     ok(thisVar.get("window").target.querySelector(".value").className.contains("token-other"),
       "Should have the right token class for 'window'.");
 
     is(thisVar.get("document").target.querySelector(".name").getAttribute("value"), "document",
       "Should have the right property name for 'document'.");
-    is(thisVar.get("document").target.querySelector(".value").getAttribute("value"), "HTMLDocument",
+    is(thisVar.get("document").target.querySelector(".value").getAttribute("value"),
+      "HTMLDocument \u2192 doc_frame-parameters.html",
       "Should have the right property value for 'document'.");
     ok(thisVar.get("document").target.querySelector(".value").className.contains("token-other"),
       "Should have the right token class for 'document'.");

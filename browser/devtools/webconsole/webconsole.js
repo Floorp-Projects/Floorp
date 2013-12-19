@@ -4261,6 +4261,7 @@ JSTerm.prototype = {
       popup.selectNextItem();
     }
 
+    this.emit("autocomplete-updated");
     aCallback && aCallback(this);
   },
 

@@ -57,20 +57,16 @@ function autocompletePopupHidden()
   popup._panel.removeEventListener("popuphidden", autocompletePopupHidden, false);
 
   ok(!popup.isOpen, "popup is not open");
+
+  jsterm.once("autocomplete-updated", function() {
+    is(completeNode.value, testStr + "dy", "autocomplete shows document.body");
+    testPropertyPanel();
+  });
+
   let inputStr = "document.b";
   jsterm.setInputValue(inputStr);
   EventUtils.synthesizeKey("o", {});
   let testStr = inputStr.replace(/./g, " ") + " ";
-
-  waitForSuccess({
-    name: "autocomplete shows document.body",
-    validatorFn: function()
-    {
-      return completeNode.value == testStr + "dy";
-    },
-    successFn: testPropertyPanel,
-    failureFn: finishTest,
-  });
 }
 
 function testPropertyPanel()
@@ -87,7 +83,6 @@ function testPropertyPanel()
 function onVariablesViewReady(aEvent, aView)
 {
   findVariableViewProperties(aView, [
-    { name: "body", value: "HTMLBodyElement" },
+    { name: "body", value: "<body>" },
   ], { webconsole: gHUD }).then(finishTest);
 }
-
