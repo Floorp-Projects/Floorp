@@ -9,13 +9,13 @@ Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
 // Dragging an item from the palette to another button in the panel should work.
 add_task(function() {
   yield startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("developer-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
   let lastButtonIndex = placements.length - 1;
   let lastButton = placements[lastButtonIndex];
-  let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["feed-button", lastButton]);
+  let placementsAfterInsert = placements.slice(0, lastButtonIndex).concat(["developer-button", lastButton]);
   let lastButtonNode = document.getElementById(lastButton);
   simulateItemDrag(btn, lastButtonNode);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
@@ -28,11 +28,11 @@ add_task(function() {
 // Dragging an item from the palette to the panel itself should also work.
 add_task(function() {
   yield startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("developer-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
-  let placementsAfterAppend = placements.concat(["feed-button"]);
+  let placementsAfterAppend = placements.concat(["developer-button"]);
   simulateItemDrag(btn, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterAppend);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
@@ -48,12 +48,12 @@ add_task(function() {
     CustomizableUI.removeWidgetFromArea(widgetIds.shift());
   }
   yield startCustomizing();
-  let btn = document.getElementById("feed-button");
+  let btn = document.getElementById("developer-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
 
   assertAreaPlacements(panel.id, []);
 
-  let placementsAfterAppend = ["feed-button"];
+  let placementsAfterAppend = ["developer-button"];
   simulateItemDrag(btn, panel);
   assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterAppend);
   ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
