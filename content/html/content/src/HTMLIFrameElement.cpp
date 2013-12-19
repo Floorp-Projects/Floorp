@@ -244,14 +244,8 @@ HTMLIFrameElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 uint32_t
 HTMLIFrameElement::GetSandboxFlags()
 {
-  nsAutoString sandboxAttr;
-
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::sandbox, sandboxAttr)) {
-    return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
-  }
-
-  // No sandbox attribute, no sandbox flags.
-  return 0;
+  const nsAttrValue* sandboxAttr = GetParsedAttr(nsGkAtoms::sandbox);
+  return nsContentUtils::ParseSandboxAttributeToFlags(sandboxAttr);
 }
 
 JSObject*
