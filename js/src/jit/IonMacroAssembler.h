@@ -212,7 +212,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // This constructor should only be used when there is no IonContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
-    MacroAssembler(JSContext *cx)
+    MacroAssembler(JSContext *cx, IonScript *ion = nullptr)
       : enoughMemory_(true),
         embedsNurseryPointers_(false),
         sps_(nullptr)
@@ -225,6 +225,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();
 #endif
+        if (ion)
+            setFramePushed(ion->frameSize());
     }
 
     // asm.js compilation handles its own IonContet-pushing
