@@ -1089,10 +1089,16 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     bool hasIonScript() const {
+        // Note: While a script's baseline script is protected by the
+        // compilation lock, writes to the ion script are not. This helps lock
+        // ordering issues in CodeGenerator::link. Tests of script->ion during
+        // off thread compilation can therefore race, though these are fairly
+        // benign and the IonScript itself is never accessed.
         js::AutoThreadSafeAccess ts(this);
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
     bool canIonCompile() const {
+        // Note: see above comment.
         js::AutoThreadSafeAccess ts(this);
         return ion != ION_DISABLED_SCRIPT;
     }
