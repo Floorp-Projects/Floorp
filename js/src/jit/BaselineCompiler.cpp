@@ -108,7 +108,7 @@ BaselineCompiler::compile()
         return Method_Error;
 
     Linker linker(masm);
-    IonCode *code = linker.newCode<CanGC>(cx, JSC::BASELINE_CODE);
+    JitCode *code = linker.newCode<CanGC>(cx, JSC::BASELINE_CODE);
     if (!code)
         return Method_Error;
 
@@ -638,7 +638,8 @@ BaselineCompiler::emitUseCountIncrement()
 
     Label skipCall;
 
-    uint32_t minUses = UsesBeforeIonRecompile(script, pc);
+    const OptimizationInfo *info = js_IonOptimizations.get(js_IonOptimizations.firstLevel());
+    uint32_t minUses = info->usesBeforeCompile(script, pc);
     masm.branch32(Assembler::LessThan, countReg, Imm32(minUses), &skipCall);
 
     masm.branchPtr(Assembler::Equal,
@@ -689,7 +690,7 @@ BaselineCompiler::emitDebugTrap()
     bool enabled = script->stepModeEnabled() || script->hasBreakpointsAt(pc);
 
     // Emit patchable call to debug trap handler.
-    IonCode *handler = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
+    JitCode *handler = cx->runtime()->jitRuntime()->debugTrapHandler(cx);
     mozilla::DebugOnly<CodeOffsetLabel> offset = masm.toggledCall(handler, enabled);
 
 #ifdef DEBUG

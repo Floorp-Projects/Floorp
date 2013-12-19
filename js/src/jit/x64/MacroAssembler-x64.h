@@ -1103,14 +1103,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testl(operand.valueReg(), operand.valueReg());
         j(truthy ? NonZero : Zero, label);
     }
-    // This returns the tag in ScratchReg.
     Condition testStringTruthy(bool truthy, const ValueOperand &value) {
         unboxString(value, ScratchReg);
 
         Operand lengthAndFlags(ScratchReg, JSString::offsetOfLengthAndFlags());
-        movq(lengthAndFlags, ScratchReg);
-        shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
-        testq(ScratchReg, ScratchReg);
+        testq(lengthAndFlags, Imm32(-1 << JSString::LENGTH_SHIFT));
         return truthy ? Assembler::NonZero : Assembler::Zero;
     }
 
@@ -1222,7 +1219,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
                  AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop()));
     }
 
-    void callWithExitFrame(IonCode *target, Register dynStack) {
+    void callWithExitFrame(JitCode *target, Register dynStack) {
         addPtr(Imm32(framePushed()), dynStack);
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);

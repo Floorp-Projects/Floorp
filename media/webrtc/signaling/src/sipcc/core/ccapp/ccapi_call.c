@@ -121,8 +121,13 @@ cc_return_t CCAPI_SetPeerConnection(cc_call_handle_t handle, cc_peerconnection_t
   return CC_CallFeature_SetPeerConnection(handle, pc);
 }
 
-cc_return_t CCAPI_AddStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {
-  return CC_CallFeature_AddStream(handle, stream_id, track_id, media_type);
+cc_return_t CCAPI_AddStream(cc_call_handle_t handle,
+                            cc_media_stream_id_t stream_id,
+                            cc_media_track_id_t track_id,
+                            cc_media_type_t media_type,
+                            cc_media_constraints_t *constraints) {
+  return CC_CallFeature_AddStream(handle, stream_id, track_id, media_type,
+                                  constraints);
 }
 
 cc_return_t CCAPI_RemoveStream(cc_call_handle_t handle, cc_media_stream_id_t stream_id, cc_media_track_id_t track_id, cc_media_type_t media_type) {

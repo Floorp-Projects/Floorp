@@ -61,7 +61,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     LIRGraph &graph;
     LBlock *current;
     SnapshotWriter snapshots_;
-    IonCode *deoptTable_;
+    JitCode *deoptTable_;
 #ifdef DEBUG
     uint32_t pushedArgs_;
 #endif

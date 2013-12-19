@@ -609,8 +609,10 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint32_t        sourceEnd_;
 
     uint32_t        useCount;   /* Number of times the script has been called
-                                 * or has had backedges taken. Reset if the
-                                 * script's JIT code is forcibly discarded. */
+                                 * or has had backedges taken. When running in
+                                 * ion, also increased for any inlined scripts.
+                                 * Reset if the script's JIT code is forcibly
+                                 * discarded. */
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for

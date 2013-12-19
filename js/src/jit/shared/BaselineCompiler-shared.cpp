@@ -34,7 +34,7 @@ BaselineCompilerShared::BaselineCompilerShared(JSContext *cx, TempAllocator &all
 bool
 BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
 {
-    IonCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
+    JitCode *code = cx->runtime()->jitRuntime()->getVMWrapper(fun);
     if (!code)
         return false;
 
