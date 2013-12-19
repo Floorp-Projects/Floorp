@@ -58,6 +58,10 @@ static void debug_RegisterPrefCallbacks();
 static int32_t gNumWidgets;
 #endif
 
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
+
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
@@ -845,16 +849,11 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
   // those versions of the OS.
   // This will still let full-screen video be accelerated on OpenGL, because
   // that XUL widget opts in to acceleration, but that's probably OK.
-  SInt32 major, minor, bugfix;
-  OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
-  OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
-  OSErr err3 = ::Gestalt(gestaltSystemVersionBugFix, &bugfix);
-  if (err1 == noErr && err2 == noErr && err3 == noErr) {
-    if (major == 10 && minor == 6) {
-      if (bugfix <= 2) {
-        accelerateByDefault = false;
-      }
-    }
+  SInt32 major = nsCocoaFeatures::OSXVersionMajor();
+  SInt32 minor = nsCocoaFeatures::OSXVersionMinor();
+  SInt32 bugfix = nsCocoaFeatures::OSXVersionBugFix();
+  if (major == 10 && minor == 6 && bugfix <= 2) {
+    accelerateByDefault = false;
   }
 #endif
 
