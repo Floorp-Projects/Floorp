@@ -13,6 +13,7 @@
 #include "jsarray.h"
 #include "jscompartment.h"
 #include "jsnum.h"
+#include "jsprf.h"
 
 #include "vm/StringBuffer.h"
 
@@ -57,10 +58,42 @@ JSONParser::trace(JSTracer *trc)
 }
 
 void
+JSONParser::getTextPosition(uint32_t *column, uint32_t *line)
+{
+    StableCharPtr ptr = begin;
+    uint32_t col = 1;
+    uint32_t row = 1;
+    for (; ptr < current; ptr++) {
+        if (*ptr == '\n' || *ptr == '\r') {
+            ++row;
+            col = 1;
+            // \r\n is treated as a single newline.
+            if (ptr + 1 < current && *ptr == '\r' && *(ptr + 1) == '\n')
+                ++ptr;
+        } else {
+            ++col;
+        }
+    }
+    *column = col;
+    *line = row;
+}
+
+void
 JSONParser::error(const char *msg)
 {
-    if (errorHandling == RaiseError)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE, msg);
+    if (errorHandling == RaiseError) {
+        uint32_t column = 1, line = 1;
+        getTextPosition(&column, &line);
+
+        const size_t MaxWidth = sizeof("4294967295");
+        char columnNumber[MaxWidth];
+        JS_snprintf(columnNumber, sizeof columnNumber, "%lu", column);
+        char lineNumber[MaxWidth];
+        JS_snprintf(lineNumber, sizeof lineNumber, "%lu", line);
+
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE,
+                             msg, lineNumber, columnNumber);
+    }
 }
 
 bool
@@ -136,6 +169,7 @@ JSONParser::readString()
         }
 
         if (c != '\\') {
+            --current;
             error("bad character in string literal");
             return token(Error);
         }
@@ -154,25 +188,37 @@ JSONParser::readString()
           case 't':  c = '\t'; break;
 
           case 'u':
-            if (end - current < 4) {
+            if (end - current < 4 ||
+                !(JS7_ISHEX(current[0]) &&
+                  JS7_ISHEX(current[1]) &&
+                  JS7_ISHEX(current[2]) &&
+                  JS7_ISHEX(current[3])))
+            {
+                // Point to the first non-hexadecimal character (which may be
+                // missing).
+                if (current == end || !JS7_ISHEX(current[0]))
+                    ; // already at correct location
+                else if (current + 1 == end || !JS7_ISHEX(current[1]))
+                    current += 1;
+                else if (current + 2 == end || !JS7_ISHEX(current[2]))
+                    current += 2;
+                else if (current + 3 == end || !JS7_ISHEX(current[3]))
+                    current += 3;
+                else
+                    MOZ_ASSUME_UNREACHABLE("logic error determining first erroneous character");
+
                 error("bad Unicode escape");
                 return token(Error);
             }
-            if (JS7_ISHEX(current[0]) &&
-                JS7_ISHEX(current[1]) &&
-                JS7_ISHEX(current[2]) &&
-                JS7_ISHEX(current[3]))
-            {
-                c = (JS7_UNHEX(current[0]) << 12)
-                  | (JS7_UNHEX(current[1]) << 8)
-                  | (JS7_UNHEX(current[2]) << 4)
-                  | (JS7_UNHEX(current[3]));
-                current += 4;
-                break;
-            }
-            /* FALL THROUGH */
+            c = (JS7_UNHEX(current[0]) << 12)
+              | (JS7_UNHEX(current[1]) << 8)
+              | (JS7_UNHEX(current[2]) << 4)
+              | (JS7_UNHEX(current[3]));
+            current += 4;
+            break;
 
           default:
+            current--;
             error("bad escaped character");
             return token(Error);
         }
@@ -740,6 +786,9 @@ JSONParser::parse(MutableHandleValue vp)
               case ObjectClose:
               case Colon:
               case Comma:
+                // Move the current pointer backwards so that the position
+                // reported in the error message is correct.
+                --current;
                 error("unexpected character");
                 return errorReturn();
 
