@@ -13,7 +13,6 @@
 
 class gfxFontEntry;
 class gfxTextRun;
-class nsIFrame;
 
 class nsFontFaceList : public nsIDOMFontFaceList
 {
@@ -25,8 +24,7 @@ public:
   virtual ~nsFontFaceList();
 
   nsresult AddFontsFromTextRun(gfxTextRun* aTextRun,
-                               uint32_t aOffset, uint32_t aLength,
-                               nsIFrame* aFrame);
+                               uint32_t aOffset, uint32_t aLength);
 
 protected:
   nsInterfaceHashtable<nsPtrHashKey<gfxFontEntry>,nsIDOMFontFace> mFontFaces;

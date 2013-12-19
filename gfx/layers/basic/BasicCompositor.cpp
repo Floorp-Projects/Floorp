@@ -302,13 +302,16 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                                   gfxPoint(aDestRect.XMost(), aDestRect.YMost()));
   Matrix matrix = ToMatrix(transform);
   if (aMask) {
-    NS_ASSERTION(matrix._11 == 1.0f && matrix._12 == 0.0f &&
-                 matrix._21 == 0.0f && matrix._22 == 1.0f,
-                 "Can only handle translations for mask transform");
-    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_CLAMP, matrix),
-                       aMask,
-                       Point(matrix._31, matrix._32),
-                       DrawOptions(aOpacity));
+    aDest->PushClipRect(aDestRect);
+    Matrix maskTransformInverse = aMaskTransform;
+    maskTransformInverse.Invert();
+    Matrix dtTransform = aDest->GetTransform();
+    aDest->SetTransform(aMaskTransform);
+    Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
+    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_REPEAT, patternMatrix),
+                       aMask, Point(), DrawOptions(aOpacity));
+    aDest->SetTransform(dtTransform);
+    aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
                     SurfacePattern(aSource, EXTEND_REPEAT, matrix),

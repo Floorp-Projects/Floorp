@@ -45,7 +45,10 @@ static const mozilla::Module::ContractIDEntry kJARContracts[] = {
 // Jar module shutdown hook
 static void nsJarShutdown()
 {
-    NS_IF_RELEASE(gJarHandler);
+    // Make sure to not null out gJarHandler here, because we may have
+    // still-live nsJARChannels that will want to release it.
+    nsJARProtocolHandler *handler = gJarHandler;
+    NS_IF_RELEASE(handler);
 }
 
 static const mozilla::Module kJARModule = {

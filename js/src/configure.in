@@ -4314,10 +4314,12 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
         mkdir -p $_objdir/intl/icu/host
         (cd $_objdir/intl/icu/host
          MOZ_SUBCONFIGURE_WRAP([.],[
+         AR="$HOST_AR" RANLIB="$HOST_RANLIB" \
          CC="$HOST_CC" CXX="$HOST_CXX" LD="$HOST_LD" \
          CFLAGS="$HOST_ICU_CFLAGS $HOST_OPTIMIZE_FLAGS" \
          CPPFLAGS="$ICU_CPPFLAGS" \
          CXXFLAGS="$HOST_ICU_CXXFLAGS $HOST_OPTIMZIE_FLAGS" \
+         LDFLAGS="$HOST_LDFLAGS" \
                 $SHELL $abs_srcdir/../../intl/icu/source/runConfigureICU \
                 $HOST_ICU_BUILD_OPTS \
                 $ICU_TARGET \
@@ -4356,6 +4358,13 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
     if test -n "$MOZ_DEBUG" -o "MOZ_DEBUG_SYMBOLS"; then
         ICU_CFLAGS="$ICU_CFLAGS $MOZ_DEBUG_FLAGS"
         ICU_CXXFLAGS="$ICU_CXXFLAGS $MOZ_DEBUG_FLAGS"
+        if test -n "$CROSS_COMPILE" -a "$OS_TARGET" = "Darwin"; then
+		# Bug 951758: Cross-OSX builds have issues with -g because it
+		# tries to run dsymutil
+                ICU_CFLAGS=`echo $ICU_CFLAGS | sed 's|-g||g'`
+                ICU_CXXFLAGS=`echo $ICU_CXXFLAGS | sed 's|-g||g'`
+        fi
+
         ICU_LDFLAGS="$MOZ_DEBUG_LDFLAGS"
         if test -z "$MOZ_DEBUG"; then
             # To generate debug symbols, it requires MOZ_DEBUG_FLAGS.

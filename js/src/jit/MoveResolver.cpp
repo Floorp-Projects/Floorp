@@ -113,8 +113,8 @@ MoveResolver::resolve()
                     // assert that we do not find two cycles in one move chain
                     // traversal (which would indicate two moves to the same
                     // destination).
-                    pm->setInCycle();
-                    blocking->setInCycle();
+                    pm->setCycleEnd();
+                    blocking->setCycleBegin(pm->type());
                     hasCycles_ = true;
                     pending_.remove(blocking);
                     stack.pushBack(blocking);

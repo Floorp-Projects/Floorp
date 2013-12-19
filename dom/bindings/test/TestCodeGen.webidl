@@ -518,6 +518,9 @@ interface TestInterface {
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
   void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
 
+  void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
+  void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+
   (CanvasPattern or CanvasGradient) receiveUnion();
   (object or long) receiveUnion2();
   (CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
@@ -787,8 +790,10 @@ dictionary Dict : ParentDict {
   (object or long) objectOrLong;
 #ifdef DEBUG
   (EventInit or long) eventInitOrLong;
+  (EventInit or long)? nullableEventInitOrLong;
   // CustomEventInit is useful to test because it needs rooting.
   (CustomEventInit or long) eventInitOrLong2;
+  (CustomEventInit or long)? nullableEventInitOrLong2;
   (EventInit or long) eventInitOrLongWithDefaultValue = null;
   (CustomEventInit or long) eventInitOrLongWithDefaultValue2 = null;
   (EventInit or long) eventInitOrLongWithDefaultValue3 = 5;
