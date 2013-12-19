@@ -3114,12 +3114,14 @@ JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 bool
 JSScript::varIsAliased(unsigned varSlot)
 {
+    AutoThreadSafeAccess ts(this);
     return bindings.bindingIsAliased(bindings.numArgs() + varSlot);
 }
 
 bool
 JSScript::formalIsAliased(unsigned argSlot)
 {
+    AutoThreadSafeAccess ts(this);
     return bindings.bindingIsAliased(argSlot);
 }
 

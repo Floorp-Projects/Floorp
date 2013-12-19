@@ -31,6 +31,7 @@ namespace js {
 inline jsid
 AtomToId(JSAtom *atom)
 {
+    AutoThreadSafeAccess ts(atom);
     JS_STATIC_ASSERT(JSID_INT_MIN == 0);
 
     uint32_t index;
