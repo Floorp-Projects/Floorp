@@ -884,8 +884,10 @@ HeapTypeSetKey::instantiate(JSContext *cx)
 {
     if (maybeTypes())
         return true;
-    if (object()->isSingleObject() && !object()->asSingleObject()->getType(cx))
+    if (object()->isSingleObject() && !object()->asSingleObject()->getType(cx)) {
+        cx->clearPendingException();
         return false;
+    }
     maybeTypes_ = object()->maybeType()->getProperty(cx, id());
     return maybeTypes_ != nullptr;
 }

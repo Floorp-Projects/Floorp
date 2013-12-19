@@ -3972,7 +3972,6 @@ fsmdef_ev_setpeerconnection(sm_event_t *event) {
     return (SM_RC_END);
 }
 
-
 static sm_rcs_t
 fsmdef_ev_addstream(sm_event_t *event) {
     fsm_fcb_t           *fcb = (fsm_fcb_t *) event->data;
@@ -3984,6 +3983,7 @@ fsmdef_ev_addstream(sm_event_t *event) {
     cc_msgbody_t        *part;
     uint32_t            body_length;
     cc_msgbody_info_t   msg_body;
+    cc_media_cap_name   cap_index = CC_INVALID_INDEX;
 
     FSM_DEBUG_SM(DEB_F_PREFIX"Entered.", DEB_F_PREFIX_ARGS(FSM, __FUNCTION__));
 
@@ -3997,28 +3997,43 @@ fsmdef_ev_addstream(sm_event_t *event) {
         return SM_RC_CLEANUP;
     }
 
+
     /*
      * This is temporary code to allow configuration of the two
      * default streams. When multiple streams > 2 are supported this
      * will be re-implemented.
      */
-    if (msg->data.track.media_type == VIDEO) {
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].enabled = TRUE;
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].support_direction = SDP_DIRECTION_SENDRECV;
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].pc_stream = msg->data.track.stream_id;
-        dcb->media_cap_tbl->cap[CC_VIDEO_1].pc_track = msg->data.track.track_id;
-    } else if (msg->data.track.media_type == AUDIO) {
-        dcb->media_cap_tbl->cap[CC_AUDIO_1].enabled = TRUE;
-        dcb->media_cap_tbl->cap[CC_AUDIO_1].support_direction = SDP_DIRECTION_SENDRECV;
-        dcb->media_cap_tbl->cap[CC_AUDIO_1].pc_stream = msg->data.track.stream_id;
-        dcb->media_cap_tbl->cap[CC_AUDIO_1].pc_track = msg->data.track.track_id;
-    } else if (msg->data.track.media_type == DATA) {
-        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = TRUE;
-        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].support_direction = SDP_DIRECTION_SENDRECV;
-        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].pc_stream = msg->data.track.stream_id;
-        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].pc_track = msg->data.track.track_id;
-    } else {
-        return (SM_RC_END);
+    switch (msg->data.track.media_type) {
+        case VIDEO:
+            cap_index = CC_VIDEO_1;
+            break;
+        case AUDIO:
+            cap_index = CC_AUDIO_1;
+            break;
+        case DATA:
+            cap_index = CC_DATACHANNEL_1;
+            break;
+        default:
+            break;
+    }
+
+    if (cap_index != CC_INVALID_INDEX) {
+        dcb->media_cap_tbl->cap[cap_index].enabled = TRUE;
+        dcb->media_cap_tbl->cap[cap_index].support_direction = SDP_DIRECTION_SENDRECV;
+        dcb->media_cap_tbl->cap[cap_index].pc_stream = msg->data.track.stream_id;
+        dcb->media_cap_tbl->cap[cap_index].pc_track = msg->data.track.track_id;
+
+        if (msg->data.track.constraints &&
+            msg->data.track.constraints->moz_bundle_only.was_passed) {
+          dcb->media_cap_tbl->cap[cap_index].bundle_only =
+            msg->data.track.constraints->moz_bundle_only.value;
+        }
+    }
+
+    /* Free the constraints structure */
+    if (msg->data.track.constraints) {
+       fsmdef_free_constraints(msg->data.track.constraints);
+       msg->data.track.constraints = 0;
     }
 
     return (SM_RC_END);

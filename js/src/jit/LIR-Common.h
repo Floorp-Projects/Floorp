@@ -5763,6 +5763,23 @@ class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3>
     }
 };
 
+class LRecompileCheck : public LInstructionHelper<0, 0, 1>
+{
+  public:
+    LIR_HEADER(RecompileCheck)
+
+    LRecompileCheck(const LDefinition &scratch) {
+        setTemp(0, scratch);
+    }
+
+    const LDefinition *scratch() {
+        return getTemp(0);
+    }
+    MRecompileCheck *mir() {
+        return mir_->toRecompileCheck();
+    }
+};
+
 } // namespace jit
 } // namespace js
 

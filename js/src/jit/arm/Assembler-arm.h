@@ -1226,7 +1226,7 @@ class Assembler
     void resetCounter();
     uint32_t actualOffset(uint32_t) const;
     uint32_t actualIndex(uint32_t) const;
-    static uint8_t *PatchableJumpAddress(IonCode *code, uint32_t index);
+    static uint8_t *PatchableJumpAddress(JitCode *code, uint32_t index);
     BufferOffset actualOffset(BufferOffset) const;
   protected:
 
@@ -1650,13 +1650,13 @@ class Assembler
     void as_bkpt();
 
   public:
-    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
-    static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
+    static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
-        if (kind == Relocation::IONCODE)
+        if (kind == Relocation::JITCODE)
             writeRelocation(src);
     }
 
