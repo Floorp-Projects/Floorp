@@ -735,8 +735,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     enum RuntimeLock {
         ExclusiveAccessLock,
         WorkerThreadStateLock,
-        OperationCallbackLock,
         CompilationLock,
+        OperationCallbackLock,
         GCLock
     };
 #ifdef DEBUG
