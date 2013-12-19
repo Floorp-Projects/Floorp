@@ -174,6 +174,14 @@ function connectSock() {
 
   server = TCPSocket.listen(PORT, options, BACKLOG);
   server.onconnect = function(socket) {
+    // Bug 937528 - Accepted client tcp socket (mozTcpSocket) has
+    //              uninitialized host and port.
+    if (socket.host !== '127.0.0.1') {
+      do_throw('got unexpected: connected socket host should be 127.0.0.1 but not ' + socket.host);
+    } else {
+      do_print('Got expected connected socket host: ' + socket.host);
+    }
+
     connectedsock = socket;
     connectedsock.ondata = makeFailureCase('serverdata');
     connectedsock.onerror = makeFailureCase('servererror');
@@ -187,7 +195,7 @@ function connectSock() {
   sock.ondrain = null;
   sock.ondata = makeFailureCase('data');
   sock.onerror = makeFailureCase('error');
-  sock.onclose = makeFailureCase('close');  
+  sock.onclose = makeFailureCase('close');
 }
 
 /**
@@ -197,7 +205,7 @@ function connectSock() {
 function openSockInClosingServer() {
   var success = makeSuccessCase('clientnotopen');
   var options = { binaryType: 'arraybuffer' };
-  
+
   sock = TCPSocket.open(
     '127.0.0.1', PORT, options);
 

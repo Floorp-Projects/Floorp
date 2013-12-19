@@ -12,7 +12,7 @@ interface nsITCPSocketIntermediary;
 // Interface required to allow the TCP socket object (TCPSocket.js) in the
 // parent process to talk to the parent IPC actor, TCPSocketParent, which
 // is written in C++.
-[scriptable, uuid(868662a4-681c-4b89-9f02-6fe5b7ace265)]
+[scriptable, uuid(6f040bf0-6852-11e3-949a-0800200c9a66)]
 interface nsITCPSocketParent : nsISupports
 {
   [implicit_jscontext] void initJS(in jsval intermediary);
@@ -55,6 +55,9 @@ interface nsITCPSocketParent : nsISupports
   //        to make sure the bufferedAmount updated on the child will correspond
   //        to the latest call of send().
   void sendUpdateBufferedAmount(in uint32_t bufferedAmount, in uint32_t trackingNumber);
+
+  readonly attribute DOMString host;
+  readonly attribute unsigned short port;
 };
 
 // Intermediate class to handle sending multiple possible data types
