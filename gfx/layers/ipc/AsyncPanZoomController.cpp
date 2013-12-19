@@ -1134,6 +1134,7 @@ void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation)
 }
 
 void AsyncPanZoomController::CancelAnimation() {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   SetState(NOTHING);
   mAnimation = nullptr;
 }
