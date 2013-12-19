@@ -25,6 +25,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462106
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/Services.jsm");
 
 function copy(str, doc) {
   if (!doc) {
@@ -63,6 +65,15 @@ function paste() {
   return str;
 }
 
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
 function testOnWindow(options, callback) {
   var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
@@ -72,10 +83,9 @@ function testOnWindow(options, callback) {
                          .getInterface(Ci.nsIDOMWindow);
 
   let win = mainWindow.OpenBrowserWindow(options);
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+  whenDelayedStartupFinished(win, function() {
     callback(win);
-  }, false);
+  });
 };
 
 function initAndRunTests() {
@@ -95,19 +105,28 @@ function initAndRunTests() {
 
     testOnWindow({private: true}, function (aPrivateWindow) {
       copy(data2, aPrivateWindow.document); // copy the data inside the private browsing mode
-      setTimeout(function() { // without this, the test fails sporadically
+
+      function insidePBPaste() {
+        if (data2 != paste()) {
+          setTimeout(insidePBPaste, 100);
+          return;
+        }
         // the data should be on the clipboard inside the private browsing mode
         is(data2, paste(), "Data successfully copied inside the private browsing mode");
         aPrivateWindow.close();
 
-        // The above .close() call will run asynchronously.
-        SimpleTest.executeSoon(function() {
+        function afterClose() {
+          if (data2 == paste()) {
+            setTimeout(afterClose, 100);
+            return;
+          }
           // the data should no longer be on the clipboard at this stage
           isnot(data2, paste(), "Data no longer available after leaving the private browsing mode");
-
           SimpleTest.finish();
-        });
-      }, 0);
+        }
+        afterClose();
+      }
+      insidePBPaste();
     });
   });
 }
