@@ -379,22 +379,21 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
             }
             return false;
         }
-        if (fun->atom())
+        if (fun->atom() || fun->hasGuessedAtom())
             firstword |= HasAtom;
         if (fun->isStarGenerator())
             firstword |= IsStarGenerator;
         script = fun->getOrCreateScript(cx);
         if (!script)
             return false;
-        atom = fun->atom();
+        atom = fun->displayAtom();
         flagsword = (fun->nargs() << 16) | fun->flags();
+    }
 
-        if (!xdr->codeUint32(&firstword))
-            return false;
-    } else {
-        if (!xdr->codeUint32(&firstword))
-            return false;
+    if (!xdr->codeUint32(&firstword))
+        return false;
 
+    if (mode == XDR_DECODE) {
         JSObject *proto = nullptr;
         if (firstword & IsStarGenerator) {
             proto = cx->global()->getOrCreateStarGeneratorFunctionPrototype(cx);
