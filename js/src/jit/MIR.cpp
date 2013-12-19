@@ -669,9 +669,10 @@ MStringLength::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
     if ((type() == MIRType_Int32) && (string()->isConstant())) {
         Value value = string()->toConstant()->value();
-        size_t length = JS_GetStringLength(value.toString());
+        JSAtom *atom = &value.toString()->asAtom();
 
-        return MConstant::New(alloc, Int32Value(length));
+        AutoThreadSafeAccess ts(atom);
+        return MConstant::New(alloc, Int32Value(atom->length()));
     }
 
     return this;
@@ -2512,6 +2513,7 @@ MBeta::printOpcode(FILE *fp) const
 bool
 MNewObject::shouldUseVM() const
 {
+    AutoThreadSafeAccess ts(templateObject());
     return templateObject()->hasSingletonType() ||
            templateObject()->hasDynamicSlots();
 }

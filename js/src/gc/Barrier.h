@@ -191,6 +191,9 @@ class BarrieredCell : public gc::Cell
 
     static JS_ALWAYS_INLINE void readBarrier(T *thing) {
 #ifdef JSGC_INCREMENTAL
+        // Off thread Ion compilation never occurs when barriers are active.
+        js::AutoThreadSafeAccess ts(thing);
+
         JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
         if (shadowZone->needsBarrier()) {
             MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));

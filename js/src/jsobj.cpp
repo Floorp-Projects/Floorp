@@ -5506,6 +5506,8 @@ DumpProperty(JSObject *obj, Shape &shape)
 bool
 JSObject::uninlinedIsProxy() const
 {
+    AutoThreadSafeAccess ts0(this);
+    AutoThreadSafeAccess ts1(type_);
     return is<ProxyObject>();
 }
 
