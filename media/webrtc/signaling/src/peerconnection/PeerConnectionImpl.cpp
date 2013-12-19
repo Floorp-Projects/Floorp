@@ -789,9 +789,26 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return NS_ERROR_FAILURE;
   }
 
-  mFingerprint = mIdentity->GetFormattedFingerprint();
-  if (mFingerprint.empty()) {
-    CSFLogError(logTag, "%s: unable to get fingerprint", __FUNCTION__);
+  // Set the fingerprint. Right now assume we only have one
+  // DTLS identity
+  unsigned char fingerprint[DTLS_FINGERPRINT_LENGTH];
+  size_t fingerprint_length;
+  res = mIdentity->ComputeFingerprint("sha-256",
+                                      fingerprint,
+                                      sizeof(fingerprint),
+                                      &fingerprint_length);
+
+  if (NS_FAILED(res)) {
+    CSFLogError(logTag, "%s: ComputeFingerprint failed: %u",
+      __FUNCTION__, static_cast<uint32_t>(res));
+    return res;
+  }
+
+  mFingerprint = "sha-256 " + mIdentity->FormatFingerprint(fingerprint,
+                                                         fingerprint_length);
+  if (NS_FAILED(res)) {
+    CSFLogError(logTag, "%s: do_GetService failed: %u",
+      __FUNCTION__, static_cast<uint32_t>(res));
     return res;
   }
 
@@ -799,57 +816,12 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 }
 
 RefPtr<DtlsIdentity> const
-PeerConnectionImpl::GetIdentity() const
-{
+PeerConnectionImpl::GetIdentity() {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   return mIdentity;
 }
 
-std::string
-PeerConnectionImpl::GetFingerprint() const
-{
-  PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  return mFingerprint;
-}
-
-NS_IMETHODIMP
-PeerConnectionImpl::FingerprintSplitHelper(std::string& fingerprint,
-    size_t& spaceIdx) const
-{
-  fingerprint = GetFingerprint();
-  spaceIdx = fingerprint.find_first_of(' ');
-  if (spaceIdx == std::string::npos) {
-    CSFLogError(logTag, "%s: fingerprint is messed up: %s",
-        __FUNCTION__, fingerprint.c_str());
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-std::string
-PeerConnectionImpl::GetFingerprintAlgorithm() const
-{
-  std::string fp;
-  size_t spc;
-  if (NS_SUCCEEDED(FingerprintSplitHelper(fp, spc))) {
-    return fp.substr(0, spc);
-  }
-  return "";
-}
-
-std::string
-PeerConnectionImpl::GetFingerprintHexValue() const
-{
-  std::string fp;
-  size_t spc;
-  if (NS_SUCCEEDED(FingerprintSplitHelper(fp, spc))) {
-    return fp.substr(spc + 1);
-  }
-  return "";
-}
-
-
-NS_IMETHODIMP
+nsresult
 PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
