@@ -1289,7 +1289,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 14;
+    const UI_VERSION = 15;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
 
     let wasCustomizedAndOnAustralis = Services.prefs.prefHasUserValue("browser.uiCustomization.state");
@@ -1302,6 +1302,22 @@ BrowserGlue.prototype = {
 
     this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
     this._dataSource = this._rdf.GetDataSource("rdf:local-store");
+
+    function migrateDetector() {
+      let detector = null;    
+      try {
+        detector = Services.prefs.getComplexValue("intl.charset.detector",
+                                                  Ci.nsIPrefLocalizedString).data;
+      } catch (ex) {}
+      if (!(detector == "" ||
+            detector == "ja_parallel_state_machine" ||
+            detector == "ruprob" ||
+            detector == "ukprob")) {
+        // If the encoding detector pref value is not reachable from the UI,
+        // reset to default (varies by localization).
+        Services.prefs.clearUserPref("intl.charset.detector");
+      }
+    }
 
     // No version check for this as this code should run until we have Australis everywhere:
     if (wasCustomizedAndOnAustralis) {
@@ -1328,6 +1344,11 @@ BrowserGlue.prototype = {
       if (oldCurrentset != currentset) {
         this._setPersist(toolbarResource, currentsetResource, currentset);
       }
+
+      // Taking the opportunity to do the version 15 action here as well to
+      // address profiles that have been on Australis.
+      migrateDetector();
+
       // If we don't have anything else to do, we can bail here:
       if (currentUIVersion >= UI_VERSION) {
         if (this._dirty) {
@@ -1521,6 +1542,14 @@ BrowserGlue.prototype = {
       let path = OS.Path.join(OS.Constants.Path.profileDir,
                               "chromeappsstore.sqlite");
       OS.File.remove(path);
+    }
+
+    // Reusing the version 15, which is no longer in use on m-c, on Holly.
+    // This fails if the user has used Australis with this profile without
+    // customization and then gone back no the non-Australis version stream.
+    // However, the situation will fix itself once Australis reaches the user.
+    if (currentUIVersion < 15) {
+      migrateDetector();
     }
 
     if (this._dirty)
