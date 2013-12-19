@@ -247,9 +247,6 @@ struct JSCompartment
     js::types::TypeObjectWithNewScriptSet newTypeObjects;
     js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
-#if defined(DEBUG) && defined(JSGC_GENERATIONAL)
-    void checkNewTypeObjectTableAfterMovingGC();
-#endif
 
     /*
      * Hash table of all manually call site-cloned functions from within
