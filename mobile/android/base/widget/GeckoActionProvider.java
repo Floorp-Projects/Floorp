@@ -59,6 +59,14 @@ public class GeckoActionProvider extends ActionProvider {
             historySize = 2;
         }
 
+        // Historical data is dependent on past selection of activities.
+        // Activity count is determined by the number of activities that can handle
+        // the particular intent. When no intent is set, the activity count is 0,
+        // while the history count can be a valid number.
+        if (historySize > dataModel.getActivityCount()) {
+            return view;
+        }
+
         for (int i = 0; i < historySize; i++) {
             view.addActionButton(dataModel.getActivity(i).loadIcon(packageManager));
         }
@@ -105,6 +113,11 @@ public class GeckoActionProvider extends ActionProvider {
     public void setIntent(Intent intent) {
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         dataModel.setIntent(intent);
+
+        // Inform the target listener to refresh it's UI, if needed.
+        if (mOnTargetListener != null) {
+            mOnTargetListener.onTargetSelected();
+        }
     }
 
     public void setOnTargetSelectedListener(OnTargetSelectedListener listener) {
@@ -117,14 +130,15 @@ public class GeckoActionProvider extends ActionProvider {
     private class Callbacks implements OnMenuItemClickListener,
                                        OnClickListener {
         private void chooseActivity(int index) { 
-            if (mOnTargetListener != null)
-                mOnTargetListener.onTargetSelected();
-
             ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
             Intent launchIntent = dataModel.chooseActivity(index);
             if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
                 mContext.startActivity(launchIntent);
+            }
+
+            if (mOnTargetListener != null) {
+                mOnTargetListener.onTargetSelected();
             }
         }
 

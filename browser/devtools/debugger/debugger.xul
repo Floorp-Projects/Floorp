@@ -396,10 +396,6 @@
                     align="center"
                     pack="center">
                 <description value="&debuggerUI.tracingNotStarted.label;" />
-                <button id="start-tracing"
-                        class="devtools-toolbarbutton"
-                        command="startTracing"
-                        label="&debuggerUI.startTracing;"/>
               </vbox>
             </deck>
           </tabpanel>

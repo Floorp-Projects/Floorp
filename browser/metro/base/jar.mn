@@ -99,6 +99,7 @@ chrome.jar:
   content/BookmarksView.js                     (content/startui/BookmarksView.js)
   content/HistoryView.js                       (content/startui/HistoryView.js)
   content/TopSitesView.js                      (content/startui/TopSitesView.js)
+  content/FirstRunOverlay.xul                  (content/startui/FirstRunOverlay.xul)
 #ifdef MOZ_SERVICES_SYNC
   content/RemoteTabsView.js                    (content/startui/RemoteTabsView.js)
 #endif
