@@ -98,7 +98,7 @@ public class GeckoMenu extends ListView
     }
 
     public GeckoMenu(Context context, AttributeSet attrs) {
-        this(context, attrs, android.R.attr.listViewStyle);
+        this(context, attrs, R.attr.geckoMenuListViewStyle);
     }
 
     public GeckoMenu(Context context, AttributeSet attrs, int defStyle) {
@@ -498,6 +498,8 @@ public class GeckoMenu extends ListView
     // URL bar can register itself as a presenter, in case it has a different place to show them.
     public static class DefaultActionItemBar extends LinearLayout
                                              implements ActionItemBarPresenter {
+        private final int mRowHeight;
+
         public DefaultActionItemBar(Context context) {
             this(context, null);
         }
@@ -505,12 +507,22 @@ public class GeckoMenu extends ListView
         public DefaultActionItemBar(Context context, AttributeSet attrs) {
             super(context, attrs);
 
+            mRowHeight = getResources().getDimensionPixelSize(R.dimen.menu_item_row_height);
             setWeightSum(3.0f);
         }
 
         @Override
         public boolean addActionItem(View actionItem) {
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(actionItem.getLayoutParams());
+            ViewGroup.LayoutParams actualParams = actionItem.getLayoutParams();
+            LinearLayout.LayoutParams params;
+
+            if (actualParams != null) {
+                params = new LinearLayout.LayoutParams(actionItem.getLayoutParams());
+                params.width = 0;
+            } else {
+                params = new LinearLayout.LayoutParams(0, mRowHeight);
+            }
+
             params.weight = 1.0f;
             actionItem.setLayoutParams(params);
             addView(actionItem);

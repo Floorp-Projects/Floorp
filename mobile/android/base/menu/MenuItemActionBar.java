@@ -26,9 +26,6 @@ public class MenuItemActionBar extends ImageButton
 
     public MenuItemActionBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
-        int size = (int) (context.getResources().getDimension(R.dimen.browser_toolbar_height));
-        setLayoutParams(new ViewGroup.LayoutParams(size, size));
     }
 
     @Override
