@@ -62,6 +62,7 @@
         <description id="mixed-content-blocked-moreinfo">&mixedContentBlocked.moreinfo;</description>
         <separator/>
         <label id="mixed-content-blocked-helplink" class="text-link"
+               onclick="openHelpLink('mixed-content');"
                value="&mixedContentBlocked.helplink;"/>
       </popupnotificationcontent>
     </popupnotification>
