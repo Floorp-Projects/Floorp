@@ -778,6 +778,9 @@ this.AddonRepository = {
                           getService(Ci.nsIAppStartup).
                           getStartupInfo();
 
+        params.TIME_MAIN = "";
+        params.TIME_FIRST_PAINT = "";
+        params.TIME_SESSION_RESTORED = "";
         if (startupInfo.process) {
           if (startupInfo.main) {
             params.TIME_MAIN = startupInfo.main - startupInfo.process;

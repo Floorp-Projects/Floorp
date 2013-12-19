@@ -61,6 +61,14 @@
         <item name="android:paddingRight">0dp</item>
     </style>
 
+    <style name="Widget.MenuItemActionBar">
+        <item name="android:layout_width">@dimen/browser_toolbar_height</item>
+        <item name="android:layout_height">@dimen/browser_toolbar_height</item>
+        <item name="android:padding">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
         <item name="android:paddingTop">30dp</item>
         <item name="android:paddingLeft">32dp</item>
