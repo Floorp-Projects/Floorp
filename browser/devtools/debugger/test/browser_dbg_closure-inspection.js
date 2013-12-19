@@ -77,13 +77,13 @@ function test() {
            .getAttribute("value"), "getName",
           "Should have the right property name for 'getName' in person.");
         is(personNode.get("getName").target.querySelector(".value")
-           .getAttribute("value"), "Function",
+           .getAttribute("value"), "_pfactory/<.getName()",
           "'getName' in person should have the right value.");
         is(personNode.get("getFoo").target.querySelector(".name")
            .getAttribute("value"), "getFoo",
           "Should have the right property name for 'getFoo' in person.");
         is(personNode.get("getFoo").target.querySelector(".value")
-           .getAttribute("value"), "Function",
+           .getAttribute("value"), "_pfactory/<.getFoo()",
           "'getFoo' in person should have the right value.");
 
         // Expand the function nodes. This causes their properties to be

@@ -36,7 +36,8 @@ function onExecuteFooObj(msg)
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object anchor");
-  isnot(anchor.textContent.indexOf("[object Object]"), -1, "message text check");
+  isnot(anchor.textContent.indexOf('testProp: "testValue"'), -1,
+        "message text check");
 
   gJSTerm.once("variablesview-fetched", onFooObjFetch);
   EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow)
@@ -76,7 +77,8 @@ function onExecuteWindow(msg)
   ok(msg, "output message found");
   let anchor = msg.querySelector("a");
   ok(anchor, "object anchor");
-  isnot(anchor.textContent.indexOf("[object Window]"), -1, "message text check");
+  isnot(anchor.textContent.indexOf("Window \u2192 http://example.com/browser/"), -1,
+        "message text check");
 
   gJSTerm.once("variablesview-fetched", onWindowFetch);
   EventUtils.synthesizeMouse(anchor, 2, 2, {}, gWebConsole.iframeWindow)
