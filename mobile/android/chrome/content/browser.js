@@ -6638,15 +6638,15 @@ var SearchEngines = {
                (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
       }
     };
-    SelectionHandler.actions.SEARCH_ADD = {
-      id: "add_search_action",
+    SelectionHandler.addAction({
+      id: "search_add_action",
       label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine"),
       icon: "drawable://ic_url_bar_search",
       selector: filter,
       action: function(aElement) {
         SearchEngines.addEngine(aElement);
       }
-    }
+    });
   },
 
   uninit: function uninit() {
