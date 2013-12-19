@@ -107,7 +107,8 @@
 }
 
 #clear-tracer {
-  min-width: 22px !important;
+  /* Make this button as narrow as the text inside it. */
+  min-width: 1px;
 }
 
 #tracer-message {
