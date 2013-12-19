@@ -606,46 +606,47 @@ HyperTextAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
                                 nsSelectionAmount aAmount,
                                 EWordMovementType aWordMovementType)
 {
-  // Convert hypertext offset to frame-relative offset.
-  int32_t offsetInFrame = aOffset, notUsedOffset = aOffset;
-  nsRefPtr<Accessible> accAtOffset;
-  nsIFrame* frameAtOffset =
-    GetPosAndText(offsetInFrame, notUsedOffset, nullptr, nullptr,
-                  getter_AddRefs(accAtOffset));
-  if (!frameAtOffset) {
-    if (aOffset == CharacterCount()) {
-      // Asking for start of line, while on last character.
-      if (accAtOffset)
-        frameAtOffset = accAtOffset->GetFrame();
-    }
-    NS_ASSERTION(frameAtOffset, "No start frame for text getting!");
-    if (!frameAtOffset)
+  // Find a leaf accessible frame to start with. PeekOffset wants this.
+  HyperTextAccessible* text = this;
+  Accessible* child = nullptr;
+  int32_t innerOffset = aOffset;
+
+  do {
+    int32_t childIdx = text->GetChildIndexAtOffset(innerOffset);
+    NS_ASSERTION(childIdx != -1, "Bad in offset!");
+    if (childIdx == -1)
       return -1;
 
-    // We're on the last continuation since we're on the last character.
-    frameAtOffset = frameAtOffset->LastContinuation();
+    child = text->GetChildAt(childIdx);
+    innerOffset -= text->GetChildOffset(childIdx);
+
+    text = child->AsHyperText();
+  } while (text);
+
+  nsIFrame* childFrame = child->GetFrame();
+  NS_ENSURE_TRUE(childFrame, -1);
+
+  int32_t innerContentOffset = innerOffset;
+  if (child->IsTextLeaf()) {
+    NS_ASSERTION(childFrame->GetType() == nsGkAtoms::textFrame, "Wrong frame!");
+    RenderedToContentOffset(childFrame, innerOffset, &innerContentOffset);
   }
 
-  // Return hypertext offset of the boundary of the found word.
-  int32_t contentOffset = offsetInFrame;
-  nsIFrame* primaryFrame = accAtOffset->GetFrame();
-  NS_ENSURE_TRUE(primaryFrame, -1);
-
-  nsresult rv = NS_OK;
-  if (primaryFrame->GetType() == nsGkAtoms::textFrame) {
-    rv = RenderedToContentOffset(primaryFrame, offsetInFrame, &contentOffset);
-    NS_ENSURE_SUCCESS(rv, -1);
-  }
+  nsIFrame* frameAtOffset = childFrame;
+  int32_t unusedOffsetInFrame = 0;
+  childFrame->GetChildFrameContainingOffset(innerContentOffset, true,
+                                            &unusedOffsetInFrame,
+                                            &frameAtOffset);
 
   const bool kIsJumpLinesOk = true; // okay to jump lines
   const bool kIsScrollViewAStop = false; // do not stop at scroll views
   const bool kIsKeyboardSelect = true; // is keyboard selection
   const bool kIsVisualBidi = false; // use visual order for bidi text
-  nsPeekOffsetStruct pos(aAmount, aDirection, contentOffset,
+  nsPeekOffsetStruct pos(aAmount, aDirection, innerContentOffset,
                          0, kIsJumpLinesOk, kIsScrollViewAStop,
                          kIsKeyboardSelect, kIsVisualBidi,
                          aWordMovementType);
-  rv = frameAtOffset->PeekOffset(&pos);
+  nsresult rv = frameAtOffset->PeekOffset(&pos);
 
   // PeekOffset fails on last/first lines of the text in certain cases.
   if (NS_FAILED(rv) && aAmount == eSelectLine) {
