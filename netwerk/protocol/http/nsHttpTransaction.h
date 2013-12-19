@@ -144,10 +144,6 @@ private:
 
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
-    bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
-      return mResponseTimeoutEnabled;
-    }
-
 private:
     class UpdateSecurityCallbacks : public nsRunnable
     {
@@ -244,7 +240,6 @@ private:
     bool                            mHttpResponseMatched;
     bool                            mPreserveStream;
     bool                            mDispatchedAsBlocking;
-    bool                            mResponseTimeoutEnabled;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted
