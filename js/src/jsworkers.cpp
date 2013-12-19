@@ -751,7 +751,6 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
     ionBuilder = state.ionWorklist.popCopy();
 
     DebugOnly<ExecutionMode> executionMode = ionBuilder->info().executionMode();
-    JS_ASSERT(jit::GetIonScript(ionBuilder->script(), executionMode) == ION_COMPILING_SCRIPT);
 
 #if JS_TRACE_LOGGING
     AutoTraceLog logger(TraceLogging::getLogger(TraceLogging::ION_BACKGROUND_COMPILER),

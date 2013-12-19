@@ -332,6 +332,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitAssertRangeF(LAssertRangeF *ins);
     bool visitAssertRangeV(LAssertRangeV *ins);
 
+    bool visitRecompileCheck(LRecompileCheck *ins);
+
     IonScriptCounts *extractUnassociatedScriptCounts() {
         IonScriptCounts *counts = unassociatedScriptCounts_;
         unassociatedScriptCounts_ = nullptr;  // prevent delete in dtor

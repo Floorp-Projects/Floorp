@@ -644,7 +644,7 @@ class MacroAssemblerX86Shared : public Assembler
         return addCodeLabel(cl);
     }
 
-    void callWithExitFrame(IonCode *target) {
+    void callWithExitFrame(JitCode *target) {
         uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         call(target);

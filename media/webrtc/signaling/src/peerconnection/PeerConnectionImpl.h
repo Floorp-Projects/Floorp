@@ -337,10 +337,14 @@ public:
   }
 
   NS_IMETHODIMP_TO_ERRORRESULT(AddStream, ErrorResult &rv,
-                               DOMMediaStream& aMediaStream)
+                               DOMMediaStream& aMediaStream,
+                               const MediaConstraintsInternal& aConstraints)
   {
-    rv = AddStream(aMediaStream);
+    rv = AddStream(aMediaStream, aConstraints);
   }
+
+  NS_IMETHODIMP AddStream(DOMMediaStream & aMediaStream,
+                          const MediaConstraintsExternal& aConstraints);
 
   NS_IMETHODIMP_TO_ERRORRESULT(RemoveStream, ErrorResult &rv,
                                DOMMediaStream& aMediaStream)

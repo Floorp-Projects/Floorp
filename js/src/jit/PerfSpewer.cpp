@@ -201,7 +201,7 @@ PerfSpewer::noteEndInlineCode(MacroAssembler &masm)
 
 void
 PerfSpewer::writeProfile(JSScript *script,
-                         IonCode *code,
+                         JitCode *code,
                          MacroAssembler &masm)
 {
     if (PerfFuncEnabled()) {
@@ -289,7 +289,7 @@ PerfSpewer::writeProfile(JSScript *script,
 }
 
 void
-js::jit::writePerfSpewerBaselineProfile(JSScript *script, IonCode *code)
+js::jit::writePerfSpewerBaselineProfile(JSScript *script, JitCode *code)
 {
     if (!PerfEnabled())
         return;
@@ -308,7 +308,7 @@ js::jit::writePerfSpewerBaselineProfile(JSScript *script, IonCode *code)
 }
 
 void
-js::jit::writePerfSpewerIonCodeProfile(IonCode *code, const char *msg)
+js::jit::writePerfSpewerJitCodeProfile(JitCode *code, const char *msg)
 {
     if (!code || !PerfEnabled())
         return;
