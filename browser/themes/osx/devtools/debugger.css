@@ -112,10 +112,6 @@
   min-width: 22px !important;
 }
 
-#tracer-search {
-  min-width: 72px !important;
-}
-
 #tracer-message {
   /* Prevent the container deck from aquiring the height from this message. */
   min-height: 1px;
