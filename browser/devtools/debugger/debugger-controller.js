@@ -99,6 +99,7 @@ const promise = require("sdk/core/promise");
 const Editor = require("devtools/sourceeditor/editor");
 const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
+const FastListWidget = require("devtools/shared/widgets/FastListWidget");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource:///modules/devtools/Parser.jsm");
@@ -192,6 +193,7 @@ let DebuggerController = {
       this.SourceScripts.disconnect();
       this.StackFrames.disconnect();
       this.ThreadState.disconnect();
+      this.Tracer.disconnect();
       this.disconnect();
 
       // Chrome debugging needs to close its parent process on shutdown.
@@ -218,39 +220,44 @@ let DebuggerController = {
       return this._connection;
     }
 
-    let deferred = promise.defer();
-    this._connection = deferred.promise;
+    let startedDebugging = promise.defer();
+    this._connection = startedDebugging.promise;
 
     if (!window._isChromeDebugger) {
       let target = this._target;
-      let { client, form: { chromeDebugger }, threadActor } = target;
+      let { client, form: { chromeDebugger, traceActor }, threadActor } = target;
       target.on("close", this._onTabDetached);
       target.on("navigate", this._onTabNavigated);
       target.on("will-navigate", this._onTabNavigated);
+      this.client = client;
 
       if (target.chrome) {
-        this._startChromeDebugging(client, chromeDebugger, deferred.resolve);
+        this._startChromeDebugging(chromeDebugger, startedDebugging.resolve);
       } else {
-        this._startDebuggingTab(client, threadActor, deferred.resolve);
+        this._startDebuggingTab(threadActor, startedDebugging.resolve);
+        const startedTracing = promise.defer();
+        this._startTracingTab(traceActor, startedTracing.resolve);
+
+        return promise.all([startedDebugging.promise, startedTracing.promise]);
       }
 
-      return deferred.promise;
+      return startedDebugging.promise;
     }
 
     // Chrome debugging needs to make its own connection to the debuggee.
     let transport = debuggerSocketConnect(
       Prefs.chromeDebuggingHost, Prefs.chromeDebuggingPort);
 
-    let client = new DebuggerClient(transport);
+    let client = this.client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
     client.addListener("tabDetached", this._onTabDetached);
     client.connect(() => {
       client.listTabs(aResponse => {
-        this._startChromeDebugging(client, aResponse.chromeDebugger, deferred.resolve);
+        this._startChromeDebugging(aResponse.chromeDebugger, startedDebugging.resolve);
       });
     });
 
-    return deferred.promise;
+    return startedDebugging.promise;
   },
 
   /**
@@ -331,21 +338,13 @@ let DebuggerController = {
   /**
    * Sets up a debugging session.
    *
-   * @param DebuggerClient aClient
-   *        The debugger client.
    * @param string aThreadActor
    *        The remote protocol grip of the tab.
    * @param function aCallback
-   *        A function to invoke once the client attached to the active thread.
+   *        A function to invoke once the client attaches to the active thread.
    */
-  _startDebuggingTab: function(aClient, aThreadActor, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachThread(aThreadActor, (aResponse, aThreadClient) => {
+  _startDebuggingTab: function(aThreadActor, aCallback) {
+    this.client.attachThread(aThreadActor, (aResponse, aThreadClient) => {
       if (!aThreadClient) {
         Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
@@ -366,21 +365,13 @@ let DebuggerController = {
   /**
    * Sets up a chrome debugging session.
    *
-   * @param DebuggerClient aClient
-   *        The debugger client.
    * @param object aChromeDebugger
    *        The remote protocol grip of the chrome debugger.
    * @param function aCallback
-   *        A function to invoke once the client attached to the active thread.
+   *        A function to invoke once the client attaches to the active thread.
    */
-  _startChromeDebugging: function(aClient, aChromeDebugger, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachThread(aChromeDebugger, (aResponse, aThreadClient) => {
+  _startChromeDebugging: function(aChromeDebugger, aCallback) {
+    this.client.attachThread(aChromeDebugger, (aResponse, aThreadClient) => {
       if (!aThreadClient) {
         Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
@@ -396,6 +387,30 @@ let DebuggerController = {
         aCallback();
       }
     }, { useSourceMaps: Prefs.sourceMapsEnabled });
+  },
+
+  /**
+   * Sets up an execution tracing session.
+   *
+   * @param object aTraceActor
+   *        The remote protocol grip of the trace actor.
+   * @param function aCallback
+   *        A function to invoke once the client attaches to the tracer.
+   */
+  _startTracingTab: function(aTraceActor, aCallback) {
+    this.client.attachTracer(aTraceActor, (response, traceClient) => {
+      if (!traceClient) {
+        DevToolsUtils.reportError(new Error("Failed to attach to tracing actor."));
+        return;
+      }
+
+      this.traceClient = traceClient;
+      this.Tracer.connect();
+
+      if (aCallback) {
+        aCallback();
+      }
+    });
   },
 
   /**
@@ -1412,6 +1427,218 @@ SourceScripts.prototype = {
 };
 
 /**
+ * Tracer update the UI according to the messages exchanged with the tracer
+ * actor.
+ */
+function Tracer() {
+  this._trace = null;
+  this._idCounter = 0;
+  this.onTraces = this.onTraces.bind(this);
+}
+
+Tracer.prototype = {
+  get client() {
+    return DebuggerController.client;
+  },
+
+  get traceClient() {
+    return DebuggerController.traceClient;
+  },
+
+  get tracing() {
+    return !!this._trace;
+  },
+
+  /**
+   * Hooks up the debugger controller with the tracer client.
+   */
+  connect: function() {
+    this._stack = [];
+    this.client.addListener("traces", this.onTraces);
+  },
+
+  /**
+   * Disconnects the debugger controller from the tracer client. Any further
+   * communcation with the tracer actor will not have any effect on the UI.
+   */
+  disconnect: function() {
+    this._stack = null;
+    this.client.removeListener("traces", this.onTraces);
+  },
+
+  /**
+   * Instructs the tracer actor to start tracing.
+   */
+  startTracing: function(aCallback = () => {}) {
+    DebuggerView.Tracer.selectTab();
+    if (this.tracing) {
+      return;
+    }
+    this._trace = "dbg.trace" + Math.random();
+    this.traceClient.startTrace([
+      "name",
+      "location",
+      "parameterNames",
+      "depth",
+      "arguments",
+      "return",
+      "throw",
+      "yield"
+    ], this._trace, (aResponse) => {
+      const { error } = aResponse;
+      if (error) {
+        DevToolsUtils.reportException(error);
+        this._trace = null;
+      }
+
+      aCallback(aResponse);
+    });
+  },
+
+  /**
+   * Instructs the tracer actor to stop tracing.
+   */
+  stopTracing: function(aCallback = () => {}) {
+    if (!this.tracing) {
+      return;
+    }
+    this.traceClient.stopTrace(this._trace, aResponse => {
+      const { error } = aResponse;
+      if (error) {
+        DevToolsUtils.reportException(error);
+      }
+
+      this._trace = null;
+      aCallback(aResponse);
+    });
+  },
+
+  onTraces: function (aEvent, { traces }) {
+    const tracesLength = traces.length;
+    let tracesToShow;
+    if (tracesLength > TracerView.MAX_TRACES) {
+      tracesToShow = traces.slice(tracesLength - TracerView.MAX_TRACES,
+                                  tracesLength);
+      DebuggerView.Tracer.empty();
+      this._stack.splice(0, this._stack.length);
+    } else {
+      tracesToShow = traces;
+    }
+
+    for (let t of tracesToShow) {
+      if (t.type == "enteredFrame") {
+        this._onCall(t);
+      } else {
+        this._onReturn(t);
+      }
+    }
+
+    DebuggerView.Tracer.commit();
+  },
+
+  /**
+   * Callback for handling a new call frame.
+   */
+  _onCall: function({ name, location, parameterNames, depth, arguments: args }) {
+    const item = {
+      name: name,
+      location: location,
+      id: this._idCounter++
+    };
+    this._stack.push(item);
+    DebuggerView.Tracer.addTrace({
+      type: "call",
+      name: name,
+      location: location,
+      depth: depth,
+      parameterNames: parameterNames,
+      arguments: args,
+      frameId: item.id
+    });
+  },
+
+  /**
+   * Callback for handling an exited frame.
+   */
+  _onReturn: function(aPacket) {
+    if (!this._stack.length) {
+      return;
+    }
+
+    const { name, id, location } = this._stack.pop();
+    DebuggerView.Tracer.addTrace({
+      type: aPacket.why,
+      name: name,
+      location: location,
+      depth: aPacket.depth,
+      frameId: id,
+      returnVal: aPacket.return || aPacket.throw || aPacket.yield
+    });
+  },
+
+  /**
+   * Create an object which has the same interface as a normal object client,
+   * but since we already have all the information for an object that we will
+   * ever get (the server doesn't create actors when tracing, just firehoses
+   * data and forgets about it) just return the data immdiately.
+   *
+   * @param Object aObject
+   *        The tracer object "grip" (more like a limited snapshot).
+   * @returns Object
+   *          The synchronous client object.
+   */
+  syncGripClient: function(aObject) {
+    return {
+      get isFrozen() { return aObject.frozen; },
+      get isSealed() { return aObject.sealed; },
+      get isExtensible() { return aObject.extensible; },
+
+      get ownProperties() { return aObject.ownProperties; },
+      get prototype() { return null; },
+
+      getParameterNames: callback => callback(aObject),
+      getPrototypeAndProperties: callback => callback(aObject),
+      getPrototype: callback => callback(aObject),
+
+      getOwnPropertyNames: (callback) => {
+        callback({
+          ownPropertyNames: aObject.ownProperties
+            ?  Object.keys(aObject.ownProperties)
+            : []
+        });
+      },
+
+      getProperty: (property, callback) => {
+        callback({
+          descriptor: aObject.ownProperties
+            ? aObject.ownProperties[property]
+            : null
+        });
+      },
+
+      getDisplayString: callback => callback("[object " + aObject.class + "]"),
+
+      getScope: callback => callback({
+        error: "scopeNotAvailable",
+        message: "Cannot get scopes for traced objects"
+      })
+    };
+  },
+
+  /**
+   * Wraps object snapshots received from the tracer server so that we can
+   * differentiate them from long living object grips from the debugger server
+   * in the variables view.
+   *
+   * @param Object aObject
+   *        The object snapshot from the tracer actor.
+   */
+  WrappedObject: function(aObject) {
+    this.object = aObject;
+  }
+};
+
+/**
  * Handles breaking on event listeners in the currently debugged target.
  */
 function EventListeners() {
@@ -1955,6 +2182,7 @@ let Prefs = new ViewHelpers.Prefs("devtools", {
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
   sourceMapsEnabled: ["Bool", "debugger.source-maps-enabled"],
   prettyPrintEnabled: ["Bool", "debugger.pretty-print-enabled"],
+  tracerEnabled: ["Bool", "debugger.tracer"],
   editorTabSize: ["Int", "editor.tabsize"]
 });
 
@@ -1982,6 +2210,7 @@ DebuggerController.StackFrames = new StackFrames();
 DebuggerController.SourceScripts = new SourceScripts();
 DebuggerController.Breakpoints = new Breakpoints();
 DebuggerController.Breakpoints.DOM = new EventListeners();
+DebuggerController.Tracer = new Tracer();
 
 /**
  * Export some properties to the global scope for easier access.

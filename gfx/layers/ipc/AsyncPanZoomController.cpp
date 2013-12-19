@@ -778,7 +778,10 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
     SetState(PANNING);
     mX.StartTouch(aEvent.mFocusPoint.x);
     mY.StartTouch(aEvent.mFocusPoint.y);
+  } else {
+    SetState(NOTHING);
   }
+
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
     ScheduleComposite();

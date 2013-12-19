@@ -34,9 +34,7 @@ function test() {
     EventUtils.sendMouseEvent({type: "click"}, chk);
 
     let browser = newWin.gBrowser.selectedBrowser;
-    promiseContentMessage(browser, "SessionStore:input").then(result => {
-      ok(result, "received message for input changes");
-
+    promiseContentMessage(browser, "SessionStore:input").then(() => {
       newWin.close();
 
       // Now give it time to close

@@ -83,11 +83,37 @@ this.makeInfallible = function makeInfallible(aHandler, aName) {
   }
 }
 
+/**
+ * Interleaves two arrays element by element, returning the combined array, like
+ * a zip. In the case of arrays with different sizes, undefined values will be
+ * interleaved at the end along with the extra values of the larger array.
+ *
+ * @param Array a
+ * @param Array b
+ * @returns Array
+ *          The combined array, in the form [a1, b1, a2, b2, ...]
+ */
+this.zip = function zip(a, b) {
+  if (!b) {
+    return a;
+  }
+  if (!a) {
+    return b;
+  }
+  const pairs = [];
+  for (let i = 0, aLength = a.length, bLength = b.length;
+       i < aLength || i < bLength;
+       i++) {
+    pairs.push([a[i], b[i]]);
+  }
+  return pairs;
+};
+
 const executeSoon = aFn => {
   Services.tm.mainThread.dispatch({
     run: this.makeInfallible(aFn)
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
-}
+};
 
 /**
  * Like Array.prototype.forEach, but doesn't cause jankiness when iterating over

@@ -2,7 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let Cu = Components.utils;
 let Ci = Components.interfaces;
+
+Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
+let gFrameTree = new FrameTree(this);
+
+gFrameTree.addObserver({
+  onFrameTreeReset: function () {
+    sendAsyncMessage("ss-test:onFrameTreeReset");
+  },
+
+  onFrameTreeCollected: function () {
+    sendAsyncMessage("ss-test:onFrameTreeCollected");
+  }
+});
 
 /**
  * This frame script is only loaded for sessionstore mochitests. It enables us
@@ -51,4 +65,78 @@ addMessageListener("ss-test:setAuthorStyleDisabled", function (msg) {
     docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
   markupDocumentViewer.authorStyleDisabled = msg.data;
   sendSyncMessage("ss-test:setAuthorStyleDisabled");
+});
+
+addMessageListener("ss-test:setUsePrivateBrowsing", function (msg) {
+  let loadContext =
+    docShell.QueryInterface(Ci.nsILoadContext);
+  loadContext.usePrivateBrowsing = msg.data;
+  sendAsyncMessage("ss-test:setUsePrivateBrowsing");
+});
+
+addMessageListener("ss-test:getScrollPosition", function (msg) {
+  let frame = content;
+  if (msg.data.hasOwnProperty("frame")) {
+    frame = content.frames[msg.data.frame];
+  }
+  let {scrollX: x, scrollY: y} = frame;
+  sendAsyncMessage("ss-test:getScrollPosition", {x: x, y: y});
+});
+
+addMessageListener("ss-test:setScrollPosition", function (msg) {
+  let frame = content;
+  let {x, y} = msg.data;
+  if (msg.data.hasOwnProperty("frame")) {
+    frame = content.frames[msg.data.frame];
+  }
+  frame.scrollTo(x, y);
+
+  frame.addEventListener("scroll", function onScroll(event) {
+    if (frame.document == event.target) {
+      frame.removeEventListener("scroll", onScroll);
+      sendAsyncMessage("ss-test:setScrollPosition");
+    }
+  });
+});
+
+addMessageListener("ss-test:createDynamicFrames", function ({data}) {
+  function createIFrame(rows) {
+    let frames = content.document.getElementById(data.id);
+    frames.setAttribute("rows", rows);
+
+    let frame = content.document.createElement("frame");
+    frame.setAttribute("src", data.url);
+    frames.appendChild(frame);
+  }
+
+  addEventListener("DOMContentLoaded", function onContentLoaded(event) {
+    if (content.document == event.target) {
+      removeEventListener("DOMContentLoaded", onContentLoaded, true);
+      // DOMContentLoaded is fired right after we finished parsing the document.
+      createIFrame("33%, 33%, 33%");
+    }
+  }, true);
+
+  addEventListener("load", function onLoad(event) {
+    if (content.document == event.target) {
+      removeEventListener("load", onLoad, true);
+
+      // Creating this frame on the same tick as the load event
+      // means that it must not be included in the frame tree.
+      createIFrame("25%, 25%, 25%, 25%");
+    }
+  }, true);
+
+  sendAsyncMessage("ss-test:createDynamicFrames");
+});
+
+addMessageListener("ss-test:removeLastFrame", function ({data}) {
+  let frames = content.document.getElementById(data.id);
+  frames.lastElementChild.remove();
+  sendAsyncMessage("ss-test:removeLastFrame");
+});
+
+addMessageListener("ss-test:mapFrameTree", function (msg) {
+  let result = gFrameTree.map(frame => ({href: frame.location.href}));
+  sendAsyncMessage("ss-test:mapFrameTree", result);
 });

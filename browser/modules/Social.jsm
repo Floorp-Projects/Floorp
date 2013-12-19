@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/commonjs/sdk/core/promise.js");
+  "resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "unescapeService",
                                    "@mozilla.org/feed-unescapehtml;1",
@@ -98,10 +98,6 @@ this.Social = {
   providers: [],
   _disabledForSafeMode: false,
 
-  get allowMultipleWorkers() {
-    return Services.prefs.getBoolPref("social.allowMultipleWorkers");
-  },
-
   get _currentProviderPref() {
     try {
       return Services.prefs.getComplexValue("social.provider.current",
@@ -129,11 +125,6 @@ this.Social = {
   _setProvider: function (provider) {
     if (this._provider == provider)
       return;
-
-    // Disable the previous provider, if we are not allowing multiple workers,
-    // since we want only one provider to be enabled at once.
-    if (this._provider && !Social.allowMultipleWorkers)
-      this._provider.enabled = false;
 
     this._provider = provider;
 
@@ -208,10 +199,6 @@ this.Social = {
   },
 
   _updateWorkerState: function(enable) {
-    // ensure that our providers are all disabled, and enabled if we allow
-    // multiple workers
-    if (enable && !Social.allowMultipleWorkers)
-      return;
     [p.enabled = enable for (p of Social.providers) if (p.enabled != enable)];
   },
 

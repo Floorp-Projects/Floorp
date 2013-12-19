@@ -375,6 +375,26 @@ function waitForThreadEvents(aPanel, aEventName, aEventRepeat = 1) {
   return deferred.promise;
 }
 
+function waitForClientEvents(aPanel, aEventName, aEventRepeat = 1) {
+  info("Waiting for client event: '" + aEventName + "' to fire: " + aEventRepeat + " time(s).");
+
+  let deferred = promise.defer();
+  let client = aPanel.panelWin.gClient;
+  let count = 0;
+
+  client.addListener(aEventName, function onEvent(aEventName, ...aArgs) {
+    info("Thread event '" + aEventName + "' fired: " + (++count) + " time(s).");
+
+    if (count == aEventRepeat) {
+      ok(true, "Enough '" + aEventName + "' thread events have been fired.");
+      client.removeListener(aEventName, onEvent);
+      deferred.resolve.apply(deferred, aArgs);
+    }
+  });
+
+  return deferred.promise;
+}
+
 function ensureThreadClientState(aPanel, aState) {
   let thread = aPanel.panelWin.gThreadClient;
   let state = thread.state;
@@ -488,8 +508,6 @@ function prepareDebugger(aDebugger) {
   if ("target" in aDebugger) {
     let variables = aDebugger.panelWin.DebuggerView.Variables;
     variables.lazyEmpty = false;
-    variables.lazyAppend = false;
-    variables.lazyExpand = false;
     variables.lazySearch = false;
   } else {
     // Nothing to do here yet.
@@ -600,3 +618,38 @@ function hideVarPopupByScrollingEditor(aPanel) {
 function reopenVarPopup(...aArgs) {
   return hideVarPopup.apply(this, aArgs).then(() => openVarPopup.apply(this, aArgs));
 }
+
+// Tracing helpers
+
+function startTracing(aPanel) {
+  const deferred = promise.defer();
+  aPanel.panelWin.DebuggerController.Tracer.startTracing(aResponse => {
+    if (aResponse.error) {
+      deferred.reject(aResponse);
+    } else {
+      deferred.resolve(aResponse);
+    }
+  });
+  return deferred.promise;
+}
+
+function stopTracing(aPanel) {
+  const deferred = promise.defer();
+  aPanel.panelWin.DebuggerController.Tracer.stopTracing(aResponse => {
+    if (aResponse.error) {
+      deferred.reject(aResponse);
+    } else {
+      deferred.resolve(aResponse);
+    }
+  });
+  return deferred.promise;
+}
+
+function filterTraces(aPanel, f) {
+  const traces = aPanel.panelWin.document
+    .getElementById("tracer-traces")
+    .querySelector("scrollbox")
+    .children;
+  return Array.filter(traces, f);
+}
+

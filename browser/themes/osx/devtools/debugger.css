@@ -95,6 +95,119 @@
   padding: .25em;
 }
 
+/* Tracer */
+
+#trace {
+  list-style-image: url(tracer-icon.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#trace[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+#start-tracing {
+  padding: 4px;
+  margin: 4px;
+}
+
+#clear-tracer {
+  min-width: 22px !important;
+}
+
+#tracer-search {
+  min-width: 72px !important;
+}
+
+#tracer-message {
+  /* Prevent the container deck from aquiring the height from this message. */
+  min-height: 1px;
+}
+
+.trace-name {
+  -moz-padding-start: 4px !important;
+}
+
+/* Tracer dark theme */
+
+.theme-dark #tracer-message {
+  color: #f5f7fa; /* Light foreground text */
+  background: url(background-noise-toolbar.png) #181d20; /* Content background sidebar */
+}
+
+.theme-dark #tracer-traces > scrollbox {
+  background-color: #181d20 !important; /* Content background sidebar */
+}
+
+.theme-dark .trace-item {
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.trace-item.selected-matching {
+  background-color: #1d4f73; /* Select highlight blue */
+}
+
+.theme-dark .trace-call {
+  color: #46afe3; /* highlight blue */
+}
+
+.theme-dark .trace-return,
+.theme-dark .trace-yield {
+  color: #70bf53; /* highlight green */
+}
+
+.theme-dark .trace-throw {
+  color: #eb5368; /* highlight red */
+}
+
+.theme-dark .trace-param {
+  color: #8fa1b2; /* Content text grey  */
+}
+
+.theme-dark .trace-syntax {
+  color: #5e88b0; /* highlight blue-grey */
+}
+
+/* Tracer light theme */
+
+.theme-light #tracer-message {
+  color: #292e33; /* Dark foreground text */
+  background: url(background-noise-toolbar.png) #f7f7f7; /* Content background sidebar */
+}
+
+.theme-light #tracer-traces > scrollbox {
+  background-color: #f7f7f7 !important; /* Content background sidebar */
+}
+
+.theme-light .trace-item {
+  color: #292e33; /* Dark foreground text */
+}
+
+.trace-item.selected-matching {
+  background-color: #4c9ed9; /* Select highlight blue */
+}
+
+.theme-light .trace-call {
+  color: #0088cc; /* highlight blue */
+}
+
+.theme-light .trace-return,
+.theme-light .trace-yield {
+  color: #2cbb0f; /* highlight green */
+}
+
+.theme-light .trace-throw {
+  color: #ed2655; /* highlight red */
+}
+
+.theme-light .trace-param {
+  color: #8fa1b2; /* Content text grey  */
+}
+
+.theme-light .trace-syntax {
+  color: #5f88b0; /* highlight blue-grey */
+}
+
 /* ListWidget items */
 
 .list-widget-item {
@@ -227,11 +340,6 @@
 }
 
 /* Instruments pane (watch expressions, variables, event listeners...) */
-
-#instruments-pane > tabs > tab {
-  min-height: 1em !important;
-  padding: 0 !important;
-}
 
 #instruments-pane .side-menu-widget-container,
 #instruments-pane .side-menu-widget-empty-notice-container {
