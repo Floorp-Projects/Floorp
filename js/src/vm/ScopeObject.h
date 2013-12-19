@@ -618,6 +618,7 @@ class ScopeIterKey
 class ScopeIterVal
 {
     friend class ScopeIter;
+    friend class DebugScopes;
 
     AbstractFramePtr frame_;
     RelocatablePtr<JSObject> cur_;
@@ -746,6 +747,9 @@ class DebugScopes
   public:
     void mark(JSTracer *trc);
     void sweep(JSRuntime *rt);
+#if defined(DEBUG) && defined(JSGC_GENERATIONAL)
+    void checkHashTablesAfterMovingGC(JSRuntime *rt);
+#endif
 
     static DebugScopeObject *hasDebugScope(JSContext *cx, ScopeObject &scope);
     static bool addDebugScope(JSContext *cx, ScopeObject &scope, DebugScopeObject &debugScope);
