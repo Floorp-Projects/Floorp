@@ -3538,7 +3538,7 @@ protected:
     gfxFloat mUnderlineOffset;
     gfxFloat mHyphenWidth;
 
-    gfxUserFontSet* mUserFontSet;
+    nsRefPtr<gfxUserFontSet> mUserFontSet;
     uint64_t mCurrGeneration;  // track the current user font set generation, rebuild font list if needed
 
     gfxTextPerfMetrics *mTextPerf;
