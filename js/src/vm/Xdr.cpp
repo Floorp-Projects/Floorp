@@ -114,6 +114,13 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     return true;
 }
 
+template<XDRMode mode>
+bool
+XDRState<mode>::codeConstValue(MutableHandleValue vp)
+{
+    return XDRScriptConst(this, vp);
+}
+
 XDRDecoder::XDRDecoder(JSContext *cx, const void *data, uint32_t length,
                        JSPrincipals *principals, JSPrincipals *originPrincipals)
   : XDRState<XDR_DECODE>(cx)
