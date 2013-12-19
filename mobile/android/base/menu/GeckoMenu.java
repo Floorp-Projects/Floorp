@@ -99,6 +99,9 @@ public class GeckoMenu extends ListView
     // Adapter to hold the list of menu items.
     private MenuItemsAdapter mAdapter;
 
+    // Show/hide icons in the list.
+    private boolean mShowIcons;
+
     public GeckoMenu(Context context) {
         this(context, null);
     }
@@ -118,6 +121,7 @@ public class GeckoMenu extends ListView
         setAdapter(mAdapter);
         setOnItemClickListener(this);
 
+        mShowIcons = false;
         mItems = new ArrayList<GeckoMenuItem>();
         mPrimaryActionItems = new HashMap<GeckoMenuItem, View>();
         mSecondaryActionItems = new HashMap<GeckoMenuItem, View>();
@@ -522,6 +526,7 @@ public class GeckoMenu extends ListView
             ActionProvider provider = item.getActionProvider();
             if (provider != null) {
                 GeckoSubMenu subMenu = new GeckoSubMenu(getContext());
+                subMenu.setShowIcons(true);
                 provider.onPrepareSubMenu(subMenu);
                 item.setSubMenu(subMenu);
             }
@@ -569,6 +574,13 @@ public class GeckoMenu extends ListView
 
     public void setActionItemBarPresenter(ActionItemBarPresenter presenter) {
         mPrimaryActionItemBar = presenter;
+    }
+
+    public void setShowIcons(boolean show) {
+        if (mShowIcons != show) {
+            mShowIcons = show;
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
     // Action Items are added to the header view by default.
@@ -700,6 +712,7 @@ public class GeckoMenu extends ListView
             }
 
             // Initialize the view.
+            view.setShowIcon(mShowIcons);
             view.initialize(item);
             return (View) view; 
         }

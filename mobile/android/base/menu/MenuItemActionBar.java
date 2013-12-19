@@ -67,4 +67,9 @@ public class MenuItemActionBar extends ImageButton
         super.setEnabled(enabled);
         setColorFilter(enabled ? 0 : 0xFF999999);
     }
+
+    @Override
+    public void setShowIcon(boolean show) {
+        // Do nothing.
+    }
 }
