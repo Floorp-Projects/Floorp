@@ -65,6 +65,18 @@ WeaveService.prototype = {
     Weave.Service;
   },
 
+  get fxAccountsEnabled() {
+    let fxAccountsEnabled = false;
+    try {
+      fxAccountsEnabled = Services.prefs.getBoolPref("identity.fxaccounts.enabled");
+    } catch (_) {
+    }
+    // Currently we don't support toggling this pref after initialization, so
+    // inject the pref value as a regular boolean.
+    delete this.fxAccountsEnabled;
+    return this.fxAccountsEnabled = fxAccountsEnabled;
+  },
+
   maybeInitWithFxAccountsAndEnsureLoaded: function() {
     Components.utils.import("resource://services-sync/main.js");
     // FxAccounts imports lots of stuff, so only do this as we need it
@@ -125,20 +137,29 @@ WeaveService.prototype = {
       this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       this.timer.initWithCallback({
         notify: function() {
-          // We only load more if it looks like Sync is configured.
-          let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-          if (!prefs.prefHasUserValue("username")) {
-            return;
-          }
+          if (this.fxAccountsEnabled) {
+            // init  the fxAccounts identity manager.
+            this.maybeInitWithFxAccountsAndEnsureLoaded();
+          } else {
+            // init the "old" style, sync-specific identity manager.
+            // We only load more if it looks like Sync is configured.
+            let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
+            if (!prefs.prefHasUserValue("username")) {
+              return;
+            }
 
-          // We have a username. So, do a more thorough check. This will
-          // import a number of modules and thus increase memory
-          // accordingly. We could potentially copy code performed by
-          // this check into this file if our above code is yielding too
-          // many false positives.
-          this.maybeInitWithFxAccountsAndEnsureLoaded();
+            // We have a username. So, do a more thorough check. This will
+            // import a number of modules and thus increase memory
+            // accordingly. We could potentially copy code performed by
+            // this check into this file if our above code is yielding too
+            // many false positives.
+            Components.utils.import("resource://services-sync/main.js");
+            if (Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED) {
+              this.ensureLoaded();
+            }
+          }
         }.bind(this)
-      }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+      }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
 
     case 'fxaccounts:onlogin':
