@@ -894,9 +894,17 @@ IonBuilder::inlineMathFRound(CallInfo &callInfo)
 
     // MIRType can't be Float32, as this point, as getInlineReturnType uses JSVal types
     // to infer the returned MIR type.
-    MIRType returnType = getInlineReturnType();
-    if (!IsNumberType(returnType))
-        return InliningStatus_NotInlined;
+    types::TemporaryTypeSet *returned = getInlineReturnTypeSet();
+    if (returned->empty()) {
+        // As there's only one possible returned type, just add it to the observed
+        // returned typeset
+        if (!returned->addType(types::Type::DoubleType(), alloc_->lifoAlloc()))
+            return InliningStatus_Error;
+    } else {
+        MIRType returnType = getInlineReturnType();
+        if (!IsNumberType(returnType))
+            return InliningStatus_NotInlined;
+    }
 
     MIRType arg = callInfo.getArg(0)->type();
     if (!IsNumberType(arg))
