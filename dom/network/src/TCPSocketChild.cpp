@@ -73,7 +73,14 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketChild::Release(void)
 
 TCPSocketChild::TCPSocketChild()
 : mWindowObj(nullptr)
+, mHost()
+, mPort(0)
 {
+}
+
+void TCPSocketChild::Init(const nsString& aHost, const uint16_t& aPort) {
+  mHost = aHost;
+  mPort = aPort;
 }
 
 NS_IMETHODIMP
@@ -91,7 +98,7 @@ TCPSocketChild::SendOpen(nsITCPSocketInternal* aSocket,
     return NS_ERROR_FAILURE;
   }
   AddIPDLReference();
-  gNeckoChild->SendPTCPSocketConstructor(this);
+  gNeckoChild->SendPTCPSocketConstructor(this, nsString(aHost), aPort);
   PTCPSocketChild::SendOpen(nsString(aHost), aPort,
                             aUseSSL, nsString(aBinaryType));
   return NS_OK;
@@ -243,6 +250,20 @@ TCPSocketChild::SetSocketAndWindow(nsITCPSocketInternal *aSocket,
   if (!mWindowObj) {
     return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TCPSocketChild::GetHost(nsAString& aHost)
+{
+  aHost = mHost;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TCPSocketChild::GetPort(uint16_t* aPort)
+{
+  *aPort = mPort;
   return NS_OK;
 }
 

@@ -9,7 +9,7 @@ interface nsIDOMWindow;
 
 // Interface to allow the content process socket to reach the IPC bridge.
 // Implemented in C++ as TCPSocketChild, referenced as _socketBridge in TCPSocket.js
-[scriptable, uuid(292ebb3a-beac-4e06-88b0-b5b4e88ebd1c)]
+[scriptable, uuid(4277aff0-4c33-11e3-8f96-0800200c9a66)]
 interface nsITCPSocketChild : nsISupports
 {
   // Tell the chrome process to open a corresponding connection with the given parameters
@@ -44,4 +44,7 @@ interface nsITCPSocketChild : nsISupports
    */
   [implicit_jscontext]
   void setSocketAndWindow(in nsITCPSocketInternal socket, in jsval windowVal);
+
+  readonly attribute DOMString host;
+  readonly attribute unsigned short port;
 };
