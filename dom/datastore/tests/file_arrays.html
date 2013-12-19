@@ -76,7 +76,7 @@
       objects.push(i);
     }
 
-    gStore.get(objects).then(function(data) {
+    gStore.get.apply(gStore, objects).then(function(data) {
        is(data.length, objects.length, "Get - Data matches");
        for (var i = 0; i < data.length; ++i) {
          is(data[i], objects[i] - 1, "Get - Data matches: " + i + " " + data[i] + " == " + objects[i]);
