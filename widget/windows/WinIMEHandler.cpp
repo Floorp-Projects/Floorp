@@ -104,6 +104,18 @@ IMEHandler::ProcessMessage(nsWindow* aWindow, UINT aMessage,
 {
 #ifdef NS_ENABLE_TSF
   if (IsTSFAvailable()) {
+    if (aMessage == WM_IME_SETCONTEXT) {
+      // If a windowless plugin had focus and IME was handled on it, composition
+      // window was set the position.  After that, even in TSF mode, WinXP keeps
+      // to use composition window at the position if the active IME is not
+      // aware TSF.  For avoiding this issue, we need to hide the composition
+      // window here.
+      if (aWParam) {
+        aLParam &= ~ISC_SHOWUICOMPOSITIONWINDOW;
+      }
+      return false;
+    }
+
     if (aMessage == WM_USER_TSF_TEXTCHANGE) {
       nsTextStore::OnTextChangeMsg();
       aResult.mConsumed = true;

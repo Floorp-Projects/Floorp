@@ -1,6 +1,6 @@
 /**
- * This file defines all virtual keycodes for
- * nsIDOMWindowUtils.sendNativeKeyEvent()
+ * This file defines all virtual keycodes for synthesizeNativeKey() of
+ * EventUtils.js and nsIDOMWindowUtils.sendNativeKeyEvent().
  * These values are defined in each platform's SDK or documents.
  */
 

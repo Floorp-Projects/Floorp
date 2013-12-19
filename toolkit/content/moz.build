@@ -15,3 +15,5 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 if 'stlport' in CONFIG['STLPORT_LIBS']:
     DEFINES['USE_STLPORT'] = True
+
+JAR_MANIFESTS += ['jar.mn']

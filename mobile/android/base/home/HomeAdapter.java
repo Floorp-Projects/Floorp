@@ -8,7 +8,6 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.home.HomeConfig.PageEntry;
 import org.mozilla.gecko.home.HomeConfig.PageType;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.HomePager.Page;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -84,10 +83,10 @@ class HomeAdapter extends FragmentStatePagerAdapter {
         mAddPageListener = listener;
     }
 
-    public int getItemPosition(Page page) {
+    public int getItemPosition(String pageId) {
         for (int i = 0; i < mPageInfos.size(); i++) {
-            final Page infoPage = mPageInfos.get(i).toPage();
-            if (infoPage == page) {
+            final String id = mPageInfos.get(i).getId();
+            if (id.equals(pageId)) {
                 return i;
             }
         }
@@ -95,15 +94,14 @@ class HomeAdapter extends FragmentStatePagerAdapter {
         return -1;
     }
 
-    public Page getPageAtPosition(int position) {
+    public String getPageIdAtPosition(int position) {
         // getPageAtPosition() might be called before HomeAdapter
         // has got its initial list of PageEntries. Just bail.
         if (mPageInfos.isEmpty()) {
             return null;
         }
 
-        PageInfo info = mPageInfos.get(position);
-        return info.toPage();
+        return mPageInfos.get(position).getId();
     }
 
     private void addPage(PageInfo info) {
@@ -145,16 +143,14 @@ class HomeAdapter extends FragmentStatePagerAdapter {
     }
 
     private final class PageInfo {
-        private final String mId;
         private final PageEntry mPageEntry;
 
         PageInfo(PageEntry pageEntry) {
-            mId = pageEntry.getType() + "-" + pageEntry.getId();
             mPageEntry = pageEntry;
         }
 
         public String getId() {
-            return mId;
+            return mPageEntry.getId();
         }
 
         public String getTitle() {
@@ -177,15 +173,6 @@ class HomeAdapter extends FragmentStatePagerAdapter {
             }
 
             return args;
-        }
-
-        public Page toPage() {
-            final PageType type = mPageEntry.getType();
-            if (type == PageType.LIST) {
-                return null;
-            }
-
-            return Page.valueOf(type);
         }
     }
 }

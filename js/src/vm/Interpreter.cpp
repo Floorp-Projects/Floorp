@@ -993,6 +993,7 @@ HandleError(JSContext *cx, FrameRegs &regs)
             }
         }
 
+        RootedValue exception(cx);
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
@@ -1009,14 +1010,10 @@ HandleError(JSContext *cx, FrameRegs &regs)
             switch (tn->kind) {
               case JSTRY_CATCH:
                 /* Catch cannot intercept the closing of a generator. */
-                if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
+                if (!cx->getPendingException(&exception))
+                    return ErrorReturnContinuation;
+                if (exception.isMagic(JS_GENERATOR_CLOSING))
                     break;
-
-                /*
-                 * Don't clear exceptions to save cx->exception from GC
-                 * until it is pushed to the stack via [exception] in the
-                 * catch block.
-                 */
                 return CatchContinuation;
 
               case JSTRY_FINALLY:
@@ -1042,11 +1039,16 @@ HandleError(JSContext *cx, FrameRegs &regs)
          * Propagate the exception or error to the caller unless the exception
          * is an asynchronous return from a generator.
          */
-        if (JS_UNLIKELY(cx->isExceptionPending() &&
-                        cx->getPendingException().isMagic(JS_GENERATOR_CLOSING))) {
-            cx->clearPendingException();
-            ok = true;
-            regs.fp()->clearReturnValue();
+        if (cx->isExceptionPending()) {
+            RootedValue exception(cx);
+            if (!cx->getPendingException(&exception))
+                return ErrorReturnContinuation;
+
+            if (exception.isMagic(JS_GENERATOR_CLOSING)) {
+                cx->clearPendingException();
+                ok = true;
+                regs.fp()->clearReturnValue();
+            }
         }
     } else {
         UnwindForUncatchableException(cx, regs);
@@ -3433,8 +3435,13 @@ DEFAULT()
          * Push (true, exception) pair for finally to indicate that [retsub]
          * should rethrow the exception.
          */
+        RootedValue &exception = rootValue0;
+        if (!cx->getPendingException(&exception)) {
+            interpReturnOK = false;
+            goto return_continuation;
+        }
         PUSH_BOOLEAN(true);
-        PUSH_COPY(cx->getPendingException());
+        PUSH_COPY(exception);
         cx->clearPendingException();
         ADVANCE_AND_DISPATCH(0);
     }
@@ -3678,13 +3685,15 @@ js::SetCallOperation(JSContext *cx)
 bool
 js::GetAndClearException(JSContext *cx, MutableHandleValue res)
 {
-    // Check the interrupt flag to allow interrupting deeply nested exception
-    // handling.
-    if (cx->runtime()->interrupt && !js_HandleExecutionInterrupt(cx))
+    bool status = cx->getPendingException(res);
+    cx->clearPendingException();
+    if (!status)
         return false;
 
-    res.set(cx->getPendingException());
-    cx->clearPendingException();
+    // Check the interrupt flag to allow interrupting deeply nested exception
+    // handling.
+    if (cx->runtime()->interrupt)
+        return js_HandleExecutionInterrupt(cx);
     return true;
 }
 

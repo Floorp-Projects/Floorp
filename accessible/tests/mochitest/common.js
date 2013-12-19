@@ -245,27 +245,20 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
   if (!aInterfaces)
     return acc;
 
-  if (aInterfaces instanceof Array) {
-    for (var index = 0; index < aInterfaces.length; index++) {
-      try {
-        acc.QueryInterface(aInterfaces[index]);
-      } catch (e) {
-        if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
-          ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
+  if (!(aInterfaces instanceof Array))
+    aInterfaces = [ aInterfaces ];
 
-        return null;
-      }
+  for (var index = 0; index < aInterfaces.length; index++) {
+    try {
+      acc.QueryInterface(aInterfaces[index]);
+    } catch (e) {
+      if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
+        ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
+
+      return null;
     }
-    return acc;
   }
-  
-  try {
-    acc.QueryInterface(aInterfaces);
-  } catch (e) {
-    ok(false, "Can't query " + aInterfaces + " for " + aAccOrElmOrID);
-    return null;
-  }
-  
+
   return acc;
 }
 

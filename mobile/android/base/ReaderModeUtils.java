@@ -4,41 +4,15 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.StringUtils;
+
 import android.net.Uri;
-import android.text.TextUtils;
 
 public class ReaderModeUtils {
     private static final String LOGTAG = "ReaderModeUtils";
 
     public static String getUrlFromAboutReader(String aboutReaderUrl) {
-        if (aboutReaderUrl == null)
-            return null;
-
-        String[] urlParts = aboutReaderUrl.split("\\?");
-        if (urlParts.length < 2)
-            return null;
-
-        String query = urlParts[1];
-        for (String param : query.split("&")) {
-            String pair[] = param.split("=");
-            String key = Uri.decode(pair[0]);
-
-            // Key is empty or not "url", discard
-            if (TextUtils.isEmpty(key) || !key.equals("url"))
-                continue;
-
-            // No value associated with key, discard
-            if (pair.length < 2)
-                continue;
-
-            String url = Uri.decode(pair[1]);
-            if (TextUtils.isEmpty(url))
-                return null;
-
-            return url;
-        }
-
-        return null;
+        return StringUtils.getQueryParameter(aboutReaderUrl, "url");
     }
 
     public static boolean isEnteringReaderMode(String currentUrl, String newUrl) {

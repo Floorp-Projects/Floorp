@@ -105,15 +105,6 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * Updates the composition bounds, i.e. the dimensions of the final size of
-   * the frame this is tied to during composition onto, in device pixels. In
-   * general, this will just be:
-   * { x = 0, y = 0, width = surface.width, height = surface.height }, however
-   * there is no hard requirement for this.
-   */
-  void UpdateCompositionBounds(const ScreenIntRect& aCompositionBounds);
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up.
@@ -244,9 +235,14 @@ public:
   nsEventStatus HandleInputEvent(const InputData& aEvent);
 
   /**
-   * Populates the provided object with the scrollable guid of this apzc.
+   * Populates the provided object (if non-null) with the scrollable guid of this apzc.
    */
   void GetGuid(ScrollableLayerGuid* aGuidOut);
+
+  /**
+   * Returns the scrollable guid of this apzc.
+   */
+  ScrollableLayerGuid GetGuid();
 
   /**
    * Returns true if this APZC instance is for the layer identified by the guid.

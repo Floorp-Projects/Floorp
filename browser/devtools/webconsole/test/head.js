@@ -796,7 +796,6 @@ function openDebugger(aOptions = {})
     let panelWin = panel.panelWin;
 
     panel._view.Variables.lazyEmpty = false;
-    panel._view.Variables.lazyAppend = false;
 
     let resolveObject = {
       target: target,

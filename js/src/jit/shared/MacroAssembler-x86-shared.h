@@ -102,6 +102,9 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(const Register &src, const Register &dest) {
         movl(src, dest);
     }
+    void move32(const Register &src, const Operand &dest) {
+        movl(src, dest);
+    }
     void and32(const Imm32 &imm, const Register &dest) {
         andl(imm, dest);
     }
@@ -198,7 +201,7 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename T>
     void Push(const T &t) {
         push(t);
-        framePushed_ += STACK_SLOT_SIZE;
+        framePushed_ += sizeof(intptr_t);
     }
     void Push(const FloatRegister &t) {
         push(t);
@@ -215,14 +218,14 @@ class MacroAssemblerX86Shared : public Assembler
     template <typename T>
     void Pop(const T &t) {
         pop(t);
-        framePushed_ -= STACK_SLOT_SIZE;
+        framePushed_ -= sizeof(intptr_t);
     }
     void Pop(const FloatRegister &t) {
         pop(t);
         framePushed_ -= sizeof(double);
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        JS_ASSERT(args % sizeof(intptr_t) == 0);
         framePushed_ -= args;
     }
     uint32_t framePushed() const {
@@ -399,10 +402,10 @@ class MacroAssemblerX86Shared : public Assembler
     void divDouble(FloatRegister src, FloatRegister dest) {
         divsd(src, dest);
     }
-    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
+    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest) {
         cvtss2sd(src, dest);
     }
-    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
+    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
     }
     void moveFloatAsDouble(const Register &src, FloatRegister dest) {
@@ -418,46 +421,46 @@ class MacroAssemblerX86Shared : public Assembler
         cvtss2sd(dest, dest);
     }
     void loadFloatAsDouble(const Operand &src, FloatRegister dest) {
-        loadFloat(src, dest);
+        loadFloat32(src, dest);
         cvtss2sd(dest, dest);
     }
-    void loadFloat(const Address &src, FloatRegister dest) {
+    void loadFloat32(const Address &src, FloatRegister dest) {
         movss(src, dest);
     }
-    void loadFloat(const BaseIndex &src, FloatRegister dest) {
+    void loadFloat32(const BaseIndex &src, FloatRegister dest) {
         movss(src, dest);
     }
-    void loadFloat(const Operand &src, FloatRegister dest) {
+    void loadFloat32(const Operand &src, FloatRegister dest) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
-            loadFloat(src.toAddress(), dest);
+            loadFloat32(src.toAddress(), dest);
             break;
           case Operand::MEM_SCALE:
-            loadFloat(src.toBaseIndex(), dest);
+            loadFloat32(src.toBaseIndex(), dest);
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void storeFloat(FloatRegister src, const Address &dest) {
+    void storeFloat32(FloatRegister src, const Address &dest) {
         movss(src, dest);
     }
-    void storeFloat(FloatRegister src, const BaseIndex &dest) {
+    void storeFloat32(FloatRegister src, const BaseIndex &dest) {
         movss(src, dest);
     }
-    void storeFloat(FloatRegister src, const Operand &dest) {
+    void storeFloat32(FloatRegister src, const Operand &dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
-            storeFloat(src, dest.toAddress());
+            storeFloat32(src, dest.toAddress());
             break;
           case Operand::MEM_SCALE:
-            storeFloat(src, dest.toBaseIndex());
+            storeFloat32(src, dest.toBaseIndex());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void moveFloat(FloatRegister src, FloatRegister dest) {
+    void moveFloat32(FloatRegister src, FloatRegister dest) {
         // Use movaps instead of movss to avoid dependencies.
         movaps(src, dest);
     }
@@ -641,7 +644,7 @@ class MacroAssemblerX86Shared : public Assembler
         return addCodeLabel(cl);
     }
 
-    void callWithExitFrame(IonCode *target) {
+    void callWithExitFrame(JitCode *target) {
         uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
         call(target);

@@ -146,7 +146,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(CallDirectEval)
     SAFE_OP(BitNot)
     UNSAFE_OP(TypeOf)
-    SAFE_OP(ToId)
+    UNSAFE_OP(ToId)
     SAFE_OP(BitAnd)
     SAFE_OP(BitOr)
     SAFE_OP(BitXor)
@@ -310,6 +310,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(AsmJSParameter)
     UNSAFE_OP(AsmJSCall)
     UNSAFE_OP(AsmJSCheckOverRecursed)
+    DROP_OP(RecompileCheck)
 
     // It looks like this could easily be made safe:
     UNSAFE_OP(ConvertElementsToDoubles)

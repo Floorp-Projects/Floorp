@@ -712,7 +712,12 @@ BrowserTabActor.prototype = {
 
     this._attach();
 
-    return { type: "tabAttached", threadActor: this.threadActor.actorID };
+    return {
+      type: "tabAttached",
+      threadActor: this.threadActor.actorID,
+      cacheEnabled: this._getCacheEnabled(),
+      javascriptEnabled: this._getJavascriptEnabled()
+    };
   },
 
   onDetach: function BTA_onDetach(aRequest) {
@@ -745,6 +750,99 @@ BrowserTabActor.prototype = {
       this.window.location = aRequest.url;
     }, "BrowserTabActor.prototype.onNavigateTo's delayed body"), 0);
     return {};
+  },
+
+  /**
+   * Reconfigure options.
+   */
+  onReconfigure: function (aRequest) {
+    let options = aRequest.options || {};
+
+    this._toggleJsOrCache(options);
+    return {};
+  },
+
+  /**
+   * Handle logic to enable/disable JS/cache.
+   */
+  _toggleJsOrCache: function(options) {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    let reload = false;
+
+    if (typeof options.javascriptEnabled !== "undefined" &&
+        options.javascriptEnabled !== this._getJavascriptEnabled()) {
+      this._setJavascriptEnabled(options.javascriptEnabled);
+      reload = true;
+    }
+    if (typeof options.cacheEnabled !== "undefined" &&
+        options.cacheEnabled !== this._getCacheEnabled()) {
+      this._setCacheEnabled(options.cacheEnabled);
+      reload = true;
+    }
+
+    if (reload) {
+      this.onReload();
+    }
+  },
+
+  /**
+   * Disable or enable the cache via docShell.
+   */
+  _setCacheEnabled: function(allow) {
+    let enable =  Ci.nsIRequest.LOAD_NORMAL;
+    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                  Ci.nsIRequest.INHIBIT_CACHING;
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    docShell.defaultLoadFlags = allow ? enable : disable;
+  },
+
+  /**
+   * Disable or enable JS via docShell.
+   */
+  _setJavascriptEnabled: function(allow) {
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    docShell.allowJavascript = allow;
+  },
+
+  /**
+   * Return cache allowed status.
+   */
+  _getCacheEnabled: function() {
+    if (!this.window) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                  Ci.nsIRequest.INHIBIT_CACHING;
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    return docShell.defaultLoadFlags !== disable;
+  },
+
+  /**
+   * Return JS allowed status.
+   */
+  _getJavascriptEnabled: function() {
+    if (!this.window) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    return docShell.allowJavascript;
   },
 
   /**
@@ -838,7 +936,8 @@ BrowserTabActor.prototype.requestTypes = {
   "attach": BrowserTabActor.prototype.onAttach,
   "detach": BrowserTabActor.prototype.onDetach,
   "reload": BrowserTabActor.prototype.onReload,
-  "navigateTo": BrowserTabActor.prototype.onNavigateTo
+  "navigateTo": BrowserTabActor.prototype.onNavigateTo,
+  "reconfigure": BrowserTabActor.prototype.onReconfigure
 };
 
 function BrowserAddonList(aConnection)

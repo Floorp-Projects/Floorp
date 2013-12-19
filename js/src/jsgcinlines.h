@@ -426,7 +426,7 @@ NewGCThing(ThreadSafeContext *cx, AllocKind kind, size_t thingSize, InitialHeap 
         JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                      kind == FINALIZE_STRING ||
                      kind == FINALIZE_SHORT_STRING ||
-                     kind == FINALIZE_IONCODE);
+                     kind == FINALIZE_JITCODE);
         JS_ASSERT(!rt->isHeapBusy());
         JS_ASSERT(!rt->noGCOrAllocationCheck);
 

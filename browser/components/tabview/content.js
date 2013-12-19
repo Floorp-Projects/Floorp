@@ -5,6 +5,7 @@
 "use strict";
 
 let Cu = Components.utils;
+let Ci = Components.interfaces;
 
 Cu.import("resource:///modules/tabview/utils.jsm");
 

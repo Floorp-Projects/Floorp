@@ -61,7 +61,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     LIRGraph &graph;
     LBlock *current;
     SnapshotWriter snapshots_;
-    IonCode *deoptTable_;
+    JitCode *deoptTable_;
 #ifdef DEBUG
     uint32_t pushedArgs_;
 #endif
@@ -150,7 +150,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     inline int32_t SlotToStackOffset(int32_t slot) const {
         JS_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
-        int32_t offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
+        int32_t offset = masm.framePushed() - slot;
         JS_ASSERT(offset >= 0);
         return offset;
     }
@@ -158,11 +158,10 @@ class CodeGeneratorShared : public LInstructionVisitor
         // See: SlotToStackOffset. This is used to convert pushed arguments
         // to a slot index that safepoints can use.
         //
-        // offset = framePushed - (slot * STACK_SLOT_SIZE)
-        // offset + (slot * STACK_SLOT_SIZE) = framePushed
-        // slot * STACK_SLOT_SIZE = framePushed - offset
-        // slot = (framePushed - offset) / STACK_SLOT_SIZE
-        return (masm.framePushed() - offset) / STACK_SLOT_SIZE;
+        // offset = framePushed - slot
+        // offset + slot = framePushed
+        // slot = framePushed - offset
+        return masm.framePushed() - offset;
     }
 
     // For argument construction for calls. Argslots are Value-sized.

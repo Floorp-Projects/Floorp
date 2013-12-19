@@ -99,6 +99,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
+XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
+  "@mozilla.org/base/telemetry;1", "nsITelemetry");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
@@ -110,6 +112,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
+  "resource:///modules/sessionstore/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
   "resource:///modules/sessionstore/SessionSaver.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
@@ -606,6 +610,7 @@ let SessionStoreInternal = {
         TabState.setSyncHandler(browser, aMessage.objects.handler);
         break;
       case "SessionStore:update":
+        this.recordTelemetry(aMessage.data.telemetry);
         TabState.update(browser, aMessage.data);
         this.saveStateDelayed(win);
         break;
@@ -615,6 +620,18 @@ let SessionStoreInternal = {
     }
 
     this._clearRestoringWindows();
+  },
+
+  /**
+   * Record telemetry measurements stored in an object.
+   * @param telemetry
+   *        {histogramID: value, ...} An object mapping histogramIDs to the
+   *        value to be recorded for that ID,
+   */
+  recordTelemetry: function (telemetry) {
+    for (let histogramId in telemetry){
+      Telemetry.getHistogramById(histogramId).add(telemetry[histogramId]);
+    }
   },
 
   /* ........ Window Event Handlers .............. */
@@ -630,14 +647,17 @@ let SessionStoreInternal = {
     let browser;
     switch (aEvent.type) {
       case "load":
-        // If __SS_restore_data is set, then we need to restore the document
-        // (form data, scrolling, etc.). This will only happen when a tab is
-        // first restored.
         browser = aEvent.currentTarget;
-        TabStateCache.delete(browser);
-        if (browser.__SS_restore_data)
-          this.restoreDocument(win, browser, aEvent);
-        this.onTabLoad(win, browser);
+        // Ignore load events from subframes.
+        if (aEvent.target == browser.contentDocument) {
+          // If __SS_restore_data is set, then we need to restore the document
+          // (form data, scrolling, etc.). This will only happen when a tab is
+          // first restored.
+          TabStateCache.delete(browser);
+          if (browser.__SS_restore_data)
+            this.restoreDocument(win, browser, aEvent);
+          this.onTabLoad(win, browser);
+        }
         break;
       case "SwapDocShells":
         browser = aEvent.currentTarget;
@@ -1311,6 +1331,11 @@ let SessionStoreInternal = {
     // Get the latest data for this tab (generally, from the cache)
     let tabState = TabState.collectSync(aTab);
 
+    // Don't save private tabs
+    if (tabState.isPrivate || false) {
+      return;
+    }
+
     // store closed-tab data for undo
     if (this._shouldSaveTabState(tabState)) {
       let tabTitle = aTab.label;
@@ -1499,34 +1524,12 @@ let SessionStoreInternal = {
     throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
   },
 
-  /**
-   * Restores the given state |aState| for a given window |aWindow|.
-   *
-   * @param aWindow (xul window)
-   *        The window that the given state will be restored to.
-   * @param aState (string)
-   *        The state that will be applied to the given window.
-   * @param aOverwrite (bool)
-   *        When true, existing tabs in the given window will be re-used or
-   *        removed. When false, only new tabs will be added, no existing ones
-   8        will be removed or overwritten.
-   */
   setWindowState: function ssi_setWindowState(aWindow, aState, aOverwrite) {
     if (!aWindow.__SSi) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
 
-    let winState = JSON.parse(aState);
-    if (!winState) {
-      throw Components.Exception("Invalid state string: not JSON", Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    if (!winState.windows || !winState.windows[0]) {
-      throw Components.Exception("Invalid window state passed", Cr.NS_ERROR_INVALID_ARG);
-    }
-
-    let state = {windows: [winState.windows[0]]};
-    this.restoreWindow(aWindow, state, {overwriteTabs: aOverwrite});
+    this.restoreWindow(aWindow, aState, {overwriteTabs: aOverwrite});
   },
 
   getTabState: function ssi_getTabState(aTab) {
@@ -2264,7 +2267,7 @@ let SessionStoreInternal = {
    * @param aWindow
    *        Window reference
    * @param aState
-   *        JS object
+   *        JS object or its eval'able source
    * @param aOptions
    *        {overwriteTabs: true} to overwrite existing tabs w/ new ones
    *        {isFollowUp: true} if this is not the restoration of the 1st window
@@ -2284,10 +2287,17 @@ let SessionStoreInternal = {
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
       this.onLoad(aWindow);
 
-    var root = aState;
-    if (!root.windows[0]) {
+    try {
+      var root = typeof aState == "string" ? JSON.parse(aState) : aState;
+      if (!root.windows[0]) {
+        this._sendRestoreCompletedNotifications();
+        return; // nothing to restore
+      }
+    }
+    catch (ex) { // invalid state object - don't restore anything
+      debug(ex);
       this._sendRestoreCompletedNotifications();
-      return; // nothing to restore
+      return;
     }
 
     TelemetryStopwatch.start("FX_SESSION_RESTORE_RESTORE_WINDOW_MS");
@@ -2664,6 +2674,7 @@ let SessionStoreInternal = {
 
       // Update the persistent tab state cache with |tabData| information.
       TabStateCache.updatePersistent(browser, {
+        scroll: tabData.scroll || null,
         storage: tabData.storage || null,
         disallow: tabData.disallow || null,
         pageStyle: tabData.pageStyle || null
@@ -2831,8 +2842,15 @@ let SessionStoreInternal = {
       // restore those aspects of the currently active documents which are not
       // preserved in the plain history entries (mainly scroll state and text data)
       browser.__SS_restore_data = tabData.entries[activeIndex] || {};
-      browser.__SS_restore_pageStyle = tabData.pageStyle || "";
       browser.__SS_restore_tab = aTab;
+
+      if (tabData.pageStyle) {
+        RestoreData.set(browser, "pageStyle", tabData.pageStyle);
+      }
+      if (tabData.scroll) {
+        RestoreData.set(browser, "scroll", tabData.scroll);
+      }
+
       didStartLoad = true;
       try {
         // In order to work around certain issues in session history, we need to
@@ -2847,7 +2865,6 @@ let SessionStoreInternal = {
       }
     } else {
       browser.__SS_restore_data = {};
-      browser.__SS_restore_pageStyle = "";
       browser.__SS_restore_tab = aTab;
       browser.loadURIWithFlags("about:blank",
                                Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
@@ -2959,7 +2976,11 @@ let SessionStoreInternal = {
     }
 
     let frameList = this.getFramesToRestore(aBrowser);
-    PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
+    let pageStyle = RestoreData.get(aBrowser, "pageStyle") || "";
+    let scrollPositions = RestoreData.get(aBrowser, "scroll") || {};
+
+    PageStyle.restore(aBrowser.docShell, frameList, pageStyle);
+    ScrollPosition.restoreTree(aBrowser.contentWindow, scrollPositions);
     TextAndScrollData.restore(frameList);
 
     let tab = aBrowser.__SS_restore_tab;
@@ -2968,8 +2989,8 @@ let SessionStoreInternal = {
     // done with that now.
     delete aBrowser.__SS_data;
     delete aBrowser.__SS_restore_data;
-    delete aBrowser.__SS_restore_pageStyle;
     delete aBrowser.__SS_restore_tab;
+    RestoreData.clear(aBrowser);
 
     // Notify the tabbrowser that this document has been completely
     // restored. Do so after restoration is completely finished and
@@ -4137,4 +4158,32 @@ let GlobalState = {
   setFromState: function (aState) {
     this.state = (aState && aState.global) || {};
   }
-}
+};
+
+/**
+ * Keeps track of data that needs to be restored after the tab's document
+ * has been loaded. This includes scroll positions, form data, and page style.
+ */
+let RestoreData = {
+  _data: new WeakMap(),
+
+  get: function (browser, key) {
+    if (!this._data.has(browser)) {
+      return null;
+    }
+
+    return this._data.get(browser).get(key);
+  },
+
+  set: function (browser, key, value) {
+    if (!this._data.has(browser)) {
+      this._data.set(browser, new Map());
+    }
+
+    this._data.get(browser).set(key, value);
+  },
+
+  clear: function (browser) {
+    this._data.delete(browser);
+  }
+};
