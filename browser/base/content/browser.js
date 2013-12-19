@@ -6463,9 +6463,6 @@ var gIdentityHandler = {
     if (PopupNotifications.getNotification("mixed-content-blocked", gBrowser.selectedBrowser))
       return;
 
-    let helplink = document.getElementById("mixed-content-blocked-helplink");
-    helplink.setAttribute("onclick", "openHelpLink('mixed-content');");
-
     let brandBundle = document.getElementById("bundle_brand");
     let brandShortName = brandBundle.getString("brandShortName");
     let messageString = gNavigatorBundle.getFormattedString("mixedContentBlocked.message", [brandShortName]);
