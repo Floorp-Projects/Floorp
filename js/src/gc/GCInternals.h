@@ -117,6 +117,9 @@ EndVerifyPostBarriers(JSRuntime *rt);
 void
 FinishVerifier(JSRuntime *rt);
 
+void
+CrashAtUnhandlableOOM(const char *reason);
+
 class AutoStopVerifyingBarriers
 {
     JSRuntime *runtime;
