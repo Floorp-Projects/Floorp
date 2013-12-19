@@ -1066,7 +1066,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         movl(StackPointer, Operand(AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop())));
     }
 
-    void callWithExitFrame(IonCode *target, Register dynStack) {
+    void callWithExitFrame(JitCode *target, Register dynStack) {
         addPtr(Imm32(framePushed()), dynStack);
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);

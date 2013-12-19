@@ -977,7 +977,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 
   if (!mHaveDataStream) {
     // XXX stream_id of 0 might confuse things...
-    mInternal->mCall->addStream(0, 2, DATA);
+    mInternal->mCall->addStream(0, 2, DATA, 0);
     mHaveDataStream = true;
   }
   nsIDOMDataChannel *retval;
@@ -1303,7 +1303,15 @@ PeerConnectionImpl::CloseStreams() {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream) {
+PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream,
+                              const MediaConstraintsInternal& aConstraints)
+{
+  return AddStream(aMediaStream, MediaConstraintsExternal(aConstraints));
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream,
+                              const MediaConstraintsExternal& aConstraints) {
   PC_AUTO_ENTER_API_CALL(true);
 
   uint32_t hints = aMediaStream.GetHintContents();
@@ -1335,12 +1343,16 @@ PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream) {
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mInternal->mCall->addStream(stream_id, 0, AUDIO);
+    cc_media_constraints_t* cc_constraints = aConstraints.build();
+    NS_ENSURE_TRUE(cc_constraints, NS_ERROR_UNEXPECTED);
+    mInternal->mCall->addStream(stream_id, 0, AUDIO, cc_constraints);
     mNumAudioStreams++;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mInternal->mCall->addStream(stream_id, 1, VIDEO);
+    cc_media_constraints_t* cc_constraints = aConstraints.build();
+    NS_ENSURE_TRUE(cc_constraints, NS_ERROR_UNEXPECTED);
+    mInternal->mCall->addStream(stream_id, 1, VIDEO, cc_constraints);
     mNumVideoStreams++;
   }
 

@@ -9196,6 +9196,41 @@ class MHaveSameClass
     }
 };
 
+// Increase the usecount of the provided script upon execution and test if
+// the usecount surpasses the threshold. Upon hit it will recompile the
+// outermost script (i.e. not the inlined script).
+class MRecompileCheck : public MNullaryInstruction
+{
+    JSScript *script_;
+    uint32_t recompileThreshold_;
+
+    MRecompileCheck(JSScript *script, uint32_t recompileThreshold)
+      : script_(script),
+        recompileThreshold_(recompileThreshold)
+    {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(RecompileCheck);
+
+    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t useCount) {
+        return new(alloc) MRecompileCheck(script_, useCount);
+    }
+
+    JSScript *script() const {
+        return script_;
+    }
+
+    uint32_t recompileThreshold() const {
+        return recompileThreshold_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 class MAsmJSNeg : public MUnaryInstruction
 {
     MAsmJSNeg(MDefinition *op, MIRType type)
