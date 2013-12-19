@@ -821,9 +821,17 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
     return;
   }
 
-  mRT->DrawBitmap(bitmap, D2DRect(dstRect), 1.0f,
-                  D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
-                  D2DRect(srcRect));
+  if (aSurface->GetFormat() == FORMAT_A8) {
+    RefPtr<ID2D1SolidColorBrush> brush;
+    mRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White),
+                               D2D1::BrushProperties(), byRef(brush));
+    mRT->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    mRT->FillOpacityMask(bitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);
+  } else {
+    mRT->DrawBitmap(bitmap, D2DRect(dstRect), 1.0f,
+            D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+            D2DRect(srcRect));
+  }
 }
 
 void
