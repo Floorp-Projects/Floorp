@@ -26,6 +26,12 @@ EmitRestoreTailCallReg(MacroAssembler &masm)
 }
 
 inline void
+EmitRepushTailCallReg(MacroAssembler &masm)
+{
+    masm.push(BaselineTailCallReg);
+}
+
+inline void
 EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 {
     // Move ICEntry offset into BaselineStubReg
@@ -188,21 +194,28 @@ EmitStowICValues(MacroAssembler &masm, int values)
 }
 
 inline void
-EmitUnstowICValues(MacroAssembler &masm, int values)
+EmitUnstowICValues(MacroAssembler &masm, int values, bool discard = false)
 {
     JS_ASSERT(values >= 0 && values <= 2);
     switch(values) {
       case 1:
         // Unstow R0
         masm.pop(BaselineTailCallReg);
-        masm.popValue(R0);
+        if (discard)
+            masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
+        else
+            masm.popValue(R0);
         masm.push(BaselineTailCallReg);
         break;
       case 2:
         // Unstow R0 and R1
         masm.pop(BaselineTailCallReg);
-        masm.popValue(R1);
-        masm.popValue(R0);
+        if (discard) {
+            masm.addPtr(Imm32(sizeof(Value) * 2), BaselineStackReg);
+        } else {
+            masm.popValue(R1);
+            masm.popValue(R0);
+        }
         masm.push(BaselineTailCallReg);
         break;
     }
