@@ -2620,6 +2620,10 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
   NS_ASSERTION(currentFontStyle, "font group is null");
 
+  // ensure user font set is up to date
+  currentFontStyle->
+    SetUserFontSet(presShell->GetPresContext()->GetUserFontSet());
+
   if (currentFontStyle->GetStyle()->size == 0.0F) {
     if (aWidth) {
       *aWidth = 0;
