@@ -930,10 +930,10 @@ nsFlexContainerFrame::
 
   nsHTMLReflowMetrics childDesiredSize;
   nsReflowStatus childReflowStatus;
+  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
   nsresult rv = ReflowChild(aFlexItem.Frame(), aPresContext,
                             childDesiredSize, childRSForMeasuringHeight,
-                            0, 0, NS_FRAME_NO_MOVE_FRAME,
-                            childReflowStatus);
+                            0, 0, flags, childReflowStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
   MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
@@ -942,7 +942,7 @@ nsFlexContainerFrame::
 
   rv = FinishReflowChild(aFlexItem.Frame(), aPresContext,
                          &childRSForMeasuringHeight, childDesiredSize,
-                         0, 0, 0);
+                         0, 0, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Subtract border/padding in vertical axis, to get _just_
@@ -2486,10 +2486,10 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   }
   nsHTMLReflowMetrics childDesiredSize;
   nsReflowStatus childReflowStatus;
+  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
   nsresult rv = ReflowChild(aItem.Frame(), aPresContext,
                             childDesiredSize, aChildReflowState,
-                            0, 0, NS_FRAME_NO_MOVE_FRAME,
-                            childReflowStatus);
+                            0, 0, flags, childReflowStatus);
   aItem.SetHadMeasuringReflow();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2503,7 +2503,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // Tell the child we're done with its initial reflow.
   // (Necessary for e.g. GetBaseline() to work below w/out asserting)
   rv = FinishReflowChild(aItem.Frame(), aPresContext,
-                         &aChildReflowState, childDesiredSize, 0, 0, 0);
+                         &aChildReflowState, childDesiredSize, 0, 0, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Save the sizing info that we learned from this reflow

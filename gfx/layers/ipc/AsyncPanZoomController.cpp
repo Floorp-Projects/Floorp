@@ -258,12 +258,13 @@ static bool IsCloseToVertical(float aAngle, float aThreshold)
   return (fabs(aAngle - (M_PI / 2)) < aThreshold);
 }
 
-static inline void LogRendertraceRect(const char* aDesc, const char* aColor, const CSSRect& aRect)
+static inline void LogRendertraceRect(const ScrollableLayerGuid& aGuid, const char* aDesc, const char* aColor, const CSSRect& aRect)
 {
 #ifdef APZC_ENABLE_RENDERTRACE
   static const TimeStamp sRenderStart = TimeStamp::Now();
   TimeDuration delta = TimeStamp::Now() - sRenderStart;
-  printf_stderr("%s RENDERTRACE %f rect %s %f %f %f %f\n",
+  printf_stderr("(%llu,%lu,%llu)%s RENDERTRACE %f rect %s %f %f %f %f\n",
+    aGuid.mLayersId, aGuid.mPresShellId, aGuid.mScrollId,
     aDesc, delta.ToMilliseconds(), aColor,
     aRect.x, aRect.y, aRect.width, aRect.height);
 #endif
@@ -777,7 +778,10 @@ nsEventStatus AsyncPanZoomController::OnScaleEnd(const PinchGestureInput& aEvent
     SetState(PANNING);
     mX.StartTouch(aEvent.mFocusPoint.x);
     mY.StartTouch(aEvent.mFocusPoint.y);
+  } else {
+    SetState(NOTHING);
   }
+
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
     ScheduleComposite();
@@ -1264,7 +1268,7 @@ AsyncPanZoomController::ScheduleContentRepaint(FrameMetrics &aFrameMetrics) {
   if (controller) {
     APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
 
-    LogRendertraceRect("requested displayport", "yellow",
+    LogRendertraceRect(GetGuid(), "requested displayport", "yellow",
         aFrameMetrics.mDisplayPort + aFrameMetrics.mScrollOffset);
 
     mPaintThrottler.PostTask(
@@ -1355,7 +1359,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     aScrollOffset = mFrameMetrics.mScrollOffset * mFrameMetrics.mZoom;
     *aNewTransform = GetCurrentAsyncTransform();
 
-    LogRendertraceRect("viewport", "red",
+    LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.mScrollOffset,
               ScreenSize(mFrameMetrics.mCompositionBounds.Size()) / mFrameMetrics.mZoom));
 
@@ -1424,8 +1428,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 
-  LogRendertraceRect("page", "brown", aLayerMetrics.mScrollableRect);
-  LogRendertraceRect("painted displayport", "green",
+  LogRendertraceRect(GetGuid(), "page", "brown", aLayerMetrics.mScrollableRect);
+  LogRendertraceRect(GetGuid(), "painted displayport", "green",
     aLayerMetrics.mDisplayPort + aLayerMetrics.mScrollOffset);
 
   mPaintThrottler.TaskComplete(GetFrameTime());
@@ -1481,28 +1485,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 const FrameMetrics& AsyncPanZoomController::GetFrameMetrics() {
   mMonitor.AssertCurrentThreadIn();
   return mFrameMetrics;
-}
-
-void AsyncPanZoomController::UpdateCompositionBounds(const ScreenIntRect& aCompositionBounds) {
-  ReentrantMonitorAutoEnter lock(mMonitor);
-
-  ScreenIntRect oldCompositionBounds = mFrameMetrics.mCompositionBounds;
-  mFrameMetrics.mCompositionBounds = aCompositionBounds;
-
-  // If the window had 0 dimensions before, or does now, we don't want to
-  // repaint or update the zoom since we'll run into rendering issues and/or
-  // divide-by-zero. This manifests itself as the screen flashing. If the page
-  // has gone out of view, the buffer will be cleared elsewhere anyways.
-  if (aCompositionBounds.width && aCompositionBounds.height &&
-      oldCompositionBounds.width && oldCompositionBounds.height) {
-    float adjustmentFactor = float(aCompositionBounds.width) / float(oldCompositionBounds.width);
-    mFrameMetrics.mZoom.scale =
-      clamped(mFrameMetrics.mZoom.scale * adjustmentFactor,
-              mMinZoom.scale, mMaxZoom.scale);
-
-    // Repaint on a rotation so that our new resolution gets properly updated.
-    RequestContentRepaint();
-  }
 }
 
 void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
@@ -1715,17 +1697,19 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
 
 bool AsyncPanZoomController::Matches(const ScrollableLayerGuid& aGuid)
 {
-  return aGuid == ScrollableLayerGuid(mLayersId, mFrameMetrics);
+  return aGuid == GetGuid();
 }
 
 void AsyncPanZoomController::GetGuid(ScrollableLayerGuid* aGuidOut)
 {
-  if (!aGuidOut) {
-    return;
+  if (aGuidOut) {
+    *aGuidOut = GetGuid();
   }
-  aGuidOut->mLayersId = mLayersId;
-  aGuidOut->mScrollId = mFrameMetrics.mScrollId;
-  aGuidOut->mPresShellId = mFrameMetrics.mPresShellId;
+}
+
+ScrollableLayerGuid AsyncPanZoomController::GetGuid()
+{
+  return ScrollableLayerGuid(mLayersId, mFrameMetrics);
 }
 
 }

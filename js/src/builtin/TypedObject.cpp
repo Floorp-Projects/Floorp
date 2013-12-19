@@ -1803,6 +1803,9 @@ TypedDatum::obj_trace(JSTracer *trace, JSObject *object)
     TypeRepresentation *repr = typeRepresentation(*GetType(*object));
     if (repr->opaque()) {
         uint8_t *mem = TypedMem(*object);
+        if (!mem)
+            return; // unattached handle or partially constructed
+
         switch (repr->kind()) {
           case TypeRepresentation::Scalar:
           case TypeRepresentation::Reference:
@@ -2333,7 +2336,7 @@ TypedDatum::obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
                                bool *succeeded)
 {
     RootedId id(cx);
-    if (!IndexToId(cx, index, id.address()))
+    if (!IndexToId(cx, index, &id))
         return false;
 
     if (IsOwnId(cx, obj, id))

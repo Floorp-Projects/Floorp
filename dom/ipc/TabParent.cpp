@@ -484,10 +484,6 @@ TabParent::UpdateDimensions(const nsRect& rect, const nsIntSize& size)
     mOrientation = orientation;
 
     unused << SendUpdateDimensions(mRect, mDimensions, mOrientation);
-    if (RenderFrameParent* rfp = GetRenderFrame()) {
-      rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
-        gfx::IntSize(mDimensions.width, mDimensions.height)));
-    }
   }
 }
 
@@ -1687,12 +1683,6 @@ TabParent::RecvPRenderFrameConstructor(PRenderFrameParent* actor,
                                        TextureFactoryIdentifier* factoryIdentifier,
                                        uint64_t* layersId)
 {
-  RenderFrameParent* rfp = GetRenderFrame();
-  if (mDimensions != nsIntSize() && rfp) {
-    rfp->NotifyDimensionsChanged(ScreenIntSize::FromUnknownSize(
-      gfx::IntSize(mDimensions.width, mDimensions.height)));
-  }
-
   return true;
 }
 

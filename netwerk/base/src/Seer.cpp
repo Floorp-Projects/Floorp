@@ -903,7 +903,7 @@ Seer::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
     }
   }
 
-  mSpeculativeService->SpeculativeConnect(targetURI, this);
+  mSpeculativeService->SpeculativeConnect(targetURI, nullptr);
   if (verifier) {
     verifier->OnPredictPreconnect(targetURI);
   }

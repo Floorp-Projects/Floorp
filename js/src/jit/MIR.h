@@ -1114,7 +1114,7 @@ class MTableSwitch MOZ_FINAL
 
     size_t addSuccessor(MBasicBlock *successor) {
         JS_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
-        JS_ASSERT(successors_.length() != 0);
+        JS_ASSERT(!successors_.empty());
         successors_.append(successor);
         return successors_.length() - 1;
     }
@@ -1158,7 +1158,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     size_t addDefault(MBasicBlock *block) {
-        JS_ASSERT(successors_.length() == 0);
+        JS_ASSERT(successors_.empty());
         successors_.append(block);
         return 0;
     }
@@ -9191,6 +9191,41 @@ class MHaveSameClass
     TypePolicy *typePolicy() {
         return this;
     }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
+// Increase the usecount of the provided script upon execution and test if
+// the usecount surpasses the threshold. Upon hit it will recompile the
+// outermost script (i.e. not the inlined script).
+class MRecompileCheck : public MNullaryInstruction
+{
+    JSScript *script_;
+    uint32_t recompileThreshold_;
+
+    MRecompileCheck(JSScript *script, uint32_t recompileThreshold)
+      : script_(script),
+        recompileThreshold_(recompileThreshold)
+    {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(RecompileCheck);
+
+    static MRecompileCheck *New(TempAllocator &alloc, JSScript *script_, uint32_t useCount) {
+        return new(alloc) MRecompileCheck(script_, useCount);
+    }
+
+    JSScript *script() const {
+        return script_;
+    }
+
+    uint32_t recompileThreshold() const {
+        return recompileThreshold_;
+    }
+
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }

@@ -13,6 +13,7 @@
 // JSScript.
 
 #include "jit/BytecodeAnalysis.h"
+#include "jit/IonOptimizationLevels.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
@@ -211,9 +212,10 @@ class IonBuilder : public MIRGenerator
     static int CmpSuccessors(const void *a, const void *b);
 
   public:
-    IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp, MIRGraph *graph,
-               types::CompilerConstraintList *constraints,
-               BaselineInspector *inspector, CompileInfo *info, BaselineFrameInspector *baselineFrame,
+    IonBuilder(JSContext *analysisContext, CompileCompartment *comp, TempAllocator *temp,
+               MIRGraph *graph, types::CompilerConstraintList *constraints,
+               BaselineInspector *inspector, CompileInfo *info,
+               const OptimizationInfo *optimizationInfo, BaselineFrameInspector *baselineFrame,
                size_t inliningDepth = 0, uint32_t loopDepth = 0);
 
     bool build();
@@ -229,10 +231,6 @@ class IonBuilder : public MIRGenerator
     JSAtom *readAtom(jsbytecode *pc);
     bool abort(const char *message, ...);
     void spew(const char *message);
-
-    static bool inliningEnabled() {
-        return js_IonOptions.inlining;
-    }
 
     JSFunction *getSingleCallTarget(types::TemporaryTypeSet *calleeTypes);
     bool getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constructing,
@@ -324,6 +322,8 @@ class IonBuilder : public MIRGenerator
     bool resumeAt(MInstruction *ins, jsbytecode *pc);
     bool resumeAfter(MInstruction *ins);
     bool maybeInsertResume();
+
+    void insertRecompileCheck();
 
     bool initParameters();
     void rewriteParameter(uint32_t slotIdx, MDefinition *param, int32_t argIndex);
@@ -866,14 +866,14 @@ class CallInfo
         fun_ = callInfo.fun();
         thisArg_ = callInfo.thisArg();
 
-        if (!args_.append(callInfo.argv().begin(), callInfo.argv().end()))
+        if (!args_.appendAll(callInfo.argv()))
             return false;
 
         return true;
     }
 
     bool init(MBasicBlock *current, uint32_t argc) {
-        JS_ASSERT(args_.length() == 0);
+        JS_ASSERT(args_.empty());
 
         // Get the arguments in the right order
         if (!args_.reserve(argc))
@@ -909,8 +909,8 @@ class CallInfo
     }
 
     void setArgs(MDefinitionVector *args) {
-        JS_ASSERT(args_.length() == 0);
-        args_.append(args->begin(), args->end());
+        JS_ASSERT(args_.empty());
+        args_.appendAll(*args);
     }
 
     MDefinitionVector &argv() {

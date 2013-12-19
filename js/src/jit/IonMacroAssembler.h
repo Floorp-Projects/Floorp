@@ -397,7 +397,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(src.type())) {
             FloatRegister reg = src.typedReg().fpu();
             if (src.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             storeDouble(reg, dest);
@@ -545,7 +545,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(v.type())) {
             FloatRegister reg = v.typedReg().fpu();
             if (v.type() == MIRType_Float32) {
-                convertFloatToDouble(reg, ScratchFloatReg);
+                convertFloat32ToDouble(reg, ScratchFloatReg);
                 reg = ScratchFloatReg;
             }
             Push(reg);
@@ -637,7 +637,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         computeEffectiveAddress(address, PreBarrierReg);
 
         const JitRuntime *rt = GetIonContext()->runtime->jitRuntime();
-        IonCode *preBarrier = (type == MIRType_Shape)
+        JitCode *preBarrier = (type == MIRType_Shape)
                               ? rt->shapePreBarrier()
                               : rt->valuePreBarrier();
 
@@ -797,9 +797,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     // abort.  Branches to fail in that case.
     void checkInterruptFlagsPar(const Register &tempReg, Label *fail);
 
-    // If the IonCode that created this assembler needs to transition into the VM,
-    // we want to store the IonCode on the stack in order to mark it during a GC.
-    // This is a reference to a patch location where the IonCode* will be written.
+    // If the JitCode that created this assembler needs to transition into the VM,
+    // we want to store the JitCode on the stack in order to mark it during a GC.
+    // This is a reference to a patch location where the JitCode* will be written.
   private:
     CodeOffsetLabel exitCodePatch_;
 
@@ -811,7 +811,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // Push VMFunction pointer, to mark arguments.
         Push(ImmPtr(f));
     }
-    void enterFakeExitFrame(IonCode *codeVal = nullptr) {
+    void enterFakeExitFrame(JitCode *codeVal = nullptr) {
         linkExitFrame();
         Push(ImmPtr(codeVal));
         Push(ImmPtr(nullptr));
@@ -827,11 +827,11 @@ class MacroAssembler : public MacroAssemblerSpecific
                                       ExecutionMode executionMode);
 
     void enterFakeParallelExitFrame(Register slice, Register scratch,
-                                    IonCode *codeVal = nullptr);
+                                    JitCode *codeVal = nullptr);
 
     void enterFakeExitFrame(Register cxReg, Register scratch,
                             ExecutionMode executionMode,
-                            IonCode *codeVal = nullptr);
+                            JitCode *codeVal = nullptr);
 
     void leaveExitFrame() {
         freeStack(IonExitFooterFrame::Size());
@@ -841,11 +841,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         return exitCodePatch_.offset() != 0;
     }
 
-    void link(IonCode *code) {
+    void link(JitCode *code) {
         JS_ASSERT(!oom());
         // If this code can transition to C++ code and witness a GC, then we need to store
-        // the IonCode onto the stack in order to GC it correctly.  exitCodePatch should
-        // be unset if the code never needed to push its IonCode*.
+        // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
+        // be unset if the code never needed to push its JitCode*.
         if (hasEnteredExitFrame()) {
             patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
                                     ImmPtr(code),
@@ -865,12 +865,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // been made so that a safepoint can be made at that location.
 
     template <typename T>
-    void callWithABINoProfiling(const T &fun, Result result = GENERAL) {
+    void callWithABINoProfiling(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         MacroAssemblerSpecific::callWithABI(fun, result);
     }
 
     template <typename T>
-    void callWithABI(const T &fun, Result result = GENERAL) {
+    void callWithABI(const T &fun, MoveOp::Type result = MoveOp::GENERAL) {
         leaveSPSFrame();
         callWithABINoProfiling(fun, result);
         reenterSPSFrame();
@@ -886,7 +886,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // see above comment for what is returned
-    uint32_t callWithExitFrame(IonCode *target) {
+    uint32_t callWithExitFrame(JitCode *target) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callWithExitFrame(target);
         uint32_t ret = currentOffset();
@@ -895,7 +895,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     // see above comment for what is returned
-    uint32_t callWithExitFrame(IonCode *target, Register dynStack) {
+    uint32_t callWithExitFrame(JitCode *target, Register dynStack) {
         leaveSPSFrame();
         MacroAssemblerSpecific::callWithExitFrame(target, dynStack);
         uint32_t ret = currentOffset();

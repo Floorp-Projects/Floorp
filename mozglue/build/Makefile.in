@@ -47,7 +47,7 @@ endif
 
 
 EXTRA_DSO_LDOPTS += \
-	version.lib \
+	$(call EXPAND_LIBNAME,version) \
 	$(NULL)
 
 STL_FLAGS=

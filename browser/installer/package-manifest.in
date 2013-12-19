@@ -62,6 +62,9 @@
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
+#ifdef MOZ_DMD
+@BINPATH@/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#endif
 #ifndef MOZ_NATIVE_NSPR
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@nspr4@DLL_SUFFIX@
@@ -376,6 +379,8 @@
 @BINPATH@/components/Downloads.manifest
 @BINPATH@/components/DownloadLegacy.js
 @BINPATH@/components/BrowserPageThumbs.manifest
+@BINPATH@/components/crashmonitor.manifest
+@BINPATH@/components/nsCrashMonitor.js
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/toolkitsearch.manifest

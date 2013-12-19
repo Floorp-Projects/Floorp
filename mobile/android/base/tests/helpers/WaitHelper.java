@@ -103,9 +103,8 @@ public final class WaitHelper {
                 }
             }, CHANGE_WAIT_MS);
 
-            if (hasTimedOut) {
-                sContext.dumpLog(verifier.getClass().getName() + " timed out.");
-            }
+            sContext.dumpLog(verifier.getLogTag() +
+                    (hasTimedOut ? "timed out." : "was satisfied."));
         }
     }
 
@@ -115,6 +114,8 @@ public final class WaitHelper {
      * returned from hasStateChanged, indicating this change of status.
      */
     private static interface ChangeVerifier {
+        public String getLogTag();
+
         /**
          * Stores the initial state of the system. This system state is used to diff against
          * the end state to determine if the system has changed. Since this is just a diff
@@ -126,14 +127,23 @@ public final class WaitHelper {
     }
 
     private static class ToolbarTitleTextChangeVerifier implements ChangeVerifier {
+        private static final String LOGTAG =
+                ToolbarTitleTextChangeVerifier.class.getSimpleName() + ": ";
+
         // A regex that matches the page title that shows up while the page is loading.
         private static final String LOADING_REGEX = "^[A-Za-z]{3,9}://";
 
-        private CharSequence oldTitleText;
+        private CharSequence mOldTitleText;
+
+        @Override
+        public String getLogTag() {
+            return LOGTAG;
+        }
 
         @Override
         public void storeState() {
-            oldTitleText = sToolbar.getPotentiallyInconsistentTitle();
+            mOldTitleText = sToolbar.getPotentiallyInconsistentTitle();
+            sContext.dumpLog(LOGTAG + "stored title, \"" + mOldTitleText + "\".");
         }
 
         @Override
@@ -148,7 +158,12 @@ public final class WaitHelper {
             // loaded from the server and set as the final page title; we ignore the
             // intermediate URL loading state here.
             final boolean isLoading = title.toString().matches(LOADING_REGEX);
-            return !isLoading && !oldTitleText.equals(title);
+            final boolean hasStateChanged = !isLoading && !mOldTitleText.equals(title);
+
+            if (hasStateChanged) {
+                sContext.dumpLog(LOGTAG + "state changed to title, \"" + title + "\".");
+            }
+            return hasStateChanged;
         }
     }
 }
