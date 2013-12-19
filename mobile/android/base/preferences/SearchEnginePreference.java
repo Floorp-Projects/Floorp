@@ -40,6 +40,8 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
 
     // Specifies if this engine is configured as the default search engine.
     private boolean mIsDefaultEngine;
+    // Specifies if this engine is one of the ones bundled with the app, which cannot be deleted.
+    private boolean mIsImmutableEngine;
 
     // Dialog element labels.
     private String[] mDialogItems;
@@ -119,7 +121,12 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
     public void setSearchEngineFromJSON(JSONObject geckoEngineJSON) throws JSONException {
         final String engineName = geckoEngineJSON.getString("name");
         final SpannableString titleSpannable = new SpannableString(engineName);
+        mIsImmutableEngine = geckoEngineJSON.getBoolean("immutable");
 
+        if (mIsImmutableEngine) {
+            // Delete the "Remove" option from the menu.
+            mDialogItems = new String[] { getContext().getResources().getString(R.string.pref_search_set_default) };
+        }
         setTitle(titleSpannable);
 
         final String iconURI = geckoEngineJSON.getString("iconURI");
@@ -166,6 +173,11 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
                     Toast.makeText(getContext(), R.string.pref_search_last_toast, Toast.LENGTH_SHORT).show();
                 }
             });
+            return;
+        }
+
+        // If we are both default and immutable, we have no enabled items to show on the menu - abort.
+        if (mIsDefaultEngine && mIsImmutableEngine) {
             return;
         }
 
