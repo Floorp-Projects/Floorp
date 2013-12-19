@@ -1544,8 +1544,12 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       // Accessible HTML table cell should be a child of accessible HTML table
       // or its row (CSS HTML tables are polite to the used markup at
       // certain degree).
+      // Otherwise create a generic text accessible to avoid text jamming
+      // when reading by AT.
       if (aContext->IsHTMLTableRow() || aContext->IsHTMLTable())
         newAcc = new HTMLTableCellAccessibleWrap(aContent, document);
+      else
+        newAcc = new HyperTextAccessibleWrap(aContent, document);
       break;
 
     case eHTMLTableRowType: {

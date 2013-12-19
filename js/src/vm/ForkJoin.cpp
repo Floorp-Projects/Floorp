@@ -1273,7 +1273,7 @@ js::ParallelDo::hasScript(Vector<types::RecompileInfo> &scripts, JSScript *scrip
 template <uint32_t maxArgc>
 class ParallelIonInvoke
 {
-    EnterIonCode enter_;
+    EnterJitCode enter_;
     void *jitcode_;
     void *calleeToken_;
     Value argv_[maxArgc + 2];
@@ -1296,7 +1296,7 @@ class ParallelIonInvoke
 
         // Find JIT code pointer.
         IonScript *ion = callee->nonLazyScript()->parallelIonScript();
-        IonCode *code = ion->method();
+        JitCode *code = ion->method();
         jitcode_ = code->raw();
         enter_ = rt->jitRuntime()->enterIon();
         calleeToken_ = CalleeToToken(callee);
@@ -2218,8 +2218,8 @@ js::ParallelTestsShouldPass(JSContext *cx)
 {
     return jit::IsIonEnabled(cx) &&
            jit::IsBaselineEnabled(cx) &&
-           !jit::js_IonOptions.eagerCompilation &&
-           jit::js_IonOptions.baselineUsesBeforeCompile != 0 &&
+           !jit::js_JitOptions.eagerCompilation &&
+           jit::js_JitOptions.baselineUsesBeforeCompile != 0 &&
            cx->runtime()->gcZeal() == 0;
 }
 
