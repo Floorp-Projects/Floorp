@@ -8,6 +8,9 @@
     <!-- Theme level attributes -->
     <declare-styleable name="GeckoTheme">
 
+        <!-- Style for GeckoMenu ListView -->
+        <attr name="geckoMenuListViewStyle" format="reference"/>
+
         <!-- Style for MenuItemActionBar -->
         <attr name="menuItemActionBarStyle" format="reference"/>
 
