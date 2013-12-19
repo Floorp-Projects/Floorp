@@ -367,6 +367,7 @@ var DebuggerServer = {
     this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/stylesheets");
     this.registerModule("devtools/server/actors/styleeditor");
   },
 
@@ -384,6 +385,7 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
       this.registerModule("devtools/server/actors/inspector");
       this.registerModule("devtools/server/actors/webgl");
+      this.registerModule("devtools/server/actors/stylesheets");
       this.registerModule("devtools/server/actors/styleeditor");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
