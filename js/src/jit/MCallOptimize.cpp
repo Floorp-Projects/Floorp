@@ -43,6 +43,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathAbs(callInfo);
     if (native == js::math_floor)
         return inlineMathFloor(callInfo);
+    if (native == js::math_ceil)
+        return inlineMathCeil(callInfo);
     if (native == js::math_round)
         return inlineMathRound(callInfo);
     if (native == js_math_sqrt)
@@ -580,6 +582,36 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
     if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.unwrapArgs();
         MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor, nullptr);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathCeil(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 1)
+        return InliningStatus_NotInlined;
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    // Math.ceil(int(x)) == int(x)
+    if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
+        callInfo.unwrapArgs();
+        current->push(callInfo.getArg(0));
+        return InliningStatus_Inlined;
+    }
+
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
+        callInfo.unwrapArgs();
+        MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil, nullptr);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
