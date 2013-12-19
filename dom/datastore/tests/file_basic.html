@@ -101,7 +101,6 @@
     function() { testStoreAdd(42).then(function(id) {
                    gId = id; runTest(); }, cbError); },
     function() { testStoreGet(gId, 42); },
-    function() { testStoreGet(gId + "", 42); },
 
     // Add + Get - boolean
     function() { testStoreAdd(true).then(function(id) {
