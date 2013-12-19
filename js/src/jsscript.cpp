@@ -421,7 +421,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         ExplicitUseStrict,
         SelfHosted,
         IsCompileAndGo,
-        HasSingleton
+        HasSingleton,
+        TreatAsRunOnce
     };
 
     uint32_t length, lineno, nslots;
@@ -519,6 +520,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << IsCompileAndGo);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
+        if (script->treatAsRunOnce())
+            scriptBits |= (1 << TreatAsRunOnce);
     }
 
     if (!xdr->codeUint32(&prologLength))
@@ -629,6 +632,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             script->compileAndGo_ = true;
         if (scriptBits & (1 << HasSingleton))
             script->hasSingletons_ = true;
+        if (scriptBits & (1 << TreatAsRunOnce))
+            script->treatAsRunOnce_ = true;
 
         if (scriptBits & (1 << IsLegacyGenerator)) {
             JS_ASSERT(!(scriptBits & (1 << IsStarGenerator)));
