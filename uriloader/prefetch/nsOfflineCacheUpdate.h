@@ -15,7 +15,6 @@
 #include "nsIChannelEventSink.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMLoadStatus.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIMutableArray.h"
 #include "nsIObserver.h"
@@ -39,15 +38,13 @@ class nsICacheEntryDescriptor;
 class nsIUTF8StringEnumerator;
 class nsILoadContext;
 
-class nsOfflineCacheUpdateItem : public nsIDOMLoadStatus
-                               , public nsIStreamListener
+class nsOfflineCacheUpdateItem : public nsIStreamListener
                                , public nsIRunnable
                                , public nsIInterfaceRequestor
                                , public nsIChannelEventSink
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMLOADSTATUS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIRUNNABLE
@@ -76,7 +73,16 @@ public:
     bool IsScheduled();
     bool IsCompleted();
 
+    nsresult GetStatus(uint16_t *aStatus);
+
 private:
+    enum LoadStatus MOZ_ENUM_TYPE(uint16_t) {
+      UNINITIALIZED = 0U,
+      REQUESTED = 1U,
+      RECEIVING = 2U,
+      LOADED = 3U
+    };
+
     nsRefPtr<nsOfflineCacheUpdate> mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
     uint16_t                       mState;

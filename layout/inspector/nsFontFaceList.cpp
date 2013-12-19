@@ -71,8 +71,7 @@ nsFontFaceList::GetLength(uint32_t *aLength)
 
 nsresult
 nsFontFaceList::AddFontsFromTextRun(gfxTextRun* aTextRun,
-                                    uint32_t aOffset, uint32_t aLength,
-                                    nsIFrame* aFrame)
+                                    uint32_t aOffset, uint32_t aLength)
 {
   gfxTextRun::GlyphRunIterator iter(aTextRun, aOffset, aLength);
   while (iter.NextRun()) {

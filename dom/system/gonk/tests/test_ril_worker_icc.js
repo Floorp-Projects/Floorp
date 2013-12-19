@@ -2440,6 +2440,9 @@ add_test(function test_fetch_icc_recodes() {
   run_next_test();
 });
 
+/**
+ * Verify SimRecordHelper.readMWIS
+ */
 add_test(function test_read_mwis() {
   let worker = newUint8Worker();
   let helper = worker.GsmPDUHelper;
@@ -2506,6 +2509,9 @@ add_test(function test_read_mwis() {
   run_next_test();
 });
 
+/**
+ * Verify SimRecordHelper.updateMWIS
+ */
 add_test(function test_update_mwis() {
   let worker = newUint8Worker();
   let pduHelper = worker.GsmPDUHelper;
@@ -2607,6 +2613,113 @@ add_test(function test_update_mwis() {
   // EF_MWIS is not loaded/available.
   delete ril.iccInfoPrivate.mwis;
   do_test(false, 0);
+
+  run_next_test();
+});
+
+/**
+ * Verify the call flow of receiving Class 2 SMS stored in SIM:
+ * 1. UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM.
+ * 2. SimRecordHelper.readSMS().
+ * 3. sendChromeMessage() with rilMessageType == "sms-received".
+ */
+add_test(function test_read_new_sms_on_sim() {
+  // Instead of reusing newUint8Worker defined in this file,
+  // we define our own worker to fake the methods in WorkerBuffer dynamically.
+  function newSmsOnSimWorkerHelper() {
+    let _postedMessage;
+    let _worker = newWorker({
+      postRILMessage: function fakePostRILMessage(data) {
+      },
+      postMessage: function fakePostMessage(message) {
+        _postedMessage = message;
+      }
+    });
+
+    _worker.debug = do_print;
+
+    return {
+      get postedMessage() {
+        return _postedMessage;
+      },
+      get worker() {
+        return _worker;
+      },
+      fakeWokerBuffer: function fakeWokerBuffer() {
+        let index = 0; // index for read
+        let buf = [];
+        _worker.Buf.writeUint8 = function (value) {
+          buf.push(value);
+        };
+        _worker.Buf.readUint8 = function () {
+          return buf[index++];
+        };
+        _worker.Buf.seekIncoming = function (offset) {
+          index += offset;
+        };
+        _worker.Buf.getReadAvailable = function () {
+          return buf.length - index;
+        };
+      }
+    };
+  }
+
+  let workerHelper = newSmsOnSimWorkerHelper();
+  let worker = workerHelper.worker;
+
+  worker.ICCIOHelper.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // SimStatus: Unread, SMSC:+0123456789, Sender: +9876543210, Text: How are you?
+      let SimSmsPduHex = "0306911032547698040A9189674523010000208062917314080CC8F71D14969741F977FD07"
+                       // In 4.2.25 EF_SMS Short Messages of 3GPP TS 31.102:
+                       // 1. Record length == 176 bytes.
+                       // 2. Any bytes in the record following the TPDU shall be filled with 'FF'.
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+      workerHelper.fakeWokerBuffer();
+
+      worker.Buf.writeString(SimSmsPduHex);
+
+      options.recordSize = 176; // Record length is fixed to 176 bytes.
+      if (options.callback) {
+        options.callback(options);
+      }
+  };
+
+  function newSmsOnSimParcel() {
+    let data = new Uint8Array(4 + 4); // Int32List with 1 element.
+    let offset = 0;
+
+    function writeInt(value) {
+      data[offset++] = value & 0xFF;
+      data[offset++] = (value >>  8) & 0xFF;
+      data[offset++] = (value >> 16) & 0xFF;
+      data[offset++] = (value >> 24) & 0xFF;
+    }
+
+    writeInt(1); // Length of Int32List
+    writeInt(1); // RecordNum = 1.
+
+    return newIncomingParcel(-1,
+                             RESPONSE_TYPE_UNSOLICITED,
+                             UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM,
+                             data);
+  }
+
+  function do_test() {
+    worker.onRILMessage(newSmsOnSimParcel());
+
+    let postedMessage = workerHelper.postedMessage;
+
+    do_check_eq("sms-received", postedMessage.rilMessageType);
+    do_check_eq("+0123456789", postedMessage.SMSC);
+    do_check_eq("+9876543210", postedMessage.sender);
+    do_check_eq("How are you?", postedMessage.fullBody);
+  }
+
+  do_test();
 
   run_next_test();
 });

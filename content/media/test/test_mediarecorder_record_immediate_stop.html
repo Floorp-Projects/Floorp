@@ -69,13 +69,23 @@ function startTest(test, token) {
          'Events fired from ondataavailable should be BlobEvent');
       is(evt.type, 'dataavailable',
          'Event type should dataavailable');
-      ok(evt.data.size > 0,
-         'Blob data received should be greater than zero');
-      is(evt.data.type, expectedMimeType,
-         'Blob data received should have type = ' + expectedMimeType);
 
-      is(mediaRecorder.mimeType, expectedMimeType,
-         'Mime type in ondataavailable = ' + expectedMimeType);
+      // The initialization of encoder can be cancelled.
+      // On some platforms, the stop method may run after media stream track
+      // available, so the blob can contain the header data.
+      if (evt.data.size > 0) {
+        is(evt.data.type, expectedMimeType,
+           'Blob data received and should have mime type');
+        is(mediaRecorder.mimeType, expectedMimeType,
+           'Media Recorder mime type in ondataavailable = ' + expectedMimeType);
+      } else if (evt.data.size === 0) {
+        is(mediaRecorder.mimeType, '',
+           'Blob data mime type is empty');
+        is(mediaRecorder.mimeType, '',
+           'Media Recorder mime type in ondataavailable is empty');
+      } else {
+        ok(false, 'Blob size can not be negative');
+      }
 
       // onstop should not have fired before ondataavailable
       if (onStopFired) {
