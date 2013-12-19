@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <iomanip>
 #include "logging.h"
 #include "nspr.h"
 #include "cryptohi.h"
@@ -24,6 +25,9 @@ DtlsIdentity::~DtlsIdentity() {
   if (cert_)
     CERT_DestroyCertificate(cert_);
 }
+
+const std::string DtlsIdentity::DEFAULT_HASH_ALGORITHM = "sha-256";
+const size_t DtlsIdentity::HASH_ALGORITHM_MAX_LENGTH = 64;
 
 TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
 
@@ -86,7 +90,7 @@ TemporaryRef<DtlsIdentity> DtlsIdentity::Generate() {
   // now with some slack in case the other side expects
   // some before expiry.
   //
-  // Note: explicit casts necessary to avoid 
+  // Note: explicit casts necessary to avoid
   //       warning C4307: '*' : integral constant overflow
   static const PRTime oneDay = PRTime(PR_USEC_PER_SEC)
                              * PRTime(60)  // sec
@@ -206,8 +210,29 @@ nsresult DtlsIdentity::ComputeFingerprint(const CERTCertificate *cert,
   return NS_OK;
 }
 
-// Format the fingerprint in RFC 4572 Section 5 format, colons and
-// all.
+// Format the fingerprint in RFC 4572 Section 5 attribute format, including both
+// the hash name and the fingerprint, colons and all.
+// returns an empty string if there is a problem
+std::string DtlsIdentity::GetFormattedFingerprint(const std::string &algorithm) {
+  unsigned char digest[HASH_ALGORITHM_MAX_LENGTH];
+  size_t digest_length;
+
+  nsresult res = this->ComputeFingerprint(algorithm,
+                                          digest,
+                                          sizeof(digest),
+                                          &digest_length);
+  if (NS_FAILED(res)) {
+    MOZ_MTLOG(ML_ERROR, "Unable to compute " << algorithm
+              << " hash for identity: nsresult = 0x"
+              << std::hex << std::uppercase
+              << static_cast<uint32_t>(res)
+              << std::nouppercase << std::dec);
+    return "";
+  }
+
+  return algorithm + " " + this->FormatFingerprint(digest, digest_length);
+}
+
 std::string DtlsIdentity::FormatFingerprint(const unsigned char *digest,
                                             std::size_t size) {
   std::string str("");
@@ -215,7 +240,7 @@ std::string DtlsIdentity::FormatFingerprint(const unsigned char *digest,
 
   for (std::size_t i=0; i < size; i++) {
     PR_snprintf(group, sizeof(group), "%.2X", digest[i]);
-    if (i != 0){
+    if (i != 0) {
       str += ":";
     }
     str += group;
