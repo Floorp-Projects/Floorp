@@ -51,8 +51,14 @@ s.async = false;
 ok(!s.async, "Setting the async DOM property to false should turned of forcing async to true.");
 document.body.appendChild(s);
 
+function unblock() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "script_bug602838.sjs?unblock");
+  xhr.send();
+}
+
 s = document.createElement("script");
-s.src = "data:text/javascript,ok(!firstRan, 'Non-async should not have run yet.'); asyncRan = true;";
+s.src = "data:text/javascript,ok(!firstRan, 'Non-async should not have run yet.'); asyncRan = true; unblock();";
 document.body.appendChild(s);
 
 </script>
