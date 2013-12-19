@@ -99,7 +99,7 @@ js::ScopeCoordinateName(ScopeCoordinateNameCache &cache, JSScript *script, jsbyt
         Shape::Range<NoGC> r(shape);
         while (r.front().slot() != sc.slot)
             r.popFront();
-        id = r.front().propid();
+        id = r.front().propidRaw();
     }
 
     /* Beware nameless destructuring formal. */

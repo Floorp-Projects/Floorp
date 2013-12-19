@@ -4142,6 +4142,8 @@ js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *resul
 int32_t
 js::CompareAtoms(JSAtom *atom1, JSAtom *atom2)
 {
+    AutoThreadSafeAccess ts0(atom1);
+    AutoThreadSafeAccess ts1(atom2);
     return CompareChars(atom1->chars(), atom1->length(), atom2->chars(), atom2->length());
 }
 

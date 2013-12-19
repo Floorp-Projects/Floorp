@@ -2140,7 +2140,7 @@ class AutoEnterIonCompilation
 class AutoProtectHeapForIonCompilation
 {
   public:
-#if defined(DEBUG) && !defined(XP_WIN)
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
     JSRuntime *runtime;
 
     AutoProtectHeapForIonCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM);

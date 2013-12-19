@@ -26,9 +26,9 @@ Bindings::Bindings()
 
 inline
 AliasedFormalIter::AliasedFormalIter(JSScript *script)
-  : begin_(script->bindings.bindingArray()),
+  : begin_(script->bindingArray()),
     p_(begin_),
-    end_(begin_ + (script->funHasAnyAliasedFormal() ? script->bindings.numArgs() : 0)),
+    end_(begin_ + (script->funHasAnyAliasedFormal() ? script->numArgs() : 0)),
     slot_(CallObject::RESERVED_SLOTS)
 {
     settle();
@@ -98,6 +98,7 @@ JSScript::global() const
      * A JSScript always marks its compartment's global (via bindings) so we
      * can assert that maybeGlobal is non-null here.
      */
+    js::AutoThreadSafeAccess ts(this);
     return *compartment()->maybeGlobal();
 }
 

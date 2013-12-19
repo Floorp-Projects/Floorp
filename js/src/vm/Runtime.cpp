@@ -15,7 +15,7 @@
 #include <locale.h>
 #include <string.h>
 
-#if defined(DEBUG) && !defined(XP_WIN)
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 # include <sys/mman.h>
 #endif
 
@@ -853,7 +853,7 @@ JSRuntime::activeGCInAtomsZone()
     return zone->needsBarrier() || zone->isGCScheduled() || zone->wasGCStarted();
 }
 
-#if defined(DEBUG) && !defined(XP_WIN)
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 
 AutoProtectHeapForIonCompilation::AutoProtectHeapForIonCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : runtime(rt)
@@ -902,7 +902,7 @@ AutoThreadSafeAccess::AutoThreadSafeAccess(const Cell *cell MOZ_GUARD_OBJECT_NOT
 
     arena = base;
 
-    if (mprotect(arena, sizeof(Arena), PROT_READ))
+    if (mprotect(arena, sizeof(Arena), PROT_READ | PROT_WRITE))
         MOZ_CRASH();
 
     if (!runtime->unprotectedArenas.append(arena))
@@ -921,7 +921,7 @@ AutoThreadSafeAccess::~AutoThreadSafeAccess()
     runtime->unprotectedArenas.popBack();
 }
 
-#endif // DEBUG && !XP_WIN
+#endif // JS_CAN_CHECK_THREADSAFE_ACCESSES
 
 #ifdef JS_WORKER_THREADS
 

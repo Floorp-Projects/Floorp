@@ -293,6 +293,8 @@ IonBuilder::getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constr
             fun = &obj->as<JSFunction>();
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
+            AutoThreadSafeAccess ts(typeObj);
+
             JS_ASSERT(typeObj);
             if (!typeObj->interpretedFunction) {
                 targets.clear();
@@ -394,9 +396,6 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
 
     if (inlineScript->uninlineable())
         return DontInline(inlineScript, "Uninlineable script");
-
-    if (!inlineScript->analyzedArgsUsage())
-        return DontInline(inlineScript, "Script without analyzed args usage");
 
     if (inlineScript->needsArgsObj())
         return DontInline(inlineScript, "Script that needs an arguments object");
@@ -3888,17 +3887,21 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     JSScript *calleeScript = target->nonLazyScript();
     BaselineInspector inspector(calleeScript);
 
-    // Improve type information of |this| when not set.
-    if (callInfo.constructing() &&
-        !callInfo.thisArg()->resultTypeSet() &&
-        calleeScript->types)
     {
-        types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
-        if (!types->unknown()) {
-            MTypeBarrier *barrier =
-                MTypeBarrier::New(alloc(), callInfo.thisArg(), types->clone(alloc_->lifoAlloc()));
-            current->add(barrier);
-            callInfo.setThis(barrier);
+        AutoThreadSafeAccess ts(calleeScript);
+
+        // Improve type information of |this| when not set.
+        if (callInfo.constructing() &&
+            !callInfo.thisArg()->resultTypeSet() &&
+            calleeScript->types)
+        {
+            types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
+            if (!types->unknown()) {
+                MTypeBarrier *barrier =
+                    MTypeBarrier::New(alloc(), callInfo.thisArg(), types->clone(alloc_->lifoAlloc()));
+                current->add(barrier);
+                callInfo.setThis(barrier);
+            }
         }
     }
 
@@ -3930,6 +3933,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
         // Inlining the callee failed. Mark the callee as uninlineable only if
         // the inlining was aborted for a non-exception reason.
         if (inlineBuilder.abortReason_ == AbortReason_Disable) {
+            AutoThreadSafeAccess ts(calleeScript);
             calleeScript->setUninlineable();
             abortReason_ = AbortReason_Inlining;
         } else if (inlineBuilder.abortReason_ == AbortReason_Inlining) {
@@ -3959,6 +3963,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     // Accumulate return values.
     if (returns.empty()) {
         // Inlining of functions that have no exit is not supported.
+        AutoThreadSafeAccess ts(calleeScript);
         calleeScript->setUninlineable();
         abortReason_ = AbortReason_Inlining;
         return false;
@@ -4626,6 +4631,7 @@ IonBuilder::createDeclEnvObject(MDefinition *callee, MDefinition *scope)
     // Get a template CallObject that we'll use to generate inline object
     // creation.
     DeclEnvObject *templateObj = inspector->templateDeclEnvObject();
+    AutoThreadSafeAccess ts(templateObj);
 
     // One field is added to the function to handle its name.  This cannot be a
     // dynamic slot because there is still plenty of room on the DeclEnv object.
@@ -4653,6 +4659,7 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     // Get a template CallObject that we'll use to generate inline object
     // creation.
     CallObject *templateObj = inspector->templateCallObject();
+    AutoThreadSafeAccess ts(templateObj);
 
     // If the CallObject needs dynamic slots, allocate those now.
     MInstruction *slots;
@@ -4754,10 +4761,13 @@ IonBuilder::createThisScriptedSingleton(JSFunction *target, MDefinition *callee)
     if (!templateObject->hasTenuredProto() || templateObject->getProto() != proto)
         return nullptr;
 
-    if (!target->nonLazyScript()->types)
-        return nullptr;
-    if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
-        return nullptr;
+    {
+        AutoThreadSafeAccess ts(target->nonLazyScript());
+        if (!target->nonLazyScript()->types)
+            return nullptr;
+        if (!types::TypeScript::ThisTypes(target->nonLazyScript())->hasType(types::Type::ObjectType(templateObject)))
+            return nullptr;
+    }
 
     // For template objects with NewScript info, the appropriate allocation
     // kind to use may change due to dynamic property adds. In these cases
@@ -5186,6 +5196,9 @@ IonBuilder::testNeedsArgumentCheck(JSFunction *target, CallInfo &callInfo)
         return true;
 
     JSScript *targetScript = target->nonLazyScript();
+
+    AutoThreadSafeAccess ts(targetScript);
+
     if (!targetScript->types)
         return true;
 
@@ -5401,6 +5414,7 @@ IonBuilder::jsop_eval(uint32_t argc)
             string->getOperand(1)->toConstant()->value().isString())
         {
             JSAtom *atom = &string->getOperand(1)->toConstant()->value().toString()->asAtom();
+            AutoThreadSafeAccess ts(atom);
 
             if (StringEqualsAscii(atom, "()")) {
                 MDefinition *name = string->getOperand(0);
@@ -5476,8 +5490,10 @@ IonBuilder::jsop_newarray(uint32_t count)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         ins->resultTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles) {
+        AutoThreadSafeAccess ts(templateObject);
         templateObject->setShouldConvertDoubleElements();
+    }
     return true;
 }
 
@@ -5555,7 +5571,10 @@ IonBuilder::jsop_initelem_array()
     MElements *elements = MElements::New(alloc(), obj);
     current->add(elements);
 
-    if (obj->toNewArray()->templateObject()->shouldConvertDoubleElements()) {
+    JSObject *templateObject = obj->toNewArray()->templateObject();
+    AutoThreadSafeAccess ts(templateObject);
+
+    if (templateObject->shouldConvertDoubleElements()) {
         MInstruction *valueDouble = MToDouble::New(alloc(), value);
         current->add(valueDouble);
         value = valueDouble;
@@ -5584,6 +5603,7 @@ IonBuilder::jsop_initprop(PropertyName *name)
     MDefinition *obj = current->peek(-1);
 
     JSObject *templateObject = obj->toNewObject()->templateObject();
+    AutoThreadSafeAccess ts(templateObject);
 
     Shape *shape = templateObject->lastProperty()->searchLinear(NameToId(name));
 
@@ -9120,6 +9140,9 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     // First, make sure the regex is one we can safely optimize. Lowering can
     // then check if this regex object only flows into known natives and can
     // avoid cloning in this case.
+
+    // RegExpObjects embedded in scripts are immutable.
+    AutoThreadSafeAccess ts(reobj);
 
     bool mustClone = true;
     types::TypeObjectKey *typeObj = types::TypeObjectKey::get(&script()->global());
