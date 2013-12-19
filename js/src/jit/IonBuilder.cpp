@@ -6770,11 +6770,14 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
     // uint32 reads that may produce either doubles or integers.
     types::TemporaryTypeSet *resultTypes = bytecodeTypes(pc);
     bool allowDouble = resultTypes->hasType(types::Type::DoubleType());
+    // Note: knownType is not necessarily in resultTypes; e.g. if we
+    // have only observed integers coming out of float array.
     MIRType knownType = MIRTypeForTypedArrayRead(elemTypeRepr->type(), allowDouble);
     // Note: we can ignore the type barrier here, we know the type must
-    // be valid and unbarriered.
+    // be valid and unbarriered. Also, need not set resultTypeSet,
+    // because knownType is scalar and a resultTypeSet would provide
+    // no useful additional info.
     load->setResultType(knownType);
-    load->setResultTypeSet(resultTypes);
 
     *emitted = true;
     return true;
@@ -8406,8 +8409,10 @@ IonBuilder::getPropTryScalarPropOfTypedObject(bool *emitted,
     MLoadTypedArrayElement *load =
         MLoadTypedArrayElement::New(alloc(), elements, scaledOffset,
                                     fieldTypeRepr->type());
+
+    // Note: need not set resultTypeSet because knownType is scalar
+    // and a resultTypeSet would provide no useful additional info.
     load->setResultType(knownType);
-    load->setResultTypeSet(resultTypes);
     current->add(load);
     current->push(load);
     *emitted = true;
