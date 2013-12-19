@@ -40,32 +40,6 @@ ContentHostBase::GetAsTextureHost()
   return mTextureHost;
 }
 
-class MOZ_STACK_CLASS AutoLockTextureHost
-{
-public:
-  AutoLockTextureHost(TextureHost* aHost)
-    : mHost(aHost)
-  {
-    mLockSuccess = mHost ? mHost->Lock() : true;
-  }
-
-  ~AutoLockTextureHost()
-  {
-    if (mHost) {
-      mHost->Unlock();
-    }
-  }
-
-  bool IsValid()
-  {
-    return mLockSuccess;
-  }
-
-private:
-  TextureHost* mHost;
-  bool mLockSuccess;
-};
-
 void
 ContentHostBase::Composite(EffectChain& aEffectChain,
                            float aOpacity,
@@ -77,12 +51,15 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 {
   NS_ASSERTION(aVisibleRegion, "Requires a visible region");
 
+  if (!mTextureHost) {
+    NS_WARNING("Missing TextureHost");
+    return;
+  }
+
   AutoLockTextureHost lock(mTextureHost);
   AutoLockTextureHost lockOnWhite(mTextureHostOnWhite);
 
-  if (!mTextureHost ||
-      !lock.IsValid() ||
-      !lockOnWhite.IsValid()) {
+  if (lock.Failed() || lockOnWhite.Failed()) {
     return;
   }
 
