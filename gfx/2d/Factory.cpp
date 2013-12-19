@@ -651,6 +651,23 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
   return nullptr;
 }
 
+TemporaryRef<DataSourceSurface>
+Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
+                                           SurfaceFormat aFormat,
+                                           int32_t aStride)
+{
+  if (aStride < aSize.width * BytesPerPixel(aFormat)) {
+    return nullptr;
+  }
+
+  RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
+  if (newSurf->InitWithStride(aSize, aFormat, aStride)) {
+    return newSurf;
+  }
+
+  return nullptr;
+}
+
 TemporaryRef<DrawEventRecorder>
 Factory::CreateEventRecorderForFile(const char *aFilename)
 {

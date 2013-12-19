@@ -53,6 +53,9 @@ public:
 
   bool Init(const IntSize &aSize,
             SurfaceFormat aFormat);
+  bool InitWithStride(const IntSize &aSize,
+                      SurfaceFormat aFormat,
+                      int32_t aStride);
 
 private:
   AlignedArray<uint8_t> mArray;
