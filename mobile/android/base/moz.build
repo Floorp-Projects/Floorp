@@ -220,6 +220,7 @@ gbjar.sources += [
     'home/HomePager.java',
     'home/HomePagerTabStrip.java',
     'home/LastTabsPage.java',
+    'home/ListManager.java',
     'home/ListPage.java',
     'home/MostRecentPage.java',
     'home/MultiTypeCursorAdapter.java',
