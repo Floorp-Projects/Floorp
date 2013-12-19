@@ -101,11 +101,17 @@ public:
                                 IsShrinking aShrinking = NonShrinkingGC,
                                 int64_t aSliceMillis = 0);
   static void ShrinkGCBuffersNow();
+
   // If aExtraForgetSkippableCalls is -1, forgetSkippable won't be
   // called even if the previous collection was GC.
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nullptr,
                               int32_t aExtraForgetSkippableCalls = 0);
-  static void ScheduledCycleCollectNow();
+
+  // If aSliceTime is negative, the CC will run to completion.  If aSliceTime
+  // is 0, only a minimum quantum of work will be done.  Otherwise, aSliceTime
+  // will be used as the time budget for the slice, in ms.
+  static void ScheduledCycleCollectNow(int64_t aSliceTime);
+
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);
 
