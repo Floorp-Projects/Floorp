@@ -1792,11 +1792,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                    "Memory holding miscellaneous additional information associated with lazy "
                    "scripts.  This memory is allocated on the malloc heap.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("ion-codes-gc-heap"),
-                      zStats.ionCodesGCHeap,
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
+                      zStats.jitCodesGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds references to executable code pools "
-                      "used by the IonMonkey JIT.");
+                      "used by the JITs.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
                       zStats.typeObjectsGCHeap,
