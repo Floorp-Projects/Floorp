@@ -425,7 +425,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         TreatAsRunOnce
     };
 
-    uint32_t length, lineno, nslots;
+    uint32_t length, lineno, column, nslots;
     uint32_t natoms, nsrcnotes, i;
     uint32_t nconsts, nobjects, nregexps, ntrynotes, nblockscopes;
     uint32_t prologLength, version;
@@ -466,6 +466,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         JS_ASSERT(script->getVersion() != JSVERSION_UNKNOWN);
         version = (uint32_t)script->getVersion() | (script->nfixed() << 16);
         lineno = script->lineno();
+        column = script->column();
         nslots = (uint32_t)script->nslots();
         nslots = (uint32_t)((script->staticLevel() << 16) | script->nslots());
         natoms = script->natoms();
@@ -654,11 +655,15 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (!xdr->codeUint32(&script->sourceEnd_))
         return false;
 
-    if (!xdr->codeUint32(&lineno) || !xdr->codeUint32(&nslots))
+    if (!xdr->codeUint32(&lineno) || !xdr->codeUint32(&column) ||
+        !xdr->codeUint32(&nslots))
+    {
         return false;
+    }
 
     if (mode == XDR_DECODE) {
         script->lineno_ = lineno;
+        script->column_ = column;
         script->nslots_ = uint16_t(nslots);
         script->staticLevel_ = uint16_t(nslots >> 16);
     }
