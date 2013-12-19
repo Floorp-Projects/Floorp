@@ -18,15 +18,15 @@ SteamStore.prototype = {
   }
 };
 
-function SteamTracker(engine) {
-  Tracker.call(this, "Steam", engine);
+function SteamTracker(name, engine) {
+  Tracker.call(this, name || "Steam", engine);
 }
 SteamTracker.prototype = {
   __proto__: Tracker.prototype
 };
 
-function SteamEngine() {
-  Engine.call(this, "Steam", Service);
+function SteamEngine(service) {
+  Engine.call(this, "Steam", service);
   this.wasReset = false;
   this.wasSynced = false;
 }
@@ -185,4 +185,33 @@ add_test(function test_sync() {
     engine.wasSynced = false;
     engineObserver.reset();
   }
+});
+
+add_test(function test_disabled_no_track() {
+  _("When an engine is disabled, its tracker is not tracking.");
+  let engine = new SteamEngine(Service);
+  let tracker = engine._tracker;
+  do_check_eq(engine, tracker.engine);
+
+  do_check_false(engine.enabled);
+  do_check_false(tracker._isTracking);
+  do_check_empty(tracker.changedIDs);
+
+  do_check_false(tracker.engineIsEnabled());
+  tracker.observe(null, "weave:engine:start-tracking", null);
+  do_check_false(tracker._isTracking);
+  do_check_empty(tracker.changedIDs);
+
+  engine.enabled = true;
+  tracker.observe(null, "weave:engine:start-tracking", null);
+  do_check_true(tracker._isTracking);
+  do_check_empty(tracker.changedIDs);
+
+  tracker.addChangedID("abcdefghijkl");
+  do_check_true(0 < tracker.changedIDs["abcdefghijkl"]);
+  engine.enabled = false;
+  do_check_false(tracker._isTracking);
+  do_check_empty(tracker.changedIDs);
+
+  run_next_test();
 });
