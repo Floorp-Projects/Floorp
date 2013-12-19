@@ -780,6 +780,30 @@ protected:
   gfx::SurfaceFormat mFormat;
 };
 
+class MOZ_STACK_CLASS AutoLockTextureHost
+{
+public:
+  AutoLockTextureHost(TextureHost* aTexture)
+    : mTexture(aTexture)
+  {
+    MOZ_ASSERT(mTexture);
+    mLocked = aTexture->Lock();
+  }
+
+  ~AutoLockTextureHost()
+  {
+    if (mLocked) {
+      mTexture->Unlock();
+    }
+  }
+
+  bool Failed() { return !mLocked; }
+
+private:
+  RefPtr<TextureHost> mTexture;
+  bool mLocked;
+};
+
 class AutoLockDeprecatedTextureHost
 {
 public:

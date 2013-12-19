@@ -76,7 +76,8 @@ ImageHost::Composite(EffectChain& aEffectChain,
   // Make sure the front buffer has a compositor
   mFrontBuffer->SetCompositor(GetCompositor());
 
-  if (!mFrontBuffer->Lock()) {
+  AutoLockTextureHost autoLock(mFrontBuffer);
+  if (autoLock.Failed()) {
     NS_WARNING("failed to lock front buffer");
     return;
   }
@@ -153,7 +154,6 @@ ImageHost::Composite(EffectChain& aEffectChain,
                                      rect, aClipRect,
                                      aTransform);
   }
-  mFrontBuffer->Unlock();
 }
 
 void
