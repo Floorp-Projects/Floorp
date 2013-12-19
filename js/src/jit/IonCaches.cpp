@@ -911,9 +911,11 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         // Load the outparam vp[0] into output register(s).
-        masm.loadValue(
-            Address(StackPointer, IonOOLNativeExitFrameLayout::offsetOfResult()),
-            JSReturnOperand);
+        Address outparam(StackPointer, IonOOLNativeExitFrameLayout::offsetOfResult());
+        masm.loadTypedOrValue(outparam, output);
+
+        // masm.leaveExitFrame & pop locals
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     } else {
         Register argObjReg       = argUintNReg;
         Register argIdReg        = regSet.takeGeneral();
@@ -958,23 +960,13 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
         // Load the outparam vp[0] into output register(s).
-        masm.loadValue(
-            Address(StackPointer, IonOOLPropertyOpExitFrameLayout::offsetOfResult()),
-            JSReturnOperand);
+        Address outparam(StackPointer, IonOOLPropertyOpExitFrameLayout::offsetOfResult());
+        masm.loadTypedOrValue(outparam, output);
+
+        // masm.leaveExitFrame & pop locals.
+        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     }
 
-    // If generating getter call stubs, then return type MUST have been generalized
-    // to MIRType_Value.
-    masm.storeCallResultValue(output);
-
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the native exit frame.
-    if (callNative)
-        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
-    else
-        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
     // restoreLive()
@@ -1353,16 +1345,10 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
     // Load the outparam vp[0] into output register(s).
-    masm.loadValue(
-        Address(StackPointer, IonOOLProxyExitFrameLayout::offsetOfResult()),
-        JSReturnOperand);
+    Address outparam(StackPointer, IonOOLProxyExitFrameLayout::offsetOfResult());
+    masm.loadTypedOrValue(outparam, output);
 
-    masm.storeCallResultValue(output);
-
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the exit frame.
+    // masm.leaveExitFrame & pop locals
     masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
@@ -2139,10 +2125,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the exit frame.
+    // masm.leaveExitFrame & pop locals
     masm.adjustStack(IonOOLProxyExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
@@ -2353,6 +2336,12 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.passABIArg(argUintNReg);
         masm.passABIArg(argVpReg);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->native()));
+
+        // Test for failure.
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+        // masm.leaveExitFrame & pop locals.
+        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
     } else {
         Register argObjReg       = regSet.takeGeneral();
         Register argIdReg        = regSet.takeGeneral();
@@ -2398,19 +2387,14 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.passABIArg(argStrictReg);
         masm.passABIArg(argVpReg);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target));
+
+        // Test for failure.
+        masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+        // masm.leaveExitFrame & pop locals.
+        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     }
 
-    // Test for failure.
-    masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
-
-    // The next instruction is removing the footer of the exit frame, so there
-    // is no need for leaveFakeExitFrame.
-
-    // Move the StackPointer back to its original location, unwinding the exit frame.
-    if (callNative)
-        masm.adjustStack(IonOOLNativeExitFrameLayout::Size(1));
-    else
-        masm.adjustStack(IonOOLPropertyOpExitFrameLayout::Size());
     JS_ASSERT(masm.framePushed() == initialStack);
 
     // restoreLive()
