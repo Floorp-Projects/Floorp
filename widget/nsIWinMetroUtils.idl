@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(d30daa27-ce2b-4503-80cc-b162f4c24e93)]
+[scriptable, uuid(148f57d3-51df-4e5c-a40b-7ae5ee76188e)]
 interface nsIWinMetroUtils : nsISupports
 {
   /**
@@ -25,6 +25,13 @@ interface nsIWinMetroUtils : nsISupports
    * Determine the activation URI
    */
   readonly attribute AString activationURI;
+
+  /**
+   * Determine the previous execution state. The possible values of this
+   * attribute are exactly those values in the
+   * Windows::ApplicationModel::Activation enumeration.
+   */
+  readonly attribute long previousExecutionState;
 
    /**
     * Show the settings flyout
