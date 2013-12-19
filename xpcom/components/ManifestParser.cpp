@@ -15,6 +15,7 @@
 #include <windows.h>
 #elif defined(MOZ_WIDGET_COCOA)
 #include <CoreServices/CoreServices.h>
+#include "nsCocoaFeatures.h"
 #elif defined(MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
 #endif
@@ -457,13 +458,11 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
                                          info.dwMinorVersion);
   }
 #elif defined(MOZ_WIDGET_COCOA)
-  SInt32 majorVersion, minorVersion;
-  if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
-      (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
-    nsTextFormatter::ssprintf(osVersion, MOZ_UTF16("%ld.%ld"),
-                                         majorVersion,
-                                         minorVersion);
-  }
+  SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
+  SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();
+  nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+                                       majorVersion,
+                                       minorVersion);
 #elif defined(MOZ_WIDGET_GTK)
   nsTextFormatter::ssprintf(osVersion, MOZ_UTF16("%ld.%ld"),
                                        gtk_major_version,
