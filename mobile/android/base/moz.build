@@ -114,6 +114,8 @@ gbjar.sources += [
     'db/BrowserProvider.java',
     'db/DBUtils.java',
     'db/FormHistoryProvider.java',
+    'db/HomeListsDatabaseHelper.java',
+    'db/HomeListsProvider.java',
     'db/LocalBrowserDB.java',
     'db/PasswordsProvider.java',
     'db/PerProfileContentProvider.java',
