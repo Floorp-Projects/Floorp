@@ -17,14 +17,34 @@ function test() {
     ok(globalScope, "The globalScope hasn't been created correctly.");
     ok(localScope, "The localScope hasn't been created correctly.");
 
+    is(globalScope.target.querySelector(".separator"), null,
+      "No separator string should be created for scopes (1).");
+    is(localScope.target.querySelector(".separator"), null,
+      "No separator string should be created for scopes (2).");
+
     let windowVar = globalScope.addItem("window");
     let documentVar = globalScope.addItem("document");
 
     ok(windowVar, "The windowVar hasn't been created correctly.");
     ok(documentVar, "The documentVar hasn't been created correctly.");
 
+    ok(windowVar.target.querySelector(".separator").hidden,
+      "No separator string should be shown for variables without a grip (1).");
+    ok(documentVar.target.querySelector(".separator").hidden,
+      "No separator string should be shown for variables without a grip (2).");
+
     windowVar.setGrip({ type: "object", class: "Window" });
     documentVar.setGrip({ type: "object", class: "HTMLDocument" });
+
+    is(windowVar.target.querySelector(".separator").hidden, false,
+      "A separator string should now be shown after setting the grip (1).");
+    is(documentVar.target.querySelector(".separator").hidden, false,
+      "A separator string should now be shown after setting the grip (2).");
+
+    is(windowVar.target.querySelector(".separator").getAttribute("value"), ": ",
+      "The separator string label is correct (1).");
+    is(documentVar.target.querySelector(".separator").getAttribute("value"), ": ",
+      "The separator string label is correct (2).");
 
     let localVar0 = localScope.addItem("localVar0");
     let localVar1 = localScope.addItem("localVar1");

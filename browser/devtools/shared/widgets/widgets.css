@@ -64,7 +64,14 @@
   display: none;
 }
 
-.variable-or-property[pseudo-item] > tooltip {
+.variable-or-property[pseudo-item] > tooltip,
+.variable-or-property[pseudo-item] > .title > .variables-view-edit,
+.variable-or-property[pseudo-item] > .title > .variables-view-delete,
+.variable-or-property[pseudo-item] > .title > .variables-view-add-property,
+.variable-or-property[pseudo-item] > .title > .variable-or-property-frozen-label,
+.variable-or-property[pseudo-item] > .title > .variable-or-property-sealed-label,
+.variable-or-property[pseudo-item] > .title > .variable-or-property-non-extensible-label,
+.variable-or-property[pseudo-item] > .title > .variable-or-property-non-writable-icon {
   display: none;
 }
 

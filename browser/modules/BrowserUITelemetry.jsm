@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["BrowserUITelemetry"];
 
-const Cu = Components.utils;
+const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -17,6 +17,88 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_TOOLBAR_PLACEMENTS", function() {
+  let result = {
+    "PanelUI-contents": [
+      "edit-controls",
+      "zoom-controls",
+      "new-window-button",
+      "privatebrowsing-button",
+      "save-page-button",
+      "print-button",
+      "history-panelmenu",
+      "fullscreen-button",
+      "find-button",
+      "preferences-button",
+      "add-ons-button",
+    ],
+    "nav-bar": [
+      "urlbar-container",
+      "search-container",
+      "webrtc-status-button",
+      "bookmarks-menu-button",
+      "downloads-button",
+      "home-button",
+      "social-share-button",
+    ],
+    // It's true that toolbar-menubar is not visible
+    // on OS X, but the XUL node is definitely present
+    // in the document.
+    "toolbar-menubar": [
+      "menubar-items",
+    ],
+    "TabsToolbar": [
+      "tabbrowser-tabs",
+      "new-tab-button",
+      "alltabs-button",
+      "tabs-closebutton",
+    ],
+    "PersonalToolbar": [
+      "personal-bookmarks",
+    ],
+  };
+
+  let showCharacterEncoding = Services.prefs.getComplexValue(
+    "browser.menu.showCharacterEncoding",
+    Ci.nsIPrefLocalizedString
+  ).data;
+  if (showCharacterEncoding == "true") {
+    result["PanelUI-contents"].push("characterencoding-button");
+  }
+
+  if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
+    result["PanelUI-contents"].push("switch-to-metro-button");
+  }
+
+  return result;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PALETTE_ITEMS", function() {
+  let result = [
+    "open-file-button",
+    "developer-button",
+    "feed-button",
+    "email-link-button",
+    "sync-button",
+    "tabview-button",
+  ];
+
+  let panelPlacements = DEFAULT_TOOLBAR_PLACEMENTS["PanelUI-contents"];
+  if (panelPlacements.indexOf("characterencoding-button") == -1) {
+    result.push("characterencoding-button");
+  }
+
+  return result;
+});
+
+XPCOMUtils.defineLazyGetter(this, "DEFAULT_ITEMS", function() {
+  let result = [];
+  for (let [, buttons] of Iterator(DEFAULT_TOOLBAR_PLACEMENTS)) {
+    result = result.concat(buttons);
+  }
+  return result;
+});
 
 const ALL_BUILTIN_ITEMS = [
   "fullscreen-button",
@@ -248,6 +330,48 @@ this.BrowserUITelemetry = {
     // Determine if the Bookmarks bar is currently visible
     let bookmarksBar = document.getElementById("PersonalToolbar");
     result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
+
+    // Examine all customizable areas and see what default items
+    // are present and missing.
+    let defaultKept = [];
+    let defaultMoved = [];
+    let nondefaultAdded = [];
+
+    for (let areaID of CustomizableUI.areas) {
+      let items = CustomizableUI.getWidgetIdsInArea(areaID);
+      for (let item of items) {
+        // Is this a default item?
+        if (DEFAULT_ITEMS.indexOf(item) != -1) {
+          // Ok, it's a default item - but is it in its default
+          // toolbar? We use Array.isArray instead of checking for
+          // toolbarID in DEFAULT_TOOLBAR_PLACEMENTS because an add-on might
+          // be clever and give itself the id of "toString" or something.
+          if (Array.isArray(DEFAULT_TOOLBAR_PLACEMENTS[areaID]) &&
+              DEFAULT_TOOLBAR_PLACEMENTS[areaID].indexOf(item) != -1) {
+            // The item is in its default toolbar
+            defaultKept.push(item);
+          } else {
+            defaultMoved.push(item);
+          }
+        } else if (PALETTE_ITEMS.indexOf(item) != -1) {
+          // It's a palette item that's been moved into a toolbar
+          nondefaultAdded.push(item);
+        }
+        // else, it's provided by an add-on, and we won't record it.
+      }
+    }
+
+    // Now go through the items in the palette to see what default
+    // items are in there.
+    let paletteItems =
+      CustomizableUI.getUnusedWidgets(win.gNavToolbox.palette);
+    let defaultRemoved = [item.id for (item of paletteItems)
+                          if (DEFAULT_ITEMS.indexOf(item.id) != -1)];
+
+    result.defaultKept = defaultKept;
+    result.defaultMoved = defaultMoved;
+    result.nondefaultAdded = nondefaultAdded;
+    result.defaultRemoved = defaultRemoved;
 
     result.countableEvents = this._countableEvents;
 

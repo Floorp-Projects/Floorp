@@ -1031,14 +1031,10 @@ let SocialStatusWidgetListener = {
 
 SocialStatus = {
   populateToolbarPalette: function() {
-    if (!Social.allowMultipleWorkers)
-      return;
     this._toolbarHelper.populatePalette();
   },
 
   removeProvider: function(origin) {
-    if (!Social.allowMultipleWorkers)
-      return;
     this._removeFrame(origin);
     this._toolbarHelper.removeProviderButton(origin);
   },
@@ -1124,8 +1120,6 @@ SocialStatus = {
   },
 
   updateButton: function(origin) {
-    if (!Social.allowMultipleWorkers)
-      return;
     let id = this._toolbarHelper.idFromOrigin(origin);
     let widget = CustomizableUI.getWidget(id);
     if (!widget)
@@ -1165,8 +1159,6 @@ SocialStatus = {
   },
 
   showPopup: function(aToolbarButton) {
-    if (!Social.allowMultipleWorkers)
-      return;
     // attach our notification panel if necessary
     let origin = aToolbarButton.getAttribute("origin");
     let provider = Social._getProviderFromOrigin(origin);

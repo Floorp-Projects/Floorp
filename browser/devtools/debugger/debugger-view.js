@@ -60,6 +60,7 @@ let DebuggerView = {
     this.StackFramesClassicList.initialize();
     this.Sources.initialize();
     this.VariableBubble.initialize();
+    this.Tracer.initialize();
     this.WatchExpressions.initialize();
     this.EventListeners.initialize();
     this.GlobalSearch.initialize();
@@ -95,6 +96,7 @@ let DebuggerView = {
     this.StackFramesClassicList.destroy();
     this.Sources.destroy();
     this.VariableBubble.destroy();
+    this.Tracer.destroy();
     this.WatchExpressions.destroy();
     this.EventListeners.destroy();
     this.GlobalSearch.destroy();
@@ -169,7 +171,11 @@ let DebuggerView = {
     // Attach a controller that handles interfacing with the debugger protocol.
     VariablesViewController.attach(this.Variables, {
       getEnvironmentClient: aObject => gThreadClient.environment(aObject),
-      getObjectClient: aObject => gThreadClient.pauseGrip(aObject)
+      getObjectClient: aObject => {
+        return aObject instanceof DebuggerController.Tracer.WrappedObject
+          ? DebuggerController.Tracer.syncGripClient(aObject.object)
+          : gThreadClient.pauseGrip(aObject)
+      }
     });
 
     // Relay events from the VariablesView.
@@ -637,6 +643,7 @@ let DebuggerView = {
   ChromeGlobals: null,
   StackFrames: null,
   Sources: null,
+  Tracer: null,
   Variables: null,
   VariableBubble: null,
   WatchExpressions: null,

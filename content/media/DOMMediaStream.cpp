@@ -324,6 +324,9 @@ DOMMediaStream::OnTracksAvailable(OnTracksAvailableCallback* aRunnable)
 void
 DOMMediaStream::CheckTracksAvailable()
 {
+  if (mTrackTypesAvailable == 0) {
+    return;
+  }
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > callbacks;
   callbacks.SwapElements(mRunOnTracksAvailable);
 

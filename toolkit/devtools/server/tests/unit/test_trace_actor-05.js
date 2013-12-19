@@ -89,11 +89,14 @@ function test_enter_exit_frame()
 
       do_check_eq(traces[1].name, "foo");
 
-      // foo's definition is at tracerlocations.js:3:0, but
-      // Debugger.Script does not provide complete definition
-      // locations (bug 901138). tracerlocations.js:4:2 is the first
-      // statement in the function (used as an approximation).
-      check_location(traces[1].location, { url: url, line: 4, column: 2 });
+      // XXX: foo's definition is at tracerlocations.js:3:0, but Debugger.Script
+      // does not provide complete definition locations (bug 901138). Therefore,
+      // we use the first statement in the function (tracerlocations.js:4:2) as
+      // an approximation.
+      //
+      // However, |column| will always be 0 until we can get bug 863089
+      // fixed.
+      check_location(traces[1].location, { url: url, line: 4, column: 0 });
       check_location(traces[1].callsite, { url: url, line: 8, column: 0 });
 
       do_check_eq(typeof traces[1].parameterNames, "object");
