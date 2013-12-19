@@ -137,7 +137,7 @@ static bool
 ToId(JSContext *cx, double index, MutableHandleId id)
 {
     if (index == uint32_t(index))
-        return IndexToId(cx, uint32_t(index), id.address());
+        return IndexToId(cx, uint32_t(index), id);
 
     Value tmp = DoubleValue(index);
     return ValueToId<CanGC>(cx, HandleValue::fromMarkedLocation(&tmp), id);
@@ -146,7 +146,7 @@ ToId(JSContext *cx, double index, MutableHandleId id)
 static bool
 ToId(JSContext *cx, uint32_t index, MutableHandleId id)
 {
-    return IndexToId(cx, index, id.address());
+    return IndexToId(cx, index, id);
 }
 
 /*
@@ -161,7 +161,6 @@ DoGetElement(JSContext *cx, HandleObject obj, HandleObject receiver,
              IndexType index, bool *hole, MutableHandleValue vp)
 {
     RootedId id(cx);
-
     if (!ToId(cx, index, &id))
         return false;
 
@@ -718,7 +717,7 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
         // returned from the function before step 15 above.
         JSContext *cx = cxArg->asJSContext();
         RootedId elementId(cx);
-        if (!IndexToId(cx, newLen - 1, elementId.address()))
+        if (!IndexToId(cx, newLen - 1, &elementId))
             return false;
         return arr->reportNotConfigurable(cx, elementId);
     }

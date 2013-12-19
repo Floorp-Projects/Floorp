@@ -436,6 +436,9 @@ interface TestJSImplInterface {
   void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
   void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
 
+  void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
+  void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(object or long) receiveUnion2();
   //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
