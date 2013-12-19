@@ -62,6 +62,7 @@ SEARCH_PATHS = [
 # Individual files providing mach commands.
 MACH_MODULES = [
     'addon-sdk/mach_commands.py',
+    'build/valgrind/mach_commands.py',
     'dom/bindings/mach_commands.py',
     'layout/tools/reftest/mach_commands.py',
     'python/mach_commands.py',
