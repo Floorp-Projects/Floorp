@@ -56,7 +56,8 @@ function testScopeVariables() {
 
   is(localEnums[0].querySelector(".name").getAttribute("value"), "this",
     "Should have the right property name for 'this'.");
-  is(localEnums[0].querySelector(".value").getAttribute("value"), "Window",
+  is(localEnums[0].querySelector(".value").getAttribute("value"),
+    "Window \u2192 doc_frame-parameters.html",
     "Should have the right property value for 'this'.");
   ok(localEnums[0].querySelector(".value").className.contains("token-other"),
     "Should have the right token class for 'this'.");
@@ -192,7 +193,8 @@ function testArgumentsProperties() {
 
     is(argsNonEnums[0].querySelector(".name").getAttribute("value"), "callee",
      "Should have the right property name for 'callee'.");
-    is(argsNonEnums[0].querySelector(".value").getAttribute("value"), "Function",
+    is(argsNonEnums[0].querySelector(".value").getAttribute("value"),
+     "test(aArg,bArg,cArg,dArg,eArg,fArg)",
      "Should have the right property name for 'callee'.");
     ok(argsNonEnums[0].querySelector(".value").className.contains("token-other"),
      "Should have the right token class for 'callee'.");
@@ -518,14 +520,16 @@ function testGetterSetterObject() {
 
     is(propNonEnums[0].querySelector(".name").getAttribute("value"), "get",
       "Should have the right property name for 'get'.");
-    is(propNonEnums[0].querySelector(".value").getAttribute("value"), "Function",
+    is(propNonEnums[0].querySelector(".value").getAttribute("value"),
+      "test/myVar.prop()",
       "Should have the right property value for 'get'.");
     ok(propNonEnums[0].querySelector(".value").className.contains("token-other"),
       "Should have the right token class for 'get'.");
 
     is(propNonEnums[1].querySelector(".name").getAttribute("value"), "set",
       "Should have the right property name for 'set'.");
-    is(propNonEnums[1].querySelector(".value").getAttribute("value"), "Function",
+    is(propNonEnums[1].querySelector(".value").getAttribute("value"),
+      "test/myVar.prop(val)",
       "Should have the right property value for 'set'.");
     ok(propNonEnums[1].querySelector(".value").className.contains("token-other"),
       "Should have the right token class for 'set'.");
