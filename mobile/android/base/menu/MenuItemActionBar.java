@@ -39,7 +39,7 @@ public class MenuItemActionBar extends ImageButton
         setId(item.getItemId());
     }
 
-    private void setIcon(Drawable icon) {
+    void setIcon(Drawable icon) {
         if (icon != null) {
             setImageDrawable(icon);
             setVisibility(VISIBLE);
@@ -48,7 +48,7 @@ public class MenuItemActionBar extends ImageButton
         }
     }
 
-    private void setIcon(int icon) {
+    void setIcon(int icon) {
         if (icon != 0) {
             setImageResource(icon);
             setVisibility(VISIBLE);
@@ -57,7 +57,7 @@ public class MenuItemActionBar extends ImageButton
         }
     }
 
-    private void setTitle(CharSequence title) {
+    void setTitle(CharSequence title) {
         // set accessibility contentDescription here
         setContentDescription(title);
     }
