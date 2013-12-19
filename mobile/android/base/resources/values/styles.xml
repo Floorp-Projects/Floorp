@@ -84,17 +84,17 @@
         <item name="android:scaleType">fitCenter</item>
     </style>
 
-    <style name="Widget.MenuItemActionView">
-        <item name="android:divider">@drawable/divider_vertical</item>
-        <item name="android:showDividers">middle</item>
-        <item name="android:dividerPadding">12dip</item>
-        <item name="android:gravity">left</item>
-    </style>
-
-    <style name="Widget.MenuItemShareActionButton">
+    <style name="Widget.MenuItemSecondaryActionBar">
         <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <style name="Widget.MenuItemActionView">
+        <item name="android:divider">@drawable/divider_vertical</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerPadding">0dip</item>
+        <item name="android:gravity">left</item>
     </style>
 
     <style name="Widget.MenuItemDefault">
