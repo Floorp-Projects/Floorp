@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+<script>
+
+function boom()
+{
+  var newSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  c.insertBefore(newSpan, d);
+  a.style.visibility = "visible";
+  ok(true, "test didn't crash or assert");
+  SimpleTest.finish();
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+  <a target="_blank"
+     title="test reparenting accessible subtree when inaccessible element becomes accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=883708">
+    Mozilla Bug 883708
+  </a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+<div style="visibility: collapse;" id="a"><div style="float: right; visibility: visible;"><div id="c"><td id="d"></td></div></div></div></body>
+</html>
