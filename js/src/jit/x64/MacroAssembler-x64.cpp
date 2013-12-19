@@ -134,10 +134,12 @@ MacroAssemblerX64::setupUnalignedABICall(uint32_t args, const Register &scratch)
 }
 
 void
-MacroAssemblerX64::passABIArg(const MoveOperand &from)
+MacroAssemblerX64::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
-    if (from.isDouble()) {
+    switch (type) {
+      case MoveOp::FLOAT32:
+      case MoveOp::DOUBLE: {
         FloatRegister dest;
         if (GetFloatArgReg(passedIntArgs_, passedFloatArgs_++, &dest)) {
             if (from.isFloatReg() && from.floatReg() == dest) {
@@ -147,10 +149,15 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
             to = MoveOperand(dest);
         } else {
             to = MoveOperand(StackPointer, stackForCall_);
-            stackForCall_ += sizeof(double);
+            switch (type) {
+              case MoveOp::FLOAT32: stackForCall_ += sizeof(float);  break;
+              case MoveOp::DOUBLE:  stackForCall_ += sizeof(double); break;
+              default: MOZ_ASSUME_UNREACHABLE("Unexpected float register class argument type");
+            }
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::DOUBLE);
-    } else {
+        break;
+      }
+      case MoveOp::GENERAL: {
         Register dest;
         if (GetIntArgReg(passedIntArgs_++, passedFloatArgs_, &dest)) {
             if (from.isGeneralReg() && from.reg() == dest) {
@@ -162,20 +169,25 @@ MacroAssemblerX64::passABIArg(const MoveOperand &from)
             to = MoveOperand(StackPointer, stackForCall_);
             stackForCall_ += sizeof(int64_t);
         }
-        enoughMemory_ = moveResolver_.addMove(from, to, MoveOp::GENERAL);
+        break;
+      }
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
+
+    enoughMemory_ = moveResolver_.addMove(from, to, type);
 }
 
 void
 MacroAssemblerX64::passABIArg(const Register &reg)
 {
-    passABIArg(MoveOperand(reg));
+    passABIArg(MoveOperand(reg), MoveOp::GENERAL);
 }
 
 void
-MacroAssemblerX64::passABIArg(const FloatRegister &reg)
+MacroAssemblerX64::passABIArg(const FloatRegister &reg, MoveOp::Type type)
 {
-    passABIArg(MoveOperand(reg));
+    passABIArg(MoveOperand(reg), type);
 }
 
 void
@@ -186,7 +198,7 @@ MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
 
     if (dynamicAlignment_) {
         *stackAdjust = stackForCall_
-                     + ComputeByteAlignment(stackForCall_ + STACK_SLOT_SIZE,
+                     + ComputeByteAlignment(stackForCall_ + sizeof(intptr_t),
                                             StackAlignment);
     } else {
         *stackAdjust = stackForCall_
@@ -219,7 +231,7 @@ MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
 }
 
 void
-MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, Result result)
+MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
 {
     freeStack(stackAdjust);
     if (dynamicAlignment_)
@@ -230,7 +242,7 @@ MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, Result result)
 }
 
 void
-MacroAssemblerX64::callWithABI(void *fun, Result result)
+MacroAssemblerX64::callWithABI(void *fun, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -239,7 +251,7 @@ MacroAssemblerX64::callWithABI(void *fun, Result result)
 }
 
 void
-MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, Result result)
+MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, MoveOp::Type result)
 {
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -259,7 +271,7 @@ IsIntArgReg(Register reg)
 }
 
 void
-MacroAssemblerX64::callWithABI(Address fun, Result result)
+MacroAssemblerX64::callWithABI(Address fun, MoveOp::Type result)
 {
     if (IsIntArgReg(fun.base)) {
         // Callee register may be clobbered for an argument. Move the callee to
@@ -288,7 +300,7 @@ MacroAssemblerX64::handleFailureWithHandler(void *handler)
     passABIArg(rax);
     callWithABI(handler);
 
-    IonCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
+    JitCode *excTail = GetIonContext()->runtime->jitRuntime()->getExceptionTail();
     jmp(excTail);
 }
 

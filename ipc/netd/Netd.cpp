@@ -18,7 +18,7 @@
 #include "nsThreadUtils.h"
 
 
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk", args)
 #define ICS_SYS_USB_RNDIS_MAC "/sys/class/android_usb/android0/f_rndis/ethaddr"
 #define INVALID_SOCKET -1
 #define MAX_RECONNECT_TIMES 10
@@ -53,7 +53,7 @@ InitRndisAddress()
 
   fd.rwget() = open(ICS_SYS_USB_RNDIS_MAC, O_WRONLY);
   if (fd.rwget() == -1) {
-    LOG("Unable to open file %s.", ICS_SYS_USB_RNDIS_MAC);
+    CHROMIUM_LOG("Unable to open file %s.", ICS_SYS_USB_RNDIS_MAC);
     return false;
   }
 
@@ -73,7 +73,7 @@ InitRndisAddress()
   length = strlen(mac);
   ret = write(fd.get(), mac, length);
   if (ret != length) {
-    LOG("Fail to write file %s.", ICS_SYS_USB_RNDIS_MAC);
+    CHROMIUM_LOG("Fail to write file %s.", ICS_SYS_USB_RNDIS_MAC);
     return false;
   }
   return true;
@@ -106,23 +106,23 @@ NetdClient::OpenSocket()
                                         ANDROID_SOCKET_NAMESPACE_RESERVED,
                                         SOCK_STREAM);
   if (mSocket.rwget() < 0) {
-    LOG("Error connecting to : netd (%s) - will retry", strerror(errno));
+    CHROMIUM_LOG("Error connecting to : netd (%s) - will retry", strerror(errno));
     return false;
   }
   // Add FD_CLOEXEC flag.
   int flags = fcntl(mSocket.get(), F_GETFD);
   if (flags == -1) {
-    LOG("Error doing fcntl with F_GETFD command(%s)", strerror(errno));
+    CHROMIUM_LOG("Error doing fcntl with F_GETFD command(%s)", strerror(errno));
     return false;
   }
   flags |= FD_CLOEXEC;
   if (fcntl(mSocket.get(), F_SETFD, flags) == -1) {
-    LOG("Error doing fcntl with F_SETFD command(%s)", strerror(errno));
+    CHROMIUM_LOG("Error doing fcntl with F_SETFD command(%s)", strerror(errno));
     return false;
   }
   // Set non-blocking.
   if (fcntl(mSocket.get(), F_SETFL, O_NONBLOCK) == -1) {
-    LOG("Error set non-blocking socket(%s)", strerror(errno));
+    CHROMIUM_LOG("Error set non-blocking socket(%s)", strerror(errno));
     return false;
   }
   if (!MessageLoopForIO::current()->
@@ -131,7 +131,7 @@ NetdClient::OpenSocket()
                           MessageLoopForIO::WATCH_READ,
                           &mReadWatcher,
                           this)) {
-    LOG("Error set socket read watcher(%s)", strerror(errno));
+    CHROMIUM_LOG("Error set socket read watcher(%s)", strerror(errno));
     return false;
   }
 
@@ -144,7 +144,7 @@ NetdClient::OpenSocket()
                           this);
   }
 
-  LOG("Connected to netd");
+  CHROMIUM_LOG("Connected to netd");
   return true;
 }
 
@@ -165,7 +165,7 @@ void NetdClient::OnLineRead(int aFd, nsDependentCSubstring& aMessage)
   }
 
   if (!responseCode) {
-    LOG("Can't parse netd's response");
+    CHROMIUM_LOG("Can't parse netd's response");
   }
 }
 
@@ -201,15 +201,15 @@ NetdClient::Start()
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
   if (!gNetdClient) {
-    LOG("Netd Client is not initialized");
+    CHROMIUM_LOG("Netd Client is not initialized");
     return;
   }
 
   if (!gNetdClient->OpenSocket()) {
     // Socket open failed, try again in a second.
-    LOG("Fail to connect to Netd");
+    CHROMIUM_LOG("Fail to connect to Netd");
     if (++gNetdClient->mReConnectTimes > MAX_RECONNECT_TIMES) {
-      LOG("Fail to connect to Netd after retry %d times", MAX_RECONNECT_TIMES);
+      CHROMIUM_LOG("Fail to connect to Netd after retry %d times", MAX_RECONNECT_TIMES);
       return;
     }
 
@@ -230,14 +230,14 @@ NetdClient::SendNetdCommandIOThread(NetdCommand* aMessage)
   MOZ_ASSERT(aMessage);
 
   if (!gNetdClient) {
-    LOG("Netd Client is not initialized");
+    CHROMIUM_LOG("Netd Client is not initialized");
     return;
   }
 
   gNetdClient->mOutgoingQ.push(aMessage);
 
   if (gNetdClient->mSocket.get() == INVALID_SOCKET) {
-    LOG("Netd connection is not established, push the message to queue");
+    CHROMIUM_LOG("Netd connection is not established, push the message to queue");
     return;
   }
 
@@ -259,7 +259,7 @@ NetdClient::WriteNetdCommand()
                             mCurrentNetdCommand->mData + mCurrentWriteOffset,
                             write_amount);
     if (written < 0) {
-      LOG("Cannot write to network, error %d\n", (int) written);
+      CHROMIUM_LOG("Cannot write to network, error %d\n", (int) written);
       OnError();
       return;
     }
@@ -269,7 +269,7 @@ NetdClient::WriteNetdCommand()
     }
 
     if (written != write_amount) {
-      LOG("WriteNetdCommand fail !!! Write is not completed");
+      CHROMIUM_LOG("WriteNetdCommand fail !!! Write is not completed");
       break;
     }
   }
@@ -304,7 +304,7 @@ InitNetdIOThread()
     // usb tethering only. Others service such as wifi tethering still need
     // to use ipc to communicate with netd.
     if (!result) {
-      LOG("fail to give rndis interface an address");
+      CHROMIUM_LOG("fail to give rndis interface an address");
     }
   }
   gNetdClient = new NetdClient();

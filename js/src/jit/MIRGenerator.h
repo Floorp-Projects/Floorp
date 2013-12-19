@@ -29,11 +29,13 @@ namespace jit {
 class MBasicBlock;
 class MIRGraph;
 class MStart;
+class OptimizationInfo;
 
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment *compartment, TempAllocator *alloc, MIRGraph *graph, CompileInfo *info);
+    MIRGenerator(CompileCompartment *compartment, TempAllocator *alloc, MIRGraph *graph,
+                 CompileInfo *info, const OptimizationInfo *optimizationInfo);
 
     TempAllocator &alloc() {
         return *alloc_;
@@ -49,6 +51,9 @@ class MIRGenerator
     }
     CompileInfo &info() {
         return *info_;
+    }
+    const OptimizationInfo &optimizationInfo() const {
+        return *optimizationInfo_;
     }
 
     template <typename T>
@@ -127,6 +132,7 @@ class MIRGenerator
 
   protected:
     CompileInfo *info_;
+    const OptimizationInfo *optimizationInfo_;
     TempAllocator *alloc_;
     JSFunction *fun_;
     uint32_t nslots_;

@@ -23,6 +23,7 @@ public:
   HTMLTableCellElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    SetHasWeirdParserInsertionMode();
   }
   virtual ~HTMLTableCellElement();
 

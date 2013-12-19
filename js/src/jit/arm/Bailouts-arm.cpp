@@ -34,10 +34,10 @@ BailoutEnvironment::BailoutEnvironment(JitCompartment *ion, void **sp)
 
     if (bailout_->frameClass() != FrameSizeClass::None()) {
         frameSize_ = bailout_->frameSize();
-        frame_ = &sp_[sizeof(BailoutStack) / STACK_SLOT_SIZE];
+        frame_ = &sp_[sizeof(BailoutStack) / sizeof(void *)];
 
         // Compute the bailout ID.
-        IonCode *code = ion->getBailoutTable(bailout_->frameClass());
+        JitCode *code = ion->getBailoutTable(bailout_->frameClass());
         uintptr_t tableOffset = bailout_->tableOffset();
         uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 
@@ -49,14 +49,14 @@ BailoutEnvironment::BailoutEnvironment(JitCompartment *ion, void **sp)
         JS_ASSERT(bailoutId_ < BAILOUT_TABLE_SIZE);
     } else {
         frameSize_ = bailout_->frameSize();
-        frame_ = &sp_[sizeof(ExtendedBailoutStack) / STACK_SLOT_SIZE];
+        frame_ = &sp_[sizeof(ExtendedBailoutStack) / sizeof(void *)];
     }
 }
 
 IonFramePrefix *
 BailoutEnvironment::top() const
 {
-    return (IonFramePrefix *)&frame_[frameSize_ / STACK_SLOT_SIZE];
+    return (IonFramePrefix *)&frame_[frameSize_ / sizeof(void *)];
 }
 
 #endif
@@ -133,7 +133,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     // Compute the snapshot offset from the bailout ID.
     JitActivation *activation = activations.activation()->asJit();
     JSRuntime *rt = activation->compartment()->runtimeFromMainThread();
-    IonCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
+    JitCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 

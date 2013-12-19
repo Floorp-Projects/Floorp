@@ -72,20 +72,20 @@ class RelocationIterator
     }
 };
 
-static inline IonCode *
+static inline JitCode *
 CodeFromJump(uint8_t *jump)
 {
     uint8_t *target = (uint8_t *)JSC::X86Assembler::getRel32Target(jump);
-    return IonCode::FromExecutable(target);
+    return JitCode::FromExecutable(target);
 }
 
 void
-Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
-        IonCode *child = CodeFromJump(code->raw() + iter.offset());
-        MarkIonCodeUnbarriered(trc, &child, "rel32");
+        JitCode *child = CodeFromJump(code->raw() + iter.offset());
+        MarkJitCodeUnbarriered(trc, &child, "rel32");
         JS_ASSERT(child == CodeFromJump(code->raw() + iter.offset()));
     }
 }

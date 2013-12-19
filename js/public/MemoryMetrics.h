@@ -108,7 +108,7 @@ struct ZoneStatsPod
     macro(Other,   NotLiveGCThing, unusedGCThings) \
     macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
     macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
-    macro(Other,   IsLiveGCThing,  ionCodesGCHeap) \
+    macro(Other,   IsLiveGCThing,  jitCodesGCHeap) \
     macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
     macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
     macro(Other,   NotLiveGCThing, typePool) \

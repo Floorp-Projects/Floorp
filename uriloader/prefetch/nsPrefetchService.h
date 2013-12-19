@@ -14,7 +14,6 @@
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIDOMLoadStatus.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
@@ -82,15 +81,13 @@ private:
 // nsPrefetchNode
 //-----------------------------------------------------------------------------
 
-class nsPrefetchNode MOZ_FINAL : public nsIDOMLoadStatus
-                               , public nsIStreamListener
+class nsPrefetchNode MOZ_FINAL : public nsIStreamListener
                                , public nsIInterfaceRequestor
                                , public nsIChannelEventSink
                                , public nsIRedirectResultListener
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIDOMLOADSTATUS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIINTERFACEREQUESTOR
@@ -116,7 +113,6 @@ private:
     nsRefPtr<nsPrefetchService> mService;
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIChannel>        mRedirectChannel;
-    uint16_t                    mState;
     int64_t                     mBytesRead;
 };
 

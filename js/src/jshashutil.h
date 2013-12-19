@@ -26,17 +26,16 @@ struct DependentAddPtr
     DependentAddPtr(const ExclusiveContext *cx, const T &table, const Lookup &lookup)
       : addPtr(table.lookupForAdd(lookup))
 #ifdef JSGC_GENERATIONAL
-      , cx(cx)
       , originalGcNumber(cx->zone()->gcNumber())
 #endif
         {}
 
     template <class KeyInput, class ValueInput>
-    bool add(T &table, const KeyInput &key, const ValueInput &value) {
+    bool add(const ExclusiveContext *cx, T &table, const KeyInput &key, const ValueInput &value) {
 #ifdef JSGC_GENERATIONAL
         bool gcHappened = originalGcNumber != cx->zone()->gcNumber();
         if (gcHappened)
-            return table.putNew(key, value);
+            addPtr = table.lookupForAdd(key);
 #endif
         return table.relookupOrAdd(addPtr, key, value);
     }
@@ -52,7 +51,6 @@ struct DependentAddPtr
   private:
     AddPtr addPtr ;
 #ifdef JSGC_GENERATIONAL
-    const ExclusiveContext *cx;
     const uint64_t originalGcNumber;
 #endif
 

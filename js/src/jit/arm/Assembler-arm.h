@@ -1226,7 +1226,7 @@ class Assembler
     void resetCounter();
     uint32_t actualOffset(uint32_t) const;
     uint32_t actualIndex(uint32_t) const;
-    static uint8_t *PatchableJumpAddress(IonCode *code, uint32_t index);
+    static uint8_t *PatchableJumpAddress(JitCode *code, uint32_t index);
     BufferOffset actualOffset(BufferOffset) const;
   protected:
 
@@ -1650,13 +1650,13 @@ class Assembler
     void as_bkpt();
 
   public:
-    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
-    static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
+    static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
-        if (kind == Relocation::IONCODE)
+        if (kind == Relocation::JITCODE)
             writeRelocation(src);
     }
 
@@ -2148,13 +2148,23 @@ GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *paddi
     uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
     doubleSlots *= 2;
     int intSlots = usedIntArgs - NumIntArgRegs;
-    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+    return (intSlots + doubleSlots + *padding) * sizeof(intptr_t);
 }
 
 static inline uint32_t
-GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
+    JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
+    uint32_t intSlots = 0;
+    if (usedIntArgs > NumIntArgRegs)
+        intSlots = usedIntArgs - NumIntArgRegs;
+    uint32_t float32Slots = usedFloatArgs - NumFloatArgRegs;
+    return (intSlots + float32Slots + *padding) * sizeof(intptr_t);
+}
 
+static inline uint32_t
+GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs) {
@@ -2164,7 +2174,7 @@ GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *pad
     }
     uint32_t doubleSlots = usedFloatArgs - NumFloatArgRegs;
     doubleSlots *= 2;
-    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+    return (intSlots + doubleSlots + *padding) * sizeof(intptr_t);
 }
 #else
 static inline bool
@@ -2201,7 +2211,7 @@ static inline uint32_t
 GetArgStackDisp(uint32_t arg)
 {
     JS_ASSERT(arg >= NumIntArgRegs);
-    return (arg - NumIntArgRegs) * STACK_SLOT_SIZE;
+    return (arg - NumIntArgRegs) * sizeof(intptr_t);
 }
 
 #endif

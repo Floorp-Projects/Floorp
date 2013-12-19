@@ -9,24 +9,21 @@
 const TAB_URL = EXAMPLE_URL + "doc_large-array-buffer.html";
 
 let gTab, gDebuggee, gPanel, gDebugger;
-let gVariables;
+let gVariables, gEllipsis;
 
 function test() {
-  // This is a very, very stressful test.
-  // Thankfully, after bug 830344 none of this will be necessary anymore.
-  requestLongerTimeout(10);
-
   initDebugger(TAB_URL).then(([aTab, aDebuggee, aPanel]) => {
     gTab = aTab;
     gDebuggee = aDebuggee;
     gPanel = aPanel;
     gDebugger = gPanel.panelWin;
     gVariables = gDebugger.DebuggerView.Variables;
+    gEllipsis = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
-    gDebugger.DebuggerView.Variables.lazyAppend = true;
-
-    waitForSourceAndCaretAndScopes(gPanel, ".html", 18)
-      .then(() => performTest())
+    waitForSourceAndCaretAndScopes(gPanel, ".html", 23)
+      .then(() => initialChecks())
+      .then(() => verifyFirstLevel())
+      .then(() => verifyNextLevels())
       .then(() => resumeDebuggerThenCloseAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
@@ -38,23 +35,15 @@ function test() {
   });
 }
 
-function performTest() {
-  let deferred = promise.defer();
-
+function initialChecks() {
   let localScope = gVariables.getScopeAtIndex(0);
-  is(localScope.expanded, true,
-    "The local scope should be expanded by default.");
-
-  let localEnums = localScope.target.querySelector(".variables-view-element-details.enum").childNodes;
-  let localNonEnums = localScope.target.querySelector(".variables-view-element-details.nonenum").childNodes;
-
-  is(localEnums.length, 5,
-    "The local scope should contain all the created enumerable elements.");
-  is(localNonEnums.length, 0,
-    "The local scope should contain all the created non-enumerable elements.");
-
   let bufferVar = localScope.get("buffer");
-  let zVar = localScope.get("z");
+  let arrayVar = localScope.get("largeArray");
+  let objectVar = localScope.get("largeObject");
+
+  ok(bufferVar, "There should be a 'buffer' variable present in the scope.");
+  ok(arrayVar, "There should be a 'largeArray' variable present in the scope.");
+  ok(objectVar, "There should be a 'largeObject' variable present in the scope.");
 
   is(bufferVar.target.querySelector(".name").getAttribute("value"), "buffer",
     "Should have the right property name for 'buffer'.");
@@ -63,163 +52,185 @@ function performTest() {
   ok(bufferVar.target.querySelector(".value").className.contains("token-other"),
     "Should have the right token class for 'buffer'.");
 
-  is(zVar.target.querySelector(".name").getAttribute("value"), "z",
-    "Should have the right property name for 'z'.");
-  is(zVar.target.querySelector(".value").getAttribute("value"), "Int8Array",
-    "Should have the right property value for 'z'.");
-  ok(zVar.target.querySelector(".value").className.contains("token-other"),
-    "Should have the right token class for 'z'.");
+  is(arrayVar.target.querySelector(".name").getAttribute("value"), "largeArray",
+    "Should have the right property name for 'largeArray'.");
+  is(arrayVar.target.querySelector(".value").getAttribute("value"), "Int8Array",
+    "Should have the right property value for 'largeArray'.");
+  ok(arrayVar.target.querySelector(".value").className.contains("token-other"),
+    "Should have the right token class for 'largeArray'.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    bufferVar.target.querySelector(".arrow"),
-    gDebugger);
+  is(objectVar.target.querySelector(".name").getAttribute("value"), "largeObject",
+    "Should have the right property name for 'largeObject'.");
+  is(objectVar.target.querySelector(".value").getAttribute("value"), "Object",
+    "Should have the right property value for 'largeObject'.");
+  ok(objectVar.target.querySelector(".value").className.contains("token-other"),
+    "Should have the right token class for 'largeObject'.");
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    zVar.target.querySelector(".arrow"),
-    gDebugger);
+  is(bufferVar.expanded, false,
+    "The 'buffer' variable shouldn't be expanded.");
+  is(arrayVar.expanded, false,
+    "The 'largeArray' variable shouldn't be expanded.");
+  is(objectVar.expanded, false,
+    "The 'largeObject' variable shouldn't be expanded.");
 
-  // Need to wait for 0 enumerable and 2 non-enumerable properties in bufferVar,
-  // and 10000 enumerable and 5 non-enumerable properties in zVar.
-  let total = 0 + 2 + 10000 + 5;
-  let loaded = 0;
-  let paints = 0;
-
-  // Make sure the variables view doesn't scroll while adding the properties.
-  let [oldX, oldY] = getScroll();
-  info("Initial scroll position: " + oldX + ", " + oldY);
-
-  waitForProperties(total, {
-    onLoading: function(aLoaded) {
-      ok(aLoaded >= loaded,
-        "Should have loaded more properties.");
-
-      let [newX, newY] = getScroll();
-      info("Current scroll position: " + newX + " " + newY);
-      is(oldX, newX, "The variables view hasn't scrolled horizontally.");
-      is(oldY, newY, "The variables view hasn't scrolled vertically.");
-
-      info("Displayed " + aLoaded + " properties, not finished yet.");
-
-      loaded = aLoaded;
-      paints++;
-    },
-    onFinished: function(aLoaded) {
-      ok(aLoaded == total,
-        "Displayed all the properties.");
-      isnot(paints, 0,
-        "Debugger was unresponsive, sad panda.");
-
-      let [newX, newY] = getScroll();
-      info("Current scroll position: " + newX + ", " + newY);
-      is(oldX, newX, "The variables view hasn't scrolled horizontally.");
-      is(oldY, newY, "The variables view hasn't scrolled vertically.");
-
-      is(bufferVar._enum.childNodes.length, 0,
-        "The bufferVar should contain all the created enumerable elements.");
-      is(bufferVar._nonenum.childNodes.length, 2,
-        "The bufferVar should contain all the created non-enumerable elements.");
-
-      let bufferVarByteLengthProp = bufferVar.get("byteLength");
-      let bufferVarProtoProp = bufferVar.get("__proto__");
-
-      is(bufferVarByteLengthProp.target.querySelector(".name").getAttribute("value"), "byteLength",
-        "Should have the right property name for 'byteLength'.");
-      is(bufferVarByteLengthProp.target.querySelector(".value").getAttribute("value"), "10000",
-        "Should have the right property value for 'byteLength'.");
-      ok(bufferVarByteLengthProp.target.querySelector(".value").className.contains("token-number"),
-        "Should have the right token class for 'byteLength'.");
-
-      is(bufferVarProtoProp.target.querySelector(".name").getAttribute("value"), "__proto__",
-        "Should have the right property name for '__proto__'.");
-      is(bufferVarProtoProp.target.querySelector(".value").getAttribute("value"), "ArrayBufferPrototype",
-        "Should have the right property value for '__proto__'.");
-      ok(bufferVarProtoProp.target.querySelector(".value").className.contains("token-other"),
-        "Should have the right token class for '__proto__'.");
-
-      is(zVar._enum.childNodes.length, 10000,
-        "The zVar should contain all the created enumerable elements.");
-      is(zVar._nonenum.childNodes.length, 5,
-        "The zVar should contain all the created non-enumerable elements.");
-
-      let zVarByteLengthProp = zVar.get("byteLength");
-      let zVarByteOffsetProp = zVar.get("byteOffset");
-      let zVarProtoProp = zVar.get("__proto__");
-
-      is(zVarByteLengthProp.target.querySelector(".name").getAttribute("value"), "byteLength",
-        "Should have the right property name for 'byteLength'.");
-      is(zVarByteLengthProp.target.querySelector(".value").getAttribute("value"), "10000",
-        "Should have the right property value for 'byteLength'.");
-      ok(zVarByteLengthProp.target.querySelector(".value").className.contains("token-number"),
-        "Should have the right token class for 'byteLength'.");
-
-      is(zVarByteOffsetProp.target.querySelector(".name").getAttribute("value"), "byteOffset",
-        "Should have the right property name for 'byteOffset'.");
-      is(zVarByteOffsetProp.target.querySelector(".value").getAttribute("value"), "0",
-        "Should have the right property value for 'byteOffset'.");
-      ok(zVarByteOffsetProp.target.querySelector(".value").className.contains("token-number"),
-        "Should have the right token class for 'byteOffset'.");
-
-      is(zVarProtoProp.target.querySelector(".name").getAttribute("value"), "__proto__",
-        "Should have the right property name for '__proto__'.");
-      is(zVarProtoProp.target.querySelector(".value").getAttribute("value"), "Int8ArrayPrototype",
-        "Should have the right property value for '__proto__'.");
-      ok(zVarProtoProp.target.querySelector(".value").className.contains("token-other"),
-        "Should have the right token class for '__proto__'.");
-
-      let arrayElements = zVar._enum.childNodes;
-      for (let i = 0, len = arrayElements.length; i < len; i++) {
-        let node = arrayElements[i];
-        let name = node.querySelector(".name").getAttribute("value");
-        let value = node.querySelector(".value").getAttribute("value");
-        if (name !== i + "" || value !== "0") {
-          ok(false, "The array items aren't in the correct order.");
-        }
-      }
-
-      deferred.resolve();
-    },
-    onTimeout: function() {
-      ok(false, "Timed out while polling for the properties.");
-      deferred.resolve();
-    }
-  });
-
-  function getScroll() {
-    let scrollX = {};
-    let scrollY = {};
-    gVariables.boxObject.getPosition(scrollX, scrollY);
-    return [scrollX.value, scrollY.value];
-  }
-
-  return deferred.promise;
+  let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.FETCHED_PROPERTIES, 2);
+  arrayVar.expand();
+  objectVar.expand();
+  return finished;
 }
 
-function waitForProperties(aTotal, aCallbacks, aInterval = 10) {
+function verifyFirstLevel() {
   let localScope = gVariables.getScopeAtIndex(0);
-  let bufferEnum = localScope.get("buffer")._enum.childNodes;
-  let bufferNonEnum = localScope.get("buffer")._nonenum.childNodes;
-  let zEnum = localScope.get("z")._enum.childNodes;
-  let zNonEnum = localScope.get("z")._nonenum.childNodes;
+  let arrayVar = localScope.get("largeArray");
+  let objectVar = localScope.get("largeObject");
 
-  // Poll every few milliseconds until the properties are retrieved.
-  let count = 0;
-  let intervalId = window.setInterval(() => {
-    // Make sure we don't wait for too long.
-    if (++count > 1000) {
-      window.clearInterval(intervalId);
-      aCallbacks.onTimeout();
-      return;
-    }
-    // Check if we need to wait for a few more properties to be fetched.
-    let loaded = bufferEnum.length + bufferNonEnum.length + zEnum.length + zNonEnum.length;
-    if (loaded < aTotal) {
-      aCallbacks.onLoading(loaded);
-      return;
-    }
-    // We got all the properties, it's safe to callback.
-    window.clearInterval(intervalId);
-    aCallbacks.onFinished(loaded);
-  }, aInterval);
+  let arrayEnums = arrayVar.target.querySelector(".variables-view-element-details.enum").childNodes;
+  let arrayNonEnums = arrayVar.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+  is(arrayEnums.length, 0,
+    "The 'largeArray' shouldn't contain any enumerable elements.");
+  is(arrayNonEnums.length, 9,
+    "The 'largeArray' should contain all the created non-enumerable elements.");
+
+  let objectEnums = objectVar.target.querySelector(".variables-view-element-details.enum").childNodes;
+  let objectNonEnums = objectVar.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+  is(objectEnums.length, 0,
+    "The 'largeObject' shouldn't contain any enumerable elements.");
+  is(objectNonEnums.length, 5,
+    "The 'largeObject' should contain all the created non-enumerable elements.");
+
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
+    0 + gEllipsis + 1999, "The first page in the 'largeArray' is named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
+    "", "The first page in the 'largeArray' should not have a corresponding value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
+    2000 + gEllipsis + 3999, "The second page in the 'largeArray' is named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
+    "", "The second page in the 'largeArray' should not have a corresponding value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
+    4000 + gEllipsis + 5999, "The third page in the 'largeArray' is named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[2].getAttribute("value"),
+    "", "The third page in the 'largeArray' should not have a corresponding value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
+    6000 + gEllipsis + 9999, "The fourth page in the 'largeArray' is named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[3].getAttribute("value"),
+    "", "The fourth page in the 'largeArray' should not have a corresponding value.");
+
+  is(objectVar.target.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
+    0 + gEllipsis + 1999, "The first page in the 'largeObject' is named correctly.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
+    "", "The first page in the 'largeObject' should not have a corresponding value.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
+    2000 + gEllipsis + 3999, "The second page in the 'largeObject' is named correctly.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
+    "", "The second page in the 'largeObject' should not have a corresponding value.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
+    4000 + gEllipsis + 5999, "The thrid page in the 'largeObject' is named correctly.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .value")[2].getAttribute("value"),
+    "", "The thrid page in the 'largeObject' should not have a corresponding value.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
+    6000 + gEllipsis + 9999, "The fourth page in the 'largeObject' is named correctly.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .value")[3].getAttribute("value"),
+    "", "The fourth page in the 'largeObject' should not have a corresponding value.");
+
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[4].getAttribute("value"),
+    "length", "The other properties 'largeArray' are named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[4].getAttribute("value"),
+    "10000", "The other properties 'largeArray' have the correct value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[5].getAttribute("value"),
+    "buffer", "The other properties 'largeArray' are named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[5].getAttribute("value"),
+    "ArrayBuffer", "The other properties 'largeArray' have the correct value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[6].getAttribute("value"),
+    "byteLength", "The other properties 'largeArray' are named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[6].getAttribute("value"),
+    "10000", "The other properties 'largeArray' have the correct value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[7].getAttribute("value"),
+    "byteOffset", "The other properties 'largeArray' are named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[7].getAttribute("value"),
+    "0", "The other properties 'largeArray' have the correct value.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .name")[8].getAttribute("value"),
+    "__proto__", "The other properties 'largeArray' are named correctly.");
+  is(arrayVar.target.querySelectorAll(".variables-view-property .value")[8].getAttribute("value"),
+    "Int8ArrayPrototype", "The other properties 'largeArray' have the correct value.");
+
+  is(objectVar.target.querySelectorAll(".variables-view-property .name")[4].getAttribute("value"),
+    "__proto__", "The other properties 'largeObject' are named correctly.");
+  is(objectVar.target.querySelectorAll(".variables-view-property .value")[4].getAttribute("value"),
+    "Object", "The other properties 'largeObject' have the correct value.");
+}
+
+function verifyNextLevels() {
+  let localScope = gVariables.getScopeAtIndex(0);
+  let objectVar = localScope.get("largeObject");
+
+  let lastPage1 = objectVar.get(6000 + gEllipsis + 9999);
+  ok(lastPage1, "The last page in the first level was retrieved successfully.");
+  lastPage1.expand();
+
+  let pageEnums1 = lastPage1.target.querySelector(".variables-view-element-details.enum").childNodes;
+  let pageNonEnums1 = lastPage1.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+  is(pageEnums1.length, 0,
+    "The last page in the first level shouldn't contain any enumerable elements.");
+  is(pageNonEnums1.length, 4,
+    "The last page in the first level should contain all the created non-enumerable elements.");
+
+  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
+    6000 + gEllipsis + 6999, "The first page in this level named correctly (1).");
+  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
+    7000 + gEllipsis + 7999, "The second page in this level named correctly (1).");
+  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
+    8000 + gEllipsis + 8999, "The third page in this level named correctly (1).");
+  is(lastPage1._nonenum.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
+    9000 + gEllipsis + 9999, "The fourth page in this level named correctly (1).");
+
+  let lastPage2 = lastPage1.get(9000 + gEllipsis + 9999);
+  ok(lastPage2, "The last page in the second level was retrieved successfully.");
+  lastPage2.expand();
+
+  let pageEnums2 = lastPage2.target.querySelector(".variables-view-element-details.enum").childNodes;
+  let pageNonEnums2 = lastPage2.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+  is(pageEnums2.length, 0,
+    "The last page in the second level shouldn't contain any enumerable elements.");
+  is(pageNonEnums2.length, 4,
+    "The last page in the second level should contain all the created non-enumerable elements.");
+
+  is(lastPage2._nonenum.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
+    9000 + gEllipsis + 9199, "The first page in this level named correctly (2).");
+  is(lastPage2._nonenum.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
+    9200 + gEllipsis + 9399, "The second page in this level named correctly (2).");
+  is(lastPage2._nonenum.querySelectorAll(".variables-view-property .name")[2].getAttribute("value"),
+    9400 + gEllipsis + 9599, "The third page in this level named correctly (2).");
+  is(lastPage2._nonenum.querySelectorAll(".variables-view-property .name")[3].getAttribute("value"),
+    9600 + gEllipsis + 9999, "The fourth page in this level named correctly (2).");
+
+  let lastPage3 = lastPage2.get(9600 + gEllipsis + 9999);
+  ok(lastPage3, "The last page in the third level was retrieved successfully.");
+  lastPage3.expand();
+
+  let pageEnums3 = lastPage3.target.querySelector(".variables-view-element-details.enum").childNodes;
+  let pageNonEnums3 = lastPage3.target.querySelector(".variables-view-element-details.nonenum").childNodes;
+  is(pageEnums3.length, 400,
+    "The last page in the third level should contain all the created enumerable elements.");
+  is(pageNonEnums3.length, 0,
+    "The last page in the third level shouldn't contain any non-enumerable elements.");
+
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .name")[0].getAttribute("value"),
+    9600, "The properties in this level are named correctly (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .name")[1].getAttribute("value"),
+    9601, "The properties in this level are named correctly (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .name")[398].getAttribute("value"),
+    9998, "The properties in this level are named correctly (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .name")[399].getAttribute("value"),
+    9999, "The properties in this level are named correctly (3).");
+
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .value")[0].getAttribute("value"),
+    399, "The properties in this level have the correct value (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .value")[1].getAttribute("value"),
+    398, "The properties in this level have the correct value (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .value")[398].getAttribute("value"),
+    1, "The properties in this level have the correct value (3).");
+  is(lastPage3._enum.querySelectorAll(".variables-view-property .value")[399].getAttribute("value"),
+    0, "The properties in this level have the correct value (3).");
 }
 
 registerCleanupFunction(function() {
@@ -228,4 +239,5 @@ registerCleanupFunction(function() {
   gPanel = null;
   gDebugger = null;
   gVariables = null;
+  gEllipsis = null;
 });

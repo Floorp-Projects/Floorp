@@ -136,16 +136,16 @@ static inline bool
 DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation alloc)
 {
     if (ins->isPhi()) {
-        if (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32)
-            return alloc.isFloatReg() || alloc.kind() == LAllocation::DOUBLE_SLOT;
-        return alloc.isGeneralReg() || alloc.kind() == LAllocation::STACK_SLOT;
+        if (def->isFloatReg())
+            return alloc.isFloatReg() || alloc.isStackSlot();
+        return alloc.isGeneralReg() || alloc.isStackSlot();
     }
 
     switch (def->policy()) {
       case LDefinition::DEFAULT:
         if (!alloc.isRegister())
             return false;
-        return alloc.isFloatReg() == (def->type() == LDefinition::DOUBLE || def->type() == LDefinition::FLOAT32);
+        return alloc.isFloatReg() == def->isFloatReg();
       case LDefinition::PRESET:
         return alloc == *def->output();
       case LDefinition::MUST_REUSE_INPUT:
@@ -472,8 +472,8 @@ class VirtualRegister
         interval->setIndex(found - intervals_.begin());
         return intervals_.insert(found, interval);
     }
-    bool isDouble() const {
-        return def_->type() == LDefinition::DOUBLE || def_->type() == LDefinition::FLOAT32;
+    bool isFloatReg() const {
+        return def_->isFloatReg();
     }
 
     LiveInterval *intervalFor(CodePosition pos);
@@ -600,7 +600,7 @@ class LiveRangeAllocator : protected RegisterAllocator
     void validateVirtualRegisters()
     {
 #ifdef DEBUG
-        if (!js_IonOptions.checkGraphConsistency)
+        if (!js_JitOptions.checkGraphConsistency)
             return;
 
         for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
