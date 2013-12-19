@@ -4,6 +4,7 @@
 const modules = [
   "addonutils.js",
   "addonsreconciler.js",
+  "browserid_identity.js",
   "constants.js",
   "engines/addons.js",
   "engines/bookmarks.js",
@@ -50,4 +51,3 @@ function run_test() {
     Cu.import(res, {});
   }
 }
-
