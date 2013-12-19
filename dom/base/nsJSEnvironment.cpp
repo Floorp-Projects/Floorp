@@ -121,15 +121,6 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define NS_CC_SKIPPABLE_DELAY       400 // ms
 
-// Maximum amount of time that should elapse between incremental CC slices
-static const int64_t kICCIntersliceDelay = 32; // ms
-
-// Time budget for an incremental CC slice
-static const int64_t kICCSliceBudget = 10; // ms
-
-// Maximum total duration for an ICC
-static const uint32_t kMaxICCDuration = 2000; // ms
-
 // Force a CC after this long if there's more than NS_CC_FORCED_PURPLE_LIMIT
 // objects in the purple buffer.
 #define NS_CC_FORCED                (2 * 60 * PR_USEC_PER_SEC) // 2 min
@@ -153,7 +144,6 @@ static const uint32_t kMaxICCDuration = 2000; // ms
 static nsITimer *sGCTimer;
 static nsITimer *sShrinkGCBuffersTimer;
 static nsITimer *sCCTimer;
-static nsITimer *sICCTimer;
 static nsITimer *sFullGCTimer;
 static nsITimer *sInterSliceGCTimer;
 
@@ -190,7 +180,6 @@ static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static bool sNeedsGCAfterCC = false;
 static nsJSContext *sContextList = nullptr;
-static bool sIncrementalCC = false;
 
 static nsScriptNameSpaceManager *gNameSpaceManager;
 
@@ -233,7 +222,6 @@ KillTimers()
   nsJSContext::KillGCTimer();
   nsJSContext::KillShrinkGCBuffersTimer();
   nsJSContext::KillCCTimer();
-  nsJSContext::KillICCTimer();
   nsJSContext::KillFullGCTimer();
   nsJSContext::KillInterSliceGCTimer();
 }
@@ -2025,22 +2013,6 @@ struct CycleCollectorStats
 
 CycleCollectorStats gCCStats;
 
-static int64_t
-ICCSliceTime()
-{
-  // If CC is not incremental, use an unlimited budget.
-  if (!sIncrementalCC) {
-    return -1;
-  }
-
-  // If an ICC is in progress and is taking too long, finish it off.
-  if (gCCStats.mBeginTime != 0 &&
-      TimeBetween(gCCStats.mBeginTime, PR_Now()) >= kMaxICCDuration) {
-    return -1;
-  }
-
-  return kICCSliceBudget;
-}
 
 static void
 PrepareForCycleCollection(int32_t aExtraForgetSkippableCalls = 0)
@@ -2098,42 +2070,15 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 //static
 void
-nsJSContext::ScheduledCycleCollectNow(int64_t aSliceTime)
+nsJSContext::ScheduledCycleCollectNow()
 {
   if (!NS_IsMainThread()) {
     return;
   }
 
   PROFILER_LABEL("CC", "ScheduledCycleCollectNow");
-
-  // Ideally, the slice time would be decreased by the amount of
-  // time spent on PrepareForCycleCollection().
   PrepareForCycleCollection();
-  nsCycleCollector_scheduledCollect(aSliceTime);
-}
-
-static void
-ICCTimerFired(nsITimer* aTimer, void* aClosure)
-{
-  if (sDidShutdown) {
-    return;
-  }
-
-  // Ignore ICC timer fires during IGC. Running ICC during an IGC will cause us
-  // to synchronously finish the GC, which is bad.
-
-  if (sCCLockedOut) {
-    PRTime now = PR_Now();
-    if (sCCLockedOutTime == 0) {
-      sCCLockedOutTime = now;
-      return;
-    }
-    if (now - sCCLockedOutTime < NS_MAX_CC_LOCKEDOUT_TIME) {
-      return;
-    }
-  }
-
-  nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
+  nsCycleCollector_scheduledCollect();
 }
 
 //static
@@ -2146,20 +2091,6 @@ nsJSContext::BeginCycleCollectionCallback()
   gCCStats.mSuspected = nsCycleCollector_suspectedCount();
 
   KillCCTimer();
-
-  MOZ_ASSERT(!sICCTimer, "Tried to create a new ICC timer when one already existed.");
-
-  if (!sIncrementalCC) {
-    return;
-  }
-
-  CallCreateInstance("@mozilla.org/timer;1", &sICCTimer);
-  if (sICCTimer) {
-    sICCTimer->InitWithFuncCallback(ICCTimerFired,
-                                    nullptr,
-                                    kICCIntersliceDelay,
-                                    nsITimer::TYPE_REPEATING_SLACK);
-  }
 }
 
 //static
@@ -2167,8 +2098,6 @@ void
 nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  nsJSContext::KillICCTimer();
 
   sCCollectedWaitingForGC += aResults.mFreedRefCounted + aResults.mFreedGCed;
 
@@ -2337,17 +2266,6 @@ ShouldTriggerCC(uint32_t aSuspected)
           sLastCCEndTime + NS_CC_FORCED < PR_Now());
 }
 
-static uint32_t
-TimeToNextCC()
-{
-  if (sIncrementalCC) {
-    return NS_CC_DELAY - kMaxICCDuration;
-  }
-  return NS_CC_DELAY;
-}
-
-static_assert(NS_CC_DELAY > kMaxICCDuration, "ICC shouldn't reduce CC delay to 0");
-
 static void
 CCTimerFired(nsITimer *aTimer, void *aClosure)
 {
@@ -2357,7 +2275,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
   static uint32_t ccDelay = NS_CC_DELAY;
   if (sCCLockedOut) {
-    ccDelay = TimeToNextCC() / 3;
+    ccDelay = NS_CC_DELAY / 3;
 
     PRTime now = PR_Now();
     if (sCCLockedOutTime == 0) {
@@ -2379,8 +2297,8 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
   // During early timer fires, we only run forgetSkippable. During the first
   // late timer fire, we decide if we are going to have a second and final
-  // late timer fire, where we may begin to run the CC.
-  uint32_t numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
+  // late timer fire, where we may run the CC.
+  const uint32_t numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
   bool isLateTimerFire = sCCTimerFireCount > numEarlyTimerFires;
   uint32_t suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
@@ -2395,7 +2313,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC. Let CycleCollectNow finish the current IGC, if any,
       // because that will allow us to include the GC time in the CC pause.
-      nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
+      nsJSContext::ScheduledCycleCollectNow();
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.
@@ -2403,7 +2321,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
   }
 
   if (isLateTimerFire) {
-    ccDelay = TimeToNextCC();
+    ccDelay = NS_CC_DELAY;
 
     // We have either just run the CC or decided we don't want to run the CC
     // next time, so kill the timer.
@@ -2507,7 +2425,7 @@ nsJSContext::PokeShrinkGCBuffers()
 void
 nsJSContext::MaybePokeCC()
 {
-  if (sCCTimer || sICCTimer || sShuttingDown || !sHasRunGC) {
+  if (sCCTimer || sShuttingDown || !sHasRunGC) {
     return;
   }
 
@@ -2576,19 +2494,6 @@ nsJSContext::KillCCTimer()
     sCCTimer->Cancel();
 
     NS_RELEASE(sCCTimer);
-  }
-}
-
-//static
-void
-nsJSContext::KillICCTimer()
-{
-  sCCLockedOutTime = 0;
-
-  if (sICCTimer) {
-    sICCTimer->Cancel();
-
-    NS_RELEASE(sICCTimer);
   }
 }
 
@@ -2753,7 +2658,7 @@ void
 mozilla::dom::StartupJSEnvironment()
 {
   // initialize all our statics, so that we can restart XPCOM
-  sGCTimer = sFullGCTimer = sCCTimer = sICCTimer = nullptr;
+  sGCTimer = sFullGCTimer = sCCTimer = nullptr;
   sCCLockedOut = false;
   sCCLockedOutTime = 0;
   sLastCCEndTime = 0;
@@ -2847,13 +2752,6 @@ SetMemoryGCDynamicMarkSlicePrefChangedCallback(const char* aPrefName, void* aClo
 {
   bool pref = Preferences::GetBool(aPrefName);
   JS_SetGCParameter(sRuntime, JSGC_DYNAMIC_MARK_SLICE, pref);
-}
-
-static void
-SetIncrementalCCPrefChangedCallback(const char* aPrefName, void* aClosure)
-{
-  bool pref = Preferences::GetBool(aPrefName);
-  sIncrementalCC = pref;
 }
 
 JSObject*
@@ -3061,9 +2959,6 @@ nsJSContext::EnsureStatics()
   Preferences::RegisterCallbackAndCall(SetMemoryGCPrefChangedCallback,
                                        "javascript.options.mem.gc_decommit_threshold_mb",
                                        (void *)JSGC_DECOMMIT_THRESHOLD);
-
-  Preferences::RegisterCallbackAndCall(SetIncrementalCCPrefChangedCallback,
-                                       "dom.cycle_collector.incremental");
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {

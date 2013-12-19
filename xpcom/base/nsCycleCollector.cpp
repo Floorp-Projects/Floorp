@@ -3056,8 +3056,7 @@ nsCycleCollector::Collect(ccType aCCType,
 // don't want to abandon the current CC, because the graph contains
 // information about purple roots. So we synchronously finish off
 // the current CC.
-void
-nsCycleCollector::PrepareForGarbageCollection()
+void nsCycleCollector::PrepareForGarbageCollection()
 {
     if (mIncrementalPhase == IdlePhase) {
         MOZ_ASSERT(mGraph.IsEmpty(), "Non-empty graph when idle");
@@ -3552,7 +3551,7 @@ nsCycleCollector_collect(nsICycleCollectorListener *aManualListener)
 }
 
 void
-nsCycleCollector_scheduledCollect(int64_t aSliceTime)
+nsCycleCollector_scheduledCollect()
 {
     CollectorData *data = sCollectorData.get();
 
@@ -3561,13 +3560,8 @@ nsCycleCollector_scheduledCollect(int64_t aSliceTime)
     MOZ_ASSERT(data->mCollector);
 
     PROFILER_LABEL("CC", "nsCycleCollector_scheduledCollect");
-    SliceBudget budget;
-    if (aSliceTime > 0) {
-        budget = SliceBudget::TimeBudget(aSliceTime);
-    } else if (aSliceTime == 0) {
-        budget = SliceBudget::WorkBudget(1);
-    }
-    data->mCollector->Collect(ScheduledCC, budget, nullptr);
+    SliceBudget unlimitedBudget;
+    data->mCollector->Collect(ScheduledCC, unlimitedBudget, nullptr);
 }
 
 void

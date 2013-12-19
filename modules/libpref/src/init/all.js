@@ -713,8 +713,6 @@ pref("dom.sysmsg.enabled", false);
 // Enable pre-installed applications.
 pref("dom.webapps.useCurrentProfile", false);
 
-pref("dom.cycle_collector.incremental", false);
-
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
 pref("content.sink.pending_event_mode", 0);
