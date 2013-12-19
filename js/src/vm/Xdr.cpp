@@ -102,26 +102,14 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeScript(MutableHandleScript scriptp)
 {
-    RootedScript script(cx());
-    if (mode == XDR_DECODE) {
-        script = nullptr;
+    if (mode == XDR_DECODE)
         scriptp.set(nullptr);
-    } else {
-        script = scriptp.get();
-    }
 
     if (!VersionCheck(this))
         return false;
 
-    if (!XDRScript(this, NullPtr(), NullPtr(), NullPtr(), &script))
+    if (!XDRScript(this, NullPtr(), NullPtr(), NullPtr(), scriptp))
         return false;
-
-    if (mode == XDR_DECODE) {
-        JS_ASSERT(!script->compileAndGo());
-        CallNewScriptHook(cx(), script, NullPtr());
-        Debugger::onNewScript(cx(), script, nullptr);
-        scriptp.set(script);
-    }
 
     return true;
 }
