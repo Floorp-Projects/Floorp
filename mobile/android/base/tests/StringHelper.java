@@ -111,6 +111,10 @@ public class StringHelper {
     public static final String TEXT_REFLOW_LABEL = "Text reflow";
     public static final String CHARACTER_ENCODING_LABEL = "Character encoding";
     public static final String PLUGINS_LABEL = "Plugins";
+ 
+    // Title bar
+    public static final String SHOW_PAGE_TITLE_LABEL = "Show page title";
+    public static final String SHOW_PAGE_ADDRESS_LABEL = "Show page address";
 
     // Privacy
     public static final String TRACKING_LABEL = "Tracking";
