@@ -162,12 +162,13 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                 name = name[3:]
             # The sandbox expects an unicode string.
             sandbox['LIBRARY_NAME'] = name.decode('utf-8')
-            # gyp files contain headers in sources lists.
+            # gyp files contain headers and asm sources in sources lists.
             sources = set(mozpath.normpath(mozpath.join(sandbox['SRCDIR'], f))
                 for f in spec.get('sources', [])
                 if mozpath.splitext(f)[-1] != '.h')
+            asm_sources = set(f for f in sources if f.endswith('.S'))
 
-            unified_sources = sources - non_unified_sources
+            unified_sources = sources - non_unified_sources - asm_sources
             sources -= unified_sources
             all_sources |= sources
             # The sandbox expects alphabetical order when adding sources
