@@ -62,24 +62,64 @@ SessionStore.prototype = {
     this._loadState = STATE_STOPPED;
 
     try {
+      let shutdownWasUnclean = false;
+
       if (this._sessionFileBackup.exists()) {
-        this._shouldRestore = true;
         this._sessionFileBackup.remove(false);
+        shutdownWasUnclean = true;
       }
 
       if (this._sessionFile.exists()) {
-        // Disable crash recovery if we have exceeded the timeout
-        this._lastSessionTime = this._sessionFile.lastModifiedTime;
-        let delta = Date.now() - this._lastSessionTime;
-        let timeout = Services.prefs.getIntPref("browser.sessionstore.resume_from_crash_timeout");
-        if (delta > (timeout * 60000))
-          this._shouldRestore = false;
-
         this._sessionFile.copyTo(null, this._sessionFileBackup.leafName);
+
+        switch(Services.metro.previousExecutionState) {
+          // 0 == NotRunning
+          case 0:
+            // Disable crash recovery if we have exceeded the timeout
+            this._lastSessionTime = this._sessionFile.lastModifiedTime;
+            let delta = Date.now() - this._lastSessionTime;
+            let timeout =
+              Services.prefs.getIntPref(
+                  "browser.sessionstore.resume_from_crash_timeout");
+            this._shouldRestore = shutdownWasUnclean
+                                && (delta < (timeout * 60000));
+            break;
+          // 1 == Running
+          case 1:
+            // We should never encounter this situation
+            Components.utils.reportError("SessionRestore.init called with "
+                                       + "previous execution state 'Running'");
+            this._shouldRestore = true;
+            break;
+          // 2 == Suspended
+          case 2:
+            // We should never encounter this situation
+            Components.utils.reportError("SessionRestore.init called with "
+                                       + "previous execution state 'Suspended'");
+            this._shouldRestore = true;
+            break;
+          // 3 == Terminated
+          case 3:
+            // Terminated means that Windows terminated our already-suspended
+            // process to get back some resources. When we re-launch, we want
+            // to provide the illusion that our process was suspended the
+            // whole time, and never terminated.
+            this._shouldRestore = true;
+            break;
+          // 4 == ClosedByUser
+          case 4:
+            // ClosedByUser indicates that the user performed a "close" gesture
+            // on our tile. We should act as if the browser closed normally,
+            // even if we were closed from a suspended state (in which case
+            // we'll have determined that it was an unclean shtudown)
+            this._shouldRestore = false;
+            break;
+        }
       }
 
-      if (!this._sessionCache.exists() || !this._sessionCache.isDirectory())
+      if (!this._sessionCache.exists() || !this._sessionCache.isDirectory()) {
         this._sessionCache.create(Ci.nsIFile.DIRECTORY_TYPE, 0700);
+      }
     } catch (ex) {
       Cu.reportError(ex); // file was write-locked?
     }

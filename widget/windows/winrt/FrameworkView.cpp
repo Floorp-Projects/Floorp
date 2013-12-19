@@ -352,13 +352,18 @@ FrameworkView::OnActivated(ICoreApplicationView* aApplicationView,
 {
   LogFunction();
 
-  ApplicationExecutionState state;
-  aArgs->get_PreviousExecutionState(&state);
-  bool startup = state == ApplicationExecutionState::ApplicationExecutionState_Terminated ||
-                 state == ApplicationExecutionState::ApplicationExecutionState_ClosedByUser ||
-                 state == ApplicationExecutionState::ApplicationExecutionState_NotRunning;
+  aArgs->get_PreviousExecutionState(&mPreviousExecutionState);
+  bool startup = mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_Terminated ||
+                 mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_ClosedByUser ||
+                 mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_NotRunning;
   ProcessActivationArgs(aArgs, startup);
   return S_OK;
+}
+
+int
+FrameworkView::GetPreviousExecutionState()
+{
+  return mPreviousExecutionState;
 }
 
 HRESULT
