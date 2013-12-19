@@ -68,6 +68,12 @@ nsNSSCertificateDB::nsNSSCertificateDB()
 
 nsNSSCertificateDB::~nsNSSCertificateDB()
 {
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown()) {
+    return;
+  }
+
+  shutdown(calledFromObject);
 }
 
 NS_IMETHODIMP
