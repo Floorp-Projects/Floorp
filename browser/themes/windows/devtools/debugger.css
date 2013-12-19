@@ -9,7 +9,7 @@
   -moz-border-end: 1px solid #222426; /* Match the sources list's dark margin. */
 }
 
-#sources-and-editor-splitter {
+#sources-pane[selectedIndex="0"] + #sources-and-editor-splitter {
   border-color: transparent;
 }
 
