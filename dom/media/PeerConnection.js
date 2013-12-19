@@ -208,45 +208,73 @@ RTCSessionDescription.prototype = {
   }
 };
 
-function RTCStatsReport(win, report, pcid) {
+function RTCStatsReport(win, dict) {
+  function appendStats(stats, report) {
+    stats.forEach(function(stat) {
+        report[stat.id] = stat;
+      });
+  }
+
   this._win = win;
-  this.report = report;
-  this.mozPcid = pcid;
+  this._pcid = dict.pcid;
+  this._report = {};
+  appendStats(dict.inboundRTPStreamStats, this._report);
+  appendStats(dict.outboundRTPStreamStats, this._report);
+  appendStats(dict.mediaStreamTrackStats, this._report);
+  appendStats(dict.mediaStreamStats, this._report);
+  appendStats(dict.transportStats, this._report);
+  appendStats(dict.iceComponentStats, this._report);
+  appendStats(dict.iceCandidatePairStats, this._report);
+  appendStats(dict.iceCandidateStats, this._report);
+  appendStats(dict.codecStats, this._report);
 }
 RTCStatsReport.prototype = {
   classDescription: "RTCStatsReport",
   classID: PC_STATS_CID,
   contractID: PC_STATS_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
+
+  // TODO: Change to use webidl getters once available (Bug 952122)
+  //
+  // Since webidl getters are not available, we make the stats available as
+  // enumerable read-only properties directly on our content-facing object.
+  // Must be called after our webidl sandwich is made.
+
+  makeStatsPublic: function() {
+    let props = {};
+    this.forEach(function(stat) {
+        props[stat.id] = { enumerable: true, configurable: false,
+                           writable: false, value: stat };
+      });
+    Object.defineProperties(this.__DOM_IMPL__.wrappedJSObject, props);
+  },
 
   forEach: function(cb, thisArg) {
-    for (var key in this.report) {
-      if (this.report.hasOwnProperty(key)) {
-        cb.call(thisArg || this, this.get(key), key, this.report);
-      }
+    for (var key in this._report) {
+      cb.call(thisArg || this._report, this.get(key), key, this._report);
     }
   },
 
   get: function(key) {
-    function publify(win, obj) {
+    function publifyReadonly(win, obj) {
       let props = {};
       for (let k in obj) {
-        props[k] = {enumerable:true, configurable:true, writable:true, value:obj[k]};
+        props[k] = {enumerable:true, configurable:false, writable:false, value:obj[k]};
       }
       let pubobj = Cu.createObjectIn(win);
       Object.defineProperties(pubobj, props);
-      Cu.makeObjectPropsNormal(pubobj);
       return pubobj;
     }
 
     // Return a content object rather than a wrapped chrome one.
-    return publify(this._win, this.report[key]);
+    return publifyReadonly(this._win, this._report[key]);
   },
 
   has: function(key) {
-    return this.report[key] !== undefined;
-  }
+    return this._report[key] !== undefined;
+  },
+
+  get mozPcid() { return this._pcid; }
 };
 
 function RTCPeerConnection() {
@@ -1138,31 +1166,11 @@ PeerConnectionObserver.prototype = {
   },
 
   onGetStatsSuccess: function(dict) {
-    function appendStats(stats, report) {
-      if (stats) {
-        stats.forEach(function(stat) {
-          report[stat.id] = stat;
-        });
-      }
-    }
-
-    let report = {};
-    appendStats(dict.rtpStreamStats, report);
-    appendStats(dict.inboundRTPStreamStats, report);
-    appendStats(dict.outboundRTPStreamStats, report);
-    appendStats(dict.mediaStreamTrackStats, report);
-    appendStats(dict.mediaStreamStats, report);
-    appendStats(dict.transportStats, report);
-    appendStats(dict.iceComponentStats, report);
-    appendStats(dict.iceCandidatePairStats, report);
-    appendStats(dict.iceCandidateStats, report);
-    appendStats(dict.codecStats, report);
-
-    this.callCB(this._dompc._onGetStatsSuccess,
-                this._dompc._win.RTCStatsReport._create(this._dompc._win,
-                                                        new RTCStatsReport(this._dompc._win,
-                                                                           report,
-                                                                           dict.pcid)));
+    let chromeobj = new RTCStatsReport(this._dompc._win, dict);
+    let webidlobj = this._dompc._win.RTCStatsReport._create(this._dompc._win,
+                                                            chromeobj);
+    chromeobj.makeStatsPublic();
+    this.callCB(this._dompc._onGetStatsSuccess, webidlobj);
     this._dompc._executeNext();
   },
 
