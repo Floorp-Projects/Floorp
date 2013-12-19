@@ -850,7 +850,7 @@ menuitem.bookmark-item {
   background-color: rgba(255,255,255,.9);
 }
 
-#urlbar:-moz-lwtheme[focused],
+#urlbar:-moz-lwtheme[focused]:not([readonly]),
 .searchbar-textbox:-moz-lwtheme[focused] {
   background-color: white;
 }

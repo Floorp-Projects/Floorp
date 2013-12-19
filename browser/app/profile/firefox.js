@@ -1121,6 +1121,7 @@ pref("devtools.debugger.pause-on-exceptions", false);
 pref("devtools.debugger.ignore-caught-exceptions", true);
 pref("devtools.debugger.source-maps-enabled", true);
 pref("devtools.debugger.pretty-print-enabled", true);
+pref("devtools.debugger.tracer", false);
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.panes-sources-width", 200);
@@ -1303,8 +1304,6 @@ pref("social.manifest.facebook", "{\"origin\":\"https://www.facebook.com\",\"nam
 
 pref("social.sidebar.open", true);
 pref("social.sidebar.unload_timeout_ms", 10000);
-
-pref("social.allowMultipleWorkers", true);
 
 pref("dom.identity.enabled", false);
 
