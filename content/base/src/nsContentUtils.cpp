@@ -929,53 +929,40 @@ nsContentUtils::GetParserService()
  * A helper function that parses a sandbox attribute (of an <iframe> or
  * a CSP directive) and converts it to the set of flags used internally.
  *
- * @param aAttribute    the value of the sandbox attribute
- * @return              the set of flags
+ * @param sandboxAttr   the sandbox attribute
+ * @return              the set of flags (0 if sandboxAttr is null)
  */
 uint32_t
-nsContentUtils::ParseSandboxAttributeToFlags(const nsAString& aSandboxAttrValue)
+nsContentUtils::ParseSandboxAttributeToFlags(const nsAttrValue* sandboxAttr)
 {
-  // If there's a sandbox attribute at all (and there is if this is being
-  // called), start off by setting all the restriction flags.
-  uint32_t out = SANDBOXED_NAVIGATION |
-                 SANDBOXED_AUXILIARY_NAVIGATION |
-                 SANDBOXED_TOPLEVEL_NAVIGATION |
-                 SANDBOXED_PLUGINS |
-                 SANDBOXED_ORIGIN |
-                 SANDBOXED_FORMS |
-                 SANDBOXED_SCRIPTS |
-                 SANDBOXED_AUTOMATIC_FEATURES |
-                 SANDBOXED_POINTER_LOCK |
-                 SANDBOXED_DOMAIN;
+  // No sandbox attribute, no sandbox flags.
+  if (!sandboxAttr) { return 0; }
 
-  if (!aSandboxAttrValue.IsEmpty()) {
-    // The separator optional flag is used because the HTML5 spec says any
-    // whitespace is ok as a separator, which is what this does.
-    HTMLSplitOnSpacesTokenizer tokenizer(aSandboxAttrValue, ' ',
-      nsCharSeparatedTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>::SEPARATOR_OPTIONAL);
+  //  Start off by setting all the restriction flags.
+  uint32_t out = SANDBOXED_NAVIGATION
+               | SANDBOXED_AUXILIARY_NAVIGATION
+               | SANDBOXED_TOPLEVEL_NAVIGATION
+               | SANDBOXED_PLUGINS
+               | SANDBOXED_ORIGIN
+               | SANDBOXED_FORMS
+               | SANDBOXED_SCRIPTS
+               | SANDBOXED_AUTOMATIC_FEATURES
+               | SANDBOXED_POINTER_LOCK
+               | SANDBOXED_DOMAIN;
 
-    while (tokenizer.hasMoreTokens()) {
-      nsDependentSubstring token = tokenizer.nextToken();
-      if (token.LowerCaseEqualsLiteral("allow-same-origin")) {
-        out &= ~SANDBOXED_ORIGIN;
-      } else if (token.LowerCaseEqualsLiteral("allow-forms")) {
-        out &= ~SANDBOXED_FORMS;
-      } else if (token.LowerCaseEqualsLiteral("allow-scripts")) {
-        // allow-scripts removes both SANDBOXED_SCRIPTS and
-        // SANDBOXED_AUTOMATIC_FEATURES.
-        out &= ~SANDBOXED_SCRIPTS;
-        out &= ~SANDBOXED_AUTOMATIC_FEATURES;
-      } else if (token.LowerCaseEqualsLiteral("allow-top-navigation")) {
-        out &= ~SANDBOXED_TOPLEVEL_NAVIGATION;
-      } else if (token.LowerCaseEqualsLiteral("allow-pointer-lock")) {
-        out &= ~SANDBOXED_POINTER_LOCK;
-      } else if (token.LowerCaseEqualsLiteral("allow-popups")) {
-        out &= ~SANDBOXED_AUXILIARY_NAVIGATION;
-      }
-    }
-  }
+// Macro for updating the flag according to the keywords
+#define IF_KEYWORD(atom, flags) \
+  if (sandboxAttr->Contains(nsGkAtoms::atom, eIgnoreCase)) { out &= ~(flags); }
+
+  IF_KEYWORD(allowsameorigin, SANDBOXED_ORIGIN)
+  IF_KEYWORD(allowforms,  SANDBOXED_FORMS)
+  IF_KEYWORD(allowscripts, SANDBOXED_SCRIPTS | SANDBOXED_AUTOMATIC_FEATURES)
+  IF_KEYWORD(allowtopnavigation, SANDBOXED_TOPLEVEL_NAVIGATION)
+  IF_KEYWORD(allowpointerlock, SANDBOXED_POINTER_LOCK)
+  IF_KEYWORD(allowpopups, SANDBOXED_AUXILIARY_NAVIGATION)
 
   return out;
+#undef IF_KEYWORD
 }
 
 #ifdef IBMBIDI
