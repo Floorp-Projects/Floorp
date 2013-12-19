@@ -127,6 +127,7 @@ struct JSCompartment
   public:
     JSPrincipals                 *principals;
     bool                         isSystem;
+    bool                         isSelfHosting;
     bool                         marked;
 
 #ifdef DEBUG

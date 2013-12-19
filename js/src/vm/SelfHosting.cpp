@@ -728,6 +728,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (receivesDefaultObject)
         js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
+    selfHostingGlobal_->compartment()->isSelfHosting = true;
+    selfHostingGlobal_->compartment()->isSystem = true;
     /*
      * During initialization of standard classes for the self-hosting global,
      * all self-hosted functions are ignored. Thus, we don't create cyclic
@@ -882,7 +884,15 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
                 return nullptr;
         } else {
             RootedFunction fun(cx, &srcObj->as<JSFunction>());
-            clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind(), TenuredObject);
+            bool hasName = fun->atom() != nullptr;
+            js::gc::AllocKind kind = hasName
+                                     ? JSFunction::ExtendedFinalizeKind
+                                     : fun->getAllocKind();
+            clone = CloneFunctionObject(cx, fun, cx->global(), kind, TenuredObject);
+            // To be able to re-lazify the cloned function, its name in the
+            // self-hosting compartment has to be stored on the clone.
+            if (hasName)
+                clone->as<JSFunction>().setExtendedSlot(0, StringValue(fun->atom()));
         }
     } else if (srcObj->is<RegExpObject>()) {
         RegExpObject &reobj = srcObj->as<RegExpObject>();
@@ -970,8 +980,11 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     cscript->setFunction(targetFun);
 
     JS_ASSERT(sourceFun->nargs() == targetFun->nargs());
-    targetFun->setFlags(sourceFun->flags() | JSFunction::EXTENDED);
+    // The target function might have been relazified after it's flags changed.
+    targetFun->setFlags((targetFun->flags() & ~JSFunction::INTERPRETED_LAZY) |
+                        sourceFun->flags() | JSFunction::EXTENDED);
     targetFun->setScript(cscript);
+    JS_ASSERT(targetFun->isExtended());
     return true;
 }
 
