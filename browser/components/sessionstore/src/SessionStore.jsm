@@ -2976,11 +2976,17 @@ let SessionStoreInternal = {
     }
 
     let frameList = this.getFramesToRestore(aBrowser);
-    let pageStyle = RestoreData.get(aBrowser, "pageStyle") || "";
+    let pageStyle = RestoreData.get(aBrowser, "pageStyle") || {};
     let scrollPositions = RestoreData.get(aBrowser, "scroll") || {};
 
-    PageStyle.restore(aBrowser.docShell, frameList, pageStyle);
-    ScrollPosition.restoreTree(aBrowser.contentWindow, scrollPositions);
+    // Support the old pageStyle format.
+    if (typeof(pageStyle) === "string") {
+      PageStyle.restore(aBrowser.docShell, frameList, pageStyle);
+    } else {
+      ScrollPosition.restoreTree(aBrowser.contentWindow, scrollPositions);
+    }
+
+    PageStyle.restoreTree(aBrowser.docShell, pageStyle);
     TextAndScrollData.restore(frameList);
 
     let tab = aBrowser.__SS_restore_tab;
