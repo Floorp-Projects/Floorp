@@ -1282,14 +1282,14 @@ abstract public class BrowserApp extends GeckoApp
             return false;
         }
 
-        // If this tab is already selected, just hide the home pager.
-        if (tabs.isSelectedTab(tabs.getTab(tabId))) {
-            hideHomePager();
-        } else {
+        if (!tabs.isSelectedTab(tabs.getTab(tabId))) {
             tabs.selectTab(tabId);
         }
 
+        // We need to hide BrowserSearch first - see dismissEditingMode for an explanation.
         hideBrowserSearch();
+        hideHomePager();
+
         mBrowserToolbar.cancelEdit();
 
         return true;
