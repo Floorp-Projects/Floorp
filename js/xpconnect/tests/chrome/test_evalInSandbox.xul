@@ -150,5 +150,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
       catch (e) {
         ok(false, "sameZoneAs works");
       }
+
+      Cu.import("resource://gre/modules/jsdebugger.jsm");
+      addDebuggerToGlobal(this);
+
+      try {
+        let dbg = new Debugger();
+        let sandbox = new Cu.Sandbox(this, { invisibleToDebugger: false });
+        dbg.addDebuggee(sandbox);
+        ok(true, "debugger added visible value");
+      } catch(e) {
+        ok(false, "debugger could not add visible value");
+      }
+
+      try {
+        let dbg = new Debugger();
+        let sandbox = new Cu.Sandbox(this, { invisibleToDebugger: true });
+        dbg.addDebuggee(sandbox);
+        ok(false, "debugger added invisible value");
+      } catch(e) {
+        ok(true, "debugger did not add invisible value");
+      }
   ]]></script>
 </window>
