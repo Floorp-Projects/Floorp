@@ -1131,7 +1131,7 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
 
-    args.rval().setBoolean(true);
+    args.rval().setUndefined();
     return true;
 }
 
