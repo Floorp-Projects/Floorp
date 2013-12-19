@@ -290,6 +290,13 @@ StoreBuffer::mark(JSTracer *trc)
     bufferRelocVal.mark(this, trc);
     bufferRelocCell.mark(this, trc);
     bufferGeneric.mark(this, trc);
+
+#if defined(DEBUG)
+    for (CompartmentsIter c(runtime_, SkipAtoms); !c.done(); c.next()) {
+        if (c->debugScopes)
+            c->debugScopes->checkHashTablesAfterMovingGC(runtime_);
+    }
+#endif
 }
 
 void
