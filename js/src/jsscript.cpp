@@ -2866,6 +2866,9 @@ JSScript::markChildren(JSTracer *trc)
     if (enclosingScopeOrOriginalFunction_)
         MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
 
+    if (maybeLazyScript())
+        MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
+
     if (IS_GC_MARKING_TRACER(trc)) {
         compartment()->mark();
 
@@ -3152,6 +3155,13 @@ LazyScript::initScript(JSScript *script)
 {
     JS_ASSERT(script && !script_);
     script_ = script;
+}
+
+void
+LazyScript::resetScript()
+{
+    JS_ASSERT(script_);
+    script_ = nullptr;
 }
 
 void

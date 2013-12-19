@@ -43,6 +43,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     runtime_(zone->runtimeFromMainThread()),
     principals(nullptr),
     isSystem(false),
+    isSelfHosting(false),
     marked(true),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),

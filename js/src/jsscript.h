@@ -39,6 +39,7 @@ namespace jit {
 
 class BreakpointSite;
 class BindingIter;
+class LazyScript;
 class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
@@ -624,6 +625,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     /* Information attached by Ion for parallel mode execution */
     js::jit::IonScript *parallelIon;
 
+    /* Information used to re-lazify a lazily-parsed interpreted function. */
+    js::LazyScript *lazyScript;
+
+#if JS_BITS_PER_WORD == 32
+    uint32_t padding0;
+#endif
+
     /*
      * Pointer to either baseline->method()->raw() or ion->method()->raw(), or
      * nullptr if there's no Baseline or Ion script.
@@ -1183,6 +1191,17 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         return offsetof(JSScript, baselineOrIonSkipArgCheck);
     }
 
+    bool isRelazifiable() const {
+        return (selfHosted() || lazyScript) &&
+               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
+    }
+    void setLazyScript(js::LazyScript *lazy) {
+        lazyScript = lazy;
+    }
+    js::LazyScript *maybeLazyScript() {
+        return lazyScript;
+    }
+
     /*
      * Original compiled function for the script, if it has a function.
      * nullptr for global and eval scripts.
@@ -1632,6 +1651,7 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     }
 
     void initScript(JSScript *script);
+    void resetScript();
     JSScript *maybeScript() {
         return script_;
     }
