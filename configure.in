@@ -8797,14 +8797,16 @@ yes)
 esac
 
 if test -n "$ENABLE_INTL_API"; then
-if test "$MOZ_BUILD_APP" = "browser"; then
+if test "$MOZ_BUILD_APP" = "browser" -a -z "$RELEASE_BUILD"; then
+    # Build and expose internationalization in non-release desktop builds.
     WITH_INTL="--with-intl-api"
 else
     # Internationalization isn't built or exposed by default in non-desktop
-    # builds.  Bugs to enable:
+    # builds, or in release desktop builds.  Bugs to enable:
     #
     #   Android:  bug 864843
     #   B2G:      bug 866301
+    #   Desktop release: bug 924839 (update to latest ICU)
     WITH_INTL="--without-intl-api"
     ENABLE_INTL_API=
 fi
