@@ -23,6 +23,9 @@
         <!-- Style for MenuItemDefault -->
         <attr name="menuItemDefaultStyle" format="reference"/>
 
+        <!-- Style for MenuItemActionBar when shown in SecondaryActionBar -->
+        <attr name="menuItemSecondaryActionBarStyle" format="reference"/>
+
         <!-- Style for MenuItemActionView's ShareActionButton -->
         <attr name="menuItemShareActionButtonStyle" format="reference"/>
 
