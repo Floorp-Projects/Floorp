@@ -229,7 +229,10 @@ BEGIN_TEST(testParseJSON_error)
     CHECK(Error(cx, "{\n\"a\":[2,3],\r\"b\":,5,6}"      , "3", "5"));
     CHECK(Error(cx, "{\r\"a\":[2,3],\n\"b\":,5,6}"      , "3", "5"));
     CHECK(Error(cx, "[\"\\t\\q"                         , "1", "6"));
-    CHECK(Error(cx, "[\"\\t\u0000"                      , "1", "5"));
+    CHECK(Error(cx, "[\"\\t\x00"                        , "1", "5"));
+    CHECK(Error(cx, "[\"\\t\x01"                        , "1", "5"));
+    CHECK(Error(cx, "[\"\\t\\\x00"                      , "1", "6"));
+    CHECK(Error(cx, "[\"\\t\\\x01"                      , "1", "6"));
 
     // Unicode escape errors are messy.  The first bad character could be
     // non-hexadecimal, or it could be absent entirely.  Include tests where
