@@ -51,7 +51,11 @@ this.Tracker = function Tracker(name, engine) {
   this.ignoreAll = false;
   this.changedIDs = {};
   this.loadChangedIDs();
-}
+
+  Svc.Obs.add("weave:engine:start-tracking", this);
+  Svc.Obs.add("weave:engine:stop-tracking", this);
+};
+
 Tracker.prototype = {
   /*
    * Score can be called as often as desired to decide which engines to sync
@@ -73,7 +77,7 @@ Tracker.prototype = {
   },
 
   // Should be called by service everytime a sync has been done for an engine
-  resetScore: function T_resetScore() {
+  resetScore: function () {
     this._score = 0;
   },
 
@@ -88,7 +92,7 @@ Tracker.prototype = {
       this._log.debug("Not saving changedIDs.");
       return;
     }
-    Utils.namedTimer(function() {
+    Utils.namedTimer(function () {
       this._log.debug("Saving changed IDs to " + this.file);
       Utils.jsonSave("changes/" + this.file, this, this.changedIDs, cb);
     }, 1000, this, "_lazySave");
@@ -112,39 +116,43 @@ Tracker.prototype = {
   // being processed, or that shouldn't be synced.
   // But note: not persisted to disk
 
-  ignoreID: function T_ignoreID(id) {
+  ignoreID: function (id) {
     this.unignoreID(id);
     this._ignored.push(id);
   },
 
-  unignoreID: function T_unignoreID(id) {
+  unignoreID: function (id) {
     let index = this._ignored.indexOf(id);
     if (index != -1)
       this._ignored.splice(index, 1);
   },
 
-  addChangedID: function addChangedID(id, when) {
+  addChangedID: function (id, when) {
     if (!id) {
       this._log.warn("Attempted to add undefined ID to tracker");
       return false;
     }
-    if (this.ignoreAll || (id in this._ignored))
+
+    if (this.ignoreAll || (id in this._ignored)) {
       return false;
+    }
 
-    // Default to the current time in seconds if no time is provided
-    if (when == null)
+    // Default to the current time in seconds if no time is provided.
+    if (when == null) {
       when = Math.floor(Date.now() / 1000);
+    }
 
-    // Add/update the entry if we have a newer time
+    // Add/update the entry if we have a newer time.
     if ((this.changedIDs[id] || -Infinity) < when) {
       this._log.trace("Adding changed ID: " + id + ", " + when);
       this.changedIDs[id] = when;
       this.saveChangedIDs(this.onSavedChangedIDs);
     }
+
     return true;
   },
 
-  removeChangedID: function T_removeChangedID(id) {
+  removeChangedID: function (id) {
     if (!id) {
       this._log.warn("Attempted to remove undefined ID to tracker");
       return false;
@@ -159,10 +167,64 @@ Tracker.prototype = {
     return true;
   },
 
-  clearChangedIDs: function T_clearChangedIDs() {
+  clearChangedIDs: function () {
     this._log.trace("Clearing changed ID list");
     this.changedIDs = {};
     this.saveChangedIDs();
+  },
+
+  _isTracking: false,
+
+  // Override these in your subclasses.
+  startTracking: function () {
+  },
+
+  stopTracking: function () {
+  },
+
+  engineIsEnabled: function () {
+    if (!this.engine) {
+      // Can't tell -- we must be running in a test!
+      return true;
+    }
+    return this.engine.enabled;
+  },
+
+  onEngineEnabledChanged: function (engineEnabled) {
+    if (engineEnabled == this._isTracking) {
+      return;
+    }
+
+    if (engineEnabled) {
+      this.startTracking();
+      this._isTracking = true;
+    } else {
+      this.stopTracking();
+      this._isTracking = false;
+      this.clearChangedIDs();
+    }
+  },
+
+  observe: function (subject, topic, data) {
+    switch (topic) {
+      case "weave:engine:start-tracking":
+        if (!this.engineIsEnabled()) {
+          return;
+        }
+        this._log.trace("Got start-tracking.");
+        if (!this._isTracking) {
+          this.startTracking();
+          this._isTracking = true;
+        }
+        return;
+      case "weave:engine:stop-tracking":
+        this._log.trace("Got stop-tracking.");
+        if (this._isTracking) {
+          this.stopTracking();
+          this._isTracking = false;
+        }
+        return;
+    }
   }
 };
 
@@ -228,7 +290,7 @@ Store.prototype = {
    * @param  records Array of records to apply
    * @return Array of record IDs which did not apply cleanly
    */
-  applyIncomingBatch: function applyIncomingBatch(records) {
+  applyIncomingBatch: function (records) {
     let failed = [];
     for each (let record in records) {
       try {
@@ -260,7 +322,7 @@ Store.prototype = {
    * @param record
    *        Record to apply
    */
-  applyIncoming: function Store_applyIncoming(record) {
+  applyIncoming: function (record) {
     if (record.deleted)
       this.remove(record);
     else if (!this.itemExists(record.id))
@@ -280,7 +342,7 @@ Store.prototype = {
    * @param record
    *        The store record to create an item from
    */
-  create: function Store_create(record) {
+  create: function (record) {
     throw "override create in a subclass";
   },
 
@@ -293,7 +355,7 @@ Store.prototype = {
    * @param record
    *        The store record to delete an item from
    */
-  remove: function Store_remove(record) {
+  remove: function (record) {
     throw "override remove in a subclass";
   },
 
@@ -306,7 +368,7 @@ Store.prototype = {
    * @param record
    *        The record to use to update an item from
    */
-  update: function Store_update(record) {
+  update: function (record) {
     throw "override update in a subclass";
   },
 
@@ -320,7 +382,7 @@ Store.prototype = {
    *         string record ID
    * @return boolean indicating whether record exists locally
    */
-  itemExists: function Store_itemExists(id) {
+  itemExists: function (id) {
     throw "override itemExists in a subclass";
   },
 
@@ -338,7 +400,7 @@ Store.prototype = {
    *         constructor for the newly-created record.
    * @return record type for this engine
    */
-  createRecord: function Store_createRecord(id, collection) {
+  createRecord: function (id, collection) {
     throw "override createRecord in a subclass";
   },
 
@@ -350,7 +412,7 @@ Store.prototype = {
    * @param  newID
    *         string new record ID
    */
-  changeItemID: function Store_changeItemID(oldID, newID) {
+  changeItemID: function (oldID, newID) {
     throw "override changeItemID in a subclass";
   },
 
@@ -360,7 +422,7 @@ Store.prototype = {
    * @return Object with ID strings as keys and values of true. The values
    *         are ignored.
    */
-  getAllIDs: function Store_getAllIDs() {
+  getAllIDs: function () {
     throw "override getAllIDs in a subclass";
   },
 
@@ -374,7 +436,7 @@ Store.prototype = {
    * can be thought of as clearing out all state and restoring the "new
    * browser" state.
    */
-  wipe: function Store_wipe() {
+  wipe: function () {
     throw "override wipe in a subclass";
   }
 };
@@ -388,14 +450,15 @@ this.EngineManager = function EngineManager(service) {
     "log.logger.service.engines", "Debug")];
 }
 EngineManager.prototype = {
-  get: function get(name) {
+  get: function (name) {
     // Return an array of engines if we have an array of names
     if (Array.isArray(name)) {
       let engines = [];
       name.forEach(function(name) {
         let engine = this.get(name);
-        if (engine)
+        if (engine) {
           engines.push(engine);
+        }
       }, this);
       return engines;
     }
@@ -403,17 +466,18 @@ EngineManager.prototype = {
     let engine = this._engines[name];
     if (!engine) {
       this._log.debug("Could not get engine: " + name);
-      if (Object.keys)
+      if (Object.keys) {
         this._log.debug("Engines are: " + JSON.stringify(Object.keys(this._engines)));
+      }
     }
     return engine;
   },
 
-  getAll: function getAll() {
+  getAll: function () {
     return [engine for ([name, engine] in Iterator(this._engines))];
   },
 
-  getEnabled: function getEnabled() {
+  getEnabled: function () {
     return this.getAll().filter(function(engine) engine.enabled);
   },
 
@@ -425,19 +489,20 @@ EngineManager.prototype = {
    *        Engine object used to get an instance of the engine
    * @return The engine object if anything failed
    */
-  register: function register(engineObject) {
-    if (Array.isArray(engineObject))
+  register: function (engineObject) {
+    if (Array.isArray(engineObject)) {
       return engineObject.map(this.register, this);
+    }
 
     try {
       let engine = new engineObject(this.service);
       let name = engine.name;
-      if (name in this._engines)
+      if (name in this._engines) {
         this._log.error("Engine '" + name + "' is already registered!");
-      else
+      } else {
         this._engines[name] = engine;
-    }
-    catch(ex) {
+      }
+    } catch (ex) {
       this._log.error(CommonUtils.exceptionStr(ex));
 
       let mesg = ex.message ? ex.message : ex;
@@ -452,14 +517,15 @@ EngineManager.prototype = {
     }
   },
 
-  unregister: function unregister(val) {
+  unregister: function (val) {
     let name = val;
-    if (val instanceof Engine)
+    if (val instanceof Engine) {
       name = val.name;
+    }
     delete this._engines[name];
   },
 
-  clear: function clear() {
+  clear: function () {
     for (let name in this._engines) {
       delete this._engines[name];
     }
@@ -493,8 +559,14 @@ Engine.prototype = {
   eEngineAbortApplyIncoming: "error.engine.abort.applyincoming",
 
   get prefName() this.name,
-  get enabled() Svc.Prefs.get("engine." + this.prefName, false),
-  set enabled(val) Svc.Prefs.set("engine." + this.prefName, !!val),
+  get enabled() {
+    return Svc.Prefs.get("engine." + this.prefName, false);
+  },
+
+  set enabled(val) {
+    Svc.Prefs.set("engine." + this.prefName, !!val);
+    this._tracker.onEngineEnabledChanged(val);
+  },
 
   get score() this._tracker.score,
 
@@ -510,27 +582,30 @@ Engine.prototype = {
     return tracker;
   },
 
-  sync: function Engine_sync() {
-    if (!this.enabled)
+  sync: function () {
+    if (!this.enabled) {
       return;
+    }
 
-    if (!this._sync)
+    if (!this._sync) {
       throw "engine does not implement _sync method";
+    }
 
     this._notify("sync", this.name, this._sync)();
   },
 
   /**
-   * Get rid of any local meta-data
+   * Get rid of any local meta-data.
    */
-  resetClient: function Engine_resetClient() {
-    if (!this._resetClient)
+  resetClient: function () {
+    if (!this._resetClient) {
       throw "engine does not implement _resetClient method";
+    }
 
     this._notify("reset-client", this.name, this._resetClient)();
   },
 
-  _wipeClient: function Engine__wipeClient() {
+  _wipeClient: function () {
     this.resetClient();
     this._log.debug("Deleting all local data");
     this._tracker.ignoreAll = true;
@@ -539,7 +614,7 @@ Engine.prototype = {
     this._tracker.clearChangedIDs();
   },
 
-  wipeClient: function Engine_wipeClient() {
+  wipeClient: function () {
     this._notify("wipe-client", this.name, this._wipeClient)();
   }
 };
@@ -606,7 +681,7 @@ SyncEngine.prototype = {
     // Store the value as a string to keep floating point precision
     Svc.Prefs.set(this.name + ".lastSync", value.toString());
   },
-  resetLastSync: function SyncEngine_resetLastSync() {
+  resetLastSync: function () {
     this._log.debug("Resetting " + this.name + " last sync time");
     Svc.Prefs.reset(this.name + ".lastSync");
     Svc.Prefs.set(this.name + ".lastSync", "0");
@@ -625,8 +700,8 @@ SyncEngine.prototype = {
     }, 0, this, "_toFetchDelay");
   },
 
-  loadToFetch: function loadToFetch() {
-    // Initialize to empty if there's no file
+  loadToFetch: function () {
+    // Initialize to empty if there's no file.
     this._toFetch = [];
     Utils.jsonLoad("toFetch/" + this.name, this, function(toFetch) {
       if (toFetch) {
@@ -647,7 +722,7 @@ SyncEngine.prototype = {
     }, 0, this, "_previousFailedDelay");
   },
 
-  loadPreviousFailed: function loadPreviousFailed() {
+  loadPreviousFailed: function () {
     // Initialize to empty if there's no file
     this._previousFailed = [];
     Utils.jsonLoad("failed/" + this.name, this, function(previousFailed) {
@@ -673,12 +748,12 @@ SyncEngine.prototype = {
    * can override this method to bypass the tracker for certain or all
    * changed items.
    */
-  getChangedIDs: function getChangedIDs() {
+  getChangedIDs: function () {
     return this._tracker.changedIDs;
   },
 
-  // Create a new record using the store and add in crypto fields
-  _createRecord: function SyncEngine__createRecord(id) {
+  // Create a new record using the store and add in crypto fields.
+  _createRecord: function (id) {
     let record = this._store.createRecord(id, this.name);
     record.id = id;
     record.collection = this.name;
@@ -686,7 +761,7 @@ SyncEngine.prototype = {
   },
 
   // Any setup that needs to happen at the beginning of each sync.
-  _syncStartup: function SyncEngine__syncStartup() {
+  _syncStartup: function () {
 
     // Determine if we need to wipe on outdated versions
     let metaGlobal = this.service.recordManager.get(this.metaURL);
@@ -1031,11 +1106,11 @@ SyncEngine.prototype = {
    *
    * @return GUID of the similar item; falsy otherwise
    */
-  _findDupe: function _findDupe(item) {
+  _findDupe: function (item) {
     // By default, assume there's no dupe items for the engine
   },
 
-  _deleteId: function _deleteId(id) {
+  _deleteId: function (id) {
     this._tracker.removeChangedID(id);
 
     // Remember this id to delete at the end of sync
@@ -1055,7 +1130,7 @@ SyncEngine.prototype = {
    * @return boolean
    *         Truthy if incoming record should be applied. False if not.
    */
-  _reconcile: function _reconcile(item) {
+  _reconcile: function (item) {
     if (this._log.level <= Log.Level.Trace) {
       this._log.trace("Incoming: " + item);
     }
@@ -1227,8 +1302,8 @@ SyncEngine.prototype = {
     return remoteIsNewer;
   },
 
-  // Upload outgoing records
-  _uploadOutgoing: function SyncEngine__uploadOutgoing() {
+  // Upload outgoing records.
+  _uploadOutgoing: function () {
     this._log.trace("Uploading local changes to server.");
 
     let modifiedIDs = Object.keys(this._modified);
@@ -1298,7 +1373,7 @@ SyncEngine.prototype = {
 
   // Any cleanup necessary.
   // Save the current snapshot so as to calculate changes at next sync
-  _syncFinish: function SyncEngine__syncFinish() {
+  _syncFinish: function () {
     this._log.trace("Finishing up sync");
     this._tracker.resetScore();
 
@@ -1325,9 +1400,10 @@ SyncEngine.prototype = {
     }
   },
 
-  _syncCleanup: function _syncCleanup() {
-    if (!this._modified)
+  _syncCleanup: function () {
+    if (!this._modified) {
       return;
+    }
 
     // Mark failed WBOs as changed again so they are reuploaded next time.
     for (let [id, when] in Iterator(this._modified)) {
@@ -1336,7 +1412,7 @@ SyncEngine.prototype = {
     this._modified = {};
   },
 
-  _sync: function SyncEngine__sync() {
+  _sync: function () {
     try {
       this._syncStartup();
       Observers.notify("weave:engine:sync:status", "process-incoming");
@@ -1349,7 +1425,7 @@ SyncEngine.prototype = {
     }
   },
 
-  canDecrypt: function canDecrypt() {
+  canDecrypt: function () {
     // Report failure even if there's nothing to decrypt
     let canDecrypt = false;
 
@@ -1377,13 +1453,13 @@ SyncEngine.prototype = {
     return canDecrypt;
   },
 
-  _resetClient: function SyncEngine__resetClient() {
+  _resetClient: function () {
     this.resetLastSync();
     this.previousFailed = [];
     this.toFetch = [];
   },
 
-  wipeServer: function wipeServer() {
+  wipeServer: function () {
     let response = this.service.resource(this.engineURL).delete();
     if (response.status != 200 && response.status != 404) {
       throw response;
@@ -1391,7 +1467,7 @@ SyncEngine.prototype = {
     this._resetClient();
   },
 
-  removeClientData: function removeClientData() {
+  removeClientData: function () {
     // Implement this method in engines that store client specific data
     // on the server.
   },
@@ -1412,7 +1488,7 @@ SyncEngine.prototype = {
    *
    * All return values will be part of the kRecoveryStrategy enumeration.
    */
-  handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
+  handleHMACMismatch: function (item, mayRetry) {
     // By default we either try again, or bail out noisily.
     return (this.service.handleHMACEvent() && mayRetry) ?
            SyncEngine.kRecoveryStrategy.retry :

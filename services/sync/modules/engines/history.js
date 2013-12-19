@@ -348,28 +348,18 @@ HistoryStore.prototype = {
 
 function HistoryTracker(name, engine) {
   Tracker.call(this, name, engine);
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 HistoryTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  _enabled: false,
-  observe: function observe(subject, topic, data) {
-    switch (topic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          PlacesUtils.history.addObserver(this, true);
-          this._enabled = true;
-        }
-        break;
-      case "weave:engine:stop-tracking":
-        if (this._enabled) {
-          PlacesUtils.history.removeObserver(this);
-          this._enabled = false;
-        }
-        break;
-    }
+  startTracking: function() {
+    this._log.info("Adding Places observer.");
+    PlacesUtils.history.addObserver(this, true);
+  },
+
+  stopTracking: function() {
+    this._log.info("Removing Places observer.");
+    PlacesUtils.history.removeObserver(this);
   },
 
   QueryInterface: XPCOMUtils.generateQI([
