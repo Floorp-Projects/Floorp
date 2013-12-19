@@ -1408,7 +1408,15 @@ abstract public class BrowserApp extends GeckoApp
 
         int flags = (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST;
         int id = Favicons.getFaviconForSize(tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
+
         tab.setFaviconLoadId(id);
+        if (id != Favicons.LOADED &&
+            Tabs.getInstance().isSelectedTab(tab)) {
+            // We're loading the current tab's favicon from somewhere
+            // other than the cache.
+            // Display the globe favicon until then.
+            mBrowserToolbar.showDefaultFavicon();
+        }
     }
 
     private void maybeCancelFaviconLoad(Tab tab) {
@@ -2053,6 +2061,7 @@ abstract public class BrowserApp extends GeckoApp
 
         Tab tab = Tabs.getInstance().getSelectedTab();
         MenuItem bookmark = aMenu.findItem(R.id.bookmark);
+        MenuItem back = aMenu.findItem(R.id.back);
         MenuItem forward = aMenu.findItem(R.id.forward);
         MenuItem share = aMenu.findItem(R.id.share);
         MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
@@ -2068,6 +2077,7 @@ abstract public class BrowserApp extends GeckoApp
 
         if (tab == null || tab.getURL() == null) {
             bookmark.setEnabled(false);
+            back.setEnabled(false);
             forward.setEnabled(false);
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
@@ -2080,6 +2090,7 @@ abstract public class BrowserApp extends GeckoApp
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(tab.isBookmark() ? R.drawable.ic_menu_bookmark_remove : R.drawable.ic_menu_bookmark_add);
 
+        back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
         desktopMode.setChecked(tab.getDesktopMode());
         desktopMode.setIcon(tab.getDesktopMode() ? R.drawable.ic_menu_desktop_mode_on : R.drawable.ic_menu_desktop_mode_off);
@@ -2206,6 +2217,13 @@ abstract public class BrowserApp extends GeckoApp
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null)
                 tab.doReload();
+            return true;
+        }
+
+        if (itemId == R.id.back) {
+            tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null)
+                tab.doBack();
             return true;
         }
 
