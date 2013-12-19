@@ -792,8 +792,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
-#if defined(JS_THREADSAFE) && defined(JS_ION)
-# define JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
 
     js::WorkerThreadState *workerThreadState;
 
@@ -841,11 +840,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setUsedByExclusiveThread(JS::Zone *zone);
     void clearUsedByExclusiveThread(JS::Zone *zone);
 
-#endif // JS_THREADSAFE && JS_ION
+#endif // JS_THREADSAFE
 
 #ifdef DEBUG
     bool currentThreadHasExclusiveAccess() {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
                exclusiveAccessOwner == PR_GetCurrentThread();
 #else
@@ -855,7 +854,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif // DEBUG
 
     bool exclusiveThreadsPresent() const {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         return numExclusiveThreads > 0;
 #else
         return false;
@@ -863,14 +862,14 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     void addCompilationThread() {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         numCompilationThreads++;
 #else
         MOZ_ASSUME_UNREACHABLE("No threads");
 #endif
     }
     void removeCompilationThread() {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         JS_ASSERT(numCompilationThreads);
         numCompilationThreads--;
 #else
@@ -879,7 +878,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     bool compilationThreadsPresent() const {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         return numCompilationThreads > 0;
 #else
         return false;
@@ -888,7 +887,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 #ifdef DEBUG
     bool currentThreadHasCompilationLock() {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         return (!numCompilationThreads && mainThreadHasCompilationLock) ||
                compilationLockOwner == PR_GetCurrentThread();
 #else

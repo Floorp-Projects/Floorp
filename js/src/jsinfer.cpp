@@ -2678,7 +2678,7 @@ TypeObject::assertCanAccessProto() const
 
     // Any proto pointer which is in the nursery may be moved, and may not be
     // accessed during off thread compilation.
-#if defined(JSGC_GENERATIONAL) && defined(JS_WORKER_THREADS)
+#if defined(JSGC_GENERATIONAL) && defined(JS_THREADSAFE)
     PerThreadData *pt = TlsPerThreadData.get();
     TaggedProto proto(proto_);
     JS_ASSERT_IF(proto.isObject() && !proto.toObject()->isTenured(),
