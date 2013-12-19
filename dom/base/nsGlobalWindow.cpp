@@ -1370,6 +1370,7 @@ void
 nsGlobalWindow::DropOuterWindowDocs()
 {
   MOZ_ASSERT(IsOuterWindow());
+  MOZ_ASSERT_IF(mDoc, !mDoc->EventHandlingSuppressed());
   mDoc = nullptr;
   mSuspendedDoc = nullptr;
 }
@@ -1552,7 +1553,7 @@ nsGlobalWindow::FreeInnerObjects()
     mDocumentURI = mDoc->GetDocumentURI();
     mDocBaseURI = mDoc->GetDocBaseURI();
 
-    if (mDoc->EventHandlingSuppressed()) {
+    while (mDoc->EventHandlingSuppressed()) {
       mDoc->UnsuppressEventHandlingAndFireEvents(false);
     }
   }
