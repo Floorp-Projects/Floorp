@@ -22,9 +22,9 @@ const FastListWidget = module.exports = function FastListWidget(aNode) {
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
+  this._list.className = "fast-list-widget-container theme-body";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
-  this._list.setAttribute("theme", "dark");
   this._list.setAttribute("tabindex", "0");
   this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
   this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);

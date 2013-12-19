@@ -135,11 +135,6 @@
 
 .theme-dark #tracer-message {
   color: #f5f7fa; /* Light foreground text */
-  background: url(background-noise-toolbar.png) #181d20; /* Content background sidebar */
-}
-
-.theme-dark #tracer-traces > scrollbox {
-  background-color: #181d20 !important; /* Content background sidebar */
 }
 
 .theme-dark .trace-item {
@@ -179,11 +174,6 @@
 
 .theme-light #tracer-message {
   color: #292e33; /* Dark foreground text */
-  background: url(background-noise-toolbar.png) #f7f7f7; /* Content background sidebar */
-}
-
-.theme-light #tracer-traces > scrollbox {
-  background-color: #f7f7f7 !important; /* Content background sidebar */
 }
 
 .theme-light .trace-item {
