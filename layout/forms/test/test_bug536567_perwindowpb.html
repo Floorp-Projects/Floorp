@@ -139,12 +139,20 @@ var mainWindow =
     getInterface(Ci.nsIDOMWindow);
 var contentPage = "http://mochi.test:8888/chrome/layout/forms/test/bug536567_iframe.html";
 
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      setTimeout(aCallback, 0);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+  whenDelayedStartupFinished(win, function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
-      if (win.content.location.href == "about:privatebrowsing") {
+      if (win.content.location.href != contentPage) {
         win.gBrowser.loadURI(contentPage);
         return;
       }
@@ -155,7 +163,7 @@ function testOnWindow(aIsPrivate, aCallback) {
     }, true);
     SimpleTest.info("load's window: " + win.location + " vs. " + window.location);
     win.setTimeout(function() { win.gBrowser.loadURI(contentPage); }, 0);
-  }, true);
+  });
 }
 
 MockFilePicker.showCallback = function(filepicker) {
