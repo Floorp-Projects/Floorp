@@ -292,9 +292,7 @@ StoreBuffer::mark(JSTracer *trc)
     bufferGeneric.mark(this, trc);
 
 #if defined(DEBUG)
-    /* Check that internal hash tables no longer have any pointers into the nursery. */
     for (CompartmentsIter c(runtime_, SkipAtoms); !c.done(); c.next()) {
-        c->checkNewTypeObjectTableAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(runtime_);
     }
