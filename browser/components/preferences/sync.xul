@@ -47,10 +47,12 @@
           <label class="text-link"
                  onclick="event.stopPropagation(); gSyncPane.openSetup(null);"
                  value="&setupButton.label;"/>
-          <separator/>
-          <label class="text-link"
-                 onclick="event.stopPropagation(); gSyncPane.openSetup('pair');"
-                 value="&pairDevice.label;"/>
+          <vbox id="pairDevice">
+            <separator/>
+            <label class="text-link"
+                   onclick="event.stopPropagation(); gSyncPane.openSetup('pair');"
+                   value="&pairDevice.label;"/>
+          </vbox>
           <spacer flex="3"/>
         </vbox>
 
