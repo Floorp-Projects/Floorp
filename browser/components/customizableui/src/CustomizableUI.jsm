@@ -883,7 +883,7 @@ let CustomizableUIInternal = {
     }
     let nextNode = null;
     if (aNextNodeId) {
-      nextNode = aAreaNode.customizationTarget.querySelector(idToSelector(aNextNodeId));
+      nextNode = aAreaNode.customizationTarget.getElementsByAttribute("id", aNextNodeId)[0];
     }
     return [aAreaNode.customizationTarget, nextNode];
   },
@@ -1004,7 +1004,7 @@ let CustomizableUIInternal = {
       if (toolbox.palette) {
         // Attempt to locate a node with a matching ID within
         // the palette.
-        let node = toolbox.palette.querySelector(idToSelector(aId));
+        let node = toolbox.palette.getElementsByAttribute("id", aId)[0];
         if (node) {
           // Normalize the removable attribute. For backwards compat, this
           // is optional if the widget is located in the toolbox palette,
@@ -1881,7 +1881,7 @@ let CustomizableUIInternal = {
         windowCache.delete(aWidgetId);
       }
       let widgetNode = window.document.getElementById(aWidgetId) ||
-                       window.gNavToolbox.palette.querySelector(idToSelector(aWidgetId));
+                       window.gNavToolbox.palette.getElementsByAttribute("id", aWidgetId)[0];
       if (widgetNode) {
         widgetNode.remove();
       }
@@ -2014,7 +2014,7 @@ let CustomizableUIInternal = {
     if (!container.length) {
       return false;
     }
-    let existingNode = container[0].querySelector(idToSelector(aWidgetId));
+    let existingNode = container[0].getElementsByAttribute("id", aWidgetId)[0];
     if (existingNode) {
       return true;
     }
@@ -2058,7 +2058,7 @@ let CustomizableUIInternal = {
           // Clone the array so we don't modify the actual placements...
           currentPlacements = [...currentPlacements];
           currentPlacements = currentPlacements.filter((item) => {
-            let itemNode = container.querySelector(idToSelector(item));
+            let itemNode = container.getElementsByAttribute("id", item)[0];
             return itemNode && removableOrDefault(itemNode || item);
           });
         }
@@ -2972,7 +2972,7 @@ function XULWidgetGroupWrapper(aWidgetId) {
     if (!instance) {
       // Toolbar palettes aren't part of the document, so elements in there
       // won't be found via document.getElementById().
-      instance = aWindow.gNavToolbox.palette.querySelector(idToSelector(aWidgetId));
+      instance = aWindow.gNavToolbox.palette.getElementsByAttribute("id", aWidgetId)[0];
     }
 
     let wrapper = new XULWidgetSingleWrapper(aWidgetId, instance);
@@ -3039,6 +3039,12 @@ function OverflowableToolbar(aToolbarNode) {
   this._enabled = true;
 
   this._toolbar.setAttribute("overflowable", "true");
+  let doc = this._toolbar.ownerDocument;
+  this._target = this._toolbar.customizationTarget;
+  this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
+  this._list.toolbox = this._toolbar.toolbox;
+  this._list.customizationTarget = this._list;
+
   Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
 }
 
@@ -3055,12 +3061,7 @@ OverflowableToolbar.prototype = {
   },
 
   init: function() {
-    this._target = this._toolbar.customizationTarget;
     let doc = this._toolbar.ownerDocument;
-    this._list = doc.getElementById(this._toolbar.getAttribute("overflowtarget"));
-    this._list.toolbox = this._toolbar.toolbox;
-    this._list.customizationTarget = this._list;
-
     let window = doc.defaultView;
     window.addEventListener("resize", this);
     window.gNavToolbox.addEventListener("customizationstarting", this);
@@ -3221,7 +3222,7 @@ OverflowableToolbar.prototype = {
       }
       let inserted = false;
       for (; beforeNodeIndex < placements.length; beforeNodeIndex++) {
-        let beforeNode = this._target.querySelector(idToSelector(placements[beforeNodeIndex]));
+        let beforeNode = this._target.getElementsByAttribute("id", placements[beforeNodeIndex])[0];
         if (beforeNode) {
           this._target.insertBefore(child, beforeNode);
           inserted = true;
@@ -3354,7 +3355,7 @@ OverflowableToolbar.prototype = {
       return [this._list, null];
     }
 
-    let nextNode = this._list.querySelector(idToSelector(aNextNodeId));
+    let nextNode = this._list.getElementsByAttribute("id", aNextNodeId)[0];
     // If this is the first item, we can actually just append the node
     // to the end of the toolbar.  If it results in an overflow event, we'll move
     // the new node to the overflow target.
@@ -3371,10 +3372,5 @@ OverflowableToolbar.prototype = {
     return this._target;
   },
 };
-
-// When IDs contain special characters, we need to escape them for use with querySelector:
-function idToSelector(aId) {
-  return "#" + aId.replace(/[ !"'#$%&\(\)*+\-,.\/:;<=>?@\[\\\]^`{|}~]/g, '\\$&');
-}
 
 CustomizableUIInternal.initialize();

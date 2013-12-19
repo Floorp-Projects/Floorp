@@ -2474,8 +2474,15 @@ function _checkDefaultAndSwitchToMetro() {
     getService(Components.interfaces.nsIAppStartup);
 
     Services.prefs.setBoolPref('browser.sessionstore.resume_session_once', true);
-    appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
-                    Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
+
+    let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
+                     .createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+
+    if (!cancelQuit.data) {
+      appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit |
+                      Components.interfaces.nsIAppStartup.eRestartTouchEnvironment);
+    }
     return true;
   }
   return false;
