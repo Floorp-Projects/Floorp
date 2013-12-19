@@ -2853,6 +2853,13 @@
     "extended_statistics_ok": true,
     "description": "Session restore: Duration of the longest uninterruptible operation while collecting all window and tab data (ms)"
   },
+  "FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Duration of the longest uninterruptible operation while collecting data in the content process (ms)"
+  },
   "FX_SESSION_RESTORE_SERIALIZE_DATA_MS": {
     "kind": "exponential",
     "high": "1000",

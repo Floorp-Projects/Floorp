@@ -86,6 +86,12 @@
              oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
     <command id="toggleShowOriginalSource"
              oncommand="DebuggerView.Options._toggleShowOriginalSource()"/>
+    <command id="toggleTracing"
+             oncommand="DebuggerView.Tracer._onToggleTracing()"/>
+    <command id="startTracing"
+             oncommand="DebuggerView.Tracer._onStartTracing()"/>
+    <command id="clearTraces"
+             oncommand="DebuggerView.Tracer._onClear()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -304,6 +310,13 @@
                        class="devtools-toolbarbutton"
                        tabindex="0"/>
       </hbox>
+      <hbox>
+        <toolbarbutton id="trace"
+                       class="devtools-toolbarbutton"
+                       command="toggleTracing"
+                       tabindex="0"
+                       hidden="true"/>
+      </hbox>
       <menulist id="chrome-globals"
                 class="devtools-menulist"
                 sizetopopup="none" hidden="true"/>
@@ -328,6 +341,7 @@
         <tabs>
           <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
           <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
+          <tab id="tracer-tab" label="&debuggerUI.tabs.traces;" hidden="true"/>
         </tabs>
         <tabpanels flex="1">
           <tabpanel id="sources-tabpanel">
@@ -353,6 +367,41 @@
           </tabpanel>
           <tabpanel id="callstack-tabpanel">
             <vbox id="callstack-list" flex="1"/>
+          </tabpanel>
+          <tabpanel id="tracer-tabpanel" flex="1">
+            <deck id="tracer-deck" selectedIndex="1" flex="1">
+              <vbox flex="1">
+                <vbox id="tracer-traces" flex="1">
+                  <hbox class="trace-item-template" hidden="true">
+                    <hbox class="trace-item" align="center" flex="1" crop="end">
+                      <label class="trace-type plain"/>
+                      <label class="trace-name plain" crop="end"/>
+                    </hbox>
+                  </hbox>
+                </vbox>
+                <toolbar id="tracer-toolbar" class="devtools-toolbar">
+                  <toolbarbutton id="clear-tracer"
+                                 label="&debuggerUI.clearButton;"
+                                 tooltiptext="&debuggerUI.clearButton.tooltip;"
+                                 command="clearTraces"
+                                 class="devtools-toolbarbutton"/>
+                  <textbox id="tracer-search"
+                           class="devtools-searchinput"
+                           flex="1"
+                           type="search"/>
+                </toolbar>
+              </vbox>
+              <vbox id="tracer-message"
+                    flex="1"
+                    align="center"
+                    pack="center">
+                <description value="&debuggerUI.tracingNotStarted.label;" />
+                <button id="start-tracing"
+                        class="devtools-toolbarbutton"
+                        command="startTracing"
+                        label="&debuggerUI.startTracing;"/>
+              </vbox>
+            </deck>
           </tabpanel>
         </tabpanels>
       </tabbox>

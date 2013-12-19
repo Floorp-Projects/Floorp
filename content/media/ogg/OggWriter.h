@@ -31,7 +31,6 @@ public:
 
   // Check metadata type integrity and reject unacceptable track encoder.
   nsresult SetMetadata(TrackMetadataBase* aMetadata) MOZ_OVERRIDE;
-
 private:
   nsresult Init();
 
