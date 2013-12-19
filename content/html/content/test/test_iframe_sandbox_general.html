@@ -40,26 +40,26 @@ function ok_wrapper(result, desc) {
     passedTests++;
   }
 
-  if (completedTests == 23) {
+  if (completedTests == 27) {
     is(passedTests, completedTests, "There are " + completedTests + " general tests that should pass");
     SimpleTest.finish();
   }
 }
 
 function doTest() {
-  // passes if good
+  // passes twice if good
   // 1) test that inline scripts (<script>) can run in an iframe sandboxed with "allow-scripts"
   // (done in file_iframe_sandbox_c_if1.html which has 'allow-scripts')
 
-  // passes if good
+  // passes twice if good
   // 2) test that <script src=...> can run in an iframe sandboxed with "allow-scripts"
   // (done in file_iframe_sandbox_c_if1.html which has 'allow-scripts')
 
-  // passes if good
+  // passes twice if good
   // 3) test that script in an event listener (body onload) can run in an iframe sandboxed with "allow-scripts"
   // (done in file_iframe_sandbox_c_if1.html which has 'allow-scripts')
 
-  // passes if good
+  // passes twice if good
   // 4) test that script in an javascript:url can run in an iframe sandboxed with "allow-scripts"
   // (done in file_iframe_sandbox_c_if1.html which has 'allow-scripts')
 
@@ -217,6 +217,7 @@ function do_if_10() {
 <p id="display"></p>
 <div id="content">
 <iframe sandbox="allow-same-origin allow-scripts" id="if_1" src="file_iframe_sandbox_c_if1.html" height="10" width="10"></iframe>
+<iframe sandbox="aLlOw-SAME-oRiGin ALLOW-sCrIpTs" id="if_1_case_insensitive" src="file_iframe_sandbox_c_if1.html" height="10" width="10"></iframe>
 <iframe sandbox="" id="if_2" src="file_iframe_sandbox_c_if2.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-forms allow-scripts" id="if_3" src="file_iframe_sandbox_c_if3.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-same-origin allow-scripts" id="if_4" src="file_iframe_sandbox_c_if4.html" height="10" width="10"></iframe>
