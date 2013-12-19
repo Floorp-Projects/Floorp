@@ -346,6 +346,21 @@ var SelectionHandler = {
     this._sendMessage("TextSelection:Update");
   },
 
+  addAction: function(action) {
+    if (!action.id)
+      action.id = uuidgen.generateUUID().toString()
+
+    if (this.actions[action.id])
+      throw "Action with id " + action.id + " already added";
+
+    this.actions[action.id] = action;
+    return action.id;
+  },
+
+  removeAction: function(id) {
+    delete this.actions[id];
+  },
+
   actions: {
     SELECT_ALL: {
       label: Strings.browser.GetStringFromName("contextmenu.selectAll"),
