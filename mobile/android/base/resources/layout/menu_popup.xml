@@ -3,35 +3,14 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:id="@+id/menu_panel"
+              android:layout_width="@dimen/menu_popup_width"
+              android:layout_height="wrap_content"
+              android:layout_alignParentRight="true"
+              android:minWidth="@dimen/menu_popup_width"
+              android:background="@drawable/menu_popup_bg">
 
-    <RelativeLayout android:id="@+id/menu_panel"
-                    android:layout_width="@dimen/menu_popup_width"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:background="@drawable/menu_popup_bg">
+    <!-- MenuPanel will be added here dynamically -->
 
-        <!-- MenuPanel will be added here dynamically -->
-
-    </RelativeLayout>
-
-    <ImageView android:id="@+id/menu_arrow_top"
-               android:layout_width="@dimen/menu_popup_arrow_width"
-               android:layout_height="12dip"
-               android:layout_marginRight="@dimen/menu_popup_arrow_margin"
-               android:layout_alignRight="@id/menu_panel"
-               android:src="@drawable/menu_popup_arrow_top"
-               android:scaleType="fitXY"/>
-
-    <ImageView android:id="@+id/menu_arrow_bottom"
-               android:layout_width="@dimen/menu_popup_arrow_width"
-               android:layout_height="12dip"
-               android:layout_marginRight="@dimen/menu_popup_arrow_margin"
-               android:layout_alignRight="@id/menu_panel"
-               android:layout_alignBottom="@id/menu_panel"
-               android:src="@drawable/menu_popup_arrow_bottom"
-               android:scaleType="fitXY"/>
-
-</RelativeLayout>
+</LinearLayout>

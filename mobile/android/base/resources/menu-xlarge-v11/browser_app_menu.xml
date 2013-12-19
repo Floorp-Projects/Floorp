@@ -10,6 +10,11 @@
           android:title="@string/reload"
           android:showAsAction="always"/>
 
+    <item android:id="@+id/back"
+          android:icon="@drawable/ic_menu_back"
+          android:title="@string/back"
+          android:visible="false"/>
+
     <item android:id="@+id/forward"
           android:icon="@drawable/ic_menu_forward"
           android:title="@string/forward"
@@ -22,7 +27,8 @@
 
     <item android:id="@+id/share"
           android:icon="@drawable/ic_menu_share"
-          android:title="@string/share" />
+          android:title="@string/share"
+          android:showAsAction="ifRoom"/>
 
     <item android:id="@+id/new_tab"
           android:icon="@drawable/ic_menu_new_tab"
