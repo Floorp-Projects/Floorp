@@ -7819,10 +7819,13 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     // done to provide templates to Ion for inlining these natives later on.
 
     if (native == js_Array) {
+        // Note: the template array won't be used if its length is inaccurately
+        // computed here.  (We allocate here because compilation may occur on a
+        // separate thread where allocation is impossible.)
         size_t count = 0;
-        if (args.hasDefined(1))
+        if (args.length() != 1)
             count = args.length();
-        else if (args.hasDefined(0) && args[0].isInt32() && args[0].toInt32() > 0)
+        else if (args.length() == 1 && args[0].isInt32() && args[0].toInt32() >= 0)
             count = args[0].toInt32();
         res.set(NewDenseUnallocatedArray(cx, count, nullptr, TenuredObject));
         if (!res)

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!--
+     Note: This layout is intended to be used only above 11+.
+     android:showDividers are available only 11+
+-->
+<view xmlns:android="http://schemas.android.com/apk/res/android"
+      class="org.mozilla.gecko.menu.GeckoMenu$DefaultActionItemBar"
+      android:layout_width="@dimen/menu_item_row_width"
+      android:layout_height="@dimen/browser_toolbar_height"
+      android:orientation="horizontal"
+      android:divider="@drawable/divider_vertical"
+      android:showDividers="middle"
+      android:dividerPadding="0dip"/>

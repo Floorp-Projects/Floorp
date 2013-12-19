@@ -6,6 +6,13 @@
 
 const Cu = Components.utils;
 
+const PREF_BRANCH = "toolkit.telemetry.";
+#ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
+const PREF_ENABLED = PREF_BRANCH + "enabledPreRelease";
+#else
+const PREF_ENABLED = PREF_BRANCH + "enabled";
+#endif
+
 this.EXPORTED_SYMBOLS = [
   "UITelemetry",
 ];
@@ -17,9 +24,54 @@ Cu.import("resource://gre/modules/Services.jsm");
  *
  * It implements nsIUITelemetryObserver, defined in nsIAndroidBridge.idl.
  */
-this.UITelemetry = Object.freeze({
+this.UITelemetry = {
+  _enabled: undefined,
   _activeSessions: {},
   _measurements: [],
+
+  // Lazily decide whether telemetry is enabled.
+  get enabled() {
+    if (this._enabled !== undefined) {
+      return this._enabled;
+    }
+
+    // Set an observer to watch for changes at runtime.
+    Services.prefs.addObserver(PREF_ENABLED, this, false);
+    Services.obs.addObserver(this, "profile-before-change", false);
+
+    // Pick up the current value.
+    try {
+      this._enabled = Services.prefs.getBoolPref(PREF_ENABLED);
+    } catch (e) {
+      this._enabled = false;
+    }
+
+    return this._enabled;
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "profile-before-change") {
+      Services.obs.removeObserver(this, "profile-before-change");
+      Services.prefs.removeObserver(PREF_ENABLED, this);
+      this._enabled = undefined;
+      return;
+    }
+
+    if (aTopic == "nsPref:changed") {
+      switch (aData) {
+        case PREF_ENABLED:
+          let on = Services.prefs.getBoolPref(PREF_ENABLED);
+          this._enabled = on;
+
+          // Wipe ourselves if we were just disabled.
+          if (!on) {
+            this._activeSessions = {};
+            this._measurements = [];
+          }
+          break;
+      }
+    }
+  },
 
   /**
    * This exists exclusively for testing -- our events are not intended to
@@ -46,6 +98,10 @@ this.UITelemetry = Object.freeze({
    * All extant sessions will be recorded by name for each event.
    */
   addEvent: function(aAction, aMethod, aTimestamp, aExtras) {
+    if (!this.enabled) {
+      return;
+    }
+
     let sessions = Object.keys(this._activeSessions);
     let aEvent = {
       type: "event",
@@ -66,6 +122,10 @@ this.UITelemetry = Object.freeze({
    * Begins tracking a session by storing a timestamp for session start.
    */
   startSession: function(aName, aTimestamp) {
+    if (!this.enabled) {
+      return;
+    }
+
     if (this._activeSessions[aName]) {
       // Do not overwrite a previous event start if it already exists.
       return;
@@ -77,6 +137,10 @@ this.UITelemetry = Object.freeze({
    * Tracks the end of a session with a timestamp.
    */
   stopSession: function(aName, aReason, aTimestamp) {
+    if (!this.enabled) {
+      return;
+    }
+
     let sessionStart = this._activeSessions[aName];
     delete this._activeSessions[aName];
 
@@ -107,6 +171,10 @@ this.UITelemetry = Object.freeze({
    * results of those functions.
    */
   getSimpleMeasures: function() {
+    if (!this.enabled) {
+      return {};
+    }
+
     let result = {};
     for (let name in this._simpleMeasureFunctions) {
       result[name] = this._simpleMeasureFunctions[name]();
@@ -124,6 +192,10 @@ this.UITelemetry = Object.freeze({
    * registered for it.
    */
   addSimpleMeasureFunction: function(aName, aFunction) {
+    if (!this.enabled) {
+      return;
+    }
+
     if (aName in this._simpleMeasureFunctions) {
       throw new Error("A simple measurement function is already registered for " + aName);
     }
@@ -139,7 +211,11 @@ this.UITelemetry = Object.freeze({
     delete this._simpleMeasureFunctions[aName];
   },
 
-  getUIMeasurements: function getUIMeasurements() {
+  getUIMeasurements: function() {
+    if (!this.enabled) {
+      return [];
+    }
+
     return this._measurements.slice();
   }
-});
+};
