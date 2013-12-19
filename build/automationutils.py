@@ -448,11 +448,14 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
   else:
     env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
-  # Set WebRTC logging in case it is not set yet
+  # Additional temporary logging while we try to debug some intermittent
+  # WebRTC conditions. This is necessary to troubleshoot bugs 841496,
+  # 841150, and 839677 (at least)
+  # Also (temporary) bug 870002 (mediastreamgraph)
   env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:3')
-  env.setdefault('R_LOG_LEVEL', '5')
-  env.setdefault('R_LOG_DESTINATION', 'stderr')
-  env.setdefault('R_LOG_VERBOSE', '1')
+  env['R_LOG_LEVEL'] = '5'
+  env['R_LOG_DESTINATION'] = 'stderr'
+  env['R_LOG_VERBOSE'] = '1'
 
   # ASan specific environment stuff
   asan = bool(mozinfo.info.get("asan"))
