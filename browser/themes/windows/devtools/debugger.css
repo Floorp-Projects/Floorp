@@ -123,6 +123,12 @@
   -moz-padding-start: 4px !important;
 }
 
+#tracer-traces > scrollbox {
+  overflow: scroll;
+  /* Hack to enable hardware acceleration */
+  transform: translateZ(0);
+}
+
 /* Tracer dark theme */
 
 .theme-dark #tracer-message {
@@ -138,8 +144,12 @@
   color: #f5f7fa; /* Light foreground text */
 }
 
-.trace-item.selected-matching {
-  background-color: #1d4f73; /* Select highlight blue */
+.theme-dark .trace-item.selected-matching {
+  background-color: rgba(29, 79, 115, .4); /* Select highlight blue at 40% alpha */
+}
+
+.theme-dark .selected > .trace-item {
+  background-color: rgba(29, 79, 115, .75); /* Select highlight blue at 75% alpha */
 }
 
 .theme-dark .trace-call {
@@ -156,11 +166,11 @@
 }
 
 .theme-dark .trace-param {
-  color: #8fa1b2; /* Content text grey  */
+  color: #b8c8d9; /* Content text light */
 }
 
 .theme-dark .trace-syntax {
-  color: #5e88b0; /* highlight blue-grey */
+  color: #8fa1b2; /* Content text grey */
 }
 
 /* Tracer light theme */
@@ -178,8 +188,12 @@
   color: #292e33; /* Dark foreground text */
 }
 
-.trace-item.selected-matching {
-  background-color: #4c9ed9; /* Select highlight blue */
+.theme-light .trace-item.selected-matching {
+  background-color: rgba(76, 158, 217, .4); /* Select highlight blue at 40% alpha */
+}
+
+.theme-light .selected > .trace-item {
+  background-color: rgba(76, 158, 217, .75); /* Select highlight blue at 75% alpha */
 }
 
 .theme-light .trace-call {
@@ -196,11 +210,11 @@
 }
 
 .theme-light .trace-param {
-  color: #8fa1b2; /* Content text grey  */
+  color: #667380; /* Content text dark grey  */
 }
 
 .theme-light .trace-syntax {
-  color: #5f88b0; /* highlight blue-grey */
+  color: #8fa1b2; /* Content text grey */
 }
 
 /* ListWidget items */
