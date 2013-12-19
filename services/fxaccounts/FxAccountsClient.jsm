@@ -187,7 +187,7 @@ this.FxAccountsClient.prototype = {
     return Promise.resolve()
       .then(_ => this._request("/certificate/sign", "POST", creds, body))
       .then(resp => resp.cert,
-            err => {dump("HAWK.signCertificate error: " + err + "\n");
+            err => {dump("HAWK.signCertificate error: " + JSON.stringify(err) + "\n");
                     throw err;});
   },
 

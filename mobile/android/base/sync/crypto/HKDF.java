@@ -108,4 +108,21 @@ public class HKDF {
     hasher.reset();
     return ret;
   }
+
+  public static byte[] derive(byte[] skm, byte[] xts, byte[] ctxInfo, int dkLen) throws InvalidKeyException, NoSuchAlgorithmException {
+    return hkdfExpand(hkdfExtract(xts, skm), ctxInfo, dkLen);
+  }
+
+  public static void deriveMany(byte[] skm, byte[] xts, byte[] ctxInfo, byte[]... keys) throws InvalidKeyException, NoSuchAlgorithmException {
+    int length = 0;
+    for (byte[] key : keys) {
+      length += key.length;
+    }
+    byte[] derived = hkdfExpand(hkdfExtract(xts, skm), ctxInfo, length);
+    int offset = 0;
+    for (byte[] key : keys) {
+      System.arraycopy(derived, offset, key, 0, key.length);
+      offset += key.length;
+    }
+  }
 }
