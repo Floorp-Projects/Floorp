@@ -4175,6 +4175,18 @@ js_strlen(const jschar *s)
     return (size_t)(t - s);
 }
 
+int32_t
+js_strcmp(const jschar *lhs, const jschar *rhs)
+{
+    while (true) {
+        if (*lhs != *rhs)
+            return int32_t(*lhs) - int32_t(*rhs);
+        if (*lhs == 0)
+            return 0;
+        ++lhs, ++rhs;
+    }
+}
+
 jschar *
 js_strdup(js::ThreadSafeContext *cx, const jschar *s)
 {

@@ -278,7 +278,7 @@ MSG_DEF(JSMSG_BAD_OBJECT_INIT,        224, 0, JSEXN_SYNTAXERR, "invalid object i
 MSG_DEF(JSMSG_CANT_SET_ARRAY_ATTRS,   225, 0, JSEXN_INTERNALERR, "can't set attributes on indexed array properties")
 MSG_DEF(JSMSG_EVAL_ARITY,             226, 0, JSEXN_TYPEERR, "eval accepts only one parameter")
 MSG_DEF(JSMSG_MISSING_FUN_ARG,        227, 2, JSEXN_TYPEERR, "missing argument {0} when calling function {1}")
-MSG_DEF(JSMSG_JSON_BAD_PARSE,         228, 1, JSEXN_SYNTAXERR, "JSON.parse: {0}")
+MSG_DEF(JSMSG_JSON_BAD_PARSE,         228, 3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")
 MSG_DEF(JSMSG_JSON_BAD_STRINGIFY,     229, 0, JSEXN_ERR, "JSON.stringify")
 MSG_DEF(JSMSG_NOT_CALLABLE_OR_UNDEFINED, 230, 0, JSEXN_TYPEERR, "value is not a function or undefined")
 MSG_DEF(JSMSG_NOT_NONNULL_OBJECT,     231, 0, JSEXN_TYPEERR, "value is not a non-null object")
