@@ -95,10 +95,6 @@ public :
   static already_AddRefed<MediaEncoder> CreateEncoder(const nsAString& aMIMEType,
                                                       uint8_t aTrackTypes = ContainerWriter::HAS_AUDIO);
   /**
-   * Check if run on Encoder thread
-   */
-  static bool OnEncoderThread();
-  /**
    * Encodes the raw track data and returns the final container data. Assuming
    * it is called on a single worker thread. The buffer of container data is
    * allocated in ContainerWriter::GetContainerData(), and is appended to
