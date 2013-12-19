@@ -83,7 +83,7 @@ TabEngine.prototype = {
    * reappear in the menu.
    */
   locallyOpenTabMatchesURL: function TabEngine_localTabMatches(url) {
-    return this._store.getAllTabs().some(function(tab) {
+    return this._store.getAllTabs().some(function (tab) {
       return tab.urlHistory[0] == url;
     });
   }
@@ -122,11 +122,11 @@ TabStore.prototype = {
 
     let currentState = JSON.parse(Svc.Session.getBrowserState());
     let tabLastUsed = this.tabLastUsed;
-    currentState.windows.forEach(function(window) {
+    currentState.windows.forEach(function (window) {
       if (window.isPrivate) {
         return;
       }
-      window.tabs.forEach(function(tab) {
+      window.tabs.forEach(function (tab) {
         // Make sure there are history entries to look at.
         if (!tab.entries.length)
           return;
@@ -158,7 +158,7 @@ TabStore.prototype = {
     record.clientName = this.engine.service.clientsEngine.localName;
 
     // Sort tabs in descending-used order to grab the most recently used
-    let tabs = this.getAllTabs(true).sort(function(a, b) {
+    let tabs = this.getAllTabs(true).sort(function (a, b) {
       return b.lastUsed - a.lastUsed;
     });
 
@@ -178,7 +178,7 @@ TabStore.prototype = {
     }
 
     this._log.trace("Created tabs " + tabs.length + " of " + origLength);
-    tabs.forEach(function(tab) {
+    tabs.forEach(function (tab) {
       this._log.trace("Wrapping tab: " + JSON.stringify(tab));
     }, this);
 
@@ -283,34 +283,32 @@ TabTracker.prototype = {
     }
   },
 
-  _enabled: false,
-  observe: function TabTracker_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          Svc.Obs.add("domwindowopened", this);
-          let wins = Services.wm.getEnumerator("navigator:browser");
-          while (wins.hasMoreElements())
-            this._registerListenersForWindow(wins.getNext());
-          this._enabled = true;
-        }
-        break;
-      case "weave:engine:stop-tracking":
-        if (this._enabled) {
-          Svc.Obs.remove("domwindowopened", this);
-          let wins = Services.wm.getEnumerator("navigator:browser");
-          while (wins.hasMoreElements())
-            this._unregisterListenersForWindow(wins.getNext());
-          this._enabled = false;
-        }
-        return;
+  startTracking: function () {
+    Svc.Obs.add("domwindowopened", this);
+    let wins = Services.wm.getEnumerator("navigator:browser");
+    while (wins.hasMoreElements()) {
+      this._registerListenersForWindow(wins.getNext());
+    }
+  },
+
+  stopTracking: function () {
+    Svc.Obs.remove("domwindowopened", this);
+    let wins = Services.wm.getEnumerator("navigator:browser");
+    while (wins.hasMoreElements()) {
+      this._unregisterListenersForWindow(wins.getNext());
+    }
+  },
+
+  observe: function (subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
+    switch (topic) {
       case "domwindowopened":
-        // Add tab listeners now that a window has opened
-        let self = this;
-        aSubject.addEventListener("load", function onLoad(event) {
-          aSubject.removeEventListener("load", onLoad, false);
-          // Only register after the window is done loading to avoid unloads
-          self._registerListenersForWindow(aSubject);
+        // Add tab listeners now that a window has opened.
+        subject.addEventListener("load", (event) => {
+          subject.removeEventListener("load", onLoad, false);
+          // Only register after the window is done loading to avoid unloads.
+          this._registerListenersForWindow(subject);
         }, false);
         break;
     }
