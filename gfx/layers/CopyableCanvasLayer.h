@@ -13,7 +13,6 @@
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxTypes.h"
 #include "gfxPlatform.h"                // for gfxImageFormat
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -61,10 +60,10 @@ protected:
   bool mForceReadback;
 
   nsRefPtr<gfxImageSurface> mCachedTempSurface;
-  gfxIntSize mCachedSize;
+  gfx::IntSize mCachedSize;
   gfxImageFormat mCachedFormat;
 
-  gfxImageSurface* GetTempSurface(const gfxIntSize& aSize, const gfxImageFormat aFormat);
+  gfxImageSurface* GetTempSurface(const gfx::IntSize& aSize, const gfxImageFormat aFormat);
 
   void DiscardTempSurface();
 };

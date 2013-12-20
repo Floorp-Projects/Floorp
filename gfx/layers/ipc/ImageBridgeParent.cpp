@@ -11,7 +11,7 @@
 #include "base/process_util.h"          // for OpenProcessHandle
 #include "base/task.h"                  // for CancelableTask, DeleteTask, etc
 #include "base/tracked.h"               // for FROM_HERE
-#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"      // for Transport
@@ -34,6 +34,7 @@
 
 using namespace base;
 using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -149,7 +150,7 @@ static  uint64_t GenImageContainerID() {
 }
 
 PGrallocBufferParent*
-ImageBridgeParent::AllocPGrallocBufferParent(const gfxIntSize& aSize,
+ImageBridgeParent::AllocPGrallocBufferParent(const IntSize& aSize,
                                              const uint32_t& aFormat,
                                              const uint32_t& aUsage,
                                              MaybeMagicGrallocBufferHandle* aOutHandle)

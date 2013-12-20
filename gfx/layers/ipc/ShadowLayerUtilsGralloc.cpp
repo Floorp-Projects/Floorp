@@ -346,7 +346,7 @@ GrallocBufferActor::InitFromHandle(const MagicGrallocBufferHandle& aHandle)
 }
 
 PGrallocBufferChild*
-ShadowLayerForwarder::AllocGrallocBuffer(const gfxIntSize& aSize,
+ShadowLayerForwarder::AllocGrallocBuffer(const gfx::IntSize& aSize,
                                          uint32_t aFormat,
                                          uint32_t aUsage,
                                          MaybeMagicGrallocBufferHandle* aHandle)
