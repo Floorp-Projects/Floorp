@@ -70,7 +70,9 @@ public:
   virtual ~GrallocBufferActor();
 
   static PGrallocBufferParent*
-  Create(const gfxIntSize& aSize, const uint32_t& aFormat, const uint32_t& aUsage,
+  Create(const gfx::IntSize& aSize,
+         const uint32_t& aFormat,
+         const uint32_t& aUsage,
          MaybeMagicGrallocBufferHandle* aOutHandle);
 
   static PGrallocBufferChild*

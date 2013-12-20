@@ -70,7 +70,7 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
 /*static*/ bool
 ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
   const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxIntSize* aSize,
+  gfx::IntSize* aSize,
   gfxASurface** aSurface)
 {
   return false;

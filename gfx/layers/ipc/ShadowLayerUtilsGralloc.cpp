@@ -7,6 +7,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "mozilla/gfx/Point.h"
 #include "mozilla/layers/PGrallocBufferChild.h"
 #include "mozilla/layers/PGrallocBufferParent.h"
 #include "mozilla/layers/LayerTransactionChild.h"
@@ -239,7 +240,7 @@ GrallocBufferActor::~GrallocBufferActor()
 }
 
 /*static*/ PGrallocBufferParent*
-GrallocBufferActor::Create(const gfxIntSize& aSize,
+GrallocBufferActor::Create(const gfx::IntSize& aSize,
                            const uint32_t& aFormat,
                            const uint32_t& aUsage,
                            MaybeMagicGrallocBufferHandle* aOutHandle)
@@ -355,7 +356,7 @@ ShadowLayerForwarder::AllocGrallocBuffer(const gfx::IntSize& aSize,
 }
 
 bool
-ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
+ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                                   gfxContentType aContent,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
@@ -479,7 +480,7 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
   // If we fail to lock, we'll just end up aborting anyway.
   MOZ_ASSERT(status == OK);
 
-  gfxIntSize size = aSurface.get_SurfaceDescriptorGralloc().size();
+  gfx::IntSize size = aSurface.get_SurfaceDescriptorGralloc().size();
   gfxImageFormat format = ImageFormatForPixelFormat(buffer->getPixelFormat());
   long pixelStride = buffer->getStride();
   long byteStride = pixelStride * gfxASurface::BytePerPixelFromFormat(format);
@@ -508,7 +509,7 @@ ShadowLayerForwarder::PlatformGetDescriptorSurfaceContentType(
 /*static*/ bool
 ShadowLayerForwarder::PlatformGetDescriptorSurfaceSize(
   const SurfaceDescriptor& aDescriptor, OpenMode aMode,
-  gfxIntSize* aSize,
+  gfx::IntSize* aSize,
   gfxASurface** aSurface)
 {
   if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
