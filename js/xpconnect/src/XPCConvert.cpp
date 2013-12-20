@@ -1028,10 +1028,16 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
     // else...
 
     nsXPCWrappedJS* wrapper;
-    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, aOuter, &wrapper);
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, &wrapper);
     if (pErr)
         *pErr = rv;
     if (NS_SUCCEEDED(rv) && wrapper) {
+        // If the caller wanted to aggregate this JS object to a native,
+        // attach it to the wrapper. Note that we allow a maximum of one
+        // aggregated native for a given XPCWrappedJS.
+        if (aOuter)
+            wrapper->SetAggregatedNativeObject(aOuter);
+
         // We need to go through the QueryInterface logic to make this return
         // the right thing for the various 'special' interfaces; e.g.
         // nsIPropertyBag. We must use AggregatedQueryInterface in cases where
@@ -1184,8 +1190,7 @@ XPCConvert::JSValToXPCException(MutableHandleValue s,
                 // lets try to build a wrapper around the JSObject
                 nsXPCWrappedJS* jswrapper;
                 nsresult rv =
-                    nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsIException),
-                                                 nullptr, &jswrapper);
+                    nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsIException), &jswrapper);
                 if (NS_FAILED(rv))
                     return rv;
 
