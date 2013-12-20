@@ -29,6 +29,8 @@ BooleanGetPrimitiveValue(HandleObject obj, JSContext *cx)
 inline bool
 EmulatesUndefined(JSObject *obj)
 {
+    AutoThreadSafeAccess ts0(obj);
+    AutoThreadSafeAccess ts1(obj->typeRaw());
     JSObject *actual = MOZ_LIKELY(!obj->is<WrapperObject>()) ? obj : UncheckedUnwrap(obj);
     return actual->getClass()->emulatesUndefined();
 }

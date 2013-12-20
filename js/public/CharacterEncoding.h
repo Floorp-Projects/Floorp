@@ -59,6 +59,8 @@ class Latin1CharsZ : public mozilla::RangedPtr<unsigned char>
         JS_ASSERT(aBytes[aLength] == '\0');
     }
 
+    using Base::operator=;
+
     char *c_str() { return reinterpret_cast<char *>(get()); }
 };
 
@@ -97,6 +99,8 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
     {
         JS_ASSERT(aBytes[aLength] == '\0');
     }
+
+    using Base::operator=;
 
     char *c_str() { return reinterpret_cast<char *>(get()); }
 };
@@ -149,6 +153,8 @@ class TwoByteCharsZ : public mozilla::RangedPtr<jschar>
     {
         JS_ASSERT(chars[length] == '\0');
     }
+
+    using Base::operator=;
 };
 
 /*

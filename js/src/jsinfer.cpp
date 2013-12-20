@@ -686,6 +686,7 @@ TypeScript::FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script
                            TemporaryTypeSet **pBytecodeTypes)
 {
     JS_ASSERT(CurrentThreadCanReadCompilationData());
+    AutoThreadSafeAccess ts(script);
 
     LifoAlloc *alloc = constraints->alloc();
     StackTypeSet *existing = script->types->typeArray();
@@ -806,6 +807,7 @@ TypeObjectKey::proto()
 bool
 ObjectImpl::hasTenuredProto() const
 {
+    AutoThreadSafeAccess ts(this);
     return type_->hasTenuredProto();
 }
 
@@ -818,7 +820,7 @@ TypeObjectKey::hasTenuredProto()
 JSObject *
 TypeObjectKey::singleton()
 {
-    return isTypeObject() ? asTypeObject()->singleton : asSingleObject();
+    return isTypeObject() ? asTypeObject()->singleton() : asSingleObject();
 }
 
 TypeNewScript *
@@ -1386,7 +1388,7 @@ class ConstraintDataFreezeObjectForTypedArrayBuffer
     bool invalidateOnNewType(Type type) { return false; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
     bool invalidateOnNewObjectState(TypeObject *object) {
-        return object->singleton->as<TypedArrayObject>().viewData() != viewData;
+        return object->singleton()->as<TypedArrayObject>().viewData() != viewData;
     }
 
     bool constraintHolds(JSContext *cx,
@@ -2206,7 +2208,7 @@ TypeCompartment::markSetsUnknown(JSContext *cx, TypeObject *target)
 {
     JS_ASSERT(this == &cx->compartment()->types);
     JS_ASSERT(!(target->flags() & OBJECT_FLAG_SETS_MARKED_UNKNOWN));
-    JS_ASSERT(!target->singleton);
+    JS_ASSERT(!target->singleton());
     JS_ASSERT(target->unknownProperties());
 
     AutoEnterAnalysis enter(cx);
@@ -2669,14 +2671,14 @@ TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t n
 
 #ifdef DEBUG
 void
-TypeObject::assertCanAccessProto()
+TypeObject::assertCanAccessProto() const
 {
     // The proto pointer for type objects representing singletons may move.
-    JS_ASSERT_IF(singleton, CurrentThreadCanReadCompilationData());
+    JS_ASSERT_IF(singleton(), CurrentThreadCanReadCompilationData());
 
     // Any proto pointer which is in the nursery may be moved, and may not be
     // accessed during off thread compilation.
-#if defined(JSGC_GENERATIONAL) && defined(JS_WORKER_THREADS)
+#if defined(JSGC_GENERATIONAL) && defined(JS_THREADSAFE)
     PerThreadData *pt = TlsPerThreadData.get();
     TaggedProto proto(proto_);
     JS_ASSERT_IF(proto.isObject() && !proto.toObject()->isTenured(),
@@ -2689,7 +2691,7 @@ void
 TypeObject::setProto(JSContext *cx, TaggedProto proto)
 {
     JS_ASSERT(CurrentThreadCanWriteCompilationData());
-    JS_ASSERT(singleton);
+    JS_ASSERT(singleton());
 
     if (proto.isObject() && IsInsideNursery(cx->runtime(), proto.toObject()))
         addFlags(OBJECT_FLAG_NURSERY_PROTO);
@@ -2737,7 +2739,7 @@ TypeObject::addProperty(ExclusiveContext *cx, jsid id, Property **pprop)
         return false;
     }
 
-    if (singleton && singleton->isNative()) {
+    if (singleton() && singleton()->isNative()) {
         /*
          * Fill the property in with any type the object already has in an own
          * property. We are only interested in plain native properties and
@@ -2745,19 +2747,18 @@ TypeObject::addProperty(ExclusiveContext *cx, jsid id, Property **pprop)
          * or jitcode.
          */
 
-        RootedObject rSingleton(cx, singleton);
         if (JSID_IS_VOID(id)) {
             /* Go through all shapes on the object to get integer-valued properties. */
-            RootedShape shape(cx, singleton->lastProperty());
+            RootedShape shape(cx, singleton()->lastProperty());
             while (!shape->isEmptyShape()) {
                 if (JSID_IS_VOID(IdToTypeId(shape->propid())))
-                    UpdatePropertyType(cx, &base->types, rSingleton, shape, true);
+                    UpdatePropertyType(cx, &base->types, singleton(), shape, true);
                 shape = shape->previous();
             }
 
             /* Also get values of any dense elements in the object. */
-            for (size_t i = 0; i < singleton->getDenseInitializedLength(); i++) {
-                const Value &value = singleton->getDenseElement(i);
+            for (size_t i = 0; i < singleton()->getDenseInitializedLength(); i++) {
+                const Value &value = singleton()->getDenseElement(i);
                 if (!value.isMagic(JS_ELEMENTS_HOLE)) {
                     Type type = GetValueType(value);
                     if (!base->types.TypeSet::addType(type, &cx->typeLifoAlloc()))
@@ -2766,12 +2767,12 @@ TypeObject::addProperty(ExclusiveContext *cx, jsid id, Property **pprop)
             }
         } else if (!JSID_IS_EMPTY(id)) {
             RootedId rootedId(cx, id);
-            Shape *shape = singleton->nativeLookup(cx, rootedId);
+            Shape *shape = singleton()->nativeLookup(cx, rootedId);
             if (shape)
-                UpdatePropertyType(cx, &base->types, rSingleton, shape, false);
+                UpdatePropertyType(cx, &base->types, singleton(), shape, false);
         }
 
-        if (singleton->watched()) {
+        if (singleton()->watched()) {
             /*
              * Mark the property as configured, to inhibit optimizations on it
              * and avoid bypassing the watchpoint handler.
@@ -2941,10 +2942,10 @@ TypeObject::setFlags(ExclusiveContext *cx, TypeObjectFlags flags)
 
     AutoEnterAnalysis enter(cx);
 
-    if (singleton) {
+    if (singleton()) {
         /* Make sure flags are consistent with persistent object state. */
         JS_ASSERT_IF(flags & OBJECT_FLAG_ITERATED,
-                     singleton->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON));
+                     singleton()->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON));
     }
 
     {
@@ -3761,7 +3762,7 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 
     /* Fill in the type according to the state of this object. */
 
-    type->singleton = obj;
+    type->initSingleton(obj);
 
     if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted())
         type->interpretedFunction = &obj->as<JSFunction>();
@@ -3987,7 +3988,7 @@ ExclusiveContext::getLazyType(const Class *clasp, TaggedProto proto)
     if (!table.add(p, TypeObjectWithNewScriptEntry(type, nullptr)))
         return nullptr;
 
-    type->singleton = (JSObject *) TypeObject::LAZY_SINGLETON;
+    type->initSingleton((JSObject *) TypeObject::LAZY_SINGLETON);
 
     return type;
 }
@@ -4087,11 +4088,12 @@ TypeObject::sweep(FreeOp *fop)
         for (unsigned i = 0; i < oldCapacity; i++) {
             Property *prop = oldArray[i];
             if (prop) {
-                if (singleton && !prop->types.constraintList) {
+                if (singleton() && !prop->types.constraintList && !zone()->isPreservingCode()) {
                     /*
-                     * Don't copy over properties of singleton objects which
-                     * don't have associated constraints. The contents of these
-                     * type sets will be regenerated as necessary.
+                     * Don't copy over properties of singleton objects when their
+                     * presence will not be required by jitcode or type constraints
+                     * (i.e. for the definite properties analysis). The contents of
+                     * these type sets will be regenerated as necessary.
                      */
                     continue;
                 }
@@ -4114,7 +4116,7 @@ TypeObject::sweep(FreeOp *fop)
         setBasePropertyCount(propertyCount);
     } else if (propertyCount == 1) {
         Property *prop = (Property *) propertySet;
-        if (singleton && !prop->types.constraintList) {
+        if (singleton() && !prop->types.constraintList && !zone()->isPreservingCode()) {
             // Skip, as above.
             clearProperties();
         } else {
@@ -4306,16 +4308,6 @@ TypeCompartment::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
 size_t
 TypeObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
-    if (singleton) {
-        /*
-         * Properties and associated type sets for singletons are cleared on
-         * every GC. The type object is normally destroyed too, but we don't
-         * charge this to 'temporary' as this is not for GC heap values.
-         */
-        JS_ASSERT(!hasNewScript());
-        return 0;
-    }
-
     return mallocSizeOf(addendum);
 }
 

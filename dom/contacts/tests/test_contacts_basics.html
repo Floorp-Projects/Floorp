@@ -759,6 +759,16 @@ var steps = [
     checkContacts(json, properties1);
     next();
   },
+  function() {
+    ok(true, "Test slice");
+    var c = new mozContact();
+    c.email = [{ type: ["foo"], value: "bar@baz" }]
+    var arr = c.email;
+    is(arr[0].value, "bar@baz", "Should have the right value");
+    arr = arr.slice();
+    is(arr[0].value, "bar@baz", "Should have the right value after slicing");
+    next();
+  },
   function () {
     ok(true, "all done!\n");
     clearTemps();

@@ -296,8 +296,6 @@ private:
 #endif
 
     PluginProcessParent* mSubprocess;
-    // the plugin thread in mSubprocess
-    NativeThreadId mPluginThread;
     bool mShutdown;
     bool mClearSiteDataSupported;
     bool mGetSitesWithDataSupported;

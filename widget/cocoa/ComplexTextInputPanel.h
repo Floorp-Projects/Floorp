@@ -41,6 +41,10 @@
 - (void)cancelComposition;
 - (BOOL)inComposition;
 
+// This places the text input panel fully onscreen and below the lower left
+// corner of the focused plugin.
+- (void)adjustTo:(NSView*)view;
+
 @end
 
 #endif // ComplexTextInputPanel_h_

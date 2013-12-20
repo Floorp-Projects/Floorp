@@ -10518,11 +10518,13 @@ def genConstructorBody(descriptor, initCall=""):
     })
 
 # We're always fallible
-def callbackGetterName(attr):
-    return "Get" + MakeNativeName(attr.identifier.name)
+def callbackGetterName(attr, descriptor):
+    return "Get" + MakeNativeName(
+        descriptor.binaryNames.get(attr.identifier.name, attr.identifier.name))
 
-def callbackSetterName(attr):
-    return "Set" + MakeNativeName(attr.identifier.name)
+def callbackSetterName(attr, descriptor):
+    return "Set" + MakeNativeName(
+        descriptor.binaryNames.get(attr.identifier.name, attr.identifier.name))
 
 class CGJSImplGetter(CGJSImplMember):
     """
@@ -10540,7 +10542,9 @@ class CGJSImplGetter(CGJSImplMember):
 
     def getImpl(self):
         callbackArgs = [arg.name for arg in self.getArgs(self.member.type, [])]
-        return 'return mImpl->%s(%s);' % (callbackGetterName(self.member), ", ".join(callbackArgs))
+        return 'return mImpl->%s(%s);' % (
+            callbackGetterName(self.member, self.descriptorProvider),
+            ", ".join(callbackArgs))
 
 class CGJSImplSetter(CGJSImplMember):
     """
@@ -10560,7 +10564,9 @@ class CGJSImplSetter(CGJSImplMember):
     def getImpl(self):
         callbackArgs = [arg.name for arg in self.getArgs(BuiltinTypes[IDLBuiltinType.Types.void],
                                                          [FakeArgument(self.member.type, self.member)])]
-        return 'mImpl->%s(%s);' % (callbackSetterName(self.member), ", ".join(callbackArgs))
+        return 'mImpl->%s(%s);' % (
+            callbackSetterName(self.member, self.descriptorProvider),
+            ", ".join(callbackArgs))
 
 class CGJSImplClass(CGBindingImplClass):
     def __init__(self, descriptor):
@@ -11176,7 +11182,7 @@ class CallbackOperationBase(CallbackMethod):
     """
     def __init__(self, signature, jsName, nativeName, descriptor, singleOperation, rethrowContentException=False):
         self.singleOperation = singleOperation
-        self.methodName = jsName
+        self.methodName = descriptor.binaryNames.get(jsName, jsName)
         CallbackMethod.__init__(self, signature, nativeName, descriptor, singleOperation, rethrowContentException)
 
     def getThisObj(self):
@@ -11217,7 +11223,8 @@ class CallbackOperation(CallbackOperationBase):
         self.method = method
         jsName = method.identifier.name
         CallbackOperationBase.__init__(self, signature,
-                                       jsName, MakeNativeName(jsName),
+                                       jsName,
+                                       MakeNativeName(descriptor.binaryNames.get(jsName, jsName)),
                                        descriptor, descriptor.interface.isSingleOperationInterface(),
                                        rethrowContentException=descriptor.interface.isJSImplemented())
 
@@ -11244,7 +11251,7 @@ class CallbackGetter(CallbackAccessor):
     def __init__(self, attr, descriptor):
         CallbackAccessor.__init__(self, attr,
                                   (attr.type, []),
-                                  callbackGetterName(attr),
+                                  callbackGetterName(attr, descriptor),
                                   descriptor)
 
     def getRvalDecl(self):
@@ -11253,7 +11260,8 @@ class CallbackGetter(CallbackAccessor):
     def getCall(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
-            "attrName": self.attrName
+            "attrName": self.descriptorProvider.binaryNames.get(self.attrName,
+                                                                self.attrName)
             }
         return string.Template(
             'if (!JS_GetProperty(cx, mCallback, "${attrName}", &rval)) {\n'
@@ -11266,7 +11274,7 @@ class CallbackSetter(CallbackAccessor):
         CallbackAccessor.__init__(self, attr,
                                   (BuiltinTypes[IDLBuiltinType.Types.void],
                                    [FakeArgument(attr.type, attr)]),
-                                  callbackSetterName(attr),
+                                  callbackSetterName(attr, descriptor),
                                   descriptor)
 
     def getRvalDecl(self):
@@ -11276,7 +11284,8 @@ class CallbackSetter(CallbackAccessor):
     def getCall(self):
         replacements = {
             "errorReturn" : self.getDefaultRetval(),
-            "attrName": self.attrName,
+            "attrName": self.descriptorProvider.binaryNames.get(self.attrName,
+                                                                self.attrName),
             "argv": "argv.handleAt(0)",
             }
         return string.Template(

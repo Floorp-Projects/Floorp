@@ -3511,6 +3511,9 @@ public:
     gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
     void SetTextPerfMetrics(gfxTextPerfMetrics *aTextPerf) { mTextPerf = aTextPerf; }
 
+    // This will call UpdateFontList() if the user font set is changed.
+    void SetUserFontSet(gfxUserFontSet *aUserFontSet);
+
     // If there is a user font set, check to see whether the font list or any
     // caches need updating.
     virtual void UpdateFontList();
@@ -3538,7 +3541,7 @@ protected:
     gfxFloat mUnderlineOffset;
     gfxFloat mHyphenWidth;
 
-    gfxUserFontSet* mUserFontSet;
+    nsRefPtr<gfxUserFontSet> mUserFontSet;
     uint64_t mCurrGeneration;  // track the current user font set generation, rebuild font list if needed
 
     gfxTextPerfMetrics *mTextPerf;
@@ -3566,10 +3569,6 @@ protected:
     gfxTextRun *MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags);
     gfxTextRun *MakeBlankTextRun(uint32_t aLength,
                                  const Parameters *aParams, uint32_t aFlags);
-
-    // Used for construction/destruction.  Not intended to change the font set
-    // as invalidation of font lists and caches is not considered.
-    void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
     // Initialize the list of fonts
     void BuildFontList();
