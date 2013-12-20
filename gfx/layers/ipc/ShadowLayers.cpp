@@ -14,6 +14,7 @@
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceScope
 #include "ShadowLayerChild.h"           // for ShadowLayerChild
+#include "gfx2DGlue.h"                  // for Moz2D transition helpers
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxImageFormat, gfxPlatform
 #include "gfxSharedImageSurface.h"      // for gfxSharedImageSurface
@@ -627,7 +628,7 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
     gfxImageFormat format
       = static_cast<gfxImageFormat>(image.format());
     surf = new gfxImageSurface((unsigned char *)image.data(),
-                               image.size(),
+                               gfx::ThebesIntSize(image.size()),
                                image.stride(),
                                format);
     return surf.forget();

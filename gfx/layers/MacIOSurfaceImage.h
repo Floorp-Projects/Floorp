@@ -23,7 +23,7 @@ public:
   MacIOSurface* GetSurface() { return mSurface; }
 
   gfx::IntSize GetSize() {
-    return gfxIntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
+    return gfx::IntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
   }
 
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }

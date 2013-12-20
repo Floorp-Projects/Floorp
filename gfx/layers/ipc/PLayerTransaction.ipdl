@@ -64,7 +64,7 @@ parent:
    *     - used for GL rendering to a buffer which the compositor
    *       treats as a texture
    */
-  sync PGrallocBuffer(gfxIntSize size, uint32_t format, uint32_t usage)
+  sync PGrallocBuffer(IntSize size, uint32_t format, uint32_t usage)
     returns (MaybeMagicGrallocBufferHandle handle);
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
