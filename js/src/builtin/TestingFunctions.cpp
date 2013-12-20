@@ -1552,7 +1552,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  validated according to the asm.js spec."),
 
     JS_FN_HELP("isAsmJSModuleLoadedFromCache", IsAsmJSModuleLoadedFromCache, 1, 0,
-"isAsmJSModule(fn)",
+"isAsmJSModuleLoadedFromCache(fn)",
 "  Return whether the given asm.js module function has been loaded directly\n"
 "  from the cache. This function throws an error if fn is not a validated asm.js\n"
 "  module."),
