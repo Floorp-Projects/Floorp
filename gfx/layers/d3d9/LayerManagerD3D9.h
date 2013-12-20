@@ -248,7 +248,7 @@ public:
    * If aSize is non-null and a texture is successfully returned, aSize will
    * contain the size of the texture.
    */
-  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfxIntSize* aSize)
+  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfx::IntSize* aSize)
   {
     return nullptr;
   }
