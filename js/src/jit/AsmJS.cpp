@@ -1708,9 +1708,9 @@ class MOZ_STACK_CLASS ModuleCompiler
                     return;
             }
         }
-        out->reset(JS_smprintf("total compilation time %dms%s%s",
+        out->reset(JS_smprintf("total compilation time %dms%s%s; ",
                                msTotal,
-                               storedInCache ? "; stored in cache" : "",
+                               storedInCache ? "stored in cache" : "not stored in cache",
                                slowFuns ? slowFuns.get() : ""));
 #endif
     }
