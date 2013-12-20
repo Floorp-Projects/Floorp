@@ -24,6 +24,7 @@
 
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
+#include "gfx2DGlue.h"
 #include "GLContext.h"
 
 #include "GeckoProfiler.h"
@@ -486,7 +487,10 @@ ShadowLayerForwarder::PlatformOpenDescriptor(OpenMode aMode,
   long byteStride = pixelStride * gfxASurface::BytePerPixelFromFormat(format);
 
   nsRefPtr<gfxASurface> surf =
-    new gfxImageSurface((unsigned char*)vaddr, size, byteStride, format);
+    new gfxImageSurface((unsigned char*)vaddr,
+                        gfx::ThebesIntSize(size),
+                        byteStride,
+                        format);
   return surf->CairoStatus() ? nullptr : surf.forget();
 }
 
