@@ -7,7 +7,7 @@
 EXPORTS += [
     'mozpngconf.h',
     'png.h',
-    'pngconf.h',
+    'pngconf.h'
 ]
 
 UNIFIED_SOURCES += [
@@ -24,18 +24,25 @@ UNIFIED_SOURCES += [
     'pngtrans.c',
     'pngwio.c',
     'pngwrite.c',
-    'pngwutil.c',
+    'pngwutil.c'
 ]
 
 if CONFIG['MOZ_PNG_ARM_NEON']:
+    DEFINES['MOZ_PNG_HAVE_ARM_NEON'] = True
     UNIFIED_SOURCES += [
-        'arm/arm_init.c'
+        'arm/arm_init.c',
+        'arm/filter_neon_intrinsics.c'
     ]
 
-if CONFIG['MOZ_PNG_ARM_NEON']:
     SOURCES += [
         'arm/filter_neon.S'
     ]
+
+    if CONFIG['MOZ_PNG_ARM_NEON_CHECK']:
+        DEFINES['MOZ_PNG_HAVE_ARM_NEON_CHECK'] = True
+        UNIFIED_SOURCES += [
+            'arm/MOZ_PNG_cpu-features.c'
+        ]
 
 LIBRARY_NAME = 'mozpng'
 
