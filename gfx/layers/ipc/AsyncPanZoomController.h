@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_AsyncPanZoomController_h
 #define mozilla_layers_AsyncPanZoomController_h
 
+#include "CrossProcessMutex.h"
 #include "GeckoContentController.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -22,12 +23,20 @@
 #include "base/message_loop.h"
 
 namespace mozilla {
+
+namespace ipc {
+
+class SharedMemoryBasic;
+
+}
+
 namespace layers {
 
 struct ScrollableLayerGuid;
 class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
+class PCompositorParent;
 class ViewTransform;
 class APZCTreeManager;
 class AsyncPanZoomAnimation;
@@ -179,6 +188,14 @@ public:
    * request composites.
    */
   void SetCompositorParent(CompositorParent* aCompositorParent);
+
+  /**
+   * The platform implementation must set the cross process compositor if
+   * there is one associated with the layer tree. The cross process compositor
+   * allows the APZC to share its FrameMetrics with the content process.
+   * The shared FrameMetrics is used in progressive paint updates.
+   */
+  void SetCrossProcessCompositorParent(PCompositorParent* aCrossProcessCompositorParent);
 
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
@@ -544,6 +561,7 @@ private:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
+  PCompositorParent* mCrossProcessCompositorParent;
   TaskThrottler mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
@@ -704,6 +722,9 @@ public:
   }
 
 private:
+  /* Unique id assigned to each APZC. Used with ViewID to uniquely identify
+   * shared FrameMeterics used in progressive tile painting. */
+  const uint32_t mAPZCId;
   /* This is the visible region of the layer that this APZC corresponds to, in
    * that layer's screen pixels (the same coordinate system in which this APZC
    * receives events in ReceiveInputEvent()). */
@@ -713,6 +734,20 @@ private:
   gfx3DMatrix mAncestorTransform;
   /* This is the CSS transform for this APZC's layer. */
   gfx3DMatrix mCSSTransform;
+
+  ipc::SharedMemoryBasic* mSharedFrameMetricsBuffer;
+  CrossProcessMutex* mSharedLock;
+  /**
+   * Called when ever mFrameMetrics is updated so that if it is being
+   * shared with the content process the shared FrameMetrics may be updated.
+   */
+  void UpdateSharedCompositorFrameMetrics();
+  /**
+   * Create a shared memory buffer for containing the FrameMetrics and
+   * a CrossProcessMutex that may be shared with the content process
+   * for use in progressive tiled update calculations.
+   */
+  void ShareCompositorFrameMetrics();
 };
 
 class AsyncPanZoomAnimation {

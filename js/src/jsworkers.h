@@ -31,7 +31,7 @@ namespace jit {
   class IonBuilder;
 }
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
 
 /* Per-runtime state for off thread work items. */
 class WorkerThreadState
@@ -199,13 +199,15 @@ struct WorkerThread
     void threadLoop();
 };
 
-#endif /* JS_WORKER_THREADS */
+#endif /* JS_THREADSAFE */
 
 /* Methods for interacting with worker threads. */
 
 /* Initialize worker threads unless already initialized. */
 bool
 EnsureWorkerThreadsInitialized(ExclusiveContext *cx);
+
+#ifdef JS_ION
 
 /* Perform MIR optimization and LIR generation on a single function. */
 bool
@@ -217,6 +219,8 @@ StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData);
  */
 bool
 StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder);
+
+#endif // JS_ION
 
 /*
  * Cancel a scheduled or in progress Ion compilation for script. If script is
@@ -253,7 +257,7 @@ class AutoLockWorkerThreadState
 {
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     WorkerThreadState &state;
 
   public:
@@ -290,7 +294,7 @@ class AutoUnlockWorkerThreadState
       : rt(rt)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         JS_ASSERT(rt->workerThreadState);
         rt->workerThreadState->unlock();
 #else
@@ -300,7 +304,7 @@ class AutoUnlockWorkerThreadState
 
     ~AutoUnlockWorkerThreadState()
     {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         rt->workerThreadState->lock();
 #endif
     }
@@ -374,7 +378,7 @@ struct SourceCompressionTask
 {
     friend class ScriptSource;
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     // Thread performing the compression.
     WorkerThread *workerThread;
 #endif
@@ -399,7 +403,7 @@ struct SourceCompressionTask
     explicit SourceCompressionTask(ExclusiveContext *cx)
       : cx(cx), ss(nullptr), chars(nullptr), oom(false), abort_(0)
     {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         workerThread = nullptr;
 #endif
     }
