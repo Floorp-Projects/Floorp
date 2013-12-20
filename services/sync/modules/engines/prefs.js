@@ -67,7 +67,7 @@ PrefsEngine.prototype = {
 
 function PrefStore(name, engine) {
   Store.call(this, name, engine);
-  Svc.Obs.add("profile-before-change", function() {
+  Svc.Obs.add("profile-before-change", function () {
     this.__prefs = null;
   }, this);
 }
@@ -214,38 +214,36 @@ PrefTracker.prototype = {
 
  __prefs: null,
   get _prefs() {
-    if (!this.__prefs)
+    if (!this.__prefs) {
       this.__prefs = new Preferences();
+    }
     return this.__prefs;
   },
 
-  _enabled: false,
-  observe: function(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          Cc["@mozilla.org/preferences-service;1"]
-            .getService(Ci.nsIPrefBranch).addObserver("", this, false);
-          this._enabled = true;
-        }
-        break;
-      case "weave:engine:stop-tracking":
-        if (this._enabled)
-          this._enabled = false;
-        // Fall through to clean up.
+  startTracking: function () {
+    Services.prefs.addObserver("", this, false);
+  },
+
+  stopTracking: function () {
+    this.__prefs = null;
+    Services.prefs.removeObserver("", this);
+  },
+
+  observe: function (subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
+    switch (topic) {
       case "profile-before-change":
-        this.__prefs = null;
-        Cc["@mozilla.org/preferences-service;1"]
-          .getService(Ci.nsIPrefBranch).removeObserver("", this);
+        this.stopTracking();
         break;
       case "nsPref:changed":
         // Trigger a sync for MULTI-DEVICE for a change that determines
         // which prefs are synced or a regular pref change.
-        if (aData.indexOf(WEAVE_SYNC_PREFS) == 0 || 
-            this._prefs.get(WEAVE_SYNC_PREFS + aData, false)) {
+        if (data.indexOf(WEAVE_SYNC_PREFS) == 0 ||
+            this._prefs.get(WEAVE_SYNC_PREFS + data, false)) {
           this.score += SCORE_INCREMENT_XLARGE;
           this.modified = true;
-          this._log.trace("Preference " + aData + " changed");
+          this._log.trace("Preference " + data + " changed");
         }
         break;
     }

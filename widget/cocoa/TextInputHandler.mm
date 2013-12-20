@@ -3945,6 +3945,7 @@ PluginTextInputHandler::HandleKeyDownEventForPlugin(NSEvent* aNativeKeyEvent)
 
   ComplexTextInputPanel* ctiPanel =
     [ComplexTextInputPanel sharedComplexTextInputPanel];
+  [ctiPanel adjustTo:mView];
 
   // If a composition is in progress then simply let the input panel continue
   // it.

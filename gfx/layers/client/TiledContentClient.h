@@ -168,6 +168,47 @@ struct BasicTiledLayerPaintData {
 class ClientTiledThebesLayer;
 class ClientLayerManager;
 
+class SharedFrameMetricsHelper
+{
+public:
+  SharedFrameMetricsHelper();
+  ~SharedFrameMetricsHelper();
+
+  /**
+   * This is called by the BasicTileLayer to determine if it is still interested
+   * in the update of this display-port to continue. We can return true here
+   * to abort the current update and continue with any subsequent ones. This
+   * is useful for slow-to-render pages when the display-port starts lagging
+   * behind enough that continuing to draw it is wasted effort.
+   */
+  bool UpdateFromCompositorFrameMetrics(ContainerLayer* aLayer,
+                                        bool aHasPendingNewThebesContent,
+                                        bool aLowPrecision,
+                                        ScreenRect& aCompositionBounds,
+                                        CSSToScreenScale& aZoom);
+
+  /**
+   * When a shared FrameMetrics can not be found for a given layer,
+   * this function is used to find the first non-empty composition bounds
+   * by traversing up the layer tree.
+   */
+  void FindFallbackContentFrameMetrics(ContainerLayer* aLayer,
+                                       ScreenRect& aCompositionBounds,
+                                       CSSToScreenScale& aZoom);
+  /**
+   * Determines if the compositor's upcoming composition bounds has fallen
+   * outside of the contents display port. If it has then the compositor
+   * will start to checker board. Checker boarding is when the compositor
+   * tries to composite a tile and it is not available. Historically
+   * a tile with a checker board pattern was used. Now a blank tile is used.
+   */
+  bool AboutToCheckerboard(const FrameMetrics& aContentMetrics,
+                           const FrameMetrics& aCompositorMetrics);
+private:
+  bool mLastProgressiveUpdateWasLowPrecision;
+  bool mProgressiveUpdateWasInDanger;
+};
+
 /**
  * Provide an instance of TiledLayerBuffer backed by image surfaces.
  * This buffer provides an implementation to ValidateTile using a
@@ -181,11 +222,13 @@ class BasicTiledLayerBuffer
 
 public:
   BasicTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
-                        ClientLayerManager* aManager);
+                        ClientLayerManager* aManager,
+                        SharedFrameMetricsHelper* aHelper);
   BasicTiledLayerBuffer()
     : mThebesLayer(nullptr)
     , mManager(nullptr)
     , mLastPaintOpaque(false)
+    , mSharedFrameMetricsHelper(nullptr)
   {}
 
   BasicTiledLayerBuffer(ISurfaceAllocator* aAllocator,
@@ -194,8 +237,10 @@ public:
                         const InfallibleTArray<TileDescriptor>& aTiles,
                         int aRetainedWidth,
                         int aRetainedHeight,
-                        float aResolution)
+                        float aResolution,
+                        SharedFrameMetricsHelper* aHelper)
   {
+    mSharedFrameMetricsHelper = aHelper;
     mValidRegion = aValidRegion;
     mPaintedRegion = aPaintedRegion;
     mRetainedWidth = aRetainedWidth;
@@ -249,7 +294,8 @@ public:
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
 
   static BasicTiledLayerBuffer OpenDescriptor(ISurfaceAllocator* aAllocator,
-                                              const SurfaceDescriptorTiles& aDescriptor);
+                                              const SurfaceDescriptorTiles& aDescriptor,
+                                              SharedFrameMetricsHelper* aHelper);
 
 protected:
   BasicTiledLayerTile ValidateTile(BasicTiledLayerTile aTile,
@@ -283,6 +329,7 @@ private:
   nsRefPtr<gfxImageSurface>     mSinglePaintBuffer;
   RefPtr<gfx::DrawTarget>       mSinglePaintDrawTarget;
   nsIntPoint                    mSinglePaintBufferOffset;
+  SharedFrameMetricsHelper*  mSharedFrameMetricsHelper;
 
   BasicTiledLayerTile ValidateTileInternal(BasicTiledLayerTile aTile,
                                            const nsIntPoint& aTileOrigin,
@@ -341,6 +388,7 @@ public:
   void LockCopyAndWrite(TiledBufferType aType);
 
 private:
+  SharedFrameMetricsHelper mSharedFrameMetricsHelper;
   BasicTiledLayerBuffer mTiledBuffer;
   BasicTiledLayerBuffer mLowPrecisionTiledBuffer;
 };

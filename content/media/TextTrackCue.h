@@ -216,12 +216,12 @@ public:
     CueChanged();
   }
 
-  TextTrackCueAlign Align() const
+  AlignSetting Align() const
   {
     return mAlign;
   }
 
-  void SetAlign(TextTrackCueAlign& aAlign)
+  void SetAlign(AlignSetting& aAlign)
   {
     if (mAlign == aAlign)
       return;
@@ -323,7 +323,7 @@ private:
   nsString mRegionId;
   DirectionSetting mVertical;
   int mLine;
-  TextTrackCueAlign mAlign;
+  AlignSetting mAlign;
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state

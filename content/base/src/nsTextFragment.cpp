@@ -84,7 +84,7 @@ void
 nsTextFragment::ReleaseText()
 {
   if (mState.mLength && m1b && mState.mInHeap) {
-    nsMemory::Free(m2b); // m1b == m2b as far as nsMemory is concerned
+    moz_free(m2b); // m1b == m2b as far as moz_free is concerned
   }
 
   m1b = nullptr;
@@ -104,9 +104,20 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
       m1b = aOther.m1b; // This will work even if aOther is using m2b
     }
     else {
-      m2b = static_cast<PRUnichar*>
-                       (nsMemory::Clone(aOther.m2b, aOther.mState.mLength *
-                                    (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char))));
+      size_t m2bSize = aOther.mState.mLength *
+        (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char));
+
+      m2b = static_cast<PRUnichar*>(moz_malloc(m2bSize));
+      if (m2b) {
+        memcpy(m2b, aOther.m2b, m2bSize);
+      } else {
+        // allocate a buffer for a single REPLACEMENT CHARACTER
+        m2b = static_cast<PRUnichar*>(moz_xmalloc(sizeof(PRUnichar)));
+        m2b[0] = 0xFFFD; // REPLACEMENT CHARACTER
+        mState.mIs2b = true;
+        mState.mInHeap = true;
+        mState.mLength = 1;
+      }
     }
 
     if (m1b) {
@@ -179,13 +190,13 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
   return FirstNon8BitUnvectorized(str, end);
 }
 
-void
+bool
 nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi)
 {
   ReleaseText();
 
   if (aLength == 0) {
-    return;
+    return true;
   }
   
   PRUnichar firstChar = *aBuffer;
@@ -195,7 +206,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
     mState.mIs2b = false;
     mState.mLength = 1;
 
-    return;
+    return true;
   }
 
   const PRUnichar *ucp = aBuffer;
@@ -234,7 +245,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
       mState.mIs2b = false;
       mState.mLength = aLength;
 
-      return;        
+      return true;        
     }
   }
 
@@ -243,11 +254,12 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // Use ucs2 storage because we have to
-    m2b = (PRUnichar *)nsMemory::Clone(aBuffer,
-                                       aLength * sizeof(PRUnichar));
+    size_t m2bSize = aLength * sizeof(PRUnichar);
+    m2b = (PRUnichar *)moz_malloc(m2bSize);
     if (!m2b) {
-      return;
+      return false;
     }
+    memcpy(m2b, aBuffer, m2bSize);
 
     mState.mIs2b = true;
     if (aUpdateBidi) {
@@ -256,9 +268,9 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
 
   } else {
     // Use 1 byte storage because we can
-    char* buff = (char *)nsMemory::Alloc(aLength * sizeof(char));
+    char* buff = (char *)moz_malloc(aLength * sizeof(char));
     if (!buff) {
-      return;
+      return false;
     }
 
     // Copy data
@@ -271,6 +283,8 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
   // Setup our fields
   mState.mInHeap = true;
   mState.mLength = aLength;
+
+  return true;
 }
 
 void
@@ -299,24 +313,22 @@ nsTextFragment::CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount)
   }
 }
 
-void
+bool
 nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi)
 {
   // This is a common case because some callsites create a textnode
   // with a value by creating the node and then calling AppendData.
   if (mState.mLength == 0) {
-    SetTo(aBuffer, aLength, aUpdateBidi);
-
-    return;
+    return SetTo(aBuffer, aLength, aUpdateBidi);
   }
 
   // Should we optimize for aData.Length() == 0?
 
   if (mState.mIs2b) {
     // Already a 2-byte string so the result will be too
-    PRUnichar* buff = (PRUnichar*)nsMemory::Realloc(m2b, (mState.mLength + aLength) * sizeof(PRUnichar));
+    PRUnichar* buff = (PRUnichar*)moz_realloc(m2b, (mState.mLength + aLength) * sizeof(PRUnichar));
     if (!buff) {
-      return;
+      return false;
     }
 
     memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
@@ -327,7 +339,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
       UpdateBidiFlag(aBuffer, aLength);
     }
 
-    return;
+    return true;
   }
 
   // Current string is a 1-byte string, check if the new data fits in one byte too.
@@ -336,10 +348,10 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    PRUnichar* buff = (PRUnichar*)nsMemory::Alloc((mState.mLength + aLength) *
+    PRUnichar* buff = (PRUnichar*)moz_malloc((mState.mLength + aLength) *
                                                   sizeof(PRUnichar));
     if (!buff) {
-      return;
+      return false;
     }
 
     // Copy data into buff
@@ -351,7 +363,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
     mState.mIs2b = true;
 
     if (mState.mInHeap) {
-      nsMemory::Free(m2b);
+      moz_free(m2b);
     }
     m2b = buff;
 
@@ -361,22 +373,22 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
       UpdateBidiFlag(aBuffer + first16bit, aLength - first16bit);
     }
 
-    return;
+    return true;
   }
 
   // The new and the old data is all 1-byte
   char* buff;
   if (mState.mInHeap) {
-    buff = (char*)nsMemory::Realloc(const_cast<char*>(m1b),
+    buff = (char*)moz_realloc(const_cast<char*>(m1b),
                                     (mState.mLength + aLength) * sizeof(char));
     if (!buff) {
-      return;
+      return false;
     }
   }
   else {
-    buff = (char*)nsMemory::Alloc((mState.mLength + aLength) * sizeof(char));
+    buff = (char*)moz_malloc((mState.mLength + aLength) * sizeof(char));
     if (!buff) {
-      return;
+      return false;
     }
 
     memcpy(buff, m1b, mState.mLength);
@@ -390,6 +402,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
   m1b = buff;
   mState.mLength += aLength;
 
+  return true;
 }
 
 /* virtual */ size_t

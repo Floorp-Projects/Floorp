@@ -25,6 +25,9 @@
 namespace js {
 namespace gc {
 
+extern void
+CrashAtUnhandlableOOM(const char *);
+
 /*
  * BufferableRef represents an abstract reference for use in the generational
  * GC's remembered set. Entries in the store buffer that cannot be represented
@@ -128,7 +131,7 @@ class StoreBuffer
 
             T *tp = storage_->new_<T>(t);
             if (!tp)
-                MOZ_CRASH();
+                CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::put.");
 
             if (isAboutToOverflow()) {
                 compact(owner);
@@ -202,12 +205,12 @@ class StoreBuffer
             unsigned size = sizeof(T);
             unsigned *sizep = storage_->newPod<unsigned>();
             if (!sizep)
-                MOZ_CRASH();
+                CrashAtUnhandlableOOM("Failed to allocate for GenericBuffer::put.");
             *sizep = size;
 
             T *tp = storage_->new_<T>(t);
             if (!tp)
-                MOZ_CRASH();
+                CrashAtUnhandlableOOM("Failed to allocate for GenericBuffer::put.");
 
             if (isAboutToOverflow())
                 owner->setAboutToOverflow();

@@ -187,18 +187,8 @@ getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
   if (!text || !text->IsTextRole())
     return 0;
 
-  // PRUnichar is unsigned short in Mozilla
-  // gnuichar is guint32 in glib
-  PRUnichar uniChar = 0;
-  nsresult rv = text->GetCharacterAtOffset(aOffset, &uniChar);
-  if (NS_FAILED(rv))
-    return 0;
-
-  // Convert char to "*" when it's "password text".
-  if (accWrap->NativeRole() == roles::PASSWORD_TEXT)
-    uniChar = '*';
-
-  return static_cast<gunichar>(uniChar);
+  // PRUnichar is unsigned short in Mozilla, gnuichar is guint32 in glib.
+  return static_cast<gunichar>(text->CharAt(aOffset));
 }
 
 static gchar*

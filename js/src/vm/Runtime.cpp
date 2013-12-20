@@ -15,7 +15,7 @@
 #include <locale.h>
 #include <string.h>
 
-#if defined(DEBUG) && !defined(XP_WIN)
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 # include <sys/mman.h>
 #endif
 
@@ -135,10 +135,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef JS_THREADSAFE
     operationCallbackLock(nullptr),
     operationCallbackOwner(nullptr),
-#else
-    operationCallbackLockTaken(false),
-#endif
-#ifdef JS_WORKER_THREADS
     workerThreadState(nullptr),
     exclusiveAccessLock(nullptr),
     exclusiveAccessOwner(nullptr),
@@ -150,6 +146,8 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     mainThreadHasCompilationLock(false),
 #endif
     numCompilationThreads(0),
+#else
+    operationCallbackLockTaken(false),
 #endif
     systemZone(nullptr),
     numCompartments(0),
@@ -369,9 +367,7 @@ JSRuntime::init(uint32_t maxbytes)
     gcLock = PR_NewLock();
     if (!gcLock)
         return false;
-#endif
 
-#ifdef JS_WORKER_THREADS
     exclusiveAccessLock = PR_NewLock();
     if (!exclusiveAccessLock)
         return false;
@@ -452,7 +448,7 @@ JSRuntime::~JSRuntime()
         CancelOffThreadIonCompile(comp, nullptr);
     WaitForOffThreadParsingToFinish(this);
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     if (workerThreadState)
         workerThreadState->cleanup();
 #endif
@@ -490,7 +486,7 @@ JSRuntime::~JSRuntime()
 
     mainThread.removeFromThreadList();
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     js_delete(workerThreadState);
 
     JS_ASSERT(!exclusiveAccessOwner);
@@ -504,9 +500,7 @@ JSRuntime::~JSRuntime()
     JS_ASSERT(!compilationLockOwner);
     if (compilationLock)
         PR_DestroyLock(compilationLock);
-#endif
 
-#ifdef JS_THREADSAFE
     JS_ASSERT(!operationCallbackOwner);
     if (operationCallbackLock)
         PR_DestroyLock(operationCallbackLock);
@@ -853,7 +847,7 @@ JSRuntime::activeGCInAtomsZone()
     return zone->needsBarrier() || zone->isGCScheduled() || zone->wasGCStarted();
 }
 
-#if defined(DEBUG) && !defined(XP_WIN)
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
 
 AutoProtectHeapForIonCompilation::AutoProtectHeapForIonCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : runtime(rt)
@@ -902,7 +896,7 @@ AutoThreadSafeAccess::AutoThreadSafeAccess(const Cell *cell MOZ_GUARD_OBJECT_NOT
 
     arena = base;
 
-    if (mprotect(arena, sizeof(Arena), PROT_READ))
+    if (mprotect(arena, sizeof(Arena), PROT_READ | PROT_WRITE))
         MOZ_CRASH();
 
     if (!runtime->unprotectedArenas.append(arena))
@@ -921,9 +915,9 @@ AutoThreadSafeAccess::~AutoThreadSafeAccess()
     runtime->unprotectedArenas.popBack();
 }
 
-#endif // DEBUG && !XP_WIN
+#endif // JS_CAN_CHECK_THREADSAFE_ACCESSES
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
 
 void
 JSRuntime::setUsedByExclusiveThread(Zone *zone)
@@ -941,10 +935,6 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
     numExclusiveThreads--;
 }
 
-#endif // JS_WORKER_THREADS
-
-#ifdef JS_THREADSAFE
-
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {
@@ -961,7 +951,7 @@ js::CurrentThreadCanAccessZone(Zone *zone)
     return !InParallelSection() || InExclusiveParallelSection();
 }
 
-#else
+#else // JS_THREADSAFE
 
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
@@ -982,7 +972,7 @@ js::CurrentThreadCanAccessZone(Zone *zone)
 void
 JSRuntime::assertCanLock(RuntimeLock which)
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     // In the switch below, each case falls through to the one below it. None
     // of the runtime locks are reentrant, and when multiple locks are acquired
     // it must be done in the order below.
@@ -991,24 +981,24 @@ JSRuntime::assertCanLock(RuntimeLock which)
         JS_ASSERT(exclusiveAccessOwner != PR_GetCurrentThread());
       case WorkerThreadStateLock:
         JS_ASSERT_IF(workerThreadState, !workerThreadState->isLocked());
-      case OperationCallbackLock:
-        JS_ASSERT(!currentThreadOwnsOperationCallbackLock());
       case CompilationLock:
         JS_ASSERT(compilationLockOwner != PR_GetCurrentThread());
+      case OperationCallbackLock:
+        JS_ASSERT(!currentThreadOwnsOperationCallbackLock());
       case GCLock:
         JS_ASSERT(gcLockOwner != PR_GetCurrentThread());
         break;
       default:
         MOZ_CRASH();
     }
-#endif // JS_WORKER_THREADS
+#endif // JS_THREADSAFE
 }
 
 AutoEnterIonCompilation::AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     PerThreadData *pt = js::TlsPerThreadData.get();
     JS_ASSERT(!pt->ionCompiling);
     pt->ionCompiling = true;
@@ -1017,7 +1007,7 @@ AutoEnterIonCompilation::AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_
 
 AutoEnterIonCompilation::~AutoEnterIonCompilation()
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     PerThreadData *pt = js::TlsPerThreadData.get();
     JS_ASSERT(pt->ionCompiling);
     pt->ionCompiling = false;
@@ -1027,7 +1017,7 @@ AutoEnterIonCompilation::~AutoEnterIonCompilation()
 bool
 js::CurrentThreadCanWriteCompilationData()
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     PerThreadData *pt = TlsPerThreadData.get();
 
     // Data can only be read from during compilation.
@@ -1049,7 +1039,7 @@ js::CurrentThreadCanWriteCompilationData()
 bool
 js::CurrentThreadCanReadCompilationData()
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     PerThreadData *pt = TlsPerThreadData.get();
 
     // Data can always be read from freely outside of compilation.
