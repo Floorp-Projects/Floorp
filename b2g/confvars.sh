@@ -60,3 +60,5 @@ if test "$OS_TARGET" = "Android"; then
 MOZ_NUWA_PROCESS=
 fi
 MOZ_FOLD_LIBS=1
+
+MOZ_JSDOWNLOADS=1

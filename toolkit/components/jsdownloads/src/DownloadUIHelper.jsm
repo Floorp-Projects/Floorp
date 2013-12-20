@@ -108,7 +108,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function () {
  */
 this.DownloadPrompter = function (aParent)
 {
-#ifdef MOZ_WIDGET_GONK
+#ifdef MOZ_B2G
   // On B2G there is no prompter implementation.
   this._prompter = null;
 #else

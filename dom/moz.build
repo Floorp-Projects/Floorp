@@ -104,6 +104,9 @@ if CONFIG['MOZ_GAMEPAD']:
 if CONFIG['MOZ_NFC']:
     PARALLEL_DIRS += ['nfc']
 
+if CONFIG['MOZ_B2G']:
+    PARALLEL_DIRS += ['downloads']
+
 TEST_DIRS += [
     'tests',
     'imptests',
