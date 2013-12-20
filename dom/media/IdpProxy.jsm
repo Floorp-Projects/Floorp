@@ -47,7 +47,7 @@ IdpChannel.prototype = {
       return callback(new Error("IdP channel already open"));
     }
 
-    var ready = this._sandboxReady.bind(this, callback);
+    let ready = this._sandboxReady.bind(this, callback);
     this.sandbox = new Sandbox(this.source, ready);
   },
 
@@ -190,6 +190,9 @@ IdpProxy.prototype = {
    * automatically to the message so that the callback is only invoked for the
    * response to the message.
    *
+   * This enqueues the message to send if the IdP hasn't signaled that it is
+   * "READY", and sends the message when it is.
+   *
    * The caller is responsible for ensuring that a response is received. If the
    * IdP doesn't respond, the callback simply isn't invoked.
    */
@@ -212,7 +215,7 @@ IdpProxy.prototype = {
     if (!message) {
       return;
     }
-    if (message.type === "READY") {
+    if (!this.ready && message.type === "READY") {
       this.ready = true;
       this.pending.forEach(function(p) {
         this.send(p.message, p.callback);
@@ -238,18 +241,23 @@ IdpProxy.prototype = {
       return;
     }
 
-    // dump a message of type "ERROR" in response to all outstanding
-    // messages to the IdP
-    let error = { type: "ERROR" };
-    Object.keys(this.tracking).forEach(function(k) {
-      this.tracking[k](error);
-    }, this);
-    this.pending.forEach(function(p) {
-      p.callback(error);
-    }, this);
+    // clear out before letting others know in case they do something bad
+    let trackingCopy = this.tracking;
+    let pendingCopy = this.pending;
 
     this.channel.close();
     this._reset();
+
+    // dump a message of type "ERROR" in response to all outstanding
+    // messages to the IdP
+    let error = { type: "ERROR", message: "IdP closed" };
+    Object.keys(trackingCopy).forEach(function(k) {
+      this.trackingCopy[k](error);
+    }, this);
+    pendingCopy.forEach(function(p) {
+      p.callback(error);
+    }, this);
+
   },
 
   toString: function() {

@@ -330,6 +330,10 @@ const kEventConstructors = {
                                                          return new RTCPeerConnectionIceEvent(aName, aProps);
                                                        },
                                              },
+  RTCPeerConnectionIdentityEvent:            { create: function (aName, aProps) {
+                                                         return new RTCPeerConnectionIdentityEvent(aName, aProps);
+                                                       },
+                                             },
   ScrollAreaEvent:                           { create: function (aName, aProps) {
                                                          var e = document.createEvent("scrollareaevent");
                                                          e.initScrollAreaEvent(aName, aProps.bubbles, aProps.cancelable,
