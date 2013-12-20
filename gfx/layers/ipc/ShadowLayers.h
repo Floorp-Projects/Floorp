@@ -11,7 +11,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint64_t
 #include "gfxTypes.h"
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
@@ -441,14 +440,14 @@ private:
                                           gfxContentType* aContent,
                                           gfxASurface** aSurface);
   // (Same as above, but for surface size.)
-  static gfxIntSize
+  static gfx::IntSize
   GetDescriptorSurfaceSize(const SurfaceDescriptor& aDescriptor,
                            OpenMode aMode,
                            gfxASurface** aSurface);
   static bool
   PlatformGetDescriptorSurfaceSize(const SurfaceDescriptor& aDescriptor,
                                    OpenMode aMode,
-                                   gfxIntSize* aSize,
+                                   gfx::IntSize* aSize,
                                    gfxASurface** aSurface);
   // And again, for the image format.
   // This function will return gfxImageFormatUnknown only if |aDescriptor|
