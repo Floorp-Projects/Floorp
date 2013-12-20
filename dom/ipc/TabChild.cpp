@@ -286,6 +286,7 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
   , mContextMenuHandled(false)
+  , mWaitingTouchListeners(false)
 {
 }
 
@@ -1914,16 +1915,43 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   WidgetTouchEvent localEvent(aEvent);
   nsEventStatus status = DispatchWidgetEvent(localEvent);
 
-  if (IsAsyncPanZoomEnabled()) {
-    nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(mWebNav);
-    nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
-
-    if (innerWindow && innerWindow->HasTouchEventListeners()) {
-      SendContentReceivedTouch(aGuid, nsIPresShell::gPreventMouseEvents ||
-                               localEvent.mFlags.mMultipleActionsPrevented);
-    }
-  } else {
+  if (!IsAsyncPanZoomEnabled()) {
     UpdateTapState(localEvent, status);
+    return true;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(mWebNav);
+  nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
+
+  if (!innerWindow || !innerWindow->HasTouchEventListeners()) {
+    SendContentReceivedTouch(aGuid, false);
+    return true;
+  }
+
+  bool isTouchPrevented = nsIPresShell::gPreventMouseEvents ||
+                          localEvent.mFlags.mMultipleActionsPrevented;
+  switch (aEvent.message) {
+  case NS_TOUCH_START: {
+    if (isTouchPrevented) {
+      SendContentReceivedTouch(aGuid, isTouchPrevented);
+    } else {
+      mWaitingTouchListeners = true;
+    }
+    break;
+  }
+
+  case NS_TOUCH_MOVE:
+  case NS_TOUCH_END:
+  case NS_TOUCH_CANCEL: {
+    if (mWaitingTouchListeners) {
+      SendContentReceivedTouch(aGuid, isTouchPrevented);
+      mWaitingTouchListeners = false;
+    }
+    break;
+  }
+
+  default:
+    NS_WARNING("Unknown touch event type");
   }
 
   return true;
