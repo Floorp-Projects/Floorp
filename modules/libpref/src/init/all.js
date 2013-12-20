@@ -3901,6 +3901,8 @@ pref("signon.rememberSignons",              true);
 pref("signon.autofillForms",                true);
 pref("signon.autologin.proxy",              false);
 pref("signon.debug",                        false);
+// Override autocomplete=false for password manager
+pref("signon.overrideAutocomplete",         false);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);

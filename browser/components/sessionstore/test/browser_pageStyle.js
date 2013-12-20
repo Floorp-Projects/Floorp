@@ -61,7 +61,8 @@ add_task(function nested_page_style() {
   gBrowser.removeTab(tab);
 
   let [{state: {pageStyle}}] = JSON.parse(ss.getClosedTabData(window));
-  is(pageStyle, "alternate", "correct pageStyle persisted");
+  let expected = JSON.stringify({children: [{pageStyle: "alternate"}]});
+  is(JSON.stringify(pageStyle), expected, "correct pageStyle persisted");
 });
 
 function getStyleSheets(browser) {

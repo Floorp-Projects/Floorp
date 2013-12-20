@@ -73,6 +73,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsresult ObjectForLocation(nsIFile* aComponentFile,
                                nsIURI *aComponent,
                                JSObject **aObject,
+                               JSScript **aTableScript,
                                char **location,
                                bool aCatchException,
                                JS::MutableHandleValue aException);
@@ -102,6 +103,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             unloadProc = nullptr;
 
             obj = nullptr;
+            thisObjectKey = nullptr;
             location = nullptr;
         }
 
@@ -119,12 +121,15 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
                 JS_SetAllNonReservedSlotsToUndefined(sSelf->mContext, obj);
                 JS_RemoveObjectRoot(sSelf->mContext, &obj);
+                if (thisObjectKey)
+                    JS_RemoveScriptRoot(sSelf->mContext, &thisObjectKey);
             }
 
             if (location)
                 NS_Free(location);
 
             obj = nullptr;
+            thisObjectKey = nullptr;
             location = nullptr;
         }
 
@@ -135,6 +140,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
         JSObject            *obj;
+        JSScript            *thisObjectKey;
         char                *location;
     };
 
