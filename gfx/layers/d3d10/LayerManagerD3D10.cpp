@@ -451,8 +451,8 @@ static void ReleaseTexture(void *texture)
 }
 
 already_AddRefed<gfxASurface>
-LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
-                                   gfxImageFormat aFormat)
+LayerManagerD3D10::CreateOptimalSurface(const IntSize &aSize,
+                                        gfxImageFormat aFormat)
 {
   if ((aFormat != gfxImageFormatRGB24 &&
        aFormat != gfxImageFormatARGB32)) {
@@ -489,7 +489,7 @@ LayerManagerD3D10::CreateOptimalSurface(const gfxIntSize &aSize,
 
 
 already_AddRefed<gfxASurface>
-LayerManagerD3D10::CreateOptimalMaskSurface(const gfxIntSize &aSize)
+LayerManagerD3D10::CreateOptimalMaskSurface(const IntSize &aSize)
 {
   return CreateOptimalSurface(aSize, gfxImageFormatARGB32);
 }

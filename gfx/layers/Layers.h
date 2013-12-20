@@ -17,7 +17,7 @@
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "GraphicsFilter.h"             // for GraphicsFilter
-#include "gfxPoint.h"                   // for gfxPoint, gfxIntSize
+#include "gfxPoint.h"                   // for gfxPoint
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
 #include "mozilla/DebugOnly.h"          // for DebugOnly
@@ -423,7 +423,7 @@ public:
    * manager.
    */
   virtual already_AddRefed<gfxASurface>
-    CreateOptimalSurface(const gfxIntSize &aSize,
+    CreateOptimalSurface(const gfx::IntSize &aSize,
                          gfxImageFormat imageFormat);
 
   /**
@@ -433,7 +433,7 @@ public:
    * is fairly simple.
    */
   virtual already_AddRefed<gfxASurface>
-    CreateOptimalMaskSurface(const gfxIntSize &aSize);
+    CreateOptimalMaskSurface(const gfx::IntSize &aSize);
 
   /**
    * Creates a DrawTarget for use with canvas which is optimized for
@@ -443,7 +443,7 @@ public:
     CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) { return true; }
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) { return true; }
 
   /**
    * returns the maximum texture size on this layer backend, or INT32_MAX

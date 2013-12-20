@@ -11,7 +11,6 @@
 #include "Layers.h"
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
@@ -119,7 +118,7 @@ public:
 
   // XXX[nrc]: never called, we should move this logic to ClientLayerManager
   // (bug 946926).
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE;
 
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE
   {
@@ -150,7 +149,7 @@ public:
   }
 
   virtual already_AddRefed<gfxASurface>
-    CreateOptimalMaskSurface(const gfxIntSize &aSize) MOZ_OVERRIDE;
+    CreateOptimalMaskSurface(const gfx::IntSize &aSize) MOZ_OVERRIDE;
 
   virtual const char* Name() const MOZ_OVERRIDE { return ""; }
 
