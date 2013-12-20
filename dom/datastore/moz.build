@@ -10,17 +10,33 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'dom_datastore'
 
+EXPORTS.mozilla.dom += [
+    'DataStore.h',
+    'DataStoreCursor.h',
+]
+
+SOURCES += [
+    'DataStore.cpp',
+    'DataStoreCursor.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/js/xpconnect/wrappers',
+]
+
 EXTRA_COMPONENTS += [
     'DataStore.manifest',
     'DataStoreService.js',
 ]
 
 EXTRA_JS_MODULES += [
-    'DataStore.jsm',
     'DataStoreChangeNotifier.jsm',
-    'DataStoreCursor.jsm',
+    'DataStoreCursorImpl.jsm',
     'DataStoreDB.jsm',
+    'DataStoreImpl.jsm',
     'DataStoreServiceInternal.jsm',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+FINAL_LIBRARY = 'xul'

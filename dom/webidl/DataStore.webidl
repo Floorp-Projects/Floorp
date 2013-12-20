@@ -6,56 +6,89 @@
 
 typedef (DOMString or unsigned long) DataStoreKey;
 
+// TODO Bug 957086 - The constructor and the setDataStoreImpl(...) will be
+//                   removed once the DataStore API is fully rewritten in C++,
+//                   which currently plays a role of C++ proxy directing to the
+//                   JS codes implemented by the DataStoreImpl WebIDL.
+
 [Func="Navigator::HasDataStoreSupport",
- JSImplementation="@mozilla.org/dom/datastore;1"]
+ ChromeConstructor]
 interface DataStore : EventTarget {
   // Returns the label of the DataSource.
+  [GetterThrows]
   readonly attribute DOMString name;
 
   // Returns the origin of the DataSource (e.g., 'facebook.com').
   // This value is the manifest URL of the owner app.
+  [GetterThrows]
   readonly attribute DOMString owner;
 
   // is readOnly a F(current_app, datastore) function? yes
+  [GetterThrows]
   readonly attribute boolean readOnly;
 
   // Promise<any>
+  [Throws]
   Promise get(DataStoreKey... id);
 
   // Promise<void>
+  [Throws]
   Promise put(any obj, DataStoreKey id, optional DOMString revisionId = "");
 
   // Promise<DataStoreKey>
+  [Throws]
   Promise add(any obj, optional DataStoreKey id,
               optional DOMString revisionId = "");
 
   // Promise<boolean>
+  [Throws]
   Promise remove(DataStoreKey id, optional DOMString revisionId = "");
 
   // Promise<void>
+  [Throws]
   Promise clear(optional DOMString revisionId = "");
 
+  [GetterThrows]
   readonly attribute DOMString revisionId;
 
   attribute EventHandler onchange;
 
   // Promise<unsigned long>
+  [Throws]
   Promise getLength();
 
+  [NewObject, Throws]
   DataStoreCursor sync(optional DOMString revisionId = "");
 };
 
-[Pref="dom.datastore.enabled",
- JSImplementation="@mozilla.org/dom/datastore-cursor;1"]
-interface DataStoreCursor {
+partial interface DataStore {
+  [ChromeOnly, Throws]
+  void setDataStoreImpl(DataStoreImpl store);
+};
 
+// TODO Bug 957086 - The constructor and the setDataStoreCursorImpl(...) will be
+//                   removed once the DataStore API is fully rewritten in C++,
+//                   which currently plays a role of C++ proxy directing to the
+//                   JS codes implemented by the DataStoreCursorImpl WebIDL.
+
+[Pref="dom.datastore.enabled",
+ ChromeConstructor]
+interface DataStoreCursor {
   // the DataStore
+  [GetterThrows]
   readonly attribute DataStore store;
 
   // Promise<DataStoreTask>
+  [Throws]
   Promise next();
 
+  [Throws]
   void close();
+};
+
+partial interface DataStoreCursor {
+  [ChromeOnly]
+  void setDataStoreCursorImpl(DataStoreCursorImpl cursor);
 };
 
 enum DataStoreOperation {
