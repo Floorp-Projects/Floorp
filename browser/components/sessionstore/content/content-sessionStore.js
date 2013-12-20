@@ -229,6 +229,10 @@ let ScrollPositionListener = {
     }
   },
 
+  onFrameTreeCollected: function () {
+    MessageQueue.push("scroll", () => this.collect());
+  },
+
   onFrameTreeReset: function () {
     MessageQueue.push("scroll", () => null);
   },
@@ -266,6 +270,10 @@ let PageStyleListener = {
 
   collect: function () {
     return PageStyle.collect(docShell, gFrameTree);
+  },
+
+  onFrameTreeCollected: function () {
+    MessageQueue.push("pageStyle", () => this.collect());
   },
 
   onFrameTreeReset: function () {
