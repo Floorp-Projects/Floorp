@@ -47,7 +47,10 @@ public class ToolbarEditText extends CustomEditText
 
     private final Context mContext;
 
-    private TextType mTextType;
+    // Type of the URL bar go/search button
+    private TextType mToolbarTextType;
+    // Type of the keyboard go/search button (cannot be EMPTY)
+    private TextType mKeyboardTextType;
 
     private OnCommitListener mCommitListener;
     private OnDismissListener mDismissListener;
@@ -66,7 +69,8 @@ public class ToolbarEditText extends CustomEditText
         super(context, attrs);
         mContext = context;
 
-        mTextType = TextType.EMPTY;
+        mToolbarTextType = TextType.EMPTY;
+        mKeyboardTextType = TextType.URL;
     }
 
     void setOnCommitListener(OnCommitListener listener) {
@@ -172,10 +176,13 @@ public class ToolbarEditText extends CustomEditText
     }
 
     private void setTextType(TextType textType) {
-        mTextType = textType;
+        mToolbarTextType = textType;
 
+        if (textType != TextType.EMPTY) {
+            mKeyboardTextType = textType;
+        }
         if (mTextTypeListener != null) {
-            mTextTypeListener.onTextTypeChange(this, mTextType);
+            mTextTypeListener.onTextTypeChange(this, textType);
         }
     }
 
@@ -186,6 +193,8 @@ public class ToolbarEditText extends CustomEditText
         }
 
         if (InputMethods.shouldDisableUrlBarUpdate(mContext)) {
+            // Set button type to match the previous keyboard type
+            setTextType(mKeyboardTextType);
             return;
         }
 
@@ -222,10 +231,16 @@ public class ToolbarEditText extends CustomEditText
             restartInput = true;
         }
 
-        if (restartInput) {
-            updateKeyboardInputType();
-            imm.restartInput(ToolbarEditText.this);
+        if (!restartInput) {
+            // If the text content was previously empty, the toolbar text type
+            // is empty as well. Since the keyboard text type cannot be empty,
+            // the two text types are now inconsistent. Reset the toolbar text
+            // type here to the keyboard text type to ensure consistency.
+            setTextType(mKeyboardTextType);
+            return;
         }
+        updateKeyboardInputType();
+        imm.restartInput(ToolbarEditText.this);
 
         setTextType(imeAction == EditorInfo.IME_ACTION_GO ?
                     TextType.URL : TextType.SEARCH_QUERY);
