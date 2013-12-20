@@ -1055,6 +1055,26 @@ CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32
   return rv;
 }
 
+NS_IMETHODIMP
+CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
+{
+  if (aOptions.isNullOrUndefined()) {
+    return NS_OK;
+  }
+
+  ContextAttributes2D attributes;
+  NS_ENSURE_TRUE(attributes.Init(aCx, aOptions), NS_ERROR_UNEXPECTED);
+
+#ifdef USE_SKIA_GPU
+  if (Preferences::GetBool("gfx.canvas.willReadFrequently.enable", false)) {
+    // Use software when there is going to be a lot of readback
+    mForceSoftware = attributes.mWillReadFrequently;
+  }
+#endif
+
+  return NS_OK;
+}
+
 void
 CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
                                          int32_t* aFormat)
