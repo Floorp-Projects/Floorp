@@ -92,8 +92,6 @@ namespace mozilla {
 class AudioSegment;
 class VideoSegment;
 
-class AudioSink;
-
 /*
   The state machine class. This manages the decoding and seeking in the
   MediaDecoderReader on the decode thread, and A/V sync on the shared
@@ -108,8 +106,6 @@ class AudioSink;
 */
 class MediaDecoderStateMachine : public nsRunnable
 {
-  friend class AudioSink;
-
 public:
   typedef MediaDecoder::DecodedStreamData DecodedStreamData;
   MediaDecoderStateMachine(MediaDecoder* aDecoder,
@@ -177,6 +173,9 @@ public:
     return IsCurrentThread(mDecodeThread);
   }
   bool OnStateMachineThread() const;
+  bool OnAudioThread() const {
+    return IsCurrentThread(mAudioThread);
+  }
 
   MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
 
@@ -422,6 +421,16 @@ private:
   // Returns true if we recently exited "quick buffering" mode.
   bool JustExitedQuickBuffering();
 
+  // Waits on the decoder ReentrantMonitor for aUsecs microseconds. If the decoder
+  // monitor is awoken by a Notify() call, we'll continue waiting, unless
+  // we've moved into shutdown state. This enables us to ensure that we
+  // wait for a specified time, and that the myriad of Notify()s we do on
+  // the decoder monitor don't cause the audio thread to be starved. aUsecs
+  // values of less than 1 millisecond are rounded up to 1 millisecond
+  // (see bug 651023). The decoder monitor must be held. Called only on the
+  // audio thread.
+  void Wait(int64_t aUsecs);
+
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
 
@@ -465,6 +474,22 @@ private:
   // state machine thread.
   void AdvanceFrame();
 
+  // Write aFrames of audio frames of silence to the audio hardware. Returns
+  // the number of frames actually written. The write size is capped at
+  // SILENCE_BYTES_CHUNK (32kB), so must be called in a loop to write the
+  // desired number of frames. This ensures that the playback position
+  // advances smoothly, and guarantees that we don't try to allocate an
+  // impossibly large chunk of memory in order to play back silence. Called
+  // on the audio thread.
+  uint32_t PlaySilence(uint32_t aFrames,
+                       uint32_t aChannels,
+                       uint64_t aFrameOffset);
+
+  // Pops an audio chunk from the front of the audio queue, and pushes its
+  // audio data to the audio hardware. MozAudioAvailable data is also queued
+  // here. Called on the audio thread.
+  uint32_t PlayFromAudioQueue(uint64_t aFrameOffset, uint32_t aChannels);
+
   // Stops the decode thread, and if we have a pending request for a new
   // decode thread it is canceled. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
@@ -483,6 +508,11 @@ private:
   // Starts the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   nsresult StartAudioThread();
+
+  // The main loop for the audio thread. Sent to the thread as
+  // an nsRunnableMethod. This continually does blocking writes to
+  // to audio stream to play audio data.
+  void AudioLoop();
 
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
@@ -558,20 +588,6 @@ private:
   // case as it may not be needed again.
   bool IsPausedAndDecoderWaiting();
 
-  // Set the time that playback started from the system clock.
-  // Can only be called on the state machine thread.
-  void SetPlayStartTime(const TimeStamp& aTimeStamp);
-
-  // Update mAudioEndTime.
-  void OnAudioEndTimeUpdate(int64_t aAudioEndTime);
-
-  // Update mDecoder's playback offset.
-  void OnPlaybackOffsetUpdate(int64_t aPlaybackOffset);
-
-  // Called by the AudioSink to signal that all outstanding work is complete
-  // and the sink is shutting down.
-  void OnAudioSinkComplete();
-
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has
@@ -589,6 +605,10 @@ private:
   // Accessed on state machine, audio, main, and AV thread.
   State mState;
 
+  // Thread for pushing audio onto the audio hardware.
+  // The "audio push thread".
+  nsCOMPtr<nsIThread> mAudioThread;
+
   // Thread for decoding video in background. The "decode thread".
   nsCOMPtr<nsIThread> mDecodeThread;
 
@@ -603,19 +623,19 @@ private:
 
   // The time that playback started from the system clock. This is used for
   // timing the presentation of video frames when there's no audio.
-  // Accessed only via the state machine thread.  Must be set via SetPlayStartTime.
+  // Accessed only via the state machine thread.
   TimeStamp mPlayStartTime;
-
-  // When the playbackRate changes, and there is no audio clock, it is necessary
-  // to reset the mPlayStartTime. This is done next time the clock is queried,
-  // when this member is true. Access protected by decoder monitor.
-  bool mResetPlayStartTime;
 
   // When we start writing decoded data to a new DecodedDataStream, or we
   // restart writing due to PlaybackStarted(), we record where we are in the
   // MediaStream and what that corresponds to in the media.
   StreamTime mSyncPointInMediaStream;
   int64_t mSyncPointInDecodedStream; // microseconds
+
+  // When the playbackRate changes, and there is no audio clock, it is necessary
+  // to reset the mPlayStartTime. This is done next time the clock is queried,
+  // when this member is true. Access protected by decoder monitor.
+  bool mResetPlayStartTime;
 
   // The amount of time we've spent playing already the media. The current
   // playback position is therefore |Now() - mPlayStartTime +
@@ -647,7 +667,11 @@ private:
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
-  nsRefPtr<AudioSink> mAudioSink;
+  // The audio stream resource. Used on the state machine, and audio threads.
+  // This is created and destroyed on the audio thread, while holding the
+  // decoder monitor, so if this is used off the audio thread, you must
+  // first acquire the decoder monitor and check that it is non-null.
+  nsAutoPtr<AudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the play state machine's constructor, and destroyed
@@ -802,7 +826,7 @@ private:
   // Manager for queuing and dispatching MozAudioAvailable events.  The
   // event manager is accessed from the state machine and audio threads,
   // and takes care of synchronizing access to its internal queue.
-  nsRefPtr<AudioAvailableEventManager> mEventManager;
+  AudioAvailableEventManager mEventManager;
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.
