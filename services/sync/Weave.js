@@ -89,13 +89,12 @@ WeaveService.prototype = {
       (accountData) => {
         if (accountData) {
           Cu.import("resource://services-sync/browserid_identity.js");
-          Cu.import("resource://services-common/tokenserverclient.js");
           // The Sync Identity module needs to be set in both these places if
           // it's swapped out as we are doing here. When Weave.Service initializes
           // it grabs a reference to Weave.Status._authManager, and for references
           // to Weave.Service.identity to resolve correctly, we also need to reset
           // Weave.Service.identity as well.
-          Weave.Service.identity = Weave.Status._authManager = new BrowserIDManager(fxAccounts, new TokenServerClient()),
+          Weave.Service.identity = Weave.Status._authManager = new BrowserIDManager(),
           // Init the identity module with any account data from
           // firefox accounts. The Identity module will fetch the signed in
           // user from fxAccounts directly.

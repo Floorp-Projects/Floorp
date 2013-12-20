@@ -14,16 +14,17 @@ Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-// Lazy import to prevent unnecessary load on startup.
-for (let symbol of ["BulkKeyBundle"]) {
-  XPCOMUtils.defineLazyModuleGetter(this, symbol,
-                                    "resource://services-sync/keys.js",
-                                    symbol);
-}
+// Lazy imports to prevent unnecessary load on startup.
+XPCOMUtils.defineLazyModuleGetter(this, "BulkKeyBundle",
+                                  "resource://services-sync/keys.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+                                  "resource://gre/modules/FxAccounts.jsm");
 
 function deriveKeyBundle(kB) {
   let out = CryptoUtils.hkdf(kB, undefined,
@@ -35,15 +36,9 @@ function deriveKeyBundle(kB) {
 }
 
 
-/**
- * Fetch a token for the sync storage server by passing a BrowserID assertion
- * from FxAccounts() to TokenServerClient, then wrap the token in in a Hawk
- * header so that SyncStorageRequest can connect.
- */
-
-this.BrowserIDManager = function BrowserIDManager(fxaService, tokenServerClient) {
-  this._fxaService = fxaService;
-  this._tokenServerClient = tokenServerClient;
+this.BrowserIDManager = function BrowserIDManager() {
+  this._fxaService = fxAccounts;
+  this._tokenServerClient = new TokenServerClient();
   this._log = Log.repository.getLogger("Sync.BrowserIDManager");
   this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")];
 
