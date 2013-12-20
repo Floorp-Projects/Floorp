@@ -333,12 +333,12 @@ let SessionStorageListener = {
   init: function () {
     addEventListener("MozStorageChanged", this);
     Services.obs.addObserver(this, "browser:purge-domain-data", true);
-    Services.obs.addObserver(this, "browser:purge-session-history", true);
+    gFrameTree.addObserver(this);
   },
 
   handleEvent: function (event) {
     // Ignore events triggered by localStorage or globalStorage changes.
-    if (isSessionStorageEvent(event)) {
+    if (gFrameTree.contains(event.target) && isSessionStorageEvent(event)) {
       this.collect();
     }
   },
@@ -350,7 +350,17 @@ let SessionStorageListener = {
   },
 
   collect: function () {
-    MessageQueue.push("storage", () => SessionStorage.collect(docShell));
+    if (docShell) {
+      MessageQueue.push("storage", () => SessionStorage.collect(docShell, gFrameTree));
+    }
+  },
+
+  onFrameTreeCollected: function () {
+    this.collect();
+  },
+
+  onFrameTreeReset: function () {
+    this.collect();
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
