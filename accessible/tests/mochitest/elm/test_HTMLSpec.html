@@ -733,7 +733,12 @@
         states: STATE_PROTECTED,
         extraStates: EXT_STATE_EDITABLE,
         actions: "activate",
-        children: [ ]
+        children: [
+        {
+            role: ROLE_TEXT_LEAF,
+            name: "●●"
+          }
+        ]
       };
       testElm("input_password", obj);
 
@@ -741,7 +746,12 @@
         role: ROLE_PASSWORD_TEXT,
         states: STATE_PROTECTED | STATE_READONLY,
         actions: "activate",
-        children: [ ]
+        children: [
+        {
+            role: ROLE_TEXT_LEAF,
+            name: "●●"
+          }
+        ]
       };
       testElm("input_password_readonly", obj);
 
