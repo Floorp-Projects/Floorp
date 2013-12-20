@@ -51,7 +51,7 @@
   display: none;
 }
 
-.devtools-toolbarbutton:not([checked=true]):hover:active {
+.devtools-toolbarbutton:not([checked]):hover:active {
   border-color: hsla(210,8%,5%,.6);
   background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
   box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
@@ -282,28 +282,28 @@
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true] + tab {
+.devtools-sidebar-tabs > tabs > tab[selected] + tab {
   background-image: linear-gradient(transparent, transparent), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true] + tab:hover {
+.devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
   background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true] + tab:hover:active {
+.devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true] {
+.devtools-sidebar-tabs > tabs > tab[selected] {
   color: #f5f7fa;
   background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true]:hover {
+.devtools-sidebar-tabs > tabs > tab[selected]:hover {
   background-image: linear-gradient(#274f64, #274f64), @solidSeparator@;
 }
 
-.devtools-sidebar-tabs > tabs > tab[selected=true]:hover:active {
+.devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparator@;
 }
 
@@ -520,7 +520,7 @@
 }
 
 .devtools-tab:active > image,
-.devtools-tab[selected=true] > image {
+.devtools-tab[selected] > image {
   opacity: 1;
 }
 
@@ -534,7 +534,7 @@
   color: #f5f7fa;
 }
 
-#toolbox-tabs .devtools-tab[selected=true] {
+#toolbox-tabs .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -542,32 +542,32 @@
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
-.devtools-tab[selected=true]:not(:first-child),
-.devtools-tab.highlighted:not(:first-child) {
+.devtools-tab[selected]:not(:first-child),
+.devtools-tab[highlighted]:not(:first-child) {
   border-width: 0;
   -moz-padding-start: 1px;
 }
 
-.devtools-tab[selected=true]:last-child,
-.devtools-tab.highlighted:last-child {
+.devtools-tab[selected]:last-child,
+.devtools-tab[highlighted]:last-child {
   -moz-padding-end: 1px;
 }
 
-.devtools-tab[selected=true] + .devtools-tab,
-.devtools-tab.highlighted + .devtools-tab {
+.devtools-tab[selected] + .devtools-tab,
+.devtools-tab[highlighted] + .devtools-tab {
   -moz-border-start-width: 0;
   -moz-padding-start: 1px;
 }
 
-.devtools-tab:not([selected=true]).highlighted {
+.devtools-tab:not([selected])[highlighted] {
   color: #f5f7fa;
   background-color: hsla(99,100%,14%,.2);
   box-shadow: 0 2px 0 #7bc107 inset;
 }
 
-.devtools-tab:not(.highlighted) > .highlighted-icon,
-.devtools-tab[selected=true] > .highlighted-icon,
-.devtools-tab:not([selected=true]).highlighted > .default-icon {
+.devtools-tab:not([highlighted]) > .highlighted-icon,
+.devtools-tab[selected] > .highlighted-icon,
+.devtools-tab:not([selected])[highlighted] > .default-icon {
   visibility: collapse;
 }
 
