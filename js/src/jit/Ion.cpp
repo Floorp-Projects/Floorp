@@ -1736,7 +1736,12 @@ IonCompile(JSContext *cx, JSScript *script,
     }
 
     Maybe<AutoEnterIonCompilation> ionCompiling;
-    ionCompiling.construct();
+    if (!cx->runtime()->profilingScripts) {
+        // Compilation with script profiling is only done on the main thread,
+        // and may modify scripts directly, so don't watch for proper use of
+        // the compilation lock.
+        ionCompiling.construct();
+    }
 
     Maybe<AutoProtectHeapForIonCompilation> protect;
     if (js_JitOptions.checkThreadSafety &&
@@ -1761,7 +1766,8 @@ IonCompile(JSContext *cx, JSScript *script,
 
     if (!protect.empty())
         protect.destroy();
-    ionCompiling.destroy();
+    if (!ionCompiling.empty())
+        ionCompiling.destroy();
 
     bool success = codegen->link(cx, builder->constraints());
 
