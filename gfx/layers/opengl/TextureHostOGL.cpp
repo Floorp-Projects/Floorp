@@ -881,8 +881,8 @@ YCbCrDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfx::IntSize gfxSize = gfx::ToIntSize(deserializer.GetYSize());
-  gfx::IntSize gfxCbCrSize = gfx::ToIntSize(deserializer.GetCbCrSize());
+  gfx::IntSize gfxSize = deserializer.GetYSize();
+  gfx::IntSize gfxCbCrSize = deserializer.GetCbCrSize();
 
   if (!mYTexture->mTexImage || mYTexture->mTexImage->GetSize() != gfxSize) {
     mYTexture->mTexImage = CreateBasicTextureImage(mGL,
