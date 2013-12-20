@@ -10,6 +10,7 @@ toolkit.jar:
 *  content/global/xul.css                     (xul.css)
    content/global/textbox.css                 (textbox.css)
    content/global/menulist.css                (menulist.css)
+   content/global/about.js                    (about.js)
    content/global/about.xhtml                 (about.xhtml)
    content/global/aboutAbout.xhtml            (aboutAbout.xhtml)
    content/global/aboutRights.xhtml           (aboutRights.xhtml)
