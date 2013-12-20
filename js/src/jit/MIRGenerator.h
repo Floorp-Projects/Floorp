@@ -127,6 +127,10 @@ class MIRGenerator
         return asmJSGlobalAccesses_;
     }
 
+    bool modifiesFrameArguments() const {
+        return modifiesFrameArguments_;
+    }
+
   public:
     CompileCompartment *compartment;
 
@@ -145,6 +149,11 @@ class MIRGenerator
     AsmJSHeapAccessVector asmJSHeapAccesses_;
     AsmJSGlobalAccessVector asmJSGlobalAccesses_;
     uint32_t minAsmJSHeapLength_;
+
+    // Keep track of whether frame arguments are modified during execution.
+    // RegAlloc needs to know this as spilling values back to their register
+    // slots is not compatible with that.
+    bool modifiesFrameArguments_;
 
 #if defined(JS_ION_PERF)
     AsmJSPerfSpewer asmJSPerfSpewer_;
