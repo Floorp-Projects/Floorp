@@ -325,6 +325,15 @@ public:
     return mIsInnerWindow;
   }
 
+
+  bool HasActiveDocument()
+  {
+    return GetOuterWindow() &&
+      (GetOuterWindow()->GetCurrentInnerWindow() == this ||
+       (GetOuterWindow()->GetCurrentInnerWindow() &&
+        GetOuterWindow()->GetCurrentInnerWindow()->GetDoc() == mDoc));
+  }
+
   bool IsOuterWindow() const
   {
     return !IsInnerWindow();
