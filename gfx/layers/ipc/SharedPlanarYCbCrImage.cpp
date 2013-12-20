@@ -6,6 +6,7 @@
 #include "SharedPlanarYCbCrImage.h"
 #include <stddef.h>                     // for size_t
 #include <stdio.h>                      // for printf
+#include "gfx2DGlue.h"                  // for Moz2D transition helpers
 #include "ISurfaceAllocator.h"          // for ISurfaceAllocator, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat::FORMAT_YUV
@@ -245,8 +246,8 @@ DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
   if (!serializer.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
-                          aData.mYSize, aData.mYStride,
-                          aData.mCbCrSize, aData.mCbCrStride,
+                          ThebesIntSize(aData.mYSize), aData.mYStride,
+                          ThebesIntSize(aData.mCbCrSize), aData.mCbCrStride,
                           aData.mYSkip, aData.mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
   }
