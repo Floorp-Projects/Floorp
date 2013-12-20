@@ -4,6 +4,7 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BasicCompositor.h"
+#include "TextureHostBasic.h"
 #include "ipc/AutoOpenSurface.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
@@ -12,6 +13,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "gfxUtils.h"
+#include "YCbCrUtils.h"
 #include <algorithm>
 #include "ImageContainer.h"
 #define PIXMAN_DONT_DEFINE_STDINT
@@ -21,16 +23,6 @@ namespace mozilla {
 using namespace mozilla::gfx;
 
 namespace layers {
-
-/**
- * A texture source interface that can be used by the software Compositor.
- */
-class TextureSourceBasic
-{
-public:
-  virtual ~TextureSourceBasic() {}
-  virtual gfx::SourceSurface* GetSurface() = 0;
-};
 
 class DataTextureSourceBasic : public DataTextureSource
                              , public TextureSourceBasic
@@ -89,7 +81,7 @@ public:
 
   virtual TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
 
-  SourceSurface *GetSurface() { return mSurface; }
+  SourceSurface *GetSurface() MOZ_OVERRIDE { return mSurface; }
 
   virtual void SetCompositor(Compositor* aCompositor)
   {
@@ -123,7 +115,10 @@ protected:
   }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE {
-    return nullptr;
+    if (!mSurface) {
+        return nullptr;
+    }
+    return mSurface->GetDataSurface();
   }
 
   BasicCompositor *mCompositor;
@@ -181,24 +176,20 @@ public:
     PlanarYCbCrData data;
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 
-    gfxImageFormat format = gfxImageFormatRGB24;
-    gfxIntSize size;
-    gfxUtils::GetYCbCrToRGBDestFormatAndSize(data, format, size);
+    gfx::SurfaceFormat format = FORMAT_B8G8R8X8;
+    gfx::IntSize size;
+    gfx::GetYCbCrToRGBDestFormatAndSize(data, format, size);
     if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
         size.height > PlanarYCbCrImage::MAX_DIMENSION) {
       NS_ERROR("Illegal image dest width or height");
       return false;
     }
 
-    mSize = ToIntSize(size);
-    mFormat = (format == gfxImageFormatRGB24)
-              ? FORMAT_B8G8R8X8
-              : FORMAT_B8G8R8A8;
+    mSize = size;
+    mFormat = format;
 
     RefPtr<DataSourceSurface> surface = Factory::CreateDataSourceSurface(mSize, mFormat);
-    gfxUtils::ConvertYCbCrToRGB(data, format, size,
-                                surface->GetData(),
-                                surface->Stride());
+    gfx::ConvertYCbCrToRGB(data, format, size, surface->GetData(), surface->Stride());
 
     mSurface = surface;
     return true;
@@ -226,7 +217,6 @@ CreateBasicDeprecatedTextureHost(SurfaceDescriptorType aDescriptorType,
 
 BasicCompositor::BasicCompositor(nsIWidget *aWidget)
   : mWidget(aWidget)
-  , mWidgetSize(-1, -1)
 {
   MOZ_COUNT_CTOR(BasicCompositor);
   sBackend = LAYERS_BASIC;
@@ -312,13 +302,16 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                                   gfxPoint(aDestRect.XMost(), aDestRect.YMost()));
   Matrix matrix = ToMatrix(transform);
   if (aMask) {
-    NS_ASSERTION(matrix._11 == 1.0f && matrix._12 == 0.0f &&
-                 matrix._21 == 0.0f && matrix._22 == 1.0f,
-                 "Can only handle translations for mask transform");
-    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_CLAMP, matrix),
-                       aMask,
-                       Point(matrix._31, matrix._32),
-                       DrawOptions(aOpacity));
+    aDest->PushClipRect(aDestRect);
+    Matrix maskTransformInverse = aMaskTransform;
+    maskTransformInverse.Invert();
+    Matrix dtTransform = aDest->GetTransform();
+    aDest->SetTransform(aMaskTransform);
+    Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
+    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_REPEAT, patternMatrix),
+                       aMask, Point(), DrawOptions(aOpacity));
+    aDest->SetTransform(dtTransform);
+    aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
                     SurfacePattern(aSource, EXTEND_REPEAT, matrix),
@@ -546,7 +539,6 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   nsIntRect intRect;
   mWidget->GetClientBounds(intRect);
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
-  mWidgetSize = intRect.Size();
 
   nsIntRect invalidRect = aInvalidRegion.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);

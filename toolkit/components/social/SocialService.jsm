@@ -187,16 +187,17 @@ let ActiveProviders = {
 
   add: function (origin) {
     this._providers[origin] = 1;
-    this._deferredTask.start();
+    this._deferredTask.arm();
   },
 
   delete: function (origin) {
     delete this._providers[origin];
-    this._deferredTask.start();
+    this._deferredTask.arm();
   },
 
   flush: function () {
-    this._deferredTask.flush();
+    this._deferredTask.disarm();
+    this._persist();
   },
 
   get _deferredTask() {
@@ -653,7 +654,7 @@ this.SocialService = {
         if (!manifest)
           throw new Error("Cannot install provider without manifest data");
         installer = new AddonInstaller(sourceURI, manifest, installCallback);
-        installer.install();
+        this._showInstallNotification(aDOMDocument, installer);
         break;
       default:
         throw new Error("SocialService.installProvider: Invalid install type "+installType+"\n");

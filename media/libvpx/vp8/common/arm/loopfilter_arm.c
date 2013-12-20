@@ -10,17 +10,22 @@
 
 
 #include "vpx_config.h"
+#include "vp8_rtcd.h"
 #include "vp8/common/loopfilter.h"
 #include "vp8/common/onyxc_int.h"
 
-#if HAVE_ARMV6
+#define prototype_loopfilter(sym) \
+    void sym(unsigned char *src, int pitch, const unsigned char *blimit,\
+             const unsigned char *limit, const unsigned char *thresh, int count)
+
+#if HAVE_MEDIA
 extern prototype_loopfilter(vp8_loop_filter_horizontal_edge_armv6);
 extern prototype_loopfilter(vp8_loop_filter_vertical_edge_armv6);
 extern prototype_loopfilter(vp8_mbloop_filter_horizontal_edge_armv6);
 extern prototype_loopfilter(vp8_mbloop_filter_vertical_edge_armv6);
 #endif
 
-#if HAVE_ARMV7
+#if HAVE_NEON
 typedef void loopfilter_y_neon(unsigned char *src, int pitch,
         unsigned char blimit, unsigned char limit, unsigned char thresh);
 typedef void loopfilter_uv_neon(unsigned char *u, int pitch,
@@ -38,8 +43,8 @@ extern loopfilter_uv_neon vp8_mbloop_filter_horizontal_edge_uv_neon;
 extern loopfilter_uv_neon vp8_mbloop_filter_vertical_edge_uv_neon;
 #endif
 
-#if HAVE_ARMV6
-/*ARMV6 loopfilter functions*/
+#if HAVE_MEDIA
+/* ARMV6/MEDIA loopfilter functions*/
 /* Horizontal MB filtering */
 void vp8_loop_filter_mbh_armv6(unsigned char *y_ptr, unsigned char *u_ptr, unsigned char *v_ptr,
                                int y_stride, int uv_stride, loop_filter_info *lfi)
@@ -113,7 +118,7 @@ void vp8_loop_filter_bvs_armv6(unsigned char *y_ptr, int y_stride,
 }
 #endif
 
-#if HAVE_ARMV7
+#if HAVE_NEON
 /* NEON loopfilter functions */
 /* Horizontal MB filtering */
 void vp8_loop_filter_mbh_neon(unsigned char *y_ptr, unsigned char *u_ptr, unsigned char *v_ptr,

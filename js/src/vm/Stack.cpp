@@ -37,7 +37,7 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
      * script in the context of another frame and the frame type is determined
      * by the context.
      */
-    flags_ = type | HAS_SCOPECHAIN | HAS_BLOCKCHAIN;
+    flags_ = type | HAS_SCOPECHAIN;
 
     JSObject *callee = nullptr;
     if (!(flags_ & (GLOBAL))) {
@@ -81,7 +81,6 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
     prev_ = nullptr;
     prevpc_ = nullptr;
     prevsp_ = nullptr;
-    blockChain_ = nullptr;
 
     JS_ASSERT_IF(evalInFramePrev, isDebuggerFrame());
     evalInFramePrev_ = evalInFramePrev;
@@ -99,7 +98,7 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
 {
     JS_ASSERT(othervp == otherfp->generatorArgsSnapshotBegin());
     JS_ASSERT(othersp >= otherfp->slots());
-    JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots);
+    JS_ASSERT(othersp <= otherfp->generatorSlotsSnapshotBegin() + otherfp->script()->nslots());
 
     /* Copy args, StackFrame, and slots. */
     const Value *srcend = otherfp->generatorArgsSnapshotEnd();
@@ -123,9 +122,6 @@ StackFrame::copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
         if (doPostBarrier)
             HeapValue::writeBarrierPost(*dst, dst);
     }
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onGeneratorFrameChange(otherfp, this, cx);
 }
 
 /* Note: explicit instantiation for js_NewGenerator located in jsiter.cpp. */
@@ -155,34 +151,13 @@ StackFrame::writeBarrierPost()
         HeapValue::writeBarrierPost(rval_, &rval_);
 }
 
-JSGenerator *
-StackFrame::maybeSuspendedGenerator(JSRuntime *rt)
-{
-    /*
-     * A suspended generator's frame is embedded inside the JSGenerator object
-     * and is not currently running.
-     */
-    if (!isGeneratorFrame() || !isSuspended())
-        return nullptr;
-
-    /*
-     * Once we know we have a suspended generator frame, there is a static
-     * offset from the frame's snapshot to beginning of the JSGenerator.
-     */
-    char *vp = reinterpret_cast<char *>(generatorArgsSnapshotBegin());
-    char *p = vp - offsetof(JSGenerator, stackSnapshot);
-    JSGenerator *gen = reinterpret_cast<JSGenerator *>(p);
-    JS_ASSERT(gen->fp == this);
-    return gen;
-}
-
 bool
 StackFrame::copyRawFrameSlots(AutoValueVector *vec)
 {
-    if (!vec->resize(numFormalArgs() + script()->nfixed))
+    if (!vec->resize(numFormalArgs() + script()->nfixed()))
         return false;
     PodCopy(vec->begin(), argv(), numFormalArgs());
-    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed);
+    PodCopy(vec->begin() + numFormalArgs(), slots(), script()->nfixed());
     return true;
 }
 
@@ -190,7 +165,7 @@ JSObject *
 StackFrame::createRestParameter(JSContext *cx)
 {
     JS_ASSERT(fun()->hasRest());
-    unsigned nformal = fun()->nargs - 1, nactual = numActualArgs();
+    unsigned nformal = fun()->nargs() - 1, nactual = numActualArgs();
     unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
     Value *restvp = argv() + nformal;
     JSObject *obj = NewDenseCopiedArray(cx, nrest, restvp, nullptr);
@@ -255,10 +230,10 @@ StackFrame::prologue(JSContext *cx)
     RootedScript script(cx, this->script());
 
     JS_ASSERT(!isGeneratorFrame());
-    JS_ASSERT(cx->interpreterRegs().pc == script->code);
+    JS_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
-        if (script->strict) {
+        if (script->strict()) {
             CallObject *callobj = CallObject::createForStrictEval(cx, this);
             if (!callobj)
                 return false;
@@ -297,7 +272,6 @@ void
 StackFrame::epilogue(JSContext *cx)
 {
     JS_ASSERT(!isYielding());
-    JS_ASSERT(!hasBlockChain());
 
     RootedScript script(cx, this->script());
     probes::ExitScript(cx, script, script->function(), hasPushedSPSFrame());
@@ -351,39 +325,23 @@ StackFrame::epilogue(JSContext *cx)
 bool
 StackFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
 {
-    JS_ASSERT_IF(hasBlockChain(), blockChain_ == block.enclosingBlock());
+    JS_ASSERT (block.needsClone());
 
-    if (block.needsClone()) {
-        Rooted<StaticBlockObject *> blockHandle(cx, &block);
-        ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
-        if (!clone)
-            return false;
+    Rooted<StaticBlockObject *> blockHandle(cx, &block);
+    ClonedBlockObject *clone = ClonedBlockObject::create(cx, blockHandle, this);
+    if (!clone)
+        return false;
 
-        pushOnScopeChain(*clone);
+    pushOnScopeChain(*clone);
 
-        blockChain_ = blockHandle;
-    } else {
-        blockChain_ = &block;
-    }
-
-    flags_ |= HAS_BLOCKCHAIN;
     return true;
 }
 
 void
 StackFrame::popBlock(JSContext *cx)
 {
-    JS_ASSERT(hasBlockChain());
-
-    if (JS_UNLIKELY(cx->compartment()->debugMode()))
-        DebugScopes::onPopBlock(cx, this);
-
-    if (blockChain_->needsClone()) {
-        JS_ASSERT(scopeChain_->as<ClonedBlockObject>().staticBlock() == *blockChain_);
-        popOffScopeChain();
-    }
-
-    blockChain_ = blockChain_->enclosingBlock();
+    JS_ASSERT(scopeChain_->is<ClonedBlockObject>());
+    popOffScopeChain();
 }
 
 void
@@ -465,7 +423,7 @@ FrameRegs::setToEndOfScript()
 {
     JSScript *script = fp()->script();
     sp = fp()->base();
-    pc = script->code + script->length - JSOP_RETRVAL_LENGTH;
+    pc = script->codeEnd() - JSOP_RETRVAL_LENGTH;
     JS_ASSERT(*pc == JSOP_RETRVAL);
 }
 
@@ -497,7 +455,7 @@ InterpreterStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Val
 {
     LifoAlloc::Mark mark = allocator_.mark();
 
-    unsigned nvars = 2 /* callee, this */ + script->nslots;
+    unsigned nvars = 2 /* callee, this */ + script->nslots();
     uint8_t *buffer = allocateFrame(cx, sizeof(StackFrame) + nvars * sizeof(Value));
     if (!buffer)
         return nullptr;
@@ -1206,9 +1164,9 @@ ScriptFrameIter::numFrameSlots() const
      case JIT: {
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS())
-            return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed;
+            return ionInlineFrames_.snapshotIterator().slots() - ionInlineFrames_.script()->nfixed();
         jit::BaselineFrame *frame = data_.ionFrames_.baselineFrame();
-        return frame->numValueSlots() - data_.ionFrames_.script()->nfixed;
+        return frame->numValueSlots() - data_.ionFrames_.script()->nfixed();
 #else
         break;
 #endif
@@ -1230,11 +1188,11 @@ ScriptFrameIter::frameSlotValue(size_t index) const
 #ifdef JS_ION
         if (data_.ionFrames_.isOptimizedJS()) {
             jit::SnapshotIterator si(ionInlineFrames_.snapshotIterator());
-            index += ionInlineFrames_.script()->nfixed;
+            index += ionInlineFrames_.script()->nfixed();
             return si.maybeReadSlotByIndex(index);
         }
 
-        index += data_.ionFrames_.script()->nfixed;
+        index += data_.ionFrames_.script()->nfixed();
         return *data_.ionFrames_.baselineFrame()->valueSlot(index);
 #else
         break;
@@ -1284,23 +1242,17 @@ AbstractFramePtr::hasPushedSPSFrame() const
 
 #ifdef DEBUG
 void
-js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
-                        StaticBlockObject *maybeBlock, unsigned i)
+js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i)
 {
     if (!checkAliasing)
         return;
 
-    JS_ASSERT(i < script->nslots);
-    if (i < script->nfixed) {
+    JS_ASSERT(i < script->nslots());
+    if (i < script->nfixed()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
-        unsigned depth = i - script->nfixed;
-        for (StaticBlockObject *b = maybeBlock; b; b = b->enclosingBlock()) {
-            if (b->containsVarAtDepth(depth)) {
-                JS_ASSERT(!b->isAliased(depth - b->stackDepth()));
-                break;
-            }
-        }
+        // FIXME: The callers of this function do not easily have the PC of the
+        // current frame, and so they do not know the block scope.
     }
 }
 #endif

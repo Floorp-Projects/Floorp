@@ -6,6 +6,9 @@
   <head>
     <meta charset="UTF-8">
     <title>Context menu test</title>
+    <style>
+      p { display: inline-block; }
+    </style>
   </head>
   <body>
     <p>
@@ -51,6 +54,28 @@
 
     <p>
       <input type="submit" id="button">
+    </p>
+
+    <p>
+      <a class="predicate-test-a" href="#test">
+        A link with no ID and an anchor, used by PredicateContext tests.
+      </a>
+    </p>
+
+    <p>
+      <input type="text" id="textbox" value="test value">
+    </p>
+
+    <p>
+      <input type="text" id="readonly-textbox" readonly="true" value="readonly value">
+    </p>
+
+    <p>
+      <input type="text" id="disabled-textbox" disabled="true" value="disabled value">
+    </p>
+
+    <p>
+      <p contenteditable="true" id="editable">This content is editable.</p>
     </p>
   </body>
 </html>

@@ -901,7 +901,7 @@ add_test(function test_read_pbr() {
   let buf    = worker.Buf;
   let io     = worker.ICCIOHelper;
 
-  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
     let pbr_1 = [
       0xa8, 0x05, 0xc0, 0x03, 0x4f, 0x3a, 0x01
     ];
@@ -937,16 +937,24 @@ add_test(function test_read_pbr() {
   let successCb = function successCb(pbrs) {
     do_check_eq(pbrs[0].adn.fileId, 0x4f3a);
     do_check_eq(pbrs.length, 1);
-    run_next_test();
   };
 
   let errorCb = function errorCb(errorMsg) {
     do_print("Reading EF_PBR failed, msg = " + errorMsg);
     do_check_true(false);
-    run_next_test();
   };
 
   record.readPBR(successCb, errorCb);
+
+  // Check cache pbrs when 2nd call
+  let ifLoadEF = false;
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
+    ifLoadEF = true;
+  }
+  record.readPBR(successCb, errorCb);
+  do_check_false(ifLoadEF);
+
+  run_next_test();
 });
 
 /**
@@ -1865,6 +1873,104 @@ add_test(function test_find_free_icc_contact_usim() {
   run_next_test();
 });
 
+/**
+ * Test error message returned in onerror for readICCContacts.
+ */
+add_test(function test_error_message_read_icc_contact () {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.readICCContacts(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn"}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 3, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn"}, CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  run_next_test();
+});
+
+/**
+ * Test error message returned in onerror for updateICCContact.
+ */
+add_test(function test_error_message_update_icc_contact() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  const ICCID = "123456789";
+  ril.iccInfo.iccid = ICCID;
+
+  function do_test(options, expectedErrorMsg) {
+    ril.sendChromeMessage = function (message) {
+      do_check_eq(message.errorMsg, expectedErrorMsg);
+    }
+    ril.updateICCContact(options);
+  }
+
+  // Error 1, didn't specify correct contactType.
+  do_test({}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 2, specifying a correct contactType, but without providing 'contact'.
+  do_test({contactType: "adn"}, CONTACT_ERR_REQUEST_NOT_SUPPORTED);
+
+  // Error 3, specifying a non-supported contactType.
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test({contactType: "sdn", contact: {}}, CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
+
+  // Error 4, without supplying pin2.
+  do_test({contactType: "fdn", contact: {contactId: ICCID + "1"}}, GECKO_ERROR_SIM_PIN2);
+
+  // Error 5, No free record found in EF_ADN.
+  let record = worker.ICCRecordHelper;
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([{adn: {fileId: 0x4f3a}}]);
+  };
+
+  let io = worker.ICCIOHelper;
+  io.loadLinearFixedEF = function (options) {
+    options.totalRecords = 1;
+    options.p1 = 1;
+    options.callback(options);
+  };
+
+  do_test({contactType: "adn", contact: {}}, CONTACT_ERR_NO_FREE_RECORD_FOUND);
+
+  // Error 6, ICC IO Error.
+  io.loadLinearFixedEF = function (options) {
+    ril[REQUEST_SIM_IO](0, {rilRequestError: ERROR_GENERIC_FAILURE});
+  };
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          GECKO_ERROR_GENERIC_FAILURE);
+
+  // Error 7, suppose we update the supported PBR fields in USIM_PBR_FIELDS,
+  // but forget to add implemenetations for it.
+  USIM_PBR_FIELDS.push("pbc");
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_FIELD_NOT_SUPPORTED);
+
+  // Error 8, EF_PBR doesn't exist.
+  record.readPBR = function (onsuccess, onerror) {
+    onsuccess([]);
+  };
+
+  do_test({contactType: "adn", contact: {contactId: ICCID + "1"}},
+          CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK);
+
+  run_next_test();
+});
+
 add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let ril = worker.RIL;
@@ -2131,7 +2237,7 @@ add_test(function test_mcc_mnc_parsing() {
   */
 add_test(function test_reading_ad_and_parsing_mcc_mnc() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let helper = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2178,7 +2284,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
 add_test(function test_reading_optional_efs() {
   let worker = newUint8Worker();
-  let record = worker.ICCRecordHelper;
+  let record = worker.SimRecordHelper;
   let gsmPdu = worker.GsmPDUHelper;
   let ril    = worker.RIL;
   let buf    = worker.Buf;
@@ -2224,6 +2330,10 @@ add_test(function test_reading_optional_efs() {
       testEf.splice(testEf.indexOf("MDN"), 1);
     };
 
+    record.readMWIS = function fakeReadMWIS() {
+      testEf.splice(testEf.indexOf("MWIS"), 1);
+    };
+
     io.loadTransparentEF = function fakeLoadTransparentEF(options) {
       // Write data size
       buf.writeInt32(sst.length * 2);
@@ -2250,11 +2360,366 @@ add_test(function test_reading_optional_efs() {
   }
 
   // TODO: Add all necessary optional EFs eventually
-  let supportedEf = ["MSISDN", "MDN"];
+  let supportedEf = ["MSISDN", "MDN", "MWIS"];
   ril.appType = CARD_APPTYPE_SIM;
   do_test(buildSST(supportedEf), supportedEf);
   ril.appType = CARD_APPTYPE_USIM;
   do_test(buildSST(supportedEf), supportedEf);
+
+  run_next_test();
+});
+
+/**
+ * Verify fetchSimRecords.
+ */
+add_test(function test_fetch_sim_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+
+  function testFetchSimRecordes(expectCalled) {
+    let ifCalled = [];
+
+    RIL.getIMSI = function () {
+      ifCalled.push("getIMSI");
+    };
+
+    simRecord.readAD = function () {
+      ifCalled.push("readAD");
+    };
+
+    simRecord.readSST = function () {
+      ifCalled.push("readSST");
+    };
+
+    simRecord.fetchSimRecords();
+
+    for (let i = 0; i < expectCalled.length; i++ ) {
+      if (ifCalled[i] != expectCalled[i]) {
+        do_print(expectCalled[i] + " is not called.");
+        do_check_true(false);
+      }
+    }
+  }
+
+  let expectCalled = ["getIMSI", "readAD", "readSST"];
+  testFetchSimRecordes(expectCalled);
+
+  run_next_test();
+});
+
+add_test(function test_fetch_icc_recodes() {
+  let worker = newWorker();
+  let RIL = worker.RIL;
+  let iccRecord = worker.ICCRecordHelper;
+  let simRecord = worker.SimRecordHelper;
+  let ruimRecord = worker.RuimRecordHelper;
+  let fetchTag = 0x00;
+
+  simRecord.fetchSimRecords = function () {
+    fetchTag = 0x01;
+  };
+
+  ruimRecord.fetchRuimRecords = function () {
+    fetchTag = 0x02;
+  };
+
+  RIL.appType = CARD_APPTYPE_SIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
+
+  RIL.appType = CARD_APPTYPE_RUIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x02);
+
+  RIL.appType = CARD_APPTYPE_USIM;
+  iccRecord.fetchICCRecords();
+  do_check_eq(fetchTag, 0x01);
+
+  run_next_test();
+});
+
+/**
+ * Verify SimRecordHelper.readMWIS
+ */
+add_test(function test_read_mwis() {
+  let worker = newUint8Worker();
+  let helper = worker.GsmPDUHelper;
+  let recordHelper = worker.SimRecordHelper;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+  let mwisData;
+  let postedMessage;
+
+  worker.postMessage = function fakePostMessage(message) {
+    postedMessage = message;
+  };
+
+  io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+    if (mwisData) {
+      // Write data size
+      buf.writeInt32(mwisData.length * 2);
+
+      // Write MWIS
+      for (let i = 0; i < mwisData.length; i++) {
+        helper.writeHexOctet(mwisData[i]);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(mwisData.length * 2);
+
+      options.recordSize = mwisData.length;
+      if (options.callback) {
+        options.callback(options);
+      }
+    } else {
+      do_print("mwisData[] is not set.");
+    }
+  };
+
+  function buildMwisData(isActive, msgCount) {
+    if (msgCount < 0 || msgCount === GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN) {
+      msgCount = 0;
+    } else if (msgCount > 255) {
+      msgCount = 255;
+    }
+
+    mwisData =  [ (isActive) ? 0x01 : 0x00,
+                  msgCount,
+                  0xFF, 0xFF, 0xFF ];
+  }
+
+  function do_test(isActive, msgCount) {
+    buildMwisData(isActive, msgCount);
+    recordHelper.readMWIS();
+
+    do_check_eq("iccmwis", postedMessage.rilMessageType);
+    do_check_eq(isActive, postedMessage.mwi.active);
+    do_check_eq((isActive) ? msgCount : 0, postedMessage.mwi.msgCount);
+  }
+
+  do_test(true, GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN);
+  do_test(true, 1);
+  do_test(true, 255);
+
+  do_test(false, 0);
+  do_test(false, 255); // Test the corner case when mwi is disable with incorrect msgCount.
+
+  run_next_test();
+});
+
+/**
+ * Verify SimRecordHelper.updateMWIS
+ */
+add_test(function test_update_mwis() {
+  let worker = newUint8Worker();
+  let pduHelper = worker.GsmPDUHelper;
+  let ril = worker.RIL;
+  ril.appType = CARD_APPTYPE_USIM;
+  ril.iccInfoPrivate.mwis = [0x00, 0x00, 0x00, 0x00, 0x00];
+  let recordHelper = worker.SimRecordHelper;
+  let buf = worker.Buf;
+  let ioHelper = worker.ICCIOHelper;
+  let recordSize = ril.iccInfoPrivate.mwis.length;
+  let recordNum = 1;
+
+  ioHelper.updateLinearFixedEF = function (options) {
+    options.pathId = worker.ICCFileHelper.getEFPath(options.fileId);
+    options.command = ICC_COMMAND_UPDATE_RECORD;
+    options.p1 = options.recordNumber;
+    options.p2 = READ_RECORD_ABSOLUTE_MODE;
+    options.p3 = recordSize;
+    ril.iccIO(options);
+  };
+
+  function do_test(isActive, count) {
+    let mwis = ril.iccInfoPrivate.mwis;
+    let isUpdated = false;
+
+    function buildMwisData() {
+      let result = mwis.slice(0);
+      result[0] = isActive? (mwis[0] | 0x01) : (mwis[0] & 0xFE);
+      result[1] = (count === GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN) ? 0 : count;
+
+      return result;
+    }
+
+    buf.sendParcel = function () {
+      isUpdated = true;
+
+      // Request Type.
+      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
+
+      // Token : we don't care
+      this.readInt32();
+
+      // command.
+      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+
+      // fileId.
+      do_check_eq(this.readInt32(), ICC_EF_MWIS);
+
+      // pathId.
+      do_check_eq(this.readString(),
+                  EF_PATH_MF_SIM + ((ril.appType === CARD_APPTYPE_USIM) ? EF_PATH_ADF_USIM : EF_PATH_DF_GSM));
+
+      // p1.
+      do_check_eq(this.readInt32(), recordNum);
+
+      // p2.
+      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+
+      // p3.
+      do_check_eq(this.readInt32(), recordSize);
+
+      // data.
+      let strLen = this.readInt32();
+      do_check_eq(recordSize * 2, strLen);
+      let expectedMwis = buildMwisData();
+      for (let i = 0; i < recordSize; i++) {
+        do_check_eq(expectedMwis[i], pduHelper.readHexOctet());
+      }
+      this.readStringDelimiter(strLen);
+
+      // pin2.
+      do_check_eq(this.readString(), null);
+
+      if (!worker.RILQUIRKS_V5_LEGACY) {
+        // AID. Ignore because it's from modem.
+        this.readInt32();
+      }
+    };
+
+    do_check_false(isUpdated);
+
+    recordHelper.updateMWIS({ active: isActive,
+                              msgCount: count });
+
+    do_check_true((ril.iccInfoPrivate.mwis) ? isUpdated : !isUpdated);
+  }
+
+  do_test(true, GECKO_VOICEMAIL_MESSAGE_COUNT_UNKNOWN);
+  do_test(true, 1);
+  do_test(true, 255);
+
+  do_test(false, 0);
+
+  // Test if Path ID is correct for SIM.
+  ril.appType = CARD_APPTYPE_SIM;
+  do_test(false, 0);
+
+  // Test if loadLinearFixedEF() is not invoked in updateMWIS() when
+  // EF_MWIS is not loaded/available.
+  delete ril.iccInfoPrivate.mwis;
+  do_test(false, 0);
+
+  run_next_test();
+});
+
+/**
+ * Verify the call flow of receiving Class 2 SMS stored in SIM:
+ * 1. UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM.
+ * 2. SimRecordHelper.readSMS().
+ * 3. sendChromeMessage() with rilMessageType == "sms-received".
+ */
+add_test(function test_read_new_sms_on_sim() {
+  // Instead of reusing newUint8Worker defined in this file,
+  // we define our own worker to fake the methods in WorkerBuffer dynamically.
+  function newSmsOnSimWorkerHelper() {
+    let _postedMessage;
+    let _worker = newWorker({
+      postRILMessage: function fakePostRILMessage(data) {
+      },
+      postMessage: function fakePostMessage(message) {
+        _postedMessage = message;
+      }
+    });
+
+    _worker.debug = do_print;
+
+    return {
+      get postedMessage() {
+        return _postedMessage;
+      },
+      get worker() {
+        return _worker;
+      },
+      fakeWokerBuffer: function fakeWokerBuffer() {
+        let index = 0; // index for read
+        let buf = [];
+        _worker.Buf.writeUint8 = function (value) {
+          buf.push(value);
+        };
+        _worker.Buf.readUint8 = function () {
+          return buf[index++];
+        };
+        _worker.Buf.seekIncoming = function (offset) {
+          index += offset;
+        };
+        _worker.Buf.getReadAvailable = function () {
+          return buf.length - index;
+        };
+      }
+    };
+  }
+
+  let workerHelper = newSmsOnSimWorkerHelper();
+  let worker = workerHelper.worker;
+
+  worker.ICCIOHelper.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // SimStatus: Unread, SMSC:+0123456789, Sender: +9876543210, Text: How are you?
+      let SimSmsPduHex = "0306911032547698040A9189674523010000208062917314080CC8F71D14969741F977FD07"
+                       // In 4.2.25 EF_SMS Short Messages of 3GPP TS 31.102:
+                       // 1. Record length == 176 bytes.
+                       // 2. Any bytes in the record following the TPDU shall be filled with 'FF'.
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+                       + "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+      workerHelper.fakeWokerBuffer();
+
+      worker.Buf.writeString(SimSmsPduHex);
+
+      options.recordSize = 176; // Record length is fixed to 176 bytes.
+      if (options.callback) {
+        options.callback(options);
+      }
+  };
+
+  function newSmsOnSimParcel() {
+    let data = new Uint8Array(4 + 4); // Int32List with 1 element.
+    let offset = 0;
+
+    function writeInt(value) {
+      data[offset++] = value & 0xFF;
+      data[offset++] = (value >>  8) & 0xFF;
+      data[offset++] = (value >> 16) & 0xFF;
+      data[offset++] = (value >> 24) & 0xFF;
+    }
+
+    writeInt(1); // Length of Int32List
+    writeInt(1); // RecordNum = 1.
+
+    return newIncomingParcel(-1,
+                             RESPONSE_TYPE_UNSOLICITED,
+                             UNSOLICITED_RESPONSE_NEW_SMS_ON_SIM,
+                             data);
+  }
+
+  function do_test() {
+    worker.onRILMessage(newSmsOnSimParcel());
+
+    let postedMessage = workerHelper.postedMessage;
+
+    do_check_eq("sms-received", postedMessage.rilMessageType);
+    do_check_eq("+0123456789", postedMessage.SMSC);
+    do_check_eq("+9876543210", postedMessage.sender);
+    do_check_eq("How are you?", postedMessage.fullBody);
+  }
+
+  do_test();
 
   run_next_test();
 });

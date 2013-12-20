@@ -161,7 +161,7 @@ BacktrackingAllocator::tryGroupRegisters(uint32_t vreg0, uint32_t vreg1)
     // already grouped with reg0 or reg1.
     BacktrackingVirtualRegister *reg0 = &vregs[vreg0], *reg1 = &vregs[vreg1];
 
-    if (reg0->isDouble() != reg1->isDouble())
+    if (reg0->isFloatReg() != reg1->isFloatReg())
         return true;
 
     VirtualRegisterGroup *group0 = reg0->group(), *group1 = reg1->group();
@@ -390,6 +390,62 @@ BacktrackingAllocator::groupAndQueueRegisters()
 static const size_t MAX_ATTEMPTS = 2;
 
 bool
+BacktrackingAllocator::tryAllocateFixed(LiveInterval *interval, bool *success,
+                                        bool *pfixed, LiveInterval **pconflicting)
+{
+    // Spill intervals which are required to be in a certain stack slot.
+    if (!interval->requirement()->allocation().isRegister()) {
+        IonSpew(IonSpew_RegAlloc, "stack allocation requirement");
+        interval->setAllocation(interval->requirement()->allocation());
+        *success = true;
+        return true;
+    }
+
+    AnyRegister reg = interval->requirement()->allocation().toRegister();
+    return tryAllocateRegister(registers[reg.code()], interval, success, pfixed, pconflicting);
+}
+
+bool
+BacktrackingAllocator::tryAllocateNonFixed(LiveInterval *interval, bool *success,
+                                           bool *pfixed, LiveInterval **pconflicting)
+{
+    // If we want, but do not require an interval to be in a specific
+    // register, only look at that register for allocating and evict
+    // or spill if it is not available. Picking a separate register may
+    // be even worse than spilling, as it will still necessitate moves
+    // and will tie up more registers than if we spilled.
+    if (interval->hint()->kind() == Requirement::FIXED) {
+        AnyRegister reg = interval->hint()->allocation().toRegister();
+        if (!tryAllocateRegister(registers[reg.code()], interval, success, pfixed, pconflicting))
+            return false;
+        if (*success)
+            return true;
+    }
+
+    // Spill intervals which have no hint or register requirement.
+    if (interval->requirement()->kind() == Requirement::NONE) {
+        spill(interval);
+        *success = true;
+        return true;
+    }
+
+    if (!*pconflicting || minimalInterval(interval)) {
+        // Search for any available register which the interval can be
+        // allocated to.
+        for (size_t i = 0; i < AnyRegister::Total; i++) {
+            if (!tryAllocateRegister(registers[i], interval, success, pfixed, pconflicting))
+                return false;
+            if (*success)
+                return true;
+        }
+    }
+
+    // We failed to allocate this interval.
+    JS_ASSERT(!*success);
+    return true;
+}
+
+bool
 BacktrackingAllocator::processInterval(LiveInterval *interval)
 {
     if (IonSpewEnabled(IonSpew_RegAlloc)) {
@@ -426,51 +482,25 @@ BacktrackingAllocator::processInterval(LiveInterval *interval)
     LiveInterval *conflict;
     for (size_t attempt = 0;; attempt++) {
         if (canAllocate) {
-            // Spill intervals which are required to be in a certain stack slot.
-            if (interval->requirement()->kind() == Requirement::FIXED &&
-                !interval->requirement()->allocation().isRegister())
-            {
-                IonSpew(IonSpew_RegAlloc, "stack allocation requirement");
-                interval->setAllocation(interval->requirement()->allocation());
-                return true;
-            }
-
+            bool success = false;
             fixed = false;
             conflict = nullptr;
 
-            // If we want, but do not require an interval to be in a specific
-            // register, only look at that register for allocating and evict
-            // or spill if it is not available. Picking a separate register may
-            // be even worse than spilling, as it will still necessitate moves
-            // and will tie up more registers than if we spilled.
-            if (interval->hint()->kind() == Requirement::FIXED) {
-                AnyRegister reg = interval->hint()->allocation().toRegister();
-                bool success;
-                if (!tryAllocateRegister(registers[reg.code()], interval, &success, &fixed, &conflict))
+            // Ok, let's try allocating for this interval.
+            if (interval->requirement()->kind() == Requirement::FIXED) {
+                if (!tryAllocateFixed(interval, &success, &fixed, &conflict))
                     return false;
-                if (success)
-                    return true;
+            } else {
+                if (!tryAllocateNonFixed(interval, &success, &fixed, &conflict))
+                    return false;
             }
 
-            // Spill intervals which have no hint or register requirement.
-            if (interval->requirement()->kind() == Requirement::NONE) {
-                spill(interval);
+            // If that worked, we're done!
+            if (success)
                 return true;
-            }
 
-            if (!conflict || minimalInterval(interval)) {
-                // Search for any available register which the interval can be
-                // allocated to.
-                for (size_t i = 0; i < AnyRegister::Total; i++) {
-                    bool success;
-                    if (!tryAllocateRegister(registers[i], interval, &success, &fixed, &conflict))
-                        return false;
-                    if (success)
-                        return true;
-                }
-            }
-
-            // Failed to allocate a register for this interval.
+            // If that didn't work, but we have a non-fixed LiveInterval known
+            // to be conflicting, maybe we can evict it and try again.
             if (attempt < MAX_ATTEMPTS &&
                 !fixed &&
                 conflict &&
@@ -606,7 +636,7 @@ BacktrackingAllocator::tryAllocateGroupRegister(PhysicalRegister &r, VirtualRegi
     if (!r.allocatable)
         return true;
 
-    if (r.reg.isFloat() != vregs[group->registers[0]].isDouble())
+    if (r.reg.isFloat() != vregs[group->registers[0]].isFloatReg())
         return true;
 
     bool allocatable = true;
@@ -656,15 +686,11 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
         return true;
 
     BacktrackingVirtualRegister *reg = &vregs[interval->vreg()];
-    if (reg->isDouble() != r.reg.isFloat())
+    if (reg->isFloatReg() != r.reg.isFloat())
         return true;
 
-    if (interval->requirement()->kind() == Requirement::FIXED) {
-        if (interval->requirement()->allocation() != LAllocation(r.reg)) {
-            IonSpew(IonSpew_RegAlloc, "%s does not match fixed requirement", r.reg.name());
-            return true;
-        }
-    }
+    JS_ASSERT_IF(interval->requirement()->kind() == Requirement::FIXED,
+                 interval->requirement()->allocation() == LAllocation(r.reg));
 
     for (size_t i = 0; i < interval->numRanges(); i++) {
         AllocatedRange range(interval, interval->getRange(i)), existing;
@@ -809,6 +835,7 @@ BacktrackingAllocator::spill(LiveInterval *interval)
     IonSpew(IonSpew_RegAlloc, "Spilling interval");
 
     JS_ASSERT(interval->requirement()->kind() == Requirement::NONE);
+    JS_ASSERT(!interval->getAllocation()->isStackSlot());
 
     // We can't spill bogus intervals.
     JS_ASSERT(interval->hasVreg());
@@ -835,14 +862,10 @@ BacktrackingAllocator::spill(LiveInterval *interval)
         }
     }
 
-    uint32_t stackSlot;
-    if (reg->isDouble())
-        stackSlot = stackSlotAllocator.allocateDoubleSlot();
-    else
-        stackSlot = stackSlotAllocator.allocateSlot();
+    uint32_t stackSlot = stackSlotAllocator.allocateSlot(reg->type());
     JS_ASSERT(stackSlot <= stackSlotAllocator.stackHeight());
 
-    LStackSlot alloc(stackSlot, reg->isDouble());
+    LStackSlot alloc(stackSlot);
     interval->setAllocation(alloc);
 
     IonSpew(IonSpew_RegAlloc, "  Allocating spill location %s", alloc.toString());
@@ -891,10 +914,10 @@ BacktrackingAllocator::resolveControlFlow()
 
                 LiveInterval *prevInterval = reg->intervalFor(start.previous());
                 if (start.subpos() == CodePosition::INPUT) {
-                    if (!moveInput(inputOf(data->ins()), prevInterval, interval))
+                    if (!moveInput(inputOf(data->ins()), prevInterval, interval, reg->type()))
                         return false;
                 } else {
-                    if (!moveAfter(outputOf(data->ins()), prevInterval, interval))
+                    if (!moveAfter(outputOf(data->ins()), prevInterval, interval, reg->type()))
                         return false;
                 }
             }
@@ -914,7 +937,8 @@ BacktrackingAllocator::resolveControlFlow()
         for (size_t j = 0; j < successor->numPhis(); j++) {
             LPhi *phi = successor->getPhi(j);
             JS_ASSERT(phi->numDefs() == 1);
-            VirtualRegister *vreg = &vregs[phi->getDef(0)];
+            LDefinition *def = phi->getDef(0);
+            VirtualRegister *vreg = &vregs[def];
             LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
             JS_ASSERT(to);
 
@@ -926,7 +950,7 @@ BacktrackingAllocator::resolveControlFlow()
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
-                if (!moveAtExit(predecessor, from, to))
+                if (!moveAtExit(predecessor, from, to, def->type()))
                     return false;
             }
         }
@@ -951,10 +975,10 @@ BacktrackingAllocator::resolveControlFlow()
 
                     if (mSuccessor->numPredecessors() > 1) {
                         JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
-                        if (!moveAtExit(predecessor, from, to))
+                        if (!moveAtExit(predecessor, from, to, reg.type()))
                             return false;
                     } else {
-                        if (!moveAtEntry(successor, from, to))
+                        if (!moveAtEntry(successor, from, to, reg.type()))
                             return false;
                     }
                 }
@@ -1050,7 +1074,7 @@ BacktrackingAllocator::reifyAllocations()
 
                     if (*res != *alloc) {
                         LMoveGroup *group = getInputMoveGroup(inputOf(ins));
-                        if (!group->addAfter(sourceAlloc, res))
+                        if (!group->addAfter(sourceAlloc, res, def->type()))
                             return false;
                         *alloc = *res;
                     }
@@ -1101,7 +1125,10 @@ BacktrackingAllocator::populateSafepoints()
             if (ins == reg->ins() && !reg->isTemp()) {
                 DebugOnly<LDefinition*> def = reg->def();
                 JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
-                             def->type() == LDefinition::GENERAL || def->type() == LDefinition::DOUBLE);
+                             def->type() == LDefinition::GENERAL ||
+                             def->type() == LDefinition::INT32 ||
+                             def->type() == LDefinition::FLOAT32 ||
+                             def->type() == LDefinition::DOUBLE);
                 continue;
             }
 

@@ -69,6 +69,9 @@ function test() {
    * of them will fail when the widget will be implemented.
    */
 
+/* No other implementations implement this, so we don't either, for now.
+   Seems like it might be nice though.
+
   for (var i = 1; i < pgUpDnVals.length; ++i) {
     synthesizeKey("VK_PAGE_UP", {});
     todo_is(elem.value, pgUpDnVals[i], "Test VK_PAGE_UP");
@@ -82,10 +85,11 @@ function test() {
     todo_is(elem.value, pgUpDnVals[i], "Test VK_PAGE_DOWN");
     is(elem.validity.valid, true, "Check element is valid for value " + pgUpDnVals[i]);
   }
+*/
 
   for (var i = 1; i < stepVals.length; ++i) {
     synthesizeKey("VK_UP", {});
-    todo_is(elem.value, stepVals[i], "Test VK_UP");
+    is(elem.value, stepVals[i], "Test VK_UP");
     is(elem.validity.valid, true, "Check element is valid for value " + stepVals[i]);
   }
 
@@ -93,7 +97,7 @@ function test() {
     synthesizeKey("VK_DOWN", {});
     // TODO: this condition is there because the todo_is() below would pass otherwise.
     if (stepVals[i] == 0) { continue; }
-    todo_is(elem.value, stepVals[i], "Test VK_DOWN");
+    is(elem.value, stepVals[i], "Test VK_DOWN");
     is(elem.validity.valid, true, "Check element is valid for value " + stepVals[i]);
   }
 

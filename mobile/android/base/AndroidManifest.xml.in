@@ -274,6 +274,10 @@
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
+        <provider android:name="org.mozilla.gecko.db.HomeListsProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.homelists"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+
         <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdateService"

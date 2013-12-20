@@ -28,17 +28,13 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-#ifdef JS_USE_JSID_STRUCT_TYPES
 struct jsid
 {
     size_t asBits;
     bool operator==(jsid rhs) const { return asBits == rhs.asBits; }
     bool operator!=(jsid rhs) const { return asBits != rhs.asBits; }
 };
-# define JSID_BITS(id) (id.asBits)
-#else
-# define JSID_BITS(id) (id)
-#endif
+#define JSID_BITS(id) (id.asBits)
 
 #define JSID_TYPE_STRING                 0x0
 #define JSID_TYPE_INT                    0x1
@@ -152,13 +148,8 @@ JSID_IS_EMPTY(const jsid id)
 
 #undef id
 
-#ifdef JS_USE_JSID_STRUCT_TYPES
 extern JS_PUBLIC_DATA(const jsid) JSID_VOID;
 extern JS_PUBLIC_DATA(const jsid) JSID_EMPTY;
-#else
-# define JSID_VOID ((jsid)JSID_TYPE_VOID)
-# define JSID_EMPTY ((jsid)JSID_TYPE_OBJECT)
-#endif
 
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_VOIDHANDLE;
 extern JS_PUBLIC_DATA(const JS::Handle<jsid>) JSID_EMPTYHANDLE;

@@ -142,7 +142,7 @@ function decodeRequestPayload(request) {
     let observer = {
       buffer: "",
       onStreamComplete: function(loader, context, status, length, result) {
-	this.buffer = String.fromCharCode.apply(this, result);
+        this.buffer = String.fromCharCode.apply(this, result);
       }
     };
 
@@ -242,8 +242,8 @@ function checkPayload(request, reason, successfulPings) {
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
   do_check_true(TELEMETRY_PING in payload.histograms);
   do_check_true(READ_SAVED_PING_SUCCESS in payload.histograms);
-  let rh = Telemetry.registeredHistograms;
-  for (let name in rh) {
+  let rh = Telemetry.registeredHistograms([]);
+  for (let name of rh) {
     if (/SQLITE/.test(name) && name in payload.histograms) {
       do_check_true(("STARTUP_" + name) in payload.histograms); 
     }
@@ -363,7 +363,7 @@ function runOldPingFileTest() {
   do_check_true(histogramsFile.exists());
 
   let mtime = histogramsFile.lastModifiedTime;
-  histogramsFile.lastModifiedTime = mtime - 8 * 24 * 60 * 60 * 1000; // 8 days.
+  histogramsFile.lastModifiedTime = mtime - (14 * 24 * 60 * 60 * 1000 + 60000); // 14 days, 1m
   TelemetryPing.testLoadHistograms(histogramsFile, true);
   do_check_false(histogramsFile.exists());
 }

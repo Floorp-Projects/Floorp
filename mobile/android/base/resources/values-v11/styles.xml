@@ -85,6 +85,10 @@
         <item name="android:paddingRight">15dp</item>
     </style>
 
+    <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
+        <item name="android:padding">12dp</item>
+    </style>
+
     <style name="GeckoActionBar.Button.MenuButton" parent="android:style/Widget.Holo.Light.ActionButton.Overflow">
         <item name="android:scaleType">center</item>
         <item name="android:background">@android:color/transparent</item>

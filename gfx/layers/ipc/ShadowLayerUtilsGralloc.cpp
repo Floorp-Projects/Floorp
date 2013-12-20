@@ -13,6 +13,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/TextureHost.h"
 #include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 
@@ -289,19 +290,6 @@ void GrallocBufferActor::RemoveDeprecatedTextureHost(DeprecatedTextureHost* aDep
   // that should be the only occurence, otherwise we'd leak this TextureHost...
   // assert that that's not happening.
   MOZ_ASSERT(!mDeprecatedTextureHosts.Contains(aDeprecatedTextureHost));
-}
-
-/*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext* aGL,
-                                                        const SurfaceDescriptor& aDescriptor,
-                                                        GLenum aWrapMode)
-{
-  PROFILER_LABEL("LayerManagerComposite", "OpenDescriptorForDirectTexturing");
-  if (SurfaceDescriptor::TSurfaceDescriptorGralloc != aDescriptor.type()) {
-    return nullptr;
-  }
-  sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(aDescriptor);
-  return aGL->CreateDirectTextureImage(buffer.get(), aWrapMode);
 }
 
 /*static*/ bool

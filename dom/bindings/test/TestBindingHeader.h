@@ -168,6 +168,10 @@ public:
   void PassNullableByte(const Nullable<int8_t>&);
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
   void PassVariadicByte(const Sequence<int8_t>&);
+  int8_t CachedByte();
+  int8_t CachedConstantByte();
+  int8_t CachedWritableByte();
+  void SetCachedWritableByte(int8_t);
 
   int16_t ReadonlyShort();
   int16_t WritableShort();
@@ -339,6 +343,11 @@ public:
   void PassConsequentialInterface(IndirectlyImplementedInterface&);
 
   // Sequence types
+  void GetReadonlySequence(nsTArray<int32_t>&);
+  void GetReadonlySequenceOfDictionaries(JSContext*, nsTArray<Dict>&);
+  void GetReadonlyNullableSequenceOfDictionaries(JSContext*, Nullable<nsTArray<Dict> >&);
+  void GetReadonlyFrozenSequence(JSContext*, nsTArray<Dict>&);
+  void GetReadonlyFrozenNullableSequence(JSContext*, Nullable<nsTArray<Dict>>&);
   void ReceiveSequence(nsTArray<int32_t>&);
   void ReceiveNullableSequence(Nullable< nsTArray<int32_t> >&);
   void ReceiveSequenceOfNullableInts(nsTArray< Nullable<int32_t> >&);
@@ -555,6 +564,12 @@ public:
   void PassNullableUnionWithDefaultValue10(const Nullable<UnrestrictedFloatOrString>& arg);
   void PassNullableUnionWithDefaultValue11(const Nullable<UnrestrictedFloatOrString>& arg);
   void PassNullableUnionWithDefaultValue12(const Nullable<UnrestrictedFloatOrString>& arg);
+
+  void PassSequenceOfUnions(const Sequence<OwningCanvasPatternOrCanvasGradient>&);
+  void PassVariadicUnion(const Sequence<OwningCanvasPatternOrCanvasGradient>&);
+
+  void PassSequenceOfNullableUnions(const Sequence<Nullable<OwningCanvasPatternOrCanvasGradient>>&);
+  void PassVariadicNullableUnion(const Sequence<Nullable<OwningCanvasPatternOrCanvasGradient>>&);
 
   void ReceiveUnion(OwningCanvasPatternOrCanvasGradient&);
   void ReceiveUnion2(JSContext*, OwningObjectOrLong&);

@@ -100,17 +100,16 @@ pref("dom.workers.enabled", true);
 pref("dom.workers.maxPerDomain", 20);
 
 // Whether or not Shared Web Workers are enabled.
-pref("dom.workers.sharedWorkers.enabled", false);
+pref("dom.workers.sharedWorkers.enabled", true);
 
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
 // Whether the Gamepad API is enabled
+pref("dom.gamepad.enabled", true);
 #ifdef RELEASE_BUILD
-pref("dom.gamepad.enabled", false);
 pref("dom.gamepad.non_standard_events.enabled", false);
 #else
-pref("dom.gamepad.enabled", true);
 pref("dom.gamepad.non_standard_events.enabled", true);
 #endif
 
@@ -230,6 +229,7 @@ pref("media.apple.mp3.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
+pref("media.navigator.video.enabled", true);
 pref("media.navigator.load_adapt", false);
 pref("media.navigator.video.default_width",640);
 pref("media.navigator.video.default_height",480);
@@ -237,10 +237,12 @@ pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
 #ifdef MOZ_WIDGET_GONK
 pref("media.peerconnection.enabled", false);
+pref("media.peerconnection.video.enabled", false);
 pref("media.navigator.video.max_fs", 1200); // 640x480 == 1200mb
 pref("media.navigator.video.max_fr", 30);
 #else
 pref("media.peerconnection.enabled", true);
+pref("media.peerconnection.video.enabled", true);
 pref("media.navigator.video.max_fs", 0); // unrestricted
 pref("media.navigator.video.max_fr", 0); // unrestricted
 #endif
@@ -269,7 +271,7 @@ pref("media.tabstreaming.height", 240);
 pref("media.tabstreaming.time_per_frame", 40);
 
 // TextTrack support
-pref("media.webvtt.enabled", false);
+pref("media.webvtt.enabled", true);
 
 // Whether to enable MediaSource support
 pref("media.mediasource.enabled", false);
@@ -307,6 +309,10 @@ pref("apz.axis_lock_mode", 0);
 //   >= 2 : hidpi supported even with mixed backingScaleFactors (somewhat broken)
 pref("gfx.hidpi.enabled", 2);
 #endif
+
+// Whether to enable LayerScope tool and default listening port
+pref("gfx.layerscope.enabled", false);
+pref("gfx.layerscope.port", 23456);
 
 // 0 = Off, 1 = Full, 2 = Tagged Images Only. 
 // See eCMSMode in gfx/thebes/gfxPlatform.h
@@ -400,7 +406,6 @@ pref("gfx.content.azure.backends", "cairo");
 pref("gfx.content.azure.backends", "cairo");
 #endif
 #ifdef ANDROID
-pref("gfx.textures.poweroftwo.force-enabled", false);
 pref("gfx.content.azure.backends", "cairo");
 #endif
 
@@ -586,7 +591,6 @@ pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");
 pref("browser.fixup.alternate.suffix", ".com");
 pref("browser.fixup.hide_user_pass", true);
-pref("browser.fixup.use-utf8", false);
 
 // Location Bar AutoComplete
 pref("browser.urlbar.autocomplete.enabled", true);
@@ -658,177 +662,8 @@ pref("editor.css.default_length_unit",       "px");
 pref("editor.resizing.preserve_ratio",       true);
 pref("editor.positioning.offset",            0);
 
-
-// Default Capability Preferences: Security-Critical! 
-// Editing these may create a security risk - be sure you know what you're doing
-//pref("capability.policy.default.barprop.visible.set", "UniversalXPConnect");
-
-pref("capability.policy.default_policynames", "mailnews");
-
-pref("capability.policy.default.DOMException.code", "allAccess");
-pref("capability.policy.default.DOMException.message", "allAccess");
-pref("capability.policy.default.DOMException.name", "allAccess");
-pref("capability.policy.default.DOMException.result", "allAccess");
-pref("capability.policy.default.DOMException.toString.get", "allAccess");
-
-pref("capability.policy.default.History.back.get", "allAccess");
-pref("capability.policy.default.History.current", "UniversalXPConnect");
-pref("capability.policy.default.History.forward.get", "allAccess");
-pref("capability.policy.default.History.go.get", "allAccess");
-pref("capability.policy.default.History.item", "UniversalXPConnect");
-pref("capability.policy.default.History.next", "UniversalXPConnect");
-pref("capability.policy.default.History.previous", "UniversalXPConnect");
-pref("capability.policy.default.History.toString", "UniversalXPConnect");
-
-pref("capability.policy.default.Location.hash.set", "allAccess");
-pref("capability.policy.default.Location.href.set", "allAccess");
-pref("capability.policy.default.Location.replace.get", "allAccess");
-
-pref("capability.policy.default.Window.blur.get", "allAccess");
-pref("capability.policy.default.Window.close.get", "allAccess");
-pref("capability.policy.default.Window.closed.get", "allAccess");
-pref("capability.policy.default.Window.focus.get", "allAccess");
-pref("capability.policy.default.Window.frames.get", "allAccess");
-pref("capability.policy.default.Window.history.get", "allAccess");
-pref("capability.policy.default.Window.length.get", "allAccess");
-pref("capability.policy.default.Window.location", "allAccess");
-pref("capability.policy.default.Window.opener.get", "allAccess");
-pref("capability.policy.default.Window.parent.get", "allAccess");
-pref("capability.policy.default.Window.postMessage.get", "allAccess");
-pref("capability.policy.default.Window.self.get", "allAccess");
-pref("capability.policy.default.Window.top.get", "allAccess");
-pref("capability.policy.default.Window.window.get", "allAccess");
-
-pref("capability.policy.default.Selection.addSelectionListener", "UniversalXPConnect");
-pref("capability.policy.default.Selection.removeSelectionListener", "UniversalXPConnect");
-
-// Restrictions on the DOM for mail/news - see bugs 66938 and 84545
-pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
-
-pref("capability.policy.mailnews.*.attributes.get", "noAccess");
-pref("capability.policy.mailnews.*.baseURI.get", "noAccess");
-pref("capability.policy.mailnews.*.data.get", "noAccess");
-pref("capability.policy.mailnews.*.getAttribute", "noAccess");
-pref("capability.policy.mailnews.HTMLDivElement.getAttribute", "sameOrigin");
-pref("capability.policy.mailnews.*.getAttributeNS", "noAccess");
-pref("capability.policy.mailnews.*.getAttributeNode", "noAccess");
-pref("capability.policy.mailnews.*.getAttributeNodeNS", "noAccess");
-pref("capability.policy.mailnews.*.getNamedItem", "noAccess");
-pref("capability.policy.mailnews.*.getNamedItemNS", "noAccess");
-pref("capability.policy.mailnews.*.host.get", "noAccess");
-pref("capability.policy.mailnews.*.hostname.get", "noAccess");
-pref("capability.policy.mailnews.*.href.get", "noAccess");
-pref("capability.policy.mailnews.*.innerHTML.get", "noAccess");
-pref("capability.policy.mailnews.*.lowSrc.get", "noAccess");
-pref("capability.policy.mailnews.*.nodeValue.get", "noAccess");
-pref("capability.policy.mailnews.*.pathname.get", "noAccess");
-pref("capability.policy.mailnews.*.protocol.get", "noAccess");
-pref("capability.policy.mailnews.*.src.get", "noAccess");
-pref("capability.policy.mailnews.*.substringData.get", "noAccess");
-pref("capability.policy.mailnews.*.text.get", "noAccess");
-pref("capability.policy.mailnews.*.textContent", "noAccess");
-pref("capability.policy.mailnews.*.title.get", "noAccess");
-pref("capability.policy.mailnews.*.wholeText", "noAccess");
-pref("capability.policy.mailnews.DOMException.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLAnchorElement.toString", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
-pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
-pref("capability.policy.mailnews.*.documentURI", "noAccess");
-pref("capability.policy.mailnews.Location.toString", "noAccess");
-pref("capability.policy.mailnews.Range.toString", "noAccess");
-pref("capability.policy.mailnews.Window.blur", "noAccess");
-pref("capability.policy.mailnews.Window.focus", "noAccess");
-pref("capability.policy.mailnews.Window.innerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.innerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.moveBy", "noAccess");
-pref("capability.policy.mailnews.Window.moveTo", "noAccess");
-pref("capability.policy.mailnews.Window.name.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerHeight.set", "noAccess");
-pref("capability.policy.mailnews.Window.outerWidth.set", "noAccess");
-pref("capability.policy.mailnews.Window.resizeBy", "noAccess");
-pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
-pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
-pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
-pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
-pref("capability.policy.mailnews.document.load", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.channel", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.getInterface", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.responseXML", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.responseText", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.status", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.statusText", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.abort", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.getAllResponseHeaders", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.getResponseHeader", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.open", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.send", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.setRequestHeader", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.readyState", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.overrideMimeType", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onload", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onerror", "noAccess");
-pref("capability.policy.mailnews.XMLHttpRequest.onreadystatechange", "noAccess");
-pref("capability.policy.mailnews.XMLSerializer.serializeToString", "noAccess");
-pref("capability.policy.mailnews.XMLSerializer.serializeToStream", "noAccess");
-pref("capability.policy.mailnews.DOMParser.parseFromString", "noAccess");
-pref("capability.policy.mailnews.DOMParser.parseFromStream", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.transportURI", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.verifySourceHeader", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.invoke", "noAccess");
-pref("capability.policy.mailnews.SOAPCall.asyncInvoke", "noAccess");
-pref("capability.policy.mailnews.SOAPResponse.fault", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.styleURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getAssociatedEncoding", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.setDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.defaultEncoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.defaultDecoder", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.schemaCollection", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.encode", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.decode", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.mapSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.unmapSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getInternalSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPEncoding.getExternalSchemaURI", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.element", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultNamespaceURI", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultCode", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultString", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.faultActor", "noAccess");
-pref("capability.policy.mailnews.SOAPFault.detail", "noAccess");
-pref("capability.policy.mailnews.SOAPHeaderBlock.actorURI", "noAccess");
-pref("capability.policy.mailnews.SOAPHeaderBlock.mustUnderstand", "noAccess");
-pref("capability.policy.mailnews.SOAPParameter", "noAccess");
-pref("capability.policy.mailnews.SOAPPropertyBagMutator.propertyBag", "noAccess");
-pref("capability.policy.mailnews.SOAPPropertyBagMutator.addProperty", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.load", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.loadAsync", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.processSchemaElement", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.onLoad", "noAccess");
-pref("capability.policy.mailnews.SchemaLoader.onError", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.load", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.loadAsync", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.onLoad", "noAccess");
-pref("capability.policy.mailnews.WSDLLoader.onError", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.createProxy", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.createProxyAsync", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.onLoad", "noAccess");
-pref("capability.policy.mailnews.WebServiceProxyFactory.onError", "noAccess");
-
-// XMLExtras
-pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
-pref("capability.policy.default.XMLHttpRequest.getInterface", "noAccess");
-pref("capability.policy.default.XMLHttpRequest.open-uri", "allAccess");
-pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
-
-// Clipboard
-pref("capability.policy.default.Clipboard.cutcopy", "noAccess");
-pref("capability.policy.default.Clipboard.paste", "noAccess");
-
 // Scripts & Windows prefs
+pref("dom.disable_beforeunload",            false);
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
@@ -864,7 +699,9 @@ pref("dom.min_background_timeout_value", 1000);
 
 // Don't use new input types
 pref("dom.experimental_forms", false);
-pref("dom.forms.number", false);
+
+// Enable <input type=number>:
+pref("dom.forms.number", true);
 
 // Enable <input type=color> by default. It will be turned off for remaining
 // platforms which don't have a color picker implemented yet.
@@ -895,6 +732,8 @@ pref("privacy.donottrackheader.value",      1);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
+
+pref("dom.webcomponents.enabled",           false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.options.strict",           false);
@@ -956,6 +795,11 @@ pref("security.fileuri.strict_origin_policy", true);
 // telemetry is also enabled as otherwise there is no way to report
 // the results
 pref("network.allow-experiments", true);
+#if defined(EARLY_BETA_OR_EARLIER)
+pref("network.dns.allow-srv-experiment", true);
+#else
+pref("network.dns.allow-srv-experiment", false);
+#endif
 
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays
@@ -1635,7 +1479,7 @@ pref("signed.applets.codebase_principal_support", false);
 pref("security.checkloaduri", true);
 pref("security.xpconnect.plugin.unrestricted", true);
 // security-sensitive dialogs should delay button enabling. In milliseconds.
-pref("security.dialog_enable_delay", 2000);
+pref("security.dialog_enable_delay", 1000);
 pref("security.notification_enable_delay", 500);
 
 pref("security.csp.enable", true);
@@ -1970,6 +1814,13 @@ pref("layout.css.unset-value.enabled", true);
 
 // Is support for the "all" shorthand enabled?
 pref("layout.css.all-shorthand.enabled", true);
+
+// Is support for CSS variables enabled?
+#ifdef RELEASE_BUILD
+pref("layout.css.variables.enabled", false);
+#else
+pref("layout.css.variables.enabled", true);
+#endif
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
@@ -3175,6 +3026,9 @@ pref("ui.panel.default_level_parent", false);
 
 pref("ui.plugin.cancel_composition_at_input_source_changed", false);
 
+// The min width of composition window for plugins
+pref("ui.plugin.panel.min-width", 500);
+
 pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 
 // Macbook touchpad two finger pixel scrolling
@@ -4047,7 +3901,8 @@ pref("signon.rememberSignons",              true);
 pref("signon.autofillForms",                true);
 pref("signon.autologin.proxy",              false);
 pref("signon.debug",                        false);
-pref("signon.useDOMFormHasPassword",        true);
+// Override autocomplete=false for password manager
+pref("signon.overrideAutocomplete",         false);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
@@ -4238,6 +4093,10 @@ pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
+// When a layer is moving it will add a scroll graph to measure the smoothness
+// of the movement. NOTE: This pref triggers composites to refresh
+// the graph.
+pref("layers.scroll-graph", false);
 
 // Set the default values, and then override per-platform as needed
 pref("layers.offmainthreadcomposition.enabled", false);
@@ -4441,6 +4300,11 @@ pref("memory.ghost_window_timeout_seconds", 60);
 
 // Disable freeing dirty pages when minimizing memory.
 pref("memory.free_dirty_pages", false);
+
+// Disable the Linux-specific, system-wide memory reporter.
+#ifdef XP_LINUX
+pref("memory.system_memory_reporter", false);
+#endif
 
 pref("social.enabled", false);
 // comma separated list of domain origins (e.g. https://domain.com) for

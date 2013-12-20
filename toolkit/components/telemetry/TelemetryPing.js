@@ -1,4 +1,4 @@
-/* -*- indent-tabs-mode: nil -*- */
+/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -39,6 +39,8 @@ const PREF_PREVIOUS_BUILDID = PREF_BRANCH + "previousBuildID";
 const TELEMETRY_INTERVAL = 60000;
 // Delay before intializing telemetry (ms)
 const TELEMETRY_DELAY = 60000;
+// Delay before initializing telemetry if we're testing (ms)
+const TELEMETRY_TEST_DELAY = 100;
 
 // Seconds of idle time before pinging.
 // On idle-daily a gather-telemetry notification is fired, during it probes can
@@ -218,6 +220,9 @@ TelemetryPing.prototype = {
       ret.savedPings = TelemetryFile.pingsLoaded;
     }
 
+    ret.pingsOverdue = TelemetryFile.pingsOverdue;
+    ret.pingsDiscarded = TelemetryFile.pingsDiscarded;
+
     return ret;
   },
 
@@ -285,15 +290,14 @@ TelemetryPing.prototype = {
   },
 
   getHistograms: function getHistograms(hls) {
-    let info = Telemetry.registeredHistograms;
+    let registered = Telemetry.registeredHistograms([]);
     let ret = {};
 
-    for (let name in hls) {
-      if (info[name]) {
-        ret[name] = this.packHistogram(hls[name]);
-        let startup_name = "STARTUP_" + name;
-        if (hls[startup_name])
-          ret[startup_name] = this.packHistogram(hls[startup_name]);
+    for (name of registered) {
+      for (let n of [name, "STARTUP_" + name]) {
+        if (n in hls) {
+          ret[n] = this.packHistogram(hls[n]);
+        }
       }
     }
 
@@ -360,7 +364,8 @@ TelemetryPing.prototype = {
                   "hasMMX", "hasSSE", "hasSSE2", "hasSSE3",
                   "hasSSSE3", "hasSSE4A", "hasSSE4_1", "hasSSE4_2",
                   "hasEDSP", "hasARMv6", "hasARMv7", "hasNEON", "isWow64",
-                  "profileHDDModel", "profileHDDRevision"];
+                  "profileHDDModel", "profileHDDRevision", "binHDDModel",
+                  "binHDDRevision", "winHDDModel", "winHDDRevision"];
     for each (let field in fields) {
       let value;
       try {
@@ -541,9 +546,9 @@ TelemetryPing.prototype = {
    * Make a copy of interesting histograms at startup.
    */
   gatherStartupHistograms: function gatherStartupHistograms() {
-    let info = Telemetry.registeredHistograms;
+    let info = Telemetry.registeredHistograms([]);
     let snapshots = Telemetry.histogramSnapshots;
-    for (let name in info) {
+    for (let name of info) {
       // Only duplicate histograms with actual data.
       if (this.isInterestingStartupHistogram(name) && name in snapshots) {
         Telemetry.histogramFrom("STARTUP_" + name, name);
@@ -598,7 +603,9 @@ TelemetryPing.prototype = {
 
   popPayloads: function popPayloads(reason) {
     function payloadIter() {
-      yield this.getSessionPayloadAndSlug(reason);
+      if (reason != "overdue-flush") {
+        yield this.getSessionPayloadAndSlug(reason);
+      }
       let iterator = TelemetryFile.popPendingPings(reason);
       for (let data of iterator) {
         yield data;
@@ -760,7 +767,7 @@ TelemetryPing.prototype = {
   /**
    * Initializes telemetry within a timer. If there is no PREF_SERVER set, don't turn on telemetry.
    */
-  setup: function setup() {
+  setup: function setup(aTesting) {
     // Initialize some probes that are kept in their own modules
     this._thirdPartyCookies = new ThirdPartyCookieProbe();
     this._thirdPartyCookies.init();
@@ -823,7 +830,17 @@ TelemetryPing.prototype = {
         {
           let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
           success_histogram.add(success);
-        }));
+        }), () =>
+        {
+          // If we have any TelemetryPings lying around, we'll be aggressive
+          // and try to send them all off ASAP.
+          if (TelemetryFile.pingsOverdue > 0) {
+            // It doesn't really matter what we pass to this.send as a reason,
+            // since it's never sent to the server. All that this.send does with
+            // the reason is check to make sure it's not a test-ping.
+            this.send("overdue-flush", this._server);
+          }
+        });
       this.attachObservers();
       this.gatherMemory();
 
@@ -831,7 +848,8 @@ TelemetryPing.prototype = {
       });
       delete this._timer;
     }
-    this._timer.initWithCallback(timerCallback.bind(this), TELEMETRY_DELAY,
+    this._timer.initWithCallback(timerCallback.bind(this),
+                                 aTesting ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
                                  Ci.nsITimer.TYPE_ONE_SHOT);
   },
 

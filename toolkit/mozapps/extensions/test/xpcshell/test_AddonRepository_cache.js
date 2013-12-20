@@ -14,8 +14,6 @@ const BASE_URL  = "http://localhost:" + PORT;
 
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_TYPES   = "extensions.getAddons.cache.types";
-const PREF_GETADDONS_BYIDS         = "extensions.getAddons.get.url";
-const PREF_GETADDONS_BYIDS_PERF    = "extensions.getAddons.getWithPerformance.url";
 const GETADDONS_RESULTS            = BASE_URL + "/data/test_AddonRepository_cache.xml";
 const GETADDONS_EMPTY              = BASE_URL + "/data/test_AddonRepository_empty.xml";
 const GETADDONS_FAILED             = BASE_URL + "/data/test_AddonRepository_failed.xml";
@@ -705,7 +703,7 @@ function run_test_12() {
 // database, and that XPI add-ons still do not use any of repository properties
 function run_test_13() {
   check_database_exists(true);
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERF, GETADDONS_EMPTY);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE, GETADDONS_EMPTY);
 
   trigger_background_update(function() {
     // Database should have been deleted
@@ -738,7 +736,7 @@ function run_test_14() {
 // Tests that the XPI add-ons correctly use the repository properties when
 // caching is enabled and the repository information is available
 function run_test_15() {
-  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERF, GETADDONS_RESULTS);
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE, GETADDONS_RESULTS);
 
   trigger_background_update(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {

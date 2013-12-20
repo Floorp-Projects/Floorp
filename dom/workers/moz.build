@@ -9,6 +9,7 @@ TEST_DIRS += ['test']
 # Public stuff.
 EXPORTS.mozilla.dom += [
     'WorkerPrivate.h',
+    'WorkerRunnable.h',
     'WorkerScope.h',
 ]
 
@@ -43,6 +44,7 @@ SOURCES += [
     'SharedWorker.cpp',
     'URL.cpp',
     'WorkerPrivate.cpp',
+    'WorkerRunnable.cpp',
     'WorkerScope.cpp',
     'XMLHttpRequest.cpp',
     'XMLHttpRequestUpload.cpp',
@@ -58,6 +60,9 @@ LOCAL_INCLUDES += [
     '/content/base/src',
     '/content/events/src',
     '/xpcom/build',
+    '/xpcom/threads',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'gklayout'

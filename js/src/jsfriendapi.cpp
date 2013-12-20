@@ -360,7 +360,7 @@ js::IsInNonStrictPropertySet(JSContext *cx)
 {
     jsbytecode *pc;
     JSScript *script = cx->currentScript(&pc, JSContext::ALLOW_CROSS_COMPARTMENT);
-    return script && !script->strict && (js_CodeSpec[*pc].format & JOF_SET);
+    return script && !script->strict() && (js_CodeSpec[*pc].format & JOF_SET);
 }
 
 JS_FRIEND_API(bool)
@@ -564,10 +564,8 @@ JS_FRIEND_API(bool)
 js::GetOriginalEval(JSContext *cx, HandleObject scope, MutableHandleObject eval)
 {
     assertSameCompartment(cx, scope);
-    if (!scope->global().getOrCreateObjectPrototype(cx))
-        return false;
-    eval.set(&scope->global().getOriginalEval().toObject());
-    return true;
+    Rooted<GlobalObject *> global(cx, &scope->global());
+    return GlobalObject::getOrCreateEval(cx, global, eval);
 }
 
 JS_FRIEND_API(void)
@@ -649,6 +647,17 @@ js::AreGCGrayBitsValid(JSRuntime *rt)
     return rt->gcGrayBitsValid;
 }
 
+JS_FRIEND_API(bool)
+js::ZoneGlobalsAreAllGray(JS::Zone *zone)
+{
+    for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
+        JSObject *obj = comp->maybeGlobal();
+        if (!obj || !JS::GCThingIsMarkedGray(obj))
+            return false;
+    }
+    return true;
+}
+
 JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void *thing)
 {
@@ -662,7 +671,7 @@ js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
     JSRuntime *rt = zone->runtimeFromMainThread();
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-            gc::Cell *thing = e.front().key.wrapped;
+            gc::Cell *thing = e.front().key().wrapped;
             if (!IsInsideNursery(rt, thing) && thing->isMarked(gc::GRAY))
                 callback(closure, thing);
         }
@@ -935,22 +944,33 @@ JS::DisableIncrementalGC(JSRuntime *rt)
 extern JS_FRIEND_API(void)
 JS::DisableGenerationalGC(JSRuntime *rt)
 {
-    rt->gcGenerationalEnabled = false;
 #ifdef JSGC_GENERATIONAL
-    MinorGC(rt, JS::gcreason::API);
-    rt->gcNursery.disable();
-    rt->gcStoreBuffer.disable();
+    if (IsGenerationalGCEnabled(rt)) {
+        MinorGC(rt, JS::gcreason::API);
+        rt->gcNursery.disable();
+        rt->gcStoreBuffer.disable();
+    }
 #endif
+    ++rt->gcGenerationalDisabled;
 }
 
 extern JS_FRIEND_API(void)
 JS::EnableGenerationalGC(JSRuntime *rt)
 {
-    rt->gcGenerationalEnabled = true;
+    JS_ASSERT(rt->gcGenerationalDisabled > 0);
+    --rt->gcGenerationalDisabled;
 #ifdef JSGC_GENERATIONAL
-    rt->gcNursery.enable();
-    rt->gcStoreBuffer.enable();
+    if (IsGenerationalGCEnabled(rt)) {
+        rt->gcNursery.enable();
+        rt->gcStoreBuffer.enable();
+    }
 #endif
+}
+
+extern JS_FRIEND_API(bool)
+JS::IsGenerationalGCEnabled(JSRuntime *rt)
+{
+    return rt->gcGenerationalDisabled == 0;
 }
 
 JS_FRIEND_API(bool)
@@ -1165,6 +1185,14 @@ JS_FRIEND_API(JSObject *)
 js::GetObjectMetadata(JSObject *obj)
 {
     return obj->getMetadata();
+}
+
+JS_FRIEND_API(void)
+js::UnsafeDefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value)
+{
+    JS_ASSERT(obj->isNative());
+    JS_ASSERT(index < obj->getDenseInitializedLength());
+    obj->setDenseElementWithType(cx, index, value);
 }
 
 JS_FRIEND_API(bool)

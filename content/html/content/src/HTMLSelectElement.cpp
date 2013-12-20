@@ -11,7 +11,6 @@
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
-#include "mozilla/Util.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsError.h"
@@ -117,6 +116,8 @@ HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
     mOptGroupCount(0),
     mSelectedIndex(-1)
 {
+  SetHasWeirdParserInsertionMode();
+
   // DoneAddingChildren() will be called later if it's from the parser,
   // otherwise it is
 

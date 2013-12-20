@@ -30,12 +30,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 <input type="radio" id="input_radio" oninput="++NonTextInput[4];"></input>
 <input type="checkbox" id="input_checkbox" oninput="++NonTextInput[5];"></input>
 <input type="range" id="input_range" oninput="++rangeInput;"></input>
+<input type="number" id="input_number" oninput="++numberInput;"></input>
  
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
   /** Test for input event. This is highly based on test_change_event.html **/
+
+  const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
 
   var textareaInput = 0;
 
@@ -48,6 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
   var NonTextInput = [0, 0, 0, 0, 0, 0];
 
   var rangeInput = 0;
+  var numberInput = 0;
 
   SimpleTest.waitForExplicitFinish();
   var MockFilePicker = SpecialPowers.MockFilePicker;
@@ -176,6 +180,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
     is(rangeInput, 3, "Input event should be dispatched during a drag");
     synthesizeMouse(range, centerOfRangeX, centerOfRangeY, { type: "mouseup" });
     is(rangeInput, 4, "Input event should be dispatched at the end of a drag");
+
+    // Tests for type='number'.
+    // We only test key events here since input events for mouse event changes
+    // are tested in test_input_number_mouse_events.html
+    var number = document.getElementById("input_number");
+
+    if (isDesktop) { // up/down arrow keys not supported on android/b2g
+      number.value = "";
+      number.focus();
+      synthesizeKey("VK_UP", {});
+      is(numberInput, 1, "input event should be dispatched for up/down arrow key keypress");
+      is(number.value, 1, "sanity check value of number control after keypress");
+
+      synthesizeKey("VK_DOWN", { type: "keydown" });
+      synthesizeKey("VK_DOWN", { type: "keypress" });
+      synthesizeKey("VK_DOWN", { type: "keypress" });
+      synthesizeKey("VK_DOWN", { type: "keypress" });
+      synthesizeKey("VK_DOWN", { type: "keyup" });
+      is(numberInput, 4, "input event should be dispatched for each up/down arrow key keypress event, even when rapidly repeated");
+      is(number.value, -2, "sanity check value of number control after multiple keydown events");
+
+      number.blur();
+      is(numberInput, 4, "input event shouldn't be dispatched on blur");
+    }
 
     MockFilePicker.cleanup();
     SimpleTest.finish();

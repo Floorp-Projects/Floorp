@@ -107,8 +107,6 @@ class ArrayBufferObject : public JSObject
 
     static bool obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiver,
                                uint32_t index, MutableHandleValue vp);
-    static bool obj_getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                        uint32_t index, MutableHandleValue vp, bool *present);
 
     static bool obj_getSpecial(JSContext *cx, HandleObject obj, HandleObject receiver,
                                HandleSpecialId sid, MutableHandleValue vp);
@@ -278,7 +276,7 @@ class ArrayBufferViewObject : public JSObject
 
     void prependToViews(ArrayBufferViewObject *viewsHead);
 
-    void neuter();
+    void neuter(JSContext *cx);
 
     static void trace(JSTracer *trc, JSObject *obj);
 };
@@ -326,9 +324,11 @@ class TypedArrayObject : public ArrayBufferViewObject
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
+        AutoThreadSafeAccess ts(tarr);
         return tarr->getFixedSlot(BYTELENGTH_SLOT);
     }
     static Value lengthValue(TypedArrayObject *tarr) {
+        AutoThreadSafeAccess ts(tarr);
         return tarr->getFixedSlot(LENGTH_SLOT);
     }
 
@@ -346,16 +346,18 @@ class TypedArrayObject : public ArrayBufferViewObject
     }
 
     uint32_t type() const {
+        AutoThreadSafeAccess ts(this);
         return getFixedSlot(TYPE_SLOT).toInt32();
     }
     void *viewData() const {
+        AutoThreadSafeAccess ts(this);
         return static_cast<void*>(getPrivate(DATA_SLOT));
     }
 
     inline bool isArrayIndex(jsid id, uint32_t *ip = nullptr);
     void copyTypedArrayElement(uint32_t index, MutableHandleValue vp);
 
-    void neuter();
+    void neuter(JSContext *cx);
 
     static uint32_t slotWidth(int atype) {
         switch (atype) {

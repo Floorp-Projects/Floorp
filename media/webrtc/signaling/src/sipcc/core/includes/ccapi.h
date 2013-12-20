@@ -5,8 +5,8 @@
 #ifndef _CCAPI_H_
 #define _CCAPI_H_
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Util.h"
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
@@ -373,6 +373,7 @@ typedef enum {
 
 /* media name with media capability table */
 typedef enum {
+    CC_INVALID_INDEX = -1,
     CC_AUDIO_1,
     CC_VIDEO_1,
     CC_DATACHANNEL_1,
@@ -778,6 +779,7 @@ typedef struct cc_media_cap_t_ {
     sdp_direction_e   support_direction;/* supported direction            */
     cc_media_stream_id_t pc_stream;       /* The media stream in the PC */
     cc_media_track_id_t  pc_track;        /* The track ID in the media stream */
+    boolean           bundle_only;   /* this media is only available bundled */
 } cc_media_cap_t;
 
 typedef struct cc_media_cap_table_t_ {
@@ -829,9 +831,10 @@ typedef struct cc_feature_data_pc_t_ {
 } cc_feature_data_pc_t;
 
 typedef struct cc_feature_data_track_t_ {
-  cc_media_stream_id_t stream_id;
-  cc_media_track_id_t  track_id;
-  cc_media_type_t      media_type;
+  cc_media_stream_id_t     stream_id;
+  cc_media_track_id_t      track_id;
+  cc_media_type_t          media_type;
+  cc_media_constraints_t  *constraints;
 } cc_feature_data_track_t;
 
 

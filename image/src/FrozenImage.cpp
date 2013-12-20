@@ -40,12 +40,11 @@ FrozenImage::GetAnimated(bool* aAnimated)
   return rv;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(already_AddRefed<gfxASurface>)
 FrozenImage::GetFrame(uint32_t aWhichFrame,
-                      uint32_t aFlags,
-                      gfxASurface** _retval)
+                      uint32_t aFlags)
 {
-  return InnerImage()->GetFrame(FRAME_FIRST, aFlags, _retval);
+  return InnerImage()->GetFrame(FRAME_FIRST, aFlags);
 }
 
 NS_IMETHODIMP_(bool)

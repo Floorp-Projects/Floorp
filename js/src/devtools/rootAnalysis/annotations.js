@@ -160,14 +160,17 @@ var ignoreFunctions = {
     // FIXME!
     "NS_DebugBreak": true,
 
-    // Bug 940765 - fetching preferences should not GC
-    "PrefHashEntry* pref_HashTableLookup(void*)": true,
-    "uint8 mozilla::Preferences::InitStaticMembers()": true, // Temporary, see bug 940765
-
     // These are a little overzealous -- these destructors *can* GC if they end
     // up wrapping a pending exception. See bug 898815 for the heavyweight fix.
     "void js::AutoCompartment::~AutoCompartment(int32)" : true,
     "void JSAutoCompartment::~JSAutoCompartment(int32)" : true,
+
+    // Bug 948646 - the only thing AutoJSContext's constructor calls
+    // is an Init() routine whose entire body is covered with an
+    // AutoAssertNoGC. AutoSafeJSContext is the same thing, just with
+    // a different value for the 'aSafe' parameter.
+    "void mozilla::AutoJSContext::AutoJSContext(mozilla::detail::GuardObjectNotifier*)" : true,
+    "void mozilla::AutoSafeJSContext::~AutoSafeJSContext(int32)" : true,
 
     // And these are workarounds to avoid even more analysis work,
     // which would sadly still be needed even with bug 898815.
@@ -231,4 +234,18 @@ function isSuppressConstructor(name)
     return /::AutoSuppressGC/.test(name)
         || /::AutoEnterAnalysis/.test(name)
         || /::AutoAssertNoGC/.test(name);
+}
+
+// nsISupports subclasses' methods may be scriptable (or overridden
+// via binary XPCOM), and so may GC. But some fields just aren't going
+// to get overridden with something that can GC.
+function isOverridableField(csu, field)
+{
+    if (csu != 'nsISupports')
+        return false;
+    if (field == 'GetCurrentJSContext')
+        return false;
+    if (field == 'IsOnCurrentThread')
+        return false;
+    return true;
 }

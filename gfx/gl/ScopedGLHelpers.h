@@ -6,8 +6,11 @@
 #ifndef SCOPEDGLHELPERS_H_
 #define SCOPEDGLHELPERS_H_
 
+#include "GLContext.h"
+
 namespace mozilla {
 namespace gl {
+
 //RAII via CRTP!
 template <class Derived>
 struct ScopedGLWrapper

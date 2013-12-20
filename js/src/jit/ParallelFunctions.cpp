@@ -472,8 +472,8 @@ jit::AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *c
          "Parallel abort with cause %d in %p:%s:%d "
          "(%p:%s:%d at line %d)",
          cause,
-         outermostScript, outermostScript->filename(), outermostScript->lineno,
-         currentScript, currentScript->filename(), currentScript->lineno,
+         outermostScript, outermostScript->filename(), outermostScript->lineno(),
+         currentScript, currentScript->filename(), currentScript->lineno(),
          (currentScript ? PCToLineNumber(currentScript, bytecode) : 0));
 
     JS_ASSERT(InParallelSection());
@@ -492,8 +492,8 @@ jit::PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript)
 {
     Spew(SpewBailouts,
          "Propagate parallel abort via %p:%s:%d (%p:%s:%d)",
-         outermostScript, outermostScript->filename(), outermostScript->lineno,
-         currentScript, currentScript->filename(), currentScript->lineno);
+         outermostScript, outermostScript->filename(), outermostScript->lineno(),
+         currentScript, currentScript->filename(), currentScript->lineno());
 
     JS_ASSERT(InParallelSection());
     JS_ASSERT(outermostScript->hasParallelIonScript());
@@ -522,7 +522,7 @@ jit::CallToUncompiledScriptPar(JSObject *obj)
     if (func->hasScript()) {
         JSScript *script = func->nonLazyScript();
         Spew(SpewBailouts, "Call to uncompiled script: %p:%s:%d",
-             script, script->filename(), script->lineno);
+             script, script->filename(), script->lineno());
     } else if (func->isInterpretedLazy()) {
         Spew(SpewBailouts, "Call to uncompiled lazy script");
     } else if (func->isBoundFunction()) {
@@ -538,7 +538,7 @@ jit::CallToUncompiledScriptPar(JSObject *obj)
         if (target->hasScript()) {
             JSScript *script = target->nonLazyScript();
             Spew(SpewBailouts, "Call to bound function leading (depth: %d) to script: %p:%s:%d",
-                 depth, script, script->filename(), script->lineno);
+                 depth, script, script->filename(), script->lineno());
         } else {
             Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
         }

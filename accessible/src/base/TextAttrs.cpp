@@ -621,7 +621,7 @@ TextAttrsMgr::FontWeightTextAttr::
   if (font->IsSyntheticBold())
     return 700;
 
-#ifdef MOZ_PANGO
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
   // On Linux, font->GetStyle()->weight will give the absolute weight requested
   // of the font face. The Linux code uses the gfxFontEntry constructor which
   // doesn't initialize the weight field.

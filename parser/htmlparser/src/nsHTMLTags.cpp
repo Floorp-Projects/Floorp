@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
 #include "nsHTMLTags.h"
 #include "nsCRT.h"
 #include "nsReadableUtils.h"
@@ -71,6 +69,8 @@ static const PRUnichar sHTMLTagUnicodeName_col[] =
   {'c', 'o', 'l', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_colgroup[] =
   {'c', 'o', 'l', 'g', 'r', 'o', 'u', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_content[] =
+  {'c', 'o', 'n', 't', 'e', 'n', 't', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_data[] =
   {'d', 'a', 't', 'a', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_datalist[] =

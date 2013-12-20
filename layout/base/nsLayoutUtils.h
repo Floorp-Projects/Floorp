@@ -51,6 +51,7 @@ struct nsOverflowAreas;
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "nsRuleNode.h"
+#include "mozilla/gfx/2D.h"
 
 #include <limits>
 #include <algorithm>
@@ -69,6 +70,12 @@ class HTMLVideoElement;
 namespace layers {
 class Layer;
 }
+
+template <class AnimationsOrTransitions>
+extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
+                                                         nsIAtom* aAnimationProperty,
+                                                         nsCSSProperty aProperty);
+
 } // namespace mozilla
 
 /**
@@ -82,6 +89,8 @@ class nsLayoutUtils
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -369,7 +378,6 @@ public:
   static void SetFixedPositionLayerData(Layer* aLayer, const nsIFrame* aViewportFrame,
                                         nsSize aViewportSize,
                                         const nsIFrame* aFixedPosFrame,
-                                        const nsIFrame* aReferenceFrame,
                                         nsPresContext* aPresContext,
                                         const ContainerLayerParameters& aContainerParameters);
 
@@ -599,7 +607,11 @@ public:
      * When set, clipping due to the root scroll frame (and any other viewport-
      * related clipping) is ignored.
      */
-    IGNORE_ROOT_SCROLL_FRAME = 0x02
+    IGNORE_ROOT_SCROLL_FRAME = 0x02,
+    /**
+     * When set, return only content in the same document as aFrame.
+     */
+    IGNORE_CROSS_DOC = 0x04
   };
 
   /**
@@ -872,12 +884,18 @@ public:
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
   enum {
-    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01
+    RECTS_ACCOUNT_FOR_TRANSFORMS = 0x01,
+    // Two bits for specifying which box type to use.
+    // With neither bit set (default), use the border box.
+    RECTS_USE_CONTENT_BOX = 0x02,
+    RECTS_USE_PADDING_BOX = 0x04,
+    RECTS_USE_MARGIN_BOX = 0x06, // both bits set
+    RECTS_WHICH_BOX_MASK = 0x06 // bitmask for these two bits
   };
   /**
-   * Collect all CSS border-boxes associated with aFrame and its
-   * continuations, "drilling down" through outer table frames and
-   * some anonymous blocks since they're not real CSS boxes.
+   * Collect all CSS boxes (content, padding, border, or margin) associated
+   * with aFrame and its continuations, "drilling down" through outer table
+   * frames and some anonymous blocks since they're not real CSS boxes.
    * The boxes are positioned relative to aRelativeTo (taking scrolling
    * into account) and passed to the callback in frame-tree order.
    * If aFrame is null, no boxes are returned.
@@ -885,6 +903,9 @@ public:
    * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
    * the boxes into aRelativeTo coordinates, transforms (including CSS
    * and SVG transforms) are taken into account.
+   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
+   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
+   * Otherwise (by default), the border box is used.
    */
   static void GetAllInFlowRects(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                 RectCallback* aCallback, uint32_t aFlags = 0);
@@ -895,6 +916,9 @@ public:
    * If aFlags includes RECTS_ACCOUNT_FOR_TRANSFORMS, then when converting
    * the boxes into aRelativeTo coordinates, transforms (including CSS
    * and SVG transforms) are taken into account.
+   * If aFlags includes one of RECTS_USE_CONTENT_BOX, RECTS_USE_PADDING_BOX,
+   * or RECTS_USE_MARGIN_BOX, the corresponding type of box is used.
+   * Otherwise (by default), the border box is used.
    */
   static nsRect GetAllInFlowRectsUnion(nsIFrame* aFrame, nsIFrame* aRelativeTo,
                                        uint32_t aFlags = 0);
@@ -1534,19 +1558,17 @@ public:
    */
 
   enum {
-    /* Always create a new surface for the result */
-    SFE_WANT_NEW_SURFACE   = 1 << 0,
     /* When creating a new surface, create an image surface */
-    SFE_WANT_IMAGE_SURFACE = 1 << 1,
+    SFE_WANT_IMAGE_SURFACE = 1 << 0,
     /* Whether to extract the first frame (as opposed to the
        current frame) in the case that the element is an image. */
-    SFE_WANT_FIRST_FRAME = 1 << 2,
+    SFE_WANT_FIRST_FRAME = 1 << 1,
     /* Whether we should skip colorspace/gamma conversion */
-    SFE_NO_COLORSPACE_CONVERSION = 1 << 3,
+    SFE_NO_COLORSPACE_CONVERSION = 1 << 2,
     /* Whether we should skip premultiplication -- the resulting
        image will always be an image surface, and must not be given to
        Thebes for compositing! */
-    SFE_NO_PREMULTIPLY_ALPHA = 1 << 4
+    SFE_NO_PREMULTIPLY_ALPHA = 1 << 3
   };
 
   struct SurfaceFromElementResult {
@@ -1554,6 +1576,8 @@ public:
 
     /* mSurface will contain the resulting surface, or will be nullptr on error */
     nsRefPtr<gfxASurface> mSurface;
+    mozilla::RefPtr<SourceSurface> mSourceSurface;
+
     /* The size of the surface */
     gfxIntSize mSize;
     /* The principal associated with the element whose surface was returned.
@@ -1571,18 +1595,23 @@ public:
   };
 
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::Element *aElement,
-                                                     uint32_t aSurfaceFlags = 0);
+                                                     uint32_t aSurfaceFlags = 0,
+                                                     DrawTarget *aTarget = nullptr);
   static SurfaceFromElementResult SurfaceFromElement(nsIImageLoadingContent *aElement,
-                                                     uint32_t aSurfaceFlags = 0);
+                                                     uint32_t aSurfaceFlags = 0,
+                                                     DrawTarget *aTarget = nullptr);
   // Need an HTMLImageElement overload, because otherwise the
   // nsIImageLoadingContent and mozilla::dom::Element overloads are ambiguous
   // for HTMLImageElement.
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLImageElement *aElement,
-                                                     uint32_t aSurfaceFlags = 0);
+                                                     uint32_t aSurfaceFlags = 0,
+                                                     DrawTarget *aTarget = nullptr);
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLCanvasElement *aElement,
-                                                     uint32_t aSurfaceFlags = 0);
+                                                     uint32_t aSurfaceFlags = 0,
+                                                     DrawTarget *aTarget = nullptr);
   static SurfaceFromElementResult SurfaceFromElement(mozilla::dom::HTMLVideoElement *aElement,
-                                                     uint32_t aSurfaceFlags = 0);
+                                                     uint32_t aSurfaceFlags = 0,
+                                                     DrawTarget *aTarget = nullptr);
 
   /**
    * When the document is editable by contenteditable attribute of its root
@@ -1709,6 +1738,14 @@ public:
    * 'true' value is enabled.
    */
   static bool IsTextAlignTrueValueEnabled();
+
+  /**
+   * Checks if CSS variables are currently enabled.
+   */
+  static bool CSSVariablesEnabled()
+  {
+    return sCSSVariablesEnabled;
+  }
 
   /**
    * Unions the overflow areas of all non-popup children of aFrame with
@@ -1937,6 +1974,7 @@ private:
   static bool sFontSizeInflationForceEnabled;
   static bool sFontSizeInflationDisabledInMasterProcess;
   static bool sInvalidationDebuggingIsEnabled;
+  static bool sCSSVariablesEnabled;
 };
 
 template<typename PointType, typename RectType, typename CoordType>

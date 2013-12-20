@@ -1687,7 +1687,8 @@ nsFrameLoader::MaybeCreateDocShell()
     if (mMessageManager) {
       mMessageManager->LoadFrameScript(
         NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js"),
-        /* allowDelayedLoad = */ true);
+        /* allowDelayedLoad = */ true,
+        /* aRunInGlobalScope */ true);
     }
   }
 
@@ -2188,16 +2189,16 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
 }
 
 bool
-nsFrameLoader::DoLoadFrameScript(const nsAString& aURL)
+nsFrameLoader::DoLoadFrameScript(const nsAString& aURL, bool aRunInGlobalScope)
 {
   mozilla::dom::PBrowserParent* tabParent = GetRemoteBrowser();
   if (tabParent) {
-    return tabParent->SendLoadRemoteScript(nsString(aURL));
+    return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
   }
   nsRefPtr<nsInProcessTabChildGlobal> tabChild =
     static_cast<nsInProcessTabChildGlobal*>(GetTabChildGlobalAsEventTarget());
   if (tabChild) {
-    tabChild->LoadFrameScript(aURL);
+    tabChild->LoadFrameScript(aURL, aRunInGlobalScope);
   }
   return true;
 }

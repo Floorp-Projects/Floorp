@@ -50,8 +50,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     bool inheritResumePoint(MBasicBlock *pred);
     void assertUsesAreNotWithin(MUseIterator use, MUseIterator end);
 
-    // Does this block do something that forces it to terminate early?
-    bool earlyAbort_;
+    // This block cannot be reached by any means.
+    bool unreachable_;
 
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
@@ -88,14 +88,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void setId(uint32_t id) {
         id_ = id;
     }
-    void setEarlyAbort() {
-        earlyAbort_ = true;
-    }
-    void clearEarlyAbort() {
-        earlyAbort_ = false;
-    }
-    bool earlyAbort() {
-        return earlyAbort_;
+
+    // Mark the current block and all dominated blocks as unreachable.
+    void setUnreachable();
+    bool unreachable() {
+        return unreachable_;
     }
     // Move the definition to the top of the stack.
     void pick(int32_t depth);
@@ -468,7 +465,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     }
 
     bool strict() const {
-        return info_.script()->strict;
+        return info_.script()->strict();
     }
 
     void dumpStack(FILE *fp);
@@ -553,7 +550,7 @@ class MIRGraph
       : alloc_(alloc),
         returnAccumulator_(nullptr),
         blockIdGen_(0),
-        idGen_(0),
+        idGen_(1),
         osrBlock_(nullptr),
         osrStart_(nullptr),
         numBlocks_(0),
@@ -598,7 +595,9 @@ class MIRGraph
         numBlocks_ = 0;
     }
     void resetInstructionNumber() {
-        idGen_ = 0;
+        // This intentionally starts above 0. The id 0 is in places used to
+        // indicate a failure to perform an operation on an instruction.
+        idGen_ = 1;
     }
     MBasicBlockIterator begin() {
         return blocks_.begin();
@@ -638,12 +637,9 @@ class MIRGraph
         return blockIdGen_;
     }
     void allocDefinitionId(MDefinition *ins) {
-        // This intentionally starts above 0. The id 0 is in places used to
-        // indicate a failure to perform an operation on an instruction.
-        idGen_ += 2;
-        ins->setId(idGen_);
+        ins->setId(idGen_++);
     }
-    uint32_t getMaxInstructionId() {
+    uint32_t getNumInstructionIds() {
         return idGen_;
     }
     MResumePoint *entryResumePoint() {

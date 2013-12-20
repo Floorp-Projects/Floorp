@@ -26,6 +26,9 @@ Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 let NFC = {};
 Cu.import("resource://gre/modules/nfc_consts.js", NFC);
 
+Cu.import("resource://gre/modules/systemlibs.js");
+const NFC_ENABLED = libcutils.property_get("ro.moz.nfc.enabled", "false") === "true";
+
 // set to true to in nfc_consts.js to see debug messages
 let DEBUG = NFC.DEBUG_CONTENT_HELPER;
 
@@ -47,7 +50,9 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:GetDetailsNDEFResponse",
   "NFC:MakeReadOnlyNDEFResponse",
   "NFC:ConnectResponse",
-  "NFC:CloseResponse"
+  "NFC:CloseResponse",
+  "NFC:CheckP2PRegistrationResponse",
+  "NFC:PeerEvent"
 ];
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
@@ -59,6 +64,10 @@ function NfcContentHelper() {
   Services.obs.addObserver(this, "xpcom-shutdown", false);
 
   this._requestMap = [];
+
+  // Maintains an array of PeerEvent related callbacks, mainly
+  // one for 'peerReady' and another for 'peerLost'.
+  this.peerEventsCallbackMap = {};
 }
 
 NfcContentHelper.prototype = {
@@ -75,6 +84,7 @@ NfcContentHelper.prototype = {
   }),
 
   _requestMap: null,
+  peerEventsCallbackMap: null,
 
   /* TODO: Bug 815526: This is a limitation when a DOMString is used in sequences of Moz DOM Objects.
    *       Strings such as 'type', 'id' 'payload' will not be acccessible to NfcWorker.
@@ -145,13 +155,11 @@ NfcContentHelper.prototype = {
       throw Components.Exception("Can't get window object",
                                   Cr.NS_ERROR_UNEXPECTED);
     }
-
     let request = Services.DOMRequest.createRequest(window);
     let requestId = btoa(this.getRequestId(request));
     this._requestMap[requestId] = window;
 
     let encodedRecords = this.encodeNdefRecords(records);
-
     cpmm.sendAsyncMessage("NFC:WriteNDEF", {
       requestId: requestId,
       sessionToken: sessionToken,
@@ -210,6 +218,63 @@ NfcContentHelper.prototype = {
     return request;
   },
 
+  registerTargetForPeerEvent: function registerTargetForPeerEvent(window,
+                                                  appId, event, callback) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    this.peerEventsCallbackMap[event] = callback;
+    cpmm.sendAsyncMessage("NFC:RegisterPeerTarget", {
+      appId: appId,
+      event: event
+    });
+  },
+
+  unregisterTargetForPeerEvent: function unregisterTargetForPeerEvent(window,
+                                                                appId, event) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let callback = this.peerEventsCallbackMap[event];
+    if (callback != null) {
+      delete this.peerEventsCallbackMap[event];
+    }
+
+    cpmm.sendAsyncMessage("NFC:UnregisterPeerTarget", {
+      appId: appId,
+      event: event
+    });
+  },
+
+  checkP2PRegistration: function checkP2PRegistration(window, appId) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+    let request = Services.DOMRequest.createRequest(window);
+    let requestId = btoa(this.getRequestId(request));
+    this._requestMap[requestId] = window;
+
+    cpmm.sendAsyncMessage("NFC:CheckP2PRegistration", {
+      appId: appId,
+      requestId: requestId
+    });
+    return request;
+  },
+
+  notifyUserAcceptedP2P: function notifyUserAcceptedP2P(window, appId) {
+    if (window == null) {
+      throw Components.Exception("Can't get window object",
+                                  Cr.NS_ERROR_UNEXPECTED);
+    }
+
+    cpmm.sendAsyncMessage("NFC:NotifyUserAcceptedP2P", {
+      appId: appId
+    });
+  },
+
   // nsIObserver
 
   observe: function observe(subject, topic, data) {
@@ -259,7 +324,18 @@ NfcContentHelper.prototype = {
       case "NFC:WriteNDEFResponse":
       case "NFC:MakeReadOnlyNDEFResponse":
       case "NFC:GetDetailsNDEFResponse":
+      case "NFC:CheckP2PRegistrationResponse":
         this.handleResponse(message.json);
+        break;
+      case "NFC:PeerEvent":
+        let callback = this.peerEventsCallbackMap[message.json.event];
+        if (callback) {
+          callback.peerNotification(message.json.event,
+                                    message.json.sessionToken);
+        } else {
+          debug("PeerEvent: No valid callback registered for the event " +
+                message.json.event);
+        }
         break;
     }
   },
@@ -311,4 +387,6 @@ NfcContentHelper.prototype = {
   },
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NfcContentHelper]);
+if (NFC_ENABLED) {
+  this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NfcContentHelper]);
+}

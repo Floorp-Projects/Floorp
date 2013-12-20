@@ -116,3 +116,6 @@ MozillaFileLogger.prototype = {
   }
 };
 
+this.MozillaLogger = MozillaLogger;
+this.SpecialPowersLogger = SpecialPowersLogger;
+this.MozillaFileLogger = MozillaFileLogger;

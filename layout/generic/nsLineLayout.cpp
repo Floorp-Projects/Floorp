@@ -10,7 +10,6 @@
 #define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
 #include "nsLineLayout.h"
 
-#include "mozilla/Util.h"
 #include "nsBlockFrame.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
@@ -83,7 +82,12 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   MOZ_COUNT_CTOR(nsLineLayout);
 
   // Stash away some style data that we need
-  mStyleText = aOuterReflowState->frame->StyleText();
+  nsBlockFrame* blockFrame = do_QueryFrame(aOuterReflowState->frame);
+  if (blockFrame)
+    mStyleText = blockFrame->StyleTextForLineLayout();
+  else
+    mStyleText = aOuterReflowState->frame->StyleText();
+
   mLineNumber = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
@@ -202,7 +206,8 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
 
   mTopEdge = aY;
 
-  psd->mNoWrap = !mStyleText->WhiteSpaceCanWrap(LineContainerFrame());
+  psd->mNoWrap =
+    !mStyleText->WhiteSpaceCanWrapStyle() || LineContainerFrame()->IsSVGText();
   psd->mDirection = aDirection;
   psd->mChangedFrameDirection = false;
 
@@ -1949,8 +1954,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     // Update minY/maxY for frames that we just placed. Do not factor
     // text into the equation.
     if (pfd->mVerticalAlign == VALIGN_OTHER) {
-      // Text frames do not contribute to the min/max Y values for the
-      // line (instead their parent frame's font-size contributes).
+      // Text frames and bullets do not contribute to the min/max Y values for
+      // the line (instead their parent frame's font-size contributes).
       // XXXrbs -- relax this restriction because it causes text frames
       //           to jam together when 'font-size-adjust' is enabled
       //           and layout is using dynamic font heights (bug 20394)
@@ -1961,17 +1966,15 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       //           For example in quirks mode, avoiding empty text frames prevents
       //           "tall" lines around elements like <hr> since the rules of <hr>
       //           in quirks.css have pseudo text contents with LF in them.
-#if 0
-      if (!pfd->GetFlag(PFD_ISTEXTFRAME)) {
-#else
-      // Only consider non empty text frames when line-height=normal
       bool canUpdate = !pfd->GetFlag(PFD_ISTEXTFRAME);
-      if (!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) {
+      if ((!canUpdate && pfd->GetFlag(PFD_ISNONWHITESPACETEXTFRAME)) ||
+          (canUpdate && (pfd->GetFlag(PFD_ISBULLET) ||
+                         nsGkAtoms::bulletFrame == frame->GetType()))) {
+        // Only consider bullet / non-empty text frames when line-height:normal.
         canUpdate =
           frame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
       }
       if (canUpdate) {
-#endif
         nscoord yTop, yBottom;
         if (frameSpan) {
           // For spans that were are now placing, use their position

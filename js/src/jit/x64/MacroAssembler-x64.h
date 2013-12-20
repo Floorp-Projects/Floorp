@@ -79,15 +79,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
 
-    enum Result {
-        GENERAL,
-        DOUBLE,
-        FLOAT
-    };
-
-    typedef MoveResolver::MoveOperand MoveOperand;
-    typedef MoveResolver::Move Move;
-
     MacroAssemblerX64()
       : inCall_(false),
         enoughMemory_(true)
@@ -1112,14 +1103,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testl(operand.valueReg(), operand.valueReg());
         j(truthy ? NonZero : Zero, label);
     }
-    // This returns the tag in ScratchReg.
     Condition testStringTruthy(bool truthy, const ValueOperand &value) {
         unboxString(value, ScratchReg);
 
         Operand lengthAndFlags(ScratchReg, JSString::offsetOfLengthAndFlags());
-        movq(lengthAndFlags, ScratchReg);
-        shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
-        testq(ScratchReg, ScratchReg);
+        testq(lengthAndFlags, Imm32(-1 << JSString::LENGTH_SHIFT));
         return truthy ? Assembler::NonZero : Assembler::Zero;
     }
 
@@ -1202,19 +1190,19 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from);
+    void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(const Register &reg);
-    void passABIArg(const FloatRegister &reg);
+    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, Result result);
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, Result result = GENERAL);
-    void callWithABI(AsmJSImmPtr imm, Result result = GENERAL);
-    void callWithABI(Address fun, Result result = GENERAL);
+    void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(Address fun, MoveOp::Type result = MoveOp::GENERAL);
 
     void handleFailureWithHandler(void *handler);
     void handleFailureWithHandlerTail();
@@ -1231,7 +1219,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
                  AbsoluteAddress(GetIonContext()->runtime->addressOfIonTop()));
     }
 
-    void callWithExitFrame(IonCode *target, Register dynStack) {
+    void callWithExitFrame(JitCode *target, Register dynStack) {
         addPtr(Imm32(framePushed()), dynStack);
         makeFrameDescriptor(dynStack, IonFrame_OptimizedJS);
         Push(dynStack);

@@ -22,7 +22,7 @@ namespace js {
  * and saved versions. If deserialization fails, the data should be
  * invalidated if possible.
  */
-static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 155);
+static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 159);
 
 class XDRBuffer {
   public:
@@ -210,6 +210,7 @@ class XDRState {
 
     bool codeFunction(JS::MutableHandleObject objp);
     bool codeScript(MutableHandleScript scriptp);
+    bool codeConstValue(MutableHandleValue vp);
 };
 
 class XDREncoder : public XDRState<XDR_ENCODE> {

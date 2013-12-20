@@ -14,7 +14,6 @@
 #define MAX_OVERLAPS 16
 
 
-
 /* The area (pixel area in Q6) the block pointed to by bmi overlaps
  * another block with.
  */
@@ -48,4 +47,4 @@ typedef struct
     MV_REFERENCE_FRAME ref_frame;
 } EC_BLOCK;
 
-#endif /* VP8_DEC_EC_TYPES_H */
+#endif  // VP8_DEC_EC_TYPES_H

@@ -26,14 +26,12 @@ usage = """
 %prog [options] command [command-specific options]
 
 Supported Commands:
-  docs       - view web-based documentation
   init       - create a sample addon in an empty directory
   test       - run tests
   run        - run program
   xpi        - generate an xpi
 
 Internal Commands:
-  sdocs      - export static documentation
   testcfx    - test the cfx tool
   testex     - test all example code
   testpkgs   - test all installed packages
@@ -223,11 +221,6 @@ parser_groups = (
                                   metavar=None,
                                   default=False,
                                   cmds=['test', 'testex', 'testpkgs'])),
-        (("", "--override-version",), dict(dest="override_version",
-                                  help="Pass in a version string to use in generated docs",
-                                  metavar=None,
-                                  default=False,
-                                  cmds=['sdocs'])),
         (("", "--check-memory",), dict(dest="check_memory",
                                        help="attempts to detect leaked compartments after a test run",
                                        action="store_true",
@@ -236,6 +229,10 @@ parser_groups = (
                                              'testall'])),
         (("", "--output-file",), dict(dest="output_file",
                                       help="Where to put the finished .xpi",
+                                      default=None,
+                                      cmds=['xpi'])),
+        (("", "--manifest-overload",), dict(dest="manifest_overload",
+                                      help="JSON file to overload package.json properties",
                                       default=None,
                                       cmds=['xpi'])),
         ]
@@ -249,12 +246,6 @@ parser_groups = (
                                  default=None,
                                  cmds=['test', 'run', 'testex', 'testpkgs',
                                        'testall'])),
-        (("", "--baseurl",), dict(dest="baseurl",
-                                 help=("root of static docs tree: "
-                                       "for example: 'http://me.com/the_docs/'"),
-                                 metavar=None,
-                                 default='',
-                                 cmds=['sdocs'])),
         (("", "--test-runner-pkg",), dict(dest="test_runner_pkg",
                                           help=("name of package "
                                                 "containing test runner "
@@ -626,23 +617,6 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             return
         test_cfx(env_root, options.verbose)
         return
-    elif command == "docs":
-        from cuddlefish.docs import generate
-        if len(args) > 1:
-            docs_home = generate.generate_named_file(env_root, filename_and_path=args[1])
-        else:
-            docs_home = generate.generate_local_docs(env_root)
-            webbrowser.open(docs_home)
-        return
-    elif command == "sdocs":
-        from cuddlefish.docs import generate
-        filename=""
-        if options.override_version:
-            filename = generate.generate_static_docs(env_root, override_version=options.override_version)
-        else:
-            filename = generate.generate_static_docs(env_root)
-        print >>stdout, "Wrote %s." % filename
-        return
     elif command not in ["xpi", "test", "run"]:
         print >>sys.stderr, "Unknown command: %s" % command
         print >>sys.stderr, "Try using '--help' for assistance."
@@ -665,6 +639,10 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
         target_cfg_json = os.path.join(options.pkgdir, 'package.json')
         target_cfg = packaging.get_config_in_dir(options.pkgdir)
+
+    if options.manifest_overload:
+        for k, v in packaging.load_json_file(options.manifest_overload).items():
+            target_cfg[k] = v
 
     # At this point, we're either building an XPI or running Jetpack code in
     # a Mozilla application (which includes running tests).

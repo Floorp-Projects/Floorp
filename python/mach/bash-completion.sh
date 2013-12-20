@@ -1,11 +1,10 @@
 function _mach()
 {
-  local cur cmds c subcommand mach
+  local cur cmds c subcommand
   COMPREPLY=()
 
   # Load the list of commands
-  mach=`which mach || echo ./mach`
-  cmds=`$mach mach-commands`
+  cmds=`"${COMP_WORDS[0]}" mach-commands`
 
   # Look for the subcommand.
   cur="${COMP_WORDS[COMP_CWORD]}"

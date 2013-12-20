@@ -16,10 +16,16 @@ class nsISelectionController;
 class nsFrameSelection;
 class nsTextControlFrame;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 // IID for the nsITextControl interface
 #define NS_ITEXTCONTROLELEMENT_IID    \
-{ 0x3dd53b59, 0x9d8f, 0x40a3, \
-  { 0x81, 0xd7, 0xb3, 0x43, 0xa0, 0x51, 0xfc, 0xb5 } }
+{ 0x3df7db6d, 0xa548, 0x4e20, \
+ { 0x97, 0xfd, 0x75, 0xa3, 0x31, 0xa2, 0xf3, 0xd4 } }
 
 /**
  * This interface is used for the text control frame to get the editor and
@@ -138,12 +144,12 @@ public:
   /**
    * Create the placeholder anonymous node for the text control and returns it.
    */
-  NS_IMETHOD_(nsIContent*) CreatePlaceholderNode() = 0;
+  NS_IMETHOD_(mozilla::dom::Element*) CreatePlaceholderNode() = 0;
 
   /**
    * Get the placeholder anonymous node for the text control.
    */
-  NS_IMETHOD_(nsIContent*) GetPlaceholderNode() = 0;
+  NS_IMETHOD_(mozilla::dom::Element*) GetPlaceholderNode() = 0;
 
   /**
    * Initialize the keyboard event listeners.

@@ -48,8 +48,7 @@ this.NFC_TECHS = {
   0:'NDEF',
   1:'NDEF_WRITEABLE',
   2:'NDEF_FORMATABLE',
-  3:'P2P',
-  4:'NFC_A'
+  3:'P2P'
 };
 
 // TODO: Bug 933595. Fill-in all error codes for Gonk/nfcd protocol
@@ -66,6 +65,9 @@ this.TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 this.TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
 this.SETTING_NFC_ENABLED            = "nfc.enabled";
 this.SETTING_NFC_POWER_LEVEL        = "nfc.powerlevel";
+
+this.NFC_PEER_EVENT_READY = 0x01;
+this.NFC_PEER_EVENT_LOST  = 0x02;
 
 // Allow this file to be imported via Components.utils.import().
 this.EXPORTED_SYMBOLS = Object.keys(this);

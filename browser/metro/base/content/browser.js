@@ -11,7 +11,7 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 
 // Page for which the start UI is shown
-const kStartURI = "about:start";
+const kStartURI = "about:newtab";
 
 // allow panning after this timeout on pages with registered touch listeners
 const kTouchTimeout = 300;
@@ -68,6 +68,16 @@ var Browser = {
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
       dump("###########" + e + "\n");
+    }
+
+    if (!Services.metro) {
+      // Services.metro is only available on Windows Metro. We want to be able
+      // to test metro on other platforms, too, so we provide a minimal shim.
+      Services.metro = {
+        activationURI: "",
+        pinTileAsync: function () {},
+        unpinTileAsync: function () {}
+      };
     }
 
     /* handles dispatching clicks on browser into clicks in content or zooms */
@@ -1208,16 +1218,17 @@ var SessionHistoryObserver = {
     if (aTopic != "browser:purge-session-history")
       return;
 
-    let back = document.getElementById("cmd_back");
-    back.setAttribute("disabled", "true");
-    let forward = document.getElementById("cmd_forward");
-    forward.setAttribute("disabled", "true");
-
-    let urlbar = document.getElementById("urlbar-edit");
-    if (urlbar) {
-      // Clear undo history of the URL bar
-      urlbar.editor.transactionManager.clear();
+    let newTab = Browser.addTab("about:start", true);
+    let tab = Browser._tabs[0];
+    while(tab != newTab) {
+      Browser.closeTab(tab, { forceClose: true } );
+      tab = Browser._tabs[0];
     }
+
+    PlacesUtils.history.removeAllPages();
+
+    // Clear undo history of the URL bar
+    BrowserUI._edit.editor.transactionManager.clear();
   }
 };
 
@@ -1305,10 +1316,10 @@ Tab.prototype = {
     }
     browser.addEventListener("pageshow", onPageShowEvent, true);
     browser.addEventListener("DOMWindowCreated", this, false);
+    browser.addEventListener("StartUIChange", this, false);
     Elements.browsers.addEventListener("SizeChanged", this, false);
 
     browser.messageManager.addMessageListener("Content:StateChange", this);
-    Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     if (aOwner)
       this._copyHistoryFrom(aOwner);
@@ -1317,14 +1328,24 @@ Tab.prototype = {
 
   updateViewport: function (aEvent) {
     // <meta name=viewport> is not yet supported; just use the browser size.
-    this.browser.setWindowSize(this.browser.clientWidth, this.browser.clientHeight);
+    let browser = this.browser;
+
+    // On the start page we add padding to keep the browser above the navbar.
+    let paddingBottom = parseInt(getComputedStyle(browser).paddingBottom, 10);
+    let height = browser.clientHeight - paddingBottom;
+
+    browser.setWindowSize(browser.clientWidth, height);
   },
 
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "DOMWindowCreated":
+      case "StartUIChange":
+        this.updateViewport();
+        break;
       case "SizeChanged":
         this.updateViewport();
+        this._delayUpdateThumbnail();
         break;
     }
   },
@@ -1336,30 +1357,24 @@ Tab.prototype = {
         this.updateThumbnail();
         // ...and in a little while to capture page after load.
         if (aMessage.json.stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-          clearTimeout(this._updateThumbnailTimeout);
-          this._updateThumbnailTimeout = setTimeout(() => {
-            this.updateThumbnail();
-          }, kTabThumbnailDelayCapture);
+          this._delayUpdateThumbnail();
         }
         break;
     }
   },
 
-  observe: function BrowserUI_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "metro_viewstate_changed":
-        if (aData !== "snapped") {
-          this.updateThumbnail();
-        }
-        break;
-    }
+  _delayUpdateThumbnail: function() {
+    clearTimeout(this._updateThumbnailTimeout);
+    this._updateThumbnailTimeout = setTimeout(() => {
+      this.updateThumbnail();
+    }, kTabThumbnailDelayCapture);
   },
 
   destroy: function destroy() {
     this._browser.messageManager.removeMessageListener("Content:StateChange", this);
     this._browser.removeEventListener("DOMWindowCreated", this, false);
+    this._browser.removeEventListener("StartUIChange", this, false);
     Elements.browsers.removeEventListener("SizeChanged", this, false);
-    Services.obs.removeObserver(this, "metro_viewstate_changed", false);
     clearTimeout(this._updateThumbnailTimeout);
 
     Elements.tabList.removeTab(this._chromeTab);
@@ -1425,7 +1440,7 @@ Tab.prototype = {
 
     browser.setAttribute("type", "content");
 
-    let useRemote = Services.prefs.getBoolPref("browser.tabs.remote");
+    let useRemote = Services.appinfo.browserTabsRemote;
     let useLocal = Util.isLocalScheme(aURI);
     browser.setAttribute("remote", (!useLocal && useRemote) ? "true" : "false");
 

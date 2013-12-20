@@ -112,6 +112,7 @@ public:
     }
 
 private:
+    void     AssignDefaultStatusText();
     void     ParseVersion(const char *);
     void     ParseCacheControl(const char *);
     void     ParsePragma(const char *);

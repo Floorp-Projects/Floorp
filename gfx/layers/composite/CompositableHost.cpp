@@ -15,6 +15,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "gfxPlatform.h"                // for gfxPlatform
 
 namespace mozilla {
 namespace layers {
@@ -35,74 +36,22 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
 CompositableHost::~CompositableHost()
 {
   MOZ_COUNT_DTOR(CompositableHost);
-
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (!(it->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
-      it->DeallocateSharedData();
-    }
-    it = it->GetNextSibling();
-  }
 }
 
 void
-CompositableHost::AddTextureHost(TextureHost* aTexture)
+CompositableHost::UseTextureHost(TextureHost* aTexture)
 {
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(GetTextureHost(aTexture->GetID()) == nullptr,
-             "A texture is already present with this ID");
-  RefPtr<TextureHost> second = mFirstTexture;
-  mFirstTexture = aTexture;
-  aTexture->SetNextSibling(second);
+  if (!aTexture) {
+    return;
+  }
+  aTexture->SetCompositor(GetCompositor());
   aTexture->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 }
-
-void
-CompositableHost::RemoveTextureHost(uint64_t aTextureID)
-{
-  if (mFirstTexture && mFirstTexture->GetID() == aTextureID) {
-    RefPtr<TextureHost> toRemove = mFirstTexture;
-    mFirstTexture = mFirstTexture->GetNextSibling();
-    toRemove->SetNextSibling(nullptr);
-  }
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetNextSibling() &&
-        it->GetNextSibling()->GetID() == aTextureID) {
-      RefPtr<TextureHost> toRemove = it->GetNextSibling();
-      it->SetNextSibling(it->GetNextSibling()->GetNextSibling());
-      toRemove->SetNextSibling(nullptr);
-    }
-    it = it->GetNextSibling();
-  }
-  if (!mFirstTexture && mBackendData) {
-    mBackendData->ClearData();
-  }
-}
-
-TextureHost*
-CompositableHost::GetTextureHost(uint64_t aTextureID)
-{
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (it) {
-    if (it->GetID() == aTextureID) {
-      return it;
-    }
-    it = it->GetNextSibling();
-  }
-  return nullptr;
-}
-
 
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;
-  RefPtr<TextureHost> it = mFirstTexture;
-  while (!!it) {
-    it->SetCompositor(aCompositor);
-    it = it->GetNextSibling();
-  }
 }
 
 bool
@@ -127,13 +76,11 @@ CompositableHost::AddMaskEffect(EffectChain& aEffects,
 {
   RefPtr<TextureSource> source;
   RefPtr<DeprecatedTextureHost> oldHost = GetDeprecatedTextureHost();
-  if (oldHost) {
-    oldHost->Lock();
+  if (oldHost && oldHost->Lock()) {
     source = oldHost;
   } else {
-    RefPtr<TextureHost> host = GetTextureHost();
-    if (host) {
-      host->Lock();
+    RefPtr<TextureHost> host = GetAsTextureHost();
+    if (host && host->Lock()) {
       source = host->GetTextureSources();
     }
   }
@@ -158,7 +105,7 @@ CompositableHost::RemoveMaskEffect()
   if (oldHost) {
     oldHost->Unlock();
   } else {
-    RefPtr<TextureHost> host = GetTextureHost();
+    RefPtr<TextureHost> host = GetAsTextureHost();
     if (host) {
       host->Unlock();
     }
@@ -173,26 +120,35 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 {
   RefPtr<CompositableHost> result;
   switch (aTextureInfo.mCompositableType) {
-  case COMPOSITABLE_IMAGE:
-    result = new ImageHost(aTextureInfo);
+  case BUFFER_IMAGE_SINGLE:
+    result = new DeprecatedImageHostSingle(aTextureInfo);
     break;
   case BUFFER_IMAGE_BUFFERED:
     result = new DeprecatedImageHostBuffered(aTextureInfo);
     break;
-  case BUFFER_IMAGE_SINGLE:
-    result = new DeprecatedImageHostSingle(aTextureInfo);
+  case BUFFER_BRIDGE:
+    MOZ_CRASH("Cannot create an image bridge compositable this way");
+    break;
+  case BUFFER_CONTENT:
+    result = new DeprecatedContentHostSingleBuffered(aTextureInfo);
+    break;
+  case BUFFER_CONTENT_DIRECT:
+    result = new DeprecatedContentHostDoubleBuffered(aTextureInfo);
+    break;
+  case BUFFER_CONTENT_INC:
+    result = new ContentHostIncremental(aTextureInfo);
     break;
   case BUFFER_TILED:
     result = new TiledContentHost(aTextureInfo);
     break;
-  case BUFFER_CONTENT:
+  case COMPOSITABLE_IMAGE:
+    result = new ImageHost(aTextureInfo);
+    break;
+  case COMPOSITABLE_CONTENT_SINGLE:
     result = new ContentHostSingleBuffered(aTextureInfo);
     break;
-  case BUFFER_CONTENT_DIRECT:
+  case COMPOSITABLE_CONTENT_DOUBLE:
     result = new ContentHostDoubleBuffered(aTextureInfo);
-    break;
-  case BUFFER_CONTENT_INC:
-    result = new ContentHostIncremental(aTextureInfo);
     break;
   default:
     MOZ_CRASH("Unknown CompositableType");
@@ -248,13 +204,6 @@ void
 CompositableParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mHost) {
-    // XXX: sadness warning. We should be able to do this whenever we get ActorDestroy,
-    // not just for abnormal shutdowns (which is the only case we _need_ to - so that
-    // we don't double release our shmems). But, for some reason, that causes a
-    // crash, we don't know why. (Bug 925773).
-    if (why == AbnormalShutdown) {
-      mHost->OnActorDestroy();
-    }
     mHost->Detach(nullptr, CompositableHost::FORCE_DETACH);
   }
 }

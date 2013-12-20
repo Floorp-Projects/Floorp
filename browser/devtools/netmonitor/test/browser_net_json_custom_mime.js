@@ -30,8 +30,11 @@ function test() {
       EventUtils.sendMouseEvent({ type: "mousedown" },
         document.querySelectorAll("#details-pane tab")[3]);
 
-      testResponseTab();
-      teardown(aMonitor).then(finish);
+      let RESPONSE_BODY_DISPLAYED = aMonitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED;
+      waitFor(aMonitor.panelWin, RESPONSE_BODY_DISPLAYED)
+        .then(testResponseTab)
+        .then(() => teardown(aMonitor))
+        .then(finish);
 
       function testResponseTab() {
         let tab = document.querySelectorAll("#details-pane tab")[3];

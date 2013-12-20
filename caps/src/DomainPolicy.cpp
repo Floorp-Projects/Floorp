@@ -8,7 +8,6 @@
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {
-namespace hotness {
 
 NS_IMPL_ISUPPORTS1(DomainPolicy, nsIDomainPolicy)
 
@@ -161,5 +160,4 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains)
 
 }
 
-} /* namespace hotness */
 } /* namespace mozilla */

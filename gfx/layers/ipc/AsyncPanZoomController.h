@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_AsyncPanZoomController_h
 #define mozilla_layers_AsyncPanZoomController_h
 
+#include "CrossProcessMutex.h"
 #include "GeckoContentController.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -22,14 +23,23 @@
 #include "base/message_loop.h"
 
 namespace mozilla {
+
+namespace ipc {
+
+class SharedMemoryBasic;
+
+}
+
 namespace layers {
 
 struct ScrollableLayerGuid;
 class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
+class PCompositorParent;
 class ViewTransform;
 class APZCTreeManager;
+class AsyncPanZoomAnimation;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -104,15 +114,6 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * Updates the composition bounds, i.e. the dimensions of the final size of
-   * the frame this is tied to during composition onto, in device pixels. In
-   * general, this will just be:
-   * { x = 0, y = 0, width = surface.width, height = surface.height }, however
-   * there is no hard requirement for this.
-   */
-  void UpdateCompositionBounds(const ScreenIntRect& aCompositionBounds);
-
-  /**
    * Kicks an animation to zoom to a rect. This may be either a zoom out or zoom
    * in. The actual animation is done on the compositor thread after being set
    * up.
@@ -133,8 +134,16 @@ public:
    * minimum-scale, maximum-scale, and user-scalable.
    */
   void UpdateZoomConstraints(bool aAllowZoom,
-                             const mozilla::CSSToScreenScale& aMinScale,
-                             const mozilla::CSSToScreenScale& aMaxScale);
+                             const CSSToScreenScale& aMinScale,
+                             const CSSToScreenScale& aMaxScale);
+
+  /**
+   * Return the zoom constraints last set for this APZC (in the constructor
+   * or in UpdateZoomConstraints()).
+   */
+  void GetZoomConstraints(bool* aAllowZoom,
+                          CSSToScreenScale* aMinScale,
+                          CSSToScreenScale* aMaxScale);
 
   /**
    * Schedules a runnable to run on the controller/UI thread at some time
@@ -145,6 +154,8 @@ public:
   // --------------------------------------------------------------------------
   // These methods must only be called on the compositor thread.
   //
+
+  bool UpdateAnimation(const TimeStamp& aSampleTime);
 
   /**
    * The compositor calls this when it's about to draw pannable/zoomable content
@@ -177,6 +188,14 @@ public:
    * request composites.
    */
   void SetCompositorParent(CompositorParent* aCompositorParent);
+
+  /**
+   * The platform implementation must set the cross process compositor if
+   * there is one associated with the layer tree. The cross process compositor
+   * allows the APZC to share its FrameMetrics with the content process.
+   * The shared FrameMetrics is used in progressive paint updates.
+   */
+  void SetCrossProcessCompositorParent(PCompositorParent* aCrossProcessCompositorParent);
 
   // --------------------------------------------------------------------------
   // These methods can be called from any thread.
@@ -233,9 +252,14 @@ public:
   nsEventStatus HandleInputEvent(const InputData& aEvent);
 
   /**
-   * Populates the provided object with the scrollable guid of this apzc.
+   * Populates the provided object (if non-null) with the scrollable guid of this apzc.
    */
   void GetGuid(ScrollableLayerGuid* aGuidOut);
+
+  /**
+   * Returns the scrollable guid of this apzc.
+   */
+  ScrollableLayerGuid GetGuid();
 
   /**
    * Returns true if this APZC instance is for the layer identified by the guid.
@@ -249,12 +273,7 @@ public:
    */
   static void SetFrameTime(const TimeStamp& aMilliseconds);
 
-  /**
-   * Update mFrameMetrics.mScrollOffset to the given offset.
-   * This is necessary in cases where a scroll is not caused by user
-   * input (for example, a content scrollTo()).
-   */
-  void UpdateScrollOffset(const CSSPoint& aScrollOffset);
+  void StartAnimation(AsyncPanZoomAnimation* aAnimation);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the
@@ -270,14 +289,22 @@ public:
    * at these points, but this function will scroll as if there had been.
    * If this attempt causes overscroll (i.e. the layer cannot be scrolled
    * by the entire amount requested), the overscroll is passed back to the
-   * tree manager via APZCTreeManager::HandleOverscroll().
+   * tree manager via APZCTreeManager::DispatchScroll().
    * |aOverscrollHandoffChainIndex| is used by the tree manager to keep track
-   * of which APZC to hand off the overscroll to; this function simply
-   * propagates it to APZCTreeManager::HandleOverscroll() in the event of
+   * of which APZC to hand off the overscroll to; this function increments it
+   * and passes it on to APZCTreeManager::DispatchScroll() in the event of
    * overscroll.
    */
   void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
                      uint32_t aOverscrollHandoffChainIndex = 0);
+
+  /**
+   * A helper function for calling APZCTreeManager::DispatchScroll().
+   * Guards against the case where the APZC is being concurrently destroyed
+   * (and thus mTreeManager is being nulled out).
+   */
+  void CallDispatchScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
+                          uint32_t aOverscrollHandoffChainIndex);
 
   /**
    * Returns whether this APZC is for an element marked with the 'scrollgrab'
@@ -329,30 +356,23 @@ protected:
   nsEventStatus OnScaleEnd(const PinchGestureInput& aEvent);
 
   /**
-   * Helper method for long press gestures.
-   *
-   * XXX: Implement this.
+   * Helper methods for long press gestures.
    */
   nsEventStatus OnLongPress(const TapGestureInput& aEvent);
+  nsEventStatus OnLongPressUp(const TapGestureInput& aEvent);
 
   /**
    * Helper method for single tap gestures.
-   *
-   * XXX: Implement this.
    */
   nsEventStatus OnSingleTapUp(const TapGestureInput& aEvent);
 
   /**
    * Helper method for a single tap confirmed.
-   *
-   * XXX: Implement this.
    */
   nsEventStatus OnSingleTapConfirmed(const TapGestureInput& aEvent);
 
   /**
    * Helper method for double taps.
-   *
-   * XXX: Implement this.
    */
   nsEventStatus OnDoubleTap(const TapGestureInput& aEvent);
 
@@ -518,6 +538,14 @@ private:
   void SetState(PanZoomState aState);
 
   /**
+   * Convert ScreenPoint relative to this APZC to CSSIntPoint relative
+   * to the parent document. This excludes the transient compositor transform.
+   * NOTE: This must be converted to CSSIntPoint relative to the child
+   * document before sending over IPC.
+   */
+  bool ConvertToGecko(const ScreenPoint& aPoint, CSSIntPoint* aOut);
+
+  /**
    * Internal helpers for checking general state of this apzc.
    */
   bool IsTransformingState(PanZoomState aState);
@@ -533,6 +561,7 @@ private:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
+  PCompositorParent* mCrossProcessCompositorParent;
   TaskThrottler mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
@@ -570,16 +599,6 @@ private:
   // If we don't do this check, we don't get a ShadowLayersUpdated back.
   FrameMetrics mLastPaintRequestMetrics;
 
-  // Old metrics from before we started a zoom animation. This is only valid
-  // when we are in the "ANIMATED_ZOOM" state. This is used so that we can
-  // interpolate between the start and end frames. We only use the
-  // |mViewportScrollOffset| and |mResolution| fields on this.
-  FrameMetrics mStartZoomToMetrics;
-  // Target metrics for a zoom to animation. This is only valid when we are in
-  // the "ANIMATED_ZOOM" state. We only use the |mViewportScrollOffset| and
-  // |mResolution| fields on this.
-  FrameMetrics mEndZoomToMetrics;
-
   nsTArray<MultiTouchInput> mTouchQueue;
 
   CancelableTask* mTouchListenerTimeoutTask;
@@ -591,18 +610,14 @@ private:
   // values; for example, allowing a min zoom of 0.0 can cause very bad things
   // to happen.
   bool mAllowZoom;
-  mozilla::CSSToScreenScale mMinZoom;
-  mozilla::CSSToScreenScale mMaxZoom;
+  CSSToScreenScale mMinZoom;
+  CSSToScreenScale mMaxZoom;
 
   // The last time the compositor has sampled the content transform for this
   // frame.
   TimeStamp mLastSampleTime;
   // The last time a touch event came through on the UI thread.
   uint32_t mLastEventTime;
-
-  // Start time of an animation. This is used for a zoom to animation to mark
-  // the beginning.
-  TimeStamp mAnimationStartTime;
 
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
@@ -630,6 +645,8 @@ private:
   // queued up event block. If set, this means that we are handling this queue
   // and we don't want to queue the events back up again.
   bool mHandlingTouchQueue;
+
+  RefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
 
@@ -705,6 +722,9 @@ public:
   }
 
 private:
+  /* Unique id assigned to each APZC. Used with ViewID to uniquely identify
+   * shared FrameMeterics used in progressive tile painting. */
+  const uint32_t mAPZCId;
   /* This is the visible region of the layer that this APZC corresponds to, in
    * that layer's screen pixels (the same coordinate system in which this APZC
    * receives events in ReceiveInputEvent()). */
@@ -714,6 +734,43 @@ private:
   gfx3DMatrix mAncestorTransform;
   /* This is the CSS transform for this APZC's layer. */
   gfx3DMatrix mCSSTransform;
+
+  ipc::SharedMemoryBasic* mSharedFrameMetricsBuffer;
+  CrossProcessMutex* mSharedLock;
+  /**
+   * Called when ever mFrameMetrics is updated so that if it is being
+   * shared with the content process the shared FrameMetrics may be updated.
+   */
+  void UpdateSharedCompositorFrameMetrics();
+  /**
+   * Create a shared memory buffer for containing the FrameMetrics and
+   * a CrossProcessMutex that may be shared with the content process
+   * for use in progressive tiled update calculations.
+   */
+  void ShareCompositorFrameMetrics();
+};
+
+class AsyncPanZoomAnimation {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
+
+public:
+  AsyncPanZoomAnimation(const TimeDuration& aRepaintInterval =
+                        TimeDuration::Forever())
+    : mRepaintInterval(aRepaintInterval)
+  { }
+
+  virtual ~AsyncPanZoomAnimation()
+  { }
+
+  virtual bool Sample(FrameMetrics& aFrameMetrics,
+                      const TimeDuration& aDelta) = 0;
+
+  /**
+   * Specifies how frequently (at most) we want to do repaints during the
+   * animation sequence. TimeDuration::Forever() will cause it to only repaint
+   * at the end of the animation.
+   */
+  TimeDuration mRepaintInterval;
 };
 
 }

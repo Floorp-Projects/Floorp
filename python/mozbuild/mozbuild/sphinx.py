@@ -49,7 +49,7 @@ def function_reference(f, attr, args, doc):
     return lines
 
 
-def variable_reference(v, st_type, in_type, default, doc, tier):
+def variable_reference(v, st_type, in_type, doc, tier):
     lines = [
         v,
         '-' * len(v),
@@ -66,7 +66,6 @@ def variable_reference(v, st_type, in_type, default, doc, tier):
     lines.extend([
         ':Storage Type: ``%s``' % st_type.__name__,
         ':Input Type: ``%s``' % in_type.__name__,
-        ':Default Value: %s' % default,
         '',
     ])
 

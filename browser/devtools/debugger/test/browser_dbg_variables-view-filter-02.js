@@ -72,36 +72,36 @@ function testVariablesAndPropertiesFiltering() {
     is(constr2Var.expanded, true,
       "The constr2Var should be expanded.");
 
-    is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 1,
+    is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 1,
       "There should be 1 variable displayed in the local scope.");
-    is(withScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(withScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be 0 variables displayed in the with scope.");
-    is(functionScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(functionScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be 0 variables displayed in the function scope.");
-    is(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
+    is(globalScope.target.querySelectorAll(".variables-view-variable:not([unmatched])").length, 0,
       "There should be no variables displayed in the global scope.");
 
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 4,
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 4,
       "There should be 4 properties displayed in the local scope.");
-    is(withScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(withScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the with scope.");
-    is(functionScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(functionScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the function scope.");
-    is(globalScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
+    is(globalScope.target.querySelectorAll(".variables-view-property:not([unmatched])").length, 0,
       "There should be 0 properties displayed in the global scope.");
 
-    is(localScope.target.querySelectorAll(".variables-view-variable:not([non-match]) > .title > .name")[0].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-variable:not([unmatched]) > .title > .name")[0].getAttribute("value"),
       "__proto__", "The only inner variable displayed should be '__proto__'");
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[0].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched]) > .title > .name")[0].getAttribute("value"),
       "constructor", "The first inner property displayed should be 'constructor'");
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[1].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched]) > .title > .name")[1].getAttribute("value"),
       "__proto__", "The second inner property displayed should be '__proto__'");
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[2].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched]) > .title > .name")[2].getAttribute("value"),
       "constructor", "The third inner property displayed should be 'constructor'");
 
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match]) > .title > .name")[3].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched]) > .title > .name")[3].getAttribute("value"),
       "name", "The fourth inner property displayed should be 'name'");
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match]) > .title > .value")[3].getAttribute("value"),
+    is(localScope.target.querySelectorAll(".variables-view-property:not([unmatched]) > .title > .value")[3].getAttribute("value"),
       "\"Function\"", "The fourth inner property displayed should be '\"Function\"'");
   }
 

@@ -14,8 +14,6 @@
 
 include $(topsrcdir)/config/config.mk
 
-VPATH += $(srcdir)
-
 # Tree to build and analyze, defaulting to the current tree
 TARGET_JSOBJDIR ?= $(MOZ_BUILD_ROOT)
 
@@ -76,6 +74,6 @@ allFunctions.txt: src_body.xdb
 
 rootingHazards.txt: gcFunctions.lst suppressedFunctions.lst gcTypes.txt analyzeRoots.js annotations.js gen-hazards.sh
 	@echo Started computation of $@ at $$(date)
-	time env JS=$(JS) ANALYZE="$(ANALYSIS_SCRIPT_DIR)/analyzeRoots.js" SIXGILL="$(SIXGILL)" "$(ANALYSIS_SCRIPT_DIR)/gen-hazards.sh" $(JOBS) > $@.tmp
+	time env JS=$(JS) ANALYZE='$(ANALYSIS_SCRIPT_DIR)/analyzeRoots.js' SIXGILL='$(SIXGILL)' '$(ANALYSIS_SCRIPT_DIR)/gen-hazards.sh' $(JOBS) > $@.tmp
 	mv $@.tmp $@
 	@echo Finished computation of $@ at $$(date)

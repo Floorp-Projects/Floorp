@@ -8,63 +8,63 @@
 <!ENTITY index.help "Help">
 
 <!ENTITY device.screenshot "Screenshot">
-<!ENTITY device.screenshotTooltip "Open a screenshot of the current state of the device in a new tab.">
+<!ENTITY device.screenshotTooltip "Open a screenshot of the current state of the device in a new tab">
 <!ENTITY device.title "Device Control Center">
 <!ENTITY device.notConnected "Not connected. Please connect your device below.">
 <!ENTITY device.startApp "Start">
-<!ENTITY device.startAppTooltip "Start this app on the device.">
+<!ENTITY device.startAppTooltip "Start this app on the device">
 <!ENTITY device.stopApp "Stop">
-<!ENTITY device.stopAppTooltip "Stop this app on the device.">
+<!ENTITY device.stopAppTooltip "Stop this app on the device">
 <!ENTITY device.debugApp "Debug">
-<!ENTITY device.debugAppTooltip "Open the Developer Tools connected to this app on the device.">
+<!ENTITY device.debugAppTooltip "Open the Developer Tools connected to this app on the device">
 <!ENTITY device.name "Name">
 <!ENTITY device.plain "Plain (default)">
 <!ENTITY device.privileged "Privileged">
 <!ENTITY device.certified "Certified">
 <!ENTITY device.allow "Allow">
-<!ENTITY device.allowTooltip "This permission is allowed for apps of this type.">
+<!ENTITY device.allowTooltip "This permission is allowed for apps of this type">
 <!ENTITY device.prompt "Prompt">
-<!ENTITY device.promptTooltip "This permission requires a user prompt for apps of this type.">
+<!ENTITY device.promptTooltip "This permission requires a user prompt for apps of this type">
 <!ENTITY device.deny "Deny">
-<!ENTITY device.denyTooltip "This permission is denied for apps of this type.">
+<!ENTITY device.denyTooltip "This permission is denied for apps of this type">
 <!ENTITY device.installedApps "Installed Apps">
 <!ENTITY device.installedAppsTooltip "View a list of apps installed on the device. Some apps, such as certified apps, may be excluded from this view.">
 <!ENTITY device.permissions "Permissions">
-<!ENTITY device.permissionsTooltip "View a table of the permissions accessible to the different types of apps.">
+<!ENTITY device.permissionsTooltip "View a table of the permissions accessible to the different types of apps">
 <!ENTITY device.permissionsHelpLink "https://developer.mozilla.org/docs/Web/Apps/App_permissions">
 <!ENTITY device.help "Help">
 
-<!ENTITY connection.connectTooltip "Connect to the device.">
+<!ENTITY connection.connectTooltip "Connect to the device">
 <!ENTITY connection.disconnect "Disconnect">
-<!ENTITY connection.disconnectTooltip "Disconnect from the current device or simulator.">
+<!ENTITY connection.disconnectTooltip "Disconnect from the current device or simulator">
 <!ENTITY connection.notConnected2 "Not Connected.">
 <!ENTITY connection.connectTo "Connect to:">
 <!ENTITY connection.noDeviceFound "No device found. Plug a device">
 <!ENTITY connection.changeHostAndPort "Change">
-<!ENTITY connection.changeHostAndPortTooltip "Change the host and port used to connect to the device. (Defaults to localhost:6000)">
+<!ENTITY connection.changeHostAndPortTooltip "Change the host and port used to connect to the device (defaults to localhost:6000)">
 <!ENTITY connection.startSimulator "Start Simulator">
-<!ENTITY connection.startSimulatorTooltip "Start an instance of the Simulator and connect to it.">
+<!ENTITY connection.startSimulatorTooltip "Start an instance of the Simulator and connect to it">
 <!ENTITY connection.saveConnectionInfo "Save">
-<!ENTITY connection.saveConnectionInfoTooltip "Save the host and port.">
+<!ENTITY connection.saveConnectionInfoTooltip "Save the host and port">
 <!ENTITY connection.connecting "Connecting…">
 <!ENTITY connection.disconnecting "Disconnecting…">
 <!ENTITY connection.cancel "Cancel">
-<!ENTITY connection.cancelConnectTooltip "Cancel the connection in progress.">
-<!ENTITY connection.cancelShowSimulatorTooltip "Exit the Simulator connection mode and return to the initial prompt.">
+<!ENTITY connection.cancelConnectTooltip "Cancel the connection in progress">
+<!ENTITY connection.cancelShowSimulatorTooltip "Exit the Simulator connection mode and return to the initial prompt">
 <!ENTITY connection.or "or">
 <!ENTITY connection.noSimulatorInstalled "No simulator installed.">
 <!ENTITY connection.installOneSimulator "Install Simulator">
-<!ENTITY connection.installOneSimulatorTooltip "Install a version of the Simulator by downloading the relevant add-on.">
+<!ENTITY connection.installOneSimulatorTooltip "Install a version of the Simulator by downloading the relevant add-on">
 <!ENTITY connection.installAnotherSimulator "Add">
-<!ENTITY connection.installAnotherSimulatorTooltip "Install an additional version of the Simulator by downloading the relevant add-on.">
+<!ENTITY connection.installAnotherSimulatorTooltip "Install an additional version of the Simulator by downloading the relevant add-on">
 <!ENTITY connection.startRegisteredSimulator "Start:">
 
 <!ENTITY projects.localApps "Local Apps">
 <!ENTITY projects.addApp "Add">
 <!ENTITY projects.addPackaged "Add Packaged App">
-<!ENTITY projects.addPackagedTooltip "Add a new packaged app (a directory) from your computer.">
+<!ENTITY projects.addPackagedTooltip "Add a new packaged app (a directory) from your computer">
 <!ENTITY projects.addHosted "Add Hosted App">
-<!ENTITY projects.addHostedTooltip "Add a new hosted app (link to a manifest.webapp file) from a remote website.">
+<!ENTITY projects.addHostedTooltip "Add a new hosted app (link to a manifest.webapp file) from a remote website">
 <!ENTITY projects.title "Local Apps">
 <!ENTITY projects.appDetails "App Details">
 <!ENTITY projects.removeAppFromList "Remove this app from the list of apps you are working on. This will not remove it from a device or a simulator.">
@@ -73,13 +73,13 @@
 <!ENTITY projects.debugApp "Debug">
 <!ENTITY projects.debugAppTooltip "Open Developer Tools connected to this app">
 <!ENTITY projects.saveManifest "Save">
-<!ENTITY projects.saveManifestTooltip "Save the contents of the Manifest Editor below.">
+<!ENTITY projects.saveManifestTooltip "Save the contents of the Manifest Editor below">
 <!ENTITY projects.hostedManifestPlaceHolder2 "http://example.com/app/manifest.webapp">
 <!ENTITY projects.noProjects "No projects. Add a new packaged app below (local directory) or a hosted app (link to a manifest file).">
 <!ENTITY projects.manifestEditor "Manifest Editor">
 <!ENTITY projects.manifestEditorTooltip "Edit your app's manifest in the panel below. The Update button will save your changes and update the app.">
 <!ENTITY projects.manifestViewer "Manifest Viewer">
-<!ENTITY projects.manifestViewerTooltip "Examine your app's manifest in the panel below.">
+<!ENTITY projects.manifestViewerTooltip "Examine your app's manifest in the panel below">
 <!ENTITY projects.valid "Valid">
 <!ENTITY projects.error "Error">
 <!ENTITY projects.warning "Warning">

@@ -388,7 +388,15 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
     case FILE_AS_BINARY:
       break; //Already accumulated mResult
     case FILE_AS_TEXT:
-      rv = GetAsText(mCharset, mFileData, mDataLen, mResult);
+      if (!mFileData) {
+        if (mDataLen) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+        rv = GetAsText(file, mCharset, "", mDataLen, mResult);
+        break;
+      }
+      rv = GetAsText(file, mCharset, mFileData, mDataLen, mResult);
       break;
     case FILE_AS_DATAURL:
       rv = GetAsDataURL(file, mFileData, mDataLen, mResult);
@@ -476,28 +484,43 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
 }
 
 nsresult
-nsDOMFileReader::GetAsText(const nsACString &aCharset,
+nsDOMFileReader::GetAsText(nsIDOMBlob *aFile,
+                           const nsACString &aCharset,
                            const char *aFileData,
                            uint32_t aDataLen,
                            nsAString& aResult)
 {
-  nsresult rv;
-  nsAutoCString charsetGuess;
-  if (!aCharset.IsEmpty()) {
-    charsetGuess = aCharset;
-  } else {
-    rv = nsContentUtils::GuessCharset(aFileData, aDataLen, charsetGuess);
-    NS_ENSURE_SUCCESS(rv, rv);
+  // The BOM sniffing is baked into the "decode" part of the Encoding
+  // Standard, which the File API references.
+  nsAutoCString encoding;
+  if (!nsContentUtils::CheckForBOM(
+        reinterpret_cast<const unsigned char *>(aFileData),
+        aDataLen,
+        encoding)) {
+    // BOM sniffing failed. Try the API argument.
+    if (!EncodingUtils::FindEncodingForLabel(aCharset,
+                                             encoding)) {
+      // API argument failed. Try the type property of the blob.
+      nsAutoString type16;
+      aFile->GetType(type16);
+      NS_ConvertUTF16toUTF8 type(type16);
+      nsAutoCString specifiedCharset;
+      bool haveCharset;
+      int32_t charsetStart, charsetEnd;
+      NS_ExtractCharsetFromContentType(type,
+                                       specifiedCharset,
+                                       &haveCharset,
+                                       &charsetStart,
+                                       &charsetEnd);
+      if (!EncodingUtils::FindEncodingForLabel(specifiedCharset, encoding)) {
+        // Type property failed. Use UTF-8.
+        encoding.AssignLiteral("UTF-8");
+      }
+    }
   }
 
-  nsAutoCString charset;
-  if (!EncodingUtils::FindEncodingForLabel(charsetGuess, charset)) {
-    return NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR;
-  }
-
-  rv = ConvertStream(aFileData, aDataLen, charset.get(), aResult);
-
-  return NS_OK;
+  nsDependentCSubstring data(aFileData, aDataLen);
+  return nsContentUtils::ConvertStringFromEncoding(encoding, data, aResult);
 }
 
 nsresult
@@ -525,31 +548,6 @@ nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aFile,
   AppendASCIItoUTF16(encodedData, aResult);
 
   return NS_OK;
-}
-
-nsresult
-nsDOMFileReader::ConvertStream(const char *aFileData,
-                               uint32_t aDataLen,
-                               const char *aCharset,
-                               nsAString &aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder =
-    EncodingUtils::DecoderForEncoding(aCharset);
-
-  int32_t destLength;
-  rv = unicodeDecoder->GetMaxLength(aFileData, aDataLen, &destLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!aResult.SetLength(destLength, fallible_t()))
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  int32_t srcLength = aDataLen;
-  rv = unicodeDecoder->Convert(aFileData, &srcLength, aResult.BeginWriting(), &destLength);
-  aResult.SetLength(destLength); //Trim down to the correct size
-
-  return rv;
 }
 
 /* virtual */ JSObject*

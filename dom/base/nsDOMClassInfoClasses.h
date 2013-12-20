@@ -22,9 +22,6 @@ DOMCI_CLASS(CSSRuleList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
 
-// Range classes
-DOMCI_CLASS(Selection)
-
 // XUL classes
 #ifdef MOZ_XUL
 DOMCI_CLASS(XULCommandDispatcher)
@@ -113,8 +110,6 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 
 DOMCI_CLASS(CSSPageRule)
 
-DOMCI_CLASS(MediaQueryList)
-
 #ifdef MOZ_B2G_RIL
 DOMCI_CLASS(MozIccManager)
 #endif
@@ -130,7 +125,6 @@ DOMCI_CLASS(LockedFile)
 DOMCI_CLASS(CSSFontFeatureValuesRule)
 
 DOMCI_CLASS(UserDataHandler)
-DOMCI_CLASS(LoadStatus)
 DOMCI_CLASS(XPathNamespace)
 DOMCI_CLASS(XULControlElement)
 DOMCI_CLASS(XULLabeledControlElement)

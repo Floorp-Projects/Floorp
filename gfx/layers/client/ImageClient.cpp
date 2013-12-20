@@ -11,7 +11,6 @@
 #include "gfx2DGlue.h"                  // for ImageFormatToSurfaceFormat
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
@@ -101,7 +100,7 @@ void
 ImageClientSingle::FlushAllImages(bool aExceptFront)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureClient(mFrontBuffer);
+    mFrontBuffer->ForceRemove();
     mFrontBuffer = nullptr;
   }
 }
@@ -110,11 +109,11 @@ void
 ImageClientBuffered::FlushAllImages(bool aExceptFront)
 {
   if (!aExceptFront && mFrontBuffer) {
-    RemoveTextureClient(mFrontBuffer);
+    mFrontBuffer->ForceRemove();
     mFrontBuffer = nullptr;
   }
   if (mBackBuffer) {
-    RemoveTextureClient(mBackBuffer);
+    mBackBuffer->ForceRemove();
     mBackBuffer = nullptr;
   }
 }
@@ -145,7 +144,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
     }
     mFrontBuffer = texture;
     if (!AddTextureClient(texture)) {
@@ -162,7 +161,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     }
 
     if (mFrontBuffer && mFrontBuffer->IsImmutable()) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
@@ -205,7 +204,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     gfx::IntSize size = gfx::IntSize(image->GetSize().width, image->GetSize().height);
 
     if (mFrontBuffer) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
@@ -226,7 +225,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     if (mFrontBuffer &&
         (mFrontBuffer->IsImmutable() || mFrontBuffer->GetSize() != size)) {
-      RemoveTextureClient(mFrontBuffer);
+      mFrontBuffer->ForceRemove();
       mFrontBuffer = nullptr;
     }
 
@@ -278,25 +277,6 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
   mFrontBuffer = mBackBuffer;
   mBackBuffer = temp;
   return ImageClientSingle::UpdateImage(aContainer, aContentFlags);
-}
-
-void
-ImageClientSingle::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-}
-
-void
-ImageClientBuffered::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-  if (mBackBuffer) {
-    mBackBuffer->OnActorDestroy();
-  }
 }
 
 bool
@@ -482,14 +462,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {
-}
-
-void
-DeprecatedImageClientSingle::OnActorDestroy()
-{
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 bool

@@ -64,6 +64,7 @@ public:
     static bool IsNetworkLinkUp();
     static bool IsTablet();
     static void KillAnyZombies();
+    static jclass LoadPluginClass(const nsAString& a0, const nsAString& a1);
     static void LockScreenOrientation(int32_t a0);
     static void MarkURIVisited(const nsAString& a0);
     static void MoveTaskToBack();
@@ -84,7 +85,6 @@ public:
     static void SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2);
     static void SetFullScreen(bool a0);
     static void SetKeepScreenOn(bool a0);
-    static void SetSelectedLocale(const nsAString& a0);
     static void SetURITitle(const nsAString& a0, const nsAString& a1);
     static void ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4);
     static void ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1);
@@ -144,6 +144,7 @@ protected:
     static jmethodID jIsNetworkLinkUp;
     static jmethodID jIsTablet;
     static jmethodID jKillAnyZombies;
+    static jmethodID jLoadPluginClass;
     static jmethodID jLockScreenOrientation;
     static jmethodID jMarkURIVisited;
     static jmethodID jMoveTaskToBack;
@@ -164,7 +165,6 @@ protected:
     static jmethodID jSendMessageWrapper;
     static jmethodID jSetFullScreen;
     static jmethodID jSetKeepScreenOn;
-    static jmethodID jSetSelectedLocale;
     static jmethodID jSetURITitle;
     static jmethodID jShowAlertNotificationWrapper;
     static jmethodID jShowFilePickerAsyncWrapper;

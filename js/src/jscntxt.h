@@ -17,8 +17,6 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#pragma warning(push)
-#pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
 
 struct DtoaState;
@@ -34,7 +32,10 @@ js_ReportOverRecursed(js::ThreadSafeContext *cx);
 
 namespace js {
 
-namespace jit { class IonContext; }
+namespace jit {
+class IonContext;
+class CompileCompartment;
+}
 
 struct CallsiteCloneKey {
     /* The original function that we are cloning. */
@@ -51,7 +52,7 @@ struct CallsiteCloneKey {
     typedef CallsiteCloneKey Lookup;
 
     static inline uint32_t hash(CallsiteCloneKey key) {
-        return uint32_t(size_t(key.script->code + key.offset) ^ size_t(key.original));
+        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ size_t(key.original));
     }
 
     static inline bool match(const CallsiteCloneKey &a, const CallsiteCloneKey &b) {
@@ -282,7 +283,8 @@ struct ThreadSafeContext : ContextFriendFields,
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
     bool useHelperThreads() { return runtime_->useHelperThreads(); }
-    size_t helperThreadCount() { return runtime_->helperThreadCount(); }
+    unsigned cpuCount() { return runtime_->cpuCount(); }
+    size_t workerThreadCount() { return runtime_->workerThreadCount(); }
     void *runtimeAddressForJit() { return runtime_; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     size_t gcSystemPageSize() { return runtime_->gcSystemPageSize; }
@@ -388,7 +390,7 @@ class ExclusiveContext : public ThreadSafeContext
         return runtime_->scriptDataTable();
     }
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     // Since JSRuntime::workerThreadState is necessarily initialized from the
     // main thread before the first worker thread can access it, there is no
     // possibility for a race read/writing it.
@@ -424,7 +426,7 @@ struct JSContext : public js::ExclusiveContext,
   private:
     /* Exception state -- the exception member is a GC root by definition. */
     bool                throwing;            /* is there a pending exception? */
-    js::Value           exception;           /* most-recently-thrown exception */
+    js::Value           unwrappedException_; /* most-recently-thrown exception */
 
     /* Per-context options. */
     JS::ContextOptions  options_;
@@ -465,9 +467,6 @@ struct JSContext : public js::ExclusiveContext,
         JS_ASSERT(!options().noDefaultCompartmentObject());
         return defaultCompartmentObject_;
     }
-
-    /* Wrap cx->exception for the current compartment. */
-    void wrapPendingException();
 
     /* State for object and array toSource conversion. */
     js::ObjectSet       cycleDetectorSet;
@@ -581,16 +580,13 @@ struct JSContext : public js::ExclusiveContext,
         return throwing;
     }
 
-    js::Value getPendingException() {
-        JS_ASSERT(throwing);
-        return exception;
-    }
+    bool getPendingException(JS::MutableHandleValue rval);
 
     void setPendingException(js::Value v);
 
     void clearPendingException() {
         throwing = false;
-        exception.setUndefined();
+        unwrappedException_.setUndefined();
     }
 
 #ifdef DEBUG
@@ -785,14 +781,14 @@ ReportUsageError(JSContext *cx, HandleObject callee, const char *msg);
 extern bool
 PrintError(JSContext *cx, FILE *file, const char *message, JSErrorReport *report,
            bool reportWarnings);
-} /* namespace js */
 
 /*
- * Report an exception using a previously composed JSErrorReport.
- * XXXbe remove from "friend" API
+ * Send a JSErrorReport to the errorReporter callback.
  */
-extern JS_FRIEND_API(void)
-js_ReportErrorAgain(JSContext *cx, const char *message, JSErrorReport *report);
+void
+CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+
+} /* namespace js */
 
 extern void
 js_ReportIsNotDefined(JSContext *cx, const char *name);
@@ -872,6 +868,19 @@ class AutoStringVector : public AutoVectorRooter<JSString *>
     explicit AutoStringVector(JSContext *cx
                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : AutoVectorRooter<JSString *>(cx, STRINGVECTOR)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoPropertyNameVector : public AutoVectorRooter<PropertyName *>
+{
+  public:
+    explicit AutoPropertyNameVector(JSContext *cx
+                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoVectorRooter<PropertyName *>(cx, STRINGVECTOR)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -1011,13 +1020,14 @@ bool intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp);
 
 bool intrinsic_ShouldForceSequential(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
 
 class AutoLockForExclusiveAccess
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     JSRuntime *runtime;
 
     void init(JSRuntime *rt) {
@@ -1025,7 +1035,9 @@ class AutoLockForExclusiveAccess
         if (runtime->numExclusiveThreads) {
             runtime->assertCanLock(JSRuntime::ExclusiveAccessLock);
             PR_Lock(runtime->exclusiveAccessLock);
+#ifdef DEBUG
             runtime->exclusiveAccessOwner = PR_GetCurrentThread();
+#endif
         } else {
             JS_ASSERT(!runtime->mainThreadHasExclusiveAccess);
             runtime->mainThreadHasExclusiveAccess = true;
@@ -1044,16 +1056,14 @@ class AutoLockForExclusiveAccess
     ~AutoLockForExclusiveAccess() {
         if (runtime->numExclusiveThreads) {
             JS_ASSERT(runtime->exclusiveAccessOwner == PR_GetCurrentThread());
-#ifdef DEBUG
             runtime->exclusiveAccessOwner = nullptr;
-#endif
             PR_Unlock(runtime->exclusiveAccessLock);
         } else {
             JS_ASSERT(runtime->mainThreadHasExclusiveAccess);
             runtime->mainThreadHasExclusiveAccess = false;
         }
     }
-#else // JS_WORKER_THREADS
+#else // JS_THREADSAFE
   public:
     AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -1065,7 +1075,70 @@ class AutoLockForExclusiveAccess
         // An empty destructor is needed to avoid warnings from clang about
         // unused local variables of this type.
     }
-#endif // JS_WORKER_THREADS
+#endif // JS_THREADSAFE
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoLockForCompilation
+{
+#ifdef JS_THREADSAFE
+    JSRuntime *runtime;
+
+    void init(JSRuntime *rt) {
+        runtime = rt;
+        if (runtime->numCompilationThreads) {
+            runtime->assertCanLock(JSRuntime::CompilationLock);
+            PR_Lock(runtime->compilationLock);
+#ifdef DEBUG
+            runtime->compilationLockOwner = PR_GetCurrentThread();
+#endif
+        } else {
+#ifdef DEBUG
+            JS_ASSERT(!runtime->mainThreadHasCompilationLock);
+            runtime->mainThreadHasCompilationLock = true;
+#endif
+        }
+    }
+
+  public:
+    AutoLockForCompilation(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        if (cx->isJSContext())
+            init(cx->asJSContext()->runtime());
+        else
+            runtime = nullptr;
+    }
+    AutoLockForCompilation(jit::CompileCompartment *compartment MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoLockForCompilation() {
+        if (runtime) {
+            if (runtime->numCompilationThreads) {
+                JS_ASSERT(runtime->compilationLockOwner == PR_GetCurrentThread());
+#ifdef DEBUG
+                runtime->compilationLockOwner = nullptr;
+#endif
+                PR_Unlock(runtime->compilationLock);
+            } else {
+#ifdef DEBUG
+                JS_ASSERT(runtime->mainThreadHasCompilationLock);
+                runtime->mainThreadHasCompilationLock = false;
+#endif
+            }
+        }
+    }
+#else // JS_THREADSAFE
+  public:
+    AutoLockForCompilation(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    AutoLockForCompilation(jit::CompileCompartment *compartment MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoLockForCompilation() {
+        // An empty destructor is needed to avoid warnings from clang about
+        // unused local variables of this type.
+    }
+#endif // JS_THREADSAFE
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -1073,7 +1146,6 @@ class AutoLockForExclusiveAccess
 } /* namespace js */
 
 #ifdef _MSC_VER
-#pragma warning(pop)
 #pragma warning(pop)
 #endif
 

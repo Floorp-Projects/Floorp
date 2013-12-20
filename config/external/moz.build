@@ -27,7 +27,7 @@ if CONFIG['MOZ_OPUS']:
 if CONFIG['MOZ_WEBM']:
     external_dirs += ['media/libnestegg']
 
-if CONFIG['MOZ_VP8'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
+if CONFIG['MOZ_VPX'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
     external_dirs += ['media/libvpx']
 
 if CONFIG['MOZ_OGG']:

@@ -20,9 +20,11 @@
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 namespace sipcc {
 
@@ -245,6 +247,11 @@ PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream, uint32_t *stream
 
   // Adding tracks here based on nsDOMMediaStream expectation settings
   uint32_t hints = stream->GetHintContents();
+#ifdef MOZILLA_INTERNAL_API
+  if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
+    hints &= ~(DOMMediaStream::HINT_CONTENTS_VIDEO);
+  }
+#endif
 
   if (!(hints & (DOMMediaStream::HINT_CONTENTS_AUDIO |
         DOMMediaStream::HINT_CONTENTS_VIDEO))) {
@@ -443,21 +450,6 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
   MOZ_ASSERT(aStream);
 
   CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
-}
-
-// This method exists for the unittests.
-// It allows visibility into the pipelines and flows.
-// It returns nullptr if no pipeline exists for this track number.
-mozilla::RefPtr<mozilla::MediaPipeline>
-SourceStreamInfo::GetPipeline(int aTrack) {
-  std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> >::iterator it =
-    mPipelines.find(aTrack);
-
-  if (it == mPipelines.end()) {
-    return nullptr;
-  }
-
-  return it->second;
 }
 
 void

@@ -50,33 +50,20 @@ anp_system_getApplicationDataDirectory()
   return anp_system_getApplicationDataDirectory(nullptr);
 }
 
-jclass anp_system_loadJavaClass(NPP instance, const char* className)
+jclass anp_system_loadJavaClass(NPP instance, const char* classNameStr)
 {
   LOG("%s", __PRETTY_FUNCTION__);
 
-  JNIEnv* env = GetJNIForThread();
-  if (!env)
-    return nullptr;
-
-  jclass cls = env->FindClass("org/mozilla/gecko/GeckoAppShell");
-  jmethodID method = env->GetStaticMethodID(cls,
-                                            "loadPluginClass",
-                                            "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;");
-
-  // pass libname and classname, gotta create java strings
   nsNPAPIPluginInstance* pinst = static_cast<nsNPAPIPluginInstance*>(instance->ndata);
   mozilla::PluginPRLibrary* lib = static_cast<mozilla::PluginPRLibrary*>(pinst->GetPlugin()->GetLibrary());
 
-  nsCString libName;
-  lib->GetLibraryPath(libName);
+  NS_ConvertUTF8toUTF16 className(classNameStr);
 
-  jstring jclassName = env->NewStringUTF(className);
-  jstring jlibName = env->NewStringUTF(libName.get());
-  jobject obj = env->CallStaticObjectMethod(cls, method, jclassName, jlibName);
-  env->DeleteLocalRef(jlibName);
-  env->DeleteLocalRef(jclassName);
-  env->DeleteLocalRef(cls);
-  return reinterpret_cast<jclass>(obj);
+  nsCString libNameUtf8;
+  lib->GetLibraryPath(libNameUtf8);
+  NS_ConvertUTF8toUTF16 libName(libNameUtf8);
+
+  return GeckoAppShell::LoadPluginClass(className, libName);
 }
 
 void anp_system_setPowerState(NPP instance, ANPPowerState powerState)

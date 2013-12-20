@@ -345,6 +345,26 @@ waitFor(
         # setup DNS fix for networking
         self._run_adb(['shell', 'setprop', 'net.dns1', '10.0.2.3'])
 
+    def wait_for_homescreen(self, marionette):
+        print 'waiting for homescreen...'
+
+        created_session = False
+        if not marionette.session:
+            marionette.start_session()
+            created_session = True
+
+        marionette.set_context(marionette.CONTEXT_CONTENT)
+        marionette.execute_async_script("""
+window.addEventListener('mozbrowserloadend', function loaded(aEvent) {
+  if (aEvent.target.src.indexOf('ftu') != -1 || aEvent.target.src.indexOf('homescreen') != -1) {
+    window.removeEventListener('mozbrowserloadend', loaded);
+    marionetteScriptFinished();
+  }
+});""", script_timeout=60000)
+        print '...done'
+        if created_session:
+            marionette.delete_session()
+
     def setup(self, marionette, gecko_path=None, busybox=None):
         if busybox:
             self.install_busybox(busybox)

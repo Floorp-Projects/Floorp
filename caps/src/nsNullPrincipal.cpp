@@ -9,7 +9,7 @@
  * same-origin with anything but themselves.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsNullPrincipal.h"
 #include "nsNullPrincipalURI.h"
@@ -143,29 +143,6 @@ NS_IMETHODIMP
 nsNullPrincipal::GetHashValue(uint32_t *aResult)
 {
   *aResult = (NS_PTR_TO_INT32(this) >> 2);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
-{
-  // Leftover from old security model, a "security policy" is a set of
-  // rules for property access that can override the SOP. Policies are
-  // associated with origins and since nsNullPinricipals never get the
-  // same origin twice, it's not possible to specify a "security
-  // policy" for it.  Hence, we do not cache the security policy.
-  *aSecurityPolicy = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNullPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
-{
-  // Leftover from old security model, a "security policy" is a set of
-  // rules for property access that can override the SOP. Policies are
-  // associated with origins and since nsNullPinricipals never get the
-  // same origin twice, it's not possible to specify a "security
-  // policy" for it.  Hence, we do not cache the security policy.
   return NS_OK;
 }
 

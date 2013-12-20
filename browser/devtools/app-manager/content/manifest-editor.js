@@ -16,6 +16,7 @@ function ManifestEditor(project) {
   this._onEval = this._onEval.bind(this);
   this._onSwitch = this._onSwitch.bind(this);
   this._onDelete = this._onDelete.bind(this);
+  this._onNew = this._onNew.bind(this);
 }
 
 ManifestEditor.prototype = {
@@ -54,6 +55,7 @@ ManifestEditor.prototype = {
       editor.eval = this._onEval;
       editor.switch = this._onSwitch;
       editor.delete = this._onDelete;
+      editor.new = this._onNew;
     }
 
     return this.update();
@@ -85,6 +87,14 @@ ManifestEditor.prototype = {
     let manifest = this.manifest;
     let evalString = "delete manifest" + variable.symbolicName;
     eval(evalString);
+  },
+
+  _onNew: function(variable, newName, newValue) {
+    let manifest = this.manifest;
+    let symbolicName = variable.symbolicName + "['" + newName + "']";
+    let evalString = "manifest" + symbolicName + " = " + newValue + ";";
+    eval(evalString);
+    this.update();
   },
 
   update: function() {

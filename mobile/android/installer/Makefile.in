@@ -49,11 +49,11 @@ ifdef MOZ_PKG_MANIFEST_P
 $(MOZ_PKG_MANIFEST): $(MOZ_PKG_MANIFEST_P) $(GLOBAL_DEPS)
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $< -o $@)
 ifdef MOZ_CHROME_MULTILOCALE
-	printf "\n[multilocale]\n" >> $@
+	printf '\n[multilocale]\n' >> $@
 	for LOCALE in en-US $(MOZ_CHROME_MULTILOCALE) ;\
 	do \
-	  printf "$(BINPATH)/chrome/$$LOCALE$(JAREXT)\n" >> $@; \
-	  printf "$(BINPATH)/chrome/$$LOCALE.manifest\n" >> $@; \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'$(JAREXT)\n' >> $@; \
+	  printf '$(BINPATH)/chrome/'"$$LOCALE"'.manifest\n' >> $@; \
 	done
 endif
 

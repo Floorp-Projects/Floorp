@@ -8,6 +8,7 @@
 
 #include <windows.h>
 #include <shobjidl.h>
+#undef LogSeverity // SetupAPI.h #defines this as DWORD
 
 #include "nsIJumpListItem.h"  // defines nsIJumpListItem
 #include "nsIMIMEInfo.h" // defines nsILocalHandlerApp

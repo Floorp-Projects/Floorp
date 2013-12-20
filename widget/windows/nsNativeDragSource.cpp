@@ -12,8 +12,6 @@
 #include "nsWidgetsCID.h"
 #include "nsIDragService.h"
 
-static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
-
 /*
  * class nsNativeDragSource
  */
@@ -68,6 +66,8 @@ nsNativeDragSource::Release(void)
 STDMETHODIMP
 nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
+  static NS_DEFINE_IID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
+
   nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
   if (dragService) {
     DWORD pos = ::GetMessagePos();

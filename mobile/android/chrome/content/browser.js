@@ -65,6 +65,11 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
                                    "@mozilla.org/uuid-generator;1",
                                    "nsIUUIDGenerator");
 
+#ifdef NIGHTLY_BUILD
+XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
+                                  "resource://shumway/ShumwayUtils.jsm");
+#endif
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -274,6 +279,7 @@ var BrowserApp = {
 
     Services.androidBridge.browserApp = this;
 
+    Services.obs.addObserver(this, "Locale:Changed", false);
     Services.obs.addObserver(this, "Tab:Load", false);
     Services.obs.addObserver(this, "Tab:Selected", false);
     Services.obs.addObserver(this, "Tab:Closed", false);
@@ -337,9 +343,11 @@ var BrowserApp = {
     DesktopUserAgent.init();
     Distribution.init();
     Tabs.init();
-    UITelemetry.init();
 #ifdef ACCESSIBILITY
     AccessFu.attach(window);
+#endif
+#ifdef NIGHTLY_BUILD
+    ShumwayUtils.init();
 #endif
 
     // Init LoginManager
@@ -408,6 +416,14 @@ var BrowserApp = {
       return savedmstone ? "upgrade" : "new";
     }
     return "";
+  },
+
+  /**
+   * Pass this a locale string, such as "fr" or "es_ES".
+   */
+  setLocale: function (locale) {
+    console.log("browser.js: requesting locale set: " + locale);
+    sendMessageToJava({ type: "Locale:Set", locale: locale });
   },
 
   initContextMenu: function ba_initContextMenu() {
@@ -782,8 +798,6 @@ var BrowserApp = {
 
     let tab = this.getTabForBrowser(aBrowser);
     if (tab) {
-      if (!tab.aboutHomePage) tab.aboutHomePage = ("aboutHomePage" in aParams) ? aParams.aboutHomePage : "";
-      if ("showProgress" in aParams) tab.showProgress = aParams.showProgress;
       if ("userSearch" in aParams) tab.userSearch = aParams.userSearch;
     }
 
@@ -1377,7 +1391,6 @@ var BrowserApp = {
           flags: flags,
           tabID: data.tabID,
           isPrivate: (data.isPrivate === true),
-          aboutHomePage: ("aboutHomePage" in data) ? data.aboutHomePage : "",
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
           desktopMode: (data.desktopMode === true)
@@ -1393,10 +1406,6 @@ var BrowserApp = {
             params.postData = submission.postData;
           }
         }
-
-        // Don't show progress throbber for about:home or about:reader
-        if (!shouldShowProgress(url))
-          params.showProgress = false;
 
         if (data.newTab) {
           this.addTab(url, params);
@@ -1501,6 +1510,13 @@ var BrowserApp = {
         this.notifyPrefObservers(aData);
         break;
 
+      case "Locale:Changed":
+        // TODO: do we need to be more nuanced here -- e.g., checking for the
+        // OS locale -- or should it always be false on Fennec?
+        Services.prefs.setBoolPref("intl.locale.matchOS", false);
+        Services.prefs.setCharPref("general.useragent.locale", aData);
+        break;
+
       default:
         dump('BrowserApp.observe: unexpected topic "' + aTopic + '"\n');
         break;
@@ -1517,6 +1533,10 @@ var BrowserApp = {
   // nsIAndroidBrowserApp
   getBrowserTab: function(tabId) {
     return this.getTabForId(tabId);
+  },
+
+  getUITelemetryObserver: function() {
+    return UITelemetry;
   },
 
   getPreferences: function getPreferences(requestId, prefNames, count) {
@@ -2104,7 +2124,11 @@ var NativeWindow = {
         BrowserEventHandler._cancelTapHighlight();
 
         if (SelectionHandler.canSelect(target)) {
-          if (!SelectionHandler.startSelection(target, aX, aY)) {
+          if (!SelectionHandler.startSelection(target, {
+              mode: SelectionHandler.SELECT_AT_POINT,
+              x: aX,
+              y: aY
+            })) {
             SelectionHandler.attachCaret(target);
           }
         }
@@ -2584,7 +2608,6 @@ function Tab(aURL, aParams) {
   this.browser = null;
   this.id = 0;
   this.lastTouchedAt = Date.now();
-  this.showProgress = true;
   this._zoom = 1.0;
   this._drawZoom = 1.0;
   this._fixedMarginLeft = 0;
@@ -2604,7 +2627,6 @@ function Tab(aURL, aParams) {
   this.clickToPlayPluginsActivated = false;
   this.desktopMode = false;
   this.originalURI = null;
-  this.aboutHomePage = null;
   this.savedArticle = null;
   this.hasTouchListener = false;
   this.browserWidth = 0;
@@ -2661,8 +2683,9 @@ Tab.prototype = {
 
     // When the tab is stubbed from Java, there's a window between the stub
     // creation and the tab creation in Gecko where the stub could be removed
-    // (which is easiest to hit during startup).  We need to differentiate
-    // between tab stubs from Java and new tabs from Gecko to prevent breakage.
+    // or the selected tab can change (which is easiest to hit during startup).
+    // To prevent these races, we need to differentiate between tab stubs from
+    // Java and new tabs from Gecko.
     let stub = false;
 
     if (!aParams.zombifying) {
@@ -2739,9 +2762,6 @@ Tab.prototype = {
       let postData = ("postData" in aParams && aParams.postData) ? aParams.postData.value : null;
       let referrerURI = "referrerURI" in aParams ? aParams.referrerURI : null;
       let charset = "charset" in aParams ? aParams.charset : null;
-
-      // This determines whether or not we show the progress throbber in the urlbar
-      this.showProgress = "showProgress" in aParams ? aParams.showProgress : true;
 
       // The search term the user entered to load the current URL
       this.userSearch = "userSearch" in aParams ? aParams.userSearch : "";
@@ -3112,29 +3132,20 @@ Tab.prototype = {
     let screenWidth = gScreenWidth;
     let screenHeight = gScreenHeight;
 
-    let [pageWidth, pageHeight] = this.getPageSize(this.browser.contentDocument,
-                                                   viewportWidth, viewportHeight);
-
-    // Check if the page would fit into either of the viewport dimensions minus
-    // the margins and shrink the screen size accordingly so that the aspect
-    // ratio calculation below works correctly in these situations.
-    // We take away the margin size over two to account for rounding errors,
-    // as the browser size set in updateViewportSize doesn't allow for any
-    // size between these two values (and thus anything between them is
-    // attributable to rounding error).
-    if ((pageHeight * zoom) < gScreenHeight - (gViewportMargins.top + gViewportMargins.bottom) / 2) {
+    // Shrink the viewport appropriately if the margins are excluded
+    if (this.viewportExcludesVerticalMargins) {
       screenHeight = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
       viewportHeight = screenHeight / zoom;
     }
-    if ((pageWidth * zoom) < gScreenWidth - (gViewportMargins.left + gViewportMargins.right) / 2) {
+    if (this.viewportExcludesHorizontalMargins) {
       screenWidth = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
       viewportWidth = screenWidth / zoom;
     }
 
     // Make sure the aspect ratio of the screen is maintained when setting
     // the clamping scroll-port size.
-    let factor = Math.min(viewportWidth / screenWidth, pageWidth / screenWidth,
-                          viewportHeight / screenHeight, pageHeight / screenHeight);
+    let factor = Math.min(viewportWidth / screenWidth,
+                          viewportHeight / screenHeight);
     let scrollPortWidth = screenWidth * factor;
     let scrollPortHeight = screenHeight * factor;
 
@@ -3357,8 +3368,6 @@ Tab.prototype = {
     switch (aEvent.type) {
       case "DOMContentLoaded": {
         let target = aEvent.originalTarget;
-
-        LoginManagerContent.onContentLoaded(aEvent);
 
         // ignore on frames and other documents
         if (target != this.browser.contentDocument)
@@ -3722,11 +3731,6 @@ Tab.prototype = {
           this.browser.feeds = null;
       }
 
-      // Check to see if we restoring the content from a previous presentation (session)
-      // since there should be no real network activity
-      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
-      let showProgress = restoring ? false : this.showProgress;
-
       // true if the page loaded successfully (i.e., no 404s or other errors)
       let success = false; 
       let uri = "";
@@ -3741,6 +3745,11 @@ Tab.prototype = {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
       } catch (e) { }
 
+      // Check to see if we restoring the content from a previous presentation (session)
+      // since there should be no real network activity
+      let restoring = aStateFlags & Ci.nsIWebProgressListener.STATE_RESTORING;
+      let showProgress = restoring ? false : shouldShowProgress(uri);
+
       let message = {
         type: "Content:StateChange",
         tabID: this.id,
@@ -3750,9 +3759,6 @@ Tab.prototype = {
         success: success
       };
       sendMessageToJava(message);
-
-      // Reset showProgress after state change
-      this.showProgress = true;
     }
   },
 
@@ -3811,7 +3817,6 @@ Tab.prototype = {
       uri: fixedURI.spec,
       userSearch: this.userSearch || "",
       baseDomain: baseDomain,
-      aboutHomePage: this.aboutHomePage || "",
       contentType: (contentType ? contentType : ""),
       sameDocument: sameDocument
     };
@@ -3955,8 +3960,6 @@ Tab.prototype = {
     let screenW = gScreenWidth - gViewportMargins.left - gViewportMargins.right;
     let screenH = gScreenHeight - gViewportMargins.top - gViewportMargins.bottom;
     let viewportW, viewportH;
-    this.viewportExcludesHorizontalMargins = true;
-    this.viewportExcludesVerticalMargins = true;
 
     let metadata = this.metadata;
     if (metadata.autoSize) {
@@ -3990,6 +3993,23 @@ Tab.prototype = {
     let oldBrowserWidth = this.browserWidth;
     this.setBrowserSize(viewportW, viewportH);
 
+    // This change to the zoom accounts for all types of changes I can conceive:
+    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
+    //    or a fixed size viewport)
+    // 2. screen size changes, CSS viewport also does (pages with a device-width
+    //    viewport)
+    // 3. screen size remains constant, but CSS viewport changes (meta viewport
+    //    tag is added or removed)
+    // 4. neither screen size nor CSS viewport changes
+    //
+    // In all of these cases, we maintain how much actual content is visible
+    // within the screen width. Note that "actual content" may be different
+    // with respect to CSS pixels because of the CSS viewport size changing.
+    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
+    let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
+    this.setResolution(zoom, false);
+    this.setScrollClampingSize(zoom);
+
     // if this page has not been painted yet, then this must be getting run
     // because a meta-viewport element was added (via the DOMMetaAdded handler).
     // in this case, we should not do anything that forces a reflow (see bug 759678)
@@ -4002,6 +4022,8 @@ Tab.prototype = {
       return;
     }
 
+    this.viewportExcludesHorizontalMargins = true;
+    this.viewportExcludesVerticalMargins = true;
     let minScale = 1.0;
     if (this.browser.contentDocument) {
       // this may get run during a Viewport:Change message while the document
@@ -4024,29 +4046,20 @@ Tab.prototype = {
     }
     minScale = this.clampZoom(minScale);
     viewportH = Math.max(viewportH, screenH / minScale);
+
+    // In general we want to keep calls to setBrowserSize and setScrollClampingSize
+    // together because setBrowserSize could mark the viewport size as dirty, creating
+    // a pending resize event for content. If that resize gets dispatched (which happens
+    // on the next reflow) without setScrollClampingSize having being called, then
+    // content might be exposed to incorrect innerWidth/innerHeight values.
     this.setBrowserSize(viewportW, viewportH);
+    this.setScrollClampingSize(zoom);
 
     // Avoid having the scroll position jump around after device rotation.
     let win = this.browser.contentWindow;
     this.userScrollPos.x = win.scrollX;
     this.userScrollPos.y = win.scrollY;
 
-    // This change to the zoom accounts for all types of changes I can conceive:
-    // 1. screen size changes, CSS viewport does not (pages with no meta viewport
-    //    or a fixed size viewport)
-    // 2. screen size changes, CSS viewport also does (pages with a device-width
-    //    viewport)
-    // 3. screen size remains constant, but CSS viewport changes (meta viewport
-    //    tag is added or removed)
-    // 4. neither screen size nor CSS viewport changes
-    //
-    // In all of these cases, we maintain how much actual content is visible
-    // within the screen width. Note that "actual content" may be different
-    // with respect to CSS pixels because of the CSS viewport size changing.
-    let zoomScale = (screenW * oldBrowserWidth) / (aOldScreenWidth * viewportW);
-    let zoom = (aInitialLoad && metadata.defaultZoom) ? metadata.defaultZoom : this.clampZoom(this._zoom * zoomScale);
-    this.setResolution(zoom, false);
-    this.setScrollClampingSize(zoom);
     this.sendViewportUpdate();
 
     // Store the page size that was used to calculate the viewport so that we
@@ -4279,7 +4292,9 @@ var BrowserEventHandler = {
     if (closest) {
       let uri = this._getLinkURI(closest);
       if (uri) {
-        Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+        try {
+          Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+        } catch (e) {}
       }
       this._doTapHighlight(closest);
     }
@@ -4389,7 +4404,7 @@ var BrowserEventHandler = {
             }
 
             // Was the element already focused before it was clicked?
-            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser, true));
+            let isFocused = (element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser));
 
             this._sendMouseEvent("mousemove", element, x, y);
             this._sendMouseEvent("mousedown", element, x, y);
@@ -6211,22 +6226,6 @@ var ClipboardHelper = {
     }
   },
 
-  selectWord: function(aElement, aX, aY) {
-    SelectionHandler.startSelection(aElement, aX, aY);
-  },
-
-  selectAll: function(aElement, aX, aY) {
-    SelectionHandler.selectAll(aElement, aX, aY);
-  },
-
-  searchWith: function(aElement) {
-    SelectionHandler.searchSelection(aElement);
-  },
-
-  share: function() {
-    SelectionHandler.shareSelection();
-  },
-
   paste: function(aElement) {
     if (!aElement || !(aElement instanceof Ci.nsIDOMNSEditableElement))
       return;
@@ -6262,15 +6261,6 @@ var ClipboardHelper = {
         }
         return false;
       }
-    }
-  },
-
-  selectWordContext: {
-    matches: function selectWordContextMatches(aElement) {
-      if (NativeWindow.contextmenus.textContext.matches(aElement))
-        return aElement.textLength > 0;
-
-      return false;
     }
   },
 
@@ -6625,18 +6615,38 @@ var SearchEngines = {
 
     let filter = {
       matches: function (aElement) {
-        return (aElement.form && NativeWindow.contextmenus.textContext.matches(aElement));
+        // Copied from body of isTargetAKeywordField function in nsContextMenu.js
+        if(!(aElement instanceof HTMLInputElement))
+          return false;
+        let form = aElement.form;
+        if (!form || aElement.type == "password")
+          return false;
+
+        let method = form.method.toUpperCase();
+
+        // These are the following types of forms we can create keywords for:
+        //
+        // method    encoding type        can create keyword
+        // GET       *                                   YES
+        //           *                                   YES
+        // POST      *                                   YES
+        // POST      application/x-www-form-urlencoded   YES
+        // POST      text/plain                          NO ( a little tricky to do)
+        // POST      multipart/form-data                 NO
+        // POST      everything else                     YES
+        return (method == "GET" || method == "") ||
+               (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
       }
     };
-    SelectionHandler.actions.SEARCH_ADD = {
-      id: "add_search_action",
+    SelectionHandler.addAction({
+      id: "search_add_action",
       label: Strings.browser.GetStringFromName("contextmenu.addSearchEngine"),
       icon: "drawable://ic_url_bar_search",
       selector: filter,
       action: function(aElement) {
         SearchEngines.addEngine(aElement);
       }
-    }
+    });
   },
 
   uninit: function uninit() {
@@ -6703,7 +6713,9 @@ var SearchEngines = {
     let searchURI = Services.search.defaultEngine.getSubmission("dummy").uri;
     let callbacks = window.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsILoadContext);
-    connector.speculativeConnect(searchURI, callbacks);
+    try {
+      connector.speculativeConnect(searchURI, callbacks);
+    } catch (e) {}
   },
 
   _handleSearchEnginesGetAll: function _handleSearchEnginesGetAll(rv) {
@@ -7735,6 +7747,7 @@ let Reader = {
     let browser = document.createElement("browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("collapsed", "true");
+    browser.setAttribute("disablehistory", "true");
 
     document.documentElement.appendChild(browser);
     browser.stop();
@@ -8104,34 +8117,63 @@ var Distribution = {
 };
 
 var Tabs = {
-  // This object provides functions to manage a most-recently-used list
-  // of tabs. Each tab has a timestamp associated with it that indicates when
-  // it was last touched.
-
   _enableTabExpiration: false,
+  _domains: new Set(),
 
   init: function() {
-    // on low-memory platforms, always allow tab expiration. on high-mem
-    // platforms, allow it to be turned on once we hit a low-mem situation
+    // On low-memory platforms, always allow tab expiration. On high-mem
+    // platforms, allow it to be turned on once we hit a low-mem situation.
     if (BrowserApp.isOnLowMemoryPlatform) {
       this._enableTabExpiration = true;
     } else {
       Services.obs.addObserver(this, "memory-pressure", false);
     }
+
+    Services.obs.addObserver(this, "Session:Prefetch", false);
+
+    BrowserApp.deck.addEventListener("pageshow", this, false);
   },
 
   uninit: function() {
     if (!this._enableTabExpiration) {
-      // if _enableTabExpiration is true then we won't have this
+      // If _enableTabExpiration is true then we won't have this
       // observer registered any more.
       Services.obs.removeObserver(this, "memory-pressure");
     }
+
+    Services.obs.removeObserver(this, "Session:Prefetch");
+
+    BrowserApp.deck.removeEventListener("pageshow", this);
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "memory-pressure" && aData != "heap-minimize") {
-      this._enableTabExpiration = true;
-      Services.obs.removeObserver(this, "memory-pressure");
+    switch (aTopic) {
+      case "memory-pressure":
+        if (aData != "heap-minimize") {
+          this._enableTabExpiration = true;
+          Services.obs.removeObserver(this, "memory-pressure");
+        }
+        break;
+      case "Session:Prefetch":
+        if (aData) {
+          let uri = Services.io.newURI(aData, null, null);
+          if (uri && !this._domains.has(uri.host)) {
+            try {
+              Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
+              this._domains.add(uri.host);
+            } catch (e) {}
+          }
+        }
+        break;
+    }
+  },
+
+  handleEvent: function(aEvent) {
+    switch (aEvent.type) {
+      case "pageshow":
+        // Clear the domain cache whenever a page get loaded into any browser.
+        this._domains.clear();
+        break;
     }
   },
 
@@ -8139,30 +8181,32 @@ var Tabs = {
     aTab.lastTouchedAt = Date.now();
   },
 
+  // Manage the most-recently-used list of tabs. Each tab has a timestamp
+  // associated with it that indicates when it was last touched.
   expireLruTab: function() {
     if (!this._enableTabExpiration) {
       return false;
     }
     let expireTimeMs = Services.prefs.getIntPref("browser.tabs.expireTime") * 1000;
     if (expireTimeMs < 0) {
-      // this behaviour is disabled
+      // This behaviour is disabled.
       return false;
     }
     let tabs = BrowserApp.tabs;
     let selected = BrowserApp.selectedTab;
     let lruTab = null;
-    // find the least recently used non-zombie tab
+    // Find the least recently used non-zombie tab.
     for (let i = 0; i < tabs.length; i++) {
       if (tabs[i] == selected || tabs[i].browser.__SS_restore) {
-        // this tab is selected or already a zombie, skip it
+        // This tab is selected or already a zombie, skip it.
         continue;
       }
       if (lruTab == null || tabs[i].lastTouchedAt < lruTab.lastTouchedAt) {
         lruTab = tabs[i];
       }
     }
-    // if the tab was last touched more than browser.tabs.expireTime seconds ago,
-    // zombify it
+    // If the tab was last touched more than browser.tabs.expireTime seconds ago,
+    // zombify it.
     if (lruTab) {
       let tabAgeMs = Date.now() - lruTab.lastTouchedAt;
       if (tabAgeMs > expireTimeMs) {
@@ -8174,7 +8218,7 @@ var Tabs = {
     return false;
   },
 
-  // for debugging
+  // For debugging
   dump: function(aPrefix) {
     let tabs = BrowserApp.tabs;
     for (let i = 0; i < tabs.length; i++) {

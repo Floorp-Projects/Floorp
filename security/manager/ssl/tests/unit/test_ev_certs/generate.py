@@ -31,9 +31,9 @@ subject_key_ident = "subjectKeyIdentifier = hash\n"
 aia_prefix = "authorityInfoAccess = OCSP;URI:http://www.example.com:8888/"
 aia_suffix ="/\n"
 intermediate_crl = ("crlDistributionPoints = " +
-                    "URI:http://crl.example.com/root-ev.crl\n")
+                    "URI:http://crl.example.com:8888/root-ev.crl\n")
 endentity_crl = ("crlDistributionPoints = " +
-                 "URI:http://crl.example.com/ee-crl.crl\n")
+                 "URI:http://crl.example.com:8888/ee-crl.crl\n")
 
 mozilla_testing_ev_policy = ("certificatePolicies = @v3_ca_ev_cp\n\n" +
                              "[ v3_ca_ev_cp ]\n" +
@@ -93,6 +93,22 @@ def generate_certs():
                                          "int-" + prefix)
     import_cert_and_pkcs12(int_cert, pk12file, "int-" + prefix, ",,")
     import_untrusted_cert(ee_cert, prefix)
+
+    # now we generate an end entity cert with an AIA with no OCSP URL
+    no_ocsp_url_ext_aia = ("authorityInfoAccess =" +
+                           "caIssuers;URI:http://www.example.com/ca.html\n");
+    [no_ocsp_key, no_ocsp_cert] =  CertUtils.generate_cert_generic(db,
+                                      srcdir,
+                                      random.randint(100, 40000000),
+                                      key_type,
+                                      'no-ocsp-url-cert',
+                                      EE_basic_constraints + EE_full_ku +
+                                      Server_eku + authority_key_ident +
+                                      no_ocsp_url_ext_aia + endentity_crl +
+                                      mozilla_testing_ev_policy,
+                                      int_key, int_cert);
+    import_untrusted_cert(no_ocsp_cert, 'no-ocsp-url-cert');
+
     [bad_ca_key, bad_ca_cert] = CertUtils.generate_cert_generic( db,
                                       srcdir,
                                       1,

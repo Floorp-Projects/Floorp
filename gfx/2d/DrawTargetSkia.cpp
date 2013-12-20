@@ -132,23 +132,20 @@ DrawTargetSkia::SetGlobalCacheLimits(int aCount, int aSizeInBytes)
 }
 
 void
-DrawTargetSkia::PurgeCache()
+DrawTargetSkia::PurgeCaches()
 {
   if (mGrContext) {
-    mGrContext->purgeCache();
+    mGrContext->freeGpuResources();
   }
 }
 
 /* static */ void
-DrawTargetSkia::PurgeTextureCaches()
+DrawTargetSkia::PurgeAllCaches()
 {
   std::vector<DrawTargetSkia*>& targets = GLDrawTargets();
   uint32_t targetCount = targets.size();
-  if (targetCount == 0)
-    return;
-
   for (uint32_t i = 0; i < targetCount; i++) {
-    targets[i]->PurgeCache();
+    targets[i]->PurgeCaches();
   }
 }
 
@@ -355,6 +352,10 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
+  if (!(aSurface->GetType() == SURFACE_SKIA || aSurface->GetType() == SURFACE_DATA)) {
+    return;
+  }
+
   if (aSource.IsEmpty()) {
     return;
   }

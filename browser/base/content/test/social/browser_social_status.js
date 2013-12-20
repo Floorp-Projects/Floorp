@@ -40,16 +40,14 @@ function openWindowAndWaitForInit(callback) {
 function test() {
   waitForExplicitFinish();
 
-  Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-  runSocialTestWithProvider(manifest, function () {
+  runSocialTestWithProvider(manifest, function (finishcb) {
     runSocialTests(tests, undefined, undefined, function () {
       Services.prefs.clearUserPref("social.remote-install.enabled");
       // just in case the tests failed, clear these here as well
-      Services.prefs.clearUserPref("social.allowMultipleWorkers");
       Services.prefs.clearUserPref("social.whitelist");
       ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
       CustomizableUI.reset();
-      finish();
+      finishcb();
     });
   });
 }
@@ -140,7 +138,7 @@ var tests = {
             port.close();
             waitForCondition(function() { return btn.getAttribute("badge"); },
                        function() {
-                         is(btn.getAttribute("image"), icon.iconURL, "notification icon updated");
+                         is(btn.style.listStyleImage, "url(\"" + icon.iconURL + "\")", "notification icon updated");
                          next();
                        }, "button updated by notification");
           }

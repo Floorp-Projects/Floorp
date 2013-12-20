@@ -353,6 +353,24 @@ nsTableCellFrame::PaintCellBackground(nsRenderingContext& aRenderingContext,
   PaintBackground(aRenderingContext, aDirtyRect, aPt, aFlags);
 }
 
+nsresult
+nsTableCellFrame::ProcessBorders(nsTableFrame* aFrame,
+                                 nsDisplayListBuilder* aBuilder,
+                                 const nsDisplayListSet& aLists)
+{
+  const nsStyleBorder* borderStyle = StyleBorder();
+  if (aFrame->IsBorderCollapse() || !borderStyle->HasBorder())
+    return NS_OK;
+
+  if (!GetContentEmpty() ||
+      StyleTableBorder()->mEmptyCells == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
+    aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
+                                              nsDisplayBorder(aBuilder, this));
+  }
+
+  return NS_OK;
+}
+
 class nsDisplayTableCellBackground : public nsDisplayTableItem {
 public:
   nsDisplayTableCellBackground(nsDisplayListBuilder* aBuilder,
@@ -486,11 +504,7 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       }
     
       // display borders if we need to
-      if (!tableFrame->IsBorderCollapse() && borderStyle->HasBorder() &&
-          emptyCellStyle == NS_STYLE_TABLE_EMPTY_CELLS_SHOW) {
-        aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-          nsDisplayBorder(aBuilder, this));
-      }
+      ProcessBorders(tableFrame, aBuilder, aLists);
     
       // and display the selection border if we need to
       if (IsSelected()) {

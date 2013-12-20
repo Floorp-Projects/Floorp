@@ -557,6 +557,23 @@ DebuggerClient.prototype = {
   },
 
   /**
+   * Reconfigure a tab actor.
+   *
+   * @param object aOptions
+   *        A dictionary object of the new options to use in the tab actor.
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  reconfigureTab: function(aOptions, aOnResponse) {
+    let packet = {
+      to: this.activeTab._actor,
+      type: "reconfigure",
+      options: aOptions
+    };
+    this.request(packet, aOnResponse);
+  },
+
+  /**
    * Release an object actor.
    *
    * @param string aActor

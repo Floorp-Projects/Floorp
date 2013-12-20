@@ -19,19 +19,20 @@
 #include "tokenize.h"
 #include "vp8/common/onyxc_int.h"
 #include "vp8/common/variance.h"
-#include "dct.h"
 #include "encodemb.h"
 #include "quantize.h"
 #include "vp8/common/entropy.h"
 #include "vp8/common/threading.h"
 #include "vpx_ports/mem.h"
 #include "vpx/internal/vpx_codec_internal.h"
+#include "vpx/vp8.h"
 #include "mcomp.h"
-#include "temporal_filter.h"
 #include "vp8/common/findnearmv.h"
 #include "lookahead.h"
+#if CONFIG_TEMPORAL_DENOISING
+#include "vp8/encoder/denoising.h"
+#endif
 
-//#define SPEEDSTATS 1
 #define MIN_GF_INTERVAL             4
 #define DEFAULT_GF_INTERVAL         7
 
@@ -42,7 +43,7 @@
 #define AF_THRESH   25
 #define AF_THRESH2  100
 #define ARF_DECAY_THRESH 12
-#define MAX_MODES 20
+
 
 #define MIN_THRESHMULT  32
 #define MAX_THRESHMULT  512
@@ -55,8 +56,6 @@
 #if !(CONFIG_REALTIME_ONLY)
 #define VP8_TEMPORAL_ALT_REF 1
 #endif
-
-#define MAX_PERIODICITY 16
 
 #define MAX(x,y) (((x)>(y))?(x):(y))
 #define MIN(x,y) (((x)<(y))?(x):(y))
@@ -74,7 +73,6 @@ typedef struct
     int mvcosts[2][MVvals+1];
 
 #ifdef MODE_STATS
-    // Stats
     int y_modes[5];
     int uv_modes[4];
     int b_modes[10];
@@ -221,17 +219,6 @@ typedef struct
     void *ptr1;
 } LPFTHREAD_DATA;
 
-
-typedef struct VP8_ENCODER_RTCD
-{
-    VP8_COMMON_RTCD            *common;
-    vp8_fdct_rtcd_vtable_t      fdct;
-    vp8_encodemb_rtcd_vtable_t  encodemb;
-    vp8_quantize_rtcd_vtable_t  quantize;
-    vp8_search_rtcd_vtable_t    search;
-    vp8_temporal_rtcd_vtable_t  temporal;
-} VP8_ENCODER_RTCD;
-
 enum
 {
     BLOCK_16X8,
@@ -244,22 +231,22 @@ enum
 
 typedef struct
 {
-    // Layer configuration
-    double frame_rate;
+    /* Layer configuration */
+    double framerate;
     int target_bandwidth;
 
-    // Layer specific coding parameters
-    int starting_buffer_level;
-    int optimal_buffer_level;
-    int maximum_buffer_size;
-    int starting_buffer_level_in_ms;
-    int optimal_buffer_level_in_ms;
-    int maximum_buffer_size_in_ms;
+    /* Layer specific coding parameters */
+    int64_t starting_buffer_level;
+    int64_t optimal_buffer_level;
+    int64_t maximum_buffer_size;
+    int64_t starting_buffer_level_in_ms;
+    int64_t optimal_buffer_level_in_ms;
+    int64_t maximum_buffer_size_in_ms;
 
     int avg_frame_size_for_layer;
 
-    int buffer_level;
-    int bits_off_target;
+    int64_t buffer_level;
+    int64_t bits_off_target;
 
     int64_t total_actual_bits;
     int total_target_vs_actual;
@@ -295,17 +282,17 @@ typedef struct VP8_COMP
 {
 
     DECLARE_ALIGNED(16, short, Y1quant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, Y1quant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, Y1quant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y1zbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y1round[QINDEX_RANGE][16]);
 
     DECLARE_ALIGNED(16, short, Y2quant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, Y2quant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, Y2quant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y2zbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, Y2round[QINDEX_RANGE][16]);
 
     DECLARE_ALIGNED(16, short, UVquant[QINDEX_RANGE][16]);
-    DECLARE_ALIGNED(16, unsigned char, UVquant_shift[QINDEX_RANGE][16]);
+    DECLARE_ALIGNED(16, short, UVquant_shift[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, UVzbin[QINDEX_RANGE][16]);
     DECLARE_ALIGNED(16, short, UVround[QINDEX_RANGE][16]);
 
@@ -319,28 +306,35 @@ typedef struct VP8_COMP
 
     MACROBLOCK mb;
     VP8_COMMON common;
-    vp8_writer bc[9]; // one boolcoder for each partition
+    vp8_writer bc[9]; /* one boolcoder for each partition */
 
     VP8_CONFIG oxcf;
 
     struct lookahead_ctx    *lookahead;
     struct lookahead_entry  *source;
     struct lookahead_entry  *alt_ref_source;
+    struct lookahead_entry  *last_source;
 
     YV12_BUFFER_CONFIG *Source;
     YV12_BUFFER_CONFIG *un_scaled_source;
     YV12_BUFFER_CONFIG scaled_source;
+    YV12_BUFFER_CONFIG *last_frame_unscaled_source;
 
-    int source_alt_ref_pending; // frame in src_buffers has been identified to be encoded as an alt ref
-    int source_alt_ref_active;  // an alt ref frame has been encoded and is usable
+    unsigned int frames_till_alt_ref_frame;
+    /* frame in src_buffers has been identified to be encoded as an alt ref */
+    int source_alt_ref_pending;
+    /* an alt ref frame has been encoded and is usable */
+    int source_alt_ref_active;
+    /* source of frame to encode is an exact copy of an alt ref frame */
+    int is_src_frame_alt_ref;
 
-    int is_src_frame_alt_ref;   // source of frame to encode is an exact copy of an alt ref frame
+    /* golden frame same as last frame ( short circuit gold searches) */
+    int gold_is_last;
+    /* Alt reference frame same as last ( short circuit altref search) */
+    int alt_is_last;
+    /* don't do both alt and gold search ( just do gold). */
+    int gold_is_alt;
 
-    int gold_is_last; // golden frame same as last frame ( short circuit gold searches)
-    int alt_is_last;  // Alt reference frame same as last ( short circuit altref search)
-    int gold_is_alt;  // don't do both alt and gold search ( just do gold).
-
-    //int refresh_alt_ref_frame;
     YV12_BUFFER_CONFIG pick_lf_lvl_frame;
 
     TOKENEXTRA *tok;
@@ -352,57 +346,64 @@ typedef struct VP8_COMP
     unsigned int this_key_frame_forced;
     unsigned int next_key_frame_forced;
 
-    // Ambient reconstruction err target for force key frames
+    /* Ambient reconstruction err target for force key frames */
     int ambient_err;
 
     unsigned int mode_check_freq[MAX_MODES];
-    unsigned int mode_test_hit_counts[MAX_MODES];
-    unsigned int mode_chosen_counts[MAX_MODES];
-    unsigned int mbs_tested_so_far;
 
-    int rd_thresh_mult[MAX_MODES];
     int rd_baseline_thresh[MAX_MODES];
-    int rd_threshes[MAX_MODES];
 
     int RDMULT;
     int RDDIV ;
 
     CODING_CONTEXT coding_context;
 
-    // Rate targetting variables
-    int64_t prediction_error;
+    /* Rate targetting variables */
     int64_t last_prediction_error;
-    int64_t intra_error;
     int64_t last_intra_error;
 
     int this_frame_target;
     int projected_frame_size;
-    int last_q[2];                   // Separate values for Intra/Inter
+    int last_q[2];                   /* Separate values for Intra/Inter */
 
     double rate_correction_factor;
     double key_frame_rate_correction_factor;
     double gf_rate_correction_factor;
 
-    int frames_till_gf_update_due;      // Count down till next GF
-    int current_gf_interval;          // GF interval chosen when we coded the last GF
+    unsigned int frames_since_golden;
+    /* Count down till next GF */
+    int frames_till_gf_update_due;
 
-    int gf_overspend_bits;            // Total bits overspent becasue of GF boost (cumulative)
+    /* GF interval chosen when we coded the last GF */
+    int current_gf_interval;
 
-    int non_gf_bitrate_adjustment;     // Used in the few frames following a GF to recover the extra bits spent in that GF
+    /* Total bits overspent becasue of GF boost (cumulative) */
+    int gf_overspend_bits;
 
-    int kf_overspend_bits;            // Extra bits spent on key frames that need to be recovered on inter frames
-    int kf_bitrate_adjustment;        // Current number of bit s to try and recover on each inter frame.
+    /* Used in the few frames following a GF to recover the extra bits
+     * spent in that GF
+     */
+    int non_gf_bitrate_adjustment;
+
+    /* Extra bits spent on key frames that need to be recovered */
+    int kf_overspend_bits;
+
+    /* Current number of bit s to try and recover on each inter frame. */
+    int kf_bitrate_adjustment;
     int max_gf_interval;
     int baseline_gf_interval;
-    int active_arnr_frames;           // <= cpi->oxcf.arnr_max_frames
+    int active_arnr_frames;
 
     int64_t key_frame_count;
     int prior_key_frame_distance[KEY_FRAME_CONTEXT];
-    int per_frame_bandwidth;          // Current section per frame bandwidth target
-    int av_per_frame_bandwidth;        // Average frame size target for clip
-    int min_frame_bandwidth;          // Minimum allocation that should be used for any frame
+    /* Current section per frame bandwidth target */
+    int per_frame_bandwidth;
+    /* Average frame size target for clip */
+    int av_per_frame_bandwidth;
+    /* Minimum allocation that should be used for any frame */
+    int min_frame_bandwidth;
     int inter_frame_target;
-    double output_frame_rate;
+    double output_framerate;
     int64_t last_time_stamp_seen;
     int64_t last_end_time_stamp_seen;
     int64_t first_time_stamp_ever;
@@ -412,20 +413,14 @@ typedef struct VP8_COMP
     int ni_frames;
     int avg_frame_qindex;
 
-    int zbin_over_quant;
-    int zbin_mode_boost;
-    int zbin_mode_boost_enabled;
-    int last_zbin_over_quant;
-    int last_zbin_mode_boost;
-
     int64_t total_byte_count;
 
     int buffered_mode;
 
-    double frame_rate;
-    double ref_frame_rate;
+    double framerate;
+    double ref_framerate;
     int64_t buffer_level;
-    int bits_off_target;
+    int64_t bits_off_target;
 
     int rolling_target_bits;
     int rolling_actual_bits;
@@ -434,7 +429,7 @@ typedef struct VP8_COMP
     int long_rolling_actual_bits;
 
     int64_t total_actual_bits;
-    int total_target_vs_actual;        // debug stats
+    int total_target_vs_actual; /* debug stats */
 
     int worst_quality;
     int active_worst_quality;
@@ -443,22 +438,12 @@ typedef struct VP8_COMP
 
     int cq_target_quality;
 
-    int drop_frames_allowed;          // Are we permitted to drop frames?
-    int drop_frame;                  // Drop this frame?
-    int drop_count;                  // How many frames have we dropped?
-    int max_drop_count;               // How many frames should we drop?
-    int max_consec_dropped_frames;     // Limit number of consecutive frames that can be dropped.
+    int drop_frames_allowed; /* Are we permitted to drop frames? */
+    int drop_frame;          /* Drop this frame? */
 
-
-    int ymode_count [VP8_YMODES];        /* intra MB type cts this frame */
-    int uv_mode_count[VP8_UV_MODES];       /* intra MB type cts this frame */
-
-    unsigned int MVcount [2] [MVvals];  /* (row,col) MV cts this frame */
-
-    unsigned int coef_counts [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [MAX_ENTROPY_TOKENS];  /* for this frame */
-    //DECLARE_ALIGNED(16, int, coef_counts_backup [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [MAX_ENTROPY_TOKENS]);   //not used any more
-    //save vp8_tree_probs_from_distribution result for each frame to avoid repeat calculation
     vp8_prob frame_coef_probs [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [ENTROPY_NODES];
+    char update_probs [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [ENTROPY_NODES];
+
     unsigned int frame_branch_ct [BLOCK_TYPES] [COEF_BANDS] [PREV_COEF_CONTEXTS] [ENTROPY_NODES][2];
 
     int gfu_boost;
@@ -469,7 +454,7 @@ typedef struct VP8_COMP
     struct vpx_codec_pkt_list  *output_pkt_list;
 
 #if 0
-    // Experimental code for lagged and one pass
+    /* Experimental code for lagged and one pass */
     ONEPASS_FRAMESTATS one_pass_frame_stats[MAX_LAG_BUFFERS];
     int one_pass_frame_index;
 #endif
@@ -477,21 +462,16 @@ typedef struct VP8_COMP
     int decimation_factor;
     int decimation_count;
 
-    // for real time encoding
-    int avg_encode_time;              //microsecond
-    int avg_pick_mode_time;            //microsecond
+    /* for real time encoding */
+    int avg_encode_time;     /* microsecond */
+    int avg_pick_mode_time;  /* microsecond */
     int Speed;
-    unsigned int cpu_freq;           //Mhz
     int compressor_speed;
 
-    int interquantizer;
     int auto_gold;
     int auto_adjust_gold_quantizer;
-    int goldfreq;
     int auto_worst_q;
     int cpu_used;
-    int horiz_scale;
-    int vert_scale;
     int pass;
 
 
@@ -503,42 +483,45 @@ typedef struct VP8_COMP
     int last_skip_probs_q[3];
     int recent_ref_frame_usage[MAX_REF_FRAMES];
 
-    int count_mb_ref_frame_usage[MAX_REF_FRAMES];
     int this_frame_percent_intra;
     int last_frame_percent_intra;
 
     int ref_frame_flags;
 
     SPEED_FEATURES sf;
-    int error_bins[1024];
 
-    // Data used for real time conferencing mode to help determine if it would be good to update the gf
-    int inter_zz_count;
-    int gf_bad_count;
-    int gf_update_recommended;
-    int skip_true_count;
-    int skip_false_count;
+    /* Count ZEROMV on all reference frames. */
+    int zeromv_count;
+    int lf_zeromv_pct;
 
     unsigned char *segmentation_map;
-    signed char segment_feature_data[MB_LVL_MAX][MAX_MB_SEGMENTS];            // Segment data (can be deltas or absolute values)
-    int  segment_encode_breakout[MAX_MB_SEGMENTS];                    // segment threashold for encode breakout
+    signed char segment_feature_data[MB_LVL_MAX][MAX_MB_SEGMENTS];
+    int  segment_encode_breakout[MAX_MB_SEGMENTS];
 
     unsigned char *active_map;
     unsigned int active_map_enabled;
-    // Video conferencing cyclic refresh mode flags etc
-    // This is a mode designed to clean up the background over time in live encoding scenarious. It uses segmentation
+
+    /* Video conferencing cyclic refresh mode flags. This is a mode
+     * designed to clean up the background over time in live encoding
+     * scenarious. It uses segmentation.
+     */
     int cyclic_refresh_mode_enabled;
     int cyclic_refresh_mode_max_mbs_perframe;
     int cyclic_refresh_mode_index;
     int cyclic_refresh_q;
     signed char *cyclic_refresh_map;
 
+    // Frame counter for the temporal pattern. Counter is rest when the temporal
+    // layers are changed dynamically (run-time change).
+    unsigned int temporal_pattern_counter;
+
 #if CONFIG_MULTITHREAD
-    // multithread data
+    /* multithread data */
     int * mt_current_mb_col;
     int mt_sync_range;
     int b_multi_threaded;
     int encoding_thread_count;
+    int b_lpf_running;
 
     pthread_t *h_encoding_thread;
     pthread_t h_filter_thread;
@@ -547,7 +530,7 @@ typedef struct VP8_COMP
     ENCODETHREAD_DATA *en_thread_data;
     LPFTHREAD_DATA lpf_thread_data;
 
-    //events
+    /* events */
     sem_t *h_event_start_encoding;
     sem_t h_event_end_encoding;
     sem_t h_event_start_lpf;
@@ -556,7 +539,8 @@ typedef struct VP8_COMP
 
     TOKENLIST *tplist;
     unsigned int partition_sz[MAX_PARTITIONS];
-    // end of multithread data
+    unsigned char *partition_d[MAX_PARTITIONS];
+    unsigned char *partition_d_end[MAX_PARTITIONS];
 
 
     fractional_mv_step_fp *find_fractional_mv_step;
@@ -564,10 +548,10 @@ typedef struct VP8_COMP
     vp8_refining_search_fn_t refining_search_sad;
     vp8_diamond_search_fn_t diamond_search_sad;
     vp8_variance_fn_ptr_t fn_ptr[BLOCK_MAX_SEGMENTS];
-    unsigned int time_receive_data;
-    unsigned int time_compress_data;
-    unsigned int time_pick_lpf;
-    unsigned int time_encode_mb_row;
+    uint64_t time_receive_data;
+    uint64_t time_compress_data;
+    uint64_t time_pick_lpf;
+    uint64_t time_encode_mb_row;
 
     int base_skip_false_prob[128];
 
@@ -601,23 +585,20 @@ typedef struct VP8_COMP
         int gf_decay_rate;
         int static_scene_max_gf_interval;
         int kf_bits;
-        int gf_group_error_left;           // Remaining error from uncoded frames in a gf group. Two pass use only
-
-        // Projected total bits available for a key frame group of frames
+        /* Remaining error from uncoded frames in a gf group. */
+        int gf_group_error_left;
+        /* Projected total bits available for a key frame group of frames */
         int64_t kf_group_bits;
-
-        // Error score of frames still to be coded in kf group
+        /* Error score of frames still to be coded in kf group */
         int64_t kf_group_error_left;
-
-        int gf_group_bits;                // Projected Bits available for a group of frames including 1 GF or ARF
-        int gf_bits;                     // Bits for the golden frame or ARF - 2 pass only
+        /* Projected Bits available for a group including 1 GF or ARF */
+        int64_t gf_group_bits;
+        /* Bits for the golden frame or ARF */
+        int gf_bits;
         int alt_extra_bits;
         double est_max_qcorrection_factor;
     } twopass;
 
-#if CONFIG_RUNTIME_CPU_DETECT
-    VP8_ENCODER_RTCD            rtcd;
-#endif
 #if VP8_TEMPORAL_ALT_REF
     YV12_BUFFER_CONFIG alt_ref_buffer;
     YV12_BUFFER_CONFIG *frames[MAX_LAG_BUFFERS];
@@ -651,63 +632,76 @@ typedef struct VP8_COMP
 #endif
     int b_calculate_psnr;
 
-    // Per MB activity measurement
+    /* Per MB activity measurement */
     unsigned int activity_avg;
     unsigned int * mb_activity_map;
-    int * mb_norm_activity_map;
 
-    // Record of which MBs still refer to last golden frame either
-    // directly or through 0,0
+    /* Record of which MBs still refer to last golden frame either
+     * directly or through 0,0
+     */
     unsigned char *gf_active_flags;
     int gf_active_count;
 
     int output_partition;
 
-    //Store last frame's MV info for next frame MV prediction
+    /* Store last frame's MV info for next frame MV prediction */
     int_mv *lfmv;
     int *lf_ref_frame_sign_bias;
     int *lf_ref_frame;
 
-    int force_next_frame_intra; /* force next frame to intra when kf_auto says so */
+    /* force next frame to intra when kf_auto says so */
+    int force_next_frame_intra;
 
     int droppable;
 
-    // Coding layer state variables
+#if CONFIG_TEMPORAL_DENOISING
+    VP8_DENOISER denoiser;
+#endif
+
+    /* Coding layer state variables */
     unsigned int current_layer;
-    LAYER_CONTEXT layer_context[MAX_LAYERS];
+    LAYER_CONTEXT layer_context[VPX_TS_MAX_LAYERS];
 
-    int64_t frames_in_layer[MAX_LAYERS];
-    int64_t bytes_in_layer[MAX_LAYERS];
-    double sum_psnr[MAX_LAYERS];
-    double sum_psnr_p[MAX_LAYERS];
-    double total_error2[MAX_LAYERS];
-    double total_error2_p[MAX_LAYERS];
-    double sum_ssim[MAX_LAYERS];
-    double sum_weights[MAX_LAYERS];
+    int64_t frames_in_layer[VPX_TS_MAX_LAYERS];
+    int64_t bytes_in_layer[VPX_TS_MAX_LAYERS];
+    double sum_psnr[VPX_TS_MAX_LAYERS];
+    double sum_psnr_p[VPX_TS_MAX_LAYERS];
+    double total_error2[VPX_TS_MAX_LAYERS];
+    double total_error2_p[VPX_TS_MAX_LAYERS];
+    double sum_ssim[VPX_TS_MAX_LAYERS];
+    double sum_weights[VPX_TS_MAX_LAYERS];
 
-    double total_ssimg_y_in_layer[MAX_LAYERS];
-    double total_ssimg_u_in_layer[MAX_LAYERS];
-    double total_ssimg_v_in_layer[MAX_LAYERS];
-    double total_ssimg_all_in_layer[MAX_LAYERS];
+    double total_ssimg_y_in_layer[VPX_TS_MAX_LAYERS];
+    double total_ssimg_u_in_layer[VPX_TS_MAX_LAYERS];
+    double total_ssimg_v_in_layer[VPX_TS_MAX_LAYERS];
+    double total_ssimg_all_in_layer[VPX_TS_MAX_LAYERS];
 
 #if CONFIG_MULTI_RES_ENCODING
     /* Number of MBs per row at lower-resolution level */
     int    mr_low_res_mb_cols;
+    /* Indicate if lower-res mv info is available */
+    unsigned char  mr_low_res_mv_avail;
+    /* The frame number of each reference frames */
+    unsigned int current_ref_frames[MAX_REF_FRAMES];
 #endif
 
+    struct rd_costs_struct
+    {
+        int mvcosts[2][MVvals+1];
+        int mvsadcosts[2][MVfpvals+1];
+        int mbmode_cost[2][MB_MODE_COUNT];
+        int intra_uv_mode_cost[2][MB_MODE_COUNT];
+        int bmode_costs[10][10][10];
+        int inter_bmode_costs[B_MODE_COUNT];
+        int token_costs[BLOCK_TYPES][COEF_BANDS]
+        [PREV_COEF_CONTEXTS][MAX_ENTROPY_TOKENS];
+    } rd_costs;
 } VP8_COMP;
 
-void control_data_rate(VP8_COMP *cpi);
+void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest,
+                        unsigned char *dest_end, unsigned long *size);
 
-void vp8_encode_frame(VP8_COMP *cpi);
-
-void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char *dest_end, unsigned long *size);
-
-void vp8_activity_masking(VP8_COMP *cpi, MACROBLOCK *x);
-
-int rd_cost_intra_mb(MACROBLOCKD *x);
-
-void vp8_tokenize_mb(VP8_COMP *, MACROBLOCKD *, TOKENEXTRA **);
+void vp8_tokenize_mb(VP8_COMP *, MACROBLOCK *, TOKENEXTRA **);
 
 void vp8_set_speed_features(VP8_COMP *cpi);
 

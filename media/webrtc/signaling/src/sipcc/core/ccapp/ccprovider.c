@@ -695,6 +695,7 @@ processSessionEvent (line_t line_id, callid_t call_id, unsigned int event, sdp_d
            featdata.track.stream_id = ccData.stream_id;
            featdata.track.track_id = ccData.track_id;
            featdata.track.media_type = ccData.media_type;
+           featdata.track.constraints = ccData.constraints;
            cc_int_feature2(CC_MSG_ADDSTREAM, CC_SRC_UI, CC_SRC_GSM, call_id, (line_t)instance, CC_FEATURE_ADDSTREAM, &featdata, timecard);
            break;
          case CC_FEATURE_REMOVESTREAM:

@@ -16,6 +16,9 @@ interface nsIAlertsService : nsISupports
     * Displays a sliding notification window.
     *
     * @param imageUrl       A URL identifying the image to put in the alert.
+    *                       The OS X implemenation limits the amount of time it
+    *                       will wait for an icon to load to six seconds. After
+    *                       that time the alert will show with no icon.
     * @param title          The title for the alert.
     * @param text           The contents of the alert.
     * @param textClickable  If true, causes the alert text to look like a link
@@ -25,10 +28,10 @@ interface nsIAlertsService : nsISupports
     *                       consumer during the alert listener callbacks.
     * @param alertListener  Used for callbacks. May be null if the caller 
     *                       doesn't care about callbacks.
-    * @param name           The name of the notification. This is currently
-    *                       only used on Android. On Android the name is hashed
-    *                       and used as a notification ID. Notifications will
-    *                       replace previous notifications with the same name.
+    * @param name           The name of the notification. This is currently only
+    *                       used on Android and OS X. On Android the name is
+    *                       hashed and used as a notification ID. Notifications
+    *                       will replace previous notifications with the same name.
     * @param dir            Bidi override for the title. Valid values are
     *                       "auto", "ltr" or "rtl". Only available on supported
     *                       platforms.

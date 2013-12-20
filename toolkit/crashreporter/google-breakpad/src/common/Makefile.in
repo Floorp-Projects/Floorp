@@ -25,10 +25,3 @@ OS_CXXFLAGS += -DHAVE_MACH_O_NLIST_H
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-ifneq (WINNT,$(OS_TARGET))
-# Headers from this directory are included as "common/header.h". Having
-# -I$(srcdir) on the command line makes us use common/memory.h when
-# <memory.h> is included from system headers, which is not intended.
-INCLUDES = $(LOCAL_INCLUDES) -I$(DIST)/include
-endif

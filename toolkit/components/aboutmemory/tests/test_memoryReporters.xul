@@ -171,11 +171,7 @@
                 domSize, styleSize, otherSize, totalSize,
                 jsMilliseconds, nonJSMilliseconds);
 
-  let e = mgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    r.collectReports(handleReport, null);
-  }
+  mgr.getReportsForThisProcess(handleReport, null);
 
   function checkSpecialReport(aName, aAmounts, aCanBeUnreasonable)
   {
@@ -205,6 +201,140 @@
   ok(present.bigString,                   "large string is present");
   ok(present.smallString1,                "small string 1 is present");
   ok(present.smallString2,                "small string 2 is present");
+
+
+  // Reporter registration tests
+
+  // collectReports() calls to the test reporter.
+  let called = 0;
+
+  // The test memory reporter, testing the various report units.
+  // Also acts as a report collector, verifying the reported values match the
+  // expected ones after passing through XPConnect / nsMemoryReporterManager
+  // and back.
+  function MemoryReporterAndCallback() {
+    this.seen = 0;
+  }
+  MemoryReporterAndCallback.prototype = {
+    // The test reports.
+    // Each test key corresponds to the path of the report.  |amount| is a
+    // function called when generating the report.  |expected| is a function
+    // to be tested when receiving a report during collection.  If |expected| is
+    // omitted the |amount| will be checked instead.
+    tests: {
+      "test-memory-reporter-bytes1": {
+        units: BYTES,
+        amount: () => 0
+      },
+      "test-memory-reporter-bytes2": {
+        units: BYTES,
+        amount: () => (1<<30) * 8 // awkward way to say 8G in JS
+      },
+      "test-memory-reporter-counter": {
+        units: COUNT,
+        amount: () => 2
+      },
+      "test-memory-reporter-ccounter": {
+        units: COUNT_CUMULATIVE,
+        amount: () => ++called,
+        expected: () => called
+      },
+      "test-memory-reporter-percentage": {
+        units: PERCENTAGE,
+        amount: () => 9999
+      }
+    },
+    // nsIMemoryReporter
+    collectReports: function(callback, data) {
+      for (let path of Object.keys(this.tests)) {
+        try {
+          let test = this.tests[path];
+          callback.callback(
+            "", // Process. Should be "" initially.
+            path,
+            OTHER,
+            test.units,
+            test.amount(),
+            "Test " + path + ".",
+            data);
+        }
+        catch (ex) {
+          ok(false, ex);
+        }
+      }
+    },
+    // nsIMemoryReporterCallback
+    callback: function(process, path, kind, units, amount, data) {
+      if (path in this.tests) {
+        this.seen++;
+        let test = this.tests[path];
+        ok(units === test.units, "Test reporter units match");
+        ok(amount === (test.expected || test.amount)(),
+           "Test reporter values match: " + amount);
+      }
+    },
+    // Checks that the callback has seen the expected number of reports, and
+    // resets the callback counter.
+    // @param expected  Optional.  Expected number of reports the callback
+    //                  should have processed.
+    finish: function(expected) {
+      if (expected === undefined) {
+        expected = Object.keys(this.tests).length;
+      }
+      is(expected, this.seen,
+         "Test reporter called the correct number of times: " + expected);
+      this.seen = 0;
+    }
+  };
+
+  // General memory reporter + registerStrongReporter tests.
+  function test_register_strong() {
+    let reporterAndCallback = new MemoryReporterAndCallback();
+    // Registration works.
+    mgr.registerStrongReporter(reporterAndCallback);
+
+    // Check the generated reports.
+    mgr.getReportsForThisProcess(reporterAndCallback, null);
+    reporterAndCallback.finish();
+
+    // Unregistration works.
+    mgr.unregisterStrongReporter(reporterAndCallback);
+
+    // The reporter was unregistered, hence there shouldn't be any reports from
+    // the test reporter.
+    mgr.getReportsForThisProcess(reporterAndCallback, null);
+    reporterAndCallback.finish(0);
+  }
+
+  test_register_strong();
+
+  // Check strong reporters a second time, to make sure a reporter can be
+  // re-registered.
+  test_register_strong();
+
+
+  // Check that you cannot register JS components as weak reporters.
+  function test_register_weak() {
+    let reporterAndCallback = new MemoryReporterAndCallback();
+    try {
+      // Should fail! nsMemoryReporterManager will only hold a raw pointer to
+      // "weak" reporters.  When registering a weak reporter, XPConnect will
+      // create a WrappedJS for JS components.  This WrappedJS would be
+      // successfully registered with the manager, only to be destroyed
+      // immediately after, which would eventually lead to a crash when
+      // collecting the reports.  Therefore nsMemoryReporterManager should
+      // reject WrappedJS reporters, which is what is tested here.
+      // See bug 950391 comment #0.
+      mgr.registerWeakReporter(reporterAndCallback);
+      ok(false, "Shouldn't be allowed to register a JS component (WrappedJS)");
+    }
+    catch (ex) {
+      ok(ex.message.indexOf("NS_ERROR_") >= 0,
+         "WrappedJS reporter got rejected: " + ex);
+    }
+  }
+
+  test_register_weak();
 
   ]]>
   </script>

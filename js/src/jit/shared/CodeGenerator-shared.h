@@ -61,7 +61,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     LIRGraph &graph;
     LBlock *current;
     SnapshotWriter snapshots_;
-    IonCode *deoptTable_;
+    JitCode *deoptTable_;
 #ifdef DEBUG
     uint32_t pushedArgs_;
 #endif
@@ -150,7 +150,7 @@ class CodeGeneratorShared : public LInstructionVisitor
 
     inline int32_t SlotToStackOffset(int32_t slot) const {
         JS_ASSERT(slot > 0 && slot <= int32_t(graph.localSlotCount()));
-        int32_t offset = masm.framePushed() - (slot * STACK_SLOT_SIZE);
+        int32_t offset = masm.framePushed() - slot;
         JS_ASSERT(offset >= 0);
         return offset;
     }
@@ -158,11 +158,10 @@ class CodeGeneratorShared : public LInstructionVisitor
         // See: SlotToStackOffset. This is used to convert pushed arguments
         // to a slot index that safepoints can use.
         //
-        // offset = framePushed - (slot * STACK_SLOT_SIZE)
-        // offset + (slot * STACK_SLOT_SIZE) = framePushed
-        // slot * STACK_SLOT_SIZE = framePushed - offset
-        // slot = (framePushed - offset) / STACK_SLOT_SIZE
-        return (masm.framePushed() - offset) / STACK_SLOT_SIZE;
+        // offset = framePushed - slot
+        // offset + slot = framePushed
+        // slot = framePushed - offset
+        return masm.framePushed() - offset;
     }
 
     // For argument construction for calls. Argslots are Value-sized.
@@ -170,16 +169,17 @@ class CodeGeneratorShared : public LInstructionVisitor
         // A slot of 0 is permitted only to calculate %esp offset for calls.
         JS_ASSERT(slot >= 0 && slot <= int32_t(graph.argumentSlotCount()));
         int32_t offset = masm.framePushed() -
-                       (graph.localSlotCount() * STACK_SLOT_SIZE) -
+                       graph.paddedLocalSlotsSize() -
                        (slot * sizeof(Value));
+
         // Passed arguments go below A function's local stack storage.
         // When arguments are being pushed, there is nothing important on the stack.
         // Therefore, It is safe to push the arguments down arbitrarily.  Pushing
-        // by 8 is desirable since everything on the stack is a Value, which is 8
-        // bytes large.
-
-        offset &= ~7;
+        // by sizeof(Value) is desirable since everything on the stack is a Value.
+        // Note that paddedLocalSlotCount() aligns to at least a Value boundary
+        // specifically to support this.
         JS_ASSERT(offset >= 0);
+        JS_ASSERT(offset % sizeof(Value) == 0);
         return offset;
     }
 
@@ -676,7 +676,7 @@ inline OutOfLineCode *
 CodeGeneratorShared::oolCallVM(const VMFunction &fun, LInstruction *lir, const ArgSeq &args,
                                const StoreOutputTo &out)
 {
-    OutOfLineCode *ool = new OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
+    OutOfLineCode *ool = new(alloc()) OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
     if (!addOutOfLineCode(ool))
         return nullptr;
     return ool;

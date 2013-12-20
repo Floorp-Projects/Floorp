@@ -7,3 +7,5 @@
 TEST_TOOL_DIRS += ['mochitest']
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+JAR_MANIFESTS += ['jar.mn']

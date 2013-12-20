@@ -188,6 +188,9 @@ extern JS_FRIEND_API(void)
 EnableGenerationalGC(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
+IsGenerationalGCEnabled(JSRuntime *rt);
+
+extern JS_FRIEND_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime *rt);
 
 extern JS_FRIEND_API(bool)
@@ -214,7 +217,7 @@ GetGCNumber();
 
 class JS_PUBLIC_API(AutoAssertNoGC)
 {
-#ifdef DEBUG
+#ifdef JS_DEBUG
     JSRuntime *runtime;
     size_t gcNumber;
 

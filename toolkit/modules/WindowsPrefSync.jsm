@@ -72,6 +72,15 @@ this.WindowsPrefSync = {
     "browser.sessionstore.resume_session_once"],
 
   /**
+   * Returns the base path where registry sync prefs are stored.
+   */
+  get prefRegistryPath() {
+    let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].
+      createInstance(Ci.nsIToolkitProfileService);
+    return PREF_BASE_KEY + profileService.selectedProfile.name + "\\";
+  },
+
+  /**
    * The following preferences will be pushed to registry from Metro
    * Firefox and pulled in from Desktop Firefox.
    *
@@ -112,8 +121,7 @@ this.WindowsPrefSync = {
 
       let prefValue = Services.prefs[prefFunc](aPrefName);
       registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-        PREF_BASE_KEY + prefType,
-        Ci.nsIWindowsRegKey.ACCESS_WRITE);
+        this.prefRegistryPath + prefType, Ci.nsIWindowsRegKey.ACCESS_WRITE);
       // Always write as string, but the registry subfolder will determine
       // how Metro interprets that string value.
       registry.writeStringValue(aPrefName, prefValue);
@@ -131,7 +139,7 @@ this.WindowsPrefSync = {
     function pullSharedPrefType(prefType, prefFunc) {
       try {
         registry.create(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-          PREF_BASE_KEY + prefType,
+          self.prefRegistryPath + prefType,
           Ci.nsIWindowsRegKey.ACCESS_ALL);
         for (let i = 0; i < registry.valueCount; i++) {
           let prefName = registry.getValueName(i);

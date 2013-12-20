@@ -81,6 +81,13 @@ public:
   static uint32_t GetNativeTextLength(nsIContent* aContent,
                                       uint32_t aMaxLength = UINT32_MAX);
 protected:
+  // Returns focused content (including its descendant documents).
+  nsIContent* GetFocusedContent();
+  // Returns true if the content is a plugin host.
+  bool IsPlugin(nsIContent* aContent);
+  // QueryContentRect() sets the rect of aContent's frame(s) to aEvent.
+  nsresult QueryContentRect(nsIContent* aContent,
+                            mozilla::WidgetQueryContentEvent* aEvent);
   // Make the DOM range from the offset of FlatText and the text length.
   // If aExpandToClusterBoundaries is true, the start offset and the end one are
   // expanded to nearest cluster boundaries.

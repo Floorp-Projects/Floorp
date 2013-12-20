@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TEST_DIRS += ['mochitest']
+
 XPIDL_SOURCES += [
     'nsIB2GKeyboard.idl',
 ]
@@ -18,3 +20,5 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'Keyboard.jsm',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

@@ -10,8 +10,12 @@
 #include "yuv_convert.h"
 #include "../d3d9/Nv3DVUtils.h"
 #include "D3D9SurfaceImage.h"
+#include "mozilla/gfx/Point.h"
+#include "gfx2DGlue.h"
 
 #include "gfxWindowsPlatform.h"
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -202,7 +206,7 @@ ImageLayerD3D10::RenderLayer()
     return;
   }
 
-  gfxIntSize size = image->GetSize();
+  IntSize size = image->GetSize();
 
   SetEffectTransformAndOpacity();
 
@@ -410,7 +414,7 @@ ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
     return nullptr;
   }
 
-  *aSize = image->GetSize();
+  *aSize = gfx::ThebesIntSize(image->GetSize());
   bool dontCare;
   nsRefPtr<ID3D10ShaderResourceView> result = GetImageSRView(image, dontCare);
   return result.forget();
@@ -465,9 +469,10 @@ RemoteDXGITextureImage::GetAsSurface()
   keyedMutex->ReleaseSync(0);
 
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(mSize, mFormat == RemoteImageData::BGRX32 ?
-                                          gfxImageFormatRGB24 :
-                                          gfxImageFormatARGB32);
+    new gfxImageSurface(ThebesIntSize(mSize),
+      mFormat == RemoteImageData::BGRX32 ?
+                 gfxImageFormatRGB24 :
+                 gfxImageFormatARGB32);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created image surface for DXGI texture.");

@@ -200,9 +200,9 @@ WeakMap_get_impl(JSContext *cx, CallArgs args)
         if (ObjectValueMap::Ptr ptr = map->lookup(key)) {
             // Read barrier to prevent an incorrectly gray value from escaping the
             // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
-            ExposeValueToActiveJS(ptr->value.get());
+            ExposeValueToActiveJS(ptr->value().get());
 
-            args.rval().set(ptr->value);
+            args.rval().set(ptr->value());
             return true;
         }
     }
@@ -269,17 +269,26 @@ TryPreserveReflector(JSContext *cx, HandleObject obj)
 }
 
 static inline void
-WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *map, JSObject *key)
+WeakMapPostWriteBarrier(JSRuntime *rt, ObjectValueMap *weakMap, JSObject *key)
 {
 #ifdef JSGC_GENERATIONAL
     /*
      * Strip the barriers from the type before inserting into the store buffer.
      * This will automatically ensure that barriers do not fire during GC.
+     *
+     * Some compilers complain about instantiating the WeakMap class for
+     * unbarriered type arguments, so we cast to a HashMap instead.  Because of
+     * WeakMap's multiple inheritace, We need to do this in two stages, first to
+     * the HashMap base class and then to the unbarriered version.
      */
-    typedef WeakMap<JSObject *, Value> UnbarrieredObjectValueMap;
-    typedef HashKeyRef<UnbarrieredObjectValueMap, JSObject *> Ref;
+    ObjectValueMap::Base *baseHashMap = static_cast<ObjectValueMap::Base *>(weakMap);
+
+    typedef HashMap<JSObject *, Value> UnbarrieredMap;
+    UnbarrieredMap *unbarrieredMap = reinterpret_cast<UnbarrieredMap *>(baseHashMap);
+
+    typedef gc::HashKeyRef<UnbarrieredMap, JSObject *> Ref;
     if (key && IsInsideNursery(rt, key))
-        rt->gcStoreBuffer.putGeneric(Ref(reinterpret_cast<UnbarrieredObjectValueMap *>(map), key));
+        rt->gcStoreBuffer.putGeneric(Ref((unbarrieredMap), key));
 #endif
 }
 
@@ -357,7 +366,7 @@ JS_NondeterministicGetWeakMapKeys(JSContext *cx, JSObject *objArg, JSObject **re
         // Prevent GC from mutating the weakmap while iterating.
         gc::AutoSuppressGC suppress(cx);
         for (ObjectValueMap::Base::Range r = map->all(); !r.empty(); r.popFront()) {
-            RootedObject key(cx, r.front().key);
+            RootedObject key(cx, r.front().key());
             if (!cx->compartment()->wrap(cx, &key))
                 return false;
             if (!js_NewbornArrayPush(cx, arr, ObjectValue(*key)))

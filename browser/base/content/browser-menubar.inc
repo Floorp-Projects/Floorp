@@ -202,10 +202,9 @@
                               key="key_gotoHistory"
                               observes="viewHistorySidebar"
                               label="&historyButton.label;"/>
-                    <menuitem id="menu_socialSidebar"
-                              type="checkbox"
-                              autocheck="false"
-                              command="Social:ToggleSidebar"/>
+                    <!-- Service providers with sidebars are inserted between these two menuseperators -->
+                    <menuseparator hidden="true"/>
+                    <menuseparator class="social-provider-menu" hidden="true"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>
@@ -447,49 +446,6 @@
                         accesskey="&addons.accesskey;"
                         key="key_openAddons"
                         command="Tools:Addons"/>
-              <menu id="menu_socialAmbientMenu"
-                    observes="socialActiveBroadcaster">
-                <menupopup id="menu_social-statusarea-popup">
-                  <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
-                            observes="socialBroadcaster_userDetails"
-                            oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-                    <image class="social-statusarea-user-portrait"
-                           observes="socialBroadcaster_userDetails"/>
-                    <vbox>
-                      <label class="social-statusarea-loggedInStatus"
-                             observes="socialBroadcaster_userDetails"/>
-                    </vbox>
-                  </menuitem>
-#ifndef XP_WIN
-                  <menuseparator class="social-statusarea-separator"/>
-#endif
-                  <menuseparator id="socialAmbientMenuSeparator"
-                                 hidden="true"/>
-                  <menuitem class="social-toggle-sidebar-menuitem"
-                            type="checkbox"
-                            autocheck="false"
-                            command="Social:ToggleSidebar"
-                            label="&social.toggleSidebar.label;"
-                            accesskey="&social.toggleSidebar.accesskey;"/>
-                  <menuitem class="social-toggle-notifications-menuitem"
-                            type="checkbox"
-                            autocheck="false"
-                            command="Social:ToggleNotifications"
-                            label="&social.toggleNotifications.label;"
-                            accesskey="&social.toggleNotifications.accesskey;"/>
-                  <menuitem id="menu_focusChatBar"
-                            label="&social.chatBar.label;"
-                            accesskey="&social.chatBar.accesskey;"
-                            key="focusChatBar"
-                            command="Social:FocusChat"
-                            class="show-only-for-keyboard"/>
-                  <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-                  <menuseparator class="social-statusarea-separator"/>
-                  <menuseparator class="social-provider-menu" hidden="true"/>
-                  <menuitem class="social-addons-menuitem" command="Social:Addons"
-                            label="&social.addons.label;"/>
-                </menupopup>
-              </menu>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
               <menuitem id="sync-setup"
@@ -518,9 +474,9 @@
                   <menuitem id="menu_devAppMgr"
                             observes="devtoolsMenuBroadcaster_DevAppMgr"
                             accesskey="&devAppMgrMenu.accesskey;"/>
-                  <menuitem id="menu_chromeDebugger"
-                            observes="devtoolsMenuBroadcaster_ChromeDebugger"
-                            accesskey="&chromeDebuggerMenu.accesskey;"/>
+                  <menuitem id="menu_browserToolbox"
+                            observes="devtoolsMenuBroadcaster_BrowserToolbox"
+                            accesskey="&browserToolboxMenu.accesskey;"/>
                   <menuitem id="menu_browserConsole"
                             observes="devtoolsMenuBroadcaster_BrowserConsole"
                             accesskey="&browserConsoleCmd.accesskey;"/>

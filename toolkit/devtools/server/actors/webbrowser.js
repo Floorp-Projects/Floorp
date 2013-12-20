@@ -481,9 +481,6 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   this._extraActors = {};
 
   this._onWindowCreated = this.onWindowCreated.bind(this);
-
-  // Number of event loops nested.
-  this._nestedEventLoopDepth = 0;
 }
 
 // XXX (bug 710213): BrowserTabActor attach/detach/exit/disconnect is a
@@ -502,28 +499,6 @@ BrowserTabActor.prototype = {
   get contextActorPool() { return this._contextPool; },
 
   _pendingNavigation: null,
-
-  /**
-   * Add the specified actor to the default actor pool connection, in order to
-   * keep it alive as long as the server is. This is used by breakpoints in the
-   * thread actor.
-   *
-   * @param actor aActor
-   *        The actor object.
-   */
-  addToParentPool: function BTA_addToParentPool(aActor) {
-    this.conn.addActor(aActor);
-  },
-
-  /**
-   * Remove the specified actor from the default actor pool.
-   *
-   * @param BreakpointActor aActor
-   *        The actor object.
-   */
-  removeFromParentPool: function BTA_removeFromParentPool(aActor) {
-    this.conn.removeActor(aActor);
-  },
 
   // A constant prefix that will be used to form the actor ID by the server.
   actorPrefix: "tab",
@@ -631,15 +606,11 @@ BrowserTabActor.prototype = {
       return;
     }
 
-    if (this.attached) {
-      this._detach();
+    if (this._detach()) {
       this.conn.send({ from: this.actorID,
                        type: "tabDetached" });
     }
 
-    // Pop all nested event loops if we haven't already.
-    while (this._nestedEventLoopDepth > 0)
-      this.postNest();
     this._browser = null;
     this._tabbrowser = null;
   },
@@ -703,10 +674,12 @@ BrowserTabActor.prototype = {
 
   /**
    * Does the actual work of detaching from a tab.
+   *
+   * @returns false if the tab wasn't attached or true of detahing succeeds.
    */
   _detach: function BTA_detach() {
     if (!this.attached) {
-      return;
+      return false;
     }
 
     if (this._progressListener) {
@@ -727,6 +700,7 @@ BrowserTabActor.prototype = {
     }
 
     this._attached = false;
+    return true;
   },
 
   // Protocol Request Handlers
@@ -738,15 +712,18 @@ BrowserTabActor.prototype = {
 
     this._attach();
 
-    return { type: "tabAttached", threadActor: this.threadActor.actorID };
+    return {
+      type: "tabAttached",
+      threadActor: this.threadActor.actorID,
+      cacheEnabled: this._getCacheEnabled(),
+      javascriptEnabled: this._getJavascriptEnabled()
+    };
   },
 
   onDetach: function BTA_onDetach(aRequest) {
-    if (!this.attached) {
+    if (!this._detach()) {
       return { error: "wrongState" };
     }
-
-    this._detach();
 
     return { type: "detached" };
   },
@@ -776,6 +753,99 @@ BrowserTabActor.prototype = {
   },
 
   /**
+   * Reconfigure options.
+   */
+  onReconfigure: function (aRequest) {
+    let options = aRequest.options || {};
+
+    this._toggleJsOrCache(options);
+    return {};
+  },
+
+  /**
+   * Handle logic to enable/disable JS/cache.
+   */
+  _toggleJsOrCache: function(options) {
+    // Wait a tick so that the response packet can be dispatched before the
+    // subsequent navigation event packet.
+    let reload = false;
+
+    if (typeof options.javascriptEnabled !== "undefined" &&
+        options.javascriptEnabled !== this._getJavascriptEnabled()) {
+      this._setJavascriptEnabled(options.javascriptEnabled);
+      reload = true;
+    }
+    if (typeof options.cacheEnabled !== "undefined" &&
+        options.cacheEnabled !== this._getCacheEnabled()) {
+      this._setCacheEnabled(options.cacheEnabled);
+      reload = true;
+    }
+
+    if (reload) {
+      this.onReload();
+    }
+  },
+
+  /**
+   * Disable or enable the cache via docShell.
+   */
+  _setCacheEnabled: function(allow) {
+    let enable =  Ci.nsIRequest.LOAD_NORMAL;
+    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                  Ci.nsIRequest.INHIBIT_CACHING;
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    docShell.defaultLoadFlags = allow ? enable : disable;
+  },
+
+  /**
+   * Disable or enable JS via docShell.
+   */
+  _setJavascriptEnabled: function(allow) {
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    docShell.allowJavascript = allow;
+  },
+
+  /**
+   * Return cache allowed status.
+   */
+  _getCacheEnabled: function() {
+    if (!this.window) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let disable = Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                  Ci.nsIRequest.INHIBIT_CACHING;
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    return docShell.defaultLoadFlags !== disable;
+  },
+
+  /**
+   * Return JS allowed status.
+   */
+  _getJavascriptEnabled: function() {
+    if (!this.window) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let docShell = this.window
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIDocShell);
+
+    return docShell.allowJavascript;
+  },
+
+  /**
    * Prepare to enter a nested event loop by disabling debuggee events.
    */
   preNest: function BTA_preNest() {
@@ -788,7 +858,6 @@ BrowserTabActor.prototype = {
                           .getInterface(Ci.nsIDOMWindowUtils);
     windowUtils.suppressEventHandling(true);
     windowUtils.suspendTimeouts();
-    this._nestedEventLoopDepth++;
   },
 
   /**
@@ -797,8 +866,6 @@ BrowserTabActor.prototype = {
   postNest: function BTA_postNest(aNestData) {
     if (!this.window) {
       // The tab is already closed.
-      dbg_assert(this._nestedEventLoopDepth === 0,
-                 "window shouldn't be closed before all nested event loops have been popped");
       return;
     }
     let windowUtils = this.window
@@ -810,7 +877,6 @@ BrowserTabActor.prototype = {
       this._pendingNavigation.resume();
       this._pendingNavigation = null;
     }
-    this._nestedEventLoopDepth--;
   },
 
   /**
@@ -870,7 +936,8 @@ BrowserTabActor.prototype.requestTypes = {
   "attach": BrowserTabActor.prototype.onAttach,
   "detach": BrowserTabActor.prototype.onDetach,
   "reload": BrowserTabActor.prototype.onReload,
-  "navigateTo": BrowserTabActor.prototype.onNavigateTo
+  "navigateTo": BrowserTabActor.prototype.onNavigateTo,
+  "reconfigure": BrowserTabActor.prototype.onReconfigure
 };
 
 function BrowserAddonList(aConnection)

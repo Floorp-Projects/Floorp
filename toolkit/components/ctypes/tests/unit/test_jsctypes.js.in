@@ -2428,10 +2428,10 @@ function run_readstring_tests(library) {
 }
 
 function run_struct_tests(library) {
-  const point_t = new ctypes.StructType("POINT",
+  const point_t = new ctypes.StructType("myPOINT",
                        [{ x: ctypes.int32_t },
                         { y: ctypes.int32_t }]);
-  const rect_t = new ctypes.StructType("RECT",
+  const rect_t = new ctypes.StructType("myRECT",
                        [{ top   : ctypes.int32_t },
                         { left  : ctypes.int32_t },
                         { bottom: ctypes.int32_t },
@@ -2739,7 +2739,7 @@ function run_variadic_tests(library) {
 
 function run_static_data_tests(library)
 {
-  const rect_t = new ctypes.StructType("RECT",
+  const rect_t = new ctypes.StructType("myRECT",
                        [{ top   : ctypes.int32_t },
                         { left  : ctypes.int32_t },
                         { bottom: ctypes.int32_t },

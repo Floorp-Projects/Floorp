@@ -242,19 +242,8 @@ function checkSocialUI(win) {
   isbool(win.SocialChatBar.isAvailable, enabled, "chatbar available?");
   isbool(!win.SocialChatBar.chatbar.hidden, enabled, "chatbar visible?");
 
-  isbool(!doc.getElementById("social-toolbar-item").hidden, active, "toolbar items visible?");
-  if (active) {
-    if (!enabled || (Social.defaultProvider.statusURL && Social.allowMultipleWorkers)) {
-      _ok(!win.SocialToolbar.button.style.listStyleImage, "toolbar button is default icon");
-    } else {
-      _is(win.SocialToolbar.button.style.listStyleImage, 'url("' + Social.defaultProvider.iconURL + '")', "toolbar button has provider icon");
-    }
-  }
   // the menus should always have the provider name
   if (provider) {
-    for (let id of ["menu_socialSidebar", "menu_socialAmbientMenu"])
-      _is(document.getElementById(id).getAttribute("label"), Social.provider.name, "element has the provider name");
-
     let contextMenus = [
       {
         type: "link",
@@ -299,8 +288,6 @@ function checkSocialUI(win) {
   isbool(!doc.getElementById("Social:FocusChat").hidden, enabled, "Social:FocusChat visible?");
   isbool(doc.getElementById("Social:FocusChat").getAttribute("disabled"), enabled ? "false" : "true", "Social:FocusChat disabled?");
 
-  // broadcasters.
-  isbool(!doc.getElementById("socialActiveBroadcaster").hidden, active, "socialActiveBroadcaster hidden?");
   // and report on overall success of failure of the various checks here.
   is(numGoodTests, numTests, "The Social UI tests succeeded.")
 }
@@ -555,12 +542,24 @@ function resizeAndCheckWidths(first, second, third, checks, cb) {
   resizeWindowToChatAreaWidth(width, function(sizedOk) {
     checkPopup();
     ok(sizedOk, count+": window resized correctly");
-    if (sizedOk) {
-      let numVisible = [first, second, third].filter(function(item) !item.collapsed).length;
-      is(numVisible, numExpectedVisible, count + ": " + "correct number of chats visible");
+    function collapsedObserver(r, m) {
+      if ([first, second, third].filter(function(item) !item.collapsed).length == numExpectedVisible) {
+        if (m) {
+          m.disconnect();
+        }
+        ok(true, count + ": " + "correct number of chats visible");
+        info(">> Check " + count);
+        resizeAndCheckWidths(first, second, third, checks, cb);
+        return true;
+      }
+      return false;
     }
-    info(">> Check " + count);
-    resizeAndCheckWidths(first, second, third, checks, cb);
+    if (!collapsedObserver()) {
+      let m = new MutationObserver(collapsedObserver);
+      m.observe(first, {attributes: true });
+      m.observe(second, {attributes: true });
+      m.observe(third, {attributes: true });
+    }
   }, count);
 }
 

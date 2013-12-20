@@ -304,7 +304,9 @@ OutputParser.prototype = {
       if (options.defaultColorType) {
         color = colorObj.toString();
       }
-      this._appendTextNode(color);
+      this._appendNode("span", {
+        class: options.colorClass
+      }, color);
       return true;
     }
     return false;
@@ -362,7 +364,9 @@ OutputParser.prototype = {
     let attrs = Object.getOwnPropertyNames(attributes);
 
     for (let attr of attrs) {
-      node.setAttribute(attr, attributes[attr]);
+      if (attributes[attr]) {
+        node.setAttribute(attr, attributes[attr]);
+      }
     }
 
     if (value) {
@@ -422,6 +426,8 @@ OutputParser.prototype = {
    *           - defaultColorType: true // Convert colors to the default type
    *                                    // selected in the options panel.
    *           - colorSwatchClass: ""   // The class to use for color swatches.
+   *           - colorClass: ""         // The class to use for the color value
+   *                                    // that follows the swatch.
    *           - isHTMLAttribute: false // This property indicates whether we
    *                                    // are parsing an HTML attribute value.
    *                                    // When the value is passed in from an
@@ -439,6 +445,7 @@ OutputParser.prototype = {
     let defaults = {
       defaultColorType: true,
       colorSwatchClass: "",
+      colorClass: "",
       isHTMLAttribute: false,
       urlClass: "",
       baseURI: ""

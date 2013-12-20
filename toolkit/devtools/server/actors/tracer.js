@@ -14,6 +14,29 @@ const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server
 Cu.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
 
+// TODO bug 943125: remove this polyfill and use Debugger.Frame.prototype.depth
+// once it is implemented.
+if (!Object.getOwnPropertyDescriptor(Debugger.Frame.prototype, "depth")) {
+  Debugger.Frame.prototype._depth = null;
+  Object.defineProperty(Debugger.Frame.prototype, "depth", {
+    get: function () {
+      if (this._depth === null) {
+        if (!this.older) {
+          this._depth = 0;
+        } else {
+          // Hide depth from self-hosted frames.
+          const increment = this.script && this.script.url == "self-hosted"
+            ? 0
+            : 1;
+          this._depth = increment + this.older.depth;
+        }
+      }
+
+      return this._depth;
+    }
+  });
+}
+
 const { setTimeout } = require("sdk/timers");
 
 /**
@@ -25,12 +48,12 @@ const BUFFER_SEND_DELAY = 50;
 /**
  * The maximum number of arguments we will send for any single function call.
  */
-const MAX_ARGUMENTS = 5;
+const MAX_ARGUMENTS = 3;
 
 /**
  * The maximum number of an object's properties we will serialize.
  */
-const MAX_PROPERTIES = 5;
+const MAX_PROPERTIES = 3;
 
 /**
  * The complete set of trace types supported.
@@ -44,7 +67,8 @@ const TRACE_TYPES = new Set([
   "location",
   "callsite",
   "parameterNames",
-  "arguments"
+  "arguments",
+  "depth"
 ]);
 
 /**
@@ -69,6 +93,7 @@ function TraceActor(aConn, aParentActor)
   this._sequence = 0;
   this._bufferSendTimer = null;
   this._buffer = [];
+  this.onExitFrame = this.onExitFrame.bind(this);
 
   this.global = aParentActor.window.wrappedJSObject;
 }
@@ -294,7 +319,10 @@ TraceActor.prototype = {
    *        The stack frame that was entered.
    */
   onEnterFrame: function(aFrame) {
-    let callee = aFrame.callee;
+    if (aFrame.script && aFrame.script.url == "self-hosted") {
+      return;
+    }
+
     let packet = {
       type: "enteredFrame",
       sequence: this._sequence++
@@ -344,11 +372,18 @@ TraceActor.prototype = {
         if (i++ > MAX_ARGUMENTS) {
           break;
         }
-        packet.arguments.push(createValueGrip(arg, true));
+        packet.arguments.push(createValueSnapshot(arg, true));
       }
     }
 
-    aFrame.onPop = this.onExitFrame.bind(this);
+    if (this._requestsForTraceType.depth) {
+      packet.depth = aFrame.depth;
+    }
+
+    const onExitFrame = this.onExitFrame;
+    aFrame.onPop = function (aCompletion) {
+      onExitFrame(this, aCompletion);
+    };
 
     this._send(packet);
   },
@@ -357,10 +392,12 @@ TraceActor.prototype = {
    * Called by the engine when a frame is exited. Sends an unsolicited packet to
    * the client carrying requested trace information.
    *
+   * @param Debugger.Frame aFrame
+   *        The Debugger.Frame that was just exited.
    * @param aCompletion object
    *        The debugger completion value for the frame.
    */
-  onExitFrame: function(aCompletion) {
+  onExitFrame: function(aFrame, aCompletion) {
     let packet = {
       type: "exitedFrame",
       sequence: this._sequence++,
@@ -380,17 +417,21 @@ TraceActor.prototype = {
       packet.time = Date.now() - this._startTime;
     }
 
+    if (this._requestsForTraceType.depth) {
+      packet.depth = aFrame.depth;
+    }
+
     if (aCompletion) {
-      if (this._requestsForTraceType.return) {
-        packet.return = createValueGrip(aCompletion.return, true);
+      if (this._requestsForTraceType.return && "return" in aCompletion) {
+        packet.return = createValueSnapshot(aCompletion.return, true);
       }
 
-      if (this._requestsForTraceType.throw) {
-        packet.throw = createValueGrip(aCompletion.throw, true);
+      else if (this._requestsForTraceType.throw && "throw" in aCompletion) {
+        packet.throw = createValueSnapshot(aCompletion.throw, true);
       }
 
-      if (this._requestsForTraceType.yield) {
-        packet.yield = createValueGrip(aCompletion.yield, true);
+      else if (this._requestsForTraceType.yield && "yield" in aCompletion) {
+        packet.yield = createValueSnapshot(aCompletion.yield, true);
       }
     }
 
@@ -515,29 +556,8 @@ MapStack.prototype = {
 // TODO bug 863089: use Debugger.Script.prototype.getOffsetColumn when
 // it is implemented.
 function getOffsetColumn(aOffset, aScript) {
-  let bestOffsetMapping = null;
-  for (let offsetMapping of aScript.getAllColumnOffsets()) {
-    if (!bestOffsetMapping ||
-        (offsetMapping.offset <= aOffset &&
-         offsetMapping.offset > bestOffsetMapping.offset)) {
-      bestOffsetMapping = offsetMapping;
-    }
-  }
-
-  if (!bestOffsetMapping) {
-    // XXX: Try not to completely break the experience of using the
-    // tracer for the user by assuming column 0. Simultaneously,
-    // report the error so that there is a paper trail if the
-    // assumption is bad and the tracing experience becomes wonky.
-    reportException("TraceActor",
-                    new Error("Could not find a column for offset " + aOffset +
-                              " in the script " + aScript));
-    return 0;
-  }
-
-  return bestOffsetMapping.columnNumber;
+  return 0;
 }
-
 
 // Serialization helper functions. Largely copied from script.js and modified
 // for use in serialization rather than object actor requests.
@@ -548,13 +568,14 @@ function getOffsetColumn(aOffset, aScript) {
  * @param aValue Debugger.Object|primitive
  *        The value to describe with the created grip.
  *
- * @param aUseDescriptor boolean
- *        If true, creates descriptors for objects rather than grips.
+ * @param aDetailed boolean
+ *        If true, capture slightly more detailed information, like some
+ *        properties on an object.
  *
- * @return ValueGrip
- *        A primitive value or a grip object.
+ * @return Object
+ *         A primitive value or a snapshot of an object.
  */
-function createValueGrip(aValue, aUseDescriptor) {
+function createValueSnapshot(aValue, aDetailed=false) {
   switch (typeof aValue) {
     case "boolean":
       return aValue;
@@ -584,7 +605,9 @@ function createValueGrip(aValue, aUseDescriptor) {
       if (aValue === null) {
         return { type: "null" };
       }
-      return aUseDescriptor ? objectDescriptor(aValue) : objectGrip(aValue);
+      return aDetailed
+        ? detailedObjectSnapshot(aValue)
+        : objectSnapshot(aValue);
     default:
       reportException("TraceActor",
                       new Error("Failed to provide a grip for: " + aValue));
@@ -593,96 +616,59 @@ function createValueGrip(aValue, aUseDescriptor) {
 }
 
 /**
- * Create a grip for the given debuggee object.
+ * Create a very minimal snapshot of the given debuggee object.
  *
  * @param aObject Debugger.Object
  *        The object to describe with the created grip.
  */
-function objectGrip(aObject) {
-  let g = {
+function objectSnapshot(aObject) {
+  return {
     "type": "object",
     "class": aObject.class,
-    "extensible": aObject.isExtensible(),
-    "frozen": aObject.isFrozen(),
-    "sealed": aObject.isSealed()
   };
-
-  // Add additional properties for functions.
-  if (aObject.class === "Function") {
-    if (aObject.name) {
-      g.name = aObject.name;
-    }
-    if (aObject.displayName) {
-      g.displayName = aObject.displayName;
-    }
-
-    // Check if the developer has added a de-facto standard displayName
-    // property for us to use.
-    let name = aObject.getOwnPropertyDescriptor("displayName");
-    if (name && name.value && typeof name.value == "string") {
-      g.userDisplayName = createValueGrip(name.value, aObject);
-    }
-
-    // Add source location information.
-    if (aObject.script) {
-      g.url = aObject.script.url;
-      g.line = aObject.script.startLine;
-    }
-  }
-
-  return g;
 }
 
 /**
- * Create a descriptor for the given debuggee object. Descriptors are
- * identical to grips, with the addition of the prototype,
- * ownProperties, and safeGetterValues properties.
+ * Create a (slightly more) detailed snapshot of the given debuggee object.
  *
  * @param aObject Debugger.Object
  *        The object to describe with the created descriptor.
  */
-function objectDescriptor(aObject) {
-  let desc = objectGrip(aObject);
-  let ownProperties = Object.create(null);
+function detailedObjectSnapshot(aObject) {
+  let desc = objectSnapshot(aObject);
+  let ownProperties = desc.ownProperties = Object.create(null);
 
-  if (Cu.isDeadWrapper(aObject)) {
-    desc.prototype = createValueGrip(null);
-    desc.ownProperties = ownProperties;
-    desc.safeGetterValues = Object.create(null);
+  if (aObject.class == "DeadObject") {
     return desc;
   }
 
-  const names = aObject.getOwnPropertyNames();
   let i = 0;
-  for (let name of names) {
+  for (let name of aObject.getOwnPropertyNames()) {
     if (i++ > MAX_PROPERTIES) {
       break;
     }
-    let desc = propertyDescriptor(name, aObject);
+    let desc = propertySnapshot(name, aObject);
     if (desc) {
       ownProperties[name] = desc;
     }
   }
 
-  desc.ownProperties = ownProperties;
-
   return desc;
 }
 
 /**
- * A helper method that creates a property descriptor for the provided object,
- * properly formatted for sending in a protocol response.
+ * A helper method that creates a snapshot of the object's |aName| property.
  *
  * @param aName string
- *        The property that the descriptor is generated for.
+ *        The property of which the snapshot is taken.
  *
  * @param aObject Debugger.Object
- *        The object whose property the descriptor is generated for.
+ *        The object whose property the snapshot is taken of.
  *
- * @return object
- *         The property descriptor for the property |aName| in |aObject|.
+ * @return Object
+ *         The snapshot of the property.
  */
-function propertyDescriptor(aName, aObject) {
+function propertySnapshot(aName, aObject) {
   let desc;
   try {
     desc = aObject.getOwnPropertyDescriptor(aName);
@@ -698,26 +684,18 @@ function propertyDescriptor(aName, aObject) {
     };
   }
 
-  // Skip objects since we only support shallow objects anyways.
-  if (!desc || typeof desc.value == "object" && desc.value !== null) {
+  // Only create descriptors for simple values. We skip objects and properties
+  // that have getters and setters; ain't nobody got time for that!
+  if (!desc
+      || typeof desc.value == "object" && desc.value !== null
+      || !("value" in desc)) {
     return undefined;
   }
 
-  let retval = {
+  return {
     configurable: desc.configurable,
-    enumerable: desc.enumerable
+    enumerable: desc.enumerable,
+    writable: desc.writable,
+    value: createValueSnapshot(desc.value)
   };
-
-  if ("value" in desc) {
-    retval.writable = desc.writable;
-    retval.value = createValueGrip(desc.value);
-  } else {
-    if ("get" in desc) {
-      retval.get = createValueGrip(desc.get);
-    }
-    if ("set" in desc) {
-      retval.set = createValueGrip(desc.set);
-    }
-  }
-  return retval;
 }

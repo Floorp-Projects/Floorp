@@ -12,7 +12,6 @@
 #include "nsBlockFrame.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -5705,6 +5704,13 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
     DoRemoveFrame(aNextInFlow,
         aDeletingEmptyFrames ? FRAMES_ARE_EMPTY : 0);
   }
+}
+
+const nsStyleText*
+nsBlockFrame::StyleTextForLineLayout()
+{
+  // Return the pointer to an unmodified style text
+  return StyleText();
 }
 
 ////////////////////////////////////////////////////////////////////////

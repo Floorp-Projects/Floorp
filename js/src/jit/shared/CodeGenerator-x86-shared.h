@@ -49,7 +49,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         return ToOperand(def->output());
     }
 
-    MoveResolver::MoveOperand toMoveOperand(const LAllocation *a) const;
+    MoveOperand toMoveOperand(const LAllocation *a) const;
 
     bool bailoutIf(Assembler::Condition condition, LSnapshot *snapshot);
     bool bailoutIf(Assembler::DoubleCondition condition, LSnapshot *snapshot);
@@ -94,6 +94,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitDivSelfI(LDivSelfI *ins);
     virtual bool visitModI(LModI *ins);
     virtual bool visitModPowTwoI(LModPowTwoI *ins);
+    virtual bool visitModSelfI(LModSelfI *ins);
     virtual bool visitBitNotI(LBitNotI *ins);
     virtual bool visitBitOpI(LBitOpI *ins);
     virtual bool visitShiftI(LShiftI *ins);

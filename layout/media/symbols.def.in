@@ -11,6 +11,7 @@ nestegg_free_packet
 nestegg_init
 nestegg_offset_seek
 nestegg_packet_count
+nestegg_packet_discard_padding
 nestegg_packet_data
 nestegg_packet_track
 nestegg_packet_tstamp
@@ -28,7 +29,7 @@ nestegg_tstamp_scale
 nestegg_has_cues
 nestegg_sniff
 #endif
-#ifdef MOZ_VP8
+#ifdef MOZ_VPX
 #ifndef MOZ_NATIVE_LIBVPX
 vpx_codec_control_
 vpx_codec_dec_init_ver
@@ -37,12 +38,12 @@ vpx_codec_destroy
 vpx_codec_get_frame
 vpx_codec_peek_stream_info
 vpx_codec_vp8_dx
+vpx_codec_vp9_dx
 vpx_img_free
 vpx_codec_enc_config_set
 vpx_codec_enc_init_ver
-#ifdef MOZ_VP8_ENCODER
 vpx_codec_vp8_cx
-#endif
+vpx_codec_vp9_cx
 vpx_img_set_rect
 vpx_img_wrap
 vpx_codec_get_cx_data

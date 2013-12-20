@@ -434,6 +434,25 @@ nsGonkCameraControl::GetParameterDouble(uint32_t aKey)
   }
 }
 
+int32_t
+nsGonkCameraControl::GetParameterInt32(uint32_t aKey)
+{
+  if (aKey == CAMERA_PARAM_SENSORANGLE) {
+    if (!mCameraHw.get()) {
+      return 0;
+    }
+    return mCameraHw->GetSensorOrientation();
+  }
+
+  const char* key = getKeyText(aKey);
+  if (!key) {
+    return 0;
+  }
+
+  RwAutoLockRead lock(mRwLock);
+  return mParams.getInt(key);
+}
+
 void
 nsGonkCameraControl::GetParameter(uint32_t aKey,
                                   nsTArray<idl::CameraRegion>& aRegions)
@@ -1139,7 +1158,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    obs->NotifyObservers(mFile, "file-watcher-notify", NS_LITERAL_STRING("modified").get());
+    obs->NotifyObservers(mFile, "file-watcher-notify", MOZ_UTF16("modified"));
     return NS_OK;
   }
 

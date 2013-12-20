@@ -38,10 +38,10 @@ protected:
 
     typedef bool (* nsBaseArrayEnumFunc)
         (void* aElement, void *aData);
-    
+
     // enumerate through the array with a callback.
     bool EnumerateForwards(nsBaseArrayEnumFunc aFunc, void* aData) const;
-    
+
     bool EnumerateBackwards(nsBaseArrayEnumFunc aFunc, void* aData) const;
 
     typedef int (* nsBaseArrayComparatorFunc)
@@ -121,7 +121,7 @@ public:
     nsISupports* ElementAt(uint32_t aIndex) const {
         return mArray[aIndex];
     }
-    
+
     nsISupports* SafeObjectAt(int32_t aIndex) const {
         return mArray.SafeElementAt(aIndex, nullptr);
     }
@@ -172,7 +172,7 @@ public:
              mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
 
 private:
-    
+
     // the actual storage
     nsTArray<nsISupports*> mArray;
 
@@ -193,8 +193,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             uint32_t aFlags = 0)
 {
     aFlags |= CycleCollectionEdgeNameArrayFlag;
-    size_t length = aField.Count();
-    for (size_t i = 0; i < length; ++i) {
+    int32_t length = aField.Count();
+    for (int32_t i = 0; i < length; ++i) {
         CycleCollectionNoteChild(aCallback, aField[i], aName, aFlags);
     }
 }
@@ -226,7 +226,7 @@ class nsCOMArray : public nsCOMArray_base
 
     explicit
     nsCOMArray(int32_t aCount) : nsCOMArray_base(aCount) {}
-    
+
     explicit
     nsCOMArray(const nsCOMArray<T>& aOther) : nsCOMArray_base(aOther) { }
 
@@ -315,7 +315,7 @@ class nsCOMArray : public nsCOMArray_base
     // bool enumerate(T* aElement, void* aData)
     typedef bool (* nsCOMArrayEnumFunc)
         (T* aElement, void *aData);
-    
+
     // enumerate through the array with a callback. 
     bool EnumerateForwards(nsCOMArrayEnumFunc aFunc, void* aData) {
         return nsCOMArray_base::EnumerateForwards(nsBaseArrayEnumFunc(aFunc),
@@ -326,10 +326,10 @@ class nsCOMArray : public nsCOMArray_base
         return nsCOMArray_base::EnumerateBackwards(nsBaseArrayEnumFunc(aFunc),
                                                   aData);
     }
-    
+
     typedef int (* nsCOMArrayComparatorFunc)
         (T* aElement1, T* aElement2, void* aData);
-        
+
     void Sort(nsCOMArrayComparatorFunc aFunc, void* aData) {
         nsCOMArray_base::Sort(nsBaseArrayComparatorFunc(aFunc), aData);
     }
@@ -354,7 +354,7 @@ class nsCOMArray : public nsCOMArray_base
     void AppendElements(T* const* aElements, uint32_t aCount) {
         InsertElementsAt(Length(), aElements, aCount);
     }
-    
+
     // remove the first instance of the given object and shrink the
     // array as necessary
     // Warning: if you pass null here, it will remove the first null element
@@ -378,7 +378,7 @@ class nsCOMArray : public nsCOMArray_base
     // the memory taken by the T itself as well as anything it points to.
     typedef size_t (* nsCOMArraySizeOfElementIncludingThisFunc)
         (T* aElement, mozilla::MallocSizeOf aMallocSizeOf, void *aData);
-    
+
     size_t SizeOfExcludingThis(
              nsCOMArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis, 
              mozilla::MallocSizeOf aMallocSizeOf, void *aData = nullptr) const {
@@ -408,8 +408,8 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                             uint32_t aFlags = 0)
 {
     aFlags |= CycleCollectionEdgeNameArrayFlag;
-    size_t length = aField.Count();
-    for (size_t i = 0; i < length; ++i) {
+    int32_t length = aField.Count();
+    for (int32_t i = 0; i < length; ++i) {
         CycleCollectionNoteChild(aCallback, aField[i], aName, aFlags);
     }
 }

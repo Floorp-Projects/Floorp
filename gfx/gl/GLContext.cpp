@@ -28,6 +28,8 @@
 #include "TextureGarbageBin.h"
 #include "gfx2DGlue.h"
 
+#include "OGLShaderProgram.h" // for ShaderProgramType
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 
@@ -41,6 +43,7 @@
 #endif
 
 using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 namespace mozilla {
 namespace gl {
@@ -273,6 +276,11 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mWorkAroundDriverBugs(true)
 {
     mOwningThread = NS_GetCurrentThread();
+
+    mReadTextureImagePrograms[0] = 0;
+    mReadTextureImagePrograms[1] = 0;
+    mReadTextureImagePrograms[2] = 0;
+    mReadTextureImagePrograms[3] = 0;
 }
 
 GLContext::~GLContext() {
@@ -448,11 +456,17 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
     };
 
     mInitialized = LoadSymbols(&symbols[0], trygl, prefix);
-
+    MakeCurrent();
     if (mInitialized) {
         unsigned int version = 0;
 
         bool parseSuccess = ParseGLVersion(this, &version);
+
+#ifdef DEBUG
+        printf_stderr("OpenGL version detected: %u\n", version);
+        printf_stderr("OpenGL vendor: %s\n", fGetString(LOCAL_GL_VENDOR));
+        printf_stderr("OpenGL renderer: %s\n", fGetString(LOCAL_GL_RENDERER));
+#endif
 
         if (version >= mVersion) {
             mVersion = version;
@@ -1037,21 +1051,17 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
                 mNeedsTextureSizeChecks = true;
             } else if (mVendor == VendorNVIDIA) {
-                SInt32 major, minor;
-                OSErr err1 = ::Gestalt(gestaltSystemVersionMajor, &major);
-                OSErr err2 = ::Gestalt(gestaltSystemVersionMinor, &minor);
-
-                if (err1 != noErr || err2 != noErr ||
-                    major < 10 || (major == 10 && minor < 8)) {
-                    // See bug 877949.
-                    mMaxTextureSize = std::min(mMaxTextureSize, 4096);
-                    mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
-                }
-                else {
+                if (nsCocoaFeatures::OnMountainLionOrLater()) {
                     // See bug 879656.  8192 fails, 8191 works.
                     mMaxTextureSize = std::min(mMaxTextureSize, 8191);
                     mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
                 }
+                else {
+                    // See bug 877949.
+                    mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+                    mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
+                }
+                
                 // Part of the bug 879656, but it also doesn't hurt the 877949
                 mNeedsTextureSizeChecks = true;
             }
@@ -1137,141 +1147,10 @@ GLContext::InitExtensions()
 #endif
 }
 
-
-// Take texture data in a given buffer and copy it into a larger buffer,
-// padding out the edge pixels for filtering if necessary
-static void
-CopyAndPadTextureData(const GLvoid* srcBuffer,
-                      GLvoid* dstBuffer,
-                      GLsizei srcWidth, GLsizei srcHeight,
-                      GLsizei dstWidth, GLsizei dstHeight,
-                      GLsizei stride, GLint pixelsize)
-{
-    unsigned char *rowDest = static_cast<unsigned char*>(dstBuffer);
-    const unsigned char *source = static_cast<const unsigned char*>(srcBuffer);
-
-    for (GLsizei h = 0; h < srcHeight; ++h) {
-        memcpy(rowDest, source, srcWidth * pixelsize);
-        rowDest += dstWidth * pixelsize;
-        source += stride;
-    }
-
-    GLsizei padHeight = srcHeight;
-
-    // Pad out an extra row of pixels so that edge filtering doesn't use garbage data
-    if (dstHeight > srcHeight) {
-        memcpy(rowDest, source - stride, srcWidth * pixelsize);
-        padHeight++;
-    }
-
-    // Pad out an extra column of pixels
-    if (dstWidth > srcWidth) {
-        rowDest = static_cast<unsigned char*>(dstBuffer) + srcWidth * pixelsize;
-        for (GLsizei h = 0; h < padHeight; ++h) {
-            memcpy(rowDest, rowDest - pixelsize, pixelsize);
-            rowDest += dstWidth * pixelsize;
-        }
-    }
-}
-
-// In both of these cases (for the Adreno at least) it is impossible
-// to determine good or bad driver versions for POT texture uploads,
-// so blacklist them all. Newer drivers use a different rendering
-// string in the form "Adreno (TM) 200" and the drivers we've seen so
-// far work fine with NPOT textures, so don't blacklist those until we
-// have evidence of any problems with them.
-bool
-GLContext::CanUploadSubTextures()
-{
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-    // There are certain GPUs that we don't want to use glTexSubImage2D on
-    // because that function can be very slow and/or buggy
-    if (Renderer() == RendererAdreno200 || Renderer() == RendererAdreno205)
-        return false;
-
-    // On PowerVR glTexSubImage does a readback, so it will be slower
-    // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
-    if (Renderer() == RendererSGX540 || Renderer() == RendererSGX530)
-        return false;
-
-    return true;
-}
-
-
-bool
-GLContext::CanReadSRGBFromFBOTexture()
-{
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-#ifdef XP_MACOSX
-    // Bug 843668:
-    // MacOSX 10.6 reports to support EXT_framebuffer_sRGB and
-    // EXT_texture_sRGB but fails to convert from sRGB to linear
-    // when writing to an sRGB texture attached to an FBO.
-    SInt32 major, minor;
-    ::Gestalt(gestaltSystemVersionMajor, &major);
-    ::Gestalt(gestaltSystemVersionMinor, &minor);
-    if (major == 10 && minor <= 6) {
-        return false;
-    }
-#endif // XP_MACOSX
-    return true;
-}
-
-
-bool GLContext::sPowerOfTwoForced = false;
-bool GLContext::sPowerOfTwoPrefCached = false;
-
 void
 GLContext::PlatformStartup()
 {
-  CacheCanUploadNPOT();
   RegisterStrongMemoryReporter(new GfxTexturesReporter());
-}
-
-void
-GLContext::CacheCanUploadNPOT()
-{
-    MOZ_ASSERT(NS_IsMainThread(), "Can't cache prefs off the main thread.");
-    MOZ_ASSERT(!sPowerOfTwoPrefCached, "Must only call this function once!");
-
-    sPowerOfTwoPrefCached = true;
-    mozilla::Preferences::AddBoolVarCache(&sPowerOfTwoForced,
-                                          "gfx.textures.poweroftwo.force-enabled");
-}
-
-bool
-GLContext::CanUploadNonPowerOfTwo()
-{
-    MOZ_ASSERT(sPowerOfTwoPrefCached);
-
-    if (!mWorkAroundDriverBugs)
-        return true;
-
-    // Some GPUs driver crash when uploading non power of two 565 textures.
-    return sPowerOfTwoForced ? false : (Renderer() != RendererAdreno200 &&
-                                        Renderer() != RendererAdreno205);
-}
-
-bool
-GLContext::WantsSmallTiles()
-{
-    // We must use small tiles for good performance if we can't use
-    // glTexSubImage2D() for some reason.
-    if (!CanUploadSubTextures())
-        return true;
-
-    // We can't use small tiles on the SGX 540, because of races in texture upload.
-    if (mWorkAroundDriverBugs &&
-        Renderer() == RendererSGX540)
-        return false;
-
-    // Don't use small tiles otherwise. (If we implement incremental texture upload,
-    // then we will want to revisit this.)
-    return false;
 }
 
 // Common code for checking for both GL extensions and GLX extensions.
@@ -1311,35 +1190,6 @@ GLContext::ListHasExtension(const GLubyte *extensions, const char *extension)
     }
     return false;
 }
-
-already_AddRefed<TextureImage>
-GLContext::CreateTextureImage(const nsIntSize& aSize,
-                              TextureImage::ContentType aContentType,
-                              GLenum aWrapMode,
-                              TextureImage::Flags aFlags,
-                              TextureImage::ImageFormat aImageFormat)
-{
-    return CreateBasicTextureImage(this, aSize, aContentType, aWrapMode,
-                                   aFlags, aImageFormat);
-}
-
-void GLContext::ApplyFilterToBoundTexture(GraphicsFilter aFilter)
-{
-    ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_2D, aFilter);
-}
-
-void GLContext::ApplyFilterToBoundTexture(GLuint aTarget,
-                                          GraphicsFilter aFilter)
-{
-    if (aFilter == GraphicsFilter::FILTER_NEAREST) {
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-    } else {
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-        fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-    }
-}
-
 
 void
 GLContext::DetermineCaps()
@@ -1477,104 +1327,6 @@ GLContext::ChooseGLFormats(const SurfaceCaps& caps) const
     formats.stencil = LOCAL_GL_STENCIL_INDEX8;
 
     return formats;
-}
-
-GLuint
-GLContext::CreateTextureForOffscreen(const GLFormats& formats, const gfxIntSize& size)
-{
-    MOZ_ASSERT(formats.color_texInternalFormat);
-    MOZ_ASSERT(formats.color_texFormat);
-    MOZ_ASSERT(formats.color_texType);
-
-    return CreateTexture(formats.color_texInternalFormat,
-                         formats.color_texFormat,
-                         formats.color_texType,
-                         size);
-}
-
-GLuint
-GLContext::CreateTexture(GLenum internalFormat, GLenum format, GLenum type, const gfxIntSize& size)
-{
-    GLuint tex = 0;
-    fGenTextures(1, &tex);
-    ScopedBindTexture autoTex(this, tex);
-
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-    fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                0,
-                internalFormat,
-                size.width, size.height,
-                0,
-                format,
-                type,
-                nullptr);
-
-    return tex;
-}
-
-static inline void
-RenderbufferStorageBySamples(GLContext* gl, GLsizei samples, GLenum internalFormat, const gfxIntSize& size)
-{
-    if (samples) {
-        gl->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
-                                            samples,
-                                            internalFormat,
-                                            size.width, size.height);
-    } else {
-        gl->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
-                                 internalFormat,
-                                 size.width, size.height);
-    }
-}
-
-GLuint
-GLContext::CreateRenderbuffer(GLenum format, GLsizei samples, const gfxIntSize& size)
-{
-    GLuint rb = 0;
-    fGenRenderbuffers(1, &rb);
-    ScopedBindRenderbuffer autoRB(this, rb);
-
-    RenderbufferStorageBySamples(this, samples, format, size);
-
-    return rb;
-}
-
-void
-GLContext::CreateRenderbuffersForOffscreen(const GLFormats& formats, const gfxIntSize& size,
-                                           bool multisample,
-                                           GLuint* colorMSRB, GLuint* depthRB, GLuint* stencilRB)
-{
-    GLsizei samples = multisample ? formats.samples : 0;
-    if (colorMSRB) {
-        MOZ_ASSERT(formats.samples > 0);
-        MOZ_ASSERT(formats.color_rbFormat);
-
-        *colorMSRB = CreateRenderbuffer(formats.color_rbFormat, samples, size);
-    }
-
-    if (depthRB &&
-        stencilRB &&
-        formats.depthStencil)
-    {
-        *depthRB = CreateRenderbuffer(formats.depthStencil, samples, size);
-        *stencilRB = *depthRB;
-    } else {
-        if (depthRB) {
-            MOZ_ASSERT(formats.depth);
-
-            *depthRB = CreateRenderbuffer(formats.depth, samples, size);
-        }
-
-        if (stencilRB) {
-            MOZ_ASSERT(formats.stencil);
-
-            *stencilRB = CreateRenderbuffer(formats.stencil, samples, size);
-        }
-    }
 }
 
 bool
@@ -1855,6 +1607,11 @@ GLContext::MarkDestroyed()
         mBlitHelper = nullptr;
         mBlitTextureImageHelper = nullptr;
 
+        fDeleteProgram(mReadTextureImagePrograms[0]);
+        fDeleteProgram(mReadTextureImagePrograms[1]);
+        fDeleteProgram(mReadTextureImagePrograms[2]);
+        fDeleteProgram(mReadTextureImagePrograms[3]);
+
         mTexGarbageBin->GLContextTeardown();
     } else {
         NS_WARNING("MakeCurrent() failed during MarkDestroyed! Skipping GL object teardown.");
@@ -1938,143 +1695,339 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
     return surf.forget();
 }
 
-already_AddRefed<gfxImageSurface>
-GLContext::ReadTextureImage(GLuint aTexture,
-                            const gfxIntSize& aSize,
-                            GLenum aTextureFormat,
-                            bool aYInvert)
+static float
+gReadTextureImageVerts[4*4] = {
+    -1.0f, -1.0f, 0.0f, 1.0f,
+     1.0f, -1.0f, 0.0f, 1.0f,
+    -1.0f,  1.0f, 0.0f, 1.0f,
+     1.0f,  1.0f, 0.0f, 1.0f
+};
+
+static float*
+ReadTextureVertexArray()
 {
-    MakeCurrent();
+    return gReadTextureImageVerts;
+}
 
-    nsRefPtr<gfxImageSurface> isurf;
+static float
+gReadTextureImageTexcoords[2*4] = {
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
+};
 
-    GLint oldrb, oldfb, oldprog, oldPackAlignment;
-    GLint success;
+static float*
+ReadTextureTexCoordArray(float aWidth, float aHeight, bool aFlip)
+{
+    const float u0 = 0.0f;
+    const float u1 = aWidth;
+    const float v0 = (aFlip) ? aHeight : 0.0f;
+    const float v1 = (aFlip) ? 0.0f : aHeight;
 
-    GLuint rb = 0, fb = 0;
-    GLuint vs = 0, fs = 0, prog = 0;
+    float* uvs = gReadTextureImageTexcoords;
+    uvs[0] = u0;
+    uvs[1] = v0;
+    uvs[2] = u1;
+    uvs[3] = v0;
+    uvs[4] = u0;
+    uvs[5] = v1;
+    uvs[6] = u1;
+    uvs[7] = v1;
 
-    const char *vShader =
-        "attribute vec4 aVertex;\n"
-        "attribute vec2 aTexCoord;\n"
-        "varying vec2 vTexCoord;\n"
-        "void main() { gl_Position = aVertex; vTexCoord = aTexCoord; }";
-    const char *fShader =
-        "#ifdef GL_ES\n"
-        "precision mediump float;\n"
-        "#endif\n"
-        "varying vec2 vTexCoord;\n"
-        "uniform sampler2D uTexture;\n"
-        "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }";
+    return uvs;
+}
 
-    float verts[4*4] = {
-        -1.0f, -1.0f, 0.0f, 1.0f,
-         1.0f, -1.0f, 0.0f, 1.0f,
-        -1.0f,  1.0f, 0.0f, 1.0f,
-         1.0f,  1.0f, 0.0f, 1.0f
-    };
+static const char*
+gReadTextureImageVS =
+    "attribute vec4 aVertex;\n"
+    "attribute vec2 aTexCoord;\n"
+    "varying vec2 vTexCoord;\n"
+    "void main() { gl_Position = aVertex; vTexCoord = aTexCoord; }";
 
-    float texcoords[2*4] = {
-        0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
-    };
+static const char*
+gReadTextureImageFS[] = {
+    /* TEXTURE_2D */
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 vTexCoord;\n"
+    "uniform sampler2D uTexture;\n"
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
+    ,
+    /* TEXTURE_2D with R/B swizzling */
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 vTexCoord;\n"
+    "uniform sampler2D uTexture;\n"
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord).bgra; }"
+    ,
+    /* TEXTURE_EXTERNAL */
+    "#extension GL_OES_EGL_image_external : require\n"
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 vTexCoord;\n"
+    "uniform samplerExternalOES uTexture;\n"
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
+    ,
+    /* TEXTURE_RECTANGLE */
+    "#extension GL_ARB_texture_rectangle\n"
+    "#ifdef GL_ES\n"
+    "precision mediump float;\n"
+    "#endif\n"
+    "varying vec2 vTexCoord;\n"
+    "uniform sampler2DRect uTexture;\n"
+    "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }"
+};
 
-    fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
-    fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
-    fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
+GLuint
+GLContext::TextureImageProgramFor(GLenum aTextureTarget, int aShader) {
+    int variant = 0;
+    if (aTextureTarget == LOCAL_GL_TEXTURE_2D &&
+        (aShader == layers::BGRALayerProgramType ||
+         aShader == layers::BGRXLayerProgramType))
+    {   // Need to swizzle R/B.
+        variant = 1;
+    } else if (aTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
+        variant = 2;
+    } else if (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) {
+        variant = 3;
+    }
+
+    /* This might be overkill, but assure that we don't access out-of-bounds */
+    MOZ_ASSERT((size_t) variant < ArrayLength(mReadTextureImagePrograms));
+    if (!mReadTextureImagePrograms[variant]) {
+        GLuint vs = fCreateShader(LOCAL_GL_VERTEX_SHADER);
+        fShaderSource(vs, 1, (const GLchar**) &gReadTextureImageVS, NULL);
+        fCompileShader(vs);
+
+        GLuint fs = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+        fShaderSource(fs, 1, (const GLchar**) &gReadTextureImageFS[variant], NULL);
+        fCompileShader(fs);
+
+        GLuint program = fCreateProgram();
+        fAttachShader(program, vs);
+        fAttachShader(program, fs);
+        fBindAttribLocation(program, 0, "aVertex");
+        fBindAttribLocation(program, 1, "aTexCoord");
+        fLinkProgram(program);
+
+        GLint success;
+        fGetProgramiv(program, LOCAL_GL_LINK_STATUS, &success);
+
+        if (!success) {
+            fDeleteProgram(program);
+            program = 0;
+        }
+
+        fDeleteShader(vs);
+        fDeleteShader(fs);
+
+        mReadTextureImagePrograms[variant] = program;
+    }
+
+    return mReadTextureImagePrograms[variant];
+}
+
+static bool
+DidGLErrorOccur(GLContext* aGL, const char* str)
+{
+    GLenum error = aGL->fGetError();
+    if (error != LOCAL_GL_NO_ERROR) {
+        printf_stderr("GL ERROR: %s (0x%04x) %s\n",
+                      aGL->GLErrorToString(error), error, str);
+        return true;
+    }
+
+    return false;
+}
+
+bool
+GLContext::ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize) {
+    GLint oldPackAlignment;
     fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &oldPackAlignment);
-
-    PushViewportRect(nsIntRect(0, 0, aSize.width, aSize.height));
-
-    fGenRenderbuffers(1, &rb);
-    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
-    fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, LOCAL_GL_RGBA,
-                         aSize.width, aSize.height);
-
-    fGenFramebuffers(1, &fb);
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
-    fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
-                             LOCAL_GL_RENDERBUFFER, rb);
-
-    if (fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) !=
-        LOCAL_GL_FRAMEBUFFER_COMPLETE)
-    {
-        goto cleanup;
-    }
-
-    vs = fCreateShader(LOCAL_GL_VERTEX_SHADER);
-    fs = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
-    fShaderSource(vs, 1, (const GLchar**) &vShader, nullptr);
-    fShaderSource(fs, 1, (const GLchar**) &fShader, nullptr);
-    fCompileShader(vs);
-    fCompileShader(fs);
-    prog = fCreateProgram();
-    fAttachShader(prog, vs);
-    fAttachShader(prog, fs);
-    fBindAttribLocation(prog, 0, "aVertex");
-    fBindAttribLocation(prog, 1, "aTexCoord");
-    fLinkProgram(prog);
-
-    fGetProgramiv(prog, LOCAL_GL_LINK_STATUS, &success);
-    if (!success) {
-        goto cleanup;
-    }
-
-    fUseProgram(prog);
-
-    fEnableVertexAttribArray(0);
-    fEnableVertexAttribArray(1);
-
-    fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, verts);
-    fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, texcoords);
-
-    fActiveTexture(LOCAL_GL_TEXTURE0);
-    fBindTexture(LOCAL_GL_TEXTURE_2D, aTexture);
-
-    fUniform1i(fGetUniformLocation(prog, "uTexture"), 0);
-
-    fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-
-    fDisableVertexAttribArray(1);
-    fDisableVertexAttribArray(0);
-
-    isurf = new gfxImageSurface(aSize, gfxImageFormatARGB32);
-    if (!isurf || isurf->CairoStatus()) {
-        isurf = nullptr;
-        goto cleanup;
-    }
 
     if (oldPackAlignment != 4)
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
 
     fReadPixels(0, 0, aSize.width, aSize.height,
                 LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                isurf->Data());
+                aSurface->Data());
 
-    SwapRAndBComponents(isurf);
+    bool result = DidGLErrorOccur(this, "when reading pixels into surface");
 
     if (oldPackAlignment != 4)
         fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, oldPackAlignment);
 
-    if (aYInvert) {
-      isurf = YInvertImageSurface(isurf);
+    return result;
+}
+
+#define CLEANUP_IF_GLERROR_OCCURRED(x)                                      \
+    if (DidGLErrorOccur(this, (x))) {                                       \
+        isurf = nullptr;                                                    \
+        break;                                                              \
     }
 
- cleanup:
-    // note that deleting 0 has no effect in any of these calls
-    fDeleteRenderbuffers(1, &rb);
-    fDeleteFramebuffers(1, &fb);
-    fDeleteShader(vs);
-    fDeleteShader(fs);
-    fDeleteProgram(prog);
+already_AddRefed<gfxImageSurface>
+GLContext::ReadTextureImage(GLuint aTextureId,
+                            GLenum aTextureTarget,
+                            const gfxIntSize& aSize,
+    /* ShaderProgramType */ int aShaderProgram,
+                            bool aYInvert)
+{
+    // Check aShaderProgram is in bounds for a layers::ShaderProgramType
+    MOZ_ASSERT(0 <= aShaderProgram && aShaderProgram < NumProgramTypes);
 
+    if (aTextureTarget != LOCAL_GL_TEXTURE_2D &&
+        aTextureTarget != LOCAL_GL_TEXTURE_EXTERNAL &&
+        aTextureTarget != LOCAL_GL_TEXTURE_RECTANGLE_ARB)
+    {
+        printf_stderr("ReadTextureImage target is not TEXTURE_2D || "
+                      "TEXTURE_EXTERNAL || TEXTURE_RECTANGLE\n");
+        return nullptr;
+    }
+
+    MakeCurrent();
+
+    /* Allocate resulting image surface */
+    nsRefPtr<gfxImageSurface> isurf;
+    isurf = new gfxImageSurface(aSize, gfxImageFormatARGB32);
+    if (!isurf || isurf->CairoStatus()) {
+        isurf = nullptr;
+        return isurf.forget();
+    }
+
+    realGLboolean oldBlend, oldScissor;
+    GLint oldrb, oldfb, oldprog, oldTexUnit, oldTex;
+    GLuint rb, fb;
+
+    do {
+        /* Save current GL state */
+        oldBlend = fIsEnabled(LOCAL_GL_BLEND);
+        oldScissor = fIsEnabled(LOCAL_GL_SCISSOR_TEST);
+
+        fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
+        fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
+        fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
+        fGetIntegerv(LOCAL_GL_ACTIVE_TEXTURE, &oldTexUnit);
+        fActiveTexture(LOCAL_GL_TEXTURE0);
+        switch (aTextureTarget) {
+        case LOCAL_GL_TEXTURE_2D:
+            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &oldTex);
+            break;
+        case LOCAL_GL_TEXTURE_EXTERNAL:
+            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL, &oldTex);
+            break;
+        case LOCAL_GL_TEXTURE_RECTANGLE:
+            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_RECTANGLE, &oldTex);
+            break;
+        default: /* Already checked above */
+            break;
+        }
+
+        /* Set required GL state */
+        fDisable(LOCAL_GL_BLEND);
+        fDisable(LOCAL_GL_SCISSOR_TEST);
+
+        PushViewportRect(nsIntRect(0, 0, aSize.width, aSize.height));
+
+        /* Setup renderbuffer */
+        fGenRenderbuffers(1, &rb);
+        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
+
+        GLenum rbInternalFormat =
+            IsGLES2()
+                ? (IsExtensionSupported(OES_rgb8_rgba8) ? LOCAL_GL_RGBA8 : LOCAL_GL_RGBA4)
+                : LOCAL_GL_RGBA;
+        fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, rbInternalFormat, aSize.width, aSize.height);
+        CLEANUP_IF_GLERROR_OCCURRED("when binding and creating renderbuffer");
+
+        /* Setup framebuffer */
+        fGenFramebuffers(1, &fb);
+        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
+        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                                 LOCAL_GL_RENDERBUFFER, rb);
+        CLEANUP_IF_GLERROR_OCCURRED("when binding and creating framebuffer");
+
+        if (fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+            printf_stderr("framebuffer is incomplete\n");
+            break; //goto cleanup;
+        }
+
+        /* Setup vertex and fragment shader */
+        layers::ShaderProgramType shaderProgram = (ShaderProgramType) aShaderProgram;
+        GLuint program = TextureImageProgramFor(aTextureTarget, shaderProgram);
+        if (!program) {
+            printf_stderr("failed to compile program for texture target %u and"
+                          " shader program type %d\n",
+                          aTextureTarget, aShaderProgram);
+            break; // goto cleanup;
+        }
+
+        fUseProgram(program);
+        CLEANUP_IF_GLERROR_OCCURRED("when using program");
+        fUniform1i(fGetUniformLocation(program, "uTexture"), 0);
+        CLEANUP_IF_GLERROR_OCCURRED("when setting uniform location");
+
+        /* Setup quad geometry */
+        fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+        fEnableVertexAttribArray(0);
+        fEnableVertexAttribArray(1);
+
+        float w = (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) ? (float) aSize.width : 1.0f;
+        float h = (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) ? (float) aSize.height : 1.0f;
+        fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, ReadTextureVertexArray());
+        fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, ReadTextureTexCoordArray(w, h, aYInvert));
+
+        /* Bind the texture */
+        if (aTextureId) {
+            fBindTexture(aTextureTarget, aTextureId);
+            CLEANUP_IF_GLERROR_OCCURRED("when binding texture");
+        }
+
+        /* Draw quad */
+        fClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+        fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+        CLEANUP_IF_GLERROR_OCCURRED("when clearing color buffer");
+
+        fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+        CLEANUP_IF_GLERROR_OCCURRED("when drawing texture");
+
+        fDisableVertexAttribArray(1);
+        fDisableVertexAttribArray(0);
+
+        /* Read-back draw results */
+        ReadBackPixelsIntoSurface(isurf, aSize);
+        CLEANUP_IF_GLERROR_OCCURRED("when reading pixels into surface");
+    } while (false);
+
+    /* Restore GL state */
+//cleanup:
     fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, oldrb);
     fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, oldfb);
     fUseProgram(oldprog);
+
+    // note that deleting 0 has no effect in any of these calls
+    fDeleteRenderbuffers(1, &rb);
+    fDeleteFramebuffers(1, &fb);
+
+    if (oldBlend)
+        fEnable(LOCAL_GL_BLEND);
+
+    if (oldScissor)
+        fEnable(LOCAL_GL_SCISSOR_TEST);
+
+    if (aTextureId)
+        fBindTexture(aTextureTarget, oldTex);
+
+    if (oldTexUnit != LOCAL_GL_TEXTURE0)
+        fActiveTexture(oldTexUnit);
 
     PopViewportRect();
 
     return isurf.forget();
 }
+
+#undef CLEANUP_IF_GLERROR_OCCURRED
 
 static bool
 GetActualReadFormats(GLContext* gl, GLenum destFormat, GLenum destType,
@@ -2319,499 +2272,7 @@ GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
 #endif
 }
 
-static unsigned int
-DataOffset(const nsIntPoint &aPoint, int32_t aStride, gfxImageFormat aFormat)
-{
-  unsigned int data = aPoint.y * aStride;
-  data += aPoint.x * gfxASurface::BytePerPixelFromFormat(aFormat);
-  return data;
-}
-
-GLContext::SurfaceFormat
-GLContext::UploadImageDataToTexture(unsigned char* aData,
-                                    int32_t aStride,
-                                    gfxImageFormat aFormat,
-                                    const nsIntRegion& aDstRegion,
-                                    GLuint& aTexture,
-                                    bool aOverwrite,
-                                    bool aPixelBuffer,
-                                    GLenum aTextureUnit,
-                                    GLenum aTextureTarget)
-{
-    bool textureInited = aOverwrite ? false : true;
-    MakeCurrent();
-    fActiveTexture(aTextureUnit);
-
-    if (!aTexture) {
-        fGenTextures(1, &aTexture);
-        fBindTexture(aTextureTarget, aTexture);
-        fTexParameteri(aTextureTarget,
-                       LOCAL_GL_TEXTURE_MIN_FILTER,
-                       LOCAL_GL_LINEAR);
-        fTexParameteri(aTextureTarget,
-                       LOCAL_GL_TEXTURE_MAG_FILTER,
-                       LOCAL_GL_LINEAR);
-        fTexParameteri(aTextureTarget,
-                       LOCAL_GL_TEXTURE_WRAP_S,
-                       LOCAL_GL_CLAMP_TO_EDGE);
-        fTexParameteri(aTextureTarget,
-                       LOCAL_GL_TEXTURE_WRAP_T,
-                       LOCAL_GL_CLAMP_TO_EDGE);
-        textureInited = false;
-    } else {
-        fBindTexture(aTextureTarget, aTexture);
-    }
-
-    nsIntRegion paintRegion;
-    if (!textureInited) {
-        paintRegion = nsIntRegion(aDstRegion.GetBounds());
-    } else {
-        paintRegion = aDstRegion;
-    }
-
-    GLenum format;
-    GLenum internalFormat;
-    GLenum type;
-    int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(aFormat);
-    SurfaceFormat surfaceFormat;
-
-    MOZ_ASSERT(GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
-               GetPreferredARGB32Format() == LOCAL_GL_RGBA);
-    switch (aFormat) {
-        case gfxImageFormatARGB32:
-            if (GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
-              format = LOCAL_GL_BGRA;
-              surfaceFormat = FORMAT_R8G8B8A8;
-              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-            } else {
-              format = LOCAL_GL_RGBA;
-              surfaceFormat = FORMAT_B8G8R8A8;
-              type = LOCAL_GL_UNSIGNED_BYTE;
-            }
-            internalFormat = LOCAL_GL_RGBA;
-            break;
-        case gfxImageFormatRGB24:
-            // Treat RGB24 surfaces as RGBA32 except for the surface
-            // format used.
-            if (GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
-              format = LOCAL_GL_BGRA;
-              surfaceFormat = FORMAT_R8G8B8X8;
-              type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
-            } else {
-              format = LOCAL_GL_RGBA;
-              surfaceFormat = FORMAT_B8G8R8X8;
-              type = LOCAL_GL_UNSIGNED_BYTE;
-            }
-            internalFormat = LOCAL_GL_RGBA;
-            break;
-        case gfxImageFormatRGB16_565:
-            internalFormat = format = LOCAL_GL_RGB;
-            type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = FORMAT_R5G6B5;
-            break;
-        case gfxImageFormatA8:
-            internalFormat = format = LOCAL_GL_LUMINANCE;
-            type = LOCAL_GL_UNSIGNED_BYTE;
-            // We don't have a specific luminance shader
-            surfaceFormat = FORMAT_A8;
-            break;
-        default:
-            NS_ASSERTION(false, "Unhandled image surface format!");
-            format = 0;
-            type = 0;
-            surfaceFormat = FORMAT_UNKNOWN;
-    }
-
-    nsIntRegionRectIterator iter(paintRegion);
-    const nsIntRect *iterRect;
-
-    // Top left point of the region's bounding rectangle.
-    nsIntPoint topLeft = paintRegion.GetBounds().TopLeft();
-
-    while ((iterRect = iter.Next())) {
-        // The inital data pointer is at the top left point of the region's
-        // bounding rectangle. We need to find the offset of this rect
-        // within the region and adjust the data pointer accordingly.
-        unsigned char *rectData =
-            aData + DataOffset(iterRect->TopLeft() - topLeft, aStride, aFormat);
-
-        NS_ASSERTION(textureInited || (iterRect->x == 0 && iterRect->y == 0),
-                     "Must be uploading to the origin when we don't have an existing texture");
-
-        if (textureInited && CanUploadSubTextures()) {
-            TexSubImage2D(aTextureTarget,
-                          0,
-                          iterRect->x,
-                          iterRect->y,
-                          iterRect->width,
-                          iterRect->height,
-                          aStride,
-                          pixelSize,
-                          format,
-                          type,
-                          rectData);
-        } else {
-            TexImage2D(aTextureTarget,
-                       0,
-                       internalFormat,
-                       iterRect->width,
-                       iterRect->height,
-                       aStride,
-                       pixelSize,
-                       0,
-                       format,
-                       type,
-                       rectData);
-        }
-
-    }
-
-    return surfaceFormat;
-}
-
-GLContext::SurfaceFormat
-GLContext::UploadSurfaceToTexture(gfxASurface *aSurface,
-                                  const nsIntRegion& aDstRegion,
-                                  GLuint& aTexture,
-                                  bool aOverwrite,
-                                  const nsIntPoint& aSrcPoint,
-                                  bool aPixelBuffer,
-                                  GLenum aTextureUnit,
-                                  GLenum aTextureTarget)
-{
-
-    nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
-    unsigned char* data = nullptr;
-
-    if (!imageSurface ||
-        (imageSurface->Format() != gfxImageFormatARGB32 &&
-         imageSurface->Format() != gfxImageFormatRGB24 &&
-         imageSurface->Format() != gfxImageFormatRGB16_565 &&
-         imageSurface->Format() != gfxImageFormatA8)) {
-        // We can't get suitable pixel data for the surface, make a copy
-        nsIntRect bounds = aDstRegion.GetBounds();
-        imageSurface =
-          new gfxImageSurface(gfxIntSize(bounds.width, bounds.height),
-                              gfxImageFormatARGB32);
-
-        nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-        context->Translate(-gfxPoint(aSrcPoint.x, aSrcPoint.y));
-        context->SetSource(aSurface);
-        context->Paint();
-        data = imageSurface->Data();
-        NS_ASSERTION(!aPixelBuffer,
-                     "Must be using an image compatible surface with pixel buffers!");
-    } else {
-        // If a pixel buffer is bound the data pointer parameter is relative
-        // to the start of the data block.
-        if (!aPixelBuffer) {
-              data = imageSurface->Data();
-        }
-        data += DataOffset(aSrcPoint, imageSurface->Stride(),
-                           imageSurface->Format());
-    }
-
-    MOZ_ASSERT(imageSurface);
-    imageSurface->Flush();
-
-    return UploadImageDataToTexture(data,
-                                    imageSurface->Stride(),
-                                    imageSurface->Format(),
-                                    aDstRegion, aTexture, aOverwrite,
-                                    aPixelBuffer, aTextureUnit, aTextureTarget);
-}
-
-static gfxImageFormat
-ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
-{
-    switch (aFormat) {
-        case gfx::FORMAT_B8G8R8A8:
-            return gfxImageFormatARGB32;
-        case gfx::FORMAT_B8G8R8X8:
-            return gfxImageFormatRGB24;
-        case gfx::FORMAT_R5G6B5:
-            return gfxImageFormatRGB16_565;
-        case gfx::FORMAT_A8:
-            return gfxImageFormatA8;
-        default:
-            return gfxImageFormatUnknown;
-    }
-}
-
-GLContext::SurfaceFormat
-GLContext::UploadSurfaceToTexture(gfx::DataSourceSurface *aSurface,
-                                  const nsIntRegion& aDstRegion,
-                                  GLuint& aTexture,
-                                  bool aOverwrite,
-                                  const nsIntPoint& aSrcPoint,
-                                  bool aPixelBuffer,
-                                  GLenum aTextureUnit,
-                                  GLenum aTextureTarget)
-{
-    unsigned char* data = aPixelBuffer ? nullptr : aSurface->GetData();
-    int32_t stride = aSurface->Stride();
-    gfxImageFormat format =
-        ImageFormatForSurfaceFormat(aSurface->GetFormat());
-    data += DataOffset(aSrcPoint, stride, format);
-    return UploadImageDataToTexture(data, stride, format,
-                                    aDstRegion, aTexture, aOverwrite,
-                                    aPixelBuffer, aTextureUnit,
-                                    aTextureTarget);
-}
-
-static GLint GetAddressAlignment(ptrdiff_t aAddress)
-{
-    if (!(aAddress & 0x7)) {
-       return 8;
-    } else if (!(aAddress & 0x3)) {
-        return 4;
-    } else if (!(aAddress & 0x1)) {
-        return 2;
-    } else {
-        return 1;
-    }
-}
-
-void
-GLContext::TexImage2D(GLenum target, GLint level, GLint internalformat,
-                      GLsizei width, GLsizei height, GLsizei stride,
-                      GLint pixelsize, GLint border, GLenum format,
-                      GLenum type, const GLvoid *pixels)
-{
-    if (IsGLES2()) {
-
-        NS_ASSERTION(format == (GLenum)internalformat,
-                    "format and internalformat not the same for glTexImage2D on GLES2");
-
-        if (!CanUploadNonPowerOfTwo()
-            && (stride != width * pixelsize
-            || !IsPowerOfTwo(width)
-            || !IsPowerOfTwo(height))) {
-
-            // Pad out texture width and height to the next power of two
-            // as we don't support/want non power of two texture uploads
-            GLsizei paddedWidth = NextPowerOfTwo(width);
-            GLsizei paddedHeight = NextPowerOfTwo(height);
-
-            GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
-
-            // Pad out texture data to be in a POT sized buffer for uploading to
-            // a POT sized texture
-            CopyAndPadTextureData(pixels, paddedPixels, width, height,
-                                  paddedWidth, paddedHeight, stride, pixelsize);
-
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)paddedPixels),
-                            GetAddressAlignment((ptrdiff_t)paddedWidth * pixelsize)));
-            fTexImage2D(target,
-                        border,
-                        internalformat,
-                        paddedWidth,
-                        paddedHeight,
-                        border,
-                        format,
-                        type,
-                        paddedPixels);
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-
-            delete[] static_cast<unsigned char*>(paddedPixels);
-            return;
-        }
-
-        if (stride == width * pixelsize) {
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-            fTexImage2D(target,
-                        border,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        format,
-                        type,
-                        pixels);
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-        } else {
-            // Use GLES-specific workarounds for GL_UNPACK_ROW_LENGTH; these are
-            // implemented in TexSubImage2D.
-            fTexImage2D(target,
-                        border,
-                        internalformat,
-                        width,
-                        height,
-                        border,
-                        format,
-                        type,
-                        nullptr);
-            TexSubImage2D(target,
-                          level,
-                          0,
-                          0,
-                          width,
-                          height,
-                          stride,
-                          pixelsize,
-                          format,
-                          type,
-                          pixels);
-        }
-    } else {
-        // desktop GL (non-ES) path
-
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-        int rowLength = stride/pixelsize;
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-        fTexImage2D(target,
-                    level,
-                    internalformat,
-                    width,
-                    height,
-                    border,
-                    format,
-                    type,
-                    pixels);
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-    }
-}
-
-void
-GLContext::TexSubImage2D(GLenum target, GLint level,
-                         GLint xoffset, GLint yoffset,
-                         GLsizei width, GLsizei height, GLsizei stride,
-                         GLint pixelsize, GLenum format,
-                         GLenum type, const GLvoid* pixels)
-{
-    if (IsGLES2()) {
-        if (stride == width * pixelsize) {
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-            fTexSubImage2D(target,
-                          level,
-                          xoffset,
-                          yoffset,
-                          width,
-                          height,
-                          format,
-                          type,
-                          pixels);
-            fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-        } else if (IsExtensionSupported(EXT_unpack_subimage)) {
-            TexSubImage2DWithUnpackSubimageGLES(target, level, xoffset, yoffset,
-                                                width, height, stride,
-                                                pixelsize, format, type, pixels);
-
-        } else {
-            TexSubImage2DWithoutUnpackSubimage(target, level, xoffset, yoffset,
-                                              width, height, stride,
-                                              pixelsize, format, type, pixels);
-        }
-    } else {
-        // desktop GL (non-ES) path
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)pixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-        int rowLength = stride/pixelsize;
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-        fTexSubImage2D(target,
-                      level,
-                      xoffset,
-                      yoffset,
-                      width,
-                      height,
-                      format,
-                      type,
-                      pixels);
-        fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-        fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-    }
-}
-
-void
-GLContext::TexSubImage2DWithUnpackSubimageGLES(GLenum target, GLint level,
-                                               GLint xoffset, GLint yoffset,
-                                               GLsizei width, GLsizei height,
-                                               GLsizei stride, GLint pixelsize,
-                                               GLenum format, GLenum type,
-                                               const GLvoid* pixels)
-{
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                 std::min(GetAddressAlignment((ptrdiff_t)pixels),
-                        GetAddressAlignment((ptrdiff_t)stride)));
-    // When using GL_UNPACK_ROW_LENGTH, we need to work around a Tegra
-    // driver crash where the driver apparently tries to read
-    // (stride - width * pixelsize) bytes past the end of the last input
-    // row. We only upload the first height-1 rows using GL_UNPACK_ROW_LENGTH,
-    // and then we upload the final row separately. See bug 697990.
-    int rowLength = stride/pixelsize;
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-    fTexSubImage2D(target,
-                    level,
-                    xoffset,
-                    yoffset,
-                    width,
-                    height-1,
-                    format,
-                    type,
-                    pixels);
-    fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-    fTexSubImage2D(target,
-                    level,
-                    xoffset,
-                    yoffset+height-1,
-                    width,
-                    1,
-                    format,
-                    type,
-                    (const unsigned char *)pixels+(height-1)*stride);
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-}
-
-void
-GLContext::TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
-                                              GLint xoffset, GLint yoffset,
-                                              GLsizei width, GLsizei height,
-                                              GLsizei stride, GLint pixelsize,
-                                              GLenum format, GLenum type,
-                                              const GLvoid* pixels)
-{
-    // Not using the whole row of texture data and GL_UNPACK_ROW_LENGTH
-    // isn't supported. We make a copy of the texture data we're using,
-    // such that we're using the whole row of data in the copy. This turns
-    // out to be more efficient than uploading row-by-row; see bug 698197.
-    unsigned char *newPixels = new unsigned char[width*height*pixelsize];
-    unsigned char *rowDest = newPixels;
-    const unsigned char *rowSource = (const unsigned char *)pixels;
-    for (int h = 0; h < height; h++) {
-            memcpy(rowDest, rowSource, width*pixelsize);
-            rowDest += width*pixelsize;
-            rowSource += stride;
-    }
-
-    stride = width*pixelsize;
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                    std::min(GetAddressAlignment((ptrdiff_t)newPixels),
-                            GetAddressAlignment((ptrdiff_t)stride)));
-    fTexSubImage2D(target,
-                    level,
-                    xoffset,
-                    yoffset,
-                    width,
-                    height,
-                    format,
-                    type,
-                    newPixels);
-    delete [] newPixels;
-    fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-}
-
-#ifdef DEBUG
-
+#ifdef MOZ_ENABLE_GL_TRACKING
 void
 GLContext::CreatedProgram(GLContext *aOrigin, GLuint aName)
 {

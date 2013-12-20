@@ -217,6 +217,14 @@ ErrorReporter::OutputError()
 }
 
 void
+ErrorReporter::OutputError(uint32_t aLineNumber, uint32_t aLineOffset)
+{
+  mErrorLineNumber = aLineNumber;
+  mErrorColNumber = aLineOffset;
+  OutputError();
+}
+
+void
 ErrorReporter::ClearError()
 {
   mError.Truncate();
@@ -319,7 +327,7 @@ ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
   const PRUnichar *params[1] = { innerStr.get() };
 
   nsAutoString str;
-  sStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
+  sStringBundle->FormatStringFromName(MOZ_UTF16("PEUnexpEOF2"),
                                       params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);
@@ -336,7 +344,7 @@ ErrorReporter::ReportUnexpectedEOF(PRUnichar aExpected)
   const PRUnichar *params[1] = { expectedStr };
 
   nsAutoString str;
-  sStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF2").get(),
+  sStringBundle->FormatStringFromName(MOZ_UTF16("PEUnexpEOF2"),
                                       params, ArrayLength(params),
                                       getter_Copies(str));
   AddToError(str);

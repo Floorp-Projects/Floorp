@@ -175,9 +175,9 @@ function secondJsSearch() {
         ["y" + s + "Y", "-02.js", "test.prototype.sub", 16, 1],
         ["z" + s + "Z", "-02.js", "test.prototype.sub.sub", 18, 1],
         ["t", "-02.js", "test.prototype.sub.sub.sub", 20, 1],
-        ["x", "-02.js", "", 20, 32],
-        ["y", "-02.js", "", 20, 41],
-        ["z", "-02.js", "", 20, 50]
+        ["x", "-02.js", "this", 20, 32],
+        ["y", "-02.js", "this", 20, 41],
+        ["z", "-02.js", "this", 20, 50]
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
@@ -231,11 +231,11 @@ function thirdJsSearch() {
         ["a" + s + "A", "-03.js", "bar", 10, 5],
         ["b" + s + "B", "-03.js", "bar.alpha", 15, 5],
         ["c" + s + "C", "-03.js", "bar.alpha.beta", 20, 5],
-        ["d" + s + "D", "-03.js", "theta", 25, 5],
+        ["d" + s + "D", "-03.js", "this.theta", 25, 5],
         ["fun", "-03.js", "", 29, 7],
         ["foo", "-03.js", "", 29, 13],
         ["bar", "-03.js", "", 29, 19],
-        ["t_foo", "-03.js", "", 29, 25],
+        ["t_foo", "-03.js", "this", 29, 25],
         ["w_bar" + s + "baz", "-03.js", "window", 29, 38]
       ];
 

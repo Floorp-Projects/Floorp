@@ -7,6 +7,9 @@
 pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.html");
 pref("browser.chromeURL", "chrome://browser/content/");
 
+// Bug 945235: Prevent all bars to be considered visible:
+pref("toolkit.defaultChromeFeatures", "chrome,dialog=no,close,resizable,scrollbars,extrachrome");
+
 // Device pixel to CSS px ratio, in percent. Set to -1 to calculate based on display density.
 pref("browser.viewport.scaleRatio", -1);
 
@@ -81,7 +84,16 @@ pref("mozilla.widget.force-24bpp", true);
 pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
-pref("layers.force-tiles", false);
+pref("layers.enable-tiles", false);
+/*
+   Cross Process Mutex is not supported on Mac OS X so progressive
+   paint can not be enabled for B2G on Mac OS X desktop
+*/
+#ifdef MOZ_WIDGET_COCOA
+pref("layers.progressive-paint", false);
+#else
+pref("layers.progressive-paint", false);
+#endif
 
 /* download manager (don't show the window or alert) */
 pref("browser.download.useDownloadDir", true);
@@ -439,6 +451,11 @@ pref("dom.mozNetworkStats.enabled", true);
 pref("dom.webapps.firstRunWithSIM", true);
 #endif
 
+#ifdef MOZ_B2G_RIL
+// SingleVariant
+pref("dom.mozApps.single_variant_sourcedir", "/persist/svoperapps");
+#endif
+
 // WebSettings
 pref("dom.mozSettings.enabled", true);
 pref("dom.navigator-property.disable.mozSettings", false);
@@ -736,6 +753,9 @@ pref("font.size.inflation.disabledInMasterProcess", true);
 // consumption when applications are sent to the background.
 pref("memory.free_dirty_pages", true);
 
+// Enable the Linux-specific, system-wide memory reporter.
+pref("memory.system_memory_reporter", true);
+
 pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);
@@ -842,3 +862,15 @@ pref("media.webspeech.synth.enabled", true);
 // Downloads API
 pref("dom.mozDownloads.enabled", true);
 pref("dom.downloads.max_retention_days", 7);
+
+// Inactivity time in milliseconds after which we shut down the OS.File worker.
+pref("osfile.reset_worker_delay", 5000);
+
+// The URL of the Firefox Accounts auth server backend
+pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
+
+// APZC preferences.
+//
+// Gaia relies heavily on scroll events for now, so lets fire them
+// more often than the default value (100).
+pref("apz.asyncscroll.throttle", 40);

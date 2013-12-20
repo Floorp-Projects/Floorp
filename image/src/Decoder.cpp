@@ -29,7 +29,6 @@ Decoder::Decoder(RasterImage &aImage)
   , mSizeDecode(false)
   , mInFrame(false)
   , mIsAnimated(false)
-  , mSynchronous(false)
 {
 }
 
@@ -86,9 +85,10 @@ Decoder::InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
 }
 
 void
-Decoder::Write(const char* aBuffer, uint32_t aCount)
+Decoder::Write(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy)
 {
   PROFILER_LABEL("ImageDecoder", "Write");
+  MOZ_ASSERT(NS_IsMainThread() || aStrategy == DECODE_ASYNC);
 
   // We're strict about decoder errors
   NS_ABORT_IF_FALSE(!HasDecoderError(),
@@ -104,16 +104,16 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   }
 
   // Pass the data along to the implementation
-  WriteInternal(aBuffer, aCount);
+  WriteInternal(aBuffer, aCount, aStrategy);
 
   // If we're a synchronous decoder and we need a new frame to proceed, let's
   // create one and call it again.
-  while (mSynchronous && NeedsNewFrame() && !HasDataError()) {
+  while (aStrategy == DECODE_SYNC && NeedsNewFrame() && !HasDataError()) {
     nsresult rv = AllocateFrame();
 
     if (NS_SUCCEEDED(rv)) {
       // Tell the decoder to use the data it saved when it asked for a new frame.
-      WriteInternal(nullptr, 0);
+      WriteInternal(nullptr, 0, aStrategy);
     }
   }
 }
@@ -121,6 +121,8 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
 void
 Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Implementation-specific finalization
   if (!HasError())
     FinishInternal();
@@ -186,6 +188,8 @@ Decoder::Finish(RasterImage::eShutdownIntent aShutdownIntent)
 void
 Decoder::FinishSharedDecoder()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!HasError()) {
     FinishInternal();
   }
@@ -280,7 +284,7 @@ Decoder::SetSizeOnImage()
  */
 
 void Decoder::InitInternal() { }
-void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount) { }
+void Decoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy aStrategy) { }
 void Decoder::FinishInternal() { }
 
 /*
@@ -349,7 +353,7 @@ Decoder::PostFrameStop(FrameBlender::FrameAlpha aFrameAlpha /* = FrameBlender::k
   }
 
   mCurrentFrame->SetFrameDisposalMethod(aDisposalMethod);
-  mCurrentFrame->SetTimeout(aTimeout);
+  mCurrentFrame->SetRawTimeout(aTimeout);
   mCurrentFrame->SetBlendMethod(aBlendMethod);
   mCurrentFrame->ImageUpdated(mCurrentFrame->GetRect());
 

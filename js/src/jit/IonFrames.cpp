@@ -32,6 +32,45 @@
 namespace js {
 namespace jit {
 
+// Given a slot index, returns the offset, in bytes, of that slot from an
+// IonJSFrameLayout. Slot distances are uniform across architectures, however,
+// the distance does depend on the size of the frame header.
+static inline int32_t
+OffsetOfFrameSlot(int32_t slot)
+{
+    return -slot;
+}
+
+static inline uintptr_t
+ReadFrameSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(uintptr_t *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline double
+ReadFrameDoubleSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(double *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline double
+ReadFrameFloat32Slot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(float *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline int32_t
+ReadFrameInt32Slot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(int32_t *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
+static inline bool
+ReadFrameBooleanSlot(IonJSFrameLayout *fp, int32_t slot)
+{
+    return *(bool *)((char *)fp + OffsetOfFrameSlot(slot));
+}
+
 IonFrameIterator::IonFrameIterator(JSContext *cx)
   : current_(cx->mainThread().ionTop),
     type_(IonFrame_Exit),
@@ -123,7 +162,7 @@ IonFrameIterator::isNative() const
 {
     if (type_ != IonFrame_Exit || isFakeExitFrame())
         return false;
-    return exitFrame()->footer()->ionCode() == nullptr;
+    return exitFrame()->footer()->jitCode() == nullptr;
 }
 
 bool
@@ -131,7 +170,7 @@ IonFrameIterator::isOOLNative() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_NATIVE;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_NATIVE;
 }
 
 bool
@@ -139,7 +178,7 @@ IonFrameIterator::isOOLPropertyOp() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROPERTY_OP;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROPERTY_OP;
 }
 
 bool
@@ -147,7 +186,7 @@ IonFrameIterator::isOOLProxy() const
 {
     if (type_ != IonFrame_Exit)
         return false;
-    return exitFrame()->footer()->ionCode() == ION_FRAME_OOL_PROXY;
+    return exitFrame()->footer()->jitCode() == ION_FRAME_OOL_PROXY;
 }
 
 bool
@@ -187,7 +226,7 @@ IonFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) 
         // If the return address is into the prologue entry address, then assume start
         // of script.
         if (retAddr == script->baselineScript()->prologueEntryAddr()) {
-            *pcRes = script->code;
+            *pcRes = script->code();
             return;
         }
 
@@ -313,7 +352,7 @@ CloseLiveIterator(JSContext *cx, const InlineFrameIterator &frame, uint32_t loca
     SnapshotIterator si = frame.snapshotIterator();
 
     // Skip stack slots until we reach the iterator object.
-    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed;
+    uint32_t base = CountArgSlots(frame.script(), frame.maybeCallee()) + frame.script()->nfixed();
     uint32_t skipSlots = base + localSlot - 1;
 
     for (unsigned i = 0; i < skipSlots; i++)
@@ -434,7 +473,7 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
 
           case JSTRAP_RETURN:
             JS_ASSERT(baselineFrame->hasReturnValue());
-            if (jit::DebugEpilogue(cx, baselineFrame, true)) {
+            if (jit::DebugEpilogue(cx, baselineFrame, pc, true)) {
                 rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
                 rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
                 rfe->stackPointer = reinterpret_cast<uint8_t *>(baselineFrame);
@@ -457,6 +496,7 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
     JSTryNote *tnEnd = tn + script->trynotes()->length;
 
     uint32_t pcOffset = uint32_t(pc - script->main());
+    ScopeIter si(frame.baselineFrame(), pc, cx);
     for (; tn != tnEnd; ++tn) {
         if (pcOffset < tn->start)
             continue;
@@ -465,19 +505,19 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
 
         // Skip if the try note's stack depth exceeds the frame's stack depth.
         // See the big comment in TryNoteIter::settle for more info.
-        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed);
-        size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed;
+        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed());
+        size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed();
         if (tn->stackDepth > stackDepth)
             continue;
 
         // Unwind scope chain (pop block objects).
         if (cx->isExceptionPending())
-            UnwindScope(cx, frame.baselineFrame(), tn->stackDepth);
+            UnwindScope(cx, si, tn->stackDepth);
 
         // Compute base pointer and stack pointer.
         rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
         rfe->stackPointer = rfe->framePointer - BaselineFrame::Size() -
-            (script->nfixed + tn->stackDepth) * sizeof(Value);
+            (script->nfixed() + tn->stackDepth) * sizeof(Value);
 
         switch (tn->kind) {
           case JSTRY_CATCH:
@@ -500,7 +540,9 @@ HandleExceptionBaseline(JSContext *cx, const IonFrameIterator &frame, ResumeFrom
                 rfe->kind = ResumeFromException::RESUME_FINALLY;
                 jsbytecode *finallyPC = script->main() + tn->start + tn->length;
                 rfe->target = script->baselineScript()->nativeCodeForPC(script, finallyPC);
-                rfe->exception = cx->getPendingException();
+                // Drop the exception instead of leaking cross compartment data.
+                if (!cx->getPendingException(MutableHandleValue::fromMarkedLocation(&rfe->exception)))
+                    rfe->exception = UndefinedValue();
                 cx->clearPendingException();
                 return;
             }
@@ -607,7 +649,10 @@ HandleException(ResumeFromException *rfe)
                 // If DebugEpilogue returns |true|, we have to perform a forced
                 // return, e.g. return frame->returnValue() to the caller.
                 BaselineFrame *frame = iter.baselineFrame();
-                if (jit::DebugEpilogue(cx, frame, false)) {
+                RootedScript script(cx);
+                jsbytecode *pc;
+                iter.baselineScriptAndPc(script.address(), &pc);
+                if (jit::DebugEpilogue(cx, frame, pc, false)) {
                     JS_ASSERT(frame->hasReturnValue());
                     rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
                     rfe->framePointer = iter.fp() - BaselineFrame::FramePointerOffset;
@@ -918,7 +963,7 @@ JitActivationIterator::jitStackRange(uintptr_t *&min, uintptr_t *&end)
 }
 
 static void
-MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
+MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
     // Ignore fake exit frames created by EnsureExitFrame.
     if (frame.isFakeExitFrame())
@@ -929,9 +974,9 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
     // Mark the code of the code handling the exit path.  This is needed because
     // invalidated script are no longer marked because data are erased by the
     // invalidation and relocation data are no longer reliable.  So the VM
-    // wrapper or the invalidation code may be GC if no IonCode keep reference
+    // wrapper or the invalidation code may be GC if no JitCode keep reference
     // on them.
-    JS_ASSERT(uintptr_t(footer->ionCode()) != uintptr_t(-1));
+    JS_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
 
     // This correspond to the case where we have build a fake exit frame in
     // CodeGenerator.cpp which handle the case of a native function call. We
@@ -946,7 +991,7 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLNative()) {
         IonOOLNativeExitFrameLayout *oolnative = frame.exitFrame()->oolNativeExit();
-        gc::MarkIonCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
+        gc::MarkJitCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
         gc::MarkValueRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
         gc::MarkValueRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
@@ -955,7 +1000,7 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLPropertyOp()) {
         IonOOLPropertyOpExitFrameLayout *oolgetter = frame.exitFrame()->oolPropertyOpExit();
-        gc::MarkIonCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
+        gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
         gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
@@ -964,7 +1009,7 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 
     if (frame.isOOLProxy()) {
         IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->oolProxyExit();
-        gc::MarkIonCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
+        gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
         gc::MarkValueRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
         gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
@@ -987,10 +1032,10 @@ MarkIonExitFrame(JSTracer *trc, const IonFrameIterator &frame)
         return;
     }
 
-    MarkIonCodeRoot(trc, footer->addressOfIonCode(), "ion-exit-code");
+    MarkJitCodeRoot(trc, footer->addressOfJitCode(), "ion-exit-code");
 
     const VMFunction *f = footer->function();
-    if (f == nullptr || f->explicitArgs == 0)
+    if (f == nullptr)
         return;
 
     // Mark arguments of the VM wrapper.
@@ -1061,7 +1106,7 @@ static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
-    if (js_IonOptions.checkOsiPointRegisters) {
+    if (js_JitOptions.checkOsiPointRegisters) {
         // GC can modify spilled registers, breaking our register checks.
         // To handle this, we disable these checks for the current VM call
         // when a GC happens.
@@ -1073,7 +1118,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
     for (IonFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
           case IonFrame_Exit:
-            MarkIonExitFrame(trc, frames);
+            MarkJitExitFrame(trc, frames);
             break;
           case IonFrame_BaselineJS:
             frames.baselineFrame()->trace(trc);
@@ -1233,8 +1278,20 @@ SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
     return machine_.read(loc.reg());
 }
 
-Value
-SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
+static Value
+FromObjectPayload(uintptr_t payload)
+{
+    return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+}
+
+static Value
+FromStringPayload(uintptr_t payload)
+{
+    return StringValue(reinterpret_cast<JSString *>(payload));
+}
+
+static Value
+FromTypedPayload(JSValueType type, uintptr_t payload)
 {
     switch (type) {
       case JSVAL_TYPE_INT32:
@@ -1242,9 +1299,9 @@ SnapshotIterator::FromTypedPayload(JSValueType type, uintptr_t payload)
       case JSVAL_TYPE_BOOLEAN:
         return BooleanValue(!!payload);
       case JSVAL_TYPE_STRING:
-        return StringValue(reinterpret_cast<JSString *>(payload));
+        return FromStringPayload(payload);
       case JSVAL_TYPE_OBJECT:
-        return ObjectValue(*reinterpret_cast<JSObject *>(payload));
+        return FromObjectPayload(payload);
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected type - needs payload");
     }
@@ -1272,11 +1329,6 @@ SnapshotIterator::slotReadable(const Slot &slot)
     }
 }
 
-typedef union {
-    double d;
-    float f;
-} PunDoubleFloat;
-
 Value
 SnapshotIterator::slotValue(const Slot &slot)
 {
@@ -1286,31 +1338,38 @@ SnapshotIterator::slotValue(const Slot &slot)
 
       case SnapshotReader::FLOAT32_REG:
       {
-        PunDoubleFloat pdf;
-        pdf.d = machine_.read(slot.floatReg());
+        union {
+            double d;
+            float f;
+        } pun;
+        pun.d = machine_.read(slot.floatReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
-        float asFloat = pdf.f;
-        return DoubleValue(asFloat);
+        return Float32Value(pun.f);
       }
 
       case SnapshotReader::FLOAT32_STACK:
-      {
-        PunDoubleFloat pdf;
-        pdf.d = ReadFrameDoubleSlot(fp_, slot.stackSlot());
-        float asFloat = pdf.f; // no conversion, see comment above.
-        return DoubleValue(asFloat);
-      }
+        return Float32Value(ReadFrameFloat32Slot(fp_, slot.stackSlot()));
 
       case SnapshotReader::TYPED_REG:
         return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
 
       case SnapshotReader::TYPED_STACK:
       {
-        JSValueType type = slot.knownType();
-        if (type == JSVAL_TYPE_DOUBLE)
+        switch (slot.knownType()) {
+          case JSVAL_TYPE_DOUBLE:
             return DoubleValue(ReadFrameDoubleSlot(fp_, slot.stackSlot()));
-        return FromTypedPayload(type, ReadFrameSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_INT32:
+            return Int32Value(ReadFrameInt32Slot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_BOOLEAN:
+            return BooleanValue(ReadFrameBooleanSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_STRING:
+            return FromStringPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+          case JSVAL_TYPE_OBJECT:
+            return FromObjectPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+          default:
+            MOZ_ASSUME_UNREACHABLE("Unexpected type");
+        }
       }
 
       case SnapshotReader::UNTYPED:
@@ -1400,7 +1459,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
     // Read the initial frame.
     callee_ = frame_->maybeCallee();
     script_ = frame_->script();
-    pc_ = script_->code + si_.pcOffset();
+    pc_ = script_->offsetToPC(si_.pcOffset());
 #ifdef DEBUG
     numActualArgs_ = 0xbadbad;
 #endif
@@ -1445,7 +1504,7 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         // exists though, just make sure the function points to it.
         script_ = callee_->existingScript();
 
-        pc_ = script_->code + si_.pcOffset();
+        pc_ = script_->offsetToPC(si_.pcOffset());
     }
 
     framesRead_++;
@@ -1463,8 +1522,8 @@ template bool InlineFrameIteratorMaybeGC<NoGC>::isFunctionFrame() const;
 template bool InlineFrameIteratorMaybeGC<CanGC>::isFunctionFrame() const;
 
 MachineState
-MachineState::FromBailout(uintptr_t regs[Registers::Total],
-                          double fpregs[FloatRegisters::Total])
+MachineState::FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
+                          mozilla::Array<double, FloatRegisters::Total> &fpregs)
 {
     MachineState machine;
 
@@ -1590,14 +1649,14 @@ IonFrameIterator::dumpBaseline() const
     }
 
     fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno);
+            script()->filename(), (unsigned) script()->lineno());
 
     JSContext *cx = GetIonContext()->cx;
     RootedScript script(cx);
     jsbytecode *pc;
     baselineScriptAndPc(script.address(), &pc);
 
-    fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void *)script, pc, uint32_t(pc - script->code));
+    fprintf(stderr, "  script = %p, pc = %p (offset %u)\n", (void *)script, pc, uint32_t(script->pcToOffset(pc)));
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
 
     fprintf(stderr, "  actual args: %d\n", numActualArgs());
@@ -1638,7 +1697,7 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
     }
 
     fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno);
+            script()->filename(), (unsigned) script()->lineno());
 
     fprintf(stderr, "  script = %p, pc = %p\n", (void*) script(), pc());
     fprintf(stderr, "  current op: %s\n", js_CodeName[*pc()]);
@@ -1655,15 +1714,15 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
                 fprintf(stderr, "  scope chain: ");
             else if (i == 1)
                 fprintf(stderr, "  this: ");
-            else if (i - 2 < callee()->nargs)
+            else if (i - 2 < callee()->nargs())
                 fprintf(stderr, "  formal (arg %d): ", i - 2);
             else {
-                if (i - 2 == callee()->nargs && numActualArgs() > callee()->nargs) {
-                    DumpOp d(callee()->nargs);
+                if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
+                    DumpOp d(callee()->nargs());
                     forEachCanonicalActualArg(GetIonContext()->cx, d, d.i_, numActualArgs() - d.i_);
                 }
 
-                fprintf(stderr, "  slot %d: ", i - 2 - callee()->nargs);
+                fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
             }
         } else
             fprintf(stderr, "  slot %u: ", i);
@@ -1721,6 +1780,27 @@ IonFrameIterator::dump() const
         break;
     };
     fputc('\n', stderr);
+}
+
+IonJSFrameLayout *
+InvalidationBailoutStack::fp() const
+{
+    return (IonJSFrameLayout *) (sp() + ionScript_->frameSize());
+}
+
+void
+InvalidationBailoutStack::checkInvariants() const
+{
+#ifdef DEBUG
+    IonJSFrameLayout *frame = fp();
+    CalleeToken token = frame->calleeToken();
+    JS_ASSERT(token);
+
+    uint8_t *rawBase = ionScript()->method()->raw();
+    uint8_t *rawLimit = rawBase + ionScript()->method()->instructionsSize();
+    uint8_t *osiPoint = osiPointReturnAddress();
+    JS_ASSERT(rawBase <= osiPoint && osiPoint <= rawLimit);
+#endif
 }
 
 } // namespace jit

@@ -57,6 +57,7 @@ jmethodID GeckoAppShell::jIsNetworkLinkKnown = 0;
 jmethodID GeckoAppShell::jIsNetworkLinkUp = 0;
 jmethodID GeckoAppShell::jIsTablet = 0;
 jmethodID GeckoAppShell::jKillAnyZombies = 0;
+jmethodID GeckoAppShell::jLoadPluginClass = 0;
 jmethodID GeckoAppShell::jLockScreenOrientation = 0;
 jmethodID GeckoAppShell::jMarkURIVisited = 0;
 jmethodID GeckoAppShell::jMoveTaskToBack = 0;
@@ -77,7 +78,6 @@ jmethodID GeckoAppShell::jScheduleRestart = 0;
 jmethodID GeckoAppShell::jSendMessageWrapper = 0;
 jmethodID GeckoAppShell::jSetFullScreen = 0;
 jmethodID GeckoAppShell::jSetKeepScreenOn = 0;
-jmethodID GeckoAppShell::jSetSelectedLocale = 0;
 jmethodID GeckoAppShell::jSetURITitle = 0;
 jmethodID GeckoAppShell::jShowAlertNotificationWrapper = 0;
 jmethodID GeckoAppShell::jShowFilePickerAsyncWrapper = 0;
@@ -138,6 +138,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jIsNetworkLinkUp = getStaticMethod("isNetworkLinkUp", "()Z");
     jIsTablet = getStaticMethod("isTablet", "()Z");
     jKillAnyZombies = getStaticMethod("killAnyZombies", "()V");
+    jLoadPluginClass = getStaticMethod("loadPluginClass", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Class;");
     jLockScreenOrientation = getStaticMethod("lockScreenOrientation", "(I)V");
     jMarkURIVisited = getStaticMethod("markUriVisited", "(Ljava/lang/String;)V");
     jMoveTaskToBack = getStaticMethod("moveTaskToBack", "()V");
@@ -158,7 +159,6 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jSendMessageWrapper = getStaticMethod("sendMessage", "(Ljava/lang/String;Ljava/lang/String;I)V");
     jSetFullScreen = getStaticMethod("setFullScreen", "(Z)V");
     jSetKeepScreenOn = getStaticMethod("setKeepScreenOn", "(Z)V");
-    jSetSelectedLocale = getStaticMethod("setSelectedLocale", "(Ljava/lang/String;)V");
     jSetURITitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
     jShowAlertNotificationWrapper = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
     jShowFilePickerAsyncWrapper = getStaticMethod("showFilePickerAsync", "(Ljava/lang/String;J)V");
@@ -1479,6 +1479,37 @@ void GeckoAppShell::KillAnyZombies() {
     env->PopLocalFrame(NULL);
 }
 
+jclass GeckoAppShell::LoadPluginClass(const nsAString& a0, const nsAString& a1) {
+    JNIEnv *env = GetJNIForThread();
+    if (!env) {
+        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
+        return nullptr;
+    }
+
+    if (env->PushLocalFrame(3) != 0) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        return nullptr;
+    }
+
+    jstring j0 = AndroidBridge::NewJavaString(env, a0);
+    jstring j1 = AndroidBridge::NewJavaString(env, a1);
+
+    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jLoadPluginClass, j0, j1);
+
+    if (env->ExceptionCheck()) {
+        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+        env->PopLocalFrame(NULL);
+        return nullptr;
+    }
+
+    jclass ret = static_cast<jclass>(env->PopLocalFrame(temp));
+    return ret;
+}
+
 void GeckoAppShell::LockScreenOrientation(int32_t a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
     if (!env) {
@@ -2043,35 +2074,6 @@ void GeckoAppShell::SetKeepScreenOn(bool a0) {
     }
 
     env->CallStaticVoidMethod(mGeckoAppShellClass, jSetKeepScreenOn, a0);
-
-    if (env->ExceptionCheck()) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        env->PopLocalFrame(NULL);
-        return;
-    }
-
-    env->PopLocalFrame(NULL);
-}
-
-void GeckoAppShell::SetSelectedLocale(const nsAString& a0) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (!env) {
-        ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    if (env->PushLocalFrame(1) != 0) {
-        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
-        env->ExceptionDescribe();
-        env->ExceptionClear();
-        return;
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, j0);
 
     if (env->ExceptionCheck()) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);

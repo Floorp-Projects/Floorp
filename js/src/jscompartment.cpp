@@ -22,6 +22,7 @@
 #include "jit/JitCompartment.h"
 #endif
 #include "js/RootingAPI.h"
+#include "vm/SelfHosting.h"
 #include "vm/StopIterationObject.h"
 #include "vm/WrapperObject.h"
 
@@ -48,7 +49,6 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
 #endif
     global_(nullptr),
     enterCompartmentDepth(0),
-    lastCodeRelease(0),
     data(nullptr),
     objectMetadataCallback(nullptr),
     lastAnimationTime(0),
@@ -183,14 +183,13 @@ JSCompartment::ensureJitCompartmentExists(JSContext *cx)
 #endif
 
 static bool
-WrapForSameCompartment(JSContext *cx, MutableHandleObject obj)
+WrapForSameCompartment(JSContext *cx, MutableHandleObject obj, const JSWrapObjectCallbacks *cb)
 {
     JS_ASSERT(cx->compartment() == obj->compartment());
-    if (!cx->runtime()->sameCompartmentWrapObjectCallback)
+    if (!cb->sameCompartmentWrap)
         return true;
 
-    RootedObject wrapped(cx);
-    wrapped = cx->runtime()->sameCompartmentWrapObjectCallback(cx, obj);
+    RootedObject wrapped(cx, cb->sameCompartmentWrap(cx, obj));
     if (!wrapped)
         return false;
     obj.set(wrapped);
@@ -229,7 +228,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
     /* Check the cache. */
     RootedValue key(cx, StringValue(str));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
-        *strp = p->value.get().toString();
+        *strp = p->value().get().toString();
         return true;
     }
 
@@ -290,17 +289,26 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
      * This loses us some transparency, and is generally very cheesy.
      */
     HandleObject global = cx->global();
+    RootedObject objGlobal(cx, &obj->global());
     JS_ASSERT(global);
+    JS_ASSERT(objGlobal);
+
+    const JSWrapObjectCallbacks *cb;
+
+    if (cx->runtime()->isSelfHostingGlobal(global) || cx->runtime()->isSelfHostingGlobal(objGlobal))
+        cb = &SelfHostingWrapObjectCallbacks;
+    else
+        cb = cx->runtime()->wrapObjectCallbacks;
 
     if (obj->compartment() == this)
-        return WrapForSameCompartment(cx, obj);
+        return WrapForSameCompartment(cx, obj, cb);
 
     /* Unwrap the object, but don't unwrap outer windows. */
     unsigned flags = 0;
     obj.set(UncheckedUnwrap(obj, /* stopAtOuter = */ true, &flags));
 
     if (obj->compartment() == this)
-        return WrapForSameCompartment(cx, obj);
+        return WrapForSameCompartment(cx, obj, cb);
 
     /* Translate StopIteration singleton. */
     if (obj->is<StopIterationObject>()) {
@@ -314,14 +322,14 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     /* Invoke the prewrap callback. We're a bit worried about infinite
      * recursion here, so we do a check - see bug 809295. */
     JS_CHECK_CHROME_RECURSION(cx, return false);
-    if (cx->runtime()->preWrapObjectCallback) {
-        obj.set(cx->runtime()->preWrapObjectCallback(cx, global, obj, flags));
+    if (cb->preWrap) {
+        obj.set(cb->preWrap(cx, global, obj, flags));
         if (!obj)
             return false;
     }
 
     if (obj->compartment() == this)
-        return WrapForSameCompartment(cx, obj);
+        return WrapForSameCompartment(cx, obj, cb);
 
 #ifdef DEBUG
     {
@@ -333,13 +341,13 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     /* If we already have a wrapper for this value, use it. */
     RootedValue key(cx, ObjectValue(*obj));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(key)) {
-        obj.set(&p->value.get().toObject());
+        obj.set(&p->value().get().toObject());
         JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
         JS_ASSERT(obj->getParent() == global);
         return true;
     }
 
-    RootedObject proto(cx, Proxy::LazyProto);
+    RootedObject proto(cx, TaggedProto::LazyProto);
     RootedObject existing(cx, existingArg);
     if (existing) {
         /* Is it possible to reuse |existing|? */
@@ -353,12 +361,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
         }
     }
 
-    /*
-     * We hand in the original wrapped object into the wrap hook to allow
-     * the wrap hook to reason over what wrappers are currently applied
-     * to the object.
-     */
-    obj.set(cx->runtime()->wrapObjectCallback(cx, existing, obj, proto, global, flags));
+    obj.set(cb->wrap(cx, existing, obj, proto, global, flags));
     if (!obj)
         return false;
 
@@ -449,8 +452,8 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
     JS_ASSERT(!zone()->isCollecting());
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value v = e.front().value;
-        if (e.front().key.kind == CrossCompartmentKey::ObjectWrapper) {
+        Value v = e.front().value();
+        if (e.front().key().kind == CrossCompartmentKey::ObjectWrapper) {
             ProxyObject *wrapper = &v.toObject().as<ProxyObject>();
 
             /*
@@ -474,12 +477,12 @@ void
 JSCompartment::markAllCrossCompartmentWrappers(JSTracer *trc)
 {
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        CrossCompartmentKey key = e.front().key;
+        CrossCompartmentKey key = e.front().key();
         MarkGCThingRoot(trc, (void **)&key.wrapped, "CrossCompartmentKey::wrapped");
         if (key.debugger)
             MarkObjectRoot(trc, &key.debugger, "CrossCompartmentKey::debugger");
-        MarkValueRoot(trc, e.front().value.unsafeGet(), "CrossCompartmentWrapper");
-        if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger)
+        MarkValueRoot(trc, e.front().value().unsafeGet(), "CrossCompartmentWrapper");
+        if (key.wrapped != e.front().key().wrapped || key.debugger != e.front().key().debugger)
             e.rekeyFront(key);
     }
 }
@@ -545,13 +548,6 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
         WeakMapBase::sweepCompartment(this);
     }
 
-    if (zone()->isPreservingCode()) {
-        gcstats::AutoPhase ap2(rt->gcStats, gcstats::PHASE_DISCARD_ANALYSIS);
-        types.sweepShapes(fop);
-    } else {
-        JS_ASSERT(!types.constrainedOutputs);
-    }
-
     NativeIterator *ni = enumerators->next();
     while (ni != enumerators) {
         JSObject *iterObj = ni->iterObj();
@@ -577,14 +573,16 @@ JSCompartment::sweepCrossCompartmentWrappers()
 
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        CrossCompartmentKey key = e.front().key;
+        CrossCompartmentKey key = e.front().key();
         bool keyDying = IsCellAboutToBeFinalized(&key.wrapped);
-        bool valDying = IsValueAboutToBeFinalized(e.front().value.unsafeGet());
+        bool valDying = IsValueAboutToBeFinalized(e.front().value().unsafeGet());
         bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
         if (keyDying || valDying || dbgDying) {
             JS_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
             e.removeFront();
-        } else if (key.wrapped != e.front().key.wrapped || key.debugger != e.front().key.debugger) {
+        } else if (key.wrapped != e.front().key().wrapped ||
+                   key.debugger != e.front().key().debugger)
+        {
             e.rekeyFront(key);
         }
     }
@@ -631,14 +629,6 @@ JSCompartment::setObjectMetadataCallback(js::ObjectMetadataCallback callback)
     // Clear any jitcode in the runtime, which behaves differently depending on
     // whether there is a creation callback.
     ReleaseAllJITCode(runtime_->defaultFreeOp());
-
-    // Turn off GGC while the metadata hook is present, to prevent
-    // nursery-allocated metadata from being used as a lookup key in
-    // InitialShapeTable entries.
-    if (callback)
-        JS::DisableGenerationalGC(runtime_);
-    else
-        JS::EnableGenerationalGC(runtime_);
 
     objectMetadataCallback = callback;
 }
@@ -862,7 +852,6 @@ JSCompartment::clearTraps(FreeOp *fop)
 
 void
 JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                      size_t *tiPendingArrays,
                                       size_t *tiAllocationSiteTables,
                                       size_t *tiArrayTypeTables,
                                       size_t *tiObjectTypeTables,
@@ -874,7 +863,7 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *baselineStubsOptimized)
 {
     *compartmentObject += mallocSizeOf(this);
-    types.addSizeOfExcludingThis(mallocSizeOf, tiPendingArrays, tiAllocationSiteTables,
+    types.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
                                  tiArrayTypeTables, tiObjectTypeTables);
     *shapesCompartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
                               + initialShapes.sizeOfExcludingThis(mallocSizeOf)

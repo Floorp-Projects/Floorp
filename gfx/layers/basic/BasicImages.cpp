@@ -11,7 +11,6 @@
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/mozalloc.h"           // for operator delete[], etc
 #include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoArrayPtr
@@ -20,6 +19,9 @@
 #include "nsDebug.h"                    // for NS_ERROR, NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Image::Release, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "mozilla/gfx/Point.h"          // for IntSize
+#include "gfx2DGlue.h"
+#include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef XP_MACOSX
 #include "gfxQuartzImageSurface.h"
 #endif
@@ -30,7 +32,7 @@ namespace layers {
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage
 {
 public:
-  BasicPlanarYCbCrImage(const gfxIntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
+  BasicPlanarYCbCrImage(const gfx::IntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
     : PlanarYCbCrImage(aRecycleBin)
     , mScaleHint(aScaleHint)
     , mDelayedConversion(false)
@@ -54,7 +56,7 @@ public:
 
 private:
   nsAutoArrayPtr<uint8_t> mDecodedBuffer;
-  gfxIntSize mScaleHint;
+  gfx::IntSize mScaleHint;
   int mStride;
   bool mDelayedConversion;
 };
@@ -66,7 +68,7 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(const ImageFormat* aFormats,
                                               uint32_t aNumFormats,
-                                              const gfxIntSize &aScaleHint,
+                                              const gfx::IntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin)
   {
     if (!aNumFormats) {
@@ -99,25 +101,26 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     return;
   }
 
-  gfxImageFormat format = GetOffscreenFormat();
+  gfx::SurfaceFormat format = gfx::ImageFormatToSurfaceFormat(GetOffscreenFormat());
 
-  gfxIntSize size(mScaleHint);
-  gfxUtils::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
+  gfx::IntSize size(mScaleHint);
+  gfx::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
     NS_ERROR("Illegal image dest width or height");
     return;
   }
 
-  mStride = gfxASurface::FormatStrideForWidth(format, size.width);
+  gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
+  mStride = gfxASurface::FormatStrideForWidth(iFormat, size.width);
   mDecodedBuffer = AllocateBuffer(size.height * mStride);
   if (!mDecodedBuffer) {
     // out of memory
     return;
   }
 
-  gfxUtils::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
-  SetOffscreenFormat(format);
+  gfx::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
+  SetOffscreenFormat(iFormat);
   mSize = size;
 }
 
@@ -146,7 +149,7 @@ BasicPlanarYCbCrImage::GetAsSurface()
   gfxImageFormat format = GetOffscreenFormat();
 
   nsRefPtr<gfxImageSurface> imgSurface =
-      new gfxImageSurface(mDecodedBuffer, mSize, mStride, format);
+    new gfxImageSurface(mDecodedBuffer, gfx::ThebesIntSize(mSize), mStride, format);
   if (!imgSurface || imgSurface->CairoStatus() != 0) {
     return nullptr;
   }

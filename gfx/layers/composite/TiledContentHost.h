@@ -12,7 +12,6 @@
 #include "ContentHost.h"                // for ContentHost
 #include "TiledLayerBuffer.h"           // for TiledLayerBuffer, etc
 #include "CompositableHost.h"
-#include "gfxPoint.h"                   // for gfxSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -117,16 +116,6 @@ public:
   void SetCompositor(Compositor* aCompositor)
   {
     mCompositor = aCompositor;
-  }
-
-  void OnActorDestroy()
-  {
-    Iterator end = TilesEnd();
-    for (Iterator it = TilesBegin(); it != end; ++it) {
-      if (it->mDeprecatedTextureHost) {
-        it->mDeprecatedTextureHost->OnActorDestroy();
-      }
-    }
   }
 
 protected:
@@ -248,12 +237,6 @@ public:
   virtual void Attach(Layer* aLayer,
                       Compositor* aCompositor,
                       AttachFlags aFlags = NO_FLAGS) MOZ_OVERRIDE;
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE
-  {
-    mVideoMemoryTiledBuffer.OnActorDestroy();
-    mLowPrecisionVideoMemoryTiledBuffer.OnActorDestroy();
-  }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void Dump(FILE* aFile=nullptr,

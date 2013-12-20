@@ -55,6 +55,7 @@ public:
     , mPresShellId(-1)
     , mIsRoot(false)
     , mHasScrollgrab(false)
+    , mUpdateScrollOffset(false)
   {}
 
   // Default copy ctor and operator= are fine
@@ -73,7 +74,8 @@ public:
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
            mMayHaveTouchListeners == aOther.mMayHaveTouchListeners &&
            mPresShellId == aOther.mPresShellId &&
-           mIsRoot == aOther.mIsRoot;
+           mIsRoot == aOther.mIsRoot &&
+           mUpdateScrollOffset == aOther.mUpdateScrollOffset;
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -111,6 +113,31 @@ public:
   LayoutDeviceToParentLayerScale GetParentResolution() const
   {
     return mCumulativeResolution / mResolution;
+  }
+
+  // Ensure the scrollableRect is at least as big as the compositionBounds
+  // because the scrollableRect can be smaller if the content is not large
+  // and the scrollableRect hasn't been updated yet.
+  // We move the scrollableRect up because we don't know if we can move it
+  // down. i.e. we know that scrollableRect can go back as far as zero.
+  // but we don't know how much further ahead it can go.
+  CSSRect GetExpandedScrollableRect() const
+  {
+    CSSRect scrollableRect = mScrollableRect;
+    CSSRect compBounds = CalculateCompositedRectInCssPixels();
+    if (scrollableRect.width < compBounds.width) {
+      scrollableRect.x = std::max(0.f,
+                                  scrollableRect.x - (compBounds.width - scrollableRect.width));
+      scrollableRect.width = compBounds.width;
+    }
+
+    if (scrollableRect.height < compBounds.height) {
+      scrollableRect.y = std::max(0.f,
+                                  scrollableRect.y - (compBounds.height - scrollableRect.height));
+      scrollableRect.height = compBounds.height;
+    }
+
+    return scrollableRect;
   }
 
   /**
@@ -260,6 +287,10 @@ public:
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
   bool mHasScrollgrab;
+
+  // Whether mScrollOffset was updated by something other than the APZ code, and
+  // if the APZC receiving this metrics should update its local copy.
+  bool mUpdateScrollOffset;
 };
 
 /**

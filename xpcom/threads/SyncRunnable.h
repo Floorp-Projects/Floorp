@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef mozilla_SyncRunnable_h
+#define mozilla_SyncRunnable_h
 
 #include "nsThreadUtils.h"
 #include "mozilla/Monitor.h"

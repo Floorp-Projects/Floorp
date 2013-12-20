@@ -153,10 +153,7 @@ __all__ = ['topobjdir', 'topsrcdir', 'defines', 'non_global_defines', 'substs']
 dnl Do the actual work
 if __name__ == '__main__':
     args = dict([(name, globals()[name]) for name in __all__])
-    import sys
-dnl Don't rely on virtualenv here. Standalone js doesn't use it.
-    sys.path.append(os.path.join(topsrcdir, ${extra_python_path}'build'))
-    from ConfigStatus import config_status
+    from mozbuild.config_status import config_status
     config_status(**args)
 EOF
 changequote([, ])

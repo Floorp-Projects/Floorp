@@ -43,7 +43,7 @@
       //////////////////////////////////////////////////////////////////////////
       // XUL textbox
 
-      testTextAtOffset([ "tbox1" ], BOUNDARY_LINE_START,
+      testTextAtOffset([ getNode("tbox1").inputField ], BOUNDARY_LINE_START,
                        [ [ 0, 4, "test", 0, 4 ] ]);
 
       SimpleTest.finish();

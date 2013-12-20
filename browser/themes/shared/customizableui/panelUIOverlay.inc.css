@@ -212,19 +212,36 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-bottom-style: none;
   border-radius: 0;
   transition: background-color;
-  -moz-box-orient: vertical;
-  flex: 1 1 33.33%;
+  -moz-box-orient: horizontal;
 }
-:-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
-  margin: 0 0 3px;
+
+#PanelUI-help,
+#PanelUI-quit {
+  min-width: 46px;
+}
+
+#PanelUI-customize > .toolbarbutton-text {
+  text-align: start;
+}
+
+#PanelUI-help > .toolbarbutton-text,
+#PanelUI-quit > .toolbarbutton-text {
+  display: none;
+}
+
+#PanelUI-help > .toolbarbutton-icon,
+#PanelUI-quit > .toolbarbutton-icon {
+  -moz-margin-end: 0;
 }
 
 #PanelUI-customize {
+  flex: 1;
+  -moz-padding-start: 15px;
+  -moz-border-start-style: none;
   list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
 }
 
 #PanelUI-help {
-  -moz-border-start-style: none;
   list-style-image: url(chrome://browser/skin/menuPanel-help.png);
 }
 
@@ -502,12 +519,14 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 #PanelUI-developerItems > toolbarbutton[checked="true"],
 #PanelUI-bookmarks > toolbarbutton[checked="true"],
+#PanelUI-history > toolbarbutton[checked="true"],
 .PanelUI-characterEncodingView-list > toolbarbutton[current] {
   -moz-padding-start: 4px;
 }
 
 #PanelUI-developerItems > toolbarbutton[checked="true"] > .toolbarbutton-text,
 #PanelUI-bookmarks > toolbarbutton[checked="true"] > .toolbarbutton-text,
+#PanelUI-history > toolbarbutton[checked="true"] > .toolbarbutton-text,
 .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
 #customizationui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
   -moz-padding-start: 0px;
@@ -515,6 +534,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 
 #BMB_bookmarksPopup > menuitem[checked="true"]::before,
 #PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-history > toolbarbutton[checked="true"]::before,
 #PanelUI-developerItems > toolbarbutton[checked="true"]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   content: "✓";
@@ -523,6 +543,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 #PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
+#PanelUI-history > toolbarbutton[checked="true"]::before,
 #PanelUI-developerItems > toolbarbutton[checked="true"]::before,
 .PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
   -moz-margin-end: -2px;
