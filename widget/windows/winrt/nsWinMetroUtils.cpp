@@ -248,6 +248,17 @@ nsWinMetroUtils::GetActivationURI(nsAString &aActivationURI)
 }
 
 NS_IMETHODIMP
+nsWinMetroUtils::GetPreviousExecutionState(int32_t *out)
+{
+  if (!sFrameworkView) {
+    NS_WARNING("GetPreviousExecutionState used before view is created!");
+    return NS_OK;
+  }
+  *out = sFrameworkView->GetPreviousExecutionState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardVisible(bool *aImersive)
 {
   *aImersive = mozilla::widget::winrt::FrameworkView::IsKeyboardVisible();

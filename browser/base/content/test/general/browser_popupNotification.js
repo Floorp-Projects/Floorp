@@ -146,6 +146,9 @@ function basicNotification() {
         case "removed":
           self.removedCallbackTriggered = true;
           break;
+        case "swapping":
+          self.swappingCallbackTriggered = true;
+          break;
       }
     }
   };
@@ -978,6 +981,49 @@ var tests = [
       triggerMainCommand(popup);
     },
     onHidden: function() { }
+  },
+  { // Test #31 - Moving a tab to a new window should remove non-swappable
+    // notifications.
+    run: function() {
+      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      let notifyObj = new basicNotification();
+      showNotification(notifyObj);
+      let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+      whenDelayedStartupFinished(win, function() {
+        let [tab] = win.gBrowser.tabs;
+        let anchor = win.document.getElementById("default-notification-icon");
+        win.PopupNotifications._reshowNotifications(anchor);
+        ok(win.PopupNotifications.panel.childNodes.length == 0,
+           "no notification displayed in new window");
+        ok(notifyObj.swappingCallbackTriggered, "the swapping callback was triggered");
+        ok(notifyObj.removedCallbackTriggered, "the removed callback was triggered");
+        win.close();
+        goNext();
+      });
+    }
+  },
+  { // Test #32 - Moving a tab to a new window should preserve swappable notifications.
+    run: function() {
+      gBrowser.selectedTab = gBrowser.addTab("about:blank");
+      let notifyObj = new basicNotification();
+      let originalCallback = notifyObj.options.eventCallback;
+        notifyObj.options.eventCallback = function (eventName) {
+          originalCallback(eventName);
+          return eventName == "swapping";
+        };
+
+      showNotification(notifyObj);
+      let win = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+      whenDelayedStartupFinished(win, function() {
+        let [tab] = win.gBrowser.tabs;
+        let anchor = win.document.getElementById("default-notification-icon");
+        win.PopupNotifications._reshowNotifications(anchor);
+        checkPopup(win.PopupNotifications.panel, notifyObj);
+        ok(notifyObj.swappingCallbackTriggered, "the swapping callback was triggered");
+        win.close();
+        goNext();
+      });
+    }
   }
 ];
 
