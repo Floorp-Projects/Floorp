@@ -60,7 +60,7 @@ let CERTIFICATE_ERROR_PAGE_PREF = 'security.alternate_certificate_error_page';
 let NS_ERROR_MODULE_BASE_OFFSET = 0x45;
 let NS_ERROR_MODULE_SECURITY= 21;
 function NS_ERROR_GET_MODULE(err) {
-  return ((((err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff) 
+  return ((((err) >> 16) - NS_ERROR_MODULE_BASE_OFFSET) & 0x1fff);
 }
 
 function NS_ERROR_GET_CODE(err) {
@@ -82,7 +82,7 @@ let SSL_ERROR_BAD_CERT_DOMAIN = (SSL_ERROR_BASE + 12);
 
 function getErrorClass(errorCode) {
   let NSPRCode = -1 * NS_ERROR_GET_CODE(errorCode);
- 
+
   switch (NSPRCode) {
     case SEC_ERROR_UNKNOWN_ISSUER:
     case SEC_ERROR_CA_CERT_INVALID:
@@ -128,6 +128,9 @@ function BrowserElementChild() {
   this._ownerVisible = true;
 
   this._nextPaintHandler = null;
+
+  this._isContentWindowCreated = false;
+  this._pendingSetInputMethodActive = [];
 
   this._init();
 };
@@ -566,6 +569,11 @@ BrowserElementChild.prototype = {
       this._addMozAfterPaintHandler(function () {
         sendAsyncMsg('documentfirstpaint');
       });
+      this._isContentWindowCreated = true;
+      // Handle pending SetInputMethodActive request.
+      while (this._pendingSetInputMethodActive.length > 0) {
+        this._recvSetInputMethodActive(this._pendingSetInputMethodActive.shift());
+      }
     }
   },
 
@@ -904,6 +912,17 @@ BrowserElementChild.prototype = {
 
   _recvSetInputMethodActive: function(data) {
     let msgData = { id: data.json.id };
+    if (!this._isContentWindowCreated) {
+      if (data.json.args.isActive) {
+        // To activate the input method, we should wait before the content
+        // window is ready.
+        this._pendingSetInputMethodActive.push(data);
+        return;
+      }
+      sendAsyncMsg('got-set-input-method-active', msgData);
+      msgData.successRv = null;
+      return;
+    }
     // Unwrap to access webpage content.
     let nav = XPCNativeWrapper.unwrap(content.document.defaultView.navigator);
     if (nav.mozInputMethod) {
@@ -977,7 +996,7 @@ BrowserElementChild.prototype = {
           return;
         }
 
-        if (NS_ERROR_GET_MODULE(status) == NS_ERROR_MODULE_SECURITY && 
+        if (NS_ERROR_GET_MODULE(status) == NS_ERROR_MODULE_SECURITY &&
             getErrorClass(status) == Ci.nsINSSErrorsService.ERROR_CLASS_BAD_CERT) {
 
           // XXX Is there a point firing the event if the error page is not
