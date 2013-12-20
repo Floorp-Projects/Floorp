@@ -690,6 +690,18 @@ function RadioInterfaceLayer() {
     options.clientId = clientId;
     this.radioInterfaces.push(new RadioInterface(options));
   }
+
+  // TODO: Move 'ril.data.*' settings handler to DataConnectionManager,
+  // see bug 905568.
+  let lock = gSettingsService.createLock();
+  // Read the data enabled setting from DB.
+  lock.get("ril.data.enabled", this);
+  // Read the default client id for data call.
+  lock.get("ril.data.defaultServiceId", this);
+
+  Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
+  Services.obs.addObserver(this, kNetworkInterfaceStateChangedTopic, false);
 }
 RadioInterfaceLayer.prototype = {
 
@@ -701,12 +713,151 @@ RadioInterfaceLayer.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRadioInterfaceLayer,
                                          Ci.nsIObserver]),
 
+  // Flag to determine the data state to start with when we boot up. It
+  // corresponds to the 'ril.data.enabled' setting from the UI.
+  _dataEnabled: null,
+
+  // Flag to record the default client id for data call.  It
+  // corresponds to the 'ril.data.defaultServiceId' setting from the UI.
+  _dataDefaultClientId: -1,
+
+  // Flag to record the current default client id for data call.
+  // It differs from _dataDefaultClientId in that it is set only when
+  // the switch of client id process is done.
+  _currentDataClientId: -1,
+
+  // Pending function to execute when we are notified that another data call has
+  // been disconnected.
+  _pendingDataCallRequest: null,
+
   /**
    * nsIObserver interface methods.
    */
 
   observe: function observe(subject, topic, data) {
-    // Nothing to do now. Just for profile-after-change.
+    switch (topic) {
+      case kMozSettingsChangedObserverTopic:
+        let setting = JSON.parse(data);
+        this.handle(setting.key, setting.value);
+        break;
+      case kNetworkInterfaceStateChangedTopic:
+        let network = subject.QueryInterface(Ci.nsINetworkInterface);
+        // DSDS: setup pending data connection when switching the default id
+        // for data call. We can not use network.type to tell if it's
+        // NETWORK_TYPE_MOBILE, since the type is removed from
+        // RILNetworkInterface.connectedTypes on disconnect().
+        if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN) {
+          let oldRadioInterface =
+            this.radioInterfaces[this._currentDataClientId];
+          if (!oldRadioInterface.anyDataConnected() &&
+              typeof this._pendingDataCallRequest === "function") {
+            if (DEBUG) debug("All data calls disconnected, setup pending data call.");
+            this._pendingDataCallRequest();
+            this._pendingDataCallRequest = null;
+          }
+        }
+        break;
+      case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
+        Services.obs.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
+        Services.obs.removeObserver(this, kMozSettingsChangedObserverTopic);
+        Services.obs.removeObserver(this, kNetworkInterfaceStateChangedTopic);
+        break;
+     }
+  },
+
+  // nsISettingsServiceCallback
+
+  handle: function handle(name, result) {
+    switch(name) {
+      // TODO: Move 'ril.data.*' settings handler to DataConnectionManager,
+      // see bug 905568.
+      case "ril.data.enabled":
+        if (DEBUG) debug("'ril.data.enabled' is now " + result);
+        if (this._dataEnabled == result) {
+          break;
+        }
+        this._dataEnabled = result;
+
+        if (DEBUG) debug("Default id for data call: " + this._dataDefaultClientId);
+        if (this._dataDefaultClientId == -1) {
+          // We haven't got the default id for data from db.
+          break;
+        }
+
+        let radioInterface = this.radioInterfaces[this._dataDefaultClientId];
+        radioInterface.dataCallSettings.oldEnabled = radioInterface.dataCallSettings.enabled;
+        radioInterface.dataCallSettings.enabled = result;
+        radioInterface.updateRILNetworkInterface();
+        break;
+      case "ril.data.defaultServiceId":
+        result = result ? result : 0;
+        if (DEBUG) debug("'ril.data.defaultServiceId' is now " + result);
+        if (this._dataDefaultClientId == result) {
+          break;
+        }
+        this._dataDefaultClientId = result;
+        this.handleDataClientIdChange();
+        break;
+    }
+  },
+
+  handleError: function handleError(errorMessage) {
+    if (DEBUG) {
+      debug("There was an error while reading RIL settings: " + errorMessage);
+    }
+  },
+
+  handleDataClientIdChange: function handleDataClientIdChange() {
+    if (this._currentDataClientId == -1) {
+      // This is to handle boot up stage.
+      this._currentDataClientId = this._dataDefaultClientId;
+      if (this._dataEnabled) {
+        let radioInterface = this.radioInterfaces[this._currentDataClientId];
+        radioInterface.dataCallSettings.oldEnabled =
+          radioInterface.dataCallSettings.enabled;
+        radioInterface.dataCallSettings.enabled = true;
+        radioInterface.updateRILNetworkInterface();
+      }
+      return;
+    }
+
+    if (!this._dataEnabled) {
+      this._currentDataClientId = this._dataDefaultClientId;
+      return;
+    }
+
+    let oldRadioInterface = this.radioInterfaces[this._currentDataClientId];
+    oldRadioInterface.dataCallSettings.oldEnabled =
+      oldRadioInterface.dataCallSettings.enabled;
+    oldRadioInterface.dataCallSettings.enabled = false;
+
+    if (oldRadioInterface.anyDataConnected()) {
+      this._pendingDataCallRequest = function () {
+        if (DEBUG) debug("Executing pending data call request.");
+        let newRadioInterface = this.radioInterfaces[this._dataDefaultClientId];
+        newRadioInterface.dataCallSettings.oldEnabled =
+          newRadioInterface.dataCallSettings.enabled;
+        newRadioInterface.dataCallSettings.enabled = this._dataEnabled;
+
+        this._currentDataClientId = this._dataDefaultClientId;
+        newRadioInterface.updateRILNetworkInterface();
+      };
+
+      if (DEBUG) {
+        debug("handleDataClientIdChange: existing data call(s) active,"
+          + " wait for them to get disconnected.");
+      }
+      oldRadioInterface.deactivateDataCalls();
+      return;
+    }
+
+    let newRadioInterface = this.radioInterfaces[this._dataDefaultClientId];
+    newRadioInterface.dataCallSettings.oldEnabled =
+      newRadioInterface.dataCallSettings.enabled;
+    newRadioInterface.dataCallSettings.enabled = true;
+
+    this._currentDataClientId = this._dataDefaultClientId;
+    newRadioInterface.updateRILNetworkInterface();
   },
 
   /**
@@ -942,11 +1093,7 @@ function RadioInterface(options) {
 
   // Read the APN data from the settings DB.
   lock.get("ril.data.roaming_enabled", this);
-  lock.get("ril.data.enabled", this);
   lock.get("ril.data.apnSettings", this);
-
-  // Read the default client id for data call.
-  lock.get("ril.data.defaultServiceId", this);
 
   // Read the "time.clock.automatic-update.enabled" setting to see if
   // we need to adjust the system clock time by NITZ or SNTP.
@@ -1801,6 +1948,18 @@ RadioInterface.prototype = {
     }
   },
 
+  anyDataConnected: function anyDataConnected() {
+    for each (let apnSetting in this.apnSettings.byApn) {
+      for each (let type in apnSetting.types) {
+        if (this.getDataCallStateByType(type) ==
+            RIL.GECKO_NETWORK_STATE_CONNECTED) {
+          return true;
+        }
+      }
+    }
+    return false;
+  },
+
   /**
    * Check if we get all necessary APN data.
    */
@@ -1809,34 +1968,6 @@ RadioInterface.prototype = {
             apnSetting.apn &&
             apnSetting.types &&
             apnSetting.types.length);
-  },
-
-  handleDataClientIdChange: function handleDataClientIdChange() {
-    // Default data has been switched to the current RadioInterface.
-    // If there is an active default data call, wait for it to get
-    // disconnected, otherwise connect directly.
-    if (this.clientId == this._dataDefaultClientId &&
-        this._dataEnabled) {
-      this.dataCallSettings.oldEnabled = this.dataCallSettings.enabled;
-      this.dataCallSettings.enabled = true;
-      if (gNetworkManager.active &&
-          gNetworkManager.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-        if (DEBUG) this.debug("Default data active, wait for it to get disconnected.");
-        this._dataCallSetupPending = true;
-        return;
-      }
-      this.updateRILNetworkInterface();
-      return;
-    }
-
-    // Default data has been switched from this current RadioInterface,
-    // disconnet data call if it is enabled.
-    if (this.clientId != this._dataDefaultClientId &&
-        this.dataCallSettings.enabled) {
-      this.dataCallSettings.oldEnabled = this.dataCallSettings.enabled;
-      this.dataCallSettings.enabled = false;
-      this.updateRILNetworkInterface();
-    }
   },
 
   updateRILNetworkInterface: function updateRILNetworkInterface() {
@@ -2471,18 +2602,6 @@ RadioInterface.prototype = {
             this._sntp.request();
           }
         }
-
-        // DSDS: setup pending data connection when switching the default id
-        // for data call.
-        // We can not use network.type to tell if it's NETWORK_TYPE_MOBILE,
-        // since the type is removed from RILNetworkInterface.connectedTypes
-        // on disconnect().
-        if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN &&
-            this._dataCallSetupPending) {
-          if (DEBUG) this.debug("Default data disconnected, setup pending data call.");
-          this._dataCallSetupPending = false;
-          this.updateRILNetworkInterface();
-        }
         break;
       case kScreenStateChangedTopic:
         this.workerMessenger.send("setScreenState", { on: (data === "on") });
@@ -2494,17 +2613,6 @@ RadioInterface.prototype = {
   dataCallSettings: null,
 
   apnSettings: null,
-
-  // Flag to determine the data state to start with when we boot up. It
-  // corresponds to the 'ril.data.enabled' setting from the UI.
-  _dataEnabled: null,
-
-  // Flag to record the default client id for data call.
-  _dataDefaultClientId: null,
-
-  // Flag to determine if we need to setup data call when we are notified
-  // that another data call has been disconnected.
-  _dataCallSetupPending: false,
 
   // Flag to determine whether to update system clock automatically. It
   // corresponds to the "time.clock.automatic-update.enabled" setting.
@@ -2565,19 +2673,6 @@ RadioInterface.prototype = {
         if (DEBUG) this.debug("'ril.radio.preferredNetworkType' is now " + aResult);
         this.setPreferredNetworkTypeBySetting(aResult);
         break;
-      case "ril.data.enabled":
-        if (DEBUG) this.debug("'ril.data.enabled' is now " + aResult);
-        if (this._dataEnabled == aResult) {
-          break;
-        }
-        this._dataEnabled = aResult;
-        if (this.clientId != this._dataDefaultClientId) {
-          break;
-        }
-        this.dataCallSettings.oldEnabled = this.dataCallSettings.enabled;
-        this.dataCallSettings.enabled = aResult;
-        this.updateRILNetworkInterface();
-        break;
       case "ril.data.roaming_enabled":
         if (DEBUG) this.debug("'ril.data.roaming_enabled' is now " + aResult);
         this.dataCallSettings.roamingEnabled = aResult;
@@ -2589,15 +2684,6 @@ RadioInterface.prototype = {
           this.updateApnSettings(aResult);
           this.updateRILNetworkInterface();
         }
-        break;
-      case "ril.data.defaultServiceId":
-        aResult = aResult ? aResult : 0;
-        if (DEBUG) this.debug("'ril.data.defaultServiceId' is now " + aResult);
-        if (this._dataDefaultClientId == aResult) {
-          break;
-        }
-        this._dataDefaultClientId = aResult;
-        this.handleDataClientIdChange();
         break;
       case kSettingsClockAutoUpdateEnabled:
         this._clockAutoUpdateEnabled = aResult;
