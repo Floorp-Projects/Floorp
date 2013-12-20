@@ -719,7 +719,7 @@ class TemporaryTypeSet : public TypeSet
 };
 
 bool
-AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, jsid id);
+AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, HandleId id);
 
 void
 AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
