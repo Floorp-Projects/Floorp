@@ -43,18 +43,19 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
         // Ensures default engine remains at top of list.
         setOrderingAsAdded(true);
 
-        // Request list of search engines from Gecko.
+        // Register for SearchEngines messages and request list of search engines from Gecko.
         GeckoAppShell.registerEventListener("SearchEngines:Data", this);
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
 
     @Override
+    protected void onPrepareForRemoval() {
+        GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
+    }
+
+    @Override
     public void handleMessage(String event, final JSONObject data) {
         if (event.equals("SearchEngines:Data")) {
-            // We are no longer interested in this event from Gecko, as we do not request it again with
-            // this instance.
-            GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
-
             // Parse engines array from JSON.
             JSONArray engines;
             try {
@@ -63,6 +64,9 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
                 Log.e(LOGTAG, "Unable to decode search engine data from Gecko.", e);
                 return;
             }
+
+            // Clear the preferences category from this thread.
+            this.removeAll();
 
             // Create an element in this PreferenceCategory for each engine.
             for (int i = 0; i < engines.length(); i++) {
