@@ -102,12 +102,7 @@ public class MenuItemDefault extends TextView
     }
 
     void setIcon(int icon) {
-        Drawable drawable = null;
-
-        if (icon != 0)
-            drawable = getResources().getDrawable(icon);
-         
-        setIcon(drawable);
+        setIcon((icon == 0) ? null : getResources().getDrawable(icon));
     }
 
     void setTitle(CharSequence title) {
