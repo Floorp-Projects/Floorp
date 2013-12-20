@@ -407,7 +407,15 @@ add_identity_test(this, function test_handleSyncError() {
   do_check_true(Status.enforceBackoff);
   scheduler.syncTimer.clear();
 
-  yield cleanUpAndGo(server);
+  _("Arrange for a successful sync to reset the scheduler error count");
+  let deferred = Promise.defer();
+  Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
+    Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
+    cleanUpAndGo(server).then(deferred.resolve);
+  });
+  Svc.Prefs.set("firstSync", "wipeRemote");
+  scheduler.scheduleNextSync(-1);
+  yield deferred.promise;
 });
 
 add_identity_test(this, function test_client_sync_finish_updateClientMode() {
