@@ -99,7 +99,7 @@ struct SurfaceDescriptorGralloc {
    * that GraphicBuffer's size and actual video's size are different.
    * Extra size member is necessary. See Bug 850566.
    */
-  nsIntSize size;
+  IntSize size;
 
   /**
    * We can have one source producing gralloc buffers and sharing them
