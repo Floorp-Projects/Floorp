@@ -123,6 +123,8 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
                          JSObject **_objp,
                          bool *_retval)
 {
+  JS::Rooted<JSObject*> scopeObj(aCtx, aScopeObj);
+
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
   // We do not throw at any point after this because we want to allow the
   // prototype chain to be checked for the property.
@@ -142,9 +144,9 @@ StatementRow::NewResolve(nsIXPConnectWrappedNative *aWrapper,
       return NS_OK;
     }
 
-    *_retval = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID,
+    *_retval = ::JS_DefinePropertyById(aCtx, scopeObj, aId, JSVAL_VOID,
                                      nullptr, nullptr, 0);
-    *_objp = aScopeObj;
+    *_objp = scopeObj;
     return NS_OK;
   }
 
