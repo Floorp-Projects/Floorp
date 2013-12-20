@@ -803,7 +803,7 @@ DeprecatedTextureClientDIB::EnsureAllocated(gfx::IntSize aSize,
                                             gfxContentType aType)
 {
   if (mSurface) {
-    gfxIntSize size = mSurface->GetSize();
+    gfx::IntSize size = gfx::ToIntSize(mSurface->GetSize());
     if (size.width == aSize.width &&
         size.height == aSize.height) {
       return true;
