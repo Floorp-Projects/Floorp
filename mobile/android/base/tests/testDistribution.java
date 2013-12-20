@@ -159,7 +159,7 @@ public class testDistribution extends ContentProviderTest {
 
     private void checkSearchPlugin() {
         Actions.RepeatedEventExpecter eventExpecter = mActions.expectGeckoEvent("SearchEngines:Data");
-        mActions.sendGeckoEvent("SearchEngines:GetVisible", null);
+        mActions.sendGeckoEvent("SearchEngines:Get", null);
 
         try {
             JSONObject data = new JSONObject(eventExpecter.blockForEventData());
