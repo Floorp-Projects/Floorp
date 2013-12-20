@@ -24,6 +24,9 @@ public class BrowserContract {
     public static final String TABS_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.tabs";
     public static final Uri TABS_AUTHORITY_URI = Uri.parse("content://" + TABS_AUTHORITY);
 
+    public static final String HOME_LISTS_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".db.homelists";
+    public static final Uri HOME_LISTS_AUTHORITY_URI = Uri.parse("content://" + HOME_LISTS_AUTHORITY);
+
     public static final String PARAM_PROFILE = "profile";
     public static final String PARAM_PROFILE_PATH = "profilePath";
     public static final String PARAM_LIMIT = "limit";
@@ -283,5 +286,18 @@ public class BrowserContract {
         // Last modified time for the client's tab record. For remote records, a server
         // timestamp provided by Sync during insertion.
         public static final String LAST_MODIFIED = "last_modified";
+    }
+
+    // Data storage for custom lists on about:home
+    @RobocopTarget
+    public static final class HomeListItems implements CommonColumns, URLColumns {
+        private HomeListItems() {}
+        public static final Uri CONTENT_FAKE_URI = Uri.withAppendedPath(HOME_LISTS_AUTHORITY_URI, "items/fake");
+        public static final Uri CONTENT_URI = Uri.withAppendedPath(HOME_LISTS_AUTHORITY_URI, "items");
+
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/homelistitem";
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/homelistitem";
+
+        public static final String PROVIDER_ID = "provider_id";
     }
 }

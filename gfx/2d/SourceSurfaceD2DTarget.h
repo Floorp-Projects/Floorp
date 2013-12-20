@@ -60,7 +60,7 @@ private:
 class DataSourceSurfaceD2DTarget : public DataSourceSurface
 {
 public:
-  DataSourceSurfaceD2DTarget();
+  DataSourceSurfaceD2DTarget(SurfaceFormat aFormat);
   ~DataSourceSurfaceD2DTarget();
 
   virtual SurfaceType GetType() const { return SURFACE_DATA; }

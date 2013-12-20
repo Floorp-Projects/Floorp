@@ -156,6 +156,7 @@ APZCTreeManager::UpdatePanZoomControllerTree(CompositorParent* aCompositor,
           apzc = new AsyncPanZoomController(aLayersId, this, state->mController,
                                             AsyncPanZoomController::USE_GESTURE_DETECTOR);
           apzc->SetCompositorParent(aCompositor);
+          apzc->SetCrossProcessCompositorParent(state->mCrossProcessParent);
         } else {
           // If there was already an APZC for the layer clear the tree pointers
           // so that it doesn't continue pointing to APZCs that should no longer

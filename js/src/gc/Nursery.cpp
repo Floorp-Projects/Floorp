@@ -460,7 +460,7 @@ js::Nursery::moveToTenured(MinorCollectionTracer *trc, JSObject *src)
     AllocKind dstKind = GetObjectAllocKindForCopy(trc->runtime, src);
     JSObject *dst = static_cast<JSObject *>(allocateFromTenured(zone, dstKind));
     if (!dst)
-        MOZ_CRASH();
+        CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
 
     trc->tenuredSize += moveObjectToTenured(dst, src, dstKind);
 
@@ -512,7 +512,7 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
     size_t count = src->numDynamicSlots();
     dst->slots = zone->pod_malloc<HeapSlot>(count);
     if (!dst->slots)
-        MOZ_CRASH();
+        CrashAtUnhandlableOOM("Failed to allocate slots while tenuring.");
     PodCopy(dst->slots, src->slots, count);
     setSlotsForwardingPointer(src->slots, dst->slots, count);
     return count * sizeof(HeapSlot);
@@ -541,7 +541,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
         if (src->hasDynamicElements()) {
             dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
             if (!dstHeader)
-                MOZ_CRASH();
+                CrashAtUnhandlableOOM("Failed to allocate array buffer elements while tenuring.");
         } else {
             dst->setFixedElements();
             dstHeader = dst->getElementsHeader();
@@ -567,7 +567,7 @@ js::Nursery::moveElementsToTenured(JSObject *dst, JSObject *src, AllocKind dstKi
     size_t nbytes = nslots * sizeof(HeapValue);
     dstHeader = static_cast<ObjectElements *>(zone->malloc_(nbytes));
     if (!dstHeader)
-        MOZ_CRASH();
+        CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
     setElementsForwardingPointer(srcHeader, dstHeader, nslots);
     dst->elements = dstHeader->elements();

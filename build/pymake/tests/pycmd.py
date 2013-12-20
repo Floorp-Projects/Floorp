@@ -33,3 +33,6 @@ def asplode_return(args):
 
 def asplode_raise(args):
   raise Exception(args[0])
+
+def delayloadfn(args):
+    import delayload

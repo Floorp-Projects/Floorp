@@ -16,7 +16,10 @@ Cu.import("resource:///modules/devtools/StyleEditorUI.jsm");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 
 loader.lazyGetter(this, "StyleSheetsFront",
-  () => require("devtools/server/actors/styleeditor").StyleSheetsFront);
+  () => require("devtools/server/actors/stylesheets").StyleSheetsFront);
+
+loader.lazyGetter(this, "StyleEditorFront",
+  () => require("devtools/server/actors/styleeditor").StyleEditorFront);
 
 this.StyleEditorPanel = function StyleEditorPanel(panelWin, toolbox) {
   EventEmitter.decorate(this);
@@ -54,14 +57,20 @@ StyleEditorPanel.prototype = {
     targetPromise.then(() => {
       this.target.on("close", this.destroy);
 
-      this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
-
+      if (this.target.form.styleSheetsActor) {
+        this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
+      }
+      else {
+        /* We're talking to a pre-Firefox 29 server-side */
+        this._debuggee = StyleEditorFront(this.target.client, this.target.form);
+      }
       this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc);
       this.UI.on("error", this._showError);
 
       this.isReady = true;
+
       deferred.resolve(this);
-    })
+    }, console.error);
 
     return deferred.promise;
   },

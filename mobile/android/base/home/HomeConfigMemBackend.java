@@ -10,9 +10,11 @@ import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnChangeListener;
 import org.mozilla.gecko.home.HomeConfig.PageEntry;
 import org.mozilla.gecko.home.HomeConfig.PageType;
+import org.mozilla.gecko.home.ListManager.ListInfo;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,10 +22,14 @@ import java.util.EnumSet;
 import java.util.List;
 
 class HomeConfigMemBackend implements HomeConfigBackend {
+    private static final String LOGTAG = "GeckoHomeConfigMemBackend";
     private final Context mContext;
+
+    private final ListManager mListManager;
 
     public HomeConfigMemBackend(Context context) {
         mContext = context;
+        mListManager = new ListManager(context);
     }
 
     public List<PageEntry> load() {
@@ -52,6 +58,12 @@ class HomeConfigMemBackend implements HomeConfigBackend {
             pageEntries.add(historyEntry);
         } else {
             pageEntries.add(0, historyEntry);
+        }
+
+        // Add registered list pages.
+        List<ListInfo> listInfos = mListManager.getListInfos();
+        for (ListInfo info : listInfos) {
+            pageEntries.add(new PageEntry(PageType.LIST, info.title, info.id));
         }
 
         return Collections.unmodifiableList(pageEntries);
