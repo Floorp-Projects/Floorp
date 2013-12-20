@@ -602,4 +602,5 @@ def shell_quote(s):
     # Single quoted strings can contain any characters unescaped except the
     # single quote itself, which can't even be escaped, so the string needs to
     # be closed, an escaped single quote added, and reopened.
-    return "'%s'" % s.replace("'", "'\\''")
+    t = type(s)
+    return t("'%s'") % s.replace(t("'"), t("'\\''"))

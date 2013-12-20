@@ -27,7 +27,7 @@ const addon1ID = "addon1@tests.mozilla.org";
 
 function cleanup_and_advance() {
   Svc.Obs.notify("weave:engine:stop-tracking");
-  tracker.observe(null, "weave:engine:stop-tracking");
+  tracker.stopTracking();
 
   tracker.resetScore();
   tracker.clearChangedIDs();

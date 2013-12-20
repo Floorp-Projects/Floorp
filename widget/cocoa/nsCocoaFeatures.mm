@@ -18,6 +18,9 @@
 #import <Cocoa/Cocoa.h>
 
 int32_t nsCocoaFeatures::mOSXVersion = 0;
+int32_t nsCocoaFeatures::mOSXVersionMajor = 0;
+int32_t nsCocoaFeatures::mOSXVersionMinor = 0;
+int32_t nsCocoaFeatures::mOSXVersionBugFix = 0;
 
 static int intAtStringIndex(NSArray *array, int index)
 {
@@ -43,29 +46,70 @@ static void GetSystemVersion(int &major, int &minor, int &bugfix)
     }
 }
 
+/*static*/ void
+nsCocoaFeatures::InitializeVersionNumbers()
+{
+    NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+    int major, minor, bugfix;
+    GetSystemVersion(major, minor, bugfix);
+
+    mOSXVersionMajor = major;
+    mOSXVersionMinor = minor;
+    mOSXVersionBugFix = bugfix;
+
+    if (major < 10) {
+        NS_ERROR("Couldn't determine OS X version, assuming 10.6");
+        mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
+        mOSXVersionMajor = 10;
+        mOSXVersionMinor = 6;
+        mOSXVersionBugFix = 0;
+    } else if (minor < 6) {
+        NS_ERROR("OS X version too old, assuming 10.6");
+        mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
+        mOSXVersionMinor = 6;
+        mOSXVersionBugFix = 0;
+    } else {
+        mOSXVersion = 0x1000 + (minor << 4);
+    }
+
+    NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 /* static */ int32_t
 nsCocoaFeatures::OSXVersion()
 {
-    NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-    
     if (!mOSXVersion) {
-        int major, minor, bugfix;
-        GetSystemVersion(major, minor, bugfix);
-        if (major != 10) {
-            NS_ERROR("Couldn't determine OS X version, assuming 10.6");
-            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
-        }
-        else if (minor < 6) {
-            NS_ERROR("OS X version too old, assuming 10.6");
-            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
-        }
-        else {
-            mOSXVersion = 0x1000 + (minor << 4);
-        }
+        InitializeVersionNumbers();
     }
     return mOSXVersion;
-    
-    NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
+}
+
+/* static */ int32_t
+nsCocoaFeatures::OSXVersionMajor()
+{
+    if (!mOSXVersion) {
+        InitializeVersionNumbers();
+    }
+    return mOSXVersionMajor;
+}
+
+/* static */ int32_t
+nsCocoaFeatures::OSXVersionMinor()
+{
+    if (!mOSXVersion) {
+        InitializeVersionNumbers();
+    }
+    return mOSXVersionMinor;
+}
+
+/* static */ int32_t
+nsCocoaFeatures::OSXVersionBugFix()
+{
+    if (!mOSXVersion) {
+        InitializeVersionNumbers();
+    }
+    return mOSXVersionBugFix;
 }
 
 /* static */ bool

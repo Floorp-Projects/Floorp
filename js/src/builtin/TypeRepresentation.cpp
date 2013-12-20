@@ -1026,6 +1026,8 @@ StructTypeRepresentation::fieldNamed(jsid id) const
 
     uint32_t unused;
     JSAtom *atom = JSID_TO_ATOM(id);
+    AutoThreadSafeAccess ts(atom);
+
     if (atom->isIndex(&unused))
         return nullptr;
 

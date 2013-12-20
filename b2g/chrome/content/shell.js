@@ -1067,6 +1067,7 @@ let RemoteDebugger = {
         }
         DebuggerServer.registerModule("devtools/server/actors/inspector");
         DebuggerServer.registerModule("devtools/server/actors/styleeditor");
+        DebuggerServer.registerModule("devtools/server/actors/stylesheets");
         DebuggerServer.enableWebappsContentActor = true;
       }
       DebuggerServer.addActors('chrome://browser/content/dbg-browser-actors.js');

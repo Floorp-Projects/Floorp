@@ -8,8 +8,6 @@ const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm"
  * Note: this widget should be used in tandem with the WidgetMethods in
  * ViewHelpers.jsm.
  *
- * Note: this widget also reuses SideMenuWidget CSS class names.
- *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
  */
@@ -21,14 +19,12 @@ const FastListWidget = module.exports = function FastListWidget(aNode) {
 
   // This is a prototype element that each item added to the list clones.
   this._templateElement = this.document.createElement("hbox");
-  this._templateElement.className = "side-menu-widget-item side-menu-widget-item-contents";
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
-  this._list.className = "side-menu-widget-container";
+  this._list.className = "fast-list-widget-container theme-body";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
-  this._list.setAttribute("theme", "dark");
   this._list.setAttribute("tabindex", "0");
   this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
   this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);

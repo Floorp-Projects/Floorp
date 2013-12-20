@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = ["Home"];
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/SharedPreferences.jsm");
 
 // See bug 915424
 function resolveGeckoURI(aURI) {
@@ -136,7 +137,73 @@ let HomeBanner = {
   }
 };
 
+function List(options) {
+  if ("id" in options)
+    this.id = options.id;
+
+  if ("title" in options)
+    this.title = options.title;
+}
+
+function HomeLists() {
+  this.PREF_KEY = "home_lists";
+
+  this._sharedPrefs = new SharedPreferences();
+  this._lists = {};
+
+  let prefValue = this._sharedPrefs.getCharPref(this.PREF_KEY);
+  if (!prefValue) {
+    return;
+  }
+
+  JSON.parse(prefValue).forEach(data => {
+    let list = new List(data);
+    this._lists[list.id] = list;
+  });
+}
+
+HomeLists.prototype = {
+  add: function(options) {
+    let list = new List(options);
+    if (!list.id || !list.title) {
+      throw "Can't create a home list without an id and title!";
+    }
+
+    // Bail if the list already exists
+    if (list.id in this._lists) {
+      throw "List already exists: " + list.id;
+    }
+
+    this._lists[list.id] = list;
+    this._updateSharedPref();
+
+    // Send a message to Java to update the home pager if it's currently showing
+    sendMessageToJava({
+      type: "HomeLists:Added",
+      id: list.id,
+      title: list.title
+    });
+  },
+
+  remove: function(id) {
+    delete this._lists[id];
+    this._updateSharedPref();
+  },
+
+  // Set a shared pref so that Java can know about this list before Gecko is running
+  _updateSharedPref: function() {
+    let lists = [];
+    for (let id in this._lists) {
+      let list = this._lists[id];
+      lists.push({ id: list.id, title: list.title});
+    }
+    this._sharedPrefs.setCharPref(this.PREF_KEY, JSON.stringify(lists));
+  }
+
+};
+
 // Public API
 this.Home = {
-  banner: HomeBanner
+  banner: HomeBanner,
+  lists: new HomeLists()
 }
