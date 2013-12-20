@@ -34,7 +34,7 @@ public:
 
   void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage);
 
-  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize);
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfx::IntSize* aSize);
 
 private:
  ID3D10ShaderResourceView* GetImageSRView(Image* aImage, bool& aHasAlpha, IDXGIKeyedMutex **aMutex = nullptr);

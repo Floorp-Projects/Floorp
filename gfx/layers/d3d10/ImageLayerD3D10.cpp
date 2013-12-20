@@ -24,7 +24,7 @@ static already_AddRefed<ID3D10Texture2D>
 DataToTexture(ID3D10Device *aDevice,
               unsigned char *data,
               int stride,
-              const gfxIntSize &aSize)
+              const IntSize &aSize)
 {
   D3D10_SUBRESOURCE_DATA srdata;
 
@@ -51,7 +51,7 @@ DataToTexture(ID3D10Device *aDevice,
 static already_AddRefed<ID3D10Texture2D>
 SurfaceToTexture(ID3D10Device *aDevice,
                  gfxASurface *aSurface,
-                 const gfxIntSize &aSize)
+                 const IntSize &aSize)
 {
   if (!aSurface) {
     return nullptr;
@@ -72,7 +72,7 @@ SurfaceToTexture(ID3D10Device *aDevice,
   nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
 
   if (!imageSurface) {
-    imageSurface = new gfxImageSurface(aSize,
+    imageSurface = new gfxImageSurface(ThebesIntSize(aSize),
                                        gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
@@ -397,7 +397,7 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
 }
 
 already_AddRefed<ID3D10ShaderResourceView>
-ImageLayerD3D10::GetAsTexture(gfxIntSize* aSize)
+ImageLayerD3D10::GetAsTexture(gfx::IntSize* aSize)
 {
   if (!GetContainer()) {
     return nullptr;
