@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_DataStoreCursor_h
+#define mozilla_dom_DataStoreCursor_h
+
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsCycleCollectionParticipant.h"
+
+class nsPIDOMWindow;
+
+namespace mozilla {
+
+class ErrorResult;
+
+namespace dom {
+
+class Promise;
+class DataStore;
+class GlobalObject;
+class DataStoreCursorImpl;
+
+class DataStoreCursor MOZ_FINAL
+{
+public:
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DataStoreCursor)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(DataStoreCursor)
+
+  // WebIDL (internal functions)
+
+  static already_AddRefed<DataStoreCursor> Constructor(GlobalObject& aGlobal,
+                                                       ErrorResult& aRv);
+
+  JSObject* WrapObject(JSContext *aCx);
+
+  // WebIDL (public APIs)
+
+  already_AddRefed<DataStore> GetStore(ErrorResult& aRv);
+
+  already_AddRefed<Promise> Next(ErrorResult& aRv);
+
+  void Close(ErrorResult& aRv);
+
+  // This internal function (ChromeOnly) is aimed to make the DataStoreCursor
+  // keep a reference to the DataStoreCursorImpl which really implements the
+  // API's logic in JS.
+  void SetDataStoreCursorImpl(DataStoreCursorImpl& aCursor);
+
+protected:
+  virtual ~DataStoreCursor() {}
+
+private:
+  nsRefPtr<DataStoreCursorImpl> mCursor;
+};
+
+} //namespace dom
+} //namespace mozilla
+
+#endif
