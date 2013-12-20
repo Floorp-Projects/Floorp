@@ -452,15 +452,15 @@ GlobalObject::getOrCreateEval(JSContext *cx, Handle<GlobalObject*> global,
 {
     if (!global->getOrCreateObjectPrototype(cx))
         return false;
-    eval.set(&global->getSlotRefForCompilation(EVAL).toObject());
+    eval.set(&global->getSlotForCompilation(EVAL).toObject());
     return true;
 }
 
 bool
 GlobalObject::valueIsEval(Value val)
 {
-    HeapSlot &eval = getSlotRef(EVAL);
-    return eval.isObject() && eval.get() == val;
+    Value eval = getSlotForCompilation(EVAL);
+    return eval.isObject() && eval == val;
 }
 
 /* static */ bool

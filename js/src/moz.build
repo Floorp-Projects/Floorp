@@ -428,5 +428,5 @@ if CONFIG['MOZ_LINKER']:
 if CONFIG['_MSC_VER']:
     if CONFIG['CPU_ARCH'] == 'x86':
         SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
-    elif CONFIG['CPU_ARCH'] == 'x86_64':
+    elif CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['JS_HAS_CTYPES']:
         SOURCES['ctypes/CTypes.cpp'].no_pgo = True # Bug 810661

@@ -27,7 +27,10 @@
 
 #import "ComplexTextInputPanel.h"
 
+#include <algorithm>
 #include "mozilla/Preferences.h"
+#include "nsChildView.h"
+#include "nsCocoaFeatures.h"
 
 using namespace mozilla;
 
@@ -145,6 +148,48 @@ using namespace mozilla;
 - (BOOL)inComposition
 {
   return [mInputTextView hasMarkedText];
+}
+
+- (void)adjustTo:(NSView*)view
+{
+  NSRect viewRect = [view frame];
+  viewRect.origin.x = 0;
+  viewRect.origin.y = 0;
+  viewRect = [view convertRect:viewRect toView:nil];
+  if (nsCocoaFeatures::OnLionOrLater()) {
+    viewRect = [[view window] convertRectToScreen:viewRect];
+  } else {
+    viewRect.origin = [[view window] convertBaseToScreen:viewRect.origin];
+  }
+  NSRect selfRect = [self frame];
+  // XXX Is this work well with Retina display?
+  CGFloat minWidth = static_cast<CGFloat>(
+                       Preferences::GetUint("ui.plugin.panel.min-width", 500));
+  NSRect rect = NSMakeRect(viewRect.origin.x,
+                           viewRect.origin.y - selfRect.size.height,
+                           std::min(viewRect.size.width, minWidth),
+                           selfRect.size.height);
+
+  // Adjust to screen.
+  NSRect screenRect = [[NSScreen mainScreen] visibleFrame];
+  if (rect.origin.x < screenRect.origin.x) {
+    rect.origin.x = screenRect.origin.x;
+  }
+  if (rect.origin.y < screenRect.origin.y) {
+    rect.origin.y = screenRect.origin.y;
+  }
+  CGFloat xMostOfScreen = screenRect.origin.x + screenRect.size.width;
+  CGFloat yMostOfScreen = screenRect.origin.y + screenRect.size.height;
+  CGFloat xMost = rect.origin.x + rect.size.width;
+  CGFloat yMost = rect.origin.y + rect.size.height;
+  if (xMostOfScreen < xMost) {
+    rect.origin.x -= xMost - xMostOfScreen;
+  }
+  if (yMostOfScreen < yMost) {
+    rect.origin.y -= yMost - yMostOfScreen;
+  }
+
+  [self setFrame:rect display:[self isVisible]];
 }
 
 @end

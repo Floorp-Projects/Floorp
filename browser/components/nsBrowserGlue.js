@@ -1289,7 +1289,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 18;
+    const UI_VERSION = 19;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1533,6 +1533,22 @@ BrowserGlue.prototype = {
             this._setPersist(toolbar, resource);
           }
         }
+      }
+    }
+
+    if (currentUIVersion < 19) {
+      let detector = null;    
+      try {
+        detector = Services.prefs.getComplexValue("intl.charset.detector",
+                                                  Ci.nsIPrefLocalizedString).data;
+      } catch (ex) {}
+      if (!(detector == "" ||
+            detector == "ja_parallel_state_machine" ||
+            detector == "ruprob" ||
+            detector == "ukprob")) {
+        // If the encoding detector pref value is not reachable from the UI,
+        // reset to default (varies by localization).
+        Services.prefs.clearUserPref("intl.charset.detector");
       }
     }
 

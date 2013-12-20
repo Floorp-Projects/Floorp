@@ -164,30 +164,126 @@ END_TEST(testParseJSON_success)
 
 BEGIN_TEST(testParseJSON_error)
 {
-    CHECK(Error(cx, "["));
-    CHECK(Error(cx, "[,]"));
-    CHECK(Error(cx, "[1,]"));
-    CHECK(Error(cx, "{a:2}"));
-    CHECK(Error(cx, "{\"a\":2,}"));
-    CHECK(Error(cx, "]"));
-    CHECK(Error(cx, "'bad string'"));
-    CHECK(Error(cx, "\""));
-    CHECK(Error(cx, "{]"));
-    CHECK(Error(cx, "[}"));
+    CHECK(Error(cx, ""                                  , "1", "1"));
+    CHECK(Error(cx, "\n"                                , "2", "1"));
+    CHECK(Error(cx, "\r"                                , "2", "1"));
+    CHECK(Error(cx, "\r\n"                              , "2", "1"));
+
+    CHECK(Error(cx, "["                                 , "1", "2"));
+    CHECK(Error(cx, "[,]"                               , "1", "2"));
+    CHECK(Error(cx, "[1,]"                              , "1", "4"));
+    CHECK(Error(cx, "{a:2}"                             , "1", "2"));
+    CHECK(Error(cx, "{\"a\":2,}"                        , "1", "8"));
+    CHECK(Error(cx, "]"                                 , "1", "1"));
+    CHECK(Error(cx, "\""                                , "1", "2"));
+    CHECK(Error(cx, "{]"                                , "1", "2"));
+    CHECK(Error(cx, "[}"                                , "1", "2"));
+    CHECK(Error(cx, "'wrongly-quoted string'"           , "1", "1"));
+
+    CHECK(Error(cx, "{\"a\":2 \n b:3}"                  , "2", "2"));
+    CHECK(Error(cx, "\n["                               , "2", "2"));
+    CHECK(Error(cx, "\n[,]"                             , "2", "2"));
+    CHECK(Error(cx, "\n[1,]"                            , "2", "4"));
+    CHECK(Error(cx, "\n{a:2}"                           , "2", "2"));
+    CHECK(Error(cx, "\n{\"a\":2,}"                      , "2", "8"));
+    CHECK(Error(cx, "\n]"                               , "2", "1"));
+    CHECK(Error(cx, "\"bad string\n\""                  , "1", "12"));
+    CHECK(Error(cx, "\r'wrongly-quoted string'"         , "2", "1"));
+    CHECK(Error(cx, "\n\""                              , "2", "2"));
+    CHECK(Error(cx, "\n{]"                              , "2", "2"));
+    CHECK(Error(cx, "\n[}"                              , "2", "2"));
+    CHECK(Error(cx, "{\"a\":[2,3],\n\"b\":,5,6}"        , "2", "5"));
+
+    CHECK(Error(cx, "{\"a\":2 \r b:3}"                  , "2", "2"));
+    CHECK(Error(cx, "\r["                               , "2", "2"));
+    CHECK(Error(cx, "\r[,]"                             , "2", "2"));
+    CHECK(Error(cx, "\r[1,]"                            , "2", "4"));
+    CHECK(Error(cx, "\r{a:2}"                           , "2", "2"));
+    CHECK(Error(cx, "\r{\"a\":2,}"                      , "2", "8"));
+    CHECK(Error(cx, "\r]"                               , "2", "1"));
+    CHECK(Error(cx, "\"bad string\r\""                  , "1", "12"));
+    CHECK(Error(cx, "\r'wrongly-quoted string'"       , "2", "1"));
+    CHECK(Error(cx, "\r\""                              , "2", "2"));
+    CHECK(Error(cx, "\r{]"                              , "2", "2"));
+    CHECK(Error(cx, "\r[}"                              , "2", "2"));
+    CHECK(Error(cx, "{\"a\":[2,3],\r\"b\":,5,6}"        , "2", "5"));
+
+    CHECK(Error(cx, "{\"a\":2 \r\n b:3}"                , "2", "2"));
+    CHECK(Error(cx, "\r\n["                             , "2", "2"));
+    CHECK(Error(cx, "\r\n[,]"                           , "2", "2"));
+    CHECK(Error(cx, "\r\n[1,]"                          , "2", "4"));
+    CHECK(Error(cx, "\r\n{a:2}"                         , "2", "2"));
+    CHECK(Error(cx, "\r\n{\"a\":2,}"                    , "2", "8"));
+    CHECK(Error(cx, "\r\n]"                             , "2", "1"));
+    CHECK(Error(cx, "\"bad string\r\n\""                , "1", "12"));
+    CHECK(Error(cx, "\r\n'wrongly-quoted string'"       , "2", "1"));
+    CHECK(Error(cx, "\r\n\""                            , "2", "2"));
+    CHECK(Error(cx, "\r\n{]"                            , "2", "2"));
+    CHECK(Error(cx, "\r\n[}"                            , "2", "2"));
+    CHECK(Error(cx, "{\"a\":[2,3],\r\n\"b\":,5,6}"      , "2", "5"));
+
+    CHECK(Error(cx, "\n\"bad string\n\""                , "2", "12"));
+    CHECK(Error(cx, "\r\"bad string\r\""                , "2", "12"));
+    CHECK(Error(cx, "\r\n\"bad string\r\n\""            , "2", "12"));
+
+    CHECK(Error(cx, "{\n\"a\":[2,3],\r\"b\":,5,6}"      , "3", "5"));
+    CHECK(Error(cx, "{\r\"a\":[2,3],\n\"b\":,5,6}"      , "3", "5"));
+    CHECK(Error(cx, "[\"\\t\\q"                         , "1", "6"));
+    CHECK(Error(cx, "[\"\\t\x00"                        , "1", "5"));
+    CHECK(Error(cx, "[\"\\t\x01"                        , "1", "5"));
+    CHECK(Error(cx, "[\"\\t\\\x00"                      , "1", "6"));
+    CHECK(Error(cx, "[\"\\t\\\x01"                      , "1", "6"));
+
+    // Unicode escape errors are messy.  The first bad character could be
+    // non-hexadecimal, or it could be absent entirely.  Include tests where
+    // there's a bad character, followed by zero to as many characters as are
+    // needed to form a complete Unicode escape sequence, plus one.  (The extra
+    // characters beyond are valuable because our implementation checks for
+    // too-few subsequent characters first, before checking for subsequent
+    // non-hexadecimal characters.  So \u<END>, \u0<END>, \u00<END>, and
+    // \u000<END> are all *detected* as invalid by the same code path, but the
+    // process of computing the first invalid character follows a different
+    // code path for each.  And \uQQQQ, \u0QQQ, \u00QQ, and \u000Q are detected
+    // as invalid by the same code path [ignoring which precise subexpression
+    // triggers failure of a single condition], but the computation of the
+    // first invalid character follows a different code path for each.)
+    CHECK(Error(cx, "[\"\\t\\u"                         , "1", "7"));
+    CHECK(Error(cx, "[\"\\t\\uZ"                        , "1", "7"));
+    CHECK(Error(cx, "[\"\\t\\uZZ"                       , "1", "7"));
+    CHECK(Error(cx, "[\"\\t\\uZZZ"                      , "1", "7"));
+    CHECK(Error(cx, "[\"\\t\\uZZZZ"                     , "1", "7"));
+    CHECK(Error(cx, "[\"\\t\\uZZZZZ"                    , "1", "7"));
+
+    CHECK(Error(cx, "[\"\\t\\u0"                        , "1", "8"));
+    CHECK(Error(cx, "[\"\\t\\u0Z"                       , "1", "8"));
+    CHECK(Error(cx, "[\"\\t\\u0ZZ"                      , "1", "8"));
+    CHECK(Error(cx, "[\"\\t\\u0ZZZ"                     , "1", "8"));
+    CHECK(Error(cx, "[\"\\t\\u0ZZZZ"                    , "1", "8"));
+
+    CHECK(Error(cx, "[\"\\t\\u00"                       , "1", "9"));
+    CHECK(Error(cx, "[\"\\t\\u00Z"                      , "1", "9"));
+    CHECK(Error(cx, "[\"\\t\\u00ZZ"                     , "1", "9"));
+    CHECK(Error(cx, "[\"\\t\\u00ZZZ"                    , "1", "9"));
+
+    CHECK(Error(cx, "[\"\\t\\u000"                      , "1", "10"));
+    CHECK(Error(cx, "[\"\\t\\u000Z"                     , "1", "10"));
+    CHECK(Error(cx, "[\"\\t\\u000ZZ"                    , "1", "10"));
+
     return true;
 }
 
-template<size_t N> inline bool
-Error(JSContext *cx, const char (&input)[N])
+template<size_t N, size_t M, size_t L> inline bool
+Error(JSContext *cx, const char (&input)[N], const char (&expectedLine)[M],
+      const char (&expectedColumn)[L])
 {
-    AutoInflatedString str(cx);
+    AutoInflatedString str(cx), line(cx), column(cx);
     RootedValue dummy(cx);
     str = input;
 
     ContextPrivate p = {0, 0};
     CHECK(!JS_GetContextPrivate(cx));
     JS_SetContextPrivate(cx, &p);
-    JSErrorReporter old = JS_SetErrorReporter(cx, reportJSONEror);
+    JSErrorReporter old = JS_SetErrorReporter(cx, ReportJSONError);
     bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
     JS_SetErrorReporter(cx, old);
     JS_SetContextPrivate(cx, nullptr);
@@ -195,6 +291,10 @@ Error(JSContext *cx, const char (&input)[N])
     CHECK(!ok);
     CHECK(!p.unexpectedErrorCount);
     CHECK(p.expectedErrorCount == 1);
+    column = expectedColumn;
+    CHECK(js_strcmp(column.chars(), p.column) == 0);
+    line = expectedLine;
+    CHECK(js_strcmp(line.chars(), p.line) == 0);
 
     /* We do not execute JS, so there should be no exception thrown. */
     CHECK(!JS_IsExceptionPending(cx));
@@ -203,14 +303,21 @@ Error(JSContext *cx, const char (&input)[N])
 }
 
 struct ContextPrivate {
+    static const size_t MaxSize = sizeof("4294967295");
     unsigned unexpectedErrorCount;
     unsigned expectedErrorCount;
+    jschar column[MaxSize];
+    jschar line[MaxSize];
 };
 
 static void
-reportJSONEror(JSContext *cx, const char *message, JSErrorReport *report)
+ReportJSONError(JSContext *cx, const char *message, JSErrorReport *report)
 {
     ContextPrivate *p = static_cast<ContextPrivate *>(JS_GetContextPrivate(cx));
+    // Although messageArgs[1] and messageArgs[2] are jschar*, we cast them to char*
+    // here because JSONParser::error() stores char* strings in them.
+    js_strncpy(p->line, report->messageArgs[1], js_strlen(report->messageArgs[1]));
+    js_strncpy(p->column, report->messageArgs[2], js_strlen(report->messageArgs[2]));
     if (report->errorNumber == JSMSG_JSON_BAD_PARSE)
         p->expectedErrorCount++;
     else
