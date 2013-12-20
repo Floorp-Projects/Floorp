@@ -3514,6 +3514,46 @@ nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
     return NS_OK;
 }
 
+/*
+ * Below is a bunch of awkward junk to allow JS test code to trigger the
+ * creation of an XPCWrappedJS, such that it ends up in the map. We need to
+ * hand the caller some sort of reference to hold onto (to prevent the
+ * refcount from dropping to zero as soon as the function returns), but trying
+ * to return a bonafide XPCWrappedJS to script causes all sorts of trouble. So
+ * we create a benign holder class instead, which acts as an opaque reference
+ * that script can use to keep the XPCWrappedJS alive and in the map.
+ */
+
+class WrappedJSHolder : public nsISupports
+{
+    NS_DECL_ISUPPORTS
+    WrappedJSHolder() {}
+    virtual ~WrappedJSHolder() {}
+
+    nsRefPtr<nsXPCWrappedJS> mWrappedJS;
+};
+NS_IMPL_ISUPPORTS0(WrappedJSHolder);
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GenerateXPCWrappedJS(const Value &aObj, const Value &aScope,
+                                            JSContext *aCx, nsISupports **aOut)
+{
+    if (!aObj.isObject())
+        return NS_ERROR_INVALID_ARG;
+    RootedObject obj(aCx, &aObj.toObject());
+    RootedObject scope(aCx, aScope.isObject() ? js::UncheckedUnwrap(&aScope.toObject())
+                                              : CurrentGlobalOrNull(aCx));
+    JSAutoCompartment ac(aCx, scope);
+    if (!JS_WrapObject(aCx, &obj))
+        return NS_ERROR_FAILURE;
+
+    nsRefPtr<WrappedJSHolder> holder = new WrappedJSHolder();
+    nsresult rv = nsXPCWrappedJS::GetNewOrUsed(obj, NS_GET_IID(nsISupports),
+                                               getter_AddRefs(holder->mWrappedJS));
+    holder.forget(aOut);
+    return rv;
+}
+
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetWatchdogTimestamp(const nsAString& aCategory, PRTime *aOut)
 {
