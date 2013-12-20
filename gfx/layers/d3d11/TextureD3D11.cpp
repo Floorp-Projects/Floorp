@@ -313,7 +313,7 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   nsRefPtr<gfxImageSurface> surf = openSurf.GetAsImage();
 
-  gfxIntSize size = surf->GetSize();
+  gfx::IntSize size = gfx::ToIntSize(surf->GetSize());
 
   uint32_t bpp = 0;
 
@@ -338,7 +338,7 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
     NS_ERROR("Bad image format");
   }
 
-  mSize = IntSize(size.width, size.height);
+  mSize = size;
 
   CD3D11_TEXTURE2D_DESC desc(dxgiFormat, size.width, size.height,
                              1, 1, D3D11_BIND_SHADER_RESOURCE,
@@ -488,9 +488,9 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfxIntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
+  gfx::IntSize gfxCbCrSize = gfx::ToIntSize(yuvDeserializer.GetCbCrSize());
 
-  gfxIntSize size = yuvDeserializer.GetYSize();
+  gfx::IntSize size = gfx::ToIntSize(yuvDeserializer.GetYSize());
 
   D3D11_SUBRESOURCE_DATA initData;
   initData.pSysMem = yuvDeserializer.GetYData();
