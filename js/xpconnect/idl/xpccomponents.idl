@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(e14f588b-63aa-4091-be82-a459a52f8ca6)]
+[scriptable, uuid(ae292d08-cfb0-4862-a2b6-4779e5ef7e72)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -518,6 +518,17 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval getIncumbentGlobal([optional] in jsval callback);
+
+    /**
+     * Forces the generation of an XPCWrappedJS for a given object. For internal
+     * and testing use only. This is only useful to set up wrapper map conditions
+     * for a testcase. The return value is not an XPCWrappedJS itself, but an
+     * opaque nsISupports holder that keeps the underlying XPCWrappedJS alive.
+     *
+     * if |scope| is passed, the XPCWrappedJS is generated in the scope of that object.
+     */
+    [implicit_jscontext]
+    nsISupports generateXPCWrappedJS(in jsval obj, [optional] in jsval scope);
 
     /**
       * Retrieve the last time, in microseconds since epoch, that a given
