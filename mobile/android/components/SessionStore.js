@@ -223,7 +223,9 @@ SessionStore.prototype = {
       }
       case "pageshow": {
         let browser = aEvent.currentTarget;
-        this.onTabLoad(window, browser, aEvent.persisted);
+        // Top-level changes only
+        if (aEvent.originalTarget == browser.contentDocument)
+          this.onTabLoad(window, browser, aEvent.persisted);
         break;
       }
     }
