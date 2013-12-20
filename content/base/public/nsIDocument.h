@@ -2016,15 +2016,6 @@ public:
                                 mozilla::ErrorResult& rv) const;
   already_AddRefed<nsINode>
     ImportNode(nsINode& aNode, bool aDeep, mozilla::ErrorResult& rv) const;
-  already_AddRefed<nsINode>
-    ImportNode(nsINode& aNode, mozilla::ErrorResult& rv)
-  {
-    if (aNode.HasChildNodes()) {
-      // Flag it as an error, not a warning, to make people actually notice.
-      WarnOnceAbout(eUnsafeImportNode, true);
-    }
-    return ImportNode(aNode, true, rv);
-  }
   nsINode* AdoptNode(nsINode& aNode, mozilla::ErrorResult& rv);
   already_AddRefed<nsDOMEvent> CreateEvent(const nsAString& aEventType,
                                            mozilla::ErrorResult& rv) const;
