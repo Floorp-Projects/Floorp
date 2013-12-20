@@ -2,51 +2,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/FxAccounts.jsm");
-Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/rest.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
-let mockUser = {email: 'email',
-                kA: 'kA',
-                kB: 'kB',
-                sessionToken: 'sessionToken',
-                uid: 'user_uid',
-               };
-
-let _MockFXA = function(blob) {
-  this.user = blob;
-};
-_MockFXA.prototype = {
-  getSignedInUser: function getSignedInUser() {
-    return Promise.resolve(this.user);
-  },
-  whenVerified: function whenVerified(userData) {
-    return Promise.resolve(this.user);
-  },
-  getAssertion: function getAssertion(audience) {
-    return Promise.resolve("assertion");
-  },
-};
-let mockFXA = new _MockFXA(mockUser);
-
-let mockToken = {
-  api_endpoint: Svc.Prefs.get("services.sync.tokenServerURI"),
-  duration: 300,
-  id: "id",
-  key: "key",
-  uid: "token_uid",
-};
-let mockTSC = { // TokenServerClient
-  getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
-    cb(null, mockToken);
-  },
-};
-
-let browseridManager = new BrowserIDManager(mockFXA, mockTSC);
-// Set the "account" of the browserId manager to be the "email" of the
-// logged in user of the mockFXA service.
-browseridManager._account = mockUser.email;
+let identityConfig = makeIdentityConfig();
+let browseridManager = new BrowserIDManager();
+configureFxAccountIdentity(browseridManager, identityConfig);
 
 function run_test() {
   initTestLogging("Trace");
@@ -74,8 +37,8 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true('authorization' in output.headers);
     do_check_true(output.headers.authorization.startsWith('Hawk'));
     _("Expected internal state after successful call.");
-    do_check_eq(browseridManager._token.uid, mockToken.uid);
-    do_check_eq(browseridManager.account, mockUser.email);
+    do_check_eq(browseridManager._token.uid, identityConfig.fxaccount.token.uid);
+    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
     run_next_test();
   }
 );
@@ -97,8 +60,8 @@ add_test(function test_getRESTRequestAuthenticator() {
 
 add_test(function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
-    let bimExp = new BrowserIDManager(mockFXA, mockTSC);
-    bimExp._account = mockUser.email;
+    let bimExp = new BrowserIDManager();
+    configureFxAccountIdentity(bimExp, identityConfig);
 
     let authenticator = bimExp.getResourceAuthenticator();
     do_check_true(!!authenticator);
@@ -124,18 +87,17 @@ add_test(function test_tokenExpiration() {
 
 add_test(function test_userChangeAndLogOut() {
     _("BrowserIDManager notices when the FxAccounts.getSignedInUser().email changes.");
-    let mockFXA2 = new _MockFXA(mockUser);
-    let bidUser = new BrowserIDManager(mockFXA2, mockTSC);
-    bidUser._account = mockUser.email;
+    let bidUser = new BrowserIDManager();
+    configureFxAccountIdentity(bidUser, identityConfig);
     let request = new SyncStorageRequest(
       "https://example.net/somewhere/over/the/rainbow");
     let authenticator = bidUser.getRESTRequestAuthenticator();
     do_check_true(!!authenticator);
     let output = authenticator(request, 'GET');
     do_check_true(!!output);
-    do_check_eq(bidUser.account, mockUser.email);
+    do_check_eq(bidUser.account, identityConfig.fxaccount.user.email);
     do_check_true(bidUser.hasValidToken());
-    mockUser.email = "something@new";
+    identityConfig.fxaccount.user.email = "something@new";
     do_check_false(bidUser.hasValidToken());
     run_next_test();
   }
