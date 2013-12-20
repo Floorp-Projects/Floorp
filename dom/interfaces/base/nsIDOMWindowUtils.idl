@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(928356ff-26b2-434e-a7ce-c1a660162d81)]
+[scriptable, uuid(c6efd629-7282-4f0d-9db8-0fa59c191dd5)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -313,6 +313,21 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in float aPressure,
                               [optional] in unsigned short aInputSourceArg);
 
+  /** The same as sendTouchEvent but ensures that the event is dispatched to
+   *  this DOM window or one of its children.
+   */
+  boolean sendTouchEventToWindow(in AString aType,
+                                 [array, size_is(count)] in uint32_t aIdentifiers,
+                                 [array, size_is(count)] in int32_t aXs,
+                                 [array, size_is(count)] in int32_t aYs,
+                                 [array, size_is(count)] in uint32_t aRxs,
+                                 [array, size_is(count)] in uint32_t aRys,
+                                 [array, size_is(count)] in float aRotationAngles,
+                                 [array, size_is(count)] in float aForces,
+                                 in uint32_t count,
+                                 in long aModifiers,
+                                 [optional] in boolean aIgnoreRootScrollFrame);
+
   /** Synthesize a wheel event for a window. The event types supported is only
    *  wheel.
    *
@@ -428,6 +443,28 @@ interface nsIDOMWindowUtils : nsISupports {
                             in nsIDOMElement aElement);
 
   /**
+   * The values for sendNativeMouseScrollEvent's aAdditionalFlags.
+   */
+
+  /**
+   * If MOUSESCROLL_PREFER_WIDGET_AT_POINT is set, widget will dispatch
+   * the event to a widget which is under the cursor.  Otherwise, dispatch to
+   * a default target on the platform.  E.g., on Windows, it's focused window.
+   */
+  const unsigned long MOUSESCROLL_PREFER_WIDGET_AT_POINT = 0x00000001;
+
+  /**
+   * The platform specific values of aAdditionalFlags.  Must be over 0x00010000.
+   */
+
+  /**
+   * If MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL is set and aNativeMessage is
+   * WM_VSCROLL or WM_HSCROLL, widget will set the window handle to the lParam
+   * instead of NULL.
+   */
+  const unsigned long MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL = 0x00010000;
+
+  /**
    * See nsIWidget::SynthesizeNativeMouseScrollEvent
    *
    * Will be called on the widget that contains aElement.
@@ -451,26 +488,79 @@ interface nsIDOMWindowUtils : nsISupports {
                                   in nsIDOMElement aElement);
 
   /**
-   * The values of aAdditionalFlags.
+   * Touch states for sendNativeTouchPoint. These values match
+   * nsIWidget's TouchPointerState.
    */
 
-  /**
-   * If MOUSESCROLL_PREFER_WIDGET_AT_POINT is set, widget will dispatch
-   * the event to a widget which is under the cursor.  Otherwise, dispatch to
-   * a default target on the platform.  E.g., on Windows, it's focused window.
-   */
-  const unsigned long MOUSESCROLL_PREFER_WIDGET_AT_POINT = 0x00000001;
+  // The pointer is in a hover state above the digitizer
+  const long TOUCH_HOVER   = 0x01;
+  // The pointer is in contact with the digitizer
+  const long TOUCH_CONTACT = 0x02;
+  // The pointer has been removed from the digitizer detection area
+  const long TOUCH_REMOVE  = 0x04;
+  // The pointer has been canceled. Will cancel any pending os level
+  // gestures that would be triggered as a result of completion of the
+  // input sequence. This may not cancel moz platform related events
+  // that might get tirggered by input already delivered.
+  const long TOUCH_CANCEL  = 0x08;
 
   /**
-   * The platform specific values of aAdditionalFlags.  Must be over 0x00010000.
+   * Create a new or update an existing touch point on the digitizer.
+   * To trigger os level gestures, individual touch points should
+   * transition through a complete set of touch states which should be
+   * sent as individual calls. For example:
+   * tap - msg1:TOUCH_CONTACT, msg2:TOUCH_REMOVE
+   * drag - msg1-n:TOUCH_CONTACT (moving), msgn+1:TOUCH_REMOVE
+   * hover drag - msg1-n:TOUCH_HOVER (moving), msgn+1:TOUCH_REMOVE
+   *
+   * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will
+   * throw.
+   *
+   * @param aPointerId The touch point id to create or update.
+   * @param aTouchState one or more of the touch states listed above
+   * @param aScreenX, aScreenY screen coords of this event
+   * @param aPressure 0.0 -> 1.0 float val indicating pressure
+   * @param aOrientation 0 -> 359 degree value indicating the
+   * orientation of the pointer. Use 90 for normal taps.
    */
+  void sendNativeTouchPoint(in unsigned long aPointerId,
+                            in unsigned long aTouchState,
+                            in long aScreenX,
+                            in long aScreenY,
+                            in double aPressure,
+                            in unsigned long aOrientation);
 
   /**
-   * If MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL is set and aNativeMessage is
-   * WM_VSCROLL or WM_HSCROLL, widget will set the window handle to the lParam
-   * instead of NULL.
+   * Simulates native touch based taps on the input digitizer. Events
+   * triggered by this call are injected at the os level. Events do not
+   * bypass widget level input processing and as such can be used to
+   * test widget event logic and async pan-zoom controller functionality.
+   * Cannot be accessed from an unprivileged context.
+   *
+   * Long taps (based on the aLongTap parameter) will be completed
+   * asynchrnously after the call returns. Long tap delay is based on
+   * the ui.click_hold_context_menus.delay pref or 1500 msec if pref
+   * is not set.
+   *
+   * Widget support: Windows 8.0+, Winrt/Win32. Other widgets will
+   * throw.
+   *
+   * @param aScreenX, aScreenY screen coords of this event
+   * @param aLongTap true if the tap should be long, false for a short
+   * tap.
    */
-  const unsigned long MOUSESCROLL_WIN_SCROLL_LPARAM_NOT_NULL = 0x00010000;
+  void sendNativeTouchTap(in long aScreenX,
+                          in long aScreenY,
+                          in boolean aLongTap);
+
+  /**
+   * Cancel any existing touch points or long tap delays. Calling this is safe
+   * even if you're sure there aren't any pointers recorded. You should call
+   * this when tests shut down to reset the digitizer driver. Not doing so can
+   * leave the digitizer in an undetermined state which can screw up subsequent
+   * tests and native input.
+   */
+  void clearNativeTouchSequence();
 
   /**
    * See nsIWidget::ActivateNativeMenuItemAt
@@ -653,11 +743,12 @@ interface nsIDOMWindowUtils : nsISupports {
   void getScrollXY(in boolean aFlushLayout, out long aScrollX, out long aScrollY);
 
   /**
-   * Sets the scroll position of the root scroll frame of the window.
-   * Returns true on success, false on error (if the window didn't have a root
-   * scroll frame).
+   * Returns the scroll position of the window's currently loaded document.
+   *
+   * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @see nsIDOMWindow::scrollX/Y
    */
-  boolean scrollToCSSPixelsApproximate(in float aX, in float aY);
+  void getScrollXYFloat(in boolean aFlushLayout, out float aScrollX, out float aScrollY);
 
   /**
    * Returns the scrollbar width of the window's scroll frame.
@@ -1044,7 +1135,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean layerManagerRemote;
 
   /**
-   * Record (and return) frame-intervals and paint-times for frames which were presented
+   * Record (and return) frame-intervals for frames which were presented
    *   between calling StartFrameTimeRecording and StopFrameTimeRecording.
    *
    * - Uses a cyclic buffer and serves concurrent consumers, so if Stop is called too late
@@ -1066,7 +1157,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * - Allocation is infallible. Should be released even if size is 0.
    */
    void stopFrameTimeRecording(in unsigned long startIndex,
-                              [optional, array, size_is(frameCount)] out float paintTimes,
                               [optional] out unsigned long frameCount,
                               [retval, array, size_is(frameCount)] out float frameIntervals);
 

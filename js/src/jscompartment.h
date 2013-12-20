@@ -187,8 +187,6 @@ struct JSCompartment
      */
     void adoptWorkerAllocator(js::Allocator *workerAllocator);
 
-
-    int64_t                      lastCodeRelease;
     bool                         activeAnalysis;
 
     /* Type information about the scripts and objects in this compartment. */
@@ -221,7 +219,6 @@ struct JSCompartment
 
   public:
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                                size_t *tiPendingArrays,
                                 size_t *tiAllocationSiteTables,
                                 size_t *tiArrayTypeTables,
                                 size_t *tiObjectTypeTables,
@@ -247,9 +244,9 @@ struct JSCompartment
     void markAllInitialShapeTableEntries(JSTracer *trc);
 
     /* Set of default 'new' or lazy types in the compartment. */
-    js::types::TypeObjectSet     newTypeObjects;
-    js::types::TypeObjectSet     lazyTypeObjects;
-    void sweepNewTypeObjectTable(js::types::TypeObjectSet &table);
+    js::types::TypeObjectWithNewScriptSet newTypeObjects;
+    js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
+    void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
 
     /*
      * Hash table of all manually call site-cloned functions from within
@@ -278,7 +275,13 @@ struct JSCompartment
     js::WeakMapBase              *gcWeakMapList;
 
   private:
-    enum { DebugFromC = 1, DebugFromJS = 2 };
+    enum {
+        DebugFromC = 1 << 0,
+        DebugFromJS = 1 << 1,
+        DebugNeedDelazification = 1 << 2
+    };
+
+    static const unsigned DebugModeFromMask = DebugFromC | DebugFromJS;
 
     unsigned                     debugModeBits;  // see debugMode() below
 
@@ -356,13 +359,34 @@ struct JSCompartment
      * by Debugger objects. Therefore debugModeBits has the DebugFromC bit set
      * if the C API wants debug mode and the DebugFromJS bit set if debuggees
      * is non-empty.
+     *
+     * When toggling on, DebugNeedDelazification is set to signal that
+     * Debugger methods which depend on seeing all scripts (like findScripts)
+     * need to delazify the scripts in the compartment first.
      */
-    bool debugMode() const { return !!debugModeBits; }
+    bool debugMode() const {
+        return !!(debugModeBits & DebugModeFromMask);
+    }
 
     /* True if any scripts from this compartment are on the JS stack. */
     bool hasScriptsOnStack();
 
+    /*
+     * Schedule the compartment to be delazified. Called from
+     * LazyScript::Create.
+     */
+    void scheduleDelazificationForDebugMode() {
+        debugModeBits |= DebugNeedDelazification;
+    }
+
+    /*
+     * If we scheduled delazification for turning on debug mode, delazify all
+     * scripts.
+     */
+    bool ensureDelazifyScriptsForDebugMode(JSContext *cx);
+
   private:
+
     /* This is called only when debugMode() has just toggled. */
     void updateForDebugMode(js::FreeOp *fop, js::AutoDebugModeInvalidation &invalidate);
 
@@ -583,11 +607,11 @@ struct WrapperValue
      * is in use, the AutoWrapper rooter will ensure the wrapper gets marked.
      */
     explicit WrapperValue(const WrapperMap::Ptr &ptr)
-      : value(*ptr->value.unsafeGet())
+      : value(*ptr->value().unsafeGet())
     {}
 
     explicit WrapperValue(const WrapperMap::Enum &e)
-      : value(*e.front().value.unsafeGet())
+      : value(*e.front().value().unsafeGet())
     {}
 
     Value &get() { return value; }

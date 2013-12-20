@@ -37,7 +37,9 @@
     // Presentation table, no table structure is exposed.
     tree =
       { SECTION: [ // container
-        { TEXT_LEAF: [ ] } // cell text
+        { TEXT_CONTAINER: [ // td generic accessible
+          { TEXT_LEAF: [ ] } // cell text
+        ] }
       ] };
     testAccessibleTree("tbl_cnt", tree);
 

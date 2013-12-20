@@ -16,13 +16,14 @@
 #include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIXULRuntime.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
 
 // Window property used by ipc related code in identifying accessible
 // tab windows.
-const PRUnichar* kPropNameTabContent = L"AccessibleTabWindow";
+const wchar_t* kPropNameTabContent = L"AccessibleTabWindow";
 
 /**
  * WindowProc to process WM_GETOBJECT messages, used in windows emulation mode.
@@ -58,7 +59,7 @@ nsWinUtils::MaybeStartWindowEmulation()
   // with tabs.
   if (Compatibility::IsJAWS() || Compatibility::IsWE() ||
       Compatibility::IsDolphin() ||
-      Preferences::GetBool("browser.tabs.remote")) {
+      BrowserTabsRemote()) {
     RegisterNativeWindow(kClassNameTabContent);
     sHWNDCache = new nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>(4);
     return true;

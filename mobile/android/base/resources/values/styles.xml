@@ -74,23 +74,27 @@
         <item name="android:minWidth">@dimen/doorhanger_input_width</item>
     </style>
 
+    <style name="Widget.GeckoMenuListView" parent="Widget.ListView">
+        <item name="android:divider">#FFC9D3DC</item>
+    </style>
+
     <style name="Widget.MenuItemActionBar">
-        <item name="android:padding">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:padding">8dip</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="Widget.MenuItemSecondaryActionBar">
+        <item name="android:padding">8dip</item>
+        <item name="android:background">@drawable/action_bar_button</item>
+        <item name="android:scaleType">centerInside</item>
     </style>
 
     <style name="Widget.MenuItemActionView">
         <item name="android:divider">@drawable/divider_vertical</item>
         <item name="android:showDividers">middle</item>
-        <item name="android:dividerPadding">12dip</item>
+        <item name="android:dividerPadding">0dip</item>
         <item name="android:gravity">left</item>
-    </style>
-
-    <style name="Widget.MenuItemShareActionButton">
-        <item name="android:padding">10dip</item>
-        <item name="android:background">@drawable/action_bar_button</item>
-        <item name="android:scaleType">centerInside</item>
     </style>
 
     <style name="Widget.MenuItemDefault">
@@ -556,8 +560,7 @@
     </style>
 
     <style name="GeckoActionBar.Button" parent="Widget.MenuItemActionBar">
-        <item name="android:background">@android:color/transparent</item>
-        <item name="android:gravity">center</item>
+        <item name="android:padding">8dp</item>
     </style>
 
     <style name="GeckoActionBar.Button.MenuButton">

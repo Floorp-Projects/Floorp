@@ -18,7 +18,10 @@
 var result = new Array();
 var expectedUpdates = 3; // 2 iframes and our self
 
-init();
+applicationCache.oncached = onUpdatePassed;
+applicationCache.onnoupdate = onUpdatePassed;
+
+SpecialPowers.pushPermissions([{'type': 'offline-app', 'allow': true, 'context': document}], init);
 
 function onUpdatePassed()
 {
@@ -28,20 +31,10 @@ function onUpdatePassed()
 
 function init()
 {
-  var Cc = SpecialPowers.Cc;
-  var Ci = SpecialPowers.Ci;
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-    .getService(Ci.nsIPermissionManager);
-  var uri = Cc["@mozilla.org/network/io-service;1"]
-    .getService(Ci.nsIIOService)
-    .newURI(window.location.href, null, null);
-  var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(uri);
-  pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
-
-  applicationCache.oncached = onUpdatePassed;
-  applicationCache.onnoupdate = onUpdatePassed;
+  var iframes = document.getElementsByTagName('iframe');
+  iframes[0].src = "460353_iframe_nomanifest.html";
+  iframes[1].src = "460353_iframe_ownmanifest.html";
+  iframes[2].src = "460353_iframe_samemanifest.html";
 }
 
 function frameOnLoad(frameid, status)
@@ -79,18 +72,6 @@ function finish()
   SimpleTest.ok(result["noman"].updateOK == undefined, "Frame with no manifest cache update didn't pass");
   SimpleTest.is(result["noman"].cacheStatus || -1, -1, "Frame with no manifest cache status was undefined");
 
-  var Cc = SpecialPowers.Cc;
-  var Ci = SpecialPowers.Ci;
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-           .getService(Ci.nsIPermissionManager);
-  var uri = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService)
-            .newURI(window.location.href, null, null);
-  var principal = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
-                    .getService(Ci.nsIScriptSecurityManager)
-                    .getNoAppCodebasePrincipal(uri);
-  pm.removeFromPrincipal(principal, "offline-app");
-
   OfflineTest.waitForUpdates(function() {
     cleanCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest");
     cleanCache("http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/updatingManifest.sjs");
@@ -112,8 +93,8 @@ SimpleTest.waitForExplicitFinish();
 </script>
 
 <body>
-  <iframe src="460353_iframe_nomanifest.html"></iframe>
-  <iframe src="460353_iframe_ownmanifest.html"></iframe>
-  <iframe src="460353_iframe_samemanifest.html"></iframe>
+  <iframe></iframe>
+  <iframe></iframe>
+  <iframe></iframe>
 </body>
 </html>

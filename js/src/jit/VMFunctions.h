@@ -260,7 +260,7 @@ struct VMFunctionsModal
         funs_[info.executionMode].init(info);
     }
 
-    VMFunction funs_[NumExecutionModes];
+    mozilla::Array<VMFunction, NumExecutionModes> funs_;
 };
 
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
@@ -326,7 +326,7 @@ template <> struct TypeToPassInFloatReg<double> {
     static const uint32_t result = 1;
 };
 
-// Convert argument types to root types used by the gc, see MarkIonExitFrame.
+// Convert argument types to root types used by the gc, see MarkJitExitFrame.
 template <class T> struct TypeToRootType {
     static const uint32_t result = VMFunction::RootNone;
 };
@@ -638,8 +638,8 @@ void PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj);
 
 uint32_t GetIndexFromString(JSString *str);
 
-bool DebugPrologue(JSContext *cx, BaselineFrame *frame, bool *mustReturn);
-bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, bool ok);
+bool DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
+bool DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok);
 
 bool StrictEvalPrologue(JSContext *cx, BaselineFrame *frame);
 bool HeavyweightFunPrologue(JSContext *cx, BaselineFrame *frame);
@@ -652,14 +652,23 @@ JSObject *InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleO
 bool HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mustReturn);
 bool OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn);
 
-bool EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
-bool LeaveBlock(JSContext *cx, BaselineFrame *frame);
+bool PushBlockScope(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
+bool PopBlockScope(JSContext *cx, BaselineFrame *frame);
+bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 
 bool InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame,
                              uint32_t numStackValues);
 
 JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
                                 HandleObject owner, int32_t offset);
+
+bool Recompile(JSContext *cx);
+
+#ifdef DEBUG
+void AssertValidObjectPtr(JSContext *cx, JSObject *obj);
+void AssertValidStringPtr(JSContext *cx, JSString *str);
+void AssertValidValue(JSContext *cx, Value *v);
+#endif
 
 } // namespace jit
 } // namespace js

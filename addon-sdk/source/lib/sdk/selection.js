@@ -315,14 +315,24 @@ function getElementWithSelection() {
   if (!element)
     return null;
 
-  let { value, selectionStart, selectionEnd } = element;
+  try {
+    // Accessing selectionStart and selectionEnd on e.g. a button
+    // results in an exception thrown as per the HTML5 spec.  See
+    // http://www.whatwg.org/specs/web-apps/current-work/multipage/association-of-controls-and-forms.html#textFieldSelection
 
-  let hasSelection = typeof value === "string" &&
+    let { value, selectionStart, selectionEnd } = element;
+
+    let hasSelection = typeof value === "string" &&
                       !isNaN(selectionStart) &&
                       !isNaN(selectionEnd) &&
                       selectionStart !== selectionEnd;
 
-  return hasSelection ? element : null;
+    return hasSelection ? element : null;
+  }
+  catch (err) {
+    return null;
+  }
+
 }
 
 /**

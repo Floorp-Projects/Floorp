@@ -85,7 +85,9 @@ nsCounterUseNode::GetText(nsString& aResult)
 
     for (uint32_t i = stack.Length() - 1;; --i) {
         nsCounterNode *n = stack[i];
-        nsBulletFrame::AppendCounterText(style, n->mValueAfter, aResult);
+        bool isTextRTL;
+        nsBulletFrame::AppendCounterText(
+                style, n->mValueAfter, aResult, isTextRTL);
         if (i == 0)
             break;
         NS_ASSERTION(mAllCounters, "yikes, separator is uninitialized");

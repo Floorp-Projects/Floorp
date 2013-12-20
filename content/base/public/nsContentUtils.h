@@ -27,6 +27,11 @@
 #include "nsMathUtils.h"
 #include "Units.h"
 
+#if defined(XP_WIN)
+// Undefine LoadImage to prevent naming conflict with Windows.
+#undef LoadImage
+#endif
+
 class imgICache;
 class imgIContainer;
 class imgINotificationObserver;
@@ -501,13 +506,14 @@ public:
                                             nsIURI* aBaseURI);
 
   /**
-   * Convert aInput (in charset aCharset) to UTF16 in aOutput.
+   * Convert aInput (in encoding aEncoding) to UTF16 in aOutput.
    *
-   * @param aCharset the name of the charset; if empty, we assume UTF8
+   * @param aEncoding the Gecko-canonical name of the encoding or the empty
+   *                  string (meaning UTF-8)
    */
-  static nsresult ConvertStringFromCharset(const nsACString& aCharset,
-                                           const nsACString& aInput,
-                                           nsAString& aOutput);
+  static nsresult ConvertStringFromEncoding(const nsACString& aEncoding,
+                                            const nsACString& aInput,
+                                            nsAString& aOutput);
 
   /**
    * Determine whether a buffer begins with a BOM for UTF-8, UTF-16LE,
@@ -520,9 +526,6 @@ public:
    */
   static bool CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
                           nsACString& aCharset);
-
-  static nsresult GuessCharset(const char *aData, uint32_t aDataLen,
-                               nsACString &aCharset);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
@@ -1256,6 +1259,7 @@ public:
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
   static void DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent);
+  static void DestroyAnonymousContent(nsCOMPtr<Element>* aElement);
 
   static void DeferredFinalize(nsISupports* aSupports);
   static void DeferredFinalize(mozilla::DeferredFinalizeAppendFunction aAppendFunc,
@@ -1539,6 +1543,7 @@ public:
 
   static JSContext *GetCurrentJSContext();
   static JSContext *GetSafeJSContext();
+  static JSContext *GetCurrentJSContextForThread();
   static JSContext *GetDefaultJSContextForThread();
 
   /**
@@ -1841,6 +1846,18 @@ public:
   static bool HasPluginWithUncontrolledEventDispatch(nsIDocument* aDoc);
 
   /**
+   * Fire mutation events for changes caused by parsing directly into a
+   * context node.
+   *
+   * @param aDoc the document of the node
+   * @param aDest the destination node that got stuff appended to it
+   * @param aOldChildCount the number of children the node had before parsing
+   */
+  static void FireMutationEventsForDirectParsing(nsIDocument* aDoc,
+                                                 nsIContent* aDest,
+                                                 int32_t aOldChildCount);
+
+  /**
    * Returns true if the content is in a document and contains a plugin
    * which we don't control event dispatch for, i.e. do any plugins in this
    * doc tree receive key events outside of our control? This always returns
@@ -2092,6 +2109,17 @@ public:
    * Return true if the browser.dom.window.dump.enabled pref is set.
    */
   static bool DOMWindowDumpEnabled();
+
+  /**
+   * Returns whether a content is an insertion point for XBL
+   * bindings or web components ShadowRoot. In web components,
+   * this corresponds to a <content> element that participates
+   * in node distribution. In XBL this corresponds to an
+   * <xbl:children> element in anonymous content.
+   *
+   * @param aContent The content to test for being an insertion point.
+   */
+  static bool IsContentInsertionPoint(const nsIContent* aContent);
 
 private:
   static bool InitializeEventTable();

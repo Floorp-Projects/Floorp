@@ -63,6 +63,8 @@ HwcComposer2D::HwcComposer2D()
     , mHwc(nullptr)
     , mColorFill(false)
     , mRBSwapSupport(false)
+    , mPrevRetireFence(-1)
+    , mPrepared(false)
 {
 }
 
@@ -492,8 +494,6 @@ HwcComposer2D::TryHwComposition()
 
     // No composition on FB layer, so closing releaseFenceFd
     close(mList->hwLayers[idx].releaseFenceFd);
-    mList->hwLayers[idx].releaseFenceFd = -1;
-    mList->numHwLayers = 0;
     return true;
 }
 
@@ -513,7 +513,7 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         return false;
     }
 
-    if (mList->numHwLayers != 0) {
+    if (mPrepared) {
         // No mHwc prepare, if already prepared in current draw cycle
         mList->hwLayers[mList->numHwLayers - 1].handle = fbsurface->lastHandle;
         mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->lastFenceFD;
@@ -523,6 +523,8 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
         mList->hwLayers[0].compositionType = HWC_BACKGROUND;
         mList->hwLayers[0].flags = HWC_SKIP_LAYER;
         mList->hwLayers[0].backgroundColor = {0};
+        mList->hwLayers[0].acquireFenceFd = -1;
+        mList->hwLayers[0].releaseFenceFd = -1;
         mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
         Prepare(fbsurface->lastHandle, fbsurface->lastFenceFD);
     }
@@ -531,7 +533,6 @@ HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
     Commit();
 
     GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
-    mList->numHwLayers = 0;
     return true;
 }
 
@@ -562,7 +563,11 @@ HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
     mList->hwLayers[idx].releaseFenceFd = -1;
     mList->hwLayers[idx].planeAlpha = 0xFF;
 
+    if (mPrepared) {
+        LOGE("Multiple hwc prepare calls!");
+    }
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
+    mPrepared = true;
 }
 
 bool
@@ -573,32 +578,50 @@ HwcComposer2D::Commit()
 
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
+    // To avoid tearing, workaround for missing releaseFenceFd
+    // waits in Gecko layers, see Bug 925444.
     if (!mPrevReleaseFds.IsEmpty()) {
         // Wait for previous retire Fence to signal.
         // Denotes contents on display have been replaced.
         // For buffer-sync, framework should not over-write
         // prev buffers until we close prev releaseFenceFds
-        sp<Fence> fence = new Fence(mPrevReleaseFds[0]);
+        sp<Fence> fence = new Fence(mPrevRetireFence);
         if (fence->wait(1000) == -ETIME) {
-            LOGE("Wait timed-out for retireFenceFd %d", mPrevReleaseFds[0]);
+            LOGE("Wait timed-out for retireFenceFd %d", mPrevRetireFence);
         }
-
         for (int i = 0; i < mPrevReleaseFds.Length(); i++) {
             close(mPrevReleaseFds[i]);
         }
+        close(mPrevRetireFence);
         mPrevReleaseFds.Clear();
     }
 
-    mPrevReleaseFds.AppendElement(mList->retireFenceFd);
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
-        if (mList->hwLayers[j].compositionType == HWC_OVERLAY) {
+        if (mList->hwLayers[j].releaseFenceFd >= 0) {
             mPrevReleaseFds.AppendElement(mList->hwLayers[j].releaseFenceFd);
-            mList->hwLayers[j].releaseFenceFd = -1;
         }
     }
 
-    mList->retireFenceFd = -1;
+    if (mList->retireFenceFd >= 0) {
+        if (!mPrevReleaseFds.IsEmpty()) {
+            mPrevRetireFence = mList->retireFenceFd;
+        } else { // GPU Composition
+            close(mList->retireFenceFd);
+        }
+    }
+
+    mPrepared = false;
     return !err;
+}
+
+void
+HwcComposer2D::Reset()
+{
+    LOGD("hwcomposer is already prepared, reset with null set");
+    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
+    displays[HWC_DISPLAY_PRIMARY] = nullptr;
+    mHwc->set(mHwc, HWC_DISPLAY_PRIMARY, displays);
+    mPrepared = false;
 }
 #else
 bool
@@ -611,6 +634,12 @@ bool
 HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
 {
     return GetGonkDisplay()->SwapBuffers(dpy, sur);
+}
+
+void
+HwcComposer2D::Reset()
+{
+    mPrepared = false;
 }
 #endif
 
@@ -629,6 +658,10 @@ HwcComposer2D::TryRender(Layer* aRoot,
         mHwcLayerMap.Clear();
     }
 
+    if (mPrepared) {
+        Reset();
+    }
+
     // XXX: The clear() below means all rect vectors will be have to be
     // reallocated. We may want to avoid this if possible
     mVisibleRegions.clear();
@@ -640,9 +673,6 @@ HwcComposer2D::TryRender(Layer* aRoot,
                           aGLWorldTransform))
     {
         LOGD("Render aborted. Nothing was drawn to the screen");
-        if (mList) {
-           mList->numHwLayers = 0;
-        }
         return false;
     }
 

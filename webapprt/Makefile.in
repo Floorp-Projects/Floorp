@@ -10,22 +10,11 @@ PREF_JS_EXPORTS = $(srcdir)/prefs.js \
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_DEBUG
-DEFINES += -DMOZ_DEBUG=1
-endif
-
-ifdef MOZILLA_OFFICIAL
-DEFINES += -DMOZILLA_OFFICIAL
-endif
-
 libs:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "resource webapprt ./")
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'resource webapprt ./')
 
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
-           -DGRE_BUILDID=$(GRE_BUILDID) \
-           -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME) \
-           $(NULL)
+DEFINES += -DGRE_BUILDID=$(GRE_BUILDID)
 
 webapprt.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 	$(call py_action,preprocessor,$(DEFINES) $< -o $@)

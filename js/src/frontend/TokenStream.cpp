@@ -287,7 +287,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
 
     // The caller must ensure that a reference is held on the supplied principals
     // throughout compilation.
-    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
+    JS_ASSERT_IF(originPrincipals, originPrincipals->refcount > 0);
 
     // Column numbers are computed as offsets from the current line's base, so the
     // initial line's base must be included in the buffer. linebase and userbuf
@@ -579,18 +579,8 @@ CompileError::throwError(JSContext *cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    if (!js_ErrorToException(cx, message, &report, nullptr, nullptr)) {
-        // If debugErrorHook is present then we give it a chance to veto
-        // sending the error on to the regular error reporter.
-        bool reportError = true;
-        if (JSDebugErrorHook hook = cx->runtime()->debugHooks.debugErrorHook) {
-            reportError = hook(cx, message, &report, cx->runtime()->debugHooks.debugErrorHookData);
-        }
-
-        // Report the error.
-        if (reportError && cx->errorReporter)
-            cx->errorReporter(cx, message, &report);
-    }
+    if (!js_ErrorToException(cx, message, &report, nullptr, nullptr))
+        CallErrorReporter(cx, message, &report);
 }
 
 CompileError::~CompileError()

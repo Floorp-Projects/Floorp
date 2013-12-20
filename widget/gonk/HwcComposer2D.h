@@ -63,6 +63,7 @@ public:
     bool Render(EGLDisplay dpy, EGLSurface sur);
 
 private:
+    void Reset();
     void Prepare(buffer_handle_t fbHandle, int fence);
     bool Commit();
     bool TryHwComposition();
@@ -82,7 +83,9 @@ private:
     //to render the current frame
     std::list<RectVector>   mVisibleRegions;
     nsTArray<int>           mPrevReleaseFds;
+    int                     mPrevRetireFence;
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
+    bool                    mPrepared;
 };
 
 } // namespace mozilla

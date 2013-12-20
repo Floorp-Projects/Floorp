@@ -10,14 +10,8 @@ DIST_FILES = install.rdf
 # Used in install.rdf
 USE_EXTENSION_MANIFEST = 1
 
-include $(topsrcdir)/config/rules.mk
-# We're installing to _tests/testing/mochitest, so this is the depth
-# necessary for relative objdir paths.
-TARGET_DEPTH = ../../..
-include $(topsrcdir)/build/automation-build.mk
-
 # files that get copied into $objdir/_tests/
-_SERV_FILES = 	\
+SERV_FILES = 	\
 		runtests.py \
 		automation.py \
 		runtestsb2g.py \
@@ -53,22 +47,26 @@ _SERV_FILES = 	\
 		b2g-desktop.json \
 		b2g-debug.json \
 		b2g_start_script.js \
-		root-ev-tester.crl \
-		intermediate-ev-tester.crl \
 		$(NULL)	
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-_SERV_FILES += \
+SERV_FILES += \
   $(topsrcdir)/mobile/android/base/tests/robocop.ini \
   $(topsrcdir)/mobile/android/base/tests/robocop_autophone.ini \
   $(NULL)
 endif
 
-_PYWEBSOCKET_FILES = \
+_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+SERV_DEST = $(_DEST_DIR)
+INSTALL_TARGETS += SERV
+
+PYWEBSOCKET_FILES = \
 		pywebsocket/standalone.py \
 		$(NULL)
+PYWEBSOCKET_DEST = $(_DEST_DIR)/pywebsocket
+INSTALL_TARGETS += PYWEBSOCKET
 
-_MOD_PYWEBSOCKET_FILES = \
+MOD_PYWEBSOCKET_FILES = \
 		pywebsocket/mod_pywebsocket/__init__.py \
 		pywebsocket/mod_pywebsocket/common.py \
 		pywebsocket/mod_pywebsocket/dispatch.py \
@@ -83,31 +81,27 @@ _MOD_PYWEBSOCKET_FILES = \
 		pywebsocket/mod_pywebsocket/_stream_hybi.py \
 		pywebsocket/mod_pywebsocket/_stream_base.py \
 		$(NULL)
+MOD_PYWEBSOCKET_DEST = $(_DEST_DIR)/pywebsocket/mod_pywebsocket
+INSTALL_TARGETS += MOD_PYWEBSOCKET
 
-_HANDSHAKE_FILES = \
+HANDSHAKE_FILES = \
 		pywebsocket/mod_pywebsocket/handshake/__init__.py \
 		pywebsocket/mod_pywebsocket/handshake/hybi00.py \
 		pywebsocket/mod_pywebsocket/handshake/_base.py \
 		pywebsocket/mod_pywebsocket/handshake/draft75.py \
 		pywebsocket/mod_pywebsocket/handshake/hybi.py \
 		$(NULL)
+HANDSHAKE_DEST = $(_DEST_DIR)/pywebsocket/mod_pywebsocket/handshake
+INSTALL_TARGETS += HANDSHAKE
 
-_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+include $(topsrcdir)/config/rules.mk
+# We're installing to _tests/testing/mochitest, so this is the depth
+# necessary for relative objdir paths.
+TARGET_DEPTH = ../../..
+include $(topsrcdir)/build/automation-build.mk
 
 libs:: 
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - mochijar) | (cd $(_DEST_DIR) && tar -xf -)
-
-libs:: $(_PYWEBSOCKET_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket
-
-libs:: $(_MOD_PYWEBSOCKET_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket
-
-libs:: $(_HANDSHAKE_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(_DEST_DIR)/pywebsocket/mod_pywebsocket/handshake
-
-libs:: $(_SERV_FILES)
-	$(INSTALL) $^ $(_DEST_DIR)
 
 # Binaries and scripts that don't get packaged with the build,
 # but that we need for the test harness

@@ -7,13 +7,7 @@ RESFILE		= widget.res
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)
-
-DEFINES += -DUSE_OS2_TOOLKIT_HEADERS
-
-DEFINES += -DMOZ_APP_DISPLAYNAME=\"$(MOZ_APP_DISPLAYNAME)\"
-
-LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
+CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
 
 install-readme:	README.$(MOZ_APP_NAME)
 ifneq (,$(filter-out xulrunner sunbird,$(MOZ_APP_NAME)))

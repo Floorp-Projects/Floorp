@@ -16,18 +16,21 @@ let Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 
-XPCOMUtils.defineLazyModuleGetter(this, "Utils",
-  "resource:///modules/sessionstore/Utils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
   "resource:///modules/sessionstore/PageStyle.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollPosition",
+  "resource:///modules/sessionstore/ScrollPosition.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource:///modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
   "resource:///modules/sessionstore/SessionStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TextAndScrollData",
   "resource:///modules/sessionstore/TextAndScrollData.jsm");
+
+Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
+let gFrameTree = new FrameTree(this);
 
 /**
  * Returns a lazy function that will evaluate the given
@@ -78,7 +81,7 @@ let EventListener = {
   handleEvent: function (event) {
     switch (event.type) {
       case "pageshow":
-        if (event.persisted)
+        if (event.persisted && event.target == content.document)
           sendAsyncMessage("SessionStore:pageshow");
         break;
       case "input":
@@ -199,23 +202,74 @@ let ProgressListener = {
 };
 
 /**
+ * Listens for scroll position changes. Whenever the user scrolls the top-most
+ * frame we update the scroll position and will restore it when requested.
+ *
+ * Causes a SessionStore:update message to be sent that contains the current
+ * scroll positions as a tree of strings. If no frame of the whole frame tree
+ * is scrolled this will return null so that we don't tack a property onto
+ * the tabData object in the parent process.
+ *
+ * Example:
+ *   {scroll: "100,100", children: [null, null, {scroll: "200,200"}]}
+ */
+let ScrollPositionListener = {
+  init: function () {
+    addEventListener("scroll", this);
+    gFrameTree.addObserver(this);
+  },
+
+  handleEvent: function (event) {
+    let frame = event.target && event.target.defaultView;
+
+    // Don't collect scroll data for frames created at or after the load event
+    // as SessionStore can't restore scroll data for those.
+    if (frame && gFrameTree.contains(frame)) {
+      MessageQueue.push("scroll", () => this.collect());
+    }
+  },
+
+  onFrameTreeReset: function () {
+    MessageQueue.push("scroll", () => null);
+  },
+
+  collect: function () {
+    return gFrameTree.map(ScrollPosition.collect);
+  }
+};
+
+/**
  * Listens for changes to the page style. Whenever a different page style is
  * selected or author styles are enabled/disabled we send a message with the
  * currently applied style to the chrome process.
  *
  * Causes a SessionStore:update message to be sent that contains the currently
- * selected pageStyle, if any. The pageStyle is represented by a string.
+ * selected pageStyle for all reachable frames.
+ *
+ * Example:
+ *   {pageStyle: "Dusk", children: [null, {pageStyle: "Mozilla"}]}
  */
 let PageStyleListener = {
   init: function () {
     Services.obs.addObserver(this, "author-style-disabled-changed", true);
     Services.obs.addObserver(this, "style-sheet-applicable-state-changed", true);
+    gFrameTree.addObserver(this);
   },
 
   observe: function (subject, topic) {
-    if (subject.defaultView && subject.defaultView.top == content) {
-      MessageQueue.push("pageStyle", () => PageStyle.collect(docShell) || null);
+    let frame = subject.defaultView;
+
+    if (frame && gFrameTree.contains(frame)) {
+      MessageQueue.push("pageStyle", () => this.collect());
     }
+  },
+
+  collect: function () {
+    return PageStyle.collect(docShell, gFrameTree);
+  },
+
+  onFrameTreeReset: function () {
+    MessageQueue.push("pageStyle", () => null);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -309,6 +363,30 @@ let SessionStorageListener = {
 };
 
 /**
+ * Listen for changes to the privacy status of the tab.
+ * By definition, tabs start in non-private mode.
+ *
+ * Causes a SessionStore:update message to be sent for
+ * field "isPrivate". This message contains
+ *  |true| if the tab is now private
+ *  |null| if the tab is now public - the field is therefore
+ *  not saved.
+ */
+let PrivacyListener = {
+  init: function() {
+    docShell.addWeakPrivacyTransitionObserver(this);
+  },
+
+  // Ci.nsIPrivacyTransitionObserver
+  privateModeChanged: function(enabled) {
+    MessageQueue.push("isPrivate", () => enabled || null);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrivacyTransitionObserver,
+                                         Ci.nsISupportsWeakReference])
+};
+
+/**
  * A message queue that takes collected data and will take care of sending it
  * to the chrome process. It allows flushing using synchronous messages and
  * takes care of any race conditions that might occur because of that. Changes
@@ -392,7 +470,14 @@ let MessageQueue = {
 
     let sync = options && options.sync;
     let startID = (options && options.id) || this._id;
-    let sendMessage = sync ? sendSyncMessage : sendAsyncMessage;
+
+    // We use sendRpcMessage in the sync case because we may have been called
+    // through a CPOW. RPC messages are the only synchronous messages that the
+    // child is allowed to send to the parent while it is handling a CPOW
+    // request.
+    let sendMessage = sync ? sendRpcMessage : sendAsyncMessage;
+
+    let durationMs = Date.now();
 
     let data = {};
     for (let [key, id] of this._lastUpdated) {
@@ -413,8 +498,17 @@ let MessageQueue = {
       data[key] = this._data.get(key)();
     }
 
+    durationMs = Date.now() - durationMs;
+    let telemetry = {
+      FX_SESSION_RESTORE_CONTENT_COLLECT_DATA_LONGEST_OP_MS: durationMs
+    }
+
     // Send all data to the parent process.
-    sendMessage("SessionStore:update", {id: this._id, data: data});
+    sendMessage("SessionStore:update", {
+      id: this._id,
+      data: data,
+      telemetry: telemetry
+    });
 
     // Increase our unique message ID.
     this._id++;
@@ -460,4 +554,6 @@ SyncHandler.init();
 ProgressListener.init();
 PageStyleListener.init();
 SessionStorageListener.init();
+ScrollPositionListener.init();
 DocShellCapabilitiesListener.init();
+PrivacyListener.init();

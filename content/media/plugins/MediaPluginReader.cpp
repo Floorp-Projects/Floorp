@@ -6,6 +6,7 @@
 #include "MediaPluginReader.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/gfx/Point.h"
 #include "MediaResource.h"
 #include "VideoUtils.h"
 #include "MediaPluginDecoder.h"
@@ -17,6 +18,7 @@
 namespace mozilla {
 
 typedef mozilla::layers::Image Image;
+typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
                                      const nsACString& aContentType) :
@@ -169,10 +171,10 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
     currentImage = bufferCallback.GetImage();
     int64_t pos = mDecoder->GetResource()->Tell();
     nsIntRect picture = mPicture;
- 
+
     nsAutoPtr<VideoData> v;
     if (currentImage) {
-      gfxIntSize frameSize = currentImage->GetSize();
+      gfx::IntSize frameSize = currentImage->GetSize();
       if (frameSize.width != mInitialFrame.width ||
           frameSize.height != mInitialFrame.height) {
         // Frame size is different from what the container reports. This is legal,
@@ -337,31 +339,77 @@ MediaPluginReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::Ima
 
 void *
 MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight,
-                                                     MPAPI::ColorFormat aColorFormat)
+                                                   MPAPI::ColorFormat aColorFormat)
 {
   if (!mImageContainer) {
     NS_WARNING("No image container to construct an image");
     return nullptr;
   }
 
-  nsRefPtr<Image> rgbImage;
+  nsRefPtr<Image> image;
   switch(aColorFormat) {
     case MPAPI::RGB565:
-      rgbImage = mozilla::layers::CreateSharedRGBImage(mImageContainer,
-                                                       nsIntSize(aWidth, aHeight),
-                                                       gfxImageFormatRGB16_565);
-      if (!rgbImage) {
+      image = mozilla::layers::CreateSharedRGBImage(mImageContainer,
+                                                    nsIntSize(aWidth, aHeight),
+                                                    gfxImageFormatRGB16_565);
+      if (!image) {
         NS_WARNING("Could not create rgb image");
         return nullptr;
       }
 
-      mImage = rgbImage;
-      return rgbImage->AsSharedImage()->GetBuffer();
-    case MPAPI::YCbCr:
+      mImage = image;
+      return image->AsSharedImage()->GetBuffer();
+    case MPAPI::I420:
+      return CreateI420Image(aWidth, aHeight);
     default:
       NS_NOTREACHED("Color format not supported");
       return nullptr;
   }
+}
+
+uint8_t *
+MediaPluginReader::ImageBufferCallback::CreateI420Image(size_t aWidth,
+                                                        size_t aHeight)
+{
+  ImageFormat format = PLANAR_YCBCR;
+
+  mImage = mImageContainer->CreateImage(&format, 1 /* numFormats */);
+  PlanarYCbCrImage *yuvImage = static_cast<PlanarYCbCrImage *>(mImage.get());
+
+  if (!yuvImage) {
+    NS_WARNING("Could not create I420 image");
+    return nullptr;
+  }
+
+  size_t frameSize = aWidth * aHeight;
+
+  // Allocate enough for one full resolution Y plane
+  // and two quarter resolution Cb/Cr planes.
+  uint8_t *buffer = yuvImage->AllocateAndGetNewBuffer(frameSize * 3 / 2);
+
+  mozilla::layers::PlanarYCbCrData frameDesc;
+
+  frameDesc.mYChannel = buffer;
+  frameDesc.mCbChannel = buffer + frameSize;
+  frameDesc.mCrChannel = buffer + frameSize * 5 / 4;
+
+  frameDesc.mYSize = gfxIntSize(aWidth, aHeight);
+  frameDesc.mCbCrSize = gfxIntSize(aWidth / 2, aHeight / 2);
+
+  frameDesc.mYStride = aWidth;
+  frameDesc.mCbCrStride = aWidth / 2;
+
+  frameDesc.mYSkip = 0;
+  frameDesc.mCbSkip = 0;
+  frameDesc.mCrSkip = 0;
+
+  frameDesc.mPicX = 0;
+  frameDesc.mPicY = 0;
+  frameDesc.mPicSize = gfxIntSize(aWidth, aHeight);
+
+  yuvImage->SetDataNoCopy(frameDesc);
+
+  return buffer;
 }
 
 already_AddRefed<Image>

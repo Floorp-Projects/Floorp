@@ -144,6 +144,9 @@ private:
   mozilla::dom::CSSValue* CreateTextAlignValue(uint8_t aAlign,
                                                bool aAlignTrue,
                                                const int32_t aTable[]);
+  // This indicates error by leaving mStyleContextHolder null.
+  void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
+  void ClearCurrentStyleSources();
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
@@ -439,12 +442,14 @@ private:
   mozilla::dom::CSSValue* DoGetAnimationPlayState();
 
   /* CSS Flexbox properties */
+  mozilla::dom::CSSValue* DoGetAlignContent();
   mozilla::dom::CSSValue* DoGetAlignItems();
   mozilla::dom::CSSValue* DoGetAlignSelf();
   mozilla::dom::CSSValue* DoGetFlexBasis();
   mozilla::dom::CSSValue* DoGetFlexDirection();
   mozilla::dom::CSSValue* DoGetFlexGrow();
   mozilla::dom::CSSValue* DoGetFlexShrink();
+  mozilla::dom::CSSValue* DoGetFlexWrap();
   mozilla::dom::CSSValue* DoGetOrder();
   mozilla::dom::CSSValue* DoGetJustifyContent();
 
@@ -488,6 +493,9 @@ private:
   mozilla::dom::CSSValue* DoGetMask();
   mozilla::dom::CSSValue* DoGetMaskType();
   mozilla::dom::CSSValue* DoGetPaintOrder();
+
+  /* Custom properties */
+  mozilla::dom::CSSValue* DoGetCustomProperty(const nsAString& aPropertyName);
 
   nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited);
   void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);

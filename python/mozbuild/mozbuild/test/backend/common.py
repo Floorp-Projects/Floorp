@@ -15,17 +15,20 @@ from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
+from mozbuild.util import DefaultOnReadDict
+
+import mozpack.path as mozpath
 
 
 log_manager = LoggingManager()
 log_manager.add_terminal_logging()
 
 
-test_data_path = os.path.abspath(os.path.dirname(__file__))
-test_data_path = os.path.join(test_data_path, 'data')
+test_data_path = mozpath.abspath(mozpath.dirname(__file__))
+test_data_path = mozpath.join(test_data_path, 'data')
 
 
-CONFIGS = {
+CONFIGS = DefaultOnReadDict({
     'stub0': {
         'defines': [
             ('MOZ_TRUE_1', '1'),
@@ -40,11 +43,6 @@ CONFIGS = {
             ('MOZ_BAR', 'bar'),
         ],
     },
-    'external_make_dirs': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
     'substitute_config_files': {
         'defines': [],
         'non_global_defines': [],
@@ -53,52 +51,21 @@ CONFIGS = {
             ('MOZ_BAR', 'bar'),
         ],
     },
-    'variable_passthru': {
-        'defines': [],
+    'test_config': {
+        'defines': [
+            ('foo', 'baz qux'),
+            ('baz', 1)
+        ],
         'non_global_defines': [],
-        'substs': [],
+        'substs': [
+            ('foo', 'bar baz'),
+        ],
     },
-    'defines': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'exports': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'test-manifests-written': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'ipdl_sources': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'xpidl': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'local_includes': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'generated_includes': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-    'final_target': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [],
-    },
-}
+}, global_default={
+    'defines': [],
+    'non_global_defines': [],
+    'substs': [],
+})
 
 
 class BackendTester(unittest.TestCase):
@@ -113,7 +80,7 @@ class BackendTester(unittest.TestCase):
         objdir = mkdtemp()
         self.addCleanup(rmtree, objdir)
 
-        srcdir = os.path.join(test_data_path, name)
+        srcdir = mozpath.join(test_data_path, name)
         config['substs'].append(('top_srcdir', srcdir))
         return ConfigEnvironment(srcdir, objdir, **config)
 
@@ -135,7 +102,7 @@ class BackendTester(unittest.TestCase):
         for dirpath, dirnames, filenames in os.walk(topdir):
             for f in filenames:
                 if f == filename:
-                    yield os.path.relpath(os.path.join(dirpath, f), topdir)
+                    yield mozpath.relpath(mozpath.join(dirpath, f), topdir)
 
     def _mozbuild_paths(self, env):
         return self._tree_paths(env.topsrcdir, 'moz.build')

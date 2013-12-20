@@ -37,7 +37,7 @@ public:
   nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
 
 protected:
-  int GetPacketDuration() MOZ_OVERRIDE;
+  int GetPacketDuration();
 
   nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
 
@@ -54,11 +54,12 @@ private:
   OpusEncoder* mEncoder;
 
   /**
-   * A local segment queue which stores the raw segments. Opus encoder only
-   * takes GetPacketDuration() samples from mSourceSegment in every encoding
-   * cycle, thus it needs to store the raw track data.
+   * A local segment queue which takes the raw data out from mRawSegment in the
+   * call of GetEncodedTrack(). Opus encoder only accepts GetPacketDuration()
+   * samples from mSourceSegment every encoding cycle, thus it needs to be
+   * global in order to store the leftover segments taken from mRawSegment.
    */
-  nsAutoPtr<AudioSegment> mSourceSegment;
+  AudioSegment mSourceSegment;
 
   /**
    * Total samples of delay added by codec, can be queried by the encoder. From

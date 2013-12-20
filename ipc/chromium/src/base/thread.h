@@ -5,6 +5,7 @@
 #ifndef BASE_THREAD_H_
 #define BASE_THREAD_H_
 
+#include <stdint.h>
 #include <string>
 
 #include "base/message_loop.h"
@@ -28,9 +29,21 @@ class Thread : PlatformThread::Delegate {
     // A value of 0 indicates that the default maximum should be used.
     size_t stack_size;
 
-    Options() : message_loop_type(MessageLoop::TYPE_DEFAULT), stack_size(0) {}
+    // Specifies the transient and permanent hang timeouts for background hang
+    // monitoring. A value of 0 indicates there is no timeout.
+    uint32_t transient_hang_timeout;
+    uint32_t permanent_hang_timeout;
+
+    Options()
+        : message_loop_type(MessageLoop::TYPE_DEFAULT)
+        , stack_size(0)
+        , transient_hang_timeout(0)
+        , permanent_hang_timeout(0) {}
     Options(MessageLoop::Type type, size_t size)
-        : message_loop_type(type), stack_size(size) {}
+        : message_loop_type(type)
+        , stack_size(size)
+        , transient_hang_timeout(0)
+        , permanent_hang_timeout(0) {}
   };
 
   // Constructor.

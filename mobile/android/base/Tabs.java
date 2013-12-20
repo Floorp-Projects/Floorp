@@ -7,7 +7,8 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -60,7 +61,6 @@ public class Tabs implements GeckoEventListener {
     public static final int LOADURL_DESKTOP      = 1 << 5;
     public static final int LOADURL_BACKGROUND   = 1 << 6;
     public static final int LOADURL_EXTERNAL     = 1 << 7;
-    public static final int LOADURL_READING_LIST = 1 << 8;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 5;
 
@@ -374,6 +374,7 @@ public class Tabs implements GeckoEventListener {
         private static final Tabs INSTANCE = new Tabs();
     }
 
+    @RobocopTarget
     public static Tabs getInstance() {
        return Tabs.TabsInstanceHolder.INSTANCE;
     }
@@ -408,10 +409,13 @@ public class Tabs implements GeckoEventListener {
                                           message.getInt("parentId"),
                                           message.getString("title"),
                                           message.getBoolean("isPrivate"));
+
+                    // If we added the tab as a stub, we should have already
+                    // selected it, so ignore this flag for stubbed tabs.
+                    if (message.getBoolean("selected"))
+                        selectTab(id);
                 }
 
-                if (message.getBoolean("selected"))
-                    selectTab(id);
                 if (message.getBoolean("delayLoad"))
                     tab.setState(Tab.STATE_DELAYED);
                 if (message.getBoolean("desktopMode"))
@@ -444,7 +448,7 @@ public class Tabs implements GeckoEventListener {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         boolean showProgress = message.getBoolean("showProgress");
                         tab.handleDocumentStart(showProgress, message.getString("uri"));
-                        notifyListeners(tab, Tabs.TabEvents.START, showProgress);
+                        notifyListeners(tab, Tabs.TabEvents.START);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         tab.handleDocumentStop(message.getBoolean("success"));
                         notifyListeners(tab, Tabs.TabEvents.STOP);
@@ -666,6 +670,7 @@ public class Tabs implements GeckoEventListener {
      *
      * @param url URL of page to load, or search term used if searchEngine is given
      */
+    @RobocopTarget
     public Tab loadUrl(String url) {
         return loadUrl(url, LOADURL_NONE);
     }
@@ -717,7 +722,6 @@ public class Tabs implements GeckoEventListener {
             args.put("delayLoad", delayLoad);
             args.put("desktopMode", desktopMode);
             args.put("selected", !background);
-            args.put("aboutHomePage", (flags & LOADURL_READING_LIST) != 0 ? HomePager.Page.READING_LIST : "");
 
             if ((flags & LOADURL_NEW_TAB) != 0) {
                 int tabId = getNextTabId();
@@ -797,9 +801,8 @@ public class Tabs implements GeckoEventListener {
 
     /**
      * Gets the next tab ID.
-     *
-     * This method is invoked via JNI.
      */
+    @JNITarget
     public static int getNextTabId() {
         return sTabId.getAndIncrement();
     }

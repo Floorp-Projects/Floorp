@@ -11,8 +11,8 @@
   by Alex Musil
  */
 
+#include "mozilla/ArrayUtils.h" // ArrayLength
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h" // ArrayLength
 
 #include "nsPluginsDir.h"
 #include "prlink.h"
@@ -36,7 +36,7 @@
  * @return true if SetDllDirectory can be called for the plugin
  */
 bool
-ShouldProtectPluginCurrentDirectory(LPCWSTR pluginFilePath)
+ShouldProtectPluginCurrentDirectory(char16ptr_t pluginFilePath)
 {
   LPCWSTR passedInFilename = PathFindFileName(pluginFilePath);
   if (!passedInFilename) {
@@ -178,7 +178,7 @@ static void FreeStringArray(uint32_t variants, char ** array)
   PR_Free(array);
 }
 
-static bool CanLoadPlugin(const PRUnichar* aBinaryPath)
+static bool CanLoadPlugin(char16ptr_t aBinaryPath)
 {
 #if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
   bool canLoad = false;

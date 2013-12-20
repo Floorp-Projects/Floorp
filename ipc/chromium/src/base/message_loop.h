@@ -203,12 +203,17 @@ public:
   //   This type of ML is used in Mozilla parent processes which initialize
   //   XPCOM and use the gecko event loop.
   //
+  // TYPE_MOZILLA_NONMAINTHREAD
+  //   This type of ML is used in Mozilla parent processes which initialize
+  //   XPCOM and use the nsThread event loop.
+  //
   enum Type {
     TYPE_DEFAULT,
     TYPE_UI,
     TYPE_IO,
     TYPE_MOZILLA_CHILD,
-    TYPE_MOZILLA_UI
+    TYPE_MOZILLA_UI,
+    TYPE_MOZILLA_NONMAINTHREAD
   };
 
   // Normally, it is not necessary to instantiate a MessageLoop.  Instead, it
@@ -268,6 +273,20 @@ public:
     return os_modal_loop_;
   }
 #endif  // OS_WIN
+
+  // Set the timeouts for background hang monitoring.
+  // A value of 0 indicates there is no timeout.
+  void set_hang_timeouts(uint32_t transient_timeout_ms,
+                         uint32_t permanent_timeout_ms) {
+    transient_hang_timeout_ = transient_timeout_ms;
+    permanent_hang_timeout_ = permanent_timeout_ms;
+  }
+  uint32_t transient_hang_timeout() const {
+    return transient_hang_timeout_;
+  }
+  uint32_t permanent_hang_timeout() const {
+    return permanent_hang_timeout_;
+  }
 
   //----------------------------------------------------------------------------
  protected:
@@ -419,6 +438,10 @@ public:
   // which enter a modal message loop.
   bool os_modal_loop_;
 #endif
+
+  // Timeout values for hang monitoring
+  uint32_t transient_hang_timeout_;
+  uint32_t permanent_hang_timeout_;
 
   // The next sequence number to use for delayed tasks.
   int next_sequence_num_;

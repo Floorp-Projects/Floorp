@@ -144,6 +144,9 @@ nsIThreadPool * gCertVerificationThreadPool = nullptr;
 // the code, since performance in the error case is not important.
 Mutex *gSSLVerificationTelemetryMutex = nullptr;
 
+// We add a mutex to serialize PKCS11 database operations
+Mutex *gSSLVerificationPK11Mutex = nullptr;
+
 } // unnamed namespace
 
 // Called when the socket transport thread starts, to initialize the SSL cert
@@ -160,6 +163,7 @@ void
 InitializeSSLServerCertVerificationThreads()
 {
   gSSLVerificationTelemetryMutex = new Mutex("SSLVerificationTelemetryMutex");
+  gSSLVerificationPK11Mutex = new Mutex("SSLVerificationPK11Mutex");
   // TODO: tuning, make parameters preferences
   // XXX: instantiate nsThreadPool directly, to make this more bulletproof.
   // Currently, the nsThreadPool.h header isn't exported for us to do so.
@@ -195,6 +199,10 @@ void StopSSLServerCertVerificationThreads()
   if (gSSLVerificationTelemetryMutex) {
     delete gSSLVerificationTelemetryMutex;
     gSSLVerificationTelemetryMutex = nullptr;
+  }
+  if (gSSLVerificationPK11Mutex) {
+    delete gSSLVerificationPK11Mutex;
+    gSSLVerificationPK11Mutex = nullptr;
   }
 }
 
@@ -901,9 +909,20 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
       // We will fall back to fetching revocation information.
       PRErrorCode ocspErrorCode = PR_GetError();
       if (ocspErrorCode != SEC_ERROR_OCSP_OLD_RESPONSE) {
+        // stapled OCSP response present but invalid for some reason
+        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 4);
         return rv;
+      } else {
+        // stapled OCSP response present but expired
+        Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 3);
       }
+    } else {
+      // stapled OCSP response present and good
+      Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 1);
     }
+  } else {
+    // no stapled OCSP response
+    Telemetry::Accumulate(Telemetry::SSL_OCSP_STAPLING, 2);
   }
 
   CERTCertList *verifyCertChain = nullptr;
@@ -979,6 +998,10 @@ AuthCertificate(TransportSecurityInfo * infoObject, CERTCertificate * cert,
         // We have found a signer cert that we want to remember.
         char* nickname = nsNSSCertificate::defaultServerNickname(node->cert);
         if (nickname && *nickname) {
+          // There is a suspicion that there is some thread safety issues
+          // in PK11_importCert and the mutex is a way to serialize until
+          // this issue has been cleared.
+          MutexAutoLock PK11Mutex(*gSSLVerificationPK11Mutex);
           ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
           if (slot) {
             PK11_ImportCert(slot, node->cert, CK_INVALID_HANDLE, 

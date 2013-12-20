@@ -216,7 +216,7 @@ if test "$CPU_ARCH" = "arm"; then
 
   AC_MSG_CHECKING(ARM version support in compiler)
   dnl Determine the target ARM architecture (5 for ARMv5, v5T, v5E, etc.; 6 for ARMv6, v6K, etc.)
-  ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]]*\).*/\1/p'`
+  ARM_ARCH=`${CC-cc} ${CFLAGS} -dM -E - < /dev/null | sed -n 's/.*__ARM_ARCH_\([[0-9]][[0-9]]*\).*/\1/p'`
   AC_MSG_RESULT("$ARM_ARCH")
 
   AC_MSG_CHECKING(for ARM NEON support in compiler)
@@ -247,6 +247,7 @@ fi # CPU_ARCH = arm
 AC_SUBST(HAVE_ARM_SIMD)
 AC_SUBST(HAVE_ARM_NEON)
 AC_SUBST(BUILD_ARM_NEON)
+AC_SUBST(ARM_ARCH)
 
 if test -n "$MOZ_ARCH"; then
   NSPR_CONFIGURE_ARGS="$NSPR_CONFIGURE_ARGS --with-arch=$MOZ_ARCH"

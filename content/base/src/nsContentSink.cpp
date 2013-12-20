@@ -27,7 +27,6 @@
 #include "nsViewManager.h"
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMWindow.h"
 #include "nsNetCID.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsIApplicationCache.h"
@@ -35,7 +34,6 @@
 #include "nsIApplicationCacheChannel.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICookieService.h"
-#include "nsIPrompt.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIAppShell.h"
@@ -290,8 +288,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
   if (aHeader == nsGkAtoms::setcookie) {
     // Note: Necko already handles cookies set via the channel.  We can't just
     // call SetCookie on the channel because we want to do some security checks
-    // here and want to use the prompt associated to our current window, not
-    // the window where the channel was dispatched.
+    // here.
     nsCOMPtr<nsICookieService> cookieServ =
       do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
@@ -309,19 +306,13 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     rv = mDocument->NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
     NS_ENSURE_TRUE(codebaseURI, rv);
 
-    nsCOMPtr<nsIPrompt> prompt;
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(mDocument->GetWindow());
-    if (window) {
-      window->GetPrompter(getter_AddRefs(prompt));
-    }
-
     nsCOMPtr<nsIChannel> channel;
     if (mParser) {
       mParser->GetChannel(getter_AddRefs(channel));
     }
 
     rv = cookieServ->SetCookieString(codebaseURI,
-                                     prompt,
+                                     nullptr,
                                      NS_ConvertUTF16toUTF8(aValue).get(),
                                      channel);
     if (NS_FAILED(rv)) {

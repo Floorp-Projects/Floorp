@@ -132,7 +132,7 @@ function testConsoleGroup(aMessageObject) {
      "expected level received");
 
   is(aMessageObject.functionName, "testGroups", "functionName matches");
-  ok(aMessageObject.lineNumber >= 45 && aMessageObject.lineNumber <= 47,
+  ok(aMessageObject.lineNumber >= 45 && aMessageObject.lineNumber <= 49,
      "lineNumber matches");
   if (aMessageObject.level == "groupCollapsed") {
     is(aMessageObject.groupName, "a group", "groupCollapsed groupName matches");
@@ -249,9 +249,17 @@ function observeConsoleTest() {
   win.console.error("arg");
   yield undefined;
 
+  expect("exception", "arg");
+  win.console.exception("arg");
+  yield undefined;
+
   let obj2 = { b: 2 };
   expect("log", "omg ", obj, " foo ", 4, obj2);
   win.console.log("omg %o foo %o", obj, 4, obj2);
+  yield undefined;
+
+  expect("assert", "message");
+  win.console.assert(false, "message");
   yield undefined;
 
   startTraceTest();
@@ -270,6 +278,7 @@ function consoleAPISanityTest() {
   ok(win.console.info, "console.info is here");
   ok(win.console.warn, "console.warn is here");
   ok(win.console.error, "console.error is here");
+  ok(win.console.exception, "console.exception is here");
   ok(win.console.trace, "console.trace is here");
   ok(win.console.dir, "console.dir is here");
   ok(win.console.group, "console.group is here");
@@ -277,6 +286,7 @@ function consoleAPISanityTest() {
   ok(win.console.groupEnd, "console.groupEnd is here");
   ok(win.console.time, "console.time is here");
   ok(win.console.timeEnd, "console.timeEnd is here");
+  ok(win.console.assert, "console.assert is here");
 }
 
 function startTimeTest() {

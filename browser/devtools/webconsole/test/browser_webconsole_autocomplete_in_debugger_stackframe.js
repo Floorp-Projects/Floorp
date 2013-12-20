@@ -34,13 +34,31 @@ function testCompletion(hud) {
   let input = jsterm.inputNode;
   let popup = jsterm.autocompletePopup;
 
+  // Test that document.title gives string methods. Native getters must execute.
+  input.value = "document.title.";
+  input.setSelectionRange(input.value.length, input.value.length);
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
+  yield undefined;
+
+  let newItems = popup.getItems();
+  ok(newItems.length > 0, "'document.title.' gave a list of suggestions");
+  ok(newItems.some(function(item) {
+       return item.label == "substr";
+     }), "autocomplete results do contain substr");
+  ok(newItems.some(function(item) {
+       return item.label == "toLowerCase";
+     }), "autocomplete results do contain toLowerCase");
+  ok(newItems.some(function(item) {
+       return item.label == "strike";
+     }), "autocomplete results do contain strike");
+
   // Test if 'f' gives 'foo1' but not 'foo2' or 'foo3'
   input.value = "f";
   input.setSelectionRange(1, 1);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
   yield undefined;
 
-  let newItems = popup.getItems();
+  newItems = popup.getItems();
   ok(newItems.length > 0, "'f' gave a list of suggestions");
   ok(!newItems.every(function(item) {
        return item.label != "foo1";

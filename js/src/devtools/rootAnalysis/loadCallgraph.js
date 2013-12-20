@@ -40,6 +40,7 @@ var functionNames = [""];
 function loadCallgraph(file)
 {
     var suppressedFieldCalls = {};
+    var resolvedFunctions = {};
 
     var textLines = snarf(file).split('\n');
     for (var line of textLines) {
@@ -72,20 +73,32 @@ function loadCallgraph(file)
             var caller = functionNames[match[1]];
             var callee = functionNames[match[2]];
             addCallEdge(caller, callee, suppressed);
+        } else if (match = /^R (\d+) (\d+)/.exec(line)) {
+            var callerField = functionNames[match[1]];
+            var callee = functionNames[match[2]];
+            addCallEdge(callerField, callee, false);
+            resolvedFunctions[callerField] = true;
         }
     }
 
+    // Initialize suppressedFunctions to the set of all functions, and the
+    // worklist to all toplevel callers.
     var worklist = [];
-    for (var name in callerGraph)
-        suppressedFunctions[name] = true;
-    for (var name in calleeGraph) {
-        if (!(name in callerGraph)) {
-            suppressedFunctions[name] = true;
-            worklist.push(name);
+    for (var callee in callerGraph)
+        suppressedFunctions[callee] = true;
+    for (var caller in calleeGraph) {
+        if (!(caller in callerGraph)) {
+            suppressedFunctions[caller] = true;
+            worklist.push(caller);
         }
     }
-    while (worklist.length) {
-        name = worklist.pop();
+
+    // Find all functions reachable via an unsuppressed call chain, and remove
+    // them from the suppressedFunctions set. Everything remaining is only
+    // reachable when GC is suppressed.
+    var top = worklist.length;
+    while (top > 0) {
+        name = worklist[--top];
         if (shouldSuppressGC(name))
             continue;
         if (!(name in suppressedFunctions))
@@ -95,10 +108,11 @@ function loadCallgraph(file)
             continue;
         for (var entry of calleeGraph[name]) {
             if (!entry.suppressed)
-                worklist.push(entry.callee);
+                worklist[top++] = entry.callee;
         }
     }
 
+    // Such functions are known to not GC.
     for (var name in gcFunctions) {
         if (name in suppressedFunctions)
             delete gcFunctions[name];
@@ -115,10 +129,12 @@ function loadCallgraph(file)
         addGCFunction(gcName, "GC");
     }
 
+    // Initialize the worklist to all known gcFunctions.
     var worklist = [];
     for (var name in gcFunctions)
         worklist.push(name);
 
+    // Recursively find all callers and add them to the set of gcFunctions.
     while (worklist.length) {
         name = worklist.pop();
         assert(name in gcFunctions);
@@ -128,5 +144,12 @@ function loadCallgraph(file)
             if (!entry.suppressed && addGCFunction(entry.caller, name))
                 worklist.push(entry.caller);
         }
+    }
+
+    // Any field call that has been resolved to all possible callees can be
+    // trusted to not GC if all of those callees are known to not GC.
+    for (var name in resolvedFunctions) {
+        if (!(name in gcFunctions))
+            suppressedFunctions[name] = true;
     }
 }

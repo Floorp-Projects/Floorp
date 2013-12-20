@@ -9,6 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <android/log.h>
+#include <sys/syscall.h>
 
 #include "mozilla/Alignment.h"
 
@@ -128,7 +129,16 @@ WRAP(fork)(void)
 extern "C" NS_EXPORT int
 WRAP(raise)(int sig)
 {
-  return pthread_kill(pthread_self(), sig);
+  // Bug 741272: Bionic incorrectly uses kill(), which signals the
+  // process, and thus could signal another thread (and let this one
+  // return "successfully" from raising a fatal signal).
+  //
+  // Bug 943170: POSIX specifies pthread_kill(pthread_self(), sig) as
+  // equivalent to raise(sig), but Bionic also has a bug with these
+  // functions, where a forked child will kill its parent instead.
+
+  extern pid_t gettid(void);
+  return syscall(__NR_tgkill, getpid(), gettid(), sig);
 }
 
 /*

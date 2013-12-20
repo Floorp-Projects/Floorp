@@ -201,7 +201,7 @@ class IonCache
 
     virtual void emitInitialJump(MacroAssembler &masm, AddCacheState &addState) = 0;
     virtual void bindInitialJump(MacroAssembler &masm, AddCacheState &addState) = 0;
-    virtual void updateBaseAddress(IonCode *code, MacroAssembler &masm);
+    virtual void updateBaseAddress(JitCode *code, MacroAssembler &masm);
 
     // Initialize the AddCacheState depending on the kind of cache, like
     // setting a scratch register. Defaults to doing nothing.
@@ -230,10 +230,10 @@ class IonCache
     // monitoring/allocation caused an invalidation of the running ion script,
     // this function returns CACHE_FLUSHED. In case of allocation issue this
     // function returns LINK_ERROR.
-    LinkStatus linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, IonCode **code);
+    LinkStatus linkCode(JSContext *cx, MacroAssembler &masm, IonScript *ion, JitCode **code);
     // Fixup variables and update jumps in the list of stubs.  Increment the
     // number of attached stubs accordingly.
-    void attachStub(MacroAssembler &masm, StubAttacher &attacher, Handle<IonCode *> code);
+    void attachStub(MacroAssembler &masm, StubAttacher &attacher, Handle<JitCode *> code);
 
     // Combine both linkStub and attachStub into one function. In addition, it
     // produces a spew augmented with the attachKind string.
@@ -380,7 +380,7 @@ class RepatchIonCache : public IonCache
     void bindInitialJump(MacroAssembler &masm, AddCacheState &addState);
 
     // Update the labels once the code is finalized.
-    void updateBaseAddress(IonCode *code, MacroAssembler &masm);
+    void updateBaseAddress(JitCode *code, MacroAssembler &masm);
 };
 
 //
@@ -478,7 +478,7 @@ class DispatchIonCache : public IonCache
     void bindInitialJump(MacroAssembler &masm, AddCacheState &addState);
 
     // Fix up the first stub pointer once the code is finalized.
-    void updateBaseAddress(IonCode *code, MacroAssembler &masm);
+    void updateBaseAddress(JitCode *code, MacroAssembler &masm);
 };
 
 // Define the cache kind and pre-declare data structures used for calling inline
@@ -690,7 +690,8 @@ class SetPropertyIC : public RepatchIonCache
                        bool checkTypeset);
     bool attachCallSetter(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
-    bool attachAddSlot(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldShape);
+    bool attachAddSlot(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldShape,
+                       bool checkTypeset);
     bool attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr);
     bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                 void *returnAddr);
@@ -1170,7 +1171,8 @@ class SetPropertyParIC : public ParallelIonCache
 
     bool attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
                        bool checkTypeset);
-    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape);
+    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape,
+                       bool checkTypeset);
 
     static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                        HandleValue value);

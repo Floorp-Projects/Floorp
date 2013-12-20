@@ -7,6 +7,7 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "gfxColor.h"
 #ifdef MOZ_X11
 #include "cairo.h"
 #include "gfxXlibSurface.h"
@@ -29,6 +30,15 @@ gfxSurfaceDrawable::gfxSurfaceDrawable(DrawTarget* aDrawTarget,
                                        const gfxMatrix aTransform)
  : gfxDrawable(aSize)
  , mDrawTarget(aDrawTarget)
+ , mTransform(aTransform)
+{
+}
+
+gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
+                                       const gfxIntSize aSize,
+                                       const gfxMatrix aTransform)
+ : gfxDrawable(aSize)
+ , mSourceSurface(aSurface)
  , mTransform(aTransform)
 {
 }
@@ -127,6 +137,8 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
         RefPtr<SourceSurface> source = mDrawTarget->Snapshot();
         pattern = new gfxPattern(source, Matrix());
       }
+    } else if (mSourceSurface) {
+      pattern = new gfxPattern(mSourceSurface, Matrix());
     } else {
       pattern = new gfxPattern(mSurface);
     }
@@ -154,13 +166,16 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
     aContext->SetPattern(pattern);
     aContext->Rectangle(aFillRect);
     aContext->Fill();
+    // clear the pattern so that the snapshot is released before the
+    // drawable is destroyed
+    aContext->SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 0.0));
     return true;
 }
 
 already_AddRefed<gfxImageSurface>
 gfxSurfaceDrawable::GetAsImageSurface()
 {
-    if (mDrawTarget) {
+    if (mDrawTarget || mSourceSurface) {
       // TODO: Find a way to implement this. The caller really wants a 'sub-image' of
       // the original, without having to do a copy. GetDataSurface() might just copy,
       // which isn't useful.

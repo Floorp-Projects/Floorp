@@ -35,6 +35,9 @@ EXTRA_JS_MODULES += [
     'TelemetryFile.jsm',
     'TelemetryStopwatch.jsm',
     'ThirdPartyCookieProbe.jsm',
+]
+
+EXTRA_PP_JS_MODULES += [
     'UITelemetry.jsm',
 ]
 
@@ -49,3 +52,6 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'TelemetryHistogramData.inc',
 ]
+
+if CONFIG['MOZILLA_OFFICIAL']:
+    DEFINES['MOZILLA_OFFICIAL'] = True

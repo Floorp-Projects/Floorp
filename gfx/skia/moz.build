@@ -175,6 +175,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'src/ports/SkFontHost_sandbox_none.cpp',
         'src/ports/SkFontHost_win.cpp',
     ]
+    DEFINES['SKIA_IMPLEMENTATION'] = 1
+    DEFINES['GR_IMPLEMENTATION'] = 1
 elif CONFIG['MOZ_WIDGET_GTK']:
     EXPORTS.skia += [
         'include/ports/SkTypeface_cairo.h',
@@ -217,6 +219,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
             'src/utils/SkThreadUtils_pthread.cpp',
             'src/utils/SkThreadUtils_pthread_linux.cpp',
         ]
+        DEFINES['SK_USE_POSIX_THREADS'] = 1
 # Separate 'if' from above, since the else below applies to all != 'android'
 # toolkits.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
@@ -240,6 +243,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
         'src/ports/SkFontHost_FreeType_common.cpp',
         'src/ports/SkFontHost_linux.cpp',
     ]
+    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 else:
     UNIFIED_SOURCES += [
         'src/ports/SkDebug_stdio.cpp',
@@ -586,3 +590,38 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+LOCAL_INCLUDES += [
+    'include/config',
+    'include/core',
+    'include/effects',
+    'include/gpu',
+    'include/images',
+    'include/lazy',
+    'include/pipe',
+    'include/ports',
+    'include/utils',
+    'include/utils/mac',
+    'include/utils/win',
+    'include/views',
+    'src/core',
+    'src/gpu',
+    'src/gpu/effects',
+    'src/gpu/gl',
+    'src/image',
+    'src/lazy',
+    'src/sfnt',
+    'src/utils',
+    'src/utils/android',
+]
+
+
+DEFINES['SK_A32_SHIFT'] = 24
+DEFINES['SK_R32_SHIFT'] = 16
+DEFINES['SK_G32_SHIFT'] = 8
+DEFINES['SK_B32_SHIFT'] = 0
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'cocoa'):
+    DEFINES['SK_USE_POSIX_THREADS'] = 1
+
+if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3']:
+    DEFINES['SK_BUILD_SSSE3'] = 1

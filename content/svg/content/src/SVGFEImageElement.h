@@ -7,6 +7,7 @@
 #define mozilla_dom_SVGFEImageElement_h
 
 #include "nsSVGFilters.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
 
 class SVGFEImageFrame;
 
@@ -37,15 +38,13 @@ public:
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
+  virtual FilterPrimitiveDescription
+    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                            const IntRect& aFilterSubregion,
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
-  virtual nsIntRect ComputeTargetBBox(const nsTArray<nsIntRect>& aSourceBBoxes,
-          const nsSVGFilterInstance& aInstance) MOZ_OVERRIDE;
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
@@ -75,8 +74,7 @@ private:
   nsresult LoadSVGImage(bool aForce, bool aNotify);
 
 protected:
-  virtual bool OperatesOnSRGB(nsSVGFilterInstance*,
-                                int32_t, Image*) MOZ_OVERRIDE { return true; }
+  virtual bool ProducesSRGB() MOZ_OVERRIDE { return true; }
 
   virtual SVGAnimatedPreserveAspectRatio *GetPreserveAspectRatio() MOZ_OVERRIDE;
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;

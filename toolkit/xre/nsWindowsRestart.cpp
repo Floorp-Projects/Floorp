@@ -24,7 +24,7 @@
  * additional length if the string needs to be quoted and if characters need to
  * be escaped.
  */
-static int ArgStrLen(const PRUnichar *s)
+static int ArgStrLen(const wchar_t *s)
 {
   int backslashes = 0;
   int i = wcslen(s);
@@ -65,7 +65,7 @@ static int ArgStrLen(const PRUnichar *s)
  *
  * @return the end of the string
  */
-static PRUnichar* ArgToString(PRUnichar *d, const PRUnichar *s)
+static wchar_t* ArgToString(wchar_t *d, const wchar_t *s)
 {
   int backslashes = 0;
   BOOL hasDoubleQuote = wcschr(s, L'"') != nullptr;
@@ -116,8 +116,8 @@ static PRUnichar* ArgToString(PRUnichar *d, const PRUnichar *s)
  *
  * argv is UTF8
  */
-PRUnichar*
-MakeCommandLine(int argc, PRUnichar **argv)
+wchar_t*
+MakeCommandLine(int argc, wchar_t **argv)
 {
   int i;
   int len = 0;
@@ -130,11 +130,11 @@ MakeCommandLine(int argc, PRUnichar **argv)
   if (len == 0)
     len = 1;
 
-  PRUnichar *s = (PRUnichar*) malloc(len * sizeof(PRUnichar));
+  wchar_t *s = (wchar_t*) malloc(len * sizeof(wchar_t));
   if (!s)
     return nullptr;
 
-  PRUnichar *c = s;
+  wchar_t *c = s;
   for (i = 0; i < argc; ++i) {
     c = ArgToString(c, argv[i]);
     if (i + 1 != argc) {
@@ -168,7 +168,7 @@ AllocConvertUTF8toUTF16(const char *arg)
 }
 
 static void
-FreeAllocStrings(int argc, PRUnichar **argv)
+FreeAllocStrings(int argc, wchar_t **argv)
 {
   while (argc) {
     --argc;
@@ -187,23 +187,23 @@ FreeAllocStrings(int argc, PRUnichar **argv)
  */
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, 
-               int argc, PRUnichar **argv, 
+WinLaunchChild(const wchar_t *exePath,
+               int argc, wchar_t **argv,
                HANDLE userToken = nullptr,
                HANDLE *hProcess = nullptr);
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, 
-               int argc, char **argv, 
+WinLaunchChild(const wchar_t *exePath,
+               int argc, char **argv,
                HANDLE userToken,
                HANDLE *hProcess)
 {
-  PRUnichar** argvConverted = new PRUnichar*[argc];
+  wchar_t** argvConverted = new wchar_t*[argc];
   if (!argvConverted)
     return FALSE;
 
   for (int i = 0; i < argc; ++i) {
-    argvConverted[i] = AllocConvertUTF8toUTF16(argv[i]);
+      argvConverted[i] = reinterpret_cast<wchar_t*>(AllocConvertUTF8toUTF16(argv[i]));
     if (!argvConverted[i]) {
       FreeAllocStrings(i, argvConverted);
       return FALSE;
@@ -216,13 +216,13 @@ WinLaunchChild(const PRUnichar *exePath,
 }
 
 BOOL
-WinLaunchChild(const PRUnichar *exePath, 
+WinLaunchChild(const wchar_t *exePath,
                int argc, 
-               PRUnichar **argv, 
+               wchar_t **argv,
                HANDLE userToken,
                HANDLE *hProcess)
 {
-  PRUnichar *cl;
+  wchar_t *cl;
   BOOL ok;
 
   cl = MakeCommandLine(argc, argv);

@@ -63,15 +63,12 @@ function test() {
     ok(chats.children.length == 0, "no chatty children left behind");
     cb();
   };
-  // always run chat tests with multiple workers.
-  Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
   runSocialTestWithProvider(manifests, function (finishcb) {
     ok(Social.enabled, "Social is enabled");
     ok(Social.providers[0].getWorkerPort(), "provider 0 has port");
     ok(Social.providers[1].getWorkerPort(), "provider 1 has port");
     ok(Social.providers[2].getWorkerPort(), "provider 2 has port");
     runSocialTests(tests, undefined, postSubTest, function() {
-      Services.prefs.clearUserPref("social.allowMultipleWorkers");
       window.moveTo(oldleft, window.screenY)
       window.resizeTo(oldwidth, window.outerHeight);
       finishcb();

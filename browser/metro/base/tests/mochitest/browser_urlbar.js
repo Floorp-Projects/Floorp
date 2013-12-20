@@ -369,6 +369,10 @@ gTests.push({
 
     EventUtils.synthesizeKey("VK_UP", {}, window);
     is(gEdit.popup._results.selectedIndex, 0, "Pressing arrow up selects first item.");
+
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, window);
+    yield waitForEvent(document.getElementById("urlbar-edit"), "input");
+    is(gEdit.popup._results.selectedIndex, -1, "backspace: autocomplete de-selected");
   }
 });
 

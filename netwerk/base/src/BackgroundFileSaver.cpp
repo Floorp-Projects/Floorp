@@ -129,7 +129,7 @@ BackgroundFileSaver::Init()
 
   rv = NS_NewPipe2(getter_AddRefs(mPipeInputStream),
                    getter_AddRefs(mPipeOutputStream), true, true, 0,
-                   HasInfiniteBuffer() ? UINT32_MAX : 0, nullptr);
+                   HasInfiniteBuffer() ? UINT32_MAX : 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_GetCurrentThread(getter_AddRefs(mControlThread));
@@ -561,7 +561,7 @@ BackgroundFileSaver::ProcessStateChange()
   nsCOMPtr<nsIOutputStream> outputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
                                    mActualTarget,
-                                   PR_WRONLY | creationIoFlags, 0600);
+                                   PR_WRONLY | creationIoFlags, 0644);
   NS_ENSURE_SUCCESS(rv, rv);
 
   outputStream = NS_BufferOutputStream(outputStream, BUFFERED_IO_SIZE);

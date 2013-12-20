@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=806506
+-->
+<head>
+  <title>Test for HTMLContent element</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="grabme"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
+<script>
+// Create a ShadowRoot and append some nodes, containing an insertion point with a universal selector.
+var shadow = $("grabme").createShadowRoot();
+shadow.innerHTML = '<span><content id="point"></content></span>';
+
+// Get the insertion point from the ShadowRoot and check that child of host is distributed.
+// Insertion point should match everything because the selector set is empty.
+var insertionPoint = shadow.getElementById("point");
+$("grabme").innerHTML = '<div id="distme"></div>';
+var distNodes = insertionPoint.getDistributedNodes();
+is(distNodes[0], $("distme"), "Child of bound content should be distributed into insertion point with universal selector.");
+is(distNodes.length, 1, "Should only have one child distributed into insertion point.");
+
+// Add another node to bound content and make sure that the node list is static and does not change.
+var someSpan = document.createElement("span");
+$("grabme").appendChild(someSpan);
+is(distNodes.length, 1, "NodeList from getDistributedNodes should be static.");
+
+// Test content select.
+$("grabme").innerHTML = '<div id="first" class="tall"></div><div id="second" class="skinny"></div>';
+shadow.innerHTML = '<span><content select=".tall" id="point"></content></span>';
+var insertionPoint = shadow.getElementById("point");
+distNodes = insertionPoint.getDistributedNodes();
+is(distNodes.length, 1, "Insertion point should only match element with the 'tall' class.");
+is(distNodes[0], $("first"), "Insertion point should only match element with the 'tall' class.");
+
+// Get rid of the select attribute and check that the insertion point matches everything.
+insertionPoint.removeAttribute("select");
+is(insertionPoint.getDistributedNodes().length, 2, "After removing the 'select' attribute, the insertion point should match everything.");
+
+// Set an invalid selector and make sure that nothing is matched.
+insertionPoint.setAttribute("select", "div:first-child");
+is(insertionPoint.getDistributedNodes().length, 0, "Invalid selectors should match nothing.");
+
+// all compound selectors must only be permitted simple selectors.
+insertionPoint.setAttribute("select", "div:first-child, span");
+is(insertionPoint.getDistributedNodes().length, 0, "Invalid selectors should match nothing.");
+
+// Test multiple compound selectors.
+$("grabme").innerHTML = '<div id="first"></div><span id="second"></span><span data-match-me="pickme" id="third"></span>';
+insertionPoint.setAttribute("select", "span[data-match-me=pickme], div");
+distNodes = insertionPoint.getDistributedNodes();
+is(distNodes.length, 2, "Insertion point selector should only match two nodes.");
+is(distNodes[0], $("first"), "First child node should match selector.");
+is(distNodes[1], $("third"), "Third child node should match selector.");
+
+// Test select property
+insertionPoint.select = "#second, #third";
+distNodes = insertionPoint.getDistributedNodes();
+is(distNodes.length, 2, "Insertion point selector (set using property) should only match two nodes.");
+is(distNodes[0], $("second"), "First child node should match selector.");
+is(distNodes[1], $("third"), "Third child node should match selector.");
+is(insertionPoint.select, "#second, #third", "select property should be transparent.");
+
+// Empty set of selectors should match everything.
+insertionPoint.select = "";
+is(insertionPoint.getDistributedNodes().length, 3, "Empty set of selectors (set using property) should match everything.");
+
+// Remove insertion point and make sure that the point does not have any nodes distributed.
+$("grabme").innerHTML = '<div></div><span></span>';
+insertionPoint.removeAttribute("select");
+is(insertionPoint.getDistributedNodes().length, 2, "Insertion point with univeral selector should match two nodes.");
+var insertionParent = insertionPoint.parentNode;
+insertionParent.removeChild(insertionPoint);
+is(insertionPoint.getDistributedNodes().length, 0, "Insertion point should match no nodes after removal.");
+insertionParent.appendChild(insertionPoint);
+is(insertionPoint.getDistributedNodes().length, 2, "Insertion point should match two nodes after appending.");
+
+// Test multiple insertion points and check tree order distribution of points.
+// Append two divs and three spans into host.
+$("grabme").innerHTML = '<div></div><span></span><div></div><span></span><span></span>';
+shadow.innerHTML = '<content select="div" id="divpoint"></content><content select="div, span" id="allpoint"></content>';
+// Insertion point matching div
+var divPoint = shadow.getElementById("divpoint");
+// Insertion point matching span and div
+var allPoint = shadow.getElementById("allpoint");
+
+is(divPoint.getDistributedNodes().length, 2, "Two div nodes should be distributed into divPoint.");
+is(allPoint.getDistributedNodes().length, 3, "Remaining nodes should be distributed into allPoint.");
+
+shadow.removeChild(allPoint);
+is(divPoint.getDistributedNodes().length, 2, "Number of div distributed into insertion point should not change.");
+is(allPoint.getDistributedNodes().length, 0, "Removed insertion point should not have any nodes.");
+
+shadow.insertBefore(allPoint, divPoint);
+is(allPoint.getDistributedNodes().length, 5, "allPoint should have nodes distributed before divPoint.");
+is(divPoint.getDistributedNodes().length, 0, "divPoint should have no distributed nodes because they are all distributed to allPoint.");
+
+// Make sure that fallback content are in the distributed nodes.
+$("grabme").innerHTML = '<div id="one"></div><div id="two"></div>';
+shadow.innerHTML = '<content select="#nothing" id="point"><span id="fallback"></span></content>';
+insertionPoint = shadow.getElementById("point");
+is(insertionPoint.getDistributedNodes().length, 1, "There should be one distributed node from fallback content.");
+is(insertionPoint.getDistributedNodes()[0].id, "fallback", "Distributed node should be fallback content.");
+
+$("grabme").innerHTML = '';
+shadow.innerHTML = '<content select="div" id="point"><span id="one"></span><span id="two"></span></content>';
+insertionPoint = shadow.getElementById("point");
+// Make sure that two fallback nodes are distributed into the insertion point.
+is(insertionPoint.getDistributedNodes().length, 2, "There should be two distributed nodes from fallback content.");
+is(insertionPoint.getDistributedNodes()[0].id, "one", "First distributed node should have an ID of one.");
+is(insertionPoint.getDistributedNodes()[1].id, "two", "Second distributed node should have an ID of two.");
+
+// Append a node that gets matched by the insertion point, thus causing the fallback content to be removed.
+var matchingDiv = document.createElement("div");
+matchingDiv.id = "three";
+$("grabme").appendChild(matchingDiv);
+is(insertionPoint.getDistributedNodes().length, 1, "There should be one node distributed from the host.");
+is(insertionPoint.getDistributedNodes()[0].id, "three", "Node distriubted from host should have id of three.");
+
+// Remove the matching node from the host and make sure that the fallback content gets distributed.
+$("grabme").removeChild(matchingDiv);
+is(insertionPoint.getDistributedNodes().length, 2, "There should be two distributed nodes from fallback content.");
+is(insertionPoint.getDistributedNodes()[0].id, "one", "First distributed node should have an ID of one.");
+is(insertionPoint.getDistributedNodes()[1].id, "two", "Second distributed node should have an ID of two.");
+</script>
+</body>
+</html>

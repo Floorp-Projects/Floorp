@@ -25,7 +25,7 @@
 #include "WinUtils.h"
 #endif
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "nsRefreshDriver.h"
 #include "nsITimer.h"
@@ -37,7 +37,6 @@
 #include "nsIDocument.h"
 #include "jsapi.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "mozilla/Preferences.h"
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
@@ -48,6 +47,7 @@
 #include "Layers.h"
 #include "imgIContainer.h"
 #include "nsIFrameRequestCallback.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -681,7 +681,7 @@ nsRefreshDriver::ChooseTimer() const
 nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   : mActiveTimer(nullptr),
     mPresContext(aPresContext),
-    mFrozen(false),
+    mFreezeCount(0),
     mThrottled(false),
     mTestControllingRefreshes(false),
     mViewManagerFlushIsPending(false),
@@ -722,8 +722,7 @@ nsRefreshDriver::AdvanceTimeAndRefresh(int64_t aMilliseconds)
   mMostRecentRefreshEpochTime += aMilliseconds * 1000;
   mMostRecentRefresh += TimeDuration::FromMilliseconds((double) aMilliseconds);
 
-  nsCxPusher pusher;
-  pusher.PushNull();
+  mozilla::dom::AutoSystemCaller asc;
   DoTick();
 }
 
@@ -827,7 +826,7 @@ nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
   if (mActiveTimer && !aAdjustingTimer)
     return;
 
-  if (mFrozen || !mPresContext) {
+  if (IsFrozen() || !mPresContext) {
     // If we don't want to start it now, or we've been disconnected.
     StopTimer();
     return;
@@ -1000,7 +999,7 @@ NS_IMPL_ISUPPORTS1(nsRefreshDriver, nsISupports)
 void
 nsRefreshDriver::DoTick()
 {
-  NS_PRECONDITION(!mFrozen, "Why are we notified while frozen?");
+  NS_PRECONDITION(!IsFrozen(), "Why are we notified while frozen?");
   NS_PRECONDITION(mPresContext, "Why are we notified after disconnection?");
   NS_PRECONDITION(!nsContentUtils::GetCurrentJSContext(),
                   "Shouldn't have a JSContext on the stack");
@@ -1038,7 +1037,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   // We're either frozen or we were disconnected (likely in the middle
   // of a tick iteration).  Just do nothing here, since our
   // prescontext went away.
-  if (mFrozen || !mPresContext) {
+  if (IsFrozen() || !mPresContext) {
     return;
   }
 
@@ -1202,13 +1201,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
       printf_stderr("Starting ProcessPendingUpdates\n");
     }
 #endif
-#ifndef MOZ_WIDGET_GONK
-    // Waiting for bug 830475 to work on B2G.
-    nsRefPtr<layers::LayerManager> mgr = mPresContext->GetPresShell()->GetLayerManager();
-    if (mgr) {
-      mgr->SetPaintStartTime(mMostRecentRefresh);
-    }
-#endif
 
     mViewManagerFlushIsPending = false;
     nsRefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
@@ -1301,23 +1293,28 @@ nsRefreshDriver::StartTableRefresh(const uint32_t& aDelay,
 void
 nsRefreshDriver::Freeze()
 {
-  NS_ASSERTION(!mFrozen, "Freeze called on already-frozen refresh driver");
   StopTimer();
-  mFrozen = true;
+  mFreezeCount++;
 }
 
 void
 nsRefreshDriver::Thaw()
 {
-  NS_ASSERTION(mFrozen, "Thaw called on an unfrozen refresh driver");
-  mFrozen = false;
-  if (ObserverCount() || ImageRequestCount()) {
-    // FIXME: This isn't quite right, since our EnsureTimerStarted call
-    // updates our mMostRecentRefresh, but the DoRefresh call won't run
-    // and notify our observers until we get back to the event loop.
-    // Thus MostRecentRefresh() will lie between now and the DoRefresh.
-    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &nsRefreshDriver::DoRefresh));
-    EnsureTimerStarted(false);
+  NS_ASSERTION(mFreezeCount > 0, "Thaw() called on an unfrozen refresh driver");
+
+  if (mFreezeCount > 0) {
+    mFreezeCount--;
+  }
+
+  if (mFreezeCount == 0) {
+    if (ObserverCount() || ImageRequestCount()) {
+      // FIXME: This isn't quite right, since our EnsureTimerStarted call
+      // updates our mMostRecentRefresh, but the DoRefresh call won't run
+      // and notify our observers until we get back to the event loop.
+      // Thus MostRecentRefresh() will lie between now and the DoRefresh.
+      NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &nsRefreshDriver::DoRefresh));
+      EnsureTimerStarted(false);
+    }
   }
 }
 
@@ -1338,7 +1335,7 @@ void
 nsRefreshDriver::DoRefresh()
 {
   // Don't do a refresh unless we're in a state where we should be refreshing.
-  if (!mFrozen && mPresContext && mActiveTimer) {
+  if (!IsFrozen() && mPresContext && mActiveTimer) {
     DoTick();
   }
 }

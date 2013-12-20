@@ -47,8 +47,6 @@
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4100) /* Silence unreferenced formal parameter warnings */
-#pragma warning(push)
-#pragma warning(disable:4355) /* Silence warning about "this" used in base member initializer list */
 #endif
 
 namespace js {
@@ -537,6 +535,9 @@ class PerThreadData : public PerThreadDataFriendFields,
     friend class js::ActivationIterator;
     friend class js::jit::JitActivation;
     friend class js::AsmJSActivation;
+#ifdef DEBUG
+    friend bool js::CurrentThreadCanReadCompilationData();
+#endif
 
     /*
      * Points to the most recent activation running on the thread.
@@ -579,7 +580,12 @@ class PerThreadData : public PerThreadDataFriendFields,
      */
     int32_t suppressGC;
 
-    // Whether there is an active compilation on this thread.
+#ifdef DEBUG
+    // Whether this thread is actively Ion compiling.
+    bool ionCompiling;
+#endif
+
+    // Number of active bytecode compilation on this thread.
     unsigned activeCompilations;
 
     PerThreadData(JSRuntime *runtime);
@@ -679,6 +685,8 @@ class MarkingValidator;
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
+class AutoLockForCompilation;
+class AutoProtectHeapForIonCompilation;
 
 void RecomputeStackLimit(JSRuntime *rt, StackKind kind);
 
@@ -727,6 +735,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     enum RuntimeLock {
         ExclusiveAccessLock,
         WorkerThreadStateLock,
+        CompilationLock,
         OperationCallbackLock,
         GCLock
     };
@@ -783,8 +792,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
-#if defined(JS_THREADSAFE) && defined(JS_ION)
-# define JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
 
     js::WorkerThreadState *workerThreadState;
 
@@ -806,28 +814,87 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     friend class js::AutoLockForExclusiveAccess;
 
+    /*
+     * Lock taken when using data that can be modified by the main thread but
+     * read by Ion compilation threads. Any time either the main thread writes
+     * such data or the compilation thread reads it, this lock must be taken.
+     * Note that no externally visible data is modified by the compilation
+     * thread, so the main thread never needs to take this lock when reading.
+     */
+    PRLock *compilationLock;
+#ifdef DEBUG
+    PRThread *compilationLockOwner;
+    bool mainThreadHasCompilationLock;
+#endif
+
+    /* Number of in flight Ion compilations. */
+    size_t numCompilationThreads;
+
+    friend class js::AutoLockForCompilation;
+#ifdef DEBUG
+    friend bool js::CurrentThreadCanWriteCompilationData();
+    friend bool js::CurrentThreadCanReadCompilationData();
+#endif
+
   public:
     void setUsedByExclusiveThread(JS::Zone *zone);
     void clearUsedByExclusiveThread(JS::Zone *zone);
 
-#endif // JS_THREADSAFE && JS_ION
+#endif // JS_THREADSAFE
 
+#ifdef DEBUG
     bool currentThreadHasExclusiveAccess() {
-#if defined(JS_WORKER_THREADS) && defined(DEBUG)
+#ifdef JS_THREADSAFE
         return (!numExclusiveThreads && mainThreadHasExclusiveAccess) ||
-            exclusiveAccessOwner == PR_GetCurrentThread();
+               exclusiveAccessOwner == PR_GetCurrentThread();
 #else
         return true;
 #endif
     }
+#endif // DEBUG
 
     bool exclusiveThreadsPresent() const {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
         return numExclusiveThreads > 0;
 #else
         return false;
 #endif
     }
+
+    void addCompilationThread() {
+#ifdef JS_THREADSAFE
+        numCompilationThreads++;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
+    }
+    void removeCompilationThread() {
+#ifdef JS_THREADSAFE
+        JS_ASSERT(numCompilationThreads);
+        numCompilationThreads--;
+#else
+        MOZ_ASSUME_UNREACHABLE("No threads");
+#endif
+    }
+
+    bool compilationThreadsPresent() const {
+#ifdef JS_THREADSAFE
+        return numCompilationThreads > 0;
+#else
+        return false;
+#endif
+    }
+
+#ifdef DEBUG
+    bool currentThreadHasCompilationLock() {
+#ifdef JS_THREADSAFE
+        return (!numCompilationThreads && mainThreadHasCompilationLock) ||
+               compilationLockOwner == PR_GetCurrentThread();
+#else
+        return true;
+#endif
+    }
+#endif // DEBUG
 
     /* Embedders can use this zone however they wish. */
     JS::Zone            *systemZone;
@@ -973,6 +1040,7 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::ActivityCallback  activityCallback;
     void                 *activityCallbackArg;
+    void triggerActivityCallback(bool active);
 
 #ifdef JS_THREADSAFE
     /* The request depth for this thread. */
@@ -1154,7 +1222,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /*
      * GGC can be enabled from the command line while testing.
      */
-    bool                gcGenerationalEnabled;
+    unsigned            gcGenerationalDisabled;
 
     /*
      * This is true if we are in the middle of a brain transplant (e.g.,
@@ -1432,6 +1500,18 @@ struct JSRuntime : public JS::shadow::Runtime,
     const char          *numGrouping;
 #endif
 
+    friend class js::AutoProtectHeapForIonCompilation;
+    friend class js::AutoThreadSafeAccess;
+    mozilla::DebugOnly<bool> heapProtected_;
+#ifdef DEBUG
+    js::Vector<js::gc::ArenaHeader *, 0, js::SystemAllocPolicy> unprotectedArenas;
+
+  public:
+    bool heapProtected() {
+        return heapProtected_;
+    }
+#endif
+
   private:
     js::MathCache *mathCache_;
     js::MathCache *createMathCache(JSContext *cx);
@@ -1546,9 +1626,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Tables of strings that are pre-allocated in the atomsCompartment. */
     js::StaticStrings   staticStrings;
 
-    JSWrapObjectCallback                   wrapObjectCallback;
-    JSSameCompartmentWrapObjectCallback    sameCompartmentWrapObjectCallback;
-    JSPreWrapCallback                      preWrapObjectCallback;
+    const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;
 
     // Table of bytecode and other data that may be shared across scripts
@@ -1605,7 +1683,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     // their callee.
     js::Value            ionReturnOverride_;
 
+#ifdef JS_THREADSAFE
     static mozilla::Atomic<size_t> liveRuntimesCount;
+#else
+    static size_t liveRuntimesCount;
+#endif
 
   public:
     static bool hasLiveRuntimes() {
@@ -1692,17 +1774,20 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
 
     JSUseHelperThreads useHelperThreads_;
-    int32_t requestedHelperThreadCount;
+    unsigned cpuCount_;
 
     // Settings for how helper threads can be used.
-    bool useHelperThreadsForIonCompilation_;
-    bool useHelperThreadsForParsing_;
+    bool parallelIonCompilationEnabled_;
+    bool parallelParsingEnabled_;
 
     // True iff this is a DOM Worker runtime.
     bool isWorkerRuntime_;
 
   public:
 
+    // This controls whether the JSRuntime is allowed to create any helper
+    // threads at all. This means both specific threads (background GC thread)
+    // and the general JS worker thread pool.
     bool useHelperThreads() const {
 #ifdef JS_THREADSAFE
         return useHelperThreads_ == JS_USE_HELPER_THREADS;
@@ -1711,36 +1796,48 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
-    void requestHelperThreadCount(size_t count) {
-        requestedHelperThreadCount = count;
+    // This allows the JS shell to override GetCPUCount() when passed the
+    // --thread-count=N option.
+    void setFakeCPUCount(size_t count) {
+        cpuCount_ = count;
     }
 
-    /* Number of helper threads which should be created for this runtime. */
-    size_t helperThreadCount() const {
-#ifdef JS_WORKER_THREADS
-        if (requestedHelperThreadCount < 0) {
-            unsigned ncpus = js::GetCPUCount();
-            return ncpus == 1 ? 0 : ncpus;
-        }
-        return requestedHelperThreadCount;
-#else
-        return 0;
-#endif
+    // Return a cached value of GetCPUCount() to avoid making the syscall all
+    // the time. Furthermore, this avoids pathological cases where the result of
+    // GetCPUCount() changes during execution.
+    unsigned cpuCount() const {
+        JS_ASSERT(cpuCount_ > 0);
+        return cpuCount_;
     }
 
-    void setCanUseHelperThreadsForIonCompilation(bool value) {
-        useHelperThreadsForIonCompilation_ = value;
-    }
-    bool useHelperThreadsForIonCompilation() const {
-        return useHelperThreadsForIonCompilation_;
+    // The number of worker threads that will be available after
+    // EnsureWorkerThreadsInitialized has been called successfully.
+    unsigned workerThreadCount() const {
+        if (!useHelperThreads())
+            return 0;
+        return js::Max(2u, cpuCount());
     }
 
-    void setCanUseHelperThreadsForParsing(bool value) {
-        useHelperThreadsForParsing_ = value;
+    // Note: these values may be toggled dynamically (in response to about:config
+    // prefs changing).
+    void setParallelIonCompilationEnabled(bool value) {
+        parallelIonCompilationEnabled_ = value;
     }
-    bool useHelperThreadsForParsing() const {
-        return useHelperThreadsForParsing_;
+    bool canUseParallelIonCompilation() const {
+        // Require cpuCount_ > 1 so that Ion compilation jobs and main-thread
+        // execution are not competing for the same resources.
+        return useHelperThreads() &&
+               parallelIonCompilationEnabled_ &&
+               cpuCount_ > 1;
     }
+    void setParallelParsingEnabled(bool value) {
+        parallelParsingEnabled_ = value;
+    }
+    bool canUseParallelParsing() const {
+        return useHelperThreads() &&
+               parallelParsingEnabled_;
+    }
+
     void setIsWorkerRuntime() {
         isWorkerRuntime_ = true;
     }
@@ -2019,10 +2116,46 @@ class RuntimeAllocPolicy
 
 extern const JSSecurityCallbacks NullSecurityCallbacks;
 
+// Debugging RAII class which marks the current thread as performing an Ion
+// compilation, for use by CurrentThreadCan{Read,Write}CompilationData
+class AutoEnterIonCompilation
+{
+  public:
+#ifdef DEBUG
+    AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+    ~AutoEnterIonCompilation();
+#else
+    AutoEnterIonCompilation(MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+#endif
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+// Debugging RAII class which protects the entire GC heap for the duration of an
+// Ion compilation. When used only the main thread will be active and all
+// accesses to GC things must be wrapped by an AutoThreadSafeAccess instance.
+class AutoProtectHeapForIonCompilation
+{
+  public:
+#ifdef JS_CAN_CHECK_THREADSAFE_ACCESSES
+    JSRuntime *runtime;
+
+    AutoProtectHeapForIonCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoProtectHeapForIonCompilation();
+#else
+    AutoProtectHeapForIonCompilation(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+#endif
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 } /* namespace js */
 
 #ifdef _MSC_VER
-#pragma warning(pop)
 #pragma warning(pop)
 #endif
 

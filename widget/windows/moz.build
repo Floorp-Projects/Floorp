@@ -19,24 +19,20 @@ EXPORTS.mozilla.widget += [
     'AudioSession.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AudioSession.cpp',
     'GfxInfo.cpp',
     'IEnumFE.cpp',
-    'JumpListBuilder.cpp',
     'JumpListItem.cpp',
     'KeyboardLayout.cpp',
     'nsAppShell.cpp',
-    'nsBidiKeyboard.cpp',
     'nsClipboard.cpp',
     'nsColorPicker.cpp',
     'nsDataObj.cpp',
     'nsDataObjCollection.cpp',
     'nsDragService.cpp',
-    'nsFilePicker.cpp',
     'nsIdleServiceWin.cpp',
     'nsImageClipboard.cpp',
-    'nsIMM32Handler.cpp',
     'nsLookAndFeel.cpp',
     'nsNativeDragSource.cpp',
     'nsNativeDragTarget.cpp',
@@ -46,7 +42,6 @@ SOURCES += [
     'nsSound.cpp',
     'nsToolkit.cpp',
     'nsUXThemeData.cpp',
-    'nsWidgetFactory.cpp',
     'nsWindow.cpp',
     'nsWindowBase.cpp',
     'nsWindowDbg.cpp',
@@ -59,18 +54,31 @@ SOURCES += [
     'WidgetTraceEvent.cpp',
     'WindowHook.cpp',
     'WinIMEHandler.cpp',
-    'WinMouseScrollHandler.cpp',
     'WinTaskbar.cpp',
+]
+
+# The following files cannot be built in unified mode because they force NSPR logging.
+SOURCES += [
+    'nsIMM32Handler.cpp',
+    'WinMouseScrollHandler.cpp',
     'WinUtils.cpp',
 ]
 
+# The following files cannot be built in unified mode because of name clashes.
+SOURCES += [
+    'JumpListBuilder.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsFilePicker.cpp',
+    'nsWidgetFactory.cpp',
+]
+
 if CONFIG['MOZ_CRASHREPORTER']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'LSPAnnotator.cpp',
     ]
 
 if CONFIG['NS_PRINTING']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsDeviceContextSpecWin.cpp',
         'nsPrintOptionsWin.cpp',
         'nsPrintSettingsWin.cpp',
@@ -88,3 +96,19 @@ LIBRARY_NAME = 'widget_windows'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../shared',
+    '../xpwidgets',
+    '/content/events/src',
+    '/layout/generic',
+    '/layout/xul',
+    '/toolkit/xre',
+    '/xpcom/base',
+]
+
+DEFINES['MOZ_UNICODE'] = True
+
+for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
+    if CONFIG[var]:
+        DEFINES[var] = True

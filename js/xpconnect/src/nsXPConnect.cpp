@@ -876,13 +876,6 @@ nsXPConnect::SetFunctionThisTranslator(const nsIID & aIID,
     return NS_OK;
 }
 
-/* void clearAllWrappedNativeSecurityPolicies (); */
-NS_IMETHODIMP
-nsXPConnect::ClearAllWrappedNativeSecurityPolicies()
-{
-    return XPCWrappedNativeScope::ClearAllWrappedNativeSecurityPolicies();
-}
-
 NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                            nsIXPConnectJSObjectHolder **_retval)
@@ -1120,7 +1113,8 @@ nsXPConnect::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 
 NS_IMETHODIMP
 nsXPConnect::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                   uint32_t aRecursionDepth)
+                                   uint32_t aRecursionDepth,
+                                   bool aEventWasProcessed)
 {
     // Watch out for unpaired events during observer registration.
     if (MOZ_UNLIKELY(mEventDepth == 0))

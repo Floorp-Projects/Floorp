@@ -2162,6 +2162,52 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Get the current browser orientation.
+   *
+   * Will return one of the valid primary orientation values
+   * portrait-primary, landscape-primary, portrait-secondary, or
+   * landscape-secondary.
+   */
+  getScreenOrientation: function MDA_getScreenOrientation(aRequest) {
+    this.command_id = this.getCommandId();
+    let curWindow = this.getCurrentWindow();
+    let or = curWindow.screen.mozOrientation;
+    this.sendResponse(or, this.command_id);
+  },
+
+  /**
+   * Set the current browser orientation.
+   *
+   * The supplied orientation should be given as one of the valid
+   * orientation values.  If the orientation is unknown, an error will
+   * be raised.
+   *
+   * Valid orientations are "portrait" and "landscape", which fall
+   * back to "portrait-primary" and "landscape-primary" respectively,
+   * and "portrait-secondary" as well as "landscape-secondary".
+   */
+  setScreenOrientation: function MDA_setScreenOrientation(aRequest) {
+    const ors = ["portrait", "landscape",
+                 "portrait-primary", "landscape-primary",
+                 "portrait-secondary", "landscape-secondary"];
+
+    this.command_id = this.getCommandId();
+    let or = String(aRequest.parameters.orientation);
+
+    let mozOr = or.toLowerCase();
+    if (ors.indexOf(mozOr) < 0) {
+      this.sendError("Unknown screen orientation: " + or, 500, null, this.command_id);
+      return;
+    }
+
+    let curWindow = this.getCurrentWindow();
+    if (!curWindow.screen.mozLockOrientation(mozOr)) {
+      this.sendError("Unable to set screen orientation: " + or, 500, null, this.command_id);
+    }
+    this.sendOk(this.command_id);
+  },
+
+  /**
    * Helper function to convert an outerWindowID into a UID that Marionette
    * tracks.
    */
@@ -2338,7 +2384,9 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getAllCookies": MarionetteServerConnection.prototype.getAllCookies,
   "deleteAllCookies": MarionetteServerConnection.prototype.deleteAllCookies,
   "deleteCookie": MarionetteServerConnection.prototype.deleteCookie,
-  "getActiveElement": MarionetteServerConnection.prototype.getActiveElement
+  "getActiveElement": MarionetteServerConnection.prototype.getActiveElement,
+  "getScreenOrientation": MarionetteServerConnection.prototype.getScreenOrientation,
+  "setScreenOrientation": MarionetteServerConnection.prototype.setScreenOrientation
 };
 
 /**
@@ -2449,7 +2497,7 @@ BrowserObj.prototype = {
    *        frame to load the script in
    */
   loadFrameScript: function BO_loadFrameScript(script, frame) {
-    frame.window.messageManager.loadFrameScript(script, true);
+    frame.window.messageManager.loadFrameScript(script, true, true);
     Services.prefs.setBoolPref("marionette.contentListener", true);
   },
 

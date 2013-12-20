@@ -35,9 +35,8 @@ public:
   NS_IMETHOD GetHeight(int32_t* aHeight) MOZ_OVERRIDE;
   NS_IMETHOD GetIntrinsicSize(nsSize* aSize) MOZ_OVERRIDE;
   NS_IMETHOD GetIntrinsicRatio(nsSize* aRatio) MOZ_OVERRIDE;
-  NS_IMETHOD GetFrame(uint32_t aWhichFrame,
-                      uint32_t aFlags,
-                      gfxASurface** _retval) MOZ_OVERRIDE;
+  NS_IMETHOD_(already_AddRefed<gfxASurface>) GetFrame(uint32_t aWhichFrame,
+                                                      uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD GetImageContainer(mozilla::layers::LayerManager* aManager,
                                mozilla::layers::ImageContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
@@ -56,11 +55,10 @@ protected:
   ClippedImage(Image* aImage, nsIntRect aClip);
 
 private:
-  nsresult GetFrameInternal(const nsIntSize& aViewportSize,
-                            const SVGImageContext* aSVGContext,
-                            uint32_t aWhichFrame,
-                            uint32_t aFlags,
-                            gfxASurface** _retval);
+  already_AddRefed<gfxASurface> GetFrameInternal(const nsIntSize& aViewportSize,
+                                                 const SVGImageContext* aSVGContext,
+                                                 uint32_t aWhichFrame,
+                                                 uint32_t aFlags);
   bool ShouldClip();
   bool MustCreateSurface(gfxContext* aContext,
                          const gfxMatrix& aTransform,

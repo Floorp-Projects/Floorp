@@ -248,7 +248,8 @@ nsVolumeService::CreateOrGetVolumeByPath(const nsAString& aPath, nsIVolume** aRe
                                          aPath, nsIVolume::STATE_MOUNTED,
                                          -1    /* generation */,
                                          true  /* isMediaPresent*/,
-                                         false /* isSharing */);
+                                         false /* isSharing */,
+                                         false /* isFormatting */);
   vol.forget(aResult);
   return NS_OK;
 }
@@ -380,7 +381,8 @@ nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
     nsRefPtr<nsVolume> vol = new nsVolume(name, path, nsIVolume::STATE_INIT,
                                           -1    /* mountGeneration */,
                                           true  /* isMediaPresent */,
-                                          false /* isSharing */);
+                                          false /* isSharing */,
+                                          false /* isFormatting */);
     vol->SetIsFake(true);
     vol->LogState();
     UpdateVolume(vol.get());
@@ -431,10 +433,11 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     DBG("UpdateVolumeRunnable::Run '%s' state %s gen %d locked %d "
-        "media %d sharing %d",
+        "media %d sharing %d formatting %d",
         mVolume->NameStr().get(), mVolume->StateStr(),
         mVolume->MountGeneration(), (int)mVolume->IsMountLocked(),
-        (int)mVolume->IsMediaPresent(), mVolume->IsSharing());
+        (int)mVolume->IsMediaPresent(), mVolume->IsSharing(),
+        mVolume->IsFormatting());
 
     mVolumeService->UpdateVolume(mVolume);
     mVolumeService = nullptr;
@@ -451,10 +454,11 @@ void
 nsVolumeService::UpdateVolumeIOThread(const Volume* aVolume)
 {
   DBG("UpdateVolumeIOThread: Volume '%s' state %s mount '%s' gen %d locked %d "
-      "media %d sharing %d",
+      "media %d sharing %d formatting %d",
       aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get(),
       aVolume->MountGeneration(), (int)aVolume->IsMountLocked(),
-      (int)aVolume->MediaPresent(), (int)aVolume->IsSharing());
+      (int)aVolume->MediaPresent(), (int)aVolume->IsSharing(),
+      (int)aVolume->IsFormatting());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   NS_DispatchToMainThread(new UpdateVolumeRunnable(this, aVolume));
 }

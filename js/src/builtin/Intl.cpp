@@ -397,7 +397,7 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
                HandleValue locales, HandleValue options)
 {
     RootedValue initializerValue(cx);
-    if (!cx->global()->getIntrinsicValue(cx, initializer, &initializerValue))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), initializer, &initializerValue))
         return false;
     JS_ASSERT(initializerValue.isObject());
     JS_ASSERT(initializerValue.toObject().is<JSFunction>());
@@ -463,7 +463,7 @@ static bool
 GetInternals(JSContext *cx, HandleObject obj, MutableHandleObject internals)
 {
     RootedValue getInternalsValue(cx);
-    if (!cx->global()->getIntrinsicValue(cx, cx->names().getInternals, &getInternalsValue))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().getInternals, &getInternalsValue))
         return false;
     JS_ASSERT(getInternalsValue.isObject());
     JS_ASSERT(getInternalsValue.toObject().is<JSFunction>());
@@ -690,7 +690,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
      * passing to methods like Array.prototype.sort).
      */
     RootedValue getter(cx);
-    if (!cx->global()->getIntrinsicValue(cx, cx->names().CollatorCompareGet, &getter))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
         return nullptr;
     RootedValue undefinedValue(cx, UndefinedValue());
     if (!JSObject::defineProperty(cx, proto, cx->names().compare, undefinedValue,
@@ -1178,7 +1178,7 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
      * for passing to methods like Array.prototype.map).
      */
     RootedValue getter(cx);
-    if (!cx->global()->getIntrinsicValue(cx, cx->names().NumberFormatFormatGet, &getter))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet, &getter))
         return nullptr;
     RootedValue undefinedValue(cx, UndefinedValue());
     if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
@@ -1635,7 +1635,7 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
      * (suitable for passing to methods like Array.prototype.map).
      */
     RootedValue getter(cx);
-    if (!cx->global()->getIntrinsicValue(cx, cx->names().DateTimeFormatFormatGet, &getter))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet, &getter))
         return nullptr;
     RootedValue undefinedValue(cx, UndefinedValue());
     if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,

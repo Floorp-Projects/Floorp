@@ -17,6 +17,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
+XPCOMUtils.defineLazyGetter(this, "BrandBundle", function() {
+  const kBrandBundle = "chrome://branding/locale/brand.properties";
+  return Services.strings.createBundle(kBrandBundle);
+});
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
@@ -40,7 +44,7 @@ function setAttributes(aNode, aAttrs) {
 
 function updateCombinedWidgetStyle(aNode, aArea, aModifyAutoclose) {
   let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-  let cls = inPanel ? "panel-combined-button" : null;
+  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
   let attrs = {class: cls};
   if (aModifyAutoclose) {
     attrs.noautoclose = inPanel ? true : null;
@@ -57,7 +61,6 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-history",
     shortcutId: "key_gotoHistory",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate our list of history
@@ -96,6 +99,7 @@ const CustomizableWidgets = [{
               let item = doc.createElementNS(kNSXUL, "toolbarbutton");
               item.setAttribute("label", title || uri);
               item.setAttribute("tabindex", "0");
+              item.setAttribute("targetURI", uri);
               item.addEventListener("command", function (aEvent) {
                 onHistoryVisit(uri, aEvent, item);
               });
@@ -144,7 +148,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "privatebrowsing-button",
-    removable: true,
     shortcutId: "key_privatebrowsing",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
@@ -157,7 +160,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "save-page-button",
-    removable: true,
     shortcutId: "key_savePage",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -170,7 +172,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "find-button",
-    removable: true,
     shortcutId: "key_find",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -183,7 +184,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "open-file-button",
-    removable: true,
     shortcutId: "openFileKb",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -198,7 +198,6 @@ const CustomizableWidgets = [{
     id: "developer-button",
     type: "view",
     viewId: "PanelUI-developer",
-    removable: true,
     shortcutId: "key_devToolboxMenuItem",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
@@ -261,7 +260,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "add-ons-button",
-    removable: true,
     shortcutId: "key_openAddons",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
@@ -274,7 +272,6 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "preferences-button",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
 #ifdef XP_WIN
     label: "preferences-button.labelWin",
@@ -291,13 +288,12 @@ const CustomizableWidgets = [{
   }, {
     id: "zoom-controls",
     type: "custom",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let noautoclose = inPanel ? "true" : null;
-      let cls = inPanel ? "panel-combined-button" : null;
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
 
       if (!this.currentArea)
         cls = null;
@@ -398,8 +394,8 @@ const CustomizableWidgets = [{
           updateZoomResetButton();
         }.bind(this),
 
-        onWidgetReset: function(aWidgetId) {
-          if (aWidgetId != this.id)
+        onWidgetReset: function(aWidgetNode) {
+          if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea, true);
           updateZoomResetButton();
@@ -437,11 +433,10 @@ const CustomizableWidgets = [{
   }, {
     id: "edit-controls",
     type: "custom",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
-      let cls = inPanel ? "panel-combined-button" : null;
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
 
       if (!this.currentArea)
         cls = null;
@@ -480,8 +475,6 @@ const CustomizableWidgets = [{
           node.appendChild(aDocument.createElementNS(kNSXUL, "separator"));
         let btnNode = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         setAttributes(btnNode, aButton);
-        if (inPanel)
-          btnNode.setAttribute("tabindex", "0");
         node.appendChild(btnNode);
       });
 
@@ -500,8 +493,8 @@ const CustomizableWidgets = [{
           updateCombinedWidgetStyle(node);
         }.bind(this),
 
-        onWidgetReset: function(aWidgetId) {
-          if (aWidgetId != this.id)
+        onWidgetReset: function(aWidgetNode) {
+          if (aWidgetNode != node)
             return;
           updateCombinedWidgetStyle(node, this.currentArea);
         }.bind(this),
@@ -534,7 +527,6 @@ const CustomizableWidgets = [{
     id: "feed-button",
     type: "view",
     viewId: "PanelUI-feeds",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onClick: function(aEvent) {
       let win = aEvent.target.ownerDocument.defaultView;
@@ -574,7 +566,6 @@ const CustomizableWidgets = [{
     id: "characterencoding-button",
     type: "view",
     viewId: "PanelUI-characterEncodingView",
-    removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     maybeDisableMenu: function(aDocument) {
       let window = aDocument.defaultView;
@@ -781,9 +772,32 @@ const CustomizableWidgets = [{
     }
   }, {
     id: "email-link-button",
-    removable: true,
     onCommand: function(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForWindow(win.content);
     }
   }];
+
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
+  let widgetArgs = {tooltiptext: "switch-to-metro-button2.tooltiptext"};
+  let brandShortName = BrandBundle.GetStringFromName("brandShortName");
+  let metroTooltip = CustomizableUI.getLocalizedProperty(widgetArgs, "tooltiptext",
+                                                         [brandShortName]);
+  CustomizableWidgets.push({
+    id: "switch-to-metro-button",
+    label: "switch-to-metro-button2.label",
+    tooltiptext: metroTooltip,
+    defaultArea: CustomizableUI.AREA_PANEL,
+    showInPrivateBrowsing: false, /* See bug 928068 */
+    onCommand: function(aEvent) {
+      let win = aEvent.view;
+      if (win && typeof win.SwitchToMetro == "function") {
+        win.SwitchToMetro();
+      }
+    }
+  });
+}
+#endif
+#endif

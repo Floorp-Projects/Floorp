@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <style type="text/css">
+    .absthing {
+      width: 400px;
+      height: 400px;
+      position: absolute;
+      left: 20px;
+      top: 20px;
+    }
+    #d1 {
+      z-index: 1;
+    }
+    #d2 {
+      z-index: 2;
+      background-color: rgba(0,0,255,0.5);
+      border: 1px solid red;
+    }
+  </style>
+<body>
+  <div class="absthing" id="d1">
+    <embed id="test" type="application/x-test">
+  </div>
+  <div class="absthing" id="d2">
+    <p>This is overlaying
+  </div>

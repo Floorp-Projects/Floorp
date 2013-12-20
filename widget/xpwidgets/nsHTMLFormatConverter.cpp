@@ -189,7 +189,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       nsresult res;
       if (toFlavor.Equals(kHTMLMime)) {
         int32_t dataLen = dataStr.Length() * 2;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)dataStr.get(), dataLen, aToData );
+        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), dataStr.get(), dataLen, aToData );
         if ( *aToData )
           *aDataToLen = dataLen;
       } else {
@@ -197,7 +197,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
         res = ConvertFromHTMLToUnicode(dataStr, outStr);
         if (NS_SUCCEEDED(res)) {
           int32_t dataLen = outStr.Length() * 2;
-          nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
+          nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), outStr.get(), dataLen, aToData );
           if ( *aToData ) 
             *aDataToLen = dataLen;
         }
@@ -207,7 +207,7 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
       nsAutoString outStr;
       if ( NS_SUCCEEDED(ConvertFromHTMLToAOLMail(dataStr, outStr)) ) {
         int32_t dataLen = outStr.Length() * 2;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), (void*)outStr.get(), dataLen, aToData );
+        nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor.get(), outStr.get(), dataLen, aToData );
         if ( *aToData ) 
           *aDataToLen = dataLen;
       }

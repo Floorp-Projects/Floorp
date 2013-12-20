@@ -27,16 +27,16 @@
     <script type="text/javascript;version=1.8" src="chrome://browser/content/aboutApps.js"></script>
   </head>
 
-  <body dir="&locale.dir;" onload="onLoad(event)">
+  <body dir="&locale.dir;">
 
     <menu type="context" id="appmenu">
-      <menuitem label="&aboutApps.addToHomescreen;" onclick="ContextMenus.addToHomescreen();"></menuitem>
-      <menuitem label="&aboutApps.uninstall;" onclick="ContextMenus.uninstall();"></menuitem>
+      <menuitem id="addToHomescreenLabel" label="&aboutApps.addToHomescreen;"></menuitem>
+      <menuitem id="uninstallLabel" label="&aboutApps.uninstall;"></menuitem>
     </menu>
   
     <div class="header">
       <div>&aboutApps.header;</div>
-      <div id="header-button" role="button" aria-label="&aboutApps.browseMarketplace;" pref="app.marketplaceURL" onclick="openLink(this);"/>
+      <div id="header-button" role="button" aria-label="&aboutApps.browseMarketplace;" pref="app.marketplaceURL"/>
     </div>
 
     <div id="main-container" class="hidden">
@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <div class="list-item" role="button" pref="app.marketplaceURL" onclick="openLink(this);">
+    <div class="list-item" role="button" pref="app.marketplaceURL">
       <img class="icon" src="chrome://browser/skin/images/marketplace-logo.png" />
       <div class="inner">
         <div id="browse-title" class="title">&aboutApps.browseMarketplace;</div>

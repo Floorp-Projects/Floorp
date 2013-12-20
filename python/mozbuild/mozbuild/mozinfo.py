@@ -51,6 +51,10 @@ def build_dict(config, env=os.environ):
     if 'MOZ_APP_NAME' in substs:
         d["appname"] = substs["MOZ_APP_NAME"]
 
+    # Build app name
+    if 'MOZ_BUILD_APP' in substs:
+        d["buildapp"] = substs["MOZ_BUILD_APP"]
+
     # processor
     p = substs["TARGET_CPU"]
     # for universal mac builds, put in a special value

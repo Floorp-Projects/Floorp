@@ -87,6 +87,11 @@ TEST_SUITES = {
         'mach_command': 'reftest-ipc',
         'kwargs': {'test_file': None},
     },
+    'valgrind': {
+        'aliases': ('V', 'v'),
+        'mach_command': 'valgrind-test',
+        'kwargs': {},
+    },
     'xpcshell': {
         'aliases': ('X', 'x'),
         'mach_command': 'xpcshell-test',

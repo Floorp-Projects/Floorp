@@ -167,9 +167,7 @@ function run_test() {
 
   do_check_false(gExtensionsJSON.exists());
 
-  let file = gProfD.clone();
-  file.leafName = "extensions.ini";
-  do_check_false(file.exists());
+  do_check_false(gExtensionsINI.exists());
 
   do_check_bootstrappedPref(run_test_1);
 }
@@ -223,9 +221,7 @@ function run_test_1() {
 }
 
 function check_test_1(installSyncGUID) {
-  let file = gProfD.clone();
-  file.leafName = "extensions.ini";
-  do_check_false(file.exists());
+  do_check_false(gExtensionsINI.exists());
 
   AddonManager.getAllInstalls(function(installs) {
     // There should be no active installs now since the install completed and
@@ -313,9 +309,7 @@ function run_test_3() {
   do_check_eq(getShutdownNewVersion(), 0);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-  let file = gProfD.clone();
-  file.append("extensions.ini");
-  do_check_false(file.exists());
+  do_check_false(gExtensionsINI.exists());
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);

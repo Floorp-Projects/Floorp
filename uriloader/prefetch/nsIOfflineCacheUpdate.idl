@@ -9,7 +9,6 @@ interface nsIURI;
 interface nsIDOMWindow;
 interface nsIDOMNode;
 interface nsIDOMDocument;
-interface nsIDOMLoadStatus;
 interface nsIOfflineCacheUpdate;
 interface nsIPrincipal;
 interface nsIPrefBranch;
@@ -54,10 +53,6 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * resources.
  *
  * It can be used to perform partial or complete updates.
- *
- * Each update object maintains a list of nsIDOMLoadStatus items for the
- * resources it is updating.  The list of these items will be available
- * after the object is scheduled.
  *
  * One update object will be updating at a time.  The active object will
  * load its items one by one, sending itemCompleted() to any registered

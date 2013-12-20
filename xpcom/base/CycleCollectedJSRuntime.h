@@ -104,10 +104,6 @@ protected:
                           JSUseHelperThreads aUseHelperThreads);
   virtual ~CycleCollectedJSRuntime();
 
-  // Idempotent. Subclasses may destroy their runtimes earlier in execution if
-  // they so desire.
-  void DestroyRuntime();
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   void UnmarkSkippableJSHolders();
 

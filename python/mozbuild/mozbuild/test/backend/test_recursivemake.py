@@ -22,6 +22,8 @@ from mozbuild.frontend.reader import BuildReader
 
 from mozbuild.test.backend.common import BackendTester
 
+import mozpack.path as mozpath
+
 
 class TestRecursiveMakeTraversal(unittest.TestCase):
     def test_traversal(self):
@@ -152,9 +154,9 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_basic(self):
         """Ensure the RecursiveMakeBackend works without error."""
         env = self._consume('stub0', RecursiveMakeBackend)
-        self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
+        self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
             'backend.RecursiveMakeBackend')))
-        self.assertTrue(os.path.exists(os.path.join(env.topobjdir,
+        self.assertTrue(os.path.exists(mozpath.join(env.topobjdir,
             'backend.RecursiveMakeBackend.pp')))
 
     def test_output_files(self):
@@ -164,8 +166,8 @@ class TestRecursiveMakeBackend(BackendTester):
         expected = ['', 'dir1', 'dir2']
 
         for d in expected:
-            out_makefile = os.path.join(env.topobjdir, d, 'Makefile')
-            out_backend = os.path.join(env.topobjdir, d, 'backend.mk')
+            out_makefile = mozpath.join(env.topobjdir, d, 'Makefile')
+            out_backend = mozpath.join(env.topobjdir, d, 'backend.mk')
 
             self.assertTrue(os.path.exists(out_makefile))
             self.assertTrue(os.path.exists(out_backend))
@@ -174,7 +176,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure Makefile.in is converted properly."""
         env = self._consume('stub0', RecursiveMakeBackend)
 
-        p = os.path.join(env.topobjdir, 'Makefile')
+        p = mozpath.join(env.topobjdir, 'Makefile')
 
         lines = [l.strip() for l in open(p, 'rt').readlines()[1:] if not l.startswith('#')]
         self.assertEqual(lines, [
@@ -194,7 +196,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure missing Makefile.in results in Makefile creation."""
         env = self._consume('stub0', RecursiveMakeBackend)
 
-        p = os.path.join(env.topobjdir, 'dir2', 'Makefile')
+        p = mozpath.join(env.topobjdir, 'dir2', 'Makefile')
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
@@ -206,11 +208,10 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure backend.mk file is written out properly."""
         env = self._consume('stub0', RecursiveMakeBackend)
 
-        p = os.path.join(env.topobjdir, 'backend.mk')
+        p = mozpath.join(env.topobjdir, 'backend.mk')
 
         lines = [l.strip() for l in open(p, 'rt').readlines()[2:]]
         self.assertEqual(lines, [
-            'MOZBUILD_DERIVED := 1',
             'DIRS := dir1',
             'PARALLEL_DIRS := dir2',
             'TEST_DIRS := dir3',
@@ -221,8 +222,8 @@ class TestRecursiveMakeBackend(BackendTester):
 
         env = self._consume('stub0', RecursiveMakeBackend)
 
-        makefile_path = os.path.join(env.topobjdir, 'Makefile')
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        makefile_path = mozpath.join(env.topobjdir, 'Makefile')
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         makefile_mtime = os.path.getmtime(makefile_path)
         backend_mtime = os.path.getmtime(backend_path)
 
@@ -234,25 +235,11 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(os.path.getmtime(makefile_path), makefile_mtime)
         self.assertEqual(os.path.getmtime(backend_path), backend_mtime)
 
-    def test_external_make_dirs(self):
-        """Ensure we have make recursion into external make directories."""
-        env = self._consume('external_make_dirs', RecursiveMakeBackend)
-
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
-        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
-        self.assertEqual(lines, [
-            'MOZBUILD_DERIVED := 1',
-            'DIRS := dir',
-            'PARALLEL_DIRS := p_dir',
-            'DIRS += external',
-            'PARALLEL_DIRS += p_external',
-        ])
-
     def test_substitute_config_files(self):
         """Ensure substituted config files are produced."""
         env = self._consume('substitute_config_files', RecursiveMakeBackend)
 
-        p = os.path.join(env.topobjdir, 'foo')
+        p = mozpath.join(env.topobjdir, 'foo')
         self.assertTrue(os.path.exists(p))
         lines = [l.strip() for l in open(p, 'rt').readlines()]
         self.assertEqual(lines, [
@@ -263,7 +250,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure variable passthru is written out correctly."""
         env = self._consume('variable_passthru', RecursiveMakeBackend)
 
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = {
@@ -346,7 +333,7 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('exports', RecursiveMakeBackend)
 
         # EXPORTS files should appear in the dist_include install manifest.
-        m = InstallManifest(path=os.path.join(env.topobjdir,
+        m = InstallManifest(path=mozpath.join(env.topobjdir,
             '_build_manifests', 'install', 'dist_include'))
         self.assertEqual(len(m), 7)
         self.assertIn('foo.h', m)
@@ -357,9 +344,9 @@ class TestRecursiveMakeBackend(BackendTester):
         """Ensure test manifests get turned into files."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
 
-        tests_dir = os.path.join(env.topobjdir, '_tests')
-        m_master = os.path.join(tests_dir, 'testing', 'mochitest', 'tests', 'mochitest.ini')
-        x_master = os.path.join(tests_dir, 'xpcshell', 'xpcshell.ini')
+        tests_dir = mozpath.join(env.topobjdir, '_tests')
+        m_master = mozpath.join(tests_dir, 'testing', 'mochitest', 'tests', 'mochitest.ini')
+        x_master = mozpath.join(tests_dir, 'xpcshell', 'xpcshell.ini')
         self.assertTrue(os.path.exists(m_master))
         self.assertTrue(os.path.exists(x_master))
 
@@ -371,7 +358,7 @@ class TestRecursiveMakeBackend(BackendTester):
             '[include:xpcshell.ini]',
         ])
 
-        all_tests_path = os.path.join(env.topobjdir, 'all-tests.json')
+        all_tests_path = mozpath.join(env.topobjdir, 'all-tests.json')
         self.assertTrue(os.path.exists(all_tests_path))
 
         with open(all_tests_path, 'rt') as fh:
@@ -382,39 +369,51 @@ class TestRecursiveMakeBackend(BackendTester):
 
             self.assertEqual(len(o['xpcshell.js']), 1)
 
+    def test_test_manifest_pattern_matches_recorded(self):
+        """Pattern matches in test manifests' support-files should be recorded."""
+        env = self._consume('test-manifests-written', RecursiveMakeBackend)
+        m = InstallManifest(path=mozpath.join(env.topobjdir,
+            '_build_manifests', 'install', 'tests'))
+
+        # This is not the most robust test in the world, but it gets the job
+        # done.
+        entries = [e for e in m._dests.keys() if '**' in e]
+        self.assertEqual(len(entries), 1)
+        self.assertIn('support/**', entries[0])
+
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""
         env = self._consume('xpidl', RecursiveMakeBackend)
 
         # Install manifests should contain entries.
-        install_dir = os.path.join(env.topobjdir, '_build_manifests',
+        install_dir = mozpath.join(env.topobjdir, '_build_manifests',
             'install')
-        self.assertTrue(os.path.isfile(os.path.join(install_dir, 'dist_idl')))
-        self.assertTrue(os.path.isfile(os.path.join(install_dir, 'xpidl')))
+        self.assertTrue(os.path.isfile(mozpath.join(install_dir, 'dist_idl')))
+        self.assertTrue(os.path.isfile(mozpath.join(install_dir, 'xpidl')))
 
-        m = InstallManifest(path=os.path.join(install_dir, 'dist_idl'))
+        m = InstallManifest(path=mozpath.join(install_dir, 'dist_idl'))
         self.assertEqual(len(m), 2)
         self.assertIn('bar.idl', m)
         self.assertIn('foo.idl', m)
 
-        m = InstallManifest(path=os.path.join(install_dir, 'xpidl'))
+        m = InstallManifest(path=mozpath.join(install_dir, 'xpidl'))
         self.assertIn('.deps/my_module.pp', m)
         self.assertIn('xpt/my_module.xpt', m)
 
-        m = InstallManifest(path=os.path.join(install_dir, 'dist_include'))
+        m = InstallManifest(path=mozpath.join(install_dir, 'dist_include'))
         self.assertIn('foo.h', m)
 
-        p = os.path.join(env.topobjdir, 'config/makefiles/xpidl')
+        p = mozpath.join(env.topobjdir, 'config/makefiles/xpidl')
         self.assertTrue(os.path.isdir(p))
 
-        self.assertTrue(os.path.isfile(os.path.join(p, 'Makefile')))
+        self.assertTrue(os.path.isfile(mozpath.join(p, 'Makefile')))
 
     def test_old_install_manifest_deleted(self):
         # Simulate an install manifest from a previous backend version. Ensure
         # it is deleted.
         env = self._get_environment('stub0')
-        purge_dir = os.path.join(env.topobjdir, '_build_manifests', 'install')
-        manifest_path = os.path.join(purge_dir, 'old_manifest')
+        purge_dir = mozpath.join(env.topobjdir, '_build_manifests', 'install')
+        manifest_path = mozpath.join(purge_dir, 'old_manifest')
         os.makedirs(purge_dir)
         m = InstallManifest()
         m.write(path=manifest_path)
@@ -432,12 +431,12 @@ class TestRecursiveMakeBackend(BackendTester):
         m.add_symlink(__file__, 'self')
         backend.consume(objs)
 
-        man_dir = os.path.join(env.topobjdir, '_build_manifests', 'install')
+        man_dir = mozpath.join(env.topobjdir, '_build_manifests', 'install')
         self.assertTrue(os.path.isdir(man_dir))
 
         expected = ['testing']
         for e in expected:
-            full = os.path.join(man_dir, e)
+            full = mozpath.join(man_dir, e)
             self.assertTrue(os.path.exists(full))
 
             m2 = InstallManifest(path=full)
@@ -447,7 +446,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Test that IPDL_SOURCES are written to ipdlsrcs.mk correctly."""
         env = self._consume('ipdl_sources', RecursiveMakeBackend)
 
-        manifest_path = os.path.join(env.topobjdir,
+        manifest_path = mozpath.join(env.topobjdir,
             'ipc', 'ipdl', 'ipdlsrcs.mk')
         lines = [l.strip() for l in open(manifest_path, 'rt').readlines()]
 
@@ -469,20 +468,20 @@ class TestRecursiveMakeBackend(BackendTester):
         """Test that DEFINES are written to backend.mk correctly."""
         env = self._consume('defines', RecursiveMakeBackend)
 
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         var = 'DEFINES'
         defines = [val for val in lines if val.startswith(var)]
 
-        expected = ['DEFINES += -DFOO -DBAZ=\'"abcd"\' -DBAR=7 -DVALUE=\'xyz\'']
+        expected = ['DEFINES += -DFOO -DBAZ=\'"ab\'\\\'\'cd"\' -DBAR=7 -DVALUE=\'xyz\'']
         self.assertEqual(defines, expected)
 
     def test_local_includes(self):
         """Test that LOCAL_INCLUDES are written to backend.mk correctly."""
         env = self._consume('local_includes', RecursiveMakeBackend)
 
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
@@ -497,7 +496,7 @@ class TestRecursiveMakeBackend(BackendTester):
         """Test that GENERATED_INCLUDES are written to backend.mk correctly."""
         env = self._consume('generated_includes', RecursiveMakeBackend)
 
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         topobjdir = env.topobjdir.replace('\\', '/')
@@ -515,32 +514,72 @@ class TestRecursiveMakeBackend(BackendTester):
         env = self._consume('final_target', RecursiveMakeBackend)
 
         final_target_rule = "FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)"
-        print([x for x in os.walk(env.topobjdir)])
         expected = dict()
         expected[env.topobjdir] = []
-        expected[os.path.join(env.topobjdir, 'both')] = [
+        expected[mozpath.join(env.topobjdir, 'both')] = [
             'XPI_NAME = mycrazyxpi',
             'DIST_SUBDIR = asubdir',
             final_target_rule
         ]
-        expected[os.path.join(env.topobjdir, 'dist-subdir')] = [
+        expected[mozpath.join(env.topobjdir, 'dist-subdir')] = [
             'DIST_SUBDIR = asubdir',
             final_target_rule
         ]
-        expected[os.path.join(env.topobjdir, 'xpi-name')] = [
+        expected[mozpath.join(env.topobjdir, 'xpi-name')] = [
             'XPI_NAME = mycrazyxpi',
             final_target_rule
         ]
-        expected[os.path.join(env.topobjdir, 'final-target')] = [
+        expected[mozpath.join(env.topobjdir, 'final-target')] = [
             'FINAL_TARGET = $(DEPTH)/random-final-target'
         ]
         for key, expected_rules in expected.iteritems():
-            backend_path = os.path.join(key, 'backend.mk')
+            backend_path = mozpath.join(key, 'backend.mk')
             lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
             found = [str for str in lines if
                 str.startswith('FINAL_TARGET') or str.startswith('XPI_NAME') or
                 str.startswith('DIST_SUBDIR')]
             self.assertEqual(found, expected_rules)
+
+    def test_config(self):
+        """Test that CONFIGURE_SUBST_FILES and CONFIGURE_DEFINE_FILES are
+        properly handled."""
+        env = self._consume('test_config', RecursiveMakeBackend)
+
+        self.assertEqual(
+            open(os.path.join(env.topobjdir, 'file'), 'r').readlines(), [
+                '#ifdef foo\n',
+                'bar baz\n',
+                '@bar@\n',
+            ])
+
+        self.assertEqual(
+            open(os.path.join(env.topobjdir, 'file.h'), 'r').readlines(), [
+                '/* Comment */\n',
+                '#define foo\n',
+                '#define foo baz qux\n',
+                '#define foo baz qux\n',
+                '#define bar\n',
+                '#define bar 42\n',
+                '/* #undef bar */\n',
+                '\n',
+                '# define baz 1\n',
+                '\n',
+                '#ifdef foo\n',
+                '#   define   foo baz qux\n',
+                '#  define foo    baz qux\n',
+                '  #     define   foo   baz qux   \n',
+                '#endif\n',
+            ])
+
+    def test_jar_manifests(self):
+        env = self._consume('jar-manifests', RecursiveMakeBackend)
+
+        with open(os.path.join(env.topobjdir, 'backend.mk'), 'rb') as fh:
+            lines = fh.readlines()
+
+        lines = [line.rstrip() for line in lines]
+
+        self.assertIn('JAR_MANIFEST := %s/jar.mn' % env.topsrcdir, lines)
 
 
 if __name__ == '__main__':

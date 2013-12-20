@@ -342,12 +342,16 @@ enum {
     AKEYCODE_KANA               = 218,
     AKEYCODE_ASSIST             = 219,
 
+    AMETA_FUNCTION_ON           = 0x00000008,
     AMETA_CTRL_ON               = 0x00001000,
     AMETA_CTRL_LEFT_ON          = 0x00002000,
     AMETA_CTRL_RIGHT_ON         = 0x00004000,
     AMETA_META_ON               = 0x00010000,
     AMETA_META_LEFT_ON          = 0x00020000,
     AMETA_META_RIGHT_ON         = 0x00040000,
+    AMETA_CAPS_LOCK_ON          = 0x00100000,
+    AMETA_NUM_LOCK_ON           = 0x00200000,
+    AMETA_SCROLL_LOCK_ON        = 0x00400000,
 
     AMETA_ALT_MASK              = AMETA_ALT_LEFT_ON   | AMETA_ALT_RIGHT_ON   | AMETA_ALT_ON,
     AMETA_CTRL_MASK             = AMETA_CTRL_LEFT_ON  | AMETA_CTRL_RIGHT_ON  | AMETA_CTRL_ON,
@@ -504,6 +508,7 @@ public:
     int KeyCode() { return mKeyCode; }
     int MetaState() { return mMetaState; }
     uint32_t DomKeyLocation() { return mDomKeyLocation; }
+    Modifiers DOMModifiers() const;
     bool IsAltPressed() const { return (mMetaState & AMETA_ALT_MASK) != 0; }
     bool IsShiftPressed() const { return (mMetaState & AMETA_SHIFT_MASK) != 0; }
     bool IsCtrlPressed() const { return (mMetaState & AMETA_CTRL_MASK) != 0; }
@@ -511,6 +516,7 @@ public:
     int Flags() { return mFlags; }
     int UnicodeChar() { return mUnicodeChar; }
     int BaseUnicodeChar() { return mBaseUnicodeChar; }
+    int DOMPrintableKeyValue() { return mDOMPrintableKeyValue; }
     int RepeatCount() const { return mRepeatCount; }
     int Count() { return mCount; }
     int Start() { return mStart; }
@@ -552,7 +558,7 @@ protected:
     nsIntRect mRect;
     int mFlags, mMetaState;
     uint32_t mDomKeyLocation;
-    int mKeyCode, mUnicodeChar, mBaseUnicodeChar;
+    int mKeyCode, mUnicodeChar, mBaseUnicodeChar, mDOMPrintableKeyValue;
     int mRepeatCount;
     int mCount;
     int mStart, mEnd;
@@ -616,6 +622,7 @@ protected:
     static jfieldID jCharactersField;
     static jfieldID jCharactersExtraField;
     static jfieldID jDataField;
+    static jfieldID jDOMPrintableKeyValueField;
     static jfieldID jKeyCodeField;
     static jfieldID jMetaStateField;
     static jfieldID jDomKeyLocationField;
@@ -686,11 +693,14 @@ public:
         PREFERENCES_OBSERVE = 39,
         PREFERENCES_GET = 40,
         PREFERENCES_REMOVE_OBSERVERS = 41,
+        TELEMETRY_UI_SESSION_START = 42,
+        TELEMETRY_UI_SESSION_STOP = 43,
+        TELEMETRY_UI_EVENT = 44,
         dummy_java_enum_list_end
     };
 
     enum {
-        // Memory pressue levels, keep in sync with those in MemoryMonitor.java
+        // Memory pressure levels. Keep these in sync with those in MemoryMonitor.java.
         MEMORY_PRESSURE_NONE = 0,
         MEMORY_PRESSURE_CLEANUP = 1,
         MEMORY_PRESSURE_LOW = 2,

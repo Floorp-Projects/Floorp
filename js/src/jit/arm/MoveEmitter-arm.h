@@ -17,9 +17,6 @@ class CodeGenerator;
 
 class MoveEmitterARM
 {
-    typedef MoveResolver::Move Move;
-    typedef MoveResolver::MoveOperand MoveOperand;
-
     bool inCycle_;
     MacroAssemblerARMCompat &masm;
 
@@ -31,7 +28,6 @@ class MoveEmitterARM
     // stack space has been allocated for that particular spill.
     int32_t pushedAtCycle_;
     int32_t pushedAtSpill_;
-    int32_t pushedAtDoubleSpill_;
 
     // These are registers that are available for temporary use. They may be
     // assigned InvalidReg. If no corresponding spill space has been assigned,
@@ -44,14 +40,14 @@ class MoveEmitterARM
     FloatRegister tempFloatReg();
     Operand cycleSlot() const;
     Operand spillSlot() const;
-    Operand doubleSpillSlot() const;
     Operand toOperand(const MoveOperand &operand, bool isFloat) const;
 
     void emitMove(const MoveOperand &from, const MoveOperand &to);
+    void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
     void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
-    void completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind);
-    void emit(const Move &move);
+    void breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
+    void completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
+    void emit(const MoveOp &move);
 
   public:
     MoveEmitterARM(MacroAssemblerARMCompat &masm);

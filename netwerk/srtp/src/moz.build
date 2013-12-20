@@ -38,3 +38,32 @@ LIBRARY_NAME = 'nksrtp_s'
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    'crypto/include',
+    'include',
+]
+
+# We know stdint.h will define uint8/16/32/64_t, so we don't need
+# to define SIZEOF_UNSIGNED_LONG/SIZEOF_UNSIGNED_LONG_LONG
+for var in ('HAVE_STDLIB_H', 'HAVE_UINT8_T', 'HAVE_UINT16_T',
+            'HAVE_UINT32_T', 'HAVE_UINT64_T'):
+    DEFINES[var] = 1
+
+# XXX while arm is not a CISC architecture, the code guarded by CPU_RISC makes
+# (at least) the AES ciphers fail their self-tests on ARM, so for now we're
+# falling back to the (presumably) slower-on-this-architecture but working
+# code path.  https://bugzilla.mozilla.org/show_bug.cgi?id=822380 has been filed
+# to make the right and more performant fix and push it back upstream.
+if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64'):
+    DEFINES['CPU_CISC'] = 1
+else:
+    # best guess
+    DEFINES['CPU_RISC'] = 1
+
+if  CONFIG['CPU_ARCH'] in ('x86', 'x86_64'):
+    DEFINES['HAVE_X86'] = True
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['HAVE_WINSOCK2_H'] = True
+    DEFINES['inline'] = '__inline'

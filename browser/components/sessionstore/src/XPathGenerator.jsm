@@ -8,8 +8,14 @@ this.EXPORTED_SYMBOLS = ["XPathGenerator"];
 
 this.XPathGenerator = {
   // these two hashes should be kept in sync
-  namespaceURIs:     { "xhtml": "http://www.w3.org/1999/xhtml" },
-  namespacePrefixes: { "http://www.w3.org/1999/xhtml": "xhtml" },
+  namespaceURIs:     {
+    "xhtml": "http://www.w3.org/1999/xhtml",
+    "xul": "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  },
+  namespacePrefixes: {
+    "http://www.w3.org/1999/xhtml": "xhtml",
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul": "xul"
+  },
 
   /**
    * Generates an approximate XPath query to an (X)HTML node
@@ -92,6 +98,9 @@ this.XPathGenerator = {
       ignoreTypes.join("' or translate(@type, " + toLowerCase + ")='") + "')";
     let formNodesXPath = "//textarea|//select|//xhtml:textarea|//xhtml:select|" +
       "//input[" + ignore + "]|//xhtml:input[" + ignore + "]";
+
+    // Special case for about:config's search field.
+    formNodesXPath += '|/xul:window[@id="config"]//xul:textbox[@id="textbox"]';
 
     delete this.restorableFormNodes;
     return (this.restorableFormNodes = formNodesXPath);

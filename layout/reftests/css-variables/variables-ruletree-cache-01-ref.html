@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<style>
+  p { background-color: purple; }
+  p#myid { background-color: blue; }
+</style>
+<p>This should be purple, and might cache background in the rule tree.</p>
+<p id="myid">This should be blue, and can't used that cached struct,
+which really shouldn't be cached anyway.</p>

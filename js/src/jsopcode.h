@@ -358,7 +358,7 @@ StackDefs(JSScript *script, jsbytecode *pc);
  * false.
  */
 extern bool
-ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc, uint32_t *depth);
+ReconstructStackDepth(JSContext *cx, JSScript *script, jsbytecode *pc, uint32_t *depth, bool *reachablePC);
 #endif
 
 }  /* namespace js */
@@ -774,7 +774,7 @@ JS_STATIC_ASSERT(sizeof(PCCounts) % sizeof(Value) == 0);
 static inline jsbytecode *
 GetNextPc(jsbytecode *pc)
 {
-    return pc + js_CodeSpec[JSOp(*pc)].length;
+    return pc + GetBytecodeLength(pc);
 }
 
 } /* namespace js */

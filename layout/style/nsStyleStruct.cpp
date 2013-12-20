@@ -101,6 +101,7 @@ nsStyleFont::nsStyleFont(const nsStyleFont& aSrc)
   , mSize(aSrc.mSize)
   , mGenericID(aSrc.mGenericID)
   , mScriptLevel(aSrc.mScriptLevel)
+  , mMathVariant(aSrc.mMathVariant)
   , mExplicitLanguage(aSrc.mExplicitLanguage)
   , mAllowZoom(aSrc.mAllowZoom)
   , mScriptUnconstrainedSize(aSrc.mScriptUnconstrainedSize)
@@ -131,6 +132,7 @@ nsStyleFont::Init(nsPresContext* aPresContext)
       NS_POINTS_TO_TWIPS(NS_MATHML_DEFAULT_SCRIPT_MIN_SIZE_PT));
   mScriptLevel = 0;
   mScriptSizeMultiplier = NS_MATHML_DEFAULT_SCRIPT_SIZE_MULTIPLIER;
+  mMathVariant = NS_MATHML_MATHVARIANT_NONE;
   mAllowZoom = true;
 
   nsAutoString language;
@@ -191,7 +193,8 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
              "expected mAllowZoom to be the same on both nsStyleFonts");
   if (mSize != aOther.mSize ||
       mLanguage != aOther.mLanguage ||
-      mExplicitLanguage != aOther.mExplicitLanguage) {
+      mExplicitLanguage != aOther.mExplicitLanguage ||
+      mMathVariant != aOther.mMathVariant) {
     return NS_STYLE_HINT_REFLOW;
   }
   return CalcFontDifference(mFont, aOther.mFont);
@@ -1269,9 +1272,11 @@ nsStylePosition::nsStylePosition(void)
   mMaxHeight.SetNoneValue();
   mFlexBasis.SetAutoValue();
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
   mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
+  mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
   mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
@@ -1324,19 +1329,35 @@ nsChangeHint nsStylePosition::CalcDifference(const nsStylePosition& aOther) cons
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
-  // Properties that apply to flexbox containers:
-
-  // flex-direction can swap a flexbox between vertical & horizontal.
-  // align-items can change the sizing of a flexbox & the positioning
-  // of its children.
+  // Properties that apply to flex containers:
+  // - flex-direction can swap a flex container between vertical & horizontal.
+  // - align-items can change the sizing of a flex container & the positioning
+  //   of its children.
+  // - flex-wrap changes whether a flex container's children are wrapped, which
+  //   impacts their sizing/positioning and hence impacts the container's size.
   if (mAlignItems != aOther.mAlignItems ||
-      mFlexDirection != aOther.mFlexDirection) {
+      mFlexDirection != aOther.mFlexDirection ||
+      mFlexWrap != aOther.mFlexWrap) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
+
 
   // Changing justify-content on a flexbox might affect the positioning of its
   // children, but it won't affect any sizing.
   if (mJustifyContent != aOther.mJustifyContent) {
+    NS_UpdateHint(hint, nsChangeHint_NeedReflow);
+  }
+
+  // Properties that apply only to multi-line flex containers:
+  // 'align-content' can change the positioning & sizing of a multi-line flex
+  // container's children when there's extra space in the cross axis, but it
+  // shouldn't affect the container's own sizing.
+  //
+  // NOTE: If we get here, we know that mFlexWrap == aOther.mFlexWrap
+  // (otherwise, we would've returned earlier). So it doesn't matter which one
+  // of those we check to see if we're multi-line.
+  if (mFlexWrap != NS_STYLE_FLEX_WRAP_NOWRAP &&
+      mAlignContent != aOther.mAlignContent) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
 
@@ -2399,6 +2420,19 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mResize != aOther.mResize)
     NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
 
+  if ((mAppearance == NS_THEME_TEXTFIELD &&
+       aOther.mAppearance != NS_THEME_TEXTFIELD) ||
+      (mAppearance != NS_THEME_TEXTFIELD &&
+       aOther.mAppearance == NS_THEME_TEXTFIELD)) {
+    // This is for <input type=number> where we allow authors to specify a
+    // |-moz-appearance:textfield| to get a control without a spinner. (The
+    // spinner is present for |-moz-appearance:number-input| but also other
+    // values such as 'none'.) We need to reframe since we want to use
+    // nsTextControlFrame instead of nsNumberControlFrame if the author
+    // specifies 'textfield'.
+    return nsChangeHint_ReconstructFrame;
+  }
+
   if (mFloats != aOther.mFloats) {
     // Changing which side we float on doesn't affect descendants directly
     NS_UpdateHint(hint,
@@ -3187,4 +3221,29 @@ nsChangeHint nsStyleUIReset::CalcDifference(const nsStyleUIReset& aOther) const
   if (mUserSelect != aOther.mUserSelect)
     return NS_STYLE_HINT_VISUAL;
   return NS_STYLE_HINT_NONE;
+}
+
+//-----------------------
+// nsStyleVariables
+//
+
+nsStyleVariables::nsStyleVariables()
+{
+  MOZ_COUNT_CTOR(nsStyleVariables);
+}
+
+nsStyleVariables::nsStyleVariables(const nsStyleVariables& aSource)
+{
+  MOZ_COUNT_CTOR(nsStyleVariables);
+}
+
+nsStyleVariables::~nsStyleVariables(void)
+{
+  MOZ_COUNT_DTOR(nsStyleVariables);
+}
+
+nsChangeHint
+nsStyleVariables::CalcDifference(const nsStyleVariables& aOther) const
+{
+  return nsChangeHint(0);
 }

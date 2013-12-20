@@ -12,7 +12,6 @@
 #include "nsBlockFrame.h"
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include "nsCOMPtr.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -5707,6 +5706,13 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
   }
 }
 
+const nsStyleText*
+nsBlockFrame::StyleTextForLineLayout()
+{
+  // Return the pointer to an unmodified style text
+  return StyleText();
+}
+
 ////////////////////////////////////////////////////////////////////////
 // Float support
 
@@ -6550,7 +6556,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
           nsCSSPseudoElements::GetPseudoAtom(pseudoType))->StyleContext();
       nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
         ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
-                                  parentStyle);
+                                  parentStyle, nullptr);
 
       // Create bullet frame
       nsBulletFrame* bullet = new (shell) nsBulletFrame(kidSC);

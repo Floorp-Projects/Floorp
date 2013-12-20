@@ -28,7 +28,7 @@ void
 TiledLayerBufferComposite::Upload(const BasicTiledLayerBuffer* aMainMemoryTiledBuffer,
                                   const nsIntRegion& aNewValidRegion,
                                   const nsIntRegion& aInvalidateRegion,
-                                  const gfxSize& aResolution)
+                                  const CSSToScreenScale& aResolution)
 {
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
   printf_stderr("Upload %i, %i, %i, %i\n", aInvalidateRegion.GetBounds().x, aInvalidateRegion.GetBounds().y, aInvalidateRegion.GetBounds().width, aInvalidateRegion.GetBounds().height);
@@ -80,13 +80,13 @@ TiledContentHost::PaintedTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                           const SurfaceDescriptorTiles& aTiledDescriptor)
 {
   if (aTiledDescriptor.resolution() < 1) {
-    mLowPrecisionMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor);
+    mLowPrecisionMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor, nullptr);
     mLowPrecisionRegionToUpload.Or(mLowPrecisionRegionToUpload,
                                    mLowPrecisionMainMemoryTiledBuffer.GetPaintedRegion());
     mLowPrecisionMainMemoryTiledBuffer.ClearPaintedRegion();
     mPendingLowPrecisionUpload = true;
   } else {
-    mMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor);
+    mMainMemoryTiledBuffer = BasicTiledLayerBuffer::OpenDescriptor(aAllocator, aTiledDescriptor, nullptr);
     mRegionToUpload.Or(mRegionToUpload, mMainMemoryTiledBuffer.GetPaintedRegion());
     mMainMemoryTiledBuffer.ClearPaintedRegion();
     mPendingUpload = true;
@@ -228,14 +228,13 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     return;
   }
   float resolution = aLayerBuffer.GetResolution();
-  gfxSize layerScale(1, 1);
+  gfx::Size layerScale(1, 1);
   // We assume that the current frame resolution is the one used in our primary
   // layer buffer. Compensate for a changing frame resolution.
   if (aLayerBuffer.GetFrameResolution() != mVideoMemoryTiledBuffer.GetFrameResolution()) {
-    const gfxSize& layerResolution = aLayerBuffer.GetFrameResolution();
-    const gfxSize& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
-    layerScale.width = layerResolution.width / localResolution.width;
-    layerScale.height = layerResolution.height / localResolution.height;
+    const CSSToScreenScale& layerResolution = aLayerBuffer.GetFrameResolution();
+    const CSSToScreenScale& localResolution = mVideoMemoryTiledBuffer.GetFrameResolution();
+    layerScale.width = layerScale.height = layerResolution.scale / localResolution.scale;
     aVisibleRect.ScaleRoundOut(layerScale.width, layerScale.height);
   }
   aTransform.Scale(1/(resolution * layerScale.width),

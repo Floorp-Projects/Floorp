@@ -278,7 +278,7 @@ AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec
          */
         JS_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
         bool aliased = dn->isClosed() ||
-                       (pc->sc->bindingsAccessedDynamically() &&
+                       (pc->sc->allLocalsAliased() &&
                         pc->decls().lookupFirst(name) == dn);
 
         *dst = Binding(name, kind, aliased);
@@ -847,7 +847,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun, const AutoN
                                          generatorKind);
     if (!funbox)
         return null();
-    funbox->length = fun->nargs - fun->hasRest();
+    funbox->length = fun->nargs() - fun->hasRest();
     handler.setFunctionBox(fn, funbox);
 
     ParseContext<FullParseHandler> funpc(this, pc, fn, funbox, newDirectives,
@@ -2212,7 +2212,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, unsigned st
                                          generatorKind);
     if (!funbox)
         return null();
-    funbox->length = fun->nargs - fun->hasRest();
+    funbox->length = fun->nargs() - fun->hasRest();
 
     Directives newDirectives = directives;
     ParseContext<FullParseHandler> funpc(this, /* parent = */ nullptr, pn, funbox,
@@ -2265,11 +2265,11 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(Node pn, HandleFunction fun, Fu
     if (hasRest)
         fun->setHasRest();
 
-    if (type == Getter && fun->nargs > 0) {
+    if (type == Getter && fun->nargs() > 0) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "getter", "no", "s");
         return false;
     }
-    if (type == Setter && fun->nargs != 1) {
+    if (type == Setter && fun->nargs() != 1) {
         report(ParseError, false, null(), JSMSG_ACCESSOR_WRONG_ARGS, "setter", "one", "");
         return false;
     }
@@ -2853,17 +2853,18 @@ Parser<ParseHandler>::bindVarOrConst(BindData<ParseHandler> *data,
         if (pc->sc->isFunctionBox()) {
             FunctionBox *funbox = pc->sc->asFunctionBox();
             funbox->setMightAliasLocals();
-
-            /*
-             * This definition isn't being added to the parse context's
-             * declarations, so make sure to indicate the need to deoptimize
-             * the script's arguments object. Mark the function as if it
-             * contained a debugger statement, which will deoptimize arguments
-             * as much as possible.
-             */
-            if (name == cx->names().arguments)
-                funbox->setHasDebuggerStatement();
         }
+
+        /*
+         * This definition isn't being added to the parse context's
+         * declarations, so make sure to indicate the need to deoptimize
+         * the script's arguments object. Mark the function as if it
+         * contained a debugger statement, which will deoptimize arguments
+         * as much as possible.
+         */
+        if (name == cx->names().arguments)
+            pc->sc->setHasDebuggerStatement();
+
         return true;
     }
 
@@ -3231,7 +3232,6 @@ Parser<FullParseHandler>::pushLetScope(HandleStaticBlockObject blockObj, StmtInf
     if (!pn)
         return null();
 
-    /* Tell codegen to emit JSOP_ENTERLETx (not JSOP_ENTERBLOCK). */
     pn->pn_dflags |= PND_LET;
 
     /* Populate the new scope with decls found in the head with updated blockid. */
@@ -3601,7 +3601,7 @@ Parser<FullParseHandler>::letDeclaration()
             if (!pn1)
                 return null();
 
-            pn1->setOp(JSOP_LEAVEBLOCK);
+            pn1->setOp(JSOP_POPN);
             pn1->pn_pos = pc->blockNode->pn_pos;
             pn1->pn_objbox = blockbox;
             pn1->pn_expr = pc->blockNode;
@@ -3637,8 +3637,8 @@ Parser<FullParseHandler>::letStatement()
     if (tokenStream.peekToken() == TOK_LP) {
         pn = letBlock(LetStatement);
         JS_ASSERT_IF(pn, pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
-        JS_ASSERT_IF(pn && pn->isKind(PNK_LET) && pn->pn_expr->getOp() != JSOP_LEAVEBLOCK,
-                     pn->isOp(JSOP_NOP));
+        JS_ASSERT_IF(pn && pn->isKind(PNK_LET) && pn->pn_expr->getOp() != JSOP_POPNV,
+                     pn->pn_expr->isOp(JSOP_POPN));
     } else 
         pn = letDeclaration();
     return pn;
@@ -6718,16 +6718,21 @@ Parser<ParseHandler>::arrayInitializer()
          *
          * Each let () {...} or for (let ...) ... compiles to:
          *
-         *   JSOP_ENTERBLOCK <o> ... JSOP_LEAVEBLOCK <n>
+         *   JSOP_PUSHN <N>            // Push space for block-scoped locals.
+         *   (JSOP_PUSHBLOCKSCOPE <O>) // If a local is aliased, push on scope
+         *                             // chain.
+         *   ...
+         *   JSOP_DEBUGLEAVEBLOCK      // Invalidate any DebugScope proxies.
+         *   JSOP_POPBLOCKSCOPE?       // Pop off scope chain, if needed.
+         *   JSOP_POPN <N>             // Pop space for block-scoped locals.
          *
          * where <o> is a literal object representing the block scope,
          * with <n> properties, naming each var declared in the block.
          *
-         * Each var declaration in a let-block binds a name in <o> at
-         * compile time, and allocates a slot on the operand stack at
-         * runtime via JSOP_ENTERBLOCK. A block-local var is accessed by
-         * the JSOP_GETLOCAL and JSOP_SETLOCAL ops. These ops have an
-         * immediate operand, the local slot's stack index from fp->spbase.
+         * Each var declaration in a let-block binds a name in <o> at compile
+         * time. A block-local var is accessed by the JSOP_GETLOCAL and
+         * JSOP_SETLOCAL ops. These ops have an immediate operand, the local
+         * slot's stack index from fp->spbase.
          *
          * The array comprehension iteration step, array.push(i * j) in
          * the example above, is done by <i * j>; JSOP_ARRAYPUSH <array>,

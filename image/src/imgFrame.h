@@ -53,8 +53,8 @@ public:
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
   uint32_t* GetPaletteData() const;
 
-  int32_t GetTimeout() const;
-  void SetTimeout(int32_t aTimeout);
+  int32_t GetRawTimeout() const;
+  void SetRawTimeout(int32_t aTimeout);
 
   int32_t GetFrameDisposalMethod() const;
   void SetFrameDisposalMethod(int32_t aFrameDisposalMethod);

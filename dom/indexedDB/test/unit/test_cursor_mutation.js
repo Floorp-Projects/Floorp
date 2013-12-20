@@ -111,5 +111,8 @@ function testSteps()
   is(sawRemoved, false, "Didn't see item that was removed");
 
   finishTest();
+
+  objectStore = null; // Bug 943409 workaround.
+
   yield undefined;
 }

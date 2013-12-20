@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nscore.h"
 
@@ -384,7 +384,7 @@ nsXPLookAndFeel::InitColorFromPref(int32_t i)
 }
 
 // static
-int
+void
 nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure)
 {
 
@@ -395,25 +395,23 @@ nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure)
   for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
     if (prefName.Equals(sIntPrefs[i].name)) {
       IntPrefChanged(&sIntPrefs[i]);
-      return 0;
+      return;
     }
   }
 
   for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
     if (prefName.Equals(sFloatPrefs[i].name)) {
       FloatPrefChanged(&sFloatPrefs[i]);
-      return 0;
+      return;
     }
   }
 
   for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
     if (prefName.Equals(sColorPrefs[i])) {
       ColorPrefChanged(i, sColorPrefs[i]);
-      return 0;
+      return;
     }
   }
-
-  return 0;
 }
 
 //

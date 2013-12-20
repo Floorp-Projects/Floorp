@@ -344,9 +344,7 @@ NPVariantToJSVal(NPP npp, JSContext *cx, const NPVariant *variant)
       NS_ConvertUTF8toUTF16 utf16String(s->UTF8Characters, s->UTF8Length);
 
       JSString *str =
-        ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar*>
-                                                  (utf16String.get()),
-                              utf16String.Length());
+        ::JS_NewUCStringCopyN(cx, utf16String.get(), utf16String.Length());
 
       if (str) {
         return STRING_TO_JSVAL(str);
@@ -471,8 +469,7 @@ ThrowJSException(JSContext *cx, const char *message)
       AppendASCIItoUTF16("].", ucex);
     }
 
-    JSString *str = ::JS_NewUCStringCopyN(cx, (jschar *)ucex.get(),
-                                          ucex.Length());
+    JSString *str = ::JS_NewUCStringCopyN(cx, ucex.get(), ucex.Length());
 
     if (str) {
       JS::Rooted<JS::Value> exn(cx, JS::StringValue(str));
@@ -1010,15 +1007,12 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
     }
   }
 
-  nsJSObjWrapperKey key(obj, npp);
-
-  JSObjWrapperTable::AddPtr p = sJSObjWrappers.lookupForAdd(key);
-
-  if (p/* && p->value*/) {
-    MOZ_ASSERT(p->value);
+  JSObjWrapperTable::Ptr p = sJSObjWrappers.lookupForAdd(nsJSObjWrapperKey(obj, npp));
+  if (p) {
+    MOZ_ASSERT(p->value());
     // Found a live nsJSObjWrapper, return it.
 
-    return _retainobject(p->value);
+    return _retainobject(p->value());
   }
 
   // No existing nsJSObjWrapper, create one.
@@ -1033,7 +1027,8 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 
   wrapper->mJSObj = obj;
 
-  if (!sJSObjWrappers.add(p, key, wrapper)) {
+  nsJSObjWrapperKey key(obj, npp);
+  if (!sJSObjWrappers.putNew(key, wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
     return nullptr;
@@ -1873,7 +1868,7 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
 {
   if (sJSObjWrappers.initialized()) {
     for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
-      nsJSObjWrapper *npobj = e.front().value;
+      nsJSObjWrapper *npobj = e.front().value();
       MOZ_ASSERT(npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass);
       if (npobj->mNpp == npp) {
         npobj->ClearJSObject();

@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'JavaScriptChild.cpp',
     'JavaScriptParent.cpp',
     'JavaScriptShared.cpp',
@@ -20,3 +20,5 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']

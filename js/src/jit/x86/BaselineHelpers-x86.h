@@ -26,6 +26,12 @@ EmitRestoreTailCallReg(MacroAssembler &masm)
 }
 
 inline void
+EmitRepushTailCallReg(MacroAssembler &masm)
+{
+    masm.push(BaselineTailCallReg);
+}
+
+inline void
 EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
 {
     // Move ICEntry offset into BaselineStubReg
@@ -66,7 +72,7 @@ EmitChangeICReturnAddress(MacroAssembler &masm, Register reg)
 }
 
 inline void
-EmitTailCallVM(IonCode *target, MacroAssembler &masm, uint32_t argSize)
+EmitTailCallVM(JitCode *target, MacroAssembler &masm, uint32_t argSize)
 {
     // We assume during this that R0 and R1 have been pushed.
 
@@ -100,7 +106,7 @@ EmitCreateStubFrameDescriptor(MacroAssembler &masm, Register reg)
 }
 
 inline void
-EmitCallVM(IonCode *target, MacroAssembler &masm)
+EmitCallVM(JitCode *target, MacroAssembler &masm)
 {
     EmitCreateStubFrameDescriptor(masm, eax);
     masm.push(eax);
@@ -188,28 +194,35 @@ EmitStowICValues(MacroAssembler &masm, int values)
 }
 
 inline void
-EmitUnstowICValues(MacroAssembler &masm, int values)
+EmitUnstowICValues(MacroAssembler &masm, int values, bool discard = false)
 {
     JS_ASSERT(values >= 0 && values <= 2);
     switch(values) {
       case 1:
         // Unstow R0
         masm.pop(BaselineTailCallReg);
-        masm.popValue(R0);
+        if (discard)
+            masm.addPtr(Imm32(sizeof(Value)), BaselineStackReg);
+        else
+            masm.popValue(R0);
         masm.push(BaselineTailCallReg);
         break;
       case 2:
         // Unstow R0 and R1
         masm.pop(BaselineTailCallReg);
-        masm.popValue(R1);
-        masm.popValue(R0);
+        if (discard) {
+            masm.addPtr(Imm32(sizeof(Value) * 2), BaselineStackReg);
+        } else {
+            masm.popValue(R1);
+            masm.popValue(R0);
+        }
         masm.push(BaselineTailCallReg);
         break;
     }
 }
 
 inline void
-EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
+EmitCallTypeUpdateIC(MacroAssembler &masm, JitCode *code, uint32_t objectOffset)
 {
     // R0 contains the value that needs to be typechecked.
     // The object we're updating is a boxed Value on the stack, at offset

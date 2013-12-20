@@ -5,6 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsUXThemeConstants_h
+#define nsUXThemeConstants_h
+
 /* 
  * The following constants are used to determine how a widget is drawn using
  * Windows' Theme API. For more information on theme parts and states see
@@ -244,3 +247,5 @@ enum {
 };
 
 }}} // mozilla::widget::themeconst
+
+#endif

@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(496b4450-5757-40f7-aeb9-a958ae86dbd1)]
+[scriptable, uuid(148f57d3-51df-4e5c-a40b-7ae5ee76188e)]
 interface nsIWinMetroUtils : nsISupports
 {
   /**
@@ -25,6 +25,13 @@ interface nsIWinMetroUtils : nsISupports
    * Determine the activation URI
    */
   readonly attribute AString activationURI;
+
+  /**
+   * Determine the previous execution state. The possible values of this
+   * attribute are exactly those values in the
+   * Windows::ApplicationModel::Activation enumeration.
+   */
+  readonly attribute long previousExecutionState;
 
    /**
     * Show the settings flyout
@@ -83,29 +90,6 @@ interface nsIWinMetroUtils : nsISupports
    * @return true if the tile is pinned
    */
   bool isTilePinned(in AString aTileID);
-
-  /**
-   * Stores the sync info securely
-   *
-   * @param aEmail The sync account email
-   * @param aPassword The sync account password
-   * @param aKey The sync account key
-   */
-  void storeSyncInfo(in AString aEmail, in AString aPassword, in AString aKey);
-
-  /**
-   * Loads the sync info
-   *
-   * @param aEmail The sync account email
-   * @param aPassword The sync account password
-   * @param aKey The sync account key
-   */
-  void loadSyncInfo(out AString aEmail, out AString aPassword, out AString aKey);
-
-  /**
-   * Clears the stored sync info if any.
-   */
-  void clearSyncInfo();
 
   /**
    * Soft keyboard attributes. Used in unison with shown/hidden observer

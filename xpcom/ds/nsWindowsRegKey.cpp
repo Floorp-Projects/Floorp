@@ -158,7 +158,7 @@ nsWindowsRegKey::GetChildName(uint32_t index, nsAString &result)
 
   FILETIME lastWritten;
 
-  PRUnichar nameBuf[MAX_KEY_NAME_LEN + 1];
+  wchar_t nameBuf[MAX_KEY_NAME_LEN + 1];
   DWORD nameLen = sizeof(nameBuf) / sizeof(nameBuf[0]);
 
   LONG rv = RegEnumKeyExW(mKey, index, nameBuf, &nameLen, nullptr, nullptr,
@@ -213,7 +213,7 @@ nsWindowsRegKey::GetValueName(uint32_t index, nsAString &result)
   if (NS_WARN_IF(!mKey))
     return NS_ERROR_NOT_INITIALIZED;
 
-  PRUnichar nameBuf[MAX_VALUE_NAME_LEN];
+  wchar_t nameBuf[MAX_VALUE_NAME_LEN];
   DWORD nameLen = sizeof(nameBuf) / sizeof(nameBuf[0]);
 
   LONG rv = RegEnumValueW(mKey, index, nameBuf, &nameLen, nullptr, nullptr,

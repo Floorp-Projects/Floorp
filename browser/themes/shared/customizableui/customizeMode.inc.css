@@ -104,17 +104,6 @@ toolbarpaletteitem[place="toolbar"] {
   margin-bottom: 25px;
 }
 
-#customization-palette > #wrapper-edit-controls,
-#customization-palette > #wrapper-zoom-controls {
-  width: 225px;
-}
-
-#wrapper-edit-controls[place="palette"] > .toolbarpaletteitem-box,
-#wrapper-zoom-controls[place="palette"] > .toolbarpaletteitem-box {
-  width: 225px;
-  max-width: 225px;
-}
-
 #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
 #wrapper-edit-controls[place="palette"] > #edit-controls > separator,
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton,
@@ -126,21 +115,25 @@ toolbarpaletteitem[place="toolbar"] {
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton {
   margin-left: 0;
   margin-right: 0;
-  max-width: 70px;
-  min-width: 70px;
+  max-width: 24px;
+  min-width: 24px;
   max-height: 24px;
   height: 24px;
-}
-
-#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-text,
-#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button > .toolbarbutton-text {
-  display: inline;
+  padding: 4px;
 }
 
 #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
 #wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
-  margin: 0;
-  -moz-margin-start: 5px;
+  width: 16px;
+}
+
+#wrapper-edit-controls > #edit-controls > toolbarbutton > .toolbarbutton-icon {
+  opacity: 1; /* To ensure these buttons always look enabled in customize mode */
+}
+
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button,
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button + separator {
+  display: none;
 }
 
 #customization-palette > toolbarpaletteitem > label {

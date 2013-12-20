@@ -7,8 +7,10 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.gfx.DisplayPortMetrics;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
+import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -36,11 +38,13 @@ import java.nio.ByteBuffer;
 /* This class is referenced by Robocop via reflection; use care when
  * modifying the signature.
  */
+@JNITarget
 public class GeckoEvent {
     private static final String LOGTAG = "GeckoEvent";
 
     // Make sure to keep these values in sync with the enum in
-    // AndroidGeckoEvent in widget/android/AndroidJavaWrapper.h
+    // AndroidGeckoEvent in widget/android/AndroidJavaWrappers.h
+    @JNITarget
     private enum NativeGeckoEvent {
         NATIVE_POKE(0),
         KEY_EVENT(1),
@@ -72,13 +76,16 @@ public class GeckoEvent {
         TELEMETRY_HISTOGRAM_ADD(37),
         PREFERENCES_OBSERVE(39),
         PREFERENCES_GET(40),
-        PREFERENCES_REMOVE_OBSERVERS(41);
+        PREFERENCES_REMOVE_OBSERVERS(41),
+        TELEMETRY_UI_SESSION_START(42),
+        TELEMETRY_UI_SESSION_STOP(43),
+        TELEMETRY_UI_EVENT(44);
 
         public final int value;
 
         private NativeGeckoEvent(int value) {
             this.value = value;
-         }
+        }
     }
 
     /**
@@ -103,6 +110,7 @@ public class GeckoEvent {
     }
 
     // Encapsulation of common IME actions.
+    @JNITarget
     public enum ImeAction {
         IME_SYNCHRONIZE(0),
         IME_REPLACE_TEXT(1),
@@ -161,6 +169,7 @@ public class GeckoEvent {
     private int mKeyCode;
     private int mUnicodeChar;
     private int mBaseUnicodeChar; // mUnicodeChar without meta states applied
+    private int mDOMPrintableKeyValue;
     private int mRepeatCount;
     private int mCount;
     private int mStart;
@@ -248,6 +257,17 @@ public class GeckoEvent {
         mBaseUnicodeChar = k.getUnicodeChar(0);
         mRepeatCount = k.getRepeatCount();
         mCharacters = k.getCharacters();
+        if (mUnicodeChar >= ' ') {
+            mDOMPrintableKeyValue = mUnicodeChar;
+        } else {
+            int unmodifiedMetaState =
+                mMetaState & ~(KeyEvent.META_ALT_MASK |
+                               KeyEvent.META_CTRL_MASK |
+                               KeyEvent.META_META_MASK);
+            if (unmodifiedMetaState != mMetaState) {
+                mDOMPrintableKeyValue = k.getUnicodeChar(unmodifiedMetaState);
+            }
+        }
         mDomKeyLocation = isJoystickButton(mKeyCode) ? DomKeyLocation.DOM_KEY_LOCATION_JOYSTICK
                                                      : DomKeyLocation.DOM_KEY_LOCATION_MOBILE;
     }
@@ -608,6 +628,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createBroadcastEvent(String subject, String data) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.BROADCAST);
         event.mCharacters = subject;
@@ -698,6 +719,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesObserveEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_OBSERVE);
         event.mCount = requestId;
@@ -705,6 +727,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesGetEvent(int requestId, String[] prefNames) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_GET);
         event.mCount = requestId;
@@ -712,6 +735,7 @@ public class GeckoEvent {
         return event;
     }
 
+    @RobocopTarget
     public static GeckoEvent createPreferencesRemoveObserversEvent(int requestId) {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.PREFERENCES_REMOVE_OBSERVERS);
         event.mCount = requestId;
@@ -735,6 +759,30 @@ public class GeckoEvent {
         GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
         event.mCharacters = histogram;
         event.mCount = value;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUISessionStartEvent(String session, long timestamp) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_SESSION_START);
+        event.mCharacters = session;
+        event.mTime = timestamp;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUISessionStopEvent(String session, String reason, long timestamp) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_SESSION_STOP);
+        event.mCharacters = session;
+        event.mCharactersExtra = reason;
+        event.mTime = timestamp;
+        return event;
+    }
+
+    public static GeckoEvent createTelemetryUIEvent(String action, String method, long timestamp, String extras) {
+        GeckoEvent event = new GeckoEvent(NativeGeckoEvent.TELEMETRY_UI_EVENT);
+        event.mData = action;
+        event.mCharacters = method;
+        event.mCharactersExtra = extras;
+        event.mTime = timestamp;
         return event;
     }
 

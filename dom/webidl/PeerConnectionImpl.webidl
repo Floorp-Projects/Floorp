@@ -46,7 +46,8 @@ interface PeerConnectionImpl  {
 
   /* Adds the stream created by GetUserMedia */
   [Throws]
-  void addStream(MediaStream stream);
+  void addStream(MediaStream stream,
+                 optional MediaConstraintsInternal constraints);
   [Throws]
   void removeStream(MediaStream stream);
   [Throws]
@@ -67,6 +68,7 @@ interface PeerConnectionImpl  {
   void close();
 
   /* Attributes */
+  readonly attribute DOMString fingerprint;
   readonly attribute DOMString localDescription;
   readonly attribute DOMString remoteDescription;
 

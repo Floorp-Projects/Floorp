@@ -34,6 +34,7 @@ const EVENTS = {
   FETCHED_SCOPES: "Debugger:FetchedScopes",
   FETCHED_VARIABLES: "Debugger:FetchedVariables",
   FETCHED_PROPERTIES: "Debugger:FetchedProperties",
+  FETCHED_BUBBLE_PROPERTIES: "Debugger:FetchedBubbleProperties",
   FETCHED_WATCH_EXPRESSIONS: "Debugger:FetchedWatchExpressions",
 
   // When a breakpoint has been added or removed on the debugger server.
@@ -75,6 +76,14 @@ const EVENTS = {
   LAYOUT_CHANGED: "Debugger:LayoutChanged"
 };
 
+// Descriptions for what a stack frame represents after the debugger pauses.
+const FRAME_TYPE = {
+  NORMAL: 0,
+  CONDITIONAL_BREAKPOINT_EVAL: 1,
+  WATCH_EXPRESSIONS_EVAL: 2,
+  PUBLIC_CLIENT_EVAL: 3
+};
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
@@ -86,9 +95,11 @@ Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
-const Editor = require("devtools/sourceeditor/editor");
 const promise = require("sdk/core/promise");
+const Editor = require("devtools/sourceeditor/editor");
 const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
+const FastListWidget = require("devtools/shared/widgets/FastListWidget");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
   "resource:///modules/devtools/Parser.jsm");
@@ -182,6 +193,7 @@ let DebuggerController = {
       this.SourceScripts.disconnect();
       this.StackFrames.disconnect();
       this.ThreadState.disconnect();
+      this.Tracer.disconnect();
       this.disconnect();
 
       // Chrome debugging needs to close its parent process on shutdown.
@@ -208,39 +220,44 @@ let DebuggerController = {
       return this._connection;
     }
 
-    let deferred = promise.defer();
-    this._connection = deferred.promise;
+    let startedDebugging = promise.defer();
+    this._connection = startedDebugging.promise;
 
     if (!window._isChromeDebugger) {
       let target = this._target;
-      let { client, form: { chromeDebugger }, threadActor } = target;
+      let { client, form: { chromeDebugger, traceActor }, threadActor } = target;
       target.on("close", this._onTabDetached);
       target.on("navigate", this._onTabNavigated);
       target.on("will-navigate", this._onTabNavigated);
+      this.client = client;
 
       if (target.chrome) {
-        this._startChromeDebugging(client, chromeDebugger, deferred.resolve);
+        this._startChromeDebugging(chromeDebugger, startedDebugging.resolve);
       } else {
-        this._startDebuggingTab(client, threadActor, deferred.resolve);
+        this._startDebuggingTab(threadActor, startedDebugging.resolve);
+        const startedTracing = promise.defer();
+        this._startTracingTab(traceActor, startedTracing.resolve);
+
+        return promise.all([startedDebugging.promise, startedTracing.promise]);
       }
 
-      return deferred.promise;
+      return startedDebugging.promise;
     }
 
     // Chrome debugging needs to make its own connection to the debuggee.
     let transport = debuggerSocketConnect(
       Prefs.chromeDebuggingHost, Prefs.chromeDebuggingPort);
 
-    let client = new DebuggerClient(transport);
+    let client = this.client = new DebuggerClient(transport);
     client.addListener("tabNavigated", this._onTabNavigated);
     client.addListener("tabDetached", this._onTabDetached);
     client.connect(() => {
       client.listTabs(aResponse => {
-        this._startChromeDebugging(client, aResponse.chromeDebugger, deferred.resolve);
+        this._startChromeDebugging(aResponse.chromeDebugger, startedDebugging.resolve);
       });
     });
 
-    return deferred.promise;
+    return startedDebugging.promise;
   },
 
   /**
@@ -321,21 +338,13 @@ let DebuggerController = {
   /**
    * Sets up a debugging session.
    *
-   * @param DebuggerClient aClient
-   *        The debugger client.
    * @param string aThreadActor
    *        The remote protocol grip of the tab.
    * @param function aCallback
-   *        A function to invoke once the client attached to the active thread.
+   *        A function to invoke once the client attaches to the active thread.
    */
-  _startDebuggingTab: function(aClient, aThreadActor, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachThread(aThreadActor, (aResponse, aThreadClient) => {
+  _startDebuggingTab: function(aThreadActor, aCallback) {
+    this.client.attachThread(aThreadActor, (aResponse, aThreadClient) => {
       if (!aThreadClient) {
         Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
@@ -356,21 +365,13 @@ let DebuggerController = {
   /**
    * Sets up a chrome debugging session.
    *
-   * @param DebuggerClient aClient
-   *        The debugger client.
    * @param object aChromeDebugger
    *        The remote protocol grip of the chrome debugger.
    * @param function aCallback
-   *        A function to invoke once the client attached to the active thread.
+   *        A function to invoke once the client attaches to the active thread.
    */
-  _startChromeDebugging: function(aClient, aChromeDebugger, aCallback) {
-    if (!aClient) {
-      Cu.reportError("No client found!");
-      return;
-    }
-    this.client = aClient;
-
-    aClient.attachThread(aChromeDebugger, (aResponse, aThreadClient) => {
+  _startChromeDebugging: function(aChromeDebugger, aCallback) {
+    this.client.attachThread(aChromeDebugger, (aResponse, aThreadClient) => {
       if (!aThreadClient) {
         Cu.reportError("Couldn't attach to thread: " + aResponse.error);
         return;
@@ -386,6 +387,30 @@ let DebuggerController = {
         aCallback();
       }
     }, { useSourceMaps: Prefs.sourceMapsEnabled });
+  },
+
+  /**
+   * Sets up an execution tracing session.
+   *
+   * @param object aTraceActor
+   *        The remote protocol grip of the trace actor.
+   * @param function aCallback
+   *        A function to invoke once the client attaches to the tracer.
+   */
+  _startTracingTab: function(aTraceActor, aCallback) {
+    this.client.attachTracer(aTraceActor, (response, traceClient) => {
+      if (!traceClient) {
+        DevToolsUtils.reportError(new Error("Failed to attach to tracing actor."));
+        return;
+      }
+
+      this.traceClient = traceClient;
+      this.Tracer.connect();
+
+      if (aCallback) {
+        aCallback();
+      }
+    });
   },
 
   /**
@@ -521,8 +546,7 @@ function StackFrames() {
 StackFrames.prototype = {
   get activeThread() DebuggerController.activeThread,
   currentFrameDepth: -1,
-  _isWatchExpressionsEvaluation: false,
-  _isConditionalBreakpointEvaluation: false,
+  _currentFrameDescription: FRAME_TYPE.NORMAL,
   _syncedWatchExpressions: null,
   _currentWatchExpressions: null,
   _currentBreakpointLocation: null,
@@ -558,6 +582,7 @@ StackFrames.prototype = {
     this.activeThread.removeListener("framescleared", this._onFramesCleared);
     this.activeThread.removeListener("blackboxchange", this._onBlackBoxChange);
     this.activeThread.removeListener("prettyprintchange", this._onPrettyPrintChange);
+    clearNamedTimeout("frames-cleared");
   },
 
   /**
@@ -611,10 +636,8 @@ StackFrames.prototype = {
    * Handler for the thread client's resumed notification.
    */
   _onResumed: function() {
-    DebuggerView.editor.clearDebugLocation();
-
     // Prepare the watch expression evaluation string for the next pause.
-    if (!this._isWatchExpressionsEvaluation) {
+    if (this._currentFrameDescription != FRAME_TYPE.WATCH_EXPRESSIONS_EVAL) {
       this._currentWatchExpressions = this._syncedWatchExpressions;
     }
   },
@@ -640,16 +663,13 @@ StackFrames.prototype = {
       // Make sure a breakpoint actually exists at the specified url and line.
       let breakpointPromise = DebuggerController.Breakpoints._getAdded(breakLocation);
       if (breakpointPromise) {
-        breakpointPromise.then(aBreakpointClient => {
-          if ("conditionalExpression" in aBreakpointClient) {
-            // Evaluating the current breakpoint's conditional expression will
-            // cause the stack frames to be cleared and active thread to pause,
-            // sending a 'clientEvaluated' packed and adding the frames again.
-            this.evaluate(aBreakpointClient.conditionalExpression, 0);
-            this._isConditionalBreakpointEvaluation = true;
-            waitForNextPause = true;
-          }
-        });
+        breakpointPromise.then(({ conditionalExpression: e }) => { if (e) {
+          // Evaluating the current breakpoint's conditional expression will
+          // cause the stack frames to be cleared and active thread to pause,
+          // sending a 'clientEvaluated' packed and adding the frames again.
+          this.evaluate(e, { depth: 0, meta: FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL });
+          waitForNextPause = true;
+        }});
       }
     }
     // We'll get our evaluation of the current breakpoint's conditional
@@ -657,8 +677,8 @@ StackFrames.prototype = {
     if (waitForNextPause) {
       return;
     }
-    if (this._isConditionalBreakpointEvaluation) {
-      this._isConditionalBreakpointEvaluation = false;
+    if (this._currentFrameDescription == FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
       // If the breakpoint's conditional expression evaluation is falsy,
       // automatically resume execution.
       if (VariablesView.isFalsy({ value: this._currentEvaluation.return })) {
@@ -673,8 +693,7 @@ StackFrames.prototype = {
     if (watchExpressions) {
       // Evaluation causes the stack frames to be cleared and active thread to
       // pause, sending a 'clientEvaluated' packet and adding the frames again.
-      this.evaluate(watchExpressions, 0);
-      this._isWatchExpressionsEvaluation = true;
+      this.evaluate(watchExpressions, { depth: 0, meta: FRAME_TYPE.WATCH_EXPRESSIONS_EVAL });
       waitForNextPause = true;
     }
     // We'll get our evaluation of the current watch expressions the next time
@@ -682,8 +701,8 @@ StackFrames.prototype = {
     if (waitForNextPause) {
       return;
     }
-    if (this._isWatchExpressionsEvaluation) {
-      this._isWatchExpressionsEvaluation = false;
+    if (this._currentFrameDescription == FRAME_TYPE.WATCH_EXPRESSIONS_EVAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
       // If an error was thrown during the evaluation of the watch expressions,
       // then at least one expression evaluation could not be performed. So
       // remove the most recent watch expression and try again.
@@ -697,6 +716,11 @@ StackFrames.prototype = {
     // Make sure the debugger view panes are visible, then refill the frames.
     DebuggerView.showInstrumentsPane();
     this._refillFrames();
+
+    // No additional processing is necessary for this stack frame.
+    if (this._currentFrameDescription != FRAME_TYPE.NORMAL) {
+      this._currentFrameDescription = FRAME_TYPE.NORMAL;
+    }
   },
 
   /**
@@ -714,29 +738,34 @@ StackFrames.prototype = {
       let title = StackFrameUtils.getFrameTitle(frame);
       DebuggerView.StackFrames.addFrame(title, location, line, depth, isBlackBoxed);
     }
-    if (this.currentFrameDepth == -1) {
-      DebuggerView.StackFrames.selectedDepth = 0;
-    }
-    if (this.activeThread.moreFrames) {
-      DebuggerView.StackFrames.dirty = true;
-    }
+
+    DebuggerView.StackFrames.selectedDepth = Math.max(this.currentFrameDepth, 0);
+    DebuggerView.StackFrames.dirty = this.activeThread.moreFrames;
   },
 
   /**
    * Handler for the thread client's framescleared notification.
    */
   _onFramesCleared: function() {
-    this.currentFrameDepth = -1;
-    this._currentWatchExpressions = null;
-    this._currentBreakpointLocation = null;
-    this._currentEvaluation = null;
-    this._currentException = null;
-    this._currentReturnedValue = null;
+    switch (this._currentFrameDescription) {
+      case FRAME_TYPE.NORMAL:
+        this._currentEvaluation = null;
+        this._currentException = null;
+        this._currentReturnedValue = null;
+        break;
+      case FRAME_TYPE.CONDITIONAL_BREAKPOINT_EVAL:
+        this._currentBreakpointLocation = null;
+        break;
+      case FRAME_TYPE.WATCH_EXPRESSIONS_EVAL:
+        this._currentWatchExpressions = null;
+        break;
+    }
+
     // After each frame step (in, over, out), framescleared is fired, which
     // forces the UI to be emptied and rebuilt on framesadded. Most of the times
     // this is not necessary, and will result in a brief redraw flicker.
     // To avoid it, invalidate the UI only after a short time if necessary.
-    window.setTimeout(this._afterFramesCleared, FRAME_STEP_CLEAR_DELAY);
+    setNamedTimeout("frames-cleared", FRAME_STEP_CLEAR_DELAY, this._afterFramesCleared);
   },
 
   /**
@@ -744,6 +773,8 @@ StackFrames.prototype = {
    */
   _onBlackBoxChange: function() {
     if (this.activeThread.state == "paused") {
+      // Hack to avoid selecting the topmost frame after blackboxing a source.
+      this.currentFrameDepth = NaN;
       this._refillFrames();
     }
   },
@@ -765,6 +796,7 @@ StackFrames.prototype = {
     if (this.activeThread.cachedFrames.length) {
       return;
     }
+    DebuggerView.editor.clearDebugLocation();
     DebuggerView.StackFrames.empty();
     DebuggerView.Sources.unhighlightBreakpoint();
     DebuggerView.WatchExpressions.toggleContents(true);
@@ -779,10 +811,8 @@ StackFrames.prototype = {
    *
    * @param number aDepth
    *        The depth of the frame in the stack.
-   * @param boolean aDontSwitchSources
-   *        Flag on whether or not we want to switch the selected source.
    */
-  selectFrame: function(aDepth, aDontSwitchSources) {
+  selectFrame: function(aDepth) {
     // Make sure the frame at the specified depth exists first.
     let frame = this.activeThread.cachedFrames[this.currentFrameDepth = aDepth];
     if (!frame) {
@@ -795,15 +825,22 @@ StackFrames.prototype = {
       return;
     }
 
-    // Move the editor's caret to the proper url and line.
-    DebuggerView.setEditorLocation(where.url, where.line);
-    // Highlight the breakpoint at the specified url and line if it exists.
-    DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
+    // Don't change the editor's location if the execution was paused by a
+    // public client evaluation. This is useful for adding overlays on
+    // top of the editor, like a variable inspection popup.
+    if (this._currentFrameDescription != FRAME_TYPE.PUBLIC_CLIENT_EVAL) {
+      // Move the editor's caret to the proper url and line.
+      DebuggerView.setEditorLocation(where.url, where.line);
+      // Highlight the breakpoint at the specified url and line if it exists.
+      DebuggerView.Sources.highlightBreakpoint(where, { noEditorUpdate: true });
+    }
+
     // Don't display the watch expressions textbox inputs in the pane.
     DebuggerView.WatchExpressions.toggleContents(false);
-    // Start recording any added variables or properties in any scope.
+
+    // Start recording any added variables or properties in any scope and
+    // clear existing scopes to create each one dynamically.
     DebuggerView.Variables.createHierarchy();
-    // Clear existing scopes and create each one dynamically.
     DebuggerView.Variables.empty();
 
     // If watch expressions evaluation results are available, create a scope
@@ -870,14 +907,42 @@ StackFrames.prototype = {
    *
    * @param string aExpression
    *        The expression to evaluate.
-   * @param number aFrame [optional]
-   *        The frame depth used for evaluation.
+   * @param object aOptions [optional]
+   *        Additional options for this client evaluation:
+   *          - depth: the frame depth used for evaluation, 0 being the topmost.
+   *          - meta: some meta-description for what this evaluation represents.
+   * @return object
+   *         A promise that is resolved when the evaluation finishes,
+   *         or rejected if there was no stack frame available or some
+   *         other error occurred.
    */
-  evaluate: function(aExpression, aFrame = this.currentFrameDepth) {
-    let frame = this.activeThread.cachedFrames[aFrame];
-    if (frame) {
-      this.activeThread.eval(frame.actor, aExpression);
+  evaluate: function(aExpression, aOptions = {}) {
+    let depth = "depth" in aOptions ? aOptions.depth : this.currentFrameDepth;
+    let frame = this.activeThread.cachedFrames[depth];
+    if (frame == null) {
+      return promise.reject(new Error("No stack frame available."));
     }
+
+    let deferred = promise.defer();
+
+    this.activeThread.addOneTimeListener("paused", (aEvent, aPacket) => {
+      let { type, frameFinished } = aPacket.why;
+      if (type == "clientEvaluated") {
+        if (!("terminated" in frameFinished)) {
+          deferred.resolve(frameFinished);
+        } else {
+          deferred.reject(new Error("The execution was abruptly terminated."));
+        }
+      } else {
+        deferred.reject(new Error("Active thread paused unexpectedly."));
+      }
+    });
+
+    let meta = "meta" in aOptions ? aOptions.meta : FRAME_TYPE.PUBLIC_CLIENT_EVAL;
+    this._currentFrameDescription = meta;
+    this.activeThread.eval(frame.actor, aExpression);
+
+    return deferred.promise;
   },
 
   /**
@@ -990,6 +1055,7 @@ StackFrames.prototype = {
       this._syncedWatchExpressions =
         this._currentWatchExpressions = null;
     }
+
     this.currentFrameDepth = -1;
     this._onFrames();
   }
@@ -1177,7 +1243,7 @@ SourceScripts.prototype = {
    *          A promize that resolves to [aSource, isBlackBoxed] or rejects to
    *          [aSource, error].
    */
-  blackBox: function(aSource, aBlackBoxFlag) {
+  setBlackBoxing: function(aSource, aBlackBoxFlag) {
     const sourceClient = this.activeThread.source(aSource);
     const deferred = promise.defer();
 
@@ -1231,11 +1297,9 @@ SourceScripts.prototype = {
         // Revert the rejected promise from the cache, so that the original
         // source's text may be shown when the source is selected.
         this._cache.set(aSource.url, textPromise);
-
         deferred.reject([aSource, message || error]);
         return;
       }
-
       deferred.resolve([aSource, text]);
     };
 
@@ -1363,6 +1427,218 @@ SourceScripts.prototype = {
 };
 
 /**
+ * Tracer update the UI according to the messages exchanged with the tracer
+ * actor.
+ */
+function Tracer() {
+  this._trace = null;
+  this._idCounter = 0;
+  this.onTraces = this.onTraces.bind(this);
+}
+
+Tracer.prototype = {
+  get client() {
+    return DebuggerController.client;
+  },
+
+  get traceClient() {
+    return DebuggerController.traceClient;
+  },
+
+  get tracing() {
+    return !!this._trace;
+  },
+
+  /**
+   * Hooks up the debugger controller with the tracer client.
+   */
+  connect: function() {
+    this._stack = [];
+    this.client.addListener("traces", this.onTraces);
+  },
+
+  /**
+   * Disconnects the debugger controller from the tracer client. Any further
+   * communcation with the tracer actor will not have any effect on the UI.
+   */
+  disconnect: function() {
+    this._stack = null;
+    this.client.removeListener("traces", this.onTraces);
+  },
+
+  /**
+   * Instructs the tracer actor to start tracing.
+   */
+  startTracing: function(aCallback = () => {}) {
+    DebuggerView.Tracer.selectTab();
+    if (this.tracing) {
+      return;
+    }
+    this._trace = "dbg.trace" + Math.random();
+    this.traceClient.startTrace([
+      "name",
+      "location",
+      "parameterNames",
+      "depth",
+      "arguments",
+      "return",
+      "throw",
+      "yield"
+    ], this._trace, (aResponse) => {
+      const { error } = aResponse;
+      if (error) {
+        DevToolsUtils.reportException(error);
+        this._trace = null;
+      }
+
+      aCallback(aResponse);
+    });
+  },
+
+  /**
+   * Instructs the tracer actor to stop tracing.
+   */
+  stopTracing: function(aCallback = () => {}) {
+    if (!this.tracing) {
+      return;
+    }
+    this.traceClient.stopTrace(this._trace, aResponse => {
+      const { error } = aResponse;
+      if (error) {
+        DevToolsUtils.reportException(error);
+      }
+
+      this._trace = null;
+      aCallback(aResponse);
+    });
+  },
+
+  onTraces: function (aEvent, { traces }) {
+    const tracesLength = traces.length;
+    let tracesToShow;
+    if (tracesLength > TracerView.MAX_TRACES) {
+      tracesToShow = traces.slice(tracesLength - TracerView.MAX_TRACES,
+                                  tracesLength);
+      DebuggerView.Tracer.empty();
+      this._stack.splice(0, this._stack.length);
+    } else {
+      tracesToShow = traces;
+    }
+
+    for (let t of tracesToShow) {
+      if (t.type == "enteredFrame") {
+        this._onCall(t);
+      } else {
+        this._onReturn(t);
+      }
+    }
+
+    DebuggerView.Tracer.commit();
+  },
+
+  /**
+   * Callback for handling a new call frame.
+   */
+  _onCall: function({ name, location, parameterNames, depth, arguments: args }) {
+    const item = {
+      name: name,
+      location: location,
+      id: this._idCounter++
+    };
+    this._stack.push(item);
+    DebuggerView.Tracer.addTrace({
+      type: "call",
+      name: name,
+      location: location,
+      depth: depth,
+      parameterNames: parameterNames,
+      arguments: args,
+      frameId: item.id
+    });
+  },
+
+  /**
+   * Callback for handling an exited frame.
+   */
+  _onReturn: function(aPacket) {
+    if (!this._stack.length) {
+      return;
+    }
+
+    const { name, id, location } = this._stack.pop();
+    DebuggerView.Tracer.addTrace({
+      type: aPacket.why,
+      name: name,
+      location: location,
+      depth: aPacket.depth,
+      frameId: id,
+      returnVal: aPacket.return || aPacket.throw || aPacket.yield
+    });
+  },
+
+  /**
+   * Create an object which has the same interface as a normal object client,
+   * but since we already have all the information for an object that we will
+   * ever get (the server doesn't create actors when tracing, just firehoses
+   * data and forgets about it) just return the data immdiately.
+   *
+   * @param Object aObject
+   *        The tracer object "grip" (more like a limited snapshot).
+   * @returns Object
+   *          The synchronous client object.
+   */
+  syncGripClient: function(aObject) {
+    return {
+      get isFrozen() { return aObject.frozen; },
+      get isSealed() { return aObject.sealed; },
+      get isExtensible() { return aObject.extensible; },
+
+      get ownProperties() { return aObject.ownProperties; },
+      get prototype() { return null; },
+
+      getParameterNames: callback => callback(aObject),
+      getPrototypeAndProperties: callback => callback(aObject),
+      getPrototype: callback => callback(aObject),
+
+      getOwnPropertyNames: (callback) => {
+        callback({
+          ownPropertyNames: aObject.ownProperties
+            ?  Object.keys(aObject.ownProperties)
+            : []
+        });
+      },
+
+      getProperty: (property, callback) => {
+        callback({
+          descriptor: aObject.ownProperties
+            ? aObject.ownProperties[property]
+            : null
+        });
+      },
+
+      getDisplayString: callback => callback("[object " + aObject.class + "]"),
+
+      getScope: callback => callback({
+        error: "scopeNotAvailable",
+        message: "Cannot get scopes for traced objects"
+      })
+    };
+  },
+
+  /**
+   * Wraps object snapshots received from the tracer server so that we can
+   * differentiate them from long living object grips from the debugger server
+   * in the variables view.
+   *
+   * @param Object aObject
+   *        The object snapshot from the tracer actor.
+   */
+  WrappedObject: function(aObject) {
+    this.object = aObject;
+  }
+};
+
+/**
  * Handles breaking on event listeners in the currently debugged target.
  */
 function EventListeners() {
@@ -1404,10 +1680,10 @@ EventListeners.prototype = {
         return;
       }
 
-      promise.all(aResponse.listeners.map(listener => {
+      let outstandingListenersDefinitionSite = aResponse.listeners.map(aListener => {
         const deferred = promise.defer();
 
-        gThreadClient.pauseGrip(listener.function).getDefinitionSite(aResponse => {
+        gThreadClient.pauseGrip(aListener.function).getDefinitionSite(aResponse => {
           if (aResponse.error) {
             const msg = "Error getting function definition site: " + aResponse.message;
             DevToolsUtils.reportException("scheduleEventListenersFetch", msg);
@@ -1415,13 +1691,15 @@ EventListeners.prototype = {
             return;
           }
 
-          listener.function.url = aResponse.url;
-          deferred.resolve(listener);
+          aListener.function.url = aResponse.url;
+          deferred.resolve(aListener);
         });
 
         return deferred.promise;
-      })).then(listeners => {
-        this._onEventListeners(listeners);
+      });
+
+      promise.all(outstandingListenersDefinitionSite).then(aListeners => {
+        this._onEventListeners(aListeners);
 
         // Notify that event listeners were fetched and shown in the view,
         // and callback to resume the active thread if necessary.
@@ -1647,7 +1925,13 @@ Breakpoints.prototype = {
       // By default, new breakpoints are always enabled. Disabled breakpoints
       // are, in fact, removed from the server but preserved in the frontend,
       // so that they may not be forgotten across target navigations.
-      this._disabled.delete(identifier);
+      let disabledPromise = this._disabled.get(identifier);
+      if (disabledPromise) {
+        disabledPromise.then(({ conditionalExpression: previousValue }) => {
+          aBreakpointClient.conditionalExpression = previousValue;
+        });
+        this._disabled.delete(identifier);
+      }
 
       // Preserve information about the breakpoint's line text, to display it
       // in the sources pane without requiring fetching the source (for example,
@@ -1898,6 +2182,7 @@ let Prefs = new ViewHelpers.Prefs("devtools", {
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
   sourceMapsEnabled: ["Bool", "debugger.source-maps-enabled"],
   prettyPrintEnabled: ["Bool", "debugger.pretty-print-enabled"],
+  tracerEnabled: ["Bool", "debugger.tracer"],
   editorTabSize: ["Int", "editor.tabsize"]
 });
 
@@ -1925,6 +2210,7 @@ DebuggerController.StackFrames = new StackFrames();
 DebuggerController.SourceScripts = new SourceScripts();
 DebuggerController.Breakpoints = new Breakpoints();
 DebuggerController.Breakpoints.DOM = new EventListeners();
+DebuggerController.Tracer = new Tracer();
 
 /**
  * Export some properties to the global scope for easier access.

@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - string or unsigned long keys</title>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var gStore;
+  var gEvent;
+  var gChangeId;
+
+  function is(a, b, msg) {
+    alert((a === b ? 'OK' : 'KO') + ' ' + msg)
+  }
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function testGetDataStores() {
+    navigator.getDataStores('foo').then(function(stores) {
+      gStore = stores[0];
+      runTest();
+    }, cbError);
+  }
+
+  function testAdd_noKey(key) {
+    gEvent = 'added';
+    gChangeId = key;
+
+    gStore.add({ a: 42 }).then(function(id) {
+      is(id, key, "Id must be " + key + " received: " + id);
+    });
+  }
+
+  function testAdd_withKey(key) {
+    gEvent = 'added';
+    gChangeId = key;
+
+    gStore.add({ a: 42 }, key).then(function(id) {
+      is(id, key, "Id must be " + key + " received: " + id);
+    });
+  }
+
+  function testPut(key) {
+    gEvent = 'updated';
+    gChangeId = key;
+
+    gStore.put({ a: 42 }, key).then(function(id) {
+      is(id, key, "Id must be " + key + " received: " + id);
+    });
+  }
+
+  function testGet(key) {
+    gStore.get(key).then(function(value) {
+      ok(value, "Object received!");
+      is(value.a, 42, "Object received with right value!");
+      runTest();
+    });
+  }
+
+  function testArrayGet(key) {
+    gStore.get.apply(gStore, key).then(function(values) {
+      is(values.length, key.length, "Object received!");
+      for (var i = 0; i < values.length; ++i) {
+        is(values[i].a, 42, "Object received with right value!");
+      }
+
+      runTest();
+    });
+  }
+
+  function testRemove(key, success) {
+    gEvent = 'removed';
+    gChangeId = key;
+
+    gStore.remove(key).then(function(value) {
+      is(value, success, "Status must be " + success + " received: " + value);
+      if (value == false) {
+        runTest();
+        return;
+      }
+    });
+  }
+
+  function eventListener() {
+    gStore.onchange = function(e) {
+      is(e.operation, gEvent, "Operation matches: " + e.operation + " " + gEvent);
+      ok(e.id === gChangeId, "Operation id matches");
+      runTest();
+    };
+
+    runTest();
+  }
+
+  var tests = [
+    // Test for GetDataStore
+    testGetDataStores,
+
+    // Event listener
+    eventListener,
+
+    // add
+    function() { testAdd_noKey(1); },
+    function() { testAdd_withKey(123); },
+    function() { testAdd_noKey(124); },
+    function() { testAdd_withKey('foobar'); },
+    function() { testAdd_noKey(125); },
+    function() { testAdd_withKey('125'); },
+    function() { testAdd_withKey('126'); },
+    function() { testAdd_noKey(126); },
+
+    // put
+    function() { testPut(42); },
+    function() { testPut('42'); },
+
+    // get
+    function() { testGet('42'); },
+    function() { testGet(42); },
+    function() { testGet(1); },
+    function() { testGet(123); },
+    function() { testGet(124); },
+    function() { testGet('foobar'); },
+    function() { testGet(125); },
+    function() { testGet('125'); },
+    function() { testGet('126'); },
+    function() { testGet(126); },
+    function() { testArrayGet(['42', 42, 1, 123, 124, 'foobar', 125, '125', '126', 126]); },
+
+    // remove
+    function() { testRemove(42, true); },
+    function() { testRemove('42', true); },
+    function() { testRemove('43', false); },
+    function() { testRemove(43, false); },
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTest();
+  </script>
+</body>
+</html>

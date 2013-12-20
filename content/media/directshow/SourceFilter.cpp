@@ -21,9 +21,9 @@ namespace mozilla {
 
 #if defined(PR_LOGGING) && defined (DEBUG_SOURCE_TRACE)
 PRLogModuleInfo* GetDirectShowLog();
-#define LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
+#define DIRECTSHOW_LOG(...) PR_LOG(GetDirectShowLog(), PR_LOG_DEBUG, (__VA_ARGS__))
 #else
-#define LOG(...)
+#define DIRECTSHOW_LOG(...)
 #endif
 
 static HRESULT
@@ -246,13 +246,13 @@ OutputPin::OutputPin(MediaResource* aResource,
     mQueriedForAsyncReader(false)
 {
   MOZ_COUNT_CTOR(OutputPin);
-  LOG("OutputPin::OutputPin()");
+  DIRECTSHOW_LOG("OutputPin::OutputPin()");
 }
 
 OutputPin::~OutputPin()
 {
   MOZ_COUNT_DTOR(OutputPin);
-  LOG("OutputPin::~OutputPin()");
+  DIRECTSHOW_LOG("OutputPin::~OutputPin()");
 }
 
 HRESULT
@@ -296,21 +296,21 @@ OutputPin::CheckMediaType(const MediaType* aMediaType)
       IsEqualGUID(aMediaType->subtype, myMediaType->subtype) &&
       IsEqualGUID(aMediaType->formattype, myMediaType->formattype))
   {
-    LOG("OutputPin::CheckMediaType() Match: major=%s minor=%s TC=%d FSS=%d SS=%u",
-        GetDirectShowGuidName(aMediaType->majortype),
-        GetDirectShowGuidName(aMediaType->subtype),
-        aMediaType->TemporalCompression(),
-        aMediaType->bFixedSizeSamples,
-        aMediaType->SampleSize());
+    DIRECTSHOW_LOG("OutputPin::CheckMediaType() Match: major=%s minor=%s TC=%d FSS=%d SS=%u",
+                   GetDirectShowGuidName(aMediaType->majortype),
+                   GetDirectShowGuidName(aMediaType->subtype),
+                   aMediaType->TemporalCompression(),
+                   aMediaType->bFixedSizeSamples,
+                   aMediaType->SampleSize());
     return S_OK;
   }
 
-  LOG("OutputPin::CheckMediaType() Failed to match: major=%s minor=%s TC=%d FSS=%d SS=%u",
-      GetDirectShowGuidName(aMediaType->majortype),
-      GetDirectShowGuidName(aMediaType->subtype),
-      aMediaType->TemporalCompression(),
-      aMediaType->bFixedSizeSamples,
-      aMediaType->SampleSize());
+  DIRECTSHOW_LOG("OutputPin::CheckMediaType() Failed to match: major=%s minor=%s TC=%d FSS=%d SS=%u",
+                 GetDirectShowGuidName(aMediaType->majortype),
+                 GetDirectShowGuidName(aMediaType->subtype),
+                 aMediaType->TemporalCompression(),
+                 aMediaType->bFixedSizeSamples,
+                 aMediaType->SampleSize());
   return S_FALSE;
 }
 
@@ -550,7 +550,7 @@ OutputPin::SyncRead(LONGLONG aPosition,
   NS_ENSURE_TRUE(aLength > 0, E_FAIL);
   NS_ENSURE_TRUE(aBuffer, E_POINTER);
 
-  LOG("OutputPin::SyncRead(%lld, %d)", aPosition, aLength);
+  DIRECTSHOW_LOG("OutputPin::SyncRead(%lld, %d)", aPosition, aLength);
   {
     // Ignore reads while flushing.
     CriticalSectionAutoEnter lock(*mLock);
@@ -600,7 +600,7 @@ OutputPin::Length(LONGLONG* aTotal, LONGLONG* aAvailable)
     *aAvailable = mResource.GetCachedDataEnd();
   }
 
-  LOG("OutputPin::Length() len=%lld avail=%lld", *aTotal, *aAvailable);
+  DIRECTSHOW_LOG("OutputPin::Length() len=%lld avail=%lld", *aTotal, *aAvailable);
 
   return hr;
 }
@@ -639,15 +639,15 @@ SourceFilter::SourceFilter(const GUID& aMajorType,
   mMediaType.majortype = aMajorType;
   mMediaType.subtype = aSubType;
 
-  LOG("SourceFilter Constructor(%s, %s)",
-      GetDirectShowGuidName(aMajorType),
-      GetDirectShowGuidName(aSubType));
+  DIRECTSHOW_LOG("SourceFilter Constructor(%s, %s)",
+                 GetDirectShowGuidName(aMajorType),
+                 GetDirectShowGuidName(aSubType));
 }
 
 SourceFilter::~SourceFilter()
 {
   MOZ_COUNT_DTOR(SourceFilter);
-  LOG("SourceFilter Destructor()");
+  DIRECTSHOW_LOG("SourceFilter Destructor()");
 }
 
 BasePin*
@@ -668,73 +668,15 @@ SourceFilter::GetMediaType() const
   return &mMediaType;
 }
 
-static uint32_t
-Read(MediaResource* aResource,
-     const int64_t aOffset,
-     char* aBuffer,
-     const uint32_t aBytesToRead)
-{
-  uint32_t totalBytesRead = 0;
-  while (totalBytesRead < aBytesToRead) {
-    uint32_t bytesRead = 0;
-    nsresult rv = aResource->ReadAt(aOffset + totalBytesRead,
-                                    aBuffer+totalBytesRead,
-                                    aBytesToRead-totalBytesRead,
-                                    &bytesRead);
-    if (NS_FAILED(rv) || bytesRead == 0) {
-      // Error or end of stream?
-      break;
-    }
-    totalBytesRead += bytesRead;
-  }
-  return totalBytesRead;
-}
-
-// Parses the MP3 stream and returns the offset of the first MP3
-// sync frame after the ID3v2 headers. This is used to trim off
-// the ID3v2 headers, as DirectShow can't handle large ID3v2 tags.
-static nsresult
-GetMP3DataOffset(MediaResource* aResource, int64_t* aOutOffset)
-{
-  MP3FrameParser parser;
-  int64_t offset = 0;
-  const uint32_t len = 1024;
-  char buffer[len];
-  do {
-    uint32_t bytesRead = Read(aResource, offset, buffer, len);
-    if (bytesRead == 0) {
-      break;
-    }
-    parser.Parse(buffer, bytesRead, offset);
-    offset += bytesRead;
-  } while (parser.GetMP3Offset() == -1 && parser.IsMP3());
-
-  if (!parser.IsMP3() || parser.GetMP3Offset() == -1) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aOutOffset = parser.GetMP3Offset();
-  return NS_OK;
-}
-
 nsresult
-SourceFilter::Init(MediaResource* aResource)
+SourceFilter::Init(MediaResource* aResource, int64_t aMP3Offset)
 {
-  LOG("SourceFilter::Init()");
-
-  // Get the offset of MP3 data in the stream, and pass that into
-  // the output pin so that the stream that we present to DirectShow
-  // does not contain ID3v2 tags. DirectShow can't properly parse some
-  // streams' ID3v2 tags.
-  int64_t mp3DataOffset = 0;
-  nsresult rv = GetMP3DataOffset(aResource, &mp3DataOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  LOG("First MP3 sync/data frame lies at offset %lld", mp3DataOffset);
+  DIRECTSHOW_LOG("SourceFilter::Init()");
 
   mOutputPin = new OutputPin(aResource,
                              this,
                              mLock,
-                             mp3DataOffset);
+                             aMP3Offset);
   NS_ENSURE_TRUE(mOutputPin != nullptr, NS_ERROR_FAILURE);
 
   return NS_OK;

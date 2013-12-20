@@ -47,10 +47,15 @@
                 name: "caption",
                 children: [ ]
               },
-              { // th text leaf
-                role: ROLE_TEXT_LEAF,
-                name: "header1",
-                children: [ ]
+              { // th generic accessible
+                role: ROLE_TEXT_CONTAINER,
+                children: [
+                  { // th text leaf
+                    role: ROLE_TEXT_LEAF,
+                    name: "header1",
+                    children: [ ]
+                  }
+                ]
               },
               { // td@role="columnheader"
                 role: ROLE_COLUMNHEADER,
@@ -70,10 +75,15 @@
             role: ROLE_ROW,
             tagName: "TR",
             children: [
-              { // td text leaf
-                role: ROLE_TEXT_LEAF,
-                name: "cell1",
-                children: [ ]
+              { // td generic accessible
+                role: ROLE_TEXT_CONTAINER,
+                children: [
+                  { // td text leaf
+                    role: ROLE_TEXT_LEAF,
+                    name: "cell1",
+                    children: [ ]
+                  }
+                ]
               },
               { // td@role="gridcell"
                 role: ROLE_GRID_CELL,
@@ -95,10 +105,15 @@
               { // div@role="gridcell"
                 role: ROLE_GRID_CELL,
                 children: [
-                  { // text leaf from presentational table
-                    role: ROLE_TEXT_LEAF,
-                    name: "cell3",
-                    children: [ ]
+                  { // td generic accessible
+                    role: ROLE_TEXT_CONTAINER,
+                    children: [
+                      { // text leaf from presentational table
+                        role: ROLE_TEXT_LEAF,
+                        name: "cell3",
+                        children: [ ]
+                      }
+                    ]
                   },
                 ]
               }
@@ -131,10 +146,15 @@
                                  name: "caption",
                                  children: [ ]
                               },
-                              { // td text leaf of presentational table
-                                role: ROLE_TEXT_LEAF,
-                                name: "cell4",
-                                children: [ ]
+                              { // td generic accessible
+                                role: ROLE_TEXT_CONTAINER,
+                                children: [
+                                  { // td text leaf of presentational table
+                                    role: ROLE_TEXT_LEAF,
+                                    name: "cell4",
+                                    children: [ ]
+                                  }
+                                ]
                               }
                             ]
                           }

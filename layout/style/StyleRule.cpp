@@ -473,7 +473,13 @@ int32_t nsCSSSelector::CalcWeightWithoutNegations() const
 {
   int32_t weight = 0;
 
-  if (nullptr != mLowercaseTag) {
+  MOZ_ASSERT(!IsPseudoElement() ||
+             mPseudoType >= nsCSSPseudoElements::ePseudo_PseudoElementCount ||
+             (!mIDList && !mClassList && !mAttrList),
+             "if pseudo-elements can have ID, class or attribute selectors "
+             "after them, specificity calculation must be updated");
+
+  if (nullptr != mCasedTag) {
     weight += 0x000001;
   }
   nsAtomList* list = mIDList;
@@ -544,7 +550,7 @@ nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
       const nsCSSSelector *next = stack.ElementAt(index - 1);
       PRUnichar oper = s->mOperator;
       if (next->IsPseudoElement()) {
-        NS_ASSERTION(oper == PRUnichar('>'),
+        NS_ASSERTION(oper == PRUnichar(':'),
                      "improperly chained pseudo element");
       } else {
         NS_ASSERTION(oper != PRUnichar(0),

@@ -23,7 +23,6 @@
 #include "nsImageFrame.h"
 #include "nsIImageLoadingContent.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "ImageContainer.h"
 #include "ImageLayers.h"
 #include "nsContentList.h"
@@ -75,12 +74,6 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     mPosterImage = element;
     NS_ENSURE_TRUE(mPosterImage, NS_ERROR_OUT_OF_MEMORY);
 
-    // Push a null JSContext on the stack so that code that runs
-    // within the below code doesn't think it's being called by
-    // JS. See bug 604262.
-    nsCxPusher pusher;
-    pusher.PushNull();
-
     // Set the nsImageLoadingContent::ImageState() to 0. This means that the
     // image will always report its state as 0, so it will never be reframed
     // to show frames for loading or the broken image icon. This is important,
@@ -92,8 +85,7 @@ nsVideoFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     // And now have it update its internal state
     element->UpdateState(false);
 
-    nsresult res = UpdatePosterSource(false);
-    NS_ENSURE_SUCCESS(res,res);
+    UpdatePosterSource(false);
 
     if (!aElements.AppendElement(mPosterImage))
       return NS_ERROR_OUT_OF_MEMORY;
@@ -187,7 +179,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   
   // Retrieve the size of the decoded video frame, before being scaled
   // by pixel aspect ratio.
-  gfxIntSize frameSize = container->GetCurrentSize();
+  mozilla::gfx::IntSize frameSize = container->GetCurrentSize();
   if (frameSize.width == 0 || frameSize.height == 0) {
     // No image, or zero-sized image. No point creating a layer.
     return nullptr;
@@ -592,20 +584,22 @@ nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
                 nsPresContext::CSSPixelsToAppUnits(size.height));
 }
 
-nsresult
+void
 nsVideoFrame::UpdatePosterSource(bool aNotify)
 {
   NS_ASSERTION(HasVideoElement(), "Only call this on <video> elements.");
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
 
-  nsAutoString posterStr;
-  element->GetPoster(posterStr);
-  nsresult res = mPosterImage->SetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::src,
-                                       posterStr,
-                                       aNotify);
-  NS_ENSURE_SUCCESS(res,res);
-  return NS_OK;
+  if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::poster)) {
+    nsAutoString posterStr;
+    element->GetPoster(posterStr);
+    mPosterImage->SetAttr(kNameSpaceID_None,
+                          nsGkAtoms::src,
+                          posterStr,
+                          aNotify);
+  } else {
+    mPosterImage->UnsetAttr(kNameSpaceID_None, nsGkAtoms::poster, aNotify);
+  }
 }
 
 NS_IMETHODIMP
@@ -614,8 +608,7 @@ nsVideoFrame::AttributeChanged(int32_t aNameSpaceID,
                                int32_t aModType)
 {
   if (aAttribute == nsGkAtoms::poster && HasVideoElement()) {
-    nsresult res = UpdatePosterSource(true);
-    NS_ENSURE_SUCCESS(res,res);
+    UpdatePosterSource(true);
   }
   return nsContainerFrame::AttributeChanged(aNameSpaceID,
                                             aAttribute,

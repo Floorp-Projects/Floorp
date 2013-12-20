@@ -17,6 +17,10 @@
 
 #include "nsIDocument.h"
 
+#include "mozilla/dom/TypedArray.h"
+#include "jsfriendapi.h"
+#include "js/GCAPI.h"
+
 struct JSContext;
 
 namespace mozilla {
@@ -31,9 +35,9 @@ public:
 
 public:
 
-  MozNdefRecord(nsPIDOMWindow* aWindow,
-                uint8_t aTnf, const nsAString& aType,
-                const nsAString& aId, const nsAString& aPlayload);
+  MozNdefRecord(JSContext* aCx, nsPIDOMWindow* aWindow, uint8_t aTnf,
+                const Uint8Array& aType, const Uint8Array& aId,
+                const Uint8Array& aPlayload);
 
   ~MozNdefRecord();
 
@@ -45,41 +49,56 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  static already_AddRefed<MozNdefRecord> Constructor(
-                                           const GlobalObject& aGlobal,
-                                           uint8_t aTnf, const nsAString& aType,
-                                           const nsAString& aId,
-                                           const nsAString& aPayload,
-                                           ErrorResult& aRv);
+  static already_AddRefed<MozNdefRecord>
+                  Constructor(const GlobalObject& aGlobal, uint8_t aTnf,
+                              const Uint8Array& aType, const Uint8Array& aId,
+                              const Uint8Array& aPayload, ErrorResult& aRv);
 
   uint8_t Tnf() const
   {
     return mTnf;
   }
 
-  void GetType(nsString& aType) const
+  JSObject* Type(JSContext* cx) const
   {
-    aType = mType;
+    return GetTypeObject();
+  }
+  JSObject* GetTypeObject() const
+  {
+    JS::ExposeObjectToActiveJS(mType);
+    return mType;
   }
 
-  void GetId(nsString& aId) const
+  JSObject* Id(JSContext* cx) const
   {
-    aId = mId;
+    return GetIdObject();
+  }
+  JSObject* GetIdObject() const
+  {
+    JS::ExposeObjectToActiveJS(mId);
+    return mId;
   }
 
-  void GetPayload(nsString& aPayload) const
+  JSObject* Payload(JSContext* cx) const
   {
-    aPayload = mPayload;
+    return GetPayloadObject();
+  }
+  JSObject* GetPayloadObject() const
+  {
+    JS::ExposeObjectToActiveJS(mPayload);
+    return mPayload;
   }
 
 private:
   MozNdefRecord() MOZ_DELETE;
   nsRefPtr<nsPIDOMWindow> mWindow;
+  void HoldData();
+  void DropData();
 
   uint8_t mTnf;
-  nsString mType;
-  nsString mId;
-  nsString mPayload;
+  JS::Heap<JSObject*> mType;
+  JS::Heap<JSObject*> mId;
+  JS::Heap<JSObject*> mPayload;
 };
 
 } // namespace dom

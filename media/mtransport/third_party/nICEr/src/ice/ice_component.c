@@ -44,6 +44,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_component.c,v 1.2 2008/04/28 17:59:0
 #include "stun.h"
 #include "nr_socket_local.h"
 #include "nr_socket_turn.h"
+#include "nr_socket_buffered_stun.h"
 #include "ice_reg.h"
 
 static int nr_ice_component_stun_server_default_cb(void *cb_arg,nr_stun_server_ctx *stun_ctx,nr_socket *sock, nr_stun_server_request *req, int *dont_free, int *error);
@@ -170,28 +171,15 @@ int nr_ice_component_destroy(nr_ice_component **componentp)
     return(0);
   }
 
-/* Make all the candidates we can make at the beginning */
-int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *component)
+static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_component *component, nr_local_addr *addrs, int addr_ct, char *lufrag, Data *pwd)
   {
-    int r,_status;
-    nr_local_addr *addrs=ctx->local_addrs;
     nr_socket *sock;
     nr_ice_socket *isock=0;
     nr_ice_candidate *cand=0;
-    char *lufrag;
-    char *lpwd;
-    Data pwd;
-    int addr_ct=ctx->local_addr_ct;
     int i;
     int j;
     char label[256];
-
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/COMP(%d): initializing component",ctx->label,component->component_id);
-
-    if(addr_ct==0){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s)/COMP(%d): no local addresses available",ctx->label, component->component_id);
-      ABORT(R_NOT_FOUND);
-    }
+    int r,_status;
 
     /* Now one ice_socket for each address */
     for(i=0;i<addr_ct;i++){
@@ -205,8 +193,6 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         if(suppress)
           continue;
       }
-
-
       r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): host address %s",ctx->label,addrs[i].addr.as_string);
       if(r=nr_socket_local_create(&addrs[i].addr,&sock)){
         r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create socket for address %s",ctx->label,addrs[i].addr.as_string);
@@ -215,7 +201,6 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
       if(r=nr_ice_socket_create(ctx,component,sock,&isock))
         ABORT(r);
-
       /* Create one host candidate */
       if(r=nr_ice_candidate_create(ctx,component,isock,sock,HOST,0,
         component->component_id,&cand))
@@ -241,6 +226,10 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
       for(j=0;j<ctx->turn_server_ct;j++){
         nr_socket *turn_sock;
         nr_ice_candidate *srvflx_cand;
+
+        /* Skip non-UDP */
+        if (ctx->turn_servers[j].transport != IPPROTO_UDP)
+          continue;
 
         /* srvrflx */
         if(r=nr_ice_candidate_create(ctx,component,
@@ -277,32 +266,150 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
         ABORT(r);
       if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
         ABORT(r);
+
       /* Add the default STUN credentials so that we can respond before
-         we hear about the peer. Note: we need to recompute these because
-         we have not yet computed the values in the peer media stream.*/
-      lufrag=component->stream->ufrag ? component->stream->ufrag : ctx->ufrag;
-      assert(lufrag);
-      if (!lufrag)
-        ABORT(R_INTERNAL);
-      lpwd=component->stream->pwd ? component->stream->pwd :ctx->pwd;
-      assert(lpwd);
-      if (!lpwd)
-        ABORT(R_INTERNAL);
-
-      INIT_DATA(pwd, (UCHAR *)lpwd, strlen(lpwd));
-
-      if(r=nr_stun_server_add_default_client(isock->stun_server, lufrag, &pwd, nr_ice_component_stun_server_default_cb, component))
+         we hear about the peer. */
+      if(r=nr_stun_server_add_default_client(isock->stun_server, lufrag, pwd, nr_ice_component_stun_server_default_cb, component))
         ABORT(r);
 
       STAILQ_INSERT_TAIL(&component->sockets,isock,entry);
     }
-    isock=0;
 
+    _status = 0;
+ abort:
+    return(_status);
+  }
+
+static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_component *component, nr_local_addr *addrs, int addr_ct, char *lufrag, Data *pwd)
+  {
+    nr_ice_socket *isock=0;
+    nr_ice_candidate *cand=0;
+    int i;
+    int j;
+    char label[256];
+    int r,_status;
+
+    /* Create a new relayed candidate for each addr/TURN server pair */
+    for(i=0;i<addr_ct;i++){
+      char suppress;
+
+      if(r=NR_reg_get2_char(NR_ICE_REG_SUPPRESS_INTERFACE_PRFX,addrs[i].addr.ifname,&suppress)){
+        if(r!=R_NOT_FOUND)
+          ABORT(r);
+      }
+      else{
+        if(suppress)
+          continue;
+      }
+
+#ifdef USE_TURN
+      for(j=0;j<ctx->turn_server_ct;j++){
+        nr_transport_addr addr;
+        nr_socket *sock;
+        nr_socket *buffered_sock;
+        nr_socket *turn_sock;
+
+        /* Skip non-TCP */
+        if (ctx->turn_servers[j].transport != IPPROTO_TCP)
+          continue;
+
+        /* Create a local socket */
+        if ((r=nr_transport_addr_copy(&addr, &addrs[i].addr)))
+          ABORT(r);
+        addr.protocol = IPPROTO_TCP;
+        if ((r=nr_transport_addr_fmt_addr_string(&addr)))
+          ABORT(r);
+        if((r=nr_socket_local_create(&addr, &sock))){
+          r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create socket for address %s",ctx->label,addr.as_string);
+          continue;
+        }
+        /* Wrap it */
+        if((r=nr_socket_buffered_stun_create(sock, NR_STUN_MAX_MESSAGE_SIZE, &buffered_sock)))
+          ABORT(r);
+
+        /* The TURN socket */
+        if(r=nr_socket_turn_create(buffered_sock, &turn_sock))
+          ABORT(r);
+
+        /* Create an ICE socket */
+        if((r=nr_ice_socket_create(ctx, component, buffered_sock, &isock)))
+          ABORT(r);
+
+        /* Attach ourselves to it */
+        if(r=nr_ice_candidate_create(ctx,component,
+          isock,turn_sock,RELAYED,
+          &ctx->turn_servers[j].turn_server,component->component_id,&cand))
+          ABORT(r);
+        cand->u.relayed.srvflx_candidate=NULL;
+        cand->u.relayed.server=&ctx->turn_servers[j];
+        TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
+        component->candidate_ct++;
+        cand=0;
+
+        /* Create a STUN server context for this socket */
+        snprintf(label, sizeof(label), "server(%s)", addr.as_string);
+        if(r=nr_stun_server_ctx_create(label,sock,&isock->stun_server))
+          ABORT(r);
+        if(r=nr_ice_socket_register_stun_server(isock,isock->stun_server,&isock->stun_server_handle))
+          ABORT(r);
+
+       /* Add the default STUN credentials so that we can respond before
+          we hear about the peer.*/
+        if(r=nr_stun_server_add_default_client(isock->stun_server, lufrag, pwd, nr_ice_component_stun_server_default_cb, component))
+          ABORT(r);
+
+        STAILQ_INSERT_TAIL(&component->sockets,isock,entry);
+      }
+    }
+#endif
+
+    _status = 0;
+ abort:
+    return(_status);
+  }
+
+
+/* Make all the candidates we can make at the beginning */
+int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *component)
+  {
+    int r,_status;
+    nr_local_addr *addrs=ctx->local_addrs;
+    int addr_ct=ctx->local_addr_ct;
+    char *lufrag;
+    char *lpwd;
+    Data pwd;
+    nr_ice_candidate *cand;
+
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): initializing component with id %d",ctx->label,component->component_id);
+
+    if(addr_ct==0){
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s): no local addresses available",ctx->label);
+      ABORT(R_NOT_FOUND);
+    }
+
+    /* Note: we need to recompute these because
+       we have not yet computed the values in the peer media stream.*/
+    lufrag=component->stream->ufrag ? component->stream->ufrag : ctx->ufrag;
+    assert(lufrag);
+    if (!lufrag)
+      ABORT(R_INTERNAL);
+    lpwd=component->stream->pwd ? component->stream->pwd :ctx->pwd;
+    assert(lpwd);
+    if (!lpwd)
+      ABORT(R_INTERNAL);
+    INIT_DATA(pwd, (UCHAR *)lpwd, strlen(lpwd));
+
+    /* Initialize the UDP candidates */
+    if (r=nr_ice_component_initialize_udp(ctx, component, addrs, addr_ct, lufrag, &pwd))
+      ABORT(r);
+    /* And the TCP candidates */
+    if (r=nr_ice_component_initialize_tcp(ctx, component, addrs, addr_ct, lufrag, &pwd))
+      ABORT(r);
 
     /* count the candidates that will be initialized */
     cand=TAILQ_FIRST(&component->candidates);
     if(!cand){
-      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): couldn't create any valid candidates",ctx->label);
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): couldn't create any valid candidates",ctx->label);
       ABORT(R_NOT_FOUND);
     }
 
@@ -324,11 +431,19 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
       }
       cand=TAILQ_NEXT(cand,entry_comp);
     }
-
     _status=0;
-  abort:
+ abort:
     return(_status);
   }
+
+static int nr_ice_any_peer_paired(nr_ice_candidate* cand) {
+  nr_ice_peer_ctx* pctx=STAILQ_FIRST(&cand->ctx->peers);
+  while(pctx && pctx->state == NR_ICE_PEER_STATE_UNPAIRED){
+    /* Is it worth actually looking through the check lists? Probably not. */
+    pctx=STAILQ_NEXT(pctx,entry);
+  }
+  return pctx != NULL;
+}
 
 /*
   Compare this newly initialized candidate against the other initialized
@@ -336,9 +451,6 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
 
    This algorithm combined with the other algorithms, favors
    host > srflx > relay
-
-   This actually won't prune relayed in the very rare
-   case that relayed is the same. Not relevant in practice.
  */
 int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *comp, nr_ice_candidate *c1, int *was_pruned)
   {
@@ -357,12 +469,13 @@ int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *co
            (c2->type==HOST && c1->type == SERVER_REFLEXIVE)){
 
           /*
-             These are redundant. Remove the lower pri one.
+             These are redundant. Remove the lower pri one, or if pairing has
+             already occurred, remove the newest one.
 
              Since this algorithmis run whenever a new candidate
              is initialized, there should at most one duplicate.
            */
-          if (c1->priority < c2->priority) {
+          if ((c1->priority <= c2->priority) || nr_ice_any_peer_paired(c2)) {
             tmp = c1;
             *was_pruned = 1;
           }
@@ -519,8 +632,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
           ABORT(R_BAD_DATA);
         }
         pcand->priority=attr->u.priority;
-        pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;;
-        TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
+        pcand->state=NR_ICE_CAND_PEER_CANDIDATE_PAIRED;
 
         if(r=nr_ice_candidate_pair_create(comp->stream->pctx,cand,pcand,
              &pair)) {
@@ -531,9 +643,12 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
 
         if(r=nr_ice_candidate_pair_insert(&comp->stream->check_list,pair)) {
           *error=(r==R_NO_MEMORY)?500:400;
+          nr_ice_candidate_pair_destroy(&pair);
           ABORT(r);
         }
 
+        /* Do this last, since any call to ABORT will destroy pcand */
+        TAILQ_INSERT_TAIL(&comp->candidates,pcand,entry_comp);
         pcand=0;
       }
       else{
@@ -638,8 +753,7 @@ int nr_ice_component_service_pre_answer_requests(nr_ice_peer_ctx *pctx, nr_ice_c
     }
 
     _status=0;
- abort:
-    return(_status);
+     return(_status);
   }
 
 int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pcomp, nr_ice_candidate *lcand, int pair_all_remote)

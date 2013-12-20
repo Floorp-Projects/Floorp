@@ -467,7 +467,9 @@ AddRegisterToSafepoint(LSafepoint *safepoint, AnyRegister reg, const LDefinition
     safepoint->addLiveRegister(reg);
 
     JS_ASSERT(def.type() == LDefinition::GENERAL ||
+              def.type() == LDefinition::INT32 ||
               def.type() == LDefinition::DOUBLE ||
+              def.type() == LDefinition::FLOAT32 ||
               def.type() == LDefinition::OBJECT);
 
     if (def.type() == LDefinition::OBJECT)
@@ -687,7 +689,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     // so that we don't assign the same register.
                     if (ins->isCall() && use->usedAtStart()) {
                         for (size_t i = 0; i < ins->numTemps(); i++)
-                            JS_ASSERT(vregs[ins->getTemp(i)].isDouble() != vregs[use].isDouble());
+                            JS_ASSERT(vregs[ins->getTemp(i)].isFloatReg() != vregs[use].isFloatReg());
                     }
 
                     // If there are both useRegisterAtStart(x) and useRegister(y)

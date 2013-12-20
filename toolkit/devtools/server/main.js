@@ -168,7 +168,7 @@ var DebuggerServer = {
 
   LONG_STRING_LENGTH: 10000,
   LONG_STRING_INITIAL_LENGTH: 1000,
-  LONG_STRING_READ_LENGTH: 1000,
+  LONG_STRING_READ_LENGTH: 65 * 1024,
 
   /**
    * A handler function that prompts the user to accept or decline the incoming
@@ -362,12 +362,13 @@ var DebuggerServer = {
     if ("nsIProfiler" in Ci)
       this.addActors("resource://gre/modules/devtools/server/actors/profiler.js");
 
-    this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
     this.registerModule("devtools/server/actors/inspector");
     this.registerModule("devtools/server/actors/webgl");
     this.registerModule("devtools/server/actors/tracer");
     this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/stylesheets");
+    this.registerModule("devtools/server/actors/styleeditor");
   },
 
   /**
@@ -382,9 +383,10 @@ var DebuggerServer = {
       this.addActors("resource://gre/modules/devtools/server/actors/script.js");
       this.addActors("resource://gre/modules/devtools/server/actors/webconsole.js");
       this.addActors("resource://gre/modules/devtools/server/actors/gcli.js");
-      this.addActors("resource://gre/modules/devtools/server/actors/styleeditor.js");
       this.registerModule("devtools/server/actors/inspector");
       this.registerModule("devtools/server/actors/webgl");
+      this.registerModule("devtools/server/actors/stylesheets");
+      this.registerModule("devtools/server/actors/styleeditor");
     }
     if (!("ContentAppActor" in DebuggerServer)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");

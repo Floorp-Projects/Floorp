@@ -22,7 +22,14 @@ JSCompartment::initGlobal(js::GlobalObject &global)
 js::GlobalObject *
 JSCompartment::maybeGlobal() const
 {
-    JS_ASSERT_IF(global_, global_->compartment() == this);
+#ifdef DEBUG
+    if (global_) {
+        js::AutoThreadSafeAccess ts0(global_);
+        js::AutoThreadSafeAccess ts1(global_->lastProperty());
+        js::AutoThreadSafeAccess ts2(global_->lastProperty()->base());
+        JS_ASSERT(global_->compartment() == this);
+    }
+#endif
     return global_;
 }
 
@@ -91,9 +98,9 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
     JS::RootedValue v(cx, vp);
     if (js::WrapperMap::Ptr p = crossCompartmentWrappers.lookup(v)) {
 #ifdef DEBUG
-        cacheResult = &p->value.get().toObject();
+        cacheResult = &p->value().get().toObject();
 #else
-        vp.set(p->value);
+        vp.set(p->value());
         return true;
 #endif
     }

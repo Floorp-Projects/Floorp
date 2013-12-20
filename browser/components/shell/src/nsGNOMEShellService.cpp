@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCOMPtr.h"
 #include "nsGNOMEShellService.h"
@@ -285,7 +285,7 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString brandShortName;
-    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+    brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
                                    getter_Copies(brandShortName));
 
     // use brandShortName as the application id.
@@ -430,7 +430,7 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
     rv = bundleService->CreateBundle(BRAND_PROPERTIES,
                                      getter_AddRefs(brandBundle));
     if (NS_SUCCEEDED(rv) && brandBundle) {
-      rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+      rv = brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
                                           getter_Copies(brandName));
       NS_ENSURE_SUCCESS(rv, rv);
     }

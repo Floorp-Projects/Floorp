@@ -283,6 +283,11 @@ public:
    */
   void SetPaintingToWindow(bool aToWindow) { mIsPaintingToWindow = aToWindow; }
   bool IsPaintingToWindow() const { return mIsPaintingToWindow; }
+  /**
+   * Call this to prevent descending into subdocuments.
+   */
+  void SetDescendIntoSubdocuments(bool aDescend) { mDescendIntoSubdocuments = aDescend; }
+  bool GetDescendIntoSubdocuments() { return mDescendIntoSubdocuments; }
 
   /**
    * Returns true if merging and flattening of display lists should be
@@ -647,6 +652,7 @@ private:
   bool                           mHadToIgnoreSuppression;
   bool                           mIsAtRootOfPseudoStackingContext;
   bool                           mIncludeAllOutOfFlows;
+  bool                           mDescendIntoSubdocuments;
   bool                           mSelectedFramesOnly;
   bool                           mAccurateVisibleRegions;
   bool                           mAllowMergingAndFlattening;
@@ -1511,6 +1517,8 @@ public:
 #ifdef DEBUG
   bool DidComputeVisibility() const { return mDidComputeVisibility; }
 #endif
+
+  nsRect GetVisibleRect() const { return mVisibleRect; }
 
 private:
   // This class is only used on stack, so we don't have to worry about leaking
@@ -2575,16 +2583,22 @@ public:
    * nsDisplayOwnLayer constructor flags
    */
   enum {
-    GENERATE_SUBDOC_INVALIDATIONS = 0x01
+    GENERATE_SUBDOC_INVALIDATIONS = 0x01,
+    VERTICAL_SCROLLBAR = 0x02,
+    HORIZONTAL_SCROLLBAR = 0x04
   };
 
   /**
    * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
    * Add UserData to the created ContainerLayer, so that invalidations
    * for this layer are send to our nsPresContext.
+   * @param aScrollTarget when VERTICAL_SCROLLBAR or HORIZONTAL_SCROLLBAR
+   * is set in the flags, this parameter should be the ViewID of the
+   * scrollable content this scrollbar is for.
    */
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                    nsDisplayList* aList, uint32_t aFlags = 0);
+                    nsDisplayList* aList, uint32_t aFlags = 0,
+                    ViewID aScrollTarget = mozilla::layers::FrameMetrics::NULL_SCROLL_ID);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayOwnLayer();
 #endif
@@ -2606,6 +2620,7 @@ public:
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 private:
   uint32_t mFlags;
+  ViewID mScrollTarget;
 };
 
 /**
@@ -2702,9 +2717,13 @@ public:
   virtual ~nsDisplayScrollLayer();
 #endif
 
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
+
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
+
+  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
@@ -2750,6 +2769,8 @@ public:
   NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
 
   virtual ~nsDisplayScrollInfoLayer();
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
@@ -3030,7 +3051,7 @@ public:
     FrameTransformProperties(const nsIFrame* aFrame,
                              float aAppUnitsPerPixel,
                              const nsRect* aBoundsOverride);
-    FrameTransformProperties(const nsCSSValueList* aTransformList,
+    FrameTransformProperties(nsCSSValueSharedList* aTransformList,
                              const gfxPoint3D& aToTransformOrigin,
                              const gfxPoint3D& aToPerspectiveOrigin,
                              nscoord aChildPerspective)
@@ -3042,7 +3063,7 @@ public:
     {}
 
     const nsIFrame* mFrame;
-    const nsCSSValueList* mTransformList;
+    nsRefPtr<nsCSSValueSharedList> mTransformList;
     const gfxPoint3D mToTransformOrigin;
     const gfxPoint3D mToPerspectiveOrigin;
     nscoord mChildPerspective;

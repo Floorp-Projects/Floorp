@@ -105,11 +105,7 @@ nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocShell> docShell(presContext->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
     rv = docShell->SetAllowPlugins(allowPlugins);
@@ -158,11 +154,7 @@ nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
   rv = aParams->GetBooleanValue("plugins", &allowPlugins);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsISupports> container = presContext->GetContainer();
-    NS_ENSURE_TRUE(container, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDocShell> docShell(presContext->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
     allowPlugins = docShell->PluginsAllowedInCurrentDoc();

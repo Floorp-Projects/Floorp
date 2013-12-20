@@ -82,8 +82,8 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndCleanup()
 
     // Pass 5: It's important for optimizations to re-run GVN (and in
     // turn alias analysis) after UCE if we eliminated branches.
-    if (rerunAliasAnalysis_ && js_IonOptions.gvn) {
-        ValueNumberer gvn(mir_, graph_, js_IonOptions.gvnIsOptimistic);
+    if (rerunAliasAnalysis_ && mir_->optimizationInfo().gvnEnabled()) {
+        ValueNumberer gvn(mir_, graph_, mir_->optimizationInfo().gvnKind() == GVN_Optimistic);
         if (!gvn.clear() || !gvn.analyze())
             return false;
         IonSpewPass("GVN-after-UCE");
@@ -204,7 +204,7 @@ UnreachableCodeElimination::checkDependencyAndRemoveUsesFromUnmarkedBlocks(MDefi
 {
     // When the instruction depends on removed block,
     // alias analysis needs to get rerun to have the right dependency.
-    if (instr->dependency() && !instr->dependency()->block()->isMarked())
+    if (!disableAliasAnalysis_ && instr->dependency() && !instr->dependency()->block()->isMarked())
         rerunAliasAnalysis_ = true;
 
     for (MUseIterator iter(instr->usesBegin()); iter != instr->usesEnd(); ) {

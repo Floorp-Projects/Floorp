@@ -16,8 +16,8 @@
 #include "ReadbackLayer.h"              // for ReadbackLayer
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils, etc
+#include "gfx2DGlue.h"
 #include "mozilla/DebugOnly.h"          // for DebugOnly
-#include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Telemetry.h"          // for Accumulate
 #include "mozilla/TelemetryHistogramEnums.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -134,15 +134,6 @@ LayerManager::CreateDrawTarget(const IntSize &aSize,
     CreateOffscreenCanvasDrawTarget(aSize, aFormat);
 }
 
-TextureFactoryIdentifier
-LayerManager::GetTextureFactoryIdentifier()
-{
-  //TODO[nrc] make pure virtual when all layer managers use Compositor
-  NS_ERROR("Should have been overridden");
-  return TextureFactoryIdentifier();
-}
-
-
 #ifdef DEBUG
 void
 LayerManager::Mutated(Layer* aLayer)
@@ -185,6 +176,8 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mIsFixedPosition(false),
   mMargins(0, 0, 0, 0),
   mStickyPositionData(nullptr),
+  mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
+  mScrollbarDirection(ScrollDirection::NONE),
   mDebugColorIndex(0),
   mAnimationGeneration(0)
 {}
@@ -223,7 +216,7 @@ Layer::ClearAnimations()
   Mutated();
 }
 
-static nsCSSValueList*
+static nsCSSValueSharedList*
 CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
 {
   nsAutoPtr<nsCSSValueList> result;
@@ -346,7 +339,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
     result = new nsCSSValueList();
     result->mValue.SetNoneValue();
   }
-  return result.forget();
+  return new nsCSSValueSharedList(result.forget());
 }
 
 void
@@ -394,13 +387,11 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
       if (segment.endState().type() == Animatable::TArrayOfTransformFunction) {
         const InfallibleTArray<TransformFunction>& startFunctions =
           segment.startState().get_ArrayOfTransformFunction();
-        startValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(startFunctions),
-                                                 nsStyleAnimation::eUnit_Transform);
+        startValue->SetTransformValue(CreateCSSValueList(startFunctions));
 
         const InfallibleTArray<TransformFunction>& endFunctions =
           segment.endState().get_ArrayOfTransformFunction();
-        endValue->SetAndAdoptCSSValueListValue(CreateCSSValueList(endFunctions),
-                                               nsStyleAnimation::eUnit_Transform);
+        endValue->SetTransformValue(CreateCSSValueList(endFunctions));
       } else {
         NS_ASSERTION(segment.endState().type() == Animatable::Tfloat,
                      "Unknown Animatable type");
@@ -519,7 +510,7 @@ Layer::SnapTransform(const gfx3DMatrix& aTransform,
   gfx3DMatrix result;
   if (mManager->IsSnappingEffectiveTransforms() &&
       aTransform.Is2D(&matrix2D) &&
-      gfxSize(1.0, 1.0) <= aSnapRect.Size() &&
+      gfx::Size(1.0, 1.0) <= ToSize(aSnapRect.Size()) &&
       matrix2D.PreservesAxisAlignedRectangles()) {
     gfxPoint transformedTopLeft = matrix2D.Transform(aSnapRect.TopLeft());
     transformedTopLeft.Round();
@@ -997,16 +988,14 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
 
 /** 
  * StartFrameTimeRecording, together with StopFrameTimeRecording
- * enable recording of frame intrvals and paint times.
- * (Paint start time is set from the refresh driver right before starting
- * flush/paint and ends at PostPresent. Intervals are measured at PostPresent).
+ * enable recording of frame intervals.
  *
- * To allow concurrent consumers, 2 cyclic arrays are used (for intervals, paints)
- * which serve all consumers, practically stateless with regard to consumers.
+ * To allow concurrent consumers, a cyclic array is used which serves all
+ * consumers, practically stateless with regard to consumers.
  *
- * To save resources, the buffers are allocated on first call to StartFrameTimeRecording
+ * To save resources, the buffer is allocated on first call to StartFrameTimeRecording
  * and recording is paused if no consumer which called StartFrameTimeRecording is able
- * to get valid results (because the cyclic buffers were overwritten since that call).
+ * to get valid results (because the cyclic buffer was overwritten since that call).
  *
  * To determine availability of the data upon StopFrameTimeRecording:
  * - mRecording.mNextIndex increases on each PostPresent, and never resets.
@@ -1024,29 +1013,20 @@ RefLayer::FillSpecificAttributes(SpecificLayerAttributes& aAttrs)
  *   older than this, it means that some frames were not recorded, so data is invalid.
  */
 uint32_t
-LayerManager::StartFrameTimeRecording()
+LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
 {
   if (mRecording.mIsPaused) {
     mRecording.mIsPaused = false;
 
     if (!mRecording.mIntervals.Length()) { // Initialize recording buffers
-      const uint32_t kRecordingMinSize = 60 * 10; // 10 seconds @60 fps.
-      const uint32_t kRecordingMaxSize = 60 * 60 * 60; // One hour
-      uint32_t bufferSize = Preferences::GetUint("toolkit.framesRecording.bufferSize",
-                                                 kRecordingMinSize);
-      bufferSize = std::min(bufferSize, kRecordingMaxSize);
-      bufferSize = std::max(bufferSize, kRecordingMinSize);
-
-      if (!mRecording.mIntervals.SetLength(bufferSize) || !mRecording.mPaints.SetLength(bufferSize)) {
+      if (!mRecording.mIntervals.SetLength(aBufferSize)) {
         mRecording.mIsPaused = true; // OOM
         mRecording.mIntervals.Clear();
-        mRecording.mPaints.Clear();
       }
     }
 
     // After being paused, recent values got invalid. Update them to now.
     mRecording.mLastFrameTime = TimeStamp::Now();
-    mRecording.mPaintStartTime = mRecording.mLastFrameTime;
 
     // Any recording which started before this is invalid, since we were paused.
     mRecording.mCurrentRunStartIndex = mRecording.mNextIndex;
@@ -1059,22 +1039,12 @@ LayerManager::StartFrameTimeRecording()
 }
 
 void
-LayerManager::SetPaintStartTime(TimeStamp& aTime)
-{
-  if (!mRecording.mIsPaused) {
-    mRecording.mPaintStartTime = aTime;
-  }
-}
-
-void
-LayerManager::PostPresent()
+LayerManager::RecordFrame()
 {
   if (!mRecording.mIsPaused) {
     TimeStamp now = TimeStamp::Now();
     uint32_t i = mRecording.mNextIndex % mRecording.mIntervals.Length();
     mRecording.mIntervals[i] = static_cast<float>((now - mRecording.mLastFrameTime)
-                                                  .ToMilliseconds());
-    mRecording.mPaints[i]    = static_cast<float>((now - mRecording.mPaintStartTime)
                                                   .ToMilliseconds());
     mRecording.mNextIndex++;
     mRecording.mLastFrameTime = now;
@@ -1084,6 +1054,11 @@ LayerManager::PostPresent()
       mRecording.mIsPaused = true;
     }
   }
+}
+
+void
+LayerManager::PostPresent()
+{
   if (!mTabSwitchStart.IsNull()) {
     Telemetry::Accumulate(Telemetry::FX_TAB_SWITCH_TOTAL_MS,
                           uint32_t((TimeStamp::Now() - mTabSwitchStart).ToMilliseconds()));
@@ -1093,8 +1068,7 @@ LayerManager::PostPresent()
 
 void
 LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
-                                     nsTArray<float>& aFrameIntervals,
-                                     nsTArray<float>& aPaintTimes)
+                                     nsTArray<float>& aFrameIntervals)
 {
   uint32_t bufferSize = mRecording.mIntervals.Length();
   uint32_t length = mRecording.mNextIndex - aStartIndex;
@@ -1105,9 +1079,8 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
   }
 
   // Set length in advance to avoid possibly repeated reallocations (and OOM checks).
-  if (!length || !aFrameIntervals.SetLength(length) || !aPaintTimes.SetLength(length)) {
+  if (!length || !aFrameIntervals.SetLength(length)) {
     aFrameIntervals.Clear();
-    aPaintTimes.Clear();
     return; // empty recording or OOM, return empty arrays.
   }
 
@@ -1117,7 +1090,6 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
       cyclicPos = 0;
     }
     aFrameIntervals[i] = mRecording.mIntervals[cyclicPos];
-    aPaintTimes[i]     = mRecording.mPaints[cyclicPos];
   }
 }
 
@@ -1298,8 +1270,15 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
     aTo += " [componentAlpha]";
   }
+  if (GetScrollbarDirection() == VERTICAL) {
+    aTo.AppendPrintf(" [vscrollbar=%lld]", GetScrollbarTargetContainerId());
+  }
+  if (GetScrollbarDirection() == HORIZONTAL) {
+    aTo.AppendPrintf(" [hscrollbar=%lld]", GetScrollbarTargetContainerId());
+  }
   if (GetIsFixedPosition()) {
-    aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f]", mAnchor.x, mAnchor.y);
+    aTo.AppendPrintf(" [isFixedPosition anchor=%f,%f margin=%f,%f,%f,%f]", mAnchor.x, mAnchor.y,
+                     mMargins.top, mMargins.right, mMargins.bottom, mMargins.left);
   }
   if (GetIsStickyPosition()) {
     aTo.AppendPrintf(" [isStickyPosition scrollId=%d outer=%f,%f %fx%f "
@@ -1515,10 +1494,12 @@ PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite)
 void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
+  bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   if (!aTarget->IsCairo()) {
     RefPtr<DrawTarget> dt = aTarget->GetDrawTarget();
 
     if (dt->GetFormat() != FORMAT_B8G8R8A8) {
+      dt->SetPermitSubpixelAA(permitSubpixelAA);
       return;
     }
 
@@ -1528,20 +1509,22 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
     transformedBounds.RoundOut();
     IntRect intTransformedBounds;
     transformedBounds.ToIntRect(&intTransformedBounds);
-    dt->SetPermitSubpixelAA(!(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
-                            dt->GetOpaqueRect().Contains(intTransformedBounds));
+    permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
+                        dt->GetOpaqueRect().Contains(intTransformedBounds);
+    dt->SetPermitSubpixelAA(permitSubpixelAA);
   } else {
     nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
     if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
       // Destination doesn't have alpha channel; no need to set any special flags
+      surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
       return;
     }
 
     const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
-    surface->SetSubpixelAntialiasingEnabled(
-        !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
+    permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
         surface->GetOpaqueRect().Contains(
-          aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height))));
+        aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
+    surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
   }
 }
 

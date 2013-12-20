@@ -6,6 +6,7 @@
 
 #include "nsContentEventHandler.h"
 #include "nsCOMPtr.h"
+#include "nsFocusManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsISelection.h"
@@ -31,6 +32,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::widget;
 
 /******************************************************************/
 /* nsContentEventHandler                                          */
@@ -123,6 +125,55 @@ nsContentEventHandler::Init(WidgetSelectionEvent* aEvent)
   NS_ENSURE_SUCCESS(rv, rv);
 
   aEvent->mSucceeded = false;
+
+  return NS_OK;
+}
+
+nsIContent*
+nsContentEventHandler::GetFocusedContent()
+{
+  nsIDocument* doc = mPresShell->GetDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(doc->GetWindow());
+  nsCOMPtr<nsPIDOMWindow> focusedWindow;
+  return nsFocusManager::GetFocusedDescendant(window, true,
+                                              getter_AddRefs(focusedWindow));
+}
+
+bool
+nsContentEventHandler::IsPlugin(nsIContent* aContent)
+{
+  return aContent &&
+         aContent->GetDesiredIMEState().mEnabled == IMEState::PLUGIN;
+}
+
+nsresult
+nsContentEventHandler::QueryContentRect(nsIContent* aContent,
+                                        WidgetQueryContentEvent* aEvent)
+{
+  NS_PRECONDITION(aContent, "aContent must not be null");
+
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
+  // get rect for first frame
+  nsRect resultRect(nsPoint(0, 0), frame->GetRect().Size());
+  nsresult rv = ConvertToRootViewRelativeOffset(frame, resultRect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // account for any additional frames
+  while ((frame = frame->GetNextContinuation()) != nullptr) {
+    nsRect frameRect(nsPoint(0, 0), frame->GetRect().Size());
+    rv = ConvertToRootViewRelativeOffset(frame, frameRect);
+    NS_ENSURE_SUCCESS(rv, rv);
+    resultRect.UnionRect(resultRect, frameRect);
+  }
+
+  aEvent->mReply.mRect =
+      resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
+  aEvent->mSucceeded = true;
 
   return NS_OK;
 }
@@ -676,25 +727,10 @@ nsContentEventHandler::OnQueryEditorRect(WidgetQueryContentEvent* aEvent)
   if (NS_FAILED(rv))
     return rv;
 
-  nsIFrame* frame = mRootContent->GetPrimaryFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  // get rect for first frame
-  nsRect resultRect(nsPoint(0, 0), frame->GetRect().Size());
-  rv = ConvertToRootViewRelativeOffset(frame, resultRect);
+  nsIContent* focusedContent = GetFocusedContent();
+  rv = QueryContentRect(IsPlugin(focusedContent) ?
+                          focusedContent : mRootContent.get(), aEvent);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // account for any additional frames
-  while ((frame = frame->GetNextContinuation()) != nullptr) {
-    nsRect frameRect(nsPoint(0, 0), frame->GetRect().Size());
-    rv = ConvertToRootViewRelativeOffset(frame, frameRect);
-    NS_ENSURE_SUCCESS(rv, rv);
-    resultRect.UnionRect(resultRect, frameRect);
-  }
-
-  aEvent->mReply.mRect =
-      resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel());
-  aEvent->mSucceeded = true;
   return NS_OK;
 }
 

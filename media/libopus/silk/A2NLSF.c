@@ -44,7 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 /* Helper function for A2NLSF(..)                    */
 /* Transforms polynomials from cos(n*f) to cos(f)^n  */
-static inline void silk_A2NLSF_trans_poly(
+static OPUS_INLINE void silk_A2NLSF_trans_poly(
     opus_int32          *p,                     /* I/O    Polynomial                                */
     const opus_int      dd                      /* I      Polynomial order (= filter order / 2 )    */
 )
@@ -60,7 +60,7 @@ static inline void silk_A2NLSF_trans_poly(
 }
 /* Helper function for A2NLSF(..) */
 /* Polynomial evaluation          */
-static inline opus_int32 silk_A2NLSF_eval_poly( /* return the polynomial evaluation, in Q16     */
+static OPUS_INLINE opus_int32 silk_A2NLSF_eval_poly( /* return the polynomial evaluation, in Q16     */
     opus_int32          *p,                     /* I    Polynomial, Q16                         */
     const opus_int32    x,                      /* I    Evaluation point, Q12                   */
     const opus_int      dd                      /* I    Order                                   */
@@ -77,7 +77,7 @@ static inline opus_int32 silk_A2NLSF_eval_poly( /* return the polynomial evaluat
     return y32;
 }
 
-static inline void silk_A2NLSF_init(
+static OPUS_INLINE void silk_A2NLSF_init(
      const opus_int32    *a_Q16,
      opus_int32          *P,
      opus_int32          *Q,

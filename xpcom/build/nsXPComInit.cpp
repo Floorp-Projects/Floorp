@@ -123,6 +123,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/AvailableMemoryTracker.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/SystemMemoryReporter.h"
 
 #ifdef MOZ_VISUAL_EVENT_TRACER
 #include "mozilla/VisualEventTracer.h"
@@ -581,9 +582,16 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     CreateAnonTempFileRemover();
 #endif
 
+    // We only want the SystemMemoryReporter running in one process, because it
+    // profiles the entire system.  The main process is the obvious place for
+    // it.
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        mozilla::SystemMemoryReporter::Init();
+    }
+
     // The memory reporter manager is up and running -- register a reporter for
     // ICU's memory usage.
-    NS_RegisterMemoryReporter(new ICUReporter());
+    RegisterStrongMemoryReporter(new ICUReporter());
 
     mozilla::Telemetry::Init();
 

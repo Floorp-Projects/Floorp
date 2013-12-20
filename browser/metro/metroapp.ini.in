@@ -1,7 +1,7 @@
 #filter substitution
 [App]
 Vendor=Mozilla
-Name=MetroFirefox
+Name=@MOZ_APP_BASENAME@
 UAName=Firefox
 Version=@GRE_MILESTONE@
 BuildID=@GRE_BUILDID@

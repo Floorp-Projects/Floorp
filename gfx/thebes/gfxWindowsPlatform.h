@@ -153,6 +153,8 @@ public:
         RENDER_MODE_MAX
     };
 
+    int GetScreenDepth() const;
+
     RenderMode GetRenderMode() { return mRenderMode; }
     void SetRenderMode(RenderMode rmode) { mRenderMode = rmode; }
 
@@ -175,16 +177,12 @@ public:
     HRESULT CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
 #endif
 
-    HDC GetScreenDC() { return mScreenDC; }
-
     /**
      * Return the resolution scaling factor to convert between "logical" or
      * "screen" pixels as used by Windows (dependent on the DPI scaling option
      * in the Display control panel) and actual device pixels.
      */
-    double GetDPIScale() {
-        return GetDeviceCaps(mScreenDC, LOGPIXELSY) / 96.0;
-    }
+    double GetDPIScale();
 
     nsresult GetFontList(nsIAtom *aLangGroup,
                          const nsACString& aGenericFamily,
@@ -238,7 +236,7 @@ public:
     bool UseClearTypeForDownloadableFonts();
     bool UseClearTypeAlways();
 
-    static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
+    static void GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion);
 
     // returns ClearType tuning information for each display
     static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);
@@ -274,7 +272,6 @@ protected:
 
     int8_t mUseClearTypeForDownloadableFonts;
     int8_t mUseClearTypeAlways;
-    HDC mScreenDC;
 
 private:
     void Init();
@@ -301,8 +298,6 @@ private:
 
     // TODO: unify this with mPrefFonts (NB: holds families, not fonts) in gfxPlatformFontList
     nsDataHashtable<nsCStringHashKey, nsTArray<nsRefPtr<gfxFontEntry> > > mPrefFonts;
-
-    nsIMemoryReporter* mGPUAdapterReporter;
 };
 
 #endif /* GFX_WINDOWS_PLATFORM_H */

@@ -31,24 +31,21 @@
 
     function runTest()
     {
-      var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                             getInterface(Components.interfaces.nsIDOMWindowUtils);
-
       window.addEventListener("keypress", onKeyPress, false);
 
       // Test ctrl-tab
       gKeyPressEventCount = 0;
-      domWindowUtils.sendNativeKeyEvent(0, MAC_VK_Tab, 0x0400, "\t", "\t");
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Tab, {ctrlKey:1}, "\t", "\t");
       is(gKeyPressEventCount, 1);
 
       // Test cmd+shift+a
       gKeyPressEventCount = 0;
-      domWindowUtils.sendNativeKeyEvent(0, MAC_VK_ANSI_A, 0x4000 | 0x0100, "a", "A");
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {metaKey:1, shiftKey:1}, "a", "A");
       is(gKeyPressEventCount, 1);
 
       // Test cmd-;
       gKeyPressEventCount = 0;
-      domWindowUtils.sendNativeKeyEvent(0, MAC_VK_ANSI_Semicolon, 0x4000, ";", ";");
+      synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Semicolon, {metaKey:1}, ";", ";");
       is(gKeyPressEventCount, 1);
 
       window.removeEventListener("keypress", onKeyPress, false);

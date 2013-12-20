@@ -51,8 +51,24 @@ namespace mozilla
   }
 
   MOZ_ALWAYS_INLINE bool
+  IsXPSP3OrLater()
+  { return IsWindowsVersionOrLater(0x0005000100030000ull); }
+
+  MOZ_ALWAYS_INLINE bool
+  IsWin2003OrLater()
+  { return IsWindowsVersionOrLater(0x0005000200000000ull); }
+
+  MOZ_ALWAYS_INLINE bool
+  IsWin2003SP2OrLater()
+  { return IsWindowsVersionOrLater(0x0005000200020000ull); }
+
+  MOZ_ALWAYS_INLINE bool
   IsVistaOrLater()
   { return IsWindowsVersionOrLater(0x0006000000000000ull); }
+
+  MOZ_ALWAYS_INLINE bool
+  IsVistaSP1OrLater()
+  { return IsWindowsVersionOrLater(0x0006000000010000ull); }
 
   MOZ_ALWAYS_INLINE bool
   IsWin7OrLater()

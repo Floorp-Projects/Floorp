@@ -9,6 +9,28 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+// Possible errors thrown by the signature verifier.
+const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
+const SEC_ERROR_EXPIRED_CERTIFICATE = (SEC_ERROR_BASE + 11);
+
+// We need this to decide if we should accept or not files signed with expired
+// certificates.
+function buildIDToTime() {
+  let platformBuildID =
+    Cc["@mozilla.org/xre/app-info;1"]
+      .getService(Ci.nsIXULAppInfo).platformBuildID;
+  let platformBuildIDDate = new Date();
+  platformBuildIDDate.setUTCFullYear(platformBuildID.substr(0,4),
+                                      platformBuildID.substr(4,2) - 1,
+                                      platformBuildID.substr(6,2));
+  platformBuildIDDate.setUTCHours(platformBuildID.substr(8,2),
+                                  platformBuildID.substr(10,2),
+                                  platformBuildID.substr(12,2));
+  return platformBuildIDDate.getTime();
+}
+
+const PLATFORM_BUILD_ID_TIME = buildIDToTime();
+
 this.EXPORTED_SYMBOLS = ["DOMApplicationRegistry"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -36,6 +58,10 @@ function debug(aMsg) {
 #ifdef MOZ_DEBUG
   dump("-*- Webapps.jsm : " + aMsg + "\n");
 #endif
+}
+
+function getNSPRErrorCode(err) {
+  return -1 * ((err) & 0xffff);
 }
 
 function supportUseCurrentProfile() {
@@ -287,10 +313,9 @@ this.DOMApplicationRegistry = {
 
     // Create or Update the DataStore for this app
     this._readManifests([{ id: aId }], (function(aResult) {
-      this.updateDataStore(this.webapps[aId].localId,
-                           this.webapps[aId].origin,
-                           this.webapps[aId].manifestURL,
-                           aResult[0].manifest);
+      let app = this.webapps[aId];
+      this.updateDataStore(app.localId, app.origin, app.manifestURL,
+                           aResult[0].manifest, app.appStatus);
     }).bind(this));
   },
 
@@ -426,6 +451,31 @@ this.DOMApplicationRegistry = {
 #endif
   },
 
+  // For hosted apps, uninstall an app served from http:// if we have
+  // one installed from the same url with an https:// scheme.
+  removeIfHttpsDuplicate: function(aId) {
+#ifdef MOZ_WIDGET_GONK
+    let app = this.webapps[aId];
+    if (!app || !app.origin.startsWith("http://")) {
+      return;
+    }
+
+    let httpsManifestURL =
+      "https://" + app.manifestURL.substring("http://".length);
+
+    // This will uninstall the http apps and remove any data hold by this
+    // app. Bug 948105 tracks data migration from http to https apps.
+    for (let id in this.webapps) {
+       if (this.webapps[id].manifestURL === httpsManifestURL) {
+         debug("Found a http/https match: " + app.manifestURL + " / " +
+               this.webapps[id].manifestURL);
+         this.uninstall(app.manifestURL, function() {}, function() {});
+         return;
+       }
+    }
+#endif
+  },
+
   // Implements the core of bug 787439
   // if at first run, go through these steps:
   //   a. load the core apps registry.
@@ -530,6 +580,7 @@ this.DOMApplicationRegistry = {
         // At first run, install preloaded apps and set up their permissions.
         for (let id in this.webapps) {
           this.installPreinstalledApp(id);
+          this.removeIfHttpsDuplicate(id);
           if (!this.webapps[id]) {
             continue;
           }
@@ -562,7 +613,15 @@ this.DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
+  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest, aAppStatus) {
+    // Just Certified Apps can use DataStores
+    let prefName = "dom.testing.datastore_enabled_for_hosted_apps";
+    if (aAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED &&
+        (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID ||
+         !Services.prefs.getBoolPref(prefName))) {
+      return;
+    }
+
     if ('datastores-owned' in aManifest) {
       for (let name in aManifest['datastores-owned']) {
         let readonly = "access" in aManifest['datastores-owned'][name]
@@ -1451,7 +1510,7 @@ this.DOMApplicationRegistry = {
               true);
           }
           this.updateDataStore(this.webapps[id].localId, app.origin,
-                               app.manifestURL, aData);
+                               app.manifestURL, aData, app.appStatus);
           this.broadcastMessage("Webapps:UpdateState", {
             app: app,
             manifest: aData,
@@ -1625,7 +1684,7 @@ this.DOMApplicationRegistry = {
         }
 
         this.updateDataStore(this.webapps[id].localId, app.origin,
-                             app.manifestURL, app.manifest);
+                             app.manifestURL, app.manifest, app.appStatus);
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
@@ -2261,7 +2320,8 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       }
 
       this.updateDataStore(this.webapps[id].localId,  this.webapps[id].origin,
-                           this.webapps[id].manifestURL, jsonManifest);
+                           this.webapps[id].manifestURL, jsonManifest,
+                           this.webapps[id].appStatus);
     }
 
     for each (let prop in ["installState", "downloadAvailable", "downloading",
@@ -2372,7 +2432,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       }
 
       this.updateDataStore(this.webapps[aId].localId, aNewApp.origin,
-                           aNewApp.manifestURL, aManifest);
+                           aNewApp.manifestURL, aManifest, aNewApp.appStatus);
 
       this.broadcastMessage("Webapps:UpdateState", {
         app: app,
@@ -2485,6 +2545,10 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
       // Check if it's a local file install (we've downloaded/sideloaded the
       // package already or it did exist on the build).
+      // Note that this variable also controls whether files signed with expired
+      // certificates are accepted or not. If isLocalFileInstall is true and the
+      // device date is earlier than the build generation date, then the signature
+      // will be accepted even if the certificate is expired.
       let isLocalFileInstall =
         Services.io.extractScheme(fullPackagePath) === 'file';
 
@@ -2837,7 +2901,8 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       let zipReader, isSigned, newManifest;
 
       try {
-        [zipReader, isSigned] = yield this._openPackage(aZipFile, aOldApp);
+        [zipReader, isSigned] = yield this._openPackage(aZipFile, aOldApp,
+                                                        aIsLocalFileInstall);
         newManifest = yield this._readPackage(aOldApp, aNewApp,
                 aIsLocalFileInstall, aIsUpdate, aManifest, aRequestChannel,
                 aHash, zipReader, isSigned);
@@ -2868,7 +2933,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
     }).bind(this));
   },
 
-  _openPackage: function(aZipFile, aApp) {
+  _openPackage: function(aZipFile, aApp, aIsLocalFileInstall) {
     return Task.spawn((function*() {
       let certDb;
       try {
@@ -2883,16 +2948,37 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
 
       let [result, zipReader] = yield this._openSignedPackage(aZipFile, certDb);
 
+      // We cannot really know if the system date is correct or
+      // not. What we can know is if it's after the build date or not,
+      // and assume the build date is correct (which we cannot
+      // really know either).
+      let isLaterThanBuildTime = Date.now() > PLATFORM_BUILD_ID_TIME;
+
       let isSigned;
 
       if (Components.isSuccessCode(result)) {
         isSigned = true;
-      } else if (result == Cr.NS_ERROR_FILE_CORRUPTED) {
+      } else if (result == Cr.NS_ERROR_SIGNED_JAR_MODIFIED_ENTRY ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_UNSIGNED_ENTRY ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_MISSING) {
         throw "APP_PACKAGE_CORRUPTED";
-      } else if (result != Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED) {
+      } else if (result == Cr.NS_ERROR_FILE_CORRUPTED ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_ENTRY_INVALID ||
+                 result == Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID) {
+        throw "APP_PACKAGE_INVALID";
+      } else if ((!aIsLocalFileInstall || isLaterThanBuildTime) &&
+                 (result != Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED)) {
         throw "INVALID_SIGNATURE";
       } else {
-        isSigned = false;
+        // If it's a localFileInstall and the validation failed
+        // because of a expired certificate, just assume it was valid
+        // and that the error occurred because the system time has not
+        // been set yet.
+        isSigned = (aIsLocalFileInstall &&
+                    (getNSPRErrorCode(result) ==
+                     SEC_ERROR_EXPIRED_CERTIFICATE));
+
         zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                       .createInstance(Ci.nsIZipReader);
         zipReader.open(aZipFile);

@@ -9,7 +9,8 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 int
-AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength)
+AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const char* aName,
+                 int aLength)
 {
   int headerLength = aLength + 3;
 
@@ -17,13 +18,15 @@ AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength)
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&aRetBuf[3], aName, aLength);
+  memcpy(&aRetBuf[3], aName, (aLength < aBufferSize - 3)? aLength
+                                                        : aBufferSize - 3);
 
   return headerLength;
 }
 
 int
-AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength)
+AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aData,
+                 int aLength)
 {
   int headerLength = aLength + 3;
 
@@ -31,7 +34,8 @@ AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength)
   aRetBuf[1] = (headerLength & 0xFF00) >> 8;
   aRetBuf[2] = headerLength & 0x00FF;
 
-  memcpy(&aRetBuf[3], aData, aLength);
+  memcpy(&aRetBuf[3], aData, (aLength < aBufferSize - 3)? aLength
+                                                        : aBufferSize - 3);
 
   return headerLength;
 }
@@ -78,7 +82,7 @@ SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength)
   aRetBuf[2] = aPacketLength & 0x00FF;
 }
 
-void
+bool
 ParseHeaders(const uint8_t* aHeaderStart,
              int aTotalLength,
              ObexHeaderSet* aRetHandlerSet)
@@ -88,7 +92,7 @@ ParseHeaders(const uint8_t* aHeaderStart,
   while (ptr - aHeaderStart < aTotalLength) {
     ObexHeaderId headerId = (ObexHeaderId)*ptr++;
 
-    int contentLength = 0;
+    uint16_t contentLength = 0;
     uint8_t highByte, lowByte;
 
     // Defined in 2.1 OBEX Headers, IrOBEX 1.2
@@ -101,7 +105,7 @@ ParseHeaders(const uint8_t* aHeaderStart,
         // byte sequence, length prefixed with 2 byte unsigned integer.
         highByte = *ptr++;
         lowByte = *ptr++;
-        contentLength = (((int)highByte << 8) | lowByte) - 3;
+        contentLength = (((uint16_t)highByte << 8) | lowByte) - 3;
         break;
 
       case 0x02:
@@ -115,10 +119,20 @@ ParseHeaders(const uint8_t* aHeaderStart,
         break;
     }
 
-    aRetHandlerSet->AddHeader(new ObexHeader(headerId, contentLength, ptr));
+    // Length check to prevent from memory pollusion.
+    if (ptr + contentLength > aHeaderStart + aTotalLength) {
+      // Severe error occurred. We can't even believe the received data, so
+      // clear all headers.
+      MOZ_ASSERT(false);
+      aRetHandlerSet->ClearHeaders();
+      return false;
+    }
 
+    aRetHandlerSet->AddHeader(new ObexHeader(headerId, contentLength, ptr));
     ptr += contentLength;
   }
+
+  return true;
 }
 
 END_BLUETOOTH_NAMESPACE

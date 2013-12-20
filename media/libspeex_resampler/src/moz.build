@@ -21,3 +21,21 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+# We don't compile the full speex codec, only the resampler.
+DEFINES['OUTSIDE_SPEEX'] = True
+# Speex wants a random prefix when building in another program, to avoid name
+# clashes
+DEFINES['RANDOM_PREFIX'] = 'speex'
+# We don't use -fvisibility=hidden
+DEFINES['SPX_RESAMPLE_EXPORT'] = ''
+
+if CONFIG['OS_TARGET'] == 'Android':
+    DEFINES['FIXED_POINT'] = True
+else:
+    DEFINES['FLOATING_POINT'] = True
+
+# Only use SSE code when using floating point samples, and on x86
+if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['OS_TARGET'] != 'Android':
+    DEFINES['_USE_SSE'] = True
+    DEFINES['_USE_SSE2'] = True

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936129
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 936129</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+    /** Test for Bug 936129 **/
+    SimpleTest.waitForExplicitFinish();
+
+    function test1Done()
+    {
+      ok(true, "Bareword setTimeout should work after calling document.open().");
+  
+      var iframe = document.getElementById("testFrame");
+      iframe.onload = function () {
+        window.runTest2 = iframe.contentWindow.runTest2;
+        iframe.onload = function () {
+          window.runTest2();
+          setTimeout(allDone);
+        }
+        iframe.src = "about:blank";
+      }
+      iframe.src = "data:text/html,<script>function runTest2() { setTimeout('parent.test2Done()'); };<" + "/script>";
+    }
+    window.test2DoneCalled = false;
+    function test2Done()
+    {
+      window.test2DoneCalled = true;
+    }
+    function allDone()
+    {
+      ok(!window.test2DoneCalled, "Bareword setTimeout should be a noop after the document for the window context that it's called on isn't active anymore.");
+
+      SimpleTest.finish();
+    }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936129">Mozilla Bug 936129</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="testFrame" src="data:text/html,<script>window.onload = function runTest1() { document.open(); setTimeout('parent.test1Done();'); document.close(); }</script>"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

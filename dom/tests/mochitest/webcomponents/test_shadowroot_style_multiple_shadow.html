@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=806506
+-->
+<head>
+  <title>Test for ShadowRoot styles with multiple ShadowRoot on host.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div class="tall" id="bodydiv"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
+<script>
+// Create ShadowRoot.
+var elem = document.createElement("div");
+var firstRoot = elem.createShadowRoot();
+var secondRoot = elem.createShadowRoot();
+var thirdRoot = elem.createShadowRoot();
+
+// A style element that will be appended into the ShadowRoot.
+var firstStyle = document.createElement("style");
+firstRoot.appendChild(firstStyle);
+is(firstRoot.styleSheets.length, 1, "firstStyle should be the only style in firstRoot.");
+is(firstRoot.styleSheets[0].ownerNode, firstStyle, "firstStyle should in the ShadowRoot styleSheets.");
+
+var secondStyle = document.createElement("style");
+secondRoot.appendChild(secondStyle);
+is(secondRoot.styleSheets.length, 1, "secondStyle should be the only style in secondRoot.");
+is(secondRoot.styleSheets[0].ownerNode, secondStyle, "secondStyle should in the ShadowRoot styleSheets.");
+
+var thirdStyle = document.createElement("style");
+thirdRoot.appendChild(thirdStyle);
+is(thirdRoot.styleSheets.length, 1, "thirdStyle should be the only style in thirdRoot.");
+is(thirdRoot.styleSheets[0].ownerNode, thirdStyle, "thirdStyle should in the ShadowRoot styleSheets.");
+
+// Check the stylesheet counts again to make sure that none of the style sheets leaked into the older ShadowRoots.
+is(firstRoot.styleSheets.length, 1, "Adding a stylesheet to a younger ShadowRoot should not affect stylesheets in the older ShadowRoot.");
+is(secondRoot.styleSheets.length, 1, "Adding a stylesheet to a younger ShadowRoot should not affect stylesheets in the older ShadowRoot.");
+
+// Remove styles and make sure they are removed from the correct ShadowRoot.
+firstRoot.removeChild(firstStyle);
+is(firstRoot.styleSheets.length, 0, "firstRoot should no longer have any styles.");
+
+thirdRoot.removeChild(thirdStyle);
+is(thirdRoot.styleSheets.length, 0, "thirdRoot should no longer have any styles.");
+
+secondRoot.removeChild(secondStyle);
+is(secondRoot.styleSheets.length, 0, "secondRoot should no longer have any styles.");
+
+</script>
+</body>
+</html>
+

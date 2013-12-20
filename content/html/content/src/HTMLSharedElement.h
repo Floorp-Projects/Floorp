@@ -32,6 +32,10 @@ public:
   HTMLSharedElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
+    if (mNodeInfo->Equals(nsGkAtoms::head) ||
+        mNodeInfo->Equals(nsGkAtoms::html)) {
+      SetHasWeirdParserInsertionMode();
+    }
   }
   virtual ~HTMLSharedElement();
 

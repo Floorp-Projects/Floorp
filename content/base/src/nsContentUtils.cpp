@@ -28,6 +28,7 @@
 // nsNPAPIPluginInstance must be included before nsIDocument.h, which is included in mozAutoDocUpdate.h.
 #include "nsNPAPIPluginInstance.h"
 #include "mozAutoDocUpdate.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Base64.h"
@@ -36,14 +37,15 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/HTMLContentElement.h"
 #include "mozilla/dom/TextDecoder.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/Util.h"
 #include "nsAString.h"
 #include "nsAttrName.h"
 #include "nsAttrValue.h"
@@ -83,8 +85,6 @@
 #include "nsICategoryManager.h"
 #include "nsIChannelEventSink.h"
 #include "nsIChannelPolicy.h"
-#include "nsICharsetDetectionObserver.h"
-#include "nsICharsetDetector.h"
 #include "nsIChromeRegistry.h"
 #include "nsIConsoleService.h"
 #include "nsIContent.h"
@@ -132,7 +132,6 @@
 #include "nsIParser.h"
 #include "nsIParserService.h"
 #include "nsIPermissionManager.h"
-#include "nsIPlatformCharset.h"
 #include "nsIPluginHost.h"
 #include "nsIRunnable.h"
 #include "nsIScriptContext.h"
@@ -417,7 +416,7 @@ nsContentUtils::Init()
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    NS_RegisterMemoryReporter(new DOMEventListenerManagersHashReporter);
+    RegisterStrongMemoryReporter(new DOMEventListenerManagersHashReporter());
   }
 
   sBlockedScriptRunners = new nsTArray< nsCOMPtr<nsIRunnable> >;
@@ -529,12 +528,12 @@ nsContentUtils::InitializeModifierStrings()
   nsXPIDLString modifierSeparator;
   if (bundle) {
     //macs use symbols for each modifier key, so fetch each from the bundle, which also covers i18n
-    bundle->GetStringFromName(NS_LITERAL_STRING("VK_SHIFT").get(), getter_Copies(shiftModifier));
-    bundle->GetStringFromName(NS_LITERAL_STRING("VK_META").get(), getter_Copies(metaModifier));
-    bundle->GetStringFromName(NS_LITERAL_STRING("VK_WIN").get(), getter_Copies(osModifier));
-    bundle->GetStringFromName(NS_LITERAL_STRING("VK_ALT").get(), getter_Copies(altModifier));
-    bundle->GetStringFromName(NS_LITERAL_STRING("VK_CONTROL").get(), getter_Copies(controlModifier));
-    bundle->GetStringFromName(NS_LITERAL_STRING("MODIFIER_SEPARATOR").get(), getter_Copies(modifierSeparator));
+    bundle->GetStringFromName(MOZ_UTF16("VK_SHIFT"), getter_Copies(shiftModifier));
+    bundle->GetStringFromName(MOZ_UTF16("VK_META"), getter_Copies(metaModifier));
+    bundle->GetStringFromName(MOZ_UTF16("VK_WIN"), getter_Copies(osModifier));
+    bundle->GetStringFromName(MOZ_UTF16("VK_ALT"), getter_Copies(altModifier));
+    bundle->GetStringFromName(MOZ_UTF16("VK_CONTROL"), getter_Copies(controlModifier));
+    bundle->GetStringFromName(MOZ_UTF16("MODIFIER_SEPARATOR"), getter_Copies(modifierSeparator));
   }
   //if any of these don't exist, we get  an empty string
   sShiftText = new nsString(shiftModifier);
@@ -3456,26 +3455,23 @@ nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
   return MatchElementId(aContent, id);
 }
 
-// Convert the string from the given charset to Unicode.
+// Convert the string from the given encoding to Unicode.
 /* static */
 nsresult
-nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
-                                         const nsACString& aInput,
-                                         nsAString& aOutput)
+nsContentUtils::ConvertStringFromEncoding(const nsACString& aEncoding,
+                                          const nsACString& aInput,
+                                          nsAString& aOutput)
 {
-  if (aCharset.IsEmpty()) {
-    // Treat the string as UTF8
-    CopyUTF8toUTF16(aInput, aOutput);
-    return NS_OK;
+  nsAutoCString encoding;
+  if (aEncoding.IsEmpty()) {
+    encoding.AssignLiteral("UTF-8");
+  } else {
+    encoding.Assign(aEncoding);
   }
 
   ErrorResult rv;
   nsAutoPtr<TextDecoder> decoder(new TextDecoder());
-  decoder->Init(NS_ConvertUTF8toUTF16(aCharset), false, rv);
-  if (rv.Failed()) {
-    rv.ClearMessage();
-    return rv.ErrorCode();
-  }
+  decoder->InitWithEncoding(encoding, false);
 
   decoder->Decode(aInput.BeginReading(), aInput.Length(), false,
                   aOutput, rv);
@@ -3507,80 +3503,6 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
   }
 
   return found;
-}
-
-NS_IMPL_ISUPPORTS1(CharsetDetectionObserver,
-                   nsICharsetDetectionObserver)
-
-/* static */
-nsresult
-nsContentUtils::GuessCharset(const char *aData, uint32_t aDataLen,
-                             nsACString &aCharset)
-{
-  // First try the universal charset detector
-  nsCOMPtr<nsICharsetDetector> detector =
-    do_CreateInstance(NS_CHARSET_DETECTOR_CONTRACTID_BASE
-                      "universal_charset_detector");
-  if (!detector) {
-    // No universal charset detector, try the default charset detector
-    const nsAdoptingCString& detectorName =
-      Preferences::GetLocalizedCString("intl.charset.detector");
-    if (!detectorName.IsEmpty()) {
-      nsAutoCString detectorContractID;
-      detectorContractID.AssignLiteral(NS_CHARSET_DETECTOR_CONTRACTID_BASE);
-      detectorContractID += detectorName;
-      detector = do_CreateInstance(detectorContractID.get());
-    }
-  }
-
-  nsresult rv;
-
-  // The charset detector doesn't work for empty (null) aData. Testing
-  // aDataLen instead of aData so that we catch potential errors.
-  if (detector && aDataLen) {
-    nsRefPtr<CharsetDetectionObserver> observer =
-      new CharsetDetectionObserver();
-
-    rv = detector->Init(observer);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool dummy;
-    rv = detector->DoIt(aData, aDataLen, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = detector->Done();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aCharset = observer->GetResult();
-  } else {
-    // no charset detector available, check the BOM
-    unsigned char sniffBuf[3];
-    uint32_t numRead =
-      (aDataLen >= sizeof(sniffBuf) ? sizeof(sniffBuf) : aDataLen);
-    memcpy(sniffBuf, aData, numRead);
-
-    CheckForBOM(sniffBuf, numRead, aCharset);
-  }
-
-  if (aCharset.IsEmpty()) {
-    // no charset detected, default to the system charset
-    nsCOMPtr<nsIPlatformCharset> platformCharset =
-      do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = platformCharset->GetCharset(kPlatformCharsetSel_PlainTextInFile,
-                                       aCharset);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to get the system charset!");
-      }
-    }
-  }
-
-  if (aCharset.IsEmpty()) {
-    // no sniffed or default charset, assume UTF-8
-    aCharset.AssignLiteral("UTF-8");
-  }
-
-  return NS_OK;
 }
 
 /* static */
@@ -4329,15 +4251,28 @@ nsContentUtils::IsInSameAnonymousTree(const nsINode* aNode,
     return aContent->GetBindingParent() == nullptr;
   }
 
-  return static_cast<const nsIContent*>(aNode)->GetBindingParent() ==
-         aContent->GetBindingParent();
- 
+  const nsIContent* nodeAsContent = static_cast<const nsIContent*>(aNode);
+
+  // For nodes in a shadow tree, it is insufficient to simply compare
+  // the binding parent because a node may host multiple ShadowRoots,
+  // thus nodes in different shadow tree may have the same binding parent.
+  if (aNode->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    return nodeAsContent->GetContainingShadow() ==
+      aContent->GetContainingShadow();
+  }
+
+  return nodeAsContent->GetBindingParent() == aContent->GetBindingParent();
 }
 
 class AnonymousContentDestroyer : public nsRunnable {
 public:
   AnonymousContentDestroyer(nsCOMPtr<nsIContent>* aContent) {
     mContent.swap(*aContent);
+    mParent = mContent->GetParent();
+    mDoc = mContent->OwnerDoc();
+  }
+  AnonymousContentDestroyer(nsCOMPtr<Element>* aElement) {
+    mContent = aElement->forget();
     mParent = mContent->GetParent();
     mDoc = mContent->OwnerDoc();
   }
@@ -4359,6 +4294,15 @@ nsContentUtils::DestroyAnonymousContent(nsCOMPtr<nsIContent>* aContent)
 {
   if (*aContent) {
     AddScriptRunner(new AnonymousContentDestroyer(aContent));
+  }
+}
+
+/* static */
+void
+nsContentUtils::DestroyAnonymousContent(nsCOMPtr<Element>* aElement)
+{
+  if (*aElement) {
+    AddScriptRunner(new AnonymousContentDestroyer(aElement));
   }
 }
 
@@ -5239,6 +5183,17 @@ nsContentUtils::GetDefaultJSContextForThread()
 }
 
 /* static */
+JSContext *
+nsContentUtils::GetCurrentJSContextForThread()
+{
+  if (MOZ_LIKELY(NS_IsMainThread())) {
+    return GetCurrentJSContext();
+  } else {
+    return workers::GetCurrentThreadJSContext();
+  }
+}
+
+/* static */
 nsresult
 nsContentUtils::ASCIIToLower(nsAString& aStr)
 {
@@ -5971,12 +5926,12 @@ nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
 {
   if (aString.FindChar(PRUnichar('\r')) != -1) {
     // Windows linebreaks: Map CRLF to LF:
-    aString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
-                             NS_LITERAL_STRING("\n").get());
+    aString.ReplaceSubstring(MOZ_UTF16("\r\n"),
+                             MOZ_UTF16("\n"));
 
     // Mac linebreaks: Map any remaining CR to LF:
-    aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
-                             NS_LITERAL_STRING("\n").get());
+    aString.ReplaceSubstring(MOZ_UTF16("\r"),
+                             MOZ_UTF16("\n"));
   }
 }
 
@@ -6396,6 +6351,29 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
 }
 
 /* static */
+void
+nsContentUtils::FireMutationEventsForDirectParsing(nsIDocument* aDoc,
+                                                   nsIContent* aDest,
+                                                   int32_t aOldChildCount)
+{
+  // Fire mutation events. Optimize for the case when there are no listeners
+  int32_t newChildCount = aDest->GetChildCount();
+  if (newChildCount && nsContentUtils::
+        HasMutationListeners(aDoc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+    nsAutoTArray<nsCOMPtr<nsIContent>, 50> childNodes;
+    NS_ASSERTION(newChildCount - aOldChildCount >= 0,
+                 "What, some unexpected dom mutation has happened?");
+    childNodes.SetCapacity(newChildCount - aOldChildCount);
+    for (nsIContent* child = aDest->GetFirstChild();
+         child;
+         child = child->GetNextSibling()) {
+      childNodes.AppendElement(child);
+    }
+    FragmentOrElement::FireNodeInserted(aDoc, aDest, childNodes);
+  }
+}
+
+/* static */
 nsIDocument*
 nsContentUtils::GetFullscreenAncestor(nsIDocument* aDoc)
 {
@@ -6482,9 +6460,9 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
   }
 
   nsCOMPtr<nsINode> anchorNode = aSelection->GetAnchorNode();
-  int32_t anchorOffset = aSelection->GetAnchorOffset();
+  uint32_t anchorOffset = aSelection->AnchorOffset();
   nsCOMPtr<nsINode> focusNode = aSelection->GetFocusNode();
-  int32_t focusOffset = aSelection->GetFocusOffset();
+  uint32_t focusOffset = aSelection->FocusOffset();
 
   // We have at most two children, consisting of an optional text node followed
   // by an optional <br>.
@@ -6523,8 +6501,7 @@ nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
 nsIEditor*
 nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 {
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShell> docShell(aPresContext->GetDocShell());
   bool isEditable;
   if (!docShell ||
       NS_FAILED(docShell->GetEditable(&isEditable)) || !isEditable)
@@ -6555,6 +6532,22 @@ nsContentUtils::InternalIsSupported(nsISupports* aObject,
 
   // Otherwise, we claim to support everything
   return true;
+}
+
+bool
+nsContentUtils::IsContentInsertionPoint(const nsIContent* aContent)
+{
+  // Check if the content is a XBL insertion point.
+  if (aContent->IsActiveChildrenElement()) {
+    return true;
+  }
+
+  // Check if the content is a web components content insertion point.
+  if (aContent->IsHTML(nsGkAtoms::content)) {
+    return static_cast<const HTMLContentElement*>(aContent)->IsInsertionPoint();
+  }
+
+  return false;
 }
 
 bool

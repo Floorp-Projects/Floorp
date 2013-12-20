@@ -11,18 +11,13 @@
 
 #include "nsIObserver.h"
 
-#include "mozilla/Attributes.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
-#include "nsCOMPtr.h"
-#include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
-#include "nsString.h"
 #include "nsTArray.h"
 
+class nsIRunnable;
 class nsIThread;
 class nsITimer;
 class nsPIDOMWindow;
@@ -34,6 +29,10 @@ class WorkerPrivate;
 
 class RuntimeService MOZ_FINAL : public nsIObserver
 {
+public:
+  class WorkerThread;
+
+private:
   struct SharedWorkerInfo
   {
     WorkerPrivate* mWorkerPrivate;
@@ -68,7 +67,7 @@ class RuntimeService MOZ_FINAL : public nsIObserver
 
   struct IdleThreadInfo
   {
-    nsCOMPtr<nsIThread> mThread;
+    nsRefPtr<WorkerThread> mThread;
     mozilla::TimeStamp mExpirationTime;
   };
 
@@ -96,9 +95,6 @@ class RuntimeService MOZ_FINAL : public nsIObserver
 
   // Only used on the main thread.
   nsCOMPtr<nsITimer> mIdleThreadTimer;
-
-  nsCString mDetectorName;
-  nsCString mSystemCharset;
 
   static JSSettings sDefaultJSSettings;
   static bool sDefaultPreferences[WORKERPREF_COUNT];
@@ -154,18 +150,6 @@ public:
   void
   ForgetSharedWorker(WorkerPrivate* aWorkerPrivate);
 
-  const nsACString&
-  GetDetectorName() const
-  {
-    return mDetectorName;
-  }
-
-  const nsACString&
-  GetSystemCharset() const
-  {
-    return mSystemCharset;
-  }
-
   const NavigatorStrings&
   GetNavigatorStrings() const
   {
@@ -173,7 +157,7 @@ public:
   }
 
   void
-  NoteIdleThread(nsIThread* aThread);
+  NoteIdleThread(WorkerThread* aThread);
 
   static void
   GetDefaultJSSettings(JSSettings& aSettings)
@@ -194,8 +178,8 @@ public:
                              const JS::ContextOptions& aChromeOptions)
   {
     AssertIsOnMainThread();
-    sDefaultJSSettings.content.options = aContentOptions;
-    sDefaultJSSettings.chrome.options = aChromeOptions;
+    sDefaultJSSettings.content.contextOptions = aContentOptions;
+    sDefaultJSSettings.chrome.contextOptions = aChromeOptions;
   }
 
   void
@@ -252,6 +236,9 @@ public:
   void
   GarbageCollectAllWorkers(bool aShrinking);
 
+  void
+  CycleCollectAllWorkers();
+
 private:
   RuntimeService();
   ~RuntimeService();
@@ -290,8 +277,11 @@ private:
   static void
   ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
 
-  static int
+  static void
   WorkerPrefChanged(const char* aPrefName, void* aClosure);
+
+  static void
+  JSVersionChanged(const char* aPrefName, void* aClosure);
 };
 
 END_WORKERS_NAMESPACE

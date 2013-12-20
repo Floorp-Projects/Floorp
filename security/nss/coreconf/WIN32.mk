@@ -25,7 +25,7 @@ else
 	CCC          = cl
 	LINK         = link
 	AR           = lib
-	AR          += -NOLOGO -OUT:"$@"
+	AR          += -NOLOGO -OUT:$@
 	RANLIB       = echo
 	BSDECHO      = echo
 	RC           = rc.exe
@@ -130,7 +130,7 @@ else # !NS_USE_GCC
 		OPTIMIZER += -O2
 	endif
 	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
-	DLLFLAGS   += -OUT:"$@"
+	DLLFLAGS   += -OUT:$@
 	ifdef MOZ_DEBUG_SYMBOLS
 		ifdef MOZ_DEBUG_FLAGS
 			OPTIMIZER += $(MOZ_DEBUG_FLAGS) -Fd$(OBJDIR)/
@@ -156,7 +156,7 @@ else # !NS_USE_GCC
 	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
 	USERNAME   := $(subst -,_,$(USERNAME))
 	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
-	DLLFLAGS   += -DEBUG -OUT:"$@"
+	DLLFLAGS   += -DEBUG -OUT:$@
 	LDFLAGS    += -DEBUG 
 ifeq ($(_MSC_VER),$(_MSC_VER_6))
 ifndef MOZ_DEBUG_SYMBOLS

@@ -6,9 +6,9 @@
 
 #include "nsXMLHttpRequest.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMProgressEvent.h"
@@ -383,7 +383,7 @@ nsXMLHttpRequest::InitParameters(bool aAnon, bool aSystem)
 
   // Chrome is always allowed access, so do the permission check only
   // for non-chrome pages.
-  if (!IsSystemXHR()) {
+  if (!IsSystemXHR() && aSystem) {
     nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
     if (!doc) {
       return;

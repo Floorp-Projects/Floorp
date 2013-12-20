@@ -11,11 +11,11 @@
 
 #include <algorithm>
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/Util.h"
 
 #include "nsRuleNode.h"
 #include "nscore.h"
@@ -43,6 +43,8 @@
 #include "nsStyleUtil.h"
 #include "nsIDocument.h"
 #include "prtime.h"
+#include "CSSVariableResolver.h"
+#include "nsCSSParser.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -1662,6 +1664,18 @@ CheckTextCallback(const nsRuleData* aRuleData,
   return aResult;
 }
 
+static nsRuleNode::RuleDetail
+CheckVariablesCallback(const nsRuleData* aRuleData,
+                       nsRuleNode::RuleDetail aResult)
+{
+  // We don't actually have any properties on nsStyleVariables, so we do
+  // all of the RuleDetail calculation in here.
+  if (aRuleData->mVariables) {
+    return nsRuleNode::eRulePartialMixed;
+  }
+  return nsRuleNode::eRuleNone;
+}
+
 #define FLAG_DATA_FOR_PROPERTY(name_, id_, method_, flags_, pref_,          \
                                parsevariant_, kwtable_, stylestructoffset_, \
                                animtype_)                                   \
@@ -1807,6 +1821,18 @@ static const uint32_t gColumnFlags[] = {
 #undef CSS_PROP_COLUMN
 };
 
+// There are no properties in nsStyleVariables, but we can't have a
+// zero length array.
+static const uint32_t gVariablesFlags[] = {
+  0,
+#define CSS_PROP_VARIABLES FLAG_DATA_FOR_PROPERTY
+#include "nsCSSPropList.h"
+#undef CSS_PROP_VARIABLES
+};
+static_assert(sizeof(gVariablesFlags) == sizeof(uint32_t),
+              "if nsStyleVariables has properties now you can remove the dummy "
+              "gVariablesFlags entry");
+
 #undef FLAG_DATA_FOR_PROPERTY
 
 static const uint32_t* gFlagsByStruct[] = {
@@ -1834,7 +1860,8 @@ AreAllMathMLPropertiesUndefined(const nsRuleData* aRuleData)
   return
     aRuleData->ValueForScriptLevel()->GetUnit() == eCSSUnit_Null &&
     aRuleData->ValueForScriptSizeMultiplier()->GetUnit() == eCSSUnit_Null &&
-    aRuleData->ValueForScriptMinSize()->GetUnit() == eCSSUnit_Null;
+    aRuleData->ValueForScriptMinSize()->GetUnit() == eCSSUnit_Null &&
+    aRuleData->ValueForMathVariant()->GetUnit() == eCSSUnit_Null;
 }
 #endif
 
@@ -1884,13 +1911,13 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   if (inherited == total)
     result = eRuleFullInherited;
   else if (specified == total
-           // MathML defines 3 properties in Font that will never be set when
-           // MathML is not in use. Therefore if all but three
+           // MathML defines 4 properties in Font that will never be set when
+           // MathML is not in use. Therefore if all but four
            // properties have been set, and MathML is not enabled, we can treat
            // this as fully specified. Code in nsMathMLElementFactory will
            // rebuild the rule tree and style data when MathML is first enabled
            // (see nsMathMLElement::BindToTree).
-           || (aSID == eStyleStruct_Font && specified + 3 == total &&
+           || (aSID == eStyleStruct_Font && specified + 4 == total &&
                !mPresContext->Document()->GetMathMLEnabled())
           ) {
     if (inherited == 0)
@@ -1995,6 +2022,44 @@ private:
   size_t mCount;
 };
 
+/* static */ bool
+nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
+                                      nsRuleData* aRuleData,
+                                      nsStyleContext* aContext)
+{
+  MOZ_ASSERT(aSID != eStyleStruct_Variables);
+  MOZ_ASSERT(aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(aSID));
+  MOZ_ASSERT(aRuleData->mValueOffsets[aSID] == 0);
+
+  nsCSSParser parser;
+  bool anyTokenStreams = false;
+
+  // Look at each property in the nsRuleData for the given style struct.
+  size_t nprops = nsCSSProps::PropertyCountInStruct(aSID);
+  for (nsCSSValue* value = aRuleData->mValueStorage,
+                  *values_end = aRuleData->mValueStorage + nprops;
+       value != values_end; value++) {
+    if (value->GetUnit() != eCSSUnit_TokenStream) {
+      continue;
+    }
+
+    const CSSVariableValues* variables =
+      &aContext->StyleVariables()->mVariables;
+    nsCSSValueTokenStream* tokenStream = value->GetTokenStreamValue();
+
+    parser.ParsePropertyWithVariableReferences(
+        tokenStream->mPropertyID, tokenStream->mShorthandPropertyID,
+        tokenStream->mTokenStream, variables, aRuleData,
+        tokenStream->mSheetURI, tokenStream->mBaseURI,
+        tokenStream->mSheetPrincipal, tokenStream->mSheet,
+        tokenStream->mLineNumber, tokenStream->mLineOffset);
+    aRuleData->mCanStoreInRuleTree = false;
+    anyTokenStreams = true;
+  }
+
+  return anyTokenStreams;
+}
+
 const void*
 nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
                          nsStyleContext* aContext)
@@ -2081,6 +2146,19 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     ruleNode = ruleNode->mParent;
   }
 
+  bool recomputeDetail = false;
+
+  // If we are computing a style struct other than nsStyleVariables, and
+  // ruleData has any properties with variable references (nsCSSValues of
+  // type eCSSUnit_TokenStream), then we need to resolve these.
+  if (aSID != eStyleStruct_Variables) {
+    // A property's value might have became 'inherit' after resolving
+    // variable references.  (This happens when an inherited property
+    // fails to parse its resolved value.)  We need to recompute
+    // |detail| in case this happened.
+    recomputeDetail = ResolveVariableReferences(aSID, &ruleData, aContext);
+  }
+
   // If needed, unset the properties that don't have a flag that allows
   // them to be set for this style context.  (For example, only some
   // properties apply to :first-line and :first-letter.)
@@ -2088,9 +2166,13 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   if (pseudoRestriction) {
     UnsetPropertiesWithoutFlags(aSID, &ruleData, pseudoRestriction);
 
-    // Recompute |detail| based on the restrictions we just applied.
+    // We need to recompute |detail| based on the restrictions we just applied.
     // We can adjust |detail| arbitrarily because of the restriction
     // rule added in nsStyleSet::WalkRestrictionRule.
+    recomputeDetail = true;
+  }
+
+  if (recomputeDetail) {
     detail = CheckSpecifiedProperties(aSID, &ruleData);
   }
 
@@ -2300,33 +2382,35 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsStyleContext* aContex
       aContext->SetStyle(eStyleStruct_UIReset, ui);
       return ui;
     }
-
     case eStyleStruct_XUL:
     {
       nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
       aContext->SetStyle(eStyleStruct_XUL, xul);
       return xul;
     }
-
     case eStyleStruct_Column:
     {
       nsStyleColumn* column = new (mPresContext) nsStyleColumn(mPresContext);
       aContext->SetStyle(eStyleStruct_Column, column);
       return column;
     }
-
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
       aContext->SetStyle(eStyleStruct_SVG, svg);
       return svg;
     }
-
     case eStyleStruct_SVGReset:
     {
       nsStyleSVGReset* svgReset = new (mPresContext) nsStyleSVGReset();
       aContext->SetStyle(eStyleStruct_SVGReset, svgReset);
       return svgReset;
+    }
+    case eStyleStruct_Variables:
+    {
+      nsStyleVariables* vars = new (mPresContext) nsStyleVariables();
+      aContext->SetStyle(eStyleStruct_Variables, vars);
+      return vars;
     }
     default:
       /*
@@ -2503,7 +2587,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   bool canStoreInRuleTree = aCanStoreInRuleTree;
 
 /**
- * Begin an nsRuleNode::Compute*Data function for an inherited struct.
+ * End an nsRuleNode::Compute*Data function for an inherited struct.
  *
  * @param type_ The nsStyle* type this function computes.
  * @param data_ Variable holding the result of this function.
@@ -2538,7 +2622,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   return data_;
 
 /**
- * Begin an nsRuleNode::Compute*Data function for a reset struct.
+ * End an nsRuleNode::Compute*Data function for a reset struct.
  *
  * @param type_ The nsStyle* type this function computes.
  * @param data_ Variable holding the result of this function.
@@ -3247,6 +3331,13 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mGenericID = aGenericFontID;
   }
 
+  // -moz-math-variant: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForMathVariant(), aFont->mMathVariant,
+              aCanStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
+              aParentFont->mMathVariant, NS_MATHML_MATHVARIANT_NONE,
+              0, 0, 0, 0);
+
   // font-smoothing: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForOSXFontSmoothing(),
               aFont->mFont.smoothing, aCanStoreInRuleTree,
@@ -3256,12 +3347,17 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
               0, 0, 0, 0);
 
   // font-style: enum, inherit, initial, -moz-system-font
-  SetDiscrete(*aRuleData->ValueForFontStyle(),
-              aFont->mFont.style, aCanStoreInRuleTree,
-              SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT | SETDSC_UNSET_INHERIT,
-              aParentFont->mFont.style,
-              defaultVariableFont->style,
-              0, 0, 0, systemFont.style);
+  if (aFont->mMathVariant != NS_MATHML_MATHVARIANT_NONE) {
+    // -moz-math-variant overrides font-style
+    aFont->mFont.style = NS_FONT_STYLE_NORMAL;
+  } else {
+    SetDiscrete(*aRuleData->ValueForFontStyle(),
+                aFont->mFont.style, aCanStoreInRuleTree,
+                SETDSC_ENUMERATED | SETDSC_SYSTEM_FONT | SETDSC_UNSET_INHERIT,
+                aParentFont->mFont.style,
+                defaultVariableFont->style,
+                0, 0, 0, systemFont.style);
+  }
 
   // font-variant: enum, inherit, initial, -moz-system-font
   SetDiscrete(*aRuleData->ValueForFontVariant(),
@@ -3274,7 +3370,10 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   // font-weight: int, enum, inherit, initial, -moz-system-font
   // special handling for enum
   const nsCSSValue* weightValue = aRuleData->ValueForFontWeight();
-  if (eCSSUnit_Enumerated == weightValue->GetUnit()) {
+  if (aFont->mMathVariant != NS_MATHML_MATHVARIANT_NONE) {
+    // -moz-math-variant overrides font-weight
+    aFont->mFont.weight = NS_FONT_WEIGHT_NORMAL;
+  } else if (eCSSUnit_Enumerated == weightValue->GetUnit()) {
     int32_t value = weightValue->GetIntValue();
     switch (value) {
       case NS_STYLE_FONT_WEIGHT_NORMAL:
@@ -3689,6 +3788,8 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     // the final value that we're computing.
     if (i != 0)
       ruleData.ValueForFontFamily()->Reset();
+
+    ResolveVariableReferences(eStyleStruct_Font, &ruleData, aContext);
 
     nsRuleNode::SetFont(aPresContext, context,
                         aGenericFontID, &ruleData, &parentFont, aFont,
@@ -5311,15 +5412,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     canStoreInRuleTree = false;
     break;
 
-  case eCSSUnit_List:
-  case eCSSUnit_ListDep: {
-    const nsCSSValueList* head = transformValue->GetListValue();
+  case eCSSUnit_SharedList: {
+    nsCSSValueSharedList* list = transformValue->GetSharedListValue();
+    nsCSSValueList* head = list->mHead;
+    MOZ_ASSERT(head, "transform list must have at least one item");
     // can get a _None in here from transform animation
     if (head->mValue.GetUnit() == eCSSUnit_None) {
       NS_ABORT_IF_FALSE(head->mNext == nullptr, "none must be alone");
       display->mSpecifiedTransform = nullptr;
     } else {
-      display->mSpecifiedTransform = head; // weak pointer, owned by rule
+      display->mSpecifiedTransform = list;
     }
     break;
   }
@@ -6942,6 +7044,13 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               parentPos->mBoxSizing,
               NS_STYLE_BOX_SIZING_CONTENT, 0, 0, 0, 0);
 
+  // align-content: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForAlignContent(),
+              pos->mAlignContent, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentPos->mAlignContent,
+              NS_STYLE_ALIGN_CONTENT_STRETCH, 0, 0, 0, 0);
+
   // align-items: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForAlignItems(),
               pos->mAlignItems, canStoreInRuleTree,
@@ -7024,6 +7133,13 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
             pos->mFlexShrink, canStoreInRuleTree,
             parentPos->mFlexShrink, 1.0f,
             SETFCT_UNSET_INITIAL);
+
+  // flex-wrap: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForFlexWrap(),
+              pos->mFlexWrap, canStoreInRuleTree,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentPos->mFlexWrap,
+              NS_STYLE_FLEX_WRAP_NOWRAP, 0, 0, 0, 0);
 
   // order: integer, inherit, initial
   SetDiscrete(*aRuleData->ValueForOrder(),
@@ -8239,6 +8355,28 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
               NS_STYLE_MASK_TYPE_LUMINANCE, 0, 0, 0, 0);
 
   COMPUTE_END_RESET(SVGReset, svgReset)
+}
+
+const void*
+nsRuleNode::ComputeVariablesData(void* aStartStruct,
+                                 const nsRuleData* aRuleData,
+                                 nsStyleContext* aContext,
+                                 nsRuleNode* aHighestNode,
+                                 const RuleDetail aRuleDetail,
+                                 const bool aCanStoreInRuleTree)
+{
+  COMPUTE_START_INHERITED(Variables, (), variables, parentVariables)
+
+  MOZ_ASSERT(aRuleData->mVariables,
+             "shouldn't be in ComputeVariablesData if there were no variable "
+             "declarations specified");
+
+  CSSVariableResolver resolver(&variables->mVariables);
+  resolver.Resolve(&parentVariables->mVariables,
+                   aRuleData->mVariables);
+  canStoreInRuleTree = false;
+
+  COMPUTE_END_INHERITED(Variables, variables)
 }
 
 const void*
