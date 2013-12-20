@@ -277,7 +277,7 @@ protected:
     mFlags |= aFlags;
   }
 
-  TextureChild* mActor;
+  RefPtr<TextureChild> mActor;
   TextureFlags mFlags;
   bool mShared;
   bool mValid;
