@@ -402,7 +402,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 }
 
 bool
-frontend::CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length)
+frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const jschar *chars, size_t length)
 {
     JS_ASSERT(cx->compartment() == lazy->function()->compartment());
 
