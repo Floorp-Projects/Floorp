@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 878935 landed without a UUID change (and was since backed out)
+Bug 910189 requires a clobber due to Proguard inner class errors from bug 946083.
