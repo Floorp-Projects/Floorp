@@ -1540,8 +1540,13 @@ abstract public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.cancelEdit();
 
-        hideHomePager();
+        // Since the underlying LayerView is set visible in hideHomePager, we would
+        // ordinarily want to call it first. However, hideBrowserSearch changes the
+        // visibility of the HomePager and hideHomePager will take no action if the
+        // HomePager is hidden, so we want to call hideBrowserSearch to restore the
+        // HomePager visibility first.
         hideBrowserSearch();
+        hideHomePager();
 
         return true;
     }
