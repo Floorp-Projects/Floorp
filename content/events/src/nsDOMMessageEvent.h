@@ -70,7 +70,7 @@ private:
   nsString mOrigin;
   nsString mLastEventId;
   nsCOMPtr<nsIDOMWindow> mWindowSource;
-  nsCOMPtr<mozilla::dom::MessagePortBase> mPortSource;
+  nsRefPtr<mozilla::dom::MessagePortBase> mPortSource;
   nsRefPtr<mozilla::dom::MessagePortList> mPorts;
 };
 
