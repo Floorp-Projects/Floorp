@@ -284,6 +284,9 @@ KidsPointer::checkConsistency(Shape *aKid) const
 void
 Shape::dump(JSContext *cx, FILE *fp) const
 {
+    /* This is only used from gdb, so allowing GC here would just be confusing. */
+    gc::AutoSuppressGC suppress(cx);
+
     jsid propid = this->propid();
 
     JS_ASSERT(!JSID_IS_VOID(propid));
@@ -296,8 +299,8 @@ Shape::dump(JSContext *cx, FILE *fp) const
             str = JSID_TO_ATOM(propid);
         } else {
             JS_ASSERT(JSID_IS_OBJECT(propid));
-            RootedValue v(cx, IdToValue(propid));
-            JSString *s = ToStringSlow<CanGC>(cx, v);
+            Value v = IdToValue(propid);
+            JSString *s = ToStringSlow<NoGC>(cx, v);
             fputs("object ", fp);
             str = s ? s->ensureLinear(cx) : nullptr;
         }
@@ -370,36 +373,4 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
     }
 }
 
-void
-js::PropertyTree::dumpShapes(JSRuntime *rt)
-{
-    static bool init = false;
-    static FILE *dumpfp = nullptr;
-    if (!init) {
-        init = true;
-        const char *name = getenv("JS_DUMP_SHAPES_FILE");
-        if (!name)
-            return;
-        dumpfp = fopen(name, "a");
-    }
-
-    if (!dumpfp)
-        return;
-
-    fprintf(dumpfp, "rt->gcNumber = %lu", (unsigned long)rt->gcNumber);
-
-    for (gc::GCCompartmentsIter c(rt); !c.done(); c.next()) {
-        fprintf(dumpfp, "*** Compartment %p ***\n", (void *)c.get());
-
-        /*
-        typedef JSCompartment::EmptyShapeSet HS;
-        HS &h = c->emptyShapes;
-        for (HS::Range r = h.all(); !r.empty(); r.popFront()) {
-            Shape *empty = r.front();
-            empty->dumpSubtree(rt, 0, dumpfp);
-            putc('\n', dumpfp);
-        }
-        */
-    }
-}
 #endif
