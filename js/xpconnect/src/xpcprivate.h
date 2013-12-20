@@ -3432,6 +3432,7 @@ public:
         , wantExportHelpers(false)
         , proto(cx)
         , sameZoneAs(cx)
+        , invisibleToDebugger(false)
         , metadata(cx)
     { }
 
@@ -3443,6 +3444,7 @@ public:
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedObject sameZoneAs;
+    bool invisibleToDebugger;
     GlobalProperties globalProperties;
     JS::RootedValue metadata;
 
