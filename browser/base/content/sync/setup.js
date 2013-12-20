@@ -472,6 +472,13 @@ var gSyncSetup = {
           Weave.Service.identity.syncKey = Weave.Utils.generatePassphrase();
           this._handleNoScript(false);
           Weave.Svc.Prefs.set("firstSync", "newAccount");
+#ifdef XP_WIN
+#ifdef MOZ_METRO
+          if (document.getElementById("metroSetupCheckbox").checked) {
+            Services.metro.storeSyncInfo(email, password, Weave.Service.identity.syncKey);
+          }
+#endif
+#endif
           this.wizardFinish();
           return false;
         }

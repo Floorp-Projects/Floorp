@@ -78,6 +78,10 @@ let modules = {
     privileged: true
   },
 #endif
+  accounts: {
+    uri: "chrome://browser/content/aboutAccounts.xhtml",
+    privileged: true
+  },
 }
 
 function AboutRedirector() {}
