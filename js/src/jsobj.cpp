@@ -69,7 +69,6 @@ using namespace js::types;
 using js::frontend::IsIdentifier;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
-using mozilla::Maybe;
 using mozilla::RoundUpPow2;
 
 JS_STATIC_ASSERT(int32_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)) == int64_t((JSObject::NELEMENTS_LIMIT - 1) * sizeof(Value)));
@@ -2529,12 +2528,6 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
         }
     }
 
-    // Global slots may be read during off thread compilation, and updates to
-    // their slot pointers need to be synchronized.
-    Maybe<AutoLockForCompilation> lock;
-    if (obj->is<GlobalObject>())
-        lock.construct(cx->asExclusiveContext());
-
     if (!oldCount) {
         obj->slots = AllocateSlots(cx, obj, newCount);
         if (!obj->slots)
@@ -2578,12 +2571,6 @@ JSObject::shrinkSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount
     }
 
     JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
-
-    // Global slots may be read during off thread compilation, and updates to
-    // their slot pointers need to be synchronized.
-    Maybe<AutoLockForCompilation> lock;
-    if (obj->is<GlobalObject>())
-        lock.construct(cx->asExclusiveContext());
 
     HeapSlot *newslots = ReallocateSlots(cx, obj, obj->slots, oldCount, newCount);
     if (!newslots)
