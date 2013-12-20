@@ -7,6 +7,9 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 Svc.DefaultPrefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
 
+// configure the identity we use for this test.
+identityConfig = makeIdentityConfig({username: "johndoe"});
+
 function FakeCollection() {
   this.deleted = false;
 }
@@ -34,7 +37,7 @@ function setUpTestFixtures(server) {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  setBasicCredentials("johndoe", null, "aabcdeabcdeabcdeabcdeabcde");
+  yield configureIdentity(identityConfig);
 }
 
 
@@ -43,7 +46,13 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_wipeServer_list_success() {
+function promiseStopServer(server) {
+  let deferred = Promise.defer();
+  server.stop(deferred.resolve);
+  return deferred.promise;
+}
+
+add_identity_test(this, function test_wipeServer_list_success() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
@@ -56,7 +65,7 @@ add_test(function test_wipeServer_list_success() {
   });
 
   try {
-    setUpTestFixtures(server);
+    yield setUpTestFixtures(server);
     new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
@@ -72,12 +81,12 @@ add_test(function test_wipeServer_list_success() {
     do_check_true(diesel_coll.deleted);
 
   } finally {
-    server.stop(run_next_test);
+    yield promiseStopServer(server);
     Svc.Prefs.resetBranch("");
   }
 });
 
-add_test(function test_wipeServer_list_503() {
+add_identity_test(this, function test_wipeServer_list_503() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
@@ -90,7 +99,7 @@ add_test(function test_wipeServer_list_503() {
   });
 
   try {
-    setUpTestFixtures(server);
+    yield setUpTestFixtures(server);
     new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
 
     _("Confirm initial environment.");
@@ -113,12 +122,12 @@ add_test(function test_wipeServer_list_503() {
     do_check_false(diesel_coll.deleted);
 
   } finally {
-    server.stop(run_next_test);
+    yield promiseStopServer(server);
     Svc.Prefs.resetBranch("");
   }
 });
 
-add_test(function test_wipeServer_all_success() {
+add_identity_test(this, function test_wipeServer_all_success() {
   _("Service.wipeServer() deletes all the things.");
 
   /**
@@ -136,7 +145,7 @@ add_test(function test_wipeServer_all_success() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  yield setUpTestFixtures(server);
 
   _("Try deletion.");
   new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
@@ -144,11 +153,11 @@ add_test(function test_wipeServer_all_success() {
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
 
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
   Svc.Prefs.resetBranch("");
 });
 
-add_test(function test_wipeServer_all_404() {
+add_identity_test(this, function test_wipeServer_all_404() {
   _("Service.wipeServer() accepts a 404.");
 
   /**
@@ -168,7 +177,7 @@ add_test(function test_wipeServer_all_404() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  yield setUpTestFixtures(server);
 
   _("Try deletion.");
   new SyncTestingInfrastructure(server, "johndoe", "irrelevant", "irrelevant");
@@ -176,11 +185,11 @@ add_test(function test_wipeServer_all_404() {
   do_check_true(deleted);
   do_check_eq(returnedTimestamp, serverTimestamp);
 
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
   Svc.Prefs.resetBranch("");
 });
 
-add_test(function test_wipeServer_all_503() {
+add_identity_test(this, function test_wipeServer_all_503() {
   _("Service.wipeServer() throws if it encounters a non-200/404 response.");
 
   /**
@@ -195,7 +204,7 @@ add_test(function test_wipeServer_all_503() {
   let server = httpd_setup({
     "/1.1/johndoe/storage": storageHandler
   });
-  setUpTestFixtures(server);
+  yield setUpTestFixtures(server);
 
   _("Try deletion.");
   let error;
@@ -208,14 +217,14 @@ add_test(function test_wipeServer_all_503() {
   }
   do_check_eq(error.status, 503);
 
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
   Svc.Prefs.resetBranch("");
 });
 
-add_test(function test_wipeServer_all_connectionRefused() {
+add_identity_test(this, function test_wipeServer_all_connectionRefused() {
   _("Service.wipeServer() throws if it encounters a network problem.");
   let server = httpd_setup({});
-  setUpTestFixtures(server);
+  yield setUpTestFixtures(server);
 
   Service.serverURL = "http://localhost:4352/";
   Service.clusterURL = "http://localhost:4352/";
@@ -229,5 +238,5 @@ add_test(function test_wipeServer_all_connectionRefused() {
   }
 
   Svc.Prefs.resetBranch("");
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
 });

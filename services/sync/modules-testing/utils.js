@@ -164,9 +164,15 @@ this.SyncTestingInfrastructure = function (server, username, password, syncKey) 
   Cu.import("resource://services-sync/service.js", ns);
 
   let auth = ns.Service.identity;
-  auth.account = username || "foo";
-  auth.basicPassword = password || "password";
-  auth.syncKey = syncKey || "abcdeabcdeabcdeabcdeabcdea";
+  let config = makeIdentityConfig();
+  // XXX - hacks for the sync identity provider.
+  if (username)
+    config.username = username;
+  if (password)
+    config.sync.password = password;
+  if (syncKey)
+    config.sync.syncKey = syncKey;
+  configureIdentity(config);
 
   let i = server.identity;
   let uri = i.primaryScheme + "://" + i.primaryHost + ":" +
