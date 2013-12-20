@@ -839,8 +839,8 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     # And if it needs rooting, we need RootedDictionary too
                     if typeNeedsRooting(f):
                         headers.add("mozilla/dom/RootedDictionary.h")
-                elif t.isPrimitive():
-                    implheaders.add("mozilla/dom/PrimitiveConversions.h")
+                elif f.isEnum():
+                    headers.add(CGHeaders.getDeclarationFilename(f))
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
