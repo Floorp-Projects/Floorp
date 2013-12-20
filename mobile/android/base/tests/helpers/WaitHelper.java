@@ -15,6 +15,8 @@ import org.mozilla.gecko.tests.UITestContext.ComponentType;
 import com.jayway.android.robotium.solo.Condition;
 import com.jayway.android.robotium.solo.Solo;
 
+import java.util.regex.Pattern;
+
 /**
  * Provides functionality related to waiting on certain events to happen.
  */
@@ -131,7 +133,7 @@ public final class WaitHelper {
                 ToolbarTitleTextChangeVerifier.class.getSimpleName() + ": ";
 
         // A regex that matches the page title that shows up while the page is loading.
-        private static final String LOADING_REGEX = "^[A-Za-z]{3,9}://";
+        private static final Pattern LOADING_PREFIX = Pattern.compile("[A-Za-z]{3,9}://");
 
         private CharSequence mOldTitleText;
 
@@ -157,7 +159,7 @@ public final class WaitHelper {
             // (e.g. the page title). However, the title is set to the URL before the title is
             // loaded from the server and set as the final page title; we ignore the
             // intermediate URL loading state here.
-            final boolean isLoading = title.toString().matches(LOADING_REGEX);
+            final boolean isLoading = LOADING_PREFIX.matcher(title).lookingAt();
             final boolean hasStateChanged = !isLoading && !mOldTitleText.equals(title);
 
             if (hasStateChanged) {
