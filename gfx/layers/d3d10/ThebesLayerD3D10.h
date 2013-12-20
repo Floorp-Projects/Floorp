@@ -63,7 +63,7 @@ private:
   void DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode);
 
   /* Create a new texture */
-  void CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode);
+  void CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode);
 
   // Fill textures with opaque black and white in the specified region.
   void FillTexturesBlackWhite(const nsIntRegion& aRegion, const nsIntPoint& aOffset);
