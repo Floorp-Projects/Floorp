@@ -27,7 +27,11 @@ public:
   explicit nsSMILRepeatCount(double aCount)
     : mCount(kNotSet) { SetCount(aCount); }
 
-  operator double() const { return mCount; }
+  operator double() const {
+    MOZ_ASSERT(IsDefinite(),
+      "Converting indefinite or unset repeat count to double");
+    return mCount;
+  }
   bool IsDefinite() const {
     return mCount != kNotSet && mCount != kIndefinite;
   }

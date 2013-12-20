@@ -12,12 +12,15 @@
 #include "nsStringGlue.h"
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
+#include "nsITimer.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "Units.h"
 
 // forward declarations
@@ -41,6 +44,7 @@ namespace layers {
 class Composer2D;
 class CompositorChild;
 class LayerManager;
+class LayerManagerComposite;
 class PLayerTransactionChild;
 }
 namespace gfx {
@@ -96,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xa1f684e6, 0x2ae1, 0x4513, \
-  { 0xb6, 0x89, 0xf4, 0xd4, 0xfe, 0x9d, 0x2c, 0xdb } }
+{ 0x67da44c4, 0xe21b, 0x4742, \
+  { 0x9c, 0x2b, 0x26, 0xc7, 0x70, 0x21, 0xde, 0x87 } }
 
 /*
  * Window shadow styles
@@ -464,6 +468,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::Composer2D Composer2D;
     typedef mozilla::layers::CompositorChild CompositorChild;
     typedef mozilla::layers::LayerManager LayerManager;
+    typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
     typedef mozilla::layers::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
     typedef mozilla::widget::NotificationToIME NotificationToIME;
@@ -491,7 +496,9 @@ class nsIWidget : public nsISupports {
       : mLastChild(nullptr)
       , mPrevSibling(nullptr)
       , mOnDestroyCalled(false)
-    {}
+    {
+      ClearNativeTouchSequence();
+    }
 
         
     /**
@@ -1145,6 +1152,13 @@ class nsIWidget : public nsISupports {
      */
     virtual void SetWindowAnimationType(WindowAnimationType aType) = 0;
 
+    /**
+     * Specifies whether the window title should be drawn even if the window
+     * contents extend into the titlebar. Ignored on windows that don't draw
+     * in the titlebar. Only implemented on OS X.
+     */
+    virtual void SetDrawsTitle(bool aDrawTitle) {}
+
     /** 
      * Hide window chrome (borders, buttons) for this widget.
      *
@@ -1216,38 +1230,36 @@ class nsIWidget : public nsISupports {
     virtual void CleanupWindowEffects() = 0;
 
     /**
-     * Called before rendering using OpenGL. Returns false when the widget is
+     * Called before rendering using OMTC. Returns false when the widget is
      * not ready to be rendered (for example while the window is closed).
      *
      * Always called from the compositing thread, which may be the main-thread if
      * OMTC is not enabled.
      */
-    virtual bool PreRender(LayerManager* aManager) = 0;
+    virtual bool PreRender(LayerManagerComposite* aManager) = 0;
 
     /**
-     * Called after rendering using OpenGL. Not called when rendering was
+     * Called after rendering using OMTC. Not called when rendering was
      * cancelled by a negative return value from PreRender.
      *
      * Always called from the compositing thread, which may be the main-thread if
      * OMTC is not enabled.
      */
-    virtual void PostRender(LayerManager* aManager) = 0;
+    virtual void PostRender(LayerManagerComposite* aManager) = 0;
 
     /**
      * Called before the LayerManager draws the layer tree.
      *
-     * Always called from the compositing thread, which may be the main-thread if
-     * OMTC is not enabled.
+     * Always called from the compositing thread.
      */
-    virtual void DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect) = 0;
 
     /**
      * Called after the LayerManager draws the layer tree
      *
-     * Always called from the compositing thread, which may be the main-thread if
-     * OMTC is not enabled.
+     * Always called from the compositing thread.
      */
-    virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect) = 0;
 
     /**
      * Return a DrawTarget for the window which can be composited into.
@@ -1559,6 +1571,85 @@ class nsIWidget : public nsISupports {
                                                       uint32_t aModifierFlags,
                                                       uint32_t aAdditionalFlags) = 0;
 
+    /*
+     * TouchPointerState states for SynthesizeNativeTouchPoint. Match
+     * touch states in nsIDOMWindowUtils.idl.
+     */
+    enum TouchPointerState {
+      // The pointer is in a hover state above the digitizer
+      TOUCH_HOVER    = 0x01,
+      // The pointer is in contact with the digitizer
+      TOUCH_CONTACT  = 0x02,
+      // The pointer has been removed from the digitizer detection area
+      TOUCH_REMOVE   = 0x04,
+      // The pointer has been canceled. Will cancel any pending os level
+      // gestures that would triggered as a result of completion of the
+      // input sequence. This may not cancel moz platform related events
+      // that might get tirggered by input already delivered.
+      TOUCH_CANCEL   = 0x08
+    };
+
+    /*
+     * Create a new or update an existing touch pointer on the digitizer.
+     * To trigger os level gestures, individual touch points should
+     * transition through a complete set of touch states which should be
+     * sent as individual messages.
+     *
+     * @param aPointerId The touch point id to create or update.
+     * @param aPointerState one or more of the touch states listed above
+     * @param aScreenX, aScreenY screen coords of this event
+     * @param aPressure 0.0 -> 1.0 float val indicating pressure
+     * @param aOrientation 0 -> 359 degree value indicating the
+     * orientation of the pointer. Use 90 for normal taps.
+     */
+    virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
+                                                TouchPointerState aPointerState,
+                                                nsIntPoint aPointerScreenPoint,
+                                                double aPointerPressure,
+                                                uint32_t aPointerOrientation) = 0;
+
+    /*
+     * Cancels all active simulated touch input points and pending long taps.
+     * Native widgets should track existing points such that they can clear the
+     * digitizer state when this call is made.
+     */
+    virtual nsresult ClearNativeTouchSequence();
+
+    /*
+     * Helper for simulating a simple tap event with one touch point. When
+     * aLongTap is true, simulates a native long tap with a duration equal to
+     * ui.click_hold_context_menus.delay. This pref is compatible with the
+     * apzc long tap duration. Defaults to 1.5 seconds.
+     */
+    nsresult SynthesizeNativeTouchTap(nsIntPoint aPointerScreenPoint,
+                                      bool aLongTap);
+
+private:
+  class LongTapInfo
+  {
+  public:
+    LongTapInfo(int32_t aPointerId, nsIntPoint& aPoint,
+                mozilla::TimeDuration aDuration) :
+      mPointerId(aPointerId),
+      mPosition(aPoint),
+      mDuration(aDuration),
+      mStamp(mozilla::TimeStamp::Now())
+    {
+    }
+
+    int32_t mPointerId;
+    nsIntPoint mPosition;
+    mozilla::TimeDuration mDuration;
+    mozilla::TimeStamp mStamp;
+  };
+
+  static void OnLongTapTimerCallback(nsITimer* aTimer, void* aClosure);
+
+  nsAutoPtr<LongTapInfo> mLongTapTouchPoint;
+  nsCOMPtr<nsITimer> mLongTapTimer;
+  static int32_t sPointerIdCounter;
+
+public:
     /**
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated

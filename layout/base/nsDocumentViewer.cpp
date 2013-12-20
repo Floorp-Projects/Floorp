@@ -33,6 +33,9 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
+#ifdef ACCESSIBILITY
+#include "mozilla/a11y/DocAccessible.h"
+#endif
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
@@ -104,7 +107,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMEventListener.h"
 #include "nsISelectionController.h"
 
-#include "nsBidiUtils.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
@@ -119,12 +121,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#ifdef DEBUG
-
-#undef NOISY_VIEWER
-#else
-#undef NOISY_VIEWER
-#endif
+#define BEFOREUNLOAD_DISABLED_PREFNAME "dom.disable_beforeunload"
 
 //-----------------------------------------------------
 // PR LOGGING
@@ -557,10 +554,6 @@ nsDocumentViewer::~nsDocumentViewer()
 NS_IMETHODIMP
 nsDocumentViewer::LoadStart(nsISupports *aDoc)
 {
-#ifdef NOISY_VIEWER
-  printf("nsDocumentViewer::LoadStart\n");
-#endif
-
   nsresult rv = NS_OK;
   if (!mDocument) {
     mDocument = do_QueryInterface(aDoc, &rv);
@@ -615,7 +608,7 @@ nsDocumentViewer::SetContainer(nsIDocShell* aContainer)
 {
   mContainer = static_cast<nsDocShell*>(aContainer)->asWeakPtr();
   if (mPresContext) {
-    mPresContext->SetContainer(aContainer);
+    mPresContext->SetContainer(mContainer);
   }
 
   // We're loading a new document into the window where this document
@@ -682,14 +675,19 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   mPresShell->BeginObservingDocument();
 
   // Initialize our view manager
-  nscoord width = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.width;
-  nscoord height = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel() * mBounds.height;
+  int32_t p2a = mPresContext->AppUnitsPerDevPixel();
+  MOZ_ASSERT(p2a == mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel());
+  nscoord width = p2a * mBounds.width;
+  nscoord height = p2a * mBounds.height;
 
   mViewManager->SetWindowDimensions(width, height);
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
   mPresContext->SetMinFontSize(mMinFontSize);
 
+  p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
+  width = p2a * mBounds.width;
+  height = p2a * mBounds.height;
   if (aDoInitialReflow) {
     nsCOMPtr<nsIPresShell> shellGrip = mPresShell;
     // Initial reflow
@@ -880,7 +878,7 @@ nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
       requestor->GetInterface(NS_GET_IID(nsILinkHandler),
                               getter_AddRefs(linkHandler));
 
-      mPresContext->SetContainer(requestor);
+      mPresContext->SetContainer(mContainer);
       mPresContext->SetLinkHandler(linkHandler);
     }
 
@@ -991,6 +989,16 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
       if (timing) {
         timing->NotifyLoadEventStart();
       }
+
+      // Dispatch observer notification to notify observers document load is complete.
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      nsIPrincipal *principal = d->NodePrincipal();
+      os->NotifyObservers(d,
+                          nsContentUtils::IsSystemPrincipal(principal) ?
+                          "chrome-document-loaded" :
+                          "content-document-loaded",
+                          nullptr);
+
       nsEventDispatcher::Dispatch(window, mPresContext, &event, nullptr,
                                   &status);
       if (timing) {
@@ -1054,6 +1062,20 @@ nsDocumentViewer::PermitUnload(bool aCallerClosesWindow, bool *aPermitUnload)
    || mInPermitUnload
    || mCallerIsClosingWindow
    || mInPermitUnloadPrompt) {
+    return NS_OK;
+  }
+
+  static bool sIsBeforeUnloadDisabled;
+  static bool sBeforeUnloadPrefCached = false;
+
+  if (!sBeforeUnloadPrefCached ) {
+    sBeforeUnloadPrefCached = true;
+    Preferences::AddBoolVarCache(&sIsBeforeUnloadDisabled,
+                                 BEFOREUNLOAD_DISABLED_PREFNAME);
+  }
+
+  // If the user has turned off onbeforeunload warnings, no need to check.
+  if (sIsBeforeUnloadDisabled) {
     return NS_OK;
   }
 
@@ -1292,13 +1314,13 @@ AttachContainerRecurse(nsIDocShell* aShell)
     nsRefPtr<nsPresContext> pc;
     viewer->GetPresContext(getter_AddRefs(pc));
     if (pc) {
-      pc->SetContainer(aShell);
+      pc->SetContainer(static_cast<nsDocShell*>(aShell));
       pc->SetLinkHandler(nsCOMPtr<nsILinkHandler>(do_QueryInterface(aShell)));
     }
     nsCOMPtr<nsIPresShell> presShell;
     viewer->GetPresShell(getter_AddRefs(presShell));
     if (presShell) {
-      presShell->SetForwardingContainer(nullptr);
+      presShell->SetForwardingContainer(WeakPtr<nsDocShell>());
     }
   }
 
@@ -1326,7 +1348,7 @@ nsDocumentViewer::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   mHidden = false;
 
   if (mPresShell)
-    mPresShell->SetForwardingContainer(nullptr);
+    mPresShell->SetForwardingContainer(WeakPtr<nsDocShell>());
 
   // Rehook the child presentations.  The child shells are still in
   // session history, so get them from there.
@@ -1452,7 +1474,8 @@ DetachContainerRecurse(nsIDocShell *aShell)
     nsCOMPtr<nsIPresShell> presShell;
     viewer->GetPresShell(getter_AddRefs(presShell));
     if (presShell) {
-      presShell->SetForwardingContainer(nsWeakPtr(do_GetWeakReference(aShell)));
+      auto weakShell = static_cast<nsDocShell*>(aShell)->asWeakPtr();
+      presShell->SetForwardingContainer(weakShell);
     }
   }
 
@@ -1550,6 +1573,16 @@ nsDocumentViewer::Destroy()
     // cache ourselves.
     shEntry->SyncPresentationState();
 
+    // Shut down accessibility for the document before we start to tear it down.
+#ifdef ACCESSIBILITY
+    if (mPresShell) {
+      a11y::DocAccessible* docAcc = mPresShell->GetDocAccessible();
+      if (docAcc) {
+        docAcc->Shutdown();
+      }
+    }
+#endif
+
     // Break the link from the document/presentation to the docshell, so that
     // link traversals cannot affect the currently-loaded document.
     // When the presentation is restored, Open() and InitInternal() will reset
@@ -1563,9 +1596,7 @@ nsDocumentViewer::Destroy()
       mPresContext->SetContainer(nullptr);
     }
     if (mPresShell) {
-      nsWeakPtr container =
-        do_GetWeakReference(static_cast<nsIDocShell*>(mContainer));
-      mPresShell->SetForwardingContainer(container);
+      mPresShell->SetForwardingContainer(mContainer);
     }
 
     // Do the same for our children.  Note that we need to get the child
@@ -1966,7 +1997,7 @@ nsDocumentViewer::Show(void)
         mPresContext->SetLinkHandler(linkHandler);
       }
 
-      mPresContext->SetContainer(base_win);
+      mPresContext->SetContainer(mContainer);
     }
 
     if (mPresContext) {
@@ -3077,118 +3108,6 @@ nsDocumentViewer::SetHintCharacterSet(const nsACString& aHintCharacterSet)
   mHintCharset = aHintCharacterSet;
   // now set the hint char set on all children of mContainer
   CallChildren(SetChildHintCharacterSet, (void*) &aHintCharacterSet);
-  return NS_OK;
-}
-
-static void
-SetChildBidiOptions(nsIMarkupDocumentViewer* aChild, void* aClosure)
-{
-  aChild->SetBidiOptions(NS_PTR_TO_INT32(aClosure));
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiTextDirection(uint8_t aTextDirection)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_DIRECTION(bidiOptions, aTextDirection);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiTextDirection(uint8_t* aTextDirection)
-{
-  uint32_t bidiOptions;
-
-  if (aTextDirection) {
-    GetBidiOptions(&bidiOptions);
-    *aTextDirection = GET_BIDI_OPTION_DIRECTION(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiTextType(uint8_t aTextType)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, aTextType);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiTextType(uint8_t* aTextType)
-{
-  uint32_t bidiOptions;
-
-  if (aTextType) {
-    GetBidiOptions(&bidiOptions);
-    *aTextType = GET_BIDI_OPTION_TEXTTYPE(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiNumeral(uint8_t aNumeral)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_NUMERAL(bidiOptions, aNumeral);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiNumeral(uint8_t* aNumeral)
-{
-  uint32_t bidiOptions;
-
-  if (aNumeral) {
-    GetBidiOptions(&bidiOptions);
-    *aNumeral = GET_BIDI_OPTION_NUMERAL(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiSupport(uint8_t aSupport)
-{
-  uint32_t bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_SUPPORT(bidiOptions, aSupport);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiSupport(uint8_t* aSupport)
-{
-  uint32_t bidiOptions;
-
-  if (aSupport) {
-    GetBidiOptions(&bidiOptions);
-    *aSupport = GET_BIDI_OPTION_SUPPORT(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::SetBidiOptions(uint32_t aBidiOptions)
-{
-  if (mPresContext) {
-    mPresContext->SetBidi(aBidiOptions, true); // could cause reflow
-  }
-  // now set bidi on all children of mContainer
-  CallChildren(SetChildBidiOptions, NS_INT32_TO_PTR(aBidiOptions));
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocumentViewer::GetBidiOptions(uint32_t* aBidiOptions)
-{
-  if (aBidiOptions) {
-    if (mPresContext) {
-      *aBidiOptions = mPresContext->GetBidi();
-    }
-    else
-      *aBidiOptions = IBMBIDI_DEFAULT_BIDI_OPTIONS;
-  }
   return NS_OK;
 }
 

@@ -39,6 +39,7 @@
 #include "runnable_utils.h"
 #include "gfxImageSurface.h"
 #include "libyuv/convert.h"
+#include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
 
@@ -50,8 +51,9 @@ namespace mozilla {
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
 
 MediaPipeline::~MediaPipeline() {
+  ASSERT_ON_THREAD(main_thread_);
   MOZ_ASSERT(!stream_);  // Check that we have shut down already.
-  MOZ_MTLOG(ML_DEBUG, "Destroying MediaPipeline: " << description_);
+  MOZ_MTLOG(ML_INFO, "Destroying MediaPipeline: " << description_);
 }
 
 nsresult MediaPipeline::Init() {
@@ -134,7 +136,7 @@ void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state
   }
 
   if (state == TransportLayer::TS_OPEN) {
-    MOZ_MTLOG(ML_DEBUG, "Flow is ready");
+    MOZ_MTLOG(ML_INFO, "Flow is ready");
     TransportReady_s(flow);
   } else if (state == TransportLayer::TS_CLOSED ||
              state == TransportLayer::TS_ERROR) {
@@ -157,7 +159,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
 
   nsresult res;
 
-  MOZ_MTLOG(ML_DEBUG, "Transport ready for pipeline " <<
+  MOZ_MTLOG(ML_INFO, "Transport ready for pipeline " <<
             static_cast<void *>(this) << " flow " << description_ << ": " <<
             (rtcp ? "rtcp" : "rtp"));
 
@@ -234,7 +236,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
       rtcp_send_srtp_ = rtp_send_srtp_;
       rtcp_recv_srtp_ = rtp_recv_srtp_;
 
-      MOZ_MTLOG(ML_DEBUG, "Listening for packets received on " <<
+      MOZ_MTLOG(ML_INFO, "Listening for packets received on " <<
                 static_cast<void *>(dtls->downward()));
 
       dtls->downward()->SignalPacketReceived.connect(this,
@@ -242,7 +244,7 @@ nsresult MediaPipeline::TransportReady_s(TransportFlow *flow) {
                                                      PacketReceived);
       rtcp_state_ = MP_OPEN;
     } else {
-      MOZ_MTLOG(ML_DEBUG, "Listening for RTP packets received on " <<
+      MOZ_MTLOG(ML_INFO, "Listening for RTP packets received on " <<
                 static_cast<void *>(dtls->downward()));
 
       dtls->downward()->SignalPacketReceived.connect(this,
@@ -290,7 +292,7 @@ nsresult MediaPipeline::TransportFailed_s(TransportFlow *flow) {
   }
 
 
-  MOZ_MTLOG(ML_DEBUG, "Transport closed for flow " << (rtcp ? "rtcp" : "rtp"));
+  MOZ_MTLOG(ML_INFO, "Transport closed for flow " << (rtcp ? "rtcp" : "rtp"));
 
   NS_WARNING(
       "MediaPipeline Transport failed. This is not properly cleaned up yet");
@@ -329,14 +331,16 @@ nsresult MediaPipeline::SendPacket(TransportFlow *flow, const void *data,
   return NS_OK;
 }
 
-void MediaPipeline::increment_rtp_packets_sent() {
+void MediaPipeline::increment_rtp_packets_sent(int32_t bytes) {
   ++rtp_packets_sent_;
+  rtp_bytes_sent_ += bytes;
 
   if (!(rtp_packets_sent_ % 100)) {
     MOZ_MTLOG(ML_INFO, "RTP sent packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
-              << ": " << rtp_packets_sent_);
+              << ": " << rtp_packets_sent_
+              << " (" << rtp_bytes_sent_ << " bytes)");
   }
 }
 
@@ -350,13 +354,15 @@ void MediaPipeline::increment_rtcp_packets_sent() {
   }
 }
 
-void MediaPipeline::increment_rtp_packets_received() {
+void MediaPipeline::increment_rtp_packets_received(int32_t bytes) {
   ++rtp_packets_received_;
+  rtp_bytes_received_ += bytes;
   if (!(rtp_packets_received_ % 100)) {
     MOZ_MTLOG(ML_INFO, "RTP received packet count for " << description_
               << " Pipeline " << static_cast<void *>(this)
               << " Flow : " << static_cast<void *>(rtp_transport_)
-              << ": " << rtp_packets_received_);
+              << ": " << rtp_packets_received_
+              << " (" << rtp_bytes_received_ << " bytes)");
   }
 }
 
@@ -403,17 +409,29 @@ void MediaPipeline::RtpPacketReceived(TransportLayer *layer,
 
   // TODO(ekr@rtfm.com): filter for DTLS here and in RtcpPacketReceived
   // TODO(ekr@rtfm.com): filter on SSRC for bundle
-  increment_rtp_packets_received();
 
   // Make a copy rather than cast away constness
   ScopedDeletePtr<unsigned char> inner_data(
       new unsigned char[len]);
   memcpy(inner_data, data, len);
-  int out_len;
+  int out_len = 0;
   nsresult res = rtp_recv_srtp_->UnprotectRtp(inner_data,
                                               len, len, &out_len);
-  if (!NS_SUCCEEDED(res))
+  if (!NS_SUCCEEDED(res)) {
+    char tmp[16];
+
+    PR_snprintf(tmp, sizeof(tmp), "%.2x %.2x %.2x %.2x",
+                inner_data[0],
+                inner_data[1],
+                inner_data[2],
+                inner_data[3]);
+
+    MOZ_MTLOG(ML_NOTICE, "Error unprotecting RTP in " << description_
+              << "len= " << len << "[" << tmp << "...]");
+
     return;
+  }
+  increment_rtp_packets_received(out_len);
 
   (void)conduit_->ReceivedRTPPacket(inner_data, out_len);  // Ignore error codes
 }
@@ -601,7 +619,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtpPacket_s(
   if (!NS_SUCCEEDED(res))
     return res;
 
-  pipeline_->increment_rtp_packets_sent();
+  pipeline_->increment_rtp_packets_sent(out_len);
   return pipeline_->SendPacket(pipeline_->rtp_transport_, inner_data,
                                out_len);
 }
@@ -742,9 +760,11 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
   if (chunk.mBuffer) {
     switch (chunk.mBufferFormat) {
       case AUDIO_FORMAT_FLOAT32:
-        MOZ_MTLOG(ML_ERROR, "Can't process audio except in 16-bit PCM yet");
-        MOZ_ASSERT(PR_FALSE);
-        return;
+        {
+          const float* buf = static_cast<const float *>(chunk.mChannelData[0]);
+          ConvertAudioSamplesWithScale(buf, static_cast<int16_t*>(samples),
+                                       chunk.mDuration, chunk.mVolume);
+        }
         break;
       case AUDIO_FORMAT_S16:
         {
@@ -839,7 +859,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     return;
   }
 
-  gfxIntSize size = img->GetSize();
+  gfx::IntSize size = img->GetSize();
   if ((size.width & 1) != 0 || (size.height & 1) != 0) {
     MOZ_ASSERT(false, "Can't handle odd-sized images");
     return;
@@ -929,7 +949,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     const_cast<layers::CairoImage *>(
           static_cast<const layers::CairoImage *>(img));
 
-    gfxIntSize size = rgb->GetSize();
+    gfx::IntSize size = rgb->GetSize();
     int half_width = (size.width + 1) >> 1;
     int half_height = (size.height + 1) >> 1;
     int c_size = half_width * half_height;

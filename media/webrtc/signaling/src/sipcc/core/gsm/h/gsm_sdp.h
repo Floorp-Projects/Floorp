@@ -37,20 +37,6 @@ typedef struct {
     int         value;
 } gsmsdp_key_table_entry_t;
 
-typedef enum constraints_ {
-    OfferToReceiveAudio     = 0,
-    OfferToReceiveVideo     = 1,
-    VoiceActivityDetection  = 2,
-    MozDontOfferDataChannel = 3
-} constraints;
-
-static const gsmsdp_key_table_entry_t constraints_table[] = {
-    {"OfferToReceiveAudio",         OfferToReceiveAudio},
-    {"OfferToReceiveVideo",         OfferToReceiveVideo},
-    {"VoiceActivityDetection",      VoiceActivityDetection},
-    {"MozDontOfferDataChannel",     MozDontOfferDataChannel}
-};
-
 cc_causes_t gsmsdp_create_local_sdp(fsmdef_dcb_t *dcb_p, boolean force_streams_enabled,
                                     boolean audio, boolean video, boolean data, boolean offer);
 void gsmsdp_create_options_sdp(cc_sdp_t **sdp_pp);

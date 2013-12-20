@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946067
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 946067</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 946067 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function doGet(prop, thisObj) {
+    return Object.getOwnPropertyDescriptor(window, prop).get.call(thisObj);
+  }
+
+  function doSet(prop, thisObj, value) {
+    return Object.getOwnPropertyDescriptor(window, prop).set.call(thisObj, value);
+  }
+
+  window.onload = function() {
+    frames[0].focus();
+    is(document.activeElement.id, "x", "Should have focused first subframe");
+    frames[0].blur();
+    window.focus.call(frames[1]);
+    is(document.activeElement.id, "y", "Should have focused second subframe");
+    window.blur.call(frames[1]);
+
+    frames[0].close();
+    is(frames[0].closed, false, "Subframe is not closed");
+    window.close.call(frames[0]);
+    is(doGet("closed", frames[0]), false, "Subframe is still not closed");
+
+    is(frames[0].frames, frames[0], "window.frames === window");
+    is(doGet("frames", frames[0]), frames[0],
+       "Really, window.frames === window");
+
+    try {
+      frames[0].frames = 1;
+      ok(false, "Should throw when setting .frames");
+    } catch (e) {
+      ok(true, "Should throw when setting .frames");
+    }
+    try {
+      doSet("frames", frames[0], 1);
+      ok(false, "Should still throw when setting .frames");
+    } catch (e) {
+      ok(true, "Should still throw when setting .frames");
+    }
+
+    // Just check whether we can get the location without throwing:
+    is(frames[0].location, doGet("location", frames[0]),
+       "Should be same Location object");
+
+    is(frames[0].length, 0, "404 page has no subframes");
+    is(doGet("length", frames[0]), 0, "404 page has no subframes");
+
+    is(frames[0].opener, null, "subframe has no opener");
+    is(doGet("opener", frames[0]), null, "subframe still has no opener");
+
+    is(frames[0].parent, window, "subframe has us as parent");
+    is(doGet("parent", frames[0]), window, "subframe still has us as parent");
+
+    // Check that postMessage doesn't throw
+    frames[0].postMessage(null, "*");
+
+    is(frames[0].self, frames[0], "self should work");
+    is(doGet("self", frames[0]), frames[0], "self should still work");
+
+    is(frames[0].top, window.top, "Our subframe's top should be our top");
+    is(doGet("top", frames[0]), window.top,
+       "Our subframe's top should still be our top");
+
+    is(frames[0].window, frames[0], "window getter should work");
+    // "window" is not a getter property yet
+    //is(doGet("window", frames[0]), frames[0], "window getter should still work");
+    todo_isnot(Object.getOwnPropertyDescriptor(window, "window").get, undefined,
+              "Should have a getter here");
+
+    // Finally, check that we can set the location
+    frames[0].location = "about:blank";
+    doSet("location", frames[1], "about:blank");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946067">Mozilla Bug 946067</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <iframe id="x" src="http://www.example.com/nosuchpageIhope"></iframe>
+  <iframe id="y" src="http://www.example.com/nosuchpageIhope"></iframe>
+</pre>
+</body>
+</html>

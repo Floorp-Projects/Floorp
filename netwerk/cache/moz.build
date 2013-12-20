@@ -20,6 +20,7 @@ EXPORTS += [
     'nsCacheService.h',
 ]
 
+# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += [
     'nsApplicationCacheService.cpp',
     'nsCache.cpp',
@@ -45,3 +46,7 @@ FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'necko'
+
+LOCAL_INCLUDES += [
+    '../base/src',
+]

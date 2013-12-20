@@ -1034,11 +1034,15 @@ class Shape : public gc::BarrieredCell<Shape>
 
         void popFront() {
             JS_ASSERT(!empty());
+            AutoThreadSafeAccess ts(cursor);
             cursor = cursor->parent;
         }
     };
 
-    const Class *getObjectClass() const { return base()->clasp; }
+    const Class *getObjectClass() const {
+        AutoThreadSafeAccess ts(base());
+        return base()->clasp;
+    }
     JSObject *getObjectParent() const { return base()->parent; }
     JSObject *getObjectMetadata() const { return base()->metadata; }
 
@@ -1095,12 +1099,15 @@ class Shape : public gc::BarrieredCell<Shape>
         PUBLIC_FLAGS    = HAS_SHORTID
     };
 
-    bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
-    unsigned getFlags() const  { return flags & PUBLIC_FLAGS; }
+    bool inDictionary() const {
+        AutoThreadSafeAccess ts(this);
+        return (flags & IN_DICTIONARY) != 0;
+    }
+    unsigned getFlags() const { return flags & PUBLIC_FLAGS; }
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
 
     PropertyOp getter() const { return base()->rawGetter; }
-    bool hasDefaultGetter() const  { return !base()->rawGetter; }
+    bool hasDefaultGetter() const {return !base()->rawGetter; }
     PropertyOp getterOp() const { JS_ASSERT(!hasGetterValue()); return base()->rawGetter; }
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return base()->getterObj; }
 
@@ -1158,11 +1165,21 @@ class Shape : public gc::BarrieredCell<Shape>
 
     BaseShape *base() const { return base_.get(); }
 
-    bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
+    bool hasSlot() const {
+        AutoThreadSafeAccess ts(this);
+        return (attrs & JSPROP_SHARED) == 0;
+    }
     uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
-    uint32_t maybeSlot() const { return slotInfo & SLOT_MASK; }
+    uint32_t maybeSlot() const {
+        // Note: Reading a shape's slot off thread can race against main thread
+        // updates to the number of linear searches on the shape, which is
+        // stored in the same slotInfo field. We tolerate this.
+        AutoThreadSafeAccess ts(this);
+        return slotInfo & SLOT_MASK;
+    }
 
     bool isEmptyShape() const {
+        AutoThreadSafeAccess ts(this);
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
         return JSID_IS_EMPTY(propid_);
     }
@@ -1184,6 +1201,8 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     uint32_t numFixedSlots() const {
+        // Note: The same race applies here as in maybeSlot().
+        AutoThreadSafeAccess ts(this);
         return (slotInfo >> FIXED_SLOTS_SHIFT);
     }
 
@@ -1205,11 +1224,17 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     const EncapsulatedId &propid() const {
+        AutoThreadSafeAccess ts(this);
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
     }
     EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
+    jsid propidRaw() const {
+        // Return the actual jsid, not an internal reference.
+        AutoThreadSafeAccess ts(this);
+        return propid();
+    }
 
     int16_t shortid() const { JS_ASSERT(hasShortID()); return maybeShortid(); }
     int16_t maybeShortid() const { return shortid_; }
@@ -1225,6 +1250,7 @@ class Shape : public gc::BarrieredCell<Shape>
     bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
     bool writable() const {
         // JS_ASSERT(isDataDescriptor());
+        AutoThreadSafeAccess ts(this);
         return (attrs & JSPROP_READONLY) == 0;
     }
     bool hasGetterValue() const { return attrs & JSPROP_GETTER; }
@@ -1382,6 +1408,19 @@ struct EmptyShape : public js::Shape
      * and the table entry is purged.
      */
     static void insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto);
+
+    /*
+     * Some object subclasses are allocated with a built-in set of properties.
+     * The first time such an object is created, these built-in properties must
+     * be set manually, to compute an initial shape.  Afterward, that initial
+     * shape can be reused for newly-created objects that use the subclass's
+     * standard prototype.  This method should be used in a post-allocation
+     * init method, to ensure that objects of such subclasses compute and cache
+     * the initial shape, if it hasn't already been computed.
+     */
+    template<class ObjectSubclass>
+    static inline bool
+    ensureInitialCustomShape(ExclusiveContext *cx, Handle<ObjectSubclass*> obj);
 };
 
 /*
@@ -1603,9 +1642,11 @@ Shape::searchLinear(jsid id)
      */
     JS_ASSERT(!inDictionary());
 
-    for (Shape *shape = this; shape; shape = shape->parent) {
+    for (Shape *shape = this; shape; ) {
+        AutoThreadSafeAccess ts(shape);
         if (shape->propidRef() == id)
             return shape;
+        shape = shape->parent;
     }
 
     return nullptr;

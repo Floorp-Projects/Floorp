@@ -51,6 +51,9 @@
     is(cursor.store, gStore, "Cursor.store is the store");
 
     ok("next" in cursor, "Cursor.next exists");
+    ok("close" in cursor, "Cursor.close exists");
+
+    cursor.close();
 
     runTest();
   }
@@ -133,16 +136,23 @@
     function() {
       gExpectedEvents = true;
 
-      gStore.add(1,2).then(function(id) {
+      gStore.add(1).then(function(id) {
         gRevisions.push(gStore.revisionId);
-        ok(true, "Iteme: " + id + " added");
+        ok(true, "Item: " + id + " added");
       });
     },
 
     function() {
-      gStore.add(2,3).then(function(id) {
+      gStore.add(2,"foobar").then(function(id) {
         gRevisions.push(gStore.revisionId);
-        ok(true, "Iteme: " + id + " added");
+        ok(true, "Item: " + id + " added");
+      });
+    },
+
+    function() {
+      gStore.add(3,3).then(function(id) {
+        gRevisions.push(gStore.revisionId);
+        ok(true, "Item: " + id + " added");
       });
     },
 
@@ -150,8 +160,9 @@
       gExpectedEvents = false;
       var cursor = gStore.sync();
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 1 },
-                    { operation: 'add', id: 3, data: 2 },
+                    { operation: 'add', id: 1, data: 1 },
+                    { operation: 'add', id: 3, data: 3 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -159,29 +170,39 @@
     function() {
       var cursor = gStore.sync('wrong revision ID');
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 1 },
-                    { operation: 'add', id: 3, data: 2 },
+                    { operation: 'add', id: 1, data: 1 },
+                    { operation: 'add', id: 3, data: 3 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[0]);
-      var steps = [ { operation: 'add', id: 2, data: 1 },
-                    { operation: 'add', id: 3, data: 2 },
+      var steps = [ { operation: 'add', id: 1, data: 1 },
+                    { operation: 'add', id: 'foobar', data: 2 },
+                    { operation: 'add', id: 3, data: 3 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[1]);
-      var steps = [ { operation: 'add', id: 3, data: 2 },
+      var steps = [ { operation: 'add', id: 'foobar', data: 2 },
+                    { operation: 'add', id: 3, data: 3 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[2]);
+      var steps = [ { operation: 'add', id: 3, data: 3 },
+                    { operation: 'done' }];
+      testCursor(cursor, steps);
+    },
+
+    function() {
+      var cursor = gStore.sync(gRevisions[3]);
       var steps = [ { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -189,7 +210,7 @@
     // Test after an update
     function() {
       gExpectedEvents = true;
-      gStore.put(3, 2).then(function() {
+      gStore.put(123, 1).then(function() {
         gRevisions.push(gStore.revisionId);
       });
     },
@@ -198,8 +219,9 @@
       gExpectedEvents = false;
       var cursor = gStore.sync();
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 3 },
-                    { operation: 'add', id: 3, data: 2 },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 3, data: 3 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -207,37 +229,48 @@
     function() {
       var cursor = gStore.sync('wrong revision ID');
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 3 },
-                    { operation: 'add', id: 3, data: 2 },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 3, data: 3 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[0]);
-      var steps = [ { operation: 'add', id: 2, data: 3 },
-                    { operation: 'add', id: 3, data: 2 },
+      var steps = [ { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 'foobar', data: 2 },
+                    { operation: 'add', id: 3, data: 3 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[1]);
-      var steps = [ { operation: 'add', id: 3, data: 2 },
-                    { operation: 'update', id: 2, data: 3 },
+      var steps = [ { operation: 'add', id: 'foobar', data: 2 },
+                    { operation: 'add', id: 3, data: 3 },
+                    { operation: 'update', id: 1, data: 123 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[2]);
-      var steps = [ { operation: 'update', id: 2, data: 3 },
+      var steps = [ { operation: 'add', id: 3, data: 3 },
+                    { operation: 'update', id: 1, data: 123 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[3]);
+      var steps = [ { operation: 'update', id: 1, data: 123 },
+                    { operation: 'done' }];
+      testCursor(cursor, steps);
+    },
+
+    function() {
+      var cursor = gStore.sync(gRevisions[4]);
       var steps = [ { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -254,7 +287,8 @@
       gExpectedEvents = false;
       var cursor = gStore.sync();
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 3 },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -262,42 +296,52 @@
     function() {
       var cursor = gStore.sync('wrong revision ID');
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 3 },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[0]);
-      var steps = [ { operation: 'add', id: 2, data: 3 },
+      var steps = [ { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 'foobar', data: 2 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[1]);
-      var steps = [ { operation: 'update', id: 2, data: 3 },
+      var steps = [ { operation: 'add', id: 'foobar', data: 2 },
+                    { operation: 'update', id: 1, data: 123 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[2]);
-      var steps = [ { operation: 'update', id: 2, data: 3 },
-                    { operation: 'remove', id: 3 },
+      var steps = [ { operation: 'update', id: 1, data: 123 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[3]);
-      var steps = [ { operation: 'remove', id: 3 },
+      var steps = [ { operation: 'update', id: 1, data: 123 },
+                    { operation: 'remove', id: 3 },
                     { operation: 'done' }];
       testCursor(cursor, steps);
     },
 
     function() {
       var cursor = gStore.sync(gRevisions[4]);
+      var steps = [ { operation: 'remove', id: 3 },
+                    { operation: 'done' }];
+      testCursor(cursor, steps);
+    },
+
+    function() {
+      var cursor = gStore.sync(gRevisions[5]);
       var steps = [ { operation: 'done' }];
       testCursor(cursor, steps);
     },
@@ -306,33 +350,39 @@
     function() {
       gCursor = gStore.sync();
       var steps = [ { operation: 'clear', },
-                    { operation: 'add', id: 2, data: 3 } ];
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 'foobar', data: 2 } ];
       testCursor(gCursor, steps);
     },
 
     function() {
-      gStore.add(42).then(function(id) {
+      gStore.add(42, 2).then(function(id) {
         ok(true, "Item: " + id + " added");
         gRevisions.push(gStore.revisionId);
         runTest();
       });
     },
 
-    // New events when the cursor is active
     function() {
-      var steps = [ { operation: 'add', id: 4, data: 42 } ];
+      var steps = [ { operation: 'clear', },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 2, data: 42 },
+		    { operation: 'add', id: 'foobar', data: 2 } ]
       testCursor(gCursor, steps);
     },
 
     function() {
-      gStore.put(42, 2).then(function(id) {
+      gStore.put(43, 2).then(function(id) {
         gRevisions.push(gStore.revisionId);
         runTest();
       });
     },
 
     function() {
-      var steps = [ { operation: 'update', id: 2, data: 42 } ];
+      var steps = [ { operation: 'clear', },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 2, data: 43 },
+		    { operation: 'add', id: 'foobar', data: 2 } ]
       testCursor(gCursor, steps);
     },
 
@@ -344,7 +394,9 @@
     },
 
     function() {
-      var steps = [ { operation: 'remove', id: 2 } ];
+      var steps = [ { operation: 'clear', },
+                    { operation: 'add', id: 1, data: 123 },
+		    { operation: 'add', id: 'foobar', data: 2 } ]
       testCursor(gCursor, steps);
     },
 
@@ -357,7 +409,36 @@
     },
 
     function() {
-      var steps = [ { operation: 'add', id: 5, data: 42 } ];
+      var steps = [ { operation: 'clear', },
+                    { operation: 'add', id: 1, data: 123 },
+                    { operation: 'add', id: 4, data: 42 },
+		    { operation: 'add', id: 'foobar', data: 2 } ]
+      testCursor(gCursor, steps);
+    },
+
+    function() {
+      gStore.clear().then(function() {
+        gRevisions.push(gStore.revisionId);
+        runTest();
+      });
+    },
+
+    function() {
+      var steps = [ { operation: 'clear' } ];
+      testCursor(gCursor, steps);
+    },
+
+    function() {
+      gStore.add(42).then(function(id) {
+        ok(true, "Item: " + id + " added");
+        gRevisions.push(gStore.revisionId);
+        runTest();
+      });
+    },
+
+    function() {
+      var steps = [ { operation: 'clear', },
+                    { operation: 'add', id: 5, data: 42 } ];
       testCursor(gCursor, steps);
     },
 
@@ -379,7 +460,7 @@
     function() {
       var steps = [ { operation: 'clear' },
                     { operation: 'add', id: 6, data: 42 },
-                    { operation: 'done' } ];
+                    { operation: 'done'} ];
       testCursor(gCursor, steps);
     },
 

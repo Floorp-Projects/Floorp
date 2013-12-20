@@ -7,6 +7,7 @@ LIBS = \
   $(NSPR_LIBS) \
   $(NSS_LIBS) \
   $(REALTIME_LIBS) \
+  $(MOZ_JS_LIBS) \
   $(DEPTH)/xpcom/glue/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/webrtc/signalingtest/signaling_ecc/$(LIB_PREFIX)ecc.$(LIB_SUFFIX) \
@@ -17,12 +18,10 @@ LIBS = \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
   $(NULL)
 
-ifdef MOZ_CUBEB
 ifdef MOZ_ALSA
 LIBS += \
   $(MOZ_ALSA_LIBS) \
   $(NULL)
-endif
 endif
 
 ifeq ($(OS_TARGET),Android)
@@ -33,9 +32,6 @@ LIBS += \
 CPPFLAGS += \
   $(STLPORT_CPPFLAGS) \
   $(NULL)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
-   $(NULL)
 endif
 
 ifdef MOZ_NATIVE_JPEG
@@ -108,19 +104,6 @@ LIBS += \
   $(NULL)
 endif
 
-DEFINES += \
-  -DUSE_FAKE_MEDIA_STREAMS \
-  -DUSE_FAKE_PCOBSERVER \
-  -DNR_SOCKET_IS_VOID_PTR \
-  -DHAVE_STRDUP \
-  $(NULL)
-
-ifeq ($(OS_TARGET),Darwin)
-DEFINES += \
-  -DGTEST_USE_OWN_TR1_TUPLE=1 \
-  $(NULL)
-endif
-
 LOCAL_INCLUDES += \
  -I. \
  -I$(topsrcdir)/media/webrtc/trunk/testing/gtest/include \
@@ -169,13 +152,8 @@ ifeq ($(OS_TARGET), Android)
 LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/android/include
 endif
 
-
-ifneq ($(OS_TARGET),WINNT)
-ifneq (gonk,$(MOZ_WIDGET_TOOLKIT))
-ifdef JS_SHARED_LIBRARY
+ifndef ZLIB_IN_MOZGLUE
 LIBS += $(MOZ_ZLIB_LIBS)
-endif
-endif
 endif
 
 include $(topsrcdir)/config/config.mk

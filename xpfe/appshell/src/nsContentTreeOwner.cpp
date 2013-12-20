@@ -12,7 +12,6 @@
 // Helper Classes
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
-#include "nsCxPusher.h"
 
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
@@ -47,11 +46,9 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ScriptSettings.h"
 
 using namespace mozilla;
-
-// CIDs
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
 //*** nsSiteWindow declaration
@@ -167,6 +164,8 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem* aOriginalRequestor,
    nsIDocShellTreeItem** aFoundItem)
 {
+   NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
    NS_ENSURE_ARG_POINTER(aFoundItem);
 
    *aFoundItem = nullptr;
@@ -946,8 +945,7 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
   *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
   {
-    nsCxPusher pusher;
-    pusher.PushNull();
+    dom::AutoSystemCaller asc;
 
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
@@ -1092,6 +1090,8 @@ nsSiteWindow::SetFocus(void)
 NS_IMETHODIMP
 nsSiteWindow::Blur(void)
 {
+  NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+
   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
   nsCOMPtr<nsIXULWindow>        xulWindow;
   bool                          more, foundUs;

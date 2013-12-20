@@ -44,12 +44,8 @@
   Histograms Collected by Add-ons
 ">
 
-<!ENTITY aboutTelemetry.toggleOn "
-  Click to expand section
-">
-
-<!ENTITY aboutTelemetry.toggleOff "
-  Click to collapse section
+<!ENTITY aboutTelemetry.toggle "
+  Click to toggle section
 ">
 
 <!ENTITY aboutTelemetry.emptySection "
@@ -66,4 +62,8 @@
 
 <!ENTITY aboutTelemetry.hideSymbols "
   Show raw data from hangs
+">
+
+<!ENTITY aboutTelemetry.filterText "
+  Filter (strings or /regexp/)
 ">

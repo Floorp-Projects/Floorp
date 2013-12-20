@@ -9,7 +9,6 @@ interface nsIFrameRequestCallback;
 interface nsIControllers;
 interface nsIDOMBlob;
 interface nsIDOMLocation;
-interface nsIDOMMediaQueryList;
 interface nsIDOMOfflineResourceList;
 interface nsIDOMStorage;
 interface nsIPrompt;
@@ -265,7 +264,7 @@ interface nsIDOMWindow : nsISupports
 
   // CSSOM-View
   // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-window-interface
-  nsIDOMMediaQueryList      matchMedia(in DOMString media_query_list);
+  nsISupports      matchMedia(in DOMString media_query_list);
 
   readonly attribute nsIDOMScreen                       screen;
 

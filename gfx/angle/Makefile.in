@@ -3,22 +3,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # The below is a rough translation of build_angle.gypi:
-DEFINES += -DANGLE_DISABLE_TRACE
-DEFINES += -DANGLE_COMPILE_OPTIMIZATION_LEVEL=D3DCOMPILE_OPTIMIZATION_LEVEL1
-
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
 VPATH += $(srcdir)/src/compiler/preprocessor
 
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
-LOCAL_INCLUDES += \
-  -I$(srcdir)/include \
-  -I$(srcdir)/include/KHR \
-  -I$(srcdir)/src
-
-DEFINES += -DCOMPILER_IMPLEMENTATION
-
 VPATH += $(srcdir)/src/compiler
 VPATH += $(srcdir)/src/compiler/depgraph
 VPATH += $(srcdir)/src/compiler/timing
@@ -32,7 +22,7 @@ ifdef MOZ_ANGLE_RENDERER
 
 libs::
 ifdef MOZ_D3DCOMPILER_CAB
-	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
+	expand '$(MOZ_D3DCOMPILER_CAB)' -F:$(MOZ_D3DCOMPILER_DLL) '$(DIST)/bin'
 endif
 
 endif

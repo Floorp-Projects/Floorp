@@ -636,6 +636,10 @@ tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
 
 .meta {
   background-color: @panel_light_color@;
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
 }
 
 /* needs to observe the viewstate */
@@ -747,7 +751,7 @@ appbar[visible] {
   /* Slow the bottom up transition since it's impossible to match the system's
      soft keyboard movement. */
   transition: transform @metro_animation_duration@ @metro_animation_easing@,
-              bottom @appbar_keyboard_slideup_duration@ @metro_animation_easing@;
+              bottom @appbar_keyboard_slideup_duration@ @appbar_keyboard_slideup_easing@ @appbar_keyboard_slideup_delay@;
 }
 
 
@@ -788,8 +792,8 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
 
 /* Sprites */
 
-.appbar-primary > .toolbarbutton-icon,
-.appbar-secondary > .toolbarbutton-icon {
+.appbar-primary .toolbarbutton-icon,
+.appbar-secondary .toolbarbutton-icon {
   width: 40px;
   height: 40px;
 }

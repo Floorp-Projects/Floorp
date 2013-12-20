@@ -125,8 +125,8 @@ NotificationService::~NotificationService() {
       // This may not be completely fixable -- see
       // http://code.google.com/p/chromium/issues/detail?id=11010 .
       // But any new leaks should be fixed.
-      LOG(WARNING) << observer_counts_[i] << " notification observer(s) leaked"
-          << " of notification type " << i;
+      CHROMIUM_LOG(WARNING) << observer_counts_[i] << " notification observer(s) leaked"
+                            << " of notification type " << i;
     }
   }
 #endif

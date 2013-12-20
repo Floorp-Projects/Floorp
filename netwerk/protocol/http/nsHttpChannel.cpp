@@ -1485,7 +1485,7 @@ nsHttpChannel::PromptTempRedirect()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLString messageString;
-    rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("RepostFormData").get(), getter_Copies(messageString));
+    rv = stringBundle->GetStringFromName(MOZ_UTF16("RepostFormData"), getter_Copies(messageString));
     // GetStringFromName can return NS_OK and nullptr messageString.
     if (NS_SUCCEEDED(rv) && messageString) {
         bool repost = false;
@@ -4302,6 +4302,8 @@ NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
     NS_INTERFACE_MAP_ENTRY(nsITimedChannel)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableRequest)
     NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDNSListener)
+    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -4534,7 +4536,7 @@ nsHttpChannel::BeginConnect()
         // timing we used.
         LOG(("nsHttpChannel::BeginConnect [this=%p] prefetching%s\n",
              this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : ""));
-        mDNSPrefetch = new nsDNSPrefetch(mURI, mTimingEnabled);
+        mDNSPrefetch = new nsDNSPrefetch(mURI, this, mTimingEnabled);
         mDNSPrefetch->PrefetchHigh(mCaps & NS_HTTP_REFRESH_DNS);
     }
 
@@ -4650,9 +4652,16 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
 
     if (NS_FAILED(rv)) {
         Cancel(rv);
-        DoNotifyListener();
+        // Calling OnStart/OnStop synchronously here would mean doing it before
+        // returning from AsyncOpen which is a contract violation. Do it async.
+        nsRefPtr<nsRunnableMethod<HttpBaseChannel> > event =
+            NS_NewRunnableMethod(this, &nsHttpChannel::DoNotifyListener);
+        rv = NS_DispatchToCurrentThread(event);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed To Dispatch DoNotifyListener");
+        }
     }
-    return NS_OK;
+    return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -5919,6 +5928,42 @@ nsHttpChannel::PopRedirectAsyncFunc(nsContinueRedirectionFunc func)
     mRedirectFuncStack.TruncateLength(mRedirectFuncStack.Length() - 1);
 }
 
+//-----------------------------------------------------------------------------
+// nsIDNSListener functions
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsHttpChannel::OnLookupComplete(nsICancelable *request,
+                                nsIDNSRecord  *rec,
+                                nsresult       status)
+{
+    MOZ_ASSERT(NS_IsMainThread(), "Expecting DNS callback on main thread.");
+
+    LOG(("nsHttpChannel::OnLookupComplete [this=%p] prefetch complete%s: "
+         "%s status[0x%x]\n",
+         this, mCaps & NS_HTTP_REFRESH_DNS ? ", refresh requested" : "",
+         NS_SUCCEEDED(status) ? "success" : "failure", status));
+
+    // We no longer need the dns prefetch object. Note: mDNSPrefetch could be
+    // validly null if OnStopRequest has already been called.
+    if (mDNSPrefetch && mDNSPrefetch->TimingsValid()) {
+        mTransactionTimings.domainLookupStart =
+            mDNSPrefetch->StartTimestamp();
+        mTransactionTimings.domainLookupEnd =
+            mDNSPrefetch->EndTimestamp();
+    }
+    mDNSPrefetch = nullptr;
+
+    // Unset DNS cache refresh if it was requested,
+    if (mCaps & NS_HTTP_REFRESH_DNS) {
+        mCaps &= ~NS_HTTP_REFRESH_DNS;
+        if (mTransaction) {
+            mTransaction->SetDNSWasRefreshed();
+        }
+    }
+
+    return NS_OK;
+}
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel internal functions

@@ -54,7 +54,7 @@ private:
     mFallback.Truncate();
   }
 
-  static int PrefChanged(const char*, void*);
+  static void PrefChanged(const char*, void*);
 
   /**
    * Gets the fallback encoding label.

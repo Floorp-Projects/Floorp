@@ -15,6 +15,9 @@
 #include <string.h>
 
 #ifdef XP_WIN
+#if defined(MOZ_OPTIMIZE) && !defined(MOZ_PROFILING)
+#error "Optimized, DMD-enabled builds on Windows must be built with --enable-profiling"
+#endif
 #include <windows.h>
 #include <process.h>
 #else
@@ -600,26 +603,29 @@ class LocationService
 
   struct Entry
   {
-    static const void* const kUnused;
-
-    const void* mPc;        // if mPc==kUnused, the entry is unused
+    const void* mPc;
     char*       mFunction;  // owned by the Entry;  may be null
     const char* mLibrary;   // owned by mLibraryStrings;  never null
                             //   in a non-empty entry is in use
     ptrdiff_t   mLOffset;
+    char*       mFileName;  // owned by the Entry; may be null
+    uint32_t    mLineNo:31;
+    uint32_t    mInUse:1;   // is the entry used?
 
     Entry()
-      : mPc(kUnused), mFunction(nullptr), mLibrary(nullptr), mLOffset(0)
+      : mPc(0), mFunction(nullptr), mLibrary(nullptr), mLOffset(0), mFileName(nullptr), mLineNo(0), mInUse(0)
     {}
 
     ~Entry()
     {
       // We don't free mLibrary because it's externally owned.
       InfallibleAllocPolicy::free_(mFunction);
+      InfallibleAllocPolicy::free_(mFileName);
     }
 
-    void Replace(const void* aPc, const char* aFunction, const char* aLibrary,
-                 ptrdiff_t aLOffset)
+    void Replace(const void* aPc, const char* aFunction,
+                 const char* aLibrary, ptrdiff_t aLOffset,
+                 const char* aFileName, unsigned long aLineNo)
     {
       mPc = aPc;
 
@@ -627,14 +633,21 @@ class LocationService
       InfallibleAllocPolicy::free_(mFunction);
       mFunction =
         !aFunction[0] ? nullptr : InfallibleAllocPolicy::strdup_(aFunction);
+      InfallibleAllocPolicy::free_(mFileName);
+      mFileName =
+        !aFileName[0] ? nullptr : InfallibleAllocPolicy::strdup_(aFileName);
+
 
       mLibrary = aLibrary;
       mLOffset = aLOffset;
+      mLineNo = aLineNo;
+
+      mInUse = 1;
     }
 
     size_t SizeOfExcludingThis() {
       // Don't measure mLibrary because it's externally owned.
-      return MallocSizeOf(mFunction);
+      return MallocSizeOf(mFunction) + MallocSizeOf(mFileName);
     }
   };
 
@@ -666,8 +679,7 @@ public:
     MOZ_ASSERT(index < kNumEntries);
     Entry& entry = mEntries[index];
 
-    MOZ_ASSERT(aPc != Entry::kUnused);
-    if (entry.mPc != aPc) {
+    if (!entry.mInUse || entry.mPc != aPc) {
       mNumCacheMisses++;
 
       // NS_DescribeCodeAddress can (on Linux) acquire a lock inside
@@ -691,7 +703,7 @@ public:
         library = *p;
       }
 
-      entry.Replace(aPc, details.function, library, details.loffset);
+      entry.Replace(aPc, details.function, library, details.loffset, details.filename, details.lineno);
 
     } else {
       mNumCacheHits++;
@@ -699,14 +711,25 @@ public:
 
     MOZ_ASSERT(entry.mPc == aPc);
 
+    uintptr_t entryPc = (uintptr_t)(entry.mPc);
     // Sometimes we get nothing useful.  Just print "???" for the entire entry
     // so that fix-linux-stack.pl doesn't complain about an empty filename.
     if (!entry.mFunction && !entry.mLibrary[0] && entry.mLOffset == 0) {
-      W("   ??? %p\n", entry.mPc);
+      W("   ??? 0x%x\n", entryPc);
     } else {
       // Use "???" for unknown functions.
-      W("   %s[%s +0x%X] %p\n", entry.mFunction ? entry.mFunction : "???",
-        entry.mLibrary, entry.mLOffset, entry.mPc);
+      const char* entryFunction = entry.mFunction ? entry.mFunction : "???";
+      if (entry.mFileName) {
+        // On Windows we can get the filename and line number at runtime.
+        W("   %s (%s:%lu) 0x%x\n",
+          entryFunction, entry.mFileName, entry.mLineNo, entryPc);
+      } else {
+        // On Linux and Mac we cannot get the filename and line number at
+        // runtime, so we print the offset in a form that fix-linux-stack.pl and
+        // fix_macosx_stack.py can post-process.
+        W("   %s[%s +0x%X] 0x%x\n",
+          entryFunction, entry.mLibrary, entry.mLOffset, entryPc);
+      }
     }
   }
 
@@ -733,7 +756,7 @@ public:
   {
     size_t n = 0;
     for (size_t i = 0; i < kNumEntries; i++) {
-      if (mEntries[i].mPc != Entry::kUnused) {
+      if (mEntries[i].mInUse) {
         n++;
       }
     }
@@ -743,10 +766,6 @@ public:
   size_t NumCacheHits()   const { return mNumCacheHits; }
   size_t NumCacheMisses() const { return mNumCacheMisses; }
 };
-
-// We can't use 0 because that sometimes shows up as a PC in stack traces.
-const void* const LocationService::Entry::kUnused =
-  reinterpret_cast<const void* const>(intptr_t(-1));
 
 //---------------------------------------------------------------------------
 // Stack traces
@@ -2280,9 +2299,9 @@ void foo()
 static void
 UseItOrLoseIt(void* a)
 {
-  if (a == 0) {
-    fprintf(stderr, "UseItOrLoseIt: %p\n", a);
-  }
+  char buf[64];
+  sprintf(buf, "%p\n", a);
+  fwrite(buf, 1, strlen(buf) + 1, stderr);
 }
 
 // The output from this should be compared against test-expected.dmd.  It's
@@ -2296,11 +2315,11 @@ RunTestMode(FILE* fp)
   // The first part of this test requires sampling to be disabled.
   gOptions->SetSampleBelowSize(1);
 
-  // 0th Dump.  Zero for everything.
+  // Dump 1.  Zero for everything.
   Dump(writer);
 
-  // 1st Dump: 1 freed, 9 out of 10 unreported.
-  // 2nd Dump: still present and unreported.
+  // Dump 2: 1 freed, 9 out of 10 unreported.
+  // Dump 3: still present and unreported.
   int i;
   char* a;
   for (i = 0; i < 10; i++) {
@@ -2310,94 +2329,94 @@ RunTestMode(FILE* fp)
   free(a);
 
   // Min-sized block.
-  // 1st Dump: reported.
-  // 2nd Dump: thrice-reported.
+  // Dump 2: reported.
+  // Dump 3: thrice-reported.
   char* a2 = (char*) malloc(0);
   Report(a2);
 
   // Operator new[].
-  // 1st Dump: reported.
-  // 2nd Dump: reportedness carries over, due to ReportOnAlloc.
+  // Dump 2: reported.
+  // Dump 3: reportedness carries over, due to ReportOnAlloc.
   char* b = new char[10];
   ReportOnAlloc(b);
 
   // ReportOnAlloc, then freed.
-  // 1st Dump: freed, irrelevant.
-  // 2nd Dump: freed, irrelevant.
+  // Dump 2: freed, irrelevant.
+  // Dump 3: freed, irrelevant.
   char* b2 = new char;
   ReportOnAlloc(b2);
   free(b2);
 
-  // 1st Dump: reported 4 times.
-  // 2nd Dump: freed, irrelevant.
+  // Dump 2: reported 4 times.
+  // Dump 3: freed, irrelevant.
   char* c = (char*) calloc(10, 3);
   Report(c);
   for (int i = 0; i < 3; i++) {
     Report(c);
   }
 
-  // 1st Dump: ignored.
-  // 2nd Dump: irrelevant.
+  // Dump 2: ignored.
+  // Dump 3: irrelevant.
   Report((void*)(intptr_t)i);
 
   // jemalloc rounds this up to 8192.
-  // 1st Dump: reported.
-  // 2nd Dump: freed.
+  // Dump 2: reported.
+  // Dump 3: freed.
   char* e = (char*) malloc(4096);
   e = (char*) realloc(e, 4097);
   Report(e);
 
   // First realloc is like malloc;  second realloc is shrinking.
-  // 1st Dump: reported.
-  // 2nd Dump: re-reported.
+  // Dump 2: reported.
+  // Dump 3: re-reported.
   char* e2 = (char*) realloc(nullptr, 1024);
   e2 = (char*) realloc(e2, 512);
   Report(e2);
 
   // First realloc is like malloc;  second realloc creates a min-sized block.
   // XXX: on Windows, second realloc frees the block.
-  // 1st Dump: reported.
-  // 2nd Dump: freed, irrelevant.
+  // Dump 2: reported.
+  // Dump 3: freed, irrelevant.
   char* e3 = (char*) realloc(nullptr, 1023);
 //e3 = (char*) realloc(e3, 0);
   MOZ_ASSERT(e3);
   Report(e3);
 
-  // 1st Dump: freed, irrelevant.
-  // 2nd Dump: freed, irrelevant.
+  // Dump 2: freed, irrelevant.
+  // Dump 3: freed, irrelevant.
   char* f = (char*) malloc(64);
   free(f);
 
-  // 1st Dump: ignored.
-  // 2nd Dump: irrelevant.
+  // Dump 2: ignored.
+  // Dump 3: irrelevant.
   Report((void*)(intptr_t)0x0);
 
-  // 1st Dump: mixture of reported and unreported.
-  // 2nd Dump: all unreported.
+  // Dump 2: mixture of reported and unreported.
+  // Dump 3: all unreported.
   foo();
   foo();
 
-  // 1st Dump: twice-reported.
-  // 2nd Dump: twice-reported.
+  // Dump 2: twice-reported.
+  // Dump 3: twice-reported.
   char* g1 = (char*) malloc(77);
   ReportOnAlloc(g1);
   ReportOnAlloc(g1);
 
-  // 1st Dump: twice-reported.
-  // 2nd Dump: once-reported.
+  // Dump 2: twice-reported.
+  // Dump 3: once-reported.
   char* g2 = (char*) malloc(78);
   Report(g2);
   ReportOnAlloc(g2);
 
-  // 1st Dump: twice-reported.
-  // 2nd Dump: once-reported.
+  // Dump 2: twice-reported.
+  // Dump 3: once-reported.
   char* g3 = (char*) malloc(79);
   ReportOnAlloc(g3);
   Report(g3);
 
   // All the odd-ball ones.
-  // 1st Dump: all unreported.
-  // 2nd Dump: all freed, irrelevant.
+  // Dump 2: all unreported.
+  // Dump 3: all freed, irrelevant.
   // XXX: no memalign on Mac
 //void* x = memalign(64, 65);           // rounds up to 128
 //UseItOrLoseIt(x);
@@ -2410,7 +2429,7 @@ RunTestMode(FILE* fp)
 //UseItOrLoseIt(z);
 //aligned_alloc(64, 256);               // XXX: C11 only
 
-  // 1st Dump.
+  // Dump 2.
   Dump(writer);
 
   //---------
@@ -2425,7 +2444,7 @@ RunTestMode(FILE* fp)
 //free(y);
 //free(z);
 
-  // 2nd Dump.
+  // Dump 3.
   Dump(writer);
 
   //---------
@@ -2489,6 +2508,7 @@ RunTestMode(FILE* fp)
   // At the end we're 64 bytes into the current sample so we report ~1,424
   // bytes of allocation overall, which is 64 less than the real value 1,488.
 
+  // Dump 4.
   Dump(writer);
 }
 
@@ -2496,12 +2516,21 @@ RunTestMode(FILE* fp)
 // Stress testing microbenchmark
 //---------------------------------------------------------------------------
 
+// This stops otherwise-unused variables from being optimized away.
+static void
+UseItOrLoseIt2(void* a)
+{
+  if (a == (void*)0x42) {
+    printf("UseItOrLoseIt2\n");
+  }
+}
+
 MOZ_NEVER_INLINE static void
 stress5()
 {
   for (int i = 0; i < 10; i++) {
     void* x = malloc(64);
-    UseItOrLoseIt(x);
+    UseItOrLoseIt2(x);
     if (i & 1) {
       free(x);
     }

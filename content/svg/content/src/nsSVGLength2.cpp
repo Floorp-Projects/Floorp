@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsSVGLength2.h"
 #include "mozilla/dom/SVGAnimatedLength.h"
@@ -112,7 +112,7 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
 {
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
-                            NS_LITERAL_STRING("%g").get(),
+                            MOZ_UTF16("%g"),
                             (double)aValue);
   aValueAsString.Assign(buf);
 

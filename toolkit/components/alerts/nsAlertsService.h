@@ -33,7 +33,7 @@ class nsAlertsService : public nsIAlertsService,
 public:
   NS_DECL_NSIALERTSPROGRESSLISTENER
   NS_DECL_NSIALERTSSERVICE
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
 
   nsAlertsService();
   virtual ~nsAlertsService();

@@ -7,7 +7,6 @@
 
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
-interface nsIMemory;
 
 /**
  * nsIPipe represents an in-process buffer that can be read using nsIInputStream
@@ -37,7 +36,7 @@ interface nsIMemory;
  * references to the pipe's input and output end.  In which case, the pipe is
  * automatically closed when the respective pipe ends are released.
  */
-[scriptable, uuid(f4211abc-61b3-11d4-9877-00c04fa0cf4a)]
+[scriptable, uuid(25d0de93-685e-4ea4-95d3-d884e31df63c)]
 interface nsIPipe : nsISupports
 {
     /**
@@ -55,15 +54,11 @@ interface nsIPipe : nsISupports
      *        "infinite" space.  This mode can be useful in some cases, but
      *        should always be used with caution.  The default value for this
      *        parameter is a finite value.
-     * @param segmentAllocator
-     *        pass reference to nsIMemory to have all pipe allocations use this
-     *        allocator (pass null to use the default allocator)
      */
     void init(in boolean nonBlockingInput,
               in boolean nonBlockingOutput,
               in unsigned long segmentSize,
-              in unsigned long segmentCount,
-              in nsIMemory segmentAllocator);
+              in unsigned long segmentCount);
 
     /**
      * The pipe's input end, which also implements nsISearchableInputStream.
@@ -129,9 +124,6 @@ class nsIOutputStream;
  *        passing UINT32_MAX here causes the pipe to have "infinite" space.
  *        this mode can be useful in some cases, but should always be used with
  *        caution.  the default value for this parameter is a finite value.
- * @param segmentAlloc
- *        pass reference to nsIMemory to have all pipe allocations use this
- *        allocator (pass null to use the default allocator)
  */
 extern nsresult
 NS_NewPipe2(nsIAsyncInputStream **pipeIn,
@@ -139,8 +131,7 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
             bool nonBlockingInput = false,
             bool nonBlockingOutput = false,
             uint32_t segmentSize = 0,
-            uint32_t segmentCount = 0,
-            nsIMemory *segmentAlloc = nullptr);
+            uint32_t segmentCount = 0);
 
 /**
  * NS_NewPipe
@@ -166,9 +157,6 @@ NS_NewPipe2(nsIAsyncInputStream **pipeIn,
  *        true specifies non-blocking input stream behavior
  * @param nonBlockingOutput
  *        true specifies non-blocking output stream behavior
- * @param segmentAlloc
- *        pass reference to nsIMemory to have all pipe allocations use this
- *        allocator (pass null to use the default allocator)
  */
 extern nsresult
 NS_NewPipe(nsIInputStream **pipeIn,
@@ -176,7 +164,6 @@ NS_NewPipe(nsIInputStream **pipeIn,
            uint32_t segmentSize = 0,
            uint32_t maxSize = 0,
            bool nonBlockingInput = false,
-           bool nonBlockingOutput = false,
-           nsIMemory *segmentAlloc = nullptr);
+           bool nonBlockingOutput = false);
 
 %}

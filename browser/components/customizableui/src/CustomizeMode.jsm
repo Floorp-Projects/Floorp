@@ -93,6 +93,9 @@ CustomizeMode.prototype = {
       return;
     }
 
+    let window = this.window;
+    let document = this.document;
+
     Task.spawn(function() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
@@ -115,9 +118,6 @@ CustomizeMode.prototype = {
       this.dispatchToolboxEvent("beforecustomization");
       CustomizableUI.notifyStartCustomizing(this.window);
 
-      let window = this.window;
-      let document = this.document;
-
       // Add a keypress listener to the document so that we can quickly exit
       // customization mode when pressing ESC.
       document.addEventListener("keypress", this);
@@ -134,6 +134,10 @@ CustomizeMode.prototype = {
       let panelHolder = document.getElementById("customization-panelHolder");
       let mainView = window.PanelUI.mainView;
       panelHolder.appendChild(mainView);
+
+      let customizeButton = document.getElementById("PanelUI-customize");
+      customizeButton.setAttribute("enterLabel", customizeButton.getAttribute("label"));
+      customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
 
       this._transitioning = true;
 
@@ -159,7 +163,6 @@ CustomizeMode.prototype = {
       }
 
       this._showPanelCustomizationPlaceholders();
-      CustomizableUI.addListener(this);
 
       yield this._wrapToolbarItems();
       yield this.populatePalette();
@@ -184,11 +187,16 @@ CustomizeMode.prototype = {
       for (let toolbar of customizableToolbars)
         toolbar.setAttribute("customizing", true);
 
+      CustomizableUI.addListener(this);
       window.PanelUI.endBatchUpdate();
       this._customizing = true;
       this._transitioning = false;
       this.dispatchToolboxEvent("customizationready");
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, function(e) {
+      ERROR(e);
+      // We should ensure this has been called, and calling it again doesn't hurt:
+      window.PanelUI.endBatchUpdate();
+    });
   },
 
   exit: function() {
@@ -251,6 +259,10 @@ CustomizeMode.prototype = {
       window.PanelUI.setMainView(window.PanelUI.mainView);
       window.PanelUI.menuButton.disabled = false;
 
+      let customizeButton = document.getElementById("PanelUI-customize");
+      customizeButton.setAttribute("exitLabel", customizeButton.getAttribute("label"));
+      customizeButton.setAttribute("label", customizeButton.getAttribute("enterLabel"));
+
       // We have to use setAttribute/removeAttribute here instead of the
       // property because the XBL property will be set later, and right
       // now we'd be setting an expando, which breaks the XBL property.
@@ -298,7 +310,11 @@ CustomizeMode.prototype = {
       this._transitioning = false;
       this.dispatchToolboxEvent("aftercustomization");
       CustomizableUI.notifyEndCustomizing(this.window);
-    }.bind(this)).then(null, ERROR);
+    }.bind(this)).then(null, function(e) {
+      ERROR(e);
+      // We should ensure this has been called, and calling it again doesn't hurt:
+      window.PanelUI.endBatchUpdate();
+    });
   },
 
   /**
@@ -511,6 +527,11 @@ CustomizeMode.prototype = {
       aNode.removeAttribute("command");
     }
 
+    if (aNode.hasAttribute("observes")) {
+      wrapper.setAttribute("itemobserves", aNode.getAttribute("observes"));
+      aNode.removeAttribute("observes");
+    }
+
     if (aNode.checked) {
       wrapper.setAttribute("itemchecked", "true");
       aNode.checked = false;
@@ -542,9 +563,13 @@ CustomizeMode.prototype = {
     if (aPlace != "toolbar") {
       wrapper.setAttribute("context", contextMenuForPlace);
     }
-    if (currentContextMenu) {
+    // Only keep track of the menu if it is non-default.
+    if (currentContextMenu &&
+        currentContextMenu != contextMenuForPlace) {
       aNode.setAttribute("wrapped-context", currentContextMenu);
       aNode.setAttribute("wrapped-contextAttrName", contextMenuAttrName)
+      aNode.removeAttribute(contextMenuAttrName);
+    } else if (currentContextMenu == contextMenuForPlace) {
       aNode.removeAttribute(contextMenuAttrName);
     }
 
@@ -580,6 +605,10 @@ CustomizeMode.prototype = {
       ERROR("no toolbarItem child for " + aWrapper.tagName + "#" + aWrapper.id);
       aWrapper.remove();
       return null;
+    }
+
+    if (aWrapper.hasAttribute("itemobserves")) {
+      toolbarItem.setAttribute("observes", aWrapper.getAttribute("itemobserves"));
     }
 
     if (aWrapper.hasAttribute("itemchecked")) {

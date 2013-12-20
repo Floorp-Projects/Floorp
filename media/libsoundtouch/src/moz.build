@@ -32,6 +32,10 @@ if CONFIG['INTEL_ARCHITECTURE']:
         ]
 
 MSVC_ENABLE_PGO = True
-NO_VISIBILITY_FLAGS = True
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
+    NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+# Use abort() instead of exception in SoundTouch.
+DEFINES['ST_NO_EXCEPTION_HANDLING'] = 1

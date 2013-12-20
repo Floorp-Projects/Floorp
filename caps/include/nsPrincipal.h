@@ -18,7 +18,6 @@
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
-class DomainPolicy; 
 
 class nsBasePrincipal : public nsJSPrincipals
 {
@@ -31,8 +30,6 @@ protected:
 public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_IMETHOD GetSecurityPolicy(void** aSecurityPolicy);
-  NS_IMETHOD SetSecurityPolicy(void* aSecurityPolicy);
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp);
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp);
 public:
@@ -44,8 +41,6 @@ protected:
 #ifdef DEBUG
   virtual void dumpImpl() = 0;
 #endif
-
-  DomainPolicy* mSecurityPolicy;
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
 };

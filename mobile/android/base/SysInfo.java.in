@@ -6,16 +6,14 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.util.HardwareUtils;
+
 import android.os.StrictMode;
 import android.util.Log;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -30,7 +28,6 @@ public final class SysInfo {
     // avoid inconsistency, so we don't bother with synchronization for
     // these.
     private static volatile int cpuCount = -1;
-    private static volatile int totalRAM = -1;
 
       /**
        * Get the number of cores on the device.
@@ -80,58 +77,10 @@ public final class SysInfo {
     }
 
     /**
-     * Fetch the total memory of the device in MB by parsing /proc/meminfo.
-     * 
-     * Of course, Android doesn't have a neat and tidy way to find total
-     * RAM, so we do it by parsing /proc/meminfo.
-     *
-     * @return 0 if a problem occurred, or memory size in MB.
+     * Wraps HardwareUtils so callers don't need to know about it.
      */
     public static int getMemSize() {
-        if (totalRAM >= 0) {
-            return totalRAM;
-        }
-
-        try {
-            RandomAccessFile reader = new RandomAccessFile("/proc/meminfo", "r");
-            try {
-                // MemTotal will be one of the first three lines.
-                int i = 0;
-                String memTotal = null;
-                while (i++ < 3) {
-                    memTotal = reader.readLine();
-                    if (memTotal == null ||
-                        memTotal.startsWith("MemTotal: ")) {
-                        break;
-                    }
-                    memTotal = null;
-                }
-
-                if (memTotal == null) {
-                    return totalRAM = 0;
-                }
-
-                // Parse a line like this:
-                // MemTotal: 1605324 kB
-                Matcher m = Pattern.compile("^MemTotal:\\s+([0-9]+) kB\\s*$")
-                                   .matcher(memTotal);
-                if (m.matches()) {
-                    String kb = m.group(1);
-                    if (kb != null) {
-                        return totalRAM = (Integer.parseInt(kb) / 1024);
-                    }
-                }
-
-                Log.w(LOG_TAG, "Got unexpected MemTotal line: " + memTotal);
-                return totalRAM = 0;
-              } finally {
-                  reader.close();
-              }
-          } catch (FileNotFoundException f) {
-              return totalRAM = 0;
-          } catch (IOException e) {
-              return totalRAM = 0;
-          }
+        return HardwareUtils.getMemSize();
     }
 
     /**

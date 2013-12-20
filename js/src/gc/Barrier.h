@@ -96,8 +96,25 @@
  *
  *                                POST-BARRIER
  *
- * These are not yet implemented. Once we get generational GC, they will allow
- * us to keep track of pointers from non-nursery space into the nursery.
+ * For generational GC, we want to be able to quickly collect the nursery in a
+ * minor collection.  Part of the way this is achieved is to only mark the
+ * nursery itself; tenured things, which may form the majority of the heap, are
+ * not traced through or marked.  This leads to the problem of what to do about
+ * tenured objects that have pointers into the nursery: if such things are not
+ * marked, they may be discarded while there are still live objects which
+ * reference them. The solution is to maintain information about these pointers,
+ * and mark their targets when we start a minor collection.
+ *
+ * The pointers can be thoughs of as edges in object graph, and the set of edges
+ * from the tenured generation into the nursery is know as the remembered set.
+ * Post barriers are used to track this remembered set.
+ *
+ * Whenever a slot which could contain such a pointer is written, we use a write
+ * barrier to check if the edge created is in the remembered set, and if so we
+ * insert it into the store buffer, which is the collector's representation of
+ * the remembered set.  This means than when we come to do a minor collection we
+ * can examine the contents of the store buffer and mark any edge targets that
+ * are in the nursery.
  *
  *                            IMPLEMENTATION DETAILS
  *
@@ -116,6 +133,21 @@
  * the "obj->field.init(value)" method instead of "obj->field = value". We use
  * the init naming idiom in many places to signify that a field is being
  * assigned for the first time.
+ *
+ * For each of pointers, Values and jsids this file implements four classes,
+ * illustrated here for the pointer (Ptr) classes:
+ *
+ * BarrieredPtr           abstract base class which provides common operations
+ *  |  |  |
+ *  |  | EncapsulatedPtr  provides pre-barriers only
+ *  |  |
+ *  | HeapPtr             provides pre- and post-barriers
+ *  |
+ * RelocatablePtr         provides pre- and post-barriers and is relocatable
+ *
+ * These classes are designed to be used by the internals of the JS engine.
+ * Barriers designed to be used externally are provided in
+ * js/public/RootingAPI.h.
  */
 
 namespace js {
@@ -159,6 +191,9 @@ class BarrieredCell : public gc::Cell
 
     static JS_ALWAYS_INLINE void readBarrier(T *thing) {
 #ifdef JSGC_INCREMENTAL
+        // Off thread Ion compilation never occurs when barriers are active.
+        js::AutoThreadSafeAccess ts(thing);
+
         JS::shadow::Zone *shadowZone = thing->shadowZoneFromAnyThread();
         if (shadowZone->needsBarrier()) {
             MOZ_ASSERT(!RuntimeFromMainThreadIsHeapMajorCollecting(shadowZone));
@@ -254,26 +289,9 @@ ZoneOfValueFromAnyThread(const JS::Value &value)
 }
 
 /*
- * This is a post barrier for HashTables whose key is a GC pointer. Any
- * insertion into a HashTable not marked as part of the runtime, with a GC
- * pointer as a key, must call this immediately after each insertion.
- */
-template <class Map, class Key>
-inline void
-HashTableWriteBarrierPost(JSRuntime *rt, Map *map, const Key &key)
-{
-#ifdef JSGC_GENERATIONAL
-    if (key && IsInsideNursery(rt, key)) {
-        JS::shadow::Runtime *shadowRuntime = JS::shadow::Runtime::asShadowRuntime(rt);
-        shadowRuntime->gcStoreBufferPtr()->putGeneric(gc::HashKeyRef<Map, Key>(map, key));
-    }
-#endif
-}
-
-/*
  * Base class for barriered pointer types.
  */
-template<class T, typename Unioned = uintptr_t>
+template <class T, typename Unioned = uintptr_t>
 class BarrieredPtr
 {
   protected:
@@ -312,7 +330,7 @@ class BarrieredPtr
     void pre() { T::writeBarrierPre(value); }
 };
 
-template<class T, typename Unioned = uintptr_t>
+template <class T, typename Unioned = uintptr_t>
 class EncapsulatedPtr : public BarrieredPtr<T, Unioned>
 {
   public:
@@ -381,7 +399,7 @@ class HeapPtr : public BarrieredPtr<T, Unioned>
     void post() { T::writeBarrierPost(this->value, (void *)&this->value); }
 
     /* Make this friend so it can access pre() and post(). */
-    template<class T1, class T2>
+    template <class T1, class T2>
     friend inline void
     BarrieredSetPair(Zone *zone,
                      HeapPtr<T1> &v1, T1 *val1,
@@ -483,7 +501,7 @@ class RelocatablePtr : public BarrieredPtr<T>
  * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
  * barriers with only one branch to check if we're in an incremental GC.
  */
-template<class T1, class T2>
+template <class T1, class T2>
 static inline void
 BarrieredSetPair(Zone *zone,
                  HeapPtr<T1> &v1, T1 *val1,
@@ -522,7 +540,8 @@ typedef HeapPtr<BaseShape> HeapPtrBaseShape;
 typedef HeapPtr<types::TypeObject> HeapPtrTypeObject;
 
 /* Useful for hashtables with a HeapPtr as key. */
-template<class T>
+
+template <class T>
 struct HeapPtrHasher
 {
     typedef HeapPtr<T> Key;
@@ -537,7 +556,7 @@ struct HeapPtrHasher
 template <class T>
 struct DefaultHasher< HeapPtr<T> > : HeapPtrHasher<T> { };
 
-template<class T>
+template <class T>
 struct EncapsulatedPtrHasher
 {
     typedef EncapsulatedPtr<T> Key;
@@ -1113,7 +1132,7 @@ class HeapId : public BarrieredId
  * may collect the empty shape even though a live object points to it. To fix
  * this, we mark these empty shapes black whenever they get read out.
  */
-template<class T>
+template <class T>
 class ReadBarriered
 {
     T *value;
@@ -1156,6 +1175,20 @@ class ReadBarrieredValue
     inline operator const Value &() const;
 
     inline JSObject &toObject() const;
+};
+
+/*
+ * Operations on a Heap thing inside the GC need to strip the barriers from
+ * pointer operations. This template helps do that in contexts where the type
+ * is templatized.
+ */
+template <typename T> struct Unbarriered {};
+template <typename S> struct Unbarriered< EncapsulatedPtr<S> > { typedef S *type; };
+template <typename S> struct Unbarriered< RelocatablePtr<S> > { typedef S *type; };
+template <> struct Unbarriered<EncapsulatedValue> { typedef Value type; };
+template <> struct Unbarriered<RelocatableValue> { typedef Value type; };
+template <typename S> struct Unbarriered< DefaultHasher< EncapsulatedPtr<S> > > {
+    typedef DefaultHasher<S *> type;
 };
 
 } /* namespace js */

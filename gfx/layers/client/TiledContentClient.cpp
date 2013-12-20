@@ -8,6 +8,7 @@
 #include "ClientTiledThebesLayer.h"     // for ClientTiledThebesLayer
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "ClientLayerManager.h"         // for ClientLayerManager
+#include "CompositorChild.h"            // for CompositorChild
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxRect.h"                    // for gfxRect
@@ -77,8 +78,8 @@ namespace layers {
 TiledContentClient::TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
                                        ClientLayerManager* aManager)
   : CompositableClient(aManager->AsShadowForwarder())
-  , mTiledBuffer(aThebesLayer, aManager)
-  , mLowPrecisionTiledBuffer(aThebesLayer, aManager)
+  , mTiledBuffer(aThebesLayer, aManager, &mSharedFrameMetricsHelper)
+  , mLowPrecisionTiledBuffer(aThebesLayer, aManager, &mSharedFrameMetricsHelper)
 {
   MOZ_COUNT_CTOR(TiledContentClient);
 
@@ -101,11 +102,138 @@ TiledContentClient::LockCopyAndWrite(TiledBufferType aType)
   buffer->ClearPaintedRegion();
 }
 
+SharedFrameMetricsHelper::SharedFrameMetricsHelper()
+  : mLastProgressiveUpdateWasLowPrecision(false)
+  , mProgressiveUpdateWasInDanger(false)
+{
+  MOZ_COUNT_CTOR(SharedFrameMetricsHelper);
+}
+
+SharedFrameMetricsHelper::~SharedFrameMetricsHelper()
+{
+  MOZ_COUNT_DTOR(SharedFrameMetricsHelper);
+}
+
+static inline bool
+FuzzyEquals(float a, float b) {
+  return (fabsf(a - b) < 1e-6);
+}
+
+bool
+SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
+    ContainerLayer* aLayer,
+    bool aHasPendingNewThebesContent,
+    bool aLowPrecision,
+    ScreenRect& aCompositionBounds,
+    CSSToScreenScale& aZoom)
+{
+  MOZ_ASSERT(aLayer);
+
+  CompositorChild* compositor = CompositorChild::Get();
+
+  if (!compositor) {
+    FindFallbackContentFrameMetrics(aLayer, aCompositionBounds, aZoom);
+    return false;
+  }
+
+  const FrameMetrics& contentMetrics = aLayer->GetFrameMetrics();
+  FrameMetrics compositorMetrics;
+
+  if (!compositor->LookupCompositorFrameMetrics(contentMetrics.mScrollId,
+                                                compositorMetrics)) {
+    FindFallbackContentFrameMetrics(aLayer, aCompositionBounds, aZoom);
+    return false;
+  }
+
+  aCompositionBounds = ScreenRect(compositorMetrics.mCompositionBounds);
+  aZoom = compositorMetrics.mZoom;
+
+  // Reset the checkerboard risk flag when switching to low precision
+  // rendering.
+  if (aLowPrecision && !mLastProgressiveUpdateWasLowPrecision) {
+    // Skip low precision rendering until we're at risk of checkerboarding.
+    if (!mProgressiveUpdateWasInDanger) {
+      return true;
+    }
+    mProgressiveUpdateWasInDanger = false;
+  }
+  mLastProgressiveUpdateWasLowPrecision = aLowPrecision;
+
+  // Always abort updates if the resolution has changed. There's no use
+  // in drawing at the incorrect resolution.
+  if (!FuzzyEquals(compositorMetrics.mZoom.scale, contentMetrics.mZoom.scale)) {
+    return true;
+  }
+
+  // Never abort drawing if we can't be sure we've sent a more recent
+  // display-port. If we abort updating when we shouldn't, we can end up
+  // with blank regions on the screen and we open up the risk of entering
+  // an endless updating cycle.
+  if (fabsf(contentMetrics.mScrollOffset.x - compositorMetrics.mScrollOffset.x) <= 2 &&
+      fabsf(contentMetrics.mScrollOffset.y - compositorMetrics.mScrollOffset.y) <= 2 &&
+      fabsf(contentMetrics.mDisplayPort.x - compositorMetrics.mDisplayPort.x) <= 2 &&
+      fabsf(contentMetrics.mDisplayPort.y - compositorMetrics.mDisplayPort.y) <= 2 &&
+      fabsf(contentMetrics.mDisplayPort.width - compositorMetrics.mDisplayPort.width) <= 2 &&
+      fabsf(contentMetrics.mDisplayPort.height - compositorMetrics.mDisplayPort.height)) {
+    return false;
+  }
+
+  // When not a low precision pass and the page is in danger of checker boarding
+  // abort update.
+  if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
+    if (AboutToCheckerboard(contentMetrics, compositorMetrics)) {
+      mProgressiveUpdateWasInDanger = true;
+      return true;
+    }
+  }
+
+  // Abort drawing stale low-precision content if there's a more recent
+  // display-port in the pipeline.
+  if (aLowPrecision && !aHasPendingNewThebesContent) {
+    return true;
+  }
+
+  return false;
+}
+
+void
+SharedFrameMetricsHelper::FindFallbackContentFrameMetrics(ContainerLayer* aLayer,
+                                                          ScreenRect& aCompositionBounds,
+                                                          CSSToScreenScale& aZoom) {
+  if (!aLayer) {
+    return;
+  }
+
+  ContainerLayer* layer = aLayer;
+  const FrameMetrics* contentMetrics = &(layer->GetFrameMetrics());
+
+  // Walk up the layer tree until a valid composition bounds is found
+  while (layer && contentMetrics->mCompositionBounds.IsEmpty()) {
+    layer = layer->GetParent();
+    contentMetrics = layer ? &(layer->GetFrameMetrics()) : contentMetrics;
+  }
+
+  MOZ_ASSERT(!contentMetrics->mCompositionBounds.IsEmpty());
+
+  aCompositionBounds = ScreenRect(contentMetrics->mCompositionBounds);
+  aZoom = contentMetrics->mZoom;
+  return;
+}
+
+bool
+SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
+                                                 const FrameMetrics& aCompositorMetrics)
+{
+  return !aContentMetrics.mDisplayPort.Contains(aCompositorMetrics.CalculateCompositedRectInCssPixels() - aCompositorMetrics.mScrollOffset);
+}
+
 BasicTiledLayerBuffer::BasicTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
-                                             ClientLayerManager* aManager)
+                                             ClientLayerManager* aManager,
+                                             SharedFrameMetricsHelper* aHelper)
   : mThebesLayer(aThebesLayer)
   , mManager(aManager)
   , mLastPaintOpaque(false)
+  , mSharedFrameMetricsHelper(aHelper)
 {
 }
 
@@ -193,7 +321,8 @@ BasicTiledLayerBuffer::GetSurfaceDescriptorTiles()
 
 /* static */ BasicTiledLayerBuffer
 BasicTiledLayerBuffer::OpenDescriptor(ISurfaceAllocator *aAllocator,
-                                      const SurfaceDescriptorTiles& aDescriptor)
+                                      const SurfaceDescriptorTiles& aDescriptor,
+                                      SharedFrameMetricsHelper* aHelper)
 {
   return BasicTiledLayerBuffer(aAllocator,
                                aDescriptor.validRegion(),
@@ -201,7 +330,8 @@ BasicTiledLayerBuffer::OpenDescriptor(ISurfaceAllocator *aAllocator,
                                aDescriptor.tiles(),
                                aDescriptor.retainedWidth(),
                                aDescriptor.retainedHeight(),
-                               aDescriptor.resolution());
+                               aDescriptor.resolution(),
+                               aHelper);
 }
 
 void
@@ -316,7 +446,7 @@ BasicTiledLayerBuffer::ValidateTileInternal(BasicTiledLayerTile aTile,
 {
   if (aTile.IsPlaceholderTile()) {
     RefPtr<DeprecatedTextureClient> textureClient =
-      new DeprecatedTextureClientTile(mManager, TextureInfo(BUFFER_TILED));
+      new DeprecatedTextureClientTile(mManager->AsShadowForwarder(), TextureInfo(BUFFER_TILED));
     aTile.mDeprecatedTextureClient = static_cast<DeprecatedTextureClientTile*>(textureClient.get());
   }
   aTile.mDeprecatedTextureClient->EnsureAllocated(gfx::IntSize(GetTileLength(), GetTileLength()), GetContentType());
@@ -419,25 +549,28 @@ BasicTiledLayerBuffer::ValidateTile(BasicTiledLayerTile aTile,
   return aTile;
 }
 
-static nsIntRect
-RoundedTransformViewportBounds(const gfx::Rect& aViewport,
-                               const CSSPoint& aScrollOffset,
-                               const gfxSize& aResolution,
-                               float aScaleX,
-                               float aScaleY,
-                               const gfx3DMatrix& aTransform)
+static LayoutDeviceRect
+TransformCompositionBounds(const ScreenRect& aCompositionBounds,
+                           const CSSToScreenScale& aZoom,
+                           const ScreenPoint& aScrollOffset,
+                           const CSSToScreenScale& aResolution,
+                           const gfx3DMatrix& aTransformScreenToLayout)
 {
-  gfxRect transformedViewport(aViewport.x - (aScrollOffset.x * aResolution.width),
-                              aViewport.y - (aScrollOffset.y * aResolution.height),
-                              aViewport.width, aViewport.height);
-  transformedViewport.Scale((aScaleX / aResolution.width) / aResolution.width,
-                            (aScaleY / aResolution.height) / aResolution.height);
-  transformedViewport = aTransform.TransformBounds(transformedViewport);
+  // Transform the current composition bounds into transformed layout device
+  // space by compensating for the difference in resolution and subtracting the
+  // old composition bounds origin.
+  ScreenRect offsetViewportRect = (aCompositionBounds / aZoom) * aResolution;
+  offsetViewportRect.MoveBy(-aScrollOffset);
 
-  return nsIntRect((int32_t)floor(transformedViewport.x),
-                   (int32_t)floor(transformedViewport.y),
-                   (int32_t)ceil(transformedViewport.width),
-                   (int32_t)ceil(transformedViewport.height));
+  gfxRect transformedViewport =
+    aTransformScreenToLayout.TransformBounds(
+      gfxRect(offsetViewportRect.x, offsetViewportRect.y,
+              offsetViewportRect.width, offsetViewportRect.height));
+
+  return LayoutDeviceRect(transformedViewport.x,
+                          transformedViewport.y,
+                          transformedViewport.width,
+                          transformedViewport.height);
 }
 
 bool
@@ -448,6 +581,14 @@ BasicTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
                                                       bool aIsRepeated)
 {
   aRegionToPaint = aInvalidRegion;
+
+  // If the composition bounds rect is empty, we can't make any sensible
+  // decision about how to update coherently. In this case, just update
+  // everything in one transaction.
+  if (aPaintData->mCompositionBounds.IsEmpty()) {
+    aPaintData->mPaintFinished = true;
+    return false;
+  }
 
   // If this is a low precision buffer, we force progressive updates. The
   // assumption is that the contents is less important, so visual coherency
@@ -461,27 +602,53 @@ BasicTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
   // Find out the current view transform to determine which tiles to draw
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
-  gfx::Rect viewport;
-  float scaleX, scaleY;
-  if (mManager->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
-                                          viewport,
-                                          scaleX, scaleY, !drawingLowPrecision)) {
-    PROFILER_LABEL("ContentClient", "Abort painting");
-    aRegionToPaint.SetEmpty();
-    return aIsRepeated;
+  ScreenRect compositionBounds;
+  CSSToScreenScale zoom;
+#if defined(MOZ_WIDGET_ANDROID)
+  bool abortPaint = mManager->ProgressiveUpdateCallback(!staleRegion.Contains(aInvalidRegion),
+                                                        compositionBounds, zoom,
+                                                        !drawingLowPrecision);
+#else
+  MOZ_ASSERT(mSharedFrameMetricsHelper);
+
+  ContainerLayer* parent = mThebesLayer->AsLayer()->GetParent();
+
+  bool abortPaint =
+    mSharedFrameMetricsHelper->UpdateFromCompositorFrameMetrics(
+      parent,
+      !staleRegion.Contains(aInvalidRegion),
+      drawingLowPrecision,
+      compositionBounds,
+      zoom);
+#endif
+
+  if (abortPaint) {
+    // We ignore if front-end wants to abort if this is the first,
+    // non-low-precision paint, as in that situation, we're about to override
+    // front-end's page/viewport metrics.
+    if (!aPaintData->mFirstPaint || drawingLowPrecision) {
+      PROFILER_LABEL("ContentClient", "Abort painting");
+      aRegionToPaint.SetEmpty();
+      return aIsRepeated;
+    }
   }
 
-  // Transform the screen coordinates into local layer coordinates.
-  nsIntRect roundedTransformedViewport =
-    RoundedTransformViewportBounds(viewport, aPaintData->mScrollOffset, aPaintData->mResolution,
-                                   scaleX, scaleY, aPaintData->mTransformScreenToLayer);
+  // Transform the screen coordinates into transformed layout device coordinates.
+  LayoutDeviceRect transformedCompositionBounds =
+    TransformCompositionBounds(compositionBounds, zoom, aPaintData->mScrollOffset,
+                            aPaintData->mResolution, aPaintData->mTransformScreenToLayout);
 
   // Paint tiles that have stale content or that intersected with the screen
   // at the time of issuing the draw command in a single transaction first.
   // This is to avoid rendering glitches on animated page content, and when
   // layers change size/shape.
-  nsIntRect criticalViewportRect = roundedTransformedViewport.Intersect(aPaintData->mCompositionBounds);
-  aRegionToPaint.And(aInvalidRegion, criticalViewportRect);
+  LayoutDeviceRect coherentUpdateRect =
+    transformedCompositionBounds.Intersect(aPaintData->mCompositionBounds);
+
+  nsIntRect roundedCoherentUpdateRect =
+    LayoutDeviceIntRect::ToUntyped(RoundedOut(coherentUpdateRect));
+
+  aRegionToPaint.And(aInvalidRegion, roundedCoherentUpdateRect);
   aRegionToPaint.Or(aRegionToPaint, staleRegion);
   bool drawingStale = !aRegionToPaint.IsEmpty();
   if (!drawingStale) {
@@ -490,8 +657,8 @@ BasicTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInvali
 
   // Prioritise tiles that are currently visible on the screen.
   bool paintVisible = false;
-  if (aRegionToPaint.Intersects(roundedTransformedViewport)) {
-    aRegionToPaint.And(aRegionToPaint, roundedTransformedViewport);
+  if (aRegionToPaint.Intersects(roundedCoherentUpdateRect)) {
+    aRegionToPaint.And(aRegionToPaint, roundedCoherentUpdateRect);
     paintVisible = true;
   }
 

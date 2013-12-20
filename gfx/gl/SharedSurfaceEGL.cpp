@@ -6,6 +6,8 @@
 #include "SharedSurfaceEGL.h"
 
 #include "GLContext.h"
+#include "GLBlitHelper.h"
+#include "ScopedGLHelpers.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
@@ -30,7 +32,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
         return nullptr;
 
     MOZ_ALWAYS_TRUE(prodGL->MakeCurrent());
-    GLuint prodTex = prodGL->CreateTextureForOffscreen(formats, size);
+    GLuint prodTex = CreateTextureForOffscreen(prodGL, formats, size);
     if (!prodTex)
         return nullptr;
 
@@ -112,7 +114,7 @@ SharedSurface_EGLImage::LockProdImpl()
     if (mPipeActive)
         return;
 
-    mGL->BlitTextureToTexture(mProdTex, mProdTexForPipe, Size(), Size());
+    mGL->BlitHelper()->BlitTextureToTexture(mProdTex, mProdTexForPipe, Size(), Size());
     mGL->fDeleteTextures(1, &mProdTex);
     mProdTex = mProdTexForPipe;
     mProdTexForPipe = 0;
@@ -128,7 +130,7 @@ CreateTexturePipe(GLLibraryEGL* const egl, GLContext* const gl,
     *out_tex = 0;
     *out_image = 0;
 
-    GLuint tex = gl->CreateTextureForOffscreen(formats, size);
+    GLuint tex = CreateTextureForOffscreen(gl, formats, size);
     if (!tex)
         return false;
 

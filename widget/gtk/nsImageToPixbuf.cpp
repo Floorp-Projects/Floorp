@@ -36,19 +36,17 @@ nsImageToPixbuf::ConvertImageToPixbuf(imgIContainer* aImage)
 GdkPixbuf*
 nsImageToPixbuf::ImageToPixbuf(imgIContainer* aImage)
 {
-    nsRefPtr<gfxASurface> surface;
-    aImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                     imgIContainer::FLAG_SYNC_DECODE,
-                     getter_AddRefs(surface));
+    nsRefPtr<gfxASurface> surface =
+      aImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                       imgIContainer::FLAG_SYNC_DECODE);
 
     // If the last call failed, it was probably because our call stack originates
     // in an imgINotificationObserver event, meaning that we're not allowed request
     // a sync decode. Presumably the originating event is something sensible like
     // OnStopFrame(), so we can just retry the call without a sync decode.
     if (!surface)
-        aImage->GetFrame(imgIContainer::FRAME_CURRENT,
-                         imgIContainer::FLAG_NONE,
-                         getter_AddRefs(surface));
+        surface = aImage->GetFrame(imgIContainer::FRAME_CURRENT,
+                                   imgIContainer::FLAG_NONE);
 
     NS_ENSURE_TRUE(surface, nullptr);
 

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Casting.h"
@@ -19,7 +20,6 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 #include "mozilla/VisualEventTracer.h"
 
 #ifdef MOZ_LOGGING
@@ -91,6 +91,7 @@
 
 // Interfaces Needed
 #include "nsIUploadChannel.h"
+#include "nsIUploadChannel2.h"
 #include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
 #include "nsITimer.h"
@@ -401,8 +402,8 @@ static void
 OnPingTimeout(nsITimer *timer, void *closure)
 {
   nsILoadGroup *loadGroup = static_cast<nsILoadGroup *>(closure);
-  loadGroup->Cancel(NS_ERROR_ABORT);
-  loadGroup->Release();
+  if (loadGroup)
+    loadGroup->Cancel(NS_ERROR_ABORT);
 }
 
 // Check to see if two URIs have the same host or not
@@ -426,18 +427,51 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
-  nsPingListener(bool requireSameHost, nsIContent* content)
+  nsPingListener(bool requireSameHost, nsIContent* content, nsILoadGroup* loadGroup)
     : mRequireSameHost(requireSameHost),
-      mContent(content)
+      mContent(content),
+      mLoadGroup(loadGroup)
   {}
+
+  ~nsPingListener();
+
+  nsresult StartTimeout();
 
 private:
   bool mRequireSameHost;
   nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsCOMPtr<nsITimer> mTimer;
 };
 
 NS_IMPL_ISUPPORTS4(nsPingListener, nsIStreamListener, nsIRequestObserver,
                    nsIInterfaceRequestor, nsIChannelEventSink)
+
+nsPingListener::~nsPingListener()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+}
+
+nsresult
+nsPingListener::StartTimeout()
+{
+  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+
+  if (timer) {
+    nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, mLoadGroup,
+                                              PING_TIMEOUT,
+                                              nsITimer::TYPE_ONE_SHOT);
+    if (NS_SUCCEEDED(rv)) {
+      mTimer = timer;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_OUT_OF_MEMORY;
+}
 
 NS_IMETHODIMP
 nsPingListener::OnStartRequest(nsIRequest *request, nsISupports *context)
@@ -458,6 +492,13 @@ NS_IMETHODIMP
 nsPingListener::OnStopRequest(nsIRequest *request, nsISupports *context,
                               nsresult status)
 {
+  mLoadGroup = nullptr;
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
   return NS_OK;
 }
 
@@ -506,6 +547,7 @@ struct SendPingInfo {
   int32_t numPings;
   int32_t maxPings;
   bool    requireSameHost;
+  nsIURI *target;
   nsIURI *referrer;
 };
 
@@ -542,8 +584,6 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   if (httpInternal)
     httpInternal->SetDocumentURI(doc->GetDocumentURI());
 
-  if (info->referrer)
-    httpChan->SetReferrer(info->referrer);
 
   httpChan->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
 
@@ -555,20 +595,56 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept-encoding"),
                              EmptyCString(), false);
 
-  nsCOMPtr<nsIUploadChannel> uploadChan = do_QueryInterface(httpChan);
+  // Always send a Ping-To header.
+  nsAutoCString pingTo;
+  if (NS_SUCCEEDED(info->target->GetSpec(pingTo)))
+    httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-To"), pingTo, false);
+
+  nsCOMPtr<nsIScriptSecurityManager> sm =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+
+  if (sm && info->referrer) {
+    bool referrerIsSecure;
+    uint32_t flags = nsIProtocolHandler::URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT;
+    nsresult rv = NS_URIChainHasFlags(info->referrer, flags, &referrerIsSecure);
+
+    // Default to sending less data if NS_URIChainHasFlags() fails.
+    referrerIsSecure = NS_FAILED(rv) || referrerIsSecure;
+
+    bool sameOrigin =
+      NS_SUCCEEDED(sm->CheckSameOriginURI(info->referrer, uri, false));
+
+    // If both the address of the document containing the hyperlink being
+    // audited and "ping URL" have the same origin or the document containing
+    // the hyperlink being audited was not retrieved over an encrypted
+    // connection, send a Ping-From header.
+    if (sameOrigin || !referrerIsSecure) {
+      nsAutoCString pingFrom;
+      if (NS_SUCCEEDED(info->referrer->GetSpec(pingFrom)))
+        httpChan->SetRequestHeader(NS_LITERAL_CSTRING("Ping-From"), pingFrom, false);
+    }
+
+    // If the document containing the hyperlink being audited was not retrieved
+    // over an encrypted connection and its address does not have the same
+    // origin as "ping URL", send a referrer.
+    if (!sameOrigin && !referrerIsSecure)
+      httpChan->SetReferrer(info->referrer);
+  }
+
+  nsCOMPtr<nsIUploadChannel2> uploadChan = do_QueryInterface(httpChan);
   if (!uploadChan)
     return;
 
-  // To avoid sending an unnecessary Content-Type header, we encode the
-  // closing portion of the headers in the POST body.
-  NS_NAMED_LITERAL_CSTRING(uploadData, "Content-Length: 0\r\n\r\n");
+  NS_NAMED_LITERAL_CSTRING(uploadData, "PING");
 
   nsCOMPtr<nsIInputStream> uploadStream;
   NS_NewPostDataStream(getter_AddRefs(uploadStream), false, uploadData);
   if (!uploadStream)
     return;
 
-  uploadChan->SetUploadStream(uploadStream, EmptyCString(), -1);
+  uploadChan->ExplicitSetUploadStream(uploadStream,
+    NS_LITERAL_CSTRING("text/ping"), uploadData.Length(),
+    NS_LITERAL_CSTRING("POST"), false);
 
   // The channel needs to have a loadgroup associated with it, so that we can
   // cancel the channel and any redirected channels it may create.
@@ -581,10 +657,12 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   // Construct a listener that merely discards any response.  If successful at
   // opening the channel, then it is not necessary to hold a reference to the
   // channel.  The networking subsystem will take care of that for us.
-  nsCOMPtr<nsIStreamListener> listener =
-      new nsPingListener(info->requireSameHost, content);
-  if (!listener)
+  nsPingListener *pingListener =
+      new nsPingListener(info->requireSameHost, content, loadGroup);
+  if (!pingListener)
     return;
+
+  nsCOMPtr<nsIStreamListener> listener(pingListener);
 
   // Observe redirects as well:
   nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(listener);
@@ -599,29 +677,16 @@ SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
   info->numPings++;
 
   // Prevent ping requests from stalling and never being garbage collected...
-  nsCOMPtr<nsITimer> timer =
-      do_CreateInstance(NS_TIMER_CONTRACTID);
-  if (timer) {
-    nsresult rv = timer->InitWithFuncCallback(OnPingTimeout, loadGroup,
-                                              PING_TIMEOUT,
-                                              nsITimer::TYPE_ONE_SHOT);
-    if (NS_SUCCEEDED(rv)) {
-      // When the timer expires, the callback function will release this
-      // reference to the loadgroup.
-      static_cast<nsILoadGroup *>(loadGroup.get())->AddRef();
-      loadGroup = 0;
-    }
-  }
-  
-  // If we failed to setup the timer, then we should just cancel the channel
-  // because we won't be able to ensure that it goes away in a timely manner.
-  if (loadGroup)
+  if (NS_FAILED(pingListener->StartTimeout())) {
+    // If we failed to setup the timer, then we should just cancel the channel
+    // because we won't be able to ensure that it goes away in a timely manner.
     chan->Cancel(NS_ERROR_ABORT);
+  }
 }
 
 // Spec: http://whatwg.org/specs/web-apps/current-work/#ping
 static void
-DispatchPings(nsIContent *content, nsIURI *referrer)
+DispatchPings(nsIContent *content, nsIURI *target, nsIURI *referrer)
 {
   SendPingInfo info;
 
@@ -631,6 +696,7 @@ DispatchPings(nsIContent *content, nsIURI *referrer)
     return;
 
   info.numPings = 0;
+  info.target = target;
   info.referrer = referrer;
 
   ForEachPing(content, SendPing, &info);
@@ -4210,9 +4276,6 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
         uint32_t fixupFlags = 0;
         if (aLoadFlags & LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP) {
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-        }
-        if (aLoadFlags & LOAD_FLAGS_URI_IS_UTF8) {
-          fixupFlags |= nsIURIFixup::FIXUP_FLAG_USE_UTF8;
         }
         nsCOMPtr<nsIInputStream> fixupStream;
         rv = sURIFixup->CreateFixupURI(uriString, fixupFlags,
@@ -11706,25 +11769,25 @@ nsDocShell::ConfirmRepost(bool * aRepost)
                "Unable to set up repost prompter.");
 
   nsXPIDLString brandName;
-  rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+  rv = brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
                                       getter_Copies(brandName));
 
   nsXPIDLString msgString, button0Title;
   if (NS_FAILED(rv)) { // No brand, use the generic version.
-    rv = appBundle->GetStringFromName(NS_LITERAL_STRING("confirmRepostPrompt").get(),
+    rv = appBundle->GetStringFromName(MOZ_UTF16("confirmRepostPrompt"),
                                       getter_Copies(msgString));
   }
   else {
     // Brand available - if the app has an override file with formatting, the app name will
     // be included. Without an override, the prompt will look like the generic version.
     const PRUnichar *formatStrings[] = { brandName.get() };
-    rv = appBundle->FormatStringFromName(NS_LITERAL_STRING("confirmRepostPrompt").get(),
+    rv = appBundle->FormatStringFromName(MOZ_UTF16("confirmRepostPrompt"),
                                          formatStrings, ArrayLength(formatStrings),
                                          getter_Copies(msgString));
   }
   if (NS_FAILED(rv)) return rv;
 
-  rv = appBundle->GetStringFromName(NS_LITERAL_STRING("resendButton.label").get(),
+  rv = appBundle->GetStringFromName(MOZ_UTF16("resendButton.label"),
                                     getter_Copies(button0Title));
   if (NS_FAILED(rv)) return rv;
 
@@ -12546,7 +12609,7 @@ nsDocShell::OnLinkClickSync(nsIContent *aContent,
                              aDocShell,                 // DocShell out-param
                              aRequest);                 // Request out-param
   if (NS_SUCCEEDED(rv)) {
-    DispatchPings(aContent, referer);
+    DispatchPings(aContent, aURI, referer);
   }
   return rv;
 }

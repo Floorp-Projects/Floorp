@@ -8,12 +8,6 @@ SDK_BINARY =  \
 	$(PROGRAM) \
 	$(NULL)
 
-DEFINES += -DWIN32_LEAN_AND_MEAN \
-					 -DUNICODE \
-					 -D_UNICODE \
-					 -DXPCOM_GLUE \
-					 $(NULL)
-
 LIBS = \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -61,8 +61,8 @@
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
 #include "GLContext.h"
+#include "GLUploadHelpers.h"
 #include "mozilla/layers/GLManager.h"
-#include "mozilla/layers/CompositorCocoaWidgetHelper.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
@@ -167,6 +167,7 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 - (void)clearCorners;
 
 // Overlay drawing functions for traditional CGContext drawing
+- (void)drawTitleString;
 - (void)drawTitlebarHighlight;
 - (void)maskTopCornersInContext:(CGContextRef)aContext;
 
@@ -292,6 +293,10 @@ public:
     }
   }
 
+  void UpdateFromCGContext(const nsIntSize& aNewSize,
+                           const nsIntRegion& aDirtyRegion,
+                           CGContextRef aCGContext);
+
   void UpdateFromDrawTarget(const nsIntSize& aNewSize,
                             const nsIntRegion& aDirtyRegion,
                             gfx::DrawTarget* aFromDrawTarget);
@@ -371,6 +376,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mShowsResizeIndicator(false)
 , mHasRoundedBottomCorners(false)
 , mIsCoveringTitlebar(false)
+, mTitlebarCGContext(nullptr)
 , mBackingScaleFactor(0.0)
 , mVisible(false)
 , mDrawing(false)
@@ -388,6 +394,8 @@ nsChildView::nsChildView() : nsBaseWidget()
 
 nsChildView::~nsChildView()
 {
+  ReleaseTitlebarCGContext();
+
   // Notify the children that we're gone.  childView->ResetParent() can change
   // our list of children while it's being iterated, so the way we iterate the
   // list must allow for this.
@@ -396,7 +404,7 @@ nsChildView::~nsChildView()
     kid = kid->GetPrevSibling();
     childView->ResetParent();
   }
-  
+
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
   DestroyCompositor();
@@ -411,6 +419,15 @@ nsChildView::~nsChildView()
   [mView widgetDestroyed]; // Safe if mView is nil.
   mParentWidget = nil;
   TearDownView(); // Safe if called twice.
+}
+
+void
+nsChildView::ReleaseTitlebarCGContext()
+{
+  if (mTitlebarCGContext) {
+    CGContextRelease(mTitlebarCGContext);
+    mTitlebarCGContext = nullptr;
+  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsChildView, nsBaseWidget, nsIPluginWidget)
@@ -893,7 +910,7 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   nsBaseWidget::SetCursor(aCursor, aHotspotX, aHotspotY);
-  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor hotSpotX:aHotspotX hotSpotY:aHotspotY];
+  return [[nsCursorManager sharedInstance] setCursorWithImage:aCursor hotSpotX:aHotspotX hotSpotY:aHotspotY scaleFactor:BackingScaleFactor()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
@@ -2017,7 +2034,7 @@ nsChildView::PrepareWindowEffects()
   mIsCoveringTitlebar = [(ChildView*)mView isCoveringTitlebar];
   if (mIsCoveringTitlebar) {
     mTitlebarRect = RectContainingTitlebarControls();
-    UpdateTitlebarImageBuffer();
+    UpdateTitlebarCGContext();
   }
 }
 
@@ -2030,7 +2047,7 @@ nsChildView::CleanupWindowEffects()
 }
 
 bool
-nsChildView::PreRender(LayerManager* aManager)
+nsChildView::PreRender(LayerManagerComposite* aManager)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
@@ -2052,7 +2069,7 @@ nsChildView::PreRender(LayerManager* aManager)
 }
 
 void
-nsChildView::PostRender(LayerManager* aManager)
+nsChildView::PostRender(LayerManagerComposite* aManager)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
@@ -2064,7 +2081,7 @@ nsChildView::PostRender(LayerManager* aManager)
 }
 
 void
-nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+nsChildView::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (manager) {
@@ -2174,34 +2191,64 @@ DrawTitlebarHighlight(NSSize aWindowSize, CGFloat aRadius, CGFloat aDevicePixelW
   [NSGraphicsContext restoreGraphicsState];
 }
 
+static CGContextRef
+CreateCGContext(const nsIntSize& aSize)
+{
+  CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+  CGContextRef ctx =
+    CGBitmapContextCreate(NULL,
+                          aSize.width,
+                          aSize.height,
+                          8 /* bitsPerComponent */,
+                          aSize.width * 4,
+                          cs,
+                          kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
+  CGColorSpaceRelease(cs);
+
+  CGContextTranslateCTM(ctx, 0, aSize.height);
+  CGContextScaleCTM(ctx, 1, -1);
+  CGContextSetInterpolationQuality(ctx, kCGInterpolationLow);
+
+  return ctx;
+}
+
 // When this method is entered, mEffectsLock is already being held.
 void
-nsChildView::UpdateTitlebarImageBuffer()
+nsChildView::UpdateTitlebarCGContext()
 {
   nsIntRegion dirtyTitlebarRegion;
   dirtyTitlebarRegion.And(mDirtyTitlebarRegion, mTitlebarRect);
   mDirtyTitlebarRegion.SetEmpty();
 
   nsIntSize texSize = RectTextureImage::TextureSizeForSize(mTitlebarRect.Size());
-  gfx::IntSize titlebarBufferSize(texSize.width, texSize.height);
-  if (!mTitlebarImageBuffer ||
-      mTitlebarImageBuffer->GetSize() != titlebarBufferSize) {
+  if (!mTitlebarCGContext ||
+      CGBitmapContextGetWidth(mTitlebarCGContext) != size_t(texSize.width) ||
+      CGBitmapContextGetHeight(mTitlebarCGContext) != size_t(texSize.height)) {
     dirtyTitlebarRegion = mTitlebarRect;
 
-    mTitlebarImageBuffer =
-      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS,
-                                     titlebarBufferSize,
-                                     gfx::FORMAT_B8G8R8A8);
+    ReleaseTitlebarCGContext();
+
+    mTitlebarCGContext = CreateCGContext(texSize);
   }
 
   if (dirtyTitlebarRegion.IsEmpty())
     return;
 
-  gfxUtils::ClipToRegion(mTitlebarImageBuffer, dirtyTitlebarRegion);
-  mTitlebarImageBuffer->ClearRect(gfx::Rect(0, 0, titlebarBufferSize.width, titlebarBufferSize.height));
+  CGContextRef ctx = mTitlebarCGContext;
 
-  gfx::BorrowedCGContext borrow(mTitlebarImageBuffer);
-  CGContextRef ctx = borrow.cg;
+  CGContextSaveGState(ctx);
+
+  std::vector<CGRect> rects;
+  nsIntRegionRectIterator iter(dirtyTitlebarRegion);
+  for (;;) {
+    const nsIntRect* r = iter.Next();
+    if (!r)
+      break;
+    rects.push_back(CGRectMake(r->x, r->y, r->width, r->height));
+  }
+  CGContextClipToRects(ctx, rects.data(), rects.size());
+
+  CGContextClearRect(ctx, CGRectMake(0, 0, texSize.width, texSize.height));
 
   double scale = BackingScaleFactor();
   CGContextScaleCTM(ctx, scale, scale);
@@ -2217,6 +2264,11 @@ nsChildView::UpdateTitlebarImageBuffer()
   }
   NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[frameView isFlipped]];
   [NSGraphicsContext setCurrentContext:context];
+
+  // Draw the title string.
+  if ([window wantsTitleDrawn] && [frameView respondsToSelector:@selector(_drawTitleBar:)]) {
+    [frameView _drawTitleBar:[frameView bounds]];
+  }
 
   // Draw the titlebar controls into the titlebar image.
   for (id view in [window titlebarControls]) {
@@ -2259,9 +2311,8 @@ nsChildView::UpdateTitlebarImageBuffer()
                         DevPixelsToCocoaPoints(1));
 
   [NSGraphicsContext setCurrentContext:oldContext];
-  borrow.Finish();
 
-  mTitlebarImageBuffer->PopClip();
+  CGContextRestoreGState(ctx);
 
   mUpdatedTitlebarRegion.Or(mUpdatedTitlebarRegion, dirtyTitlebarRegion);
 }
@@ -2292,9 +2343,9 @@ nsChildView::MaybeDrawTitlebar(GLManager* aManager, const nsIntRect& aRect)
     mTitlebarImage = new RectTextureImage(aManager->gl());
   }
 
-  mTitlebarImage->UpdateFromDrawTarget(mTitlebarRect.Size(),
-                                       updatedTitlebarRegion,
-                                       mTitlebarImageBuffer);
+  mTitlebarImage->UpdateFromCGContext(mTitlebarRect.Size(),
+                                      updatedTitlebarRegion,
+                                      mTitlebarCGContext);
 
   mTitlebarImage->Draw(aManager, mTitlebarRect.TopLeft());
 }
@@ -2318,9 +2369,12 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
   mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    gfx::BorrowedCGContext borrow(drawTarget);
-    DrawTopLeftCornerMask(borrow.cg, mDevPixelCornerRadius);
-    borrow.Finish();
+    RefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
+    builder->Arc(gfx::Point(mDevPixelCornerRadius, mDevPixelCornerRadius), mDevPixelCornerRadius, 0, 2.0f * M_PI);
+    RefPtr<gfx::Path> path = builder->Finish();
+    drawTarget->Fill(path,
+                     gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)),
+                     gfx::DrawOptions(1.0f, gfx::OP_SOURCE));
   });
 
   // Use operator destination in: multiply all 4 channels with source alpha.
@@ -2586,20 +2640,46 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
   RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
   RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
 
-  mGLContext->UploadSurfaceToTexture(dataSnapshot,
-                                     updateRegion,
-                                     mTexture,
-                                     overwriteTexture,
-                                     updateRegion.GetBounds().TopLeft(),
-                                     false,
-                                     LOCAL_GL_TEXTURE0,
-                                     LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  UploadSurfaceToTexture(mGLContext,
+                         dataSnapshot,
+                         updateRegion,
+                         mTexture,
+                         overwriteTexture,
+                         updateRegion.GetBounds().TopLeft(),
+                         false,
+                         LOCAL_GL_TEXTURE0,
+                         LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
   if (!aKeepSurface) {
     mUpdateDrawTarget = nullptr;
   }
 
   mInUpdate = false;
+}
+
+void
+RectTextureImage::UpdateFromCGContext(const nsIntSize& aNewSize,
+                                      const nsIntRegion& aDirtyRegion,
+                                      CGContextRef aCGContext)
+{
+  gfx::IntSize size = gfx::IntSize(CGBitmapContextGetWidth(aCGContext),
+                                   CGBitmapContextGetHeight(aCGContext));
+  mBufferSize.SizeTo(size.width, size.height);
+  RefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
+  if (dt) {
+    gfx::Rect rect(0, 0, size.width, size.height);
+    gfxUtils::ClipToRegion(dt, GetUpdateRegion());
+    RefPtr<gfx::SourceSurface> sourceSurface =
+      dt->CreateSourceSurfaceFromData(static_cast<uint8_t *>(CGBitmapContextGetData(aCGContext)),
+                                      size,
+                                      CGBitmapContextGetBytesPerRow(aCGContext),
+                                      gfx::FORMAT_B8G8R8A8);
+    dt->DrawSurface(sourceSurface, rect, rect,
+                    gfx::DrawSurfaceOptions(),
+                    gfx::DrawOptions(1.0, gfx::OP_SOURCE));
+    dt->PopClip();
+    EndUpdate();
+  }
 }
 
 void
@@ -3471,6 +3551,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   if ([self isCoveringTitlebar]) {
+    [self drawTitleString];
     [self drawTitlebarHighlight];
     [self maskTopCornersInContext:aContext];
   }
@@ -3627,6 +3708,31 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGContextRestoreGState(aContext);
 }
 
+- (void)drawTitleString
+{
+  BaseWindow* window = (BaseWindow*)[self window];
+  if (![window wantsTitleDrawn]) {
+    return;
+  }
+
+  NSView* frameView = [[window contentView] superview];
+  if (![frameView respondsToSelector:@selector(_drawTitleBar:)]) {
+    return;
+  }
+
+  NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
+  CGContextRef ctx = (CGContextRef)[oldContext graphicsPort];
+  CGContextSaveGState(ctx);
+  if ([oldContext isFlipped] != [frameView isFlipped]) {
+    CGContextTranslateCTM(ctx, 0, [self bounds].size.height);
+    CGContextScaleCTM(ctx, 1, -1);
+  }
+  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[frameView isFlipped]]];
+  [frameView _drawTitleBar:[frameView bounds]];
+  CGContextRestoreGState(ctx);
+  [NSGraphicsContext setCurrentContext:oldContext];
+}
+
 - (void)drawTitlebarHighlight
 {
   DrawTitlebarHighlight([self bounds].size, [self cornerRadius],
@@ -3682,7 +3788,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
       if (mGeckoChild->GetLayerManager()->GetBackendType() == LAYERS_CLIENT) {
         ClientLayerManager *manager = static_cast<ClientLayerManager*>(mGeckoChild->GetLayerManager());
-        manager->WindowOverlayChanged();
+        manager->AsShadowForwarder()->WindowOverlayChanged();
       }
     }
 

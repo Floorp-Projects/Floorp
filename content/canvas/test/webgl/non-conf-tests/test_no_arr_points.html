@@ -116,11 +116,19 @@ void main(void) {
     checkGLError(ok, info);
 
     var elemTestFunc = todo; // We fail on most implementations.
+    var checkGLTestFunc = todo;
     if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANGLE ||
         DriverInfo.getOS() == DriverInfo.OS.ANDROID)
     {
       // ANGLE and Android slaves seem to work fine.
       elemTestFunc = ok;
+      checkGLTestFunc = ok;
+    }
+    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANDROID_X86_EMULATOR)
+    {
+      // ...but the Android 4.2 x86 emulator environment is different
+      elemTestFunc = todo;
+      checkGLTestFunc = ok;
     }
 
     // Now for drawElements:
@@ -139,7 +147,7 @@ void main(void) {
     gl.drawElements(gl.POINTS, 1, indexType, 2*indexStride);
     elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[huge offset] should color pixels.');
 
-    checkGLError(elemTestFunc, info);
+    checkGLError(checkGLTestFunc, info);
   }
 
   // Begin drawing

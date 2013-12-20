@@ -2,14 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH += $(topsrcdir)/build
-
 LIBS += $(XPCOM_LIBS)
-
-# Needed to resolve __yylex (?)
-ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
-LIBS		+= -lpcap
-endif
 
 # Make sure we have symbols in case we need to debug these.
 MOZ_DEBUG_SYMBOLS = 1
@@ -34,8 +27,8 @@ endif
 
 abs_srcdir = $(abspath $(srcdir))
 
-regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
+regOrderDir = $(call getnativepath,$(abs_srcdir)/regorder)
 
 check::
 	XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) \
-	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) $(regOrderDir)
+	  $(DIST)/bin/TestRegistrationOrder$(BIN_SUFFIX) '$(regOrderDir)'

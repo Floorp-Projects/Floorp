@@ -29,11 +29,15 @@
 #include "VideoUtils.h"
 #include "ImageLayers.h"
 #include "VideoSegment.h"
-#else
-namespace mozilla {
-  class DataChannel;
-}
 #endif
+
+namespace mozilla {
+class DataChannel;
+namespace dom {
+class RTCInboundRTPStreamStats;
+class RTCOutboundRTPStreamStats;
+}
+}
 
 #include "nricectx.h"
 #include "nriceresolver.h"
@@ -180,10 +184,13 @@ public:
     MOZ_ASSERT(mMediaStream);
   }
 
-  mozilla::RefPtr<mozilla::MediaPipeline> GetPipeline(int aTrack);
+  // This method exists for stats and the unittests.
+  // It allows visibility into the pipelines and flows.
+  const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
+  GetPipelines() const { return mPipelines; }
 
 protected:
-  std::map<int, mozilla::RefPtr<mozilla::MediaPipeline> > mPipelines;
+  std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
   nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
 };

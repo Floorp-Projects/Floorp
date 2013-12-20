@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426308
 const SJS_URL = "http://example.org:80/tests/content/base/test/bug426308-redirect.sjs";
 
 function startTest() {
-  var req = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  var req = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   req.open("GET", SJS_URL + "?" + window.location.href, false);
   req.send(null);
 

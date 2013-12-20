@@ -30,9 +30,9 @@
         let testGenerator = (function() {
           SimpleTest.waitForExplicitFinish();
 
-          ok(!("SharedWorker" in window), "No SharedWorker without pref set");
-          ok(!("WorkerMessagePort" in window),
-             "No WorkerMessagePort without pref set");
+          if (!SpecialPowers.getBoolPref(swPref)) {
+            ok(!("SharedWorker" in window), "No SharedWorker without pref set");
+          }
 
           SpecialPowers.pushPrefEnv({ set: [[swPref, true]] }, sendToGenerator);
           yield undefined;

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu TraversalRules</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../pivot.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+
+  <script type="application/javascript">
+    Components.utils.import("resource://gre/modules/accessibility/TraversalRules.jsm");
+    var gBrowserWnd = null;
+    var gQueue = null;
+
+    function doTest()
+    {
+      var doc = currentTabDocument();
+      var docAcc = getAccessible(doc, [nsIAccessibleDocument]);
+
+      gQueue = new eventQueue();
+
+      gQueue.onFinish = function onFinish()
+      {
+        closeBrowserWindow();
+      }
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Heading, null,
+                             ['heading-1', 'heading-2', 'heading-3', 'heading-5']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Entry, null,
+                             ['input-1-1', 'label-1-2', 'input-1-3',
+                              'input-1-4', 'input-1-5']);
+
+      // move back an element to hit all the form elements, because the VC is
+      // currently at the first input element
+      gQueue.push(new setVCPosInvoker(docAcc, "movePrevious",
+                                      TraversalRules.Heading, "heading-1"));
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.FormElement, null,
+                             ['input-1-1', 'label-1-2', 'button-1-1',
+                              'radio-1-1', 'radio-1-2', 'input-1-3',
+                              'input-1-4', 'button-1-2', 'checkbox-1-1',
+                              'select-1-1', 'select-1-2', 'checkbox-1-2',
+                              'select-1-3', 'input-1-5', 'button-1-3',
+                              'button-2-1', 'button-2-2', 'button-2-3',
+                              'button-2-4']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Button, null,
+                             ['button-1-1', 'button-1-2', 'button-1-3',
+                              'button-2-1', 'button-2-2', 'button-2-3',
+                              'button-2-4']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.RadioButton, null,
+                             ['radio-1-1', 'radio-1-2']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Checkbox, null,
+                             ['checkbox-1-1', 'checkbox-1-2']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Combobox, null,
+                             ['select-1-1', 'select-1-2', 'select-1-3']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.List, null,
+                             ['list-1', 'list-2', 'list-3']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.ListItem, null,
+                             ['listitem-1-1', 'listitem-2-1', 'listitem-2-2',
+                              'listitem-3-1', 'listitem-3-2', 'listitem-3-3',
+                              'listitem-2-3']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Graphic, null,
+                             ['image-2', 'image-3']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Link, null,
+                             ['link-1', 'link-2', 'link-3']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Anchor, null,
+                             ['anchor-1', 'anchor-2']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Separator, null,
+                             ['separator-1', 'separator-2']);
+
+      queueTraversalSequence(gQueue, docAcc, TraversalRules.Table, null,
+                             ['table-1', 'table-2']);
+
+      gQueue.invoke();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function () {
+      /* We open a new browser because we need to test with a top-level content
+         document. */
+      openBrowserWindow(
+        doTest,
+        getRootDirectory(window.location.href) + "doc_traversal.html");
+    });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for AccessFu TraversalRules"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=933808">Mozilla Bug 933808</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

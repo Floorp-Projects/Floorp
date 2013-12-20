@@ -7,7 +7,9 @@ from __future__ import unicode_literals
 import hashlib
 import os
 import unittest
+import shutil
 import sys
+import tempfile
 
 from mozfile.mozfile import NamedTemporaryFile
 from mozunit import (
@@ -22,6 +24,7 @@ from mozbuild.util import (
     MozbuildDeletionError,
     HierarchicalStringList,
     StrictOrderingOnAppendList,
+    StrictOrderingOnAppendListWithFlagsFactory,
     UnsortedError,
 )
 
@@ -107,6 +110,40 @@ class TestFileAvoidWrite(unittest.TestCase):
             faw.write('content')
             self.assertEqual(faw.close(), (True, False))
 
+    def test_diff_not_default(self):
+        """Diffs are not produced by default."""
+
+        faw = FileAvoidWrite('doesnotexist')
+        faw.write('dummy')
+        faw.close()
+        self.assertIsNone(faw.diff)
+
+    def test_diff_update(self):
+        """Diffs are produced on file update."""
+
+        with MockedOpen({'file': 'old'}):
+            faw = FileAvoidWrite('file', capture_diff=True)
+            faw.write('new')
+            faw.close()
+
+            self.assertIsInstance(faw.diff, unicode)
+            self.assertIn('-old', faw.diff)
+            self.assertIn('+new', faw.diff)
+
+    def test_diff_create(self):
+        """Diffs are produced when files are created."""
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            path = os.path.join(tmpdir, 'file')
+            faw = FileAvoidWrite(path, capture_diff=True)
+            faw.write('new')
+            faw.close()
+
+            self.assertIsInstance(faw.diff, unicode)
+            self.assertIn('+new', faw.diff)
+        finally:
+            shutil.rmtree(tmpdir)
 
 class TestResolveTargetToMake(unittest.TestCase):
     def setUp(self):
@@ -283,6 +320,40 @@ class TestStrictOrderingOnAppendList(unittest.TestCase):
             l += ['b', 'a']
 
         self.assertEqual(len(l), 2)
+
+
+class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
+    def test_strict_ordering_on_append_list_with_flags_factory(self):
+        cls = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool,
+            'bar': int,
+        })
+
+        l = cls()
+        l += ['a', 'b']
+
+        with self.assertRaises(Exception):
+            l['a'] = 'foo'
+
+        with self.assertRaises(Exception):
+            c = l['c']
+
+        self.assertEqual(l['a'].foo, False)
+        l['a'].foo = True
+        self.assertEqual(l['a'].foo, True)
+
+        with self.assertRaises(TypeError):
+            l['a'].bar = 'bar'
+
+        self.assertEqual(l['a'].bar, 0)
+        l['a'].bar = 42
+        self.assertEqual(l['a'].bar, 42)
+
+        l['b'].foo = True
+        self.assertEqual(l['b'].foo, True)
+
+        with self.assertRaises(AttributeError):
+            l['b'].baz = False
 
 
 if __name__ == '__main__':

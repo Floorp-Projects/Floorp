@@ -14,6 +14,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "dom_quickstubs.h"
+#include "mozJSComponentLoader.h"
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserverService.h"
@@ -609,9 +610,8 @@ WindowGlobalOrNull(JSObject *aObj)
 static void
 CompartmentDestroyedCallback(JSFreeOp *fop, JSCompartment *compartment)
 {
-    XPCJSRuntime* self = nsXPConnect::GetRuntimeInstance();
-    if (!self)
-        return;
+    // NB - This callback may be called in JS_DestroyRuntime, which happens
+    // after the XPCJSRuntime has been torn down.
 
     // Get the current compartment private into an AutoPtr (which will do the
     // cleanup for us), and null out the private (which may already be null).
@@ -668,35 +668,6 @@ XPCJSRuntime::SuspectWrappedNative(XPCWrappedNative *wrapper,
         cb.NoteJSRoot(obj);
 }
 
-bool
-CanSkipWrappedJS(nsXPCWrappedJS *wrappedJS)
-{
-    JSObject *obj = wrappedJS->GetJSObjectPreserveColor();
-    // If traversing wrappedJS wouldn't release it, nor
-    // cause any other objects to be added to the graph, no
-    // need to add it to the graph at all.
-    bool isRootWrappedJS = wrappedJS->GetRootWrapper() == wrappedJS;
-    if (nsCCUncollectableMarker::sGeneration &&
-        (!obj || !xpc_IsGrayGCThing(obj)) &&
-        !wrappedJS->IsSubjectToFinalization() &&
-        (isRootWrappedJS || CanSkipWrappedJS(wrappedJS->GetRootWrapper()))) {
-        if (!wrappedJS->IsAggregatedToNative() || !isRootWrappedJS) {
-            return true;
-        } else {
-            nsISupports* agg = wrappedJS->GetAggregatedNativeObject();
-            nsXPCOMCycleCollectionParticipant* cp = nullptr;
-            CallQueryInterface(agg, &cp);
-            nsISupports* canonical = nullptr;
-            agg->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                                reinterpret_cast<void**>(&canonical));
-            if (cp && canonical && cp->CanSkipInCC(canonical)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 void
 XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &cb)
 {
@@ -714,13 +685,7 @@ XPCJSRuntime::TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback &c
     }
 
     for (XPCRootSetElem *e = mWrappedJSRoots; e ; e = e->GetNextRoot()) {
-        nsXPCWrappedJS *wrappedJS = static_cast<nsXPCWrappedJS*>(e);
-        if (!cb.WantAllTraces() &&
-            CanSkipWrappedJS(wrappedJS)) {
-            continue;
-        }
-
-        cb.NoteXPCOMRoot(static_cast<nsIXPConnectWrappedJS *>(wrappedJS));
+        cb.NoteXPCOMRoot(ToSupports(static_cast<nsXPCWrappedJS*>(e)));
     }
 }
 
@@ -1519,6 +1484,13 @@ void XPCJSRuntime::SystemIsBeingShutDown()
 
 XPCJSRuntime::~XPCJSRuntime()
 {
+    // This destructor runs before ~CycleCollectedJSRuntime, which does the
+    // actual JS_DestroyRuntime() call. But destroying the runtime triggers
+    // one final GC, which can call back into the runtime with various
+    // callback if we aren't careful. Null out the relevant callbacks.
+    js::SetActivityCallback(Runtime(), nullptr, nullptr);
+    JS_SetFinalizeCallback(Runtime(), nullptr);
+
     // Clear any pending exception.  It might be an XPCWrappedJS, and if we try
     // to destroy it later we will crash.
     SetPendingException(nullptr);
@@ -1537,41 +1509,52 @@ XPCJSRuntime::~XPCJSRuntime()
     delete rtPrivate;
     JS_SetRuntimePrivate(Runtime(), nullptr);
 
-    // Tell the superclas to destroy the JSRuntime. We need to do this here,
-    // because destroying the runtime runs one final rambo GC, which sometimes
-    // calls various finalizers that assume that XPCJSRuntime is still
-    // operational. We have bug 911303 on file for fixing this.
-    DestroyRuntime();
-
     // clean up and destroy maps...
     if (mWrappedJSMap) {
         mWrappedJSMap->ShutdownMarker();
         delete mWrappedJSMap;
+        mWrappedJSMap = nullptr;
     }
 
-    if (mWrappedJSClassMap)
+    if (mWrappedJSClassMap) {
         delete mWrappedJSClassMap;
+        mWrappedJSClassMap = nullptr;
+    }
 
-    if (mIID2NativeInterfaceMap)
+    if (mIID2NativeInterfaceMap) {
         delete mIID2NativeInterfaceMap;
+        mIID2NativeInterfaceMap = nullptr;
+    }
 
-    if (mClassInfo2NativeSetMap)
+    if (mClassInfo2NativeSetMap) {
         delete mClassInfo2NativeSetMap;
+        mClassInfo2NativeSetMap = nullptr;
+    }
 
-    if (mNativeSetMap)
+    if (mNativeSetMap) {
         delete mNativeSetMap;
+        mNativeSetMap = nullptr;
+    }
 
-    if (mThisTranslatorMap)
+    if (mThisTranslatorMap) {
         delete mThisTranslatorMap;
+        mThisTranslatorMap = nullptr;
+    }
 
-    if (mNativeScriptableSharedMap)
+    if (mNativeScriptableSharedMap) {
         delete mNativeScriptableSharedMap;
+        mNativeScriptableSharedMap = nullptr;
+    }
 
-    if (mDyingWrappedNativeProtoMap)
+    if (mDyingWrappedNativeProtoMap) {
         delete mDyingWrappedNativeProtoMap;
+        mDyingWrappedNativeProtoMap = nullptr;
+    }
 
-    if (mDetachedWrappedNativeProtoMap)
+    if (mDetachedWrappedNativeProtoMap) {
         delete mDetachedWrappedNativeProtoMap;
+        mDetachedWrappedNativeProtoMap = nullptr;
+    }
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the runtime is gone
@@ -1773,7 +1756,7 @@ private:
         rtTotal += amount;                                                    \
     } while (0)
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JSMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(JSMallocSizeOf)
 
 namespace xpc {
 
@@ -1809,11 +1792,11 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                    "Memory holding miscellaneous additional information associated with lazy "
                    "scripts.  This memory is allocated on the malloc heap.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("ion-codes-gc-heap"),
-                      zStats.ionCodesGCHeap,
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
+                      zStats.jitCodesGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds references to executable code pools "
-                      "used by the IonMonkey JIT.");
+                      "used by the JITs.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
                       zStats.typeObjectsGCHeap,
@@ -1847,8 +1830,8 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         // bucket.
 #       define STRING_LENGTH "string(length="
         if (FindInReadable(NS_LITERAL_CSTRING(STRING_LENGTH), notableString)) {
-            stringsNotableAboutMemoryGCHeap += info.totalGCHeapSizeOf();
-            stringsNotableAboutMemoryMallocHeap += info.normalMallocHeap;
+            stringsNotableAboutMemoryGCHeap += info.gcHeap;
+            stringsNotableAboutMemoryMallocHeap += info.mallocHeap;
             continue;
         }
 
@@ -1867,7 +1850,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 
         REPORT_BYTES2(path + NS_LITERAL_CSTRING("gc-heap"),
             KIND_NONHEAP,
-            info.totalGCHeapSizeOf(),
+            info.gcHeap,
             nsPrintfCString("Memory allocated to hold headers for copies of "
             "the given notable string.  A string is notable if all of its copies "
             "together use more than %d bytes total of JS GC heap and malloc heap "
@@ -1876,12 +1859,12 @@ ReportZoneStats(const JS::ZoneStats &zStats,
             "is short enough.  If so, the string won't have any memory reported "
             "under 'string-chars'.",
             JS::NotableStringInfo::notableSize()));
-        gcTotal += info.totalGCHeapSizeOf();
+        gcTotal += info.gcHeap;
 
-        if (info.normalMallocHeap > 0) {
+        if (info.mallocHeap > 0) {
             REPORT_BYTES2(path + NS_LITERAL_CSTRING("malloc-heap"),
                 KIND_HEAP,
-                info.normalMallocHeap,
+                info.mallocHeap,
                 nsPrintfCString("Memory allocated on the malloc heap to hold "
                 "string data for copies of the given notable string.  A string is "
                 "notable if all of its copies together use more than %d bytes "
@@ -2103,10 +2086,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
                    cStats.typeInferenceTypeScripts,
                    "Memory used by type sets associated with scripts.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
-                   cStats.typeInferencePendingArrays,
-                   "Memory used for solving constraints during type inference.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
                    cStats.typeInferenceAllocationSiteTables,
@@ -2377,12 +2356,10 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 } // namespace xpc
 
-class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public MemoryMultiReporter
+class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
 {
   public:
-    JSMainRuntimeCompartmentsReporter()
-      : MemoryMultiReporter("js-main-runtime-compartments")
-    {}
+    NS_DECL_ISUPPORTS
 
     typedef js::Vector<nsCString, 0, js::SystemAllocPolicy> Paths;
 
@@ -2421,7 +2398,9 @@ class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public MemoryMultiReporter
     }
 };
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(OrphanMallocSizeOf)
+NS_IMPL_ISUPPORTS1(JSMainRuntimeCompartmentsReporter, nsIMemoryReporter)
+
+MOZ_DEFINE_MALLOC_SIZE_OF(OrphanMallocSizeOf)
 
 namespace xpc {
 
@@ -2613,9 +2592,13 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     if (!JS::CollectRuntimeStats(xpcrt->Runtime(), &rtStats, &orphanReporter))
         return NS_ERROR_FAILURE;
 
-    size_t xpconnect =
-        xpcrt->SizeOfIncludingThis(JSMallocSizeOf) +
-        XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
+    size_t xpconnect = xpcrt->SizeOfIncludingThis(JSMallocSizeOf);
+
+    XPCWrappedNativeScope::ScopeSizeInfo sizeInfo(JSMallocSizeOf);
+    XPCWrappedNativeScope::AddSizeOfAllScopesIncludingThis(&sizeInfo);
+
+    mozJSComponentLoader* loader = mozJSComponentLoader::Get();
+    size_t jsComponentLoaderSize = loader ? loader->SizeOfIncludingThis(JSMallocSizeOf) : 0;
 
     // This is the second step (see above).  First we report stuff in the
     // "explicit" tree, then we report other stuff.
@@ -2694,13 +2677,25 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
                  KIND_OTHER,
                  rtStats.gcHeapGCThings,
                  "Memory on the garbage-collected JavaScript heap that holds GC things such "
-                 "as objects, strings, scripts, etc.")
+                 "as objects, strings, scripts, etc.");
 
     // Report xpconnect.
 
-    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect"),
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/runtime"),
                  KIND_HEAP, xpconnect,
-                 "Memory used by XPConnect.");
+                 "Memory used by XPConnect runtime.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
+                 KIND_HEAP, sizeInfo.mScopeAndMapSize,
+                 "Memory used by XPConnect scopes.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/proto-iface-cache"),
+                 KIND_HEAP, sizeInfo.mProtoAndIfaceCacheSize,
+                 "Memory used for prototype and interface binding caches.");
+
+    REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
+                 KIND_HEAP, jsComponentLoaderSize,
+                 "Memory used by XPConnect's JS component loader.");
 
     return NS_OK;
 }
@@ -2908,6 +2903,12 @@ class XPCJSSourceHook: public js::SourceHook {
     }
 };
 
+static const JSWrapObjectCallbacks WrapObjectCallbacks = {
+    xpc::WrapperFactory::Rewrap,
+    xpc::WrapperFactory::WrapForSameCompartment,
+    xpc::WrapperFactory::PrepareForWrapping
+};
+
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
    mJSContextStack(new XPCJSContextStack()),
@@ -2931,7 +2932,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mVariantRoots(nullptr),
    mWrappedJSRoots(nullptr),
    mObjectHolderRoots(nullptr),
-   mWatchdogManager(new WatchdogManager(this)),
+   mWatchdogManager(new WatchdogManager(MOZ_THIS_IN_INITIALIZER_LIST())),
    mJunkScope(nullptr),
    mAsyncSnowWhiteFreer(new AsyncFreeSnowWhite())
 {
@@ -3036,10 +3037,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_SetFinalizeCallback(runtime, FinalizeCallback);
-    JS_SetWrapObjectCallbacks(runtime,
-                              xpc::WrapperFactory::Rewrap,
-                              xpc::WrapperFactory::WrapForSameCompartment,
-                              xpc::WrapperFactory::PrepareForWrapping);
+    JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER
     JS_EnumerateDiagnosticMemoryRegions(DiagnosticMemoryCallback);
@@ -3079,8 +3077,8 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         NS_RUNTIMEABORT("xpc_LocalizeRuntime failed.");
 
     // Register memory reporters and distinguished amount functions.
-    NS_RegisterMemoryReporter(new JSMainRuntimeCompartmentsReporter);
-    NS_RegisterMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
+    RegisterStrongMemoryReporter(new JSMainRuntimeCompartmentsReporter());
+    RegisterStrongMemoryReporter(new JSMainRuntimeTemporaryPeakReporter());
     RegisterJSMainRuntimeGCHeapDistinguishedAmount(JSMainRuntimeGCHeapDistinguishedAmount);
     RegisterJSMainRuntimeTemporaryPeakDistinguishedAmount(JSMainRuntimeTemporaryPeakDistinguishedAmount);
     RegisterJSMainRuntimeCompartmentsSystemDistinguishedAmount(JSMainRuntimeCompartmentsSystemDistinguishedAmount);

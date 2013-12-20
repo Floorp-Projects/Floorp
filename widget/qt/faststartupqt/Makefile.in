@@ -5,11 +5,6 @@
 DIST_INSTALL = 1
 STL_FLAGS=
 
-LOCAL_INCLUDES += \
-	-I$(topsrcdir)/xpcom/build \
-	-I$(topsrcdir)/widget/qt \
-	$(NULL)
-
 EXPORT_SOURCES = \
 	$(topsrcdir)/widget/qt/moziqwidget.h \
 	$(topsrcdir)/toolkit/xre/nsQAppInstance.h \
@@ -21,8 +16,8 @@ GARBAGE += $(EXPORT_SOURCES)
 export:: $(EXPORT_SOURCES)
 	$(INSTALL) $^ .
 
-LOCAL_INCLUDES += \
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS += \
 	$(MOZ_QT_CFLAGS) \
 	$(NULL)
-
-DEFINES += -DLIBRARY_FILENAME="$(SHARED_LIBRARY)" -DMOZ_NO_MOZALLOC -DXPCOM_GLUE

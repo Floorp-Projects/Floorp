@@ -21,14 +21,14 @@ MoveResolver::resetState()
 }
 
 bool
-MoveResolver::addMove(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
+MoveResolver::addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // Assert that we're not doing no-op moves.
     JS_ASSERT(!(from == to));
     PendingMove *pm = movePool_.allocate();
     if (!pm)
         return false;
-    new (pm) PendingMove(from, to, kind);
+    new (pm) PendingMove(from, to, type);
     pending_.pushBack(pm);
     return true;
 }
@@ -113,8 +113,8 @@ MoveResolver::resolve()
                     // assert that we do not find two cycles in one move chain
                     // traversal (which would indicate two moves to the same
                     // destination).
-                    pm->setInCycle();
-                    blocking->setInCycle();
+                    pm->setCycleEnd();
+                    blocking->setCycleBegin(pm->type());
                     hasCycles_ = true;
                     pending_.remove(blocking);
                     stack.pushBack(blocking);

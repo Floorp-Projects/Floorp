@@ -9,8 +9,6 @@
 
 #include "Workers.h"
 
-#include "nsICharsetDetectionObserver.h"
-
 class nsIInputStream;
 class nsIDOMBlob;
 
@@ -25,20 +23,18 @@ template<typename> class Optional;
 
 BEGIN_WORKERS_NAMESPACE
 
-class FileReaderSync MOZ_FINAL : public nsICharsetDetectionObserver
+class FileReaderSync MOZ_FINAL
 {
-  nsCString mCharset;
+  NS_INLINE_DECL_REFCOUNTING(FileReaderSync)
+
   nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
                          nsAString &aResult);
-  nsresult GuessCharset(nsIInputStream *aStream, nsACString &aCharset);
 
 public:
   static already_AddRefed<FileReaderSync>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
-
-  NS_DECL_ISUPPORTS
 
   JSObject* ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
                               JS::Handle<JSObject*> aBlob,
@@ -50,9 +46,6 @@ public:
                   nsAString& aResult, ErrorResult& aRv);
   void ReadAsDataURL(JS::Handle<JSObject*> aBlob, nsAString& aResult,
                      ErrorResult& aRv);
-
-  // From nsICharsetDetectionObserver
-  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf) MOZ_OVERRIDE;
 };
 
 END_WORKERS_NAMESPACE

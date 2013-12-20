@@ -6,9 +6,12 @@
 
 LIBRARY_NAME = 'verifymar'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'cryptox.c',
     'mar_verify.c',
 ]
 
 FORCE_STATIC_LIB = True
+
+if CONFIG['OS_ARCH'] != 'WINNT':
+    DEFINES['MAR_NSS'] = True

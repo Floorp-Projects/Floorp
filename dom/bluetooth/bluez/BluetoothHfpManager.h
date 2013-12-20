@@ -68,6 +68,7 @@ public:
 
   uint16_t mState;
   bool mDirection; // true: incoming call; false: outgoing call
+  bool mIsConference;
   nsString mNumber;
   int mType;
 };
@@ -102,8 +103,9 @@ public:
    * This function set up a Synchronous Connection (SCO) link for HFP.
    * Service Level Connection (SLC) should be established before SCO setup
    * process.
-   * If SLC haven't been established, this function will return false and send a
-   * request to set up SCO ater HfpManager receive AT+CMER.
+   * If SLC haven't been established, this function will return false and
+   * send a request to set up SCO ater HfpManager receive AT+CMER, unless we are
+   * connecting HSP socket rather than HFP socket.
    *
    * @param  aRunnable Indicate a BluetoothReplyRunnable to execute this
    *                   function. The default value is nullpter
@@ -120,7 +122,8 @@ public:
    */
   void HandleCallStateChanged(uint32_t aCallIndex, uint16_t aCallState,
                               const nsAString& aError, const nsAString& aNumber,
-                              const bool aIsOutgoing, bool aSend);
+                              const bool aIsOutgoing, const bool aIsConference,
+                              bool aSend);
   void HandleIccInfoChanged(uint32_t aClientId);
   void HandleVoiceConnectionChanged(uint32_t aClientId);
 
@@ -188,6 +191,7 @@ private:
   bool mCMER;
   bool mConnectScoRequest;
   bool mSlcConnected;
+  bool mHspConnected;
 #ifdef MOZ_B2G_RIL
   bool mFirstCKPD;
   int mNetworkSelectionMode;
@@ -220,7 +224,7 @@ private:
   nsRefPtr<BluetoothSocket> mHandsfreeSocket;
   nsRefPtr<BluetoothSocket> mHeadsetSocket;
   nsRefPtr<BluetoothSocket> mScoSocket;
-  SocketConnectionStatus mScoSocketStatus;
+  mozilla::ipc::SocketConnectionStatus mScoSocketStatus;
 
 #ifdef MOZ_B2G_RIL
   // CDMA-specific variable

@@ -24,11 +24,11 @@ typedef enum
     SUBMVREF_LEFT_ABOVE_ZED
 } sumvfref_t;
 
-typedef const int vp8_mbsplit[16];
+typedef int vp8_mbsplit[16];
 
 #define VP8_NUMMBSPLITS 4
 
-extern vp8_mbsplit vp8_mbsplits [VP8_NUMMBSPLITS];
+extern const vp8_mbsplit vp8_mbsplits [VP8_NUMMBSPLITS];
 
 extern const int vp8_mbsplit_count [VP8_NUMMBSPLITS];    /* # of subsets */
 
@@ -52,26 +52,29 @@ extern const vp8_tree_index  vp8_mbsplit_tree[];
 extern const vp8_tree_index  vp8_mv_ref_tree[];
 extern const vp8_tree_index  vp8_sub_mv_ref_tree[];
 
-extern struct vp8_token_struct vp8_bmode_encodings   [VP8_BINTRAMODES];
-extern struct vp8_token_struct vp8_ymode_encodings   [VP8_YMODES];
-extern struct vp8_token_struct vp8_kf_ymode_encodings [VP8_YMODES];
-extern struct vp8_token_struct vp8_uv_mode_encodings  [VP8_UV_MODES];
-extern struct vp8_token_struct vp8_mbsplit_encodings  [VP8_NUMMBSPLITS];
+extern const struct vp8_token_struct vp8_bmode_encodings[VP8_BINTRAMODES];
+extern const struct vp8_token_struct vp8_ymode_encodings[VP8_YMODES];
+extern const struct vp8_token_struct vp8_kf_ymode_encodings[VP8_YMODES];
+extern const struct vp8_token_struct vp8_uv_mode_encodings[VP8_UV_MODES];
+extern const struct vp8_token_struct vp8_mbsplit_encodings[VP8_NUMMBSPLITS];
 
 /* Inter mode values do not start at zero */
 
-extern struct vp8_token_struct vp8_mv_ref_encoding_array    [VP8_MVREFS];
-extern struct vp8_token_struct vp8_sub_mv_ref_encoding_array [VP8_SUBMVREFS];
+extern const struct vp8_token_struct vp8_mv_ref_encoding_array[VP8_MVREFS];
+extern const struct vp8_token_struct vp8_sub_mv_ref_encoding_array[VP8_SUBMVREFS];
 
 extern const vp8_tree_index vp8_small_mvtree[];
 
-extern struct vp8_token_struct vp8_small_mvencodings [8];
+extern const struct vp8_token_struct vp8_small_mvencodings[8];
 
-void vp8_entropy_mode_init(void);
+/* Key frame default mode probs */
+extern const vp8_prob vp8_kf_bmode_prob[VP8_BINTRAMODES][VP8_BINTRAMODES]
+[VP8_BINTRAMODES-1];
+extern const vp8_prob vp8_kf_uv_mode_prob[VP8_UV_MODES-1];
+extern const vp8_prob vp8_kf_ymode_prob[VP8_YMODES-1];
 
 void vp8_init_mbmode_probs(VP8_COMMON *x);
-
-void   vp8_default_bmode_probs(vp8_prob dest [VP8_BINTRAMODES-1]);
+void vp8_default_bmode_probs(vp8_prob dest [VP8_BINTRAMODES-1]);
 void vp8_kf_default_bmode_probs(vp8_prob dest [VP8_BINTRAMODES] [VP8_BINTRAMODES] [VP8_BINTRAMODES-1]);
 
 #endif

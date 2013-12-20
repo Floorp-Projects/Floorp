@@ -6,7 +6,6 @@
 
 #include "jit/VMFunctions.h"
 
-#include "builtin/ParallelArray.h"
 #include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/BaselineIC.h"
@@ -63,7 +62,7 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
                 return false;
 
             // Clone function at call site if needed.
-            if (fun->nonLazyScript()->shouldCloneAtCallsite) {
+            if (fun->nonLazyScript()->shouldCloneAtCallsite()) {
                 jsbytecode *pc;
                 RootedScript script(cx, cx->currentScript(&pc));
                 fun = CloneFunctionAtCallsite(cx, fun, script, pc);
@@ -277,21 +276,6 @@ IteratorMore(JSContext *cx, HandleObject obj, bool *res)
     return true;
 }
 
-JSObject *
-NewInitParallelArray(JSContext *cx, HandleObject templateObject)
-{
-    JS_ASSERT(templateObject->getClass() == &ParallelArrayObject::class_);
-    JS_ASSERT(!templateObject->hasSingletonType());
-
-    RootedObject obj(cx, ParallelArrayObject::newInstance(cx, TenuredObject));
-    if (!obj)
-        return nullptr;
-
-    obj->setType(templateObject->type());
-
-    return obj;
-}
-
 JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
 {
@@ -303,9 +287,7 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
     if (!obj)
         return nullptr;
 
-    if (!type)
-        types::TypeScript::Monitor(cx, ObjectValue(*obj));
-    else
+    if (type)
         obj->setType(type);
 
     return obj;
@@ -322,9 +304,7 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
     if (!obj)
         return nullptr;
 
-    if (templateObject->hasSingletonType())
-        types::TypeScript::Monitor(cx, ObjectValue(*obj));
-    else
+    if (!templateObject->hasSingletonType())
         obj->setType(templateObject->type());
 
     return obj;
@@ -572,7 +552,7 @@ OperatorInI(JSContext *cx, uint32_t index, HandleObject obj, bool *out)
 bool
 GetIntrinsicValue(JSContext *cx, HandlePropertyName name, MutableHandleValue rval)
 {
-    if (!cx->global()->getIntrinsicValue(cx, name, rval))
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, rval))
         return false;
 
     // This function is called when we try to compile a cold getintrinsic
@@ -695,11 +675,11 @@ GetIndexFromString(JSString *str)
 }
 
 bool
-DebugPrologue(JSContext *cx, BaselineFrame *frame, bool *mustReturn)
+DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustReturn)
 {
     *mustReturn = false;
 
-    JSTrapStatus status = ScriptDebugPrologue(cx, frame);
+    JSTrapStatus status = ScriptDebugPrologue(cx, frame, pc);
     switch (status) {
       case JSTRAP_CONTINUE:
         return true;
@@ -709,7 +689,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, bool *mustReturn)
         // debug epilogue handler as well.
         JS_ASSERT(frame->hasReturnValue());
         *mustReturn = true;
-        return jit::DebugEpilogue(cx, frame, true);
+        return jit::DebugEpilogue(cx, frame, pc, true);
 
       case JSTRAP_THROW:
       case JSTRAP_ERROR:
@@ -721,15 +701,16 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, bool *mustReturn)
 }
 
 bool
-DebugEpilogue(JSContext *cx, BaselineFrame *frame, bool ok)
+DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
 {
     // Unwind scope chain to stack depth 0.
-    UnwindScope(cx, frame, 0);
+    ScopeIter si(frame, pc, cx);
+    UnwindScope(cx, si, 0);
 
     // If ScriptDebugEpilogue returns |true| we have to return the frame's
     // return value. If it returns |false|, the debugger threw an exception.
     // In both cases we have to pop debug scopes.
-    ok = ScriptDebugEpilogue(cx, frame, ok);
+    ok = ScriptDebugEpilogue(cx, frame, pc, ok);
 
     if (frame->isNonEvalFunctionFrame()) {
         JS_ASSERT_IF(ok, frame->hasReturnValue());
@@ -848,7 +829,7 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mus
       case JSTRAP_RETURN:
         *mustReturn = true;
         frame->setReturnValue(rval);
-        return jit::DebugEpilogue(cx, frame, true);
+        return jit::DebugEpilogue(cx, frame, pc, true);
 
       case JSTRAP_THROW:
         cx->setPendingException(rval);
@@ -886,7 +867,7 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
       case JSTRAP_RETURN:
         frame->setReturnValue(rval);
         *mustReturn = true;
-        return jit::DebugEpilogue(cx, frame, true);
+        return jit::DebugEpilogue(cx, frame, pc, true);
 
       case JSTRAP_THROW:
         cx->setPendingException(rval);
@@ -898,15 +879,25 @@ OnDebuggerStatement(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *m
 }
 
 bool
-EnterBlock(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
+PushBlockScope(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block)
 {
     return frame->pushBlock(cx, block);
 }
 
 bool
-LeaveBlock(JSContext *cx, BaselineFrame *frame)
+PopBlockScope(JSContext *cx, BaselineFrame *frame)
 {
     frame->popBlock(cx);
+    return true;
+}
+
+bool
+DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc)
+{
+    JS_ASSERT(cx->compartment()->debugMode());
+
+    DebugScopes::onPopBlock(cx, frame, pc);
+
     return true;
 }
 
@@ -922,6 +913,86 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
     return TypedObject::createDerived(cx, type, owner, offset);
 }
 
+bool
+Recompile(JSContext *cx)
+{
+    JS_ASSERT(cx->currentlyRunningInJit());
+    JitActivationIterator activations(cx->runtime());
+    IonFrameIterator iter(activations);
+
+    JS_ASSERT(iter.type() == IonFrame_Exit);
+    ++iter;
+
+    bool isConstructing = iter.isConstructing();
+    RootedScript script(cx, iter.script());
+    JS_ASSERT(script->hasIonScript());
+
+    if (!IsIonEnabled(cx))
+        return true;
+
+    MethodStatus status = Recompile(cx, script, nullptr, nullptr, isConstructing);
+    if (status == Method_Error)
+        return false;
+
+    return true;
+}
+
+#ifdef DEBUG
+void
+AssertValidObjectPtr(JSContext *cx, JSObject *obj)
+{
+    // Check what we can, so that we'll hopefully assert/crash if we get a
+    // bogus object (pointer).
+    JS_ASSERT(obj->compartment() == cx->compartment());
+    JS_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
+
+    JS_ASSERT_IF(!obj->hasLazyType(),
+                 obj->type()->clasp() == obj->lastProperty()->getObjectClass());
+
+    if (obj->isTenured()) {
+        JS_ASSERT(obj->isAligned());
+        gc::AllocKind kind = obj->tenuredGetAllocKind();
+        JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+        JS_ASSERT(obj->tenuredZone() == cx->zone());
+    }
+}
+
+void
+AssertValidStringPtr(JSContext *cx, JSString *str)
+{
+    if (str->isAtom())
+        JS_ASSERT(cx->runtime()->isAtomsZone(str->tenuredZone()));
+    else
+        JS_ASSERT(str->tenuredZone() == cx->zone());
+
+    JS_ASSERT(str->runtimeFromMainThread() == cx->runtime());
+    JS_ASSERT(str->isAligned());
+    JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
+
+    gc::AllocKind kind = str->tenuredGetAllocKind();
+    if (str->isShort())
+        JS_ASSERT(kind == gc::FINALIZE_SHORT_STRING);
+    else if (str->isExternal())
+        JS_ASSERT(kind == gc::FINALIZE_EXTERNAL_STRING);
+    else if (str->isAtom() || str->isFlat())
+        JS_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_SHORT_STRING);
+    else
+        JS_ASSERT(kind == gc::FINALIZE_STRING);
+}
+
+void
+AssertValidValue(JSContext *cx, Value *v)
+{
+    if (v->isObject()) {
+        AssertValidObjectPtr(cx, &v->toObject());
+        return;
+    }
+    if (v->isString()) {
+        AssertValidStringPtr(cx, v->toString());
+        return;
+    }
+}
+#endif
 
 } // namespace jit
 } // namespace js

@@ -215,4 +215,41 @@ nsFrame::PrintDisplayList(nsDisplayListBuilder* aBuilder,
   PrintDisplayListTo(aBuilder, aList, aFile, aDumpHtml);
 }
 
+static void
+PrintDisplayListSetItem(nsDisplayListBuilder* aBuilder,
+                        const char* aItemName,
+                        const nsDisplayList& aList,
+                        FILE* aFile,
+                        bool aDumpHtml)
+{
+  if (aDumpHtml) {
+    fprintf_stderr(aFile, "<li>");
+  }
+  fprintf_stderr(aFile, "%s", aItemName);
+  PrintDisplayListTo(aBuilder, aList, aFile, aDumpHtml);
+  if (aDumpHtml) {
+    fprintf_stderr(aFile, "</li>");
+  }
+}
+
+void
+nsFrame::PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
+                             const nsDisplayListSet& aSet,
+                             FILE *aFile,
+                             bool aDumpHtml)
+{
+  if (aDumpHtml) {
+    fprintf_stderr(aFile, "<ul>");
+  }
+  PrintDisplayListSetItem(aBuilder, "[BorderBackground]", *(aSet.BorderBackground()), aFile, aDumpHtml);
+  PrintDisplayListSetItem(aBuilder, "[BlockBorderBackgrounds]", *(aSet.BlockBorderBackgrounds()), aFile, aDumpHtml);
+  PrintDisplayListSetItem(aBuilder, "[Floats]", *(aSet.Floats()), aFile, aDumpHtml);
+  PrintDisplayListSetItem(aBuilder, "[PositionedDescendants]", *(aSet.PositionedDescendants()), aFile, aDumpHtml);
+  PrintDisplayListSetItem(aBuilder, "[Outlines]", *(aSet.Outlines()), aFile, aDumpHtml);
+  PrintDisplayListSetItem(aBuilder, "[Content]", *(aSet.Content()), aFile, aDumpHtml);
+  if (aDumpHtml) {
+    fprintf_stderr(aFile, "</ul>");
+  }
+}
+
 #endif

@@ -17,9 +17,11 @@ using namespace js;
 using namespace js::jit;
 
 MIRGenerator::MIRGenerator(CompileCompartment *compartment,
-                           TempAllocator *alloc, MIRGraph *graph, CompileInfo *info)
+                           TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
+                           const OptimizationInfo *optimizationInfo)
   : compartment(compartment),
     info_(info),
+    optimizationInfo_(optimizationInfo),
     alloc_(alloc),
     graph_(graph),
     error_(false),
@@ -275,7 +277,7 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
 }
 
 MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kind kind)
-  : earlyAbort_(false),
+  : unreachable_(false),
     graph_(graph),
     info_(info),
     predecessors_(graph.alloc()),
@@ -305,13 +307,13 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
 bool
 MBasicBlock::init()
 {
-    return slots_.init(info_.nslots());
+    return slots_.init(graph_.alloc(), info_.nslots());
 }
 
 bool
 MBasicBlock::increaseSlots(size_t num)
 {
-    return slots_.growBy(num);
+    return slots_.growBy(graph_.alloc(), num);
 }
 
 void
@@ -348,7 +350,7 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
 
     // Create a resume point using our initial stack state.
     entryResumePoint_ = new(alloc) MResumePoint(this, pc(), callerResumePoint, MResumePoint::ResumeAt);
-    if (!entryResumePoint_->init())
+    if (!entryResumePoint_->init(alloc))
         return false;
 
     if (pred) {
@@ -763,6 +765,7 @@ MBasicBlock::discardAllResumePoints(bool discardEntry)
 void
 MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 {
+    JS_ASSERT(at->block() == this);
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.insertBefore(at, ins);
@@ -772,6 +775,7 @@ MBasicBlock::insertBefore(MInstruction *at, MInstruction *ins)
 void
 MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
 {
+    JS_ASSERT(at->block() == this);
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.insertAfter(at, ins);
@@ -911,6 +915,15 @@ MBasicBlock::dominates(MBasicBlock *other)
     uint32_t high = domIndex() + numDominated();
     uint32_t low  = domIndex();
     return other->domIndex() >= low && other->domIndex() <= high;
+}
+
+void
+MBasicBlock::setUnreachable()
+{
+    unreachable_ = true;
+    size_t numDom = numImmediatelyDominatedBlocks();
+    for (size_t d = 0; d < numDom; d++)
+        getImmediatelyDominatedBlock(d)->unreachable_ = true;
 }
 
 AbortReason

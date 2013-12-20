@@ -25,6 +25,7 @@
 #include "vm/ProxyObject.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace JS;
@@ -872,15 +873,17 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     if (argc > i) {
         Value v = args[i];
         if (v.isString()) {
-            JSString *str = v.toString();
-            JSAutoByteString fileNameBytes;
-            if (!fileNameBytes.encodeLatin1(cx, str))
-                return false;
-            const char *fileName = fileNameBytes.ptr();
-            dumpFile = fopen(fileName, "w");
-            if (!dumpFile) {
-                JS_ReportError(cx, "can't open %s", fileName);
-                return false;
+            if (!fuzzingSafe) {
+                JSString *str = v.toString();
+                JSAutoByteString fileNameBytes;
+                if (!fileNameBytes.encodeLatin1(cx, str))
+                    return false;
+                const char *fileName = fileNameBytes.ptr();
+                dumpFile = fopen(fileName, "w");
+                if (!dumpFile) {
+                    JS_ReportError(cx, "can't open %s", fileName);
+                    return false;
+                }
             }
             ++i;
         }
@@ -903,6 +906,12 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 Terminate(JSContext *cx, unsigned arg, jsval *vp)
 {
+#ifdef JS_MORE_DETERMINISTIC
+    // Print a message to stderr in more-deterministic builds to help jsfunfuzz
+    // find uncatchable-exception bugs.
+    fprintf(stderr, "terminate called\n");
+#endif
+
     JS_ClearPendingException(cx);
     return false;
 }
@@ -940,7 +949,7 @@ static bool
 EnableOsiPointRegisterChecks(JSContext *, unsigned, jsval *vp)
 {
 #if defined(JS_ION) && defined(CHECK_OSIPOINT_REGISTERS)
-    jit::js_IonOptions.checkOsiPointRegisters = true;
+    jit::js_JitOptions.checkOsiPointRegisters = true;
 #endif
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -972,22 +981,45 @@ js::testingFunc_inParallelSection(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static const char *ObjectMetadataPropertyName = "__objectMetadataFunction__";
-
 static bool
 ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    RootedValue fun(cx);
-    if (!JS_GetProperty(cx, cx->global(), ObjectMetadataPropertyName, &fun))
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    if (!obj)
         return false;
 
-    RootedValue rval(cx);
-    if (!Invoke(cx, UndefinedValue(), fun, 0, nullptr, &rval))
+    RootedObject stack(cx, NewDenseEmptyArray(cx));
+    if (!stack)
         return false;
 
-    if (rval.isObject())
-        *pmetadata = &rval.toObject();
+    static int createdIndex = 0;
+    createdIndex++;
 
+    if (!JS_DefineProperty(cx, obj, "index", Int32Value(createdIndex),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    {
+        return false;
+    }
+
+    if (!JS_DefineProperty(cx, obj, "stack", ObjectValue(*stack),
+                           JS_PropertyStub, JS_StrictPropertyStub, 0))
+    {
+        return false;
+    }
+
+    int stackIndex = 0;
+    for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
+        if (iter.isFunctionFrame()) {
+            if (!JS_DefinePropertyById(cx, stack, INT_TO_JSID(stackIndex), ObjectValue(*iter.callee()),
+                                       JS_PropertyStub, JS_StrictPropertyStub, 0))
+            {
+                return false;
+            }
+            stackIndex++;
+        }
+    }
+
+    *pmetadata = obj;
     return true;
 }
 
@@ -996,19 +1028,10 @@ SetObjectMetadataCallback(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    bool enabled = argc ? ToBoolean(args[0]) : false;
+    SetObjectMetadataCallback(cx, enabled ? ShellObjectMetadataCallback : nullptr);
+
     args.rval().setUndefined();
-
-    if (argc == 0 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
-        if (!JS_DeleteProperty(cx, cx->global(), ObjectMetadataPropertyName))
-            return false;
-        js::SetObjectMetadataCallback(cx, nullptr);
-        return true;
-    }
-
-    if (!JS_DefineProperty(cx, cx->global(), ObjectMetadataPropertyName, args[0], nullptr, nullptr, 0))
-        return false;
-
-    js::SetObjectMetadataCallback(cx, ShellObjectMetadataCallback);
     return true;
 }
 
@@ -1100,16 +1123,16 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SetGlobalJitCompilerOption(cx, opt, uint32_t(number));
 
-    args.rval().setBoolean(true);
+    args.rval().setUndefined();
     return true;
 }
 
 static bool
-SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
+SetIonCheckGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 #ifdef JS_ION
-    jit::js_IonOptions.assertGraphConsistency = ToBoolean(args.get(0));
+    jit::js_JitOptions.checkGraphConsistency = ToBoolean(args.get(0));
 #endif
     args.rval().setUndefined();
     return true;
@@ -1355,6 +1378,14 @@ Neuter(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+WorkerThreadCount(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(static_cast<double>(cx->runtime()->workerThreadCount()));
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1555,8 +1586,8 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "setCompilerOption(<option>, <number>)",
 "  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
 
-    JS_FN_HELP("setIonAssertGraphCoherency", SetIonAssertGraphCoherency, 1, 0,
-"setIonAssertGraphCoherency(bool)",
+    JS_FN_HELP("setIonCheckGraphCoherency", SetIonCheckGraphCoherency, 1, 0,
+"setIonCheckGraphCoherency(bool)",
 "  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
 "  (asm.js) programs."),
@@ -1573,6 +1604,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("neuter", Neuter, 1, 0,
 "neuter(buffer)",
 "  Neuter the given ArrayBuffer object as if it had been transferred to a WebWorker."),
+
+    JS_FN_HELP("workerThreadCount", WorkerThreadCount, 0, 0,
+"workerThreadCount()",
+"  Returns the number of worker threads available for off-main-thread tasks."),
 
     JS_FS_HELP_END
 };

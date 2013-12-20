@@ -15,6 +15,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.TouchEventInterceptor;
 import org.mozilla.gecko.ZoomConstraints;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 
 import android.content.Context;
@@ -116,6 +117,10 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
             mOverscroll = null;
         }
         Tabs.registerOnTabsChangedListener(this);
+    }
+
+    public LayerView(Context context) {
+        this(context, null);
     }
 
     public void initializeView(EventDispatcher eventDispatcher) {
@@ -324,6 +329,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
         }
     }
 
+    @RobocopTarget
     public GeckoLayerClient getLayerClient() { return mLayerClient; }
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public LayerMarginsAnimator getLayerMarginsAnimator() { return mMarginsAnimator; }
@@ -456,6 +462,7 @@ public class LayerView extends FrameLayout implements Tabs.OnTabsChangedListener
     }
 
     /** Used by robocop for testing purposes. Not for production use! */
+    @RobocopTarget
     public IntBuffer getPixels() {
         return mRenderer.getPixels();
     }

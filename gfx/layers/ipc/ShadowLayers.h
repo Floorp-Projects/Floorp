@@ -46,6 +46,7 @@ class OptionalThebesBuffer;
 class PLayerChild;
 class PLayerTransactionChild;
 class PLayerTransactionParent;
+class LayerTransactionChild;
 class RefLayerComposite;
 class ShadowableLayer;
 class Shmem;
@@ -137,6 +138,7 @@ class ShadowLayerForwarder : public CompositableForwarder
   friend class AutoOpenSurface;
   friend class DeprecatedTextureClientShmem;
   friend class ContentClientIncremental;
+  friend class ClientLayerManager;
 
 public:
   virtual ~ShadowLayerForwarder();
@@ -146,6 +148,8 @@ public:
    * transactions.
    */
   void Connect(CompositableClient* aCompositable);
+
+  virtual PTextureChild* CreateEmptyTextureChild() MOZ_OVERRIDE;
 
   virtual void CreatedSingleBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptor& aDescriptor,
@@ -275,6 +279,8 @@ public:
                              TextureIdentifier aTextureId,
                              SurfaceDescriptor* aDescriptor) MOZ_OVERRIDE;
 
+  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
+
   /**
    * Same as above, but performs an asynchronous layer transaction
    */
@@ -304,19 +310,6 @@ public:
                          const nsIntRect& aRect);
 
   /**
-   * See CompositableForwarder::AddTexture
-   */
-  virtual bool AddTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) MOZ_OVERRIDE;
-
-  /**
-   * See CompositableForwarder::RemoveTexture
-   */
-  virtual void RemoveTexture(CompositableClient* aCompositable,
-                             uint64_t aTextureID,
-                             TextureFlags aFlags) MOZ_OVERRIDE;
-
-  /**
    * See CompositableForwarder::UpdatedTexture
    */
   virtual void UpdatedTexture(CompositableClient* aCompositable,
@@ -334,21 +327,18 @@ public:
    * |aReplies| are directions from the LayerManagerComposite to the
    * caller of EndTransaction().
    */
-  bool EndTransaction(InfallibleTArray<EditReply>* aReplies, bool* aSent);
+  bool EndTransaction(InfallibleTArray<EditReply>* aReplies, bool aScheduleComposite, bool* aSent);
 
   /**
    * Set an actor through which layer updates will be pushed.
    */
-  void SetShadowManager(PLayerTransactionChild* aShadowManager)
-  {
-    mShadowManager = aShadowManager;
-  }
+  void SetShadowManager(PLayerTransactionChild* aShadowManager);
 
   /**
    * True if this is forwarding to a LayerManagerComposite.
    */
   bool HasShadowManager() const { return !!mShadowManager; }
-  PLayerTransactionChild* GetShadowManager() const { return mShadowManager; }
+  LayerTransactionChild* GetShadowManager() const { return mShadowManager.get(); }
 
   virtual void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
@@ -394,6 +384,8 @@ public:
                           mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE;
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) MOZ_OVERRIDE;
 
+  virtual bool IPCOpen() const MOZ_OVERRIDE;
+
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
    * LayerManagerComposite.
@@ -419,7 +411,7 @@ protected:
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
 
-  PLayerTransactionChild* mShadowManager;
+  RefPtr<LayerTransactionChild> mShadowManager;
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   // from ISurfaceAllocator

@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import copy
+import difflib
 import errno
 import hashlib
 import os
@@ -115,10 +116,16 @@ class FileAvoidWrite(StringIO):
     it. When we close the file object, if the content in the in-memory buffer
     differs from what is on disk, then we write out the new content. Otherwise,
     the original file is untouched.
+
+    Instances can optionally capture diffs of file changes. This feature is not
+    enabled by default because it a) doesn't make sense for binary files b)
+    could add unwanted overhead to calls.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, capture_diff=False):
         StringIO.__init__(self)
         self.name = filename
+        self._capture_diff = capture_diff
+        self.diff = None
 
     def close(self):
         """Stop accepting writes, compare file contents, and rewrite if needed.
@@ -126,10 +133,16 @@ class FileAvoidWrite(StringIO):
         Returns a tuple of bools indicating what action was performed:
 
             (file existed, file updated)
+
+        If ``capture_diff`` was specified at construction time and the
+        underlying file was changed, ``.diff`` will be populated with the diff
+        of the result.
         """
         buf = self.getvalue()
         StringIO.close(self)
         existed = False
+        old_content = None
+
         try:
             existing = open(self.name, 'rU')
             existed = True
@@ -137,7 +150,8 @@ class FileAvoidWrite(StringIO):
             pass
         else:
             try:
-                if existing.read() == buf:
+                old_content = existing.read()
+                if old_content == buf:
                     return True, False
             except IOError:
                 pass
@@ -147,6 +161,22 @@ class FileAvoidWrite(StringIO):
         ensureParentDir(self.name)
         with open(self.name, 'w') as file:
             file.write(buf)
+
+        if self._capture_diff:
+            try:
+                old_lines = old_content.splitlines() if old_content else []
+                new_lines = buf.splitlines()
+
+                self.diff = '\n'.join(difflib.unified_diff(old_lines, new_lines,
+                    self.name, self.name, n=4, lineterm=''))
+            # FileAvoidWrite isn't unicode/bytes safe. So, files with non-ascii
+            # content or opened and written in different modes may involve
+            # implicit conversion and this will make Python unhappy. Since
+            # diffing isn't a critical feature, we just ignore the failure.
+            # This can go away once FileAvoidWrite uses io.BytesIO and
+            # io.StringIO. But that will require a lot of work.
+            except (UnicodeDecodeError, UnicodeEncodeError):
+                self.diff = 'Binary or non-ascii file changed: %s' % self.name
 
         return existed, True
 
@@ -300,6 +330,74 @@ class StrictOrderingOnAppendList(list):
 
 class MozbuildDeletionError(Exception):
     pass
+
+
+def StrictOrderingOnAppendListWithFlagsFactory(flags):
+    """Returns a StrictOrderingOnAppendList-like object, with optional
+    flags on each item.
+
+    The flags are defined in the dict given as argument, where keys are
+    the flag names, and values the type used for the value of that flag.
+
+    Example:
+        FooList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool, 'bar': unicode
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
+    """
+
+    assert isinstance(flags, dict)
+    assert all(isinstance(v, type) for v in flags.values())
+
+    class Flags(object):
+        __slots__ = flags.keys()
+        _flags = flags
+
+        def __getattr__(self, name):
+            if name not in self.__slots__:
+                raise AttributeError("'%s' object has no attribute '%s'" %
+                                     (self.__class__.__name__, name))
+            try:
+                return object.__getattr__(self, name)
+            except AttributeError:
+                value = self._flags[name]()
+                self.__setattr__(name, value)
+                return value
+
+        def __setattr__(self, name, value):
+            if name not in self.__slots__:
+                raise AttributeError("'%s' object has no attribute '%s'" %
+                                     (self.__class__.__name__, name))
+            if not isinstance(value, self._flags[name]):
+                raise TypeError("'%s' attribute of class '%s' must be '%s'" %
+                                (name, self.__class__.__name__,
+                                 self._flags[name].__name__))
+            return object.__setattr__(self, name, value)
+
+        def __delattr__(self, name):
+            raise MozbuildDeletionError('Unable to delete attributes for this object')
+
+    class StrictOrderingOnAppendListWithFlags(StrictOrderingOnAppendList):
+        def __init__(self, iterable=[]):
+            StrictOrderingOnAppendList.__init__(self, iterable)
+            self._flags_type = Flags
+            self._flags = dict()
+
+        def __getitem__(self, name):
+            if name not in self._flags:
+                if name not in self:
+                    raise KeyError("'%s'" % name)
+                self._flags[name] = self._flags_type()
+            return self._flags[name]
+
+        def __setitem__(self, name, value):
+            raise TypeError("'%s' object does not support item assignment" %
+                            self.__class__.__name__)
+
+    return StrictOrderingOnAppendListWithFlags
+
 
 class HierarchicalStringList(object):
     """A hierarchy of lists of strings.
@@ -490,3 +588,19 @@ class PushbackIter(object):
 
     def pushback(self, item):
         self.pushed_back.append(item)
+
+
+def shell_quote(s):
+    '''Given a string, returns a version enclosed with single quotes for use
+    in a shell command line.
+
+    As a special case, if given an int, returns a string containing the int,
+    not enclosed in quotes.
+    '''
+    if type(s) == int:
+        return '%d' % s
+    # Single quoted strings can contain any characters unescaped except the
+    # single quote itself, which can't even be escaped, so the string needs to
+    # be closed, an escaped single quote added, and reopened.
+    t = type(s)
+    return t("'%s'") % s.replace(t("'"), t("'\\''"))

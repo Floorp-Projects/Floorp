@@ -24,17 +24,11 @@ UNIFIED_SOURCES += [
     'pngtrans.c',
     'pngwio.c',
     'pngwrite.c',
-    'pngwtran.c',
     'pngwutil.c',
 ]
 
 if CONFIG['MOZ_PNG_ARM_NEON']:
-    DIRS += [
-        'arm',
-    ]
-
-if CONFIG['MOZ_PNG_ARM_NEON']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'arm/arm_init.c'
     ]
 
@@ -47,7 +41,7 @@ LIBRARY_NAME = 'mozpng'
 
 MSVC_ENABLE_PGO = True
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'gkmedias'

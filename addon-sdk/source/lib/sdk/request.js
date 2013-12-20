@@ -130,6 +130,10 @@ const Request = Class({
     request(this).contentType = validateSingleOption('contentType', value);
   },
   get response() { return request(this).response; },
+  delete: function() {
+    runRequest('DELETE', this);
+    return this;
+  },
   get: function() {
     runRequest('GET', this);
     return this;

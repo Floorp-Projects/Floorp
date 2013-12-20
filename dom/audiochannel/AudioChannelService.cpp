@@ -12,7 +12,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/unused.h"
-#include "mozilla/Util.h"
 
 #include "mozilla/dom/ContentParent.h"
 
@@ -138,16 +137,20 @@ AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID, boo
       mWithVideoChildIDs.AppendElement(aChildID);
     }
 
+    // No hidden content channel can be playable if there is a content channel
+    // in foreground (bug 855208), nor if there is a normal channel with video
+    // in foreground (bug 894249).
+    if (type == AUDIO_CHANNEL_INT_CONTENT ||
+        (type == AUDIO_CHANNEL_INT_NORMAL &&
+         mWithVideoChildIDs.Contains(aChildID))) {
+      mPlayableHiddenContentChildID = CONTENT_PROCESS_ID_UNKNOWN;
+    }
     // One hidden content channel can be playable only when there is no any
-    // content channel in the foreground.
-    if (type == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
+    // content channel in the foreground, and no normal channel with video in
+    // foreground.
+    else if (type == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
         mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty()) {
       mPlayableHiddenContentChildID = aChildID;
-    }
-    // No hidden content channel can be playable if there is an content channel
-    // in foreground.
-    else if (type == AUDIO_CHANNEL_INT_CONTENT) {
-      mPlayableHiddenContentChildID = CONTENT_PROCESS_ID_UNKNOWN;
     }
 
     // In order to avoid race conditions, it's safer to notify any existing
@@ -255,17 +258,21 @@ AudioChannelService::UpdateChannelType(AudioChannelType aType,
     mChannelCounters[oldType].RemoveElement(aChildID);
   }
 
-  // The last content channel which goes from foreground to background can also
-  // be playable.
-  if (oldType == AUDIO_CHANNEL_INT_CONTENT &&
+  // No hidden content channel can be playable if there is a content channel
+  // in foreground (bug 855208), nor if there is a normal channel with video
+  // in foreground (bug 894249).
+  if (newType == AUDIO_CHANNEL_INT_CONTENT ||
+      (newType == AUDIO_CHANNEL_INT_NORMAL &&
+       mWithVideoChildIDs.Contains(aChildID))) {
+    mPlayableHiddenContentChildID = CONTENT_PROCESS_ID_UNKNOWN;
+  }
+  // If there is no content channel in foreground and no normal channel with
+  // video in foreground, the last content channel which goes from foreground
+  // to background can be playable.
+  else if (oldType == AUDIO_CHANNEL_INT_CONTENT &&
       newType == AUDIO_CHANNEL_INT_CONTENT_HIDDEN &&
       mChannelCounters[AUDIO_CHANNEL_INT_CONTENT].IsEmpty()) {
     mPlayableHiddenContentChildID = aChildID;
-  }
-  // No hidden content channel can be playable if there is an content channel
-  // in foreground.
-  else if (newType == AUDIO_CHANNEL_INT_CONTENT) {
-    mPlayableHiddenContentChildID = CONTENT_PROCESS_ID_UNKNOWN;
   }
 }
 

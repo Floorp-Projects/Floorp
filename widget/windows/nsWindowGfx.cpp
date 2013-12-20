@@ -100,8 +100,8 @@ static IconMetrics sIconMetrics[] = {
  **************************************************************
  **************************************************************/
 
-static bool
-IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
+/* static */ bool
+nsWindow::IsRenderMode(gfxWindowsPlatform::RenderMode rmode)
 {
   return gfxWindowsPlatform::GetPlatform()->GetRenderMode() == rmode;
 }
@@ -647,10 +647,9 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   HICON *aIcon) {
 
   // Get the image data
-  nsRefPtr<gfxASurface> surface;
-  aContainer->GetFrame(imgIContainer::FRAME_CURRENT,
-                       imgIContainer::FLAG_SYNC_DECODE,
-                       getter_AddRefs(surface));
+  nsRefPtr<gfxASurface> surface =
+    aContainer->GetFrame(imgIContainer::FRAME_CURRENT,
+                         imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
 
   nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());

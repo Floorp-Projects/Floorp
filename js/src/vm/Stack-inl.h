@@ -77,7 +77,7 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
     JS_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
-    flags_ = FUNCTION | HAS_SCOPECHAIN | HAS_BLOCKCHAIN | flagsArg;
+    flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
     argv_ = argv;
     exec.fun = &callee;
     u.nactual = nactual;
@@ -85,8 +85,6 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
     prev_ = prev;
     prevpc_ = prevpc;
     prevsp_ = prevsp;
-    blockChain_= nullptr;
-    JS_ASSERT(!hasBlockChain());
     JS_ASSERT(!hasHookData());
 
     initVarsToUndefined();
@@ -95,14 +93,14 @@ StackFrame::initCallFrame(JSContext *cx, StackFrame *prev, jsbytecode *prevpc, V
 inline void
 StackFrame::initVarsToUndefined()
 {
-    SetValueRangeToUndefined(slots(), script()->nfixed);
+    SetValueRangeToUndefined(slots(), script()->nfixed());
 }
 
 inline Value &
 StackFrame::unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-    JS_ASSERT(i < script()->nfixed);
+    JS_ASSERT(i < script()->nfixed());
     return slots()[i];
 }
 
@@ -110,7 +108,7 @@ inline Value &
 StackFrame::unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
 #ifdef DEBUG
-    CheckLocalUnaliased(checkAliasing, script(), maybeBlockChain(), i);
+    CheckLocalUnaliased(checkAliasing, script(), i);
 #endif
     return slots()[i];
 }
@@ -137,7 +135,7 @@ template <class Op>
 inline void
 StackFrame::forEachUnaliasedActual(Op op)
 {
-    JS_ASSERT(!script()->funHasAnyAliasedFormal);
+    JS_ASSERT(!script()->funHasAnyAliasedFormal());
     JS_ASSERT(!script()->needsArgsObj());
 
     const Value *argsEnd = argv() + numActualArgs();
@@ -255,8 +253,8 @@ InterpreterStack::getCallFrame(JSContext *cx, const CallArgs &args, HandleScript
     JSFunction *fun = &args.callee().as<JSFunction>();
 
     JS_ASSERT(fun->nonLazyScript() == script);
-    unsigned nformal = fun->nargs;
-    unsigned nvals = script->nslots;
+    unsigned nformal = fun->nargs();
+    unsigned nvals = script->nslots();
 
     if (args.length() >= nformal) {
         *pargv = args.array();
@@ -516,25 +514,6 @@ AbstractFramePtr::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 #endif
 }
 
-inline JSGenerator *
-AbstractFramePtr::maybeSuspendedGenerator(JSRuntime *rt) const
-{
-    if (isStackFrame())
-        return asStackFrame()->maybeSuspendedGenerator(rt);
-    return nullptr;
-}
-
-inline StaticBlockObject *
-AbstractFramePtr::maybeBlockChain() const
-{
-    if (isStackFrame())
-        return asStackFrame()->maybeBlockChain();
-#ifdef JS_ION
-    return asBaselineFrame()->maybeBlockChain();
-#else
-    MOZ_ASSUME_UNREACHABLE("Invalid frame");
-#endif
-}
 inline bool
 AbstractFramePtr::hasCallObj() const
 {
@@ -833,6 +812,7 @@ Activation::Activation(JSContext *cx, Kind kind)
     compartment_(cx->compartment()),
     prev_(cx->mainThread().activation_),
     savedFrameChain_(0),
+    hideScriptedCallerCount_(0),
     kind_(kind)
 {
     cx->mainThread().activation_ = this;
@@ -841,6 +821,7 @@ Activation::Activation(JSContext *cx, Kind kind)
 Activation::~Activation()
 {
     JS_ASSERT(cx_->mainThread().activation_ == this);
+    JS_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->mainThread().activation_ = prev_;
 }
 
@@ -855,12 +836,12 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx, Sta
 {
     if (!state.isGenerator()) {
         regs_.prepareToRun(*entryFrame, state.script());
-        JS_ASSERT(regs_.pc == state.script()->code);
+        JS_ASSERT(regs_.pc == state.script()->code());
     } else {
         regs_ = state.asGenerator()->gen()->regs;
     }
 
-    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval);
+    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval());
 }
 
 InterpreterActivation::~InterpreterActivation()

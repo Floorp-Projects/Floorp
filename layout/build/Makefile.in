@@ -8,112 +8,20 @@ ifeq ($(OS_ARCH),SunOS)
 SHELL := ksh
 endif
 
-ifneq (,$(filter qt gtk2 gtk3,$(MOZ_WIDGET_TOOLKIT)))
-LOCAL_INCLUDES	+= \
-	-I$(topsrcdir)/dom/system/unix \
-	$(NULL)
-else ifneq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
-LOCAL_INCLUDES	+= \
-	-I$(topsrcdir)/dom/system/windows \
-	$(NULL)
-else ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-LOCAL_INCLUDES	+= \
-	-I$(topsrcdir)/dom/system/mac \
-	$(NULL)
-else ifneq (,$(filter android,$(MOZ_WIDGET_TOOLKIT)))
-LOCAL_INCLUDES	+= \
-	-I$(topsrcdir)/dom/system/android \
-	-I$(topsrcdir)/dom/system \
-	$(NULL)
-endif
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-INCLUDES	+= \
-		-I$(srcdir)/../../base/src \
-		-I$(srcdir)/../../html/content/src \
-		-I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
-		-I$(ANDROID_SOURCE)/frameworks/base/include/ \
-		-I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
-		-I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
-		-I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
-		-I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
-		-I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
-		$(NULL)
-endif
-
-LOCAL_INCLUDES  += \
-      -I$(srcdir)/../inspector/src \
-      $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	+= -I$(srcdir)/../base \
-		   -I$(srcdir)/../generic \
-		   -I$(srcdir)/../forms \
-		   -I$(srcdir)/../tables \
-		   -I$(srcdir)/../style \
-		   -I$(srcdir)/../xul/base/src \
-		   -I$(srcdir)/../mathml \
-		   -I$(topsrcdir)/content/base/src \
-		   -I$(topsrcdir)/content/canvas/src \
-		   -I$(topsrcdir)/content/html/content/src \
-		   -I$(topsrcdir)/content/html/document/src \
-		   -I$(topsrcdir)/content/xslt/src/base \
-		   -I$(topsrcdir)/content/xslt/src/xml \
-		   -I$(topsrcdir)/content/xslt/src/xpath \
-		   -I$(topsrcdir)/content/xslt/src/xslt \
-		   -I$(topsrcdir)/content/xul/content/src \
-		   -I$(topsrcdir)/content/xul/document/src \
-		   -I$(topsrcdir)/content/xul/templates/src \
-		   -I$(topsrcdir)/content/events/src \
-		   -I$(topsrcdir)/content/xbl/src \
-		   -I$(topsrcdir)/view/src \
-		   -I$(topsrcdir)/dom/base \
-		   -I$(topsrcdir)/dom/file \
-		   -I$(topsrcdir)/dom/src/json \
-		   -I$(topsrcdir)/dom/src/jsurl \
-		   -I$(topsrcdir)/dom/src/storage \
-		   -I$(topsrcdir)/dom/src/offline \
-		   -I$(topsrcdir)/dom/src/geolocation \
-		   -I$(topsrcdir)/dom/audiochannel \
-		   -I$(topsrcdir)/dom/telephony \
-		   -I$(topsrcdir)/dom/media \
-		   -I$(topsrcdir)/dom/speakermanager \
-		   -I. \
-		   -I$(topsrcdir)/editor/libeditor/base \
-		   -I$(topsrcdir)/editor/libeditor/text \
-		   -I$(topsrcdir)/editor/libeditor/html \
-		   -I$(topsrcdir)/editor/txmgr/src \
-		   -I$(topsrcdir)/editor/txtsvc/src \
-		   -I$(topsrcdir)/editor/composer/src \
-		   -I$(topsrcdir)/js/xpconnect/src \
-		   -I$(topsrcdir)/js/xpconnect/loader \
-		   -I$(topsrcdir)/caps/include \
-		   -I$(topsrcdir)/netwerk/base/src \
-		   -I$(topsrcdir)/content/svg/content/src \
-		   -I$(topsrcdir)/extensions/cookie \
-		   -I$(topsrcdir)/netwerk/cookie \
-		   $(NULL)
-
 ifdef MOZ_GSTREAMER
-LOCAL_INCLUDES	+= $(GSTREAMER_CFLAGS)
+CXXFLAGS += $(GSTREAMER_CFLAGS)
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/speakermanager
-endif #}
-
-ifdef MOZ_B2G_FM #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/fmradio
-endif #}
-
-ifdef MOZ_B2G_BT #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/bluetooth
-endif #}
-
-ifdef MOZ_WEBSPEECH #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/content/media/webspeech/synth
-endif #}
-
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/camera
+CXXFLAGS += \
+  -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
+  -I$(ANDROID_SOURCE)/frameworks/base/include/ \
+  -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
+  -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
+  -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
+  -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
+  -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
+  $(NULL)
+endif

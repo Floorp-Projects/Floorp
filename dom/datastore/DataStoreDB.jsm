@@ -9,7 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 this.EXPORTED_SYMBOLS = ['DataStoreDB'];
 
 function debug(s) {
-  // dump('DEBUG DataStoreDB: ' + s + '\n');
+  //dump('DEBUG DataStoreDB: ' + s + '\n');
 }
 
 const DATASTOREDB_VERSION = 1;

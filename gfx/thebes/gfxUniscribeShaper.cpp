@@ -67,7 +67,7 @@ public:
         HRESULT rv;
         HDC shapeDC = nullptr;
 
-        const PRUnichar *str = mAlternativeString ? mAlternativeString : mItemString;
+        char16ptr_t str = mAlternativeString ? mAlternativeString : mItemString;
 
         mScriptItem->a.fLogicalOrder = true; 
         SCRIPT_ANALYSIS sa = mScriptItem->a;
@@ -417,7 +417,7 @@ public:
     }
 
 private:
-    const PRUnichar *mString;
+    char16ptr_t      mString;
     gfxShapedText   *mShapedText;
     uint32_t         mOffset;
     uint32_t         mLength;

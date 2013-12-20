@@ -93,7 +93,7 @@ class DiscardTracker
     /**
      * This is called when the discard timer fires; it calls into DiscardNow().
      */
-    friend int DiscardTimeoutChangedCallback(const char* aPref, void *aClosure);
+    friend void DiscardTimeoutChangedCallback(const char* aPref, void *aClosure);
 
     /**
      * When run, this runnable sets sDiscardRunnablePending to false and calls

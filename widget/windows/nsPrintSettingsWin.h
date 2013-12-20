@@ -44,8 +44,8 @@ public:
 protected:
   void CopyDevMode(DEVMODEW* aInDevMode, DEVMODEW *& aOutDevMode);
 
-  PRUnichar*      mDeviceName;
-  PRUnichar*      mDriverName;
+  wchar_t*      mDeviceName;
+  wchar_t*      mDriverName;
   LPDEVMODEW mDevMode;
 };
 

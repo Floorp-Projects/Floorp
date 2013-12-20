@@ -12,9 +12,19 @@ const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
+const {CSSTransformPreviewer} = require("devtools/shared/widgets/CSSTransformPreviewer");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearNamedTimeout",
+  "resource:///modules/devtools/ViewHelpers.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
+  "resource:///modules/devtools/VariablesView.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
+  "resource:///modules/devtools/VariablesViewController.jsm");
 
 const GRADIENT_RE = /\b(repeating-)?(linear|radial)-gradient\(((rgb|hsl)a?\(.+?\)|[^\)])+\)/gi;
 const BORDERCOLOR_RE = /^border-[-a-z]*color$/ig;
@@ -24,7 +34,6 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const ENTER_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
-const SHOW_TIMEOUT = 50;
 
 /**
  * Tooltip widget.
@@ -92,7 +101,6 @@ let PanelFactory = {
     panel.setAttribute("hidden", true);
     panel.setAttribute("ignorekeys", true);
 
-    // Prevent the click used to close the panel from being consumed
     panel.setAttribute("consumeoutsideclicks", options.get("consumeOutsideClick"));
     panel.setAttribute("noautofocus", options.get("noAutoFocus"));
     panel.setAttribute("type", "arrow");
@@ -185,8 +193,9 @@ module.exports.Tooltip = Tooltip;
 
 Tooltip.prototype = {
   defaultPosition: "before_start",
-  defaultOffsetX: 0,
-  defaultOffsetY: 0,
+  defaultOffsetX: 0, // px
+  defaultOffsetY: 0, // px
+  defaultShowDelay: 50, // ms
 
   /**
    * Show the tooltip. It might be wise to append some content first if you
@@ -194,13 +203,11 @@ Tooltip.prototype = {
    * tooltip by setting a XUL node to t.content.
    * @param {node} anchor
    *        Which node should the tooltip be shown on
-   * @param {string} position
+   * @param {string} position [optional]
    *        Optional tooltip position. Defaults to before_start
    *        https://developer.mozilla.org/en-US/docs/XUL/PopupGuide/Positioning
-   * @param {number} x
-   *        Optional x offset. Defaults to 0
-   * @param {number} y
-   *        Optional y offset. Defaults to 0
+   * @param {number} x, y [optional]
+   *        The left and top offset coordinates, in pixels.
    */
   show: function(anchor,
     position = this.defaultPosition,
@@ -222,6 +229,10 @@ Tooltip.prototype = {
     return this.panel.state !== "closed" && this.panel.state !== "hiding";
   },
 
+  setSize: function(width, height) {
+    this.panel.sizeTo(width, height);
+  },
+
   /**
    * Empty the tooltip's content
    */
@@ -229,6 +240,22 @@ Tooltip.prototype = {
     while (this.panel.hasChildNodes()) {
       this.panel.removeChild(this.panel.firstChild);
     }
+  },
+
+  /**
+   * Gets this panel's visibility state.
+   * @return boolean
+   */
+  isHidden: function() {
+    return this.panel.state == "closed" || this.panel.state == "hiding";
+  },
+
+  /**
+   * Gets if this panel has any child nodes.
+   * @return boolean
+   */
+  isEmpty: function() {
+    return !this.panel.hasChildNodes();
   },
 
   /**
@@ -253,7 +280,7 @@ Tooltip.prototype = {
 
     this.doc = null;
 
-    this.panel.parentNode.removeChild(this.panel);
+    this.panel.remove();
     this.panel = null;
   },
 
@@ -281,15 +308,16 @@ Tooltip.prototype = {
    *        The container for all target nodes
    * @param {Function} targetNodeCb
    *        A function that accepts a node argument and returns true or false
-   *        to signify if the tooltip should be shown on that node or not.
+   *        (or a promise that resolves or rejects) to signify if the tooltip
+   *        should be shown on that node or not.
    *        Additionally, the function receives a second argument which is the
    *        tooltip instance itself, to be used to add/modify the content of the
    *        tooltip if needed. If omitted, the tooltip will be shown everytime.
    * @param {Number} showDelay
    *        An optional delay that will be observed before showing the tooltip.
-   *        Defaults to SHOW_TIMEOUT
+   *        Defaults to this.defaultShowDelay.
    */
-  startTogglingOnHover: function(baseNode, targetNodeCb, showDelay=SHOW_TIMEOUT) {
+  startTogglingOnHover: function(baseNode, targetNodeCb, showDelay=this.defaultShowDelay) {
     if (this._basedNode) {
       this.stopTogglingOnHover();
     }
@@ -334,7 +362,12 @@ Tooltip.prototype = {
   },
 
   _showOnHover: function(target) {
-    if (this._targetNodeCb(target, this)) {
+    let res = this._targetNodeCb(target, this);
+    if (res && res.then) {
+      res.then(() => {
+        this.show(target);
+      });
+    } else if (res) {
       this.show(target);
     }
   },
@@ -353,7 +386,13 @@ Tooltip.prototype = {
    *        A node that can be appended in the tooltip XUL element
    */
   set content(content) {
+    if (this.content == content) {
+      return;
+    }
+
     this.empty();
+    this.panel.removeAttribute("clamped-dimensions");
+
     if (content) {
       this.panel.appendChild(content);
     }
@@ -366,23 +405,87 @@ Tooltip.prototype = {
   /**
    * Sets some text as the content of this tooltip.
    *
-   * @param {string[]} messages
+   * @param {array} messages
    *        A list of text messages.
+   * @param {string} messagesClass [optional]
+   *        A style class for the text messages.
+   * @param {string} containerClass [optional]
+   *        A style class for the text messages container.
    */
-  setTextContent: function(...messages) {
+  setTextContent: function(messages,
+    messagesClass = "default-tooltip-simple-text-colors",
+    containerClass = "default-tooltip-simple-text-colors") {
+
     let vbox = this.doc.createElement("vbox");
-    vbox.className = "devtools-tooltip-simple-text-container";
+    vbox.className = "devtools-tooltip-simple-text-container " + containerClass;
     vbox.setAttribute("flex", "1");
 
     for (let text of messages) {
       let description = this.doc.createElement("description");
       description.setAttribute("flex", "1");
-      description.className = "devtools-tooltip-simple-text";
+      description.className = "devtools-tooltip-simple-text " + messagesClass;
       description.textContent = text;
       vbox.appendChild(description);
     }
 
     this.content = vbox;
+  },
+
+  /**
+   * Fill the tooltip with a variables view, inspecting an object via its
+   * corresponding object actor, as specified in the remote debugging protocol.
+   *
+   * @param {object} objectActor
+   *        The value grip for the object actor.
+   * @param {object} viewOptions [optional]
+   *        Options for the variables view visualization.
+   * @param {object} controllerOptions [optional]
+   *        Options for the variables view controller.
+   * @param {object} relayEvents [optional]
+   *        A collection of events to listen on the variables view widget.
+   *        For example, { fetched: () => ... }
+   * @param {boolean} reuseCachedWidget [optional]
+   *        Pass false to instantiate a brand new widget for this variable.
+   *        Otherwise, if a variable was previously inspected, its widget
+   *        will be reused.
+   */
+  setVariableContent: function(
+    objectActor,
+    viewOptions = {},
+    controllerOptions = {},
+    relayEvents = {},
+    reuseCachedWidget = true) {
+
+    if (reuseCachedWidget && this._cachedVariablesView) {
+      var [vbox, widget] = this._cachedVariablesView;
+    } else {
+      var vbox = this.doc.createElement("vbox");
+      vbox.className = "devtools-tooltip-variables-view-box";
+      vbox.setAttribute("flex", "1");
+
+      let innerbox = this.doc.createElement("vbox");
+      innerbox.className = "devtools-tooltip-variables-view-innerbox";
+      innerbox.setAttribute("flex", "1");
+      vbox.appendChild(innerbox);
+
+      var widget = new VariablesView(innerbox, viewOptions);
+      for (let e in relayEvents) widget.on(e, relayEvents[e]);
+      VariablesViewController.attach(widget, controllerOptions);
+
+      this._cachedVariablesView = [vbox, widget];
+    }
+
+    // Some of the view options are allowed to change between uses.
+    widget.searchPlaceholder = viewOptions.searchPlaceholder;
+    widget.searchEnabled = viewOptions.searchEnabled;
+
+    // Use the object actor's grip to display it as a variable in the widget.
+    // The controller options are allowed to change between uses.
+    widget.controller.setSingleVariable(
+      { objectActor: objectActor }, controllerOptions);
+
+    this.content = vbox;
+    this.panel.setAttribute("clamped-dimensions", "");
   },
 
   /**
@@ -415,27 +518,32 @@ Tooltip.prototype = {
     }
     vbox.appendChild(image);
 
-    // Temporary label during image load
+    // Dimension label
     let label = this.doc.createElement("label");
     label.classList.add("devtools-tooltip-caption");
     label.classList.add("theme-comment");
-    label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+    if (options.naturalWidth && options.naturalHeight) {
+      label.textContent = this._getImageDimensionLabel(options.naturalWidth,
+        options.naturalHeight);
+      this.setSize(vbox.width, vbox.height);
+    } else {
+      // If no dimensions were provided, load the image to get them
+      label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
+      let imgObj = new this.doc.defaultView.Image();
+      imgObj.src = imageUrl;
+      imgObj.onload = () => {
+        imgObj.onload = null;
+        label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
+          imgObj.naturalHeight);
+        this.setSize(vbox.width, vbox.height);
+      }
+    }
     vbox.appendChild(label);
 
     this.content = vbox;
-
-    // Load the image to get dimensions and display it when done
-    let imgObj = new this.doc.defaultView.Image();
-    imgObj.src = imageUrl;
-    imgObj.onload = () => {
-      imgObj.onload = null;
-
-      // Display dimensions
-      let w = options.naturalWidth || imgObj.naturalWidth;
-      let h = options.naturalHeight || imgObj.naturalHeight;
-      label.textContent = w + " x " + h;
-    }
   },
+
+  _getImageDimensionLabel: (w, h) => w + " x " + h,
 
   /**
    * Exactly the same as the `image` function but takes a css background image
@@ -489,6 +597,54 @@ Tooltip.prototype = {
 
     // Put the iframe in the tooltip
     this.content = iframe;
+
+    return def.promise;
+  },
+
+  /**
+   * Set the content of the tooltip to be the result of CSSTransformPreviewer.
+   * Meaning a canvas previewing a css transformation.
+   *
+   * @param {String} transform
+   *        The CSS transform value (e.g. "rotate(45deg) translateX(50px)")
+   * @param {PageStyleActor} pageStyle
+   *        An instance of the PageStyleActor that will be used to retrieve
+   *        computed styles
+   * @param {NodeActor} node
+   *        The NodeActor for the currently selected node
+   * @return A promise that resolves when the tooltip content is ready, or
+   *         rejects if no transform is provided or is invalid
+   */
+  setCssTransformContent: function(transform, pageStyle, node) {
+    let def = promise.defer();
+
+    if (transform) {
+      // Look into the computed styles to find the width and height and possibly
+      // the origin if it hadn't been provided
+      pageStyle.getComputed(node, {
+        filter: "user",
+        markMatched: false,
+        onlyMatched: false
+      }).then(styles => {
+        let origin = styles["transform-origin"].value;
+        let width = parseInt(styles["width"].value);
+        let height = parseInt(styles["height"].value);
+
+        let root = this.doc.createElementNS(XHTML_NS, "div");
+        let previewer = new CSSTransformPreviewer(root);
+        this.content = root;
+        if (!previewer.preview(transform, origin, width, height)) {
+          // If the preview didn't work, reject the promise
+          def.reject();
+        } else {
+          // Else, make sure the tooltip has the right size and resolve
+          this.setSize(previewer.canvas.width, previewer.canvas.height);
+          def.resolve();
+        }
+      });
+    } else {
+      def.reject();
+    }
 
     return def.promise;
   }

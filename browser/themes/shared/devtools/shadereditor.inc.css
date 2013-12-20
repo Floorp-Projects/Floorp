@@ -46,7 +46,7 @@
 }
 
 #shaders-pane + .devtools-side-splitter {
-  -moz-border-start-color: transparent;
+  border-color: transparent;
 }
 
 .side-menu-widget-item-checkbox {
@@ -88,7 +88,7 @@
 /* Shader source editors */
 
 #editors-splitter {
-  -moz-border-start-color: rgb(61,69,76);
+  border-color: rgb(61,69,76);
 }
 
 .editor-label {

@@ -18,7 +18,7 @@ interface nsINode;
  * @version 1.0
  */
 
-[scriptable, builtinclass, uuid(12cf5a4d-fffb-4f2f-9cec-c65195661d76)]
+[scriptable, builtinclass, uuid(e0a4d4b3-f34e-44bd-b1f2-4e3bde9b6915)]
 interface nsISelection : nsISupports
 {
     /**
@@ -124,13 +124,6 @@ interface nsISelection : nsISupports
      * Deletes this selection from document the nodes belong to.
      */
     void deleteFromDocument();
-
-    /**
-     * Modifies the cursor Bidi level after a change in keyboard direction
-     * @param langRTL is PR_TRUE if the new language is right-to-left or
-     *                PR_FALSE if the new language is left-to-right.
-     */
-    void selectionLanguageChange(in boolean langRTL);
 
     /**
      * Returns the whole selection into a plain text string.

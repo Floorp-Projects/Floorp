@@ -173,8 +173,7 @@ XPC_WN_DoubleWrappedGetter(JSContext *cx, unsigned argc, jsval *vp)
                                     &ccx, ccx,
                                     ccx.GetFlattenedJSObject(),
                                     wrapper->GetIdentityObject(),
-                                    wrapper->GetClassInfo(), id,
-                                    wrapper->GetSecurityInfoAddr()))) {
+                                    wrapper->GetClassInfo(), id))) {
                 // The SecurityManager should have set an exception.
                 return false;
             }
@@ -720,7 +719,6 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // getGeneric
         nullptr, // getProperty
         nullptr, // getElement
-        nullptr, // getElementIfPresent
         nullptr, // getSpecial
         nullptr, // setGeneric
         nullptr, // setProperty
@@ -732,6 +730,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // deleteElement
         nullptr, // deleteSpecial
         nullptr, nullptr, // watch/unwatch
+        nullptr, // slice
         XPC_WN_JSOp_Enumerate,
         XPC_WN_JSOp_ThisObject,
     }

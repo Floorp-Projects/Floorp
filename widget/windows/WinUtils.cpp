@@ -35,6 +35,10 @@
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
 #include "gfxColor.h"
+#ifdef MOZ_METRO
+#include "winrt/MetroInput.h"
+#include "winrt/MetroUtils.h"
+#endif // MOZ_METRO
 
 #ifdef NS_ENABLE_TSF
 #include <textstor.h>
@@ -66,9 +70,9 @@ WinUtils::SHGetKnownFolderPathPtr WinUtils::sGetKnownFolderPath = nullptr;
 
 // We just leak these DLL HMODULEs. There's no point in calling FreeLibrary
 // on them during shutdown anyway.
-static const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+static const wchar_t kShellLibraryName[] =  L"shell32.dll";
 static HMODULE sShellDll = nullptr;
-static const PRUnichar kDwmLibraryName[] = L"dwmapi.dll";
+static const wchar_t kDwmLibraryName[] = L"dwmapi.dll";
 static HMODULE sDwmDll = nullptr;
 
 WinUtils::DwmExtendFrameIntoClientAreaProc WinUtils::dwmExtendFrameIntoClientAreaPtr = nullptr;
@@ -183,6 +187,47 @@ WinUtils::Log(const char *fmt, ...)
 }
 
 /* static */
+double
+WinUtils::LogToPhysFactor()
+{
+  // dpi / 96.0
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+#ifdef MOZ_METRO
+    return MetroUtils::LogToPhysFactor();
+#else
+    return 1.0;
+#endif
+  } else {
+    HDC hdc = ::GetDC(nullptr);
+    double result = ::GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
+    ::ReleaseDC(nullptr, hdc);
+    return result;
+  }
+}
+
+/* static */
+double
+WinUtils::PhysToLogFactor()
+{
+  // 1.0 / (dpi / 96.0)
+  return 1.0 / LogToPhysFactor();
+}
+
+/* static */
+double
+WinUtils::PhysToLog(int32_t aValue)
+{
+  return double(aValue) * PhysToLogFactor();
+}
+
+/* static */
+int32_t
+WinUtils::LogToPhys(double aValue)
+{
+  return int32_t(NS_round(aValue * LogToPhysFactor()));
+}
+
+/* static */
 bool
 WinUtils::PeekMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
                       UINT aLastMessage, UINT aOption)
@@ -243,9 +288,9 @@ WinUtils::WaitForMessage()
 /* static */
 bool
 WinUtils::GetRegistryKey(HKEY aRoot,
-                         const PRUnichar* aKeyName,
-                         const PRUnichar* aValueName,
-                         PRUnichar* aBuffer,
+                         char16ptr_t aKeyName,
+                         char16ptr_t aValueName,
+                         wchar_t* aBuffer,
                          DWORD aBufferLength)
 {
   NS_PRECONDITION(aKeyName, "The key name is NULL");
@@ -277,7 +322,7 @@ WinUtils::GetRegistryKey(HKEY aRoot,
 
 /* static */
 bool
-WinUtils::HasRegistryKey(HKEY aRoot, const PRUnichar* aKeyName)
+WinUtils::HasRegistryKey(HKEY aRoot, char16ptr_t aKeyName)
 {
   MOZ_ASSERT(aRoot, "aRoot must not be NULL");
   MOZ_ASSERT(aKeyName, "aKeyName must not be NULL");
@@ -329,10 +374,10 @@ WinUtils::GetTopLevelHWND(HWND aWnd,
   return topWnd;
 }
 
-static PRUnichar*
+static const wchar_t*
 GetNSWindowPropName()
 {
-  static PRUnichar sPropName[40] = L"";
+  static wchar_t sPropName[40] = L"";
   if (!*sPropName) {
     _snwprintf(sPropName, 39, L"MozillansIWidgetPtr%p",
                ::GetCurrentProcessId());
@@ -691,9 +736,9 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
                                 getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<gfxASurface> imgFrame;
-  rv = container->GetFrame(imgIContainer::FRAME_FIRST, 0, getter_AddRefs(imgFrame));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<gfxASurface> imgFrame =
+    container->GetFrame(imgIContainer::FRAME_FIRST, 0);
+  NS_ENSURE_TRUE(imgFrame, NS_ERROR_FAILURE);
 
   nsRefPtr<gfxImageSurface> imageSurface;
   gfxIntSize size;
@@ -1177,6 +1222,17 @@ WinUtils::SetupKeyModifiersSequence(nsTArray<KeyPair>* aArray,
   }
 }
 
+/* static */
+bool
+WinUtils::ShouldHideScrollbars()
+{
+#ifdef MOZ_METRO
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+    return widget::winrt::MetroInput::IsInputModeImprecise();
+  }
+#endif // MOZ_METRO
+  return false;
+}
 
 } // namespace widget
 } // namespace mozilla

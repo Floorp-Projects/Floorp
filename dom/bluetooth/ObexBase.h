@@ -102,7 +102,8 @@ enum ObexResponseCode {
   DatabaseLocked = 0xE1,
 };
 
-class ObexHeader {
+class ObexHeader
+{
 public:
   ObexHeader(ObexHeaderId aId, int aDataLength, const uint8_t* aData)
     : mId(aId)
@@ -122,11 +123,9 @@ public:
   nsAutoArrayPtr<uint8_t> mData;
 };
 
-class ObexHeaderSet {
+class ObexHeaderSet
+{
 public:
-  uint8_t mOpcode;
-  nsTArray<nsAutoPtr<ObexHeader> > mHeaders;
-
   ObexHeaderSet(uint8_t aOpcode) : mOpcode(aOpcode)
   {
   }
@@ -241,15 +240,30 @@ public:
 
     return false;
   }
+
+  void ClearHeaders()
+  {
+    mHeaders.Clear();
+  }
+
+private:
+  uint8_t mOpcode;
+  nsTArray<nsAutoPtr<ObexHeader> > mHeaders;
 };
 
-int AppendHeaderName(uint8_t* aRetBuf, const char* aName, int aLength);
-int AppendHeaderBody(uint8_t* aRetBuf, uint8_t* aData, int aLength);
+int AppendHeaderName(uint8_t* aRetBuf, int aBufferSize, const char* aName,
+                     int aLength);
+int AppendHeaderBody(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aData,
+                     int aLength);
 int AppendHeaderEndOfBody(uint8_t* aRetBuf);
 int AppendHeaderLength(uint8_t* aRetBuf, int aObjectLength);
 int AppendHeaderConnectionId(uint8_t* aRetBuf, int aConnectionId);
 void SetObexPacketInfo(uint8_t* aRetBuf, uint8_t aOpcode, int aPacketLength);
-void ParseHeaders(const uint8_t* aHeaderStart,
+
+/**
+ * @return true when the message was parsed without any error, false otherwise.
+ */
+bool ParseHeaders(const uint8_t* aHeaderStart,
                   int aTotalLength,
                   ObexHeaderSet* aRetHanderSet);
 

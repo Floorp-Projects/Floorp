@@ -12,7 +12,7 @@ EXPORTS += [
     'DirectShowUtils.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'AudioSinkFilter.cpp',
     'AudioSinkInputPin.cpp',
     'DirectShowDecoder.cpp',

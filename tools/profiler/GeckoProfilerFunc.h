@@ -26,8 +26,8 @@ class ProfilerMarkerPayload;
 inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = nullptr,
                                         bool aCopy = false, uint32_t line = 0);
 inline void  mozilla_sampler_call_exit(void* handle);
-inline void  mozilla_sampler_add_marker(const char *aInfo,
-                                        ProfilerMarkerPayload *aPayload = nullptr);
+void  mozilla_sampler_add_marker(const char *aInfo,
+                                 ProfilerMarkerPayload *aPayload = nullptr);
 
 void mozilla_sampler_start(int aEntries, double aInterval,
                            const char** aFeatures, uint32_t aFeatureCount,

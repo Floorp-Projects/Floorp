@@ -52,16 +52,33 @@ CSS_PSEUDO_ELEMENT(mozMathStretchy, ":-moz-math-stretchy", 0)
 CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous", 0)
 
 // HTML5 Forms pseudo elements
-CSS_PSEUDO_ELEMENT(mozNumberWrapper, ":-moz-number-wrapper", 0)
-CSS_PSEUDO_ELEMENT(mozNumberText, ":-moz-number-text", 0)
-CSS_PSEUDO_ELEMENT(mozNumberSpinBox, ":-moz-number-spin-box", 0)
-CSS_PSEUDO_ELEMENT(mozNumberSpinUp, ":-moz-number-spin-up", 0)
-CSS_PSEUDO_ELEMENT(mozNumberSpinDown, ":-moz-number-spin-down", 0)
-CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar", 0)
-CSS_PSEUDO_ELEMENT(mozRangeTrack, ":-moz-range-track", 0)
-CSS_PSEUDO_ELEMENT(mozRangeProgress, ":-moz-range-progress", 0)
-CSS_PSEUDO_ELEMENT(mozRangeThumb, ":-moz-range-thumb", 0)
-CSS_PSEUDO_ELEMENT(mozMeterBar, ":-moz-meter-bar", 0)
-CSS_PSEUDO_ELEMENT(mozPlaceholder, ":-moz-placeholder", 0)
+CSS_PSEUDO_ELEMENT(mozNumberWrapper, ":-moz-number-wrapper",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+CSS_PSEUDO_ELEMENT(mozNumberText, ":-moz-number-text",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+CSS_PSEUDO_ELEMENT(mozNumberSpinBox, ":-moz-number-spin-box",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+CSS_PSEUDO_ELEMENT(mozNumberSpinUp, ":-moz-number-spin-up",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+CSS_PSEUDO_ELEMENT(mozNumberSpinDown, ":-moz-number-spin-down",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_IS_CHROME_ONLY)
+CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+CSS_PSEUDO_ELEMENT(mozRangeTrack, ":-moz-range-track",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+CSS_PSEUDO_ELEMENT(mozRangeProgress, ":-moz-range-progress",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+CSS_PSEUDO_ELEMENT(mozRangeThumb, ":-moz-range-thumb",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+CSS_PSEUDO_ELEMENT(mozMeterBar, ":-moz-meter-bar",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+CSS_PSEUDO_ELEMENT(mozPlaceholder, ":-moz-placeholder",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
 CSS_PSEUDO_ELEMENT(mozColorSwatch, ":-moz-color-swatch",
-                   CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE)
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_STYLE_ATTRIBUTE |
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)

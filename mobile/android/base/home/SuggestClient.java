@@ -5,6 +5,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import org.json.JSONArray;
 
@@ -53,8 +54,13 @@ class SuggestClient {
         mCheckNetwork = true;
     }
 
+    /**
+     * This constructor is used exclusively by Robocop.
+     */
+    @RobocopTarget
     public SuggestClient(Context context, String suggestTemplate, int timeout) {
         this(context, suggestTemplate, timeout, Integer.MAX_VALUE);
+        mCheckNetwork = false;
     }
 
     /**

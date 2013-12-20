@@ -32,10 +32,6 @@ public:
 
   virtual MediaDecoder* Clone() MOZ_OVERRIDE;
   virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
-  // Called by |ChangeState|, override it to send the Rtsp play/pause commands
-  // through |nsIStreamingProtocolController|.
-  // Call on the main thread only and the lock must be obtained.
-  virtual void ApplyStateToStateMachine(PlayState aState) MOZ_OVERRIDE;
 };
 
 } // namespace mozilla

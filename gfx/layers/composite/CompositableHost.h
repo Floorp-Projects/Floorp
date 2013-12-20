@@ -8,7 +8,6 @@
 
 #include <stdint.h>                     // for uint64_t
 #include <stdio.h>                      // for FILE
-#include "gfxPoint.h"                   // for gfxSize
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
@@ -24,14 +23,15 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString
+#include "Units.h"                      // for CSSToScreenScale
 
-class gfxImageSurface;
 struct nsIntPoint;
 struct nsIntRect;
 
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
+class DataSourceSurface;
 }
 
 namespace layers {
@@ -41,7 +41,7 @@ struct TiledLayerProperties
 {
   nsIntRegion mVisibleRegion;
   nsIntRegion mValidRegion;
-  gfxSize mEffectiveResolution;
+  CSSToScreenScale mEffectiveResolution;
 };
 
 class Layer;
@@ -106,12 +106,6 @@ public:
   {
     mBackendData = aBackendData;
   }
-
-  /**
-   * Our IPDL actor is being destroyed, get rid of any shmem resources now and
-   * don't worry about compositing anymore.
-   */
-  virtual void OnActorDestroy() = 0;
 
   // If base class overrides, it should still call the parent implementation
   virtual void SetCompositor(Compositor* aCompositor);
@@ -210,7 +204,7 @@ public:
   /**
    * Returns the front buffer.
    */
-  virtual TextureHost* GetTextureHost() { return nullptr; }
+  virtual TextureHost* GetAsTextureHost() { return nullptr; }
 
   virtual LayerRenderState GetRenderState() = 0;
 
@@ -288,22 +282,18 @@ public:
   static void DumpDeprecatedTextureHost(FILE* aFile, DeprecatedTextureHost* aTexture);
   static void DumpTextureHost(FILE* aFile, TextureHost* aTexture);
 
-  virtual already_AddRefed<gfxImageSurface> GetAsSurface() { return nullptr; }
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() { return nullptr; }
 #endif
 
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix) { }
 
-  void AddTextureHost(TextureHost* aTexture);
-  virtual void UseTextureHost(TextureHost* aTexture) {}
-  virtual void RemoveTextureHost(uint64_t aTextureID);
-  TextureHost* GetTextureHost(uint64_t aTextureID);
+  virtual void UseTextureHost(TextureHost* aTexture);
 
 protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;
   Layer* mLayer;
   RefPtr<CompositableBackendSpecificData> mBackendData;
-  RefPtr<TextureHost> mFirstTexture;
   bool mAttached;
   bool mKeepAttached;
 };

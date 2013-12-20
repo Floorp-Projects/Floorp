@@ -679,32 +679,32 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   kern_return_t err = parent_recv_port.WaitForMessage(&child_message, kTimeoutMs);
   if (err != KERN_SUCCESS) {
     std::string errString = StringPrintf("0x%x %s", err, mach_error_string(err));
-    LOG(ERROR) << "parent WaitForMessage() failed: " << errString;
+    CHROMIUM_LOG(ERROR) << "parent WaitForMessage() failed: " << errString;
     return false;
   }
 
   task_t child_task = child_message.GetTranslatedPort(0);
   if (child_task == MACH_PORT_NULL) {
-    LOG(ERROR) << "parent GetTranslatedPort(0) failed.";
+    CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(0) failed.";
     return false;
   }
 
   if (child_message.GetTranslatedPort(1) == MACH_PORT_NULL) {
-    LOG(ERROR) << "parent GetTranslatedPort(1) failed.";
+    CHROMIUM_LOG(ERROR) << "parent GetTranslatedPort(1) failed.";
     return false;
   }
   MachPortSender parent_sender(child_message.GetTranslatedPort(1));
 
   MachSendMessage parent_message(/* id= */0);
   if (!parent_message.AddDescriptor(bootstrap_port)) {
-    LOG(ERROR) << "parent AddDescriptor(" << bootstrap_port << ") failed.";
+    CHROMIUM_LOG(ERROR) << "parent AddDescriptor(" << bootstrap_port << ") failed.";
     return false;
   }
 
   err = parent_sender.SendMessage(parent_message, kTimeoutMs);
   if (err != KERN_SUCCESS) {
     std::string errString = StringPrintf("0x%x %s", err, mach_error_string(err));
-    LOG(ERROR) << "parent SendMessage() failed: " << errString;
+    CHROMIUM_LOG(ERROR) << "parent SendMessage() failed: " << errString;
     return false;
   }
 #endif
@@ -755,7 +755,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // See XRE_InitChildProcess in nsEmbedFunction.
 
   // Win app model id
-  cmdLine.AppendLooseValue(std::wstring(mGroupId.get()));
+  cmdLine.AppendLooseValue(mGroupId.get());
 
   // Process id
   cmdLine.AppendLooseValue(UTF8ToWide(pidstring));

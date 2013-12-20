@@ -137,13 +137,8 @@ xpcAccessibleHyperText::GetCharacterAtOffset(int32_t aOffset,
   if (text->IsDefunct())
     return NS_ERROR_FAILURE;
 
-  nsAutoString character;
-  if (text->GetCharAt(aOffset, eGetAt, character)) {
-    *aCharacter = character.First();
-    return NS_OK;
-  }
-
-  return NS_ERROR_INVALID_ARG;
+  *aCharacter = text->CharAt(aOffset);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

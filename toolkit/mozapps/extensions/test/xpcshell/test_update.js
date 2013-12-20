@@ -6,7 +6,6 @@
 
 const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE = "general.useragent.locale";
-const PREF_GETADDONS_BYIDS_PERFORMANCE = "extensions.getAddons.getWithPerformance.url";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 
 // The test extension uses an insecure update url.
@@ -1178,6 +1177,8 @@ function run_test_17() {
     }
   });
 
+  Services.prefs.setCharPref(PREF_GETADDONS_BYIDS,
+                             "http://localhost:" + gPort + "/data/test_update.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE,
                              "http://localhost:" + gPort + "/data/test_update.xml");
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);

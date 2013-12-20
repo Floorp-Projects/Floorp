@@ -34,6 +34,7 @@
 #include "ConvolverNode.h"
 #include "OscillatorNode.h"
 #include "nsNetUtil.h"
+#include "AudioStream.h"
 
 namespace mozilla {
 namespace dom {
@@ -65,12 +66,22 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 static uint8_t gWebAudioOutputKey;
 
+float GetSampleRateForAudioContext(bool aIsOffline, float aSampleRate)
+{
+  if (aIsOffline) {
+    return aSampleRate;
+  } else {
+    AudioStream::InitPreferredSampleRate();
+    return static_cast<float>(AudioStream::PreferredSampleRate());
+  }
+}
+
 AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                            bool aIsOffline,
                            uint32_t aNumberOfChannels,
                            uint32_t aLength,
                            float aSampleRate)
-  : mSampleRate(aIsOffline ? aSampleRate : IdealAudioRate())
+  : mSampleRate(GetSampleRateForAudioContext(aIsOffline, aSampleRate))
   , mNumberOfChannels(aNumberOfChannels)
   , mIsOffline(aIsOffline)
   , mIsStarted(!aIsOffline)
@@ -163,8 +174,8 @@ AudioContext::CreateBuffer(JSContext* aJSContext, uint32_t aNumberOfChannels,
                            uint32_t aLength, float aSampleRate,
                            ErrorResult& aRv)
 {
-  if (aSampleRate < 8000 || aSampleRate > 96000 || !aLength) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (aSampleRate < 8000 || aSampleRate > 192000 || !aLength || !aNumberOfChannels) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return nullptr;
   }
 
@@ -533,7 +544,12 @@ AudioContext::Shutdown()
 {
   mIsShutDown = true;
 
-  Suspend();
+  // We mute rather than suspending, because the delay between the ::Shutdown
+  // call and the CC would make us overbuffer in the MediaStreamGraph.
+  // See bug 936784 for details.
+  if (!mIsOffline) {
+    Mute();
+  }
 
   mDecoder.Shutdown();
 

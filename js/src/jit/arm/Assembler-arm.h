@@ -7,9 +7,9 @@
 #ifndef jit_arm_Assembler_arm_h
 #define jit_arm_Assembler_arm_h
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Util.h"
 
 #include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "jit/arm/Architecture-arm.h"
@@ -68,12 +68,8 @@ static const uint32_t NumCallTempNonArgRegs =
     mozilla::ArrayLength(CallTempNonArgRegs);
 class ABIArgGenerator
 {
-#if defined(JS_CPU_ARM_HARDFP)
     unsigned intRegIndex_;
     unsigned floatRegIndex_;
-#else
-    unsigned argRegIndex_;
-#endif
     uint32_t stackOffset_;
     ABIArg current_;
 
@@ -1160,7 +1156,7 @@ class Assembler
         LessThanOrEqual = LE,
         Overflow = VS,
         Signed = MI,
-        Unsigned = PL,
+        NotSigned = PL,
         Zero = EQ,
         NonZero = NE,
         Always  = AL,
@@ -1230,7 +1226,7 @@ class Assembler
     void resetCounter();
     uint32_t actualOffset(uint32_t) const;
     uint32_t actualIndex(uint32_t) const;
-    static uint8_t *PatchableJumpAddress(IonCode *code, uint32_t index);
+    static uint8_t *PatchableJumpAddress(JitCode *code, uint32_t index);
     BufferOffset actualOffset(BufferOffset) const;
   protected:
 
@@ -1282,7 +1278,7 @@ class Assembler
     // dest parameter, a this object is still needed.  dummy always happens
     // to be null, but we shouldn't be looking at it in any case.
     static Assembler *dummy;
-    Pool pools_[4];
+    mozilla::Array<Pool, 4> pools_;
     Pool *int32Pool;
     Pool *doublePool;
 
@@ -1303,17 +1299,12 @@ class Assembler
     void initWithAllocator() {
         m_buffer.initWithAllocator();
 
-        // Note that the sizes for the double pools are set to 1020 rather than 1024 to
-        // work around a rare edge case that would otherwise bail out - which is not
-        // possible for Asm.js code and causes a compilation failure.  See the comment at
-        // the fail_bail call within IonAssemberBufferWithConstantPools.h: finishPool().
-
         // Set up the backwards double region
-        new (&pools_[2]) Pool (1020, 8, 4, 8, 8, m_buffer.LifoAlloc_, true);
+        new (&pools_[2]) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, true);
         // Set up the backwards 32 bit region
         new (&pools_[3]) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, true, true);
         // Set up the forwards double region
-        new (doublePool) Pool (1020, 8, 4, 8, 8, m_buffer.LifoAlloc_, false, false, &pools_[2]);
+        new (doublePool) Pool (1024, 8, 4, 8, 8, m_buffer.LifoAlloc_, false, false, &pools_[2]);
         // Set up the forwards 32 bit region
         new (int32Pool) Pool (4096, 4, 4, 8, 4, m_buffer.LifoAlloc_, false, true, &pools_[3]);
         for (int i = 0; i < 4; i++) {
@@ -1659,13 +1650,13 @@ class Assembler
     void as_bkpt();
 
   public:
-    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
-    static void TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
+    static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
-        if (kind == Relocation::IONCODE)
+        if (kind == Relocation::JITCODE)
             writeRelocation(src);
     }
 
@@ -2157,13 +2148,23 @@ GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *paddi
     uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
     doubleSlots *= 2;
     int intSlots = usedIntArgs - NumIntArgRegs;
-    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+    return (intSlots + doubleSlots + *padding) * sizeof(intptr_t);
 }
 
 static inline uint32_t
-GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
+    JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
+    uint32_t intSlots = 0;
+    if (usedIntArgs > NumIntArgRegs)
+        intSlots = usedIntArgs - NumIntArgRegs;
+    uint32_t float32Slots = usedFloatArgs - NumFloatArgRegs;
+    return (intSlots + float32Slots + *padding) * sizeof(intptr_t);
+}
 
+static inline uint32_t
+GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
+{
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs) {
@@ -2173,7 +2174,7 @@ GetFloatArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *pad
     }
     uint32_t doubleSlots = usedFloatArgs - NumFloatArgRegs;
     doubleSlots *= 2;
-    return (intSlots + doubleSlots + *padding) * STACK_SLOT_SIZE;
+    return (intSlots + doubleSlots + *padding) * sizeof(intptr_t);
 }
 #else
 static inline bool
@@ -2210,7 +2211,7 @@ static inline uint32_t
 GetArgStackDisp(uint32_t arg)
 {
     JS_ASSERT(arg >= NumIntArgRegs);
-    return (arg - NumIntArgRegs) * STACK_SLOT_SIZE;
+    return (arg - NumIntArgRegs) * sizeof(intptr_t);
 }
 
 #endif
@@ -2251,7 +2252,7 @@ class DoubleEncoder {
         { }
     };
 
-    DoubleEntry table[256];
+    mozilla::Array<DoubleEntry, 256> table;
 
   public:
     DoubleEncoder()

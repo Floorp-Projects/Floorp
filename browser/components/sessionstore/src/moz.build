@@ -15,10 +15,12 @@ JS_MODULES_PATH = 'modules/sessionstore'
 EXTRA_JS_MODULES = [
     'DocShellCapabilities.jsm',
     'DocumentUtils.jsm',
+    'FrameTree.jsm',
     'Messenger.jsm',
     'PageStyle.jsm',
     'PrivacyLevel.jsm',
     'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
+    'ScrollPosition.jsm',
     'SessionCookies.jsm',
     'SessionFile.jsm',
     'SessionHistory.jsm',

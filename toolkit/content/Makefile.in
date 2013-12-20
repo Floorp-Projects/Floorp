@@ -7,36 +7,21 @@ USE_RCS_MK := 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
 DEFINES += \
-  -Dtarget="$(target)" \
-  -Dac_configure_args="$(ac_configure_args)" \
-  -DCC="$(CC)" \
-  -DCC_VERSION="$(CC_VERSION)" \
-  -DCFLAGS="$(CFLAGS)" \
-  -DCXX="$(CXX)" \
-  -DCXX_VERSION="$(CXX_VERSION)" \
-  -DCXXFLAGS="$(CXXFLAGS)" \
-  -DCPPFLAGS="$(CPPFLAGS)" \
+  -DCXXFLAGS='$(CXXFLAGS)' \
+  -DCPPFLAGS='$(CPPFLAGS)' \
   $(NULL)
 
-MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template="{node|short}\n" 2>/dev/null)
+MOZ_SOURCE_STAMP ?= $(shell hg -R $(topsrcdir) parent --template='{node|short}\n' 2>/dev/null)
 ifdef MOZ_SOURCE_STAMP
-DEFINES += -DSOURCE_CHANGESET="$(MOZ_SOURCE_STAMP)"
-endif
-
-ifeq (Android,$(OS_TARGET))
-DEFINES += -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME)
+DEFINES += -DSOURCE_CHANGESET='$(MOZ_SOURCE_STAMP)'
 endif
 
 source_repo ?= $(call getSourceRepo)
 ifneq (,$(filter http%,$(source_repo)))
-  DEFINES += -DSOURCE_REPO="$(source_repo)"
+  DEFINES += -DSOURCE_REPO='$(source_repo)'
 else ifneq (,$(strip $(source_repo)))
-  DEFINES += -DSOURCE_GIT_COMMIT="$(source_repo)"
-endif
-
-ifneq (,$(findstring stlport,$(STLPORT_LIBS)))
-DEFINES += -DUSE_STLPORT
+  DEFINES += -DSOURCE_GIT_COMMIT='$(source_repo)'
 endif
 
 BUILD_HOSTNAME = $(shell hostname -s || hostname)
-DEFINES += -DBUILD_HOSTNAME="$(BUILD_HOSTNAME)"
+DEFINES += -DBUILD_HOSTNAME='$(BUILD_HOSTNAME)'

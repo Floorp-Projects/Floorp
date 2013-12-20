@@ -15,6 +15,9 @@
 #include "MetroAppShell.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "WinUtils.h"
+#include "nsIPresShell.h"
+#include "nsEventStateManager.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace
@@ -26,6 +29,7 @@
 using namespace ABI::Windows; // UI, System, Foundation namespaces
 using namespace Microsoft; // WRL namespace (ComPtr, possibly others)
 using namespace mozilla;
+using namespace mozilla::widget;
 using namespace mozilla::widget::winrt;
 using namespace mozilla::dom;
 
@@ -75,8 +79,8 @@ namespace {
 
     nsIntPoint touchPoint = MetroUtils::LogToPhys(position);
     nsIntPoint touchRadius;
-    touchRadius.x = MetroUtils::LogToPhys(contactRect.Width) / 2;
-    touchRadius.y = MetroUtils::LogToPhys(contactRect.Height) / 2;
+    touchRadius.x = WinUtils::LogToPhys(contactRect.Width) / 2;
+    touchRadius.y = WinUtils::LogToPhys(contactRect.Height) / 2;
     return new Touch(pointerId,
                      touchPoint,
                      // Rotation radius and angle.
@@ -122,8 +126,8 @@ namespace {
     props->get_Pressure(&pressure);
     nsIntPoint touchPoint = MetroUtils::LogToPhys(position);
     nsIntPoint touchRadius;
-    touchRadius.x = MetroUtils::LogToPhys(contactRect.Width) / 2;
-    touchRadius.y = MetroUtils::LogToPhys(contactRect.Height) / 2;
+    touchRadius.x = WinUtils::LogToPhys(contactRect.Width) / 2;
+    touchRadius.y = WinUtils::LogToPhys(contactRect.Height) / 2;
 
     // from Touch.Equals
     return touchPoint != aTouch->mRefPoint ||
@@ -207,11 +211,13 @@ namespace mozilla {
 namespace widget {
 namespace winrt {
 
+MetroInput::InputPrecisionLevel MetroInput::sCurrentInputLevel =
+  MetroInput::InputPrecisionLevel::LEVEL_IMPRECISE;
+
 MetroInput::MetroInput(MetroWidget* aWidget,
                        UI::Core::ICoreWindow* aWindow)
               : mWidget(aWidget),
                 mChromeHitTestCacheForTouch(false),
-                mCurrentInputLevel(LEVEL_IMPRECISE),
                 mWindow(aWindow)
 {
   LogFunction();
@@ -244,6 +250,11 @@ MetroInput::~MetroInput()
   UnregisterInputEvents();
 }
 
+/* static */
+bool MetroInput::IsInputModeImprecise()
+{
+  return sCurrentInputLevel == LEVEL_IMPRECISE;
+}
 
 /**
  * Tracks the current input level (precise/imprecise) and fires an observer
@@ -256,9 +267,9 @@ MetroInput::UpdateInputLevel(InputPrecisionLevel aInputLevel)
   if (aInputLevel == LEVEL_PRECISE && mTouches.Count() > 0) {
     return;
   }
-  if (mCurrentInputLevel != aInputLevel) {
-    mCurrentInputLevel = aInputLevel;
-    MetroUtils::FireObserver(mCurrentInputLevel == LEVEL_PRECISE ?
+  if (sCurrentInputLevel != aInputLevel) {
+    sCurrentInputLevel = aInputLevel;
+    MetroUtils::FireObserver(sCurrentInputLevel == LEVEL_PRECISE ?
                                "metro_precise_input" : "metro_imprecise_input");
   }
 }
@@ -497,7 +508,6 @@ MetroInput::OnPointerPressed(UI::Core::ICoreWindow* aSender,
     mCancelable = true;
     mCanceledIds.Clear();
   } else {
-    // Only the first touchstart can be canceled.
     mCancelable = false;
   }
 
@@ -642,11 +652,6 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
   if (ShouldDeliverInputToRecognizer()) {
     mGestureRecognizer->ProcessUpEvent(currentPoint.Get());
   }
-
-  // Make sure all gecko events are dispatched and the dom is up to date
-  // so that when ui automation comes in looking for focus info it gets
-  // the right information.
-  MetroAppShell::MarkEventQueueForPurge();
 
   return S_OK;
 }
@@ -952,13 +957,8 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
 #endif
 
   LayoutDeviceIntPoint refPoint;
-  bool hitTestChrome = TransformRefPoint(aPoint, refPoint);
-  if (!hitTestChrome) {
-    // Let APZC handle tap/doubletap detection for content.
-    return;
-  }
+  TransformRefPoint(aPoint, refPoint);
 
-  // send mousemove
   WidgetMouseEvent* mouseEvent =
     new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
@@ -967,7 +967,6 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
   mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   DispatchAsyncEventIgnoreStatus(mouseEvent);
 
-  // Send the mousedown
   mouseEvent =
     new WidgetMouseEvent(true, NS_MOUSE_BUTTON_DOWN, mWidget.Get(),
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
@@ -986,21 +985,10 @@ MetroInput::HandleTap(const Foundation::Point& aPoint, unsigned int aTapCount)
   mouseEvent->button = WidgetMouseEvent::buttonType::eLeftButton;
   DispatchAsyncEventIgnoreStatus(mouseEvent);
 
-  // Send one more mousemove to avoid getting a hover state.
-  // In the Metro environment for any application, a tap does not imply a
-  // mouse cursor move.  In desktop environment for any application a tap
-  // does imply a cursor move.
-  POINT point;
-  if (GetCursorPos(&point)) {
-    ScreenToClient((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW), &point);
-    mouseEvent =
-      new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
-                           WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
-    mouseEvent->refPoint = LayoutDeviceIntPoint(point.x, point.y);
-    mouseEvent->clickCount = aTapCount;
-    mouseEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-    DispatchAsyncEventIgnoreStatus(mouseEvent);
-  }
+  // Make sure all gecko events are dispatched and the dom is up to date
+  // so that when ui automation comes in looking for focus info it gets
+  // the right information.
+  MetroAppShell::MarkEventQueueForPurge();
 }
 
 void
@@ -1040,11 +1028,33 @@ MetroInput::DispatchAsyncEventIgnoreStatus(WidgetInputEvent* aEvent)
 void
 MetroInput::DeliverNextQueuedEventIgnoreStatus()
 {
-  WidgetGUIEvent* event =
+  nsAutoPtr<WidgetGUIEvent> event =
     static_cast<WidgetGUIEvent*>(mInputEventQueue.PopFront());
-  MOZ_ASSERT(event);
-  DispatchEventIgnoreStatus(event);
-  delete event;
+  MOZ_ASSERT(event.get());
+  DispatchEventIgnoreStatus(event.get());
+
+  // Let app shell know we've delivered that last input we wanted purged
+  // via a call to MarkEventQueueForPurge().
+  if (event->message == NS_MOUSE_BUTTON_UP) {
+    MetroAppShell::InputEventsDispatched();
+  }
+
+  // Clear :hover/:active states for mouse events generated by HandleTap
+  WidgetMouseEvent* mouseEvent = event.get()->AsMouseEvent();
+  if (!mouseEvent) {
+    return;
+  }
+  if (mouseEvent->message != NS_MOUSE_BUTTON_UP ||
+      mouseEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+    return;
+  }
+  nsCOMPtr<nsIPresShell> presShell = mWidget->GetPresShell();
+  if (presShell) {
+    nsEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
+    if (esm) {
+      esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
+    }
+  }
 }
 
 void
@@ -1153,9 +1163,20 @@ MetroInput::DeliverNextQueuedTouchEvent()
 
   // If this event is destined for chrome, deliver it directly there bypassing
   // the apz.
-  if (!mCancelable && mChromeHitTestCacheForTouch) {
+  if (mChromeHitTestCacheForTouch) {
     DUMP_TOUCH_IDS("DOM(1)", event);
     mWidget->DispatchEvent(event, status);
+    if (mCancelable) {
+      // Disable gesture based events (taps, swipes, rotation) if
+      // preventDefault is called on touchstart.
+      if (nsEventStatus_eConsumeNoDefault == status) {
+        mRecognizerWantsEvents = false;
+        mGestureRecognizer->CompleteGesture();
+      }
+      if (event->message == NS_TOUCH_MOVE) {
+        mCancelable = false;
+      }
+    }
     return;
   }
 
@@ -1167,7 +1188,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
     DUMP_TOUCH_IDS("APZC(1)", event);
     mWidget->ApzReceiveInputEvent(event, &mTargetAPZCGuid, &transformedEvent);
     DUMP_TOUCH_IDS("DOM(2)", event);
-    mWidget->DispatchEvent(mChromeHitTestCacheForTouch ? event : &transformedEvent, status);
+    mWidget->DispatchEvent(&transformedEvent, status);
     if (event->message == NS_TOUCH_START) {
       mContentConsumingTouch = (nsEventStatus_eConsumeNoDefault == status);
       // If we know content wants touch here, we can bail early on mCancelable
@@ -1210,9 +1231,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
   if (mContentConsumingTouch) {
     // Only translate if we're dealing with web content that's transformed
     // by the apzc.
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(3)", event);
     mWidget->DispatchEvent(event, status);
     return;
@@ -1228,9 +1247,7 @@ MetroInput::DeliverNextQueuedTouchEvent()
       DispatchTouchCancel(event);
       return;
     }
-    if (!mChromeHitTestCacheForTouch) {
-      TransformTouchEvent(event);
-    }
+    TransformTouchEvent(event);
     DUMP_TOUCH_IDS("DOM(4)", event);
     mWidget->DispatchEvent(event, status);
   }

@@ -158,14 +158,12 @@ public:
      * If this isn't implemented by a subclass, it will just perform
      * a dummy BeginUpdate/EndUpdate pair.
      */
-    virtual void Resize(const nsIntSize& aSize) {
+    virtual void Resize(const gfx::IntSize& aSize) {
         mSize = aSize;
         nsIntRegion r(nsIntRect(0, 0, aSize.width, aSize.height));
         BeginUpdate(r);
         EndUpdate();
     }
-    // Moz2D equivalent...
-    void Resize(const gfx::IntSize& aSize);
 
     /**
      * Mark this texture as having valid contents. Call this after modifying
@@ -185,41 +183,6 @@ public:
                               const gfx::IntPoint* aSrcOffset = nullptr);
 
     virtual void BindTexture(GLenum aTextureUnit) = 0;
-    virtual void ReleaseTexture() {}
-
-    void BindTextureAndApplyFilter(GLenum aTextureUnit) {
-        BindTexture(aTextureUnit);
-        ApplyFilter();
-    }
-
-    class ScopedBindTexture
-    {
-    public:
-        ScopedBindTexture(TextureImage *aTexture, GLenum aTextureUnit);
-
-        ~ScopedBindTexture()
-        {
-            if (mTexture) {
-                mTexture->ReleaseTexture();
-            }
-        }
-
-    protected:
-        TextureImage *mTexture;
-    };
-
-    class ScopedBindTextureAndApplyFilter
-        : public ScopedBindTexture
-    {
-    public:
-        ScopedBindTextureAndApplyFilter(TextureImage *aTexture, GLenum aTextureUnit) :
-          ScopedBindTexture(aTexture, aTextureUnit)
-        {
-            if (mTexture) {
-                mTexture->ApplyFilter();
-            }
-        }
-    };
 
     /**
      * Returns the image format of the texture. Only valid after a matching
@@ -246,12 +209,6 @@ public:
     GLenum GetWrapMode() const { return mWrapMode; }
 
     void SetFilter(GraphicsFilter aFilter) { mFilter = aFilter; }
-
-    /**
-     * Applies this TextureImage's filter, assuming that its texture is
-     * the currently bound texture.
-     */
-    virtual void ApplyFilter() = 0;
 
 protected:
     friend class GLContext;
@@ -281,7 +238,7 @@ protected:
 
     virtual gfx::IntRect GetSrcTileRect();
 
-    nsIntSize mSize;
+    gfx::IntSize mSize;
     GLenum mWrapMode;
     ContentType mContentType;
     ImageFormat mImageFormat;
@@ -343,11 +300,9 @@ public:
 
     virtual bool InUpdate() const { return !!mUpdateSurface; }
 
-    virtual void Resize(const nsIntSize& aSize);
+    virtual void Resize(const gfx::IntSize& aSize);
 
-    virtual void ApplyFilter();
 protected:
-
     GLuint mTexture;
     TextureState mTextureState;
     nsRefPtr<GLContext> mGLContext;
@@ -368,7 +323,7 @@ class TiledTextureImage
 {
 public:
     TiledTextureImage(GLContext* aGL,
-                      nsIntSize aSize,
+                      gfx::IntSize aSize,
                       TextureImage::ContentType,
                       TextureImage::Flags aFlags = TextureImage::NoFlags,
                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
@@ -377,7 +332,7 @@ public:
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
-    virtual void Resize(const nsIntSize& aSize);
+    virtual void Resize(const gfx::IntSize& aSize);
     virtual uint32_t GetTileCount();
     virtual void BeginTileIteration();
     virtual bool NextTile();
@@ -390,7 +345,6 @@ public:
     virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
     virtual bool InUpdate() const { return mInUpdate; }
     virtual void BindTexture(GLenum);
-    virtual void ApplyFilter();
 
 protected:
     virtual gfx::IntRect GetSrcTileRect();
@@ -400,7 +354,7 @@ protected:
     void* mIterationCallbackData;
     nsTArray< nsRefPtr<TextureImage> > mImages;
     bool mInUpdate;
-    nsIntSize mSize;
+    gfx::IntSize mSize;
     unsigned int mTileSize;
     unsigned int mRows, mColumns;
     GLContext* mGL;
@@ -419,18 +373,35 @@ protected:
  */
 already_AddRefed<TextureImage>
 CreateBasicTextureImage(GLContext* aGL,
-                        const nsIntSize& aSize,
+                        const gfx::IntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
                         TextureImage::Flags aFlags,
                         TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
 
+/**
+  * Return a valid, allocated TextureImage of |aSize| with
+  * |aContentType|.  If |aContentType| is COLOR, |aImageFormat| can be used
+  * to hint at the preferred RGB format, however it is not necessarily
+  * respected.  The TextureImage's texture is configured to use
+  * |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
+  * default, GL_LINEAR filtering.  Specify
+  * |aFlags=UseNearestFilter| for GL_NEAREST filtering. Specify
+  * |aFlags=NeedsYFlip| if the image is flipped. Return
+  * nullptr if creating the TextureImage fails.
+  *
+  * The returned TextureImage may only be used with this GLContext.
+  * Attempting to use the returned TextureImage after this
+  * GLContext is destroyed will result in undefined (and likely
+  * crashy) behavior.
+  */
 already_AddRefed<TextureImage>
-CreateBasicTextureImage(GLContext* aGL,
-                        const gfx::IntSize& aSize,
-                        TextureImage::ContentType aContentType,
-                        GLenum aWrapMode,
-                        TextureImage::Flags aFlags);
+CreateTextureImage(GLContext* gl,
+                   const gfx::IntSize& aSize,
+                   TextureImage::ContentType aContentType,
+                   GLenum aWrapMode,
+                   TextureImage::Flags aFlags = TextureImage::NoFlags,
+                   TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
 
 } // namespace gl
 } // namespace mozilla

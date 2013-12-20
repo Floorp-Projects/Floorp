@@ -83,6 +83,32 @@ XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function () {
   return ns.PhoneNumberUtils;
 });
 
+function SingleCall(options){
+  this.clientId = options.clientId;
+  this.callIndex = options.callIndex;
+  this.state = options.state;
+  this.number = options.number;
+  this.isOutgoing = options.isOutgoing;
+  this.isEmergency = options.isEmergency;
+  this.isConference = options.isConference;
+}
+SingleCall.prototype = {
+  clientId: null,
+  callIndex: null,
+  state: null,
+  number: null,
+  isOutgoing: false,
+  isEmergency: false,
+  isConference: false
+};
+
+function ConferenceCall(state){
+  this.state = state;
+}
+ConferenceCall.prototype = {
+  state: null
+};
+
 function TelephonyProvider() {
   this._numClients = gRadioInterfaceLayer.numRadioInterfaces;
   this._listeners = [];
@@ -162,14 +188,11 @@ TelephonyProvider.prototype = {
     }
   },
 
-  _matchActiveCall: function _matchActiveCall(aCall) {
-    if (this._activeCall &&
-        this._activeCall.callIndex == aCall.callIndex &&
-        this._activeCall.clientId == aCall.clientId) {
-      return true;
-    }
-
-    return false;
+  _matchActiveSingleCall: function _matchActiveSingleCall(aCall) {
+    return this._activeCall &&
+           this._activeCall instanceof SingleCall &&
+           this._activeCall.clientId === aCall.clientId &&
+           this._activeCall.callIndex === aCall.callIndex;
   },
 
   /**
@@ -179,17 +202,28 @@ TelephonyProvider.prototype = {
   _updateCallAudioState: function _updateCallAudioState(aCall,
                                                         aConferenceState) {
     if (aConferenceState === nsITelephonyProvider.CALL_STATE_CONNECTED) {
+      this._activeCall = new ConferenceCall(aConferenceState);
       gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
       if (this.speakerEnabled) {
         gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
                                      nsIAudioManager.FORCE_SPEAKER);
       }
+      if (DEBUG) {
+        debug("Active call, put audio system into PHONE_STATE_IN_CALL: " +
+              gAudioManager.phoneState);
+      }
       return;
     }
+
     if (aConferenceState === nsITelephonyProvider.CALL_STATE_UNKNOWN ||
         aConferenceState === nsITelephonyProvider.CALL_STATE_HELD) {
-      if (!this._activeCall) {
+      if (this._activeCall instanceof ConferenceCall) {
+        this._activeCall = null;
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_NORMAL;
+        if (DEBUG) {
+          debug("No active call, put audio system into PHONE_STATE_NORMAL: " +
+                gAudioManager.phoneState);
+        }
       }
       return;
     }
@@ -199,7 +233,7 @@ TelephonyProvider.prototype = {
     }
 
     if (aCall.isConference) {
-      if (this._matchActiveCall(aCall)) {
+      if (this._matchActiveSingleCall(aCall)) {
         this._activeCall = null;
       }
       return;
@@ -210,7 +244,7 @@ TelephonyProvider.prototype = {
       case nsITelephonyProvider.CALL_STATE_ALERTING:
       case nsITelephonyProvider.CALL_STATE_CONNECTED:
         aCall.isActive = true;
-        this._activeCall = aCall;
+        this._activeCall = new SingleCall(aCall);
         gAudioManager.phoneState = nsIAudioManager.PHONE_STATE_IN_CALL;
         if (this.speakerEnabled) {
           gAudioManager.setForceForUse(nsIAudioManager.USE_COMMUNICATION,
@@ -238,7 +272,7 @@ TelephonyProvider.prototype = {
       case nsITelephonyProvider.CALL_STATE_HELD: // Fall through...
       case nsITelephonyProvider.CALL_STATE_DISCONNECTED:
         aCall.isActive = false;
-        if (this._matchActiveCall(aCall)) {
+        if (this._matchActiveSingleCall(aCall)) {
           // Previously active call is not active now.
           this._activeCall = null;
         }
@@ -355,7 +389,7 @@ TelephonyProvider.prototype = {
       for (let call of response.calls) {
         call.clientId = aClientId;
         call.state = this._convertRILCallState(call.state);
-        call.isActive = this._matchActiveCall(call);
+        call.isActive = this._matchActiveSingleCall(call);
 
         aListener.enumerateCallState(call.clientId, call.callIndex,
                                      call.state, call.number,
@@ -494,16 +528,23 @@ TelephonyProvider.prototype = {
     };
     gSystemMessenger.broadcastMessage("telephony-call-ended", data);
 
+    aCall.clientId = aClientId;
     this._updateCallAudioState(aCall, null);
 
-    this._notifyAllListeners("callStateChanged", [aClientId,
-                                                  aCall.callIndex,
-                                                  aCall.state,
-                                                  aCall.number,
-                                                  aCall.isActive,
-                                                  aCall.isOutgoing,
-                                                  aCall.isEmergency,
-                                                  aCall.isConference]);
+    if (!aCall.failCause ||
+        aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
+      this._notifyAllListeners("callStateChanged", [aClientId,
+                                                    aCall.callIndex,
+                                                    aCall.state,
+                                                    aCall.number,
+                                                    aCall.isActive,
+                                                    aCall.isOutgoing,
+                                                    aCall.isEmergency,
+                                                    aCall.isConference]);
+      return;
+    }
+
+    this.notifyCallError(aClientId, aCall.callIndex, aCall.failCause);
   },
 
   /**
@@ -539,6 +580,7 @@ TelephonyProvider.prototype = {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
 
+    aCall.clientId = aClientId;
     this._updateCallAudioState(aCall, null);
 
     this._notifyAllListeners("callStateChanged", [aClientId,

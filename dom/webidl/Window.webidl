@@ -16,7 +16,6 @@
  */
 
 interface ApplicationCache;
-interface MediaQueryList;
 interface MozFrameRequestCallback;
 interface nsIDOMCrypto;
 interface Pkcs11;
@@ -26,11 +25,14 @@ typedef any Transferable;
 [Global]
 /*sealed*/ interface Window : EventTarget {
   // the current browsing context
-  [Unforgeable, Throws] readonly attribute WindowProxy window;
-  [Replaceable, Throws] readonly attribute WindowProxy self;
+  [Unforgeable, Throws,
+   CrossOriginReadable] readonly attribute WindowProxy window;
+  [Replaceable, Throws,
+   CrossOriginReadable] readonly attribute WindowProxy self;
   //[Unforgeable] readonly attribute Document? document;
   [Throws] attribute DOMString name; 
-  [PutForwards=href, Unforgeable, Throws] readonly attribute Location? location;
+  [PutForwards=href, Unforgeable, Throws,
+   CrossOriginReadable, CrossOriginWritable] readonly attribute Location? location;
   [Throws] readonly attribute History history;
   [Replaceable, Throws] readonly attribute BarProp locationbar;
   [Replaceable, Throws] readonly attribute BarProp menubar;
@@ -39,19 +41,19 @@ typedef any Transferable;
   [Replaceable, Throws] readonly attribute BarProp statusbar;
   [Replaceable, Throws] readonly attribute BarProp toolbar;
   [Throws] attribute DOMString status;
-  [Throws] void close();
-  [Throws] readonly attribute boolean closed;
+  [Throws, CrossOriginCallable] void close();
+  [Throws, CrossOriginReadable] readonly attribute boolean closed;
   [Throws] void stop();
-  [Throws] void focus();
-  [Throws] void blur();
+  [Throws, CrossOriginCallable] void focus();
+  [Throws, CrossOriginCallable] void blur();
 
   // other browsing contexts
-  [Replaceable, Throws] readonly attribute WindowProxy frames;
-  [Replaceable] readonly attribute unsigned long length;
-  [Unforgeable, Throws] readonly attribute WindowProxy top;
-  [Throws] attribute WindowProxy? opener;
+  [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy frames;
+  [Replaceable, CrossOriginReadable] readonly attribute unsigned long length;
+  [Unforgeable, Throws, CrossOriginReadable] readonly attribute WindowProxy top;
+  [Throws, CrossOriginReadable] attribute WindowProxy? opener;
   //[Throws] readonly attribute WindowProxy parent;
-  [Replaceable, Throws] readonly attribute WindowProxy? parent;
+  [Replaceable, Throws, CrossOriginReadable] readonly attribute WindowProxy? parent;
   [Throws] readonly attribute Element? frameElement;
   //[Throws] WindowProxy open(optional DOMString url = "about:blank", optional DOMString target = "_blank", optional DOMString features = "", optional boolean replace = false);
   [Throws] WindowProxy? open(optional DOMString url = "", optional DOMString target = "", optional DOMString features = "");
@@ -73,7 +75,7 @@ typedef any Transferable;
   //[Throws] any showModalDialog(DOMString url, optional any argument);
   [Throws] any showModalDialog(DOMString url, optional any argument, optional DOMString options = "");
 
-  [Throws] void postMessage(any message, DOMString targetOrigin, optional sequence<Transferable> transfer);
+  [Throws, CrossOriginCallable] void postMessage(any message, DOMString targetOrigin, optional sequence<Transferable> transfer);
 
   // also has obsolete members
 };
@@ -144,8 +146,8 @@ dictionary ScrollOptions {
 };
 
 partial interface Window {
-  //[Throws] MediaQueryList matchMedia(DOMString query);
-  [Throws] MediaQueryList? matchMedia(DOMString query);
+  //[Throws,NewObject] MediaQueryList matchMedia(DOMString query);
+  [Throws,NewObject] MediaQueryList? matchMedia(DOMString query);
   //[SameObject]
   [Throws] readonly attribute Screen screen;
 
@@ -333,6 +335,8 @@ partial interface Window {
                                                any... extraArguments);
 
   [Replaceable, Throws] readonly attribute object? content;
+
+  [ChromeOnly, Throws] readonly attribute object? __content;
 };
 
 Window implements TouchEventHandlers;

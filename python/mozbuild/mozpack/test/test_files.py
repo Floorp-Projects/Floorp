@@ -724,6 +724,48 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         self.do_match_test()
         self.do_finder_test(self.finder)
 
+    def test_ignored_dirs(self):
+        """Ignored directories should not have results returned."""
+        self.prepare_match_test()
+        self.add('fooz')
+
+        # Present to ensure prefix matching doesn't exclude.
+        self.add('foo/quxz')
+
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux'])
+
+        self.do_check('**', ['bar', 'foo/bar', 'foo/baz', 'foo/quxz', 'fooz'])
+        self.do_check('foo/*', ['foo/bar', 'foo/baz', 'foo/quxz'])
+        self.do_check('foo/**', ['foo/bar', 'foo/baz', 'foo/quxz'])
+        self.do_check('foo/qux/**', [])
+        self.do_check('foo/qux/*', [])
+        self.do_check('foo/qux/bar', [])
+        self.do_check('foo/quxz', ['foo/quxz'])
+        self.do_check('fooz', ['fooz'])
+
+    def test_ignored_files(self):
+        """Ignored files should not have results returned."""
+        self.prepare_match_test()
+
+        # Be sure prefix match doesn't get ignored.
+        self.add('barz')
+
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/bar', 'bar'])
+        self.do_check('**', ['barz', 'foo/baz', 'foo/qux/1', 'foo/qux/2/test',
+            'foo/qux/2/test2', 'foo/qux/bar'])
+        self.do_check('foo/**', ['foo/baz', 'foo/qux/1', 'foo/qux/2/test',
+            'foo/qux/2/test2', 'foo/qux/bar'])
+
+    def test_ignored_patterns(self):
+        """Ignore entries with patterns should be honored."""
+        self.prepare_match_test()
+
+        self.add('foo/quxz')
+
+        self.finder = FileFinder(self.tmpdir, ignore=['foo/qux/*'])
+        self.do_check('**', ['foo/bar', 'foo/baz', 'foo/quxz', 'bar'])
+        self.do_check('foo/**', ['foo/bar', 'foo/baz', 'foo/quxz'])
+
 
 class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):

@@ -95,18 +95,13 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
 
     MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
                aSourceSurface->Width()  == aDestSurface->Width() &&
-               aSourceSurface->Height() == aDestSurface->Height() &&
-               aSourceSurface->Stride() == aDestSurface->Stride(),
+               aSourceSurface->Height() == aDestSurface->Height(),
                "Source and destination surfaces don't have identical characteristics");
-
-    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-               "Source surface stride isn't tightly packed");
 
     // Only premultiply ARGB32
     if (aSourceSurface->Format() != gfxImageFormatARGB32) {
         if (aDestSurface != aSourceSurface) {
-            memcpy(aDestSurface->Data(), aSourceSurface->Data(),
-                   aSourceSurface->Stride() * aSourceSurface->Height());
+            aDestSurface->CopyFrom(aSourceSurface);
         }
         return;
     }
@@ -114,29 +109,33 @@ gfxUtils::UnpremultiplyImageSurface(gfxImageSurface *aSourceSurface,
     uint8_t *src = aSourceSurface->Data();
     uint8_t *dst = aDestSurface->Data();
 
-    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
-    for (uint32_t i = 0; i < dim; ++i) {
+    for (int32_t i = 0; i < aSourceSurface->Height(); ++i) {
+        uint8_t *srcRow = src + (i * aSourceSurface->Stride());
+        uint8_t *dstRow = dst + (i * aDestSurface->Stride());
+
+        for (int32_t j = 0; j < aSourceSurface->Width(); ++j) {
 #ifdef IS_LITTLE_ENDIAN
-        uint8_t b = *src++;
-        uint8_t g = *src++;
-        uint8_t r = *src++;
-        uint8_t a = *src++;
+          uint8_t b = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t a = *srcRow++;
 
-        *dst++ = UnpremultiplyValue(a, b);
-        *dst++ = UnpremultiplyValue(a, g);
-        *dst++ = UnpremultiplyValue(a, r);
-        *dst++ = a;
+          *dstRow++ = UnpremultiplyValue(a, b);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = a;
 #else
-        uint8_t a = *src++;
-        uint8_t r = *src++;
-        uint8_t g = *src++;
-        uint8_t b = *src++;
+          uint8_t a = *srcRow++;
+          uint8_t r = *srcRow++;
+          uint8_t g = *srcRow++;
+          uint8_t b = *srcRow++;
 
-        *dst++ = a;
-        *dst++ = UnpremultiplyValue(a, r);
-        *dst++ = UnpremultiplyValue(a, g);
-        *dst++ = UnpremultiplyValue(a, b);
+          *dstRow++ = a;
+          *dstRow++ = UnpremultiplyValue(a, r);
+          *dstRow++ = UnpremultiplyValue(a, g);
+          *dstRow++ = UnpremultiplyValue(a, b);
 #endif
+        }
     }
 }
 
@@ -525,7 +524,7 @@ ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion,
 }
 
 static TemporaryRef<Path>
-PathFromRegionInternal(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion,
+PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
                        bool aSnap)
 {
   Matrix mat = aTarget->GetTransform();
@@ -567,7 +566,7 @@ PathFromRegionInternal(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion,
 }
 
 static void
-ClipToRegionInternal(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion,
+ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
                      bool aSnap)
 {
   RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion, aSnap);
@@ -690,8 +689,8 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
                                          gfxIntSize& aSuggestedSize)
 {
-  gfx::YUVType yuvtype =
-    gfx::TypeFromSize(aData.mYSize.width,
+  YUVType yuvtype =
+    TypeFromSize(aData.mYSize.width,
                       aData.mYSize.height,
                       aData.mCbCrSize.width,
                       aData.mCbCrSize.height);
@@ -704,15 +703,15 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
   if (aSuggestedFormat == gfxImageFormatRGB16_565) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (prescale &&
-        !gfx::IsScaleYCbCrToRGB565Fast(aData.mPicX,
+        !IsScaleYCbCrToRGB565Fast(aData.mPicX,
                                        aData.mPicY,
                                        aData.mPicSize.width,
                                        aData.mPicSize.height,
                                        aSuggestedSize.width,
                                        aSuggestedSize.height,
                                        yuvtype,
-                                       gfx::FILTER_BILINEAR) &&
-        gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
+                                       FILTER_BILINEAR) &&
+        IsConvertYCbCrToRGB565Fast(aData.mPicX,
                                         aData.mPicY,
                                         aData.mPicSize.width,
                                         aData.mPicSize.height,
@@ -731,7 +730,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
   if (aSuggestedFormat == gfxImageFormatRGB24) {
     /* ScaleYCbCrToRGB32 does not support a picture offset, nor 4:4:4 data.
        See bugs 639415 and 640073. */
-    if (aData.mPicX != 0 || aData.mPicY != 0 || yuvtype == gfx::YV24)
+    if (aData.mPicX != 0 || aData.mPicY != 0 || yuvtype == YV24)
       prescale = false;
   }
   if (!prescale) {
@@ -752,8 +751,8 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
               aData.mCbCrSize.width == (aData.mYSize.width + 1) >> 1) &&
              (aData.mCbCrSize.height == aData.mYSize.height ||
               aData.mCbCrSize.height == (aData.mYSize.height + 1) >> 1));
-  gfx::YUVType yuvtype =
-    gfx::TypeFromSize(aData.mYSize.width,
+  YUVType yuvtype =
+    TypeFromSize(aData.mYSize.width,
                       aData.mYSize.height,
                       aData.mCbCrSize.width,
                       aData.mCbCrSize.height);
@@ -762,7 +761,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
   if (aDestSize != aData.mPicSize) {
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == gfxImageFormatRGB16_565) {
-      gfx::ScaleYCbCrToRGB565(aData.mYChannel,
+      ScaleYCbCrToRGB565(aData.mYChannel,
                               aData.mCbChannel,
                               aData.mCrChannel,
                               aDestBuffer,
@@ -776,10 +775,10 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                               aData.mCbCrStride,
                               aStride,
                               yuvtype,
-                              gfx::FILTER_BILINEAR);
+                              FILTER_BILINEAR);
     } else
 #endif
-      gfx::ScaleYCbCrToRGB32(aData.mYChannel,
+      ScaleYCbCrToRGB32(aData.mYChannel,
                              aData.mCbChannel,
                              aData.mCrChannel,
                              aDestBuffer,
@@ -791,12 +790,12 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                              aData.mCbCrStride,
                              aStride,
                              yuvtype,
-                             gfx::ROTATE_0,
-                             gfx::FILTER_BILINEAR);
+                             ROTATE_0,
+                             FILTER_BILINEAR);
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (aDestFormat == gfxImageFormatRGB16_565) {
-      gfx::ConvertYCbCrToRGB565(aData.mYChannel,
+      ConvertYCbCrToRGB565(aData.mYChannel,
                                 aData.mCbChannel,
                                 aData.mCrChannel,
                                 aDestBuffer,
@@ -810,7 +809,7 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                                 yuvtype);
     } else // aDestFormat != gfxImageFormatRGB16_565
 #endif
-      gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+      ConvertYCbCrToRGB32(aData.mYChannel,
                                aData.mCbChannel,
                                aData.mCrChannel,
                                aDestBuffer,

@@ -8,6 +8,7 @@
 
 #include "ImageContainer.h"
 #include "mozilla/gfx/MacIOSurface.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/layers/TextureClient.h"
 #include "gfxImageSurface.h"
 
@@ -21,7 +22,7 @@ public:
   void SetSurface(MacIOSurface* aSurface) { mSurface = aSurface; }
   MacIOSurface* GetSurface() { return mSurface; }
 
-  gfxIntSize GetSize() {
+  gfx::IntSize GetSize() {
     return gfxIntSize(mSurface->GetDevicePixelWidth(), mSurface->GetDevicePixelHeight());
   }
 

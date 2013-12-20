@@ -168,7 +168,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
 
     nsString unicodeMsg;
     unicodeMsg.AssignWithConversion(msg);
-    JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, (jschar*) unicodeMsg.get());
+    JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, unicodeMsg.get());
     NS_ENSURE_TRUE(jsMsgStr, NS_ERROR_OUT_OF_MEMORY);
 
     params[0] = BOOLEAN_TO_JSVAL(server);
@@ -461,16 +461,16 @@ nsHTTPIndex::OnIndexAvailable(nsIRequest* aRequest, nsISupports *aContext,
       rv = aIndex->GetType(&type);
       switch (type) {
       case nsIDirIndex::TYPE_UNKNOWN:
-        rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("UNKNOWN").get(), getter_AddRefs(lit));
+        rv = mDirRDF->GetLiteral(MOZ_UTF16("UNKNOWN"), getter_AddRefs(lit));
         break;
       case nsIDirIndex::TYPE_DIRECTORY:
-        rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("DIRECTORY").get(), getter_AddRefs(lit));
+        rv = mDirRDF->GetLiteral(MOZ_UTF16("DIRECTORY"), getter_AddRefs(lit));
         break;
       case nsIDirIndex::TYPE_FILE:
-        rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("FILE").get(), getter_AddRefs(lit));
+        rv = mDirRDF->GetLiteral(MOZ_UTF16("FILE"), getter_AddRefs(lit));
         break;
       case nsIDirIndex::TYPE_SYMLINK:
-        rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("SYMLINK").get(), getter_AddRefs(lit));
+        rv = mDirRDF->GetLiteral(MOZ_UTF16("SYMLINK"), getter_AddRefs(lit));
         break;
       }
       
@@ -588,9 +588,9 @@ nsHTTPIndex::CommonInit()
     mDirRDF->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IsContainer"),
                          getter_AddRefs(kNC_IsContainer));
 
-    rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
+    rv = mDirRDF->GetLiteral(MOZ_UTF16("true"), getter_AddRefs(kTrueLiteral));
     if (NS_FAILED(rv)) return(rv);
-    rv = mDirRDF->GetLiteral(NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral));
+    rv = mDirRDF->GetLiteral(MOZ_UTF16("false"), getter_AddRefs(kFalseLiteral));
     if (NS_FAILED(rv)) return(rv);
 
     rv = NS_NewISupportsArray(getter_AddRefs(mConnectionList));

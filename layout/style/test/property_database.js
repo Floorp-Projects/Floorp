@@ -1513,10 +1513,12 @@ var gCSSProperties = {
 		"radial-gradient(43px 50%, red, blue)",
 		"radial-gradient(50% 43px, red, blue)",
 		"radial-gradient(circle 43px, red, blue)",
+		"radial-gradient(43px circle, red, blue)",
 		"radial-gradient(ellipse 43px 43px, red, blue)",
 		"radial-gradient(ellipse 50% 50%, red, blue)",
 		"radial-gradient(ellipse 43px 50%, red, blue)",
 		"radial-gradient(ellipse 50% 43px, red, blue)",
+		"radial-gradient(50% 43px ellipse, red, blue)",
 
 		"radial-gradient(farthest-corner at top left, red, blue)",
 		"radial-gradient(ellipse closest-corner at 45px, red, blue)",
@@ -1817,6 +1819,14 @@ var gCSSProperties = {
 			"-moz-repeating-radial-gradient(to top left at 30% 40%, red, blue)",
 			"-moz-repeating-radial-gradient(ellipse at 45px closest-corner, red, blue)",
 			"-moz-repeating-radial-gradient(circle at 45px farthest-side, red, blue)",
+
+			"radial-gradient(circle 175px 20px, black, white)",
+			"radial-gradient(175px 20px circle, black, white)",
+			"radial-gradient(ellipse 175px, black, white)",
+			"radial-gradient(175px ellipse, black, white)",
+			"radial-gradient(50%, red, blue)",
+			"radial-gradient(circle 50%, red, blue)",
+			"radial-gradient(50% circle, red, blue)",
 
 			/* Valid only when prefixed */
 			"linear-gradient(top left, red, blue)",
@@ -2625,7 +2635,31 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "disc" ],
-		other_values: [ "circle", "decimal-leading-zero", "upper-alpha" ],
+		other_values: [ "none", "circle", "square",
+			"decimal", "decimal-leading-zero",
+			"lower-roman", "upper-roman", "lower-greek",
+			"lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
+			"hebrew", "armenian", "georgian",
+			"cjk-decimal", "cjk-ideographic",
+			"hiragana", "katakana", "hiragana-iroha", "katakana-iroha",
+			"japanese-informal", "japanese-formal", "korean-hangul-formal",
+			"korean-hanja-informal", "korean-hanja-formal",
+			"simp-chinese-informal", "simp-chinese-formal",
+			"trad-chinese-informal", "trad-chinese-formal",
+			"-moz-cjk-heavenly-stem", "-moz-cjk-earthly-branch",
+			"-moz-trad-chinese-informal", "-moz-trad-chinese-formal",
+			"-moz-simp-chinese-informal", "-moz-simp-chinese-formal",
+			"-moz-japanese-informal", "-moz-japanese-formal",
+			"-moz-arabic-indic", "-moz-persian", "-moz-urdu",
+			"-moz-devanagari", "-moz-gurmukhi", "-moz-gujarati",
+			"-moz-oriya", "-moz-kannada", "-moz-malayalam", "-moz-bengali",
+			"-moz-tamil", "-moz-telugu", "-moz-thai", "-moz-lao",
+			"-moz-myanmar", "-moz-khmer",
+			"-moz-hangul", "-moz-hangul-consonant",
+			"-moz-ethiopic-halehame", "-moz-ethiopic-numeric",
+			"-moz-ethiopic-halehame-am",
+			"-moz-ethiopic-halehame-ti-er", "-moz-ethiopic-halehame-ti-et"
+		],
 		invalid_values: []
 	},
 	"margin": {
@@ -3696,6 +3730,20 @@ var gCSSProperties = {
 		other_values: [ "non-scaling-stroke" ],
 		invalid_values: []
 	},
+	"align-content": {
+		domProp: "alignContent",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch" ],
+		other_values: [
+			"flex-start",
+			"flex-end",
+			"center",
+			"space-between",
+			"space-around"
+		],
+		invalid_values: [ "abc", "30px", "0", "auto" ]
+	},
 	"align-items": {
 		domProp: "alignItems",
 		inherited: false,
@@ -3828,6 +3876,46 @@ var gCSSProperties = {
 		other_values: [ "row-reverse", "column", "column-reverse" ],
 		invalid_values: [ "10px", "30%", "justify", "column wrap" ]
 	},
+	"flex-flow": {
+		domProp: "flexFlow",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [
+			"flex-direction",
+			"flex-wrap"
+		],
+		initial_values: [ "row nowrap", "nowrap row", "row", "nowrap" ],
+		other_values: [
+			// only specifying one property:
+			"column",
+			"wrap",
+			"wrap-reverse",
+			// specifying both properties, 'flex-direction' first:
+			"row wrap",
+			"row wrap-reverse",
+			"column wrap",
+			"column wrap-reverse",
+			// specifying both properties, 'flex-wrap' first:
+			"wrap row",
+			"wrap column",
+			"wrap-reverse row",
+			"wrap-reverse column",
+		],
+		invalid_values: [
+			// specifying flex-direction twice (invalid):
+			"row column",
+			"row column nowrap",
+			"row nowrap column",
+			"nowrap row column",
+			// specifying flex-wrap twice (invalid):
+			"nowrap wrap-reverse",
+			"nowrap wrap-reverse row",
+			"nowrap row wrap-reverse",
+			"row nowrap wrap-reverse",
+			// Invalid data-type / invalid keyword type:
+			"1px", "5%", "justify", "none"
+		]
+	},
 	"flex-grow": {
 		domProp: "flexGrow",
 		inherited: false,
@@ -3843,6 +3931,14 @@ var gCSSProperties = {
 		initial_values: [ "1" ],
 		other_values: [ "3", "0", "0.0", "2.5", "123" ],
 		invalid_values: [ "0px", "-5", "1%", "3em", "stretch", "auto" ]
+	},
+	"flex-wrap": {
+		domProp: "flexWrap",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "nowrap" ],
+		other_values: [ "wrap", "wrap-reverse" ],
+		invalid_values: [ "10px", "30%", "justify", "column wrap", "auto" ]
 	},
 	"order": {
 		domProp: "order",

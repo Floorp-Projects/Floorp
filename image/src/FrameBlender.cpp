@@ -19,6 +19,7 @@ namespace image {
 FrameBlender::FrameBlender(FrameSequence* aSequenceToUse /* = nullptr */)
  : mFrames(aSequenceToUse)
  , mAnim(nullptr)
+ , mLoopCount(-1)
 {
   if (!mFrames) {
     mFrames = new FrameSequence();
@@ -64,6 +65,40 @@ uint32_t
 FrameBlender::GetNumFrames() const
 {
   return mFrames->GetNumFrames();
+}
+
+int32_t
+FrameBlender::GetTimeoutForFrame(uint32_t framenum) const
+{
+  const int32_t timeout = RawGetFrame(framenum)->GetRawTimeout();
+  // Ensure a minimal time between updates so we don't throttle the UI thread.
+  // consider 0 == unspecified and make it fast but not too fast.  Unless we have
+  // a single loop GIF. See bug 890743, bug 125137, bug 139677, and bug 207059.
+  // The behavior of recent IE and Opera versions seems to be:
+  // IE 6/Win:
+  //   10 - 50ms go 100ms
+  //   >50ms go correct speed
+  // Opera 7 final/Win:
+  //   10ms goes 100ms
+  //   >10ms go correct speed
+  // It seems that there are broken tools out there that set a 0ms or 10ms
+  // timeout when they really want a "default" one.  So munge values in that
+  // range.
+  if (timeout >= 0 && timeout <= 10 && mLoopCount != 0)
+    return 100;
+  return timeout;
+}
+
+void
+FrameBlender::SetLoopCount(int32_t aLoopCount)
+{
+  mLoopCount = aLoopCount;
+}
+
+int32_t
+FrameBlender::GetLoopCount() const
+{
+  return mLoopCount;
 }
 
 void
@@ -381,8 +416,8 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
 
   // Set timeout of CompositeFrame to timeout of frame we just composed
   // Bug 177948
-  int32_t timeout = nextFrame->GetTimeout();
-  mAnim->compositingFrame->SetTimeout(timeout);
+  int32_t timeout = nextFrame->GetRawTimeout();
+  mAnim->compositingFrame->SetRawTimeout(timeout);
 
   // Tell the image that it is fully 'downloaded'.
   nsresult rv = mAnim->compositingFrame->ImageUpdated(mAnim->compositingFrame->GetRect());

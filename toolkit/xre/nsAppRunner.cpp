@@ -21,11 +21,12 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/Util.h"
 
 #include "nsAppRunner.h"
 #include "mozilla/AppData.h"
@@ -127,6 +128,10 @@
 #include "nsXREDirProvider.h"
 #include "nsToolkitCompsCID.h"
 
+#if defined(XP_WIN) && defined(MOZ_METRO)
+#include "updatehelper.h"
+#endif
+
 #include "nsINIParser.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/StartupTimeline.h"
@@ -149,8 +154,8 @@
 #include <process.h>
 #include <shlobj.h>
 #include "nsThreadUtils.h"
-#include <comutil.h>
-#include <Wbemidl.h>
+#include <comdef.h>
+#include <wbemidl.h>
 #endif
 
 #ifdef XP_MACOSX
@@ -189,7 +194,6 @@
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
-#include "mozilla/Preferences.h"
 #endif
 
 #include "base/command_line.h"
@@ -570,6 +574,22 @@ ProcessDDE(nsINativeAppSupport* aNative, bool aWait)
 }
 #endif
 
+/**
+ * Determines if there is support for showing the profile manager
+ *
+ * @return true in all environments except for Windows Metro
+*/
+static bool
+CanShowProfileManager()
+{
+#if defined(XP_WIN)
+  return XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop;
+#else
+  return true;
+#endif
+}
+
+
 bool gSafeMode = false;
 
 /**
@@ -782,6 +802,16 @@ nsXULAppInfo::GetProcessType(uint32_t* aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = XRE_GetProcessType();
+  return NS_OK;
+}
+
+static bool gBrowserTabsRemote = false;
+static bool gBrowserTabsRemoteInitialized = false;
+
+NS_IMETHODIMP
+nsXULAppInfo::GetBrowserTabsRemote(bool* aResult)
+{
+  *aResult = BrowserTabsRemote();
   return NS_OK;
 }
 
@@ -1749,7 +1779,7 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
                              params, 2, getter_Copies(killMessage));
 
     nsXPIDLString killTitle;
-    sb->FormatStringFromName(NS_LITERAL_STRING("restartTitle").get(),
+    sb->FormatStringFromName(MOZ_UTF16("restartTitle"),
                              params, 1, getter_Copies(killTitle));
 
     if (!killMessage || !killTitle)
@@ -1835,7 +1865,7 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
     sb->FormatStringFromName(kMissing, params, 2, getter_Copies(missingMessage));
   
     nsXPIDLString missingTitle;
-    sb->FormatStringFromName(NS_LITERAL_STRING("profileMissingTitle").get(),
+    sb->FormatStringFromName(MOZ_UTF16("profileMissingTitle"),
                              params, 1, getter_Copies(missingTitle));
   
     if (missingMessage && missingTitle) {
@@ -1879,6 +1909,10 @@ static nsresult
 ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                    nsINativeAppSupport* aNative)
 {
+  if (!CanShowProfileManager()) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsresult rv;
 
   nsCOMPtr<nsIFile> profD, profLD;
@@ -2229,7 +2263,10 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       PR_fprintf(PR_STDERR, "Error: argument -p is invalid when argument -osint is specified\n");
       return NS_ERROR_FAILURE;
     }
-    return ShowProfileManager(aProfileSvc, aNative);
+
+    if (CanShowProfileManager()) {
+      return ShowProfileManager(aProfileSvc, aNative);
+    }
   }
   if (ar) {
     ar = CheckArg("osint");
@@ -2257,14 +2294,16 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
 
-    return ShowProfileManager(aProfileSvc, aNative);
+    if (CanShowProfileManager()) {
+      return ShowProfileManager(aProfileSvc, aNative);
+    }
   }
 
   ar = CheckArg("profilemanager", true);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -profilemanager is invalid when argument -osint is specified\n");
     return NS_ERROR_FAILURE;
-  } else if (ar == ARG_FOUND) {
+  } else if (ar == ARG_FOUND && CanShowProfileManager()) {
     return ShowProfileManager(aProfileSvc, aNative);
   }
 
@@ -2289,8 +2328,9 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
   }
 
   bool useDefault = true;
-  if (count > 1)
+  if (count > 1 && CanShowProfileManager()) {
     aProfileSvc->GetStartWithLastProfile(&useDefault);
+  }
 
   if (useDefault) {
     nsCOMPtr<nsIToolkitProfile> profile;
@@ -2343,6 +2383,10 @@ SelectProfile(nsIProfileLock* *aResult, nsIToolkitProfileService* aProfileSvc, n
 
       return ProfileLockedDialog(profile, unlocker, aNative, aResult);
     }
+  }
+
+  if (!CanShowProfileManager()) {
+    return NS_ERROR_FAILURE;
   }
 
   return ShowProfileManager(aProfileSvc, aNative);
@@ -2480,7 +2524,7 @@ WriteVersion(nsIFile* aProfileDir, const nsCString& aVersion,
     PR_Write(fd, appDir.get(), appDir.Length());
   }
 
-  static const char kInvalidationHeader[] = "InvalidateCaches=1" NS_LINEBREAK;
+  static const char kInvalidationHeader[] = NS_LINEBREAK "InvalidateCaches=1";
   if (invalidateCache)
     PR_Write(fd, kInvalidationHeader, sizeof(kInvalidationHeader) - 1);
 
@@ -3860,6 +3904,11 @@ XREMain::XRE_mainRun()
   mDirProvider.DoStartup();
 
 #ifdef MOZ_CRASHREPORTER
+  if (BrowserTabsRemote()) {
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("DOMIPCEnabled"),
+                                       NS_LITERAL_CSTRING("1"));
+  }
+
   nsCString userAgentLocale;
   if (NS_SUCCEEDED(Preferences::GetCString("general.useragent.locale", &userAgentLocale))) {
     CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("useragent_locale"), userAgentLocale);
@@ -4047,7 +4096,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   // Check for an application initiated restart.  This is one that
   // corresponds to nsIAppStartup.quit(eRestart)
-  if (rv == NS_SUCCESS_RESTART_APP) {
+  if (rv == NS_SUCCESS_RESTART_APP || rv == NS_SUCCESS_RESTART_METRO_APP) {
     appInitiatedRestart = true;
 
     // We have an application restart don't do any shutdown checks here
@@ -4089,7 +4138,15 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     MOZ_gdk_display_close(mGdkDisplay);
 #endif
 
-    rv = LaunchChild(mNativeApp, true);
+#if defined(MOZ_METRO) && defined(XP_WIN)
+    if (rv == NS_SUCCESS_RESTART_METRO_APP) {
+      LaunchDefaultMetroBrowser();
+      rv = NS_OK;
+    } else
+#endif
+    {
+      rv = LaunchChild(mNativeApp, true);
+    }
 
 #ifdef MOZ_CRASHREPORTER
     if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
@@ -4180,6 +4237,36 @@ public:
   HRESULT mResult;
 };
 
+#ifndef AHE_TYPE
+enum AHE_TYPE {
+  AHE_DESKTOP = 0,
+  AHE_IMMERSIVE = 1
+};
+#endif
+
+/*
+ * The Windows launcher uses this value to decide what front end ui
+ * to launch. We always launch the same ui unless the user
+ * specifically asks to switch. Update the value on every startup
+ * based on the environment requested.
+ */
+void
+SetLastWinRunType(AHE_TYPE aType)
+{
+  HKEY key;
+  LONG result = RegOpenKeyExW(HKEY_CURRENT_USER,
+                              L"SOFTWARE\\Mozilla\\Firefox",
+                              0, KEY_WRITE, &key);
+  if (result != ERROR_SUCCESS) {
+    return;
+  }
+  DWORD value = (DWORD)aType;
+  result = RegSetValueEx(key, L"MetroLastAHE", 0, REG_DWORD,
+                         reinterpret_cast<LPBYTE>(&value),
+                         sizeof(DWORD));
+  RegCloseKey(key);
+}
+
 int
 XRE_mainMetro(int argc, char* argv[], const nsXREAppData* aAppData)
 {
@@ -4247,6 +4334,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData, uint32_t aFlags)
 #else
   if (aFlags == XRE_MAIN_FLAG_USE_METRO) {
     SetWindowsEnvironment(WindowsEnvironmentType_Metro);
+    SetLastWinRunType(AHE_IMMERSIVE);
+  } else {
+    SetLastWinRunType(AHE_DESKTOP);
   }
 
   // Desktop
@@ -4356,6 +4446,17 @@ GeckoProcessType
 XRE_GetProcessType()
 {
   return mozilla::startup::sChildProcessType;
+}
+
+bool
+mozilla::BrowserTabsRemote()
+{
+  if (!gBrowserTabsRemoteInitialized) {
+    gBrowserTabsRemote = Preferences::GetBool("browser.tabs.remote", false);
+    gBrowserTabsRemoteInitialized = true;
+  }
+
+  return gBrowserTabsRemote;
 }
 
 void

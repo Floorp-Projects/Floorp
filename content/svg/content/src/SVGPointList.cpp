@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "SVGPointList.h"
 #include "nsCharSeparatedTokenizer.h"
@@ -33,7 +33,7 @@ SVGPointList::GetValueAsString(nsAString& aValue) const
     // Would like to use aValue.AppendPrintf("%f,%f", item.mX, item.mY),
     // but it's not possible to always avoid trailing zeros.
     nsTextFormatter::snprintf(buf, ArrayLength(buf),
-                              NS_LITERAL_STRING("%g,%g").get(),
+                              MOZ_UTF16("%g,%g"),
                               double(mItems[i].mX), double(mItems[i].mY));
     // We ignore OOM, since it's not useful for us to return an error.
     aValue.Append(buf);

@@ -50,6 +50,13 @@ public:
   virtual void HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers) = 0;
 
   /**
+   * Requests handling of releasing a long tap. |aPoint| is in CSS pixels,
+   * relative to the current scroll offset. HandleLongTapUp will always be
+   * preceeded by HandleLongTap
+   */
+  virtual void HandleLongTapUp(const CSSIntPoint& aPoint, int32_t aModifiers) = 0;
+
+  /**
    * Requests sending a mozbrowserasyncscroll domevent to embedder.
    * |aContentRect| is in CSS pixels, relative to the current cssPage.
    * |aScrollableSize| is the current content width/height in CSS pixels.
@@ -81,8 +88,8 @@ public:
    * the apzc is modifying the view, including panning, zooming, and
    * fling.
    */
-  virtual void NotifyTransformBegin() {}
-  virtual void NotifyTransformEnd() {}
+  virtual void NotifyTransformBegin(const ScrollableLayerGuid& aGuid) {}
+  virtual void NotifyTransformEnd(const ScrollableLayerGuid& aGuid) {}
 
   GeckoContentController() {}
   virtual ~GeckoContentController() {}

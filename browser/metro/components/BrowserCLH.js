@@ -61,7 +61,7 @@ function needHomepageOverride() {
   if (savedmstone == "ignore")
     return "none";
 
-#expand    let ourmstone = "__MOZ_APP_VERSION__";
+  let ourmstone = Services.appinfo.platformVersion;
 
   if (ourmstone != savedmstone) {
     Services.prefs.setCharPref("browser.startup.homepage_override.mstone", ourmstone);
@@ -73,7 +73,7 @@ function needHomepageOverride() {
 }
 
 function getHomePage() {
-  let url = "about:start";
+  let url = "about:newtab";
   try {
     url = Services.prefs.getComplexValue("browser.startup.homepage", Ci.nsIPrefLocalizedString).data;
   } catch (e) { }
@@ -221,6 +221,11 @@ BrowserCLH.prototype = {
       if (!browserWin) {
         // Default to the saved homepage
         let defaultURL = getHomePage();
+
+        // Show page for first run or upgrade.
+        if (needHomepageOverride() == "new profile") {
+          defaultURL = 'about:newtab?firstrun';
+        }
 
         // Override the default if we have a URL passed on command line
         if (uris.length > 0) {

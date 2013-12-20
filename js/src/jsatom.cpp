@@ -10,8 +10,8 @@
 
 #include "jsatominlines.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/RangedPtr.h"
-#include "mozilla/Util.h"
 
 #include <string.h>
 
@@ -391,7 +391,7 @@ js::AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length, Inter
 }
 
 bool
-js::IndexToIdSlow(ExclusiveContext *cx, uint32_t index, jsid *idp)
+js::IndexToIdSlow(ExclusiveContext *cx, uint32_t index, MutableHandleId idp)
 {
     JS_ASSERT(index > JSID_INT_MAX);
 
@@ -403,7 +403,7 @@ js::IndexToIdSlow(ExclusiveContext *cx, uint32_t index, jsid *idp)
     if (!atom)
         return false;
 
-    *idp = JSID_FROM_BITS((size_t)atom);
+    idp.set(JSID_FROM_BITS((size_t)atom));
     return true;
 }
 

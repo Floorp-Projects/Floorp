@@ -24,7 +24,7 @@ MachMessageSource::MachMessageSource(mach_port_t port,
                               NULL));
 
   if (cf_mach_port_ref.get() == NULL) {
-   LOG(WARNING) << "CFMachPortCreate failed";
+   CHROMIUM_LOG(WARNING) << "CFMachPortCreate failed";
    *success = false;
    return;
   }
@@ -36,7 +36,7 @@ MachMessageSource::MachMessageSource(mach_port_t port,
                                    0));
 
   if (machport_runloop_ref_.get() == NULL) {
-   LOG(WARNING) << "CFMachPortCreateRunLoopSource failed";
+   CHROMIUM_LOG(WARNING) << "CFMachPortCreateRunLoopSource failed";
    *success = false;
    return;
   }

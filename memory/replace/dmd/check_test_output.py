@@ -29,7 +29,7 @@ def main():
     # Arguments
 
     if (len(sys.argv) != 3):
-        print("usage:", sys.argv[0], "<srcdir> <test-output>")
+        print("usage:", sys.argv[0], "<topsrcdir> <test.dmd>")
         sys.exit(1)
 
     srcdir = sys.argv[1]
@@ -62,38 +62,38 @@ def main():
 
     # Filter output
 
-    # In stack trace records we filter out all stack frames that contain a
-    # function whose name doesn't begin with "RunTestMode".  And the remaining
-    # ones have their line numbers omitted, unfortunately, because they are
-    # often off by one or two and this can vary between builds (e.g. debug vs
-    # non-debug).
+    # In stack trace records we filter out most stack frames.  The only thing
+    # we leave behind is a "DMD.cpp" entry if we see one or more frames that
+    # have DMD.cpp in them.  There is simply too much variation to do anything
+    # better than that.
     #
-    # As for stack frame records, we complete eliminate all those that contain
-    # a function whose name doesn't begin with "RunTestMode", because such
-    # stack frame records are highly dependent on the exact forms of stack
-    # traces.
+    # As for stack frame records, alas, we filter them out entirely because
+    # they have even more variation.
 
     print("filtering output to", filtered_name)
 
     with open(fixed_name, "r") as fin, \
          open(filtered_name, "w") as fout:
 
-        test_frame_re = re.compile(r".*(RunTestMode\w*).*(DMD.cpp)")
+        test_frame_re = re.compile(r".*(DMD.cpp)")
 
         for line in fin:
             if re.match(r" (Allocated at|Reported( again)? at)", line):
                 # It's a stack trace record.
                 print(line, end='', file=fout)
 
-                # Filter the stack trace -- only show RunTestMode* frames.
+                # Filter the stack trace -- print a single line if we see one
+                # or more frames involving DMD.cpp.
+                seen_DMD_frame = False
                 for frame in fin:
                     if re.match(r"   ", frame):
                         m = test_frame_re.match(frame)
                         if m:
-                            print("   ...", m.group(1), "...", m.group(2),
-                                  file=fout)
+                            seen_DMD_frame = True
                     else:
                         # We're past the stack trace.
+                        if seen_DMD_frame:
+                            print("   ... DMD.cpp", file=fout)
                         print(frame, end='', file=fout)
                         break
 
@@ -103,22 +103,11 @@ def main():
                 line2 = fin.next()
                 line3 = fin.next()
                 line4 = fin.next()
-                frame = fin.next()
+                line5 = fin.next()
                 line6 = fin.next()
-                m = test_frame_re.match(frame)
-                if m:
-                    # This is a stack frame record from RunTestMode* -- print
-                    # it, obscuring record numbers (which vary unpredictably).
-                    print(re.sub(r"record \d+ of \d+", "record M of N", line),
-                          end='', file=fout)
-                    print(line2, end='', file=fout)
-                    print(line3, end='', file=fout)
-                    print(line4, end='', file=fout)
-                    print("   ...", m.group(1), "...", m.group(2), file=fout)
-                    print(line6, end='', file=fout)
 
             else:
-                # Some line that needs no special handling.  Copy it through.
+                # A line that needs no special handling.  Copy it through.
                 print(line, end='', file=fout)
 
     # Compare with expected output

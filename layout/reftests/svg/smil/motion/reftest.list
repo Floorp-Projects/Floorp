@@ -3,6 +3,7 @@
 
 skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-by-1.svg      lime.svg # bug 773482
 skip-if(B2G) random-if(Android&&AndroidVersion>=15) == animateMotion-by-2.svg      lime.svg # bug 773482
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,800) == animateMotion-flattening-1.svg lime.svg # bug 951541
 skip-if(B2G) == animateMotion-from-to-1.svg lime.svg # bug 773482
 == animateMotion-indefinite-to-1.svg lime.svg
 == animateMotion-indefinite-to-2.svg lime.svg

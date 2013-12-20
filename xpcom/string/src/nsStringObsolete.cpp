@@ -871,7 +871,7 @@ nsString::Find( const nsAFlatString& aString, int32_t aOffset, int32_t aCount ) 
     // this method changes the meaning of aOffset and aCount:
     Find_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
 
-    int32_t result = FindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), false);
+    int32_t result = FindSubstring(mData + aOffset, aCount, static_cast<const char16_t*>(aString.get()), aString.Length(), false);
     if (result != kNotFound)
       result += aOffset;
     return result;
@@ -889,7 +889,7 @@ nsString::RFind( const nsAFlatString& aString, int32_t aOffset, int32_t aCount )
     // this method changes the meaning of aOffset and aCount:
     RFind_ComputeSearchRange(mLength, aString.Length(), aOffset, aCount);
 
-    int32_t result = RFindSubstring(mData + aOffset, aCount, aString.get(), aString.Length(), false);
+    int32_t result = RFindSubstring(mData + aOffset, aCount, static_cast<const char16_t*>(aString.get()), aString.Length(), false);
     if (result != kNotFound)
       result += aOffset;
     return result;
