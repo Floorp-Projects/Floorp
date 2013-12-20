@@ -366,7 +366,7 @@ let TabStateInternal = {
       if (key != "storage" || includePrivateData) {
         tabData[key] = data[key];
       } else {
-        tabData.storage = {};
+        let storage = {};
         let isPinned = tab.pinned;
 
         // If we're not allowed to include private data, let's filter out hosts
@@ -374,8 +374,12 @@ let TabStateInternal = {
         for (let host of Object.keys(data.storage)) {
           let isHttps = host.startsWith("https:");
           if (PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
-            tabData.storage[host] = data.storage[host];
+            storage[host] = data.storage[host];
           }
+        }
+
+        if (Object.keys(storage).length) {
+          tabData.storage = storage;
         }
       }
     }
