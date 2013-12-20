@@ -838,7 +838,3 @@ pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
 
 // Enable Web Speech synthesis API
 pref("media.webspeech.synth.enabled", true);
-
-// Downloads API
-pref("dom.mozDownloads.enabled", true);
-pref("dom.downloads.max_retention_days", 7);
