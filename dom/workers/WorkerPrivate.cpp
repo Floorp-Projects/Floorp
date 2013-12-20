@@ -5706,12 +5706,6 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
 
   nsRefPtr<MessagePort> port = new MessagePort(this, aMessagePortSerial);
 
-  JS::Rooted<JS::Value> jsPort(aCx);
-  if (!WrapNewBindingObject(aCx, jsGlobal, port, &jsPort)) {
-    MOZ_ASSERT(JS_IsExceptionPending(aCx));
-    return false;
-  }
-
   GlobalObject globalObject(aCx, jsGlobal);
   if (globalObject.Failed()) {
     return false;
@@ -5720,7 +5714,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
   RootedDictionary<MessageEventInit> init(aCx);
   init.mBubbles = false;
   init.mCancelable = false;
-  init.mSource = &jsPort.toObject();
+  init.mSource.SetValue().SetAsMessagePort() = port;
 
   ErrorResult rv;
 
