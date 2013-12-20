@@ -378,8 +378,8 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  mSize = ToIntSize(yuvDeserializer.GetYSize());
-  IntSize cbCrSize = ToIntSize(yuvDeserializer.GetCbCrSize());
+  mSize = yuvDeserializer.GetYSize();
+  IntSize cbCrSize = yuvDeserializer.GetCbCrSize();
   mStereoMode = yuvDeserializer.GetStereoMode();
 
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();

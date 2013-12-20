@@ -488,9 +488,9 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
 
-  gfx::IntSize gfxCbCrSize = gfx::ToIntSize(yuvDeserializer.GetCbCrSize());
+  gfx::IntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
 
-  gfx::IntSize size = gfx::ToIntSize(yuvDeserializer.GetYSize());
+  gfx::IntSize size = yuvDeserializer.GetYSize();
 
   D3D11_SUBRESOURCE_DATA initData;
   initData.pSysMem = yuvDeserializer.GetYData();

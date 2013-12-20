@@ -9,7 +9,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint8_t, uint32_t
 #include "ImageTypes.h"                 // for StereoMode
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
 #include "mozilla/RefPtr.h"             // for TemporaryRef
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -58,12 +57,12 @@ public:
   /**
    * Returns the dimensions of the Y Channel.
    */
-  gfxIntSize GetYSize();
+  gfx::IntSize GetYSize();
 
   /**
    * Returns the dimensions of the Cb and Cr Channel.
    */
-  gfxIntSize GetCbCrSize();
+  gfx::IntSize GetCbCrSize();
 
   /**
    * Stereo mode for the image.
@@ -105,8 +104,6 @@ public:
    */
   static size_t ComputeMinBufferSize(const gfx::IntSize& aYSize,
                                      const gfx::IntSize& aCbCrSize);
-  static size_t ComputeMinBufferSize(const gfxIntSize& aYSize,
-                                     const gfxIntSize& aCbCrSize);
   static size_t ComputeMinBufferSize(uint32_t aSize);
 
   /**
@@ -123,14 +120,10 @@ public:
   void InitializeBufferInfo(const gfx::IntSize& aYSize,
                             const gfx::IntSize& aCbCrSize,
                             StereoMode aStereoMode);
-  void InitializeBufferInfo(const gfxIntSize& aYSize,
-                            const gfxIntSize& aCbCrSize,
-                            StereoMode aStereoMode);
-
   bool CopyData(const uint8_t* aYData,
                 const uint8_t* aCbData, const uint8_t* aCrData,
-                gfxIntSize aYSize, uint32_t aYStride,
-                gfxIntSize aCbCrSize, uint32_t aCbCrStride,
+                gfx::IntSize aYSize, uint32_t aYStride,
+                gfx::IntSize aCbCrSize, uint32_t aCbCrStride,
                 uint32_t aYSkip, uint32_t aCbCrSkip);
 };
 
