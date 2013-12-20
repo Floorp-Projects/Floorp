@@ -4719,22 +4719,26 @@ nsSVGTextFrame2::GetTextPath(nsIFrame* aTextPathFrame)
 {
   nsIFrame *pathFrame = GetTextPathPathFrame(aTextPathFrame);
 
-  if (pathFrame) {
-    nsSVGPathGeometryElement *element =
-      static_cast<nsSVGPathGeometryElement*>(pathFrame->GetContent());
-
-    RefPtr<Path> path = element->GetPathForLengthOrPositionMeasuring();
-
-    gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
-    if (!matrix.IsIdentity()) {
-      RefPtr<PathBuilder> builder =
-        path->TransformedCopyToBuilder(ToMatrix(matrix));
-      path = builder->Finish();
-    }
-
-    return path.forget();
+  if (!pathFrame) {
+    return nullptr;
   }
-  return nullptr;
+
+  nsSVGPathGeometryElement *element =
+    static_cast<nsSVGPathGeometryElement*>(pathFrame->GetContent());
+
+  RefPtr<Path> path = element->GetPathForLengthOrPositionMeasuring();
+  if (!path) {
+    return nullptr;
+  }
+
+  gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
+  if (!matrix.IsIdentity()) {
+    RefPtr<PathBuilder> builder =
+      path->TransformedCopyToBuilder(ToMatrix(matrix));
+    path = builder->Finish();
+  }
+
+  return path.forget();
 }
 
 gfxFloat
