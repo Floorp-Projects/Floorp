@@ -43,6 +43,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathAbs(callInfo);
     if (native == js::math_floor)
         return inlineMathFloor(callInfo);
+    if (native == js::math_ceil)
+        return inlineMathCeil(callInfo);
     if (native == js::math_round)
         return inlineMathRound(callInfo);
     if (native == js_math_sqrt)
@@ -246,8 +248,10 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles) {
+        AutoThreadSafeAccess ts(templateObject);
         templateObject->setShouldConvertDoubleElements();
+    }
 
     MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateObject,
                                     templateObject->type()->initialHeap(constraints()),
@@ -589,6 +593,36 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineMathCeil(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 1)
+        return InliningStatus_NotInlined;
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    // Math.ceil(int(x)) == int(x)
+    if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
+        callInfo.unwrapArgs();
+        current->push(callInfo.getArg(0));
+        return InliningStatus_Inlined;
+    }
+
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
+        callInfo.unwrapArgs();
+        MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil, nullptr);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineMathRound(CallInfo &callInfo)
 {
     if (callInfo.constructing())
@@ -862,9 +896,17 @@ IonBuilder::inlineMathFRound(CallInfo &callInfo)
 
     // MIRType can't be Float32, as this point, as getInlineReturnType uses JSVal types
     // to infer the returned MIR type.
-    MIRType returnType = getInlineReturnType();
-    if (!IsNumberType(returnType))
-        return InliningStatus_NotInlined;
+    types::TemporaryTypeSet *returned = getInlineReturnTypeSet();
+    if (returned->empty()) {
+        // As there's only one possible returned type, just add it to the observed
+        // returned typeset
+        if (!returned->addType(types::Type::DoubleType(), alloc_->lifoAlloc()))
+            return InliningStatus_Error;
+    } else {
+        MIRType returnType = getInlineReturnType();
+        if (!IsNumberType(returnType))
+            return InliningStatus_NotInlined;
+    }
 
     MIRType arg = callInfo.getArg(0)->type();
     if (!IsNumberType(arg))

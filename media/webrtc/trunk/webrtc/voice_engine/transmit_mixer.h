@@ -241,8 +241,8 @@ private:
     bool swap_stereo_channels_;
 };
 
-#endif // WEBRTC_VOICE_ENGINE_TRANSMIT_MIXER_H
-
 }  // namespace voe
 
 }  // namespace webrtc
+
+#endif // WEBRTC_VOICE_ENGINE_TRANSMIT_MIXER_H

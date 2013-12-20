@@ -202,8 +202,6 @@ FormStore.prototype = {
 
 function FormTracker(name, engine) {
   Tracker.call(this, name, engine);
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -212,21 +210,18 @@ FormTracker.prototype = {
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference]),
 
-  _enabled: false,
+  startTracking: function() {
+    Svc.Obs.add("satchel-storage-changed", this);
+  },
+
+  stopTracking: function() {
+    Svc.Obs.remove("satchel-storage-changed", this);
+  },
+
   observe: function (subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
     switch (topic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          Svc.Obs.add("satchel-storage-changed", this);
-          this._enabled = true;
-        }
-        break;
-      case "weave:engine:stop-tracking":
-        if (this._enabled) {
-          Svc.Obs.remove("satchel-storage-changed", this);
-          this._enabled = false;
-        }
-        break;
       case "satchel-storage-changed":
         if (data == "formhistory-add" || data == "formhistory-remove") {
           let guid = subject.QueryInterface(Ci.nsISupportsString).toString();

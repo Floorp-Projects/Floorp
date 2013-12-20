@@ -72,7 +72,7 @@ add_test(function test_empty() {
   _("Verify we've got an empty, disabled tracker to work with.");
   do_check_empty(tracker.changedIDs);
   do_check_eq(tracker.score, 0);
-  do_check_false(tracker._enabled);
+  do_check_false(tracker._isTracking);
   run_next_test();
 });
 

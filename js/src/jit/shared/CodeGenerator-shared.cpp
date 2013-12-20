@@ -279,6 +279,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
 
 #ifdef DEBUG
         if (GetIonContext()->cx) {
+            AutoThreadSafeAccess ts(script);
             uint32_t stackDepth;
             bool reachablePC;
             if (!ReconstructStackDepth(GetIonContext()->cx, script, bailPC, &stackDepth, &reachablePC))

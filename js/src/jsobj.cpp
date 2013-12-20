@@ -4200,6 +4200,14 @@ GetPropertyHelperInline(JSContext *cx,
             if (!script || script->warnedAboutUndefinedProp())
                 return true;
 
+            /*
+             * Don't warn in self-hosted code (where the further presence of
+             * JS::ContextOptions::werror() would result in impossible-to-avoid
+             * errors to entirely-innocent client code).
+             */
+            if (script->selfHosted())
+                return true;
+
             /* We may just be checking if that object has an iterator. */
             if (JSID_IS_ATOM(id, cx->names().iteratorIntrinsic))
                 return true;
@@ -5506,6 +5514,8 @@ DumpProperty(JSObject *obj, Shape &shape)
 bool
 JSObject::uninlinedIsProxy() const
 {
+    AutoThreadSafeAccess ts0(this);
+    AutoThreadSafeAccess ts1(type_);
     return is<ProxyObject>();
 }
 

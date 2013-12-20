@@ -313,11 +313,13 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty.  Don't bother to check for
     // bidi in this string if the document already has bidi enabled.
-    mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    bool ok = mText.SetTo(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
   else if (aOffset == textLength) {
     // Appending to existing
-    mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    bool ok = mText.Append(aBuffer, aLength, !document || !document->GetBidiEnabled());
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
   else {
     // Merging old and new
@@ -338,10 +340,11 @@ nsGenericDOMDataNode::SetTextInternal(uint32_t aOffset, uint32_t aCount,
       mText.CopyTo(to + aOffset + aLength, endOffset, textLength - endOffset);
     }
 
-    // XXX Add OOM checking to this
-    mText.SetTo(to, newLength, !document || !document->GetBidiEnabled());
+    bool ok = mText.SetTo(to, newLength, !document || !document->GetBidiEnabled());
 
     delete [] to;
+
+    NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
   }
 
   UnsetFlags(NS_CACHED_TEXT_IS_ONLY_WHITESPACE);
