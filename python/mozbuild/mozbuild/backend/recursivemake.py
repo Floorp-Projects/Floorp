@@ -373,18 +373,11 @@ class RecursiveMakeBackend(CommonBackend):
             for k, v in sorted(obj.variables.items()):
                 if k in unified_suffixes:
                     if do_unify:
-                        # On Windows, path names have a maximum length of 255 characters,
-                        # so avoid creating extremely long path names.
-                        unified_prefix = backend_file.relobjdir
-                        if len(unified_prefix) > 39:
-                            unified_prefix = unified_prefix[-39:].split('/', 1)[-1]
-                        unified_prefix = unified_prefix.replace('/', '_')
-
                         self._add_unified_build_rules(backend_file, v,
                             backend_file.objdir,
                             unified_prefix='Unified_%s_%s' % (
                                 unified_suffixes[k],
-                                unified_prefix),
+                                backend_file.relobjdir.replace('/', '_')),
                             unified_suffix=unified_suffixes[k],
                             unified_files_makefile_variable=k,
                             include_curdir_build_rules=False,
