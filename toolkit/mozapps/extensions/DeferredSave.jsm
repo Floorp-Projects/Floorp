@@ -11,6 +11,9 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
+// Make it possible to mock out timers for testing
+let MakeTimer = () => Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
 this.EXPORTED_SYMBOLS = ["DeferredSave"];
 
 // If delay parameter is not provided, default is 50 milliseconds.
@@ -104,7 +107,7 @@ this.DeferredSave.prototype = {
 
     this.LOG("Starting timer");
     if (!this._timer)
-      this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._timer = MakeTimer();
     this._timer.initWithCallback(() => this._deferredSave(),
                                  this._delay, Ci.nsITimer.TYPE_ONE_SHOT);
   },
