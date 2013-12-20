@@ -16,13 +16,6 @@
     <org.mozilla.gecko.preferences.SearchPreferenceCategory
                         android:title="@string/pref_category_installed_search_engines"/>
 
-    <PreferenceCategory android:title="@string/pref_category_search_restore_defaults">
-
-        <Preference android:key="android.not_a_preference.search.restore_defaults"
-                    android:title="@string/pref_search_restore_defaults_summary" />
-
-    </PreferenceCategory>
-
     <PreferenceCategory android:title="@string/pref_category_add_search_providers">
 
         <Preference android:layout="@layout/preference_search_tip"
