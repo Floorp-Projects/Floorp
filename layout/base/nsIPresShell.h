@@ -129,10 +129,10 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 
-// f5b542a9-eaf0-4560-a656-37a9d379864c
+// 0e4f2b36-7ab8-43c5-b912-5c311566297c
 #define NS_IPRESSHELL_IID \
-{ 0xf5b542a9, 0xeaf0, 0x4560, \
-  { 0x37, 0xa9, 0xd3, 0x79, 0x86, 0x4c } }
+{ 0xde498c49, 0xf83f, 0x47bf, \
+  {0x8c, 0xc6, 0x8f, 0xf8, 0x74, 0x62, 0x22, 0x23 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -835,6 +835,20 @@ public:
    * recur into our children.
    */
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
+
+  /**
+   * Pause painting by freezing the refresh driver of this and all parent
+   * presentations. This may not have the desired effect if this pres shell
+   * has its own refresh driver.
+   */
+  virtual void PausePainting() = 0;
+
+  /**
+   * Resume painting by thawing the refresh driver of this and all parent
+   * presentations. This may not have the desired effect if this pres shell
+   * has its own refresh driver.
+   */
+  virtual void ResumePainting() = 0;
 
   /**
    * Unsuppress painting.
@@ -1601,6 +1615,7 @@ protected:
   bool mFontSizeInflationForceEnabled;
   bool mFontSizeInflationDisabledInMasterProcess;
   bool mFontSizeInflationEnabled;
+  bool mPaintingIsFrozen;
 
   // Dirty bit indicating that mFontSizeInflationEnabled needs to be recomputed.
   bool mFontSizeInflationEnabledIsDirty;
