@@ -310,7 +310,17 @@ this.BrowserUITelemetry = {
     }
   },
 
+  _firstWindowMeasurements: null,
   _registerWindow: function(aWindow) {
+    // We'll gather measurements on the first non-popup window that opens
+    // after it has painted. We do this here instead of waiting for
+    // UITelemetry to ask for our measurements because at that point
+    // all browser windows have probably been closed, since the vast
+    // majority of saved-session pings are gathered during shutdown.
+    if (!this._firstWindowMeasurements && aWindow.toolbar.visible) {
+      this._firstWindowMeasurements = this._getWindowMeasurements(aWindow);
+    }
+
     aWindow.addEventListener("unload", this);
     let document = aWindow.document;
 
@@ -473,20 +483,8 @@ this.BrowserUITelemetry = {
     }
   },
 
-  getToolbarMeasures: function() {
-    // Grab the most recent non-popup, non-private browser window for us to
-    // analyze the toolbars in...
-    let win = RecentWindow.getMostRecentBrowserWindow({
-      private: false,
-      allowPopups: false
-    });
-
-    // If there are no such windows, we're out of luck. :(
-    if (!win) {
-      return {};
-    }
-
-    let document = win.document;
+  _getWindowMeasurements: function(aWindow) {
+    let document = aWindow.document;
     let result = {};
 
     // Determine if the add-on bar is currently visible
@@ -552,7 +550,7 @@ this.BrowserUITelemetry = {
 
     // Now go through the items in the palette to see what default
     // items are in there.
-    let paletteChildren = win.gNavToolbox.palette.childNodes;
+    let paletteChildren = aWindow.gNavToolbox.palette.childNodes;
     let defaultRemoved = [node.id for (node of paletteChildren)
                           if (DEFAULT_ITEMS.indexOf(node.id) != -1)];
 
@@ -566,8 +564,8 @@ this.BrowserUITelemetry = {
     result.addonToolbars = addonToolbars;
     result.addonBarItems = addonBarItems;
 
-    result.smallIcons = win.gNavToolbox.getAttribute("iconsize") == "small";
-    result.buttonMode = win.gNavToolbox.getAttribute("mode");
+    result.smallIcons = aWindow.gNavToolbox.getAttribute("iconsize") == "small";
+    result.buttonMode = aWindow.gNavToolbox.getAttribute("mode");
 
     // Find out how many open tabs we have in each window
     let winEnumerator = Services.wm.getEnumerator("navigator:browser");
@@ -584,9 +582,13 @@ this.BrowserUITelemetry = {
     result.visibleTabs = visibleTabs;
     result.hiddenTabs = hiddenTabs;
 
+    return result;
+  },
+
+  getToolbarMeasures: function() {
+    let result = this._firstWindowMeasurements || {};
     result.countableEvents = this._countableEvents;
     result.durations = this._durations;
-
     return result;
   },
 };
