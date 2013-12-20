@@ -416,7 +416,8 @@ class JSObject : public js::ObjectImpl
             elements[i].js::HeapSlot::~HeapSlot();
     }
 
-    bool rollbackProperties(js::ExclusiveContext *cx, uint32_t slotSpan);
+    static bool rollbackProperties(js::ExclusiveContext *cx, js::HandleObject obj,
+                                   uint32_t slotSpan);
 
     void nativeSetSlot(uint32_t slot, const js::Value &value) {
         JS_ASSERT(isNative());
