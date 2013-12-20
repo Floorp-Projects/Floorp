@@ -83,7 +83,6 @@ add_test(function test_invalid_json() {
 
   let request = Service.getStorageInfo(INFO_COLLECTIONS, function (error, info) {
     do_check_eq(error.name, "SyntaxError");
-    do_check_eq(error.message, "JSON.parse: unexpected character");
     do_check_eq(info, null);
     server.stop(run_next_test);
   });

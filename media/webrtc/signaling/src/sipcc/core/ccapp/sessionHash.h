@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef __SESSIONHASH_H__
+#define __SESSIONHASH_H__
+
 typedef struct hash_table {
    struct hash_table *next;
    struct hash_table *prev;
@@ -21,3 +24,5 @@ extern int addhash (unsigned int key, void *data) ;
 extern int delhash(unsigned int  key);
 extern void *findhash(unsigned int key);
 extern unsigned int ccpro_get_sessionId_by_callid(unsigned short call_id);
+
+#endif

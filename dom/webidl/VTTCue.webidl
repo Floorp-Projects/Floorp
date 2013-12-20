@@ -9,9 +9,7 @@
 
 enum AutoKeyword { "auto" };
 
-/* Non-spec: Request to add this enum to spec
- * can be found here: https://www.w3.org/Bugs/Public/show_bug.cgi?id=20996 */
-enum TextTrackCueAlign {
+enum AlignSetting {
   "start",
   "middle",
   "end",
@@ -43,7 +41,7 @@ interface VTTCue : EventTarget {
   attribute long position;
   [SetterThrows]
   attribute long size;
-  attribute TextTrackCueAlign align;
+  attribute AlignSetting align;
   attribute DOMString text;
   DocumentFragment getCueAsHTML();
 

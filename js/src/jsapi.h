@@ -50,6 +50,8 @@ class StableCharPtr : public CharPtr {
     StableCharPtr(const jschar *pos, const jschar *start, size_t len)
       : CharPtr(pos, start, len)
     {}
+
+    using CharPtr::operator=;
 };
 
 #if defined JS_THREADSAFE && defined JS_DEBUG
