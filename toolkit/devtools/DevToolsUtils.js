@@ -83,11 +83,37 @@ this.makeInfallible = function makeInfallible(aHandler, aName) {
   }
 }
 
+/**
+ * Interleaves two arrays element by element, returning the combined array, like
+ * a zip. In the case of arrays with different sizes, undefined values will be
+ * interleaved at the end along with the extra values of the larger array.
+ *
+ * @param Array a
+ * @param Array b
+ * @returns Array
+ *          The combined array, in the form [a1, b1, a2, b2, ...]
+ */
+this.zip = function zip(a, b) {
+  if (!b) {
+    return a;
+  }
+  if (!a) {
+    return b;
+  }
+  const pairs = [];
+  for (let i = 0, aLength = a.length, bLength = b.length;
+       i < aLength || i < bLength;
+       i++) {
+    pairs.push([a[i], b[i]]);
+  }
+  return pairs;
+};
+
 const executeSoon = aFn => {
   Services.tm.mainThread.dispatch({
     run: this.makeInfallible(aFn)
   }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
-}
+};
 
 /**
  * Like Array.prototype.forEach, but doesn't cause jankiness when iterating over
@@ -166,3 +192,48 @@ function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
     }
   });
 }
+
+/**
+ * Safely get the property value from a Debugger.Object for a given key. Walks
+ * the prototype chain until the property is found.
+ *
+ * @param Debugger.Object aObject
+ *        The Debugger.Object to get the value from.
+ * @param String aKey
+ *        The key to look for.
+ * @return Any
+ */
+this.getProperty = function getProperty(aObj, aKey) {
+  let root = aObj;
+  try {
+    do {
+      const desc = aObj.getOwnPropertyDescriptor(aKey);
+      if (desc) {
+        if ("value" in desc) {
+          return desc.value;
+        }
+        // Call the getter if it's safe.
+        return hasSafeGetter(desc) ? desc.get.call(root).return : undefined;
+      }
+      aObj = aObj.proto;
+    } while (aObj);
+  } catch (e) {
+    // If anything goes wrong report the error and return undefined.
+    reportException("getProperty", e);
+  }
+  return undefined;
+};
+
+/**
+ * Determines if a descriptor has a getter which doesn't call into JavaScript.
+ *
+ * @param Object aDesc
+ *        The descriptor to check for a safe getter.
+ * @return Boolean
+ *         Whether a safe getter was found.
+ */
+this.hasSafeGetter = function hasSafeGetter(aDesc) {
+  let fn = aDesc.get;
+  return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+};
+

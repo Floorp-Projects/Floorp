@@ -21,6 +21,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
+#include "builtin/TypedObject.h"
 #include "vm/RegExpStatics.h"
 
 #include "jscompartmentinlines.h"
@@ -30,6 +31,17 @@
 #include "vm/ObjectImpl-inl.h"
 
 using namespace js;
+
+// This method is not in the header file to avoid having to include
+// TypedObject.h from GlobalObject.h. It is not generally perf
+// sensitive.
+TypedObjectModuleObject&
+js::GlobalObject::getTypedObjectModule() const {
+    Value v = getConstructor(JSProto_TypedObject);
+    // only gets called from contexts where TypedObject must be initialized
+    JS_ASSERT(v.isObject());
+    return v.toObject().as<TypedObjectModuleObject>();
+}
 
 JSObject *
 js_InitObjectClass(JSContext *cx, HandleObject obj)
@@ -56,7 +68,7 @@ ThrowTypeError(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-TestProtoGetterThis(HandleValue v)
+TestProtoThis(HandleValue v)
 {
     return !v.isNullOrUndefined();
 }
@@ -64,7 +76,7 @@ TestProtoGetterThis(HandleValue v)
 static bool
 ProtoGetterImpl(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(TestProtoGetterThis(args.thisv()));
+    JS_ASSERT(TestProtoThis(args.thisv()));
 
     HandleValue thisv = args.thisv();
     if (thisv.isPrimitive() && !BoxNonStrictThis(cx, args))
@@ -85,7 +97,7 @@ static bool
 ProtoGetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, TestProtoGetterThis, ProtoGetterImpl, args);
+    return CallNonGenericMethod(cx, TestProtoThis, ProtoGetterImpl, args);
 }
 
 namespace js {
@@ -93,23 +105,9 @@ size_t sSetProtoCalled = 0;
 } // namespace js
 
 static bool
-TestProtoSetterThis(HandleValue v)
-{
-    if (v.isNullOrUndefined())
-        return false;
-
-    /* These will work as if on a boxed primitive; dumb, but whatever. */
-    if (!v.isObject())
-        return true;
-
-    /* Otherwise, only accept non-proxies. */
-    return !v.toObject().is<ProxyObject>();
-}
-
-static bool
 ProtoSetterImpl(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(TestProtoSetterThis(args.thisv()));
+    JS_ASSERT(TestProtoThis(args.thisv()));
 
     HandleValue thisv = args.thisv();
     if (thisv.isPrimitive()) {
@@ -125,25 +123,14 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
 
     Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
-    /* ES5 8.6.2 forbids changing [[Prototype]] if not [[Extensible]]. */
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    if (!extensible) {
-        obj->reportNotExtensible(cx);
-        return false;
-    }
-
     /*
-     * Disallow mutating the [[Prototype]] of a proxy that wasn't simply
-     * wrapping some other object.  Also disallow it on ArrayBuffer objects,
-     * which due to their complicated delegate-object shenanigans can't easily
+     * Disallow mutating the [[Prototype]] on ArrayBuffer objects, which
+     * due to their complicated delegate-object shenanigans can't easily
      * have a mutable [[Prototype]].
      */
-    if (obj->is<ProxyObject>() || obj->is<ArrayBufferObject>()) {
+    if (obj->is<ArrayBufferObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             "Object", "__proto__ setter",
-                             obj->is<ProxyObject>() ? "Proxy" : "ArrayBuffer");
+                             "Object", "__proto__ setter", "ArrayBuffer");
         return false;
     }
 
@@ -161,8 +148,14 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), &v, &dummy))
         return false;
 
-    if (!SetClassAndProto(cx, obj, obj->getClass(), newProto, true))
+    bool success;
+    if (!JSObject::setProto(cx, obj, newProto, &success))
         return false;
+
+    if (!success) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+        return false;
+    }
 
     args.rval().setUndefined();
     return true;
@@ -172,7 +165,7 @@ static bool
 ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, TestProtoSetterThis, ProtoSetterImpl, args);
+    return CallNonGenericMethod(cx, TestProtoThis, ProtoSetterImpl, args);
 }
 
 JSObject *
@@ -454,6 +447,23 @@ GlobalObject::create(JSContext *cx, const Class *clasp)
 }
 
 /* static */ bool
+GlobalObject::getOrCreateEval(JSContext *cx, Handle<GlobalObject*> global,
+                              MutableHandleObject eval)
+{
+    if (!global->getOrCreateObjectPrototype(cx))
+        return false;
+    eval.set(&global->getSlotForCompilation(EVAL).toObject());
+    return true;
+}
+
+bool
+GlobalObject::valueIsEval(Value val)
+{
+    Value eval = getSlotForCompilation(EVAL);
+    return eval.isObject() && eval == val;
+}
+
+/* static */ bool
 GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
 {
     /* Define a top-level property 'undefined' with the undefined value. */
@@ -487,9 +497,6 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
            GlobalObject::initSetIteratorProto(cx, global) &&
 #if EXPOSE_INTL_API
            js_InitIntlClass(cx, global) &&
-#endif
-#if ENABLE_PARALLEL_JS
-           js_InitParallelArrayClass(cx, global) &&
 #endif
            true;
 }
@@ -543,7 +550,7 @@ CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObjec
     JS_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
-    if (!blankProto)
+    if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
 
     return blankProto;
@@ -662,7 +669,7 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     RootedId shId(cx, AtomToId(selfHostedName));
     RootedObject holder(cx, cx->global()->intrinsicsHolder());
 
-    if (HasDataProperty(cx, holder, shId, funVal.address()))
+    if (cx->global()->maybeGetIntrinsicValue(shId, funVal.address()))
         return true;
 
     if (!cx->runtime()->maybeWrappedSelfHostedFunction(cx, shId, funVal))
@@ -678,5 +685,31 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
     fun->setExtendedSlot(0, StringValue(selfHostedName));
     funVal.setObject(*fun);
 
-    return JSObject::defineGeneric(cx, holder, shId, funVal, nullptr, nullptr, 0);
+    return cx->global()->addIntrinsicValue(cx, shId, funVal);
+}
+
+bool
+GlobalObject::addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value)
+{
+    RootedObject holder(cx, intrinsicsHolder());
+
+    // Work directly with the shape machinery underlying the object, so that we
+    // don't take the compilation lock until we are ready to update the object
+    // without triggering a GC.
+
+    uint32_t slot = holder->slotSpan();
+    RootedShape last(cx, holder->lastProperty());
+    Rooted<UnownedBaseShape*> base(cx, last->base()->unowned());
+
+    StackShape child(base, id, slot, holder->numFixedSlots(), 0, 0, 0);
+    RootedShape shape(cx, cx->compartment()->propertyTree.getChild(cx, last, holder->numFixedSlots(), child));
+    if (!shape)
+        return false;
+
+    AutoLockForCompilation lock(cx);
+    if (!JSObject::setLastProperty(cx, holder, shape))
+        return false;
+
+    holder->setSlot(shape->slot(), value);
+    return true;
 }

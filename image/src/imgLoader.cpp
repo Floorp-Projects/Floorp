@@ -48,14 +48,12 @@
 using namespace mozilla;
 using namespace mozilla::image;
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(ImagesMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(ImagesMallocSizeOf)
 
-class imgMemoryReporter MOZ_FINAL : public MemoryMultiReporter
+class imgMemoryReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  imgMemoryReporter()
-    : MemoryMultiReporter("images")
-  {}
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *callback,
                             nsISupports *closure)
@@ -214,10 +212,12 @@ private:
   }
 };
 
+NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
+
 NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
-                     nsIProgressEventSink,
-                     nsIChannelEventSink,
-                     nsIInterfaceRequestor)
+                   nsIProgressEventSink,
+                   nsIChannelEventSink,
+                   nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 nsProgressNotificationProxy::OnProgress(nsIRequest* request,
@@ -820,7 +820,7 @@ void imgLoader::GlobalInit()
     sCacheMaxSize = 5 * 1024 * 1024;
 
   sMemReporter = new imgMemoryReporter();
-  NS_RegisterMemoryReporter(sMemReporter);
+  RegisterStrongMemoryReporter(sMemReporter);
   RegisterImagesContentUsedUncompressedDistinguishedAmount(imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
 }
 

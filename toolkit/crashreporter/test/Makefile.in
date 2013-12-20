@@ -14,18 +14,6 @@ LOCAL_INCLUDES += \
   $(NULL)
 EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(MOZ_COMPONENT_LIBS) $(XPCOM_GLUE_LDOPTS)
 
-MOCHITEST_CRASHREPORTER_FILES = \
-  browser/head.js \
-  browser/crashreport.sjs \
-  browser/browser_aboutCrashes.js \
-  browser/browser_bug471404.js \
-  browser/browser_aboutCrashesResubmit.js \
-  $(NULL)
-MOCHITEST_CRASHREPORTER_DEST = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/browser
-INSTALL_TARGETS += MOCHITEST_CRASHREPORTER
-
-DEFINES += -DSHARED_LIBRARY=$(SHARED_LIBRARY) -DNOMINMAX
-
 UNIT_FILES = $(SHARED_LIBRARY) $(EXTRA_JS_MODULES)
 UNIT_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit/
 INSTALL_TARGETS += UNIT

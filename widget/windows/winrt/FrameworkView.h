@@ -81,6 +81,7 @@ public:
   HRESULT ActivateView();
 
   // Public apis for MetroWidget
+  int GetPreviousExecutionState();
   void ShutdownXPCOM();
   float GetDPI() { return mDPI; }
   ICoreWindow* GetCoreWindow() { return mWindow.Get(); }
@@ -177,6 +178,7 @@ private:
   EventRegistrationToken mPrintManager;
 
 private:
+  ABI::Windows::ApplicationModel::Activation::ApplicationExecutionState mPreviousExecutionState;
   nsIntRect mWindowBounds; // in device-pixel coordinates
   float mDPI;
   bool mShuttingDown;

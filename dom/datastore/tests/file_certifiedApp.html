@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore just for certified Apps</title>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  ok(!("getDataStores" in navigator), "DataStore not available");
+  finish();
+  </script>
+</body>
+</html>

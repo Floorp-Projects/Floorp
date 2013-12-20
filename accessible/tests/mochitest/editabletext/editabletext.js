@@ -56,7 +56,7 @@ function editableTextTest(aID)
   /**
    * setTextContents test.
    */
-  this.setTextContents = function setTextContents(aValue, aTrailChar)
+  this.setTextContents = function setTextContents(aValue)
   {
     var testID = "setTextContents '" + aValue + "' for " + prettyName(aID);
 
@@ -66,8 +66,7 @@ function editableTextTest(aID)
       acc.setTextContents(aValue);
     }
 
-    var newValue = aValue + (aTrailChar ? aTrailChar : "");
-    var insertTripple = newValue ? [0, newValue.length, newValue] : null;
+    var insertTripple = aValue ? [0, aValue.length, aValue] : null;
     var oldValue = getValue(aID);
     var removeTripple = oldValue ? [0, oldValue.length, oldValue] : null;
 

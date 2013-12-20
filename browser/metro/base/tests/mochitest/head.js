@@ -557,24 +557,10 @@ function waitForObserver(aObsEvent, aTimeoutMs) {
 }
 
 /*=============================================================================
-  Native input synthesis helpers
-=============================================================================*/
-// Keyboard layouts for use with synthesizeNativeKey
-const usEnglish = 0x409;
-const arSpanish = 0x2C0A;
-
-// Modifiers for use with synthesizeNativeKey
-const leftShift = 0x100;
-const rightShift = 0x200;
-const leftControl = 0x400;
-const rightControl = 0x800;
-const leftAlt = 0x1000;
-const rightAlt = 0x2000;
-
-function synthesizeNativeKey(aKbLayout, aVKey, aModifiers) {
-  Browser.windowUtils.sendNativeKeyEvent(aKbLayout, aVKey, aModifiers, '', '');
-}
-
+ * Native input helpers - these helpers send input directly to the os
+ * generating os level input events that get processed by widget and
+ * apzc logic.
+ *===========================================================================*/
 function synthesizeNativeMouse(aElement, aOffsetX, aOffsetY, aMsg) {
   let x = aOffsetX;
   let y = aOffsetY;
@@ -639,6 +625,36 @@ function synthesizeNativeMouseMUp(aElement, aOffsetX, aOffsetY) {
                         aOffsetY,
                         0x0040);  // MOUSEEVENTF_MIDDLEUP
 }
+
+// WARNING: these calls can trigger the soft keyboard on tablets, but not
+// on test slaves (bug 947428).
+// WARNING: When testing the apzc, be careful of bug 933990. Events sent
+// shortly after loading a page may get ignored.
+
+function sendNativeLongTap(aElement, aX, aY) {
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+  Browser.windowUtils.sendNativeTouchTap(coords.x, coords.y, true);
+}
+
+function sendNativeTap(aElement, aX, aY) {
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+  Browser.windowUtils.sendNativeTouchTap(coords.x, coords.y, false);
+}
+
+function sendNativeDoubleTap(aElement, aX, aY) {
+  let coords = logicalCoordsForElement(aElement, aX, aY);
+  Browser.windowUtils.sendNativeTouchTap(coords.x, coords.y, false);
+  Browser.windowUtils.sendNativeTouchTap(coords.x, coords.y, false);
+}
+
+function clearNativeTouchSequence() {
+  Browser.windowUtils.clearNativeTouchSequence();
+}
+
+/*=============================================================================
+ * Synthesized event helpers - these helpers synthesize input events that get
+ * dispatched directly to the dom. As such widget and apzc logic is bypassed.
+ *===========================================================================*/
 
 /*
  * logicalCoordsForElement - given coordinates relative to top-left of
@@ -784,6 +800,17 @@ TouchDragAndHold.prototype = {
   _numSteps: 50,
   _debug: false,
   _win: null,
+  _native: false,
+  _pointerId: 1,
+  _dui: Components.interfaces.nsIDOMWindowUtils,
+
+  set useNativeEvents(aValue) {
+    this._native = aValue;
+  },
+
+  set nativePointerId(aValue) {
+    this._pointerId = aValue;
+  },
 
   callback: function callback() {
     if (this._win == null)
@@ -795,8 +822,14 @@ TouchDragAndHold.prototype = {
     }
 
     if (++this._step.steps >= this._numSteps) {
-      EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
-                                        { type: "touchmove" }, this._win);
+      if (this._native) {
+        this._utils.sendNativeTouchPoint(this._pointerId, this._dui.TOUCH_CONTACT,
+                                         this._endPoint.xPos, this._endPoint.yPos,
+                                         1, 90);
+      } else {
+        EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
+                                          { type: "touchmove" }, this._win);
+      }
       this._defer.resolve();
       return;
     }
@@ -805,8 +838,16 @@ TouchDragAndHold.prototype = {
     if (this._debug) {
       info("[" + this._step.steps + "] touchmove " + this._currentPoint.xPos + " x " + this._currentPoint.yPos);
     }
-    EventUtils.synthesizeTouchAtPoint(this._currentPoint.xPos, this._currentPoint.yPos,
-                                      { type: "touchmove" }, this._win);
+
+    if (this._native) {
+      this._utils.sendNativeTouchPoint(this._pointerId, this._dui.TOUCH_CONTACT,
+                                       this._currentPoint.xPos, this._currentPoint.yPos,
+                                       1, 90);
+    } else {
+      EventUtils.synthesizeTouchAtPoint(this._currentPoint.xPos, this._currentPoint.yPos,
+                                        { type: "touchmove" }, this._win);
+    }
+
     let self = this;
     setTimeout(function () { self.callback(); }, this._timeoutStep);
   },
@@ -814,13 +855,20 @@ TouchDragAndHold.prototype = {
   start: function start(aWindow, aStartX, aStartY, aEndX, aEndY) {
     this._defer = Promise.defer();
     this._win = aWindow;
+    this._utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
     this._endPoint = { xPos: aEndX, yPos: aEndY };
     this._currentPoint = { xPos: aStartX, yPos: aStartY };
     this._step = { steps: 0, x: (aEndX - aStartX) / this._numSteps, y: (aEndY - aStartY) / this._numSteps };
     if (this._debug) {
       info("[0] touchstart " + aStartX + " x " + aStartY);
     }
-    EventUtils.synthesizeTouchAtPoint(aStartX, aStartY, { type: "touchstart" }, aWindow);
+    if (this._native) {
+      this._utils.sendNativeTouchPoint(this._pointerId, this._dui.TOUCH_CONTACT,
+                                       aStartX, aStartY, 1, 90);
+    } else {
+      EventUtils.synthesizeTouchAtPoint(aStartX, aStartY, { type: "touchstart" }, aWindow);
+    }
     let self = this;
     setTimeout(function () { self.callback(); }, this._timeoutStep);
     return this._defer.promise;
@@ -847,8 +895,14 @@ TouchDragAndHold.prototype = {
       info("[" + this._step.steps + "] touchend " + this._endPoint.xPos + " x " + this._endPoint.yPos);
       SelectionHelperUI.debugClearDebugPoints();
     }
-    EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
-                                      { type: "touchend" }, this._win);
+    if (this._native) {
+      this._utils.sendNativeTouchPoint(this._pointerId, this._dui.TOUCH_REMOVE,
+                                       this._endPoint.xPos, this._endPoint.yPos,
+                                       1, 90);
+    } else {
+      EventUtils.synthesizeTouchAtPoint(this._endPoint.xPos, this._endPoint.yPos,
+                                        { type: "touchend" }, this._win);
+    }
     this._win = null;
   },
 };

@@ -5,8 +5,11 @@
 
 #include "mozilla/dom/SVGFEDistantLightElement.h"
 #include "mozilla/dom/SVGFEDistantLightElementBinding.h"
+#include "nsSVGFilterInstance.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEDistantLight)
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -38,6 +41,19 @@ SVGFEDistantLightElement::AttributeAffectsRendering(int32_t aNameSpaceID,
   return aNameSpaceID == kNameSpaceID_None &&
          (aAttribute == nsGkAtoms::azimuth ||
           aAttribute == nsGkAtoms::elevation);
+}
+
+AttributeMap
+SVGFEDistantLightElement::ComputeLightAttributes(nsSVGFilterInstance* aInstance)
+{
+  float azimuth, elevation;
+  GetAnimatedNumberValues(&azimuth, &elevation, nullptr);
+
+  AttributeMap map;
+  map.Set(eLightType, (uint32_t)eLightTypeDistant);
+  map.Set(eDistantLightAzimuth, azimuth);
+  map.Set(eDistantLightElevation, elevation);
+  return map;
 }
 
 already_AddRefed<SVGAnimatedNumber>

@@ -5,7 +5,7 @@
 
 /* atom list for CSS pseudo-elements */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsCSSPseudoElements.h"
 #include "nsAtomListUtils.h"
@@ -111,4 +111,11 @@ nsCSSPseudoElements::FlagsForPseudoElement(const Type aType)
   NS_ASSERTION(index < ArrayLength(CSSPseudoElements_flags),
                "argument must be a pseudo-element");
   return CSSPseudoElements_flags[index];
+}
+
+/* static */ bool
+nsCSSPseudoElements::PseudoElementSupportsUserActionState(const Type aType)
+{
+  return PseudoElementHasFlags(aType,
+                               CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE);
 }

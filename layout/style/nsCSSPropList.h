@@ -124,6 +124,7 @@
 #define CSS_PROP_COLUMN(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Column, stylestructoffset_, animtype_)
 #define CSS_PROP_SVG(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVG, stylestructoffset_, animtype_)
 #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, SVGReset, stylestructoffset_, animtype_)
+#define CSS_PROP_VARIABLES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, Variables, stylestructoffset_, animtype_)
 
 // For properties that are stored in the CSS backend but are not
 // computed.  An includer may define this in addition to CSS_PROP, but
@@ -230,6 +231,10 @@
 #ifndef CSS_PROP_SVGRESET
 #define CSS_PROP_SVGRESET(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
 #define DEFINED_CSS_PROP_SVGRESET
+#endif
+#ifndef CSS_PROP_VARIABLES
+#define CSS_PROP_VARIABLES(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, stylestructoffset_, animtype_) /* nothing */
+#define DEFINED_CSS_PROP_VARIABLES
 #endif
 
 #ifndef CSS_PROP_BACKENDONLY
@@ -1599,6 +1604,16 @@ CSS_PROP_TABLEBORDER(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
+    align-content,
+    align_content,
+    AlignContent,
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kAlignContentKTable,
+    offsetof(nsStylePosition, mAlignContent),
+    eStyleAnimType_EnumU8)
+CSS_PROP_POSITION(
     align-items,
     align_items,
     AlignItems,
@@ -1649,6 +1664,12 @@ CSS_PROP_POSITION(
     kFlexDirectionKTable,
     offsetof(nsStylePosition, mFlexDirection),
     eStyleAnimType_EnumU8)
+CSS_PROP_SHORTHAND(
+    flex-flow,
+    flex_flow,
+    FlexFlow,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "")
 CSS_PROP_POSITION(
     flex-grow,
     flex_grow,
@@ -1677,6 +1698,16 @@ CSS_PROP_POSITION(
     nullptr,
     offsetof(nsStylePosition, mFlexShrink),
     eStyleAnimType_float) // float, except animations to/from 0 shouldn't work
+CSS_PROP_POSITION(
+    flex-wrap,
+    flex_wrap,
+    FlexWrap,
+    CSS_PROPERTY_PARSE_VALUE,
+    "",
+    VARIANT_HK,
+    kFlexWrapKTable,
+    offsetof(nsStylePosition, mFlexWrap),
+    eStyleAnimType_EnumU8)
 CSS_PROP_POSITION(
     order,
     order,
@@ -3353,6 +3384,16 @@ CSS_PROP_FONT(
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_FONT(
+    -moz-math-variant,
+    math_variant,
+    MathVariant,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
+    "",
+    VARIANT_HK,
+    kMathVariantKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 #endif // !defined(CSS_PROP_LIST_EXCLUDE_INTERNAL)
 #endif // !defined(CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND)
 
@@ -3769,6 +3810,7 @@ CSS_PROP_FONT(
 #undef CSS_PROP_COLUMN
 #undef CSS_PROP_SVG
 #undef CSS_PROP_SVGRESET
+#undef CSS_PROP_VARIABLES
 #ifdef DEFINED_CSS_PROP_BACKENDONLY
 #undef CSS_PROP_BACKENDONLY
 #undef DEFINED_CSS_PROP_BACKENDONLY
@@ -3867,6 +3909,10 @@ CSS_PROP_FONT(
 #ifdef DEFINED_CSS_PROP_SVGRESET
 #undef CSS_PROP_SVGRESET
 #undef DEFINED_CSS_PROP_SVGRESET
+#endif
+#ifdef DEFINED_CSS_PROP_VARIABLES
+#undef CSS_PROP_VARIABLES
+#undef DEFINED_CSS_PROP_VARIABLES
 #endif
 #ifdef DEFINED_CSS_PROP_BACKENDONLY
 #undef CSS_PROP_BACKENDONLY

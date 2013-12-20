@@ -103,6 +103,7 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 : mCompositor(aCompositor)
 , mInTransaction(false)
 , mIsCompositorReady(false)
+, mDebugOverlayWantsNextFrame(false)
 {
   MOZ_ASSERT(aCompositor);
 }
@@ -202,6 +203,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
                                       EndTransactionFlags aFlags)
 {
   NS_ASSERTION(mInTransaction, "Didn't call BeginTransaction?");
+  NS_ASSERTION(!aCallback && !aCallbackData, "Not expecting callbacks here");
   mInTransaction = false;
 
   if (!mIsCompositorReady) {
@@ -239,13 +241,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
     // so we don't need to pass any global transform here.
     mRoot->ComputeEffectiveTransforms(gfx3DMatrix());
 
-    mThebesLayerCallback = aCallback;
-    mThebesLayerCallbackData = aCallbackData;
-
     Render();
-
-    mThebesLayerCallback = nullptr;
-    mThebesLayerCallbackData = nullptr;
   }
 
   mCompositor->SetTargetContext(nullptr);
@@ -306,7 +302,7 @@ LayerManagerComposite::RootLayer() const
     return nullptr;
   }
 
-  return static_cast<LayerComposite*>(mRoot->ImplData());
+  return ToLayerComposite(mRoot);
 }
 
 static uint16_t sFrameCount = 0;
@@ -418,6 +414,8 @@ LayerManagerComposite::Render()
   }
 
   mCompositor->GetWidget()->PostRender(this);
+
+  RecordFrame();
 }
 
 void
@@ -720,7 +718,7 @@ LayerManagerComposite::AutoAddMaskEffect::AutoAddMaskEffect(Layer* aMaskLayer,
     return;
   }
 
-  mCompositable = static_cast<LayerComposite*>(aMaskLayer->ImplData())->GetCompositableHost();
+  mCompositable = ToLayerComposite(aMaskLayer)->GetCompositableHost();
   if (!mCompositable) {
     NS_WARNING("Mask layer with no compositable host");
     return;
@@ -728,7 +726,9 @@ LayerManagerComposite::AutoAddMaskEffect::AutoAddMaskEffect(Layer* aMaskLayer,
 
   gfx::Matrix4x4 transform;
   ToMatrix4x4(aMaskLayer->GetEffectiveTransform(), transform);
-  mCompositable->AddMaskEffect(aEffects, transform, aIs3D);
+  if (!mCompositable->AddMaskEffect(aEffects, transform, aIs3D)) {
+    mCompositable = nullptr;
+  }
 }
 
 LayerManagerComposite::AutoAddMaskEffect::~AutoAddMaskEffect()
@@ -783,25 +783,6 @@ LayerComposite::Destroy()
   }
 }
 
-const nsIntSize&
-LayerManagerComposite::GetWidgetSize()
-{
-  return mCompositor->GetWidgetSize();
-}
-
-void
-LayerManagerComposite::SetCompositorID(uint32_t aID)
-{
-  NS_ASSERTION(mCompositor, "No compositor");
-  mCompositor->SetCompositorID(aID);
-}
-
-void
-LayerManagerComposite::NotifyShadowTreeTransaction()
-{
-  mCompositor->NotifyLayersTransaction();
-}
-
 bool
 LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
 {
@@ -809,27 +790,7 @@ LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
                                                             aSize.height));
 }
 
-TextureFactoryIdentifier
-LayerManagerComposite::GetTextureFactoryIdentifier()
-{
-  return mCompositor->GetTextureFactoryIdentifier();
-}
-
-int32_t
-LayerManagerComposite::GetMaxTextureSize() const
-{
-  return mCompositor->GetMaxTextureSize();
-}
-
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
-
-/*static*/ already_AddRefed<TextureImage>
-LayerManagerComposite::OpenDescriptorForDirectTexturing(GLContext*,
-                                                        const SurfaceDescriptor&,
-                                                        GLenum)
-{
-  return nullptr;
-}
 
 /*static*/ bool
 LayerManagerComposite::SupportsDirectTexturing()

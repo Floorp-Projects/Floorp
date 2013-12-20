@@ -21,25 +21,27 @@ public final class testInputUrlBar extends BaseTest {
         startEditingMode();
         assertUrlBarText("about:home");
 
-        mActions.sendKeys("ab");
-        assertUrlBarText("ab");
+        // Avoid any auto domain completion by using a prefix that matches
+        //  nothing, including about: pages
+        mActions.sendKeys("zy");
+        assertUrlBarText("zy");
 
         mActions.sendKeys("cd");
-        assertUrlBarText("abcd");
+        assertUrlBarText("zycd");
 
         mActions.sendSpecialKey(Actions.SpecialKey.LEFT);
         mActions.sendSpecialKey(Actions.SpecialKey.LEFT);
 
         // Inserting "" should not do anything.
         mActions.sendKeys("");
-        assertUrlBarText("abcd");
+        assertUrlBarText("zycd");
 
         mActions.sendKeys("ef");
-        assertUrlBarText("abefcd");
+        assertUrlBarText("zyefcd");
 
         mActions.sendSpecialKey(Actions.SpecialKey.RIGHT);
         mActions.sendKeys("gh");
-        assertUrlBarText("abefcghd");
+        assertUrlBarText("zyefcghd");
 
         final EditText editText = mUrlBarEditView;
         runOnUiThreadSync(new Runnable() {
@@ -49,7 +51,7 @@ public final class testInputUrlBar extends BaseTest {
             }
         });
         mActions.sendKeys("op");
-        assertUrlBarText("abopefcghd");
+        assertUrlBarText("zyopefcghd");
 
         runOnUiThreadSync(new Runnable() {
             public void run() {
@@ -58,7 +60,7 @@ public final class testInputUrlBar extends BaseTest {
             }
         });
         mActions.sendKeys("qr");
-        assertUrlBarText("abopefqrhd");
+        assertUrlBarText("zyopefqrhd");
 
         runOnUiThreadSync(new Runnable() {
             public void run() {
@@ -67,7 +69,7 @@ public final class testInputUrlBar extends BaseTest {
             }
         });
         mActions.sendKeys("st");
-        assertUrlBarText("abstefqrhd");
+        assertUrlBarText("zystefqrhd");
 
         runOnUiThreadSync(new Runnable() {
             public void run() {

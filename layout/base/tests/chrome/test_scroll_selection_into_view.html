@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scrolling selection into view</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var ANCHOR = 0;
+var FOCUS = 1;
+var win;
+
+function testCollapsed(id, vPercent, startAt, expected) {
+  var selection = win.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+
+  var c = win.document.getElementById("c" + id);
+  var target = win.document.getElementById("target" + id);
+  if (target.contentDocument) {
+    selection = target.contentWindow.getSelection().QueryInterface(SpecialPowers.Ci.nsISelectionPrivate);
+    target = target.contentDocument.getElementById("target" + id);
+  }
+  selection.collapse(target.parentNode, 0);
+  c.scrollTop = startAt;
+  selection.scrollIntoView(FOCUS, true, vPercent, 0);
+  is(c.scrollTop, expected, "Scrolling " + target.id +
+     " into view with vPercent " + vPercent + ", starting at " + startAt);
+}
+
+function doTest() {
+  // Test scrolling an element smaller than the scrollport
+  testCollapsed("1", 0, 0, 400);
+  testCollapsed("1", 100, 0, 220);
+  testCollapsed("1", -1, 0, 220);
+  testCollapsed("1", 0, 500, 400);
+  testCollapsed("1", 100, 500, 220);
+  testCollapsed("1", -1, 500, 400);
+
+  // overflow:hidden elements should not be scrolled by selection
+  // scrolling-into-view
+  testCollapsed("2", 0, 0, 0);
+  testCollapsed("2", 100, 0, 0);
+  testCollapsed("2", -1, 0, 0);
+  testCollapsed("2", 0, 500, 500);
+  testCollapsed("2", 100, 500, 500);
+  testCollapsed("2", -1, 500, 500);
+
+  // Test scrolling an element larger than the scrollport
+  testCollapsed("3", 0, 0, 400);
+  testCollapsed("3", 100, 0, 500);
+  testCollapsed("3", -1, 0, 400);
+  testCollapsed("3", 0, 1000, 400);
+  testCollapsed("3", 100, 1000, 500);
+  // If the element can't be completely visible, we make the top edge
+  // visible.
+  testCollapsed("3", -1, 1000, 400);
+
+  // Test scrolling an element larger than the scrollport
+  testCollapsed("4", 0, 0, 400);
+  testCollapsed("4", 100, 0, 500);
+  testCollapsed("4", -1, 0, 400);
+  testCollapsed("4", 0, 1000, 400);
+  testCollapsed("4", 100, 1000, 500);
+  // If the element can't be completely visible, we make the top edge
+  // visible.
+  testCollapsed("4", -1, 1000, 400);
+
+  // Test that scrolling a translated element into view takes
+  // account of the transform.
+  testCollapsed("5", 0, 0, 400);
+
+  // Test that scrolling a scaled element into view takes
+  // account of the transform.
+  testCollapsed("6", 0, 0, 150);
+
+  // Test that scrolling an element with a translated, scrolling container
+  // into view takes account of the transform.
+  testCollapsed("7", 0, 0, 400);
+
+  win.close();
+  SimpleTest.finish();
+}
+
+function openWindow() {
+  win = open("scroll_selection_into_view_window.html", "_blank", "width=500,height=350");
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(openWindow);
+</script>
+</pre>
+</body>
+
+</html>

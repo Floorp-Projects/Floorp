@@ -21,14 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372964
 
 var eventCount = 0;
 
-function listener(evt) {
-  ++eventCount;
-}
-
 function runTest() {
   var ifr = document.getElementsByTagName("iframe")[0];
   var xhr = new ifr.contentWindow.XMLHttpRequest();
-  xhr.addEventListener("foo", listener, false);
+  xhr.addEventListener("foo", ifr.contentWindow.listener, false);
   var event = ifr.contentDocument.createEvent("Events");
   event.initEvent("foo", true, true);
   xhr.dispatchEvent(event);
@@ -48,7 +44,7 @@ addLoadEvent(runTest);
 
 </script>
 </pre>
-<iframe>
+<iframe src="data:text/html,<script>function listener() { ++parent.eventCount; } </script>">
 </body>
 </html>
 

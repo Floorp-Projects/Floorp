@@ -1338,7 +1338,7 @@ WpsGetDefaultHandler(const char *aFileExt, nsAString& aDescription)
   }
 
   // no RWS or RWS failed to return at least a description
-  if (NS_FAILED(GetNLSString(NS_LITERAL_STRING("wpsDefaultOS2").get(),
+  if (NS_FAILED(GetNLSString(MOZ_UTF16("wpsDefaultOS2"),
                              aDescription)))
     aDescription.Assign(NS_LITERAL_STRING("WPS default"));
 
@@ -1388,7 +1388,7 @@ WpsMimeInfoFromExtension(const char *aFileExt, nsMIMEInfoOS2 *aMI)
     CopyUTF8toUTF16(extUpper, ustr);
 
     nsAutoString fileType;
-    if (NS_FAILED(GetNLSString(NS_LITERAL_STRING("fileType").get(), fileType)))
+    if (NS_FAILED(GetNLSString(MOZ_UTF16("fileType"), fileType)))
       ustr.Assign(NS_LITERAL_STRING("%S file"));
     int pos = -1;
     if ((pos = fileType.Find("%S")) > -1)

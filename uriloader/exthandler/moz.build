@@ -56,64 +56,74 @@ EXPORTS.mozilla.dom += [
     'ExternalHelperAppParent.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ExternalHelperAppChild.cpp',
     'ExternalHelperAppParent.cpp',
-    'nsExternalHelperAppService.cpp',
-    'nsExternalProtocolHandler.cpp',
     'nsLocalHandlerApp.cpp',
     'nsMIMEInfoImpl.cpp',
 ]
 
+# These files can't be built in unified mode because they force NSPR logging.
+SOURCES += [
+    'nsExternalHelperAppService.cpp',
+    'nsExternalProtocolHandler.cpp',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'mac/nsLocalHandlerAppMac.mm',
         'mac/nsMIMEInfoMac.mm',
+    ]
+    # These files can't be built in unified mode because they force NSPR logging.
+    SOURCES += [
         'mac/nsOSHelperAppService.mm',
     ]
 else:
+    # These files can't be built in unified mode because they force NSPR logging.
     SOURCES += [
         osdir + '/nsOSHelperAppService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'android/nsAndroidHandlerApp.cpp',
         'android/nsExternalSharingAppService.cpp',
         'android/nsExternalURLHandlerService.cpp',
         'android/nsMIMEInfoAndroid.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'unix/nsGNOMERegistry.cpp',
         'unix/nsMIMEInfoUnix.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    # These files can't be built in unified mode because they force NSPR logging.
     SOURCES += [
         'win/nsMIMEInfoWin.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
+    # These files can't be built in unified mode because they force NSPR logging.
     SOURCES += [
         'os2/nsMIMEInfoOS2.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_DBUS']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsDBusHandlerApp.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_MEEGOTOUCHSHARE']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'unix/nsMeegoExternalSharingAppService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_CONTENTACTION']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsContentHandlerApp.cpp',
     ]
 

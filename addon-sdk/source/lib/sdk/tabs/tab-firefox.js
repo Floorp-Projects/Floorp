@@ -13,9 +13,10 @@ const { getFaviconURIForLocation } = require("../io/data");
 const { activateTab, getOwnerWindow, getBrowserForTab, getTabTitle, setTabTitle,
         getTabURL, setTabURL, getTabContentType, getTabId } = require('./utils');
 const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
-const viewNS = require('sdk/core/namespace').ns();
-const { deprecateUsage } = require('sdk/util/deprecate');
-const { getURL } = require('sdk/url/utils');
+const viewNS = require('../core/namespace').ns();
+const { deprecateUsage } = require('../util/deprecate');
+const { getURL } = require('../url/utils');
+const { viewFor } = require('../view/core');
 
 // Array of the inner instances of all the wrapped tabs.
 const TABS = [];
@@ -64,6 +65,7 @@ const TabTrait = Trait.compose(EventEmitter, {
 
     viewNS(this._public).tab = this._tab;
     getPBOwnerWindow.implement(this._public, getChromeTab);
+    viewFor.implement(this._public, getTabView);
 
     // Add tabs to getURL method
     getURL.implement(this._public, (function (obj) this._public.url).bind(this));
@@ -97,7 +99,7 @@ const TabTrait = Trait.compose(EventEmitter, {
     if (event.target == this._contentDocument)
       this._emit(EVENTS.ready.name, this._public);
   },
-  
+
   /**
    * Internal listener that emits public event 'load' when the page of this
    * tab is loaded, for triggering on non-HTML content, bug #671305
@@ -271,6 +273,10 @@ const TabTrait = Trait.compose(EventEmitter, {
 function getChromeTab(tab) {
   return getOwnerWindow(viewNS(tab).tab);
 }
+
+// Implement `viewFor` polymorphic function for the Tab
+// instances.
+const getTabView = tab => viewNS(tab).tab;
 
 function Tab(options, existingOnly) {
   let chromeTab = options.tab;

@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.mozglue.RobocopTarget;
+
 import android.content.Context;
 import android.os.Build;
 import android.provider.Settings.Secure;
@@ -61,6 +63,7 @@ final public class InputMethods {
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);
     }
 
+    @RobocopTarget
     public static boolean shouldDisableUrlBarUpdate(Context context) {
         String inputMethod = getCurrentInputMethod(context);
         return METHOD_HTC_TOUCH_INPUT.equals(inputMethod);

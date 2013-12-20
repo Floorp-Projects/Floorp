@@ -70,3 +70,8 @@ UNIFIED_SOURCES += [
     'testUTF8.cpp',
     'testXDR.cpp',
 ]
+
+DEFINES['EXPORT_JS_API'] = True
+# Building against js_static requires that we declare mfbt sybols "exported"
+# on its behalf.
+DEFINES['IMPL_MFBT'] = True

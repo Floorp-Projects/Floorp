@@ -1067,12 +1067,12 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
             if (bundle) {
                 const PRUnichar* error[] = { errorText.get() };
                 if (mStylesheet) {
-                    bundle->FormatStringFromName(NS_LITERAL_STRING("TransformError").get(),
+                    bundle->FormatStringFromName(MOZ_UTF16("TransformError"),
                                                  error, 1,
                                                  getter_Copies(errorMessage));
                 }
                 else {
-                    bundle->FormatStringFromName(NS_LITERAL_STRING("LoadingError").get(),
+                    bundle->FormatStringFromName(MOZ_UTF16("LoadingError"),
                                                  error, 1,
                                                  getter_Copies(errorMessage));
                 }

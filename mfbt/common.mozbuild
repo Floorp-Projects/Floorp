@@ -14,6 +14,7 @@ mfbt_headers = [
     'Alignment.h',
     'AllocPolicy.h',
     'Array.h',
+    'ArrayUtils.h',
     'Assertions.h',
     'Atomics.h',
     'Attributes.h',
@@ -48,6 +49,7 @@ mfbt_headers = [
     'RangedPtr.h',
     'ReentrancyGuard.h',
     'RefPtr.h',
+    'RollingMean.h',
     'Scoped.h',
     'SHA1.h',
     'SplayTree.h',
@@ -56,14 +58,11 @@ mfbt_headers = [
     'TypedEnum.h',
     'Types.h',
     'TypeTraits.h',
-    'Util.h',
     'Vector.h',
     'WeakPtr.h',
 ]
 
 mfbt_sources = [
-    'Compression.cpp',
-    'decimal/Decimal.cpp',
     'double-conversion/bignum-dtoa.cc',
     'double-conversion/bignum.cc',
     'double-conversion/cached-powers.cc',
@@ -81,4 +80,11 @@ mfbt_sources = [
 DEFINES['IMPL_MFBT'] = True
 
 EXPORTS.mozilla += ['%s/%s' % (mfbt_root, header) for header in mfbt_headers]
-SOURCES += ['%s/%s' % (mfbt_root, src) for src in mfbt_sources]
+UNIFIED_SOURCES += ['%s/%s' % (mfbt_root, src) for src in mfbt_sources]
+
+# Compression.cpp cannot be built in unified mode because it pulls in Windows system headers.
+# Decimal.cpp doesn't build in unified mode with gcc.
+SOURCES += [
+    mfbt_root + '/Compression.cpp',
+    mfbt_root + '/decimal/Decimal.cpp',
+]

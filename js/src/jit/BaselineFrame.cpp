@@ -56,7 +56,7 @@ BaselineFrame::trace(JSTracer *trc)
 bool
 BaselineFrame::copyRawFrameSlots(AutoValueVector *vec) const
 {
-    unsigned nfixed = script()->nfixed;
+    unsigned nfixed = script()->nfixed();
     unsigned nformals = numFormalArgs();
 
     if (!vec->resize(nformals + nfixed))
@@ -112,11 +112,6 @@ BaselineFrame::initForOsr(StackFrame *fp, uint32_t numStackValues)
 
     if (fp->hasCallObjUnchecked())
         flags_ |= BaselineFrame::HAS_CALL_OBJ;
-
-    if (fp->hasBlockChain()) {
-        flags_ |= BaselineFrame::HAS_BLOCKCHAIN;
-        blockChain_ = &fp->blockChain();
-    }
 
     if (fp->isEvalFrame()) {
         flags_ |= BaselineFrame::EVAL;

@@ -29,6 +29,12 @@ interface TestExampleInterface {
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
+  [Cached, Pure]
+  readonly attribute byte cachedByte;
+  [StoreInSlot, Constant]
+  readonly attribute byte cachedConstantByte;
+  [Cached, Pure]
+  attribute byte cachedWritableByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
@@ -189,6 +195,16 @@ interface TestExampleInterface {
   void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
+  [Cached, Pure]
+  readonly attribute sequence<long> readonlySequence;
+  [Cached, Pure]
+  readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
+  [Cached, Pure]
+  readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<long> readonlyFrozenSequence;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<long>? readonlyFrozenNullableSequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();
@@ -395,6 +411,12 @@ interface TestExampleInterface {
   void passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
   void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
 
+  void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
+  void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
+
+  void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
+  void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(object or long) receiveUnion2();
   //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
@@ -423,9 +445,8 @@ interface TestExampleInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
-  // FIXME: Bug 863949 no dictionary return values in callbacks
-  // Dict receiveDictionary();
-  // Dict? receiveNullableDictionary();
+  Dict receiveDictionary();
+  Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
@@ -435,7 +456,7 @@ interface TestExampleInterface {
 
   void passDictContainingDict(optional DictContainingDict arg);
   void passDictContainingSequence(optional DictContainingSequence arg);
-  //UNSUPPORTED DictContainingSequence receiveDictContainingSequence();
+  DictContainingSequence receiveDictContainingSequence();
 
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);

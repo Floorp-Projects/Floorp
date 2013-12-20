@@ -237,7 +237,7 @@ public final class NotificationHelper implements GeckoEventListener {
         builder.setOngoing(ongoing);
 
         if (message.has(WHEN_ATTR)) {
-            int when = message.optInt(WHEN_ATTR);
+            long when = message.optLong(WHEN_ATTR);
             builder.setWhen(when);
         }
 

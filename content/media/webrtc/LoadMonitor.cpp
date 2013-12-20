@@ -19,9 +19,7 @@
 #include "nsIServiceManager.h"
 
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Util.h"
 #include "mozilla/Services.h"
-#include "mozilla/Preferences.h"
 
 #if defined(ANDROID) || defined(LINUX) || defined(XP_MACOSX)
 #include <sys/time.h>
@@ -323,10 +321,6 @@ LoadMonitor::GetSystemLoad() {
 nsresult
 LoadMonitor::Init(nsRefPtr<LoadMonitor> &self)
 {
-  if (!Preferences::GetBool("media.navigator.load_adapt", false)) {
-    return NS_OK;
-  }
-
 #if defined(PR_LOGGING)
   if (!gLoadMonitorLog)
     gLoadMonitorLog = PR_NewLogModule("LoadMonitor");

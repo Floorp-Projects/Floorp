@@ -11,6 +11,7 @@
 
 #include "SharedWorker.h"
 #include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 
 using mozilla::dom::EventHandlerNonNull;
 using mozilla::dom::MessagePortBase;
@@ -28,13 +29,10 @@ class DelayedEventRunnable MOZ_FINAL : public WorkerRunnable
 
 public:
   DelayedEventRunnable(WorkerPrivate* aWorkerPrivate,
-                       Target aTarget,
+                       TargetAndBusyBehavior aBehavior,
                        MessagePort* aMessagePort,
                        nsTArray<nsCOMPtr<nsIDOMEvent>>& aEvents)
-  : WorkerRunnable(aWorkerPrivate, aTarget,
-                   aTarget == WorkerThread ? ModifyBusyCount : UnchangedBusyCount,
-                   SkipWhenClearing),
-    mMessagePort(aMessagePort)
+  : WorkerRunnable(aWorkerPrivate, aBehavior), mMessagePort(aMessagePort)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(aMessagePort);
@@ -109,16 +107,22 @@ MessagePort::Start()
   mStarted = true;
 
   if (!mQueuedEvents.IsEmpty()) {
-    WorkerRunnable::Target target = WorkerRunnable::WorkerThread;
-    WorkerPrivate* workerPrivate = mWorkerPrivate;
+    WorkerPrivate* workerPrivate;
+    WorkerRunnable::TargetAndBusyBehavior behavior;
 
-    if (!workerPrivate) {
-      target = WorkerRunnable::ParentThread;
+    if (mWorkerPrivate) {
+      workerPrivate = mWorkerPrivate;
+      behavior = WorkerRunnable::WorkerThreadModifyBusyCount;
+    }
+    else {
       workerPrivate = mSharedWorker->GetWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      behavior = WorkerRunnable::ParentThreadUnchangedBusyCount;
     }
 
     nsRefPtr<DelayedEventRunnable> runnable =
-      new DelayedEventRunnable(workerPrivate, target, this, mQueuedEvents);
+      new DelayedEventRunnable(workerPrivate, behavior, this, mQueuedEvents);
     runnable->Dispatch(nullptr);
   }
 }

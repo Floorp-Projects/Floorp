@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.widget.ArrowPopup;
+import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.prompts.PromptInput;
 
 import org.json.JSONArray;
@@ -34,8 +35,8 @@ public class DoorHangerPopup extends ArrowPopup
     // Whether or not the doorhanger popup is disabled.
     private boolean mDisabled;
 
-    DoorHangerPopup(GeckoApp activity, View anchor) {
-        super(activity, anchor);
+    DoorHangerPopup(GeckoApp activity) {
+        super(activity);
 
         mDoorHangers = new HashSet<DoorHanger>();
 

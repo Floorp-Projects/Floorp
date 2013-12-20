@@ -95,6 +95,6 @@ LOCAL_INCLUDES += [
     '/js/xpconnect/src',
     '/layout/generic',
     '/layout/style',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]
 

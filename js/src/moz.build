@@ -81,6 +81,7 @@ EXPORTS.js += [
     '../public/PropertyKey.h',
     '../public/RequiredDefines.h',
     '../public/RootingAPI.h',
+    '../public/SliceBudget.h',
     '../public/StructuredClone.h',
     '../public/Tracer.h',
     '../public/TypeDecls.h',
@@ -95,9 +96,7 @@ UNIFIED_SOURCES += [
     'builtin/Intl.cpp',
     'builtin/MapObject.cpp',
     'builtin/Object.cpp',
-    'builtin/ParallelArray.cpp',
     'builtin/Profilers.cpp',
-    'builtin/RegExp.cpp',
     'builtin/TestingFunctions.cpp',
     'builtin/TypedObject.cpp',
     'builtin/TypeRepresentation.cpp',
@@ -109,7 +108,6 @@ UNIFIED_SOURCES += [
     'frontend/NameFunctions.cpp',
     'frontend/ParseMaps.cpp',
     'frontend/ParseNode.cpp',
-    'frontend/Parser.cpp',
     'frontend/TokenStream.cpp',
     'gc/Barrier.cpp',
     'gc/Iteration.cpp',
@@ -125,8 +123,6 @@ UNIFIED_SOURCES += [
     'jsalloc.cpp',
     'jsanalyze.cpp',
     'jsapi.cpp',
-    'jsarray.cpp',
-    'jsatom.cpp',
     'jsbool.cpp',
     'jscntxt.cpp',
     'jscompartment.cpp',
@@ -162,6 +158,7 @@ UNIFIED_SOURCES += [
     'vm/CharacterEncoding.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',
+    'vm/ErrorObject.cpp',
     'vm/ForkJoin.cpp',
     'vm/GlobalObject.cpp',
     'vm/Id.cpp',
@@ -196,11 +193,21 @@ UNIFIED_SOURCES += [
     'yarr/YarrSyntaxChecker.cpp',
 ]
 
+# jsarray.cpp and jsatom.cpp cannot be built in unified mode because
+# xpcshell is broken during packaging when compiled with gcc-4.8.2
+# builtin/RegExp.cpp cannot be built in unified mode because it is built
+# without PGO
+# frontend/Parser.cpp cannot be built in unified mode because of explicit
+# template instantiations.
 # jsmath.cpp cannot be built in unified mode because it needs to pull rand_s
 # from <stdlib.h> on Windows through a preprocessor define.
 # jsutil.cpp cannot be built in unified mode because it is needed for
 # check-vanilla-allocations.
 SOURCES += [
+    'builtin/RegExp.cpp',
+    'frontend/Parser.cpp',
+    'jsarray.cpp',
+    'jsatom.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
 ]
@@ -249,7 +256,9 @@ if CONFIG['ENABLE_ION']:
         'jit/IonCaches.cpp',
         'jit/IonFrames.cpp',
         'jit/IonMacroAssembler.cpp',
+        'jit/IonOptimizationLevels.cpp',
         'jit/IonSpewer.cpp',
+        'jit/JitOptions.cpp',
         'jit/JSONSpewer.cpp',
         'jit/LICM.cpp',
         'jit/LinearScan.cpp',
@@ -283,7 +292,6 @@ if CONFIG['ENABLE_ION']:
             'jit/shared/BaselineCompiler-x86-shared.cpp',
             'jit/shared/BaselineIC-x86-shared.cpp',
             'jit/shared/CodeGenerator-x86-shared.cpp',
-            'jit/shared/IonFrames-x86-shared.cpp',
             'jit/shared/Lowering-x86-shared.cpp',
             'jit/shared/MoveEmitter-x86-shared.cpp',
         ]
@@ -317,7 +325,6 @@ if CONFIG['ENABLE_ION']:
             'jit/arm/BaselineCompiler-arm.cpp',
             'jit/arm/BaselineIC-arm.cpp',
             'jit/arm/CodeGenerator-arm.cpp',
-            'jit/arm/IonFrames-arm.cpp',
             'jit/arm/Lowering-arm.cpp',
             'jit/arm/MacroAssembler-arm.cpp',
             'jit/arm/MoveEmitter-arm.cpp',
@@ -400,3 +407,26 @@ if CONFIG['MOZ_ETW']:
     GENERATED_FILES = [
         'ETWProvider.h',
     ]
+
+if CONFIG['NIGHTLY_BUILD']:
+    DEFINES['ENABLE_PARALLEL_JS'] = True
+    DEFINES['ENABLE_BINARYDATA'] = True
+
+DEFINES['EXPORT_JS_API'] = True
+
+if CONFIG['JS_THREADSAFE']:
+    DEFINES['JS_THREADSAFE'] = True
+
+if CONFIG['JS_HAS_CTYPES']:
+    DEFINES['JS_HAS_CTYPES'] = True
+    for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
+        DEFINES[var] = '"%s"' % CONFIG[var]
+
+if CONFIG['MOZ_LINKER']:
+    DEFINES['MOZ_LINKER'] = True
+
+if CONFIG['_MSC_VER']:
+    if CONFIG['CPU_ARCH'] == 'x86':
+        SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
+    elif CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['JS_HAS_CTYPES']:
+        SOURCES['ctypes/CTypes.cpp'].no_pgo = True # Bug 810661

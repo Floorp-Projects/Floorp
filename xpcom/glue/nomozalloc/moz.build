@@ -6,10 +6,10 @@
 
 include('../objs.mozbuild')
 
-SOURCES += xpcom_gluens_src_cppsrcs
-SOURCES += xpcom_glue_src_cppsrcs
+UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
+UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 
-SOURCES += [
+UNIFIED_SOURCES += [
     '../GenericModule.cpp',
     '../nsStringAPI.cpp',
 ]
@@ -22,3 +22,11 @@ SDK_LIBRARY = [
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = True
+
+if CONFIG['_MSC_VER']:
+    DEFINES['_USE_ANSI_CPP'] = True
+
+if CONFIG['TARGET_XPCOM_ABI']:
+    DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']
+
+DEFINES['MOZ_NO_MOZALLOC'] = True

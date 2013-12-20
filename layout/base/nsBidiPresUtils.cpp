@@ -687,6 +687,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
       printf("early return for single direction frame %p\n", (void*)frame);
 #endif
 #endif
+      frame->AddStateBits(NS_FRAME_IS_BIDI);
       return NS_OK;
     }
   }
@@ -975,6 +976,13 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
 
     PRUnichar ch = 0;
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+      if (!(frame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+        nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
+        MOZ_ASSERT(c = do_QueryFrame(frame),
+                   "eBidiInlineContainer must be a nsContainerFrame subclass");
+        c->DrainSelfOverflowList();
+      }
+
       const nsStyleVisibility* vis = frame->StyleVisibility();
       const nsStyleTextReset* text = frame->StyleTextReset();
       if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
@@ -1142,8 +1150,9 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
     } else {
       // For a non-leaf frame, recurse into TraverseFrames
       nsIFrame* kid = frame->GetFirstPrincipalChild();
-      nsIFrame* overflowKid = frame->GetFirstChild(nsIFrame::kOverflowList);
-      if (kid || overflowKid) {
+      MOZ_ASSERT(!frame->GetFirstChild(nsIFrame::kOverflowList),
+                 "should have drained the overflow list above");
+      if (kid) {
         const nsStyleTextReset* text = frame->StyleTextReset();
         if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_ISOLATE ||
             text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
@@ -1167,7 +1176,6 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
             subParagraph->Reset(frame, aBpd);
           }
           TraverseFrames(aBlockFrame, aLineIter, kid, subParagraph);
-          TraverseFrames(aBlockFrame, aLineIter, overflowKid, subParagraph);
           if (isLastContinuation) {
             ResolveParagraph(aBlockFrame, subParagraph);
             subParagraph->EmptyBuffer();
@@ -1178,7 +1186,6 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
           aBpd->AppendControlChar(kObjectSubstitute);
         } else {
           TraverseFrames(aBlockFrame, aLineIter, kid, aBpd);
-          TraverseFrames(aBlockFrame, aLineIter, overflowKid, aBpd);
         }
       }
     }

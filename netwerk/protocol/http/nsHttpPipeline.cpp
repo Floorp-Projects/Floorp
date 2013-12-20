@@ -558,6 +558,17 @@ nsHttpPipeline::Caps()
     return trans ? trans->Caps() : 0;
 }
 
+void
+nsHttpPipeline::SetDNSWasRefreshed()
+{
+    nsAHttpTransaction *trans = Request(0);
+    if (!trans)
+        trans = Response(0);
+
+    if (trans)
+      trans->SetDNSWasRefreshed();
+}
+
 uint64_t
 nsHttpPipeline::Available()
 {

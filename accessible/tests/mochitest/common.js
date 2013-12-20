@@ -79,7 +79,8 @@ const COORDTYPE_PARENT_RELATIVE = nsIAccessibleCoordinateType.COORDTYPE_PARENT_R
 
 const kEmbedChar = String.fromCharCode(0xfffc);
 
-const kDiscBulletText = String.fromCharCode(0x2022) + " ";
+const kDiscBulletChar = String.fromCharCode(0x2022);
+const kDiscBulletText = kDiscBulletChar + " ";
 const kCircleBulletText = String.fromCharCode(0x25e6) + " ";
 const kSquareBulletText = String.fromCharCode(0x25aa) + " ";
 
@@ -244,27 +245,20 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
   if (!aInterfaces)
     return acc;
 
-  if (aInterfaces instanceof Array) {
-    for (var index = 0; index < aInterfaces.length; index++) {
-      try {
-        acc.QueryInterface(aInterfaces[index]);
-      } catch (e) {
-        if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
-          ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
+  if (!(aInterfaces instanceof Array))
+    aInterfaces = [ aInterfaces ];
 
-        return null;
-      }
+  for (var index = 0; index < aInterfaces.length; index++) {
+    try {
+      acc.QueryInterface(aInterfaces[index]);
+    } catch (e) {
+      if (!(aDoNotFailIf & DONOTFAIL_IF_NO_INTERFACE))
+        ok(false, "Can't query " + aInterfaces[index] + " for " + aAccOrElmOrID);
+
+      return null;
     }
-    return acc;
   }
-  
-  try {
-    acc.QueryInterface(aInterfaces);
-  } catch (e) {
-    ok(false, "Can't query " + aInterfaces + " for " + aAccOrElmOrID);
-    return null;
-  }
-  
+
   return acc;
 }
 
@@ -329,6 +323,14 @@ function getApplicationAccessible()
 }
 
 /**
+ * A version of accessible tree testing, doesn't fail if tree is not complete.
+ */
+function testElm(aID, aTreeObj)
+{
+  testAccessibleTree(aID, aTreeObj, kSkipTreeFullCheck);
+}
+
+/**
  * Flags used for testAccessibleTree
  */
 const kSkipTreeFullCheck = 1;
@@ -370,11 +372,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 
     switch (prop) {
     case "actions": {
-      var actions = (typeof accTree.actions == "string") ?
-        [ accTree.actions ] : (accTree.actions || []);
-      is(acc.actionCount, actions.length, "Wong number of actions.");
-      for (var i = 0; i < actions.length; i++ )
-        is(acc.getActionName(i), actions[i], "Wrong action name at " + i + " index.");
+      testActionNames(acc, accTree.actions);
       break;
     }
 

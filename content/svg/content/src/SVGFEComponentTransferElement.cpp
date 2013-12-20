@@ -7,8 +7,11 @@
 #include "mozilla/dom/SVGFEComponentTransferElement.h"
 #include "mozilla/dom/SVGFEComponentTransferElementBinding.h"
 #include "nsSVGUtils.h"
+#include "mozilla/gfx/2D.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEComponentTransfer)
+
+using namespace mozilla::gfx;;
 
 namespace mozilla {
 namespace dom {
@@ -48,20 +51,13 @@ SVGFEComponentTransferElement::GetStringInfo()
 
 //--------------------------------------------
 
-nsresult
-SVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
-                                      const nsTArray<const Image*>& aSources,
-                                      const Image* aTarget,
-                                      const nsIntRect& rect)
+FilterPrimitiveDescription
+SVGFEComponentTransferElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                                                       const IntRect& aFilterSubregion,
+                                                       nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
-  uint8_t* sourceData = aSources[0]->mImage->Data();
-  uint8_t* targetData = aTarget->mImage->Data();
-  uint32_t stride = aTarget->mImage->Stride();
+  nsRefPtr<SVGComponentTransferFunctionElement> childForChannel[4];
 
-  uint8_t tableR[256], tableG[256], tableB[256], tableA[256];
-  for (int i=0; i<256; i++)
-    tableR[i] = tableG[i] = tableB[i] = tableA[i] = i;
-  uint8_t* tables[] = { tableR, tableG, tableB, tableA };
   for (nsIContent* childContent = nsINode::GetFirstChild();
        childContent;
        childContent = childContent->GetNextSibling()) {
@@ -70,26 +66,29 @@ SVGFEComponentTransferElement::Filter(nsSVGFilterInstance *instance,
     CallQueryInterface(childContent,
             (SVGComponentTransferFunctionElement**)getter_AddRefs(child));
     if (child) {
-      if (!child->GenerateLookupTable(tables[child->GetChannel()])) {
-        return NS_ERROR_FAILURE;
-      }
+      childForChannel[child->GetChannel()] = child;
     }
   }
 
-  for (int32_t y = rect.y; y < rect.YMost(); y++) {
-    for (int32_t x = rect.x; x < rect.XMost(); x++) {
-      int32_t targIndex = y * stride + x * 4;
-      targetData[targIndex + GFX_ARGB32_OFFSET_B] =
-        tableB[sourceData[targIndex + GFX_ARGB32_OFFSET_B]];
-      targetData[targIndex + GFX_ARGB32_OFFSET_G] =
-        tableG[sourceData[targIndex + GFX_ARGB32_OFFSET_G]];
-      targetData[targIndex + GFX_ARGB32_OFFSET_R] =
-        tableR[sourceData[targIndex + GFX_ARGB32_OFFSET_R]];
-      targetData[targIndex + GFX_ARGB32_OFFSET_A] =
-        tableA[sourceData[targIndex + GFX_ARGB32_OFFSET_A]];
+  static const AttributeName attributeNames[4] = {
+    eComponentTransferFunctionR,
+    eComponentTransferFunctionG,
+    eComponentTransferFunctionB,
+    eComponentTransferFunctionA
+  };
+
+  FilterPrimitiveDescription descr(FilterPrimitiveDescription::eComponentTransfer);
+  for (int32_t i = 0; i < 4; i++) {
+    if (childForChannel[i]) {
+      descr.Attributes().Set(attributeNames[i], childForChannel[i]->ComputeAttributes());
+    } else {
+      AttributeMap functionAttributes;
+      functionAttributes.Set(eComponentTransferFunctionType,
+                             (uint32_t)SVG_FECOMPONENTTRANSFER_TYPE_IDENTITY);
+      descr.Attributes().Set(attributeNames[i], functionAttributes);
     }
   }
-  return NS_OK;
+  return descr;
 }
 
 bool

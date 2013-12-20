@@ -1,0 +1,155 @@
+<!DOCTYPE>
+<html class="reftest-wait">
+  <head>
+    <title>Test MathML columnalign</title>
+    <script type="text/javascript">
+      function doTest()
+      {
+        var table1 = document.getElementById("table1");
+        var table2 = document.getElementById("table2");
+        var table3 = document.getElementById("table3");
+        var rows = undefined;
+
+        // Table 1 setup
+        rows = table1.getElementsByTagName("mtr");
+        for(var i = 0; i < rows.length; i++)
+          rows[i].setAttribute("columnalign", "left");
+
+        // Table 2 setup
+        rows = table2.getElementsByTagName("mtr");
+        for(var i = 0; i < rows.length; i++)
+          rows[i].setAttribute("columnalign", "center");
+
+        // Table 3 setup
+        rows = table3.getElementsByTagName("mtr");
+        for(var i = 0; i < rows.length; i++)
+          rows[i].setAttribute("columnalign", "right");
+
+        document.documentElement.removeAttribute("class");
+      }
+    window.addEventListener("MozReftestInvalidate", doTest, false);
+    </script>
+  </head>
+  <body>
+    <b>columnalign="left"</b> <br />
+    <math>
+      <mstyle>
+        <mtable id="table1">
+          <mtr>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+            <mtext>1234567</mtext>
+            </mtd>
+          </mtr>
+        </mtable>
+      </mstyle>
+    </math> <br />
+    <b>columnalign="center"</b> <br />
+    <math>
+      <mstyle>
+        <mtable id="table2">
+          <mtr>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+            <mtext>1234567</mtext>
+            </mtd>
+          </mtr>
+        </mtable>
+      </mstyle>
+    </math> <br />
+    <b>columnalign="right"</b> <br />
+    <math>
+      <mstyle>
+        <mtable id="table3">
+          <mtr>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+            <mtd>
+              <mtext>123</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+            <mtd>
+              <mtext>12345</mtext>
+            </mtd>
+          </mtr>
+          <mtr>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+              <mtext>1234567</mtext>
+            </mtd>
+            <mtd>
+            <mtext>1234567</mtext>
+            </mtd>
+          </mtr>
+        </mtable>
+      </mstyle>
+    </math>
+  </body>
+</html>

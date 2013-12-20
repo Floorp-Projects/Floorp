@@ -222,7 +222,16 @@ if CONFIG['INTEL_ARCHITECTURE']:
 MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
+    '../ucvcn',
+    '../ucvibm',
+    '../ucvja',
+    '../ucvko',
+    '../ucvlatin',
+    '../ucvtw',
+    '../ucvtw2',
     '../util',
 ]
 
 FINAL_LIBRARY = 'xul'
+
+JAR_MANIFESTS += ['jar.mn']

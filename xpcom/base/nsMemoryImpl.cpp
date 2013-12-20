@@ -48,7 +48,7 @@ nsMemoryImpl::Free(void* ptr)
 NS_IMETHODIMP
 nsMemoryImpl::HeapMinimize(bool aImmediate)
 {
-    return FlushMemory(NS_LITERAL_STRING("heap-minimize").get(), aImmediate);
+    return FlushMemory(MOZ_UTF16("heap-minimize"), aImmediate);
 }
 
 NS_IMETHODIMP

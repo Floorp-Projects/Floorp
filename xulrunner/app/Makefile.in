@@ -8,13 +8,6 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-DEFINES += -DXULRUNNER_PROGNAME=\"xulrunner\"
-
-ifdef TARGET_XPCOM_ABI
-DEFINES += -DTARGET_XPCOM_ABI=\"$(TARGET_XPCOM_ABI)\"
-endif
-
-DEFINES += -DXPCOM_GLUE
 STL_FLAGS=
 
 LOCAL_INCLUDES += \
@@ -71,12 +64,12 @@ RCFLAGS += -DMOZ_XULRUNNER
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
-RCFLAGS += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+RCFLAGS += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'
 endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
+DEFINES += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'
 
 ifeq ($(OS_ARCH),WINNT)
 #
@@ -134,7 +127,7 @@ $(FRAMEWORK_DIR)/Resources:
 
 tools:: $(PROGRAM) $(FRAMEWORK_DIR)/Resources
 	$(NSINSTALL) $(srcdir)/macbuild/InfoPlist.strings $(FRAMEWORK_DIR)/Resources
-	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Info.plist.in > $(FRAMEWORK_DIR)/Info.plist
+	sed -e 's/APP_VERSION/$(APP_VERSION)/' $(srcdir)/macbuild/Info.plist.in > $(FRAMEWORK_DIR)/Info.plist
 	rsync -av $(DIST)/bin/ $(FRAMEWORK_DIR) --exclude mangle --exclude shlibsign
 	rm -f $(DIST)/$(FRAMEWORK_NAME).framework/Versions/Current \
 	      $(DIST)/$(FRAMEWORK_NAME).framework/libxpcom.dylib \

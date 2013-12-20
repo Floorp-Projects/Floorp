@@ -239,7 +239,6 @@ class SnapshotIterator : public SnapshotReader
   private:
     bool hasLocation(const SnapshotReader::Location &loc);
     uintptr_t fromLocation(const SnapshotReader::Location &loc);
-    static Value FromTypedPayload(JSValueType type, uintptr_t payload);
 
     Value slotValue(const Slot &slot);
     bool slotReadable(const Slot &slot);
@@ -398,7 +397,7 @@ class InlineFrameIteratorMaybeGC
             count = nactual - start;
 
         unsigned end = start + count;
-        unsigned nformal = callee()->nargs;
+        unsigned nformal = callee()->nargs();
 
         JS_ASSERT(start <= end && end <= nactual);
 

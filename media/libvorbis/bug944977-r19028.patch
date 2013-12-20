@@ -1,0 +1,109 @@
+diff --git a/media/libvorbis/lib/vorbis_block.c b/media/libvorbis/lib/vorbis_block.c
+--- a/media/libvorbis/lib/vorbis_block.c
++++ b/media/libvorbis/lib/vorbis_block.c
+@@ -766,42 +766,42 @@ int vorbis_synthesis_blockin(vorbis_dsp_
+        to have to constantly shift *or* adjust memory usage.  Don't
+        accept a new block until the old is shifted out */
+ 
+     for(j=0;j<vi->channels;j++){
+       /* the overlap/add section */
+       if(v->lW){
+         if(v->W){
+           /* large/large */
+-          float *w=_vorbis_window_get(b->window[1]-hs);
++          const float *w=_vorbis_window_get(b->window[1]-hs);
+           float *pcm=v->pcm[j]+prevCenter;
+           float *p=vb->pcm[j];
+           for(i=0;i<n1;i++)
+             pcm[i]=pcm[i]*w[n1-i-1] + p[i]*w[i];
+         }else{
+           /* large/small */
+-          float *w=_vorbis_window_get(b->window[0]-hs);
++          const float *w=_vorbis_window_get(b->window[0]-hs);
+           float *pcm=v->pcm[j]+prevCenter+n1/2-n0/2;
+           float *p=vb->pcm[j];
+           for(i=0;i<n0;i++)
+             pcm[i]=pcm[i]*w[n0-i-1] +p[i]*w[i];
+         }
+       }else{
+         if(v->W){
+           /* small/large */
+-          float *w=_vorbis_window_get(b->window[0]-hs);
++          const float *w=_vorbis_window_get(b->window[0]-hs);
+           float *pcm=v->pcm[j]+prevCenter;
+           float *p=vb->pcm[j]+n1/2-n0/2;
+           for(i=0;i<n0;i++)
+             pcm[i]=pcm[i]*w[n0-i-1] +p[i]*w[i];
+           for(;i<n1/2+n0/2;i++)
+             pcm[i]=p[i];
+         }else{
+           /* small/small */
+-          float *w=_vorbis_window_get(b->window[0]-hs);
++          const float *w=_vorbis_window_get(b->window[0]-hs);
+           float *pcm=v->pcm[j]+prevCenter;
+           float *p=vb->pcm[j];
+           for(i=0;i<n0;i++)
+             pcm[i]=pcm[i]*w[n0-i-1] +p[i]*w[i];
+         }
+       }
+ 
+       /* the copy section */
+@@ -1030,17 +1030,17 @@ int vorbis_synthesis_lapout(vorbis_dsp_s
+       v->pcmret[i]=v->pcm[i]+v->pcm_returned;
+     *pcm=v->pcmret;
+   }
+ 
+   return(n1+n-v->pcm_returned);
+ 
+ }
+ 
+-float *vorbis_window(vorbis_dsp_state *v,int W){
++const float *vorbis_window(vorbis_dsp_state *v,int W){
+   vorbis_info *vi=v->vi;
+   codec_setup_info *ci=vi->codec_setup;
+   int hs=ci->halfrate_flag;
+   private_state *b=v->backend_state;
+ 
+   if(b->window[W]-1<0)return NULL;
+   return _vorbis_window_get(b->window[W]-hs);
+ }
+diff --git a/media/libvorbis/lib/vorbis_window.c b/media/libvorbis/lib/vorbis_window.c
+--- a/media/libvorbis/lib/vorbis_window.c
++++ b/media/libvorbis/lib/vorbis_window.c
+@@ -14,16 +14,17 @@
+  last mod: $Id: window.c 16227 2009-07-08 06:58:46Z xiphmont $
+ 
+  ********************************************************************/
+ 
+ #include <stdlib.h>
+ #include <math.h>
+ #include "os.h"
+ #include "misc.h"
++#include "window.h"
+ 
+ static const float vwin64[32] = {
+   0.0009460463F, 0.0085006468F, 0.0235352254F, 0.0458950567F,
+   0.0753351908F, 0.1115073077F, 0.1539457973F, 0.2020557475F,
+   0.2551056759F, 0.3122276645F, 0.3724270287F, 0.4346027792F,
+   0.4975789974F, 0.5601459521F, 0.6211085051F, 0.6793382689F,
+   0.7338252629F, 0.7837245849F, 0.8283939355F, 0.8674186656F,
+   0.9006222429F, 0.9280614787F, 0.9500073081F, 0.9669131782F,
+diff --git a/media/libvorbis/lib/window.h b/media/libvorbis/lib/window.h
+--- a/media/libvorbis/lib/window.h
++++ b/media/libvorbis/lib/window.h
+@@ -13,14 +13,14 @@
+  function: window functions
+  last mod: $Id: window.h 13293 2007-07-24 00:09:47Z xiphmont $
+ 
+  ********************************************************************/
+ 
+ #ifndef _V_WINDOW_
+ #define _V_WINDOW_
+ 
+-extern float *_vorbis_window_get(int n);
++extern const float *_vorbis_window_get(int n);
+ extern void _vorbis_apply_window(float *d,int *winno,long *blocksizes,
+                           int lW,int W,int nW);
+ 
+ 
+ #endif

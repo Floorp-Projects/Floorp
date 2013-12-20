@@ -13,8 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var gEnabled = false, gDebug = false, gAutofillForms = true; // these mirror signon.* prefs
-var gUseDOMFormHasPassword = false; // use DOMFormHasPassword event for autofill
+var gEnabled = false, gDebug = false, gAutofillForms = true , gOverrideAutocompleteAttribute = false; // these mirror signon.* prefs
 
 function log(...pieces) {
     function generateLogMessage(args) {
@@ -72,7 +71,7 @@ var observer = {
         gDebug = Services.prefs.getBoolPref("signon.debug");
         gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
         gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
-        gUseDOMFormHasPassword = Services.prefs.getBoolPref("signon.useDOMFormHasPassword");
+        gOverrideAutocompleteAttribute = Services.prefs.getBoolPref("signon.overrideAutocomplete");
     },
 };
 
@@ -94,32 +93,8 @@ var LoginManagerContent = {
         return this.__formFillService;
     },
 
-    onContentLoaded : function (event) {
-      // If we're using the new DOMFormHasPassword event, don't fill at pageload.
-      if (gUseDOMFormHasPassword)
-          return;
-
-      if (!event.isTrusted)
-          return;
-
-      if (!gEnabled)
-          return;
-
-      let domDoc = event.target;
-
-      // Only process things which might have HTML forms.
-      if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
-          return;
-
-      this._fillDocument(domDoc);
-    },
-
 
     onFormPassword: function (event) {
-      // If we're not using the new DOMFormHasPassword event, only fill at pageload.
-      if (!gUseDOMFormHasPassword)
-          return;
-
       if (!event.isTrusted)
           return;
 
@@ -382,10 +357,13 @@ var LoginManagerContent = {
      * specified form input.
      */
     _isAutocompleteDisabled :  function (element) {
+        if (gOverrideAutocompleteAttribute)
+            return false; 
+
         if (element && element.hasAttribute("autocomplete") &&
             element.getAttribute("autocomplete").toLowerCase() == "off")
             return true;
-
+        
         return false;
     },
 
@@ -549,91 +527,6 @@ var LoginManagerContent = {
         // Prompt user to save login (via dialog or notification bar)
         prompter = getPrompter(win);
         prompter.promptToSavePassword(formLogin);
-    },
-
-
-    /*
-     * _fillDocument
-     *
-     * Called when a page has loaded. For each form in the document,
-     * we check to see if it can be filled with a stored login.
-     */
-    _fillDocument : function (doc) {
-        var forms = doc.forms;
-        if (!forms || forms.length == 0)
-            return;
-
-        var formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
-
-        // If there are no logins for this site, bail out now.
-        if (!Services.logins.countLogins(formOrigin, "", null))
-            return;
-
-        // If we're currently displaying a master password prompt, defer
-        // processing this document until the user handles the prompt.
-        if (Services.logins.uiBusy) {
-            log("deferring fillDoc for", doc.documentURI);
-            let self = this;
-            let observer = {
-                QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-                observe: function (subject, topic, data) {
-                    log("Got deferred fillDoc notification:", topic);
-                    // Only run observer once.
-                    Services.obs.removeObserver(this, "passwordmgr-crypto-login");
-                    Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
-                    if (topic == "passwordmgr-crypto-loginCanceled")
-                        return;
-                    self._fillDocument(doc);
-                },
-                handleEvent : function (event) {
-                    // Not expected to be called
-                }
-            };
-            // Trickyness follows: We want an observer, but don't want it to
-            // cause leaks. So add the observer with a weak reference, and use
-            // a dummy event listener (a strong reference) to keep it alive
-            // until the document is destroyed.
-            Services.obs.addObserver(observer, "passwordmgr-crypto-login", true);
-            Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled", true);
-            doc.addEventListener("mozCleverClosureHack", observer);
-            return;
-        }
-
-        log("fillDocument processing", forms.length, "forms on", doc.documentURI);
-
-        var autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
-        var previousActionOrigin = null;
-        var foundLogins = null;
-
-        // Limit the number of forms we try to fill. If there are too many
-        // forms, just fill some at the beginning and end of the page.
-        const MAX_FORMS = 40; // assumed to be an even number
-        var skip_from = -1, skip_to = -1;
-        if (forms.length > MAX_FORMS) {
-            log("fillDocument limiting number of forms filled to", MAX_FORMS);
-            let chunk_size = MAX_FORMS / 2;
-            skip_from = chunk_size;
-            skip_to   = forms.length - chunk_size;
-        }
-
-        for (var i = 0; i < forms.length; i++) {
-            // Skip some in the middle of the document if there were too many.
-            if (i == skip_from)
-              i = skip_to;
-
-            var form = forms[i];
-
-            // Only the actionOrigin might be changing, so if it's the same
-            // as the last form on the page we can reuse the same logins.
-            var actionOrigin = LoginUtils._getActionOrigin(form);
-            if (actionOrigin != previousActionOrigin) {
-                foundLogins = null;
-                previousActionOrigin = actionOrigin;
-            }
-            log("_fillDocument processing form[", i, "]");
-            foundLogins = this._fillForm(form, autofillForm, false, false, foundLogins)[1];
-        } // foreach form
     },
 
 

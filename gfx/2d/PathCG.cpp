@@ -68,12 +68,20 @@ void
 PathBuilderCG::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
                  Float aEndAngle, bool aAntiClockwise)
 {
+  // Core Graphic's initial coordinate system is y-axis up, whereas Moz2D's is
+  // y-axis down. Core Graphics therefore considers "clockwise" to mean "sweep
+  // in the direction of decreasing angle" whereas Moz2D considers it to mean
+  // "sweep in the direction of increasing angle". In other words if this
+  // Moz2D method is instructed to sweep anti-clockwise we need to tell
+  // CGPathAddArc to sweep clockwise, and vice versa. Hence why we pass the
+  // value of aAntiClockwise directly to CGPathAddArc's "clockwise" bool
+  // parameter.
   CGPathAddArc(mCGPath, nullptr,
                aOrigin.x, aOrigin.y,
                aRadius,
                aStartAngle,
                aEndAngle,
-               !aAntiClockwise);
+               aAntiClockwise);
 }
 
 Point
@@ -289,10 +297,8 @@ PathCG::GetBounds(const Matrix &aTransform) const
 {
   //XXX: are these bounds tight enough
   Rect bounds = CGRectToRect(CGPathGetBoundingBox(mPath));
-  if (!bounds.IsFinite()) {
-    return Rect();
-  }
-  //XXX: curretnly this returns the bounds of the transformed bounds
+
+  //XXX: currently this returns the bounds of the transformed bounds
   // this is strictly looser than the bounds of the transformed path
   return aTransform.TransformBounds(bounds);
 }

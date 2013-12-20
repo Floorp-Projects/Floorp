@@ -22,7 +22,7 @@ USING_FILE_NAMESPACE
 
 ArchiveZipItem::ArchiveZipItem(const char* aFilename,
                                const ZipCentral& aCentralStruct,
-                               const nsAString& aEncoding)
+                               const nsACString& aEncoding)
 : mFilename(aFilename),
   mCentralStruct(aCentralStruct),
   mEncoding(aEncoding)
@@ -43,8 +43,8 @@ ArchiveZipItem::ConvertFilename()
   }
 
   nsString filenameU;
-  nsresult rv = nsContentUtils::ConvertStringFromCharset(
-                  NS_ConvertUTF16toUTF8(mEncoding),
+  nsresult rv = nsContentUtils::ConvertStringFromEncoding(
+                  mEncoding,
                   mFilename, filenameU);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -111,7 +111,7 @@ ArchiveZipItem::StrToInt16(const uint8_t* aStr)
 // ArchiveReaderZipEvent
 
 ArchiveReaderZipEvent::ArchiveReaderZipEvent(ArchiveReader* aArchiveReader,
-                                             const nsAString& aEncoding)
+                                             const nsACString& aEncoding)
 : ArchiveReaderEvent(aArchiveReader),
   mEncoding(aEncoding)
 {

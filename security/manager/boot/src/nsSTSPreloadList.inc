@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1396091153162000);
+const PRTime gPreloadListExpirationTime = INT64_C(1397905536640000);
 
 class nsSTSPreload
 {
@@ -21,6 +21,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "aladdinschools.appspot.com", false },
   { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
+  { "api.xero.com", false },
   { "app.recurly.com", false },
   { "appseccalifornia.org", true },
   { "arivo.com.br", true },
@@ -49,6 +50,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "cupcake.is", true },
   { "cybozu.com", true },
   { "cyphertite.com", true },
+  { "data.qld.gov.au", false },
   { "davidlyness.com", true },
   { "developer.mydigipass.com", false },
   { "dist.torproject.org", false },
@@ -57,6 +59,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "download.jitsi.org", false },
   { "ebanking.indovinabank.com.vn", false },
   { "ecosystem.atlassian.net", true },
+  { "eff.org", true },
   { "entropia.de", false },
   { "errors.zenpayroll.com", false },
   { "espra.com", true },
@@ -66,6 +69,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "forum.quantifiedself.com", true },
   { "gernert-server.de", true },
   { "getlantern.org", true },
+  { "go.xero.com", false },
   { "grc.com", false },
   { "haste.ch", true },
   { "howrandom.org", true },
@@ -83,11 +87,13 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "lockify.com", true },
   { "login.persona.org", true },
   { "login.sapo.pt", true },
+  { "login.xero.com", false },
   { "logotype.se", true },
   { "lolicore.ch", true },
   { "lookout.com", false },
   { "lumi.do", false },
   { "luneta.nearbuysystems.com", false },
+  { "mail.de", true },
   { "makeyourlaws.org", false },
   { "manage.zenpayroll.com", false },
   { "manager.linode.com", false },
@@ -98,6 +104,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "members.nearlyfreespeech.net", false },
   { "mudcrab.us", true },
   { "my.onlime.ch", false },
+  { "my.xero.com", false },
   { "mylookout.com", false },
   { "neg9.org", false },
   { "oplop.appspot.com", true },
@@ -107,9 +114,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "pastebin.linode.com", false },
   { "pay.gigahost.dk", true },
   { "paymill.com", true },
-  { "paymill.de", true },
+  { "paymill.de", false },
   { "piratenlogin.de", true },
   { "pixi.me", true },
+  { "publications.qld.gov.au", false },
   { "riseup.net", true },
   { "roundcube.mayfirst.org", false },
   { "sandbox.mydigipass.com", false },
@@ -118,6 +126,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "silentcircle.com", false },
   { "simbolo.co.uk", false },
   { "simple.com", false },
+  { "skydrive.live.com", false },
   { "squareup.com", false },
   { "stocktrade.de", false },
   { "stripe.com", true },

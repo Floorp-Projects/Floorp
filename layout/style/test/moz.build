@@ -14,5 +14,7 @@ HOST_SIMPLE_PROGRAMS += [
     'host_%s' % f.replace('.cpp', '') for f in HOST_SOURCES
 ]
 
+MOCHITEST_MANIFESTS += ['mochitest.ini']
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
 
+DEFINES['MOZILLA_INTERNAL_API'] = True

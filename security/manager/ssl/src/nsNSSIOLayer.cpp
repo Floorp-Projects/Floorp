@@ -974,14 +974,15 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
       // to retry without TLS.
 
       // Don't allow STARTTLS connections to fall back on connection resets or
-      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for those errors,
-      // because connection resets and EOF have too many false positives,
+      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for connection
+      // resets, because connection resets have too many false positives,
       // and we want to maximize how often we send TLS 1.0+ with extensions
       // if at all reasonable. Unfortunately, it appears we have to allow
-      // fallback from TLS 1.2 and TLS 1.1 for those errors due to bad
-      // intermediaries.
+      // fallback from TLS 1.2 and TLS 1.1 for connection resets due to bad
+      // servers and possibly bad intermediaries.
     conditional:
-      if (range.max <= SSL_LIBRARY_VERSION_TLS_1_0 ||
+      if ((err == PR_CONNECT_RESET_ERROR &&
+           range.max <= SSL_LIBRARY_VERSION_TLS_1_0) ||
           socketInfo->GetHasCleartextPhase()) {
         return false;
       }
@@ -1035,7 +1036,8 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
                        PRFileDesc* ssl_layer_fd,
                        nsNSSSocketInfo *socketInfo)
 {
-  PRErrorCode err = PR_GetError();
+  const PRErrorCode originalError = PR_GetError();
+  PRErrorCode err = originalError;
 
   // This is where we work around all of those SSL servers that don't 
   // conform to the SSL spec and shutdown a connection when we request
@@ -1113,6 +1115,14 @@ int32_t checkHandshake(int32_t bytesTransfered, bool wasReading,
   }
   
   if (bytesTransfered < 0) {
+    // Remember that we encountered an error so that getSocketInfoIfRunning
+    // will correctly cause us to fail if another part of Gecko
+    // (erroneously) calls an I/O function (PR_Send/PR_Recv/etc.) again on
+    // this socket. Note that we use the original error because if we use
+    // PR_CONNECT_RESET_ERROR, we'll repeated try to reconnect.
+    if (originalError != PR_WOULD_BLOCK_ERROR && !socketInfo->GetErrorCode()) {
+      socketInfo->SetCanceled(originalError, PlainErrorMessage);
+    }
     PR_SetError(err, 0);
   }
 

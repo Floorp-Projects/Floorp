@@ -673,8 +673,17 @@
       </field>
 
       <property name="userTypedValue"
-                onget="return this._userTypedValue;"
-                onset="this.userTypedClear = 0; return this._userTypedValue = val;"/>
+                onget="return this._userTypedValue;">
+        <setter><![CDATA[
+          this.userTypedClear = 0;
+          this._userTypedValue = val;
+
+          let event = new CustomEvent("UserTypedValueChanged");
+          this.dispatchEvent(event);
+
+          return val;
+        ]]></setter>
+      </property>
 
       <field name="mFormFillAttached">
         false
@@ -1145,6 +1154,10 @@
             ourFieldValues[field] = this[field];
             otherFieldValues[field] = aOtherBrowser[field];
           }
+
+          if (window.PopupNotifications)
+            PopupNotifications._swapBrowserNotifications(aOtherBrowser, this);
+
           this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner)
               .swapFrameLoaders(aOtherBrowser);
 

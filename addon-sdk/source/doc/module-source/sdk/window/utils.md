@@ -89,7 +89,7 @@ to support private browsing, refer to the
       var utils = require('sdk/window/utils');
       var browserWindow = utils.getMostRecentBrowserWindow();
       var window = browserWindow.content; // `window` object for the current webpage
-      utils.getToplevelWindw(window) == browserWindow // => true
+      utils.getToplevelWindow(window) == browserWindow // => true
 
   @param window {nsIDOMWindow}
   @returns {nsIDOMWindow}

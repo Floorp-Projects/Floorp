@@ -5,19 +5,40 @@
 ####################
 
 {
-   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534.)
    Memcheck:Leak
    ...
    fun:_ZL9SaveToEnvPKc
    ...
 }
 {
-   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793534 and see bug 793549.)
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793549.)
    Memcheck:Leak
    ...
    fun:_ZL13SaveWordToEnvPKcRK19nsACString_internal
    ...
 }
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 944133.)
+   Memcheck:Leak
+   ...
+   fun:_ZN13CrashReporter14SetRestartArgsEiPPc
+   ...
+}
+{
+   PR_SetEnv requires its argument to be leaked, but does not appear on stacks. (See bug 793548.)
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:_Z12ToNewCStringRK19nsACString_internal
+   fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
+   ...
+}
+
+####################################
+#  Leaks in third party libraries  #
+####################################
+
 {
    See bug 793535
    Memcheck:Leak
@@ -48,126 +69,6 @@
 #################
 
 {
-   Bug 793532
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN8JSObject25allocateSlowArrayElementsEP9JSContext
-   ...
-}
-{
-   Bug 793533 (all 64-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN3xpc18CreateGlobalObjectEP9JSContextP7JSClassP12nsIPrincipalbPP8JSObjectPP13JSCompartment
-   ...
-}
-{
-   Bug 793533 (all 64-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN3xpc18CreateGlobalObjectEP9JSContextP7JSClassP12nsIPrincipalm
-   ...
-}
-{
-   Bug 793536 (all 64-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZNSt11_Deque_baseIN11MessageLoop11PendingTaskESaIS1_EE17_M_initialize_mapEm
-   ...
-}
-{
-   Bug 793536 (all 32-bit systems)
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZNSt11_Deque_baseIN11MessageLoop11PendingTaskESaIS1_EE17_M_initialize_mapEj
-   ...
-}
-{
-   Bug 793548
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:_Z12ToNewCStringRK19nsACString_internal
-   fun:_ZN13CrashReporter14SetupExtraDataEP7nsIFileRK19nsACString_internal
-   ...
-}
-{
-   Bug 793608
-   Memcheck:Leak
-   ...
-   fun:gaih_inet
-   fun:getaddrinfo
-   fun:PR_GetAddrInfoByName
-   fun:_ZN14nsHostResolver10ThreadFuncEPv
-   fun:_pt_root
-   fun:start_thread
-   fun:clone
-}
-{
-   Bug 793608 variant
-   Memcheck:Leak
-   fun:malloc
-   fun:__libc_res_nsend
-   fun:__libc_res_nquery
-   fun:__libc_res_nquerydomain
-   fun:__libc_res_nsearch
-   obj:*
-   ...
-}
-{
-   Bug 793608 variant 2
-   Memcheck:Leak
-   fun:malloc
-   fun:make_request
-   fun:__check_pf
-   fun:getaddrinfo
-   fun:PR_GetAddrInfoByName
-   fun:_ZN14nsHostResolver10ThreadFuncEPv
-   fun:_pt_root
-   fun:start_thread
-   fun:clone
-}
-{
-   Bug 793615
-   Memcheck:Leak
-   fun:malloc
-   fun:sqlite3MemMalloc
-   ...
-}
-{
-   Bug 794350
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_ZN11MessageLoopC1ENS_4TypeE
-   fun:_ZN4base6Thread10ThreadMainEv
-   fun:_ZL10ThreadFuncPv
-   fun:start_thread
-   fun:clone
-}
-{
-   Bug 794354
-   Memcheck:Leak
-   ...
-   fun:_ZN7mozilla12safebrowsing10Classifier12ApplyUpdatesEP8nsTArrayIPNS0_11TableUpdateE24nsTArrayDefaultAllocatorE
-   fun:_ZN30nsUrlClassifierDBServiceWorker11ApplyUpdateEv
-   fun:_ZN30nsUrlClassifierDBServiceWorker12FinishUpdateEv
-   ...
-}
-{
-   Bug 794358
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:PK11_InitPin
-   fun:_ZN11nsPK11Token12InitPasswordEPKt
-   ...
-}
-{
    Bug 794369
    Memcheck:Leak
    fun:malloc
@@ -188,14 +89,6 @@
    Memcheck:Leak
    fun:malloc
    fun:moz_xmalloc
-   fun:_ZN22nsComponentManagerImpl16RegisterCIDEntryEPKN7mozilla6Module8CIDEntryEPNS_11KnownModuleE
-   ...
-}
-{
-   Bug 794372
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
    fun:_ZN22nsComponentManagerImpl22RegisterCIDEntryLockedEPKN7mozilla6Module8CIDEntryEPNS_11KnownModuleE
    ...
 }
@@ -205,87 +98,5 @@
    fun:malloc
    fun:moz_xmalloc
    fun:_ZN22nsComponentManagerImpl17ManifestComponentERNS_25ManifestProcessingContextEiPKPc
-   ...
-}
-{
-   Bug 803386
-   Memcheck:Free
-   fun:_ZdlPv
-   fun:_ZN16SkMallocPixelRefD0Ev
-   fun:_ZNK8SkRefCnt16internal_disposeEv
-   fun:_ZN8SkBitmap10freePixelsEv
-   fun:_ZN8SkBitmapD1Ev
-   fun:_ZN7mozilla3gfx5ScaleEPhiiiS1_iiiNS0_13SurfaceFormatE
-   ...
-}
-{
-   Bug 812422
-   Memcheck:Leak
-   fun:malloc
-   fun:moz_xmalloc
-   fun:_Z22NS_NewComputedDOMStylePN7mozilla3dom7ElementERK18nsAString_internalP12nsIPresShellN18nsComputedDOMStyle9StyleTypeE
-   fun:_ZN14nsGlobalWindow22GetComputedStyleHelperEP13nsIDOMElementRK18nsAString_internalbPP25nsIDOMCSSStyleDeclaration
-   ...
-}
-{
-   Bug 812423
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js15ArgumentsObject6createI18CopyStackFrameArgsEEPS0_P9JSContextN2JS6HandleIP8JSScriptEENS7_IP10JSFunctionEEjRT_
-   fun:_ZN2js15ArgumentsObject14createExpectedEP9JSContextPNS_10StackFrameE
-   ...
-}
-{
-   Bug 812423
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js15ArgumentsObject6createI13CopyFrameArgsEEPS0_P9JSContextN2JS6HandleIP8JSScriptEENS7_IP10JSFunctionEEjRT_
-   fun:_ZN2js15ArgumentsObject14createExpectedEP9JSContextNS_16AbstractFramePtrE
-   ...
-}
-{
-   Bug 823782
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:_ZN2js6ctypes7LibraryL7DeclareEP9JSContextjPN2JS5ValueE
-   ...
-}
-{
-   Bug 823782
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js6ctypes5CData6CreateEP9JSContextN2JS6HandleIP8JSObjectEES8_Pvb
-   ...
-}
-{
-   Bug 823782
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:_ZN2js6ctypes10StructTypeL6CreateEP9JSContextjPN2JS5ValueE
-   ...
-}
-{
-   Bug 823782
-   Memcheck:Leak
-   fun:malloc
-   fun:_ZN2js6ctypes9Int64Base9ConstructEP9JSContextN2JS6HandleIP8JSObjectEEmb
-   ...
-}
-{
-   Bug 824323
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:_ZN7mozilla3dom7workers13WorkerPrivate9DoRunLoopEP9JSContext
-   ...
-}
-{
-   Bug 874658
-   Memcheck:Leak
-   fun:malloc
-   ...
-   fun:_Z31mozilla_sampler_register_threadPKc
    ...
 }

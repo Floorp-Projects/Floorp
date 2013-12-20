@@ -8,14 +8,6 @@
 # libstdc++-compat is not built yet.
 MOZ_LIBSTDCXX_HOST_VERSION =
 
-ifndef CROSS_COMPILE
-ifdef COMPILE_ENVIRONMENT
-ifdef USE_ELF_DYNSTR_GC
-export:: elf-dynstr-gc
-endif
-endif
-endif
-
 # IMPORTANT: Disable NSBUILDROOT for this directory only, otherwise we have
 # a recursive rule for finding nsinstall and the Perl scripts.
 ifdef NSBUILDROOT
@@ -55,15 +47,11 @@ include $(topsrcdir)/config/rules.mk
 
 HOST_CFLAGS += -DUNICODE -D_UNICODE
 
-ifeq ($(OS_CONFIG),SunOS4.1)
-NSPR_CFLAGS	+= -I$(srcdir)/../nsprpub/pr/include/md
-endif
-
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!
 export::
 ifdef MOZ_BUILD_DATE
-	printf "%s" $(MOZ_BUILD_DATE) > buildid
+	printf '%s' $(MOZ_BUILD_DATE) > buildid
 else
 	$(PYTHON) $(topsrcdir)/toolkit/xre/make-platformini.py --print-buildid > buildid
 endif
@@ -117,13 +105,6 @@ endif
 
 GARBAGE += \
   $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES) buildid $(srcdir)/*.pyc *.pyc
-
-ifndef CROSS_COMPILE
-ifdef USE_ELF_DYNSTR_GC
-elf-dynstr-gc: elf-dynstr-gc.c $(GLOBAL_DEPS) $(call mkdir_deps,$(MDDEPDIR))
-	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -DELFDYNSTRGC_BUILD -o $@ $< $(LDFLAGS) $(GLIB_LIBS)
-endif
-endif
 
 FORCE:
 

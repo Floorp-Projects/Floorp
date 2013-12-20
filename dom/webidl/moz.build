@@ -119,6 +119,7 @@ WEBIDL_FILES = [
     'HTMLButtonElement.webidl',
     'HTMLCanvasElement.webidl',
     'HTMLCollection.webidl',
+    'HTMLContentElement.webidl',
     'HTMLDataElement.webidl',
     'HTMLDataListElement.webidl',
     'HTMLDirectoryElement.webidl',
@@ -209,6 +210,7 @@ WEBIDL_FILES = [
     'MediaElementAudioSourceNode.webidl',
     'MediaError.webidl',
     'MediaList.webidl',
+    'MediaQueryList.webidl',
     'MediaRecorder.webidl',
     'MediaSource.webidl',
     'MediaStream.webidl',
@@ -271,7 +273,9 @@ WEBIDL_FILES = [
     'Screen.webidl',
     'ScriptProcessorNode.webidl',
     'ScrollAreaEvent.webidl',
+    'Selection.webidl',
     'SettingsManager.webidl',
+    'ShadowRoot.webidl',
     'SharedWorker.webidl',
     'SharedWorkerGlobalScope.webidl',
     'SimpleGestureEvent.webidl',
@@ -404,6 +408,7 @@ WEBIDL_FILES = [
     'UIEvent.webidl',
     'UndoManager.webidl',
     'URL.webidl',
+    'URLSearchParams.webidl',
     'URLUtils.webidl',
     'URLUtilsReadOnly.webidl',
     'ValidityState.webidl',
@@ -546,18 +551,6 @@ if CONFIG['MOZ_WEBSPEECH']:
 if CONFIG['MOZ_B2G_FM']:
     WEBIDL_FILES += [
         'FMRadio.webidl',
-    ]
-
-if CONFIG['ENABLE_TESTS']:
-    TEST_WEBIDL_FILES += [
-        'TestDictionary.webidl',
-        'TestJSImplInheritanceGen.webidl',
-        'TestTypedef.webidl',
-    ]
-    PREPROCESSED_TEST_WEBIDL_FILES += [
-        'TestCodeGen.webidl',
-        'TestExampleGen.webidl',
-        'TestJSImplGen.webidl',
     ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [

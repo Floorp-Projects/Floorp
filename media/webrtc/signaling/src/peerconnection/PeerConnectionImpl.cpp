@@ -63,6 +63,8 @@
 #include "mozilla/dom/DataChannelBinding.h"
 #include "MediaStreamList.h"
 #include "MediaStreamTrack.h"
+#include "AudioStreamTrack.h"
+#include "VideoStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
 #include "DOMMediaStream.h"
 #include "rlogringbuffer.h"
@@ -112,7 +114,7 @@ static nsresult InitNSSInContent()
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::psm::ConfigureMD5(false);
+  mozilla::psm::DisableMD5();
 
   nssStarted = true;
 
@@ -646,6 +648,10 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
       NS_ConvertUTF16toUTF8 credential(server.mCredential);
       NS_ConvertUTF16toUTF8 username(server.mUsername);
 
+#ifdef MOZ_WIDGET_GONK
+      if (transport.get() == kNrIceTransportTcp)
+          continue;
+#endif
       if (!aDst->addTurnServer(host.get(), port,
                                username.get(),
                                credential.get(),
@@ -787,7 +793,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // DTLS identity
   unsigned char fingerprint[DTLS_FINGERPRINT_LENGTH];
   size_t fingerprint_length;
-  res = mIdentity->ComputeFingerprint("sha-1",
+  res = mIdentity->ComputeFingerprint("sha-256",
                                       fingerprint,
                                       sizeof(fingerprint),
                                       &fingerprint_length);
@@ -798,7 +804,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
     return res;
   }
 
-  mFingerprint = "sha-1 " + mIdentity->FormatFingerprint(fingerprint,
+  mFingerprint = "sha-256 " + mIdentity->FormatFingerprint(fingerprint,
                                                          fingerprint_length);
   if (NS_FAILED(res)) {
     CSFLogError(logTag, "%s: do_GetService failed: %u",
@@ -971,7 +977,7 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 
   if (!mHaveDataStream) {
     // XXX stream_id of 0 might confuse things...
-    mInternal->mCall->addStream(0, 2, DATA);
+    mInternal->mCall->addStream(0, 2, DATA, 0);
     mHaveDataStream = true;
   }
   nsIDOMDataChannel *retval;
@@ -992,15 +998,18 @@ PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
 // Without it, each weak-ref call in this file would look like this:
 //
 //  nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(mPCObserver);
-//  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
-//  nsRefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
-//  if (!pco) {
+//  if (!tmp) {
 //    return;
 //  }
+//  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
+//  nsRefPtr<PeerConnectionObserver> pco = static_cast<PeerConnectionObserver*>(&*tmp2);
 
 static already_AddRefed<PeerConnectionObserver>
 do_QueryObjectReferent(nsIWeakReference* aRawPtr) {
   nsCOMPtr<nsISupportsWeakReference> tmp = do_QueryReferent(aRawPtr);
+  if (!tmp) {
+    return nullptr;
+  }
   nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
   nsRefPtr<PeerConnectionObserver> tmp3 = static_cast<PeerConnectionObserver*>(&*tmp2);
   return tmp3.forget();
@@ -1182,24 +1191,68 @@ PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
   *result = perf->Now() + perf->Timing()->NavigationStart();
   return NS_OK;
 }
+
+class RTCStatsReportInternalConstruct : public RTCStatsReportInternal {
+public:
+  RTCStatsReportInternalConstruct(const nsString &pcid, DOMHighResTimeStamp now) {
+    mPcid = pcid;
+    mInboundRTPStreamStats.Construct();
+    mOutboundRTPStreamStats.Construct();
+    mMediaStreamTrackStats.Construct();
+    mMediaStreamStats.Construct();
+    mTransportStats.Construct();
+    mIceComponentStats.Construct();
+    mIceCandidatePairStats.Construct();
+    mIceCandidateStats.Construct();
+    mCodecStats.Construct();
+  }
+};
+
+// Specialized helper - push map[key] if specified or all map values onto array
+
+static void
+PushBackSelect(std::vector<RefPtr<MediaPipeline>>& aDst,
+               const std::map<TrackID, RefPtr<mozilla::MediaPipeline>> & aSrc,
+               TrackID aKey = 0) {
+  auto begin = aKey ? aSrc.find(aKey) : aSrc.begin(), it = begin;
+  for (auto end = (aKey && begin != aSrc.end())? ++begin : aSrc.end();
+       it != end; ++it) {
+    aDst.push_back(it->second);
+  }
+}
 #endif
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector,
-                             bool internalStats) {
+PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector, bool internalStats) {
   PC_AUTO_ENTER_API_CALL(true);
 
 #ifdef MOZILLA_INTERNAL_API
-  uint32_t track = aSelector ? aSelector->GetTrackID() : 0;
+  MOZ_ASSERT(mMedia);
+
+  // Gather up pipelines from mMedia and dispatch them to STS for inspection
+
+  nsAutoPtr<std::vector<RefPtr<MediaPipeline>>> pipelines(
+      new std::vector<RefPtr<MediaPipeline>>());
+  TrackID trackId = aSelector ? aSelector->GetTrackID() : 0;
+
+  for (int i = 0, len = mMedia->LocalStreamsLength(); i < len; i++) {
+    PushBackSelect(*pipelines, mMedia->GetLocalStream(i)->GetPipelines(), trackId);
+  }
+  for (int i = 0, len = mMedia->RemoteStreamsLength(); i < len; i++) {
+    PushBackSelect(*pipelines, mMedia->GetRemoteStream(i)->GetPipelines(), trackId);
+  }
+
   DOMHighResTimeStamp now;
   nsresult rv = GetTimeSinceEpoch(&now);
   NS_ENSURE_SUCCESS(rv, rv);
+
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mSTSThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::GetStats_s,
-                             track,
+                             trackId,
                              internalStats,
+                             pipelines,
                              now),
                 NS_DISPATCH_NORMAL);
 #endif
@@ -1250,7 +1303,15 @@ PeerConnectionImpl::CloseStreams() {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream) {
+PeerConnectionImpl::AddStream(DOMMediaStream &aMediaStream,
+                              const MediaConstraintsInternal& aConstraints)
+{
+  return AddStream(aMediaStream, MediaConstraintsExternal(aConstraints));
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream,
+                              const MediaConstraintsExternal& aConstraints) {
   PC_AUTO_ENTER_API_CALL(true);
 
   uint32_t hints = aMediaStream.GetHintContents();
@@ -1282,12 +1343,16 @@ PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream) {
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mInternal->mCall->addStream(stream_id, 0, AUDIO);
+    cc_media_constraints_t* cc_constraints = aConstraints.build();
+    NS_ENSURE_TRUE(cc_constraints, NS_ERROR_UNEXPECTED);
+    mInternal->mCall->addStream(stream_id, 0, AUDIO, cc_constraints);
     mNumAudioStreams++;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mInternal->mCall->addStream(stream_id, 1, VIDEO);
+    cc_media_constraints_t* cc_constraints = aConstraints.build();
+    NS_ENSURE_TRUE(cc_constraints, NS_ERROR_UNEXPECTED);
+    mInternal->mCall->addStream(stream_id, 1, VIDEO, cc_constraints);
     mNumVideoStreams++;
   }
 
@@ -1337,6 +1402,7 @@ PeerConnectionImpl::SetRemoteFingerprint(const char* hash, const char* fingerpri
     return NS_ERROR_FAILURE;
   }
 }
+*/
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetFingerprint(char** fingerprint)
@@ -1354,7 +1420,6 @@ PeerConnectionImpl::GetFingerprint(char** fingerprint)
   *fingerprint = tmp;
   return NS_OK;
 }
-*/
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetLocalDescription(char** aSDP)
@@ -1789,26 +1854,58 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
 }
 
 #ifdef MOZILLA_INTERNAL_API
-void PeerConnectionImpl::GetStats_s(
-    uint32_t trackId,
+nsresult
+PeerConnectionImpl::GetStatsImpl_s(
+    TrackID trackId,
     bool internalStats,
-    DOMHighResTimeStamp now) {
+    nsAutoPtr<std::vector<RefPtr<MediaPipeline>>> pipelines,
+    DOMHighResTimeStamp now,
+    RTCStatsReportInternal *report) {
 
-  nsresult result = NS_OK;
-  nsAutoPtr<RTCStatsReportInternal> report(new RTCStatsReportInternal);
-  if (!report) {
-    result = NS_ERROR_FAILURE;
+  // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
+
+  for (auto it = pipelines->begin(); it != pipelines->end(); ++it) {
+    const MediaPipeline& mp = **it;
+    nsString idstr = (mp.Conduit()->type() == MediaSessionConduit::AUDIO) ?
+        NS_LITERAL_STRING("audio_") : NS_LITERAL_STRING("video_");
+    idstr.AppendInt(mp.trackid());
+
+    switch (mp.direction()) {
+      case MediaPipeline::TRANSMIT: {
+        RTCOutboundRTPStreamStats s;
+        s.mTimestamp.Construct(now);
+        s.mId.Construct(NS_LITERAL_STRING("outbound_rtp_") + idstr);
+        s.mType.Construct(RTCStatsType::Outboundrtp);
+        // TODO: Get SSRC
+        // int channel = mp.Conduit()->GetChannel();
+        s.mSsrc.Construct(NS_LITERAL_STRING("123457"));
+        s.mPacketsSent.Construct(mp.rtp_packets_sent());
+        s.mBytesSent.Construct(mp.rtp_bytes_sent());
+        report->mOutboundRTPStreamStats.Value().AppendElement(s);
+        break;
+      }
+      case MediaPipeline::RECEIVE: {
+        RTCInboundRTPStreamStats s;
+        s.mTimestamp.Construct(now);
+        s.mId.Construct(NS_LITERAL_STRING("inbound_rtp_") + idstr);
+        s.mType.Construct(RTCStatsType::Inboundrtp);
+        s.mSsrc.Construct(NS_LITERAL_STRING("123457"));
+        s.mPacketsReceived.Construct(mp.rtp_packets_received());
+        s.mBytesReceived.Construct(mp.rtp_bytes_received());
+        report->mInboundRTPStreamStats.Value().AppendElement(s);
+        break;
+      }
+    }
   }
 
-  report->mPcid.Construct(NS_ConvertASCIItoUTF16(mHandle.c_str()));
   if (mMedia) {
-    RefPtr<NrIceMediaStream> mediaStream(
-        mMedia->ice_media_stream(trackId));
+
+    // Gather stats from ICE
+
+    RefPtr<NrIceMediaStream> mediaStream(mMedia->ice_media_stream(trackId));
     if (mediaStream) {
       std::vector<NrIceCandidatePair> candPairs;
       mediaStream->GetCandidatePairs(&candPairs);
-      report->mIceCandidatePairStats.Construct();
-      report->mIceCandidateStats.Construct();
       NS_ConvertASCIItoUTF16 componentId(mediaStream->name().c_str());
       for (auto p = candPairs.begin(); p != candPairs.end(); ++p) {
         NS_ConvertASCIItoUTF16 codeword(p->codeword.c_str());
@@ -1842,8 +1939,8 @@ void PeerConnectionImpl::GetStats_s(
           local.mCandidateType.Construct(
               RTCStatsIceCandidateType(p->local.type));
           local.mIpAddress.Construct(
-              NS_ConvertASCIItoUTF16(p->local.host.c_str()));
-          local.mPortNumber.Construct(p->local.port);
+              NS_ConvertASCIItoUTF16(p->local.cand_addr.host.c_str()));
+          local.mPortNumber.Construct(p->local.cand_addr.port);
           report->mIceCandidateStats.Value().AppendElement(local);
         }
 
@@ -1855,27 +1952,42 @@ void PeerConnectionImpl::GetStats_s(
           remote.mCandidateType.Construct(
               RTCStatsIceCandidateType(p->remote.type));
           remote.mIpAddress.Construct(
-              NS_ConvertASCIItoUTF16(p->remote.host.c_str()));
-          remote.mPortNumber.Construct(p->remote.port);
+              NS_ConvertASCIItoUTF16(p->remote.cand_addr.host.c_str()));
+          remote.mPortNumber.Construct(p->remote.cand_addr.port);
           report->mIceCandidateStats.Value().AppendElement(remote);
         }
       }
     }
   }
+  return NS_OK;
+}
+
+void PeerConnectionImpl::GetStats_s(
+    TrackID trackId,
+    bool internalStats,
+    nsAutoPtr<std::vector<RefPtr<MediaPipeline>>> pipelines,
+    DOMHighResTimeStamp now) {
+
+  nsAutoPtr<RTCStatsReportInternal> report(new RTCStatsReportInternalConstruct(
+      NS_ConvertASCIItoUTF16(mHandle.c_str()), now));
+
+  nsresult rv = report ? GetStatsImpl_s(trackId, internalStats, pipelines, now,
+                                        report)
+                       : NS_ERROR_UNEXPECTED;
 
   nsRefPtr<PeerConnectionImpl> pc(this);
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::OnStatsReport_m,
-                             trackId,
-                             result,
+                             rv,
+                             pipelines, // return for release on main thread
                              report),
                 NS_DISPATCH_NORMAL);
 }
 
 void PeerConnectionImpl::OnStatsReport_m(
-    uint32_t trackId,
     nsresult result,
+    nsAutoPtr<std::vector<RefPtr<MediaPipeline>>> pipelines, //returned for release
     nsAutoPtr<RTCStatsReportInternal> report) {
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (pco) {

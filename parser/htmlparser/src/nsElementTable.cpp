@@ -124,6 +124,10 @@ const nsHTMLElement gHTMLElements[] = {
     /*parent,leaf*/ kNone, false
   },
   {
+    /*tag*/         eHTMLTag_content,
+    /*parent,leaf*/ kNone, false
+  },
+  {
     /*tag*/         eHTMLTag_data,
     /*parent,leaf*/ kPhrase, false
   },

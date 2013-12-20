@@ -208,6 +208,13 @@ public:
 
 NS_IMPL_ISUPPORTS1(AppClearDataObserver, nsIObserver)
 
+static bool
+IsExpandedPrincipal(nsIPrincipal* aPrincipal)
+{
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+  return !!ep;
+}
+
 } // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -644,6 +651,11 @@ nsPermissionManager::AddFromPrincipal(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
+  // Permissions may not be added to expanded principals.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   return AddInternal(aPrincipal, nsDependentCString(aType), aPermission, 0,
                      aExpireType, aExpireTime, eNotify, eWriteToDB);
 }
@@ -767,7 +779,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       aPermission,
                                       aExpireType,
                                       aExpireTime,
-                                      NS_LITERAL_STRING("added").get());
+                                      MOZ_UTF16("added"));
       }
 
       break;
@@ -793,7 +805,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       oldPermissionEntry.mPermission,
                                       oldPermissionEntry.mExpireType,
                                       oldPermissionEntry.mExpireTime,
-                                      NS_LITERAL_STRING("deleted").get());
+                                      MOZ_UTF16("deleted"));
       }
 
       // If there are no more permissions stored for that entry, clear it.
@@ -840,7 +852,7 @@ nsPermissionManager::AddInternal(nsIPrincipal* aPrincipal,
                                       aPermission,
                                       aExpireType,
                                       aExpireTime,
-                                      NS_LITERAL_STRING("changed").get());
+                                      MOZ_UTF16("changed"));
       }
 
       break;
@@ -872,6 +884,11 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
   // System principals are never added to the database, no need to remove them.
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return NS_OK;
+  }
+
+  // Permissions may not be added to expanded principals.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   // AddInternal() handles removal, just let it do the work
@@ -916,7 +933,7 @@ nsPermissionManager::RemoveAllInternal(bool aNotifyObservers)
   // on-disk database to notify observers.
   RemoveAllFromMemory();
   if (aNotifyObservers) {
-    NotifyObservers(nullptr, NS_LITERAL_STRING("cleared").get());
+    NotifyObservers(nullptr, MOZ_UTF16("cleared"));
   }
 
   // clear the db
@@ -958,13 +975,6 @@ nsPermissionManager::TestExactPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                       const char* aType,
                                                       uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, true, true);
 }
 
@@ -973,15 +983,6 @@ nsPermissionManager::TestExactPermanentPermission(nsIPrincipal* aPrincipal,
                                                   const char* aType,
                                                   uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  // System principals do not have URI so we can't try to get
-  // retro-compatibility here.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, true, false);
 }
 
@@ -1022,15 +1023,6 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
                                                  const char* aType,
                                                  uint32_t* aPermission)
 {
-  NS_ENSURE_ARG_POINTER(aPrincipal);
-
-  // System principals do not have URI so we can't try to get
-  // retro-compatibility here.
-  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    *aPermission = nsIPermissionManager::ALLOW_ACTION;
-    return NS_OK;
-  }
-
   return CommonTestPermission(aPrincipal, aType, aPermission, false, true);
 }
 
@@ -1047,6 +1039,11 @@ nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return NS_OK;
+  }
+
+  // Querying the permission object of an nsEP is non-sensical.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsAutoCString host;
@@ -1100,6 +1097,39 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
 {
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aType);
+
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    *aPermission = nsIPermissionManager::ALLOW_ACTION;
+    return NS_OK;
+  }
+
+  // For expanded principals, we want to iterate over the whitelist and see
+  // if the permission is granted for any of them.
+  nsCOMPtr<nsIExpandedPrincipal> ep = do_QueryInterface(aPrincipal);
+  if (ep) {
+    nsTArray<nsCOMPtr<nsIPrincipal>>* whitelist;
+    nsresult rv = ep->GetWhiteList(&whitelist);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Start with DENY_ACTION. If we get PROMPT_ACTION, keep going to see if
+    // we get ALLOW_ACTION from another principal.
+    *aPermission = nsIPermissionManager::DENY_ACTION;
+    for (size_t i = 0; i < whitelist->Length(); ++i) {
+      uint32_t perm;
+      rv = CommonTestPermission(whitelist->ElementAt(i), aType, &perm, aExactHostMatch,
+                                aIncludingSession);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (perm == nsIPermissionManager::ALLOW_ACTION) {
+        *aPermission = perm;
+        return NS_OK;
+      } else if (perm == nsIPermissionManager::PROMPT_ACTION) {
+        // Store it, but keep going to see if we can do better.
+        *aPermission = perm;
+      }
+    }
+
+    return NS_OK;
+  }
 
   // set the default
   *aPermission = nsIPermissionManager::UNKNOWN_ACTION;
@@ -1256,7 +1286,7 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // The profile is about to change,
     // or is going away because the application is shutting down.
     mIsShuttingDown = true;
-    if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
+    if (!nsCRT::strcmp(someData, MOZ_UTF16("shutdown-cleanse"))) {
       // Clear the permissions file and close the db asynchronously
       RemoveAllInternal(false);
     } else {
@@ -1387,7 +1417,7 @@ nsPermissionManager::RemoveExpiredPermissionsForAppEnumerator(
                                                         oldPermissionEntry.mPermission,
                                                         oldPermissionEntry.mExpireType,
                                                         oldPermissionEntry.mExpireTime,
-                                                        NS_LITERAL_STRING("deleted").get());
+                                                        MOZ_UTF16("deleted"));
       --i;
       continue;
     }
@@ -1403,7 +1433,7 @@ nsPermissionManager::RemoveExpiredPermissionsForAppEnumerator(
                                                       permEntry.mPermission,
                                                       permEntry.mExpireType,
                                                       permEntry.mExpireTime,
-                                                      NS_LITERAL_STRING("changed").get());
+                                                      MOZ_UTF16("changed"));
   }
 
   return PL_DHASH_NEXT;
@@ -1836,6 +1866,11 @@ nsPermissionManager::UpdateExpireTime(nsIPrincipal* aPrincipal,
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return NS_OK;
+  }
+
+  // Setting the expire time of an nsEP is non-sensical.
+  if (IsExpandedPrincipal(aPrincipal)) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsAutoCString host;

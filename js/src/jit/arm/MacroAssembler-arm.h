@@ -50,14 +50,15 @@ class MacroAssemblerARM : public Assembler
     void convertInt32ToDouble(const Address &src, FloatRegister dest);
     void convertUInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest);
-    void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest);
+    void convertDoubleToFloat32(const FloatRegister &src, const FloatRegister &dest,
+                                Condition c = Always);
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
     void convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                                bool negativeZeroCheck = true);
 
-    void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest);
+    void convertFloat32ToDouble(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail);
     void convertInt32ToFloat32(const Register &src, const FloatRegister &dest);
     void convertInt32ToFloat32(const Address &src, FloatRegister dest);
@@ -317,6 +318,7 @@ class MacroAssemblerARM : public Assembler
 
     void ma_vneg(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vmov(FloatRegister src, FloatRegister dest, Condition cc = Always);
+    void ma_vmov_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vabs(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vabs_f32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
@@ -461,8 +463,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Used to work around the move resolver's lack of support for
     // moving into register pairs, which the softfp ABI needs.
-    MoveResolver::MoveOperand floatArgsInGPR[2];
-    bool floatArgsInGPRValid[2];
+    mozilla::Array<MoveOperand, 2> floatArgsInGPR;
+    mozilla::Array<bool, 2> floatArgsInGPRValid;
 
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
@@ -484,15 +486,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         setFramePushed(framePushed_ + value);
     }
   public:
-    typedef MoveResolver::MoveOperand MoveOperand;
-    typedef MoveResolver::Move Move;
-
-    enum Result {
-        GENERAL,
-        DOUBLE,
-        FLOAT
-    };
-
     MacroAssemblerARMCompat()
       : inCall_(false),
         enoughMemory_(true),
@@ -553,9 +546,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         movePtr(imm, CallReg);
         call(CallReg);
     }
-    void call(IonCode *c) {
+    void call(JitCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, ImmPtr(c->raw()), Relocation::IONCODE);
+        addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
         if (hasMOVWT())
             rs = L_MOVWT;
@@ -565,9 +558,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_movPatchable(ImmPtr(c->raw()), ScratchRegister, Always, rs);
         ma_callIonHalfPush(ScratchRegister);
     }
-    void branch(IonCode *c) {
+    void branch(JitCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
-        addPendingJump(bo, ImmPtr(c->raw()), Relocation::IONCODE);
+        addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
         if (hasMOVWT())
             rs = L_MOVWT;
@@ -641,7 +634,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     // Emit a BLX or NOP instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffsetLabel toggledCall(IonCode *target, bool enabled);
+    CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
 
     static size_t ToggledCallSize() {
         if (hasMOVWT())
@@ -1150,22 +1143,22 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // The following functions are exposed for use in platform-shared code.
     void Push(const Register &reg) {
         ma_push(reg);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const Imm32 imm) {
         push(imm);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const ImmWord imm) {
         push(imm);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const ImmPtr imm) {
         Push(ImmWord(uintptr_t(imm.value)));
     }
     void Push(const ImmGCPtr ptr) {
         push(ptr);
-        adjustFrame(STACK_SLOT_SIZE);
+        adjustFrame(sizeof(intptr_t));
     }
     void Push(const FloatRegister &t) {
         VFPRegister r = VFPRegister(t);
@@ -1183,19 +1176,19 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void PushWithPadding(const Register &reg, const Imm32 extraSpace) {
         pushWithPadding(reg, extraSpace);
-        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
+        adjustFrame(sizeof(intptr_t) + extraSpace.value);
     }
     void PushWithPadding(const Imm32 imm, const Imm32 extraSpace) {
         pushWithPadding(imm, extraSpace);
-        adjustFrame(STACK_SLOT_SIZE + extraSpace.value);
+        adjustFrame(sizeof(intptr_t) + extraSpace.value);
     }
 
     void Pop(const Register &reg) {
         ma_pop(reg);
-        adjustFrame(-STACK_SLOT_SIZE);
+        adjustFrame(-sizeof(intptr_t));
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % STACK_SLOT_SIZE == 0);
+        JS_ASSERT(args % sizeof(intptr_t) == 0);
         adjustFrame(-args);
     }
     uint32_t framePushed() const {
@@ -1209,8 +1202,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // non-function. Returns offset to be passed to markSafepointAt().
     bool buildFakeExitFrame(const Register &scratch, uint32_t *offset);
 
-    void callWithExitFrame(IonCode *target);
-    void callWithExitFrame(IonCode *target, Register dynStack);
+    void callWithExitFrame(JitCode *target);
+    void callWithExitFrame(JitCode *target, Register dynStack);
 
     // Makes an Ion call using the only two methods that it is sane for
     // indep code to make a call
@@ -1238,6 +1231,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void addPtr(const Address &src, Register dest);
+    void not32(Register reg);
 
     void move32(const Imm32 &imm, const Register &dest);
     void move32(const Register &src, const Register &dest);
@@ -1278,8 +1272,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void loadFloatAsDouble(const Address &addr, const FloatRegister &dest);
     void loadFloatAsDouble(const BaseIndex &src, const FloatRegister &dest);
 
-    void loadFloat(const Address &addr, const FloatRegister &dest);
-    void loadFloat(const BaseIndex &src, const FloatRegister &dest);
+    void loadFloat32(const Address &addr, const FloatRegister &dest);
+    void loadFloat32(const BaseIndex &src, const FloatRegister &dest);
 
     void store8(const Register &src, const Address &address);
     void store8(const Imm32 &imm, const Address &address);
@@ -1315,10 +1309,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_vmov(src, dest);
     }
 
-    void storeFloat(FloatRegister src, Address addr) {
+    void storeFloat32(FloatRegister src, Address addr) {
         ma_vstr(VFPRegister(src).singleOverlay(), Operand(addr));
     }
-    void storeFloat(FloatRegister src, BaseIndex addr) {
+    void storeFloat32(FloatRegister src, BaseIndex addr) {
         // Harder cases not handled yet.
         JS_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
@@ -1410,9 +1404,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // automatically adjusted. It is extremely important that esp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from);
+    void passABIArg(const MoveOperand &from, MoveOp::Type type);
     void passABIArg(const Register &reg);
-    void passABIArg(const FloatRegister &reg);
+    void passABIArg(const FloatRegister &reg, MoveOp::Type type);
     void passABIArg(const ValueOperand &regs);
 
   protected:
@@ -1420,13 +1414,13 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
   private:
     void callWithABIPre(uint32_t *stackAdjust);
-    void callWithABIPost(uint32_t stackAdjust, Result result);
+    void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, Result result = GENERAL);
-    void callWithABI(AsmJSImmPtr imm, Result result = GENERAL);
-    void callWithABI(const Address &fun, Result result = GENERAL);
+    void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(const Address &fun, MoveOp::Type result = MoveOp::GENERAL);
 
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());
@@ -1493,12 +1487,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         return as_cmp(bounded, Imm8(0));
     }
 
-    void storeFloat(VFPRegister src, Register base, Register index, Condition cond) {
-        as_vcvt(VFPRegister(ScratchFloatReg).singleOverlay(), src, false, cond);
-        ma_vstr(VFPRegister(ScratchFloatReg).singleOverlay(), base, index, 0, cond);
-
-    }
-    void moveFloat(FloatRegister src, FloatRegister dest) {
+    void moveFloat32(FloatRegister src, FloatRegister dest) {
         as_vmov(VFPRegister(src).singleOverlay(), VFPRegister(dest).singleOverlay());
     }
 };

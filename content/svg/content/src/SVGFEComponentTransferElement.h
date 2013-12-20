@@ -29,10 +29,10 @@ protected:
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Filter(nsSVGFilterInstance* aInstance,
-                          const nsTArray<const Image*>& aSources,
-                          const Image* aTarget,
-                          const nsIntRect& aDataRect) MOZ_OVERRIDE;
+  virtual FilterPrimitiveDescription
+    GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
+                            const IntRect& aFilterSubregion,
+                            nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
@@ -45,8 +45,6 @@ public:
   already_AddRefed<SVGAnimatedString> In1();
 
 protected:
-  virtual bool OperatesOnPremultipledAlpha(int32_t) MOZ_OVERRIDE { return false; }
-
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
   enum { RESULT, IN1 };

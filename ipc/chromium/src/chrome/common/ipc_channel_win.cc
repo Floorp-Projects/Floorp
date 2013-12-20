@@ -41,8 +41,8 @@ Channel::ChannelImpl::ChannelImpl(const std::wstring& channel_id, Mode mode,
 
   if (!CreatePipe(channel_id, mode)) {
     // The pipe may have been closed already.
-    LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
-                    "\" in " << (mode == 0 ? "server" : "client") << " mode.";
+    CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id <<
+                             "\" in " << (mode == 0 ? "server" : "client") << " mode.";
   }
 }
 
@@ -195,7 +195,7 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
   }
   if (pipe_ == INVALID_HANDLE_VALUE) {
     // If this process is being closed, the pipe may be gone already.
-    LOG(WARNING) << "failed to create pipe: " << GetLastError();
+    CHROMIUM_LOG(WARNING) << "failed to create pipe: " << GetLastError();
     return false;
   }
 
@@ -309,7 +309,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
           input_state_.is_pending = true;
           return true;
         }
-        LOG(ERROR) << "pipe error: " << err;
+        CHROMIUM_LOG(ERROR) << "pipe error: " << err;
         return false;
       }
       input_state_.is_pending = true;
@@ -326,7 +326,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages(
     } else {
       if (input_overflow_buf_.size() > (kMaximumMessageSize - bytes_read)) {
         input_overflow_buf_.clear();
-        LOG(ERROR) << "IPC message is too big";
+        CHROMIUM_LOG(ERROR) << "IPC message is too big";
         return false;
       }
       input_overflow_buf_.append(input_buf_, bytes_read);
@@ -376,7 +376,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
     output_state_.is_pending = false;
     if (!context || bytes_written == 0) {
       DWORD err = GetLastError();
-      LOG(ERROR) << "pipe error: " << err;
+      CHROMIUM_LOG(ERROR) << "pipe error: " << err;
       return false;
     }
     // Message was sent.
@@ -411,7 +411,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages(
 
       return true;
     }
-    LOG(ERROR) << "pipe error: " << err;
+    CHROMIUM_LOG(ERROR) << "pipe error: " << err;
     return false;
   }
 

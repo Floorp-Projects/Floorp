@@ -14,6 +14,9 @@
 #define NS_ANDROIDHISTORY_CID \
     {0xCCAA4880, 0x44DD, 0x40A7, {0xA1, 0x3F, 0x61, 0x56, 0xFC, 0x88, 0x2C, 0x0B}}
 
+// Max size of History::mRecentlyVisitedURIs
+#define RECENTLY_VISITED_URI_SIZE 8
+
 class nsAndroidHistory : public mozilla::IHistory, public nsIRunnable
 {
 public:
@@ -34,6 +37,20 @@ private:
 
   nsDataHashtable<nsStringHashKey, nsTArray<mozilla::dom::Link *> *> mListeners;
   nsTPriorityQueue<nsString> mPendingURIs;
+
+  nsresult CanAddURI(nsIURI* aURI, bool* canAdd);
+
+  /**
+   * mRecentlyVisitedURIs remembers URIs which are recently added to the DB,
+   * to avoid saving these locations repeatedly in a short period.
+   */
+  typedef nsAutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE>
+          RecentlyVisitedArray;
+  RecentlyVisitedArray mRecentlyVisitedURIs;
+  RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;
+
+  void AppendToRecentlyVisitedURIs(nsIURI* aURI);
+  bool IsRecentlyVisitedURI(nsIURI* aURI);
 };
 
 #endif

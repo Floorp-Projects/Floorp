@@ -7,19 +7,7 @@ CHROMETESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/$(relatives
 
 DEFINES += \
   -DAB_CD=$(AB_CD) \
-  -DMOZ_APP_NAME=$(MOZ_APP_NAME) \
-  -DMOZ_APP_DISPLAYNAME="$(MOZ_APP_DISPLAYNAME)" \
-  -DBIN_SUFFIX=$(BIN_SUFFIX) \
-  -DNS_NO_XPCOM \
-  -DMOZ_DEBUG=$(MOZ_DEBUG) \
   $(NULL)
-
-ifdef MOZ_MAINTENANCE_SERVICE
-DEFINES += -DMOZ_MAINTENANCE_SERVICE=$(MOZ_MAINTENANCE_SERVICE)
-endif
-
-# For debugging purposes only
-#DEFINES += -DDISABLE_UPDATER_AUTHENTICODE_CHECK
 
 PP_TARGETS            += aus-update-head
 aus-update-head_FLAGS := -Fsubstitution $(DEFINES) $(ACDEFINES)
@@ -91,7 +79,6 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 USE_STATIC_LIBS = 1
-DEFINES += -DUNICODE -D_UNICODE
 endif # WINNT
 endif # Not Android
 

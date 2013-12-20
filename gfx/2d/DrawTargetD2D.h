@@ -56,6 +56,10 @@ public:
                            const Rect &aSource,
                            const DrawSurfaceOptions &aSurfOptions = DrawSurfaceOptions(),
                            const DrawOptions &aOptions = DrawOptions());
+  virtual void DrawFilter(FilterNode *aNode,
+                          const Rect &aSourceRect,
+                          const Point &aDestPoint,
+                          const DrawOptions &aOptions = DrawOptions());
   virtual void DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      const Point &aDest,
                                      const Color &aColor,
@@ -123,6 +127,8 @@ public:
                         uint32_t aNumStops,
                         ExtendMode aExtendMode = EXTEND_CLAMP) const;
 
+  virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
+
   virtual void *GetNativeSurface(NativeSurfaceType aType);
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
@@ -135,6 +141,7 @@ public:
   static ID2D1Factory *factory();
   static void CleanupD2D();
   static IDWriteFactory *GetDWriteFactory();
+  ID2D1RenderTarget *GetRT() { return mRT; }
 
   operator std::string() const {
     std::stringstream stream;
@@ -197,6 +204,8 @@ private:
   // are currently set. The returned clipped geometry must be clipped by these
   // bounds to correctly reflect the total clip. This is in device space.
   TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
+
+  bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
 
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 

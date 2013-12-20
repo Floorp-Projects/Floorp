@@ -10,8 +10,3 @@ ifdef MOZ_ENABLE_GTK2
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
 endif
 
-DEFINES		+= -D_IMPL_GTKXTBIN_API
-
-INCLUDES	+= \
-		-I$(srcdir) \
-		$(NULL)

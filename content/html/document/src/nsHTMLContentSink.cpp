@@ -10,7 +10,7 @@
  * Don't bother adding new stuff in this file.
  */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsContentSink.h"
 #include "nsCOMPtr.h"
@@ -242,7 +242,7 @@ public:
 };
 
 nsresult
-NS_NewHTMLElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
+NS_NewHTMLElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                   FromParser aFromParser)
 {
   *aResult = nullptr;

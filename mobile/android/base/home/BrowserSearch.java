@@ -15,6 +15,7 @@ import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
@@ -27,10 +28,8 @@ import org.json.JSONObject;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
@@ -96,6 +95,7 @@ public class BrowserSearch extends HomeFragment
     private HomeListView mList;
 
     // Client that performs search suggestion queries
+    @RobocopTarget
     private volatile SuggestClient mSuggestClient;
 
     // List of search engines from gecko
@@ -325,19 +325,67 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void handleAutocomplete(String searchTerm, Cursor c) {
-        if (TextUtils.isEmpty(mSearchTerm) || c == null || mAutocompleteHandler == null) {
+        if (c == null ||
+            mAutocompleteHandler == null ||
+            TextUtils.isEmpty(searchTerm)) {
             return;
         }
 
         // Avoid searching the path if we don't have to. Currently just
-        // decided by if there is a '/' character in the string.
-        final boolean searchPath = (searchTerm.indexOf("/") > 0);
+        // decided by whether there is a '/' character in the string.
+        final boolean searchPath = searchTerm.indexOf('/') > 0;
         final String autocompletion = findAutocompletion(searchTerm, c, searchPath);
 
-        if (autocompletion != null && mAutocompleteHandler != null) {
-            mAutocompleteHandler.onAutocomplete(autocompletion);
-            mAutocompleteHandler = null;
+        if (autocompletion == null || mAutocompleteHandler == null) {
+            return;
         }
+
+        // Prefetch auto-completed domain since it's a likely target
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Prefetch", "http://" + autocompletion));
+
+        mAutocompleteHandler.onAutocomplete(autocompletion);
+        mAutocompleteHandler = null;
+    }
+
+    /**
+     * Returns the substring of a provided URI, starting at the given offset,
+     * and extending up to the end of the path segment in which the provided
+     * index is found.
+     *
+     * For example, given
+     *
+     *   "www.reddit.com/r/boop/abcdef", 0, ?
+     *
+     * this method returns
+     *
+     *   ?=2:  "www.reddit.com/"
+     *   ?=17: "www.reddit.com/r/boop/"
+     *   ?=21: "www.reddit.com/r/boop/"
+     *   ?=22: "www.reddit.com/r/boop/abcdef"
+     *
+     */
+    private static String uriSubstringUpToMatchedPath(final String url, final int offset, final int begin) {
+        final int afterEnd = url.length();
+
+        // We want to include the trailing slash, but not other characters.
+        int chop = url.indexOf('/', begin);
+        if (chop != -1) {
+            ++chop;
+            if (chop < offset) {
+                // This isn't supposed to happen. Fall back to returning the whole damn thing.
+                return url;
+            }
+        } else {
+            chop = url.indexOf('?', begin);
+            if (chop == -1) {
+                chop = url.indexOf('#', begin);
+            }
+            if (chop == -1) {
+                chop = afterEnd;
+            }
+        }
+
+        return url.substring(offset, chop);
     }
 
     private String findAutocompletion(String searchTerm, Cursor c, boolean searchPath) {
@@ -345,36 +393,62 @@ public class BrowserSearch extends HomeFragment
             return null;
         }
 
+        final int searchLength = searchTerm.length();
         final int urlIndex = c.getColumnIndexOrThrow(URLColumns.URL);
         int searchCount = 0;
 
         do {
-            final Uri url = Uri.parse(c.getString(urlIndex));
-            final String host = StringUtils.stripCommonSubdomains(url.getHost());
+            final String url = c.getString(urlIndex);
 
-            // Host may be null for about pages
+            if (searchCount == 0) {
+                // Prefetch the first item in the list since it's weighted the highest
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Session:Prefetch", url.toString()));
+            }
+
+            // Does the completion match against the whole URL? This will match
+            // about: pages, as well as user input including "http://...".
+            if (url.startsWith(searchTerm)) {
+                return uriSubstringUpToMatchedPath(url, 0, searchLength);
+            }
+
+            final Uri uri = Uri.parse(url);
+            final String host = uri.getHost();
+
+            // Host may be null for about pages.
             if (host == null) {
                 continue;
             }
 
-            final StringBuilder hostBuilder = new StringBuilder(host);
-            if (hostBuilder.indexOf(searchTerm) == 0) {
-                return hostBuilder.append("/").toString();
+            if (host.startsWith(searchTerm)) {
+                return host + "/";
             }
 
-            if (searchPath) {
-                final List<String> path = url.getPathSegments();
-
-                for (String s : path) {
-                    hostBuilder.append("/").append(s);
-
-                    if (hostBuilder.indexOf(searchTerm) == 0) {
-                        return hostBuilder.append("/").toString();
-                    }
-                }
+            final String strippedHost = StringUtils.stripCommonSubdomains(host);
+            if (strippedHost.startsWith(searchTerm)) {
+                return strippedHost + "/";
             }
 
-            searchCount++;
+            ++searchCount;
+
+            if (!searchPath) {
+                continue;
+            }
+
+            // Otherwise, if we're matching paths, let's compare against the string itself.
+            final int hostOffset = url.indexOf(strippedHost);
+            if (hostOffset == -1) {
+                // This was a URL string that parsed to a different host (normalized?).
+                // Give up.
+                continue;
+            }
+
+            // We already matched the non-stripped host, so now we're
+            // substring-searching in the part of the URL without the common
+            // subdomains.
+            if (url.startsWith(searchTerm, hostOffset)) {
+                // Great! Return including the rest of the path segment.
+                return uriSubstringUpToMatchedPath(url, hostOffset, hostOffset + searchLength);
+            }
         } while (searchCount < MAX_AUTOCOMPLETE_SEARCH && c.moveToNext());
 
         return null;
@@ -787,7 +861,7 @@ public class BrowserSearch extends HomeFragment
             mAdapter.swapCursor(c);
 
             // We should handle autocompletion based on the search term
-            // associated with the currently loader that has just provided
+            // associated with the loader that has just provided
             // the results.
             SearchCursorLoader searchLoader = (SearchCursorLoader) loader;
             handleAutocomplete(searchLoader.getSearchTerm(), c);

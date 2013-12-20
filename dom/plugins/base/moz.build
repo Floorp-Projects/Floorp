@@ -14,7 +14,6 @@ XPIDL_SOURCES += [
     'nsIPluginInputStream.idl',
     'nsIPluginInstanceOwner.idl',
     'nsIPluginTag.idl',
-    'nsIPluginTagInfo.idl',
     'nspluginroot.idl',
 ]
 
@@ -108,7 +107,7 @@ LOCAL_INCLUDES += [
     '/gfx/skia/include/config',
     '/gfx/skia/include/core',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/widget/android',
     '/widget/xpwidgets',
     '/xpcom/base',

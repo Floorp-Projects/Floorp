@@ -17,7 +17,11 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/Shape-inl.h"
+
 using namespace js;
+
+using mozilla::DebugOnly;
 using js::frontend::TokenStream;
 
 JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
@@ -273,10 +277,9 @@ RegExpObject::createShared(ExclusiveContext *cx, RegExpGuard *g)
 }
 
 Shape *
-RegExpObject::assignInitialShape(ExclusiveContext *cx)
+RegExpObject::assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> self)
 {
-    JS_ASSERT(is<RegExpObject>());
-    JS_ASSERT(nativeEmpty());
+    JS_ASSERT(self->nativeEmpty());
 
     JS_STATIC_ASSERT(LAST_INDEX_SLOT == 0);
     JS_STATIC_ASSERT(SOURCE_SLOT == LAST_INDEX_SLOT + 1);
@@ -285,10 +288,8 @@ RegExpObject::assignInitialShape(ExclusiveContext *cx)
     JS_STATIC_ASSERT(MULTILINE_FLAG_SLOT == IGNORE_CASE_FLAG_SLOT + 1);
     JS_STATIC_ASSERT(STICKY_FLAG_SLOT == MULTILINE_FLAG_SLOT + 1);
 
-    RootedObject self(cx, this);
-
     /* The lastIndex property alone is writable but non-configurable. */
-    if (!addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
+    if (!self->addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
         return nullptr;
 
     /* Remaining instance properties are non-writable and non-configurable. */
@@ -309,19 +310,8 @@ RegExpObject::init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags)
 {
     Rooted<RegExpObject *> self(cx, this);
 
-    if (nativeEmpty()) {
-        if (isDelegate()) {
-            if (!assignInitialShape(cx))
-                return false;
-        } else {
-            RootedShape shape(cx, assignInitialShape(cx));
-            if (!shape)
-                return false;
-            RootedObject proto(cx, self->getProto());
-            EmptyShape::insertInitialShape(cx, shape, proto);
-        }
-        JS_ASSERT(!self->nativeEmpty());
-    }
+    if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, self))
+        return false;
 
     JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().lastIndex))->slot() ==
               LAST_INDEX_SLOT);
@@ -642,13 +632,48 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
 /* RegExpCompartment */
 
 RegExpCompartment::RegExpCompartment(JSRuntime *rt)
-  : map_(rt), inUse_(rt)
+  : map_(rt), inUse_(rt), matchResultTemplateObject_(nullptr)
 {}
 
 RegExpCompartment::~RegExpCompartment()
 {
     JS_ASSERT(map_.empty());
     JS_ASSERT(inUse_.empty());
+}
+
+HeapPtrObject &
+RegExpCompartment::getOrCreateMatchResultTemplateObject(JSContext *cx)
+{
+    if (matchResultTemplateObject_)
+        return matchResultTemplateObject_;
+
+    /* Create template array object */
+    RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
+    if (!templateObject)
+        return matchResultTemplateObject_; // = nullptr
+
+    /* Set dummy index property */
+    RootedValue index(cx, Int32Value(0));
+    if (!baseops::DefineProperty(cx, templateObject, cx->names().index, index,
+                                 JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE))
+        return matchResultTemplateObject_; // = nullptr
+
+    /* Set dummy input property */
+    RootedValue inputVal(cx, StringValue(cx->runtime()->emptyString));
+    if (!baseops::DefineProperty(cx, templateObject, cx->names().input, inputVal,
+                                 JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE))
+        return matchResultTemplateObject_; // = nullptr
+
+    // Make sure that the properties are in the right slots.
+    DebugOnly<Shape *> shape = templateObject->lastProperty();
+    JS_ASSERT(shape->previous()->slot() == 0 &&
+              shape->previous()->propidRef() == NameToId(cx->names().index));
+    JS_ASSERT(shape->slot() == 1 &&
+              shape->propidRef() == NameToId(cx->names().input));
+
+    matchResultTemplateObject_ = templateObject;
+
+    return matchResultTemplateObject_;
 }
 
 bool
@@ -669,7 +694,7 @@ RegExpCompartment::sweep(JSRuntime *rt)
 {
 #ifdef DEBUG
     for (Map::Range r = map_.all(); !r.empty(); r.popFront())
-        JS_ASSERT(inUse_.has(r.front().value));
+        JS_ASSERT(inUse_.has(r.front().value()));
 #endif
 
     map_.clear();
@@ -681,6 +706,8 @@ RegExpCompartment::sweep(JSRuntime *rt)
             e.removeFront();
         }
     }
+
+    matchResultTemplateObject_ = nullptr;
 }
 
 void
@@ -696,7 +723,7 @@ RegExpCompartment::get(ExclusiveContext *cx, JSAtom *source, RegExpFlag flags, R
     Key key(source, flags);
     Map::AddPtr p = map_.lookupForAdd(key);
     if (p) {
-        g->init(*p->value);
+        g->init(*p->value());
         return true;
     }
 

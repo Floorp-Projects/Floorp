@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.text.TextUtils;
 import android.util.Log;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import java.util.ArrayList;
 import java.util.Map.Entry;
@@ -50,6 +51,7 @@ public class SQLiteBridge {
     private static native void closeDatabase(long aDb);
 
     // Takes the path to the database we want to access.
+    @RobocopTarget
     public SQLiteBridge(String aDb) throws SQLiteBridgeException {
         mDb = aDb;
     }
@@ -120,7 +122,7 @@ public class SQLiteBridge {
         return rawQuery(sb.toString(), selectionArgs);
     }
 
-    /* This method is referenced by Robocop via reflection. */
+    @RobocopTarget
     public Cursor rawQuery(String sql, String[] selectionArgs)
         throws SQLiteBridgeException {
         return internalQuery(sql, selectionArgs);

@@ -75,8 +75,7 @@ enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 
 #ifdef DEBUG
 extern void
-CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script,
-                    StaticBlockObject *maybeBlock, unsigned i);
+CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, unsigned i);
 #endif
 
 namespace jit {
@@ -172,8 +171,6 @@ class AbstractFramePtr
 
     operator bool() const { return !!ptr_; }
 
-    inline JSGenerator *maybeSuspendedGenerator(JSRuntime *rt) const;
-
     inline JSObject *scopeChain() const;
     inline CallObject &callObj() const;
     inline bool initFunctionScopeObjects(JSContext *cx);
@@ -181,7 +178,6 @@ class AbstractFramePtr
 
     inline JSCompartment *compartment() const;
 
-    inline StaticBlockObject *maybeBlockChain() const;
     inline bool hasCallObj() const;
     inline bool isGeneratorFrame() const;
     inline bool isYielding() const;
@@ -311,7 +307,6 @@ class StackFrame
         HAS_HOOK_DATA      =      0x400,  /* frame has hookData_ set */
         HAS_RVAL           =      0x800,  /* frame has rval_ set */
         HAS_SCOPECHAIN     =     0x1000,  /* frame has scopeChain_ set */
-        HAS_BLOCKCHAIN     =     0x2000,  /* frame has blockChain_ set */
 
         /* Debugger state */
         PREV_UP_TO_DATE    =     0x4000,  /* see DebugScopes::updateLiveScopes */
@@ -341,7 +336,6 @@ class StackFrame
     } u;
     mutable JSObject    *scopeChain_;   /* if HAS_SCOPECHAIN, current scope chain */
     Value               rval_;          /* if HAS_RVAL, return value of the frame */
-    StaticBlockObject   *blockChain_;   /* if HAS_BLOCKCHAIN, innermost let block */
     ArgumentsObject     *argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
 
     /*
@@ -380,7 +374,7 @@ class StackFrame
      */
   public:
     Value *slots() const { return (Value *)(this + 1); }
-    Value *base() const { return slots() + script()->nfixed; }
+    Value *base() const { return slots() + script()->nfixed(); }
     Value *argv() const { return argv_; }
 
   private:
@@ -475,15 +469,15 @@ class StackFrame
     }
 
     inline bool isStrictEvalFrame() const {
-        return isEvalFrame() && script()->strict;
+        return isEvalFrame() && script()->strict();
     }
 
     bool isNonStrictEvalFrame() const {
-        return isEvalFrame() && !script()->strict;
+        return isEvalFrame() && !script()->strict();
     }
 
     bool isDirectEvalFrame() const {
-        return isEvalFrame() && script()->staticLevel > 0;
+        return isEvalFrame() && script()->staticLevel() > 0;
     }
 
     bool isNonStrictDirectEvalFrame() const {
@@ -540,7 +534,7 @@ class StackFrame
 
     bool copyRawFrameSlots(AutoValueVector *v);
 
-    unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs; }
+    unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs(); }
     unsigned numActualArgs() const { JS_ASSERT(hasArgs()); return u.nactual; }
 
     inline Value &canonicalActualArg(unsigned i) const;
@@ -594,28 +588,9 @@ class StackFrame
     inline void popOffScopeChain();
 
     /*
-     * Block chain
-     *
-     * Entering/leaving a let (or exception) block may do 1 or 2 things: First,
-     * a static block object (created at compiled time and stored in the
-     * script) is pushed on StackFrame::blockChain. Second, if the static block
-     * may be cloned to hold the dynamic values if this is needed for dynamic
-     * scope access. A clone is created for a static block iff
-     * StaticBlockObject::needsClone.
+     * For blocks with aliased locals, these interfaces push and pop entries on
+     * the scope chain.
      */
-
-    bool hasBlockChain() const {
-        return (flags_ & HAS_BLOCKCHAIN) && blockChain_;
-    }
-
-    StaticBlockObject *maybeBlockChain() {
-        return (flags_ & HAS_BLOCKCHAIN) ? blockChain_ : nullptr;
-    }
-
-    StaticBlockObject &blockChain() const {
-        JS_ASSERT(hasBlockChain());
-        return *blockChain_;
-    }
 
     bool pushBlock(JSContext *cx, StaticBlockObject &block);
     void popBlock(JSContext *cx);
@@ -864,8 +839,6 @@ class StackFrame
     void copyFrameAndValues(JSContext *cx, Value *vp, StackFrame *otherfp,
                             const Value *othervp, Value *othersp);
 
-    JSGenerator *maybeSuspendedGenerator(JSRuntime *rt);
-
     /*
      * js::Execute pushes both global and function frames (since eval() in a
      * function pushes a frame with isFunctionFrame() && isEvalFrame()). Most
@@ -1000,9 +973,6 @@ InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
     return !!(initial & INITIAL_CONSTRUCT);
 }
 
-inline AbstractFramePtr Valueify(JSAbstractFramePtr frame) { return AbstractFramePtr(frame); }
-static inline JSAbstractFramePtr Jsvalify(AbstractFramePtr frame)   { return JSAbstractFramePtr(frame.raw()); }
-
 /*****************************************************************************/
 
 class FrameRegs
@@ -1021,7 +991,7 @@ class FrameRegs
     }
 
     Value *spForStackDepth(unsigned depth) const {
-        JS_ASSERT(fp_->script()->nfixed + depth <= fp_->script()->nslots);
+        JS_ASSERT(fp_->script()->nfixed() + depth <= fp_->script()->nslots());
         return fp_->base() + depth;
     }
 
@@ -1040,8 +1010,8 @@ class FrameRegs
         JS_ASSERT(fp_);
     }
     void prepareToRun(StackFrame &fp, JSScript *script) {
-        pc = script->code;
-        sp = fp.slots() + script->nfixed;
+        pc = script->code();
+        sp = fp.slots() + script->nfixed();
         fp_ = &fp;
     }
 
@@ -1167,6 +1137,13 @@ class Activation
     // set).
     size_t savedFrameChain_;
 
+    // Counter incremented by JS::HideScriptedCaller and decremented by
+    // JS::UnhideScriptedCaller. If > 0 for the top activation,
+    // JS_DescribeScriptedCaller will return null instead of querying that
+    // activation, which should prompt the caller to consult embedding-specific
+    // data structures instead.
+    size_t hideScriptedCallerCount_;
+
     enum Kind { Interpreter, Jit, ForkJoin };
     Kind kind_;
 
@@ -1216,6 +1193,17 @@ class Activation
     }
     bool hasSavedFrameChain() const {
         return savedFrameChain_ > 0;
+    }
+
+    void hideScriptedCaller() {
+        hideScriptedCallerCount_++;
+    }
+    void unhideScriptedCaller() {
+        JS_ASSERT(hideScriptedCallerCount_ > 0);
+        hideScriptedCallerCount_--;
+    }
+    bool scriptedCallerIsHidden() const {
+        return hideScriptedCallerCount_ > 0;
     }
 
   private:
@@ -1575,7 +1563,7 @@ class ScriptFrameIter
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;
-    unsigned    numFormalArgs() const { return script()->function()->nargs; }
+    unsigned    numFormalArgs() const { return script()->function()->nargs(); }
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
 
     JSObject   *scopeChain() const;
@@ -1616,7 +1604,7 @@ class NonBuiltinScriptFrameIter : public ScriptFrameIter
 
     void settle() {
         if (!includeSelfhostedFrames())
-            while (!done() && script()->selfHosted)
+            while (!done() && script()->selfHosted())
                 ScriptFrameIter::operator++();
     }
 

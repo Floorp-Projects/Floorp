@@ -9,6 +9,7 @@
 #include "nsIDocument.h"
 #include "prprf.h"
 #include "nsGlobalWindow.h"
+#include "ScriptSettings.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla;
@@ -271,10 +272,10 @@ nsDOMEventTargetHelper::SetEventHandler(nsIAtom* aType,
                                         const JS::Value& aValue)
 {
   nsRefPtr<EventHandlerNonNull> handler;
-  JSObject* callable;
+  JS::Rooted<JSObject*> callable(aCx);
   if (aValue.isObject() &&
       JS_ObjectIsCallable(aCx, callable = &aValue.toObject())) {
-    handler = new EventHandlerNonNull(callable);
+    handler = new EventHandlerNonNull(callable, mozilla::dom::GetIncumbentGlobal());
   }
   SetEventHandler(aType, EmptyString(), handler);
   return NS_OK;
@@ -357,4 +358,18 @@ nsDOMEventTargetHelper::WantsUntrusted(bool* aRetVal)
   // We can let listeners on workers to always handle all the events.
   *aRetVal = (doc && !nsContentUtils::IsChromeDoc(doc)) || !NS_IsMainThread();
   return rv;
+}
+
+void
+nsDOMEventTargetHelper::EventListenerAdded(nsIAtom* aType)
+{
+  mozilla::ErrorResult rv;
+  EventListenerWasAdded(Substring(nsDependentAtomString(aType), 2), rv);
+}
+
+void
+nsDOMEventTargetHelper::EventListenerRemoved(nsIAtom* aType)
+{
+  mozilla::ErrorResult rv;
+  EventListenerWasRemoved(Substring(nsDependentAtomString(aType), 2), rv);
 }

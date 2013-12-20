@@ -6,8 +6,8 @@
 #include "jsapi-tests/tests.h"
 
 static JSPrincipals *sOriginPrincipalsInErrorReporter = nullptr;
-static JSPrincipals prin1 = { 1 };
-static JSPrincipals prin2 = { 1 };
+static TestJSPrincipals prin1(1);
+static TestJSPrincipals prin2(1);
 
 BEGIN_TEST(testOriginPrincipals)
 {

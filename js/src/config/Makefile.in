@@ -15,11 +15,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-# Force wrap zlib system header if building js as a shared library.
-ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ZLIB))
-DEFINES += -DMOZ_NATIVE_ZLIB=1
-endif
-
 ifneq (WINNT,$(HOST_OS_ARCH))
 # Ensure nsinstall is atomically created
 nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)
@@ -41,7 +36,6 @@ export:: \
   $(call mkdir_deps,system_wrappers_js) \
   $(NULL)
 	$(PYTHON) -m mozbuild.action.preprocessor $(DEFINES) $(ACDEFINES) \
-		-DMOZ_NATIVE_ICU=$(MOZ_NATIVE_ICU) \
 		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
 	$(INSTALL) system_wrappers_js $(DIST)
 

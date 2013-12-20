@@ -29,8 +29,10 @@ class TestInstallManifest(TestWithTmpDir):
         m.add_copy('c_source', 'c_dest')
         m.add_required_exists('e_dest')
         m.add_optional_exists('o_dest')
+        m.add_pattern_symlink('ps_base', 'ps/*', 'ps_dest')
+        m.add_pattern_copy('pc_base', 'pc/**', 'pc_dest')
 
-        self.assertEqual(len(m), 4)
+        self.assertEqual(len(m), 6)
         self.assertIn('s_dest', m)
         self.assertIn('c_dest', m)
         self.assertIn('e_dest', m)
@@ -48,12 +50,20 @@ class TestInstallManifest(TestWithTmpDir):
         with self.assertRaises(ValueError):
             m.add_optional_exists('o_dest')
 
+        with self.assertRaises(ValueError):
+            m.add_pattern_symlink('ps_base', 'ps/*', 'ps_dest')
+
+        with self.assertRaises(ValueError):
+            m.add_pattern_copy('pc_base', 'pc/**', 'pc_dest')
+
     def _get_test_manifest(self):
         m = InstallManifest()
         m.add_symlink(self.tmppath('s_source'), 's_dest')
         m.add_copy(self.tmppath('c_source'), 'c_dest')
         m.add_required_exists('e_dest')
         m.add_optional_exists('o_dest')
+        m.add_pattern_symlink('ps_base', '*', 'ps_dest')
+        m.add_pattern_copy('pc_base', '**', 'pc_dest')
 
         return m
 
@@ -67,18 +77,12 @@ class TestInstallManifest(TestWithTmpDir):
         with open(p, 'rb') as fh:
             c = fh.read()
 
-        self.assertEqual(c.count('\n'), 5)
+        self.assertEqual(c.count('\n'), 7)
 
         lines = c.splitlines()
-        self.assertEqual(len(lines), 5)
+        self.assertEqual(len(lines), 7)
 
-        self.assertEqual(lines[0], '2')
-        self.assertEqual(lines[1], '2\x1fc_dest\x1f%s' %
-            self.tmppath('c_source'))
-        self.assertEqual(lines[2], '3\x1fe_dest')
-        self.assertEqual(lines[3], '4\x1fo_dest')
-        self.assertEqual(lines[4], '1\x1fs_dest\x1f%s' %
-            self.tmppath('s_source'))
+        self.assertEqual(lines[0], '3')
 
         m2 = InstallManifest(path=p)
         self.assertEqual(m, m2)
@@ -98,8 +102,28 @@ class TestInstallManifest(TestWithTmpDir):
         self.assertEqual(len(r), 4)
         self.assertEqual(r.paths(), ['c_dest', 'e_dest', 'o_dest', 's_dest'])
 
+    def test_pattern_expansion(self):
+        source = self.tmppath('source')
+        os.mkdir(source)
+        os.mkdir('%s/base' % source)
+        os.mkdir('%s/base/foo' % source)
+
+        with open('%s/base/foo/file1' % source, 'a'):
+            pass
+
+        with open('%s/base/foo/file2' % source, 'a'):
+            pass
+
+        m = InstallManifest()
+        m.add_pattern_symlink('%s/base' % source, '**', 'dest')
+
+        c = FileCopier()
+        m.populate_registry(c)
+        self.assertEqual(c.paths(), ['dest/foo/file1', 'dest/foo/file2'])
+
     def test_or(self):
         m1 = self._get_test_manifest()
+        orig_length = len(m1)
         m2 = InstallManifest()
         m2.add_symlink('s_source2', 's_dest2')
         m2.add_copy('c_source2', 'c_dest2')
@@ -107,7 +131,7 @@ class TestInstallManifest(TestWithTmpDir):
         m1 |= m2
 
         self.assertEqual(len(m2), 2)
-        self.assertEqual(len(m1), 6)
+        self.assertEqual(len(m1), orig_length + 2)
 
         self.assertIn('s_dest2', m1)
         self.assertIn('c_dest2', m1)

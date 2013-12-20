@@ -7,6 +7,7 @@
 #ifndef mozJSComponentLoader_h
 #define mozJSComponentLoader_h
 
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleLoader.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
@@ -55,6 +56,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     void NoteSubScript(JS::HandleScript aScript, JS::HandleObject aThisObject);
 
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+
  protected:
     static mozJSComponentLoader* sSelf;
 
@@ -70,6 +73,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsresult ObjectForLocation(nsIFile* aComponentFile,
                                nsIURI *aComponent,
                                JSObject **aObject,
+                               JSScript **aTableScript,
                                char **location,
                                bool aCatchException,
                                JS::MutableHandleValue aException);
@@ -99,6 +103,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
             unloadProc = nullptr;
 
             obj = nullptr;
+            thisObjectKey = nullptr;
             location = nullptr;
         }
 
@@ -116,24 +121,36 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
                 JS_SetAllNonReservedSlotsToUndefined(sSelf->mContext, obj);
                 JS_RemoveObjectRoot(sSelf->mContext, &obj);
+                if (thisObjectKey)
+                    JS_RemoveScriptRoot(sSelf->mContext, &thisObjectKey);
             }
 
             if (location)
                 NS_Free(location);
 
             obj = nullptr;
+            thisObjectKey = nullptr;
             location = nullptr;
         }
+
+        size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
         static already_AddRefed<nsIFactory> GetFactory(const mozilla::Module& module,
                                                        const mozilla::Module::CIDEntry& entry);
 
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
         JSObject            *obj;
+        JSScript            *thisObjectKey;
         char                *location;
     };
 
     friend class ModuleEntry;
+
+    static size_t DataEntrySizeOfExcludingThis(const nsACString& aKey, ModuleEntry* const& aData,
+                                               mozilla::MallocSizeOf aMallocSizeOf, void* arg);
+    static size_t ClassEntrySizeOfExcludingThis(const nsACString& aKey,
+                                                const nsAutoPtr<ModuleEntry>& aData,
+                                                mozilla::MallocSizeOf aMallocSizeOf, void* arg);
 
     // Modules are intentionally leaked, but still cleared.
     static PLDHashOperator ClearModules(const nsACString& key, ModuleEntry*& entry, void* cx);

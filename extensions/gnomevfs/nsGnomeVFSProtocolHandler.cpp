@@ -222,13 +222,13 @@ ProxiedAuthCallback(gconstpointer in,
   if (!realm.IsEmpty())
   {
     const PRUnichar *strings[] = { realm.get(), dispHost.get() };
-    bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordForRealm").get(),
+    bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordForRealm"),
                                  strings, 2, getter_Copies(message));
   }
   else
   {
     const PRUnichar *strings[] = { dispHost.get() };
-    bundle->FormatStringFromName(NS_LITERAL_STRING("EnterUserPasswordFor").get(),
+    bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordFor"),
                                  strings, 1, getter_Copies(message));
   }
   if (message.IsEmpty())

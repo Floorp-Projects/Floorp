@@ -109,6 +109,18 @@ class GLManager;
 
 @interface NSView (Undocumented)
 
+// Draws the title string of a window.
+// Present on NSThemeFrame since at least 10.6.
+// _drawTitleBar is somewhat complex, and has changed over the years
+// since OS X 10.6.  But in that time it's never done anything that
+// would break when called outside of -[NSView drawRect:] (which we
+// sometimes do), or whose output can't be redirected to a
+// CGContextRef object (which we also sometimes do).  This is likely
+// to remain true for the indefinite future.  However we should
+// check _drawTitleBar in each new major version of OS X.  For more
+// information see bug 877767.
+- (void)_drawTitleBar:(NSRect)aRect;
+
 // Returns an NSRect that is the bounding box for all an NSView's dirty
 // rectangles (ones that need to be redrawn).  The full list of dirty
 // rectangles can be obtained by calling -[NSView _dirtyRegion] and then
@@ -172,6 +184,10 @@ enum {
   NSEventPhaseCancelled   = 0x1 << 4,
 };
 typedef NSUInteger NSEventPhase;
+
+@interface NSWindow (LionWindowFeatures)
+- (NSRect)convertRectToScreen:(NSRect)aRect;
+@end
 
 #ifdef __LP64__
 enum {
@@ -549,9 +565,9 @@ public:
   virtual gfxASurface* GetThebesSurface();
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
   virtual void CleanupWindowEffects() MOZ_OVERRIDE;
-  virtual bool PreRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void PostRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
+  virtual bool PreRender(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void PostRender(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
 
@@ -626,9 +642,9 @@ protected:
   void MaybeDrawRoundedCorners(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
   void MaybeDrawTitlebar(mozilla::layers::GLManager* aManager, const nsIntRect& aRect);
 
-  // Redraw the contents of mTitlebarImageBuffer on the main thread, as
+  // Redraw the contents of mTitlebarCGContext on the main thread, as
   // determined by mDirtyTitlebarRegion.
-  void UpdateTitlebarImageBuffer();
+  void UpdateTitlebarCGContext();
 
   nsIntRect RectContainingTitlebarControls();
 
@@ -649,7 +665,6 @@ protected:
   nsWeakPtr             mAccessible;
 #endif
 
-
   nsRefPtr<gfxASurface> mTempThebesSurface;
 
   // Protects the view from being teared down while a composition is in
@@ -667,11 +682,10 @@ protected:
   bool mIsCoveringTitlebar;
   nsIntRect mTitlebarRect;
 
-  // The area of mTitlebarImageBuffer that needs to be redrawn during the next
+  // The area of mTitlebarCGContext that needs to be redrawn during the next
   // transaction. Accessed from any thread, protected by mEffectsLock.
   nsIntRegion mUpdatedTitlebarRegion;
-
-  mozilla::RefPtr<mozilla::gfx::DrawTarget> mTitlebarImageBuffer;
+  CGContextRef mTitlebarCGContext;
 
   // Compositor thread only
   nsAutoPtr<RectTextureImage> mResizerImage;
@@ -679,7 +693,7 @@ protected:
   nsAutoPtr<RectTextureImage> mTitlebarImage;
   nsAutoPtr<RectTextureImage> mBasicCompositorImage;
 
-  // The area of mTitlebarImageBuffer that has changed and needs to be
+  // The area of mTitlebarCGContext that has changed and needs to be
   // uploaded to to mTitlebarImage. Main thread only.
   nsIntRegion           mDirtyTitlebarRegion;
 
@@ -702,6 +716,8 @@ protected:
   nsAutoPtr<GLPresenter> mGLPresenter;
 
   static uint32_t sLastInputEventCount;
+
+  void ReleaseTitlebarCGContext();
 };
 
 void NS_InstallPluginKeyEventsHandler();

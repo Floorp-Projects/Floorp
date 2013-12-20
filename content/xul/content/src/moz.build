@@ -7,7 +7,7 @@
 if CONFIG['MOZ_XUL']:
     MSVC_ENABLE_PGO = True
 
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'nsXULContextMenuBuilder.cpp',
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',
@@ -26,7 +26,7 @@ LOCAL_INCLUDES += [
     '/content/xml/document/src',
     '/layout/generic',
     '/layout/style',
-    '/layout/xul/base/src',
+    '/layout/xul',
     '/xpcom/ds',
 ]
 

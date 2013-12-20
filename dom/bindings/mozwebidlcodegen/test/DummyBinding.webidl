@@ -1,0 +1,2 @@
+interface DummyInterface {};
+interface DummyInterfaceWorkers {};

@@ -43,7 +43,7 @@ bool
 LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 {
     // Instructions with safepoints must be in linear order.
-    JS_ASSERT_IF(safepoints_.length(), safepoints_[safepoints_.length() - 1]->id() < ins->id());
+    JS_ASSERT_IF(!safepoints_.empty(), safepoints_.back()->id() < ins->id());
     if (!ins->isCall() && !nonCallSafepoints_.append(ins))
         return false;
     return safepoints_.append(ins);
@@ -73,8 +73,9 @@ LBlock::lastId()
 {
     LInstruction *last = *instructions_.rbegin();
     JS_ASSERT(last->id());
-    if (last->numDefs())
-        return last->getDef(last->numDefs() - 1)->virtualRegister();
+    // The last instruction is a control flow instruction which does not have
+    // any output.
+    JS_ASSERT(last->numDefs() == 0);
     return last->id();
 }
 
@@ -83,7 +84,7 @@ LBlock::getEntryMoveGroup(TempAllocator &alloc)
 {
     if (entryMoveGroup_)
         return entryMoveGroup_;
-    entryMoveGroup_ = new LMoveGroup(alloc);
+    entryMoveGroup_ = LMoveGroup::New(alloc);
     if (begin()->isLabel())
         insertAfter(*begin(), entryMoveGroup_);
     else
@@ -96,7 +97,7 @@ LBlock::getExitMoveGroup(TempAllocator &alloc)
 {
     if (exitMoveGroup_)
         return exitMoveGroup_;
-    exitMoveGroup_ = new LMoveGroup(alloc);
+    exitMoveGroup_ = LMoveGroup::New(alloc);
     insertBefore(*rbegin(), exitMoveGroup_);
     return exitMoveGroup_;
 }
@@ -129,7 +130,7 @@ LSnapshot::init(MIRGenerator *gen)
 LSnapshot *
 LSnapshot::New(MIRGenerator *gen, MResumePoint *mir, BailoutKind kind)
 {
-    LSnapshot *snapshot = new LSnapshot(mir, kind);
+    LSnapshot *snapshot = new(gen->alloc()) LSnapshot(mir, kind);
     if (!snapshot->init(gen))
         return nullptr;
 
@@ -165,7 +166,7 @@ LPhi::LPhi(MPhi *mir)
 LPhi *
 LPhi::New(MIRGenerator *gen, MPhi *ins)
 {
-    LPhi *phi = new LPhi(ins);
+    LPhi *phi = new(gen->alloc()) LPhi(ins);
     if (!phi->init(gen))
         return nullptr;
     return phi;
@@ -194,12 +195,15 @@ LInstruction::printName(FILE *fp)
 
 static const char * const TypeChars[] =
 {
-    "i",            // INTEGER
+    "g",            // GENERAL
+    "i",            // INT32
     "o",            // OBJECT
-    "f",            // DOUBLE
+    "s",            // SLOTS
+    "f",            // FLOAT32
+    "d",            // DOUBLE
 #ifdef JS_NUNBOX32
     "t",            // TYPE
-    "d"             // PAYLOAD
+    "p"             // PAYLOAD
 #elif JS_PUNBOX64
     "x"             // BOX
 #endif
@@ -267,15 +271,9 @@ LAllocation::toString() const
         JS_snprintf(buf, sizeof(buf), "=%s", toFloatReg()->reg().name());
         return buf;
       case LAllocation::STACK_SLOT:
-        JS_snprintf(buf, sizeof(buf), "stack:i%d", toStackSlot()->slot());
+        JS_snprintf(buf, sizeof(buf), "stack:%d", toStackSlot()->slot());
         return buf;
-      case LAllocation::DOUBLE_SLOT:
-        JS_snprintf(buf, sizeof(buf), "stack:d%d", toStackSlot()->slot());
-        return buf;
-      case LAllocation::INT_ARGUMENT:
-        JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
-        return buf;
-      case LAllocation::DOUBLE_ARGUMENT:
+      case LAllocation::ARGUMENT_SLOT:
         JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
         return buf;
       case LAllocation::USE:
@@ -357,23 +355,23 @@ void
 LInstruction::initSafepoint(TempAllocator &alloc)
 {
     JS_ASSERT(!safepoint_);
-    safepoint_ = new LSafepoint(alloc);
+    safepoint_ = new(alloc) LSafepoint(alloc);
     JS_ASSERT(safepoint_);
 }
 
 bool
-LMoveGroup::add(LAllocation *from, LAllocation *to)
+LMoveGroup::add(LAllocation *from, LAllocation *to, LDefinition::Type type)
 {
 #ifdef DEBUG
     JS_ASSERT(*from != *to);
     for (size_t i = 0; i < moves_.length(); i++)
         JS_ASSERT(*to != *moves_[i].to());
 #endif
-    return moves_.append(LMove(from, to));
+    return moves_.append(LMove(from, to, type));
 }
 
 bool
-LMoveGroup::addAfter(LAllocation *from, LAllocation *to)
+LMoveGroup::addAfter(LAllocation *from, LAllocation *to, LDefinition::Type type)
 {
     // Transform the operands to this move so that performing the result
     // simultaneously with existing moves in the group will have the same
@@ -391,12 +389,12 @@ LMoveGroup::addAfter(LAllocation *from, LAllocation *to)
 
     for (size_t i = 0; i < moves_.length(); i++) {
         if (*to == *moves_[i].to()) {
-            moves_[i] = LMove(from, to);
+            moves_[i] = LMove(from, to, type);
             return true;
         }
     }
 
-    return add(from, to);
+    return add(from, to, type);
 }
 
 void

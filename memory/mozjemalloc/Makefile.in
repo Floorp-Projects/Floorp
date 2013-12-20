@@ -9,26 +9,6 @@ ifndef GNU_CC
 MODULE_OPTIMIZE_FLAGS = -xO5
 endif
 endif
-
-ifeq (Linux,$(OS_TARGET))
-#XXX: PGO on Linux causes problems here
-# See bug 419470
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-endif
 endif
 
 LOCAL_INCLUDES += -I$(topsrcdir)/memory/build
-
-# For non release/esr builds, enable (some) fatal jemalloc assertions.  This
-# helps us catch memory errors.
-ifeq (,$(filter release esr,$(MOZ_UPDATE_CHANNEL)))
-DEFINES	+= -DMOZ_JEMALLOC_HARD_ASSERTS
-endif
-
-DEFINES += -Dabort=moz_abort
-
-ifdef MOZ_REPLACE_MALLOC
-DEFINES += -DMOZ_REPLACE_MALLOC
-endif
-
-DEFINES += -DMOZ_JEMALLOC_IMPL

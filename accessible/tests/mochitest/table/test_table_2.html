@@ -15,23 +15,6 @@
 
 function doTest()
 {
-  // Test table with display:inline. We shouldn't create table accessible and
-  // table cell accessible in this case
-  var accNotCreated = (!isAccessible("table1"));
-  ok(accNotCreated, "wrongly created table accessible");
-  
-  if (accNotCreated) {
-    var accDiv = getAccessible("div");
-    is(accDiv.firstChild.name, "cell", "wrongly created table cell accessible");
-  }
-
-  // Test table with display:inline and have an another outside table
-  accNotCreated = (!isAccessible("table2"));
-  ok(accNotCreated, "wrongly created table accessible");
-
-  accNotCreated = (!isAccessible("cell"));
-  ok(accNotCreated, "wrongly created table cell accessible");
-
   // Test table with role=alert. 
   var tableInterfaceExposed = true;
   var accTable3 = getAccessible("table3", [nsIAccessibleTable], null, DONOTFAIL_IF_NO_INTERFACE);
@@ -66,14 +49,6 @@ function doTest()
     is(accTable4.getCellAt(1,1).firstChild.name, "cell3", "wrong cell");
   }
 
-  // Test table with display:inline and an outside table. We shouldn't be fooled
-  // by the outside table and shouldn't create table accessible and table cell
-  // accessible in this case
-  accNotCreated = (!isAccessible("table5"));
-  ok(accNotCreated, "wrongly created table accessible");
-  accNotCreated = (!isAccessible("t5_cell"));
-  ok(accNotCreated, "wrongly created table cell accessible");
-
   // test crazy table
   var table6 = getAccessible("table6", [nsIAccessibleTable]);
   ok(!table6.getCellAt(0, 0),
@@ -96,22 +71,6 @@ addA11yLoadEvent(doTest);
   <!-- Test Table -->
   <br><br><b> Testing Table:</b><br><br>
   <center>
-   <div id="div">
-     <table id="table1" border="1" style="display:inline">
-      <tr>
-       <td>cell</td>
-      </tr>
-     </table>
-   </div>
-
-   <table><tr><td>
-     <table id="table2" border="1" style="display:inline">
-      <tr>
-       <td id="cell">cell</td>
-      </tr>
-     </table>
-   </td></tr></table>
-
    <table id="table3" border="1" role="alert">
     <tr>
      <td>cell0</td>
@@ -128,17 +87,6 @@ addA11yLoadEvent(doTest);
      <td>cell2</td>
      <td>cell3</td>
     </tr>
-   </table>
-
-   <table>
-   <tr>
-   <td style="display:block">
-     <table style="display:inline" id="table5">
-       <tr><td id="t5_cell">cell0</td></tr>
-     </table>
-   </td>
-   <td>cell1</td>
-   </tr>
    </table>
 
   <div style="display:table;" id="table6">

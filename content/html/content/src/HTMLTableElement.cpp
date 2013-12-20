@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsRuleData.h"
@@ -288,6 +286,7 @@ HTMLTableElement::HTMLTableElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mTableInheritedAttributes(TABLE_ATTRS_DIRTY)
 {
+  SetHasWeirdParserInsertionMode();
 }
 
 HTMLTableElement::~HTMLTableElement()

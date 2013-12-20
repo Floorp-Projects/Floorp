@@ -1263,7 +1263,7 @@ nsWindow::DispatchMotionEvent(WidgetInputEvent &event, AndroidGeckoEvent *ae,
 {
     nsIntPoint offset = WidgetToScreenOffset();
 
-    event.modifiers = 0;
+    event.modifiers = ae->DOMModifiers();
     event.time = ae->Time();
 
     // XXX possibly bound the range of event.refPoint here.
@@ -1393,18 +1393,20 @@ static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
     }
 }
 
-static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
+static KeyNameIndex
+ConvertAndroidKeyCodeToKeyNameIndex(AndroidGeckoEvent& aAndroidGeckoEvent)
 {
+    int keyCode = aAndroidGeckoEvent.KeyCode();
     // Special-case alphanumeric keycodes because they are most common.
-    if (aAndroidKeyCode >= AKEYCODE_A && aAndroidKeyCode <= AKEYCODE_Z) {
-        return KEY_NAME_INDEX_PrintableKey;
+    if (keyCode >= AKEYCODE_A && keyCode <= AKEYCODE_Z) {
+        return KEY_NAME_INDEX_USE_STRING;
     }
 
-    if (aAndroidKeyCode >= AKEYCODE_0 && aAndroidKeyCode <= AKEYCODE_9) {
-        return KEY_NAME_INDEX_PrintableKey;
+    if (keyCode >= AKEYCODE_0 && keyCode <= AKEYCODE_9) {
+        return KEY_NAME_INDEX_USE_STRING;
     }
 
-    switch (aAndroidKeyCode) {
+    switch (keyCode) {
 
 #define NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, aKeyNameIndex) \
         case aNativeKey: return aKeyNameIndex;
@@ -1421,6 +1423,7 @@ static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
 
         case AKEYCODE_COMMA:              // ',' key
         case AKEYCODE_PERIOD:             // '.' key
+        case AKEYCODE_SPACE:
         case AKEYCODE_GRAVE:              // '`' key
         case AKEYCODE_MINUS:              // '-' key
         case AKEYCODE_EQUALS:             // '=' key
@@ -1433,7 +1436,6 @@ static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
         case AKEYCODE_AT:                 // '@' key
         case AKEYCODE_PLUS:               // '+' key
 
-        case AKEYCODE_UNKNOWN:
         case AKEYCODE_NUMPAD_0:
         case AKEYCODE_NUMPAD_1:
         case AKEYCODE_NUMPAD_2:
@@ -1444,13 +1446,19 @@ static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
         case AKEYCODE_NUMPAD_7:
         case AKEYCODE_NUMPAD_8:
         case AKEYCODE_NUMPAD_9:
-
+        case AKEYCODE_NUMPAD_DIVIDE:
+        case AKEYCODE_NUMPAD_MULTIPLY:
+        case AKEYCODE_NUMPAD_SUBTRACT:
+        case AKEYCODE_NUMPAD_ADD:
+        case AKEYCODE_NUMPAD_DOT:
+        case AKEYCODE_NUMPAD_COMMA:
+        case AKEYCODE_NUMPAD_EQUALS:
         case AKEYCODE_NUMPAD_LEFT_PAREN:
         case AKEYCODE_NUMPAD_RIGHT_PAREN:
 
         case AKEYCODE_YEN:                // yen sign key
         case AKEYCODE_RO:                 // Japanese Ro key
-            return KEY_NAME_INDEX_PrintableKey;
+            return KEY_NAME_INDEX_USE_STRING;
 
         case AKEYCODE_SOFT_LEFT:
         case AKEYCODE_SOFT_RIGHT:
@@ -1521,9 +1529,18 @@ static KeyNameIndex ConvertAndroidKeyCodeToKeyNameIndex(int aAndroidKeyCode)
         case AKEYCODE_KATAKANA_HIRAGANA:
             return KEY_NAME_INDEX_Unidentified;
 
+        case AKEYCODE_UNKNOWN:
+            MOZ_ASSERT(
+                aAndroidGeckoEvent.Action() != AKEY_EVENT_ACTION_MULTIPLE,
+                "Don't call this when action is AKEY_EVENT_ACTION_MULTIPLE!");
+            // It's actually an unknown key if the action isn't ACTION_MULTIPLE.
+            // However, it might cause text input.  So, let's check the value.
+            return aAndroidGeckoEvent.DOMPrintableKeyValue() ?
+                KEY_NAME_INDEX_USE_STRING : KEY_NAME_INDEX_Unidentified;
+
         default:
             ALOG("ConvertAndroidKeyCodeToKeyNameIndex: "
-                 "No DOM key name index for Android keycode %d", aAndroidKeyCode);
+                 "No DOM key name index for Android keycode %d", keyCode);
             return KEY_NAME_INDEX_Unidentified;
     }
 }
@@ -1554,9 +1571,14 @@ void
 nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
                        ANPEvent* pluginEvent)
 {
-    int androidKeyCode = key.KeyCode();
-    event.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(androidKeyCode);
-    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(androidKeyCode);
+    event.mKeyNameIndex = ConvertAndroidKeyCodeToKeyNameIndex(key);
+    if (event.mKeyNameIndex == KEY_NAME_INDEX_USE_STRING) {
+        int keyValue = key.DOMPrintableKeyValue();
+        if (keyValue) {
+            event.mKeyValue = static_cast<PRUnichar>(keyValue);
+        }
+    }
+    uint32_t domKeyCode = ConvertAndroidKeyCodeToDOMKeyCode(key.KeyCode());
 
     if (event.message == NS_KEY_PRESS) {
         // Android gives us \n, so filter out some control characters.
@@ -1587,16 +1609,19 @@ nsWindow::InitKeyEvent(WidgetKeyboardEvent& event, AndroidGeckoEvent& key,
         event.pluginEvent = pluginEvent;
     }
 
-    if (event.message != NS_KEY_PRESS ||
-        !key.UnicodeChar() || !key.BaseUnicodeChar() ||
-        key.UnicodeChar() == key.BaseUnicodeChar()) {
-        // For keypress, if the unicode char already has modifiers applied, we
-        // don't specify extra modifiers. If UnicodeChar() != BaseUnicodeChar()
-        // it means UnicodeChar() already has modifiers applied.
-        event.InitBasicModifiers(gMenu || key.IsCtrlPressed(),
-                                 key.IsAltPressed(),
-                                 key.IsShiftPressed(),
-                                 key.IsMetaPressed());
+    event.modifiers = key.DOMModifiers();
+    if (gMenu) {
+        event.modifiers |= MODIFIER_CONTROL;
+    }
+    // For keypress, if the unicode char already has modifiers applied, we
+    // don't specify extra modifiers. If UnicodeChar() != BaseUnicodeChar()
+    // it means UnicodeChar() already has modifiers applied.
+    // Note that on Android 4.x, Alt modifier isn't set when the key input
+    // causes text input even while right Alt key is pressed.  However, this
+    // is necessary for Android 2.3 compatibility.
+    if (event.message == NS_KEY_PRESS &&
+        key.UnicodeChar() && key.UnicodeChar() != key.BaseUnicodeChar()) {
+        event.modifiers &= ~(MODIFIER_ALT | MODIFIER_CONTROL | MODIFIER_META);
     }
 
     event.mIsRepeat =
@@ -2328,7 +2353,7 @@ nsWindow::GetIMEUpdatePreference()
 }
 
 void
-nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
+nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
@@ -2362,7 +2387,7 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 }
 
 void
-nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
+nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 {
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay");
     JNIEnv *env = GetJNIForThread();
@@ -2430,11 +2455,7 @@ float
 nsWindow::ComputeRenderIntegrity()
 {
     if (sCompositorParent) {
-        mozilla::layers::LayerManagerComposite* manager =
-          static_cast<mozilla::layers::LayerManagerComposite*>(sCompositorParent->GetLayerManager());
-        if (manager) {
-            return manager->ComputeRenderIntegrity();
-        }
+        return sCompositorParent->ComputeRenderIntegrity();
     }
 
     return 1.f;

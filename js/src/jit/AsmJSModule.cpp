@@ -10,7 +10,6 @@
 # include <sys/mman.h>
 #endif
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "jslibmath.h"
@@ -32,7 +31,6 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
-using mozilla::DebugOnly;
 using mozilla::PodEqual;
 
 void
@@ -237,28 +235,50 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return FuncCast(NumberMod);
       case AsmJSImm_SinD:
         return FuncCast<double (double)>(sin);
+      case AsmJSImm_SinF:
+        return FuncCast<float (float)>(sinf);
       case AsmJSImm_CosD:
         return FuncCast<double (double)>(cos);
+      case AsmJSImm_CosF:
+        return FuncCast<float (float)>(cosf);
       case AsmJSImm_TanD:
         return FuncCast<double (double)>(tan);
+      case AsmJSImm_TanF:
+        return FuncCast<float (float)>(tanf);
       case AsmJSImm_ASinD:
         return FuncCast<double (double)>(asin);
+      case AsmJSImm_ASinF:
+        return FuncCast<float (float)>(asinf);
       case AsmJSImm_ACosD:
         return FuncCast<double (double)>(acos);
+      case AsmJSImm_ACosF:
+        return FuncCast<float (float)>(acosf);
       case AsmJSImm_ATanD:
         return FuncCast<double (double)>(atan);
+      case AsmJSImm_ATanF:
+        return FuncCast<float (float)>(atanf);
       case AsmJSImm_CeilD:
         return FuncCast<double (double)>(ceil);
+      case AsmJSImm_CeilF:
+        return FuncCast<float (float)>(ceilf);
       case AsmJSImm_FloorD:
         return FuncCast<double (double)>(floor);
+      case AsmJSImm_FloorF:
+        return FuncCast<float (float)>(floorf);
       case AsmJSImm_ExpD:
         return FuncCast<double (double)>(exp);
+      case AsmJSImm_ExpF:
+        return FuncCast<float (float)>(expf);
       case AsmJSImm_LogD:
         return FuncCast<double (double)>(log);
+      case AsmJSImm_LogF:
+        return FuncCast<float (float)>(logf);
       case AsmJSImm_PowD:
         return FuncCast(ecmaPow);
       case AsmJSImm_ATan2D:
         return FuncCast(ecmaAtan2);
+      case AsmJSImm_Invalid:
+        break;
     }
 
     MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
@@ -445,7 +465,7 @@ SerializedNameSize(PropertyName *name)
 static uint8_t *
 SerializeName(uint8_t *cursor, PropertyName *name)
 {
-    JS_ASSERT_IF(name, name->length() != 0);
+    JS_ASSERT_IF(name, !name->empty());
     if (name) {
         cursor = WriteScalar<uint32_t>(cursor, name->length());
         cursor = WriteBytes(cursor, name->chars(), name->length() * sizeof(jschar));
@@ -466,7 +486,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
         return cursor;
     }
 
-    Vector<jschar> tmp(cx);
+    js::Vector<jschar> tmp(cx);
     jschar *src;
     if ((size_t(cursor) & (sizeof(jschar) - 1)) != 0) {
         // Align 'src' for AtomizeChars.
@@ -488,7 +508,7 @@ DeserializeName(ExclusiveContext *cx, const uint8_t *cursor, PropertyName **name
 
 template <class T>
 size_t
-SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializedVectorSize(const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     size_t size = sizeof(uint32_t);
     for (size_t i = 0; i < vec.length(); i++)
@@ -498,7 +518,7 @@ SerializedVectorSize(const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 uint8_t *
-SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
+SerializeVector(uint8_t *cursor, const js::Vector<T, 0, SystemAllocPolicy> &vec)
 {
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     for (size_t i = 0; i < vec.length(); i++)
@@ -508,7 +528,7 @@ SerializeVector(uint8_t *cursor, const Vector<T, 0, SystemAllocPolicy> &vec)
 
 template <class T>
 const uint8_t *
-DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, Vector<T, 0, SystemAllocPolicy> *vec)
+DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, js::Vector<T, 0, SystemAllocPolicy> *vec)
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
@@ -799,7 +819,7 @@ class ModuleChars
     uint32_t length_;
     const jschar *begin_;
     uint32_t isFunCtor_;
-    Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
+    js::Vector<PropertyNameWrapper, 0, SystemAllocPolicy> funCtorArgs_;
 
   public:
     static uint32_t beginOffset(AsmJSParser &parser) {

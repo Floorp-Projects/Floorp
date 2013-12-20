@@ -15,5 +15,6 @@ MOCHITEST_FILES = \
   test_networkstats_disabled.html \
   test_networkstats_enabled_no_perm.html \
   test_networkstats_enabled_perm.html \
+  test_networkstats_alarms.html \
   $(NULL)
 endif

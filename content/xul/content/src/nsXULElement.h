@@ -680,6 +680,7 @@ protected:
     void SetTitlebarColor(nscolor aColor, bool aActive);
 
     void SetDrawsInTitlebar(bool aState);
+    void SetDrawsTitle(bool aState);
 
     void RemoveBroadcaster(const nsAString & broadcasterId);
 
@@ -695,7 +696,7 @@ protected:
     bool BoolAttrIsTrue(nsIAtom* aName) const;
 
     friend nsresult
-    NS_NewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
+    NS_NewXULElement(mozilla::dom::Element** aResult, nsINodeInfo *aNodeInfo);
     friend void
     NS_TrustedNewXULElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
 

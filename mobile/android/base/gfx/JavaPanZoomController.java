@@ -475,7 +475,7 @@ class JavaPanZoomController
 
         case TOUCHING:
             // Don't allow panning if there is an element in full-screen mode. See bug 775511.
-            if (mTarget.isFullScreen() || panDistance(event) < PAN_THRESHOLD) {
+            if ((mTarget.isFullScreen() && !mSubscroller.scrolling()) || panDistance(event) < PAN_THRESHOLD) {
                 return false;
             }
             cancelTouch();
@@ -1455,11 +1455,6 @@ class JavaPanZoomController
     @Override
     public int getOverScrollMode() {
         return mX.getOverScrollMode();
-    }
-
-    @Override
-    public void updateScrollOffset(float cssX, float cssY) {
-        // Nothing to update, this class doesn't store the scroll offset locally.
     }
 
     @Override

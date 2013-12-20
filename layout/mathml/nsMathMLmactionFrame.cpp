@@ -8,7 +8,7 @@
 #include "nsPresContext.h"
 #include "nsINameSpaceManager.h"
 #include "prprf.h"         // For PR_snprintf()
-#include "nsIDocShellTreeItem.h"
+#include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -246,17 +246,14 @@ NS_IMPL_ISUPPORTS1(nsMathMLmactionFrame::MouseListener,
 void
 ShowStatus(nsPresContext* aPresContext, nsString& aStatusMsg)
 {
-  nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();
-  if (cont) {
-    nsCOMPtr<nsIDocShellTreeItem> docShellItem(do_QueryInterface(cont));
-    if (docShellItem) {
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
-      if (treeOwner) {
-        nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
-        if (browserChrome) {
-          browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, aStatusMsg.get());
-        }
+  nsCOMPtr<nsIDocShellTreeItem> docShellItem(aPresContext->GetDocShell());
+  if (docShellItem) {
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    docShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (treeOwner) {
+      nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
+      if (browserChrome) {
+        browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, aStatusMsg.get());
       }
     }
   }

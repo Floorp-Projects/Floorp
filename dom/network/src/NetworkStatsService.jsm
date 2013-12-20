@@ -22,6 +22,8 @@ Cu.import("resource://gre/modules/NetworkStatsDB.jsm");
 const NET_NETWORKSTATSSERVICE_CONTRACTID = "@mozilla.org/network/netstatsservice;1";
 const NET_NETWORKSTATSSERVICE_CID = Components.ID("{18725604-e9ac-488a-8aa0-2471e7f6c0a4}");
 
+const TOPIC_BANDWIDTH_CONTROL = "netd-bandwidth-control"
+
 const TOPIC_INTERFACE_REGISTERED   = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED = "network-interface-unregistered";
 const NET_TYPE_WIFI = Ci.nsINetworkInterface.NETWORK_TYPE_WIFI;
@@ -34,10 +36,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "networkManager",
-                                   "@mozilla.org/network/manager;1",
-                                   "nsINetworkManager");
-
+XPCOMUtils.defineLazyServiceGetter(this, "gRil",
+                                   "@mozilla.org/ril;1",
+                                   "nsIRadioInterfaceLayer");
 
 XPCOMUtils.defineLazyServiceGetter(this, "networkService",
                                    "@mozilla.org/network/service;1",
@@ -51,6 +52,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSettingsService",
                                    "@mozilla.org/settingsService;1",
                                    "nsISettingsService");
 
+XPCOMUtils.defineLazyServiceGetter(this, "messenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 this.NetworkStatsService = {
   init: function() {
     debug("Service started");
@@ -58,6 +63,7 @@ this.NetworkStatsService = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     Services.obs.addObserver(this, TOPIC_INTERFACE_REGISTERED, false);
     Services.obs.addObserver(this, TOPIC_INTERFACE_UNREGISTERED, false);
+    Services.obs.addObserver(this, TOPIC_BANDWIDTH_CONTROL, false);
     Services.obs.addObserver(this, "profile-after-change", false);
 
     this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -88,6 +94,9 @@ this.NetworkStatsService = {
     this.messages = ["NetworkStats:Get",
                      "NetworkStats:Clear",
                      "NetworkStats:ClearAll",
+                     "NetworkStats:SetAlarm",
+                     "NetworkStats:GetAlarms",
+                     "NetworkStats:RemoveAlarms",
                      "NetworkStats:GetAvailableNetworks",
                      "NetworkStats:SampleRate",
                      "NetworkStats:MaxStorageAge"];
@@ -108,6 +117,9 @@ this.NetworkStatsService = {
 
     this.updateQueue = [];
     this.isQueueRunning = false;
+
+    this._currentAlarms = {};
+    this.initAlarms();
   },
 
   receiveMessage: function(aMessage) {
@@ -130,6 +142,15 @@ this.NetworkStatsService = {
       case "NetworkStats:ClearAll":
         this.clearDB(mm, msg);
         break;
+      case "NetworkStats:SetAlarm":
+        this.setAlarm(mm, msg);
+        break;
+      case "NetworkStats:GetAlarms":
+        this.getAlarms(mm, msg);
+        break;
+      case "NetworkStats:RemoveAlarms":
+        this.removeAlarms(mm, msg);
+        break;
       case "NetworkStats:GetAvailableNetworks":
         this.getAvailableNetworks(mm, msg);
         break;
@@ -147,7 +168,7 @@ this.NetworkStatsService = {
       case TOPIC_INTERFACE_REGISTERED:
       case TOPIC_INTERFACE_UNREGISTERED:
 
-        // If new interface is registered (notified from NetworkManager),
+        // If new interface is registered (notified from NetworkService),
         // the stats are updated for the new interface without waiting to
         // complete the updating period.
 
@@ -159,9 +180,27 @@ this.NetworkStatsService = {
           break;
         }
 
+        this._updateCurrentAlarm(netId);
+
         debug("NetId: " + netId);
         this.updateStats(netId);
         break;
+
+      case TOPIC_BANDWIDTH_CONTROL:
+        debug("Bandwidth message from netd: " + JSON.stringify(aData));
+
+        let interfaceName = aData.substring(aData.lastIndexOf(" ") + 1);
+        for (let networkId in this._networks) {
+          if (interfaceName == this._networks[networkId].interfaceName) {
+            let currentAlarm = this._currentAlarms[networkId];
+            if (Object.getOwnPropertyNames(currentAlarm).length !== 0) {
+              this._fireAlarm(currentAlarm.alarm);
+            }
+            break;
+          }
+        }
+        break;
+
       case "xpcom-shutdown":
         debug("Service shutdown");
 
@@ -173,6 +212,7 @@ this.NetworkStatsService = {
         Services.obs.removeObserver(this, "profile-after-change");
         Services.obs.removeObserver(this, TOPIC_INTERFACE_REGISTERED);
         Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
+        Services.obs.removeObserver(this, TOPIC_BANDWIDTH_CONTROL);
 
         this.timer.cancel();
         this.timer = null;
@@ -194,6 +234,20 @@ this.NetworkStatsService = {
   /*
    * nsINetworkStatsService
    */
+  getRilNetworks: function() {
+    let networks = {};
+    let numRadioInterfaces = gRil.numRadioInterfaces;
+    for (let i = 0; i < numRadioInterfaces; i++) {
+      let radioInterface = gRil.getRadioInterface(i);
+      if (radioInterface.rilContext.iccInfo) {
+        let netId = this.getNetworkId(radioInterface.rilContext.iccInfo.iccid,
+                                      NET_TYPE_MOBILE);
+        networks[netId] = { id : radioInterface.rilContext.iccInfo.iccid,
+                            type: NET_TYPE_MOBILE };
+      }
+    }
+    return networks;
+  },
 
   convertNetworkInterface: function(aNetwork) {
     if (aNetwork.type != NET_TYPE_MOBILE &&
@@ -229,10 +283,47 @@ this.NetworkStatsService = {
   },
 
   getAvailableNetworks: function getAvailableNetworks(mm, msg) {
+    let self = this;
+    let rilNetworks = this.getRilNetworks();
     this._db.getAvailableNetworks(function onGetNetworks(aError, aResult) {
+
+      // Also return the networks that are valid but have not
+      // established connections yet.
+      for (let netId in rilNetworks) {
+        let found = false;
+        for (let i = 0; i < aResult.length; i++) {
+          if (netId == self.getNetworkId(aResult[i].id, aResult[i].type)) {
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          aResult.push(rilNetworks[netId]);
+        }
+      }
+
       mm.sendAsyncMessage("NetworkStats:GetAvailableNetworks:Return",
                           { id: msg.id, error: aError, result: aResult });
     });
+  },
+
+  initAlarms: function initAlarms() {
+    debug("Init usage alarms");
+    let self = this;
+
+    for (let netId in this._networks) {
+      this._currentAlarms[netId] = Object.create(null);
+
+      this._db.getFirstAlarm(netId, function getResult(error, result) {
+        if (!error && result) {
+          self._setAlarm(result, function onSet(error, success) {
+            if (error == "InvalidStateError") {
+              self._fireAlarm(result);
+            }
+          });
+        }
+      });
+    }
   },
 
   /*
@@ -283,8 +374,23 @@ this.NetworkStatsService = {
     // Check if the network is available in the DB. If yes, we also
     // retrieve the stats for it from the DB.
     this._db.isNetworkAvailable(network, function(aError, aResult) {
+      let toFind = false;
       if (aResult) {
-        // If network is not active, there is no need to update stats.
+        toFind = true;
+      } else if (!aError) {
+        // Network is not found in the database without any errors.
+        // Check if network is valid but has not established a connection yet.
+        let rilNetworks = self.getRilNetworks();
+        if (rilNetworks[netId]) {
+          // find will not get data for network from the database but will format the
+          // result object in order to make NetworkStatsManager be able to construct a
+          // nsIDOMMozNetworkStats object.
+          toFind = true;
+        }
+      }
+
+      if (toFind) {
+        // If network is not active, there is no need to update stats before finding.
         self._db.find(function onStatsFound(aError, aResult) {
           mm.sendAsyncMessage("NetworkStats:Get:Return",
                               { id: msg.id, error: aError, result: aResult });
@@ -308,8 +414,18 @@ this.NetworkStatsService = {
     debug("clear stats for network " + network.id + " of type " + network.type);
 
     if (!this._networks[netId]) {
+      let error = "Invalid networkType";
+      let result = null;
+
+      // Check if network is valid but has not established a connection yet.
+      let rilNetworks = this.getRilNetworks();
+      if (rilNetworks[netId]) {
+        error = null;
+        result = true;
+      }
+
       mm.sendAsyncMessage("NetworkStats:Clear:Return",
-                          { id: msg.id, error: "Invalid networkType", result: null });
+                          { id: msg.id, error: error, result: result });
       return;
     }
 
@@ -426,8 +542,8 @@ this.NetworkStatsService = {
       }
     } else {
       // The caller is a function that has pushed new elements to the queue,
-      // if isQueueRunning is false it means there is no processing currently being
-      // done, so start.
+      // if isQueueRunning is false it means there is no processing currently
+      // being done, so start.
       if (this.isQueueRunning) {
         if(this.updateQueue.length > 1) {
           return;
@@ -459,7 +575,7 @@ this.NetworkStatsService = {
     let interfaceName = this._networks[aNetId].interfaceName;
     debug("Update stats for " + interfaceName);
 
-    // Request stats to NetworkManager, which will get stats from netd, passing
+    // Request stats to NetworkService, which will get stats from netd, passing
     // 'networkStatsAvailable' as a callback.
     if (interfaceName) {
       networkService.getNetworkInterfaceStats(interfaceName,
@@ -650,6 +766,262 @@ this.NetworkStatsService = {
       debug(JSON.stringify(aResult));
     });
   },
+
+  getAlarms: function getAlarms(mm, msg) {
+    let network = msg.data.network;
+    let manifestURL = msg.data.manifestURL;
+
+    let netId = null;
+    if (network) {
+      netId = this.getNetworkId(network.id, network.type);
+      if (!this._networks[netId]) {
+        mm.sendAsyncMessage("NetworkStats:GetAlarms:Return",
+                            { id: msg.id, error: "InvalidInterface", result: null });
+        return;
+      }
+    }
+
+    let self = this;
+    this._db.getAlarms(netId, manifestURL, function onCompleted(error, result) {
+      if (error) {
+        mm.sendAsyncMessage("NetworkStats:GetAlarms:Return",
+                            { id: msg.id, error: error, result: result });
+        return;
+      }
+
+      let alarms = []
+      // NetworkStatsManager must return the network instead of the networkId.
+      for (let i = 0; i < result.length; i++) {
+        let alarm = result[i];
+        alarms.push({ id: alarm.id,
+                      network: self._networks[alarm.networkId].network,
+                      threshold: alarm.threshold,
+                      data: alarm.data });
+      }
+
+      mm.sendAsyncMessage("NetworkStats:GetAlarms:Return",
+                          { id: msg.id, error: null, result: alarms });
+    });
+  },
+
+  removeAlarms: function removeAlarms(mm, msg) {
+    let alarmId = msg.data.alarmId;
+    let manifestURL = msg.data.manifestURL;
+
+    let self = this;
+    let callback = function onRemove(error, result) {
+      if (error) {
+        mm.sendAsyncMessage("NetworkStats:RemoveAlarms:Return",
+                            { id: msg.id, error: error, result: result });
+        return;
+      }
+
+      for (let i in self._currentAlarms) {
+        let currentAlarm = self._currentAlarms[i].alarm;
+        if (currentAlarm && ((alarmId == currentAlarm.id) ||
+            (alarmId == -1 && currentAlarm.manifestURL == manifestURL))) {
+
+          self._updateCurrentAlarm(currentAlarm.networkId);
+        }
+      }
+
+      mm.sendAsyncMessage("NetworkStats:RemoveAlarms:Return",
+                          { id: msg.id, error: error, result: true });
+    };
+
+    if (alarmId == -1) {
+      this._db.removeAlarms(manifestURL, callback);
+    } else {
+      this._db.removeAlarm(alarmId, manifestURL, callback);
+    }
+  },
+
+  /*
+   * Function called from manager to set an alarm.
+   */
+  setAlarm: function setAlarm(mm, msg) {
+    let options = msg.data;
+    let network = options.network;
+    let threshold = options.threshold;
+
+    debug("Set alarm at " + threshold + " for " + JSON.stringify(network));
+
+    if (threshold < 0) {
+      mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
+                          { id: msg.id, error: "InvalidThresholdValue", result: null });
+      return;
+    }
+
+    let netId = this.getNetworkId(network.id, network.type);
+    if (!this._networks[netId]) {
+      mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
+                          { id: msg.id, error: "InvalidiConnectionType", result: null });
+      return;
+    }
+
+    let newAlarm = {
+      id: null,
+      networkId: netId,
+      threshold: threshold,
+      absoluteThreshold: null,
+      startTime: options.startTime,
+      data: options.data,
+      pageURL: options.pageURL,
+      manifestURL: options.manifestURL
+    };
+
+    let self = this;
+    this._updateThreshold(newAlarm, function onUpdate(error, _threshold) {
+      if (error) {
+        mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
+                            { id: msg.id, error: error, result: null });
+        return;
+      }
+
+      newAlarm.absoluteThreshold = _threshold.absoluteThreshold;
+      self._db.addAlarm(newAlarm, function addSuccessCb(error, newId) {
+        if (error) {
+          mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
+                              { id: msg.id, error: error, result: null });
+          return;
+        }
+
+        newAlarm.id = newId;
+        self._setAlarm(newAlarm, function onSet(error, success) {
+          mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
+                              { id: msg.id, error: error, result: newId });
+
+          if (error == "InvalidStateError") {
+            self._fireAlarm(newAlarm);
+          }
+        });
+      });
+    });
+  },
+
+  _setAlarm: function _setAlarm(aAlarm, aCallback) {
+    let currentAlarm = this._currentAlarms[aAlarm.networkId];
+    if (Object.getOwnPropertyNames(currentAlarm).length !== 0 &&
+        aAlarm.absoluteThreshold > currentAlarm.alarm.absoluteThreshold) {
+      aCallback(null, true);
+      return;
+    }
+
+    let self = this;
+
+    this._updateThreshold(aAlarm, function onUpdate(aError, aThreshold) {
+      if (aError) {
+        aCallback(aError, null);
+        return;
+      }
+
+      let callback = function onAlarmSet(aError) {
+        if (aError) {
+          debug("Set alarm error: " + aError);
+          aCallback("netdError", null);
+          return;
+        }
+
+        self._currentAlarms[aAlarm.networkId].alarm = aAlarm;
+
+        aCallback(null, true);
+      };
+
+      debug("Set alarm " + JSON.stringify(aAlarm));
+      let interfaceName = self._networks[aAlarm.networkId].interfaceName;
+      if (interfaceName) {
+        networkService.setNetworkInterfaceAlarm(interfaceName,
+                                                aThreshold.systemThreshold,
+                                                callback);
+        return;
+      }
+
+      aCallback(null, true);
+    });
+  },
+
+  _updateThreshold: function _updateThreshold(aAlarm, aCallback) {
+    let self = this;
+    this.updateStats(aAlarm.networkId, function onStatsUpdated(aResult, aMessage) {
+      self._db.getCurrentStats(self._networks[aAlarm.networkId].network,
+                               aAlarm.startTime,
+                               function onStatsFound(error, result) {
+        if (error) {
+          debug("Error getting stats for " +
+                JSON.stringify(self._networks[aAlarm.networkId]) + ": " + error);
+          aCallback(error, result);
+          return;
+        }
+
+        let offset = aAlarm.threshold - result.rxTotalBytes - result.txTotalBytes;
+
+        // Alarm set to a threshold lower than current rx/tx bytes.
+        if (offset <= 0) {
+          aCallback("InvalidStateError", null);
+          return;
+        }
+
+        let threshold = {
+          systemThreshold: result.rxSystemBytes + result.txSystemBytes + offset,
+          absoluteThreshold: result.rxTotalBytes + result.txTotalBytes + offset
+        };
+
+        aCallback(null, threshold);
+      });
+    });
+  },
+
+  _fireAlarm: function _fireAlarm(aAlarm) {
+    debug("Fire alarm");
+
+    let self = this;
+    this._db.removeAlarm(aAlarm.id, null, function onRemove(aError, aResult){
+      if (!aError && !aResult) {
+        return;
+      }
+
+      self._fireSystemMessage(aAlarm);
+      self._updateCurrentAlarm(aAlarm.networkId);
+    });
+  },
+
+  _updateCurrentAlarm: function _updateCurrentAlarm(aNetworkId) {
+    this._currentAlarms[aNetworkId] = Object.create(null);
+
+    let self = this;
+    this._db.getFirstAlarm(aNetworkId, function onGet(error, result){
+      if (error) {
+        debug("Error getting the first alarm");
+        return;
+      }
+
+      if (!result) {
+        let interfaceName = self._networks[aNetworkId].interfaceName;
+        networkService.setNetworkInterfaceAlarm(interfaceName, -1,
+                                                function onComplete(){});
+        return;
+      }
+
+      self._setAlarm(result, function onSet(error, success){
+        if (error == "InvalidStateError") {
+          self._fireAlarm(result);
+          return;
+        }
+      });
+    });
+  },
+
+  _fireSystemMessage: function _fireSystemMessage(aAlarm) {
+    debug("Fire system message: " + JSON.stringify(aAlarm));
+
+    let manifestURI = Services.io.newURI(aAlarm.manifestURL, null, null);
+    let pageURI = Services.io.newURI(aAlarm.pageURL, null, null);
+
+    let alarm = { "id":        aAlarm.id,
+                  "threshold": aAlarm.threshold,
+                  "data":      aAlarm.data };
+    messenger.sendMessage("networkstats-alarm", alarm, pageURI, manifestURI);
+  }
 };
 
 NetworkStatsService.init();

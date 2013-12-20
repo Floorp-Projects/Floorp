@@ -22,8 +22,6 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace layers {
 
@@ -40,7 +38,8 @@ public:
   virtual ~CopyableCanvasLayer();
 
   virtual void Initialize(const Data& aData);
-  
+
+  virtual bool IsDataValid(const Data& aData);
 
 protected:
   void PaintWithOpacity(gfxContext* aContext,
@@ -48,7 +47,8 @@ protected:
                         Layer* aMaskLayer,
                         gfxContext::GraphicsOperator aOperator = gfxContext::OPERATOR_OVER);
 
-  void UpdateSurface(gfxASurface* aDestSurface = nullptr, Layer* aMaskLayer = nullptr);
+  void UpdateSurface(gfxASurface* aDestSurface = nullptr,
+                     Layer* aMaskLayer = nullptr);
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;

@@ -92,10 +92,23 @@ public:
   {
   }
 
-  MOZ_ALWAYS_INLINE uintptr_t incr()
+  MOZ_ALWAYS_INLINE uintptr_t incr(nsISupports *owner)
+  {
+    return incr(owner, nullptr);
+  }
+
+  MOZ_ALWAYS_INLINE uintptr_t incr(void *owner, nsCycleCollectionParticipant *p)
   {
     mRefCntAndFlags += NS_REFCOUNT_CHANGE;
     mRefCntAndFlags &= ~NS_IS_PURPLE;
+    // For incremental cycle collection, use the purple buffer to track objects
+    // that have been AddRef'd.
+    if (!IsInPurpleBuffer()) {
+      mRefCntAndFlags |= NS_IN_PURPLE_BUFFER;
+      // Refcount isn't zero, so Suspect won't delete anything.
+      MOZ_ASSERT(get() > 0);
+      NS_CycleCollectorSuspect3(owner, p, this, nullptr);
+    }
     return NS_REFCOUNT_VALUE(mRefCntAndFlags);
   }
 
@@ -265,7 +278,9 @@ public:
 #define NS_IMPL_CC_NATIVE_ADDREF_BODY(_class)                                 \
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                      \
     NS_ASSERT_OWNINGTHREAD(_class);                                           \
-    nsrefcnt count = mRefCnt.incr();                                          \
+    nsrefcnt count =                                                          \
+      mRefCnt.incr(static_cast<void*>(this),                                  \
+                   _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant()); \
     NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                       \
     return count;
 
@@ -296,7 +311,8 @@ NS_METHOD_(nsrefcnt) _class::Release(void)                                      
                    &shouldDelete);                                               \
     NS_LOG_RELEASE(this, count, #_class);                                        \
     if (count == 0) {                                                            \
-        mRefCnt.incr();                                                          \
+        mRefCnt.incr(static_cast<void*>(this),                                   \
+                     _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());  \
         _last;                                                                   \
         mRefCnt.decr(static_cast<void*>(this),                                   \
                      _class::NS_CYCLE_COLLECTION_INNERCLASS::GetParticipant());  \
@@ -502,7 +518,8 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
 {                                                                             \
   MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                        \
   NS_ASSERT_OWNINGTHREAD(_class);                                             \
-  nsrefcnt count = mRefCnt.incr();                                            \
+  nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);    \
+  nsrefcnt count = mRefCnt.incr(base);                                        \
   NS_LOG_ADDREF(this, count, #_class, sizeof(*this));                         \
   return count;                                                               \
 }
@@ -537,7 +554,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
   nsrefcnt count = mRefCnt.decr(base, &shouldDelete);                         \
   NS_LOG_RELEASE(this, count, #_class);                                       \
   if (count == 0) {                                                           \
-      mRefCnt.incr();                                                         \
+      mRefCnt.incr(base);                                                     \
       _last;                                                                  \
       mRefCnt.decr(base);                                                     \
       if (shouldDelete) {                                                     \
@@ -609,8 +626,15 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
                reinterpret_cast<char*>((_class*) 0x1000))                     \
   },
 
+/*
+ * XXX: we want to use mozilla::ArrayLength (or equivalent,
+ * MOZ_ARRAY_LENGTH) in this condition, but some versions of GCC don't
+ * see that the static_assert condition is actually constant in those
+ * cases, even with constexpr support (?).
+ */
 #define NS_INTERFACE_TABLE_END_WITH_PTR(_ptr)                                 \
   { nullptr, 0 } };                                                           \
+  static_assert((sizeof(table)/sizeof(table[0])) > 1, "need at least 1 interface"); \
   rv = NS_TableDrivenQI(static_cast<void*>(_ptr),                             \
                         table, aIID, aInstancePtr);
 

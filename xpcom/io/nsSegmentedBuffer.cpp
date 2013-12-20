@@ -7,20 +7,12 @@
 #include "nsMemory.h"
 
 nsresult
-nsSegmentedBuffer::Init(uint32_t segmentSize, uint32_t maxSize,
-                        nsIMemory* allocator)
+nsSegmentedBuffer::Init(uint32_t segmentSize, uint32_t maxSize)
 {
     if (mSegmentArrayCount != 0)
         return NS_ERROR_FAILURE;        // initialized more than once
     mSegmentSize = segmentSize;
     mMaxSize = maxSize;
-    mSegAllocator = allocator;
-    if (mSegAllocator == nullptr) {
-        mSegAllocator = nsMemory::GetGlobalMemoryService();
-    }
-    else {
-        NS_ADDREF(mSegAllocator);
-    }
 #if 0 // testing...
     mSegmentArrayCount = 2;
 #else
@@ -68,7 +60,7 @@ nsSegmentedBuffer::AppendNewSegment()
         mSegmentArrayCount = newArraySize;
     }
 
-    char* seg = (char*)mSegAllocator->Alloc(mSegmentSize);
+    char* seg = (char*)moz_malloc(mSegmentSize);
     if (seg == nullptr) {
         return nullptr;
     }
@@ -81,7 +73,7 @@ bool
 nsSegmentedBuffer::DeleteFirstSegment()
 {
     NS_ASSERTION(mSegmentArray[mFirstSegmentIndex] != nullptr, "deleting bad segment");
-    (void)mSegAllocator->Free(mSegmentArray[mFirstSegmentIndex]);
+    moz_free(mSegmentArray[mFirstSegmentIndex]);
     mSegmentArray[mFirstSegmentIndex] = nullptr;
     int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
     if (mFirstSegmentIndex == last) {
@@ -99,7 +91,7 @@ nsSegmentedBuffer::DeleteLastSegment()
 {
     int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
     NS_ASSERTION(mSegmentArray[last] != nullptr, "deleting bad segment");
-    (void)mSegAllocator->Free(mSegmentArray[last]);
+    moz_free(mSegmentArray[last]);
     mSegmentArray[last] = nullptr;
     mLastSegmentIndex = last;
     return (bool)(mLastSegmentIndex == mFirstSegmentIndex);
@@ -111,7 +103,7 @@ nsSegmentedBuffer::ReallocLastSegment(size_t newSize)
     int32_t last = ModSegArraySize(mLastSegmentIndex - 1);
     NS_ASSERTION(mSegmentArray[last] != nullptr, "realloc'ing bad segment");
     char *newSegment =
-        (char*)mSegAllocator->Realloc(mSegmentArray[last], newSize);
+        (char*)moz_realloc(mSegmentArray[last], newSize);
     if (newSegment) {
         mSegmentArray[last] = newSegment;
         return true;
@@ -126,7 +118,7 @@ nsSegmentedBuffer::Empty()
     if (mSegmentArray) {
         for (uint32_t i = 0; i < mSegmentArrayCount; i++) {
             if (mSegmentArray[i])
-                mSegAllocator->Free(mSegmentArray[i]);
+                moz_free(mSegmentArray[i]);
         }
         nsMemory::Free(mSegmentArray);
         mSegmentArray = nullptr;

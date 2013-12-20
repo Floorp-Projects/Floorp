@@ -53,7 +53,7 @@ public:
 
   /**
    * Change the contents of this fragment to be a copy of the
-   * the argument fragment.
+   * the argument fragment, or to "" if unable to allocate enough memory.
    */
   nsTextFragment& operator=(const nsTextFragment& aOther);
 
@@ -112,14 +112,14 @@ public:
    * buffer. If aUpdateBidi is true, contents of the fragment will be scanned,
    * and mState.mIsBidi will be turned on if it includes any Bidi characters.
    */
-  void SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi);
+  bool SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi);
 
   /**
    * Append aData to the end of this fragment. If aUpdateBidi is true, contents
    * of the fragment will be scanned, and mState.mIsBidi will be turned on if
    * it includes any Bidi characters.
    */
-  void Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi);
+  bool Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi);
 
   /**
    * Append the contents of this string fragment to aString

@@ -22,22 +22,24 @@ void vp8_update_gf_useage_maps(VP8_COMP *cpi, VP8_COMMON *cm, MACROBLOCK *x)
 
     if ((cm->frame_type == KEY_FRAME) || (cm->refresh_golden_frame))
     {
-        // Reset Gf useage monitors
+        /* Reset Gf useage monitors */
         vpx_memset(cpi->gf_active_flags, 1, (cm->mb_rows * cm->mb_cols));
         cpi->gf_active_count = cm->mb_rows * cm->mb_cols;
     }
     else
     {
-        // for each macroblock row in image
+        /* for each macroblock row in image */
         for (mb_row = 0; mb_row < cm->mb_rows; mb_row++)
         {
-            // for each macroblock col in image
+            /* for each macroblock col in image */
             for (mb_col = 0; mb_col < cm->mb_cols; mb_col++)
             {
 
-                // If using golden then set GF active flag if not already set.
-                // If using last frame 0,0 mode then leave flag as it is
-                // else if using non 0,0 motion or intra modes then clear flag if it is currently set
+                /* If using golden then set GF active flag if not already set.
+                 * If using last frame 0,0 mode then leave flag as it is
+                 * else if using non 0,0 motion or intra modes then clear
+                 * flag if it is currently set
+                 */
                 if ((this_mb_mode_info->mbmi.ref_frame == GOLDEN_FRAME) || (this_mb_mode_info->mbmi.ref_frame == ALTREF_FRAME))
                 {
                     if (*(x->gf_active_ptr) == 0)
@@ -52,12 +54,12 @@ void vp8_update_gf_useage_maps(VP8_COMP *cpi, VP8_COMMON *cm, MACROBLOCK *x)
                     cpi->gf_active_count--;
                 }
 
-                x->gf_active_ptr++;          // Step onto next entry
-                this_mb_mode_info++;           // skip to next mb
+                x->gf_active_ptr++;          /* Step onto next entry */
+                this_mb_mode_info++;         /* skip to next mb */
 
             }
 
-            // this is to account for the border
+            /* this is to account for the border */
             this_mb_mode_info++;
         }
     }

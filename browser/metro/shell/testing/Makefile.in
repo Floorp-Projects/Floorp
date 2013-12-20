@@ -9,8 +9,6 @@ USE_STATIC_LIBS = 1
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
 
-NO_PROFILE_GUIDED_OPTIMIZE = 1
-
 include $(topsrcdir)/config/config.mk
 
 OS_LIBS = \
@@ -21,5 +19,3 @@ OS_LIBS = \
 	propsys.lib \
 	advapi32.lib \
 	$(NULL)
-
-DEFINES += -DUNICODE -D_UNICODE

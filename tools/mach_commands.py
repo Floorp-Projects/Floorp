@@ -4,11 +4,15 @@
 
 from __future__ import unicode_literals
 
+import sys
+
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
 )
+
+from mozbuild.base import MachCommandBase
 
 
 @CommandProvider
@@ -282,3 +286,23 @@ class PastebinProvider(object):
             print('ERROR. Could not connect to pastebin.mozilla.org.')
             return 1
         return 0
+
+
+@CommandProvider
+class ReviewboardToolsProvider(MachCommandBase):
+    @Command('rbt', category='devenv', allow_all_args=True,
+        description='Run Reviewboard Tools')
+    @CommandArgument('args', nargs='...', help='Arguments to rbt tool')
+    def rbt(self, args):
+        if not args:
+            args = ['help']
+
+        self._activate_virtualenv()
+        self.virtualenv_manager.install_pip_package('RBTools')
+
+        from rbtools.commands.main import main
+
+        # main() doesn't accept arguments and instead reads from sys.argv. So,
+        # we fake it out.
+        sys.argv = ['rbt'] + args
+        return main()

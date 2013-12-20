@@ -311,7 +311,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal);
+    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
     return recordDT;
   }
 
@@ -417,7 +417,7 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
     RefPtr<DrawTarget> retVal = newTarget;
 
     if (mRecorder) {
-      retVal = new DrawTargetRecording(mRecorder, retVal);
+      retVal = new DrawTargetRecording(mRecorder, retVal, true);
     }
 
     return retVal;
@@ -549,10 +549,10 @@ Factory::SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes)
 #endif // USE_SKIA_GPU
 
 void
-Factory::PurgeTextureCaches()
+Factory::PurgeAllCaches()
 {
 #ifdef USE_SKIA_GPU
-  DrawTargetSkia::PurgeTextureCaches();
+  DrawTargetSkia::PurgeAllCaches();
 #endif
 }
 
@@ -582,7 +582,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal);
+    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
     return recordDT;
   }
 #endif

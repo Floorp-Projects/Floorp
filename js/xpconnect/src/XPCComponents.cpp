@@ -3094,13 +3094,13 @@ nsXPCComponents_Utils::EvalInWindow(const nsAString &source, const Value &window
 /* jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ExportFunction(const Value &vfunction, const Value &vscope,
-                                      const Value &vname, JSContext *cx, Value *rval)
+                                      const Value &voptions, JSContext *cx, Value *rval)
 {
     RootedValue rfunction(cx, vfunction);
     RootedValue rscope(cx, vscope);
-    RootedValue rname(cx, vname);
+    RootedValue roptions(cx, voptions);
     RootedValue res(cx);
-    if (!xpc::ExportFunction(cx, rfunction, rscope, rname, &res))
+    if (!xpc::ExportFunction(cx, rfunction, rscope, roptions, &res))
         return NS_ERROR_FAILURE;
     *rval = res;
     return NS_OK;
@@ -3485,6 +3485,33 @@ nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
 {
     *aClassInfo = nullptr;
     return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
+                                          JSContext *aCx, Value *aOut)
+{
+    nsCOMPtr<nsIGlobalObject> global = mozilla::dom::GetIncumbentGlobal();
+    RootedValue globalVal(aCx);
+
+    if (!global) {
+        globalVal = NullValue();
+    } else {
+        // Note: We rely on the wrap call for outerization.
+        globalVal = ObjectValue(*global->GetGlobalJSObject());
+        if (!JS_WrapValue(aCx, &globalVal))
+            return NS_ERROR_FAILURE;
+    }
+
+    // Invoke the callback, if passed.
+    if (aCallback.isObject()) {
+        Value ignored;
+        if (!JS_CallFunctionValue(aCx, nullptr, aCallback, 1, globalVal.address(), &ignored))
+            return NS_ERROR_FAILURE;
+    }
+
+    *aOut = globalVal;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

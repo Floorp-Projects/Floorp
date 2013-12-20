@@ -2,28 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEFINES		+= -DMOZ_UNICODE
-
-ifdef MOZ_ENABLE_D3D9_LAYER
-DEFINES		+= -DMOZ_ENABLE_D3D9_LAYER
-endif
-
-ifdef MOZ_ENABLE_D3D10_LAYER
-DEFINES		+= -DMOZ_ENABLE_D3D10_LAYER
-endif
-
-LOCAL_INCLUDES	= \
-		-I. \
-		-I$(srcdir)/../../shared \
-		-I$(srcdir)/../../xpwidgets \
-		-I$(srcdir) \
-		-I$(srcdir)/../ \
-		-I$(topsrcdir)/layout/generic \
-		-I$(topsrcdir)/layout/xul/base/src \
-		-I$(topsrcdir)/toolkit/xre \
-		-I$(topsrcdir)/xpcom/base \
-		$(NULL)
-
 MIDL_GENERATED_FILES = \
 	UIABridge_i.c \
 	UIABridge_p.c \

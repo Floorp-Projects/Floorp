@@ -18,9 +18,11 @@ pref("devtools.chrome.enabled", false);
 // Automatically submit crash reports
 #ifdef RELEASE_BUILD
 pref("app.crashreporter.autosubmit", false);
+pref("app.crashreporter.submitURLs", false);
 #else
 // For Nightly and Aurora we turn this on by default
 pref("app.crashreporter.autosubmit", true);
+pref("app.crashreporter.submitURLs", false);
 #endif
 // Has the user been prompted about crash reporting?
 pref("app.crashreporter.prompted", false);
@@ -44,7 +46,6 @@ pref("layers.componentalpha.enabled", false);
 pref("apz.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
 pref("apz.pan_repaint_interval", 50);   // prefer 20 fps
 pref("apz.fling_repaint_interval", 50); // prefer 20 fps
-pref("apz.fling_friction", "0.002");
 pref("apz.fling_stopped_threshold", "0.2");
 
 // 0 = free, 1 = standard, 2 = sticky
@@ -200,6 +201,10 @@ pref("signon.rememberSignons", true);
 pref("layout.spellcheckDefault", 1);
 
 /* extension manager and xpinstall */
+// Completely disable extensions
+pref("extensions.defaultProviders.enabled", false);
+// Disable version checks making addons compatible by default
+pref("extensions.strictCompatibility", false);
 // Disable all add-on locations other than the profile
 pref("extensions.enabledScopes", 1);
 // Auto-disable any add-ons that are "dropped in" to the profile
@@ -215,6 +220,7 @@ pref("extensions.blocklist.enabled", true);
 pref("extensions.blocklist.interval", 86400);
 pref("extensions.blocklist.url", "https://addons.mozilla.org/blocklist/3/%APP_ID%/%APP_VERSION%/%PRODUCT%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/%PING_COUNT%/%TOTAL_PING_COUNT%/%DAYS_SINCE_LAST_PING%/");
 pref("extensions.blocklist.detailsURL", "https://www.mozilla.org/%LOCALE%/blocklist/");
+pref("extensions.showMismatchUI", false);
 
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);

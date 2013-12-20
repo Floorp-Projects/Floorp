@@ -10,13 +10,10 @@ EXPORTS += [
     'nsMediaSniffer.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
+    'mp3sniff.c',
     'nsMediaSniffer.cpp',
     'nsMediaSnifferModule.cpp',
-]
-
-SOURCES += [
-    'mp3sniff.c',
 ]
 
 FINAL_LIBRARY = 'xul'

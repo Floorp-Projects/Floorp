@@ -410,7 +410,7 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
   // otherwise.
   *aIsDefaultBrowser = true;
 
-  PRUnichar exePath[MAX_BUF];
+  wchar_t exePath[MAX_BUF];
   if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
     return NS_ERROR_FAILURE;
 
@@ -424,7 +424,7 @@ nsWindowsShellService::IsDefaultBrowser(bool aStartupCheck,
   HKEY theKey;
   DWORD res;
   nsresult rv;
-  PRUnichar currValue[MAX_BUF];
+  wchar_t currValue[MAX_BUF];
 
   SETTING* settings = gSettings;
   if (!aForAllTypes && IsWin8OrLater()) {
@@ -611,7 +611,7 @@ DynSHOpenWithDialog(HWND hwndParent, const OPENASINFO *poainfo)
   
   // shell32.dll is in the knownDLLs list so will always be loaded from the
   // system32 directory.
-  static const PRUnichar kSehllLibraryName[] =  L"shell32.dll";
+  static const wchar_t kSehllLibraryName[] =  L"shell32.dll";
   HMODULE shellDLL = ::LoadLibraryW(kSehllLibraryName);
   if (!shellDLL) {
     return NS_ERROR_FAILURE;
@@ -752,10 +752,9 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<gfxASurface> surface;
-  aImage->GetFrame(imgIContainer::FRAME_FIRST,
-                   imgIContainer::FLAG_SYNC_DECODE,
-                   getter_AddRefs(surface));
+  nsRefPtr<gfxASurface> surface =
+    aImage->GetFrame(imgIContainer::FRAME_FIRST,
+                     imgIContainer::FLAG_SYNC_DECODE);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
   nsRefPtr<gfxImageSurface> image(surface->GetAsReadableARGB32ImageSurface());
@@ -868,7 +867,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // e.g. "Desktop Background.bmp"
   nsString fileLeafName;
   rv = shellBundle->GetStringFromName
-                      (NS_LITERAL_STRING("desktopBackgroundLeafNameWin").get(),
+                      (MOZ_UTF16("desktopBackgroundLeafNameWin"),
                        getter_Copies(fileLeafName));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -967,7 +966,7 @@ nsWindowsShellService::OpenApplication(int32_t aApplication)
   if (NS_FAILED(rv))
     return rv;
 
-  PRUnichar buf[MAX_BUF];
+  wchar_t buf[MAX_BUF];
   DWORD type, len = sizeof buf;
   DWORD res = ::RegQueryValueExW(theKey, EmptyString().get(), 0,
                                  &type, (LPBYTE)&buf, &len);
@@ -1068,7 +1067,7 @@ nsWindowsShellService::SetDesktopBackgroundColor(uint32_t aColor)
                       nsIWindowsRegKey::ACCESS_SET_VALUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar rgb[12];
+  wchar_t rgb[12];
   _snwprintf(rgb, 12, L"%u %u %u", r, g, b);
 
   rv = regKey->WriteStringValue(NS_LITERAL_STRING("Background"),

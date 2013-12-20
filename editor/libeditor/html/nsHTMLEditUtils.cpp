@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"         // for ArrayLength
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Util.h"               // for ArrayLength
 #include "mozilla/dom/Element.h"        // for Element, nsINode
 #include "nsAString.h"                  // for nsAString_internal::IsEmpty
 #include "nsCOMPtr.h"                   // for nsCOMPtr, operator==, etc
@@ -641,6 +641,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(col, false, false, GROUP_TABLE_CONTENT | GROUP_COLGROUP_CONTENT,
        GROUP_NONE),
   ELEM(colgroup, true, false, GROUP_NONE, GROUP_COLGROUP_CONTENT),
+  ELEM(content, true, false, GROUP_NONE, GROUP_INLINE_ELEMENT),
   ELEM(data, true, false, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(datalist, true, false, GROUP_PHRASE,
        GROUP_OPTIONS | GROUP_INLINE_ELEMENT),

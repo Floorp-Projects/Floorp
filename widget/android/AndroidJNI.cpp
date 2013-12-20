@@ -41,8 +41,7 @@
 #include "nsPluginInstanceOwner.h"
 #include "nsSurfaceTexture.h"
 #include "GeckoProfiler.h"
-
-#include "GeckoProfiler.h"
+#include "nsMemoryPressure.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -839,6 +838,12 @@ Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable(JNIEnv* jenv
   st->NotifyFrameAvailable();
 }
 
+NS_EXPORT void JNICALL
+Java_org_mozilla_gecko_GeckoAppShell_dispatchMemoryPressure(JNIEnv* jenv, jclass)
+{
+    NS_DispatchMemoryPressure(MemPressure_New);
+}
+
 NS_EXPORT jdouble JNICALL
 Java_org_mozilla_gecko_GeckoJavaSampler_getProfilerTime(JNIEnv *jenv, jclass jc)
 {
@@ -942,16 +947,6 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_getOverScrollMode(JNIEnv* env
 {
     // FIXME implement this
     return 0;
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_gfx_NativePanZoomController_updateScrollOffset(JNIEnv* env, jobject instance, jfloat cssX, jfloat cssY)
-{
-    APZCTreeManager *controller = nsWindow::GetAPZCTreeManager();
-    if (controller) {
-        // TODO: Pass in correct values for presShellId and viewId.
-        controller->UpdateScrollOffset(ScrollableLayerGuid(nsWindow::RootLayerTreeId(), 0, 0), CSSPoint(cssX, cssY));
-    }
 }
 
 NS_EXPORT jboolean JNICALL

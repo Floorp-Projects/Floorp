@@ -76,10 +76,8 @@ FreezeThaw(JSContext *cx, JS::HandleObject funobj)
     return funobj2;
 }
 
-static JSPrincipals testPrincipals[] = {
-    { 1 },
-    { 1 },
-};
+static TestJSPrincipals testPrincipal0(1);
+static TestJSPrincipals testPrincipal1(1);
 
 BEGIN_TEST(testXDR_principals)
 {
@@ -88,21 +86,21 @@ BEGIN_TEST(testXDR_principals)
     for (int i = TEST_FIRST; i != TEST_END; ++i) {
         // Appease the new JSAPI assertions. The stuff being tested here is
         // going away anyway.
-        JS_SetCompartmentPrincipals(compartment, &testPrincipals[0]);
-        script = createScriptViaXDR(&testPrincipals[0], nullptr, i);
+        JS_SetCompartmentPrincipals(compartment, &testPrincipal0);
+        script = createScriptViaXDR(&testPrincipal0, nullptr, i);
         CHECK(script);
-        CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
-        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[0]);
+        CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
+        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal0);
 
-        script = createScriptViaXDR(&testPrincipals[0], &testPrincipals[0], i);
+        script = createScriptViaXDR(&testPrincipal0, &testPrincipal0, i);
         CHECK(script);
-        CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
-        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[0]);
+        CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
+        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal0);
 
-        script = createScriptViaXDR(&testPrincipals[0], &testPrincipals[1], i);
+        script = createScriptViaXDR(&testPrincipal0, &testPrincipal1, i);
         CHECK(script);
-        CHECK(JS_GetScriptPrincipals(script) == &testPrincipals[0]);
-        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipals[1]);
+        CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
+        CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal1);
     }
 
     return true;

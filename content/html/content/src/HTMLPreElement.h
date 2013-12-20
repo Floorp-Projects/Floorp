@@ -7,7 +7,6 @@
 #define mozilla_dom_HTMLPreElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Util.h"
 
 #include "nsIDOMHTMLPreElement.h"
 #include "nsGenericHTMLElement.h"

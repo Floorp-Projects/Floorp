@@ -20,6 +20,7 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services-common/bagheeraserver.js");
 Cu.import("resource://testing-common/services/metrics/mocks.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+Cu.import("resource://testing-common/AppData.jsm");
 
 
 const DUMMY_URI = "http://localhost:62013/";
@@ -120,7 +121,7 @@ add_task(function test_constructor() {
       failed = false;
     }
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -130,7 +131,7 @@ add_task(function test_shutdown_normal() {
   // We can't send "quit-application" notification because the xpcshell runner
   // will shut down!
   reporter._initiateShutdown();
-  yield reporter._promiseShutdown;
+  reporter._waitForShutdown();
 });
 
 add_task(function test_shutdown_storage_in_progress() {
@@ -143,7 +144,7 @@ add_task(function test_shutdown_storage_in_progress() {
 
   reporter.init();
 
-  yield reporter._promiseShutdown;
+  reporter._waitForShutdown();
   do_check_eq(reporter.providerManagerShutdownCount, 0);
   do_check_eq(reporter.storageCloseCount, 1);
 });
@@ -162,7 +163,7 @@ add_task(function test_shutdown_provider_manager_in_progress() {
   reporter.init();
 
   // This will hang if shutdown logic is busted.
-  yield reporter._promiseShutdown;
+  reporter._waitForShutdown();
   do_check_eq(reporter.providerManagerShutdownCount, 1);
   do_check_eq(reporter.storageCloseCount, 1);
 });
@@ -180,7 +181,7 @@ add_task(function test_shutdown_when_provider_manager_errors() {
   reporter.init();
 
   // This will hang if shutdown logic is busted.
-  yield reporter._promiseShutdown;
+  reporter._waitForShutdown();
   do_check_eq(reporter.providerManagerShutdownCount, 1);
   do_check_eq(reporter.storageCloseCount, 1);
 });
@@ -217,7 +218,7 @@ add_task(function test_pull_only_providers() {
     let values = yield reporter._storage.getMeasurementValues(mID);
     do_check_true(values.singular.size > 0);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -248,7 +249,7 @@ add_task(function test_collect_daily() {
     yield reporter.collectMeasurements();
     do_check_eq(provider.collectDailyCount, 3);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -272,7 +273,7 @@ add_task(function test_remove_old_lastpayload() {
       do_check_false(yield OS.File.exists(path));
     }
     yield reporter._state.save();
-    yield reporter._shutdown();
+    reporter._shutdown();
 
     let o = yield CommonUtils.readJSON(reporter._state._filename);
     do_check_true(o.removedOutdatedLastpayload);
@@ -284,7 +285,7 @@ add_task(function test_remove_old_lastpayload() {
       do_check_true(yield OS.File.exists(path));
     }
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -316,7 +317,7 @@ add_task(function test_json_payload_simple() {
     payload = yield reporter.getJSONPayload(true);
     do_check_eq(typeof payload, "object");
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -335,7 +336,7 @@ add_task(function test_json_payload_dummy_provider() {
     do_check_true(name in o.data.last);
     do_check_eq(o.data.last[name]._v, 1);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -353,7 +354,7 @@ add_task(function test_collect_and_obtain_json_payload() {
     payload = yield reporter.collectAndObtainJSONPayload(true);
     do_check_eq(typeof payload, "object");
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -409,7 +410,7 @@ add_task(function test_constant_only_providers_in_json_payload() {
 
     yield deferred.promise;
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -444,7 +445,7 @@ add_task(function test_json_payload_multiple_days() {
     let today = reporter._formatDate(now);
     do_check_true(today in o.data.days);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -521,7 +522,7 @@ add_task(function test_json_payload_newer_version_overwrites() {
     do_check_eq(o.data.days[day]["MultiMeasurementProvider.DummyMeasurement"]._v, highestVersion);
 
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -546,7 +547,7 @@ add_task(function test_idle_daily() {
     values = yield m.getValues();
     do_check_eq(values.days.size, 180);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -569,7 +570,7 @@ add_task(function test_data_submission_transport_failure() {
     do_check_eq(data.uploadTransportFailure, 1);
     do_check_eq(Object.keys(data).length, 3);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -597,7 +598,7 @@ add_task(function test_data_submission_server_failure() {
     do_check_eq(Object.keys(data).length, 3);
   } finally {
     yield shutdownServer(server);
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -638,14 +639,14 @@ add_task(function test_data_submission_success() {
     let d = reporter.lastPingDate;
     let id = reporter.lastSubmitID;
 
-    yield reporter._shutdown();
+    reporter._shutdown();
 
     // Ensure reloading state works.
     reporter = yield getReporter("data_submission_success");
     do_check_eq(reporter.lastSubmitID, id);
     do_check_eq(reporter.lastPingDate.getTime(), d.getTime());
 
-    yield reporter._shutdown();
+    reporter._shutdown();
   } finally {
     yield shutdownServer(server);
   }
@@ -687,7 +688,7 @@ add_task(function test_recurring_daily_pings() {
     do_check_eq(data.uploadSuccess, 2);
     do_check_eq(Object.keys(data).length, 4);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
     yield shutdownServer(server);
   }
 });
@@ -714,7 +715,7 @@ add_task(function test_request_remote_data_deletion() {
     do_check_false(reporter.haveRemoteData());
     do_check_false(server.hasDocument(reporter.serverNamespace, id));
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
     yield shutdownServer(server);
   }
 });
@@ -736,7 +737,7 @@ add_task(function test_policy_accept_reject() {
     do_check_false(policy.dataSubmissionPolicyAccepted);
     do_check_false(reporter.willUploadData);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
     yield shutdownServer(server);
   }
 });
@@ -759,7 +760,7 @@ add_task(function test_error_message_scrubbing() {
     reporter._recordError("Foo " + uri.spec);
     do_check_eq(reporter._errors[0], "Foo <AppDataURI>");
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -785,7 +786,7 @@ add_task(function test_basic_appinfo() {
     do_check_eq(payload["version"], 2);
     verify(payload["geckoAppInfo"]);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -806,13 +807,13 @@ add_task(function test_collect_when_upload_disabled() {
     // We would ideally ensure the timer fires and does the right thing.
     // However, testing the update timer manager is quite involved.
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
 add_task(function test_failure_if_not_initialized() {
   let reporter = yield getReporter("failure_if_not_initialized");
-  yield reporter._shutdown();
+  reporter._shutdown();
 
   let error = false;
   try {
@@ -886,7 +887,7 @@ add_task(function test_upload_on_init_failure() {
   do_check_eq(doc.errors.length, 1);
   do_check_true(doc.errors[0].contains("Fake error during provider manager initialization"));
 
-  yield reporter._shutdown();
+  reporter._shutdown();
   yield shutdownServer(server);
 });
 
@@ -912,7 +913,7 @@ add_task(function test_state_prefs_conversion_simple() {
     do_check_false(prefs.isSet("lastSubmitID"));
     do_check_false(prefs.isSet("lastPingTime"));
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -934,7 +935,7 @@ add_task(function test_state_no_json_object() {
     do_check_eq(o.lastPingTime, 0);
     do_check_eq(o.remoteIDs.length, 0);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -955,7 +956,7 @@ add_task(function test_state_future_version() {
     do_check_eq(o.lastPingTime, 2412);
     do_check_eq(o.remoteIDs.length, 1);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -974,7 +975,7 @@ add_task(function test_state_invalid_json() {
     do_check_eq(reporter.lastPingDate.getTime(), 0);
     do_check_null(reporter.lastSubmitID);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -1015,7 +1016,7 @@ add_task(function test_state_multiple_remote_ids() {
     do_check_eq(o.lastPingTime, reporter.lastPingDate.getTime());
   } finally {
     yield shutdownServer(server);
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });
 
@@ -1047,6 +1048,6 @@ add_task(function test_state_downgrade_upgrade() {
     do_check_eq(o.remoteIDs.length, 3);
     do_check_eq(o.lastPingTime, now.getTime() + 1000);
   } finally {
-    yield reporter._shutdown();
+    reporter._shutdown();
   }
 });

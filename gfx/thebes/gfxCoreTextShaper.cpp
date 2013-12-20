@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "gfxCoreTextShaper.h"
 #include "gfxMacFont.h"
 #include "gfxFontUtils.h"
@@ -488,6 +488,8 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
 
     return NS_OK;
 }
+
+#undef SMALL_GLYPH_RUN
 
 // Construct the font attribute descriptor that we'll apply by default when creating a CTFontRef.
 // This will turn off line-edge swashes by default, because we don't know the actual line breaks

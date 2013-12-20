@@ -14,6 +14,8 @@
 class nsPresContext;
 
 namespace mozilla {
+class WidgetEvent;
+class WidgetGUIEvent;
 namespace dom {
 class HTMLInputElement;
 }
@@ -28,7 +30,10 @@ class nsNumberControlFrame MOZ_FINAL : public nsContainerFrame
   friend nsIFrame*
   NS_NewNumberControlFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  typedef mozilla::dom::Element Element;
   typedef mozilla::dom::HTMLInputElement HTMLInputElement;
+  typedef mozilla::WidgetEvent WidgetEvent;
+  typedef mozilla::WidgetGUIEvent WidgetGUIEvent;
 
   nsNumberControlFrame(nsStyleContext* aContext);
 
@@ -38,8 +43,12 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void ContentStatesChanged(nsEventStates aStates);
+  virtual bool IsLeaf() const MOZ_OVERRIDE { return false; }
 
-  virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
+#ifdef ACCESSIBILITY
+  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+#endif
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -86,9 +95,52 @@ public:
 
   HTMLInputElement* GetAnonTextControl();
 
+  /**
+   * If the frame is the frame for an nsNumberControlFrame's anonymous text
+   * field, returns the nsNumberControlFrame. Else returns nullptr.
+   */
+  static nsNumberControlFrame* GetNumberControlFrameForTextField(nsIFrame* aFrame);
+
+  /**
+   * If the frame is the frame for an nsNumberControlFrame's up or down spin
+   * button, returns the nsNumberControlFrame. Else returns nullptr.
+   */
+  static nsNumberControlFrame* GetNumberControlFrameForSpinButton(nsIFrame* aFrame);
+
+  enum SpinButtonEnum {
+    eSpinButtonNone,
+    eSpinButtonUp,
+    eSpinButtonDown
+  };
+
+  /**
+   * Returns one of the SpinButtonEnum values to depending on whether the
+   * pointer event is over the spin-up button, the spin-down button, or
+   * neither.
+   */
+  int32_t GetSpinButtonForPointerEvent(WidgetGUIEvent* aEvent) const;
+
+  void SpinnerStateChanged() const;
+
+  bool SpinnerUpButtonIsDepressed() const;
+  bool SpinnerDownButtonIsDepressed() const;
+
+  bool IsFocused() const;
+
+  void HandleFocusEvent(WidgetEvent* aEvent);
+
+  /**
+   * Our element had HTMLInputElement::Select() called on it.
+   */
+  nsresult HandleSelectCall();
+
+  virtual Element* GetPseudoElement(nsCSSPseudoElements::Type aType) MOZ_OVERRIDE;
+
+  bool ShouldUseNativeStyleForSpinner() const;
+
 private:
 
-  nsresult MakeAnonymousElement(nsIContent** aResult,
+  nsresult MakeAnonymousElement(Element** aResult,
                                 nsTArray<ContentInfo>& aElements,
                                 nsIAtom* aTagName,
                                 nsCSSPseudoElements::Type aPseudoType,
@@ -99,15 +151,43 @@ private:
                                   const nsHTMLReflowState& aReflowState,
                                   nsIFrame* aOuterWrapperFrame);
 
+  class SyncDisabledStateEvent;
+  friend class SyncDisabledStateEvent;
+  class SyncDisabledStateEvent : public nsRunnable
+  {
+  public:
+    SyncDisabledStateEvent(nsNumberControlFrame* aFrame)
+    : mFrame(aFrame)
+    {}
+
+    NS_IMETHOD Run() MOZ_OVERRIDE
+    {
+      nsNumberControlFrame* frame =
+        static_cast<nsNumberControlFrame*>(mFrame.GetFrame());
+      NS_ENSURE_STATE(frame);
+
+      frame->SyncDisabledState();
+      return NS_OK;
+    }
+
+  private:
+    nsWeakFrame mFrame;
+  };
+
+  /**
+   * Sync the disabled state of the anonymous children up with our content's.
+   */
+  void SyncDisabledState();
+
   /**
    * The text field used to edit and show the number.
    * @see nsNumberControlFrame::CreateAnonymousContent.
    */
-  nsCOMPtr<nsIContent> mOuterWrapper;
-  nsCOMPtr<nsIContent> mTextField;
-  nsCOMPtr<nsIContent> mSpinBox;
-  nsCOMPtr<nsIContent> mSpinUp;
-  nsCOMPtr<nsIContent> mSpinDown;
+  nsCOMPtr<Element> mOuterWrapper;
+  nsCOMPtr<Element> mTextField;
+  nsCOMPtr<Element> mSpinBox;
+  nsCOMPtr<Element> mSpinUp;
+  nsCOMPtr<Element> mSpinDown;
   bool mHandlingInputEvent;
 };
 

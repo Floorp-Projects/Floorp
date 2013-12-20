@@ -15,14 +15,16 @@
 #include "mozilla/layers/TextureD3D9.h"
 #include "mozilla/layers/TextureD3D11.h"
 #include "gfxWindowsPlatform.h"
+#include "gfx2DGlue.h"
 #endif
+
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder)
-: mNextTextureID(1)
-, mCompositableChild(nullptr)
+: mCompositableChild(nullptr)
 , mForwarder(aForwarder)
 {
   MOZ_COUNT_CTOR(CompositableClient);
@@ -33,23 +35,6 @@ CompositableClient::~CompositableClient()
 {
   MOZ_COUNT_DTOR(CompositableClient);
   Destroy();
-
-  FlushTexturesToRemoveCallbacks();
-  MOZ_ASSERT(mTexturesToRemove.Length() == 0, "would leak textures pending for deletion");
-}
-
-void
-CompositableClient::FlushTexturesToRemoveCallbacks()
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.begin();
-  std::map<uint64_t,TextureClientData*>::iterator stop
-    = mTexturesToRemoveCallbacks.end();
-  for (; it != stop; ++it) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-  }
-  mTexturesToRemoveCallbacks.clear();
 }
 
 LayersBackend
@@ -193,8 +178,8 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 }
 
 TemporaryRef<BufferTextureClient>
-CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                                              uint32_t aTextureFlags)
+CompositableClient::CreateBufferTextureClient(SurfaceFormat aFormat,
+                                              TextureFlags aTextureFlags)
 {
 // XXX - Once bug 908196 is fixed, we can use gralloc textures here which will
 // improve performances of videos using SharedPlanarYCbCrImage on b2g.
@@ -214,63 +199,50 @@ CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
   return result.forget();
 }
 
+TemporaryRef<TextureClient>
+CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
+                                                  TextureFlags aTextureFlags)
+{
+  RefPtr<TextureClient> result;
+
+#ifdef XP_WIN
+  LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
+  // XXX[nrc] uncomment once we have new texture clients for windows
+  if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+    //result = new TextureClientD3D11(GetForwarder(), GetTextureInfo());
+  }
+  if (parentBackend == LAYERS_D3D9 &&
+      !GetForwarder()->ForwardsToDifferentProcess() &&
+      !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
+    // non-DIB textures don't work with alpha, see notes in TextureD3D9.
+    if (ContentForFormat(aFormat) == GFX_CONTENT_COLOR_ALPHA) {
+      //result = new TextureClientDIB(GetForwarder(), GetTextureInfo());
+    } else {
+      //result = new TextureClientD3D9(GetForwarder(), GetTextureInfo());
+    }
+  }
+#endif
+  // Can't do any better than a buffer texture client.
+  if (!result) {
+    result = CreateBufferTextureClient(aFormat, aTextureFlags);
+  }
+
+  MOZ_ASSERT(!result || result->AsTextureClientDrawTarget(),
+             "Not a TextureClientDrawTarget?");
+  return result;
+}
+
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
-  ++mNextTextureID;
-  // 0 is always an invalid ID
-  if (mNextTextureID == 0) {
-    ++mNextTextureID;
-  }
-  aClient->SetID(mNextTextureID);
-  return mForwarder->AddTexture(this, aClient);
-}
-
-void
-CompositableClient::RemoveTextureClient(TextureClient* aClient)
-{
-  MOZ_ASSERT(aClient);
-  mTexturesToRemove.AppendElement(TextureIDAndFlags(aClient->GetID(),
-                                                    aClient->GetFlags()));
-  if (aClient->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
-    TextureClientData* data = aClient->DropTextureData();
-    if (data) {
-      mTexturesToRemoveCallbacks[aClient->GetID()] = data;
-    }
-  }
-  aClient->ClearID();
-  aClient->MarkInvalid();
-}
-
-void
-CompositableClient::OnReplyTextureRemoved(uint64_t aTextureID)
-{
-  std::map<uint64_t,TextureClientData*>::iterator it
-    = mTexturesToRemoveCallbacks.find(aTextureID);
-  if (it != mTexturesToRemoveCallbacks.end()) {
-    it->second->DeallocateSharedData(GetForwarder());
-    delete it->second;
-    mTexturesToRemoveCallbacks.erase(it);
-  }
+  return aClient->InitIPDLActor(mForwarder);
 }
 
 void
 CompositableClient::OnTransaction()
 {
-  for (unsigned i = 0; i < mTexturesToRemove.Length(); ++i) {
-    const TextureIDAndFlags& texture = mTexturesToRemove[i];
-    mForwarder->RemoveTexture(this, texture.mID, texture.mFlags);
-  }
-  mTexturesToRemove.Clear();
 }
 
-
-void
-CompositableChild::ActorDestroy(ActorDestroyReason why)
-{
-  if (mCompositableClient && why == AbnormalShutdown) {
-    mCompositableClient->OnActorDestroy();
-  }
-}
 } // namespace layers
 } // namespace mozilla

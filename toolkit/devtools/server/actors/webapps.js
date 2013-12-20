@@ -72,7 +72,8 @@ PackageUploadActor.prototype = {
    * and also be locked.
    */
   done: function (aRequest) {
-    return this._file.close();
+    this._file.close();
+    return {};
   },
 
   /**
@@ -81,7 +82,6 @@ PackageUploadActor.prototype = {
    */
   remove: function (aRequest) {
     this._cleanupFile();
-
     return {};
   },
 
@@ -947,8 +947,7 @@ WebappsActor.prototype = {
     let manifestURL;
     switch(event.type) {
       case "appwillopen":
-        let frame = event.target;
-        manifestURL = frame.getAttribute("mozapp")
+        manifestURL = event.detail.manifestURL;
 
         // Ignore the event if we already received an appwillopen for this app
         // (appwillopen is also fired when the app has been moved to background

@@ -368,29 +368,12 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
   }
 #endif
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-    AutoFrameListPtr overflowFrames(aPresContext, StealOverflowFrames());
-    if (overflowFrames) {
-      NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-      if (!lazilySetParentPointer) {
-        // The frames on our own overflowlist may have been pushed by a
-        // previous lazilySetParentPointer Reflow so we need to ensure
-        // the correct parent pointer now since we're not setting it
-        // lazily in this Reflow.
-        nsIFrame* firstChild = overflowFrames->FirstChild();
-        if (lineContainer && lineContainer->GetPrevContinuation()) {
-          ReparentFloatsForInlineChild(lineContainer, firstChild, true);
-        }
-        const bool inFirstLine = aReflowState.mLineLayout->GetInFirstLine();
-        RestyleManager* restyleManager = PresContext()->RestyleManager();
-        for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
-          f->SetParent(this);
-          if (inFirstLine) {
-            restyleManager->ReparentStyleContext(f);
-          }
-        }
-      }
-      mFrames.AppendFrames(nullptr, *overflowFrames);
+    DrainFlags flags =
+      lazilySetParentPointer ? eDontReparentFrames : DrainFlags(0);
+    if (aReflowState.mLineLayout->GetInFirstLine()) {
+      flags = DrainFlags(flags | eInFirstLine);
     }
+    DrainSelfOverflowListInternal(flags, lineContainer);
   }
 
   // Set our own reflow state (additional state above and beyond
@@ -419,6 +402,53 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return rv;
+}
+
+bool
+nsInlineFrame::DrainSelfOverflowListInternal(DrainFlags aFlags,
+                                             nsIFrame* aLineContainer)
+{
+  AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
+  if (overflowFrames) {
+    NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
+    // The frames on our own overflowlist may have been pushed by a
+    // previous lazilySetParentPointer Reflow so we need to ensure the
+    // correct parent pointer.  This is sometimes skipped by Reflow.
+    if (!(aFlags & eDontReparentFrames)) {
+      nsIFrame* firstChild = overflowFrames->FirstChild();
+      if (aLineContainer && aLineContainer->GetPrevContinuation()) {
+        ReparentFloatsForInlineChild(aLineContainer, firstChild, true);
+      }
+      const bool inFirstLine = (aFlags & eInFirstLine);
+      RestyleManager* restyleManager = PresContext()->RestyleManager();
+      for (nsIFrame* f = firstChild; f; f = f->GetNextSibling()) {
+        f->SetParent(this);
+        if (inFirstLine) {
+          restyleManager->ReparentStyleContext(f);
+        }
+      }
+    }
+    bool result = !overflowFrames->IsEmpty();
+    mFrames.AppendFrames(nullptr, *overflowFrames);
+    return result;
+  }
+  return false;
+}
+
+/* virtual */ bool
+nsInlineFrame::DrainSelfOverflowList()
+{
+  nsIFrame* lineContainer = nsLayoutUtils::FindNearestBlockAncestor(this);
+  // Add the eInFirstLine flag if we have a ::first-line ancestor frame.
+  // No need to look further than the nearest line container though.
+  DrainFlags flags = DrainFlags(0);
+  for (nsIFrame* p = GetParent(); p != lineContainer; p = p->GetParent()) {
+    if (p->GetType() == nsGkAtoms::lineFrame) {
+      flags = DrainFlags(flags | eInFirstLine);
+      break;
+    }
+  }
+  return DrainSelfOverflowListInternal(flags, lineContainer);
 }
 
 /* virtual */ bool
@@ -1018,15 +1048,8 @@ nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  // It's also possible that we have an overflow list for ourselves
-  AutoFrameListPtr overflowFrames(aPresContext, StealOverflowFrames());
-  if (overflowFrames) {
-    NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
-
-    const nsFrameList::Slice& newFrames =
-      mFrames.AppendFrames(nullptr, *overflowFrames);
-    ReparentChildListStyle(aPresContext, newFrames, this);
-  }
+  // It's also possible that we have an overflow list for ourselves.
+  DrainSelfOverflowList();
 
   // Set our own reflow state (additional state above and beyond
   // aReflowState)
@@ -1094,3 +1117,18 @@ nsFirstLineFrame::PullOverflowsFromPrevInFlow()
   }
 }
 
+/* virtual */ bool
+nsFirstLineFrame::DrainSelfOverflowList()
+{
+  AutoFrameListPtr overflowFrames(PresContext(), StealOverflowFrames());
+  if (overflowFrames) {
+    NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
+
+    bool result = !overflowFrames->IsEmpty();
+    const nsFrameList::Slice& newFrames =
+      mFrames.AppendFrames(nullptr, *overflowFrames);
+    ReparentChildListStyle(PresContext(), newFrames, this);
+    return result;
+  }
+  return false;
+}

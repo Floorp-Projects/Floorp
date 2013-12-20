@@ -10,6 +10,8 @@
 #include "nsRefreshDriver.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
+#include "nsAnimationManager.h"
+#include "nsTransitionManager.h"
 
 namespace mozilla {
 
@@ -215,6 +217,18 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
   if (aProperty == eCSSProperty_transform && aFrame->Preserves3D()) {
     return IsStyleAnimated(aFrame->GetParent(), aProperty);
   }
+  nsIContent* content = aFrame->GetContent();
+  if (content) {
+    if (mozilla::HasAnimationOrTransition<ElementAnimations>(
+          content, nsGkAtoms::animationsProperty, aProperty)) {
+      return true;
+    }
+    if (mozilla::HasAnimationOrTransition<ElementTransitions>(
+          content, nsGkAtoms::transitionsProperty, aProperty)) {
+      return true;
+    }
+  }
+
   return false;
 }
 

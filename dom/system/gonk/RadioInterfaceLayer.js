@@ -92,6 +92,8 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetAvailableNetworks",
   "RIL:SelectNetwork",
   "RIL:SelectNetworkAuto",
+  "RIL:SetPreferredNetworkType",
+  "RIL:GetPreferredNetworkType",
   "RIL:SendMMI",
   "RIL:CancelMMI",
   "RIL:RegisterMobileConnectionMsg",
@@ -302,11 +304,12 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       let msg = { topic : topic,
                   message : message,
                   options : options };
-      // Remove previous queued message of same message type, only one message
-      // per message type is allowed in queue.
+      // Remove previous queued message with the same message type and client Id
+      // , only one message per (message type + client Id) is allowed in queue.
       let messageQueue = this.targetMessageQueue;
       for(let i = 0; i < messageQueue.length; i++) {
-        if (messageQueue[i].message === message) {
+        if (messageQueue[i].message === message &&
+            messageQueue[i].options.clientId === options.clientId) {
           messageQueue.splice(i, 1);
           break;
         }
@@ -488,7 +491,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
     receiveMessage: function(msg) {
       if (DEBUG) debug("setRadioEnabled: receiveMessage: " + JSON.stringify(msg));
       this.pendingMessages.push(msg);
-      if (this.pendingMessages.length === 1) {
+      if (this.pendingMessages.length === 1 && !this.isDeactivatingDataCalls()) {
         this._processNextMessage();
       }
     },
@@ -537,7 +540,6 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
       } else {
         this.request = (function() {
           radioInterface.receiveMessage(msg);
-          this._processNextMessage();
         }).bind(this);
 
         // In some DSDS architecture with only one modem, toggling one radio may
@@ -593,6 +595,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function () {
         this.request();
         this.request = null;
       }
+      this._processNextMessage();
     }
   };
 });
@@ -727,6 +730,13 @@ RadioInterfaceLayer.prototype = {
     }
 
     throw Cr.NS_ERROR_NOT_AVAILABLE;
+  },
+
+  setMicrophoneMuted: function setMicrophoneMuted(muted) {
+    for (let clientId = 0; clientId < this.numRadioInterfaces; clientId++) {
+      let radioInterface = this.radioInterfaces[clientId];
+      radioInterface.workerMessenger.send("setMute", { muted: muted });
+    }
   }
 };
 
@@ -1045,6 +1055,12 @@ RadioInterface.prototype = {
       case "RIL:SelectNetworkAuto":
         this.workerMessenger.sendWithIPCMessage(msg, "selectNetworkAuto");
         break;
+      case "RIL:SetPreferredNetworkType":
+        this.setPreferredNetworkType(msg.target, msg.json.data);
+        break;
+      case "RIL:GetPreferredNetworkType":
+        this.getPreferredNetworkType(msg.target, msg.json.data);
+        break;
       case "RIL:GetCardLockState":
         this.workerMessenger.sendWithIPCMessage(msg, "iccGetCardLockState",
                                                 "RIL:CardLockResult");
@@ -1213,7 +1229,8 @@ RadioInterface.prototype = {
         break;
       case "sms-received":
         let ackOk = this.handleSmsReceived(message);
-        if (ackOk) {
+        // Note: ACK has been done by modem for NEW_SMS_ON_SIM
+        if (ackOk && message.simStatus === undefined) {
           this.workerMessenger.send("ackSMS", { result: RIL.PDU_FCS_OK });
         }
         return;
@@ -1240,6 +1257,10 @@ RadioInterface.prototype = {
         break;
       case "iccmbdn":
         this.handleIccMbdn(message);
+        break;
+      case "iccmwis":
+        gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
+                                             this.clientId, message.mwi);
         break;
       case "USSDReceived":
         if (DEBUG) this.debug("USSDReceived " + JSON.stringify(message));
@@ -1478,7 +1499,58 @@ RadioInterface.prototype = {
   },
 
   _preferredNetworkType: null,
-  setPreferredNetworkType: function setPreferredNetworkType(value) {
+  getPreferredNetworkType: function getPreferredNetworkType(target, message) {
+    this.workerMessenger.send("getPreferredNetworkType", message, (function(response) {
+      if (response.success) {
+        this._preferredNetworkType = response.networkType;
+        response.type = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType];
+        if (DEBUG) {
+          this.debug("_preferredNetworkType is now " +
+                     RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
+        }
+      }
+
+      target.sendAsyncMessage("RIL:GetPreferredNetworkType", {
+        clientId: this.clientId,
+        data: response
+      });
+      return false;
+    }).bind(this));
+  },
+
+  setPreferredNetworkType: function setPreferredNetworkType(target, message) {
+    if (DEBUG) this.debug("setPreferredNetworkType: " + JSON.stringify(message));
+    let networkType = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(message.type);
+    if (networkType < 0) {
+      message.errorMsg = RIL.GECKO_ERROR_INVALID_PARAMETER;
+      target.sendAsyncMessage("RIL:SetPreferredNetworkType", {
+        clientId: this.clientId,
+        data: message
+      });
+      return false;
+    }
+    message.networkType = networkType;
+
+    this.workerMessenger.send("setPreferredNetworkType", message, (function(response) {
+      if (response.success) {
+        this._preferredNetworkType = response.networkType;
+        if (DEBUG) {
+          this.debug("_preferredNetworkType is now " +
+                      RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO[this._preferredNetworkType]);
+        }
+      }
+
+      target.sendAsyncMessage("RIL:SetPreferredNetworkType", {
+        clientId: this.clientId,
+        data: response
+      });
+      return false;
+    }).bind(this));
+  },
+
+  // TODO: Bug 946589 - B2G RIL: follow-up to bug 944225 - remove
+  // 'ril.radio.preferredNetworkType' setting handler
+  setPreferredNetworkTypeBySetting: function setPreferredNetworkTypeBySetting(value) {
     let networkType = RIL.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO.indexOf(value);
     if (networkType < 0) {
       networkType = (this._preferredNetworkType != null)
@@ -1938,6 +2010,7 @@ RadioInterface.prototype = {
       body:              aDomMessage.body,
       messageClass:      aDomMessage.messageClass,
       timestamp:         aDomMessage.timestamp,
+      sentTimestamp:     aDomMessage.sentTimestamp,
       deliveryTimestamp: aDomMessage.deliveryTimestamp,
       read:              aDomMessage.read
     });
@@ -2027,6 +2100,7 @@ RadioInterface.prototype = {
                                                message.body,
                                                message.messageClass,
                                                message.timestamp,
+                                               message.sentTimestamp,
                                                0,
                                                message.read);
 
@@ -2036,28 +2110,31 @@ RadioInterface.prototype = {
       return true;
     }
 
-    // TODO: Bug #768441
-    // For now we don't store indicators persistently. When the mwi.discard
-    // flag is false, we'll need to persist the indicator to EFmwis.
-    // See TS 23.040 9.2.3.24.2
-
     let mwi = message.mwi;
     if (mwi) {
       mwi.returnNumber = message.sender;
       mwi.returnMessage = message.fullBody;
       gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
                                            this.clientId, mwi);
-      return true;
+
+      // Dicarded MWI comes without text body.
+      // Hence, we discard it here after notifying the MWI status.
+      if (mwi.discard) {
+        return true;
+      }
     }
 
     let notifyReceived = function notifyReceived(rv, domMessage) {
       let success = Components.isSuccessCode(rv);
 
       // Acknowledge the reception of the SMS.
-      this.workerMessenger.send("ackSMS", {
-        result: (success ? RIL.PDU_FCS_OK
-                         : RIL.PDU_FCS_MEMORY_CAPACITY_EXCEEDED)
-      });
+      // Note: Ack has been done by modem for NEW_SMS_ON_SIM
+      if (message.simStatus === undefined) {
+        this.workerMessenger.send("ackSMS", {
+          result: (success ? RIL.PDU_FCS_OK
+                           : RIL.PDU_FCS_MEMORY_CAPACITY_EXCEEDED)
+        });
+      }
 
       if (!success) {
         // At this point we could send a message to content to notify the user
@@ -2093,6 +2170,7 @@ RadioInterface.prototype = {
                                                message.body,
                                                message.messageClass,
                                                message.timestamp,
+                                               message.sentTimestamp,
                                                0,
                                                message.read);
 
@@ -2326,7 +2404,12 @@ RadioInterface.prototype = {
 
   handleStkProactiveCommand: function handleStkProactiveCommand(message) {
     if (DEBUG) this.debug("handleStkProactiveCommand " + JSON.stringify(message));
-    gSystemMessenger.broadcastMessage("icc-stkcommand", message);
+    let iccId = this.rilContext.iccInfo && this.rilContext.iccInfo.iccid;
+    if (iccId) {
+      gSystemMessenger.broadcastMessage("icc-stkcommand",
+                                        {iccId: iccId,
+                                         command: message});
+    }
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
 
@@ -2476,9 +2559,11 @@ RadioInterface.prototype = {
   // nsISettingsServiceCallback
   handle: function handle(aName, aResult) {
     switch(aName) {
+      // TODO: Bug 946589 - B2G RIL: follow-up to bug 944225 - remove
+      // 'ril.radio.preferredNetworkType' setting handler
       case "ril.radio.preferredNetworkType":
         if (DEBUG) this.debug("'ril.radio.preferredNetworkType' is now " + aResult);
-        this.setPreferredNetworkType(aResult);
+        this.setPreferredNetworkTypeBySetting(aResult);
         break;
       case "ril.data.enabled":
         if (DEBUG) this.debug("'ril.data.enabled' is now " + aResult);
@@ -3272,6 +3357,7 @@ RadioInterface.prototype = {
                                                    sms.body,
                                                    sms.messageClass,
                                                    sms.timestamp,
+                                                   Date.now(),
                                                    0,
                                                    sms.read));
           // We don't wait for SMS-DELIVER-REPORT for silent one.
@@ -3312,8 +3398,8 @@ RadioInterface.prototype = {
     };
 
     if (silent) {
-      let deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_PENDING;
       let delivery = DOM_MOBILE_MESSAGE_DELIVERY_SENDING;
+      let deliveryStatus = RIL.GECKO_SMS_DELIVERY_STATUS_PENDING;
       let domMessage =
         gMobileMessageService.createSmsMessage(-1, // id
                                                0,  // threadId
@@ -3325,6 +3411,7 @@ RadioInterface.prototype = {
                                                sendingMessage.body,
                                                "normal", // message class
                                                sendingMessage.timestamp,
+                                               0,
                                                0,
                                                false);
       notifyResult(Cr.NS_OK, domMessage);

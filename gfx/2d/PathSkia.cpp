@@ -88,7 +88,7 @@ void
 PathBuilderSkia::Arc(const Point &aOrigin, float aRadius, float aStartAngle,
                      float aEndAngle, bool aAntiClockwise)
 {
-  ArcToBezier(this, aOrigin, aRadius, aStartAngle, aEndAngle, aAntiClockwise);
+  ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle, aAntiClockwise);
 }
 
 Point
@@ -107,6 +107,12 @@ PathBuilderSkia::Finish()
 {
   RefPtr<PathSkia> path = new PathSkia(mPath, mFillRule);
   return path;
+}
+
+void
+PathBuilderSkia::AppendPath(const SkPath &aPath)
+{
+  mPath.addPath(aPath);
 }
 
 TemporaryRef<PathBuilder>

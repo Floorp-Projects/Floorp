@@ -15,7 +15,7 @@ public class FennecMochitestAssert implements Assert {
     private int mPassed = 0;
     private int mFailed = 0;
     private int mTodo = 0;
-    
+
     // Used to write the first line of the test file
     private boolean mLogStarted = false;
 
@@ -140,14 +140,14 @@ public class FennecMochitestAssert implements Assert {
         mTestList.add(test);
     }
 
-    public void is(Object a, Object b, String name) {
-        boolean pass = checkObjectsEqual(a,b);
-        ok(pass, name, getEqualString(a,b, pass));
+    public void is(Object actual, Object expected, String name) {
+        boolean pass = checkObjectsEqual(actual, expected);
+        ok(pass, name, getEqualString(actual, expected, pass));
     }
-    
-    public void isnot(Object a, Object b, String name) {
-        boolean pass = checkObjectsNotEqual(a,b);
-        ok(pass, name, getNotEqualString(a,b,pass));
+
+    public void isnot(Object actual, Object notExpected, String name) {
+        boolean pass = checkObjectsNotEqual(actual, notExpected);
+        ok(pass, name, getNotEqualString(actual, notExpected, pass));
     }
 
     public void ispixel(int actual, int r, int g, int b, String name) {
@@ -197,14 +197,14 @@ public class FennecMochitestAssert implements Assert {
         mTestList.add(test);
     }
 
-    public void todo_is(Object a, Object b, String name) {
-        boolean pass = checkObjectsEqual(a,b);
-        todo(pass, name, getEqualString(a,b,pass));
+    public void todo_is(Object actual, Object expected, String name) {
+        boolean pass = checkObjectsEqual(actual, expected);
+        todo(pass, name, getEqualString(actual, expected, pass));
     }
 
-    public void todo_isnot(Object a, Object b, String name) {
-        boolean pass = checkObjectsNotEqual(a,b);
-        todo(pass, name, getNotEqualString(a,b,pass));
+    public void todo_isnot(Object actual, Object notExpected, String name) {
+        boolean pass = checkObjectsNotEqual(actual, notExpected);
+        todo(pass, name, getNotEqualString(actual, notExpected, pass));
     }
 
     private boolean checkObjectsEqual(Object a, Object b) {

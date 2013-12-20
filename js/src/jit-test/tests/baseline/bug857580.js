@@ -1,4 +1,4 @@
-gczeal(2);
+gczeal(2,10);
 var g = newGlobal();
 var dbg = new Debugger(g);
 dbg.onNewScript = function(script) {

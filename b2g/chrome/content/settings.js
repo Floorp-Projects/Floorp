@@ -223,6 +223,7 @@ let AdbController = {
   lockEnabled: undefined,
   disableAdbTimer: null,
   disableAdbTimeoutHours: 12,
+  umsActive: false,
 
   debug: function(str) {
     dump("AdbController: " + str + "\n");
@@ -304,6 +305,51 @@ let AdbController = {
   },
 
   updateState: function() {
+    this.umsActive = false;
+    this.storages = navigator.getDeviceStorages('sdcard');
+    this.updateStorageState(0);
+  },
+
+  updateStorageState: function(storageIndex) {
+    if (storageIndex >= this.storages.length) {
+      // We've iterated through all of the storage objects, now we can
+      // really do updateStateInternal.
+      this.updateStateInternal();
+      return;
+    }
+    let storage = this.storages[storageIndex];
+    if (this.DEBUG) {
+      this.debug("Checking availability of storage: '" +
+                 storage.storageName);
+    }
+
+    let req = storage.available();
+    req.onsuccess = function(e) {
+      if (this.DEBUG) {
+        this.debug("Storage: '" + storage.storageName + "' is '" +
+                   e.target.result);
+      }
+      if (e.target.result == 'shared') {
+        // We've found a storage area that's being shared with the PC.
+        // We can stop looking now.
+        this.umsActive = true;
+        this.updateStateInternal();
+        return;
+      }
+      this.updateStorageState(storageIndex + 1);
+    }.bind(this);
+    req.onerror = function(e) {
+      dump("AdbController: error querying storage availability for '" +
+           this.storages[storageIndex].storageName + "' (ignoring)\n");
+      this.updateStorageState(storageIndex + 1);
+    }.bind(this);
+  },
+
+  updateStateInternal: function() {
+    if (this.DEBUG) {
+      this.debug("updateStateInternal: called");
+    }
+
     if (this.remoteDebuggerEnabled === undefined ||
         this.lockEnabled === undefined ||
         this.locked === undefined) {
@@ -338,8 +384,15 @@ let AdbController = {
       this.debug("isDebugging=" + isDebugging);
     }
 
+    // If USB Mass Storage, USB tethering, or a debug session is active,
+    // then we don't want to disable adb in an automatic fashion (i.e.
+    // when the screen locks or due to timeout).
+    let sysUsbConfig = libcutils.property_get("sys.usb.config");
+    let rndisActive = (sysUsbConfig.split(",").indexOf("rndis") >= 0);
+    let usbFuncActive = rndisActive || this.umsActive || isDebugging;
+
     let enableAdb = this.remoteDebuggerEnabled &&
-      (!(this.lockEnabled && this.locked) || isDebugging);
+      (!(this.lockEnabled && this.locked) || usbFuncActive);
 
     let useDisableAdbTimer = true;
     try {
@@ -359,7 +412,8 @@ let AdbController = {
       this.debug("updateState: enableAdb = " + enableAdb +
                  " remoteDebuggerEnabled = " + this.remoteDebuggerEnabled +
                  " lockEnabled = " + this.lockEnabled +
-                 " locked = " + this.locked);
+                 " locked = " + this.locked +
+                 " usbFuncActive = " + usbFuncActive);
     }
 
     // Configure adb.
@@ -391,7 +445,7 @@ let AdbController = {
       }
     }
     if (useDisableAdbTimer) {
-      if (enableAdb && !isDebugging) {
+      if (enableAdb && !usbFuncActive) {
         this.startDisableAdbTimer();
       } else {
         this.stopDisableAdbTimer();
@@ -472,4 +526,12 @@ SettingsListener.observe("debug.paint-flashing.enabled", false, function(value) 
 });
 SettingsListener.observe("layers.draw-borders", false, function(value) {
   Services.prefs.setBoolPref("layers.draw-borders", value);
+});
+
+// ================ Accessibility ============
+SettingsListener.observe("accessibility.screenreader", false, function(value) {
+  if (value && !("AccessFu" in this)) {
+    Cu.import('resource://gre/modules/accessibility/AccessFu.jsm');
+    AccessFu.attach(window);
+  }
 });

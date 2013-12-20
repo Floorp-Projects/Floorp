@@ -18,7 +18,7 @@ namespace widget {
 
 NS_IMPL_ISUPPORTS1(TaskbarTabPreview, nsITaskbarTabPreview)
 
-const PRUnichar *const kWindowClass = L"MozillaTaskbarPreviewClass";
+const wchar_t *const kWindowClass = L"MozillaTaskbarPreviewClass";
 
 TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell)
   : TaskbarPreview(aTaskbar, aController, aHWND, aShell),

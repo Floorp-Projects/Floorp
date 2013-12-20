@@ -12,6 +12,7 @@
 
 #ifndef IDropTargetHelper
 #include <shobjidl.h> // Vista drag image interfaces
+#undef LogSeverity // SetupAPI.h #defines this as DWORD
 #endif
 
 #include "mozilla/Attributes.h"

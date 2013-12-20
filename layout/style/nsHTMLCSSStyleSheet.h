@@ -34,6 +34,7 @@ public:
   virtual void RulesMatching(XULTreeRuleProcessorData* aData) MOZ_OVERRIDE;
 #endif
   virtual nsRestyleHint HasStateDependentStyle(StateRuleProcessorData* aData) MOZ_OVERRIDE;
+  virtual nsRestyleHint HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData) MOZ_OVERRIDE;
   virtual bool HasDocumentStateDependentStyle(StateRuleProcessorData* aData) MOZ_OVERRIDE;
   virtual nsRestyleHint
     HasAttributeDependentStyle(AttributeRuleProcessorData* aData) MOZ_OVERRIDE;

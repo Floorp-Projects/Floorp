@@ -27,19 +27,19 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
-        title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
-        title_normal="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title="&mainWindow.title;"
+        title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
-        title_privatebrowsing="&mainWindow.title;@PRE_RELEASE_SUFFIX@&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
-        titledefault="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
+        title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
+        titledefault="&mainWindow.title;"
         titlemodifier=""
         titlemodifier_normal=""
         titlemodifier_privatebrowsing="&mainWindow.titlePrivateBrowsingSuffix;"
 #else
-        title_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
-        titlemodifier="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_normal="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@"
-        titlemodifier_privatebrowsing="&mainWindow.titlemodifier;@PRE_RELEASE_SUFFIX@ &mainWindow.titlePrivateBrowsingSuffix;"
+        title_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
+        titlemodifier="&mainWindow.titlemodifier;"
+        titlemodifier_normal="&mainWindow.titlemodifier;"
+        titlemodifier_privatebrowsing="&mainWindow.titlemodifier; &mainWindow.titlePrivateBrowsingSuffix;"
 #endif
 #ifdef CAN_DRAW_IN_TITLEBAR
 #ifdef XP_WIN
@@ -115,8 +115,7 @@
                 oncommand="gBrowser.removeAllTabsBut(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_undoCloseTab"
-                singletablabel="&undoCloseTab.label;"
-                multipletablabel="&undoCloseTabs.label;"
+                label="&undoCloseTab.label;"
                 accesskey="&undoCloseTab.accesskey;"
                 observes="History:UndoCloseTab"/>
       <menuitem id="context_closeTab" label="&closeTab.label;" accesskey="&closeTab.accesskey;"
@@ -199,41 +198,19 @@
            type="arrow"
            hidden="true"
            noautofocus="true"
+           noautohide="true"
            align="start"
            orient="vertical"
            role="alert">
       <label id="UITourTooltipTitle" flex="1"/>
       <description id="UITourTooltipDescription" flex="1"/>
     </panel>
-    <html:div id="UITourHighlightContainer" style="position:relative">
-      <html:div id="UITourHighlight"></html:div>
-    </html:div>
-
-    <panel id="socialActivatedNotification"
-           type="arrow"
+    <panel id="UITourHighlightContainer"
            hidden="true"
-           align="start"
-           orient="horizontal"
-           role="alert">
-      <image id="social-activation-icon" class="popup-notification-icon"/>
-      <vbox flex="1">
-        <description id="social-activation-message" class="popup-notification-description">&social.activated.description;</description>
-        <spacer flex="1"/>
-        <hbox pack="start" align="center" class="popup-notification-button-container">
-          <label  id="social-undoactivation-button"
-                  class="text-link"
-                  value="&social.activated.undo.label;"
-                  accesskey="&social.activated.undo.accesskey;"
-                  onclick="SocialUI.undoActivation(this);"/>
-          <spacer flex="1"/>
-          <button id="social-activation-button"
-                  default="true"
-                  autofocus="autofocus"
-                  label="&social.ok.label;"
-                  accesskey="&social.ok.accesskey;"
-                  oncommand="SocialUI.activationPanel.hidePopup();"/>
-        </hbox>
-      </vbox>
+           noautofocus="true"
+           noautohide="true"
+           consumeoutsideclicks="false">
+      <box id="UITourHighlight"></box>
     </panel>
 
     <panel id="social-share-panel"
@@ -269,8 +246,8 @@
                onpopupshowing="onViewToolbarsPopupShowing(event, document.getElementById('viewToolbarsMenuSeparator'));">
       <menuitem oncommand="gCustomizeMode.addToPanel(document.popupNode)"
                 accesskey="&customizeMenu.addToPanel.accesskey;"
-                label="&customizeMenu.addToPanel.label;"
-                class="customize-context-addToPanel"/>
+                label="&customizeMenu.moveToPanel.label;"
+                class="customize-context-moveToPanel"/>
       <menuitem oncommand="gCustomizeMode.removeFromArea(document.popupNode)"
                 accesskey="&customizeMenu.removeFromToolbar.accesskey;"
                 label="&customizeMenu.removeFromToolbar.label;"
@@ -458,7 +435,7 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
-#ifdef XP_LINUX
+#if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
              autohide="true"
 #endif
 #endif
@@ -824,58 +801,6 @@
                        tooltiptext="&sharePageCmd.label;"
                        cui-areatype="toolbar"
                        command="Social:SharePage"/>
-
-        <toolbaritem id="social-toolbar-item"
-                     class="chromeclass-toolbar-additional toolbaritem-with-separator"
-                     removable="false"
-                     title="&socialToolbar.title;"
-                     hidden="true"
-                     overflows="false"
-                     cui-areatype="toolbar"
-                     observes="socialActiveBroadcaster">
-        <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
-                   oncommand="PopupNotifications._reshowNotifications(this,
-                                document.getElementById('social-sidebar-browser'));"/>
-          <toolbarbutton id="social-provider-button"
-                         class="toolbarbutton-1"
-                         type="menu">
-            <menupopup id="social-statusarea-popup">
-              <menuitem class="social-statusarea-user menuitem-iconic" pack="start" align="center"
-                        observes="socialBroadcaster_userDetails"
-                        oncommand="SocialUI.showProfile(); document.getElementById('social-statusarea-popup').hidePopup();">
-                <image class="social-statusarea-user-portrait"
-                       observes="socialBroadcaster_userDetails"/>
-                <vbox>
-                  <label class="social-statusarea-loggedInStatus"
-                         observes="socialBroadcaster_userDetails"/>
-                </vbox>
-              </menuitem>
-#ifndef XP_WIN
-              <menuseparator class="social-statusarea-separator"/>
-#endif
-              <menuitem class="social-toggle-sidebar-menuitem"
-                        type="checkbox"
-                        autocheck="false"
-                        command="Social:ToggleSidebar"
-                        label="&social.toggleSidebar.label;"
-                        accesskey="&social.toggleSidebar.accesskey;"/>
-              <menuitem class="social-toggle-notifications-menuitem"
-                        type="checkbox"
-                        autocheck="false"
-                        command="Social:ToggleNotifications"
-                        label="&social.toggleNotifications.label;"
-                        accesskey="&social.toggleNotifications.accesskey;"/>
-              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
-              <menuseparator/>
-              <menuseparator class="social-provider-menu" hidden="true"/>
-              <menuitem class="social-addons-menuitem" command="Social:Addons"
-                        label="&social.addons.label;"/>
-              <menuitem label="&social.learnMore.label;"
-                        accesskey="&social.learnMore.accesskey;"
-                        oncommand="SocialUI.showLearnMore();"/>
-            </menupopup>
-          </toolbarbutton>
-        </toolbaritem>
       </hbox>
 
       <toolbarbutton id="nav-bar-overflow-button"
@@ -1046,6 +971,37 @@
             class="chromeclass-extrachrome"
             observes="socialSidebarBroadcaster"
             persist="width">
+
+        <sidebarheader id="social-sidebar-header" class="sidebar-header" align="center">
+          <image id="social-sidebar-favico"/>
+          <label id="social-sidebar-title" class="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
+          <button id="social-sidebar-button"
+                         type="menu">
+            <menupopup id="social-statusarea-popup" position="after_end">
+              <menuitem class="social-toggle-sidebar-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleSidebar"
+                        label="&social.toggleSidebar.label;"
+                        accesskey="&social.toggleSidebar.accesskey;"/>
+              <menuitem class="social-toggle-notifications-menuitem"
+                        type="checkbox"
+                        autocheck="false"
+                        command="Social:ToggleNotifications"
+                        label="&social.toggleNotifications.label;"
+                        accesskey="&social.toggleNotifications.accesskey;"/>
+              <menuitem class="social-toggle-menuitem" command="Social:Toggle"/>
+              <menuseparator/>
+              <menuseparator class="social-provider-menu" hidden="true"/>
+              <menuitem class="social-addons-menuitem" command="Social:Addons"
+                        label="&social.addons.label;"/>
+              <menuitem label="&social.learnMore.label;"
+                        accesskey="&social.learnMore.accesskey;"
+                        oncommand="SocialUI.showLearnMore();"/>
+            </menupopup>
+          </button>
+        </sidebarheader>
+
         <browser id="social-sidebar-browser"
                  type="content"
                  context="contentAreaContextMenu"
@@ -1092,7 +1048,6 @@
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox"/>
     <toolbar id="developer-toolbar"
-             class="devtools-toolbar"
              hidden="true">
 #ifdef XP_MACOSX
           <toolbarbutton id="developer-toolbar-closebutton"

@@ -209,23 +209,21 @@ ClippedImage::GetIntrinsicRatio(nsSize* aRatio)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(already_AddRefed<gfxASurface>)
 ClippedImage::GetFrame(uint32_t aWhichFrame,
-                       uint32_t aFlags,
-                       gfxASurface** _retval)
+                       uint32_t aFlags)
 {
-  return GetFrameInternal(mClip.Size(), nullptr, aWhichFrame, aFlags, _retval);
+  return GetFrameInternal(mClip.Size(), nullptr, aWhichFrame, aFlags);
 }
 
-nsresult
+already_AddRefed<gfxASurface>
 ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
                                const SVGImageContext* aSVGContext,
                                uint32_t aWhichFrame,
-                               uint32_t aFlags,
-                               gfxASurface** _retval)
+                               uint32_t aFlags)
 {
   if (!ShouldClip()) {
-    return InnerImage()->GetFrame(aWhichFrame, aFlags, _retval);
+    return InnerImage()->GetFrame(aWhichFrame, aFlags);
   }
 
   float frameToDraw = InnerImage()->GetFrameIndex(aWhichFrame);
@@ -273,9 +271,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
   }
 
   MOZ_ASSERT(mCachedSurface, "Should have a cached surface now");
-  nsRefPtr<gfxASurface> surf = mCachedSurface->Surface();
-  surf.forget(_retval);
-  return NS_OK;
+  return mCachedSurface->Surface();
 }
 
 NS_IMETHODIMP
@@ -335,8 +331,8 @@ ClippedImage::Draw(gfxContext* aContext,
   if (MustCreateSurface(aContext, aUserSpaceToImageSpace, sourceRect, aSubimage, aFlags)) {
     // Create a temporary surface containing a single tile of this image.
     // GetFrame will call DrawSingleTile internally.
-    nsRefPtr<gfxASurface> surface;
-    GetFrameInternal(aViewportSize, aSVGContext, aWhichFrame, aFlags, getter_AddRefs(surface));
+    nsRefPtr<gfxASurface> surface =
+      GetFrameInternal(aViewportSize, aSVGContext, aWhichFrame, aFlags);
     NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
     // Create a drawable from that surface.

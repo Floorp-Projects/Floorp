@@ -29,3 +29,6 @@ SOURCES += [
     'uncompr.c',
     'zutil.c',
 ]
+
+if CONFIG['ZLIB_IN_MOZGLUE']:
+    DEFINES['IMPL_MFBT'] = True

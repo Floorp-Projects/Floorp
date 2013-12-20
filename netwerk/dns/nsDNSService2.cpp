@@ -1,4 +1,5 @@
-/* vim:set ts=4 sw=4 sts=4 et cin: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +8,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSListener.h"
 #include "nsICancelable.h"
-#include "nsIMemoryReporter.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
@@ -34,6 +34,9 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/VisualEventTracer.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "mozilla/net/ChildDNSService.h"
+#include "mozilla/net/DNSListenerProxy.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -394,26 +397,11 @@ nsDNSSyncRequest::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 
 //-----------------------------------------------------------------------------
 
-class NetworkDNSServiceReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    NetworkDNSServiceReporter(nsDNSService* aService)
-        : MemoryUniReporter("explicit/network/dns-service",
-                             KIND_HEAP, UNITS_BYTES,
-                             "Memory used for the DNS service.")
-        , mService(aService)
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        return mService->SizeOfIncludingThis(MallocSizeOf);
-    }
-
-    nsDNSService *mService;
-};
-
 nsDNSService::nsDNSService()
-    : mLock("nsDNSServer.mLock")
+    : MemoryUniReporter("explicit/network/dns-service",
+                        KIND_HEAP, UNITS_BYTES,
+                        "Memory used for the DNS service.")
+    , mLock("nsDNSServer.mLock")
     , mFirstTime(true)
     , mOffline(false)
 {
@@ -423,7 +411,45 @@ nsDNSService::~nsDNSService()
 {
 }
 
-NS_IMPL_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver)
+NS_IMPL_ISUPPORTS_INHERITED3(nsDNSService, MemoryUniReporter, nsIDNSService,
+                             nsPIDNSService, nsIObserver)
+
+/******************************************************************************
+ * nsDNSService impl:
+ * singleton instance ctor/dtor methods
+ ******************************************************************************/
+static nsDNSService *gDNSService;
+
+nsIDNSService*
+nsDNSService::GetXPCOMSingleton()
+{
+    if (IsNeckoChild()) {
+        return ChildDNSService::GetSingleton();
+    }
+
+    return GetSingleton();
+}
+
+nsDNSService*
+nsDNSService::GetSingleton()
+{
+    NS_ASSERTION(!IsNeckoChild(), "not a parent process");
+
+    if (gDNSService) {
+        NS_ADDREF(gDNSService);
+        return gDNSService;
+    }
+
+    gDNSService = new nsDNSService();
+    if (gDNSService) {
+        NS_ADDREF(gDNSService);
+        if (NS_FAILED(gDNSService->Init())) {
+              NS_RELEASE(gDNSService);
+        }
+    }
+
+    return gDNSService;
+}
 
 NS_IMETHODIMP
 nsDNSService::Init()
@@ -529,8 +555,7 @@ nsDNSService::Init()
         }
     }
 
-    mReporter = new NetworkDNSServiceReporter(this);
-    NS_RegisterMemoryReporter(mReporter);
+    RegisterWeakMemoryReporter(this);
 
     return rv;
 }
@@ -538,7 +563,7 @@ nsDNSService::Init()
 NS_IMETHODIMP
 nsDNSService::Shutdown()
 {
-    NS_UnregisterMemoryReporter(mReporter);
+    UnregisterWeakMemoryReporter(this);
 
     nsRefPtr<nsHostResolver> res;
     {
@@ -579,70 +604,6 @@ nsDNSService::SetPrefetchEnabled(bool inVal)
     return NS_OK;
 }
 
-namespace {
-
-class DNSListenerProxy MOZ_FINAL : public nsIDNSListener
-{
-public:
-  DNSListenerProxy(nsIDNSListener* aListener, nsIEventTarget* aTargetThread)
-    // Sometimes aListener is a main-thread only object like XPCWrappedJS, and
-    // sometimes it's a threadsafe object like nsSOCKSSocketInfo. Use a main-
-    // thread pointer holder, but disable strict enforcement of thread invariants.
-    // The AddRef implementation of XPCWrappedJS will assert if we go wrong here.
-    : mListener(new nsMainThreadPtrHolder<nsIDNSListener>(aListener, false))
-    , mTargetThread(aTargetThread)
-  { }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIDNSLISTENER
-
-  class OnLookupCompleteRunnable : public nsRunnable
-  {
-  public:
-    OnLookupCompleteRunnable(const nsMainThreadPtrHandle<nsIDNSListener>& aListener,
-                             nsICancelable* aRequest,
-                             nsIDNSRecord* aRecord,
-                             nsresult aStatus)
-      : mListener(aListener)
-      , mRequest(aRequest)
-      , mRecord(aRecord)
-      , mStatus(aStatus)
-    { }
-
-    NS_DECL_NSIRUNNABLE
-
-  private:
-    nsMainThreadPtrHandle<nsIDNSListener> mListener;
-    nsCOMPtr<nsICancelable> mRequest;
-    nsCOMPtr<nsIDNSRecord> mRecord;
-    nsresult mStatus;
-  };
-
-private:
-  nsMainThreadPtrHandle<nsIDNSListener> mListener;
-  nsCOMPtr<nsIEventTarget> mTargetThread;
-};
-
-NS_IMPL_ISUPPORTS1(DNSListenerProxy, nsIDNSListener)
-
-NS_IMETHODIMP
-DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
-                                   nsIDNSRecord* aRecord,
-                                   nsresult aStatus)
-{
-  nsRefPtr<OnLookupCompleteRunnable> r =
-    new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
-  return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
-}
-
-NS_IMETHODIMP
-DNSListenerProxy::OnLookupCompleteRunnable::Run()
-{
-  mListener->OnLookupComplete(mRequest, mRecord, mStatus);
-  return NS_OK;
-}
-
-} // anonymous namespace
 
 NS_IMETHODIMP
 nsDNSService::AsyncResolve(const nsACString  &hostname,
@@ -686,6 +647,7 @@ nsDNSService::AsyncResolve(const nsACString  &hostname,
             hostPtr = &hostACE;
     }
 
+    // make sure JS callers get notification on the main thread
     nsCOMPtr<nsIXPConnectWrappedJS> wrappedListener = do_QueryInterface(listener);
     if (wrappedListener && !target) {
         nsCOMPtr<nsIThread> mainThread;
@@ -937,7 +899,7 @@ SizeOfLocalDomainsEntryExcludingThis(nsCStringHashKey* entry,
 }
 
 size_t
-nsDNSService::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
+nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:

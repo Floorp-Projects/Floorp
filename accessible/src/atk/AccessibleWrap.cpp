@@ -25,7 +25,7 @@
 #include "States.h"
 #include "nsISimpleEnumerator.h"
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "nsXPCOMStrings.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIPersistentProperties2.h"
@@ -692,7 +692,7 @@ getRoleCB(AtkObject *aAtkObj)
   return aAtkObj->role;
 }
 
-AtkAttributeSet*
+static AtkAttributeSet*
 ConvertToAtkAttributeSet(nsIPersistentProperties* aAttributes)
 {
     if (!aAttributes)
