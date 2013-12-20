@@ -4510,6 +4510,13 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
 // Binary data
 /////////////////////////////////////////////////////////////////////
 
+void
+TypeObject::setAddendum(TypeObjectAddendum *addendum)
+{
+    JS_ASSERT(CurrentThreadCanWriteCompilationData());
+    this->addendum = addendum;
+}
+
 bool
 TypeObject::addTypedObjectAddendum(JSContext *cx,
                                    TypeTypedObject::Kind kind,
