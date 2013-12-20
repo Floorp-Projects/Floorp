@@ -56,7 +56,7 @@ class MachCommands(MachCommandBase):
         machtype = subprocess.check_output(['bash', '-c', 'echo $MACHTYPE']).rstrip()
         arch_specific_supps_file = os.path.join(supps_dir, machtype + '.sup')
         if os.path.isfile(arch_specific_supps_file):
-            debugger_args += ' --suppressions=' + os.path.join(supps_dir, arch_specific_supps_file)
+            debugger_args.append('--suppressions=' + os.path.join(supps_dir, arch_specific_supps_file))
             print('Using platform-specific suppression file: ',
                   arch_specific_supps_file + '\n')
         else:
