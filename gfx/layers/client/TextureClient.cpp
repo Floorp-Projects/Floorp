@@ -887,8 +887,8 @@ bool AutoLockYCbCrClient::EnsureDeprecatedTextureClient(PlanarYCbCrImage* aImage
   } else {
     ipc::Shmem& shmem = mDescriptor->get_YCbCrImage().data();
     YCbCrImageDataSerializer serializer(shmem.get<uint8_t>());
-    if (ToIntSize(serializer.GetYSize()) != data->mYSize ||
-        ToIntSize(serializer.GetCbCrSize()) != data->mCbCrSize) {
+    if (serializer.GetYSize() != data->mYSize ||
+        serializer.GetCbCrSize() != data->mCbCrSize) {
       needsAllocation = true;
     }
   }
