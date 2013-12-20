@@ -244,18 +244,32 @@ let ScrollPositionListener = {
  * currently applied style to the chrome process.
  *
  * Causes a SessionStore:update message to be sent that contains the currently
- * selected pageStyle, if any. The pageStyle is represented by a string.
+ * selected pageStyle for all reachable frames.
+ *
+ * Example:
+ *   {pageStyle: "Dusk", children: [null, {pageStyle: "Mozilla"}]}
  */
 let PageStyleListener = {
   init: function () {
     Services.obs.addObserver(this, "author-style-disabled-changed", true);
     Services.obs.addObserver(this, "style-sheet-applicable-state-changed", true);
+    gFrameTree.addObserver(this);
   },
 
   observe: function (subject, topic) {
-    if (subject.defaultView && subject.defaultView.top == content) {
-      MessageQueue.push("pageStyle", () => PageStyle.collect(docShell) || null);
+    let frame = subject.defaultView;
+
+    if (frame && gFrameTree.contains(frame)) {
+      MessageQueue.push("pageStyle", () => this.collect());
     }
+  },
+
+  collect: function () {
+    return PageStyle.collect(docShell, gFrameTree);
+  },
+
+  onFrameTreeReset: function () {
+    MessageQueue.push("pageStyle", () => null);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
