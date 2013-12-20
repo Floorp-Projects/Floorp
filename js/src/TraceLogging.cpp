@@ -161,7 +161,7 @@ TraceLogging::log(Type type, const char* text /* = nullptr */, unsigned int numb
             if (!textMap.add(p, text, textId))
                 return;
         } else {
-            textId = p->value;
+            textId = p->value();
         }
     }
 
@@ -181,7 +181,7 @@ TraceLogging::log(Type type, const JS::ReadOnlyCompileOptions &options)
 void
 TraceLogging::log(Type type, JSScript* script)
 {
-    this->log(type, script->filename(), script->lineno);
+    this->log(type, script->filename(), script->lineno());
 }
 
 void

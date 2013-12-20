@@ -2,251 +2,277 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 Cu.import("resource://gre/modules/Promise.jsm");
 
 const isOSX = (Services.appinfo.OS === "Darwin");
 
-let gTests = [
-  {
-    desc: "Right-click on the home button should show a context menu with options to move it.",
-    setup: null,
-    run: function() {
-      let contextMenu = document.getElementById("toolbar-context-menu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let homeButton = document.getElementById("home-button");
-      EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2 });
-      yield shownPromise;
+// Right-click on the home button should
+// show a context menu with options to move it.
+add_task(function() {
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let homeButton = document.getElementById("home-button");
+  EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2 });
+  yield shownPromise;
 
-      let expectedEntries = [
-        [".customize-context-addToPanel", true],
-        [".customize-context-removeFromToolbar", true],
-        ["---"]
-      ];
-      if (!isOSX) {
-        expectedEntries.push(["#toggle_toolbar-menubar", true]);
-      }
-      expectedEntries.push(
-        ["#toggle_PersonalToolbar", true],
-        ["---"],
-        [".viewCustomizeToolbar", true]
-      );
-      checkContextMenu(contextMenu, expectedEntries);
+  let expectedEntries = [
+    [".customize-context-moveToPanel", true],
+    [".customize-context-removeFromToolbar", true],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
 
-      let hiddenPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenPromise;
-    },
-    teardown: null
-  },
-  {
-    desc: "Right-click on the urlbar-container should show a context menu with disabled options to move it.",
-    setup: null,
-    run: function() {
-      let contextMenu = document.getElementById("toolbar-context-menu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let urlBarContainer = document.getElementById("urlbar-container");
-      // Need to make sure not to click within an edit field.
-      let urlbarRect = urlBarContainer.getBoundingClientRect();
-      EventUtils.synthesizeMouse(urlBarContainer, 100, urlbarRect.height - 1, {type: "contextmenu", button: 2 });
-      yield shownPromise;
+  let hiddenPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+});
 
-      let expectedEntries = [
-        [".customize-context-addToPanel", false],
-        [".customize-context-removeFromToolbar", false],
-        ["---"]
-      ];
-      if (!isOSX) {
-        expectedEntries.push(["#toggle_toolbar-menubar", true]);
-      }
-      expectedEntries.push(
-        ["#toggle_PersonalToolbar", true],
-        ["---"],
-        [".viewCustomizeToolbar", true]
-      );
-      checkContextMenu(contextMenu, expectedEntries);
+// Right-click on the urlbar-container should
+// show a context menu with disabled options to move it.
+add_task(function() {
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let urlBarContainer = document.getElementById("urlbar-container");
+  // Need to make sure not to click within an edit field.
+  let urlbarRect = urlBarContainer.getBoundingClientRect();
+  EventUtils.synthesizeMouse(urlBarContainer, 100, urlbarRect.height - 1, {type: "contextmenu", button: 2 });
+  yield shownPromise;
 
-      let hiddenPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenPromise;
-    },
-    teardown: null
-  },
-  {
-    desc: "Right-click on the searchbar and moving it to the menu and back should move the search-container instead.",
-    run: function() {
-      let searchbar = document.getElementById("searchbar");
-      gCustomizeMode.addToPanel(searchbar);
-      let placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
+  let expectedEntries = [
+    [".customize-context-moveToPanel", false],
+    [".customize-context-removeFromToolbar", false],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
 
-      let shownPanelPromise = promisePanelShown(window);
-      PanelUI.toggle({type: "command"});
-      yield shownPanelPromise;
-      let hiddenPanelPromise = promisePanelHidden(window);
-      PanelUI.toggle({type: "command"});
-      yield hiddenPanelPromise;
+  let hiddenPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+});
 
-      gCustomizeMode.addToToolbar(searchbar);
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
-      gCustomizeMode.removeFromArea(searchbar);
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement, null, "Should be in palette");
-      CustomizableUI.reset();
-      placement = CustomizableUI.getPlacementOfWidget("search-container");
-      is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
-    }
-  },
-  {
-    desc: "Right-click on an item within the menu panel should show a context menu with options to move it.",
-    setup: null,
-    run: function() {
-      let shownPanelPromise = promisePanelShown(window);
-      PanelUI.toggle({type: "command"});
-      yield shownPanelPromise;
+// Right-click on the searchbar and moving it to the menu
+// and back should move the search-container instead.
+add_task(function() {
+  let searchbar = document.getElementById("searchbar");
+  gCustomizeMode.addToPanel(searchbar);
+  let placement = CustomizableUI.getPlacementOfWidget("search-container");
+  is(placement.area, CustomizableUI.AREA_PANEL, "Should be in panel");
 
-      let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-      let shownContextPromise = contextMenuShown(contextMenu);
-      let newWindowButton = document.getElementById("new-window-button");
-      ok(newWindowButton, "new-window-button was found");
-      EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
-      yield shownContextPromise;
+  let shownPanelPromise = promisePanelShown(window);
+  PanelUI.toggle({type: "command"});
+  yield shownPanelPromise;
+  let hiddenPanelPromise = promisePanelHidden(window);
+  PanelUI.toggle({type: "command"});
+  yield hiddenPanelPromise;
 
-      is(PanelUI.panel.state, "open", "The PanelUI should still be open.");
+  gCustomizeMode.addToToolbar(searchbar);
+  placement = CustomizableUI.getPlacementOfWidget("search-container");
+  is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
+  gCustomizeMode.removeFromArea(searchbar);
+  placement = CustomizableUI.getPlacementOfWidget("search-container");
+  is(placement, null, "Should be in palette");
+  CustomizableUI.reset();
+  placement = CustomizableUI.getPlacementOfWidget("search-container");
+  is(placement.area, CustomizableUI.AREA_NAVBAR, "Should be in navbar");
+});
 
-      let expectedEntries = [
-        [".customize-context-addToToolbar", true],
-        [".customize-context-removeFromPanel", true],
-        ["---"],
-        [".viewCustomizeToolbar", true]
-      ];
-      checkContextMenu(contextMenu, expectedEntries);
+// Right-click on an item within the menu panel should
+// show a context menu with options to move it.
+add_task(function() {
+  let shownPanelPromise = promisePanelShown(window);
+  PanelUI.toggle({type: "command"});
+  yield shownPanelPromise;
 
-      let hiddenContextPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenContextPromise;
+  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let shownContextPromise = contextMenuShown(contextMenu);
+  let newWindowButton = document.getElementById("new-window-button");
+  ok(newWindowButton, "new-window-button was found");
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  yield shownContextPromise;
 
-      let hiddenPromise = promisePanelHidden(window);
-      PanelUI.toggle({type: "command"});
-      yield hiddenPromise;
-    },
-    teardown: null
-  },
-  {
-    desc: "Right-click on the home button while in customization mode should show a context menu with options to move it.",
-    setup: startCustomizing,
-    run: function () {
-      let contextMenu = document.getElementById("toolbar-context-menu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let homeButton = document.getElementById("wrapper-home-button");
-      EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
-      yield shownPromise;
+  is(PanelUI.panel.state, "open", "The PanelUI should still be open.");
 
-      let expectedEntries = [
-        [".customize-context-addToPanel", true],
-        [".customize-context-removeFromToolbar", true],
-        ["---"]
-      ];
-      if (!isOSX) {
-        expectedEntries.push(["#toggle_toolbar-menubar", true]);
-      }
-      expectedEntries.push(
-        ["#toggle_PersonalToolbar", true],
-        ["---"],
-        [".viewCustomizeToolbar", false]
-      );
-      checkContextMenu(contextMenu, expectedEntries);
+  let expectedEntries = [
+    [".customize-context-moveToToolbar", true],
+    [".customize-context-removeFromPanel", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  ];
+  checkContextMenu(contextMenu, expectedEntries);
 
-      let hiddenContextPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenContextPromise;
-    },
-    teardown: null
-  },
-  {
-    desc: "Right-click on an item in the palette should show a context menu with options to move it.",
-    setup: null,
-    run: function () {
-      let contextMenu = document.getElementById("customizationPaletteItemContextMenu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let openFileButton = document.getElementById("wrapper-open-file-button");
-      EventUtils.synthesizeMouse(openFileButton, 2, 2, {type: "contextmenu", button: 2});
-      yield shownPromise;
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
 
-      let expectedEntries = [
-        [".customize-context-addToToolbar", true],
-        [".customize-context-addToPanel", true],
-      ];
-      checkContextMenu(contextMenu, expectedEntries);
+  let hiddenPromise = promisePanelHidden(window);
+  PanelUI.toggle({type: "command"});
+  yield hiddenPromise;
+});
 
-      let hiddenContextPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenContextPromise;
-    },
-    teardown: null
-  },
-  {
-    desc: "Right-click on an item in the panel while in customization mode should show a context menu with options to move it.",
-    setup: null,
-    run: function () {
-      let contextMenu = document.getElementById("customizationPanelItemContextMenu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let newWindowButton = document.getElementById("wrapper-new-window-button");
-      EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
-      yield shownPromise;
+// Right-click on the home button while in customization mode
+// should show a context menu with options to move it.
+add_task(function() {
+  yield startCustomizing();
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let homeButton = document.getElementById("wrapper-home-button");
+  EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
+  yield shownPromise;
 
-      let expectedEntries = [
-        [".customize-context-addToToolbar", true],
-        [".customize-context-removeFromPanel", true],
-        ["---"],
-        [".viewCustomizeToolbar", false]
-      ];
-      checkContextMenu(contextMenu, expectedEntries);
+  let expectedEntries = [
+    [".customize-context-moveToPanel", true],
+    [".customize-context-removeFromToolbar", true],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", false]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
 
-      let hiddenContextPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenContextPromise;
-    },
-    teardown: endCustomizing
-  },
-  {
-    desc: "Test the toolbarbutton panel context menu in customization mode without opening the panel before customization mode",
-    setup: null,
-    run: function() {
-      this.otherWin = yield openAndLoadWindow(null, true);
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
+});
 
-      yield startCustomizing(this.otherWin);
+// Right-click on an item in the palette should
+// show a context menu with options to move it.
+add_task(function() {
+  let contextMenu = document.getElementById("customizationPaletteItemContextMenu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let openFileButton = document.getElementById("wrapper-open-file-button");
+  EventUtils.synthesizeMouse(openFileButton, 2, 2, {type: "contextmenu", button: 2});
+  yield shownPromise;
 
-      let contextMenu = this.otherWin.document.getElementById("customizationPanelItemContextMenu");
-      let shownPromise = contextMenuShown(contextMenu);
-      let newWindowButton = this.otherWin.document.getElementById("wrapper-new-window-button");
-      EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2}, this.otherWin);
-      yield shownPromise;
+  let expectedEntries = [
+    [".customize-context-addToToolbar", true],
+    [".customize-context-addToPanel", true]
+  ];
+  checkContextMenu(contextMenu, expectedEntries);
 
-      let expectedEntries = [
-        [".customize-context-addToToolbar", true],
-        [".customize-context-removeFromPanel", true],
-        ["---"],
-        [".viewCustomizeToolbar", false]
-      ];
-      checkContextMenu(contextMenu, expectedEntries, this.otherWin);
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
+});
 
-      let hiddenContextPromise = contextMenuHidden(contextMenu);
-      contextMenu.hidePopup();
-      yield hiddenContextPromise;
-    },
-    teardown: function() {
-      yield endCustomizing(this.otherWin);
-      this.otherWin.close();
-      this.otherWin = null;
-    }
-  },
-];
+// Right-click on an item in the panel while in customization mode
+// should show a context menu with options to move it.
+add_task(function() {
+  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let newWindowButton = document.getElementById("wrapper-new-window-button");
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2});
+  yield shownPromise;
 
-function test() {
-  waitForExplicitFinish();
-  runTests(gTests);
-}
+  let expectedEntries = [
+    [".customize-context-moveToToolbar", true],
+    [".customize-context-removeFromPanel", true],
+    ["---"],
+    [".viewCustomizeToolbar", false]
+  ];
+  checkContextMenu(contextMenu, expectedEntries);
+
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
+  yield endCustomizing();
+});
+
+// Test the toolbarbutton panel context menu in customization mode
+// without opening the panel before customization mode
+add_task(function() {
+  this.otherWin = yield openAndLoadWindow(null, true);
+
+  yield startCustomizing(this.otherWin);
+
+  let contextMenu = this.otherWin.document.getElementById("customizationPanelItemContextMenu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let newWindowButton = this.otherWin.document.getElementById("wrapper-new-window-button");
+  EventUtils.synthesizeMouse(newWindowButton, 2, 2, {type: "contextmenu", button: 2}, this.otherWin);
+  yield shownPromise;
+
+  let expectedEntries = [
+    [".customize-context-moveToToolbar", true],
+    [".customize-context-removeFromPanel", true],
+    ["---"],
+    [".viewCustomizeToolbar", false]
+  ];
+  checkContextMenu(contextMenu, expectedEntries, this.otherWin);
+
+  let hiddenContextPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenContextPromise;
+  yield endCustomizing(this.otherWin);
+  this.otherWin.close();
+  this.otherWin = null;
+});
+
+// Bug 945191 - Combined buttons show wrong context menu options
+// when they are in the toolbar.
+add_task(function() {
+  yield startCustomizing();
+  let contextMenu = document.getElementById("customizationPanelItemContextMenu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let zoomControls = document.getElementById("wrapper-zoom-controls");
+  EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
+  yield shownPromise;
+  // Execute the command to move the item from the panel to the toolbar.
+  contextMenu.childNodes[0].doCommand();
+  let hiddenPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+  yield endCustomizing();
+
+  zoomControls = document.getElementById("zoom-controls");
+  is(zoomControls.parentNode.id, "nav-bar-customization-target", "Zoom-controls should be on the nav-bar");
+
+  contextMenu = document.getElementById("toolbar-context-menu");
+  shownPromise = contextMenuShown(contextMenu);
+  EventUtils.synthesizeMouse(zoomControls, 2, 2, {type: "contextmenu", button: 2});
+  yield shownPromise;
+
+  let expectedEntries = [
+    [".customize-context-moveToPanel", true],
+    [".customize-context-removeFromToolbar", true],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
+
+  hiddenPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+  yield resetCustomization();
+});
 
 function contextMenuShown(aContextMenu) {
   let deferred = Promise.defer();

@@ -346,21 +346,6 @@ class PythonException(Exception):
     def __str__(self):
         return self.message
 
-def load_module_recursive(module, path):
-    """
-    Like __import__, but allow passing a custom path to search for modules.
-    """
-    oldsyspath = sys.path
-    sys.path = []
-    for p in path:
-        site.addsitedir(p)
-    sys.path.extend(oldsyspath)
-    try:
-        __import__(module)
-    except ImportError:
-        return
-    finally:
-        sys.path = oldsyspath
 
 class PythonJob(Job):
     """
@@ -380,16 +365,28 @@ class PythonJob(Job):
         # os.environ is a magic dictionary. Setting it to something else
         # doesn't affect the environment of subprocesses, so use clear/update
         oldenv = dict(os.environ)
+
+        # sys.path is adjusted for the entire lifetime of the command
+        # execution. This ensures any delayed imports will still work.
+        oldsyspath = list(sys.path)
         try:
             os.chdir(self.cwd)
             os.environ.clear()
             os.environ.update(self.env)
+
+            sys.path = []
+            for p in sys.path + self.pycommandpath:
+                site.addsitedir(p)
+            sys.path.extend(oldsyspath)
+
             if self.module not in sys.modules:
-                load_module_recursive(self.module,
-                                      sys.path + self.pycommandpath)
-            if self.module not in sys.modules:
-                print >>sys.stderr, "No module named '%s'" % self.module
-                return -127                
+                try:
+                    __import__(self.module)
+                except Exception as e:
+                    print >>sys.stderr, 'Error importing %s: %s' % (
+                        self.module, e)
+                    return -127
+
             m = sys.modules[self.module]
             if self.method not in m.__dict__:
                 print >>sys.stderr, "No method named '%s' in module %s" % (self.method, self.module)
@@ -415,10 +412,12 @@ class PythonJob(Job):
         finally:
             os.environ.clear()
             os.environ.update(oldenv)
+            sys.path = oldsyspath
             # multiprocessing exits via os._exit, make sure that all output
             # from command gets written out before that happens.
             sys.stdout.flush()
             sys.stderr.flush()
+
         return 0
 
 def job_runner(job):

@@ -32,7 +32,7 @@ public:
   };
 
   static BluetoothA2dpManager* Get();
-  ~BluetoothA2dpManager();
+  virtual ~BluetoothA2dpManager();
   void ResetA2dp();
   void ResetAvrcp();
 

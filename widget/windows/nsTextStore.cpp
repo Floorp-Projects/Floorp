@@ -264,7 +264,7 @@ GetRIIDNameStr(REFIID aRIID)
   key += str;
 
   nsAutoCString result;
-  PRUnichar buf[256];
+  wchar_t buf[256];
   if (WinUtils::GetRegistryKey(HKEY_CLASSES_ROOT, key.get(), nullptr,
                                buf, sizeof(buf))) {
     result = NS_ConvertUTF16toUTF8(buf);
@@ -3347,7 +3347,7 @@ nsTextStore::Initialize(void)
 
   if (sTsfThreadMgr && !sFlushTIPInputMessage) {
     sFlushTIPInputMessage = ::RegisterWindowMessageW(
-        NS_LITERAL_STRING("Flush TIP Input Message").get());
+        L"Flush TIP Input Message");
   }
 
   if (!sTsfThreadMgr) {

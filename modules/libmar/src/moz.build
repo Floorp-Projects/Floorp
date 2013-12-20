@@ -18,7 +18,7 @@ HOST_LIBRARY_NAME = 'hostmar'
 
 LIBRARY_NAME = 'mar'
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'mar_create.c',
     'mar_extract.c',
     'mar_read.c',

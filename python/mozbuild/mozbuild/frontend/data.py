@@ -24,7 +24,8 @@ from mozbuild.util import (
     shell_quote,
     StrictOrderingOnAppendList,
 )
-from .sandbox_symbols import compute_final_target
+import mozpack.path as mozpath
+from .sandbox_symbols import FinalTargetValue
 
 
 class TreeMetadata(object):
@@ -40,10 +41,12 @@ class TreeMetadata(object):
 class ReaderSummary(TreeMetadata):
     """A summary of what the reader did."""
 
-    def __init__(self, total_file_count, total_execution_time):
+    def __init__(self, total_file_count, total_sandbox_execution_time,
+        total_emitter_execution_time):
         TreeMetadata.__init__(self)
         self.total_file_count = total_file_count
-        self.total_execution_time = total_execution_time
+        self.total_sandbox_execution_time = total_sandbox_execution_time
+        self.total_emitter_execution_time = total_emitter_execution_time
 
 
 class SandboxDerived(TreeMetadata):
@@ -99,8 +102,6 @@ class DirectoryTraversal(SandboxDerived):
         'test_tool_dirs',
         'tier_dirs',
         'tier_static_dirs',
-        'external_make_dirs',
-        'parallel_external_make_dirs',
     )
 
     def __init__(self, sandbox):
@@ -113,8 +114,6 @@ class DirectoryTraversal(SandboxDerived):
         self.test_tool_dirs = []
         self.tier_dirs = OrderedDict()
         self.tier_static_dirs = OrderedDict()
-        self.external_make_dirs = []
-        self.parallel_external_make_dirs = []
 
 
 class BaseConfigSubstitution(SandboxDerived):
@@ -169,7 +168,7 @@ class XPIDLFile(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.source_path = source
-        self.basename = os.path.basename(source)
+        self.basename = mozpath.basename(source)
         self.module = module
 
 class Defines(SandboxDerived):
@@ -290,6 +289,20 @@ class GeneratedWebIDLFile(SandboxDerived):
 
         self.basename = path
 
+
+class ExampleWebIDLInterface(SandboxDerived):
+    """An individual WebIDL interface to generate."""
+
+    __slots__ = (
+        'name',
+    )
+
+    def __init__(self, sandbox, name):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.name = name
+
+
 class BaseProgram(SandboxDerived):
     """Sandbox container object for programs, which is a unicode string.
 
@@ -361,6 +374,10 @@ class TestManifest(SandboxDerived):
         # path is relative from the tests root directory.
         'installs',
 
+        # A list of pattern matching installs to perform. Entries are
+        # (base, pattern, dest).
+        'pattern_installs',
+
         # Where all files for this manifest flavor are installed in the unified
         # test package directory.
         'install_prefix',
@@ -393,13 +410,14 @@ class TestManifest(SandboxDerived):
         SandboxDerived.__init__(self, sandbox)
 
         self.path = path
-        self.directory = os.path.dirname(path)
+        self.directory = mozpath.dirname(path)
         self.manifest = manifest
         self.flavor = flavor
         self.install_prefix = install_prefix
         self.manifest_relpath = relpath
         self.dupe_manifest = dupe_manifest
         self.installs = {}
+        self.pattern_installs = []
         self.tests = []
         self.external_installs = set()
 
@@ -419,6 +437,23 @@ class LocalInclude(SandboxDerived):
 class GeneratedInclude(SandboxDerived):
     """Describes an individual generated include path."""
 
+    __slots__ = (
+        'path',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.path = path
+
+
+class JARManifest(SandboxDerived):
+    """Describes an individual JAR manifest file and how to process it.
+
+    This class isn't very useful for optimizing backends yet because we don't
+    capture defines. We can't capture defines safely until all of them are
+    defined in moz.build and not Makefile.in files.
+    """
     __slots__ = (
         'path',
     )
@@ -499,6 +534,6 @@ class InstallationTarget(SandboxDerived):
         """Returns whether or not the target is not derived from the default
         given xpiname and subdir."""
 
-        return compute_final_target(dict(
+        return FinalTargetValue(dict(
             XPI_NAME=self.xpiname,
             DIST_SUBDIR=self.subdir)) == self.target

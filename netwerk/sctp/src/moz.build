@@ -80,3 +80,5 @@ if CONFIG['OS_TARGET'] == 'Darwin':
 if CONFIG['OS_TARGET'] in ('Linux', 'Android'):
     # to make sure that in6_pktinfo gets defined on all distros
     DEFINES['_GNU_SOURCE'] = True
+
+NO_PGO = True # Don't PGO

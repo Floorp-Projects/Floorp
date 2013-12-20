@@ -8,6 +8,7 @@ TEST_DIRS += ['test']
 
 EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
+    'BrowserUITelemetry.jsm',
     'CharsetMenu.jsm',
     'ContentClick.jsm',
     'NetworkPrioritizer.jsm',

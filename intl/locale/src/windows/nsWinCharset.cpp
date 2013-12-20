@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "nsIPlatformCharset.h"
 #include "nsUConvPropertySearch.h"
@@ -72,7 +72,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   rv = nsWin32Locale::GetPlatformLocale(localeName, &localeAsLCID);
   if (NS_FAILED(rv)) { return rv; }
 
-  PRUnichar acp_name[6];
+  wchar_t acp_name[6];
   if (GetLocaleInfoW(localeAsLCID, LOCALE_IDEFAULTANSICODEPAGE, acp_name,
                      ArrayLength(acp_name))==0) {
     return NS_ERROR_FAILURE; 

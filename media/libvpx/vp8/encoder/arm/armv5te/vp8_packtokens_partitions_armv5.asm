@@ -12,7 +12,7 @@
     EXPORT |vp8cx_pack_tokens_into_partitions_armv5|
     IMPORT |vp8_validate_buffer_arm|
 
-    INCLUDE asm_enc_offsets.asm
+    INCLUDE vp8_asm_enc_offsets.asm
 
     ARM
     REQUIRE8
@@ -90,7 +90,6 @@ numparts_loop
     mov     r5, #255                    ; vp8_writer_range
     mvn     r3, #23                     ; vp8_writer_count
 
-    str     r2,  [r0, #vp8_writer_value]
     str     r2,  [r0, #vp8_writer_pos]
     str     r10, [r0, #vp8_writer_buffer]
 

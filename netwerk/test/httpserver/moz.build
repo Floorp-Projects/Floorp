@@ -16,3 +16,4 @@ EXTRA_COMPONENTS += [
     'httpd.js',
 ]
 
+JAR_MANIFESTS += ['jar.mn']

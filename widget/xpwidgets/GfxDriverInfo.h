@@ -6,7 +6,7 @@
 #ifndef __mozilla_widget_GfxDriverInfo_h__
 #define __mozilla_widget_GfxDriverInfo_h__
 
-#include "mozilla/Util.h" // ArrayLength
+#include "mozilla/ArrayUtils.h" // ArrayLength
 #include "nsString.h"
 
 // Macros for adding a blocklist item to the static list.

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "ManifestParser.h"
 
@@ -15,6 +15,7 @@
 #include <windows.h>
 #elif defined(MOZ_WIDGET_COCOA)
 #include <CoreServices/CoreServices.h>
+#include "nsCocoaFeatures.h"
 #elif defined(MOZ_WIDGET_GTK)
 #include <gtk/gtk.h>
 #endif
@@ -452,20 +453,18 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
 #if defined(XP_WIN)
   OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
   if (GetVersionEx(&info)) {
-    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+    nsTextFormatter::ssprintf(osVersion, MOZ_UTF16("%ld.%ld"),
                                          info.dwMajorVersion,
                                          info.dwMinorVersion);
   }
 #elif defined(MOZ_WIDGET_COCOA)
-  SInt32 majorVersion, minorVersion;
-  if ((Gestalt(gestaltSystemVersionMajor, &majorVersion) == noErr) &&
-      (Gestalt(gestaltSystemVersionMinor, &minorVersion) == noErr)) {
-    nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
-                                         majorVersion,
-                                         minorVersion);
-  }
-#elif defined(MOZ_WIDGET_GTK)
+  SInt32 majorVersion = nsCocoaFeatures::OSXVersionMajor();
+  SInt32 minorVersion = nsCocoaFeatures::OSXVersionMinor();
   nsTextFormatter::ssprintf(osVersion, NS_LITERAL_STRING("%ld.%ld").get(),
+                                       majorVersion,
+                                       minorVersion);
+#elif defined(MOZ_WIDGET_GTK)
+  nsTextFormatter::ssprintf(osVersion, MOZ_UTF16("%ld.%ld"),
                                        gtk_major_version,
                                        gtk_minor_version);
 #elif defined(MOZ_WIDGET_ANDROID)

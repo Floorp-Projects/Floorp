@@ -7,6 +7,10 @@
 #include "AndroidBridge.h"
 #include "Link.h"
 #include "nsIURI.h"
+#include "mozilla/Services.h"
+#include "nsIObserverService.h"
+
+#define NS_LINK_VISITED_EVENT_TOPIC "link-visited"
 
 using namespace mozilla;
 using mozilla::dom::Link;
@@ -78,11 +82,52 @@ nsAndroidHistory::UnregisterVisitedCallback(nsIURI *aURI, Link *aContent)
   return NS_OK;
 }
 
+void
+nsAndroidHistory::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
+  if (mRecentlyVisitedURIs.Length() < RECENTLY_VISITED_URI_SIZE) {
+    // Append a new element while the array is not full.
+    mRecentlyVisitedURIs.AppendElement(aURI);
+  } else {
+    // Otherwise, replace the oldest member.
+    mRecentlyVisitedURIsNextIndex %= RECENTLY_VISITED_URI_SIZE;
+    mRecentlyVisitedURIs.ElementAt(mRecentlyVisitedURIsNextIndex) = aURI;
+    mRecentlyVisitedURIsNextIndex++;
+  }
+}
+
+inline bool
+nsAndroidHistory::IsRecentlyVisitedURI(nsIURI* aURI) {
+  bool equals = false;
+  RecentlyVisitedArray::index_type i;
+  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
+    aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
+  }
+  return equals;
+}
+
 NS_IMETHODIMP
 nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
 {
   if (!aURI)
     return NS_OK;
+
+  // Silently return if URI is something we shouldn't add to DB.
+  bool canAdd;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
+  if (aLastVisitedURI) {
+    bool same;
+    rv = aURI->Equals(aLastVisitedURI, &same);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (same && IsRecentlyVisitedURI(aURI)) {
+      // Do not save refresh visits if we have visited this URI recently.
+      return NS_OK;
+    }
+  }
 
   if (!(aFlags & VisitFlags::TOP_LEVEL))
     return NS_OK;
@@ -94,16 +139,34 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
     return NS_OK;
 
   nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
+  rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
   GeckoAppShell::MarkURIVisited(uriString);
+
+  AppendToRecentlyVisitedURIs(aURI);
+
+  // Finally, notify that we've been visited.
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
+  if (obsService) {
+    obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nullptr);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
 {
+  // Silently return if URI is something we shouldn't add to DB.
+  bool canAdd;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
   if (AndroidBridge::Bridge()) {
     nsAutoCString uri;
     nsresult rv = aURI->GetSpec(uri);
@@ -142,5 +205,55 @@ nsAndroidHistory::Run()
       delete list;
     }
   }
+  return NS_OK;
+}
+
+// Filter out unwanted URIs such as "chrome:", "mailbox:", etc.
+//
+// The model is if we don't know differently then add which basically means
+// we are suppose to try all the things we know not to allow in and then if
+// we don't bail go on and allow it in.
+//
+// Logic ported from nsNavHistory::CanAddURI.
+
+NS_IMETHODIMP
+nsAndroidHistory::CanAddURI(nsIURI* aURI, bool* canAdd)
+{
+  NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG_POINTER(canAdd);
+
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // first check the most common cases (HTTP, HTTPS) to allow in to avoid most
+  // of the work
+  if (scheme.EqualsLiteral("http")) {
+    *canAdd = true;
+    return NS_OK;
+  }
+  if (scheme.EqualsLiteral("https")) {
+    *canAdd = true;
+    return NS_OK;
+  }
+
+  // now check for all bad things
+  if (scheme.EqualsLiteral("about") ||
+      scheme.EqualsLiteral("imap") ||
+      scheme.EqualsLiteral("news") ||
+      scheme.EqualsLiteral("mailbox") ||
+      scheme.EqualsLiteral("moz-anno") ||
+      scheme.EqualsLiteral("view-source") ||
+      scheme.EqualsLiteral("chrome") ||
+      scheme.EqualsLiteral("resource") ||
+      scheme.EqualsLiteral("data") ||
+      scheme.EqualsLiteral("wyciwyg") ||
+      scheme.EqualsLiteral("javascript") ||
+      scheme.EqualsLiteral("blob")) {
+    *canAdd = false;
+    return NS_OK;
+  }
+  *canAdd = true;
   return NS_OK;
 }

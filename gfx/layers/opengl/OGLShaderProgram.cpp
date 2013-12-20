@@ -5,7 +5,6 @@
 #include "OGLShaderProgram.h"
 #include <stdint.h>                     // for uint32_t
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPoint.h"                   // for gfxIntSize, gfxPoint, etc
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "nsAString.h"
@@ -449,9 +448,7 @@ ShaderProgramOGL::Activate()
   }
   NS_ASSERTION(HasInitialized(), "Attempting to activate a program that's not in use!");
   mGL->fUseProgram(mProgram);
-#if CHECK_CURRENT_PROGRAM
-  mGL->SetUserData(&sCurrentProgramKey, this);
-#endif
+
   // check and set the projection matrix
   if (mIsProjectionMatrixStale) {
     SetProjectionMatrix(mProjectionMatrix);

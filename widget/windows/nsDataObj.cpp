@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include <ole2.h>
 #include <shlobj.h>
@@ -1030,7 +1030,7 @@ nsDataObj :: GetFileDescriptorInternetShortcutA ( FORMATETC& aFE, STGMEDIUM& aST
   if (!CreateFilenameFromTextA(title, ".URL", 
                                fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
     nsXPIDLString untitled;
-    if (!GetLocalizedString(NS_LITERAL_STRING("noPageTitle").get(), untitled) ||
+    if (!GetLocalizedString(MOZ_UTF16("noPageTitle"), untitled) ||
         !CreateFilenameFromTextA(untitled, ".URL", 
                                  fileGroupDescA->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
       strcpy(fileGroupDescA->fgd[0].cFileName, "Untitled.URL");
@@ -1068,13 +1068,13 @@ nsDataObj :: GetFileDescriptorInternetShortcutW ( FORMATETC& aFE, STGMEDIUM& aST
 
   // get a valid filename in the following order: 1) from the page title, 
   // 2) localized string for an untitled page, 3) just use "Untitled.URL"
-  if (!CreateFilenameFromTextW(title, NS_LITERAL_STRING(".URL").get(), 
+  if (!CreateFilenameFromTextW(title, L".URL",
                                fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
     nsXPIDLString untitled;
-    if (!GetLocalizedString(NS_LITERAL_STRING("noPageTitle").get(), untitled) ||
-        !CreateFilenameFromTextW(untitled, NS_LITERAL_STRING(".URL").get(), 
+    if (!GetLocalizedString(MOZ_UTF16("noPageTitle"), untitled) ||
+        !CreateFilenameFromTextW(untitled, L".URL",
                                  fileGroupDescW->fgd[0].cFileName, NS_MAX_FILEDESCRIPTOR)) {
-      wcscpy(fileGroupDescW->fgd[0].cFileName, NS_LITERAL_STRING("Untitled.URL").get());
+      wcscpy(fileGroupDescW->fgd[0].cFileName, L"Untitled.URL");
     }
   }
 

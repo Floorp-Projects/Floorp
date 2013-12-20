@@ -407,7 +407,7 @@ enum ParseNodeKind
  * PNK_NULL,
  * PNK_THIS
  *
- * PNK_LEXICALSCOPE name    pn_op: JSOP_LEAVEBLOCK or JSOP_LEAVEBLOCKEXPR
+ * PNK_LEXICALSCOPE name    pn_op: JSOP_POPN or JSOP_POPNV
  *                          pn_objbox: block object in ObjectBox holder
  *                          pn_expr: block body
  * PNK_ARRAYCOMP    list    pn_count: 1
@@ -659,8 +659,6 @@ class ParseNode
 #define PND_USE2DEF_FLAGS (PND_ASSIGNED | PND_CLOSED)
 
 /* PN_LIST pn_xflags bits. */
-#define PNX_STRCAT      0x01            /* PNK_ADD list has string term */
-#define PNX_CANTFOLD    0x02            /* PNK_ADD list has unfoldable term */
 #define PNX_POPVAR      0x04            /* PNK_VAR or PNK_CONST last result
                                            needs popping */
 #define PNX_GROUPINIT   0x08            /* var [a, b] = [c, d]; unit list */

@@ -61,7 +61,7 @@ class SafepointReader
     CompactBufferReader stream_;
     uint32_t frameSlots_;
     uint32_t currentSlotChunk_;
-    uint32_t currentSlotChunkNumber_;
+    uint32_t nextSlotChunkNumber_;
     uint32_t osiCallPointOffset_;
     GeneralRegisterSet gcSpills_;
     GeneralRegisterSet valueSpills_;

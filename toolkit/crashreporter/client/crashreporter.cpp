@@ -36,7 +36,7 @@ int          gArgc;
 char**       gArgv;
 
 static auto_ptr<ofstream> gLogStream(nullptr);
-static string             gDumpFile;
+static string             gReporterDumpFile;
 static string             gExtraFile;
 
 static string kExtraDataExtension = ".extra";
@@ -323,8 +323,8 @@ void DeleteDump()
 {
   const char* noDelete = getenv("MOZ_CRASHREPORTER_NO_DELETE_DUMP");
   if (!noDelete || *noDelete == '\0') {
-    if (!gDumpFile.empty())
-      UIDeleteFile(gDumpFile);
+    if (!gReporterDumpFile.empty())
+      UIDeleteFile(gReporterDumpFile);
     if (!gExtraFile.empty())
       UIDeleteFile(gExtraFile);
   }
@@ -337,7 +337,7 @@ void SendCompleted(bool success, const string& serverResponse)
       DeleteDump();
     }
     else {
-      string directory = gDumpFile;
+      string directory = gReporterDumpFile;
       int slashpos = directory.find_last_of("/\\");
       if (slashpos < 2)
         return;
@@ -446,14 +446,14 @@ int main(int argc, char** argv)
     return 0;
 
   if (argc > 1) {
-    gDumpFile = argv[1];
+    gReporterDumpFile = argv[1];
   }
 
-  if (gDumpFile.empty()) {
+  if (gReporterDumpFile.empty()) {
     // no dump file specified, run the default UI
     UIShowDefaultUI();
   } else {
-    gExtraFile = GetExtraDataFilename(gDumpFile);
+    gExtraFile = GetExtraDataFilename(gReporterDumpFile);
     if (gExtraFile.empty()) {
       UIError(gStrings[ST_ERROR_BADARGUMENTS]);
       return 0;
@@ -514,13 +514,13 @@ int main(int argc, char** argv)
 
     OpenLogFile();
 
-    if (!UIFileExists(gDumpFile)) {
+    if (!UIFileExists(gReporterDumpFile)) {
       UIError(gStrings[ST_ERROR_DUMPFILEEXISTS]);
       return 0;
     }
 
     string pendingDir = gSettingsPath + UI_DIR_SEPARATOR + "pending";
-    if (!MoveCrashData(pendingDir, gDumpFile, gExtraFile)) {
+    if (!MoveCrashData(pendingDir, gReporterDumpFile, gExtraFile)) {
       return 0;
     }
 
@@ -575,7 +575,7 @@ int main(int argc, char** argv)
        return 0;
      }
 
-    if (!UIShowCrashUI(gDumpFile, queryParameters, sendURL, restartArgs))
+    if (!UIShowCrashUI(gReporterDumpFile, queryParameters, sendURL, restartArgs))
       DeleteDump();
   }
 

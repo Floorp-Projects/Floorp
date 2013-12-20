@@ -58,7 +58,7 @@ MoveEmitterARM::spillSlot() const
 Operand
 MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
 {
-    if (operand.isMemory() || operand.isEffectiveAddress() || operand.isFloatAddress()) {
+    if (operand.isMemoryOrEffectiveAddress()) {
         if (operand.base() != StackPointer) {
             JS_ASSERT(operand.disp() < 1024 && operand.disp() > -1024);
             return Operand(operand.base(), operand.disp());
@@ -100,7 +100,7 @@ MoveEmitterARM::tempReg()
 }
 
 void
-MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
+MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // There is some pattern:
     //   (A -> B)
@@ -108,7 +108,9 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
     //
     // This case handles (A -> B), which we reach first. We save B, then allow
     // the original move to continue.
-    if (kind == Move::DOUBLE) {
+    switch (type) {
+      case MoveOp::FLOAT32:
+      case MoveOp::DOUBLE:
         if (to.isMemory()) {
             FloatRegister temp = ScratchFloatReg;
             masm.ma_vldr(toOperand(to, true), temp);
@@ -116,7 +118,9 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
         } else {
             masm.ma_vstr(to.floatReg(), cycleSlot());
         }
-    } else {
+        break;
+      case MoveOp::INT32:
+      case MoveOp::GENERAL:
         // an non-vfp value
         if (to.isMemory()) {
             Register temp = tempReg();
@@ -130,11 +134,14 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, Move:
             }
             masm.ma_str(to.reg(), cycleSlot());
         }
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
     }
 }
 
 void
-MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Move::Kind kind)
+MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type)
 {
     // There is some pattern:
     //   (A -> B)
@@ -142,7 +149,9 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
     //
     // This case handles (B -> A), which we reach last. We emit a move from the
     // saved value of B, to A.
-    if (kind == Move::DOUBLE) {
+    switch (type) {
+      case MoveOp::FLOAT32:
+      case MoveOp::DOUBLE:
         if (to.isMemory()) {
             FloatRegister temp = ScratchFloatReg;
             masm.ma_vldr(cycleSlot(), temp);
@@ -150,7 +159,9 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
         } else {
             masm.ma_vldr(cycleSlot(), to.floatReg());
         }
-    } else {
+        break;
+      case MoveOp::INT32:
+      case MoveOp::GENERAL:
         if (to.isMemory()) {
             Register temp = tempReg();
             masm.ma_ldr(cycleSlot(), temp);
@@ -162,6 +173,9 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
             }
             masm.ma_ldr(cycleSlot(), to.reg());
         }
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
     }
 }
 
@@ -193,7 +207,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
             MOZ_ASSUME_UNREACHABLE("strange move!");
         }
     } else if (to.isGeneralReg()) {
-        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        JS_ASSERT(from.isMemoryOrEffectiveAddress());
         if (from.isMemory())
             masm.ma_ldr(toOperand(from, false), to.reg());
         else
@@ -202,13 +216,36 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
         // Memory to memory gpr move.
         Register reg = tempReg();
 
-        JS_ASSERT(from.isMemory() || from.isEffectiveAddress());
+        JS_ASSERT(from.isMemoryOrEffectiveAddress());
         if (from.isMemory())
             masm.ma_ldr(toOperand(from, false), reg);
         else
             masm.ma_add(from.base(), Imm32(from.disp()), reg);
         JS_ASSERT(to.base() != reg);
         masm.ma_str(reg, toOperand(to, false));
+    }
+}
+
+void
+MoveEmitterARM::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
+{
+    if (from.isFloatReg()) {
+        if (to.isFloatReg())
+            masm.ma_vmov_f32(from.floatReg(), to.floatReg());
+        else
+            masm.ma_vstr(VFPRegister(from.floatReg()).singleOverlay(),
+                         toOperand(to, true));
+    } else if (to.isFloatReg()) {
+        masm.ma_vldr(toOperand(from, true),
+                     VFPRegister(to.floatReg()).singleOverlay());
+    } else {
+        // Memory to memory move.
+        JS_ASSERT(from.isMemory());
+        FloatRegister reg = ScratchFloatReg;
+        masm.ma_vldr(toOperand(from, true),
+                     VFPRegister(reg).singleOverlay());
+        masm.ma_vstr(VFPRegister(reg).singleOverlay(),
+                     toOperand(to, true));
     }
 }
 
@@ -223,7 +260,7 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
     } else if (to.isFloatReg()) {
         masm.ma_vldr(toOperand(from, true), to.floatReg());
     } else {
-        // Memory to memory float move.
+        // Memory to memory move.
         JS_ASSERT(from.isMemory());
         FloatRegister reg = ScratchFloatReg;
         masm.ma_vldr(toOperand(from, true), reg);
@@ -232,26 +269,38 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterARM::emit(const Move &move)
+MoveEmitterARM::emit(const MoveOp &move)
 {
     const MoveOperand &from = move.from();
     const MoveOperand &to = move.to();
 
-    if (move.inCycle()) {
-        if (inCycle_) {
-            completeCycle(from, to, move.kind());
-            inCycle_ = false;
-            return;
-        }
+    if (move.isCycleEnd()) {
+        JS_ASSERT(inCycle_);
+        completeCycle(from, to, move.type());
+        inCycle_ = false;
+        return;
+    }
 
-        breakCycle(from, to, move.kind());
+    if (move.isCycleBegin()) {
+        JS_ASSERT(!inCycle_);
+        breakCycle(from, to, move.endCycleType());
         inCycle_ = true;
     }
 
-    if (move.kind() == Move::DOUBLE)
+    switch (move.type()) {
+      case MoveOp::FLOAT32:
+        emitFloat32Move(from, to);
+        break;
+      case MoveOp::DOUBLE:
         emitDoubleMove(from, to);
-    else
+        break;
+      case MoveOp::INT32:
+      case MoveOp::GENERAL:
         emitMove(from, to);
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unexpected move type");
+    }
 }
 
 void

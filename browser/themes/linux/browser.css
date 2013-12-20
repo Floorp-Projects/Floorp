@@ -510,6 +510,11 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   transition: @forwardTransitionLength@ ease-out;
 }
 
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 /* tabview button */
 
 #tabview-button,
@@ -698,6 +703,10 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   margin-bottom: 0;
   -moz-margin-start: 0;
   color: GrayText;
+}
+
+#search-container {
+  min-width: calc(54px + 11ch);
 }
 
 %include ../shared/identity-block.inc.css
@@ -1830,7 +1839,7 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customizing] #tab-view-deck {
+#main-window[customize-entered] #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
                     linear-gradient(to bottom, #bcbcbc, #b5b5b5);

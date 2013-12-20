@@ -667,6 +667,13 @@ this.USIM_TAG_NAME[ICC_USIM_EFUID_TAG] = "uid";
 this.USIM_TAG_NAME[ICC_USIM_EFEMAIL_TAG] = "email";
 this.USIM_TAG_NAME[ICC_USIM_EFCCP1_TAG] = "ccp1";
 
+// Error message for ICC contact.
+this.CONTACT_ERR_REQUEST_NOT_SUPPORTED = GECKO_ERROR_REQUEST_NOT_SUPPORTED;
+this.CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED = "ContactTypeNotSupported";
+this.CONTACT_ERR_FIELD_NOT_SUPPORTED = "FieldNotSupported";
+this.CONTACT_ERR_NO_FREE_RECORD_FOUND = "NoFreeRecordFound";
+this.CONTACT_ERR_CANNOT_ACCESS_PHONEBOOK = "CannotAccessPhoneBook";
+
 // CDMA IMSI_M's byte const.
 // 3GPP2 C.S0065 Sec. 5.2.2
 this.CSIM_IMSI_M_MIN2_BYTE = 1;
@@ -1199,6 +1206,7 @@ this.GECKO_ICC_SERVICES = {
     PNN: 51,
     OPL: 52,
     MDN: 53,
+    MWIS: 54,
     SPDI: 56
   },
   usim: {
@@ -1214,6 +1222,7 @@ this.GECKO_ICC_SERVICES = {
     PNN: 45,
     OPL: 46,
     MDN: 47,
+    MWIS: 48,
     SPDI: 51
   },
   ruim: {
@@ -2754,9 +2763,10 @@ this.PDU_CDMA_MSG_TYPE_BROADCAST = 0x01;  // Broadcast
 this.PDU_CDMA_MSG_TYPE_ACK = 0x02;        // Acknowledge
 
 // SMS Teleservice Identitifier, as defined in 3GPP2 N.S0005, Table 175
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS = 0x1002;   // SMS
-this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;  // Wireless Enhanced Messaging Teleservice
-                                                  // required for fragmented SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_SMS  = 0x1002;   // SMS
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WAP  = 0x1004;   // WAP
+this.PDU_CDMA_MSG_TELESERIVCIE_ID_WEMT = 0x1005;   // Wireless Enhanced Messaging Teleservice
+                                                   // required for fragmented SMS
 
 // SMS Service Category, as defined in 3GPP2 C.R1001-D, Table 9.3.1-1
 this.PDU_CDMA_MSG_CATEGORY_UNSPEC = 0x00; // Unknown/Unspecified

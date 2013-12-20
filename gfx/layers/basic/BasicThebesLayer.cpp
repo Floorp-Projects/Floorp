@@ -156,9 +156,9 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
                            void* aCallbackData)
 {
   if (!mContentClient) {
-    // we pass a null pointer for the Forwarder argument, which means
-    // this will not have a ContentHost on the other side.
-    mContentClient = new ContentClientBasic(nullptr, BasicManager());
+    // This client will have a null Forwarder, which means it will not have
+    // a ContentHost on the other side.
+    mContentClient = new ContentClientBasic();
   }
 
   if (!BasicManager()->IsRetained()) {

@@ -1485,7 +1485,7 @@ nsHttpChannel::PromptTempRedirect()
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLString messageString;
-    rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("RepostFormData").get(), getter_Copies(messageString));
+    rv = stringBundle->GetStringFromName(MOZ_UTF16("RepostFormData"), getter_Copies(messageString));
     // GetStringFromName can return NS_OK and nullptr messageString.
     if (NS_SUCCEEDED(rv) && messageString) {
         bool repost = false;
@@ -4652,9 +4652,16 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIURI *uri,
 
     if (NS_FAILED(rv)) {
         Cancel(rv);
-        DoNotifyListener();
+        // Calling OnStart/OnStop synchronously here would mean doing it before
+        // returning from AsyncOpen which is a contract violation. Do it async.
+        nsRefPtr<nsRunnableMethod<HttpBaseChannel> > event =
+            NS_NewRunnableMethod(this, &nsHttpChannel::DoNotifyListener);
+        rv = NS_DispatchToCurrentThread(event);
+        if (NS_FAILED(rv)) {
+            NS_WARNING("Failed To Dispatch DoNotifyListener");
+        }
     }
-    return NS_OK;
+    return rv;
 }
 
 //-----------------------------------------------------------------------------

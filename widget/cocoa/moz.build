@@ -53,6 +53,7 @@ UNIFIED_SOURCES += [
     'nsToolkit.mm',
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
+    'OSXNotificationCenter.mm',
     'WidgetTraceEvent.mm',
 ]
 
@@ -75,6 +76,6 @@ LOCAL_INCLUDES += [
     '../xpwidgets',
     '/layout/forms',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]
 

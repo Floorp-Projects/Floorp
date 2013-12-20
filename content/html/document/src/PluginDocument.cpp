@@ -44,7 +44,7 @@ public:
   virtual bool CanSavePresentation(nsIRequest *aNewRequest);
 
   const nsCString& GetType() const { return mMimeType; }
-  nsIContent*      GetPluginContent() { return mPluginContent; }
+  Element*         GetPluginContent() { return mPluginContent; }
 
   void StartLayout() { MediaDocument::StartLayout(); }
 
@@ -52,7 +52,7 @@ public:
 protected:
   nsresult CreateSyntheticPluginDocument();
 
-  nsCOMPtr<nsIContent>                     mPluginContent;
+  nsCOMPtr<Element>                        mPluginContent;
   nsRefPtr<MediaDocumentStreamListener>    mStreamListener;
   nsCString                                mMimeType;
 };
@@ -165,7 +165,7 @@ PluginDocument::StartDocumentLoad(const char*         aCommand,
   nsCOMPtr<nsIDocShellTreeItem> dsti (do_QueryInterface(aContainer));
   if (dsti) {
     bool isMsgPane = false;
-    dsti->NameEquals(NS_LITERAL_STRING("messagepane").get(), &isMsgPane);
+    dsti->NameEquals(MOZ_UTF16("messagepane"), &isMsgPane);
     if (isMsgPane) {
       return NS_ERROR_FAILURE;
     }

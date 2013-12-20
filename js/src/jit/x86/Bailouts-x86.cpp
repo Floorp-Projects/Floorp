@@ -23,8 +23,8 @@ namespace jit {
 class BailoutStack
 {
     uintptr_t frameClassId_;
-    double    fpregs_[FloatRegisters::Total];
-    uintptr_t regs_[Registers::Total];
+    mozilla::Array<double, FloatRegisters::Total> fpregs_;
+    mozilla::Array<uintptr_t, Registers::Total> regs_;
     union {
         uintptr_t frameSize_;
         uintptr_t tableOffset_;
@@ -86,7 +86,7 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     // Compute the snapshot offset from the bailout ID.
     JitActivation *activation = activations.activation()->asJit();
     JSRuntime *rt = activation->compartment()->runtimeFromMainThread();
-    IonCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
+    JitCode *code = rt->jitRuntime()->getBailoutTable(bailout->frameClass());
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 

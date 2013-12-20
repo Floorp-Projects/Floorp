@@ -6,6 +6,7 @@
 #ifndef EncodedFrameContainer_H_
 #define EncodedFrameContainer_H_
 
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -51,6 +52,8 @@ public:
     P_FRAME,      // predicted frame
     B_FRAME,      // bidirectionally predicted frame
     AUDIO_FRAME,  // audio frame
+    AAC_CSD,      // AAC codec specific data
+    AVC_CSD,      // AVC codec specific data
     UNKNOW        // FrameType not set
   };
   const nsTArray<uint8_t>& GetFrameData() const

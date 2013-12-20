@@ -11,7 +11,7 @@
 namespace MPAPI {
 
 enum ColorFormat {
-  YCbCr,
+  I420,
   RGB565
 };
 

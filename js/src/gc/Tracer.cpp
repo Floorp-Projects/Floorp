@@ -153,8 +153,8 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         name = "lazyscript";
         break;
 
-      case JSTRACE_IONCODE:
-        name = "ioncode";
+      case JSTRACE_JITCODE:
+        name = "jitcode";
         break;
 
       case JSTRACE_SHAPE:
@@ -224,12 +224,12 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           case JSTRACE_SCRIPT:
           {
             JSScript *script = static_cast<JSScript *>(thing);
-            JS_snprintf(buf, bufsize, " %s:%u", script->filename(), unsigned(script->lineno));
+            JS_snprintf(buf, bufsize, " %s:%u", script->filename(), unsigned(script->lineno()));
             break;
           }
 
           case JSTRACE_LAZY_SCRIPT:
-          case JSTRACE_IONCODE:
+          case JSTRACE_JITCODE:
           case JSTRACE_SHAPE:
           case JSTRACE_BASE_SHAPE:
           case JSTRACE_TYPE_OBJECT:

@@ -633,6 +633,10 @@ menuitem.bookmark-item {
   opacity: 0;
 }
 
+@conditionalForwardWithUrlbar@ > #forward-button[occluded-by-urlbar] {
+  visibility: hidden;
+}
+
 #back-button {
   padding-top: 3px !important;
   padding-bottom: 3px !important;
@@ -686,6 +690,11 @@ menuitem.bookmark-item {
   box-shadow: 0 0 0 1px hsla(210,54%,20%,.55),
               0 1px 0 hsla(210,54%,20%,.65) !important;
   transition: none;
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
 }
 
 .unified-nav-back[_moz-menuactive]:-moz-locale-dir(ltr),
@@ -836,6 +845,16 @@ menuitem.bookmark-item {
   color: black;
 }
 
+#urlbar:-moz-lwtheme:hover:not([focused]):not([readonly]),
+.searchbar-textbox:-moz-lwtheme:hover:not([focused]) {
+  background-color: rgba(255,255,255,.9);
+}
+
+#urlbar:-moz-lwtheme[focused]:not([readonly]),
+.searchbar-textbox:-moz-lwtheme[focused] {
+  background-color: white;
+}
+
 @conditionalForwardWithUrlbar@ > #urlbar-wrapper {
   padding-left: @conditionalForwardWithUrlbarWidth@px;
   -moz-margin-start: -@conditionalForwardWithUrlbarWidth@px;
@@ -876,8 +895,10 @@ menuitem.bookmark-item {
   transition-delay: 100s;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar,
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar {
-  /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
+  /* when switching tabs, or when not hovered anymore, trigger a new transition
+   * to hide the forward button immediately */
   margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
 }
 
@@ -891,11 +912,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 .searchbar-textbox:-moz-lwtheme > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input::-moz-placeholder {
   opacity: 1.0;
   color: #777;
-}
-
-#urlbar:-moz-lwtheme[focused="true"],
-.searchbar-textbox:-moz-lwtheme[focused="true"] {
-  background-color: white;
 }
 
 #urlbar-container {
@@ -956,6 +972,10 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   color: GrayText;
 }
 
+#search-container {
+  min-width: calc(54px + 11ch);
+}
+
 /* identity box */
 
 #identity-box {
@@ -997,11 +1017,13 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
   transition-delay: 100s;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr),
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-left: 5.01px;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   /* when not hovered anymore, trigger a new non-delayed transition to react to the forward button hiding */
   padding-right: 5.01px;
@@ -2216,6 +2238,19 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   display: none;
 }
 
+#switch-to-metro-button[cui-areatype="toolbar"] {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph.png);
+}
+
+#switch-to-metro-button[cui-areatype="toolbar"]:-moz-lwtheme-brighttext {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph-inverted.png);
+}
+
+#switch-to-metro-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #switch-to-metro-button {
+  list-style-image: url(chrome://browser/skin/Metro_Glyph-menuPanel.png);
+}
+
 .toolbarbutton-badge-container {
   margin: 0;
   padding: 0;
@@ -2383,7 +2418,7 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customizing] {
+#main-window[customize-entered] {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
 }

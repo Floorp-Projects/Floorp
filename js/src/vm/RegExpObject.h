@@ -15,6 +15,7 @@
 
 #include "gc/Marking.h"
 #include "gc/Zone.h"
+#include "vm/Shape.h"
 #if ENABLE_YARR_JIT
 #include "yarr/YarrJIT.h"
 #else
@@ -317,6 +318,13 @@ class RegExpCompartment
     typedef HashSet<RegExpShared *, DefaultHasher<RegExpShared*>, RuntimeAllocPolicy> PendingSet;
     PendingSet inUse_;
 
+    /*
+     * This is the template object where the result of re.exec() is based on,
+     * if there is a result. This is used in CreateRegExpMatchResult to set
+     * the input/index properties faster.
+     */
+    HeapPtrObject matchResultTemplateObject_;
+
   public:
     RegExpCompartment(JSRuntime *rt);
     ~RegExpCompartment();
@@ -329,6 +337,9 @@ class RegExpCompartment
 
     /* Like 'get', but compile 'maybeOpt' (if non-null). */
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
+
+    /* Get or create template object used to base the result of .exec() on. */
+    HeapPtrObject &getOrCreateMatchResultTemplateObject(JSContext *cx);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
@@ -438,12 +449,18 @@ class RegExpObject : public JSObject
   private:
     friend class RegExpObjectBuilder;
 
+    /* For access to assignInitialShape. */
+    friend bool
+    EmptyShape::ensureInitialCustomShape<RegExpObject>(ExclusiveContext *cx,
+                                                       Handle<RegExpObject*> obj);
+
     /*
      * Compute the initial shape to associate with fresh RegExp objects,
      * encoding their initial properties. Return the shape after
-     * changing this regular expression object's last property to it.
+     * changing |obj|'s last property to it.
      */
-    Shape *assignInitialShape(ExclusiveContext *cx);
+    static Shape *
+    assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> obj);
 
     bool init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags);
 

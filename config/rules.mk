@@ -129,7 +129,7 @@ check::
 
 cppunittests-remote: DM_TRANS?=adb
 cppunittests-remote:
-	@if [ "${TEST_DEVICE}" != "" -o "$(DM_TRANS)" = "adb" ]; then \
+	@if [ '${TEST_DEVICE}' != '' -o '$(DM_TRANS)' = 'adb' ]; then \
 		$(PYTHON) -u $(topsrcdir)/testing/remotecppunittests.py \
 			--xre-path=$(DEPTH)/dist/bin \
 			--localLib=$(DEPTH)/dist/$(MOZ_APP_NAME) \
@@ -137,7 +137,7 @@ cppunittests-remote:
 			--deviceIP=${TEST_DEVICE} \
 			$(subst .cpp,$(BIN_SUFFIX),$(CPP_UNIT_TESTS)) $(EXTRA_TEST_ARGS); \
 	else \
-		echo "please prepare your host with environment variables for TEST_DEVICE"; \
+		echo 'please prepare your host with environment variables for TEST_DEVICE'; \
 	fi
 
 endif # COMPILE_ENVIRONMENT
@@ -364,13 +364,13 @@ ifdef MOZ_UPDATE_XTERM
 # Its good not to have a newline at the end of the titlebar string because it
 # makes the make -s output easier to read.  Echo -n does not work on all
 # platforms, but we can trick printf into doing it.
-UPDATE_TITLE = printf "\033]0;%s in %s\007" $(1) $(shell $(BUILD_TOOLS)/print-depth-path.sh)/$(2) ;
+UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(relativesrcdir)/$(2) ;
 endif
 
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
-@echo "BUILDSTATUS $1"
+@echo 'BUILDSTATUS $1'
 
 endef
 endif
@@ -642,7 +642,7 @@ tools::
 endif
 
 ##############################################
-ifndef NO_PROFILE_GUIDED_OPTIMIZE
+ifneq (1,$(NO_PROFILE_GUIDED_OPTIMIZE))
 ifdef MOZ_PROFILE_USE
 ifeq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 # When building with PGO, we have to make sure to re-link
@@ -743,22 +743,22 @@ ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(EXPAND_LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
-		if test -f "$(srcdir)/$@.manifest"; then \
-			echo "Embedding manifest from $(srcdir)/$@.manifest and $@.manifest"; \
-			mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		if test -f '$(srcdir)/$@.manifest'; then \
+			echo 'Embedding manifest from $(srcdir)/$@.manifest and $@.manifest'; \
+			mt.exe -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
-			echo "Embedding manifest from $@.manifest"; \
+			echo 'Embedding manifest from $@.manifest'; \
 			mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
-	elif test -f "$(srcdir)/$@.manifest"; then \
-		echo "Embedding manifest from $(srcdir)/$@.manifest"; \
-		mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" -OUTPUTRESOURCE:$@\;1; \
+	elif test -f '$(srcdir)/$@.manifest'; then \
+		echo 'Embedding manifest from $(srcdir)/$@.manifest'; \
+		mt.exe -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 ifdef MOZ_PROFILE_GENERATE
 # touch it a few seconds into the future to work around FAT's
 # 2-second granularity
-	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
+	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
 endif
 else # !WINNT || GNU_CC
 	$(EXPAND_CCC) -o $@ $(CXXFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(WRAP_LDFLAGS) $(LIBS_DIR) $(LIBS) $(MOZ_GLUE_PROGRAM_LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE) $(STLPORT_LIBS)
@@ -778,16 +778,16 @@ ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 	$(EXPAND_LIBS_EXEC) -- $(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
-		if test -f "$(srcdir)/$@.manifest"; then \
-			echo "Embedding manifest from $(srcdir)/$@.manifest and $@.manifest"; \
-			mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" $@.manifest -OUTPUTRESOURCE:$@\;1; \
+		if test -f '$(srcdir)/$@.manifest'; then \
+			echo 'Embedding manifest from $(srcdir)/$@.manifest and $@.manifest'; \
+			mt.exe -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
-			echo "Embedding manifest from $@.manifest"; \
+			echo 'Embedding manifest from $@.manifest'; \
 			mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
-	elif test -f "$(srcdir)/$@.manifest"; then \
-		echo "Embedding manifest from $(srcdir)/$@.manifest"; \
-		mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" -OUTPUTRESOURCE:$@\;1; \
+	elif test -f '$(srcdir)/$@.manifest'; then \
+		echo 'Embedding manifest from $(srcdir)/$@.manifest'; \
+		mt.exe -NOLOGO -MANIFEST '$(win_srcdir)/$@.manifest' -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 else
@@ -932,7 +932,7 @@ ifdef EMBED_MANIFEST_AT
 endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
 ifdef MOZ_PROFILE_GENERATE
-	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
+	touch -t `date +%Y%m%d%H%M.%S -d 'now+5seconds'` pgo.relink
 endif
 endif	# WINNT && !GCC
 	@$(RM) foodummyfilefoo $(DELETE_AFTER_LINK)
@@ -949,14 +949,14 @@ _MDDEPFILE = $(MDDEPDIR)/$(@F).pp
 
 define MAKE_DEPS_AUTO_CC
 if test -d $(@D); then \
-	echo "Building deps for $< using Sun Studio cc"; \
+	echo 'Building deps for $< using Sun Studio cc'; \
 	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
 	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
 endef
 define MAKE_DEPS_AUTO_CXX
 if test -d $(@D); then \
-	echo "Building deps for $< using Sun Studio CC"; \
+	echo 'Building deps for $< using Sun Studio CC'; \
 	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
 	$(PYTHON) $(topsrcdir)/build/unix/add_phony_targets.py $(_MDDEPFILE) ; \
 fi
@@ -1103,8 +1103,8 @@ ifeq ($(HOST_OS_ARCH),WINNT)
 #  could be a file or a non-existent path, we cannot call 'pwd -W' directly
 #  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
 #  on it, then merge with the rest of the path.
-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\1|")
-non-root-path = $(shell echo $(1) | sed -e "s|\(/[^/]*\)/\?\(.*\)|\2|")
+root-path = $(shell echo $(1) | sed -e 's|\(/[^/]*\)/\?\(.*\)|\1|')
+non-root-path = $(shell echo $(1) | sed -e 's|\(/[^/]*\)/\?\(.*\)|\2|')
 normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(patsubst %/,%,$(shell cd $(call root-path,$(1)) && pwd -W))/$(call non-root-path,$(1)),$(1)))
 else
 normalizepath = $(1)
@@ -1178,8 +1178,8 @@ INSTALL_TARGETS += _XPT_NAME
 
 ifndef NO_INTERFACES_MANIFEST
 libs:: $(call mkdir_deps,$(FINAL_TARGET)/components)
-	$(call py_action,buildlist,$(FINAL_TARGET)/components/interfaces.manifest "interfaces $(XPT_NAME)")
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "manifest components/interfaces.manifest")
+	$(call py_action,buildlist,$(FINAL_TARGET)/components/interfaces.manifest 'interfaces $(XPT_NAME)')
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'manifest components/interfaces.manifest')
 endif
 endif
 
@@ -1215,7 +1215,7 @@ endif
 EXTRA_MANIFESTS = $(filter %.manifest,$(EXTRA_COMPONENTS) $(EXTRA_PP_COMPONENTS))
 ifneq (,$(EXTRA_MANIFESTS))
 libs:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest $(patsubst %,"manifest components/%",$(notdir $(EXTRA_MANIFESTS))))
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest $(patsubst %,'manifest components/%',$(notdir $(EXTRA_MANIFESTS))))
 endif
 
 ################################################################################
@@ -1284,8 +1284,6 @@ endif # SDK_BINARY
 ################################################################################
 # CHROME PACKAGING
 
-JAR_MANIFEST := $(srcdir)/jar.mn
-
 chrome::
 	$(MAKE) realchrome
 	$(LOOP_OVER_PARALLEL_DIRS)
@@ -1294,7 +1292,7 @@ chrome::
 
 $(FINAL_TARGET)/chrome: $(call mkdir_deps,$(FINAL_TARGET)/chrome)
 
-ifneq (,$(wildcard $(JAR_MANIFEST)))
+ifneq (,$(JAR_MANIFEST))
 ifndef NO_DIST_INSTALL
 
 ifdef XPI_NAME
@@ -1302,7 +1300,7 @@ ifdef XPI_ROOT_APPID
 # For add-on packaging we may specify that an application
 # sub-dir should be added to the root chrome manifest with
 # a specific application id.
-MAKE_JARS_FLAGS += --root-manifest-entry-appid="$(XPI_ROOT_APPID)"
+MAKE_JARS_FLAGS += --root-manifest-entry-appid='$(XPI_ROOT_APPID)'
 endif
 
 # if DIST_SUBDIR is defined but XPI_ROOT_APPID is not there's
@@ -1320,6 +1318,13 @@ libs realchrome:: $(FINAL_TARGET)/chrome
 	  $(MAKE_JARS_FLAGS) $(XULPPFLAGS) $(DEFINES) $(ACDEFINES) \
 	  $(JAR_MANIFEST))
 
+endif
+
+# This is a temporary check to ensure patches relying on the old behavior
+# of silently picking up jar.mn files continue to work.
+else # No JAR_MANIFEST
+ifneq (,$(wildcard $(srcdir)/jar.mn))
+$(error $(srcdir) contains a jar.mn file but this file is not declared in a JAR_MANIFESTS variable in a moz.build file)
 endif
 endif
 
@@ -1339,34 +1344,34 @@ ifneq ($(XPI_PKGNAME),)
 tools realchrome::
 ifdef STRIP_XPI
 ifndef MOZ_DEBUG
-	@echo "Stripping $(XPI_PKGNAME) package directory..."
+	@echo 'Stripping $(XPI_PKGNAME) package directory...'
 	@echo $(FINAL_TARGET)
 	@cd $(FINAL_TARGET) && find . ! -type d \
-			! -name "*.js" \
-			! -name "*.xpt" \
-			! -name "*.gif" \
-			! -name "*.jpg" \
-			! -name "*.png" \
-			! -name "*.xpm" \
-			! -name "*.txt" \
-			! -name "*.rdf" \
-			! -name "*.sh" \
-			! -name "*.properties" \
-			! -name "*.dtd" \
-			! -name "*.html" \
-			! -name "*.xul" \
-			! -name "*.css" \
-			! -name "*.xml" \
-			! -name "*.jar" \
-			! -name "*.dat" \
-			! -name "*.tbl" \
-			! -name "*.src" \
-			! -name "*.reg" \
+			! -name '*.js' \
+			! -name '*.xpt' \
+			! -name '*.gif' \
+			! -name '*.jpg' \
+			! -name '*.png' \
+			! -name '*.xpm' \
+			! -name '*.txt' \
+			! -name '*.rdf' \
+			! -name '*.sh' \
+			! -name '*.properties' \
+			! -name '*.dtd' \
+			! -name '*.html' \
+			! -name '*.xul' \
+			! -name '*.css' \
+			! -name '*.xml' \
+			! -name '*.jar' \
+			! -name '*.dat' \
+			! -name '*.tbl' \
+			! -name '*.src' \
+			! -name '*.reg' \
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
 endif
 endif
-	@echo "Packaging $(XPI_PKGNAME).xpi..."
+	@echo 'Packaging $(XPI_PKGNAME).xpi...'
 	cd $(FINAL_TARGET) && $(ZIP) -qr ../$(XPI_PKGNAME).xpi *
 endif
 
@@ -1376,8 +1381,8 @@ $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
 endif
 
 tools::
-	$(RM) -r "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
-	$(NSINSTALL) -D "$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)"
+	$(RM) -r '$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
+	$(NSINSTALL) -D '$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID)'
 	$(call copy_dir,$(FINAL_TARGET),$(DIST)/bin$(DIST_SUBDIR:%=/%)/extensions/$(INSTALL_EXTENSION_ID))
 
 endif
@@ -1499,11 +1504,11 @@ install_targets_sanity = $(if $(filter-out $(notdir $@),$(notdir $(<))),$(error 
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_FILES_$(tier)))):
 	$(install_targets_sanity)
-	$(call install_cmd,$(IFLAGS1) "$<" "$(@D)")
+	$(call install_cmd,$(IFLAGS1) '$<' '$(@D)')
 
 $(sort $(foreach tier,$(INSTALL_TARGETS_TIERS),$(INSTALL_TARGETS_EXECUTABLES_$(tier)))):
 	$(install_targets_sanity)
-	$(call install_cmd,$(IFLAGS2) "$<" "$(@D)")
+	$(call install_cmd,$(IFLAGS2) '$<' '$(@D)')
 
 ################################################################################
 # Preprocessing rules
@@ -1564,8 +1569,8 @@ $(foreach tier,$(PP_TARGETS_TIERS), \
 PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier))))
 $(PP_TARGETS_ALL_RESULTS):
 	$(if $(filter-out $(notdir $@),$(notdir $(<:.in=))),$(error Looks like $@ has an unexpected dependency on $< which breaks PP_TARGETS))
-	$(RM) "$@"
-	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) "$<" -o "$@")
+	$(RM) '$@'
+	$(call py_action,preprocessor,--depend $(MDDEPDIR)/$(@F).pp $(PP_TARGET_FLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) '$<' -o '$@')
 
 # The depfile is based on the filename, and we don't want conflicts. So check
 # there's only one occurrence of any given filename in PP_TARGETS_ALL_RESULTS.

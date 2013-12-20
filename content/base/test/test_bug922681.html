@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=922681
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 922681</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  function testInnerHTMLParserInsertionMode() {
+
+    function testInnerHTML(el, input, output) {
+        el.innerHTML = input;
+        is(el.innerHTML, output, el.tagName.toLowerCase() + ': "' + input + '"');
+    }
+
+    var c;
+
+    c = document.createElement("html");
+    testInnerHTML(c, "", "<head></head><body></body>");
+    testInnerHTML(c, "xyz", "<head></head><body>xyz</body>");
+    testInnerHTML(c, "<input>", "<head></head><body><input></body>");
+
+    c = document.createElement("colgroup");
+    testInnerHTML(c, "abcdef", "");
+    testInnerHTML(c, "", "");
+    testInnerHTML(c, "\n", "\n");
+    testInnerHTML(c, "<col>", "<col>");
+
+    c = document.createElement("select");
+    testInnerHTML(c, "123", "123");
+    testInnerHTML(c, "<input>", "");
+    testInnerHTML(c, "\0", "");
+    testInnerHTML(c, "<col>", "");
+    testInnerHTML(c, "<option>", "<option></option>");
+
+    c = document.createElement("head");
+    testInnerHTML(c, "123", "123");
+    testInnerHTML(c, "\n", "\n");
+
+    c = document.createElement("frameset");
+    testInnerHTML(c, "456", "");
+    testInnerHTML(c, "\n", "\n");
+    testInnerHTML(c, "<input>", "");
+    testInnerHTML(c, "\0", "");
+
+    c = document.createElement("table");
+    testInnerHTML(c, "abc", "abc");
+    testInnerHTML(c, "<td>", "<tbody><tr><td></td></tr></tbody>");
+    testInnerHTML(c, "</body>", "");
+    testInnerHTML(c, "<input>", "<input>");
+
+    c = document.createElement("tr");
+    testInnerHTML(c, "xyz", "xyz");
+    testInnerHTML(c, "<td>", "<td></td>");
+    testInnerHTML(c, "</body>", "");
+    testInnerHTML(c, "<table>", "");
+
+    c = document.createElement("td");
+    testInnerHTML(c, "789", "789");
+    testInnerHTML(c, "\0", "");
+    testInnerHTML(c, "<td>", "");
+
+    c = document.createElement("th");
+    testInnerHTML(c, "789", "789");
+    testInnerHTML(c, "\0", "");
+    testInnerHTML(c, "</tr>", "");
+
+    c = document.createElement("caption");
+    testInnerHTML(c, "xyz", "xyz");
+    testInnerHTML(c, "\0", "");
+    testInnerHTML(c, "<td>", "");
+    testInnerHTML(c, "<dd>", "<dd></dd>");
+    testInnerHTML(c, "<body>", "");
+
+    function testTableBody(tag) {
+        var c = document.createElement(tag);
+        testInnerHTML(c, "abc", "abc");
+        testInnerHTML(c, "<td>", "<tr><td></td></tr>");
+        testInnerHTML(c, "</body>", "");
+        testInnerHTML(c, "<input>", "<input>");
+    }
+    testTableBody("thead");
+    testTableBody("tbody");
+    testTableBody("tfoot");
+
+    c = document.createElement("template");
+    testInnerHTML(c, "abc", "abc");
+    testInnerHTML(c, "<td>", "<td></td>");
+    testInnerHTML(c, "</template>", "");
+    testInnerHTML(c, "<input>", "<input>");
+
+    c = document.createElement("div");
+    testInnerHTML(c, "abc", "abc");
+    testInnerHTML(c, "<td>", "");
+    testInnerHTML(c, "</body>", "");
+    testInnerHTML(c, "<input>", "<input>");
+
+    SimpleTest.finish();
+  }
+
+  addLoadEvent(testInnerHTMLParserInsertionMode);
+  SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=922681">Mozilla Bug 922681</a>
+<pre id="test">
+</pre>
+</body>
+</html>

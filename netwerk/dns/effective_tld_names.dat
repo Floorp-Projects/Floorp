@@ -885,13 +885,12 @@ pvt.ge
 // gf : http://en.wikipedia.org/wiki/.gf
 gf
 
-// gg : http://www.channelisles.net/applic/avextn.shtml
+// gg : http://www.channelisles.net/register-domains/
+// Confirmed by registry <nigel@channelisles.net> 2013-11-28
 gg
 co.gg
-org.gg
 net.gg
-sch.gg
-gov.gg
+org.gg
 
 // gh : http://en.wikipedia.org/wiki/.gh
 // see also: http://www.nic.gh/reg_now.php
@@ -1462,13 +1461,12 @@ vi.it
 viterbo.it
 vt.it
 
-// je : http://www.channelisles.net/applic/avextn.shtml
+// je : http://www.channelisles.net/register-domains/
+// Confirmed by registry <nigel@channelisles.net> 2013-11-28
 je
 co.je
-org.je
 net.je
-sch.je
-gov.je
+org.je
 
 // jm : http://www.com.jm/register.html
 *.jm
@@ -6178,7 +6176,7 @@ k12.vt.us
 k12.va.us
 k12.wa.us
 k12.wi.us
-k12.wv.us
+// k12.wv.us  Bug 947705 - Removed at request of Verne Britton <verne@wvnet.edu>
 k12.wy.us
 
 cc.ak.us

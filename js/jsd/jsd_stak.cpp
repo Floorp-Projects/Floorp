@@ -97,7 +97,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
     {
         JSAbstractFramePtr frame = iter.abstractFramePtr();
         JS::RootedScript script(cx, frame.script());
-        uintptr_t  pc = (uintptr_t)iter.pc();
+        uintptr_t  pc = (uintptr_t)frame.pc();
         JS::RootedValue dummyThis(cx);
 
         /*
@@ -485,8 +485,8 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     cx = jsdthreadstate->context;
     JS_ASSERT(cx);
 
-    exceptionState = JS_SaveExceptionState(cx);
     JS::RootedValue v(cx, val);
+    exceptionState = JS_SaveExceptionState(cx);
     retval = JS::ToString(cx, v);
     JS_RestoreExceptionState(cx, exceptionState);
 

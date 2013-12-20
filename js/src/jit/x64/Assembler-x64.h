@@ -7,7 +7,7 @@
 #ifndef jit_x64_Assembler_x64_h
 #define jit_x64_Assembler_x64_h
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "jit/IonCode.h"
 #include "jit/shared/Assembler-shared.h"
@@ -209,7 +209,7 @@ class Assembler : public AssemblerX86Shared
 
     uint32_t extendedJumpTable_;
 
-    static IonCode *CodeFromJump(IonCode *code, uint8_t *jump);
+    static JitCode *CodeFromJump(JitCode *code, uint8_t *jump);
 
   private:
     void writeRelocation(JmpSrc src, Relocation::Kind reloc);
@@ -224,7 +224,7 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::push;
     using AssemblerX86Shared::pop;
 
-    static uint8_t *PatchableJumpAddress(IonCode *code, size_t index);
+    static uint8_t *PatchableJumpAddress(JitCode *code, size_t index);
     static void PatchJumpEntry(uint8_t *entry, uint8_t *target);
 
     Assembler()
@@ -232,7 +232,7 @@ class Assembler : public AssemblerX86Shared
     {
     }
 
-    static void TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
@@ -634,23 +634,23 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target, reloc);
     }
 
-    void jmp(IonCode *target) {
-        jmp(ImmPtr(target->raw()), Relocation::IONCODE);
+    void jmp(JitCode *target) {
+        jmp(ImmPtr(target->raw()), Relocation::JITCODE);
     }
-    void j(Condition cond, IonCode *target) {
-        j(cond, ImmPtr(target->raw()), Relocation::IONCODE);
+    void j(Condition cond, JitCode *target) {
+        j(cond, ImmPtr(target->raw()), Relocation::JITCODE);
     }
-    void call(IonCode *target) {
+    void call(JitCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
+    CodeOffsetLabel toggledCall(JitCode *target, bool enabled) {
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
-        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
         JS_ASSERT(size() - offset.offset() == ToggledCallSize());
         return offset;
     }

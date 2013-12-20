@@ -42,6 +42,10 @@
 #include "mozilla/GenericRefCounted.h"
 #include "mozilla/Scoped.h"
 
+#ifdef DEBUG
+#define MOZ_ENABLE_GL_TRACKING 1
+#endif
+
 class nsIntRegion;
 class nsIRunnable;
 class nsIThread;
@@ -583,7 +587,7 @@ private:
 #undef BEFORE_GL_CALL
 #undef AFTER_GL_CALL
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
 
 #ifndef MOZ_FUNCTION_NAME
 # ifdef __GNUC__
@@ -2380,14 +2384,17 @@ public:
 
     virtual bool MakeCurrentImpl(bool aForce = false) = 0;
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
     static void StaticInit() {
         PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
     }
 #endif
 
     bool MakeCurrent(bool aForce = false) {
-#ifdef DEBUG
+        if (IsDestroyed()) {
+            return false;
+        }
+#ifdef MOZ_ENABLE_GL_TRACKING
     PR_SetThreadPrivate(sCurrentGLContextTLS, this);
 
     // XXX this assertion is disabled because it's triggering on Mac;
@@ -2407,16 +2414,6 @@ public:
     virtual bool SetupLookupFunction() = 0;
 
     virtual void ReleaseSurface() {}
-
-    void *GetUserData(void *aKey) {
-        void *result = nullptr;
-        mUserData.Get(aKey, &result);
-        return result;
-    }
-
-    void SetUserData(void *aKey, void *aValue) {
-        mUserData.Put(aKey, aValue);
-    }
 
     // Mark this context as destroyed.  This will nullptr out all
     // the GL function pointers!
@@ -2466,21 +2463,9 @@ public:
         MOZ_CRASH("Must be called against a GLContextEGL.");
     }
 
-    bool CanUploadSubTextures();
-    bool CanReadSRGBFromFBOTexture();
-
     static void PlatformStartup();
 
-protected:
-    static bool sPowerOfTwoForced;
-    static bool sPowerOfTwoPrefCached;
-    static void CacheCanUploadNPOT();
-
 public:
-    bool CanUploadNonPowerOfTwo();
-
-    bool WantsSmallTiles();
-
     /**
      * If this context wraps a double-buffered target, swap the back
      * and front buffers.  It should be assumed that after a swap, the
@@ -2496,29 +2481,6 @@ public:
      * Releases a color buffer that is being used as a texture
      */
     virtual bool ReleaseTexImage() { return false; }
-
-    /**
-     * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
-     */
-    void ApplyFilterToBoundTexture(GraphicsFilter aFilter);
-
-    /**
-     * Applies aFilter to the texture currently bound to aTarget.
-     */
-    void ApplyFilterToBoundTexture(GLuint aTarget,
-                                   GraphicsFilter aFilter);
-
-    virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
-    virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
-
-#ifdef MOZ_WIDGET_GONK
-    virtual EGLImage CreateEGLImageForNativeBuffer(void* buffer) = 0;
-    virtual void DestroyEGLImage(EGLImage image) = 0;
-#endif
-
-    virtual already_AddRefed<TextureImage>
-    CreateDirectTextureImage(::android::GraphicBuffer* aBuffer, GLenum aWrapMode)
-    { return nullptr; }
 
     // Before reads from offscreen texture
     void GuaranteeResolve();
@@ -2541,71 +2503,6 @@ public:
      * Only valid if IsOffscreen() returns true.
      */
     const gfxIntSize& OffscreenSize() const;
-
-    /*
-     * Create a new shared GLContext content handle, using the passed buffer as a source.
-     * Must be released by ReleaseSharedHandle. UpdateSharedHandle will have no effect
-     * on handles created with this method, as the caller owns the source (the passed buffer)
-     * and is responsible for updating it accordingly.
-     */
-    virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
-                                                   void* buffer,
-                                                   SharedTextureBufferType bufferType)
-    { return 0; }
-    /**
-     * Publish GLContext content to intermediate buffer attached to shared handle.
-     * Shared handle content is ready to be used after call returns, and no need extra Flush/Finish are required.
-     * GLContext must be current before this call
-     */
-    virtual void UpdateSharedHandle(SharedTextureShareType shareType,
-                                    SharedTextureHandle sharedHandle)
-    { }
-    /**
-     * - It is better to call ReleaseSharedHandle before original GLContext destroyed,
-     *     otherwise warning will be thrown on attempt to destroy Texture associated with SharedHandle, depends on backend implementation.
-     * - It does not require to be called on context where it was created,
-     *     because SharedHandle suppose to keep Context reference internally,
-     *     or don't require specific context at all, for example IPC SharedHandle.
-     * - Not recommended to call this between AttachSharedHandle and Draw Target call.
-     *      if it is really required for some special backend, then DetachSharedHandle API must be added with related implementation.
-     * - It is recommended to stop any possible access to SharedHandle (Attachments, pending GL calls) before calling Release,
-     *      otherwise some artifacts might appear or even crash if API backend implementation does not expect that.
-     * SharedHandle (currently EGLImage) does not require GLContext because it is EGL call, and can be destroyed
-     *   at any time, unless EGLImage have siblings (which are not expected with current API).
-     */
-    virtual void ReleaseSharedHandle(SharedTextureShareType shareType,
-                                     SharedTextureHandle sharedHandle)
-    { }
-
-
-    typedef struct {
-        GLenum mTarget;
-        SurfaceFormat mTextureFormat;
-        gfx3DMatrix mTextureTransform;
-    } SharedHandleDetails;
-
-    /**
-     * Returns information necessary for rendering a shared handle.
-     * These values change depending on what sharing mechanism is in use
-     */
-    virtual bool GetSharedHandleDetails(SharedTextureShareType shareType,
-                                        SharedTextureHandle sharedHandle,
-                                        SharedHandleDetails& details)
-    { return false; }
-    /**
-     * Attach Shared GL Handle to GL_TEXTURE_2D target
-     * GLContext must be current before this call
-     */
-    virtual bool AttachSharedHandle(SharedTextureShareType shareType,
-                                    SharedTextureHandle sharedHandle)
-    { return false; }
-
-    /**
-     * Detach Shared GL Handle from GL_TEXTURE_2D target
-     */
-    virtual void DetachSharedHandle(SharedTextureShareType shareType,
-                                    SharedTextureHandle sharedHandle)
-    { }
 
     void BindFB(GLuint fb) {
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
@@ -2683,53 +2580,18 @@ public:
     void ForceDirtyScreen();
     void CleanDirtyScreen();
 
-    virtual bool TextureImageSupportsGetBackingSurface() {
-        return false;
-    }
-
     virtual GLenum GetPreferredARGB32Format() { return LOCAL_GL_RGBA; }
 
     virtual bool RenewSurface() { return false; }
 
+private:
     /**
-     * Return a valid, allocated TextureImage of |aSize| with
-     * |aContentType|.  If |aContentType| is COLOR, |aImageFormat| can be used
-     * to hint at the preferred RGB format, however it is not necessarily
-     * respected.  The TextureImage's texture is configured to use
-     * |aWrapMode| (usually GL_CLAMP_TO_EDGE or GL_REPEAT) and by
-     * default, GL_LINEAR filtering.  Specify
-     * |aFlags=UseNearestFilter| for GL_NEAREST filtering. Specify
-     * |aFlags=NeedsYFlip| if the image is flipped. Return
-     * nullptr if creating the TextureImage fails.
-     *
-     * The returned TextureImage may only be used with this GLContext.
-     * Attempting to use the returned TextureImage after this
-     * GLContext is destroyed will result in undefined (and likely
-     * crashy) behavior.
+     * Helpers for ReadTextureImage
      */
-    virtual already_AddRefed<TextureImage>
-    CreateTextureImage(const nsIntSize& aSize,
-                       TextureImage::ContentType aContentType,
-                       GLenum aWrapMode,
-                       TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
+    GLuint TextureImageProgramFor(GLenum aTextureTarget, int aShader);
+    bool ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize);
 
-    /**
-     * In EGL we want to use Tiled Texture Images, which we return
-     * from CreateTextureImage above.
-     * Inside TiledTextureImage we need to create actual images and to
-     * prevent infinite recursion we need to differentiate the two
-     * functions.
-     **/
-    virtual already_AddRefed<TextureImage>
-    TileGenFunc(const nsIntSize& aSize,
-                TextureImage::ContentType aContentType,
-                TextureImage::Flags aFlags = TextureImage::NoFlags,
-                TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown)
-    {
-        return nullptr;
-    }
-
+public:
     /**
      * Read the image data contained in aTexture, and return it as an ImageSurface.
      * If GL_RGBA is given as the format, a gfxImageFormatARGB32 surface is returned.
@@ -2740,13 +2602,20 @@ public:
      * THIS IS EXPENSIVE.  It is ridiculously expensive.  Only do this
      * if you absolutely positively must, and never in any performance
      * critical path.
+     *
+     * NOTE: aShaderProgram is really mozilla::layers::ShaderProgramType. It is
+     * passed as int to eliminate including LayerManagerOGLProgram.h in this
+     * hub header.
      */
-    already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTexture,
+    already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTextureId,
+                                                       GLenum aTextureTarget,
                                                        const gfxIntSize& aSize,
-                                                       GLenum aTextureFormat,
+                               /* ShaderProgramType */ int aShaderProgram,
                                                        bool aYInvert = false);
 
-    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat);
+    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture,
+                                                  bool aYInvert,
+                                                  SurfaceFormat aFormat);
 
     /**
      * Call ReadPixels into an existing gfxImageSurface.
@@ -2762,101 +2631,6 @@ public:
     void ReadScreenIntoImageSurface(gfxImageSurface* dest);
 
     TemporaryRef<gfx::SourceSurface> ReadPixelsToSourceSurface(const gfx::IntSize &aSize);
-
-    /**
-     * Creates a RGB/RGBA texture (or uses one provided) and uploads the surface
-     * contents to it within aSrcRect.
-     *
-     * aSrcRect.x/y will be uploaded to 0/0 in the texture, and the size
-     * of the texture with be aSrcRect.width/height.
-     *
-     * If an existing texture is passed through aTexture, it is assumed it
-     * has already been initialised with glTexImage2D (or this function),
-     * and that its size is equal to or greater than aSrcRect + aDstPoint.
-     * You can alternatively set the overwrite flag to true and have a new
-     * texture memory block allocated.
-     *
-     * The aDstPoint parameter is ignored if no texture was provided
-     * or aOverwrite is true.
-     *
-     * \param aData Image data to upload.
-     * \param aDstRegion Region of texture to upload to.
-     * \param aTexture Texture to use, or 0 to have one created for you.
-     * \param aOverwrite Over an existing texture with a new one.
-     * \param aSrcPoint Offset into aSrc where the region's bound's
-     *  TopLeft() sits.
-     * \param aPixelBuffer Pass true to upload texture data with an
-     *  offset from the base data (generally for pixel buffer objects),
-     *  otherwise textures are upload with an absolute pointer to the data.
-     * \param aTextureUnit, the texture unit used temporarily to upload the
-     *  surface. This testure may be overridden, clients should not rely on
-     *  the contents of this texture after this call or even on this
-     *  texture unit being active.
-     * \return Surface format of this texture.
-     */
-    SurfaceFormat UploadImageDataToTexture(unsigned char* aData,
-                                           int32_t aStride,
-                                           gfxImageFormat aFormat,
-                                           const nsIntRegion& aDstRegion,
-                                           GLuint& aTexture,
-                                           bool aOverwrite = false,
-                                           bool aPixelBuffer = false,
-                                           GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
-                                           GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
-
-    /**
-     * Convenience wrapper around UploadImageDataToTexture for gfxASurfaces.
-     */
-    SurfaceFormat UploadSurfaceToTexture(gfxASurface *aSurface,
-                                         const nsIntRegion& aDstRegion,
-                                         GLuint& aTexture,
-                                         bool aOverwrite = false,
-                                         const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
-                                         bool aPixelBuffer = false,
-                                         GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
-                                         GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
-
-    /**
-     * Same as above, for DataSourceSurfaces.
-     */
-    SurfaceFormat UploadSurfaceToTexture(gfx::DataSourceSurface *aSurface,
-                                         const nsIntRegion& aDstRegion,
-                                         GLuint& aTexture,
-                                         bool aOverwrite = false,
-                                         const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
-                                         bool aPixelBuffer = false,
-                                         GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
-                                         GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
-
-    void TexImage2D(GLenum target, GLint level, GLint internalformat,
-                    GLsizei width, GLsizei height, GLsizei stride,
-                    GLint pixelsize, GLint border, GLenum format,
-                    GLenum type, const GLvoid *pixels);
-
-    void TexSubImage2D(GLenum target, GLint level,
-                       GLint xoffset, GLint yoffset,
-                       GLsizei width, GLsizei height, GLsizei stride,
-                       GLint pixelsize, GLenum format,
-                       GLenum type, const GLvoid* pixels);
-
-    /**
-     * Uses the Khronos GL_EXT_unpack_subimage extension, working around
-     * quirks in the Tegra implementation of this extension.
-     */
-    void TexSubImage2DWithUnpackSubimageGLES(GLenum target, GLint level,
-                                             GLint xoffset, GLint yoffset,
-                                             GLsizei width, GLsizei height,
-                                             GLsizei stride, GLint pixelsize,
-                                             GLenum format, GLenum type,
-                                             const GLvoid* pixels);
-
-    void TexSubImage2DWithoutUnpackSubimage(GLenum target, GLint level,
-                                            GLint xoffset, GLint yoffset,
-                                            GLsizei width, GLsizei height,
-                                            GLsizei stride, GLint pixelsize,
-                                            GLenum format, GLenum type,
-                                            const GLvoid* pixels);
-
 
     // Shared code for GL extensions and GLX extensions.
     static bool ListHasExtension(const GLubyte *extensions,
@@ -3019,24 +2793,7 @@ public:
         return *mPixelFormat;
     }
 
-
-    GLuint CreateTextureForOffscreen(const GLFormats& formats,
-                                     const gfxIntSize& size);
-    GLuint CreateTexture(GLenum internalFormat,
-                         GLenum format, GLenum type,
-                         const gfxIntSize& size);
-    GLuint CreateRenderbuffer(GLenum format,
-                              GLsizei samples,
-                              const gfxIntSize& size);
     bool IsFramebufferComplete(GLuint fb, GLenum* status = nullptr);
-
-    // Pass null to an RB arg to disable its creation.
-    void CreateRenderbuffersForOffscreen(const GLFormats& formats,
-                                         const gfxIntSize& size,
-                                         bool multisample,
-                                         GLuint* colorMSRB,
-                                         GLuint* depthRB,
-                                         GLuint* stencilRB);
 
     // Does not check completeness.
     void AttachBuffersToFB(GLuint colorTex, GLuint colorRB,
@@ -3104,14 +2861,14 @@ public:
 
     void EmptyTexGarbageBin();
 
+    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
+
 protected:
-    nsDataHashtable<nsPtrHashKey<void>, void*> mUserData;
+    GLuint mReadTextureImagePrograms[4];
 
     bool InitWithPrefix(const char *prefix, bool trygl);
 
     void InitExtensions();
-
-    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
 
     nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
@@ -3242,7 +2999,7 @@ public:
 
 #undef ASSERT_SYMBOL_PRESENT
 
-#ifdef DEBUG
+#ifdef MOZ_ENABLE_GL_TRACKING
     void CreatedProgram(GLContext *aOrigin, GLuint aName);
     void CreatedShader(GLContext *aOrigin, GLuint aName);
     void CreatedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);

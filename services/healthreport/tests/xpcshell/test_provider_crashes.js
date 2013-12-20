@@ -9,6 +9,7 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
+Cu.import("resource://testing-common/AppData.jsm");
 
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;

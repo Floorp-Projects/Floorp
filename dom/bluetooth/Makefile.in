@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-VPATH += $(srcdir)/ipc
-
 ifneq (,$(MOZ_B2G_BT))
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
@@ -27,9 +25,4 @@ CFLAGS += $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS += $(MOZ_DBUS_GLIB_CFLAGS) -DHAVE_PTHREADS
 endif #MOZ_ENABLE_DBUS
 endif #MOZ_WIDGET_TOOLKIT
-
-# Add VPATH to LOCAL_INCLUDES so we are going to include the correct backend
-# subdirectory.
-LOCAL_INCLUDES += $(VPATH:%=-I%)
-
 endif #MOZ_B2G_BT

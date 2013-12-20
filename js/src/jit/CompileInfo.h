@@ -37,7 +37,7 @@ CountArgSlots(JSScript *script, JSFunction *fun)
     // Slot x + n: Argument n.
 
     // Note: when updating this, please also update the assert in SnapshotWriter::startFrame
-    return StartArgSlot(script) + (fun ? fun->nargs + 1 : 0);
+    return StartArgSlot(script) + (fun ? fun->nargs() + 1 : 0);
 }
 
 // Contains information about the compilation source for IR being generated.
@@ -45,9 +45,9 @@ class CompileInfo
 {
   public:
     CompileInfo(JSScript *script, JSFunction *fun, jsbytecode *osrPc, bool constructing,
-                ExecutionMode executionMode)
+                ExecutionMode executionMode, bool scriptNeedsArgsObj)
       : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
-        executionMode_(executionMode)
+        executionMode_(executionMode), scriptNeedsArgsObj_(scriptNeedsArgsObj)
     {
         JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
 
@@ -60,15 +60,15 @@ class CompileInfo
 
         nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
-        nargs_ = fun ? fun->nargs : 0;
-        nlocals_ = script->nfixed;
-        nstack_ = script->nslots - script->nfixed;
+        nargs_ = fun ? fun->nargs() : 0;
+        nlocals_ = script->nfixed();
+        nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
       : script_(nullptr), fun_(nullptr), osrPc_(nullptr), constructing_(false),
-        executionMode_(executionMode)
+        executionMode_(executionMode), scriptNeedsArgsObj_(false)
     {
         nimplicit_ = 0;
         nargs_ = 0;
@@ -96,10 +96,10 @@ class CompileInfo
     }
 
     jsbytecode *startPC() const {
-        return script_->code;
+        return script_->code();
     }
     jsbytecode *limitPC() const {
-        return script_->code + script_->length;
+        return script_->codeEnd();
     }
 
     const char *filename() const {
@@ -107,7 +107,7 @@ class CompileInfo
     }
 
     unsigned lineno() const {
-        return script_->lineno;
+        return script_->lineno();
     }
     unsigned lineno(jsbytecode *pc) const {
         return PCToLineNumber(script_, pc);
@@ -250,10 +250,10 @@ class CompileInfo
         return script()->argumentsAliasesFormals();
     }
     bool needsArgsObj() const {
-        return script()->needsArgsObj();
+        return scriptNeedsArgsObj_;
     }
     bool argsObjAliasesFormals() const {
-        return script()->argsObjAliasesFormals();
+        return scriptNeedsArgsObj_ && !script()->strict();
     }
 
     ExecutionMode executionMode() const {
@@ -275,6 +275,11 @@ class CompileInfo
     jsbytecode *osrPc_;
     bool constructing_;
     ExecutionMode executionMode_;
+
+    // Whether a script needs an arguments object is unstable over compilation
+    // since the arguments optimization could be marked as failed on the main
+    // thread, so cache a value here and use it throughout for consistency.
+    bool scriptNeedsArgsObj_;
 };
 
 } // namespace jit

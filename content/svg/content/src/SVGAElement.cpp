@@ -34,12 +34,28 @@ nsSVGElement::StringInfo SVGAElement::sStringInfo[2] =
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS_INHERITED4(SVGAElement, SVGAElementBase,
-                             nsIDOMNode,
-                             nsIDOMElement,
-                             nsIDOMSVGElement,
-                             Link)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGAElement)
+  NS_INTERFACE_TABLE_INHERITED4(SVGAElement,
+                                nsIDOMNode,
+                                nsIDOMElement,
+                                nsIDOMSVGElement,
+                                Link)
+NS_INTERFACE_TABLE_TAIL_INHERITING(SVGAElementBase)
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(SVGAElement)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SVGAElement,
+                                                  SVGAElementBase)
+  tmp->Link::Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SVGAElement,
+                                                SVGAElementBase)
+  tmp->Link::Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_ADDREF_INHERITED(SVGAElement, SVGAElementBase)
+NS_IMPL_RELEASE_INHERITED(SVGAElement, SVGAElementBase)
 
 //----------------------------------------------------------------------
 // Implementation

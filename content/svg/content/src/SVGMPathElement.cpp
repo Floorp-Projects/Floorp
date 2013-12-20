@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "mozilla/dom/SVGMPathElement.h"
 #include "nsDebug.h"
@@ -55,19 +55,9 @@ NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(SVGMPathElement)
 NS_INTERFACE_TABLE_TAIL_INHERITING(SVGMPathElementBase)
 
 // Constructor
-#ifdef _MSC_VER
-// Disable "warning C4355: 'this' : used in base member initializer list".
-// We can ignore that warning because we know that mHrefTarget's constructor 
-// doesn't dereference the pointer passed to it.
-#pragma warning(push)
-#pragma warning(disable:4355)
-#endif
 SVGMPathElement::SVGMPathElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : SVGMPathElementBase(aNodeInfo),
-    mHrefTarget(this)
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+    mHrefTarget(MOZ_THIS_IN_INITIALIZER_LIST())
 {
 }
 

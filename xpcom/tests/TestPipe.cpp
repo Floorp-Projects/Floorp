@@ -17,8 +17,7 @@ nsresult TP_NewPipe2(nsIAsyncInputStream** input,
                      bool nonBlockingInput,
                      bool nonBlockingOutput,
                      uint32_t segmentSize,
-                     uint32_t segmentCount,
-                     nsIMemory* segmentAlloc)
+                     uint32_t segmentCount)
 {
   nsCOMPtr<nsIPipe> pipe = do_CreateInstance("@mozilla.org/pipe;1");
   if (!pipe)
@@ -27,8 +26,7 @@ nsresult TP_NewPipe2(nsIAsyncInputStream** input,
   nsresult rv = pipe->Init(nonBlockingInput,
                            nonBlockingOutput,
                            segmentSize,
-                           segmentCount,
-                           segmentAlloc);
+                           segmentCount);
 
   if (NS_FAILED(rv))
     return rv;
@@ -38,146 +36,18 @@ nsresult TP_NewPipe2(nsIAsyncInputStream** input,
   return NS_OK;
 }
 
-/**
- * Allocator can allocate exactly count * size bytes, stored at mMemory;
- * immediately after the end of this is a byte-map of 0/1 values indicating
- * which <size>-byte locations in mMemory are empty and which are filled.
- * Pretty stupid, but enough to test bug 394692.
- */
-class BackwardsAllocator MOZ_FINAL : public nsIMemory
-{
-  public:
-    BackwardsAllocator()
-      : mMemory(0),
-        mIndex(0xFFFFFFFF),
-        mCount(0xFFFFFFFF),
-        mSize(0)
-    { }
-    ~BackwardsAllocator()
-    {
-      delete [] mMemory;
-    }
-
-    nsresult Init(uint32_t count, size_t size);
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMEMORY
-
-  private:
-    uint32_t previous(uint32_t i)
-    {
-      if (i == 0)
-        return mCount - 1;
-      return i - 1;
-    }
-
-  private:
-    uint8_t* mMemory;
-    uint32_t mIndex;
-    uint32_t mCount;
-    size_t mSize;
-};
-
-NS_IMPL_ISUPPORTS1(BackwardsAllocator, nsIMemory)
-
-nsresult BackwardsAllocator::Init(uint32_t count, size_t size)
-{
-  if (mMemory)
-  {
-    fail("allocator already initialized!");
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  mMemory = new uint8_t[count * size + count];
-  if (!mMemory)
-  {
-    fail("failed to allocate mMemory!");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  memset(mMemory, 0, count * size + count);
-
-  mIndex = 0;
-  mCount = count;
-  mSize = size;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(void*) BackwardsAllocator::Alloc(size_t size)
-{
-  if (size != mSize)
-  {
-    NS_ERROR("umm, why would this be reached for this test?");
-    return nullptr;
-  }
-
-  uint32_t index = mIndex;
-
-  while ((index = previous(index)) != mIndex)
-  {
-    if (mMemory[mSize * mCount + index] == 1)
-      continue;
-    mMemory[mSize * mCount + index] = 1;
-    mIndex = index;
-    return &mMemory[mSize * index];
-  }
-
-  NS_ERROR("shouldn't reach here in this test");
-  return nullptr;
-}
-
-NS_IMETHODIMP_(void*) BackwardsAllocator::Realloc(void* ptr, size_t newSize)
-{
-  NS_ERROR("shouldn't reach here in this test");
-  return nullptr;
-}
-
-NS_IMETHODIMP_(void) BackwardsAllocator::Free(void* ptr)
-{
-  uint8_t* p = static_cast<uint8_t*>(ptr);
-  if (p)
-    mMemory[mCount * mSize + (p - mMemory) / mSize] = 0;
-}
-
-NS_IMETHODIMP BackwardsAllocator::HeapMinimize(bool immediate)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP BackwardsAllocator::IsLowMemory(bool* retval)
-{
-  *retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP BackwardsAllocator::IsLowMemoryPlatform(bool* retval)
-{
-  *retval = false;
-  return NS_OK;
-}
-
-nsresult TestBackwardsAllocator()
+nsresult TestPipe()
 {
   const uint32_t SEGMENT_COUNT = 10;
   const uint32_t SEGMENT_SIZE = 10;
 
-  nsRefPtr<BackwardsAllocator> allocator = new BackwardsAllocator();
-  if (!allocator)
-  {
-    fail("Allocation of BackwardsAllocator failed!");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult rv = allocator->Init(SEGMENT_COUNT, SEGMENT_SIZE);
-  if (NS_FAILED(rv))
-    return rv;
-
   nsCOMPtr<nsIAsyncInputStream> input;
   nsCOMPtr<nsIAsyncOutputStream> output;
-  rv = TP_NewPipe2(getter_AddRefs(input),
+  nsresult rv = TP_NewPipe2(getter_AddRefs(input),
                    getter_AddRefs(output),
                    false,
                    false,
-                   SEGMENT_SIZE, SEGMENT_COUNT, allocator); 
+                   SEGMENT_SIZE, SEGMENT_COUNT); 
   if (NS_FAILED(rv))
   {
     fail("TP_NewPipe2 failed: %x", rv);
@@ -227,7 +97,7 @@ nsresult TestBackwardsAllocator()
     return NS_ERROR_FAILURE;
   }
 
-  passed("TestBackwardsAllocator");
+  passed("TestPipe");
   return NS_OK;
 }
 
@@ -239,7 +109,7 @@ int main(int argc, char** argv)
 
   int rv = 0;
 
-  if (NS_FAILED(TestBackwardsAllocator()))
+  if (NS_FAILED(TestPipe()))
     rv = 1;
 
   return rv;

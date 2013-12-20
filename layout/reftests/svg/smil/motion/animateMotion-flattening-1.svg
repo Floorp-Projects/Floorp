@@ -1,0 +1,26 @@
+  <svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    width="100%" height="100%" viewBox="0 0 45 45" preserveAspectRatio="none"
+    class="reftest-wait">
+    <!--
+      Bug 946540. Test that motion paths with inflection points that both lie
+      outside of (0, 1) are flattened correctly.
+
+      We have a lime background and move a red square along a motion path. If
+      the path is not flattened correctly the red square will get stuck at the
+      point where it covers the viewport.
+     -->
+    <script xlink:href="../smil-util.js"/>
+    <script>
+      window.addEventListener("MozReftestInvalidate", function() {
+        setTimeAndSnapshot(110, true);
+      }, false);
+    </script>
+    <!-- Lime background -->
+    <rect width="100%" height="100%" fill="lime"/>
+    <!-- Animated square -->
+    <rect x="-25" y="-25" width="50" height="50" fill="red">
+      <animateMotion calcMode="paced" begin="100s" dur="1s" fill="freeze"
+        path="m0-32c0 25 10 46 22 56 34 28 75 35 102 38"/>
+    </rect>
+  </svg>

@@ -37,6 +37,8 @@ enum
   kVK_PC_Backspace       = kVK_Delete,
   kVK_PC_Delete          = kVK_ForwardDelete,
 
+  kVK_PC_ContextMenu     = 0x6E,
+
   kVK_Powerbook_KeypadEnter = 0x34  // Enter on Powerbook's keyboard is different
 };
 
@@ -92,6 +94,12 @@ public:
    *                                3: Swedish-Pro
    *                                4: Dvorak-Qwerty Cmd
    *                                5: Thai
+   *                                6: Arabic
+   *                                7: French
+   *                                8: Hebrew
+   *                                9: Lithuanian
+   *                               10: Norwegian
+   *                               11: Spanish
    * @param aOverrideKeyboard     When testing set to TRUE, otherwise, set to
    *                              FALSE.  When TRUE, we use an ANSI keyboard
    *                              instead of the actual keyboard.

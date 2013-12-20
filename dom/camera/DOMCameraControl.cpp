@@ -10,6 +10,7 @@
 #include "DeviceStorage.h"
 #include "mozilla/dom/CameraControlBinding.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/MediaManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
 #include "nsIAppsService.h"
@@ -284,6 +285,14 @@ nsDOMCameraControl::GetExposureCompensation(ErrorResult& aRv)
   return compensation;
 }
 
+int32_t
+nsDOMCameraControl::SensorAngle()
+{
+  int32_t angle;
+  mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, &angle);
+  return angle;
+}
+
 already_AddRefed<nsICameraShutterCallback>
 nsDOMCameraControl::GetOnShutter(ErrorResult& aRv)
 {
@@ -351,24 +360,7 @@ nsDOMCameraControl::StartRecording(JSContext* aCx,
     return;
   }
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not get the Observer service for CameraControl::StartRecording.");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  nsRefPtr<nsHashPropertyBag> props = CreateRecordingDeviceEventsSubject();
-  obs->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
-                       "recording-device-events",
-                       NS_LITERAL_STRING("starting").get());
-  // Forward recording events to parent process.
-  // The events are gathered in chrome process and used for recording indicator
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    unused << TabChild::GetFrom(mWindow)->SendRecordingDeviceEvents(NS_LITERAL_STRING("starting"),
-                                                                    true /* isAudio */,
-                                                                    true /* isVideo */);
-  }
+  aRv = NotifyRecordingStatusChange(NS_LITERAL_STRING("starting"));
 
   #ifdef MOZ_B2G
   if (!mAudioChannelAgent) {
@@ -395,23 +387,7 @@ nsDOMCameraControl::StartRecording(JSContext* aCx,
 void
 nsDOMCameraControl::StopRecording(ErrorResult& aRv)
 {
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs) {
-    NS_WARNING("Could not get the Observer service for CameraControl::StopRecording.");
-    aRv.Throw(NS_ERROR_FAILURE);
-  }
-
-  nsRefPtr<nsHashPropertyBag> props = CreateRecordingDeviceEventsSubject();
-  obs->NotifyObservers(static_cast<nsIPropertyBag2*>(props) ,
-                       "recording-device-events",
-                       NS_LITERAL_STRING("shutdown").get());
-  // Forward recording events to parent process.
-  // The events are gathered in chrome process and used for recording indicator
-  if (XRE_GetProcessType() != GeckoProcessType_Default) {
-    unused << TabChild::GetFrom(mWindow)->SendRecordingDeviceEvents(NS_LITERAL_STRING("shutdown"),
-                                                                    true /* isAudio */,
-                                                                    true /* isVideo */);
-  }
+  aRv = NotifyRecordingStatusChange(NS_LITERAL_STRING("shutdown"));
 
   #ifdef MOZ_B2G
   if (mAudioChannelAgent) {
@@ -611,38 +587,14 @@ nsDOMCameraControl::GetNativeCameraControl()
   return mCameraControl;
 }
 
-already_AddRefed<nsHashPropertyBag>
-nsDOMCameraControl::CreateRecordingDeviceEventsSubject()
+nsresult
+nsDOMCameraControl::NotifyRecordingStatusChange(const nsString& aMsg)
 {
-  MOZ_ASSERT(mWindow);
+  NS_ENSURE_TRUE(mWindow, NS_ERROR_FAILURE);
 
-  nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
-  props->SetPropertyAsBool(NS_LITERAL_STRING("isAudio"), true);
-  props->SetPropertyAsBool(NS_LITERAL_STRING("isVideo"), true);
-
-  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
-  if (docShell) {
-    bool isApp;
-    DebugOnly<nsresult> rv = docShell->GetIsApp(&isApp);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-    nsString requestURL;
-    if (isApp) {
-      rv = docShell->GetAppManifestURL(requestURL);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    } else {
-      nsCString pageURL;
-      nsCOMPtr<nsIURI> docURI = mWindow->GetDocumentURI();
-      MOZ_ASSERT(docURI);
-
-      rv = docURI->GetSpec(pageURL);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-      requestURL = NS_ConvertUTF8toUTF16(pageURL);
-    }
-    props->SetPropertyAsBool(NS_LITERAL_STRING("isApp"), isApp);
-    props->SetPropertyAsAString(NS_LITERAL_STRING("requestURL"), requestURL);
-  }
-
-  return props.forget();
+  return MediaManager::NotifyRecordingStatusChange(mWindow,
+                                                   aMsg,
+                                                   true /* aIsAudio */,
+                                                   true /* aIsVideo */);
 }
+

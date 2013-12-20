@@ -9,6 +9,7 @@
 <?xml-stylesheet href="chrome://browser/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/cssthrobber.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/tiles.css" type="text/css"?>
+<?xml-stylesheet href="chrome://branding/content/metro-about.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
@@ -21,6 +22,8 @@
 %prefsDTD;
 <!ENTITY % aboutPanelDTD SYSTEM "chrome://browser/locale/aboutPanel.dtd">
 %aboutPanelDTD;
+<!ENTITY % searchPanelDTD SYSTEM "chrome://browser/locale/searchPanel.dtd">
+%searchPanelDTD;
 #ifdef MOZ_SERVICES_SYNC
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
@@ -76,6 +79,7 @@
 
     <!-- tabs -->
     <command id="cmd_newTab" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_newTabKey" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_closeTab" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_undoCloseTab" oncommand="CommandUpdater.doCommand(this.id);"/>
 #ifdef MOZ_SERVICES_SYNC
@@ -152,8 +156,8 @@ Desktop browser's sync prefs.
 -->
 
     <!-- manage tabs -->
-    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTab"/>
-    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTab"/>
+    <key id="key_newTab" key="&newTab.key;" modifiers="accel" command="cmd_newTabKey"/>
+    <key id="key_newTab2" key="&newTab2.key;" modifiers="accel" command="cmd_newTabKey"/>
     <key id="key_closeTab" key="&closeTab.key;" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_closeTab2" keycode="VK_F4" modifiers="accel" command="cmd_closeTab"/>
     <key id="key_undoCloseTab" key="&newTab.key;" modifiers="accel,shift" command="cmd_undoCloseTab"/>
@@ -244,7 +248,7 @@ Desktop browser's sync prefs.
                      completeselectedindex="true"
                      placeholder="&urlbar.emptytext;"
                      tabscrolling="true"
-                     onclick="SelectionHelperUI.urlbarClick();"/>
+                     onclick="SelectionHelperUI.urlbarTextboxClick(this);"/>
 
             <toolbarbutton id="go-button" class="urlbar-button"
                            command="cmd_go"/>
@@ -260,12 +264,12 @@ Desktop browser's sync prefs.
             <observes element="bcast_windowState" attribute="*"/>
             <observes element="bcast_urlbarState" attribute="*"/>
             <hbox id="toolbar-context-page" pack="end">
-              <circularprogressindicator id="download-progress"
+              <circularprogressindicator id="download-progress" class="appbar-primary"
                                      oncommand="MetroDownloadsView.onDownloadButton()"/>
-              <toolbarbutton id="star-button" class="appbar-primary"
+              <toolbarbutton id="star-button" class="appbar-primary hide-on-start"
                              type="checkbox"
                              oncommand="Appbar.onStarButton()"/>
-              <toolbarbutton id="pin-button" class="appbar-primary"
+              <toolbarbutton id="pin-button" class="appbar-primary hide-on-start"
                              type="checkbox"
                              oncommand="Appbar.onPinButton()"/>
               <toolbarbutton id="menu-button" class="appbar-primary"
@@ -273,7 +277,7 @@ Desktop browser's sync prefs.
             </hbox>
 
             <hbox id="toolbar-context-autocomplete" pack="end">
-              <toolbarbutton id="close-button" class="appbar-secondary"
+              <toolbarbutton id="close-button" class="appbar-primary"
                              oncommand="Appbar.onAutocompleteCloseButton()"/>
             </hbox>
           </stack>
@@ -359,26 +363,31 @@ Desktop browser's sync prefs.
     <!-- Context button bar -->
     <appbar id="contextappbar">
       <toolbar id="contextualactions-tray" labelled="true" flex="1">
-        <toolbarbutton id="pin-selected-button" class="appbar-secondary"
+        <toolbarbutton id="pin-selected-button" class="appbar-primary"
                        label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('pin')"/>
-        <toolbarbutton id="unpin-selected-button" class="appbar-secondary"
+        <toolbarbutton id="unpin-selected-button" class="appbar-primary"
                        label-uses-set-name="true" hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('unpin')"/>
-        <toolbarbutton id="delete-selected-button" class="appbar-secondary"
+        <toolbarbutton id="hide-selected-button" class="appbar-primary"
+                       label-uses-set-name="true" hidden="true" fade="true"
+                       oncommand="Appbar.dispatchContextualAction('unpin')"/>
+        <toolbarbutton id="delete-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('delete')"/>
-        <toolbarbutton id="restore-selected-button" class="appbar-secondary"
+        <toolbarbutton id="restore-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('restore')"/>
-        <toolbarbutton id="clear-selected-button" class="appbar-secondary"
+        <toolbarbutton id="clear-selected-button" class="appbar-primary"
                        hidden="true" fade="true"
                        oncommand="Appbar.dispatchContextualAction('clear')"/>
       </toolbar>
     </appbar>
     <autoscroller class="autoscroller" id="autoscrollerid"/>
     <flyoutpanel id="about-flyoutpanel" class="flyout-narrow" headertext="&aboutHeader.title;">
-      <label id="about-product-label" linewrap="true" value="&aboutHeader.product.label;"/>
+      <label align="start">
+        <html:img src="chrome://branding/content/metro-about-wordmark.png" alt="&aboutHeader.product.label;"/>
+      </label>
       <label value="&aboutHeader.company.label;" linewrap="true"/>
 #expand <label id="about-version-label">__MOZ_APP_VERSION__</label>
       <vbox id="updateBox">
@@ -666,7 +675,13 @@ Desktop browser's sync prefs.
       </settings>
       <setting pref="signon.rememberSignons" title="&optionsHeader.privacy.passwords.label;" type="bool"/>
       <settings id="prefs-reporting" label="&optionsHeader.reporting.title;">
-        <setting pref="app.crashreporter.autosubmit" type="bool" title="&optionsHeader.reporting.crashes.label;" oncommand="BrowserUI.crashReportingPrefChanged(this.value);"/>
+        <setting pref="app.crashreporter.autosubmit"
+                 type="bool"
+                 title="&optionsHeader.reporting.crashes.label;" />
+        <setting pref="app.crashreporter.submitURLs"
+                 id="prefs-reporting-submitURLs"
+                 type="bool"
+                 title="&optionsHeader.reporting.crashes.submitURLs;" />
       </settings>
       <settings id="prefs-telemetry" label="&optionsHeader.telemetry.title;">
         <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
@@ -683,6 +698,10 @@ Desktop browser's sync prefs.
           </radiogroup>
         </setting>
         <label class="text-link" href="https://www.mozilla.org/dnt">&doNotTrack.learnMoreLink;</label>
+      </settings>
+    </flyoutpanel>
+    <flyoutpanel id="search-flyoutpanel" class="flyout-narrow" headertext="&searchFlyoutHeader.title;">
+      <settings id="search-options" label="&searchSetting.title;">
       </settings>
     </flyoutpanel>
 

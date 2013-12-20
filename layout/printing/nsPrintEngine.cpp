@@ -2214,8 +2214,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
 
   // This docshell stuff is weird; will go away when we stop having multiple
   // presentations per document
-  nsCOMPtr<nsISupports> supps(do_QueryInterface(aPO->mDocShell));
-  aPO->mPresContext->SetContainer(supps);
+  aPO->mPresContext->SetContainer(aPO->mDocShell);
 
   aPO->mPresShell->BeginObservingDocument();
 

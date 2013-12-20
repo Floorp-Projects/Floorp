@@ -50,9 +50,11 @@ class StableCharPtr : public CharPtr {
     StableCharPtr(const jschar *pos, const jschar *start, size_t len)
       : CharPtr(pos, start, len)
     {}
+
+    using CharPtr::operator=;
 };
 
-#if defined JS_THREADSAFE && defined DEBUG
+#if defined JS_THREADSAFE && defined JS_DEBUG
 
 class JS_PUBLIC_API(AutoCheckRequestDepth)
 {
@@ -71,9 +73,9 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 # define CHECK_REQUEST(cx) \
     ((void) 0)
 
-#endif /* JS_THREADSAFE && DEBUG */
+#endif /* JS_THREADSAFE && JS_DEBUG */
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 /*
  * Assert that we're not doing GC on cx, that we're in a request as
  * needed, and that the compartments for cx and v are correct.
@@ -85,7 +87,7 @@ AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v);
 inline void AssertArgumentsAreSane(JSContext *cx, JS::Handle<JS::Value> v) {
     /* Do nothing */
 }
-#endif /* DEBUG */
+#endif /* JS_DEBUG */
 
 class JS_PUBLIC_API(AutoGCRooter) {
   public:
@@ -839,6 +841,13 @@ typedef JSObject *
 typedef JSObject *
 (* JSSameCompartmentWrapObjectCallback)(JSContext *cx, JS::Handle<JSObject*> obj);
 
+struct JSWrapObjectCallbacks
+{
+    JSWrapObjectCallback wrap;
+    JSSameCompartmentWrapObjectCallback sameCompartmentWrap;
+    JSPreWrapCallback preWrap;
+};
+
 typedef void
 (* JSDestroyCompartmentCallback)(JSFreeOp *fop, JSCompartment *compartment);
 
@@ -1370,7 +1379,7 @@ class JSAutoCheckRequest
     JSAutoCheckRequest(JSContext *cx
                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     {
-#if defined JS_THREADSAFE && defined DEBUG
+#if defined JS_THREADSAFE && defined JS_DEBUG
         mContext = cx;
         JS_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
 #endif
@@ -1378,14 +1387,14 @@ class JSAutoCheckRequest
     }
 
     ~JSAutoCheckRequest() {
-#if defined JS_THREADSAFE && defined DEBUG
+#if defined JS_THREADSAFE && defined JS_DEBUG
         JS_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
 #endif
     }
 
 
   private:
-#if defined JS_THREADSAFE && defined DEBUG
+#if defined JS_THREADSAFE && defined JS_DEBUG
     JSContext *mContext;
 #endif
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -1635,11 +1644,8 @@ JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback);
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
 
-extern JS_PUBLIC_API(JSWrapObjectCallback)
-JS_SetWrapObjectCallbacks(JSRuntime *rt,
-                          JSWrapObjectCallback callback,
-                          JSSameCompartmentWrapObjectCallback sccallback,
-                          JSPreWrapCallback precallback);
+extern JS_PUBLIC_API(void)
+JS_SetWrapObjectCallbacks(JSRuntime *rt, const JSWrapObjectCallbacks *callbacks);
 
 extern JS_PUBLIC_API(void)
 JS_SetCompartmentPrivate(JSCompartment *compartment, void *data);
@@ -1988,13 +1994,6 @@ extern JS_PUBLIC_API(void)
 JS_RemoveScriptRootRT(JSRuntime *rt, JSScript **rp);
 
 /*
- * C-compatible version of the Anchor class. It should be called after the last
- * use of the variable it protects.
- */
-extern JS_NEVER_INLINE JS_PUBLIC_API(void)
-JS_AnchorPtr(void *p);
-
-/*
  * Register externally maintained GC roots.
  *
  * traceOp: the trace operation. For each root the implementation should call
@@ -2040,10 +2039,10 @@ JSVAL_TRACE_KIND(jsval v)
     return (JSGCTraceKind) JSVAL_TRACE_KIND_IMPL(JSVAL_TO_IMPL(v));
 }
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 
 /*
- * DEBUG-only method to dump the object graph of heap-allocated things.
+ * Debug-only method to dump the object graph of heap-allocated things.
  *
  * fp:              file for the dump output.
  * start:           when non-null, dump only things reachable from start
@@ -2082,7 +2081,7 @@ extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
 /* For assertions only. */
-#ifdef DEBUG
+#ifdef JS_DEBUG
 extern JS_PUBLIC_API(bool)
 JS_IsMarkingGray(JSTracer *trc);
 #endif
@@ -2206,6 +2205,9 @@ JS_SetGCParameterForThread(JSContext *cx, JSGCParamKey key, uint32_t value);
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameterForThread(JSContext *cx, JSGCParamKey key);
+
+extern JS_PUBLIC_API(void)
+JS_SetGCParametersBasedOnAvailableMemory(JSRuntime *rt, uint32_t availMem);
 
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,
@@ -3047,15 +3049,6 @@ extern JS_PUBLIC_API(bool)
 JS_ForwardGetElementTo(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf,
                        JS::MutableHandle<JS::Value> vp);
 
-/*
- * Get the property with name given by |index|, if it has one.  If
- * not, |*present| will be set to false and the value of |vp| must not
- * be relied on.
- */
-extern JS_PUBLIC_API(bool)
-JS_GetElementIfPresent(JSContext *cx, JSObject *obj, uint32_t index, JSObject *onBehalfOf,
-                       JS::MutableHandle<JS::Value> vp, bool* present);
-
 extern JS_PUBLIC_API(bool)
 JS_SetElement(JSContext *cx, JSObject *obj, uint32_t index, JS::MutableHandle<JS::Value> vp);
 
@@ -3162,13 +3155,13 @@ struct JSPrincipals {
     int32_t refcount;
 #endif
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
     /* A helper to facilitate principals debugging. */
     uint32_t    debugToken;
 #endif
 
     void setDebugToken(uint32_t token) {
-# ifdef DEBUG
+# ifdef JS_DEBUG
         debugToken = token;
 # endif
     }
@@ -4481,14 +4474,6 @@ extern JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, JS::HandleValue v);
 
 /*
- * Given a reported error's message and JSErrorReport struct pointer, throw
- * the corresponding exception on cx.
- */
-extern JS_PUBLIC_API(bool)
-JS_ThrowReportedError(JSContext *cx, const char *message,
-                      JSErrorReport *reportp);
-
-/*
  * Throws a StopIteration exception on cx.
  */
 extern JS_PUBLIC_API(bool)
@@ -4583,10 +4568,53 @@ JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 /*
  * Return the current script and line number of the most currently running
  * frame. Returns true if a scripted frame was found, false otherwise.
+ *
+ * If a the embedding has hidden the scripted caller for the topmost activation
+ * record, this will also return false.
  */
 extern JS_PUBLIC_API(bool)
 JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
 
+namespace JS {
+
+/*
+ * Informs the JS engine that the scripted caller should be hidden. This can be
+ * used by the embedding to maintain an override of the scripted caller in its
+ * calculations, by hiding the scripted caller in the JS engine and pushing data
+ * onto a separate stack, which it inspects when JS_DescribeScriptedCaller
+ * returns null.
+ *
+ * We maintain a counter on each activation record. Add() increments the counter
+ * of the topmost activation, and Remove() decrements it. The count may never
+ * drop below zero, and must always be exactly zero when the activation is
+ * popped from the stack.
+ */
+extern JS_PUBLIC_API(void)
+HideScriptedCaller(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+UnhideScriptedCaller(JSContext *cx);
+
+class AutoHideScriptedCaller
+{
+  public:
+    AutoHideScriptedCaller(JSContext *cx
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mContext(cx)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        HideScriptedCaller(mContext);
+    }
+    ~AutoHideScriptedCaller() {
+        UnhideScriptedCaller(mContext);
+    }
+
+  protected:
+    JSContext *mContext;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} /* namepsace JS */
 
 /*
  * Encode/Decode interpreted scripts and functions to/from memory.

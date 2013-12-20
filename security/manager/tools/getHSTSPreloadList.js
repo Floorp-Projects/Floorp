@@ -212,7 +212,7 @@ function output(sortedStatuses, currentList) {
     writeTo(HEADER, fos);
     writeTo(getExpirationTimeString(), fos);
     writeTo(PREFIX, fos);
-    for (var status of hstsStatuses) {
+    for (var status of sortedStatuses) {
 
       // If we've encountered an error for this entry (other than the site not
       // sending an HSTS header), be safe and don't remove it from the list

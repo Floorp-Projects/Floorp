@@ -43,6 +43,7 @@ MmsMessage::MmsMessage(int32_t                          aId,
                        const nsAString&                 aSender,
                        const nsTArray<nsString>&        aReceivers,
                        uint64_t                         aTimestamp,
+                       uint64_t                         aSentTimestamp,
                        bool                             aRead,
                        const nsAString&                 aSubject,
                        const nsAString&                 aSmil,
@@ -57,6 +58,7 @@ MmsMessage::MmsMessage(int32_t                          aId,
     mSender(aSender),
     mReceivers(aReceivers),
     mTimestamp(aTimestamp),
+    mSentTimestamp(aSentTimestamp),
     mRead(aRead),
     mSubject(aSubject),
     mSmil(aSmil),
@@ -74,6 +76,7 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
   , mSender(aData.sender())
   , mReceivers(aData.receivers())
   , mTimestamp(aData.timestamp())
+  , mSentTimestamp(aData.sentTimestamp())
   , mRead(aData.read())
   , mSubject(aData.subject())
   , mSmil(aData.smil())
@@ -134,17 +137,7 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
     info.deliveryStatus = statusStr;
 
     // Prepare |info.deliveryTimestamp|.
-    info.deliveryTimestamp = JSVAL_NULL;
-    if (infoData.deliveryTimestamp() != 0) {
-      AutoJSContext cx;
-      JS::Rooted<JSObject*>
-        dateObj(cx, JS_NewDateObjectMsec(cx, infoData.deliveryTimestamp()));
-      if (!dateObj) {
-        NS_WARNING("MmsMessage: Unable to create Date for deliveryTimestamp.");
-      } else {
-        info.deliveryTimestamp = OBJECT_TO_JSVAL(dateObj);
-      }
-    }
+    info.deliveryTimestamp = infoData.deliveryTimestamp();
 
     // Prepare |info.readStatus|.
     nsString statusReadString;
@@ -168,17 +161,7 @@ MmsMessage::MmsMessage(const mobilemessage::MmsMessageData& aData)
     info.readStatus = statusReadString;
 
     // Prepare |info.readTimestamp|.
-    info.readTimestamp = JSVAL_NULL;
-    if (infoData.readTimestamp() != 0) {
-      AutoJSContext cx;
-      JS::Rooted<JSObject*>
-        dateObj(cx, JS_NewDateObjectMsec(cx, infoData.readTimestamp()));
-      if (!dateObj) {
-        NS_WARNING("MmsMessage: Unable to create Data for readTimestamp.");
-      } else {
-        info.readTimestamp = OBJECT_TO_JSVAL(dateObj);
-      }
-    }
+    info.readTimestamp = infoData.readTimestamp();
 
     mDeliveryInfo.AppendElement(info);
   }
@@ -193,6 +176,7 @@ MmsMessage::Create(int32_t               aId,
                    const nsAString&      aSender,
                    const JS::Value&      aReceivers,
                    const JS::Value&      aTimestamp,
+                   const JS::Value&      aSentTimestamp,
                    bool                  aRead,
                    const nsAString&      aSubject,
                    const nsAString&      aSmil,
@@ -276,6 +260,11 @@ MmsMessage::Create(int32_t               aId,
   nsresult rv = convertTimeToInt(aCx, aTimestamp, timestamp);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Set |sentTimestamp|.
+  uint64_t sentTimestamp;
+  rv = convertTimeToInt(aCx, aSentTimestamp, sentTimestamp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Set |attachments|.
   if (!aAttachments.isObject()) {
     return NS_ERROR_INVALID_ARG;
@@ -314,6 +303,7 @@ MmsMessage::Create(int32_t               aId,
                                                          aSender,
                                                          receivers,
                                                          timestamp,
+                                                         sentTimestamp,
                                                          aRead,
                                                          aSubject,
                                                          aSmil,
@@ -337,6 +327,7 @@ MmsMessage::GetData(ContentParent* aParent,
   aData.sender().Assign(mSender);
   aData.receivers() = mReceivers;
   aData.timestamp() = mTimestamp;
+  aData.sentTimestamp() = mSentTimestamp;
   aData.read() = mRead;
   aData.subject() = mSubject;
   aData.smil() = mSmil;
@@ -371,12 +362,7 @@ MmsMessage::GetData(ContentParent* aParent,
     infoData.deliveryStatus() = status;
 
     // Prepare |infoData.deliveryTimestamp|.
-    if (info.deliveryTimestamp == JSVAL_NULL) {
-      infoData.deliveryTimestamp() = 0;
-    } else {
-      AutoJSContext cx;
-      convertTimeToInt(cx, info.deliveryTimestamp, infoData.deliveryTimestamp());
-    }
+    infoData.deliveryTimestamp() = info.deliveryTimestamp;
 
     // Prepare |infoData.readStatus|.
     ReadStatus readStatus;
@@ -394,12 +380,7 @@ MmsMessage::GetData(ContentParent* aParent,
     infoData.readStatus() = readStatus;
 
     // Prepare |infoData.readTimestamp|.
-    if (info.readTimestamp == JSVAL_NULL) {
-      infoData.readTimestamp() = 0;
-    } else {
-      AutoJSContext cx;
-      convertTimeToInt(cx, info.readTimestamp, infoData.readTimestamp());
-    }
+    infoData.readTimestamp() = info.readTimestamp;
 
     aData.deliveryInfo().AppendElement(infoData);
   }
@@ -540,8 +521,8 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
     }
 
     // Get |info.deliveryTimestamp|.
-    if (!JS_DefineProperty(aCx, infoJsObj,
-                           "deliveryTimestamp", info.deliveryTimestamp,
+    tmpJsVal.setNumber(static_cast<double>(info.deliveryTimestamp));
+    if (!JS_DefineProperty(aCx, infoJsObj, "deliveryTimestamp", tmpJsVal,
                            nullptr, nullptr, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
@@ -554,13 +535,14 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
 
     tmpJsVal.setString(tmpJsStr);
     if (!JS_DefineProperty(aCx, infoJsObj, "readStatus", tmpJsVal,
-                           NULL, NULL, JSPROP_ENUMERATE)) {
+                           nullptr, nullptr, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
     // Get |info.readTimestamp|.
-    if (!JS_DefineProperty(aCx, infoJsObj, "readTimestamp", info.readTimestamp,
-                           NULL, NULL, JSPROP_ENUMERATE)) {
+    tmpJsVal.setNumber(static_cast<double>(info.readTimestamp));
+    if (!JS_DefineProperty(aCx, infoJsObj, "readTimestamp", tmpJsVal,
+                           nullptr, nullptr, JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
     }
 
@@ -593,12 +575,16 @@ MmsMessage::GetReceivers(JSContext* aCx, JS::Value* aReceivers)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetTimestamp(JSContext* cx, JS::Value* aDate)
+MmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
 {
-  JSObject *obj = JS_NewDateObjectMsec(cx, mTimestamp);
-  NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
+  *aTimestamp = mTimestamp;
+  return NS_OK;
+}
 
-  *aDate = OBJECT_TO_JSVAL(obj);
+NS_IMETHODIMP
+MmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+{
+  *aSentTimestamp = mSentTimestamp;
   return NS_OK;
 }
 
@@ -691,12 +677,9 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetExpiryDate(JSContext* cx, JS::Value* aDate)
+MmsMessage::GetExpiryDate(DOMTimeStamp* aExpiryDate)
 {
-  JSObject *obj = JS_NewDateObjectMsec(cx, mExpiryDate);
-  NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
-
-  *aDate = OBJECT_TO_JSVAL(obj);
+  *aExpiryDate = mExpiryDate;
   return NS_OK;
 }
 

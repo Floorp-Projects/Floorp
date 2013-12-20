@@ -189,8 +189,12 @@ struct EffectSolidColor : public Effect
 
 struct EffectChain
 {
+  EffectChain() : mLayerRef(NULL) {}
+  explicit EffectChain(void* aLayerRef) : mLayerRef(aLayerRef) {}
+
   RefPtr<Effect> mPrimaryEffect;
   RefPtr<Effect> mSecondaryEffects[EFFECT_MAX_SECONDARY];
+  void* mLayerRef; //!< For LayerScope logging
 };
 
 /**

@@ -50,10 +50,10 @@ private:
     int NumRASEntries();
 
     // Get the name of the default connection from the OS.
-    nsresult GetDefaultEntryName(PRUnichar* entryName, int bufferSize);
+    nsresult GetDefaultEntryName(wchar_t* entryName, int bufferSize);
 
     // Get the name of the first RAS dial entry from the OS.
-    nsresult GetFirstEntryName(PRUnichar* entryName, int bufferSize);
+    nsresult GetFirstEntryName(wchar_t* entryName, int bufferSize);
 
     // Check to see if RAS already has a dialup connection going.
     bool IsRASConnected();
@@ -62,7 +62,7 @@ private:
     int QueryAutodialBehavior();
 
     // Add the specified address to the autodial directory.
-    bool AddAddressToAutodialDirectory(const PRUnichar* hostName);
+    bool AddAddressToAutodialDirectory(char16ptr_t hostName);
 
     // Get the  current TAPI dialing location.
     int GetCurrentLocation();
@@ -88,7 +88,7 @@ private:
     int mNumRASConnectionEntries;
 
     // Default connection entry name.
-    PRUnichar mDefaultEntryName[RAS_MaxEntryName + 1];  
+    wchar_t mDefaultEntryName[RAS_MaxEntryName + 1];
 
     // Don't try to dial again within a few seconds of when user pressed cancel.
     static PRIntervalTime mDontRetryUntil;

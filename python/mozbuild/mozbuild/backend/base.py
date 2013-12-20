@@ -11,19 +11,22 @@ from abc import (
 
 import errno
 import os
-import sys
 import time
 
 from contextlib import contextmanager
 
 from mach.mixin.logging import LoggingMixin
 
+import mozpack.path as mozpath
+from ..preprocessor import Preprocessor
+from ..pythonutil import iter_modules_in_path
 from ..util import FileAvoidWrite
 from ..frontend.data import (
     ReaderSummary,
     SandboxDerived,
 )
 from .configenvironment import ConfigEnvironment
+import mozpack.path as mozpath
 
 
 class BackendConsumeSummary(object):
@@ -63,19 +66,31 @@ class BackendConsumeSummary(object):
         # the read and execute time. It does not cover consume time.
         self.mozbuild_execution_time = 0.0
 
+        # The total wall time spent emitting objects from sandboxes.
+        self.emitter_execution_time = 0.0
+
         # The total wall time spent in the backend. This counts the time the
         # backend writes out files, etc.
         self.backend_execution_time = 0.0
 
         # How much wall time the system spent doing other things. This is
-        # wall_time - mozbuild_execution_time - backend_execution_time.
+        # wall_time - mozbuild_execution_time - emitter_execution_time -
+        # backend_execution_time.
         self.other_time = 0.0
+
+        # Mapping of changed file paths to diffs of the changes.
+        self.file_diffs = {}
 
     @property
     def reader_summary(self):
-        return 'Finished reading {:d} moz.build files into {:d} descriptors in {:.2f}s'.format(
-            self.mozbuild_count, self.object_count,
+        return 'Finished reading {:d} moz.build files in {:.2f}s'.format(
+            self.mozbuild_count,
             self.mozbuild_execution_time)
+
+    @property
+    def emitter_summary(self):
+        return 'Processed into {:d} build config descriptors in {:.2f}s'.format(
+            self.object_count, self.emitter_execution_time)
 
     @property
     def backend_summary(self):
@@ -88,11 +103,14 @@ class BackendConsumeSummary(object):
     @property
     def total_summary(self):
         efficiency_value = self.cpu_time / self.wall_time if self.wall_time else 100
-        return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: {:.0%}'.format(
-            self.wall_time, self.cpu_time, efficiency_value)
+        return 'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: ' \
+            '{:.0%}; Untracked: {:.2f}s'.format(
+                self.wall_time, self.cpu_time, efficiency_value,
+                self.other_time)
 
     def summaries(self):
         yield self.reader_summary
+        yield self.emitter_summary
         yield self.backend_summary
 
         detailed = self.backend_detailed_summary()
@@ -128,34 +146,17 @@ class BuildBackend(LoggingMixin):
         self._backend_output_files = set()
 
         # Previously generated files.
-        self._backend_output_list_file = os.path.join(environment.topobjdir,
+        self._backend_output_list_file = mozpath.join(environment.topobjdir,
             'backend.%s' % self.__class__.__name__)
         self._backend_output_list = set()
         if os.path.exists(self._backend_output_list_file):
-            self._backend_output_list.update(open(self._backend_output_list_file) \
-                                               .read().split('\n'))
+            l = open(self._backend_output_list_file).read().split('\n')
+            self._backend_output_list.update(mozpath.normsep(p) for p in l)
 
-        # Pull in Python files for this package as dependencies so backend
-        # regeneration occurs if any of the code affecting it changes.
-        for name, module in sys.modules.items():
-            if not module or not name.startswith('mozbuild'):
-                continue
-
-            p = module.__file__
-
-            # We need to look at the actual source files as opposed to derived
-            # because there may be nothing loading these modules at build time.
-            # Assuming each .pyc comes from a .py file in the same directory is
-            # not a safe assumption. Hence the assert to catch future changes
-            # in behavior. A better solution likely involves loading all
-            # mozbuild modules at the top of the build to force .pyc
-            # generation.
-            if p.endswith('.pyc'):
-                p = p[0:-1]
-
-            assert os.path.exists(p)
-
-            self.backend_input_files.add((os.path.abspath(p)))
+        # Pull in all loaded Python as dependencies so any Python changes that
+        # could influence our output result in a rescan.
+        self.backend_input_files |= set(iter_modules_in_path(environment.topsrcdir))
+        self.backend_input_files |= set(iter_modules_in_path(environment.topobjdir))
 
         self._environments = {}
         self._environments[environment.topobjdir] = environment
@@ -179,7 +180,7 @@ class BuildBackend(LoggingMixin):
         """
         environment = self._environments.get(obj.topobjdir, None)
         if not environment:
-            config_status = os.path.join(obj.topobjdir, 'config.status')
+            config_status = mozpath.join(obj.topobjdir, 'config.status')
 
             environment = ConfigEnvironment.from_config_status(config_status)
             self._environments[obj.topobjdir] = environment
@@ -211,7 +212,8 @@ class BuildBackend(LoggingMixin):
 
             if isinstance(obj, ReaderSummary):
                 self.summary.mozbuild_count = obj.total_file_count
-                self.summary.mozbuild_execution_time = obj.total_execution_time
+                self.summary.mozbuild_execution_time = obj.total_sandbox_execution_time
+                self.summary.emitter_execution_time = obj.total_emitter_execution_time
 
         finished_start = time.time()
         self.consume_finished()
@@ -221,12 +223,12 @@ class BuildBackend(LoggingMixin):
         delete_files = self._backend_output_list - self._backend_output_files
         for path in delete_files:
             try:
-                os.unlink(os.path.join(self.environment.topobjdir, path))
+                os.unlink(mozpath.join(self.environment.topobjdir, path))
                 self.summary.deleted_count += 1
             except OSError:
                 pass
         # Remove now empty directories
-        for dir in set(os.path.dirname(d) for d in delete_files):
+        for dir in set(mozpath.dirname(d) for d in delete_files):
             try:
                 os.removedirs(dir)
             except OSError:
@@ -246,6 +248,7 @@ class BuildBackend(LoggingMixin):
         self.summary.backend_execution_time = backend_time
         self.summary.other_time = self.summary.wall_time - \
             self.summary.mozbuild_execution_time - \
+            self.summary.emitter_execution_time - \
             self.summary.backend_execution_time
 
         return self.summary
@@ -276,11 +279,11 @@ class BuildBackend(LoggingMixin):
 
         if path is not None:
             assert fh is None
-            fh = FileAvoidWrite(path)
+            fh = FileAvoidWrite(path, capture_diff=True)
         else:
             assert fh is not None
 
-        dirname = os.path.dirname(fh.name)
+        dirname = mozpath.dirname(fh.name)
         try:
             os.makedirs(dirname)
         except OSError as error:
@@ -289,11 +292,33 @@ class BuildBackend(LoggingMixin):
 
         yield fh
 
-        self._backend_output_files.add(os.path.relpath(fh.name, self.environment.topobjdir))
+        self._backend_output_files.add(mozpath.relpath(fh.name, self.environment.topobjdir))
         existed, updated = fh.close()
         if not existed:
             self.summary.created_count += 1
         elif updated:
             self.summary.updated_count += 1
+            if fh.diff:
+                self.summary.file_diffs[fh.name] = fh.diff
         else:
             self.summary.unchanged_count += 1
+
+    @contextmanager
+    def _get_preprocessor(self, obj):
+        '''Returns a preprocessor with a few predefined values depending on
+        the given BaseConfigSubstitution(-like) object, and all the substs
+        in the current environment.'''
+        pp = Preprocessor()
+        srcdir = mozpath.dirname(obj.input_path)
+        pp.context.update(self.environment.substs)
+        pp.context.update(
+            top_srcdir=obj.topsrcdir,
+            srcdir=srcdir,
+            relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or '.',
+            DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path)) or '.',
+        )
+        pp.do_filter('attemptSubstitution')
+        pp.setMarker(None)
+        with self._write_file(obj.output_path) as fh:
+            pp.out = fh
+            yield pp

@@ -16,17 +16,110 @@
 }
 
 .devtools-responsiveui-toolbar {
+  -moz-appearance: none;
   background: transparent;
+  /* text color is textColor from dark theme, since no theme is applied to
+   * the responsive toolbar.
+   */
+  color: hsl(210,30%,85%);
   margin: 10px 0;
   padding: 0;
   box-shadow: none;
   border-bottom-width: 0;
 }
 
-.devtools-responsiveui-toolbar > menulist,
-.devtools-responsiveui-toolbar > toolbarbutton {
-  min-width: 22px;
+.devtools-responsiveui-menulist,
+.devtools-responsiveui-toolbarbutton {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  min-width: 32px;
+  min-height: 22px;
+  text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
+  border: 1px solid hsla(210,8%,5%,.45);
   border-radius: 0;
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
+  margin: 0 3px;
+  color: inherit;
+}
+
+.devtools-responsiveui-toolbarbutton > .toolbarbutton-menubutton-button {
+  -moz-box-orient: horizontal;
+}
+
+.devtools-responsiveui-menulist:-moz-focusring,
+.devtools-responsiveui-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.7);
+  outline-offset: -4px;
+}
+
+.devtools-responsiveui-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-responsiveui-toolbarbutton:not([checked=true]):hover:active {
+  border-color: hsla(210,8%,5%,.6);
+  background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-responsiveui-menulist[open=true],
+.devtools-responsiveui-toolbarbutton[open=true],
+.devtools-responsiveui-toolbarbutton[checked=true] {
+  border-color: hsla(210,8%,5%,.6) !important;
+  background: linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
+  box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-responsiveui-toolbarbutton[checked=true] {
+  color: hsl(208,100%,60%);
+}
+
+.devtools-responsiveui-toolbarbutton[checked=true]:hover {
+  background-color: transparent !important;
+}
+
+.devtools-responsiveui-toolbarbutton[checked=true]:hover:active {
+  background-color: hsla(210,8%,5%,.2) !important;
+}
+
+.devtools-responsiveui-menulist > .menulist-label-box {
+  text-align: center;
+}
+
+.devtools-responsiveui-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  background-color: transparent;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  -moz-box-align: center;
+  border-width: 0;
+  min-width: 16px;
+}
+
+.devtools-responsiveui-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+  -moz-border-end: 1px solid hsla(210,8%,5%,.45);
+  box-shadow: -1px 0 0 hsla(210,16%,76%,.15) inset, 1px 0 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-responsiveui-toolbarbutton[type=menu-button]:-moz-locale-dir(rtl) > .toolbarbutton-menubutton-button {
+  box-shadow: 1px 0 0 hsla(210,16%,76%,.15) inset, -1px 0 0 hsla(210,16%,76%,.15);
+}
+
+.devtools-responsiveui-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+}
+
+.devtools-responsiveui-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-responsiveui-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  -moz-box-align: center;
+  padding: 0 3px;
 }
 
 .devtools-responsiveui-toolbar:-moz-locale-dir(ltr) > *:first-child,

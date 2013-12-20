@@ -22,6 +22,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+const PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
+
 /**
  * These regular expressions are adapted from firebug's css.js, and are
  * used to parse CSSStyleDeclaration's cssText attribute.
@@ -485,6 +487,33 @@ Rule.prototype = {
   get ruleLine()
   {
     return this.domRule ? this.domRule.line : null;
+  },
+
+  /**
+   * The rule's column within a stylesheet
+   */
+  get ruleColumn()
+  {
+    return this.domRule ? this.domRule.column : null;
+  },
+
+  /**
+   * Get display name for this rule based on the original source
+   * for this rule's style sheet.
+   *
+   * @return {Promise}
+   *         Promise which resolves with location as a string.
+   */
+  getOriginalSourceString: function Rule_getOriginalSourceString()
+  {
+    if (this._originalSourceString) {
+      return promise.resolve(this._originalSourceString);
+    }
+    return this.domRule.getOriginalLocation().then(({href, line}) => {
+      let string = CssLogic.shortSource({href: href}) + ":" + line;
+      this._originalSourceString = string;
+      return string;
+    });
   },
 
   /**
@@ -1125,27 +1154,32 @@ CssRuleView.prototype = {
    * prepare some content for the tooltip
    */
   _buildTooltipContent: function(target) {
-    let isImageHref = target.classList.contains("theme-link") &&
-      target.parentNode.classList.contains("ruleview-propertyvalue");
+    let property = target.textProperty, def = promise.defer(), hasTooltip = false;
 
-    // If the inplace-editor is visible or if this is not a background image
-    // don't show the tooltip
-    if (!isImageHref) {
-      return false;
+    // Test for css transform
+    if (property && property.name === "transform") {
+      this.previewTooltip.setCssTransformContent(property.value, this.pageStyle,
+        this._viewedElement).then(def.resolve);
+      hasTooltip = true;
     }
 
-    // Retrieve the TextProperty for the hovered element
-    let property = target.parentNode.textProperty;
-    let href = property.rule.domRule.href;
+    // Test for image
+    let isImageHref = target.classList.contains("theme-link") &&
+      target.parentNode.classList.contains("ruleview-propertyvalue");
+    if (isImageHref) {
+      property = target.parentNode.textProperty;
+      this.previewTooltip.setCssBackgroundImageContent(property.value,
+        property.rule.domRule.href);
+      def.resolve();
+      hasTooltip = true;
+    }
 
-    // Fill some content
-    this.previewTooltip.setCssBackgroundImageContent(property.value, href);
+    if (hasTooltip) {
+      this.colorPicker.revert();
+      this.colorPicker.hide();
+    }
 
-    // Hide the color picker tooltip if shown and revert changes
-    this.colorPicker.revert();
-    this.colorPicker.hide();
-
-    return true;
+    return def.promise;
   },
 
   /**
@@ -1301,7 +1335,7 @@ CssRuleView.prototype = {
   /**
    * Update the highlighted element.
    *
-   * @param {nsIDOMElement} aElement
+   * @param {NodeActor} aElement
    *        The node whose style rules we'll inspect.
    */
   highlight: function CssRuleView_highlight(aElement)
@@ -1395,6 +1429,9 @@ CssRuleView.prototype = {
     this._clearRules();
     this._viewedElement = null;
     this._elementStyle = null;
+
+    this.previewTooltip.hide();
+    this.colorPicker.hide();
   },
 
   /**
@@ -1585,6 +1622,14 @@ RuleEditor.prototype = {
     sourceLabel.setAttribute("value", this.rule.title);
     sourceLabel.setAttribute("tooltiptext", this.rule.title);
     source.appendChild(sourceLabel);
+
+    let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
+    if (showOrig && this.rule.domRule.type != ELEMENT_STYLE) {
+      this.rule.getOriginalSourceString().then((string) => {
+        sourceLabel.setAttribute("value", string);
+        sourceLabel.setAttribute("tooltiptext", string);
+      })
+    }
 
     let code = createChild(this.element, "div", {
       class: "ruleview-code"
@@ -2023,6 +2068,7 @@ TextPropertyEditor.prototype = {
     let outputParser = this.ruleEditor.ruleView._outputParser;
     let frag = outputParser.parseCssProperty(name, val, {
       colorSwatchClass: swatchClass,
+      colorClass: "ruleview-color",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       baseURI: this.sheetURI

@@ -476,9 +476,9 @@ struct MessageWindow {
     }
 
     // Class name: appName + "MessageWindow"
-    static const PRUnichar *className() {
-        static PRUnichar classNameBuffer[128];
-        static PRUnichar *mClassName = 0;
+    static const wchar_t *className() {
+        static wchar_t classNameBuffer[128];
+        static wchar_t *mClassName = 0;
         if ( !mClassName ) {
             ::_snwprintf(classNameBuffer,
                          128,   // size of classNameBuffer in PRUnichars
@@ -643,7 +643,8 @@ nsNativeAppSupportWin::Start( bool *aResult ) {
     // Grab mutex first.
 
     // Build mutex name from app name.
-    ::_snwprintf(mMutexName, sizeof mMutexName / sizeof(PRUnichar), L"%s%s%s", 
+    ::_snwprintf(reinterpret_cast<wchar_t*>(mMutexName),
+                 sizeof mMutexName / sizeof(PRUnichar), L"%s%s%s",
                  MOZ_MUTEX_NAMESPACE,
                  NS_ConvertUTF8toUTF16(gAppData->name).get(),
                  MOZ_STARTUP_MUTEX_NAME );
@@ -1218,7 +1219,7 @@ void nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index, nsString& aString)
     // Ensure result's buffer is sufficiently big.
     temp.SetLength( argLen );
     // Now get the string contents.
-    DdeQueryString( mInstance, args, temp.BeginWriting(), temp.Length(), CP_WINUNICODE );
+    DdeQueryString( mInstance, args, reinterpret_cast<wchar_t*>(temp.BeginWriting()), temp.Length(), CP_WINUNICODE );
     // Parse out the given arg.
     ParseDDEArg(temp.get(), index, aString);
     return;
@@ -1241,7 +1242,7 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
     nsCOMPtr<nsIDOMWindow> navWin;
-    GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
+    GetMostRecentWindow( MOZ_UTF16("navigator:browser"), getter_AddRefs( navWin ) );
     if ( navWin ) {
         // Activate that window.
         activateWindow( navWin );

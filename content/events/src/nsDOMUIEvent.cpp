@@ -14,7 +14,7 @@
 #include "nsContentUtils.h"
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/TextEvents.h"
@@ -63,7 +63,7 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
   mView = nullptr;
   if (mPresContext)
   {
-    nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
+    nsISupports* container = mPresContext->GetContainerWeak();
     if (container)
     {
        nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);

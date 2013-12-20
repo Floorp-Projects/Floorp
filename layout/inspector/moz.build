@@ -1,0 +1,55 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    'inICSSValueSearch.idl',
+    'inIDeepTreeWalker.idl',
+    'inIDOMUtils.idl',
+    'inIDOMView.idl',
+    'inIFlasher.idl',
+    'inISearchObserver.idl',
+    'inISearchProcess.idl',
+    'nsIDOMFontFace.idl',
+    'nsIDOMFontFaceList.idl',
+]
+
+XPIDL_MODULE = 'inspector'
+
+EXPORTS += [
+    'nsFontFace.h',
+    'nsFontFaceList.h',
+]
+
+UNIFIED_SOURCES += [
+    'inCSSValueSearch.cpp',
+    'inDeepTreeWalker.cpp',
+    'inDOMUtils.cpp',
+    'inFlasher.cpp',
+    'inLayoutUtils.cpp',
+    'inSearchLoop.cpp',
+    'nsFontFace.cpp',
+    'nsFontFaceList.cpp',
+]
+
+if CONFIG['MOZ_XUL']:
+    UNIFIED_SOURCES += [
+        'inDOMView.cpp',
+    ]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'gklayout'
+LOCAL_INCLUDES += [
+    '../style',
+    '/content/base/src',
+    '/content/xbl/src',
+]
+
+if CONFIG['ENABLE_TESTS']:
+    PARALLEL_DIRS += [
+        'tests',
+        'tests/chrome',
+    ]

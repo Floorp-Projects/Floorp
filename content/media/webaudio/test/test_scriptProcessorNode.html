@@ -79,10 +79,10 @@ addLoadEvent(function() {
     // Because of the initial latency added by the second script processor node,
     // we will never see any generated audio frames in the first callback.
     var emptyBuffer = context.createBuffer(1, 2048, context.sampleRate);
-    compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-    compareBuffers(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
-    compareBuffers(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-    compareBuffers(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
+    compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+    compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
+    compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+    compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
     sp.onaudioprocess = function(e) {
       is(e.target, sp, "Correct event target");
@@ -96,13 +96,14 @@ addLoadEvent(function() {
       is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
 
       var firstNonZero = findFirstNonZeroSample(e.inputBuffer);
+      ok(firstNonZero <= 2048, "First non-zero sample within range");
 
-      compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), 0, Math.min(firstNonZero, 2048));
-      compareBuffers(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), 0, Math.min(firstNonZero, 2048));
-      compareBuffers(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), Math.min(firstNonZero, 2048), 2048 - firstNonZero, 0, -firstNonZero);
-      compareBuffers(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), Math.min(firstNonZero, 2048), 2048 - firstNonZero, 0, -firstNonZero);
-      compareBuffers(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-      compareBuffers(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
+      compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), firstNonZero);
+      compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), firstNonZero);
+      compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), 2048 - firstNonZero, firstNonZero, 0);
+      compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), 2048 - firstNonZero, firstNonZero, 0);
+      compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+      compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
       if (firstNonZero == 0) {
         // If we did not experience any delays, the test is done!
@@ -122,12 +123,12 @@ addLoadEvent(function() {
           is(e.outputBuffer.length, 2048, "Correct length for the output buffer");
           is(e.outputBuffer.sampleRate, context.sampleRate, "Correct sample rate for the output buffer");
 
-          compareBuffers(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), 0, firstNonZero, 0, 2048 - firstNonZero);
-          compareBuffers(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), 0, firstNonZero, 0, 2048 - firstNonZero);
-          compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), firstNonZero);
-          compareBuffers(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), firstNonZero);
-          compareBuffers(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
-          compareBuffers(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
+          compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(0), firstNonZero, 0, 2048 - firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(1), buffer.getChannelData(1), firstNonZero, 0, 2048 - firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0), undefined, firstNonZero);
+          compareChannels(e.inputBuffer.getChannelData(1), emptyBuffer.getChannelData(0), undefined, firstNonZero);
+          compareChannels(e.outputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+          compareChannels(e.outputBuffer.getChannelData(1), emptyBuffer.getChannelData(0));
 
           sp.onaudioprocess = null;
 

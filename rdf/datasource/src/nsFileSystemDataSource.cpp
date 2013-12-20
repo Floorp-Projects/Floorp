@@ -297,7 +297,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
         if (property == mNC_pulse)
         {
             nsIRDFLiteral   *pulseLiteral;
-            mRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), &pulseLiteral);
+            mRDFService->GetLiteral(MOZ_UTF16("12"), &pulseLiteral);
             *target = pulseLiteral;
             return NS_OK;
         }
@@ -409,7 +409,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
         else if (property == mNC_pulse)
         {
             nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-            mRDFService->GetLiteral(NS_LITERAL_STRING("12").get(), getter_AddRefs(pulseLiteral));
+            mRDFService->GetLiteral(MOZ_UTF16("12"), getter_AddRefs(pulseLiteral));
             rv = pulseLiteral->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
             return(rv);
         }
@@ -485,7 +485,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
         else if (property == mNC_pulse)
         {
             nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-            mRDFService->GetLiteral(NS_LITERAL_STRING("12").get(),
+            mRDFService->GetLiteral(MOZ_UTF16("12"),
                                     getter_AddRefs(pulseLiteral));
             return NS_NewSingletonEnumerator(targets, pulseLiteral);
         }
@@ -529,7 +529,7 @@ FileSystemDataSource::GetTargets(nsIRDFResource *source,
         else if (property == mNC_pulse)
         {
             nsCOMPtr<nsIRDFLiteral> pulseLiteral;
-            rv = mRDFService->GetLiteral(NS_LITERAL_STRING("12").get(),
+            rv = mRDFService->GetLiteral(MOZ_UTF16("12"),
                 getter_AddRefs(pulseLiteral));
             if (NS_FAILED(rv)) return rv;
 
@@ -849,7 +849,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 #ifdef XP_WIN
 
     int32_t         driveType;
-    PRUnichar       drive[32];
+    wchar_t         drive[32];
     int32_t         volNum;
 
     for (volNum = 0; volNum < 26; volNum++)

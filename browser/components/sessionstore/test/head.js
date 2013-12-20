@@ -193,7 +193,7 @@ function promiseContentMessage(browser, name) {
 
   function listener(msg) {
     removeListener();
-    deferred.resolve(msg);
+    deferred.resolve(msg.data);
   }
 
   mm.addMessageListener(name, listener);
@@ -280,9 +280,11 @@ function forceSaveState() {
 }
 
 function whenBrowserLoaded(aBrowser, aCallback = next) {
-  aBrowser.addEventListener("load", function onLoad() {
-    aBrowser.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback);
+  aBrowser.addEventListener("load", function onLoad(event) {
+    if (event.target == aBrowser.contentDocument) {
+      aBrowser.removeEventListener("load", onLoad, true);
+      executeSoon(aCallback);
+    }
   }, true);
 }
 function promiseBrowserLoaded(aBrowser) {
@@ -411,6 +413,29 @@ function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   whenDelayedStartupFinished(win, () => aCallback(win));
   return win;
+}
+function promiseNewWindowLoaded(aOptions) {
+  let deferred = Promise.defer();
+  whenNewWindowLoaded(aOptions, deferred.resolve);
+  return deferred.promise;
+}
+
+/**
+ * Chrome windows aren't closed synchronously. Provide a helper method to close
+ * a window and wait until we received the "domwindowclosed" notification for it.
+ */
+function promiseWindowClosed(win) {
+  let deferred = Promise.defer();
+
+  Services.obs.addObserver(function obs(subject, topic) {
+    if (subject == win) {
+      Services.obs.removeObserver(obs, topic);
+      deferred.resolve();
+    }
+  }, "domwindowclosed", false);
+
+  win.close();
+  return deferred.promise;
 }
 
 /**

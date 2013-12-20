@@ -11,9 +11,11 @@
 #include "nsIServiceManager.h"
 #include "nsDebug.h"
 #include "nsCOMArray.h"
+#include "nsXULAppAPI.h"
 #include "prinrval.h"
 #include "prlog.h"
 #include "prtime.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -397,8 +399,10 @@ nsIdleService::nsIdleService() : mCurrentlySetToTimeoutAt(TimeStamp()),
 #endif
   MOZ_ASSERT(!gIdleService);
   gIdleService = this;
-  mDailyIdle = new nsIdleServiceDaily(this);
-  mDailyIdle->Init();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    mDailyIdle = new nsIdleServiceDaily(this);
+    mDailyIdle->Init();
+  }
 }
 
 nsIdleService::~nsIdleService()
@@ -417,19 +421,25 @@ NS_IMPL_ISUPPORTS2(nsIdleService, nsIIdleService, nsIIdleServiceInternal)
 NS_IMETHODIMP
 nsIdleService::AddIdleObserver(nsIObserver* aObserver, uint32_t aIdleTimeInS)
 {
+  NS_ENSURE_ARG_POINTER(aObserver);
+  // We don't accept idle time at 0, and we can't handle idle time that are too
+  // high either - no more than ~136 years.
+  NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (UINT32_MAX / 10) - 1);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
+    cpc->AddIdleObserver(aObserver, aIdleTimeInS);
+    return NS_OK;
+  }
+
   PR_LOG(sLog, PR_LOG_DEBUG,
-         ("idleService: Register idle observer %x for %d seconds",
-          aObserver, aIdleTimeInS));
+       ("idleService: Register idle observer %x for %d seconds",
+        aObserver, aIdleTimeInS));
 #ifdef MOZ_WIDGET_ANDROID
   __android_log_print(ANDROID_LOG_INFO, "IdleService",
                       "Register idle observer %x for %d seconds",
                       aObserver, aIdleTimeInS);
 #endif
-
-  NS_ENSURE_ARG_POINTER(aObserver);
-  // We don't accept idle time at 0, and we can't handle idle time that are too
-  // high either - no more than ~136 years.
-  NS_ENSURE_ARG_RANGE(aIdleTimeInS, 1, (UINT32_MAX / 10) - 1);
 
   // Put the time + observer in a struct we can keep:
   IdleListener listener(aObserver, aIdleTimeInS);
@@ -474,6 +484,13 @@ nsIdleService::RemoveIdleObserver(nsIObserver* aObserver, uint32_t aTimeInS)
 
   NS_ENSURE_ARG_POINTER(aObserver);
   NS_ENSURE_ARG(aTimeInS);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    dom::ContentChild* cpc = dom::ContentChild::GetSingleton();
+    cpc->RemoveIdleObserver(aObserver, aTimeInS);
+    return NS_OK;
+  }
+
   IdleListener listener(aObserver, aTimeInS);
 
   // Find the entry and remove it, if it was the last entry, we just let the

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #ifdef MOZ_VALGRIND
 # include <valgrind/memcheck.h>
@@ -47,7 +47,7 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
     if (IsNullTaggedPointer(*addr))
         return;
 
-    if (kind == THING_ROOT_OBJECT && *addr == Proxy::LazyProto)
+    if (kind == THING_ROOT_OBJECT && *addr == TaggedProto::LazyProto)
         return;
 
     switch (kind) {
@@ -58,7 +58,7 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact-baseshape"); break;
       case THING_ROOT_TYPE:        MarkTypeRoot(trc, (types::Type *)addr, "exact-type"); break;
       case THING_ROOT_TYPE_OBJECT: MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact-typeobject"); break;
-      case THING_ROOT_ION_CODE:    MarkIonCodeRoot(trc, (jit::IonCode **)addr, "exact-ioncode"); break;
+      case THING_ROOT_JIT_CODE:    MarkJitCodeRoot(trc, (jit::JitCode **)addr, "exact-jitcode"); break;
       case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
       case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
       case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
@@ -474,11 +474,11 @@ AutoGCRooter::trace(JSTracer *trc)
       case OBJOBJHASHMAP: {
         AutoObjectObjectHashMap::HashMapImpl &map = static_cast<AutoObjectObjectHashMap *>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            MarkObjectRoot(trc, &e.front().value, "AutoObjectObjectHashMap value");
-            JS_SET_TRACING_LOCATION(trc, (void *)&e.front().key);
-            JSObject *key = e.front().key;
+            MarkObjectRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
+            JS_SET_TRACING_LOCATION(trc, (void *)&e.front().key());
+            JSObject *key = e.front().key();
             MarkObjectRoot(trc, &key, "AutoObjectObjectHashMap key");
-            if (key != e.front().key)
+            if (key != e.front().key())
                 e.rekeyFront(key);
         }
         return;
@@ -488,9 +488,9 @@ AutoGCRooter::trace(JSTracer *trc)
         AutoObjectUnsigned32HashMap *self = static_cast<AutoObjectUnsigned32HashMap *>(this);
         AutoObjectUnsigned32HashMap::HashMapImpl &map = self->map;
         for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
-            JSObject *key = e.front().key;
+            JSObject *key = e.front().key();
             MarkObjectRoot(trc, &key, "AutoObjectUnsignedHashMap key");
-            if (key != e.front().key)
+            if (key != e.front().key())
                 e.rekeyFront(key);
         }
         return;
@@ -684,16 +684,18 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 
     for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
         const RootEntry &entry = r.front();
-        const char *name = entry.value.name ? entry.value.name : "root";
-        if (entry.value.type == JS_GC_ROOT_VALUE_PTR) {
-            MarkValueRoot(trc, reinterpret_cast<Value *>(entry.key), name);
-        } else if (*reinterpret_cast<void **>(entry.key)){
-            if (entry.value.type == JS_GC_ROOT_STRING_PTR)
-                MarkStringRoot(trc, reinterpret_cast<JSString **>(entry.key), name);
-            else if (entry.value.type == JS_GC_ROOT_OBJECT_PTR)
-                MarkObjectRoot(trc, reinterpret_cast<JSObject **>(entry.key), name);
-            else if (entry.value.type == JS_GC_ROOT_SCRIPT_PTR)
-                MarkScriptRoot(trc, reinterpret_cast<JSScript **>(entry.key), name);
+        const char *name = entry.value().name ? entry.value().name : "root";
+        JSGCRootType type = entry.value().type;
+        void *key = entry.key();
+        if (type == JS_GC_ROOT_VALUE_PTR) {
+            MarkValueRoot(trc, reinterpret_cast<Value *>(key), name);
+        } else if (*reinterpret_cast<void **>(key)){
+            if (type == JS_GC_ROOT_STRING_PTR)
+                MarkStringRoot(trc, reinterpret_cast<JSString **>(key), name);
+            else if (type == JS_GC_ROOT_OBJECT_PTR)
+                MarkObjectRoot(trc, reinterpret_cast<JSObject **>(key), name);
+            else if (type == JS_GC_ROOT_SCRIPT_PTR)
+                MarkScriptRoot(trc, reinterpret_cast<JSScript **>(key), name);
             else
                 MOZ_ASSUME_UNREACHABLE("unexpected js::RootInfo::type value");
         }
@@ -724,16 +726,11 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         if (IS_GC_MARKING_TRACER(trc) && !zone->isCollecting())
             continue;
 
-        if (IS_GC_MARKING_TRACER(trc) && zone->isPreservingCode()) {
-            gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_TYPES);
-            zone->markTypes(trc);
-        }
-
         /* Do not discard scripts with counts while profiling. */
         if (rt->profilingScripts && !rt->isHeapMinorCollecting()) {
             for (CellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
-                if (script->hasScriptCounts) {
+                if (script->hasScriptCounts()) {
                     MarkScriptRoot(trc, &script, "profilingScripts");
                     JS_ASSERT(script == i.get<JSScript>());
                 }

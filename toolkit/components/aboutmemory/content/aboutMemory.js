@@ -359,22 +359,23 @@ function onLoad()
 
 function doGC()
 {
-  Cu.forceGC();
   Services.obs.notifyObservers(null, "child-gc-request", null);
+  Cu.forceGC();
   updateMainAndFooter("Garbage collection completed", HIDE_FOOTER);
 }
 
 function doCC()
 {
+  Services.obs.notifyObservers(null, "child-cc-request", null);
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  Services.obs.notifyObservers(null, "child-cc-request", null);
   updateMainAndFooter("Cycle collection completed", HIDE_FOOTER);
 }
 
 function doMMU()
 {
+  Services.obs.notifyObservers(null, "child-mmu-request", null);
   gMgr.minimizeMemoryUsage(
     () => updateMainAndFooter("Memory minimization completed", HIDE_FOOTER));
 }
@@ -421,8 +422,6 @@ function updateAboutMemoryFromReporters()
 
 // Increment this if the JSON format changes.
 //
-// If/when this changes to 2, the beLenient() function and its use can be
-// removed.
 var gCurrentFileFormatVersion = 1;
 
 /**
@@ -446,8 +445,19 @@ function updateAboutMemoryFromJSONObject(aObj)
         function(aHandleReport, aDisplayReports) {
       for (let i = 0; i < aObj.reports.length; i++) {
         let r = aObj.reports[i];
-        aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
-                      r.description, r._presence);
+
+        // A hack: for a brief time (late in the FF26 and early in the FF27
+        // cycle) we were dumping memory report files that contained reports
+        // whose path began with "redundant/".  Such reports were ignored by
+        // about:memory.  These reports are no longer produced, but some older
+        // builds are still floating around and producing files that contain
+        // them, so we need to still handle them (i.e. ignore them).  This hack
+        // can be removed once FF26 and associated products (e.g. B2G 1.2) are
+        // no longer in common use.
+        if (!r.path.startsWith("redundant/")) {
+          aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
+                        r.description, r._presence);
+        }
       }
       aDisplayReports();
     }
@@ -810,11 +820,6 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
 {
   let pcollsByProcess = {};
 
-  // This regexp matches sentences and sentence fragments, i.e. strings that
-  // start with a capital letter and ends with a '.'.  (The final sentence may
-  // be in parentheses, so a ')' might appear after the '.'.)
-  const gSentenceRegExp = /^[A-Z].*\.\)?$/m;
-
   function handleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
                         aDescription, aPresence)
   {
@@ -822,33 +827,6 @@ function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
       assertInput(aKind === KIND_HEAP || aKind === KIND_NONHEAP,
                   "bad explicit kind");
       assertInput(aUnits === UNITS_BYTES, "bad explicit units");
-      assertInput(gSentenceRegExp.test(aDescription),
-                  "non-sentence explicit description");
-
-    } else {
-      const kLenientPrefixes =
-        ['rss/', 'pss/', 'size/', 'swap/', 'compartments/', 'ghost-windows/'];
-      let beLenient = function(aUnsafePath) {
-        for (let i = 0; i < kLenientPrefixes.length; i++) {
-          if (aUnsafePath.startsWith(kLenientPrefixes[i])) {
-            return true;
-          }
-        }
-        return false;
-      }
-
-      // In general, non-explicit reports should have a description that is a
-      // complete sentence.  However, we want to be able to read old saved
-      // reports, so we are lenient in a couple of situations where we used to
-      // allow non-sentence descriptions:
-      // - smaps reports (which were removed in bug 912165);
-      // - compartment and ghost-window reports (which had empty descriptions
-      //   prior to bug 911641).
-      if (!beLenient(aUnsafePath)) {
-        assertInput(gSentenceRegExp.test(aDescription),
-                    "non-sentence other description: " + aUnsafePath + ", " +
-                    aDescription);
-      }
     }
 
     assert(aPresence === undefined ||
@@ -1110,7 +1088,7 @@ function fillInTree(aRoot)
  * @param aHeapAllocatedNode
  *        The "heap-allocated" tree node.
  * @param aHeapTotal
- *        The sum of all explicit HEAP reporters for this process.
+ *        The sum of all explicit HEAP reports for this process.
  * @return A boolean indicating if "heap-allocated" is known for the process.
  */
 function addHeapUnclassifiedNode(aT, aHeapAllocatedNode, aHeapTotal)
@@ -1123,7 +1101,7 @@ function addHeapUnclassifiedNode(aT, aHeapAllocatedNode, aHeapTotal)
   let heapUnclassifiedT = new TreeNode("heap-unclassified", UNITS_BYTES);
   heapUnclassifiedT._amount = heapAllocatedBytes - aHeapTotal;
   heapUnclassifiedT._description =
-      "Memory not classified by a more specific reporter. This includes " +
+      "Memory not classified by a more specific report. This includes " +
       "slop bytes due to internal fragmentation in the heap allocator " +
       "(caused when the allocator rounds up request sizes).";
   aT._kids.push(heapUnclassifiedT);
@@ -1309,12 +1287,14 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   let warningsDiv = appendElement(aP, "div", "accuracyWarning");
 
   // The explicit tree.
+  let hasExplicitTree;
   let hasKnownHeapAllocated;
   {
     let treeName = "explicit";
-    let pre = appendSectionHeader(aP, "Explicit Allocations");
     let t = aTrees[treeName];
     if (t) {
+      let pre = appendSectionHeader(aP, "Explicit Allocations");
+      hasExplicitTree = true;
       fillInTree(t);
       // Using the "heap-allocated" reporter here instead of
       // nsMemoryReporterManager.heapAllocated goes against the usual pattern.
@@ -1372,11 +1352,13 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
   }
   appendTextNode(aP, "\n");  // gives nice spacing when we copy and paste
 
-  // Add any warnings about inaccuracies due to platform limitations.
-  // These must be computed after generating all the text.  The newlines give
-  // nice spacing if we copy+paste into a text buffer.
-  appendWarningElements(warningsDiv, hasKnownHeapAllocated,
-                        aHasMozMallocUsableSize);
+  // Add any warnings about inaccuracies in the "explicit" tree due to platform
+  // limitations.  These must be computed after generating all the text.  The
+  // newlines give nice spacing if we copy+paste into a text buffer.
+  if (hasExplicitTree) {
+    appendWarningElements(warningsDiv, hasKnownHeapAllocated,
+                          aHasMozMallocUsableSize);
+  }
 
   appendElementWithText(aP, "h3", "", "End of " + aProcess);
   appendLink("end", "start", kUpwardsArrow);
@@ -1545,7 +1527,7 @@ function appendMrNameSpan(aP, aDescription, aUnsafeName, aIsInvalid, aNMerged,
     let noteSpan = appendElementWithText(aP, "span", "mrNote", noteText);
     noteSpan.title =
       "This value is the sum of " + aNMerged +
-      " memory reporters that all have the same path.";
+      " memory reports that all have the same path.";
   }
 
   if (aPresence) {

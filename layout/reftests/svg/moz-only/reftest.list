@@ -19,4 +19,4 @@ skip-if(B2G) random-if(d2d) == feImage-zoom-01a.svg          feImage-zoom-01-ref
 skip-if(B2G) random-if(d2d) == feImage-zoom-01b.svg          feImage-zoom-01-ref.svg # bug 773482
 skip-if(B2G) == foreignObject-zoom-01.svg                    pass.svg # bug 773482
 skip-if(B2G) == zoom-invalidation-01.svg                     pass.svg # bug 773482
-== zoomed-svg-with-viewBox-01.svg          zoomed-svg-with-viewBox-01-ref.svg
+fuzzy-if(winWidget,12,7) == zoomed-svg-with-viewBox-01.svg   zoomed-svg-with-viewBox-01-ref.svg

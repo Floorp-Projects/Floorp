@@ -9,10 +9,11 @@
  */
 
 #include "vpx_config.h"
+#include "vp8_rtcd.h"
 #include "vp8/common/variance.h"
 #include "vp8/common/filter.h"
 
-#if HAVE_ARMV6
+#if HAVE_MEDIA
 #include "vp8/common/arm/bilinearfilter_arm.h"
 
 unsigned int vp8_sub_pixel_variance8x8_armv6
@@ -91,10 +92,21 @@ unsigned int vp8_sub_pixel_variance16x16_armv6
     return var;
 }
 
-#endif /* HAVE_ARMV6 */
+#endif /* HAVE_MEDIA */
 
 
-#if HAVE_ARMV7
+#if HAVE_NEON
+
+extern unsigned int vp8_sub_pixel_variance16x16_neon_func
+(
+    const unsigned char  *src_ptr,
+    int  src_pixels_per_line,
+    int  xoffset,
+    int  yoffset,
+    const unsigned char *dst_ptr,
+    int dst_pixels_per_line,
+    unsigned int *sse
+);
 
 unsigned int vp8_sub_pixel_variance16x16_neon
 (

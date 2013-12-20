@@ -139,7 +139,7 @@ class MochitestRunner(MozbuildObject):
                 print('Specified test path does not exist: %s' % test_root_file)
                 return 1
             options.testPath = test_path
-        elif conditions.is_b2g_desktop:
+        elif conditions.is_b2g_desktop(self):
             options.testManifest = 'b2g-desktop.json'
         else:
             options.testManifest = 'b2g.json'
@@ -198,7 +198,7 @@ class MochitestRunner(MozbuildObject):
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
         debug_on_failure=False, start_at=None, end_at=None, e10s=False,
         dmd=False, dump_output_directory=None, dump_about_memory_after_test=False,
-        dump_dmd_after_test=False):
+        dump_dmd_after_test=False, install_extension=None):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -312,6 +312,8 @@ class MochitestRunner(MozbuildObject):
         mozinfo.update({"e10s": e10s}) # for test manifest parsing.
 
         options.failureFile = failure_file_path
+        if install_extension != None:
+            options.extensionsToInstall = [os.path.join(self.topsrcdir,install_extension)]
 
         if test_path:
             test_root = runner.getTestRoot(options)
@@ -480,6 +482,11 @@ def MochitestCommand(func):
             'directory, or omitted. If omitted, the entire test suite is ' \
             'executed.')
     func = path(func)
+
+    install_extension = CommandArgument('--install-extension',
+        help='Install given extension before running selected tests. ' \
+            'Parameter is a path to xpi file.')
+    func = install_extension(func)
 
     return func
 

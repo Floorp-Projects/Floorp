@@ -88,6 +88,12 @@ public:
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                             TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
 
+  // If we return a non-null TextureClient, then AsTextureClientDrawTarget will
+  // always be non-null.
+  TemporaryRef<TextureClient>
+  CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
+                                TextureFlags aTextureFlags);
+
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)
   {
@@ -127,12 +133,6 @@ public:
   virtual bool AddTextureClient(TextureClient* aClient);
 
   /**
-   * Tells the Compositor to delete the TextureHost corresponding to this
-   * TextureClient.
-   */
-  virtual void RemoveTextureClient(TextureClient* aClient);
-
-  /**
    * A hook for the Compositable to execute whatever it held off for next transaction.
    */
   virtual void OnTransaction();
@@ -142,44 +142,11 @@ public:
    */
   virtual void OnDetach() {}
 
-  /**
-   * When texture deallocation must happen on the client side, we need to first
-   * ensure that the compositor has already let go of the data in order
-   * to safely deallocate it.
-   *
-   * This is implemented by registering a callback to postpone deallocation or
-   * recycling of the shared data.
-   *
-   * This hook is called when the compositor notifies the client that it is not
-   * holding any more references to the shared data so that this compositable
-   * can run the corresponding callback.
-   */
-  void OnReplyTextureRemoved(uint64_t aTextureID);
-
-  /**
-   * Run all he registered callbacks (see the comment for OnReplyTextureRemoved).
-   * Only call this if you know what you are doing.
-   */
-  void FlushTexturesToRemoveCallbacks();
-
-  /**
-   * Our IPDL actor is being destroyed, get rid of any shmem resources now.
-   */
-  virtual void OnActorDestroy() = 0;
-
 protected:
-  struct TextureIDAndFlags {
-    TextureIDAndFlags(uint64_t aID, TextureFlags aFlags)
-    : mID(aID), mFlags(aFlags) {}
-    uint64_t mID;
-    TextureFlags mFlags;
-  };
-  // The textures to destroy in the next transaction;
-  nsTArray<TextureIDAndFlags> mTexturesToRemove;
-  std::map<uint64_t, TextureClientData*> mTexturesToRemoveCallbacks;
-  uint64_t mNextTextureID;
   CompositableChild* mCompositableChild;
   CompositableForwarder* mForwarder;
+
+  friend class CompositableChild;
 };
 
 /**
@@ -213,7 +180,11 @@ public:
     return mCompositableClient;
   }
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason) MOZ_OVERRIDE {
+    if (mCompositableClient) {
+      mCompositableClient->mCompositableChild = nullptr;
+    }
+  }
 
   void SetAsyncID(uint64_t aID) { mID = aID; }
   uint64_t GetAsyncID() const

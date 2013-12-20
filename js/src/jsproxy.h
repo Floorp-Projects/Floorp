@@ -47,6 +47,22 @@ class JS_FRIEND_API(Wrapper);
  * BaseProxyHandler provides implementations of the derived traps in terms of
  * the (pure virtual) fundamental traps.
  *
+ * In addition to the normal traps, there are two models for proxy prototype
+ * chains. First, proxies may opt to use the standard prototype mechanism used
+ * throughout the engine. To do so, simply pass a prototype to NewProxyObject()
+ * at creation time. All prototype accesses will then "just work" to treat the
+ * proxy as a "normal" object. Alternatively, if instead the proxy wishes to
+ * implement more complicated prototype semantics (if, for example, it wants to
+ * delegate the prototype lookup to a wrapped object), it may pass Proxy::LazyProto
+ * as the prototype at create time and opt in to the trapped prototype system,
+ * which guarantees that their trap will be called on any and every prototype
+ * chain access of the object.
+ *
+ * This system is implemented with two traps: {get,set}PrototypeOf. The default
+ * implementation of setPrototypeOf throws a TypeError. Since it is not possible
+ * to create an object without a sense of prototype chain, handler implementors
+ * must provide a getPrototypeOf trap if opting in to the dynamic prototype system.
+ *
  * To minimize code duplication, a set of abstract proxy handler classes is
  * provided, from which other handlers may inherit. These abstract classes
  * are organized in the following hierarchy:
@@ -64,6 +80,10 @@ class JS_FRIEND_API(Wrapper);
  * default implementation for the fundamental traps. It does, however, implement
  * the derived traps in terms of the fundamental ones. This allows consumers of
  * this class to define any custom behavior they want.
+ *
+ * Important: If you add a trap here, you should probably also add a Proxy::foo
+ * entry point with an AutoEnterPolicy. If you don't, you need an explicit
+ * override for the trap in SecurityWrapper. See bug 945826 comment 0.
  */
 class JS_FRIEND_API(BaseProxyHandler)
 {
@@ -162,15 +182,17 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     virtual void finalize(JSFreeOp *fop, JSObject *proxy);
-    virtual bool getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                     uint32_t index, MutableHandleValue vp, bool *present);
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
 
     // These two hooks must be overridden, or not overridden, in tandem -- no
     // overriding just one!
     virtual bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                        JS::HandleObject callable);
     virtual bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id);
+
+    virtual bool slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                       HandleObject result);
 
     /* See comment for weakmapKeyDelegateOp in js/Class.h. */
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
@@ -182,6 +204,10 @@ class JS_FRIEND_API(BaseProxyHandler)
  * reimplemented such that they forward their behavior to the target. This
  * allows consumers of this class to forward to another object as transparently
  * and efficiently as possible.
+ *
+ * Important: If you add a trap implementation here, you probably also need to
+ * add an override in CrossCompartmentWrapper. If you don't, you risk
+ * compartment mismatches. See bug 945826 comment 0.
  */
 class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
 {
@@ -226,6 +252,8 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                             CallArgs args) MOZ_OVERRIDE;
     virtual bool hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
                              bool *bp) MOZ_OVERRIDE;
+    virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
     virtual bool objectClassIs(HandleObject obj, ESClassValue classValue,
                                JSContext *cx) MOZ_OVERRIDE;
     virtual const char *className(JSContext *cx, HandleObject proxy) MOZ_OVERRIDE;
@@ -236,7 +264,13 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
     virtual JSObject *weakmapKeyDelegate(JSObject *proxy);
 };
 
-/* Dispatch point for handlers that executes the appropriate C++ or scripted traps. */
+/*
+ * Dispatch point for handlers that executes the appropriate C++ or scripted traps.
+ *
+ * Important: All proxy traps need either (a) an AutoEnterPolicy in their
+ * Proxy::foo entry point below or (b) an override in SecurityWrapper. See bug
+ * 945826 comment 0.
+ */
 class Proxy
 {
   public:
@@ -262,8 +296,6 @@ class Proxy
     static bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                     MutableHandleValue vp);
-    static bool getElementIfPresent(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                    uint32_t index, MutableHandleValue vp, bool *present);
     static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                     bool strict, MutableHandleValue vp);
     static bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props);
@@ -281,16 +313,17 @@ class Proxy
     static bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g);
     static bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
+    static bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp);
 
-    static bool watch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                      JS::HandleObject callable);
-    static bool unwatch(JSContext *cx, JS::HandleObject proxy, JS::HandleId id);
+    static bool watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable);
+    static bool unwatch(JSContext *cx, HandleObject proxy, HandleId id);
+
+    static bool slice(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end,
+                      HandleObject result);
 
     /* IC entry path for handling __noSuchMethod__ on access. */
     static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,
                          MutableHandleValue vp);
-
-    static JSObject * const LazyProto;
 };
 
 // Use these in places where you don't want to #include vm/ProxyObject.h.
@@ -412,7 +445,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
     typedef BaseProxyHandler::Action Action;
     AutoEnterPolicy(JSContext *cx, BaseProxyHandler *handler,
                     HandleObject wrapper, HandleId id, Action act, bool mayThrow)
-#ifdef DEBUG
+#ifdef JS_DEBUG
         : context(nullptr)
 #endif
     {
@@ -435,7 +468,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
   protected:
     // no-op constructor for subclass
     AutoEnterPolicy()
-#ifdef DEBUG
+#ifdef JS_DEBUG
         : context(nullptr)
 #endif
         {};
@@ -443,7 +476,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
     bool allow;
     bool rv;
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
     JSContext *context;
     mozilla::Maybe<HandleObject> enteredProxy;
     mozilla::Maybe<HandleId> enteredId;
@@ -462,7 +495,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
 
 };
 
-#ifdef DEBUG
+#ifdef JS_DEBUG
 class JS_FRIEND_API(AutoWaivePolicy) : public AutoEnterPolicy {
 public:
     AutoWaivePolicy(JSContext *cx, HandleObject proxy, HandleId id)

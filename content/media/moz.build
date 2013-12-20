@@ -123,6 +123,7 @@ UNIFIED_SOURCES += [
     'MediaDecoderStateMachine.cpp',
     'MediaRecorder.cpp',
     'MediaResource.cpp',
+    'MediaShutdownManager.cpp',
     'MediaStreamGraph.cpp',
     'MediaStreamTrack.cpp',
     'MP3FrameParser.cpp',
@@ -164,7 +165,7 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '/content/base/src',
     '/layout/generic',
-    '/layout/xul/base/src',
+    '/layout/xul',
 ]
 
 if CONFIG['MOZ_DIRECTSHOW']:

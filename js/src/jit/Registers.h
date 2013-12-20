@@ -81,8 +81,8 @@ struct FloatRegister {
 class RegisterDump
 {
   protected: // Silence Clang warning.
-    uintptr_t regs_[Registers::Total];
-    double fpregs_[FloatRegisters::Total];
+    mozilla::Array<uintptr_t, Registers::Total> regs_;
+    mozilla::Array<double, FloatRegisters::Total> fpregs_;
 
   public:
     static size_t offsetOfRegister(Register reg) {
@@ -100,8 +100,8 @@ class MachineState
     mozilla::Array<double *, FloatRegisters::Total> fpregs_;
 
   public:
-    static MachineState FromBailout(uintptr_t regs[Registers::Total],
-                                    double fpregs[FloatRegisters::Total]);
+    static MachineState FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
+                                    mozilla::Array<double, FloatRegisters::Total> &fpregs);
 
     void setRegisterLocation(Register reg, uintptr_t *up) {
         regs_[reg.code()] = up;

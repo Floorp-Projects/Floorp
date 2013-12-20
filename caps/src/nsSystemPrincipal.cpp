@@ -153,19 +153,6 @@ nsSystemPrincipal::SetDomain(nsIURI* aDomain)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
-{
-    *aSecurityPolicy = nullptr;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSystemPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetJarPrefix(nsACString& aJarPrefix)
 {
   aJarPrefix.Truncate();

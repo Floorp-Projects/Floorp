@@ -10,11 +10,11 @@ var summary = 'Handle Move';
 
 var T = TypedObject;
 
-var Point = new T.ArrayType(T.float32, 3);
+var Point = T.float32.array(3);
 var Line = new T.StructType({from: Point, to: Point});
-var Lines = new T.ArrayType(Line, 3);
+var Lines = Line.array(3);
 
-var Objects = new T.ArrayType(T.Object, 3);
+var Objects = T.Object.array(3);
 
 function runTests() {
   function testHandleGetSetWithScalarType() {

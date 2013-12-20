@@ -82,6 +82,9 @@ ConsoleAPI.prototype = {
       error: function CA_error() {
         self.queueCall("error", arguments);
       },
+      exception: function CA_exception() {
+        self.queueCall("exception", arguments);
+      },
       debug: function CA_debug() {
         self.queueCall("debug", arguments);
       },
@@ -129,11 +132,18 @@ ConsoleAPI.prototype = {
         Services.obs.notifyObservers(consoleEvent, "console-api-profiler",
                                      null);  
       },
+      assert: function CA_assert() {
+        let args = Array.prototype.slice.call(arguments);
+        if(!args.shift()) {
+          self.queueCall("assert", args);
+        }
+      },
       __exposedProps__: {
         log: "r",
         info: "r",
         warn: "r",
         error: "r",
+        exception: "r",
         debug: "r",
         trace: "r",
         dir: "r",
@@ -143,7 +153,8 @@ ConsoleAPI.prototype = {
         time: "r",
         timeEnd: "r",
         profile: "r",
-        profileEnd: "r"
+        profileEnd: "r",
+        assert: "r"
       }
     };
 
@@ -159,6 +170,7 @@ ConsoleAPI.prototype = {
       info: genPropDesc('info'),
       warn: genPropDesc('warn'),
       error: genPropDesc('error'),
+      exception: genPropDesc('exception'),
       debug: genPropDesc('debug'),
       trace: genPropDesc('trace'),
       dir: genPropDesc('dir'),
@@ -169,6 +181,7 @@ ConsoleAPI.prototype = {
       timeEnd: genPropDesc('timeEnd'),
       profile: genPropDesc('profile'),
       profileEnd: genPropDesc('profileEnd'),
+      assert: genPropDesc('assert'),
       __noSuchMethod__: { enumerable: true, configurable: true, writable: true,
                           value: function() {} },
       __mozillaConsole__: { value: true }
@@ -288,7 +301,9 @@ ConsoleAPI.prototype = {
       case "info":
       case "warn":
       case "error":
+      case "exception":
       case "debug":
+      case "assert":
         consoleEvent.arguments = this.processArguments(args);
         break;
       case "trace":

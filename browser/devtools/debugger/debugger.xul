@@ -32,12 +32,14 @@
   <commandset id="editMenuCommands"/>
 
   <commandset id="debuggerCommands">
-    <command id="prettyPrintCommand"
-             oncommand="DebuggerView.Sources.togglePrettyPrint()"/>
     <command id="blackBoxCommand"
              oncommand="DebuggerView.Sources.toggleBlackBoxing()"/>
     <command id="unBlackBoxButton"
              oncommand="DebuggerView.Sources._onStopBlackBoxing()"/>
+    <command id="prettyPrintCommand"
+             oncommand="DebuggerView.Sources.togglePrettyPrint()"/>
+    <command id="toggleBreakpointsCommand"
+             oncommand="DebuggerView.Sources.toggleBreakpoints()"/>
     <command id="nextSourceCommand"
              oncommand="DebuggerView.Sources.selectNextItem()"/>
     <command id="prevSourceCommand"
@@ -84,6 +86,12 @@
              oncommand="DebuggerView.Options._toggleShowVariablesFilterBox()"/>
     <command id="toggleShowOriginalSource"
              oncommand="DebuggerView.Options._toggleShowOriginalSource()"/>
+    <command id="toggleTracing"
+             oncommand="DebuggerView.Tracer._onToggleTracing()"/>
+    <command id="startTracing"
+             oncommand="DebuggerView.Tracer._onStartTracing()"/>
+    <command id="clearTraces"
+             oncommand="DebuggerView.Tracer._onClear()"/>
   </commandset>
 
   <popupset id="debuggerPopupset">
@@ -302,6 +310,13 @@
                        class="devtools-toolbarbutton"
                        tabindex="0"/>
       </hbox>
+      <hbox>
+        <toolbarbutton id="trace"
+                       class="devtools-toolbarbutton"
+                       command="toggleTracing"
+                       tabindex="0"
+                       hidden="true"/>
+      </hbox>
       <menulist id="chrome-globals"
                 class="devtools-menulist"
                 sizetopopup="none" hidden="true"/>
@@ -321,23 +336,71 @@
     <scrollbox id="globalsearch" orient="vertical" hidden="true"/>
     <splitter class="devtools-horizontal-splitter" hidden="true"/>
     <hbox id="debugger-widgets" flex="1">
-      <vbox id="sources-pane">
-        <vbox id="sources" flex="1"/>
-        <toolbar id="sources-toolbar" class="devtools-toolbar">
-          <hbox id="sources-controls">
-            <toolbarbutton id="black-box"
-                           tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
-                           command="blackBoxCommand"
-                           class="devtools-toolbarbutton"/>
-            <toolbarbutton id="pretty-print"
-                           label="{}"
-                           tooltiptext="&debuggerUI.sources.prettyPrint;"
-                           class="devtools-toolbarbutton devtools-monospace"
-                           command="prettyPrintCommand"
-                           hidden="true"/>
-          </hbox>
-        </toolbar>
-      </vbox>
+      <tabbox id="sources-pane"
+              class="devtools-sidebar-tabs">
+        <tabs>
+          <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
+          <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
+          <tab id="tracer-tab" label="&debuggerUI.tabs.traces;" hidden="true"/>
+        </tabs>
+        <tabpanels flex="1">
+          <tabpanel id="sources-tabpanel">
+            <vbox id="sources" flex="1"/>
+            <toolbar id="sources-toolbar" class="devtools-toolbar">
+              <hbox id="sources-controls">
+                <toolbarbutton id="black-box"
+                               class="devtools-toolbarbutton"
+                               tooltiptext="&debuggerUI.sources.blackBoxTooltip;"
+                               command="blackBoxCommand"/>
+                <toolbarbutton id="pretty-print"
+                               class="devtools-toolbarbutton devtools-monospace"
+                               label="{}"
+                               tooltiptext="&debuggerUI.sources.prettyPrint;"
+                               command="prettyPrintCommand"
+                               hidden="true"/>
+              </hbox>
+              <toolbarbutton id="toggle-breakpoints"
+                             class="devtools-toolbarbutton"
+                             tooltiptext="&debuggerUI.sources.toggleBreakpoints;"
+                             command="toggleBreakpointsCommand"/>
+            </toolbar>
+          </tabpanel>
+          <tabpanel id="callstack-tabpanel">
+            <vbox id="callstack-list" flex="1"/>
+          </tabpanel>
+          <tabpanel id="tracer-tabpanel" flex="1">
+            <deck id="tracer-deck" selectedIndex="1" flex="1">
+              <vbox flex="1">
+                <vbox id="tracer-traces" flex="1">
+                  <hbox class="trace-item-template" hidden="true">
+                    <hbox class="trace-item" align="center" flex="1" crop="end">
+                      <label class="trace-type plain"/>
+                      <label class="trace-name plain" crop="end"/>
+                    </hbox>
+                  </hbox>
+                </vbox>
+                <toolbar id="tracer-toolbar" class="devtools-toolbar">
+                  <toolbarbutton id="clear-tracer"
+                                 label="&debuggerUI.clearButton;"
+                                 tooltiptext="&debuggerUI.clearButton.tooltip;"
+                                 command="clearTraces"
+                                 class="devtools-toolbarbutton"/>
+                  <textbox id="tracer-search"
+                           class="devtools-searchinput"
+                           flex="1"
+                           type="search"/>
+                </toolbar>
+              </vbox>
+              <vbox id="tracer-message"
+                    flex="1"
+                    align="center"
+                    pack="center">
+                <description value="&debuggerUI.tracingNotStarted.label;" />
+              </vbox>
+            </deck>
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
       <deck id="editor-deck" flex="4">
@@ -349,7 +412,7 @@
           <button id="black-boxed-message-button"
                   class="devtools-toolbarbutton"
                   label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                  image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
+                  image="chrome://browser/skin/devtools/debugger-blackboxMessageEye.png"
                   command="unBlackBoxCommand"/>
         </vbox>
         <vbox id="source-progress-container" align="center" pack="center">
@@ -367,12 +430,12 @@
           <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
         </tabs>
         <tabpanels flex="1">
-          <tabpanel id="variables-tabpanel">
+          <tabpanel id="variables-tabpanel" class="theme-body">
             <vbox id="expressions"/>
             <splitter class="devtools-horizontal-splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
-          <tabpanel id="events-tabpanel">
+          <tabpanel id="events-tabpanel" class="theme-body">
             <vbox id="event-listeners" flex="1"/>
           </tabpanel>
         </tabpanels>

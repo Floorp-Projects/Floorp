@@ -14,7 +14,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 
 class gfxContext;
-using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {

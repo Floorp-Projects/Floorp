@@ -879,7 +879,7 @@ nsXREDirProvider::DoShutdown()
 static nsresult
 GetShellFolderPath(int folder, nsAString& _retval)
 {
-  PRUnichar* buf;
+  wchar_t* buf;
   uint32_t bufLength = _retval.GetMutableData(&buf, MAXPATHLEN + 3);
   NS_ENSURE_TRUE(bufLength >= (MAXPATHLEN + 3), NS_ERROR_OUT_OF_MEMORY);
 
@@ -960,14 +960,14 @@ GetCachedHash(HKEY rootKey, const nsAString &regPath, const nsAString &path,
               nsAString &cachedHash)
 {
   HKEY baseKey;
-  if (RegOpenKeyExW(rootKey, regPath.BeginReading(), 0, KEY_READ, &baseKey) !=
+  if (RegOpenKeyExW(rootKey, reinterpret_cast<const wchar_t*>(regPath.BeginReading()), 0, KEY_READ, &baseKey) !=
       ERROR_SUCCESS) {
     return false;
   }
 
   wchar_t cachedHashRaw[512];
   DWORD bufferSize = sizeof(cachedHashRaw);
-  LONG result = RegQueryValueExW(baseKey, path.BeginReading(), 0, nullptr,
+  LONG result = RegQueryValueExW(baseKey, reinterpret_cast<const wchar_t*>(path.BeginReading()), 0, nullptr,
                                  (LPBYTE)cachedHashRaw, &bufferSize);
   RegCloseKey(baseKey);
   if (result == ERROR_SUCCESS) {
@@ -1045,7 +1045,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   // AppDir may be a short path. Convert to long path to make sure
   // the consistency of the update folder location
   nsString longPath;
-  PRUnichar* buf;
+  wchar_t* buf;
 
   uint32_t bufLength = longPath.GetMutableData(&buf, MAXPATHLEN);
   NS_ENSURE_TRUE(bufLength >= MAXPATHLEN, NS_ERROR_OUT_OF_MEMORY);

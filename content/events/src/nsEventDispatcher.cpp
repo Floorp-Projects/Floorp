@@ -8,7 +8,6 @@
 #include "nsPresContext.h"
 #include "nsEventListenerManager.h"
 #include "nsContentUtils.h"
-#include "nsCxPusher.h"
 #include "nsError.h"
 #include <new>
 #include "nsIContent.h"
@@ -158,8 +157,7 @@ public:
   static void HandleEventTargetChain(nsTArray<nsEventTargetChainItem>& aChain,
                                      nsEventChainPostVisitor& aVisitor,
                                      nsDispatchingCallback* aCallback,
-                                     ELMCreationDetector& aCd,
-                                     nsCxPusher* aPusher);
+                                     ELMCreationDetector& aCd);
 
   /**
    * Resets aVisitor object and calls PreHandleEvent.
@@ -172,8 +170,7 @@ public:
    * manager, this method calls nsEventListenerManager::HandleEvent().
    */
   nsresult HandleEvent(nsEventChainPostVisitor& aVisitor,
-                       ELMCreationDetector& aCd,
-                       nsCxPusher* aPusher)
+                       ELMCreationDetector& aCd)
   {
     if (WantsWillHandleEvent()) {
       mTarget->WillHandleEvent(aVisitor);
@@ -193,8 +190,7 @@ public:
       mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
                             &aVisitor.mDOMEvent,
                             CurrentTarget(),
-                            &aVisitor.mEventStatus,
-                            aPusher);
+                            &aVisitor.mEventStatus);
       NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
                    "CurrentTarget should be null!");
     }
@@ -204,8 +200,7 @@ public:
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
    */
-  nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor,
-                           nsCxPusher* aPusher);
+  nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   nsCOMPtr<EventTarget>             mTarget;
   uint16_t                          mFlags;
@@ -237,10 +232,8 @@ nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 nsresult
-nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor,
-                                        nsCxPusher* aPusher)
+nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
-  aPusher->Pop();
   aVisitor.mItemFlags = mItemFlags;
   aVisitor.mItemData = mItemData;
   mTarget->PostHandleEvent(aVisitor);
@@ -252,8 +245,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
                           nsTArray<nsEventTargetChainItem>& aChain,
                           nsEventChainPostVisitor& aVisitor,
                           nsDispatchingCallback* aCallback,
-                          ELMCreationDetector& aCd,
-                          nsCxPusher* aPusher)
+                          ELMCreationDetector& aCd)
 {
   // Save the target so that it can be restored later.
   nsCOMPtr<EventTarget> firstTarget = aVisitor.mEvent->target;
@@ -267,7 +259,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
     if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
          item.ForceContentDispatch()) &&
         !aVisitor.mEvent->mFlags.mPropagationStopped) {
-      item.HandleEvent(aVisitor, aCd, aPusher);
+      item.HandleEvent(aVisitor, aCd);
     }
 
     if (item.GetNewTarget()) {
@@ -289,10 +281,10 @@ nsEventTargetChainItem::HandleEventTargetChain(
   if (!aVisitor.mEvent->mFlags.mPropagationStopped &&
       (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
        targetItem.ForceContentDispatch())) {
-    targetItem.HandleEvent(aVisitor, aCd, aPusher);
+    targetItem.HandleEvent(aVisitor, aCd);
   }
   if (aVisitor.mEvent->mFlags.mInSystemGroup) {
-    targetItem.PostHandleEvent(aVisitor, aPusher);
+    targetItem.PostHandleEvent(aVisitor);
   }
 
   // Bubble
@@ -310,10 +302,10 @@ nsEventTargetChainItem::HandleEventTargetChain(
       if ((!aVisitor.mEvent->mFlags.mNoContentDispatch ||
            item.ForceContentDispatch()) &&
           !aVisitor.mEvent->mFlags.mPropagationStopped) {
-        item.HandleEvent(aVisitor, aCd, aPusher);
+        item.HandleEvent(aVisitor, aCd);
       }
       if (aVisitor.mEvent->mFlags.mInSystemGroup) {
-        item.PostHandleEvent(aVisitor, aPusher);
+        item.PostHandleEvent(aVisitor);
       }
     }
   }
@@ -331,7 +323,6 @@ nsEventTargetChainItem::HandleEventTargetChain(
     // Special handling if PresShell (or some other caller)
     // used a callback object.
     if (aCallback) {
-      aPusher->Pop();
       aCallback->HandleEvent(aVisitor);
     }
 
@@ -342,8 +333,7 @@ nsEventTargetChainItem::HandleEventTargetChain(
     HandleEventTargetChain(aChain,
                            aVisitor,
                            aCallback,
-                           aCd,
-                           aPusher);
+                           aCd);
     aVisitor.mEvent->mFlags.mInSystemGroup = false;
 
     // After dispatch, clear all the propagation flags so that
@@ -601,12 +591,10 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
       } else {
         // Event target chain is created. Handle the chain.
         nsEventChainPostVisitor postVisitor(preVisitor);
-        nsCxPusher pusher;
         nsEventTargetChainItem::HandleEventTargetChain(chain,
                                                        postVisitor,
                                                        aCallback,
-                                                       cd,
-                                                       &pusher);
+                                                       cd);
 
         preVisitor.mEventStatus = postVisitor.mEventStatus;
         // If the DOM event was created during event flow.

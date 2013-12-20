@@ -14,7 +14,12 @@
     <script type="text/javascript">
       function test(aNumber) {
         var buffer = new ArrayBuffer(aNumber);
-        var z = new Int8Array(buffer);
+        var largeArray = new Int8Array(buffer);
+        var largeObject = {};
+
+        for (var i = 0; i < aNumber; i++) {
+          largeObject[i] = aNumber - i - 1;
+        }
         debugger;
       }
     </script>

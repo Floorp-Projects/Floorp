@@ -154,11 +154,15 @@ static int nr_socket_wrapped_set_send_addr(nr_socket *sock, nr_transport_addr *a
 }
 
 static nr_socket_vtbl nr_socket_wrapped_vtbl = {
+  1,
   nr_socket_wrapped_destroy,
   nr_socket_wrapped_sendto,
   nr_socket_wrapped_recvfrom,
   nr_socket_wrapped_getfd,
   nr_socket_wrapped_getaddr,
+  0,
+  0,
+  0,
   nr_socket_wrapped_close
 };
 

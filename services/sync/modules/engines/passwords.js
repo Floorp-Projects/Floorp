@@ -263,49 +263,43 @@ function PasswordTracker(name, engine) {
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  _enabled: false,
-  observe: function PasswordTracker_observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "weave:engine:start-tracking":
-        if (!this._enabled) {
-          Svc.Obs.add("passwordmgr-storage-changed", this);
-          this._enabled = true;
-        }
-        return;
-      case "weave:engine:stop-tracking":
-        if (this._enabled) {
-          Svc.Obs.remove("passwordmgr-storage-changed", this);
-          this._enabled = false;
-        }
-        return;
-    }
+  startTracking: function() {
+    Svc.Obs.add("passwordmgr-storage-changed", this);
+  },
 
-    if (this.ignoreAll)
+  stopTracking: function() {
+    Svc.Obs.remove("passwordmgr-storage-changed", this);
+  },
+
+  observe: function(subject, topic, data) {
+    Tracker.prototype.observe.call(this, subject, topic, data);
+
+    if (this.ignoreAll) {
       return;
+    }
 
     // A single add, remove or change or removing all items
     // will trigger a sync for MULTI_DEVICE.
-    switch (aData) {
-    case 'modifyLogin':
-      aSubject = aSubject.QueryInterface(Ci.nsIArray).
-        queryElementAt(1, Ci.nsILoginMetaInfo);
-      // fallthrough
-    case 'addLogin':
-    case 'removeLogin':
-      // Skip over Weave password/passphrase changes
-      aSubject.QueryInterface(Ci.nsILoginMetaInfo).
-        QueryInterface(Ci.nsILoginInfo);
-      if (aSubject.hostname == PWDMGR_HOST)
-        break;
+    switch (data) {
+      case "modifyLogin":
+        subject = subject.QueryInterface(Ci.nsIArray).queryElementAt(1, Ci.nsILoginMetaInfo);
+        // fallthrough
+      case "addLogin":
+      case "removeLogin":
+        // Skip over Weave password/passphrase changes.
+        subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
+        if (subject.hostname == PWDMGR_HOST) {
+          break;
+        }
 
-      this.score += SCORE_INCREMENT_XLARGE;
-      this._log.trace(aData + ": " + aSubject.guid);
-      this.addChangedID(aSubject.guid);
-      break;
-    case 'removeAllLogins':
-      this._log.trace(aData);
-      this.score += SCORE_INCREMENT_XLARGE;
-      break;
+        this.score += SCORE_INCREMENT_XLARGE;
+        this._log.trace(data + ": " + subject.guid);
+        this.addChangedID(subject.guid);
+        break;
+      case "removeAllLogins":
+        this._log.trace(data);
+        this.score += SCORE_INCREMENT_XLARGE;
+        break;
     }
   }
 };

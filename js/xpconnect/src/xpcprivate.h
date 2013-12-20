@@ -81,7 +81,6 @@
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -248,11 +247,6 @@ inline JSObject* GetWNExpandoChain(JSObject *obj)
     MOZ_ASSERT(IS_WN_REFLECTOR(obj));
     return JS_GetReservedSlot(obj, WN_XRAYEXPANDOCHAIN_SLOT).toObjectOrNull();
 }
-
-// We PROMISE to never screw this up.
-#ifdef _MSC_VER
-#pragma warning(disable : 4355) // OK to pass "this" in member initializer
-#endif
 
 /***************************************************************************
 ****************************************************************************
@@ -982,7 +976,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
         nullptr, /* getElement    */                                          \
-        nullptr, /* getElementIfPresent */                                    \
         nullptr, /* getSpecial    */                                          \
         nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \
@@ -994,6 +987,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* deleteElement */                                          \
         nullptr, /* deleteSpecial */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
+        nullptr, /* slice */                                                  \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_ThisObject,                                               \
     }
@@ -1011,7 +1005,6 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* getGeneric    */                                          \
         nullptr, /* getProperty    */                                         \
         nullptr, /* getElement    */                                          \
-        nullptr, /* getElementIfPresent */                                    \
         nullptr, /* getSpecial    */                                          \
         nullptr, /* setGeneric    */                                          \
         nullptr, /* setProperty    */                                         \
@@ -1023,6 +1016,7 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JS::HandleObject obj);
         nullptr, /* deleteElement */                                          \
         nullptr, /* deleteSpecial */                                          \
         nullptr, nullptr, /* watch/unwatch */                                 \
+        nullptr, /* slice */                                                  \
         XPC_WN_JSOp_Enumerate,                                                \
         XPC_WN_JSOp_ThisObject,                                               \
     }
@@ -1126,9 +1120,6 @@ public:
     static void
     MarkAllWrappedNativesAndProtos();
 
-    static nsresult
-    ClearAllWrappedNativeSecurityPolicies();
-
 #ifdef DEBUG
     static void
     ASSERT_NoInterfaceSetsAreMarked();
@@ -1143,11 +1134,23 @@ public:
     void
     DebugDump(int16_t depth);
 
-    static size_t
-    SizeOfAllScopesIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    struct ScopeSizeInfo {
+        ScopeSizeInfo(mozilla::MallocSizeOf mallocSizeOf)
+            : mMallocSizeOf(mallocSizeOf),
+              mScopeAndMapSize(0),
+              mProtoAndIfaceCacheSize(0)
+        {}
 
-    size_t
-    SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+        mozilla::MallocSizeOf mMallocSizeOf;
+        size_t mScopeAndMapSize;
+        size_t mProtoAndIfaceCacheSize;
+    };
+
+    static void
+    AddSizeOfAllScopesIncludingThis(ScopeSizeInfo* scopeSizeInfo);
+
+    void
+    AddSizeOfIncludingThis(ScopeSizeInfo* scopeSizeInfo);
 
     bool
     IsValid() const {return mRuntime != nullptr;}
@@ -1830,9 +1833,6 @@ public:
     XPCNativeScriptableInfo*
     GetScriptableInfo()   {return mScriptableInfo;}
 
-    void**
-    GetSecurityInfoAddr() {return &mSecurityInfo;}
-
     uint32_t
     GetClassInfoFlags() const {return mClassInfoFlags;}
 
@@ -1923,7 +1923,6 @@ private:
     nsCOMPtr<nsIClassInfo>   mClassInfo;
     uint32_t                 mClassInfoFlags;
     XPCNativeSet*            mSet;
-    void*                    mSecurityInfo;
     XPCNativeScriptableInfo* mScriptableInfo;
 };
 
@@ -2007,29 +2006,11 @@ TraceXPCGlobal(JSTracer *trc, JSObject *obj);
 class XPCWrappedNative : public nsIXPConnectWrappedNative
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
-    // No need to unlink the JS objects, if the XPCWrappedNative will be cycle
-    // collected then its mFlatJSObject will be cycle collected too and
-    // finalization of the mFlatJSObject will unlink the js objects (see
-    // XPC_WN_NoHelper_Finalize and FlatJSObjectFinalized).
-    // We also give XPCWrappedNative empty Root/Unroot methods, to avoid
-    // root/unrooting the JS objects from addrefing/releasing the
-    // XPCWrappedNative during unlinking, which would make the JS objects
-    // uncollectable to the JS GC.
-    class NS_CYCLE_COLLECTION_INNERCLASS
-     : public nsXPCOMCycleCollectionParticipant
-    {
-      NS_DECL_CYCLE_COLLECTION_CLASS_BODY(XPCWrappedNative, XPCWrappedNative)
-      NS_IMETHOD_(void) Root(void *p) { }
-      NS_IMETHOD_(void) Unroot(void *p) { }
-      NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(XPCWrappedNative)
-    };
-    NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(XPCWrappedNative);
-    static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
-    void DeleteCycleCollectable() {}
+    NS_DECL_CYCLE_COLLECTION_CLASS(XPCWrappedNative)
 
     nsIPrincipal* GetObjectPrincipal() const;
 
@@ -2124,10 +2105,6 @@ public:
 
     nsIXPCScriptable*      // call this wrong and you deserve to crash
     GetScriptableCallback() const  {return mScriptableInfo->GetCallback();}
-
-    void**
-    GetSecurityInfoAddr() {return HasProto() ?
-                                   GetProto()->GetSecurityInfoAddr() : nullptr;}
 
     nsIClassInfo*
     GetClassInfo() const {return IsValid() && HasProto() ?
@@ -2476,14 +2453,13 @@ class nsXPCWrappedJS : protected nsAutoXPTCStub,
                        public XPCRootSetElem
 {
 public:
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
-    void DeleteCycleCollectable() {}
+    NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS_AMBIGUOUS(nsXPCWrappedJS, nsIXPConnectWrappedJS)
 
     NS_IMETHOD CallMethod(uint16_t methodIndex,
                           const XPTMethodDescriptor *info,
@@ -2521,15 +2497,13 @@ public:
     nsXPCWrappedJS* Find(REFNSIID aIID);
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
 
+    bool IsRootWrapper() const {return mRoot == this;}
     bool IsValid() const {return mJSObj != nullptr;}
     void SystemIsBeingShutDown();
 
-    // This is used by XPCJSRuntime::GCCallback to find wrappers that no
-    // longer root their JSObject and are only still alive because they
-    // were being used via nsSupportsWeakReference at the time when their
-    // last (outside) reference was released. Wrappers that fit into that
-    // category are only deleted when we see that their corresponding JSObject
-    // is to be finalized.
+    // These two methods are used by JSObject2WrappedJSMap::FindDyingJSObjects
+    // to find non-rooting wrappers for dying JS objects. See the top of
+    // XPCWrappedJS.cpp for more details.
     bool IsSubjectToFinalization() const {return IsValid() && mRefCnt == 1;}
     bool IsObjectAboutToBeFinalized() {return JS_IsAboutToBeFinalized(&mJSObj);}
 
@@ -2548,7 +2522,9 @@ protected:
                    nsXPCWrappedJS* root,
                    nsISupports* aOuter);
 
-   void Unlink();
+    bool CanSkip();
+    void Destroy();
+    void Unlink();
 
 private:
     JS::Heap<JSObject*> mJSObj;
@@ -3471,6 +3447,19 @@ class MOZ_STACK_CLASS CreateObjectInOptions : public OptionsBase {
 public:
     CreateObjectInOptions(JSContext *cx = xpc_GetSafeJSContext(),
                           JSObject* options = nullptr)
+        : OptionsBase(cx, options)
+        , defineAs(cx, JSID_VOID)
+    { }
+
+    virtual bool Parse() { return ParseId("defineAs", &defineAs); };
+
+    JS::RootedId defineAs;
+};
+
+class MOZ_STACK_CLASS ExportOptions : public OptionsBase {
+public:
+    ExportOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                  JSObject* options = nullptr)
         : OptionsBase(cx, options)
         , defineAs(cx, JSID_VOID)
     { }

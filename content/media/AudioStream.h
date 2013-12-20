@@ -179,8 +179,11 @@ public:
   // Returns the maximum number of channels supported by the audio hardware.
   static int MaxNumberOfChannels();
 
-  // Returns the samplerate the systems prefer, because it is the
-  // samplerate the hardware/mixer supports.
+  // Queries the samplerate the hardware/mixer runs at, and stores it.
+  // Can be called on any thread. When this returns, it is safe to call
+  // PreferredSampleRate without locking.
+  static void InitPreferredSampleRate();
+  // Get the aformentionned sample rate. Does not lock.
   static int PreferredSampleRate();
 
   AudioStream();
@@ -249,6 +252,7 @@ public:
 
   int GetRate() { return mOutRate; }
   int GetChannels() { return mChannels; }
+  int GetOutChannels() { return mOutChannels; }
 
   // This should be called before attempting to use the time stretcher.
   nsresult EnsureTimeStretcherInitialized();
@@ -259,7 +263,7 @@ public:
   nsresult SetPreservesPitch(bool aPreservesPitch);
 
 private:
-  static int PrefChanged(const char* aPref, void* aClosure);
+  static void PrefChanged(const char* aPref, void* aClosure);
   static double GetVolumeScale();
   static cubeb* GetCubebContext();
   static cubeb* GetCubebContextUnlocked();
@@ -306,6 +310,7 @@ private:
   // Output rate in Hz (characteristic of the playback rate)
   int mOutRate;
   int mChannels;
+  int mOutChannels;
   // Number of frames written to the buffers.
   int64_t mWritten;
   AudioClock mAudioClock;

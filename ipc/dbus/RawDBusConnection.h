@@ -14,7 +14,6 @@
 #include <string>
 #include "nscore.h"
 #include "mozilla/Scoped.h"
-#include <mozilla/RefPtr.h>
 #include <mozilla/Mutex.h>
 
 struct DBusConnection;
@@ -26,7 +25,7 @@ namespace ipc {
 
 typedef void (*DBusReplyCallback)(DBusMessage*, void*);
 
-class RawDBusConnection : public AtomicRefCounted<RawDBusConnection>
+class RawDBusConnection
 {
   struct ScopedDBusConnectionPtrTraits : ScopedFreePtrTraits<DBusConnection>
   {

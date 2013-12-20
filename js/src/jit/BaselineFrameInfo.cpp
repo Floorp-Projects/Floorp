@@ -14,10 +14,11 @@ using namespace js;
 using namespace js::jit;
 
 bool
-FrameInfo::init() {
+FrameInfo::init(TempAllocator &alloc)
+{
     // One slot is always needed for this/arguments type checks.
-    size_t nstack = Max(script->nslots - script->nfixed, 1);
-    if (!stack.init(nstack))
+    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(1));
+    if (!stack.init(alloc, nstack))
         return false;
 
     return true;

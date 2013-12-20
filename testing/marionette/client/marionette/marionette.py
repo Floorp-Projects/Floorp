@@ -9,13 +9,14 @@ import sys
 import time
 import traceback
 
-from client import MarionetteClient
 from application_cache import ApplicationCache
-from keys import Keys
-from errors import *
+from client import MarionetteClient
 from emulator import Emulator
-import geckoinstance
+from emulator_screen import EmulatorScreen
+from errors import *
+from keys import Keys
 
+import geckoinstance
 
 class HTMLElement(object):
     """
@@ -325,9 +326,9 @@ class Actions(object):
          corner of the element.
         :param y1: Starting y-coordinate of flick, relative to the top left
          corner of the element.
-        :param x1: Ending x-coordinate of flick, relative to the top left
+        :param x2: Ending x-coordinate of flick, relative to the top left
          corner of the element.
-        :param x1: Ending y-coordinate of flick, relative to the top left
+        :param y2: Ending y-coordinate of flick, relative to the top left
          corner of the element.
         :param duration: Time needed for the flick gesture for complete (in
          milliseconds).
@@ -421,6 +422,12 @@ class Marionette(object):
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
+    SCREEN_ORIENTATIONS = {"portrait": EmulatorScreen.SO_PORTRAIT_PRIMARY,
+                           "landscape": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
+                           "portrait-primary": EmulatorScreen.SO_PORTRAIT_PRIMARY,
+                           "landscape-primary": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
+                           "portrait-secondary": EmulatorScreen.SO_PORTRAIT_SECONDARY,
+                           "landscape-secondary": EmulatorScreen.SO_LANDSCAPE_SECONDARY}
 
     def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
                  profile=None, emulator=None, sdcard=None, emulatorBinary=None,
@@ -592,7 +599,7 @@ class Marionette(object):
             status = response['error'].get('status', 500)
             message = response['error'].get('message')
             stacktrace = response['error'].get('stacktrace')
-            # status numbers come from 
+            # status numbers come from
             # http://code.google.com/p/selenium/wiki/JsonWireProtocol#Response_Status_Codes
             if status == ErrorCodes.NO_SUCH_ELEMENT:
                 raise NoSuchElementException(message=message, status=status, stacktrace=stacktrace)
@@ -1280,3 +1287,33 @@ class Marionette(object):
         if highlights is not None:
             lights = [highlight.id for highlight in highlights if highlights]
         return self._send_message("screenShot", 'value', id=element, highlights=lights)
+
+    @property
+    def orientation(self):
+        """Get the current browser orientation.
+
+        Will return one of the valid primary orientation values
+        portrait-primary, landscape-primary, portrait-secondary, or
+        landscape-secondary.
+
+        """
+        return self._send_message("getScreenOrientation", "value")
+
+    def set_orientation(self, orientation):
+        """Set the current browser orientation.
+
+        The supplied orientation should be given as one of the valid
+        orientation values.  If the orientation is unknown, an error
+        will be raised.
+
+        Valid orientations are "portrait" and "landscape", which fall
+        back to "portrait-primary" and "landscape-primary"
+        respectively, and "portrait-secondary" as well as
+        "landscape-secondary".
+
+        :param orientation: The orientation to lock the screen in.
+
+        """
+        self._send_message("setScreenOrientation", "ok", orientation=orientation)
+        if self.emulator:
+            self.emulator.screen.orientation = self.SCREEN_ORIENTATIONS[orientation.lower()]

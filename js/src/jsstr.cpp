@@ -2860,7 +2860,7 @@ LambdaIsGetElem(JSContext *cx, JSObject &lambda, MutableHandleObject pobj)
     if (!script)
         return false;
 
-    jsbytecode *pc = script->code;
+    jsbytecode *pc = script->code();
 
     /*
      * JSOP_GETALIASEDVAR tells us exactly where to find the base object 'b'.
@@ -3801,13 +3801,13 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-Shape *
-StringObject::assignInitialShape(JSContext *cx)
+/* static */ Shape *
+StringObject::assignInitialShape(ExclusiveContext *cx, Handle<StringObject*> obj)
 {
-    JS_ASSERT(nativeEmpty());
+    JS_ASSERT(obj->nativeEmpty());
 
-    return addDataProperty(cx, cx->names().length, LENGTH_SLOT,
-                           JSPROP_PERMANENT | JSPROP_READONLY);
+    return obj->addDataProperty(cx, cx->names().length, LENGTH_SLOT,
+                                JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
 JSObject *
@@ -4142,6 +4142,8 @@ js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *resul
 int32_t
 js::CompareAtoms(JSAtom *atom1, JSAtom *atom2)
 {
+    AutoThreadSafeAccess ts0(atom1);
+    AutoThreadSafeAccess ts1(atom2);
     return CompareChars(atom1->chars(), atom1->length(), atom2->chars(), atom2->length());
 }
 
@@ -4171,6 +4173,18 @@ js_strlen(const jschar *s)
     for (t = s; *t != 0; t++)
         continue;
     return (size_t)(t - s);
+}
+
+int32_t
+js_strcmp(const jschar *lhs, const jschar *rhs)
+{
+    while (true) {
+        if (*lhs != *rhs)
+            return int32_t(*lhs) - int32_t(*rhs);
+        if (*lhs == 0)
+            return 0;
+        ++lhs, ++rhs;
+    }
 }
 
 jschar *
