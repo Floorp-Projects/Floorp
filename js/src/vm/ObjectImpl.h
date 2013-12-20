@@ -980,13 +980,15 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     /* These functions are public, and they should remain public. */
 
   public:
-    js::TaggedProto getTaggedProto() const {
+    TaggedProto getTaggedProto() const {
+        AutoThreadSafeAccess ts(this);
         return type_->proto();
     }
 
     bool hasTenuredProto() const;
 
     const Class *getClass() const {
+        AutoThreadSafeAccess ts(this);
         return type_->clasp();
     }
 
@@ -1193,6 +1195,12 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     types::TypeObject *type() const {
         MOZ_ASSERT(!hasLazyType());
+        return typeRaw();
+    }
+
+    types::TypeObject *typeRaw() const {
+        AutoThreadSafeAccess ts0(this);
+        AutoThreadSafeAccess ts1(type_);
         return type_;
     }
 
@@ -1206,13 +1214,19 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
      * Whether this is the only object which has its specified type. This
      * object will have its type constructed lazily as needed by analysis.
      */
-    bool hasSingletonType() const { return !!type_->singleton; }
+    bool hasSingletonType() const {
+        AutoThreadSafeAccess ts(this);
+        return !!type_->singleton();
+    }
 
     /*
      * Whether the object's type has not been constructed yet. If an object
      * might have a lazy type, use getType() below, otherwise type().
      */
-    bool hasLazyType() const { return type_->lazy(); }
+    bool hasLazyType() const {
+        AutoThreadSafeAccess ts(this);
+        return type_->lazy();
+    }
 
     uint32_t slotSpan() const {
         if (inDictionaryMode())
@@ -1540,6 +1554,10 @@ JS_ALWAYS_INLINE Zone *
 BarrieredCell<ObjectImpl>::zoneFromAnyThread() const
 {
     const ObjectImpl* obj = static_cast<const ObjectImpl*>(this);
+
+    // Note: This read of obj->shape_ may race, though the zone fetched will be the same.
+    AutoThreadSafeAccess ts(obj->shape_);
+
     return obj->shape_->zoneFromAnyThread();
 }
 

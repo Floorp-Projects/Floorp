@@ -143,14 +143,14 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compactMoved(StoreBuffer *owner)
     LifoAlloc &storage = *this->storage_;
     EdgeSet invalidated;
     if (!invalidated.init())
-        MOZ_CRASH("RelocatableMonoTypeBuffer::compactMoved: Failed to init table.");
+        CrashAtUnhandlableOOM("RelocatableMonoTypeBuffer::compactMoved: Failed to init table.");
 
     /* Collect the set of entries which are currently invalid. */
     for (LifoAlloc::Enum e(storage); !e.empty(); e.popFront<T>()) {
         T *edge = e.get<T>();
         if (edge->isTagged()) {
             if (!invalidated.put(edge->location()))
-                MOZ_CRASH("RelocatableMonoTypeBuffer::compactMoved: Failed to put removal.");
+                CrashAtUnhandlableOOM("RelocatableMonoTypeBuffer::compactMoved: Failed to put removal.");
         } else {
             invalidated.remove(edge->location());
         }
@@ -290,6 +290,13 @@ StoreBuffer::mark(JSTracer *trc)
     bufferRelocVal.mark(this, trc);
     bufferRelocCell.mark(this, trc);
     bufferGeneric.mark(this, trc);
+
+#if defined(DEBUG)
+    for (CompartmentsIter c(runtime_, SkipAtoms); !c.done(); c.next()) {
+        if (c->debugScopes)
+            c->debugScopes->checkHashTablesAfterMovingGC(runtime_);
+    }
+#endif
 }
 
 void

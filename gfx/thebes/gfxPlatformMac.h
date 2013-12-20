@@ -89,7 +89,6 @@ private:
     // read in the pref value for the lower threshold on font anti-aliasing
     static uint32_t ReadAntiAliasingThreshold();
 
-    int32_t mOSXVersion;
     uint32_t mFontAntiAliasingThreshold;
 };
 

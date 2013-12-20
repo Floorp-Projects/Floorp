@@ -41,11 +41,11 @@ function test() {
           "The response info header doesn't have the intended visibility.");
         is(tabpanel.querySelector("#response-content-info-header")
           .getAttribute("value"),
-          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
+          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data at line 1 column 40 of the JSON data",
           "The response info header doesn't have the intended value attribute.");
         is(tabpanel.querySelector("#response-content-info-header")
           .getAttribute("tooltiptext"),
-          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data",
+          "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data at line 1 column 40 of the JSON data",
           "The response info header doesn't have the intended tooltiptext attribute.");
 
         is(tabpanel.querySelector("#response-content-json-box")

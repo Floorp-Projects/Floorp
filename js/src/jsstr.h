@@ -226,6 +226,9 @@ StringHasPattern(const jschar *text, uint32_t textlen,
 extern size_t
 js_strlen(const jschar *s);
 
+extern int32_t
+js_strcmp(const jschar *lhs, const jschar *rhs);
+
 extern jschar *
 js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 

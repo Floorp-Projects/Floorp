@@ -787,6 +787,10 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 {
     // Fast initialization of an empty object returned by NewGCThing().
 
+    AutoThreadSafeAccess ts0(templateObject);
+    AutoThreadSafeAccess ts1(templateObject->lastProperty());
+    AutoThreadSafeAccess ts2(templateObject->lastProperty()->base()); // For isNative() assertions.
+
     JS_ASSERT(!templateObject->hasDynamicElements());
 
     storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));

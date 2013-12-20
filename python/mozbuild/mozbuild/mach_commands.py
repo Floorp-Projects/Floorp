@@ -442,8 +442,8 @@ class Build(MachCommandBase):
 
         if monitor.have_resource_usage:
             excessive, swap_in, swap_out = monitor.have_excessive_swapping()
-            if excessive:
-                print(EXCESSIVE_SWAP_MESSAGE)
+            # if excessive:
+            #    print(EXCESSIVE_SWAP_MESSAGE)
 
             print('To view resource usage of the build, run |mach '
                 'resource-usage|.')

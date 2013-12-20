@@ -11,6 +11,7 @@
     <Url type="application/x-suggestions+json" template="http://api.bing.com/osjson.aspx">
         <Param name="query" value="{searchTerms}"/>
         <Param name="form" value="MOZW"/>
+        <Param name="language" value="{moz:locale}"/>
     </Url>
     <Url type="text/html" method="GET" template="http://www.bing.com/search">
         <Param name="q" value="{searchTerms}"/>

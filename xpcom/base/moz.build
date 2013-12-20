@@ -110,13 +110,24 @@ UNIFIED_SOURCES += [
     'nsMemoryReporterManager.cpp',
     'nsMessageLoop.cpp',
     'nsSecurityConsoleMessage.cpp',
-    'nsStackWalk.cpp',
     'nsSystemInfo.cpp',
     'nsTraceRefcntImpl.cpp',
     'nsUUIDGenerator.cpp',
     'nsVersionComparatorImpl.cpp',
     'VisualEventTracer.cpp',
 ]
+
+# On Windows, NS_StackWalk will only work correctly if we have frame pointers available.
+# That will only be true for non-optimized builds, and for optimized builds with
+# --enable-profiling in the .mozconfig (which is turned on in Nightly by default.)
+# We exclude this file from other build configurations so that if somebody adds a
+# new usage of NS_StackWalk it will cause a link error, which is better than having
+# NS_StackWalk silently return garbage at runtime.
+if CONFIG['OS_TARGET'] != 'WINNT' or \
+   (not CONFIG['MOZ_OPTIMIZE'] or CONFIG['MOZ_PROFILING'] or CONFIG['MOZ_DEBUG']):
+    UNIFIED_SOURCES += [
+        'nsStackWalk.cpp',
+    ]
 
 if CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [
@@ -141,3 +152,6 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xpcom_core'
+
+if CONFIG['MOZ_OPTIMIZE']:
+    DEFINES['MOZ_OPTIMIZE'] = True
