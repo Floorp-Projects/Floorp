@@ -976,8 +976,20 @@ function PeerConnectionWrapper(label, configuration) {
   var self = this;
   // This enables tests to validate that the next ice state is the one they expect to happen
   this.next_ice_state = ""; // in most cases, the next state will be "checking", but in some tests "closed"
+  // This allows test to register their own callbacks for ICE connection state changes
+  this.ice_connection_callbacks = [ ];
+
   this._pc.oniceconnectionstatechange = function() {
       ok(self._pc.iceConnectionState != undefined, "iceConnectionState should not be undefined");
+      info(self + ": oniceconnectionstatechange fired, new state is: " + self._pc.iceConnectionState);
+      if (Object.keys(self.ice_connection_callbacks).length >= 1) {
+        var it = Iterator(self.ice_connection_callbacks);
+        var name = "";
+        var callback = "";
+        for ([name, callback] in it) {
+          callback();
+        }
+      }
       if (self.next_ice_state != "") {
         is(self._pc.iceConnectionState, self.next_ice_state, "iceConnectionState changed to '" +
            self.next_ice_state + "'");
@@ -1081,12 +1093,20 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
-   * Returns the remote signaling state.
+   * Returns the signaling state.
    *
    * @returns {object} The local description
    */
   get signalingState() {
     return this._pc.signalingState;
+  },
+  /**
+   * Returns the ICE connection state.
+   *
+   * @returns {object} The local description
+   */
+  get iceConnectionState() {
+    return this._pc.iceConnectionState;
   },
 
   /**
@@ -1314,6 +1334,63 @@ PeerConnectionWrapper.prototype = {
         info(self + ": As expected, failed to add an ICE candidate");
         onFailure(err);
     }) ;
+  },
+
+  /**
+   * Returns if the ICE the connection state is "connected".
+   *
+   * @returns {boolean} True is the connection state is "connected", otherwise false.
+   */
+  isIceConnected : function PCW_isIceConnected() {
+    info("iceConnectionState: " + this.iceConnectionState);
+    return this.iceConnectionState === "connected";
+  },
+
+  /**
+   * Returns if the ICE the connection state is "checking".
+   *
+   * @returns {boolean} True is the connection state is "checking", otherwise false.
+   */
+  isIceChecking : function PCW_isIceChecking() {
+    return this.iceConnectionState === "checking";
+  },
+
+  /**
+   * Returns if the ICE the connection state is "new".
+   *
+   * @returns {boolean} True is the connection state is "new", otherwise false.
+   */
+  isIceNew : function PCW_isIceNew() {
+    return this.iceConnectionState === "new";
+  },
+
+  /**
+   * Registers a callback for the ICE connection state change and
+   * reports success (=connected) or failure via the callbacks.
+   * States "new" and "checking" are ignored.
+   *
+   * @param {function} onSuccess
+   *        Callback if ICE connection status is "connected".
+   * @param {function} onFailure
+   *        Callback if ICE connection reaches a different state than
+   *        "new", "checking" or "connected".
+   */
+  waitForIceConnected : function PCW_waitForIceConnected(onSuccess, onFailure) {
+    var self = this;
+    var mySuccess = onSuccess;
+    var myFailure = onFailure;
+
+    function iceConnectedChanged () {
+      if (self.isIceConnected()) {
+        delete self.ice_connection_callbacks["waitForIceConnected"];
+        mySuccess();
+      } else if (! (self.isIceChecking() || self.isIceNew())) {
+        delete self.ice_connection_callbacks["waitForIceConnected"];
+        myFailure();
+      }
+    };
+
+    self.ice_connection_callbacks["waitForIceConnected"] = (function() {iceConnectedChanged()});
   },
 
   /**
