@@ -282,21 +282,20 @@ TypedObjectPointer.prototype.getReference = function() {
 
 TypedObjectPointer.prototype.getX4 = function() {
   var type = REPR_TYPE(this.typeRepr);
-  var T = GetTypedObjectModule();
   switch (type) {
   case JS_X4TYPEREPR_FLOAT32:
     var x = Load_float32(this.datum, this.offset + 0);
     var y = Load_float32(this.datum, this.offset + 4);
     var z = Load_float32(this.datum, this.offset + 8);
     var w = Load_float32(this.datum, this.offset + 12);
-    return T.float32x4(x, y, z, w);
+    return GetFloat32x4TypeObject()(x, y, z, w);
 
   case JS_X4TYPEREPR_INT32:
     var x = Load_int32(this.datum, this.offset + 0);
     var y = Load_int32(this.datum, this.offset + 4);
     var z = Load_int32(this.datum, this.offset + 8);
     var w = Load_int32(this.datum, this.offset + 12);
-    return T.int32x4(x, y, z, w);
+    return GetInt32x4TypeObject()(x, y, z, w);
   }
 
   assert(false, "Unhandled x4 type: " + type);
@@ -720,42 +719,6 @@ function X4ProtoString(type) {
   assert(false, "Unhandled type constant");
   return undefined;
 }
-
-var X4LaneStrings = ["x", "y", "z", "w"];
-
-// Generalized handler for the various properties for accessing a
-// single lane of an X4 vector value. Note that this is the slow path;
-// the fast path will be inlined into ion code.
-function X4GetLane(datum, type, lane) {
-  if (!IsObject(datum) || !ObjectIsTypedDatum(datum))
-    ThrowError(JSMSG_INCOMPATIBLE_PROTO, X4ProtoString(type),
-               X4LaneStrings[lane], typeof this);
-
-  var repr = DATUM_TYPE_REPR(datum);
-  if (REPR_KIND(repr) != JS_TYPEREPR_X4_KIND || REPR_TYPE(repr) != type)
-    ThrowError(JSMSG_INCOMPATIBLE_PROTO, X4ProtoString(type),
-               X4LaneStrings[lane], typeof this);
-
-  switch (type) {
-  case JS_X4TYPEREPR_INT32:
-    return Load_int32(datum, lane * 4);
-  case JS_X4TYPEREPR_FLOAT32:
-    return Load_float32(datum, lane * 4);
-  }
-
-  assert(false, "Unhandled type constant");
-  return undefined;
-}
-
-function Float32x4Lane0() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 0); }
-function Float32x4Lane1() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 1); }
-function Float32x4Lane2() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 2); }
-function Float32x4Lane3() { return X4GetLane(this, JS_X4TYPEREPR_FLOAT32, 3); }
-
-function Int32x4Lane0() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 0); }
-function Int32x4Lane1() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 1); }
-function Int32x4Lane2() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 2); }
-function Int32x4Lane3() { return X4GetLane(this, JS_X4TYPEREPR_INT32, 3); }
 
 function X4ToSource() {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))

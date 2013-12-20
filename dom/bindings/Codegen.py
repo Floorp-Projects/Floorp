@@ -3299,13 +3299,14 @@ for (uint32_t i = 0; i < length; ++i) {
                 holderType = CGTemplatedType("Maybe", holderType)
 
         # If we're isOptional and not nullable the normal optional handling will
-        # handle lazy construction of our holder.  If we're nullable we do it
-        # all by hand because we do not want our holder constructed if we're
-        # null.
+        # handle lazy construction of our holder.  If we're nullable and not
+        # isMember we do it all by hand because we do not want our holder
+        # constructed if we're null.  But if we're isMember we don't have a
+        # holder anyway, so we can do the normal Optional codepath.
         declLoc = "${declName}"
         constructDecl = None
         if nullable:
-            if isOptional:
+            if isOptional and not isMember:
                 holderArgs = "${declName}.Value().SetValue()"
                 declType = CGTemplatedType("Optional", declType)
                 constructDecl = CGGeneric("${declName}.Construct();")
@@ -3374,7 +3375,7 @@ for (uint32_t i = 0; i < length; ++i) {
                                         declType=declType,
                                         holderType=holderType,
                                         holderArgs=holderArgs,
-                                        dealWithOptional=isOptional and not nullable)
+                                        dealWithOptional=isOptional and (not nullable or isMember))
 
     if type.isGeckoInterface():
         assert not isEnforceRange and not isClamp

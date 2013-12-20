@@ -735,8 +735,7 @@ xpc_qsUnwrapArgImpl(JSContext *cx,
     }
 
     nsRefPtr<nsXPCWrappedJS> wrappedJS;
-    rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, nullptr,
-                                      getter_AddRefs(wrappedJS));
+    rv = nsXPCWrappedJS::GetNewOrUsed(src, iid, getter_AddRefs(wrappedJS));
     if (NS_FAILED(rv) || !wrappedJS) {
         *ppArgRef = nullptr;
         return rv;
