@@ -150,8 +150,8 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   // client allocation
   ASSERT_TRUE(client->AsTextureClientYCbCr() != nullptr);
   TextureClientYCbCr* texture = client->AsTextureClientYCbCr();
-  texture->AllocateForYCbCr(ToIntSize(ycbcrData.mYSize),
-                            ToIntSize(ycbcrData.mCbCrSize),
+  texture->AllocateForYCbCr(ycbcrData.mYSize,
+                            ycbcrData.mCbCrSize,
                             ycbcrData.mStereoMode);
   ASSERT_TRUE(client->IsAllocated());
 
