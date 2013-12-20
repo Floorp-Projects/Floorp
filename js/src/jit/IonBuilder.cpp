@@ -9036,6 +9036,13 @@ IonBuilder::jsop_setarg(uint32_t arg)
                     JS_ASSERT(op->resultTypeSet() == &argTypes[arg]);
                     if (!argTypes[arg].addType(types::Type::UnknownType(), temp_->lifoAlloc()))
                         return false;
+                    if (val->isMul()) {
+                        val->setResultType(MIRType_Double);
+                        val->toMul()->setSpecialization(MIRType_Double);
+                    } else {
+                        JS_ASSERT(val->type() == MIRType_Int32);
+                    }
+                    val->setResultTypeSet(nullptr);
                 }
             }
         }
