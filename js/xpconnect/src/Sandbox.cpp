@@ -1053,6 +1053,9 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
         compartmentOptions.setSameZoneAs(js::UncheckedUnwrap(options.sameZoneAs));
     else
         compartmentOptions.setZone(JS::SystemZone);
+
+    compartmentOptions.setInvisibleToDebugger(options.invisibleToDebugger);
+
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, &SandboxClass,
                                                      principal, compartmentOptions));
     if (!sandbox)
@@ -1486,6 +1489,7 @@ SandboxOptions::Parse()
            ParseBoolean("wantExportHelpers", &wantExportHelpers) &&
            ParseString("sandboxName", sandboxName) &&
            ParseObject("sameZoneAs", &sameZoneAs) &&
+           ParseBoolean("invisibleToDebugger", &invisibleToDebugger) &&
            ParseGlobalProperties() &&
            ParseValue("metadata", &metadata);
 }
