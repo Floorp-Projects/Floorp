@@ -2474,7 +2474,6 @@ public:
     static nsresult
     GetNewOrUsed(JS::HandleObject aJSObj,
                  REFNSIID aIID,
-                 nsISupports* aOuter,
                  nsXPCWrappedJS** wrapper);
 
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
@@ -2509,6 +2508,15 @@ public:
 
     bool IsAggregatedToNative() const {return mRoot->mOuter != nullptr;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
+    void SetAggregatedNativeObject(nsISupports *aNative) {
+        MOZ_ASSERT(aNative);
+        if (mRoot->mOuter) {
+            MOZ_ASSERT(mRoot->mOuter == aNative,
+                       "Only one aggregated native can be set");
+            return;
+        }
+        NS_ADDREF(mRoot->mOuter = aNative);
+    }
 
     void TraceJS(JSTracer* trc);
     static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
@@ -2519,8 +2527,7 @@ protected:
     nsXPCWrappedJS(JSContext* cx,
                    JSObject* aJSObj,
                    nsXPCWrappedJSClass* aClass,
-                   nsXPCWrappedJS* root,
-                   nsISupports* aOuter);
+                   nsXPCWrappedJS* root);
 
     bool CanSkip();
     void Destroy();

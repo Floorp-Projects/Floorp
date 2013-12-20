@@ -94,6 +94,7 @@
 IF_INTL(real,imaginary) (Intl,                  36,     js_InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           37,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
     imaginary(GeneratorFunction,     38,     js_InitIteratorClasses, dummy) \
+IF_BDATA(real,imaginary)(SIMD,                  39,     js_InitSIMDClass, OCLASP(SIMD)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
