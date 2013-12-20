@@ -144,26 +144,14 @@ nsDOMMessageEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
     event->mLastEventId = aParam.mLastEventId.Value();
   }
 
-  if (aParam.mSource) {
-    nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
-    nsContentUtils::XPConnect()->
-      GetWrappedNativeOfJSObject(aCx, aParam.mSource,
-                                 getter_AddRefs(wrappedNative));
-
-    if (wrappedNative) {
-      event->mWindowSource = do_QueryWrappedNative(wrappedNative);
+  if (!aParam.mSource.IsNull()) {
+    if (aParam.mSource.Value().IsWindowProxy()) {
+      event->mWindowSource = aParam.mSource.Value().GetAsWindowProxy();
+    } else {
+      event->mPortSource = aParam.mSource.Value().GetAsMessagePort();
     }
 
-    if (!event->mWindowSource) {
-      MessagePortBase* port = nullptr;
-      nsresult rv = UNWRAP_OBJECT(MessagePort, aParam.mSource, port);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(NS_ERROR_INVALID_ARG);
-        return nullptr;
-      }
-
-      event->mPortSource = port;
-    }
+    MOZ_ASSERT(event->mWindowSource || event->mPortSource);
   }
 
   if (aParam.mPorts.WasPassed() && !aParam.mPorts.Value().IsNull()) {
