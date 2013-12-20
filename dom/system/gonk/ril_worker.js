@@ -88,6 +88,10 @@ let RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = libcutils.property_get("ro.moz.r
 // Ril quirk to Send STK Profile Download
 let RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true";
 
+// Ril quirk to attach data registration on demand.
+let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
+  libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true";
+
 // Marker object.
 let PENDING_NETWORK_TYPE = {};
 
@@ -1895,6 +1899,20 @@ let RIL = {
    */
   getDataCallList: function getDataCallList() {
     Buf.simpleRequest(REQUEST_DATA_CALL_LIST);
+  },
+
+  _attachDataRegistration: false,
+  /**
+   * Manually attach/detach data registration.
+   *
+   * @param attach
+   *        Boolean value indicating attach or detach.
+   */
+  setDataRegistration: function setDataRegistration(options) {
+    let request = options.attach ? RIL_REQUEST_GPRS_ATTACH :
+                                   RIL_REQUEST_GPRS_DETACH;
+    this._attachDataRegistration = options.attach;
+    Buf.simpleRequest(request);
   },
 
   /**
@@ -6063,6 +6081,8 @@ RIL[REQUEST_GET_UNLOCK_RETRY_COUNT] = function REQUEST_GET_UNLOCK_RETRY_COUNT(le
   options.retryCount = length ? Buf.readInt32List()[0] : -1;
   this.sendChromeMessage(options);
 };
+RIL[RIL_REQUEST_GPRS_ATTACH] = null;
+RIL[RIL_REQUEST_GPRS_DETACH] = null;
 RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED() {
   let radioState = Buf.readInt32();
 
@@ -6130,6 +6150,9 @@ RIL[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLICITED_RESPONSE_RA
     this.updateCellBroadcastConfig();
     this.setPreferredNetworkType();
     this.setCLIR();
+    if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND && this._attachDataRegistration) {
+      this.setDataRegistration({attach: true});
+    }
   }
 
   this.radioState = newState;
