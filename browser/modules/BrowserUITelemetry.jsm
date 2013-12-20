@@ -100,11 +100,26 @@ XPCOMUtils.defineLazyGetter(this, "DEFAULT_ITEMS", function() {
   return result;
 });
 
-const ALL_BUILTIN_ITEMS = [
-  "fullscreen-button",
-  "switch-to-metro-button",
-  "bookmarks-menu-button",
-];
+XPCOMUtils.defineLazyGetter(this, "ALL_BUILTIN_ITEMS", function() {
+  // These special cases are for click events on built-in items that are
+  // contained within customizable items (like the navigation widget).
+  const SPECIAL_CASES = [
+    "back-button",
+    "forward-button",
+    "urlbar-stop-button",
+    "urlbar-go-button",
+    "urlbar-reload-button",
+    "searchbar",
+    "cut-button",
+    "copy-button",
+    "paste-button",
+    "zoom-out-button",
+    "zoom-reset-button",
+    "zoom-in-button",
+  ]
+  return DEFAULT_ITEMS.concat(PALETTE_ITEMS)
+                      .concat(SPECIAL_CASES);
+});
 
 const OTHER_MOUSEUP_MONITORED_ITEMS = [
   "PlacesChevron",
@@ -318,6 +333,14 @@ this.BrowserUITelemetry = {
       // Base case - we clicked directly on one of our built-in items,
       // and we can go ahead and register that click.
       this._countMouseUpEvent("click-builtin-item", item.id, aEvent.button);
+      return;
+    }
+
+    // If not, we need to check if one of the ancestors of the clicked
+    // item is in our list of built-in items to check.
+    let candidate = getIDBasedOnFirstIDedAncestor(item);
+    if (ALL_BUILTIN_ITEMS.indexOf(candidate) != -1) {
+      this._countMouseUpEvent("click-builtin-item", candidate, aEvent.button);
     }
   },
 
