@@ -47,6 +47,14 @@ fuzzy-if(B2G,10,3) random-if(winWidget) == flexbox-align-self-baseline-horiz-3.x
 # fail until bug 794660 is fixed:
 == flexbox-basic-video-vert-2.xhtml flexbox-basic-video-vert-2-ref.xhtml
 
+# Tests for box-sizing on flex containers and flex items.
+== flexbox-box-sizing-on-container-horiz-1.html flexbox-box-sizing-on-container-horiz-1-ref.html
+== flexbox-box-sizing-on-container-vert-1.html flexbox-box-sizing-on-container-vert-1-ref.html
+== flexbox-box-sizing-on-items-horiz-1a.html flexbox-box-sizing-on-items-horiz-1-ref.html
+== flexbox-box-sizing-on-items-horiz-1b.html flexbox-box-sizing-on-items-horiz-1-ref.html
+== flexbox-box-sizing-on-items-vert-1a.html flexbox-box-sizing-on-items-vert-1-ref.html
+== flexbox-box-sizing-on-items-vert-1b.html flexbox-box-sizing-on-items-vert-1-ref.html
+
 # Tests for dynamic modifications of content inside/around a flex container
 == flexbox-dyn-changeFrameWidth-1.xhtml flexbox-dyn-changeFrameWidth-1-ref.xhtml
 == flexbox-dyn-changeFrameWidth-2.xhtml flexbox-dyn-changeFrameWidth-2-ref.xhtml

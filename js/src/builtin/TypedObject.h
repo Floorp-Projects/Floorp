@@ -111,11 +111,51 @@ class TypedObjectModuleObject : public JSObject {
 
     static const Class class_;
 
-    bool getSuitableClaspAndProto(JSContext *cx,
-                                  TypeRepresentation::Kind kind,
-                                  const Class **clasp,
-                                  MutableHandleObject proto);
+    static bool getSuitableClaspAndProto(JSContext *cx,
+                                         TypeRepresentation::Kind kind,
+                                         const Class **clasp,
+                                         MutableHandleObject proto);
 };
+
+/*
+ * Helper method for converting a double into other scalar
+ * types in the same way that JavaScript would. In particular,
+ * simple C casting from double to int32_t gets things wrong
+ * for values like 0xF0000000.
+ */
+template <typename T>
+static T ConvertScalar(double d)
+{
+    if (TypeIsFloatingPoint<T>()) {
+        return T(d);
+    } else if (TypeIsUnsigned<T>()) {
+        uint32_t n = ToUint32(d);
+        return T(n);
+    } else {
+        int32_t n = ToInt32(d);
+        return T(n);
+    }
+}
+
+/*
+ * Given a user-visible type descriptor object, returns the
+ * owner object for the TypeRepresentation* that we use internally.
+ */
+JSObject *typeRepresentationOwnerObj(const JSObject &typeObj);
+
+/*
+ * Given a user-visible type descriptor object, returns the
+ * TypeRepresentation* that we use internally.
+ *
+ * Note: this pointer is valid only so long as `typeObj` remains rooted.
+ */
+TypeRepresentation *typeRepresentation(const JSObject &typeObj);
+
+bool TypeObjectToSource(JSContext *cx, unsigned int argc, Value *vp);
+
+bool InitializeCommonTypeDescriptorProperties(JSContext *cx,
+                                              HandleObject obj,
+                                              HandleObject typeReprOwnerObj);
 
 // Type for scalar type constructors like `uint8`. All such type
 // constructors share a common js::Class and JSFunctionSpec. Scalar
@@ -154,6 +194,7 @@ class X4Type : public JSObject
     static const Class class_;
 
     static bool call(JSContext *cx, unsigned argc, Value *vp);
+    static bool is(const Value &v);
 };
 
 /*
@@ -356,6 +397,9 @@ class TypedDatum : public JSObject
 
     // Otherwise, use this to attach to memory referenced by another datum.
     void attach(JSObject &datum, uint32_t offset);
+
+    TypeRepresentation *datumTypeRepresentation() const;
+    uint8_t *typedMem() const;
 };
 
 class TypedObject : public TypedDatum
@@ -380,6 +424,21 @@ class TypedHandle : public TypedDatum
     static const Class class_;
     static const JSFunctionSpec handleStaticMethods[];
 };
+
+/*
+ * Because TypedDatum is a supertype of two concrete
+ * classes, we can't use JSObject.is() and JSObject.as(),
+ * so create two concrete casting operations.
+ */
+
+inline bool IsTypedDatum(const JSObject &obj) {
+    return obj.is<TypedObject>() || obj.is<TypedHandle>();
+}
+
+inline TypedDatum &AsTypedDatum(JSObject &obj) {
+    JS_ASSERT(IsTypedDatum(obj));
+    return *static_cast<TypedDatum *>(&obj);
+}
 
 /*
  * Usage: NewTypedHandle(typeObj)
@@ -486,6 +545,22 @@ extern const JSJitInfo MemcpyJitInfo;
 bool GetTypedObjectModule(JSContext *cx, unsigned argc, Value *vp);
 
 /*
+ * Usage: GetFloat32x4TypeObject()
+ *
+ * Returns the float32x4 type object. SIMD pseudo-module must have 
+ * been initialized for this to be safe.
+ */
+bool GetFloat32x4TypeObject(JSContext *cx, unsigned argc, Value *vp);
+
+/*
+ * Usage: GetInt32x4TypeObject()
+ *
+ * Returns the int32x4 type object. SIMD pseudo-module must have 
+ * been initialized for this to be safe.
+ */
+bool GetInt32x4TypeObject(JSContext *cx, unsigned argc, Value *vp);
+
+/*
  * Usage: Store_int8(targetDatum, targetOffset, value)
  *        ...
  *        Store_uint8(targetDatum, targetOffset, value)
@@ -572,6 +647,9 @@ JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_STORE_REFERENCE_CLASS_DEFN)
 JS_FOR_EACH_REFERENCE_TYPE_REPR(JS_LOAD_REFERENCE_CLASS_DEFN)
 
 } // namespace js
+
+JSObject *
+js_InitTypedObjectModuleObject(JSContext *cx, JS::HandleObject obj);
 
 #endif /* builtin_TypedObject_h */
 

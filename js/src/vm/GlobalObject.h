@@ -26,9 +26,6 @@ js_InitFunctionClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
-extern JSObject *
-js_InitTypedObjectModuleObject(JSContext *cx, js::HandleObject obj);
-
 namespace js {
 
 class Debugger;
@@ -111,9 +108,11 @@ class GlobalObject : public JSObject
     static const unsigned RUNTIME_CODEGEN_ENABLED = WARNED_WATCH_DEPRECATED + 1;
     static const unsigned DEBUGGERS               = RUNTIME_CODEGEN_ENABLED + 1;
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
+    static const unsigned FLOAT32X4_TYPE_OBJECT   = INTRINSICS + 1;
+    static const unsigned INT32X4_TYPE_OBJECT     = FLOAT32X4_TYPE_OBJECT + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = INTRINSICS + 1;
+    static const unsigned RESERVED_SLOTS = INT32X4_TYPE_OBJECT + 1;
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
@@ -414,6 +413,26 @@ class GlobalObject : public JSObject
 
     JSObject *getOrCreateTypedObjectModule(JSContext *cx) {
         return getOrCreateObject(cx, APPLICATION_SLOTS + JSProto_TypedObject, initTypedObjectModule);
+    }
+
+    void setFloat32x4TypeObject(JSObject &obj) {
+        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_OBJECT).isUndefined());
+        setSlot(FLOAT32X4_TYPE_OBJECT, ObjectValue(obj));
+    }
+
+    JSObject &float32x4TypeObject() {
+        JS_ASSERT(getSlotRef(FLOAT32X4_TYPE_OBJECT).isObject());
+        return getSlotRef(FLOAT32X4_TYPE_OBJECT).toObject();
+    }
+
+    void setInt32x4TypeObject(JSObject &obj) {
+        JS_ASSERT(getSlotRef(INT32X4_TYPE_OBJECT).isUndefined());
+        setSlot(INT32X4_TYPE_OBJECT, ObjectValue(obj));
+    }
+
+    JSObject &int32x4TypeObject() {
+        JS_ASSERT(getSlotRef(INT32X4_TYPE_OBJECT).isObject());
+        return getSlotRef(INT32X4_TYPE_OBJECT).toObject();
     }
 
     TypedObjectModuleObject &getTypedObjectModule() const;
