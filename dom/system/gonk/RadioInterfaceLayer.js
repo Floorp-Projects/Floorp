@@ -42,6 +42,10 @@ function debug(s) {
   dump("-*- RadioInterfaceLayer: " + s + "\n");
 }
 
+// Ril quirk to attach data registration on demand.
+let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
+  libcutils.property_get("ro.moz.ril.data_reg_on_demand", "false") == "true";
+
 const RADIOINTERFACELAYER_CID =
   Components.ID("{2d831c8d-6017-435b-a80c-e5d422810cea}");
 const RADIOINTERFACE_CID =
@@ -751,6 +755,9 @@ RadioInterfaceLayer.prototype = {
             this.radioInterfaces[this._currentDataClientId];
           if (!oldRadioInterface.anyDataConnected() &&
               typeof this._pendingDataCallRequest === "function") {
+            if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
+              oldRadioInterface.setDataRegistration(false);
+            }
             if (DEBUG) debug("All data calls disconnected, setup pending data call.");
             this._pendingDataCallRequest();
             this._pendingDataCallRequest = null;
@@ -811,6 +818,10 @@ RadioInterfaceLayer.prototype = {
     if (this._currentDataClientId == -1) {
       // This is to handle boot up stage.
       this._currentDataClientId = this._dataDefaultClientId;
+      if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
+        let radioInterface = this.radioInterfaces[this._currentDataClientId];
+        radioInterface.setDataRegistration(true);
+      }
       if (this._dataEnabled) {
         let radioInterface = this.radioInterfaces[this._currentDataClientId];
         radioInterface.dataCallSettings.oldEnabled =
@@ -822,6 +833,12 @@ RadioInterfaceLayer.prototype = {
     }
 
     if (!this._dataEnabled) {
+      if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
+        let oldRadioInterface = this.radioInterfaces[this._currentDataClientId];
+        let newRadioInterface = this.radioInterfaces[this._dataDefaultClientId];
+        oldRadioInterface.setDataRegistration(false);
+        newRadioInterface.setDataRegistration(true);
+      }
       this._currentDataClientId = this._dataDefaultClientId;
       return;
     }
@@ -835,6 +852,9 @@ RadioInterfaceLayer.prototype = {
       this._pendingDataCallRequest = function () {
         if (DEBUG) debug("Executing pending data call request.");
         let newRadioInterface = this.radioInterfaces[this._dataDefaultClientId];
+        if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
+          newRadioInterface.setDataRegistration(true);
+        }
         newRadioInterface.dataCallSettings.oldEnabled =
           newRadioInterface.dataCallSettings.enabled;
         newRadioInterface.dataCallSettings.enabled = this._dataEnabled;
@@ -857,6 +877,10 @@ RadioInterfaceLayer.prototype = {
     newRadioInterface.dataCallSettings.enabled = true;
 
     this._currentDataClientId = this._dataDefaultClientId;
+    if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
+      oldRadioInterface.setDataRegistration(false);
+      newRadioInterface.setDataRegistration(true);
+    }
     newRadioInterface.updateRILNetworkInterface();
   },
 
@@ -1968,6 +1992,10 @@ RadioInterface.prototype = {
             apnSetting.apn &&
             apnSetting.types &&
             apnSetting.types.length);
+  },
+
+  setDataRegistration: function setDataRegistration(attach) {
+    this.workerMessenger.send("setDataRegistration", {attach: attach});
   },
 
   updateRILNetworkInterface: function updateRILNetworkInterface() {
