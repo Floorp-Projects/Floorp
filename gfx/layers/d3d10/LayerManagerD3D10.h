@@ -230,7 +230,7 @@ public:
    * Any layer that can be used as a mask layer should override this method.
    * If aSize is non-null, it will contain the size of the texture.
    */
-  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize)
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfx::IntSize* aSize)
   {
     return nullptr;
   }
