@@ -3129,8 +3129,10 @@ TypeObject::clearNewScriptAddendum(ExclusiveContext *cx)
                 }
             }
 
-            if (!finished)
-                obj->rollbackProperties(cx, numProperties);
+            if (!finished) {
+                if (!obj->rollbackProperties(cx, numProperties))
+                    cx->compartment()->types.setPendingNukeTypes(cx);
+            }
         }
     } else {
         // Threads with an ExclusiveContext are not allowed to run scripts.
