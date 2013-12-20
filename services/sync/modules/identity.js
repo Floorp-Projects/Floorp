@@ -133,7 +133,21 @@ IdentityManager.prototype = {
     // If we change the username, we interpret this as a major change event
     // and wipe out the credentials.
     this._log.info("Username changed. Removing stored credentials.");
+    this.resetCredentials();
+  },
+
+  /**
+   * Resets/Drops all credentials we hold for the current user.
+   */
+  resetCredentials: function() {
     this.basicPassword = null;
+    this.resetSyncKey();
+  },
+
+  /**
+   * Resets/Drops the sync key we hold for the current user.
+   */
+  resetSyncKey: function() {
     this.syncKey = null;
     // syncKeyBundle cleared as a result of setting syncKey.
   },

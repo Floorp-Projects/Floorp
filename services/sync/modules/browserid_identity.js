@@ -103,10 +103,7 @@ this.BrowserIDManager.prototype = {
    * Changes will not persist unless persistSyncCredentials() is called.
    */
   set basicPassword(value) {
-    if (!value) {
-      return;
-    }
-    throw "basicPassword setter should be not used with non-null value in BrowserIDManager";
+    throw "basicPassword setter should be not used in BrowserIDManager";
   },
 
   /**
@@ -134,17 +131,28 @@ this.BrowserIDManager.prototype = {
   },
 
   set syncKey(value) {
-    if (!value) {
-      this._log.info("Sync Key has no value. Deleting.");
-      this._syncKey = null;
-      this._syncKeyBundle = null;
-      this._syncKeyUpdated = true;
-      return;
-    }
+    throw "syncKey setter should be not used in BrowserIDManager";
   },
 
   get syncKeyBundle() {
     return this._syncKeyBundle;
+  },
+
+  /**
+   * Resets/Drops all credentials we hold for the current user.
+   */
+  resetCredentials: function() {
+    // the only credentials we hold are the sync key.
+    this.resetSyncKey();
+  },
+
+  /**
+   * Resets/Drops the sync key we hold for the current user.
+   */
+  resetSyncKey: function() {
+    this._syncKey = null;
+    this._syncKeyBundle = null;
+    this._syncKeyUpdated = true;
   },
 
   /**
@@ -161,13 +169,11 @@ this.BrowserIDManager.prototype = {
       return LOGIN_FAILED_NO_USERNAME;
     }
 
-    if (!this.syncKey) {
-      return LOGIN_FAILED_NO_PASSPHRASE;
-    }
-
-    // If we have a Sync Key but no bundle, or bundle creation failed.
+    // No need to check this.syncKey as our getter for that attribute
+    // uses this.syncKeyBundle
+    // If bundle creation failed.
     if (!this.syncKeyBundle) {
-      return LOGIN_FAILED_INVALID_PASSPHRASE;
+      return LOGIN_FAILED_NO_PASSPHRASE;
     }
 
     return STATUS_OK;
