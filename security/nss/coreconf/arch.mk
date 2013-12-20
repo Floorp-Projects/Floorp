@@ -150,32 +150,6 @@ endif
 #
 
 #
-# The following hack allows one to build on a WIN95 machine (as if
-# s/he were cross-compiling on a WINNT host for a WIN95 target).
-# It also accomodates for MKS's and Cygwin's uname.exe.
-#
-ifeq ($(OS_ARCH),WIN95)
-    OS_ARCH   = WINNT
-    OS_TARGET = WIN95
-endif
-ifeq ($(OS_ARCH),Windows_95)
-    OS_ARCH   = Windows_NT
-    OS_TARGET = WIN95
-endif
-ifeq ($(OS_ARCH),CYGWIN_95-4.0)
-	OS_ARCH   = CYGWIN_NT-4.0
-	OS_TARGET = WIN95
-endif
-ifeq ($(OS_ARCH),CYGWIN_98-4.10)
-	OS_ARCH   = CYGWIN_NT-4.0
-	OS_TARGET = WIN95
-endif
-ifeq ($(OS_ARCH),CYGWIN_ME-4.90)
-	OS_ARCH   = CYGWIN_NT-4.0
-	OS_TARGET = WIN95
-endif
-
-#
 # On WIN32, we also define the variable CPU_ARCH, if it isn't already.
 #
 ifndef CPU_ARCH
