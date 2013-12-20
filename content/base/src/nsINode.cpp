@@ -2624,17 +2624,6 @@ nsINode::CloneNode(bool aDeep, ErrorResult& aError)
   return result.forget();
 }
 
-already_AddRefed<nsINode>
-nsINode::CloneNode(mozilla::ErrorResult& aError)
-{
-  if (HasChildNodes()) {
-    // Flag it as an error, not a warning, to make people actually notice.
-    OwnerDoc()->WarnOnceAbout(nsIDocument::eUnsafeCloneNode, true);
-  }
-  return CloneNode(true, aError);
-}
-
-
 nsDOMAttributeMap*
 nsINode::GetAttributes()
 {
