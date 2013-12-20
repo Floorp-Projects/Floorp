@@ -128,62 +128,14 @@ function prompt(aWindowID, aCallID, aAudioRequested, aVideoRequested, aDevices) 
   let message = stringBundle.getFormattedString("getUserMedia.share" + requestType + ".message",
                                                 [ host ]);
 
-  function listDevices(menupopup, devices) {
-    while (menupopup.lastChild)
-      menupopup.removeChild(menupopup.lastChild);
-
-    let deviceIndex = 0;
-    for (let device of devices) {
-      addDeviceToList(menupopup, device.name, deviceIndex);
-      deviceIndex++;
-    }
-  }
-
-  function addDeviceToList(menupopup, deviceName, deviceIndex) {
-    let menuitem = chromeDoc.createElement("menuitem");
-    menuitem.setAttribute("value", deviceIndex);
-    menuitem.setAttribute("label", deviceName);
-    menuitem.setAttribute("tooltiptext", deviceName);
-    menupopup.appendChild(menuitem);
-  }
-
-  chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length;
-  chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length;
-
-  let camMenupopup = chromeDoc.getElementById("webRTC-selectCamera-menupopup");
-  let micMenupopup = chromeDoc.getElementById("webRTC-selectMicrophone-menupopup");
-  listDevices(camMenupopup, videoDevices);
-  listDevices(micMenupopup, audioDevices);
-  if (requestType == "CameraAndMicrophone") {
-    addDeviceToList(camMenupopup, stringBundle.getString("getUserMedia.noVideo.label"), "-1");
-    addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
-  }
-
   let mainAction = {
     label: PluralForm.get(requestType == "CameraAndMicrophone" ? 2 : 1,
                           stringBundle.getString("getUserMedia.shareSelectedDevices.label")),
     accessKey: stringBundle.getString("getUserMedia.shareSelectedDevices.accesskey"),
-    callback: function () {
-      let allowedDevices = Cc["@mozilla.org/supports-array;1"]
-                             .createInstance(Ci.nsISupportsArray);
-      if (videoDevices.length) {
-        let videoDeviceIndex = chromeDoc.getElementById("webRTC-selectCamera-menulist").value;
-        if (videoDeviceIndex != "-1")
-          allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
-      }
-      if (audioDevices.length) {
-        let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
-        if (audioDeviceIndex != "-1")
-          allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
-      }
-
-      if (allowedDevices.Count() == 0) {
-        denyRequest(aCallID);
-        return;
-      }
-
-      Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
-    }
+    // The real callback will be set during the "showing" event. The
+    // empty function here is so that PopupNotifications.show doesn't
+    // reject the action.
+    callback: function() {}
   };
 
   let secondaryActions = [{
@@ -194,7 +146,72 @@ function prompt(aWindowID, aCallID, aAudioRequested, aVideoRequested, aDevices) 
     }
   }];
 
-  let options = null;
+  let options = {
+    eventCallback: function(aTopic, aNewBrowser) {
+      if (aTopic == "swapping")
+        return true;
+
+      if (aTopic != "showing")
+        return false;
+
+      let chromeDoc = this.browser.ownerDocument;
+
+      function listDevices(menupopup, devices) {
+        while (menupopup.lastChild)
+          menupopup.removeChild(menupopup.lastChild);
+
+        let deviceIndex = 0;
+        for (let device of devices) {
+          addDeviceToList(menupopup, device.name, deviceIndex);
+          deviceIndex++;
+        }
+      }
+
+      function addDeviceToList(menupopup, deviceName, deviceIndex) {
+        let menuitem = chromeDoc.createElement("menuitem");
+        menuitem.setAttribute("value", deviceIndex);
+        menuitem.setAttribute("label", deviceName);
+        menuitem.setAttribute("tooltiptext", deviceName);
+        menupopup.appendChild(menuitem);
+      }
+
+      chromeDoc.getElementById("webRTC-selectCamera").hidden = !videoDevices.length;
+      chromeDoc.getElementById("webRTC-selectMicrophone").hidden = !audioDevices.length;
+
+      let camMenupopup = chromeDoc.getElementById("webRTC-selectCamera-menupopup");
+      let micMenupopup = chromeDoc.getElementById("webRTC-selectMicrophone-menupopup");
+      listDevices(camMenupopup, videoDevices);
+      listDevices(micMenupopup, audioDevices);
+      if (requestType == "CameraAndMicrophone") {
+        let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
+        addDeviceToList(camMenupopup, stringBundle.getString("getUserMedia.noVideo.label"), "-1");
+        addDeviceToList(micMenupopup, stringBundle.getString("getUserMedia.noAudio.label"), "-1");
+      }
+
+      this.mainAction.callback = function() {
+        let allowedDevices = Cc["@mozilla.org/supports-array;1"]
+                               .createInstance(Ci.nsISupportsArray);
+        if (videoDevices.length) {
+          let videoDeviceIndex = chromeDoc.getElementById("webRTC-selectCamera-menulist").value;
+          if (videoDeviceIndex != "-1")
+            allowedDevices.AppendElement(videoDevices[videoDeviceIndex]);
+        }
+        if (audioDevices.length) {
+          let audioDeviceIndex = chromeDoc.getElementById("webRTC-selectMicrophone-menulist").value;
+          if (audioDeviceIndex != "-1")
+            allowedDevices.AppendElement(audioDevices[audioDeviceIndex]);
+        }
+
+        if (allowedDevices.Count() == 0) {
+          denyRequest(aCallID);
+          return;
+        }
+
+        Services.obs.notifyObservers(allowedDevices, "getUserMedia:response:allow", aCallID);
+      };
+      return true;
+    }
+  };
 
   chromeWin.PopupNotifications.show(browser, "webRTC-shareDevices", message,
                                     "webRTC-shareDevices-notification-icon", mainAction,
@@ -237,7 +254,8 @@ function showBrowserSpecificIndicator(aBrowser) {
   let mainAction = null;
   let secondaryActions = null;
   let options = {
-    dismissed: true
+    dismissed: true,
+    eventCallback: function(aTopic) aTopic == "swapping"
   };
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingDevices", message,
                                     "webRTC-sharingDevices-notification-icon", mainAction,

@@ -11,7 +11,7 @@ const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
 const { Class } = require("sdk/core/heritage");
-const { StyleSheetActor } = require("devtools/server/actors/styleeditor");
+const { StyleSheetActor } = require("devtools/server/actors/stylesheets");
 
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
