@@ -243,7 +243,6 @@ nsXPCWrappedJS::GetJSObject()
 nsresult
 nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                              REFNSIID aIID,
-                             nsISupports* aOuter,
                              nsXPCWrappedJS** wrapperResult)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
@@ -293,8 +292,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         // build the root wrapper
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedJS(cx, jsObj, clazz, nullptr,
-                                                aOuter);
+            wrapper = root = new nsXPCWrappedJS(cx, jsObj, clazz, nullptr);
             if (!root)
                 goto return_wrapper;
 
@@ -316,7 +314,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             if (!rootClazz)
                 goto return_wrapper;
 
-            root = new nsXPCWrappedJS(cx, rootJSObj, rootClazz, nullptr, aOuter);
+            root = new nsXPCWrappedJS(cx, rootJSObj, rootClazz, nullptr);
             NS_RELEASE(rootClazz);
 
             if (!root)
@@ -340,7 +338,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     MOZ_ASSERT(clazz,"bad clazz");
 
     if (!wrapper) {
-        wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root, aOuter);
+        wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root);
         if (!wrapper)
             goto return_wrapper;
 #if DEBUG_xpc_leaks
@@ -369,13 +367,12 @@ return_wrapper:
 nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
                                JSObject* aJSObj,
                                nsXPCWrappedJSClass* aClass,
-                               nsXPCWrappedJS* root,
-                               nsISupports* aOuter)
+                               nsXPCWrappedJS* root)
     : mJSObj(aJSObj),
       mClass(aClass),
       mRoot(root ? root : this),
       mNext(nullptr),
-      mOuter(root ? nullptr : aOuter)
+      mOuter(nullptr)
 {
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -390,7 +387,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
     NS_ADDREF(aClass);
-    NS_IF_ADDREF(mOuter);
 
     if (mRoot != this)
         NS_ADDREF(mRoot);
