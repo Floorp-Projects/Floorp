@@ -9,6 +9,7 @@
 #ifdef MOZ_WIDGET_GONK
 
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/gfx/Point.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 
@@ -18,7 +19,6 @@ namespace mozilla {
 namespace layers {
 
 class GrallocTextureClientOGL;
-class IntSize;
 
 /**
  * The gralloc buffer maintained by android GraphicBuffer can be
@@ -79,7 +79,7 @@ class GrallocImage : public PlanarYCbCrImage
 public:
   struct GrallocData {
     nsRefPtr<GraphicBufferLocked> mGraphicBuffer;
-    IntSize mPicSize;
+    gfx::IntSize mPicSize;
   };
 
   GrallocImage();

@@ -12,6 +12,7 @@
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 
