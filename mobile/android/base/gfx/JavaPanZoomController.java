@@ -245,12 +245,16 @@ class JavaPanZoomController
                 final RectF zoomRect = new RectF(x, y,
                                      x + (float)message.getDouble("w"),
                                      y + (float)message.getDouble("h"));
-                mTarget.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        animatedZoomTo(zoomRect);
-                    }
-                });
+                if (message.optBoolean("animate", true)) {
+                    mTarget.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            animatedZoomTo(zoomRect);
+                        }
+                    });
+                } else {
+                    mTarget.setViewportMetrics(getMetricsToZoomTo(zoomRect));
+                }
             } else if (MESSAGE_ZOOM_PAGE.equals(event)) {
                 ImmutableViewportMetrics metrics = getMetrics();
                 RectF cssPageRect = metrics.getCssPageRect();
@@ -264,12 +268,16 @@ class JavaPanZoomController
                                     y + dh/2,
                                     cssPageRect.width(),
                                     y + dh/2 + newHeight);
-                mTarget.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        animatedZoomTo(r);
-                    }
-                });
+                if (message.optBoolean("animate", true)) {
+                    mTarget.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            animatedZoomTo(r);
+                        }
+                    });
+                } else {
+                    mTarget.setViewportMetrics(getMetricsToZoomTo(r));
+                }
             } else if (MESSAGE_TOUCH_LISTENER.equals(event)) {
                 int tabId = message.getInt("tabID");
                 final Tab tab = Tabs.getInstance().getTab(tabId);
@@ -1399,7 +1407,7 @@ class JavaPanZoomController
      * While we usually use device pixels, @zoomToRect must be specified in CSS
      * pixels.
      */
-    private boolean animatedZoomTo(RectF zoomToRect) {
+    private ImmutableViewportMetrics getMetricsToZoomTo(RectF zoomToRect) {
         final float startZoom = getMetrics().zoomFactor;
 
         RectF viewport = getMetrics().getViewport();
@@ -1434,8 +1442,11 @@ class JavaPanZoomController
         // 2. now run getValidViewportMetrics on it, so that the target viewport is
         // clamped down to prevent overscroll, over-zoom, and other bad conditions.
         finalMetrics = getValidViewportMetrics(finalMetrics);
+        return finalMetrics;
+    }
 
-        bounce(finalMetrics, PanZoomState.ANIMATED_ZOOM);
+    private boolean animatedZoomTo(RectF zoomToRect) {
+        bounce(getMetricsToZoomTo(zoomToRect), PanZoomState.ANIMATED_ZOOM);
         return true;
     }
 

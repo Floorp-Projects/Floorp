@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<bindings id="chromeTestBindings" xmlns="http://www.mozilla.org/xbl">
+  <binding id="testBinding">
+    <implementation implements="nsIObserver">
+      <constructor>
+      <![CDATA[
+        // This binding gets applied to a content object, and thus is actually
+        // running in a content XBL scope.
+        var win = XPCNativeWrapper.unwrap(window);
+        var SpecialPowers = win.SpecialPowers;
+        var ok = SpecialPowers.unwrap(SpecialPowers.wrap(window).parent.ok);
+        ok(win != window, "Should be running in an XBL scope with Xrays");
+
+        // Generate an XPCWrappedJS for the reflector. We need to do this
+        // explicitly with a testing helper, because we're converging on
+        // removing XPConnect from the web, which means that it won't be
+        // possible to generate an XPCWrappedJS from content (or XBL) code.
+        var scope = {};
+        var holder = SpecialPowers.Cu.generateXPCWrappedJS(this, scope);
+
+        // Now, QI |this|, which will generate an aggregated native.
+        this.QueryInterface(Components.interfaces.nsIObserver);
+
+        ok(true, "Didn't assert or crash");
+
+        SpecialPowers.wrap(window).parent.SimpleTest.finish();
+      ]]>
+      </constructor>
+      <method name="observe">
+        <parameter name="aSubject"/>
+        <parameter name="aTopic"/>
+        <parameter name="aData"/>
+        <body><![CDATA[]]></body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>
