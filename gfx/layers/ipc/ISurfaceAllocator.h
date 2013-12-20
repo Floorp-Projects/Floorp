@@ -116,7 +116,7 @@ public:
   virtual void DestroySharedSurface(SurfaceDescriptor* aSurface);
 
   // method that does the actual allocation work
-  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfxIntSize& aSize,
+  virtual PGrallocBufferChild* AllocGrallocBuffer(const gfx::IntSize& aSize,
                                                   uint32_t aFormat,
                                                   uint32_t aUsage,
                                                   MaybeMagicGrallocBufferHandle* aHandle)
