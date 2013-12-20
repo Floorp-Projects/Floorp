@@ -3540,7 +3540,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   mRunningExpiredTimeouts(false), mCloseHandlerStarted(false),
   mCloseHandlerFinished(false), mMemoryReporterRunning(false),
   mBlockedForMemoryReporter(false), mCancelAllPendingRunnables(false),
-  mPeriodicGCTimerRunning(false)
+  mPeriodicGCTimerRunning(false), mIdleGCTimerRunning(false)
 #ifdef DEBUG
   , mPRThread(nullptr)
 #endif
@@ -4097,6 +4097,7 @@ WorkerPrivate::InitializeGCTimers()
   mIdleGCTimerTarget = new TimerThreadEventTarget(this, runnable);
 
   mPeriodicGCTimerRunning = false;
+  mIdleGCTimerRunning = false;
 }
 
 void
@@ -4107,13 +4108,15 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
   MOZ_ASSERT(mPeriodicGCTimerTarget);
   MOZ_ASSERT(mIdleGCTimerTarget);
 
-  if (aMode == PeriodicTimer && mPeriodicGCTimerRunning) {
+  if ((aMode == PeriodicTimer && mPeriodicGCTimerRunning) ||
+      (aMode == IdleTimer && mIdleGCTimerRunning)) {
     return;
   }
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mGCTimer->Cancel()));
 
   mPeriodicGCTimerRunning = false;
+  mIdleGCTimerRunning = false;
 
   LOG(("Worker %p canceled GC timer because %s\n", this,
        aMode == PeriodicTimer ?
@@ -4152,6 +4155,7 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
   }
   else {
     LOG(("Worker %p scheduled idle GC timer\n", this));
+    mIdleGCTimerRunning = true;
   }
 }
 
@@ -4171,6 +4175,7 @@ WorkerPrivate::ShutdownGCTimers()
   mPeriodicGCTimerTarget = nullptr;
   mIdleGCTimerTarget = nullptr;
   mPeriodicGCTimerRunning = false;
+  mIdleGCTimerRunning = false;
 }
 
 bool
