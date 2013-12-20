@@ -537,7 +537,7 @@ let DebuggerView = {
       animated: true,
       delayed: true,
       callback: aCallback
-    });
+    }, 0);
   },
 
   /**
