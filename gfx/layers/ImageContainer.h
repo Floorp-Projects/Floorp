@@ -10,7 +10,6 @@
 #include <sys/types.h>                  // for int32_t
 #include "ImageTypes.h"                 // for ImageFormat, etc
 #include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Mutex.h"              // for Mutex
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitorAutoEnter, etc
@@ -305,7 +304,7 @@ struct RemoteImageData {
   bool mWasUpdated;
   Type mType;
   Format mFormat;
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
   union {
     struct {
       /* This pointer is set by a remote process, however it will be set to
@@ -511,7 +510,7 @@ public:
    * Can be called on any thread. This method takes mReentrantMonitor
    * when accessing thread-shared state.
    */
-  void SetScaleHint(const gfxIntSize& aScaleHint)
+  void SetScaleHint(const gfx::IntSize& aScaleHint)
   { mScaleHint = aScaleHint; }
 
   void SetImageFactory(ImageFactory *aFactory)
@@ -638,7 +637,7 @@ protected:
   // create images for this container.
   nsRefPtr<ImageFactory> mImageFactory;
 
-  gfxIntSize mScaleHint;
+  gfx::IntSize mScaleHint;
 
   nsRefPtr<BufferRecycleBin> mRecycleBin;
 
@@ -706,19 +705,19 @@ struct PlanarYCbCrData {
   // Luminance buffer
   uint8_t* mYChannel;
   int32_t mYStride;
-  gfxIntSize mYSize;
+  gfx::IntSize mYSize;
   int32_t mYSkip;
   // Chroma buffers
   uint8_t* mCbChannel;
   uint8_t* mCrChannel;
   int32_t mCbCrStride;
-  gfxIntSize mCbCrSize;
+  gfx::IntSize mCbCrSize;
   int32_t mCbSkip;
   int32_t mCrSkip;
   // Picture region
   uint32_t mPicX;
   uint32_t mPicY;
-  gfxIntSize mPicSize;
+  gfx::IntSize mPicSize;
   StereoMode mStereoMode;
 
   nsIntRect GetPictureRect() const {
@@ -865,7 +864,7 @@ class CairoImage : public Image {
 public:
   struct Data {
     gfxASurface* mSurface;
-    gfxIntSize mSize;
+    gfx::IntSize mSize;
   };
 
   /**
@@ -891,7 +890,7 @@ public:
   CairoImage() : Image(nullptr, CAIRO_SURFACE) {}
 
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
 };
 
 class RemoteBitmapImage : public Image {
@@ -904,7 +903,7 @@ public:
 
   unsigned char *mData;
   int mStride;
-  gfxIntSize mSize;
+  gfx::IntSize mSize;
   RemoteImageData::Format mFormat;
 };
 
