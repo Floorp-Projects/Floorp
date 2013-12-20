@@ -62,12 +62,12 @@ SEARCH_PATHS = [
 # Individual files providing mach commands.
 MACH_MODULES = [
     'addon-sdk/mach_commands.py',
+    'build/valgrind/mach_commands.py',
     'dom/bindings/mach_commands.py',
     'layout/tools/reftest/mach_commands.py',
     'python/mach_commands.py',
     'python/mach/mach/commands/commandinfo.py',
     'python/mozboot/mozboot/mach_commands.py',
-    'python/mozbuild/mozbuild/config.py',
     'python/mozbuild/mozbuild/mach_commands.py',
     'python/mozbuild/mozbuild/frontend/mach_commands.py',
     'testing/mach_commands.py',
@@ -76,6 +76,7 @@ MACH_MODULES = [
     'testing/xpcshell/mach_commands.py',
     'testing/talos/mach_commands.py',
     'testing/xpcshell/mach_commands.py',
+    'tools/docs/mach_commands.py',
     'tools/mercurial/mach_commands.py',
     'tools/mach_commands.py',
 ]

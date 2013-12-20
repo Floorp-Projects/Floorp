@@ -226,9 +226,7 @@ EventQueue::CoalesceReorderEvents(AccEvent* aTailEvent)
 
     // If tailEvent contains thisEvent
     // then
-    //   if show of tailEvent contains a grand parent of thisEvent
-    //   then assert
-    //   else if hide of tailEvent contains a grand parent of thisEvent
+    //   if show or hide of tailEvent contains a grand parent of thisEvent
     //   then ignore thisEvent and its show and hide events
     //   otherwise ignore thisEvent but not its show and hide events
     Accessible* thisParent = thisEvent->mAccessible;
@@ -237,9 +235,12 @@ EventQueue::CoalesceReorderEvents(AccEvent* aTailEvent)
         AccReorderEvent* tailReorder = downcast_accEvent(aTailEvent);
         uint32_t eventType = tailReorder->IsShowHideEventTarget(thisParent);
 
-        if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
-           NS_ERROR("Accessible tree was created after it was modified! Huh?");
-        } else if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
+        // Sometimes InvalidateChildren() and
+        // DocAccessible::CacheChildrenInSubtree() can conspire to reparent an
+        // accessible in this case no need for mutation events.  Se bug 883708
+        // for details.
+        if (eventType == nsIAccessibleEvent::EVENT_SHOW ||
+            eventType == nsIAccessibleEvent::EVENT_HIDE) {
           AccReorderEvent* thisReorder = downcast_accEvent(thisEvent);
           thisReorder->DoNotEmitAll();
         } else {

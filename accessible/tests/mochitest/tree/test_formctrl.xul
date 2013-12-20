@@ -3,8 +3,16 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
                  type="text/css"?>
 
+<!-- Firefox toolbar -->
+<?xml-stylesheet href="chrome://browser/content/browser.css"
+                 type="text/css"?>
+
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible XUL checkbox and radio hierarchy tests">
+
+  <!-- Firefox toolbar -->
+  <script type="application/javascript"
+          src="chrome://browser/content/browser.js"/>
 
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -76,6 +84,9 @@
 
       testAccessibleTree("toolbar2", accTree);
 
+      if (!SEAMONKEY)
+        testAccessibleTree("tb_customizable", { TOOLBAR: [] });
+
       SimpleTest.finish()
     }
 
@@ -110,6 +121,8 @@
       <toolbar id="toolbar2" toolbarname="2nd" aria-label="My second toolbar">
         <toolbarbutton id="button2" label="hello"/>
       </toolbar>
+
+      <toolbar id="tb_customizable" customizable="true"/>
     </vbox>
   </hbox>
 

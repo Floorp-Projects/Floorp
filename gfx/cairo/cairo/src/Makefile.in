@@ -36,7 +36,3 @@ CFLAGS += -Wno-missing-field-initializers
 CFLAGS += -Wno-conversion
 endif # GNU_CC
 
-ifndef MOZ_TREE_PIXMAN
-CFLAGS += $(MOZ_PIXMAN_CFLAGS)
-CXXFLAGS += $(MOZ_PIXMAN_CFLAGS)
-endif

@@ -12,11 +12,11 @@ public interface Assert {
     void endTest();
 
     void ok(boolean condition, String name, String diag);
-    void is(Object a, Object b, String name);
-    void isnot(Object a, Object b, String name);
+    void is(Object actual, Object expected, String name);
+    void isnot(Object actual, Object notExpected, String name);
     void todo(boolean condition, String name, String diag);
-    void todo_is(Object a, Object b, String name);
-    void todo_isnot(Object a, Object b, String name);
+    void todo_is(Object actual, Object expected, String name);
+    void todo_isnot(Object actual, Object notExpected, String name);
     void info(String name, String message);
 
     // robocop-specific asserts

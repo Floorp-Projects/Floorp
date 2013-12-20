@@ -16,6 +16,7 @@
 #include "jsobj.h"
 
 #include "js/GCAPI.h"
+#include "js/SliceBudget.h"
 #include "js/Tracer.h"
 #include "js/Vector.h"
 
@@ -39,7 +40,6 @@ class PropertyName;
 class ScopeObject;
 class Shape;
 class UnownedBaseShape;
-struct SliceBudget;
 
 unsigned GetCPUCount();
 
@@ -51,7 +51,7 @@ enum HeapState {
 };
 
 namespace jit {
-    class IonCode;
+    class JitCode;
 }
 
 namespace gc {
@@ -119,7 +119,7 @@ MapAllocToTraceKind(AllocKind kind)
         JSTRACE_STRING,     /* FINALIZE_SHORT_STRING */
         JSTRACE_STRING,     /* FINALIZE_STRING */
         JSTRACE_STRING,     /* FINALIZE_EXTERNAL_STRING */
-        JSTRACE_IONCODE,    /* FINALIZE_IONCODE */
+        JSTRACE_JITCODE,    /* FINALIZE_JITCODE */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == FINALIZE_LIMIT);
     return map[kind];
@@ -146,7 +146,7 @@ template <> struct MapTypeToTraceKind<JSString>         { static const JSGCTrace
 template <> struct MapTypeToTraceKind<JSFlatString>     { static const JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<JSLinearString>   { static const JSGCTraceKind kind = JSTRACE_STRING; };
 template <> struct MapTypeToTraceKind<PropertyName>     { static const JSGCTraceKind kind = JSTRACE_STRING; };
-template <> struct MapTypeToTraceKind<jit::IonCode>     { static const JSGCTraceKind kind = JSTRACE_IONCODE; };
+template <> struct MapTypeToTraceKind<jit::JitCode>     { static const JSGCTraceKind kind = JSTRACE_JITCODE; };
 
 #if defined(JSGC_GENERATIONAL) || defined(DEBUG)
 static inline bool
@@ -174,7 +174,7 @@ IsNurseryAllocable(AllocKind kind)
         false,     /* FINALIZE_SHORT_STRING */
         false,     /* FINALIZE_STRING */
         false,     /* FINALIZE_EXTERNAL_STRING */
-        false,     /* FINALIZE_IONCODE */
+        false,     /* FINALIZE_JITCODE */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == FINALIZE_LIMIT);
     return map[kind];
@@ -206,7 +206,7 @@ IsBackgroundFinalized(AllocKind kind)
         true,      /* FINALIZE_SHORT_STRING */
         true,      /* FINALIZE_STRING */
         false,     /* FINALIZE_EXTERNAL_STRING */
-        false,     /* FINALIZE_IONCODE */
+        false,     /* FINALIZE_JITCODE */
     };
     JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == FINALIZE_LIMIT);
     return map[kind];
@@ -603,7 +603,7 @@ class ArenaLists
     void queueStringsForSweep(FreeOp *fop);
     void queueShapesForSweep(FreeOp *fop);
     void queueScriptsForSweep(FreeOp *fop);
-    void queueIonCodeForSweep(FreeOp *fop);
+    void queueJitCodeForSweep(FreeOp *fop);
 
     bool foregroundFinalize(FreeOp *fop, AllocKind thingKind, SliceBudget &sliceBudget);
     static void backgroundFinalize(FreeOp *fop, ArenaHeader *listHead, bool onBackgroundThread);
@@ -615,6 +615,8 @@ class ArenaLists
 
     void *allocateFromArena(JS::Zone *zone, AllocKind thingKind);
     inline void *allocateFromArenaInline(JS::Zone *zone, AllocKind thingKind);
+
+    inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
 
     friend class js::Nursery;
 };
@@ -1064,46 +1066,6 @@ struct MarkStack {
     }
 };
 
-/*
- * This class records how much work has been done in a given GC slice, so that
- * we can return before pausing for too long. Some slices are allowed to run for
- * unlimited time, and others are bounded. To reduce the number of gettimeofday
- * calls, we only check the time every 1000 operations.
- */
-struct SliceBudget {
-    int64_t deadline; /* in microseconds */
-    intptr_t counter;
-
-    static const intptr_t CounterReset = 1000;
-
-    static const int64_t Unlimited = 0;
-    static int64_t TimeBudget(int64_t millis);
-    static int64_t WorkBudget(int64_t work);
-
-    /* Equivalent to SliceBudget(UnlimitedBudget). */
-    SliceBudget();
-
-    /* Instantiate as SliceBudget(Time/WorkBudget(n)). */
-    SliceBudget(int64_t budget);
-
-    void reset() {
-        deadline = INT64_MAX;
-        counter = INTPTR_MAX;
-    }
-
-    void step(intptr_t amt = 1) {
-        counter -= amt;
-    }
-
-    bool checkOverBudget();
-
-    bool isOverBudget() {
-        if (counter >= 0)
-            return false;
-        return checkOverBudget();
-    }
-};
-
 struct GrayRoot {
     void *thing;
     JSGCTraceKind kind;
@@ -1129,10 +1091,9 @@ struct GCMarker : public JSTracer {
         ObjectTag,
         TypeTag,
         XmlTag,
-        ArenaTag,
         SavedValueArrayTag,
-        IonCodeTag,
-        LastTag = IonCodeTag
+        JitCodeTag,
+        LastTag = JitCodeTag
     };
 
     static const uintptr_t StackTagMask = 7;
@@ -1157,16 +1118,12 @@ struct GCMarker : public JSTracer {
         pushTaggedPtr(ObjectTag, obj);
     }
 
-    void pushArenaList(gc::ArenaHeader *firstArena) {
-        pushTaggedPtr(ArenaTag, firstArena);
-    }
-
     void pushType(types::TypeObject *type) {
         pushTaggedPtr(TypeTag, type);
     }
 
-    void pushIonCode(jit::IonCode *code) {
-        pushTaggedPtr(IonCodeTag, code);
+    void pushJitCode(jit::JitCode *code) {
+        pushTaggedPtr(JitCodeTag, code);
     }
 
     uint32_t getMarkColor() const {
@@ -1267,7 +1224,7 @@ struct GCMarker : public JSTracer {
     bool restoreValueArray(JSObject *obj, void **vpp, void **endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget &budget);
-    void processMarkStackOther(SliceBudget &budget, uintptr_t tag, uintptr_t addr);
+    void processMarkStackOther(uintptr_t tag, uintptr_t addr);
 
     void appendGrayRoot(void *thing, JSGCTraceKind kind);
 
@@ -1441,6 +1398,7 @@ class AutoSuppressGC
   public:
     AutoSuppressGC(ExclusiveContext *cx);
     AutoSuppressGC(JSCompartment *comp);
+    AutoSuppressGC(JSRuntime *rt);
 
     ~AutoSuppressGC()
     {

@@ -34,6 +34,9 @@
 #ifndef MOZ_STATIC_JS
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
+#ifdef MOZ_DMD
+@BINPATH@/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#endif
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@plc4@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@plds4@DLL_SUFFIX@
@@ -442,6 +445,10 @@
 ; [Browser Chrome Files]
 @BINPATH@/chrome/browser@JAREXT@
 @BINPATH@/chrome/browser.manifest
+#ifdef NIGHTLY_BUILD
+@BINPATH@/chrome/shumway.manifest
+@BINPATH@/chrome/shumway/*
+#endif
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/icon.png
 @BINPATH@/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/preview.png
@@ -558,6 +565,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/AddonUpdateService.js
 @BINPATH@/components/BlocklistPrompt.js
 @BINPATH@/components/BrowserCLH.js
+@BINPATH@/components/ColorPicker.js
 @BINPATH@/components/ContentDispatchChooser.js
 @BINPATH@/components/ContentPermissionPrompt.js
 @BINPATH@/components/DirectoryProvider.js

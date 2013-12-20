@@ -30,8 +30,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource://gre/modules/AsyncShutdown.jsm");
 
 // Oldest year to allow in date preferences. This module was implemented in
 // 2012 and no dates older than that should be encountered.
@@ -50,6 +48,7 @@ const TELEMETRY_JSON_PAYLOAD_SERIALIZE = "HEALTHREPORT_JSON_PAYLOAD_SERIALIZE_MS
 const TELEMETRY_PAYLOAD_SIZE_UNCOMPRESSED = "HEALTHREPORT_PAYLOAD_UNCOMPRESSED_BYTES";
 const TELEMETRY_PAYLOAD_SIZE_COMPRESSED = "HEALTHREPORT_PAYLOAD_COMPRESSED_BYTES";
 const TELEMETRY_UPLOAD = "HEALTHREPORT_UPLOAD_MS";
+const TELEMETRY_SHUTDOWN_DELAY = "HEALTHREPORT_SHUTDOWN_DELAY_MS";
 const TELEMETRY_COLLECT_CONSTANT = "HEALTHREPORT_COLLECT_CONSTANT_DATA_MS";
 const TELEMETRY_COLLECT_DAILY = "HEALTHREPORT_COLLECT_DAILY_MS";
 const TELEMETRY_SHUTDOWN = "HEALTHREPORT_SHUTDOWN_MS";
@@ -283,8 +282,7 @@ function AbstractHealthReporter(branch, policy, sessionRecorder) {
   this._shutdownRequested = false;
   this._shutdownInitiated = false;
   this._shutdownComplete = false;
-  this._deferredShutdown = Promise.defer();
-  this._promiseShutdown = this._deferredShutdown.promise;
+  this._shutdownCompleteCallback = null;
 
   this._errors = [];
 
@@ -371,10 +369,7 @@ AbstractHealthReporter.prototype = Object.freeze({
       // As soon as we have could storage, we need to register cleanup or
       // else bad things happen on shutdown.
       Services.obs.addObserver(this, "quit-application", false);
-      // The database needs to be shut down by the end of shutdown
-      // phase profileBeforeChange.
-      AsyncShutdown.profileBeforeChange.
-        addBlocker("FHR: Flushing storage shutdown", this._promiseShutdown);
+      Services.obs.addObserver(this, "profile-before-change", false);
 
       this._storageInProgress = true;
       TelemetryStopwatch.start(this._dbOpenHistogram, this);
@@ -500,6 +495,11 @@ AbstractHealthReporter.prototype = Object.freeze({
         this._initiateShutdown();
         break;
 
+      case "profile-before-change":
+        Services.obs.removeObserver(this, "profile-before-change");
+        this._waitForShutdown();
+        break;
+
       case "idle-daily":
         this._performDailyMaintenance();
         break;
@@ -550,51 +550,80 @@ AbstractHealthReporter.prototype = Object.freeze({
       Services.obs.removeObserver(this, "idle-daily");
     } catch (ex) { }
 
-    Task.spawn(function() {
+    if (this._providerManager) {
+      let onShutdown = this._onProviderManagerShutdown.bind(this);
+      Task.spawn(this._shutdownProviderManager.bind(this))
+          .then(onShutdown, onShutdown);
+      return;
+    }
+
+    this._log.warn("Don't have provider manager. Proceeding to storage shutdown.");
+    this._shutdownStorage();
+  },
+
+  _shutdownProviderManager: function () {
+    this._log.info("Shutting down provider manager.");
+    for (let provider of this._providerManager.providers) {
       try {
-        if (this._providerManager) {
-          this._log.info("Shutting down provider manager.");
-          for (let provider of this._providerManager.providers) {
-            try {
-              yield provider.shutdown();
-            } catch (ex) {
-              this._log.warn("Error when shutting down provider: " +
-                             CommonUtils.exceptionStr(ex));
-            }
-          }
-          this._log.info("Provider manager shut down.");
-          this._providerManager = null;
-          this._onProviderManagerShutdown();
-        }
-        if (this._storage) {
-          this._log.info("Shutting down storage.");
-          try {
-            yield this._storage.close();
-            this._onStorageClose();
-          } catch (error) {
-            this._log.warn("Error when closing storage: " +
-                           CommonUtils.exceptionStr(error));
-          }
-          this._storage = null;
-        }
-
-        this._log.warn("Shutdown complete.");
-        this._shutdownComplete = true;
-      } finally {
-        this._deferredShutdown.resolve();
-        TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
+        yield provider.shutdown();
+      } catch (ex) {
+        this._log.warn("Error when shutting down provider: " +
+                       CommonUtils.exceptionStr(ex));
       }
-    }.bind(this));
+    }
   },
 
-  _onStorageClose: function() {
-    // Do nothing.
-    // This method provides a hook point for the test suite.
+  _onProviderManagerShutdown: function () {
+    this._log.info("Provider manager shut down.");
+    this._providerManager = null;
+    this._shutdownStorage();
   },
 
-  _onProviderManagerShutdown: function() {
-    // Do nothing.
-    // This method provides a hook point for the test suite.
+  _shutdownStorage: function () {
+    if (!this._storage) {
+      this._onShutdownComplete();
+    }
+
+    this._log.info("Shutting down storage.");
+    let onClose = this._onStorageClose.bind(this);
+    this._storage.close().then(onClose, onClose);
+  },
+
+  _onStorageClose: function (error) {
+    this._log.info("Storage has been closed.");
+
+    if (error) {
+      this._log.warn("Error when closing storage: " +
+                     CommonUtils.exceptionStr(error));
+    }
+
+    this._storage = null;
+    this._onShutdownComplete();
+  },
+
+  _onShutdownComplete: function () {
+    this._log.warn("Shutdown complete.");
+    this._shutdownComplete = true;
+    TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN, this);
+
+    if (this._shutdownCompleteCallback) {
+      this._shutdownCompleteCallback();
+    }
+  },
+
+  _waitForShutdown: function () {
+    if (this._shutdownComplete) {
+      return;
+    }
+
+    TelemetryStopwatch.start(TELEMETRY_SHUTDOWN_DELAY, this);
+    try {
+      this._shutdownCompleteCallback = Async.makeSpinningCallback();
+      this._shutdownCompleteCallback.wait();
+      this._shutdownCompleteCallback = null;
+    } finally {
+      TelemetryStopwatch.finish(TELEMETRY_SHUTDOWN_DELAY, this);
+    }
   },
 
   /**
@@ -604,7 +633,7 @@ AbstractHealthReporter.prototype = Object.freeze({
    */
   _shutdown: function () {
     this._initiateShutdown();
-    return this._promiseShutdown;
+    this._waitForShutdown();
   },
 
   /**

@@ -33,7 +33,7 @@
 #if !defined(_ecintrin_H)
 # define _ecintrin_H (1)
 
-/*Some specific platforms may have optimized intrinsic or inline assembly
+/*Some specific platforms may have optimized intrinsic or OPUS_INLINE assembly
    versions of these functions which can substantially improve performance.
   We define macros for them to allow easy incorporation of these non-ANSI
    features.*/

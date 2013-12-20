@@ -22,6 +22,7 @@
 
 #include "mozilla/EventForwards.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/WeakPtr.h"
 #include "gfxPoint.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -42,6 +43,7 @@
 #include "nsMargin.h"
 
 class nsIContent;
+class nsDocShell;
 class nsIDocument;
 class nsIFrame;
 class nsPresContext;
@@ -98,6 +100,7 @@ class Selection;
 namespace dom {
 class Element;
 class Touch;
+class ShadowRoot;
 } // namespace dom
 
 namespace layers{
@@ -527,6 +530,11 @@ public:
   void RestyleForAnimation(mozilla::dom::Element* aElement,
                            nsRestyleHint aHint);
 
+  // ShadowRoot has APIs that can change styles so we only
+  // want to restyle elements in the ShadowRoot and not the whole
+  // document.
+  virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+
   /**
    * Determine if it is safe to flush all pending notifications
    * @param aIsSafeToFlush true if it is safe, false otherwise.
@@ -950,7 +958,7 @@ public:
    * user events at the docshell's parent.  This pointer allows us to do that.
    * It should not be used for any other purpose.
    */
-  void SetForwardingContainer(nsWeakPtr aContainer)
+  void SetForwardingContainer(const mozilla::WeakPtr<nsDocShell> &aContainer)
   {
     mForwardingContainer = aContainer;
   }
@@ -1502,7 +1510,7 @@ protected:
   // Pointer into mFrameConstructor - this is purely so that FrameManager() and
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
-  nsWeakPtr                 mForwardingContainer;
+  mozilla::WeakPtr<nsDocShell>                 mForwardingContainer;
   nsRefreshDriver*          mHiddenInvalidationObserverRefreshDriver;
 #ifdef ACCESSIBILITY
   mozilla::a11y::DocAccessible* mDocAccessible;

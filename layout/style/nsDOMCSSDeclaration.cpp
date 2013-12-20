@@ -52,6 +52,26 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
   return NS_OK;
 }
 
+// Length of the "var-" prefix of custom property names.
+#define VAR_PREFIX_LENGTH 4
+
+void
+nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
+                                            nsAString& aValue)
+{
+  MOZ_ASSERT(Substring(aPropertyName,
+                       0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+
+  css::Declaration* decl = GetCSSDeclaration(false);
+  if (!decl) {
+    aValue.Truncate();
+    return;
+  }
+
+  decl->GetVariableDeclaration(Substring(aPropertyName, VAR_PREFIX_LENGTH),
+                               aValue);
+}
+
 NS_IMETHODIMP
 nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
                                       const nsAString& aValue)
@@ -156,6 +176,11 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
+  if (propID == eCSSPropertyExtra_variable) {
+    GetCustomPropertyValue(aPropertyName, aReturn);
+    return NS_OK;
+  }
+
   return GetPropertyValue(propID, aReturn);
 }
 
@@ -189,19 +214,26 @@ nsDOMCSSDeclaration::SetProperty(const nsAString& aPropertyName,
     // If the new value of the property is an empty string we remove the
     // property.
     // XXX this ignores the priority string, should it?
+    if (propID == eCSSPropertyExtra_variable) {
+      return RemoveCustomProperty(aPropertyName);
+    }
     return RemoveProperty(propID);
   }
 
+  bool important;
   if (aPriority.IsEmpty()) {
-    return ParsePropertyValue(propID, aValue, false);
+    important = false;
+  } else if (aPriority.EqualsLiteral("important")) {
+    important = true;
+  } else {
+    // XXX silent failure?
+    return NS_OK;
   }
 
-  if (aPriority.EqualsLiteral("important")) {
-    return ParsePropertyValue(propID, aValue, true);
+  if (propID == eCSSPropertyExtra_variable) {
+    return ParseCustomPropertyValue(aPropertyName, aValue, important);
   }
-
-  // XXX silent failure?
-  return NS_OK;
+  return ParsePropertyValue(propID, aValue, important);
 }
 
 NS_IMETHODIMP
@@ -212,6 +244,11 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
                                                           nsCSSProps::eEnabled);
   if (propID == eCSSProperty_UNKNOWN) {
     aReturn.Truncate();
+    return NS_OK;
+  }
+
+  if (propID == eCSSPropertyExtra_variable) {
+    RemoveCustomProperty(aPropertyName);
     return NS_OK;
   }
 
@@ -279,6 +316,49 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
 }
 
 nsresult
+nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
+                                              const nsAString& aPropValue,
+                                              bool aIsImportant)
+{
+  MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
+
+  css::Declaration* olddecl = GetCSSDeclaration(true);
+  if (!olddecl) {
+    return NS_ERROR_FAILURE;
+  }
+
+  CSSParsingEnvironment env;
+  GetCSSParsingEnvironment(env);
+  if (!env.mPrincipal) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
+  // Attribute setting code, which leads in turn to BeginUpdate.  We
+  // need to start the update now so that the old rule doesn't get used
+  // between when we mutate the declaration and when we set the new
+  // rule (see stack in bug 209575).
+  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
+  css::Declaration* decl = olddecl->EnsureMutable();
+
+  nsCSSParser cssParser(env.mCSSLoader);
+  bool changed;
+  nsresult result = cssParser.ParseVariable(Substring(aPropertyName,
+                                                      VAR_PREFIX_LENGTH),
+                                            aPropValue, env.mSheetURI,
+                                            env.mBaseURI, env.mPrincipal, decl,
+                                            &changed, aIsImportant);
+  if (NS_FAILED(result) || !changed) {
+    if (decl != olddecl) {
+      delete decl;
+    }
+    return result;
+  }
+
+  return SetCSSDeclaration(decl);
+}
+
+nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 {
   css::Declaration* decl = GetCSSDeclaration(false);
@@ -295,5 +375,28 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 
   decl = decl->EnsureMutable();
   decl->RemoveProperty(aPropID);
+  return SetCSSDeclaration(decl);
+}
+
+nsresult
+nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
+{
+  MOZ_ASSERT(Substring(aPropertyName,
+                       0, VAR_PREFIX_LENGTH).EqualsLiteral("var-"));
+
+  css::Declaration* decl = GetCSSDeclaration(false);
+  if (!decl) {
+    return NS_OK; // no decl, so nothing to remove
+  }
+
+  // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
+  // Attribute setting code, which leads in turn to BeginUpdate.  We
+  // need to start the update now so that the old rule doesn't get used
+  // between when we mutate the declaration and when we set the new
+  // rule (see stack in bug 209575).
+  mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
+
+  decl = decl->EnsureMutable();
+  decl->RemoveVariableDeclaration(Substring(aPropertyName, VAR_PREFIX_LENGTH));
   return SetCSSDeclaration(decl);
 }

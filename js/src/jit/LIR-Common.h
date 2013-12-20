@@ -71,11 +71,13 @@ class LMove
 {
     LAllocation *from_;
     LAllocation *to_;
+    LDefinition::Type type_;
 
   public:
-    LMove(LAllocation *from, LAllocation *to)
+    LMove(LAllocation *from, LAllocation *to, LDefinition::Type type)
       : from_(from),
-        to_(to)
+        to_(to),
+        type_(type)
     { }
 
     LAllocation *from() {
@@ -90,26 +92,33 @@ class LMove
     const LAllocation *to() const {
         return to_;
     }
+    LDefinition::Type type() const {
+        return type_;
+    }
 };
 
 class LMoveGroup : public LInstructionHelper<0, 0, 0>
 {
     js::Vector<LMove, 2, IonAllocPolicy> moves_;
 
-  public:
-    LIR_HEADER(MoveGroup)
-
     LMoveGroup(TempAllocator &alloc)
       : moves_(alloc)
     { }
 
+  public:
+    LIR_HEADER(MoveGroup)
+
+    static LMoveGroup *New(TempAllocator &alloc) {
+        return new(alloc) LMoveGroup(alloc);
+    }
+
     void printOperands(FILE *fp);
 
     // Add a move which takes place simultaneously with all others in the group.
-    bool add(LAllocation *from, LAllocation *to);
+    bool add(LAllocation *from, LAllocation *to, LDefinition::Type type);
 
     // Add a move which takes place after existing moves in the group.
-    bool addAfter(LAllocation *from, LAllocation *to);
+    bool addAfter(LAllocation *from, LAllocation *to, LDefinition::Type type);
 
     size_t numMoves() const {
         return moves_.length();
@@ -242,7 +251,7 @@ class LCallee : public LInstructionHelper<1, 0, 0>
 template <size_t Succs, size_t Operands, size_t Temps>
 class LControlInstructionHelper : public LInstructionHelper<0, Operands, Temps> {
 
-    MBasicBlock *successors_[Succs];
+    mozilla::Array<MBasicBlock *, Succs> successors_;
 
   public:
     virtual size_t numSuccessors() const MOZ_FINAL MOZ_OVERRIDE { return Succs; }
@@ -295,16 +304,6 @@ class LNewSlots : public LCallInstructionHelper<1, 0, 3>
 
     MNewSlots *mir() const {
         return mir_->toNewSlots();
-    }
-};
-
-class LNewParallelArray : public LInstructionHelper<1, 0, 0>
-{
-  public:
-    LIR_HEADER(NewParallelArray);
-
-    MNewParallelArray *mir() const {
-        return mir_->toNewParallelArray();
     }
 };
 
@@ -460,17 +459,19 @@ class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
 public:
     LIR_HEADER(NewCallObjectPar);
 
-    static LNewCallObjectPar *NewWithSlots(const LAllocation &slice, const LAllocation &slots,
+    static LNewCallObjectPar *NewWithSlots(TempAllocator &alloc,
+                                           const LAllocation &slice, const LAllocation &slots,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
-    static LNewCallObjectPar *NewSansSlots(const LAllocation &slice,
+    static LNewCallObjectPar *NewSansSlots(TempAllocator &alloc,
+                                           const LAllocation &slice,
                                            const LDefinition &temp1, const LDefinition &temp2)
     {
         LAllocation slots = LConstantIndex::Bogus();
-        return new LNewCallObjectPar(slice, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(slice, slots, temp1, temp2);
     }
 
     const LAllocation *forkJoinSlice() {
@@ -1320,12 +1321,13 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
     }
 };
 
-class LFilterArgumentsOrEval : public LCallInstructionHelper<0, 1, 2>
+class LFilterArgumentsOrEvalS : public LCallInstructionHelper<0, 1, 2>
 {
   public:
-    LIR_HEADER(FilterArgumentsOrEval)
+    LIR_HEADER(FilterArgumentsOrEvalS)
 
-    LFilterArgumentsOrEval(const LAllocation &string, const LDefinition &temp1, const LDefinition &temp2)
+    LFilterArgumentsOrEvalS(const LAllocation &string, const LDefinition &temp1,
+                            const LDefinition &temp2)
     {
         setOperand(0, string);
         setTemp(0, temp1);
@@ -1347,18 +1349,48 @@ class LFilterArgumentsOrEval : public LCallInstructionHelper<0, 1, 2>
     }
 };
 
-class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
+class LFilterArgumentsOrEvalV : public LCallInstructionHelper<0, BOX_PIECES, 3>
 {
   public:
-    LIR_HEADER(CallDirectEval)
+    LIR_HEADER(FilterArgumentsOrEvalV)
 
-    LCallDirectEval(const LAllocation &scopeChain, const LAllocation &string)
+    LFilterArgumentsOrEvalV(const LDefinition &temp1, const LDefinition &temp2,
+                            const LDefinition &temp3)
+    {
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, temp3);
+    }
+
+    static const size_t Input = 0;
+
+    MFilterArgumentsOrEval *mir() const {
+        return mir_->toFilterArgumentsOrEval();
+    }
+
+    const LDefinition *temp1() {
+        return getTemp(0);
+    }
+    const LDefinition *temp2() {
+        return getTemp(1);
+    }
+    const LDefinition *temp3() {
+        return getTemp(2);
+    }
+};
+
+class LCallDirectEvalS : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(CallDirectEvalS)
+
+    LCallDirectEvalS(const LAllocation &scopeChain, const LAllocation &string)
     {
         setOperand(0, scopeChain);
         setOperand(1, string);
     }
 
-    static const size_t ThisValueInput = 2;
+    static const size_t ThisValue = 2;
 
     MCallDirectEval *mir() const {
         return mir_->toCallDirectEval();
@@ -1369,6 +1401,28 @@ class LCallDirectEval : public LCallInstructionHelper<BOX_PIECES, 2 + BOX_PIECES
     }
     const LAllocation *getString() {
         return getOperand(1);
+    }
+};
+
+class LCallDirectEvalV : public LCallInstructionHelper<BOX_PIECES, 1 + (2 * BOX_PIECES), 0>
+{
+  public:
+    LIR_HEADER(CallDirectEvalV)
+
+    LCallDirectEvalV(const LAllocation &scopeChain)
+    {
+        setOperand(0, scopeChain);
+    }
+
+    static const size_t Argument = 1;
+    static const size_t ThisValue = 1 + BOX_PIECES;
+
+    MCallDirectEval *mir() const {
+        return mir_->toCallDirectEval();
+    }
+
+    const LAllocation *getScopeChain() {
+        return getOperand(0);
     }
 };
 
@@ -1590,13 +1644,15 @@ class LCompare : public LInstructionHelper<1, 2, 0>
 // For objects, both operands are in registers.
 class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
+    MCompare *cmpMir_;
     JSOp jsop_;
 
   public:
     LIR_HEADER(CompareAndBranch)
-    LCompareAndBranch(JSOp jsop, const LAllocation &left, const LAllocation &right,
+    LCompareAndBranch(MCompare *cmpMir, JSOp jsop,
+                      const LAllocation &left, const LAllocation &right,
                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
-      : jsop_(jsop)
+      : cmpMir_(cmpMir), jsop_(jsop)
     {
         setOperand(0, left);
         setOperand(1, right);
@@ -1619,8 +1675,11 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
     const char *extraName() const {
         return js_CodeName[jsop_];
@@ -1669,10 +1728,13 @@ class LCompareF : public LInstructionHelper<1, 2, 0>
 
 class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(CompareDAndBranch)
-    LCompareDAndBranch(const LAllocation &left, const LAllocation &right,
+    LCompareDAndBranch(MCompare *cmpMir, const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : cmpMir_(cmpMir)
     {
         setOperand(0, left);
         setOperand(1, right);
@@ -1692,17 +1754,23 @@ class LCompareDAndBranch : public LControlInstructionHelper<2, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
 };
 
 class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(CompareFAndBranch)
-    LCompareFAndBranch(const LAllocation &left, const LAllocation &right,
+    LCompareFAndBranch(MCompare *cmpMir, const LAllocation &left, const LAllocation &right,
                        MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : cmpMir_(cmpMir)
     {
         setOperand(0, left);
         setOperand(1, right);
@@ -1722,8 +1790,11 @@ class LCompareFAndBranch : public LControlInstructionHelper<2, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
 };
 
@@ -1805,10 +1876,14 @@ class LCompareB : public LInstructionHelper<1, BOX_PIECES + 1, 0>
 
 class LCompareBAndBranch : public LControlInstructionHelper<2, BOX_PIECES + 1, 0>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(CompareBAndBranch)
 
-    LCompareBAndBranch(const LAllocation &rhs, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    LCompareBAndBranch(MCompare *cmpMir, const LAllocation &rhs,
+                       MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : cmpMir_(cmpMir)
     {
         setOperand(BOX_PIECES, rhs);
         setSuccessor(0, ifTrue);
@@ -1827,8 +1902,11 @@ class LCompareBAndBranch : public LControlInstructionHelper<2, BOX_PIECES + 1, 0
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
 };
 
@@ -1847,13 +1925,16 @@ class LCompareV : public LInstructionHelper<1, 2 * BOX_PIECES, 0>
 
 class LCompareVAndBranch : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(CompareVAndBranch)
 
     static const size_t LhsInput = 0;
     static const size_t RhsInput = BOX_PIECES;
 
-    LCompareVAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+    LCompareVAndBranch(MCompare *cmpMir, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
+      : cmpMir_(cmpMir)
     {
         setSuccessor(0, ifTrue);
         setSuccessor(1, ifFalse);
@@ -1865,8 +1946,11 @@ class LCompareVAndBranch : public LControlInstructionHelper<2, 2 * BOX_PIECES, 0
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
 };
 
@@ -1905,9 +1989,6 @@ class LBitAndAndBranch : public LControlInstructionHelper<2, 2, 0>
     const LAllocation *right() {
         return getOperand(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
-    }
 };
 
 class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
@@ -1938,10 +2019,14 @@ class LIsNullOrLikeUndefined : public LInstructionHelper<1, BOX_PIECES, 2>
 
 class LIsNullOrLikeUndefinedAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 2>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(IsNullOrLikeUndefinedAndBranch)
 
-    LIsNullOrLikeUndefinedAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp, const LDefinition &tempToUnbox)
+    LIsNullOrLikeUndefinedAndBranch(MCompare *cmpMir, MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                                    const LDefinition &temp, const LDefinition &tempToUnbox)
+      : cmpMir_(cmpMir)
     {
         setSuccessor(0, ifTrue);
         setSuccessor(1, ifFalse);
@@ -1957,8 +2042,11 @@ class LIsNullOrLikeUndefinedAndBranch : public LControlInstructionHelper<2, BOX_
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
     const LDefinition *temp() {
         return getTemp(0);
@@ -1988,10 +2076,15 @@ class LEmulatesUndefined : public LInstructionHelper<1, 1, 0>
 
 class LEmulatesUndefinedAndBranch : public LControlInstructionHelper<2, 1, 1>
 {
+    MCompare *cmpMir_;
+
   public:
     LIR_HEADER(EmulatesUndefinedAndBranch)
 
-    LEmulatesUndefinedAndBranch(const LAllocation &input, MBasicBlock *ifTrue, MBasicBlock *ifFalse, const LDefinition &temp)
+    LEmulatesUndefinedAndBranch(MCompare *cmpMir, const LAllocation &input,
+                                MBasicBlock *ifTrue, MBasicBlock *ifFalse,
+                                const LDefinition &temp)
+      : cmpMir_(cmpMir)
     {
         setOperand(0, input);
         setSuccessor(0, ifTrue);
@@ -2005,8 +2098,11 @@ class LEmulatesUndefinedAndBranch : public LControlInstructionHelper<2, 1, 1>
     MBasicBlock *ifFalse() const {
         return getSuccessor(1);
     }
-    MCompare *mir() {
-        return mir_->toCompare();
+    MTest *mir() const {
+        return mir_->toTest();
+    }
+    MCompare *cmpMir() const {
+        return cmpMir_;
     }
     const LDefinition *temp() {
         return getTemp(0);
@@ -5664,6 +5760,23 @@ class LAssertRangeV : public LInstructionHelper<0, BOX_PIECES, 3>
     }
     const Range *range() {
         return mir()->assertedRange();
+    }
+};
+
+class LRecompileCheck : public LInstructionHelper<0, 0, 1>
+{
+  public:
+    LIR_HEADER(RecompileCheck)
+
+    LRecompileCheck(const LDefinition &scratch) {
+        setTemp(0, scratch);
+    }
+
+    const LDefinition *scratch() {
+        return getTemp(0);
+    }
+    MRecompileCheck *mir() {
+        return mir_->toRecompileCheck();
     }
 };
 

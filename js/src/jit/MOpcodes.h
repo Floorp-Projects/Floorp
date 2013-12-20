@@ -87,7 +87,6 @@ namespace jit {
     _(TruncateToInt32)                                                      \
     _(ToString)                                                             \
     _(NewSlots)                                                             \
-    _(NewParallelArray)                                                     \
     _(NewArray)                                                             \
     _(NewObject)                                                            \
     _(NewDeclEnvObject)                                                     \
@@ -211,7 +210,8 @@ namespace jit {
     _(RestPar)                                                              \
     _(ForkJoinSlice)                                                        \
     _(GuardThreadLocalObject)                                               \
-    _(CheckInterruptPar)
+    _(CheckInterruptPar)                                                    \
+    _(RecompileCheck)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

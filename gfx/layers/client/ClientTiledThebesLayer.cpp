@@ -8,7 +8,6 @@
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
-#include "gfxPoint.h"                   // for gfxSize
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize

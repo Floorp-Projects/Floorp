@@ -159,9 +159,13 @@ function testSteps()
 
       is(event.target.result, indexCount,
          "Correct number of entries in index");
+
+      index = event = null; // Bug 943409 workaround.
     }
+    objectStore = event = null; // Bug 943409 workaround.
   }
 
   finishTest();
+  event = db = request = null; // Bug 943409 workaround.
   yield undefined;
 }

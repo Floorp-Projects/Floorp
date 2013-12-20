@@ -26,9 +26,6 @@ public class MenuItemActionBar extends ImageButton
 
     public MenuItemActionBar(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
-        int size = (int) (context.getResources().getDimension(R.dimen.browser_toolbar_height));
-        setLayoutParams(new ViewGroup.LayoutParams(size, size));
     }
 
     @Override
@@ -42,7 +39,7 @@ public class MenuItemActionBar extends ImageButton
         setId(item.getItemId());
     }
 
-    private void setIcon(Drawable icon) {
+    void setIcon(Drawable icon) {
         if (icon != null) {
             setImageDrawable(icon);
             setVisibility(VISIBLE);
@@ -51,7 +48,7 @@ public class MenuItemActionBar extends ImageButton
         }
     }
 
-    private void setIcon(int icon) {
+    void setIcon(int icon) {
         if (icon != 0) {
             setImageResource(icon);
             setVisibility(VISIBLE);
@@ -60,7 +57,7 @@ public class MenuItemActionBar extends ImageButton
         }
     }
 
-    private void setTitle(CharSequence title) {
+    void setTitle(CharSequence title) {
         // set accessibility contentDescription here
         setContentDescription(title);
     }
@@ -69,5 +66,10 @@ public class MenuItemActionBar extends ImageButton
     public void setEnabled(boolean enabled) {
         super.setEnabled(enabled);
         setColorFilter(enabled ? 0 : 0xFF999999);
+    }
+
+    @Override
+    public void setShowIcon(boolean show) {
+        // Do nothing.
     }
 }

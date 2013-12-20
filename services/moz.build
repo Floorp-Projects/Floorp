@@ -7,6 +7,7 @@
 PARALLEL_DIRS += [
     'common',
     'crypto',
+    'fxaccounts',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
@@ -23,3 +24,5 @@ if CONFIG['MOZ_SERVICES_METRICS']:
 
 if CONFIG['MOZ_SERVICES_SYNC']:
     PARALLEL_DIRS += ['sync']
+
+SPHINX_TREES['services'] = 'docs'

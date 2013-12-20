@@ -203,7 +203,7 @@ function ResponsiveUI(aWindow, aTab)
 
   // Touch events support
   this.touchEnableBefore = false;
-  this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+  this.touchEventHandler = new TouchEventHandler(this.browser);
 
   this.browser.addEventListener("load", this.bound_onPageLoad, true);
   this.browser.addEventListener("unload", this.bound_onPageUnload, true);
@@ -232,7 +232,7 @@ ResponsiveUI.prototype = {
    * Window onload / onunload
    */
    onPageLoad: function() {
-     this.touchEventHandler = new TouchEventHandler(this.browser.contentWindow);
+     this.touchEventHandler = new TouchEventHandler(this.browser);
      if (this.touchEnableBefore) {
        this.enableTouch();
      }
@@ -356,11 +356,11 @@ ResponsiveUI.prototype = {
    * Build the toolbar and the resizers.
    *
    * <vbox class="browserContainer"> From tabbrowser.xml
-   *  <toolbar class="devtools-toolbar devtools-responsiveui-toolbar">
-   *    <menulist class="devtools-menulist"/> // presets
-   *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton" tooltiptext="rotate"/> // rotate
-   *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton" tooltiptext="screenshot"/> // screenshot
-   *    <toolbarbutton tabindex="0" class="devtools-toolbarbutton" tooltiptext="Leave Responsive Design View"/> // close
+   *  <toolbar class="devtools-responsiveui-toolbar">
+   *    <menulist class="devtools-responsiveui-menulist"/> // presets
+   *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="rotate"/> // rotate
+   *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="screenshot"/> // screenshot
+   *    <toolbarbutton tabindex="0" class="devtools-responsiveui-toolbarbutton" tooltiptext="Leave Responsive Design View"/> // close
    *  </toolbar>
    *  <stack class="browserStack"> From tabbrowser.xml
    *    <browser/>
@@ -373,10 +373,10 @@ ResponsiveUI.prototype = {
   buildUI: function RUI_buildUI() {
     // Toolbar
     this.toolbar = this.chromeDoc.createElement("toolbar");
-    this.toolbar.className = "devtools-toolbar devtools-responsiveui-toolbar";
+    this.toolbar.className = "devtools-responsiveui-toolbar";
 
     this.menulist = this.chromeDoc.createElement("menulist");
-    this.menulist.className = "devtools-menulist";
+    this.menulist.className = "devtools-responsiveui-menulist";
 
     this.menulist.addEventListener("select", this.bound_presetSelected, true);
 
@@ -401,24 +401,24 @@ ResponsiveUI.prototype = {
     this.rotatebutton = this.chromeDoc.createElement("toolbarbutton");
     this.rotatebutton.setAttribute("tabindex", "0");
     this.rotatebutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.rotate2"));
-    this.rotatebutton.className = "devtools-toolbarbutton devtools-responsiveui-rotate";
+    this.rotatebutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-rotate";
     this.rotatebutton.addEventListener("command", this.bound_rotate, true);
 
     this.screenshotbutton = this.chromeDoc.createElement("toolbarbutton");
     this.screenshotbutton.setAttribute("tabindex", "0");
     this.screenshotbutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.screenshot"));
-    this.screenshotbutton.className = "devtools-toolbarbutton devtools-responsiveui-screenshot";
+    this.screenshotbutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-screenshot";
     this.screenshotbutton.addEventListener("command", this.bound_screenshot, true);
 
     this.touchbutton = this.chromeDoc.createElement("toolbarbutton");
     this.touchbutton.setAttribute("tabindex", "0");
     this.touchbutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.touch"));
-    this.touchbutton.className = "devtools-toolbarbutton devtools-responsiveui-touch";
+    this.touchbutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-touch";
     this.touchbutton.addEventListener("command", this.bound_touch, true);
 
     this.closebutton = this.chromeDoc.createElement("toolbarbutton");
     this.closebutton.setAttribute("tabindex", "0");
-    this.closebutton.className = "devtools-toolbarbutton devtools-responsiveui-close";
+    this.closebutton.className = "devtools-responsiveui-toolbarbutton devtools-responsiveui-close";
     this.closebutton.setAttribute("tooltiptext", this.strings.GetStringFromName("responsiveUI.close"));
     this.closebutton.addEventListener("command", this.bound_close, true);
 

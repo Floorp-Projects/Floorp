@@ -244,6 +244,9 @@ class CellIterUnderGC : public CellIterImpl
 {
   public:
     CellIterUnderGC(JS::Zone *zone, AllocKind kind) {
+#ifdef JSGC_GENERATIONAL
+        JS_ASSERT(zone->runtimeFromAnyThread()->gcNursery.isEmpty());
+#endif
         JS_ASSERT(zone->runtimeFromAnyThread()->isHeapBusy());
         init(zone, kind);
     }
@@ -277,16 +280,27 @@ class CellIter : public CellIterImpl
         {
             gc::FinishBackgroundFinalize(zone->runtimeFromMainThread());
         }
+
+#ifdef JSGC_GENERATIONAL
+        /* Evict the nursery before iterating so we can see all things. */
+        JSRuntime *rt = zone->runtimeFromMainThread();
+        if (!rt->gcNursery.isEmpty())
+            MinorGC(rt, JS::gcreason::EVICT_NURSERY);
+#endif
+
         if (lists->isSynchronizedFreeList(kind)) {
             lists = nullptr;
         } else {
             JS_ASSERT(!zone->runtimeFromMainThread()->isHeapBusy());
             lists->copyFreeListToArena(kind);
         }
+
 #ifdef DEBUG
+        /* Assert that no GCs can occur while a CellIter is live. */
         counter = &zone->runtimeFromAnyThread()->noGCOrAllocationCheck;
         ++*counter;
 #endif
+
         init(zone, kind);
     }
 
@@ -412,7 +426,7 @@ NewGCThing(ThreadSafeContext *cx, AllocKind kind, size_t thingSize, InitialHeap 
         JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                      kind == FINALIZE_STRING ||
                      kind == FINALIZE_SHORT_STRING ||
-                     kind == FINALIZE_IONCODE);
+                     kind == FINALIZE_JITCODE);
         JS_ASSERT(!rt->isHeapBusy());
         JS_ASSERT(!rt->noGCOrAllocationCheck);
 
@@ -420,7 +434,7 @@ NewGCThing(ThreadSafeContext *cx, AllocKind kind, size_t thingSize, InitialHeap 
         JS_OOM_POSSIBLY_FAIL_REPORT(ncx);
 
 #ifdef JS_GC_ZEAL
-        if (rt->needZealousGC() && allowGC)
+        if (allowGC && rt->needZealousGC())
             js::gc::RunDebugGC(ncx);
 #endif
 

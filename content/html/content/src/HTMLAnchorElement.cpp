@@ -41,8 +41,26 @@ HTMLAnchorElement::~HTMLAnchorElement()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED2(HTMLAnchorElement, nsGenericHTMLElement,
-                             nsIDOMHTMLAnchorElement, Link)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(HTMLAnchorElement)
+  NS_INTERFACE_TABLE_INHERITED2(HTMLAnchorElement,
+                                nsIDOMHTMLAnchorElement,
+                                Link)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsGenericHTMLElement)
+
+NS_IMPL_ADDREF_INHERITED(HTMLAnchorElement, Element)
+NS_IMPL_RELEASE_INHERITED(HTMLAnchorElement, Element)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAnchorElement)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLAnchorElement,
+                                                  nsGenericHTMLElement)
+  tmp->Link::Traverse(cb);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLAnchorElement,
+                                                nsGenericHTMLElement)
+  tmp->Link::Unlink();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ELEMENT_CLONE(HTMLAnchorElement)
 

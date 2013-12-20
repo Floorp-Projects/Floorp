@@ -4,22 +4,26 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ev_streams.c',
     'ev_timers.c',
     'getaddrinfo.c',
     'ns_name.c',
     'ns_netint.c',
     'ns_parse.c',
-    'ns_print.c',
     'ns_samedomain.c',
     'ns_ttl.c',
     'res_comp.c',
     'res_data.c',
-    'res_debug.c',
     'res_init.c',
-    'res_mkquery.c',
     'res_send.c',
+]
+
+# These files can't be unified because of conflicting global variable names.
+SOURCES += [
+    'ns_print.c',
+    'res_debug.c',
+    'res_mkquery.c',
     'res_state.c',
 ]
 

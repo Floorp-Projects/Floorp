@@ -26,12 +26,12 @@ EXPORTS += [
     'nsCSSPseudoElementList.h',
     'nsCSSPseudoElements.h',
     'nsCSSRuleProcessor.h',
+    'nsCSSScanner.h',
     'nsCSSStyleSheet.h',
     'nsCSSValue.h',
     'nsDOMCSSAttrDeclaration.h',
     'nsDOMCSSDeclaration.h',
     'nsDOMCSSRGBColor.h',
-    'nsDOMMediaQueryList.h',
     'nsICSSDeclaration.h',
     'nsICSSLoaderObserver.h',
     'nsICSSPseudoComparator.h',
@@ -57,9 +57,16 @@ EXPORTS += [
     'nsStyleUtil.h',
 ]
 
+EXPORTS.mozilla += [
+    'CSSVariableDeclarations.h',
+    'CSSVariableResolver.h',
+    'CSSVariableValues.h',
+]
+
 EXPORTS.mozilla.dom += [
     'CSS.h',
     'CSSValue.h',
+    'MediaQueryList.h',
 ]
 
 EXPORTS.mozilla.css += [
@@ -77,10 +84,14 @@ EXPORTS.mozilla.css += [
 UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
+    'CSSVariableDeclarations.cpp',
+    'CSSVariableResolver.cpp',
+    'CSSVariableValues.cpp',
     'Declaration.cpp',
     'ErrorReporter.cpp',
     'ImageLoader.cpp',
     'Loader.cpp',
+    'MediaQueryList.cpp',
     'nsAnimationManager.cpp',
     'nsComputedDOMStyle.cpp',
     'nsCSSAnonBoxes.cpp',
@@ -99,7 +110,6 @@ UNIFIED_SOURCES += [
     'nsDOMCSSRect.cpp',
     'nsDOMCSSRGBColor.cpp',
     'nsDOMCSSValueList.cpp',
-    'nsDOMMediaQueryList.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsLayoutStylesheetCache.cpp',
@@ -141,6 +151,8 @@ LOCAL_INCLUDES += [
     '../../content/xul/document/src',
     '../base',
     '../generic',
-    '../xul/base/src',
+    '../xul',
     '/dom/base',
 ]
+
+JAR_MANIFESTS += ['jar.mn']

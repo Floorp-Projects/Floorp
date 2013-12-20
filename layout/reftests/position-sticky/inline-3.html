@@ -4,7 +4,7 @@
 <html>
   <head>
     <title>CSS Test: Sticky Positioning - inline with margins</title>
-    <link rel="author" title="Corey Ford" href="mailto:cford@mozilla.com">
+    <link rel="author" title="Corey Ford" href="mailto:corey@coreyford.name">
     <link rel="match" href="inline-3-ref.html">
     <meta name="assert" content="Sticky positioning on inline elements should keep the bounding box of all continuations' margin boxes contained">
     <link rel="stylesheet" type="text/css" href="ahem.css">
@@ -16,26 +16,18 @@
       }
       #sticky {
         position: sticky;
-        top: 20px;
         left: 20px;
         margin-right: 10px;
       }
       #contain {
-        width: 90px;
-        font-size: 10px;
-      }
-      b {
-        display: inline-block;
-        width: 40px;
-        height: 10px;
-        background: black;
+        width: 100px;
       }
     </style>
   </head>
   <body>
     <div id="scroll">
       <div id="contain">
-        <b></b><span id="sticky"><b></b><br><b></b></span>
+        test <span id="sticky">test<br>test</span>
       </div>
     </div>
   </body>

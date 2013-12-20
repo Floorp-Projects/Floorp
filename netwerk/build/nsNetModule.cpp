@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -57,8 +58,9 @@ NS_HIDDEN_(ContentSnifferCache*) gDataSniffers = nullptr;
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIOService, nsIOService::GetInstance)
 
 #include "nsDNSService2.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDNSService, Init)
-  
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDNSService,
+  nsDNSService::GetXPCOMSingleton)
+
 #include "nsProtocolProxyService.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsProtocolProxyService, Init)
 
@@ -101,6 +103,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(BackgroundFileSaverStreamListener, Init)
 
 #include "nsSyncStreamListener.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSyncStreamListener, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAtomicFileOutputStream)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeFileOutputStream)
 
@@ -705,6 +709,7 @@ NS_DEFINE_NAMED_CID(NS_LOADGROUP_CID);
 NS_DEFINE_NAMED_CID(NS_LOCALFILEINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_LOCALFILEOUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_PARTIALLOCALFILEINPUTSTREAM_CID);
+NS_DEFINE_NAMED_CID(NS_ATOMICLOCALFILEOUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_SAFELOCALFILEOUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_LOCALFILESTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_URICHECKER_CID);
@@ -822,7 +827,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SERVERSOCKET_CID, false, nullptr, nsServerSocketConstructor },
     { &kNS_UDPSOCKET_CID, false, nullptr, nsUDPSocketConstructor },
     { &kNS_SOCKETPROVIDERSERVICE_CID, false, nullptr, nsSocketProviderService::Create },
-    { &kNS_DNSSERVICE_CID, false, nullptr, nsDNSServiceConstructor },
+    { &kNS_DNSSERVICE_CID, false, nullptr, nsIDNSServiceConstructor },
     { &kNS_IDNSERVICE_CID, false, nullptr, nsIDNServiceConstructor },
     { &kNS_EFFECTIVETLDSERVICE_CID, false, nullptr, nsEffectiveTLDServiceConstructor },
     { &kNS_SIMPLEURI_CID, false, nullptr, nsSimpleURIConstructor },
@@ -845,6 +850,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_LOCALFILEINPUTSTREAM_CID, false, nullptr, nsFileInputStream::Create },
     { &kNS_LOCALFILEOUTPUTSTREAM_CID, false, nullptr, nsFileOutputStream::Create },
     { &kNS_PARTIALLOCALFILEINPUTSTREAM_CID, false, nullptr, nsPartialFileInputStream::Create },
+    { &kNS_ATOMICLOCALFILEOUTPUTSTREAM_CID, false, nullptr, nsAtomicFileOutputStreamConstructor },
     { &kNS_SAFELOCALFILEOUTPUTSTREAM_CID, false, nullptr, nsSafeFileOutputStreamConstructor },
     { &kNS_LOCALFILESTREAM_CID, false, nullptr, nsFileStreamConstructor },
     { &kNS_URICHECKER_CID, false, nullptr, nsURICheckerConstructor },
@@ -987,6 +993,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_LOCALFILEINPUTSTREAM_CONTRACTID, &kNS_LOCALFILEINPUTSTREAM_CID },
     { NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &kNS_LOCALFILEOUTPUTSTREAM_CID },
     { NS_PARTIALLOCALFILEINPUTSTREAM_CONTRACTID, &kNS_PARTIALLOCALFILEINPUTSTREAM_CID },
+    { NS_ATOMICLOCALFILEOUTPUTSTREAM_CONTRACTID, &kNS_ATOMICLOCALFILEOUTPUTSTREAM_CID },
     { NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID, &kNS_SAFELOCALFILEOUTPUTSTREAM_CID },
     { NS_LOCALFILESTREAM_CONTRACTID, &kNS_LOCALFILESTREAM_CID },
     { NS_URICHECKER_CONTRACT_ID, &kNS_URICHECKER_CID },

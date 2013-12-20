@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
-
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
 #include "nsAttrValueInlines.h"
@@ -132,44 +130,41 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   // if marginwidth or marginheight is set in the <frame> and not set in the <body>
   // reflect them as margin in the <body>
   if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    nsCOMPtr<nsISupports> container = aData->mPresContext->GetContainer();
-    if (container) {
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-      if (docShell) {
-        nscoord frameMarginWidth=-1;  // default value
-        nscoord frameMarginHeight=-1; // default value
-        docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set   
-        docShell->GetMarginHeight(&frameMarginHeight); 
-        if ((frameMarginWidth >= 0) && (bodyMarginWidth == -1)) { // set in <frame> & not in <body> 
-          if (eCompatibility_NavQuirks == mode) {
-            if ((bodyMarginHeight == -1) && (0 > frameMarginHeight)) // nav quirk 
-              frameMarginHeight = 0;
-          }
+    nsCOMPtr<nsIDocShell> docShell(aData->mPresContext->GetDocShell());
+    if (docShell) {
+      nscoord frameMarginWidth=-1;  // default value
+      nscoord frameMarginHeight=-1; // default value
+      docShell->GetMarginWidth(&frameMarginWidth); // -1 indicates not set
+      docShell->GetMarginHeight(&frameMarginHeight);
+      if ((frameMarginWidth >= 0) && (bodyMarginWidth == -1)) { // set in <frame> & not in <body>
+        if (eCompatibility_NavQuirks == mode) {
+          if ((bodyMarginHeight == -1) && (0 > frameMarginHeight)) // nav quirk
+            frameMarginHeight = 0;
         }
-        if ((frameMarginHeight >= 0) && (bodyMarginHeight == -1)) { // set in <frame> & not in <body> 
-          if (eCompatibility_NavQuirks == mode) {
-            if ((bodyMarginWidth == -1) && (0 > frameMarginWidth)) // nav quirk
-              frameMarginWidth = 0;
-          }
+      }
+      if ((frameMarginHeight >= 0) && (bodyMarginHeight == -1)) { // set in <frame> & not in <body>
+        if (eCompatibility_NavQuirks == mode) {
+          if ((bodyMarginWidth == -1) && (0 > frameMarginWidth)) // nav quirk
+            frameMarginWidth = 0;
         }
+      }
 
-        if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
-          nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
-          if (marginLeft->GetUnit() == eCSSUnit_Null)
-            marginLeft->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-          nsCSSValue* marginRight = aData->ValueForMarginRightValue();
-          if (marginRight->GetUnit() == eCSSUnit_Null)
-            marginRight->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-        }
+      if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
+        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+        if (marginLeft->GetUnit() == eCSSUnit_Null)
+          marginLeft->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
+        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+        if (marginRight->GetUnit() == eCSSUnit_Null)
+          marginRight->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
+      }
 
-        if ((bodyMarginHeight == -1) && (frameMarginHeight >= 0)) {
-          nsCSSValue* marginTop = aData->ValueForMarginTop();
-          if (marginTop->GetUnit() == eCSSUnit_Null)
-            marginTop->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
-          nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-          if (marginBottom->GetUnit() == eCSSUnit_Null)
-            marginBottom->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
-        }
+      if ((bodyMarginHeight == -1) && (frameMarginHeight >= 0)) {
+        nsCSSValue* marginTop = aData->ValueForMarginTop();
+        if (marginTop->GetUnit() == eCSSUnit_Null)
+          marginTop->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
+        nsCSSValue* marginBottom = aData->ValueForMarginBottom();
+        if (marginBottom->GetUnit() == eCSSUnit_Null)
+          marginBottom->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
       }
     }
   }
@@ -464,8 +459,7 @@ HTMLBodyElement::GetAssociatedEditor()
     return nullptr;
   }
 
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+  nsCOMPtr<nsIDocShell> docShell = presContext->GetDocShell();
   if (!docShell) {
     return nullptr;
   }

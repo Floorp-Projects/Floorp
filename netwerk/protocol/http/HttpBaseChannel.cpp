@@ -1524,6 +1524,14 @@ HttpBaseChannel::SetLoadUnblocked(bool aLoadUnblocked)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetApiRedirectToURI(nsIURI ** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  NS_IF_ADDREF(*aResult = mAPIRedirectToURI);
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------

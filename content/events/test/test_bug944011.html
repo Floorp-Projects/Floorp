@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=944011
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 944011</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 944011 comment 24 - Event handlers should fire even if the
+      target comes from a non-current inner. **/
+  SimpleTest.waitForExplicitFinish();
+  var gLoadCount = 0;
+  function loaded() {
+    ++gLoadCount;
+    switch(gLoadCount) {
+      case 1:
+        ok(true, "Got first load");
+        oldBody = window[0].document.body;
+        oldBody.onclick = function() {
+          ok(true, "Got onclick");
+          SimpleTest.finish();
+        }
+        $('ifr').setAttribute('src', 'data:text/html,<html><body>Second frame</body></html>');
+        break;
+      case 2:
+        ok(true, "Got second load");
+        oldBody.dispatchEvent(new MouseEvent('click'));
+        break;
+      default:
+        ok(false, "Unexpected load");
+        SimpleTest.finish();
+    }
+  }
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=944011">Mozilla Bug 944011</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe id="ifr" onload="loaded();" src="data:text/html,<html><body>foo</body></html>"></iframe>
+  <div name="testTarget"></div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

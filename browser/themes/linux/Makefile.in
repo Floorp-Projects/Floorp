@@ -14,11 +14,11 @@ INSTALL_TARGETS += ICON
 # the processing of the jar file in this directory.
 tab-selected-svg: $(srcdir)/../shared/tab-selected.svg
 	$(call py_action,preprocessor, \
-	  --marker "%" -D TAB_SIDE=start \
+	  --marker % -D TAB_SIDE=start \
 	  $(ACDEFINES) \
 	  $(srcdir)/../shared/tab-selected.svg -o tab-selected-start.svg)
 	$(call py_action,preprocessor, \
-	  --marker "%" -D TAB_SIDE=end \
+	  --marker % -D TAB_SIDE=end \
 	  $(ACDEFINES) \
 	  $(srcdir)/../shared/tab-selected.svg -o tab-selected-end.svg)
 

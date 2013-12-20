@@ -363,7 +363,7 @@ nsTreeBodyFrame::EnsureView()
       mTreeBoxObject->GetView(getter_AddRefs(treeView));
       if (treeView && weakFrame.IsAlive()) {
         nsXPIDLString rowStr;
-        box->GetProperty(NS_LITERAL_STRING("topRow").get(),
+        box->GetProperty(MOZ_UTF16("topRow"),
                          getter_Copies(rowStr));
         nsAutoString rowStr2(rowStr);
         nsresult error;
@@ -380,7 +380,7 @@ nsTreeBodyFrame::EnsureView()
 
         // Clear out the property info for the top row, but we always keep the
         // view current.
-        box->RemoveProperty(NS_LITERAL_STRING("topRow").get());
+        box->RemoveProperty(MOZ_UTF16("topRow"));
       }
     }
   }

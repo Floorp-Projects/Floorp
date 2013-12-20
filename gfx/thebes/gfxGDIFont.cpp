@@ -90,7 +90,7 @@ gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 
 static bool
 UseUniscribe(gfxShapedText *aShapedText,
-             const PRUnichar *aText,
+             char16ptr_t aText,
              uint32_t aLength)
 {
     uint32_t flags = aShapedText->Flags();

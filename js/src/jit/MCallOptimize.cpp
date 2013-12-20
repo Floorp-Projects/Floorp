@@ -6,7 +6,6 @@
 
 #include "jsmath.h"
 
-#include "builtin/ParallelArray.h"
 #include "builtin/TestingFunctions.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
@@ -24,6 +23,9 @@ namespace jit {
 IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
 {
+    if (!optimizationInfo().inlineNative())
+        return InliningStatus_NotInlined;
+
     // Array natives.
     if (native == js_Array)
         return inlineArray(callInfo);
@@ -41,6 +43,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineMathAbs(callInfo);
     if (native == js::math_floor)
         return inlineMathFloor(callInfo);
+    if (native == js::math_ceil)
+        return inlineMathCeil(callInfo);
     if (native == js::math_round)
         return inlineMathRound(callInfo);
     if (native == js_math_sqrt)
@@ -137,10 +141,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     // Parallel intrinsics.
     if (native == intrinsic_ShouldForceSequential)
         return inlineForceSequentialOrInParallelSection(callInfo);
-    if (native == intrinsic_NewParallelArray)
-        return inlineNewParallelArray(callInfo);
-    if (native == ParallelArrayObject::construct)
-        return inlineParallelArray(callInfo);
 
     // Utility intrinsics.
     if (native == intrinsic_IsCallable)
@@ -248,10 +248,12 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles) {
+        AutoThreadSafeAccess ts(templateObject);
         templateObject->setShouldConvertDoubleElements();
+    }
 
-    MNewArray *ins = MNewArray::New(alloc(), initLength, templateObject,
+    MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateObject,
                                     templateObject->type()->initialHeap(constraints()),
                                     allocating);
     current->add(ins);
@@ -500,8 +502,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MArrayConcat *ins = MArrayConcat::New(alloc(), callInfo.thisArg(), callInfo.getArg(0), templateObj,
-                                          templateObj->type()->initialHeap(constraints()));
+    MArrayConcat *ins = MArrayConcat::New(alloc(), constraints(), callInfo.thisArg(), callInfo.getArg(0),
+                                          templateObj, templateObj->type()->initialHeap(constraints()));
     current->add(ins);
     current->push(ins);
 
@@ -573,7 +575,7 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
 
     if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
-        MFloor *ins = new MFloor(callInfo.getArg(0));
+        MFloor *ins = MFloor::New(alloc(), callInfo.getArg(0));
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -582,6 +584,36 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
     if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.unwrapArgs();
         MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Floor, nullptr);
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineMathCeil(CallInfo &callInfo)
+{
+    if (callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (callInfo.argc() != 1)
+        return InliningStatus_NotInlined;
+
+    MIRType argType = callInfo.getArg(0)->type();
+    MIRType returnType = getInlineReturnType();
+
+    // Math.ceil(int(x)) == int(x)
+    if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
+        callInfo.unwrapArgs();
+        current->push(callInfo.getArg(0));
+        return InliningStatus_Inlined;
+    }
+
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
+        callInfo.unwrapArgs();
+        MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Ceil, nullptr);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -611,7 +643,7 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
 
     if (argType == MIRType_Double && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
-        MRound *ins = new MRound(callInfo.getArg(0));
+        MRound *ins = MRound::New(alloc(), callInfo.getArg(0));
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -864,9 +896,17 @@ IonBuilder::inlineMathFRound(CallInfo &callInfo)
 
     // MIRType can't be Float32, as this point, as getInlineReturnType uses JSVal types
     // to infer the returned MIR type.
-    MIRType returnType = getInlineReturnType();
-    if (!IsNumberType(returnType))
-        return InliningStatus_NotInlined;
+    types::TemporaryTypeSet *returned = getInlineReturnTypeSet();
+    if (returned->empty()) {
+        // As there's only one possible returned type, just add it to the observed
+        // returned typeset
+        if (!returned->addType(types::Type::DoubleType(), alloc_->lifoAlloc()))
+            return InliningStatus_Error;
+    } else {
+        MIRType returnType = getInlineReturnType();
+        if (!IsNumberType(returnType))
+            return InliningStatus_NotInlined;
+    }
 
     MIRType arg = callInfo.getArg(0)->type();
     if (!IsNumberType(arg))
@@ -974,7 +1014,8 @@ IonBuilder::inlineStringSplit(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MStringSplit *ins = MStringSplit::New(alloc(), callInfo.thisArg(), callInfo.getArg(0), templateObject);
+    MStringSplit *ins = MStringSplit::New(alloc(), constraints(), callInfo.thisArg(),
+                                          callInfo.getArg(0), templateObject);
     current->add(ins);
     current->push(ins);
 
@@ -1245,153 +1286,6 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
-{
-    // Rewrites a call like
-    //
-    //    NewParallelArray(ParallelArrayView, arg0, ..., argN)
-    //
-    // to
-    //
-    //    x = MNewParallelArray()
-    //    ParallelArrayView(x, arg0, ..., argN)
-
-    uint32_t argc = callInfo.argc();
-    if (argc < 1 || callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    types::TemporaryTypeSet *ctorTypes = callInfo.getArg(0)->resultTypeSet();
-    JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : nullptr;
-    JSFunction *target = nullptr;
-    if (targetObj && targetObj->is<JSFunction>())
-        target = &targetObj->as<JSFunction>();
-    if (target && target->isInterpreted() && target->nonLazyScript()->shouldCloneAtCallsite) {
-        if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
-            target = clone;
-    }
-    MDefinition *ctor = makeCallsiteClone(
-        target,
-        callInfo.getArg(0)->toPassArg()->getArgument());
-
-    // Discard the function.
-    return inlineParallelArrayTail(callInfo, target, ctor,
-                                   target ? nullptr : ctorTypes, 1,
-                                   intrinsic_NewParallelArray);
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineParallelArray(CallInfo &callInfo)
-{
-    if (!callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    uint32_t argc = callInfo.argc();
-    JSFunction *target = ParallelArrayObject::maybeGetConstructor(&script()->global(), argc);
-    if (!target)
-        return InliningStatus_NotInlined;
-
-    JS_ASSERT(target->nonLazyScript()->shouldCloneAtCallsite);
-    if (JSFunction *clone = ExistingCloneFunctionAtCallsite(compartment->callsiteClones(), target, script(), pc))
-        target = clone;
-
-    MConstant *ctor = MConstant::New(alloc(), ObjectValue(*target));
-    current->add(ctor);
-
-    return inlineParallelArrayTail(callInfo, target, ctor, nullptr, 0,
-                                   ParallelArrayObject::construct);
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineParallelArrayTail(CallInfo &callInfo,
-                                    JSFunction *target,
-                                    MDefinition *ctor,
-                                    types::TemporaryTypeSet *ctorTypes,
-                                    uint32_t discards,
-                                    Native native)
-{
-    // Rewrites either NewParallelArray(...) or new ParallelArray(...) from a
-    // call to a native ctor into a call to the relevant function in the
-    // self-hosted code.
-
-    uint32_t argc = callInfo.argc() - discards;
-
-    // Create the new parallel array object.  Parallel arrays have specially
-    // constructed type objects, so we can only perform the inlining if we
-    // already have one of these type objects.
-    types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
-    if (returnTypes->getKnownTypeTag() != JSVAL_TYPE_OBJECT)
-        return InliningStatus_NotInlined;
-    if (returnTypes->unknownObject() || returnTypes->getObjectCount() != 1)
-        return InliningStatus_NotInlined;
-    types::TypeObject *typeObject = returnTypes->getTypeObject(0);
-    if (!typeObject || typeObject->clasp != &ParallelArrayObject::class_)
-        return InliningStatus_NotInlined;
-
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, native);
-    if (!templateObject || templateObject->type() != typeObject)
-        return InliningStatus_NotInlined;
-
-    // Create the call and add in the non-this arguments.
-    uint32_t targetArgs = argc;
-    if (target && !target->isNative())
-        targetArgs = Max<uint32_t>(target->nargs, argc);
-
-    MCall *call = MCall::New(alloc(), target, targetArgs + 1, argc, false);
-    if (!call)
-        return InliningStatus_Error;
-
-    callInfo.unwrapArgs();
-
-    // Explicitly pad any missing arguments with |undefined|.
-    // This permits skipping the argumentsRectifier.
-    for (uint32_t i = targetArgs; i > argc; i--) {
-        JS_ASSERT_IF(target, !target->isNative());
-        MConstant *undef = MConstant::New(alloc(), UndefinedValue());
-        current->add(undef);
-        MPassArg *pass = MPassArg::New(alloc(), undef);
-        current->add(pass);
-        call->addArg(i, pass);
-    }
-
-    MPassArg *oldThis = MPassArg::New(alloc(), callInfo.thisArg());
-    current->add(oldThis);
-
-    // Add explicit arguments.
-    // Skip addArg(0) because it is reserved for this
-    for (uint32_t i = 0; i < argc; i++) {
-        MDefinition *arg = callInfo.getArg(i + discards);
-        MPassArg *passArg = MPassArg::New(alloc(), arg);
-        current->add(passArg);
-        call->addArg(i + 1, passArg);
-    }
-
-    // Place an MPrepareCall before the first passed argument, before we
-    // potentially perform rearrangement.
-    MPrepareCall *start = new MPrepareCall;
-    oldThis->block()->insertBefore(oldThis, start);
-    call->initPrepareCall(start);
-
-    // Create the MIR to allocate the new parallel array.  Take the type
-    // object is taken from the prediction set.
-    MNewParallelArray *newObject = MNewParallelArray::New(alloc(), templateObject);
-    current->add(newObject);
-    MPassArg *newThis = MPassArg::New(alloc(), newObject);
-    current->add(newThis);
-    call->addArg(0, newThis);
-
-    // Set the new callee.
-    call->initFunction(ctor);
-
-    current->add(call);
-    current->push(newObject);
-
-    if (!resumeAfter(call))
-        return InliningStatus_Error;
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
 IonBuilder::inlineNewDenseArray(CallInfo &callInfo)
 {
     if (callInfo.constructing() || callInfo.argc() != 1)
@@ -1439,9 +1333,10 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
 
     callInfo.unwrapArgs();
 
-    MNewDenseArrayPar *newObject = new MNewDenseArrayPar(graph().forkJoinSlice(),
-                                                         callInfo.getArg(0),
-                                                         templateObject);
+    MNewDenseArrayPar *newObject = MNewDenseArrayPar::New(alloc(),
+                                                          graph().forkJoinSlice(),
+                                                          callInfo.getArg(0),
+                                                          templateObject);
     current->add(newObject);
     current->push(newObject);
 

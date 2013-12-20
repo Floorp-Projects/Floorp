@@ -13,6 +13,7 @@ var gIsAndroid = navigator.appVersion.indexOf("Android") != -1;
 var gTests = [
   // Interact with the ::-moz-progress-bar.
   { markup:                 '<progress value="75" max="100"></progress>',
+    pseudoelement:          '::-moz-progress-bar',
     common_style:           'progress { -moz-appearance: none; } progress::-moz-progress-bar { background: black; }',
     hover_test_style:       'progress::-moz-progress-bar:hover { background: green; }',
     hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
@@ -21,7 +22,8 @@ var gTests = [
 
   // Interact with the part of the <progress> not covered by the ::-moz-progress-bar.
   { markup:                 '<progress value="25" max="100"></progress>',
-    common_style:           'progress { -moz-appearance: none; }',
+    pseudoelement:          '::-moz-progress-bar',
+    common_style:           'progress { -moz-appearance: none; } progress::-moz-progress-bar { background: black; }',
     hover_test_style:       'progress::-moz-progress-bar { background: green; } progress::-moz-progress-bar:hover { background: red; }',
     hover_reference_style:  'progress::-moz-progress-bar { background: green; }',
     active_test_style:      'progress::-moz-progress-bar { background: lime; } progress::-moz-progress-bar:active { background: red; }',
@@ -29,6 +31,7 @@ var gTests = [
 
   // Interact with the ::-moz-range-thumb.
   { markup:                 '<input type="range" value="50" min="0" max="100">',
+    pseudoelement:          '::-moz-range-thumb',
     common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'input::-moz-range-thumb:hover { background: green; }',
     hover_reference_style:  'input::-moz-range-thumb { background: green; }',
@@ -37,7 +40,8 @@ var gTests = [
 
   // Interact with the part of the <input type="range"> not covered by the ::-moz-range-thumb.
   { markup:                 '<input type="range" value="25" min="0" max="100">',
-    common_style:           'input { -moz-appearance: none; }',
+    pseudoelement:          '::-moz-range-thumb',
+    common_style:           'input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'input::-moz-range-thumb { background: green; } input::-moz-range-thumb:hover { background: red; }',
     hover_reference_style:  'input::-moz-range-thumb { background: green; }',
     active_test_style:      'input::-moz-range-thumb { background: lime; } input::-moz-range-thumb:active { background: red; }',
@@ -45,6 +49,7 @@ var gTests = [
 
   // Interact with the ::-moz-meter-bar.
   { markup:                 '<meter value="75" min="0" max="100"></meter>',
+    pseudoelement:          '::-moz-meter-bar',
     common_style:           'meter { -moz-appearance: none; } meter::-moz-meter-bar { background: black; }',
     hover_test_style:       'meter::-moz-meter-bar:hover { background: green; }',
     hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
@@ -53,7 +58,8 @@ var gTests = [
 
   // Interact with the part of the <meter> not covered by the ::-moz-meter-bar.
   { markup:                 '<meter value="25" min="0" max="100"></meter>',
-    common_style:           'meter { -moz-appearance: none; }',
+    pseudoelement:          '::-moz-meter-bar',
+    common_style:           'meter { -moz-appearance: none; } meter::-moz-meter-bar { background: black; }',
     hover_test_style:       'meter::-moz-meter-bar { background: green; } meter::-moz-meter-bar:hover { background: red; }',
     hover_reference_style:  'meter::-moz-meter-bar { background: green; }',
     active_test_style:      'meter::-moz-meter-bar { background: lime; } meter::-moz-meter-bar:active { background: red; }',
@@ -62,6 +68,7 @@ var gTests = [
   // Do the same as the "Interact with the ::-moz-range-thumb" subtest above,
   // but with selectors that include descendant operators.
   { markup:                 '<input type="range" value="50" min="0" max="100">',
+    pseudoelement:          '::-moz-range-thumb',
     common_style:           'body input { -moz-appearance: none; } input::-moz-range-thumb { background: black; }',
     hover_test_style:       'body input::-moz-range-thumb:hover { background: green; }',
     hover_reference_style:  'body input::-moz-range-thumb { background: green; }',
@@ -98,7 +105,9 @@ function runTests() {
   function runTestPart1(aIndex) {
     var test = gTests[aIndex];
     div.innerHTML = test.markup;
-    style.textContent = test.common_style + test.hover_test_style;
+    style.textContent = test.common_style;
+    is(getComputedStyle(div.firstChild, test.pseudoelement).backgroundColor, "rgb(0, 0, 0)", "subtest #" + aIndex + ", computed style");
+    style.textContent += test.hover_test_style;
     synthesizeMouseAtCenter(div.lastChild, { type: 'mouseover' }, iframe.contentWindow);
   }
 
@@ -113,6 +122,7 @@ function runTests() {
     canvas2 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
     ok(canvas1.width == canvas2.width && canvas1.height == canvas2.height, "hover subtest #" + aIndex + ", canvas sizes equal");
     is(countPixelDifferences(canvas1, canvas2), 0, "hover subtest #" + aIndex + ", number of different pixels");
+    is(getComputedStyle(div.firstChild, test.pseudoelement).backgroundColor, "rgb(0, 128, 0)", "hover subtest #" + aIndex + ", computed style");
 
     if (!gIsAndroid) {
       style.textContent = test.common_style + test.active_test_style;
@@ -131,9 +141,11 @@ function runTests() {
 
   function runTestPart5(aIndex) {
     if (!gIsAndroid) {
+      var test = gTests[aIndex];
       canvas2 = SpecialPowers.snapshotWindow(iframe.contentWindow, false);
       ok(canvas1.width == canvas2.width && canvas1.height == canvas2.height, "active subtest #" + aIndex + ", canvas sizes equal");
       is(countPixelDifferences(canvas1, canvas2), 0, "active subtest #" + aIndex + ", number of different pixels");
+      is(getComputedStyle(div.firstChild, test.pseudoelement).backgroundColor, "rgb(0, 255, 0)", "active subtest #" + aIndex + ", computed style");
     }
   }
 

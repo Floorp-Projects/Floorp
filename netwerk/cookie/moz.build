@@ -23,10 +23,13 @@ if CONFIG['NECKO_COOKIES']:
         'CookieServiceChild.h',
         'CookieServiceParent.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'CookieServiceChild.cpp',
         'CookieServiceParent.cpp',
         'nsCookie.cpp',
+    ]
+    # nsCookieService.cpp can't be unified because it forces NSPR logging.
+    SOURCES += [
         'nsCookieService.cpp',
     ]
     LOCAL_INCLUDES += [

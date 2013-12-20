@@ -242,9 +242,10 @@ class nsCocoaUtils
       @param aImage the image to extract a frame from
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
       @param aResult the resulting NSImage
+      @param scaleFactor the desired scale factor of the NSImage (2 for a retina display)
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */  
-  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult);
+  static nsresult CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult, CGFloat scaleFactor);
 
   /**
    * Returns nsAString for aSrc.

@@ -840,7 +840,8 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 // public
 NS_IMETHODIMP
 nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
-                                  uint32_t aRecursionDepth)
+                                  uint32_t aRecursionDepth,
+                                  bool aEventWasProcessed)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -856,7 +857,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
   [pool release];
 
-  return nsBaseAppShell::AfterProcessNextEvent(aThread, aRecursionDepth);
+  return nsBaseAppShell::AfterProcessNextEvent(aThread, aRecursionDepth,
+                                               aEventWasProcessed);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }

@@ -51,6 +51,11 @@ public class CrashReporter extends Activity
     private static final String PENDING_SUFFIX = CRASH_REPORT_SUFFIX + "pending";
     private static final String SUBMITTED_SUFFIX = CRASH_REPORT_SUFFIX + "submitted";
 
+    private static final String PREFS_SEND_REPORT   = "sendReport";
+    private static final String PREFS_INCLUDE_URL   = "includeUrl";
+    private static final String PREFS_ALLOW_CONTACT = "allowContact";
+    private static final String PREFS_CONTACT_EMAIL = "contactEmail";
+
     private Handler mHandler;
     private ProgressDialog mProgressDialog;
     private File mPendingMinidumpFile;
@@ -140,6 +145,17 @@ public class CrashReporter extends Activity
         final EditText commentsEditText = (EditText) findViewById(R.id.comment);
         final EditText emailEditText = (EditText) findViewById(R.id.email);
 
+        // Load CrashReporter preferences to avoid redundant user input.
+        final boolean sendReport   = prefs.getBoolean(PREFS_SEND_REPORT, true);
+        final boolean includeUrl   = prefs.getBoolean(PREFS_INCLUDE_URL, false);
+        final boolean allowContact = prefs.getBoolean(PREFS_ALLOW_CONTACT, false);
+        final String contactEmail  = prefs.getString(PREFS_CONTACT_EMAIL, "");
+
+        allowContactCheckBox.setChecked(allowContact);
+        includeUrlCheckBox.setChecked(includeUrl);
+        sendReportCheckBox.setChecked(sendReport);
+        emailEditText.setText(contactEmail);
+
         sendReportCheckBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
@@ -202,6 +218,9 @@ public class CrashReporter extends Activity
             return;
         }
 
+        // Persist settings to avoid redundant user input.
+        savePrefs();
+
         mProgressDialog.show();
         new Thread(new Runnable() {
             @Override
@@ -209,6 +228,28 @@ public class CrashReporter extends Activity
                 sendReport(mPendingMinidumpFile, mExtrasStringMap, mPendingExtrasFile);
             }
         }, "CrashReporter Thread").start();
+    }
+
+    private void savePrefs() {
+        SharedPreferences prefs = getSharedPreferences(GeckoApp.PREFS_NAME, 0);
+        SharedPreferences.Editor editor = prefs.edit();
+                  
+        final boolean allowContact = ((CheckBox) findViewById(R.id.allow_contact)).isChecked();
+        final boolean includeUrl   = ((CheckBox) findViewById(R.id.include_url)).isChecked();
+        final boolean sendReport   = ((CheckBox) findViewById(R.id.send_report)).isChecked();
+        final String contactEmail  = ((EditText) findViewById(R.id.email)).getText().toString();
+                   
+        editor.putBoolean(PREFS_ALLOW_CONTACT, allowContact);
+        editor.putBoolean(PREFS_INCLUDE_URL, includeUrl);
+        editor.putBoolean(PREFS_SEND_REPORT, sendReport);
+        editor.putString(PREFS_CONTACT_EMAIL, contactEmail);
+                    
+        // A slight performance improvement via async apply() vs. blocking on commit().
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD) {
+            editor.commit();
+        } else { 
+            editor.apply();
+        }
     }
 
     public void onCloseClick(View v) {  // bound via crash_reporter.xml

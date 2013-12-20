@@ -83,7 +83,7 @@ WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
         ProcessPriorityManager::CurrentProcessIsForeground())
         wantToLoseContext = false;
     else if (!nsCRT::strcmp(aSomeData,
-                            NS_LITERAL_STRING("heap-minimize").get()))
+                            MOZ_UTF16("heap-minimize")))
         wantToLoseContext = mContext->mLoseContextOnHeapMinimize;
 
     if (wantToLoseContext)

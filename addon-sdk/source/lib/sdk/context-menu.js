@@ -24,6 +24,7 @@ const { Worker } = require("./content/worker");
 const { EventTarget } = require("./event/target");
 const { emit } = require('./event/core');
 const { when } = require('./system/unload');
+const selection = require('./selection');
 
 // All user items we add have this class.
 const ITEM_CLASS = "addon-context-menu-item";
@@ -203,6 +204,66 @@ let URLContext = Class({
   }
 });
 exports.URLContext = URLContext;
+
+// Matches when the user-supplied predicate returns true
+let PredicateContext = Class({
+  extends: Context,
+
+  initialize: function initialize(predicate) {
+    let options = validateOptions({ predicate: predicate }, {
+      predicate: {
+        is: ["function"],
+        msg: "predicate must be a function."
+      }
+    });
+    internal(this).predicate = options.predicate;
+  },
+
+  isCurrent: function isCurrent(popupNode) {
+    return internal(this).predicate(populateCallbackNodeData(popupNode));
+  }
+});
+exports.PredicateContext = PredicateContext;
+
+// List all editable types of inputs.  Or is it better to have a list
+// of non-editable inputs?
+let editableInputs = {
+  email: true,
+  number: true,
+  password: true,
+  search: true,
+  tel: true,
+  text: true,
+  textarea: true,
+  url: true
+};
+
+function populateCallbackNodeData(node) {
+  let window = node.ownerDocument.defaultView;
+  let data = {};
+
+  data.documentType = node.ownerDocument.contentType;
+
+  data.documentURL = node.ownerDocument.location.href;
+  data.targetName = node.nodeName.toLowerCase();
+  data.targetID = node.id || null ;
+
+  if ((data.targetName === 'input' && editableInputs[node.type]) ||
+      data.targetName === 'textarea') {
+    data.isEditable = !node.readOnly && !node.disabled;
+  }
+  else {
+    data.isEditable = node.isContentEditable;
+  }
+
+  data.selectionText = selection.text;
+  
+  data.srcURL = node.src || null;
+  data.linkURL = node.href || null;
+  data.value = node.value || null;
+
+  return data;
+}
 
 function removeItemFromArray(array, item) {
   return array.filter(function(i) i !== item);

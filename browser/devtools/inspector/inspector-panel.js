@@ -515,7 +515,11 @@ InspectorPanel.prototype = {
     if (this.walker) {
       this.walker.off("new-root", this.onNewRoot);
       this._destroyPromise = this.walker.release()
-        .then(() => this._inspector.destroy())
+        .then(() => this._inspector.destroy(),
+              (e) => {
+                console.error("Walker.release() failed: " + e);
+                return this._inspector.destroy();
+              })
         .then(() => {
           this._inspector = null;
         }, console.error);

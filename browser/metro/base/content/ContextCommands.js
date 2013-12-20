@@ -288,7 +288,7 @@ var ContextCommands = {
   viewPageSource: function cc_viewPageSource() {
     let uri = this.getPageSource();
     if (uri) {
-      BrowserUI.addAndShowTab(uri);
+      BrowserUI.addAndShowTab(uri, Browser.selectedTab);
     }
   },
 

@@ -22,13 +22,11 @@ using namespace js::jit;
 
 using mozilla::CountLeadingZeroes32;
 
+// Note this is used for inter-AsmJS calls and may pass arguments and results
+// in floating point registers even if the system ABI does not.
 ABIArgGenerator::ABIArgGenerator() :
-#if defined(JS_CPU_ARM_HARDFP)
     intRegIndex_(0),
     floatRegIndex_(0),
-#else
-    argRegIndex_(0),
-#endif
     stackOffset_(0),
     current_()
 {}
@@ -36,7 +34,6 @@ ABIArgGenerator::ABIArgGenerator() :
 ABIArg
 ABIArgGenerator::next(MIRType type)
 {
-#if defined(JS_CPU_ARM_HARDFP)
     switch (type) {
       case MIRType_Int32:
       case MIRType_Pointer:
@@ -48,6 +45,7 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(Register::FromCode(intRegIndex_));
         intRegIndex_++;
         break;
+      case MIRType_Float32:
       case MIRType_Double:
         if (floatRegIndex_ == NumFloatArgRegs) {
             static const int align = sizeof(double) - 1;
@@ -62,40 +60,8 @@ ABIArgGenerator::next(MIRType type)
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
     }
-    return current_;
-#else
-    switch (type) {
-      case MIRType_Int32:
-      case MIRType_Pointer:
-        if (argRegIndex_ == NumIntArgRegs) {
-            current_ = ABIArg(stackOffset_);
-            stackOffset_ += sizeof(uint32_t);
-            break;
-        }
-        current_ = ABIArg(Register::FromCode(argRegIndex_));
-        argRegIndex_++;
-        break;
-      case MIRType_Double: {
-        unsigned alignedArgRegIndex_ = (argRegIndex_ + 1) & ~1;
-        if (alignedArgRegIndex_ + 1 > NumIntArgRegs) {
-            static const int align = sizeof(double) - 1;
-            stackOffset_ = (stackOffset_ + align) & ~align;
-            current_ = ABIArg(stackOffset_);
-            stackOffset_ += sizeof(uint64_t);
-            argRegIndex_ = NumIntArgRegs;
-            break;
-        }
-        argRegIndex_ = alignedArgRegIndex_;
-        current_ = ABIArg(FloatRegister::FromCode(argRegIndex_ >> 1));
 
-        argRegIndex_+=2;
-      }
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("Unexpected argument type");
-    }
     return current_;
-#endif
 }
 const Register ABIArgGenerator::NonArgReturnVolatileReg0 = r4;
 const Register ABIArgGenerator::NonArgReturnVolatileReg1 = r5;
@@ -625,7 +591,7 @@ Assembler::actualIndex(uint32_t idx_) const
 }
 
 uint8_t *
-Assembler::PatchableJumpAddress(IonCode *code, uint32_t pe_)
+Assembler::PatchableJumpAddress(JitCode *code, uint32_t pe_)
 {
     return code->raw() + pe_;
 }
@@ -801,21 +767,21 @@ Assembler::getPtr32Target(Iter *start, Register *dest, RelocStyle *style)
     MOZ_ASSUME_UNREACHABLE("unsupported relocation");
 }
 
-static IonCode *
+static JitCode *
 CodeFromJump(InstructionIterator *jump)
 {
     uint8_t *target = (uint8_t *)Assembler::getCF32Target(jump);
-    return IonCode::FromExecutable(target);
+    return JitCode::FromExecutable(target);
 }
 
 void
-Assembler::TraceJumpRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
         InstructionIterator institer((Instruction *) (code->raw() + iter.offset()));
-        IonCode *child = CodeFromJump(&institer);
-        MarkIonCodeUnbarriered(trc, &child, "rel32");
+        JitCode *child = CodeFromJump(&institer);
+        MarkJitCodeUnbarriered(trc, &child, "rel32");
     }
 }
 
@@ -846,7 +812,7 @@ TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer,
 
 }
 void
-Assembler::TraceDataRelocations(JSTracer *trc, IonCode *code, CompactBufferReader &reader)
+Assembler::TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
 {
     ::TraceDataRelocations(trc, code->raw(), reader);
 }
@@ -877,10 +843,10 @@ Assembler::trace(JSTracer *trc)
 {
     for (size_t i = 0; i < jumps_.length(); i++) {
         RelativePatch &rp = jumps_[i];
-        if (rp.kind == Relocation::IONCODE) {
-            IonCode *code = IonCode::FromExecutable((uint8_t*)rp.target);
-            MarkIonCodeUnbarriered(trc, &code, "masmrel32");
-            JS_ASSERT(code == IonCode::FromExecutable((uint8_t*)rp.target));
+        if (rp.kind == Relocation::JITCODE) {
+            JitCode *code = JitCode::FromExecutable((uint8_t*)rp.target);
+            MarkJitCodeUnbarriered(trc, &code, "masmrel32");
+            JS_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
         }
     }
 

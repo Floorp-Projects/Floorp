@@ -37,6 +37,12 @@ public:
    */
   static StickyScrollContainer* GetStickyScrollContainerForScrollFrame(nsIFrame* aScrollFrame);
 
+  /**
+   * aFrame may have moved into or out of a scroll frame's frame subtree.
+   */
+  static void NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* aFrame,
+                                                             nsIFrame* aOldParent);
+
   void AddFrame(nsIFrame* aFrame) {
     mFrames.AppendElement(aFrame);
   }

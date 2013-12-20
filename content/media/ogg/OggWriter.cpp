@@ -162,7 +162,9 @@ OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
   if (rc) {
     ProduceOggPage(aOutputBufs);
   }
-
+  if (aFlags & ContainerWriter::FLUSH_NEEDED) {
+    mIsWritingComplete = true;
+  }
   return (rc > 0) ? NS_OK : NS_ERROR_FAILURE;
 }
 

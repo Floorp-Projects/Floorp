@@ -50,42 +50,9 @@ public:
   virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  GetDevicePropertiesInternal(const BluetoothSignal& aSignal);
-
-  virtual nsresult
   SetProperty(BluetoothObjectType aType,
               const BluetoothNamedValue& aValue,
               BluetoothReplyRunnable* aRunnable);
-
-  virtual bool
-  GetDevicePath(const nsAString& aAdapterPath,
-                const nsAString& aDeviceAddress,
-                nsAString& aDevicePath);
-
-  static bool
-  AddServiceRecords(const char* serviceName,
-                    unsigned long long uuidMsb,
-                    unsigned long long uuidLsb,
-                    int channel);
-
-  static bool
-  RemoveServiceRecords(const char* serviceName,
-                       unsigned long long uuidMsb,
-                       unsigned long long uuidLsb,
-                       int channel);
-
-  static bool
-  AddReservedServicesInternal(const nsTArray<uint32_t>& aServices,
-                              nsTArray<uint32_t>& aServiceHandlesContainer);
-
-  static bool
-  RemoveReservedServicesInternal(const nsTArray<uint32_t>& aServiceHandles);
-
-  virtual nsresult
-  GetScoSocket(const nsAString& aObjectPath,
-               bool aAuth,
-               bool aEncrypt,
-               mozilla::ipc::UnixSocketConsumer* aConsumer);
 
   virtual nsresult
   GetServiceChannel(const nsAString& aDeviceAddress,

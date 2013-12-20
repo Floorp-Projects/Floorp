@@ -54,21 +54,6 @@ public:
               const BluetoothNamedValue& aValue,
               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual bool
-  GetDevicePath(const nsAString& aAdapterPath,
-                const nsAString& aDeviceAddress,
-                nsAString& aDevicePath) MOZ_OVERRIDE;
-
-  static bool
-  AddReservedServicesInternal(const nsTArray<uint32_t>& aServices,
-                              nsTArray<uint32_t>& aServiceHandlesContainer);
-
-  virtual nsresult
-  GetScoSocket(const nsAString& aObjectPath,
-               bool aAuth,
-               bool aEncrypt,
-               mozilla::ipc::UnixSocketConsumer* aConsumer) MOZ_OVERRIDE;
-
   virtual nsresult
   GetServiceChannel(const nsAString& aDeviceAddress,
                     const nsAString& aServiceUuid,
@@ -209,8 +194,6 @@ private:
                                 const char* aInterface,
                                 const nsAString& aMessage,
                                 mozilla::ipc::DBusReplyCallback aCallback);
-
-  nsRefPtr<mozilla::ipc::RawDBusConnection> mConnection;
 };
 
 END_BLUETOOTH_NAMESPACE

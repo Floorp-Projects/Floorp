@@ -210,7 +210,7 @@ inline bool
 GetIntrinsicOperation(JSContext *cx, jsbytecode *pc, MutableHandleValue vp)
 {
     RootedPropertyName name(cx, cx->currentScript()->getName(pc));
-    return cx->global()->getIntrinsicValue(cx, name, vp);
+    return GlobalObject::getIntrinsicValue(cx, cx->global(), name, vp);
 }
 
 inline bool
@@ -227,7 +227,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
     JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
-    bool strict = script->strict;
+    bool strict = script->strict();
     RootedPropertyName name(cx, script->getName(pc));
     RootedValue valCopy(cx, val);
 

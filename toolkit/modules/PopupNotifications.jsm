@@ -12,6 +12,7 @@ const NOTIFICATION_EVENT_DISMISSED = "dismissed";
 const NOTIFICATION_EVENT_REMOVED = "removed";
 const NOTIFICATION_EVENT_SHOWING = "showing";
 const NOTIFICATION_EVENT_SHOWN = "shown";
+const NOTIFICATION_EVENT_SWAPPING = "swapping";
 
 const ICON_SELECTOR = ".notification-anchor-icon";
 const ICON_ATTRIBUTE_SHOWING = "showing";
@@ -224,9 +225,23 @@ PopupNotifications.prototype = {
    *                                  tabs)
    *                     "removed": notification has been removed (due to
    *                                location change or user action)
+   *                     "showing": notification is about to be shown
+   *                                (this can be fired multiple times as
+   *                                 notifications are dismissed and re-shown)
    *                     "shown": notification has been shown (this can be fired
    *                              multiple times as notifications are dismissed
    *                              and re-shown)
+   *                     "swapping": the docshell of the browser that created
+   *                                 the notification is about to be swapped to
+   *                                 another browser. A second parameter contains
+   *                                 the browser that is receiving the docshell,
+   *                                 so that the event callback can transfer stuff
+   *                                 specific to this notification.
+   *                                 If the callback returns true, the notification
+   *                                 will be moved to the new browser.
+   *                                 If the callback isn't implemented, returns false,
+   *                                 or doesn't return any value, the notification
+   *                                 will be removed.
    *        neverShow:   Indicate that no popup should be shown for this
    *                     notification. Useful for just showing the anchor icon.
    *        removeOnDismissal:
@@ -747,13 +762,60 @@ PopupNotifications.prototype = {
     this._update(notifications, anchor);
   },
 
-  _fireCallback: function PopupNotifications_fireCallback(n, event) {
+  _swapBrowserNotifications: function PopupNotifications_swapBrowserNoficications(ourBrowser, otherBrowser) {
+    // When swaping browser docshells (e.g. dragging tab to new window) we need
+    // to update our notification map.
+
+    let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
+    let other = otherBrowser.ownerDocument.defaultView.PopupNotifications;
+    if (!other) {
+      if (ourNotifications.length > 0)
+        Cu.reportError("unable to swap notifications: otherBrowser doesn't support notifications");
+      return;
+    }
+    let otherNotifications = other._getNotificationsForBrowser(otherBrowser);
+    if (ourNotifications.length < 1 && otherNotifications.length < 1) {
+      // No notification to swap.
+      return;
+    }
+
+    otherNotifications = otherNotifications.filter(n => {
+      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, ourBrowser)) {
+        n.browser = ourBrowser;
+        n.owner = this;
+        return true;
+      }
+      other._fireCallback(n, NOTIFICATION_EVENT_REMOVED);
+      return false;
+    });
+
+    ourNotifications = ourNotifications.filter(n => {
+      if (this._fireCallback(n, NOTIFICATION_EVENT_SWAPPING, otherBrowser)) {
+        n.browser = otherBrowser;
+        n.owner = other;
+        return true;
+      }
+      this._fireCallback(n, NOTIFICATION_EVENT_REMOVED);
+      return false;
+    });
+
+    this._setNotificationsForBrowser(otherBrowser, ourNotifications);
+    other._setNotificationsForBrowser(ourBrowser, otherNotifications);
+
+    if (otherNotifications.length > 0)
+      this._update(otherNotifications, otherNotifications[0].anchorElement);
+    if (ourNotifications.length > 0)
+      other._update(ourNotifications, ourNotifications[0].anchorElement);
+  },
+
+  _fireCallback: function PopupNotifications_fireCallback(n, event, ...args) {
     try {
       if (n.options.eventCallback)
-        n.options.eventCallback.call(n, event);
+        return n.options.eventCallback.call(n, event, ...args);
     } catch (error) {
       Cu.reportError(error);
     }
+    return undefined;
   },
 
   _onPopupHidden: function PopupNotifications_onPopupHidden(event) {

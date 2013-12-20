@@ -29,6 +29,7 @@
 // Boilerplate used to be able to import this module both from the main
 // thread and from worker threads.
 if (typeof Components != "undefined") {
+  Components.utils.importGlobalProperties(["URL"]);
   // Global definition of |exports|, to keep everybody happy.
   // In non-main thread, |exports| is provided by the module
   // loader.
@@ -44,7 +45,9 @@ let EXPORTED_SYMBOLS = [
   "normalize",
   "split",
   "winGetDrive",
-  "winIsAbsolute"
+  "winIsAbsolute",
+  "toFileURI",
+  "fromFileURI",
 ];
 
 /**
@@ -286,6 +289,57 @@ let split = function(path) {
   };
 };
 exports.split = split;
+
+/**
+ * Return the file:// URI file path of the given local file path.
+ */
+// The case of %3b is designed to match Services.io, but fundamentally doesn't matter.
+let toFileURIExtraEncodings = {';': '%3b', '?': '%3F', "'": '%27', '#': '%23'};
+let toFileURI = function toFileURI(path) {
+  // URI-escape forward slashes and convert backward slashes to forward
+  path = this.normalize(path).replace(/[\\\/]/g, m => (m=='\\')? '/' : '%2F');
+  let uri = encodeURI(path);
+
+  // add a prefix, and encodeURI doesn't escape a few characters that we do
+  // want to escape, so fix that up
+  let prefix = "file:///";
+  uri = prefix + uri.replace(/[;?'#]/g, match => toFileURIExtraEncodings[match]);
+
+  // turn e.g., file:///C: into file:///C:/
+  if (uri.charAt(uri.length - 1) === ':') {
+    uri += "/"
+  }
+
+  return uri;
+};
+exports.toFileURI = toFileURI;
+
+/**
+ * Returns the local file path from a given file URI.
+ */
+let fromFileURI = function fromFileURI(uri) {
+  let url = new URL(uri);
+  if (url.protocol != 'file:') {
+    throw new Error("fromFileURI expects a file URI");
+  }
+
+  // strip leading slash, since Windows paths don't start with one
+  uri = url.pathname.substr(1);
+
+  let path = decodeURI(uri);
+  // decode a few characters where URL's parsing is overzealous
+  path = path.replace(/%(3b|3f|23)/gi,
+        match => decodeURIComponent(match));
+  path = this.normalize(path);
+
+  // this.normalize() does not remove the trailing slash if the path
+  // component is a drive letter. eg. 'C:\'' will not get normalized.
+  if (path.endsWith(":\\")) {
+    path = path.substr(0, path.length - 1);
+  }
+  return this.normalize(path);
+};
+exports.fromFileURI = fromFileURI;
 
 /**
 * Utility function: Remove any leading/trailing backslashes

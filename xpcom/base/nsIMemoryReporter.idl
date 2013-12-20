@@ -136,16 +136,17 @@ interface nsIMemoryReporterCallback : nsISupports
  * aboutMemory.js is the most important consumer of memory reports.  It
  * places the following constraints on reports.
  *
- * - There must be an "explicit" tree.  It represents non-overlapping
- *   regions of memory that have been explicitly allocated with an
- *   OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
- *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters
- *   in this tree must have kind HEAP or NONHEAP, units BYTES, and a
- *   description that is a sentence (i.e. starts with a capital letter and
- *   ends with a period, or similar).
+ * - All reports within a single sub-tree must have the same units.
  *
- * - All other reports are unconstrained except that they must have a
- *   description that is a sentence.
+ * - There may be an "explicit" tree.  If present, it represents
+ *   non-overlapping regions of memory that have been explicitly allocated with
+ *   an OS-level allocation (e.g. mmap/VirtualAlloc/vm_allocate) or a
+ *   heap-level allocation (e.g. malloc/calloc/operator new).  Reporters in
+ *   this tree must have kind HEAP or NONHEAP, units BYTES.
+ *
+ * It is preferred, but not required, that report descriptions use complete
+ * sentences (i.e. start with a capital letter and end with a period, or
+ * similar).
  */
 [scriptable, uuid(0884cd0f-5829-4381-979b-0f53904030ed)]
 interface nsIMemoryReporter : nsISupports
@@ -178,7 +179,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(9245d89e-6523-45f9-bc15-a69789e33cbb)]
+[scriptable, builtinclass, uuid(e4e4ca56-13e0-46f1-b3c5-62d2c09fc98e)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -187,19 +188,29 @@ interface nsIMemoryReporterManager : nsISupports
   void init();
 
   /*
-   * Register the given nsIMemoryReporter.  After a reporter is registered,
-   * it will be available via enumerateReporters().  The Manager service
-   * will hold a strong reference to the given reporter, and will be
-   * responsible for freeing the reporter at shutdown.
+   * Register the given nsIMemoryReporter.  The Manager service will hold a
+   * strong reference to the given reporter, and will be responsible for freeing
+   * the reporter at shutdown.  You may manually unregister the reporter with
+   * unregisterStrongReporter() at any point.
    */
   void registerStrongReporter(in nsIMemoryReporter reporter);
 
   /*
    * Like registerReporter, but the Manager service will hold a weak reference
-   * to the given reporter.  The reporter should be unregistered before
-   * shutdown.
+   * via a raw pointer to the given reporter.  The reporter should be
+   * unregistered before shutdown.
+   * You cannot register JavaScript components with this function!  Always
+   * register your JavaScript components with registerStrongReporter().
    */
   void registerWeakReporter(in nsIMemoryReporter reporter);
+
+  /*
+   * Unregister the given memory reporter, which must have been registered with
+   * registerStrongReporter().  You normally don't need to unregister your
+   * strong reporters, as nsIMemoryReporterManager will take care of that at
+   * shutdown.
+   */
+  void unregisterStrongReporter(in nsIMemoryReporter reporter);
 
   /*
    * Unregister the given memory reporter, which must have been registered with
@@ -213,14 +224,6 @@ interface nsIMemoryReporterManager : nsISupports
   void blockRegistrationAndHideExistingReporters();
   void unblockRegistrationAndRestoreOriginalReporters();
   void registerStrongReporterEvenIfBlocked(in nsIMemoryReporter aReporter);
-
-  /*
-   * Return an enumerator of nsIMemoryReporters that are currently registered
-   * in the current process.  WARNING: this does not do anything with child
-   * processes.  Use getReports() if you want measurements from child
-   * processes.
-   */
-  nsISimpleEnumerator enumerateReporters();
 
   /*
    * Get memory reports for the current process and all child processes.
@@ -241,6 +244,13 @@ interface nsIMemoryReporterManager : nsISupports
                   in nsISupports finishReportingData);
 
   /*
+   * Get memory reports in the current process only.  |handleReport| is called
+   * for each report.
+   */
+  void getReportsForThisProcess(in nsIMemoryReporterCallback handleReport,
+                                in nsISupports handleReportData);
+
+  /*
    * The memory reporter manager, for the most part, treats reporters
    * registered with it as a black box.  However, there are some
    * "distinguished" amounts (as could be reported by a memory reporter) that
@@ -248,8 +258,9 @@ interface nsIMemoryReporterManager : nsISupports
    * interesting that we want external code (e.g. telemetry) to be able to rely
    * on them.
    *
-   * Note that these are not reporters and so enumerateReporters() does not
-   * look at them.  However, they can be embedded in a reporter.
+   * Note that these are not reporters and so getReports() and
+   * getReportsForThisProcess() do not look at them.  However, distinguished
+   * amounts can be embedded in a reporter.
    *
    * Access to these attributes can fail.  In particular, some of them are not
    * available on all platforms.
@@ -441,7 +452,7 @@ namespace dmd {
 // This runs all the memory reporters in the current process but does nothing
 // with the results;  i.e. it does the minimal amount of work possible for DMD
 // to do its thing.  It does nothing with child processes.
-void RunReporters();
+void RunReportersForThisProcess();
 }
 }
 
@@ -466,13 +477,12 @@ void RunReporters();
 // will always be zero on some obscure platforms.
 //
 // You might be wondering why we have a macro that creates multiple functions
-// that differ only in their name, instead of a single
-// MemoryReporterMallocSizeOf function.  It's mostly to help with DMD
-// integration, though it sometimes also helps with debugging and temporary ad
-// hoc profiling.  The function name chosen doesn't matter greatly, but it's
-// best to make it similar to the path used by the relevant memory
-// reporter(s).
-#define NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(fn)                              \
+// that differ only in their name, instead of a single MallocSizeOf function.
+// It's mostly to help with DMD integration, though it sometimes also helps
+// with debugging and temporary ad hoc profiling.  The function name chosen
+// doesn't matter greatly, but it's best to make it similar to the path used by
+// the relevant memory reporter(s).
+#define MOZ_DEFINE_MALLOC_SIZE_OF(fn)                                         \
   static size_t fn(const void* aPtr)                                          \
   {                                                                           \
       MOZ_REPORT(aPtr);                                                       \
@@ -484,13 +494,13 @@ void RunReporters();
 // unreport them as soon as they are freed.  Such allocators are used in cases
 // where we have third-party code that we cannot modify.  The two functions
 // must always be used in tandem.
-#define NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(fn)                     \
+#define MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(fn)                                \
   static size_t fn(const void* aPtr)                                          \
   {                                                                           \
       MOZ_REPORT_ON_ALLOC(aPtr);                                              \
       return moz_malloc_size_of(aPtr);                                        \
   }
-#define NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(fn)                      \
+#define MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(fn)                                 \
   static size_t fn(const void* aPtr)                                          \
   {                                                                           \
       return moz_malloc_size_of(aPtr);                                        \
@@ -500,9 +510,8 @@ namespace mozilla {
 
 // The following base class reduces the amount of boilerplate code required for
 // memory uni-reporters.  You just need to provide the following.
-// - The constant values: nameAndPath (which serves as both the reporters name,
-//   and the path in its single report), kind, units, and description.  They
-//   are arguments to the MemoryUniReporter constructor.
+// - The constant values: path, kind, units, and description.  They are
+//   arguments to the MemoryUniReporter constructor.
 // - A private Amount() or public GetAmount() method.  It can use the
 //   MallocSizeOf method if necessary.  (There is also
 //   MallocSizeOfOn{Alloc,Free}, which can be useful.)  Use Amount() if the
@@ -510,17 +519,17 @@ namespace mozilla {
 //   provide one or the other, you'll get assertion failures when the memory
 //   reporter runs.)
 //
-// The class name of subclasses should match the nameAndPath, minus the
-// "explicit" (if present), and with "Reporter" at the end.  For example:
-// - nameAndPath == "explicit/dom/xyzzy"     --> DOMXyzzyReporter
-// - nameAndPath == "js-compartments/system" --> JSCompartmentsSystemReporter
+// The class name of subclasses should match the path, minus the "explicit" (if
+// present), and with "Reporter" at the end.  For example:
+// - path == "explicit/dom/xyzzy"     --> DOMXyzzyReporter
+// - path == "js-compartments/system" --> JSCompartmentsSystemReporter
 //
 class MemoryUniReporter : public nsIMemoryReporter
 {
 public:
-  MemoryUniReporter(const char* aNameAndPath, int32_t aKind, int32_t aUnits,
+  MemoryUniReporter(const char* aPath, int32_t aKind, int32_t aUnits,
                     const char* aDescription)
-    : mNameAndPath(aNameAndPath)
+    : mPath(aPath)
     , mKind(aKind)
     , mUnits(aUnits)
     , mDescription(aDescription)
@@ -530,12 +539,6 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD GetName(nsACString& aName)
-  {
-    aName.Assign(mNameAndPath);
-    return NS_OK;
-  }
-
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCallback,
                             nsISupports* aData)
   {
@@ -544,7 +547,7 @@ public:
     if (NS_WARN_IF(NS_FAILED(rv)))
       return rv;
 
-    return aCallback->Callback(EmptyCString(), mNameAndPath, mKind, mUnits,
+    return aCallback->Callback(EmptyCString(), mPath, mKind, mUnits,
                                amount, mDescription, aData);
   }
 
@@ -562,48 +565,14 @@ protected:
     return 0;
   }
 
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(MallocSizeOfOnAlloc)
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(MallocSizeOfOnFree)
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
+  MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
 
-  const nsCString mNameAndPath;
+  const nsCString mPath;
   const int32_t   mKind;
   const int32_t   mUnits;
   const nsCString mDescription;
-};
-
-// The following base class reduces the amount of boilerplate code required for
-// memory multi-reporters.  You just need to provide the following.
-// - The constant value: name.  It is an argument to the MemoryMultiReporter
-//   constructor.  The name of each multi-reporter should be unique.
-// - A public CollectReports() method.  It can use the MallocSizeOf method if
-//   necessary.  (There is also MallocSizeOfOn{Alloc,Free}, which can be
-//   useful.)
-//
-// The class name of subclasses should match the name, with "Reporter" at
-// the end.  For example:
-// - name == "foo" --> FooMultiReporter
-//
-class MemoryMultiReporter : public nsIMemoryReporter
-{
-public:
-  MemoryMultiReporter(const char* aName)
-    : mName(aName)
-  {}
-
-  virtual ~MemoryMultiReporter() {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  NS_IMETHOD CollectReports(nsIMemoryReporterCallback* aCb,
-                            nsISupports* aClosure) = 0;
-
-protected:
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(MallocSizeOf)
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_ALLOC_FUN(MallocSizeOfOnAlloc)
-  NS_MEMORY_REPORTER_MALLOC_SIZEOF_ON_FREE_FUN(MallocSizeOfOnFree)
-
-  const nsCString mName;
 };
 
 } // namespace mozilla

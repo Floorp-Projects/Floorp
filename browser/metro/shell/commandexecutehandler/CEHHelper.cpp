@@ -12,6 +12,7 @@
 
 HANDLE sCon;
 LPCWSTR metroDX10Available = L"MetroD3DAvailable";
+LPCWSTR metroLastAHE = L"MetroLastAHE";
 
 typedef HRESULT (WINAPI*D3D10CreateDevice1Func)
   (IDXGIAdapter *, D3D10_DRIVER_TYPE, HMODULE, UINT,
@@ -105,6 +106,21 @@ IsProcessRunning(const wchar_t *processName, bool bCheckIfMetro)
 
   CloseHandle(snapshot);
   return exists;
+}
+
+/*
+ * Retrieve the last front end ui we launched so we can target it
+ * again. This value is updated down in nsAppRunner when the browser
+ * starts up.
+ */
+AHE_TYPE
+GetLastAHE()
+{
+  DWORD ahe;
+  if (GetDWORDRegKey(metroLastAHE, ahe)) {
+    return (AHE_TYPE) ahe;
+  }
+  return AHE_DESKTOP;
 }
 
 bool

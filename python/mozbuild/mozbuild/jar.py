@@ -115,9 +115,6 @@ class JarMaker(object):
         p.add_option('-e', action='store_true',
                      help='create chrome.manifest instead of jarfile.manifest'
                      )
-        p.add_option('--both-manifests', action='store_true',
-                     dest='bothManifests',
-                     help='create chrome.manifest and jarfile.manifest')
         p.add_option('-s', type='string', action='append', default=[],
                      help='source directory')
         p.add_option('-t', type='string', help='top source directory')
@@ -501,9 +498,6 @@ def main(args=None):
     if options.e:
         jm.useChromeManifest = True
         jm.useJarfileManifest = False
-    if options.bothManifests:
-        jm.useChromeManifest = True
-        jm.useJarfileManifest = True
     if options.l10n_base:
         if not options.relativesrcdir:
             p.error('relativesrcdir required when using l10n-base')
@@ -513,8 +507,8 @@ def main(args=None):
         jm.relativesrcdir = options.relativesrcdir
         jm.l10nmerge = options.locale_mergedir
         if jm.l10nmerge and not os.path.isdir(jm.l10nmerge):
-            logging.warning("WARNING: --locale-mergedir passed, but '%s' does not exist. Ignore this message if the locale is complete."
-                            )
+            logging.warning("WARNING: --locale-mergedir passed, but '%s' does not exist. "
+                "Ignore this message if the locale is complete." % jm.l10nmerge)
     elif options.locale_mergedir:
         p.error('l10n-base required when using locale-mergedir')
     jm.localedirs = options.l10n_src

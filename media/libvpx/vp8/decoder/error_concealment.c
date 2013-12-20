@@ -8,14 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <assert.h>
+
 #include "error_concealment.h"
 #include "onyxd_int.h"
 #include "decodemv.h"
 #include "vpx_mem/vpx_mem.h"
-#include "vp8/common/recon.h"
 #include "vp8/common/findnearmv.h"
-
-#include <assert.h>
 
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #define MAX(x,y) (((x)>(y))?(x):(y))
@@ -52,12 +51,13 @@ int vp8_alloc_overlap_lists(VP8D_COMP *pbi)
         vpx_free(pbi->overlaps);
         pbi->overlaps = NULL;
     }
+
     pbi->overlaps = vpx_calloc(pbi->common.mb_rows * pbi->common.mb_cols,
                                sizeof(MB_OVERLAP));
+
     if (pbi->overlaps == NULL)
         return -1;
-    vpx_memset(pbi->overlaps, 0,
-               sizeof(MB_OVERLAP) * pbi->common.mb_rows * pbi->common.mb_cols);
+
     return 0;
 }
 

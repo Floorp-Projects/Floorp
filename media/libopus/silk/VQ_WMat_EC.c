@@ -35,15 +35,18 @@ POSSIBILITY OF SUCH DAMAGE.
 void silk_VQ_WMat_EC(
     opus_int8                   *ind,                           /* O    index of best codebook vector               */
     opus_int32                  *rate_dist_Q14,                 /* O    best weighted quant error + mu * rate       */
+    opus_int                    *gain_Q7,                       /* O    sum of absolute LTP coefficients            */
     const opus_int16            *in_Q14,                        /* I    input vector to be quantized                */
     const opus_int32            *W_Q18,                         /* I    weighting matrix                            */
     const opus_int8             *cb_Q7,                         /* I    codebook                                    */
+    const opus_uint8            *cb_gain_Q7,                    /* I    codebook effective gain                     */
     const opus_uint8            *cl_Q5,                         /* I    code length for each codebook vector        */
     const opus_int              mu_Q9,                          /* I    tradeoff betw. weighted error and rate      */
+    const opus_int32            max_gain_Q7,                    /* I    maximum sum of absolute LTP coefficients    */
     opus_int                    L                               /* I    number of vectors in codebook               */
 )
 {
-    opus_int   k;
+    opus_int   k, gain_tmp_Q7;
     const opus_int8 *cb_row_Q7;
     opus_int16 diff_Q14[ 5 ];
     opus_int32 sum1_Q14, sum2_Q16;
@@ -52,6 +55,8 @@ void silk_VQ_WMat_EC(
     *rate_dist_Q14 = silk_int32_MAX;
     cb_row_Q7 = cb_Q7;
     for( k = 0; k < L; k++ ) {
+	    gain_tmp_Q7 = cb_gain_Q7[k];
+
         diff_Q14[ 0 ] = in_Q14[ 0 ] - silk_LSHIFT( cb_row_Q7[ 0 ], 7 );
         diff_Q14[ 1 ] = in_Q14[ 1 ] - silk_LSHIFT( cb_row_Q7[ 1 ], 7 );
         diff_Q14[ 2 ] = in_Q14[ 2 ] - silk_LSHIFT( cb_row_Q7[ 2 ], 7 );
@@ -60,6 +65,9 @@ void silk_VQ_WMat_EC(
 
         /* Weighted rate */
         sum1_Q14 = silk_SMULBB( mu_Q9, cl_Q5[ k ] );
+
+		/* Penalty for too large gain */
+		sum1_Q14 = silk_ADD_LSHIFT32( sum1_Q14, silk_max( silk_SUB32( gain_tmp_Q7, max_gain_Q7 ), 0 ), 10 );
 
         silk_assert( sum1_Q14 >= 0 );
 
@@ -103,6 +111,7 @@ void silk_VQ_WMat_EC(
         if( sum1_Q14 < *rate_dist_Q14 ) {
             *rate_dist_Q14 = sum1_Q14;
             *ind = (opus_int8)k;
+			*gain_Q7 = gain_tmp_Q7;
         }
 
         /* Go to next cbk vector */

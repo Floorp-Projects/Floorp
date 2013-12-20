@@ -57,3 +57,5 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xpcom_core'
+
+include('/ipc/chromium/chromium-config.mozbuild')

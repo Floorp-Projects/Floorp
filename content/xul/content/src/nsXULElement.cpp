@@ -293,7 +293,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 }
 
 nsresult
-NS_NewXULElement(nsIContent** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
+NS_NewXULElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo)
 {
     NS_PRECONDITION(aNodeInfo.get(), "need nodeinfo for non-proto Create");
 
@@ -1003,6 +1003,10 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                     SetDrawsInTitlebar(
                         aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
                 }
+                else if (aName == nsGkAtoms::drawtitle) {
+                    SetDrawsTitle(
+                        aValue->Equals(NS_LITERAL_STRING("true"), eCaseMatters));
+                }
                 else if (aName == nsGkAtoms::localedir) {
                     // if the localedir changed on the root element, reset the document direction
                     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(document);
@@ -1057,6 +1061,9 @@ nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                 }
                 else if (aName == nsGkAtoms::drawintitlebar) {
                     SetDrawsInTitlebar(false);
+                }
+                else if (aName == nsGkAtoms::drawtitle) {
+                    SetDrawsTitle(false);
                 }
             }
         }
@@ -1826,6 +1833,17 @@ nsXULElement::SetDrawsInTitlebar(bool aState)
     nsIWidget* mainWidget = GetWindowWidget();
     if (mainWidget) {
         nsContentUtils::AddScriptRunner(new SetDrawInTitleBarEvent(mainWidget, aState));
+    }
+}
+
+void
+nsXULElement::SetDrawsTitle(bool aState)
+{
+    nsIWidget* mainWidget = GetWindowWidget();
+    if (mainWidget) {
+        // We can do this synchronously because SetDrawsTitle doesn't have any
+        // synchronous effects apart from a harmless invalidation.
+        mainWidget->SetDrawsTitle(aState);
     }
 }
 

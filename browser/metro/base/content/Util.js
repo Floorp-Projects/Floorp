@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+
 Components.utils.import("resource:///modules/ContentUtil.jsm");
 
 let Util = {
@@ -209,7 +212,8 @@ let Util = {
             aURL == "about:blank" ||
             aURL == "about:empty" ||
             aURL == "about:home" ||
-            aURL == "about:start");
+            aURL == "about:newtab" ||
+            aURL.startsWith("about:newtab"));
   },
 
   // Title to use for emptyURL tabs.
@@ -408,3 +412,5 @@ Util.Timeout.prototype = {
       Util[name] = copy;
   }
 }
+
+this.Util = Util;

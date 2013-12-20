@@ -15,7 +15,7 @@
 ;                           short *qcoeff_ptr,short *dequant_ptr,
 ;                           short *scan_mask, short *round_ptr,
 ;                           short *quant_ptr, short *dqcoeff_ptr);
-global sym(vp8_fast_quantize_b_impl_mmx)
+global sym(vp8_fast_quantize_b_impl_mmx) PRIVATE
 sym(vp8_fast_quantize_b_impl_mmx):
     push        rbp
     mov         rbp, rsp

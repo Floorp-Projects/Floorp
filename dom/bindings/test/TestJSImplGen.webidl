@@ -41,6 +41,12 @@ interface TestJSImplInterface {
   void passNullableByte(byte? arg);
   void passOptionalNullableByte(optional byte? arg);
   void passVariadicByte(byte... arg);
+  [Cached, Pure]
+  readonly attribute byte cachedByte;
+  [Cached, Constant]
+  readonly attribute byte cachedConstantByte;
+  [Cached, Pure]
+  attribute byte cachedWritableByte;
 
   readonly attribute short readonlyShort;
   attribute short writableShort;
@@ -210,6 +216,16 @@ interface TestJSImplInterface {
   void passConsequentialInterface(IndirectlyImplementedInterface arg);
 
   // Sequence types
+  [Cached, Pure]
+  readonly attribute sequence<long> readonlySequence;
+  [Cached, Pure]
+  readonly attribute sequence<Dict> readonlySequenceOfDictionaries;
+  [Cached, Pure]
+  readonly attribute sequence<Dict>? readonlyNullableSequenceOfDictionaries;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<long> readonlyFrozenSequence;
+  [Cached, Pure, Frozen]
+  readonly attribute sequence<long>? readonlyFrozenNullableSequence;
   sequence<long> receiveSequence();
   sequence<long>? receiveNullableSequence();
   sequence<long?> receiveSequenceOfNullableInts();
@@ -374,12 +390,10 @@ interface TestJSImplInterface {
   void passUnion14(optional (object or long?) arg = 5);
 #endif
   void passUnionWithNullable((object? or long) arg);
-  // FIXME: Bug 863948 Nullable unions not supported yet
-  //   void passNullableUnion((object or long)? arg);
+  void passNullableUnion((object or long)? arg);
   void passOptionalUnion(optional (object or long) arg);
-  // FIXME: Bug 863948 Nullable unions not supported yet
-  //  void passOptionalNullableUnion(optional (object or long)? arg);
-  //  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
+  void passOptionalNullableUnion(optional (object or long)? arg);
+  void passOptionalNullableUnionWithDefaultValue(optional (object or long)? arg = null);
   //void passUnionWithInterfaces((TestJSImplInterface or TestExternalInterface) arg);
   //void passUnionWithInterfacesAndNullable((TestJSImplInterface? or TestExternalInterface) arg);
   //void passUnionWithSequence((sequence<object> or long) arg);
@@ -419,6 +433,12 @@ interface TestJSImplInterface {
   void passNullableUnionWithDefaultValue11(optional (unrestricted float or DOMString)? arg = 1);
   void passNullableUnionWithDefaultValue12(optional (unrestricted float or DOMString)? arg = null);
 
+  void passSequenceOfUnions(sequence<(CanvasPattern or CanvasGradient)> arg);
+  void passVariadicUnion((CanvasPattern or CanvasGradient)... arg);
+
+  void passSequenceOfNullableUnions(sequence<(CanvasPattern or CanvasGradient)?> arg);
+  void passVariadicNullableUnion((CanvasPattern or CanvasGradient)?... arg);
+
   //(CanvasPattern or CanvasGradient) receiveUnion();
   //(object or long) receiveUnion2();
   //(CanvasPattern? or CanvasGradient) receiveUnionContainingNull();
@@ -447,9 +467,9 @@ interface TestJSImplInterface {
   attribute byte attributeRenamedFrom;
 
   void passDictionary(optional Dict x);
-  // FIXME: Bug 863949 no dictionary return values
-  //   Dict receiveDictionary();
-  //   Dict? receiveNullableDictionary();
+  Dict receiveDictionary();
+  // No support for nullable dictionary return values here yet
+  //  Dict? receiveNullableDictionary();
   void passOtherDictionary(optional GrandparentDict x);
   void passSequenceOfDictionaries(sequence<Dict> x);
   // No support for nullable dictionaries inside a sequence (nor should there be)
@@ -459,8 +479,7 @@ interface TestJSImplInterface {
 
   void passDictContainingDict(optional DictContainingDict arg);
   void passDictContainingSequence(optional DictContainingSequence arg);
-  // FIXME: Bug 863949 no dictionary return values
-  //   DictContainingSequence receiveDictContainingSequence();
+  DictContainingSequence receiveDictContainingSequence();
 
   // EnforceRange/Clamp tests
   void dontEnforceRangeOrClamp(byte arg);

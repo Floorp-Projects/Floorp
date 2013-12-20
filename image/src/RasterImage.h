@@ -25,14 +25,16 @@
 #include "nsTArray.h"
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
+#include "DecodeStrategy.h"
 #include "DiscardTracker.h"
 #include "Orientation.h"
 #include "nsIObserver.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Mutex.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/Mutex.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -122,11 +124,13 @@ class nsIRequest;
 class ScaleRequest;
 
 namespace mozilla {
+
 namespace layers {
 class LayerManager;
 class ImageContainer;
 class Image;
 }
+
 namespace image {
 
 class Decoder;
@@ -308,9 +312,12 @@ public:
     eShutdownIntent_AllCount    = 3
   };
 
+  // Decode strategy
+
 private:
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
+    mDecodingMonitor.AssertCurrentThreadIn();
     nsRefPtr<imgStatusTracker> statusTracker;
     statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
                                    : mStatusTracker;
@@ -400,7 +407,7 @@ private:
      * Decode aImg for a short amount of time, and post the remainder to the
      * queue.
      */
-    void DecodeABitOf(RasterImage* aImg);
+    void DecodeABitOf(RasterImage* aImg, DecodeStrategy aStrategy);
 
     /**
      * Ask the DecodePool to stop decoding this image.  Internally, we also
@@ -449,6 +456,7 @@ private:
      * UNTIL_DONE_BYTES, decode until all bytesToDecode bytes are decoded.
      */
     nsresult DecodeSomeOfImage(RasterImage* aImg,
+                               DecodeStrategy aStrategy,
                                DecodeType aDecodeType = DECODE_TYPE_UNTIL_TIME,
                                uint32_t bytesToDecode = 0);
 
@@ -472,10 +480,10 @@ private:
   private: /* members */
 
     // mThreadPoolMutex protects mThreadPool. For all RasterImages R,
-    // R::mDecodingMutex must be acquired before mThreadPoolMutex if both are
-    // acquired; the other order may cause deadlock.
-    mozilla::Mutex          mThreadPoolMutex;
-    nsCOMPtr<nsIThreadPool> mThreadPool;
+    // R::mDecodingMonitor must be acquired before mThreadPoolMutex
+    // if both are acquired; the other order may cause deadlock.
+    mozilla::Mutex            mThreadPoolMutex;
+    nsCOMPtr<nsIThreadPool>   mThreadPool;
   };
 
   class DecodeDoneWorker : public nsRunnable
@@ -642,10 +650,10 @@ private: // data
 #endif
 
   // Below are the pieces of data that can be accessed on more than one thread
-  // at once, and hence need to be locked by mDecodingMutex.
+  // at once, and hence need to be locked by mDecodingMonitor.
 
   // BEGIN LOCKED MEMBER VARIABLES
-  mozilla::Mutex             mDecodingMutex;
+  mozilla::ReentrantMonitor  mDecodingMonitor;
 
   FallibleTArray<char>       mSourceData;
 
@@ -699,13 +707,13 @@ private: // data
   nsresult WantDecodedFrames();
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
-  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount);
-  nsresult DecodeSomeData(uint32_t aMaxBytes);
+  nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
+  nsresult DecodeSomeData(uint32_t aMaxBytes, DecodeStrategy aStrategy);
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
-  inline bool CanQualityScale(const gfxSize& scale);
-  inline bool CanScale(GraphicsFilter aFilter, gfxSize aScale, uint32_t aFlags);
+  inline bool CanQualityScale(const gfx::Size& scale);
+  inline bool CanScale(GraphicsFilter aFilter, gfx::Size aScale, uint32_t aFlags);
 
   struct ScaleResult
   {
@@ -713,7 +721,7 @@ private: // data
      : status(SCALE_INVALID)
     {}
 
-    gfxSize scale;
+    gfx::Size scale;
     nsAutoPtr<imgFrame> frame;
     ScaleStatus status;
   };

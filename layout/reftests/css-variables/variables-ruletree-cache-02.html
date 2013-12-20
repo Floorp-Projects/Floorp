@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<style>
+  div#a { var-foo: purple }
+  div#b { var-foo: blue }
+  p { background-color: var(foo) }
+</style>
+<div id="a"><p>This should be purple.</p></div>
+<div id="b"><p>This should be blue.</p></div>

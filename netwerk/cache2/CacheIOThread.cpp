@@ -122,8 +122,6 @@ void CacheIOThread::ThreadFunc()
 
     lock.NotifyAll();
 
-    static PRIntervalTime const waitTime = PR_MillisecondsToInterval(5000);
-
     do {
 loopStart:
       // Reset the lowest level now, so that we can detect a new event on
@@ -160,14 +158,17 @@ loopStart:
       }
 
       if (EventsPending())
-        goto loopStart;
+        continue;
 
-      lock.Wait(waitTime);
+      if (mShutdown)
+        break;
+
+      lock.Wait(PR_INTERVAL_NO_TIMEOUT);
 
       if (EventsPending())
-        goto loopStart;
+        continue;
 
-    } while (!mShutdown);
+    } while (true);
 
     MOZ_ASSERT(!EventsPending());
   } // lock
@@ -241,7 +242,8 @@ NS_IMETHODIMP CacheIOThread::OnProcessNextEvent(nsIThreadInternal *thread, bool 
   return NS_OK;
 }
 
-NS_IMETHODIMP CacheIOThread::AfterProcessNextEvent(nsIThreadInternal *thread, uint32_t recursionDepth)
+NS_IMETHODIMP CacheIOThread::AfterProcessNextEvent(nsIThreadInternal *thread, uint32_t recursionDepth,
+                                                   bool eventWasProcessed)
 {
   return NS_OK;
 }

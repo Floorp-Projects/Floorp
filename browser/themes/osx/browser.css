@@ -1280,6 +1280,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   opacity: 0;
 }
 
+@conditionalForwardWithUrlbar@ > #forward-button[occluded-by-urlbar] {
+  visibility: hidden;
+}
+
 @media (-moz-mac-lion-theme) {
   #forward-button:not(:-moz-lwtheme) {
     background-image: linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
@@ -1432,8 +1436,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0;
 }
 
-#zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 2px;
+#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
+  padding-top: 8px;
   margin: 2px;
 }
 
@@ -1540,8 +1544,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   transition-delay: 100s;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar,
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar {
-  /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
+  /* when switching tabs, or when not hovered anymore, trigger a new transition
+   * to hide the forward button immediately */
   margin-left: -@conditionalForwardWithUrlbarWidth@.01px;
 }
 
@@ -1594,10 +1600,12 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   transition-delay: 100s;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr),
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(ltr) {
   padding-left: 10.01px;
 }
 
+@conditionalForwardWithUrlbar@[forwarddisabled][switchingtabs] + #urlbar-container > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl),
 @conditionalForwardWithUrlbar@[forwarddisabled]:not(:hover) > #urlbar-wrapper > #urlbar > #notification-popup-box[hidden] + #identity-box:-moz-locale-dir(rtl) {
   padding-right: 10.01px;
 }
@@ -1672,6 +1680,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0 -4px;
   position: relative;
   height: 22px;
+}
+
+#search-container {
+  min-width: calc(54px + 11ch);
 }
 
 %include ../shared/identity-block.inc.css
@@ -2398,11 +2410,13 @@ sidebarheader {
   -moz-margin-end: -3px;
 }
 
+.sidebar-title,
 #sidebar-title {
   color: #535f6d;
   font-weight: bold;
 }
 
+.sidebar-throbber[loading="true"],
 #sidebar-throbber[loading="true"] {
   list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
@@ -3590,11 +3604,16 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before {
     height: calc(@tabHeight@ + 11px) !important;
   }
+  #main-window[inFullscreen][privatebrowsingmode=temporary],
   #main-window[inFullscreen]:-moz-lwtheme {
     /* This additional padding matches the change in height in the pseudo-element
-     * above. The rules combined force the top 22px of the background image to
-     * be hidden, so there image doesn't jump around with the loss of the titlebar */
+     * above. */
     padding-top: 11px;
+  }
+  #main-window[inFullscreen]:not([privatebrowsingmode=temporary]):-moz-lwtheme {
+    /* In combination with the previous rule, forces the top 22px of the
+     * background image to be hidden, so the image doesn't jump around with
+     * the loss of the titlebar. */
     background-position: right -11px;
   }
 }
@@ -3934,7 +3953,7 @@ window > chatbox {
   padding: 0 2em 2em;
 }
 
-#main-window[customizing] #tab-view-deck {
+#main-window[customize-entered] #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
                     linear-gradient(to bottom, rgb(233,233,233), rgb(178,178,178) 21px);

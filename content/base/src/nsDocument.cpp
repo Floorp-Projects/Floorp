@@ -10,10 +10,10 @@
 
 #include "nsDocument.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Util.h"
 #include "mozilla/Likely.h"
 #include <algorithm>
 
@@ -172,6 +172,7 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "mozilla/dom/DOMImplementation.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Comment.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/Link.h"
@@ -433,10 +434,10 @@ nsIdentifierMapEntry::SetImageElement(Element* aElement)
 }
 
 void
-nsIdentifierMapEntry::AddNameElement(nsIDocument* aDocument, Element* aElement)
+nsIdentifierMapEntry::AddNameElement(nsINode* aNode, Element* aElement)
 {
   if (!mNameContentList) {
-    mNameContentList = new nsSimpleContentList(aDocument);
+    mNameContentList = new nsSimpleContentList(aNode);
   }
 
   mNameContentList->AppendElement(aElement);
@@ -2642,6 +2643,33 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 #endif
 
   nsresult rv;
+
+  // If Document is an app check to see if we already set CSP and return early
+  // if that is indeed the case.
+  //
+  // In general (see bug 947831), we should not be setting CSP on a principal
+  // that aliases another document. For non-app code this is not a problem
+  // since we only share the underlying principal with nested browsing
+  // contexts for which a header cannot be set (e.g., about:blank and
+  // about:srcodoc iframes) and thus won't try to set the CSP again. This
+  // check ensures that we do not try to set CSP for an app.
+  if (applyAppDefaultCSP || applyAppManifestCSP) {
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = principal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (csp) {
+#ifdef PR_LOGGING
+      PR_LOG(gCspPRLog, PR_LOG_DEBUG, ("%s %s %s",
+           "This document is sharing principal with another document.",
+           "Since the document is an app, CSP was already set.",
+           "Skipping attempt to set CSP."));
+#endif
+      return NS_OK;
+    }
+  }
+
+  // create new CSP object
   csp = do_CreateInstance("@mozilla.org/contentsecuritypolicy;1", &rv);
 
   if (NS_FAILED(rv)) {
@@ -2721,16 +2749,12 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     }
   }
 
-  if (csp) {
-    // Copy into principal
-    nsIPrincipal* principal = GetPrincipal();
-    rv = principal->SetCsp(csp);
-    NS_ENSURE_SUCCESS(rv, rv);
+  rv = principal->SetCsp(csp);
+  NS_ENSURE_SUCCESS(rv, rv);
 #ifdef PR_LOGGING
-    PR_LOG(gCspPRLog, PR_LOG_DEBUG,
-           ("Inserted CSP into principal %p", principal));
+  PR_LOG(gCspPRLog, PR_LOG_DEBUG,
+         ("Inserted CSP into principal %p", principal));
 #endif
-  }
 
   return NS_OK;
 }
@@ -3138,7 +3162,7 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
   if (!ptFrame) {
     return nullptr;
@@ -3193,7 +3217,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
 
   nsAutoTArray<nsIFrame*,8> outFrames;
   nsLayoutUtils::GetFramesForArea(rootFrame, rect, outFrames,
-    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION |
+    nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
     (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
 
   // Used to filter out repeated elements in sequence.
@@ -4652,6 +4676,15 @@ nsDocument::DispatchContentLoadedEvents()
     mTiming->NotifyDOMContentLoadedStart(nsIDocument::GetDocumentURI());
   }
 
+  // Dispatch observer notification to notify observers document is interactive.
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsIPrincipal *principal = GetPrincipal();
+  os->NotifyObservers(static_cast<nsIDocument*>(this),
+                      nsContentUtils::IsSystemPrincipal(principal) ?
+                        "chrome-document-interactive" :
+                        "content-document-interactive",
+                      nullptr);
+
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -4982,13 +5015,13 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
     return nullptr;
   }
 
-  nsCOMPtr<nsIContent> content;
-  rv = NS_NewElement(getter_AddRefs(content), nodeInfo.forget(),
+  nsCOMPtr<Element> element;
+  rv = NS_NewElement(getter_AddRefs(element), nodeInfo.forget(),
                      NOT_FROM_PARSER);
   if (rv.Failed()) {
     return nullptr;
   }
-  return dont_AddRef(content.forget().get()->AsElement());
+  return element.forget();
 }
 
 NS_IMETHODIMP
@@ -6150,7 +6183,8 @@ nsDocument::DoNotifyPossibleTitleChange()
 
   nsCOMPtr<nsIPresShell> shell = GetShell();
   if (shell) {
-    nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
+    nsCOMPtr<nsISupports> container =
+      shell->GetPresContext()->GetContainerWeak();
     if (container) {
       nsCOMPtr<nsIBaseWindow> docShellWin = do_QueryInterface(container);
       if (docShellWin) {
@@ -6830,6 +6864,8 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   switch (mViewportType) {
   case DisplayWidthHeight:
     return nsViewportInfo(aDisplaySize);
+  case DisplayWidthHeightNoZoom:
+    return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
   case Unknown:
   {
     nsAutoString viewport;
@@ -6859,6 +6895,21 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       if (handheldFriendly.EqualsLiteral("true")) {
         mViewportType = DisplayWidthHeight;
         return nsViewportInfo(aDisplaySize);
+      }
+
+      // Bug 940036. This is bad. When FirefoxOS was built, apps installed
+      // where not using the AsyncPanZoom code. As a result a lot of apps
+      // in the marketplace does not use it yet and instead are built to
+      // render correctly in FirefoxOS only. For a smooth transition the above
+      // code force installed apps to render as if they have a viewport with
+      // content="width=device-width, height=device-height, user-scalable=no".
+      // This could be safely remove once it is known that most apps in the
+      // marketplace use it and that users does not use an old version of the
+      // app that does not use it.
+      nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+      if (docShell && docShell->GetIsApp()) {
+        mViewportType = DisplayWidthHeightNoZoom;
+        return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
       }
     }
 
@@ -7566,7 +7617,11 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, int32_t aNamesp
                                 getter_AddRefs(nodeInfo));
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
-  return NS_NewElement(aResult, nodeInfo.forget(), NOT_FROM_PARSER);
+  nsCOMPtr<Element> element;
+  nsresult rv = NS_NewElement(getter_AddRefs(element), nodeInfo.forget(),
+                              NOT_FROM_PARSER);
+  element.forget(aResult);
+  return rv;
 }
 
 bool
@@ -8105,6 +8160,17 @@ nsDocument::OnPageShow(bool aPersisted,
   if (!target) {
     target = do_QueryInterface(GetWindow());
   }
+
+  // Dispatch observer notification to notify observers page is shown.
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsIPrincipal *principal = GetPrincipal();
+  os->NotifyObservers(static_cast<nsIDocument*>(this),
+                      nsContentUtils::IsSystemPrincipal(principal) ?
+                        "chrome-page-shown" :
+                        "content-page-shown",
+                      nullptr);
+
+
   DispatchPageTransition(target, NS_LITERAL_STRING("pageshow"), aPersisted);
 }
 
@@ -8167,6 +8233,16 @@ nsDocument::OnPageHide(bool aPersisted,
   if (!target) {
     target = do_QueryInterface(GetWindow());
   }
+
+  // Dispatch observer notification to notify observers page is hidden.
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  nsIPrincipal *principal = GetPrincipal();
+  os->NotifyObservers(static_cast<nsIDocument*>(this),
+                      nsContentUtils::IsSystemPrincipal(principal) ?
+                        "chrome-page-hidden" :
+                        "content-page-hidden",
+                      nullptr);
+
   DispatchPageTransition(target, NS_LITERAL_STRING("pagehide"), aPersisted);
 
   mVisible = false;
@@ -8489,11 +8565,17 @@ FireOrClearDelayedEvents(nsTArray<nsCOMPtr<nsIDocument> >& aDocuments,
     return;
 
   for (uint32_t i = 0; i < aDocuments.Length(); ++i) {
+    // NB: Don't bother trying to fire delayed events on documents that were
+    // closed before this event ran.
     if (!aDocuments[i]->EventHandlingSuppressed()) {
       fm->FireDelayedEvents(aDocuments[i]);
       nsCOMPtr<nsIPresShell> shell = aDocuments[i]->GetShell();
       if (shell) {
-        shell->FireOrClearDelayedEvents(aFireEvents);
+        // Only fire events for active documents.
+        bool fire = aFireEvents &&
+                    aDocuments[i]->GetInnerWindow() &&
+                    aDocuments[i]->GetInnerWindow()->IsCurrentInnerWindow();
+        shell->FireOrClearDelayedEvents(fire);
       }
     }
   }
@@ -8771,7 +8853,9 @@ nsDocument::ScrollToRef()
     if (NS_FAILED(rv)) {
       const nsACString &docCharset = GetDocumentCharacterSet();
 
-      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
+      rv = nsContentUtils::ConvertStringFromEncoding(docCharset,
+                                                     unescapedRef,
+                                                     ref);
 
       if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
         rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
@@ -9375,7 +9459,7 @@ nsIDocument::CaretPositionFromPoint(float aX, float aY)
   }
 
   nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
-      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION);
+      nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC);
   if (!ptFrame) {
     return nullptr;
   }
@@ -9638,13 +9722,7 @@ nsDocument::MozCancelFullScreen()
 void
 nsIDocument::MozCancelFullScreen()
 {
-  // Only perform fullscreen changes if we're running in a webapp
-  // same-origin to the web app, or if we're in a user generated event
-  // handler.
-  if (NodePrincipal()->GetAppStatus() >= nsIPrincipal::APP_STATUS_INSTALLED ||
-      nsContentUtils::IsRequestFullScreenAllowed()) {
-    RestorePreviousFullScreenState();
-  }
+  RestorePreviousFullScreenState();
 }
 
 // Runnable to set window full-screen mode. Used as a script runner
@@ -11398,9 +11476,7 @@ nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
 
   NS_NAMED_LITERAL_STRING(doc_str, "document");
 
-  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal),
-                           reinterpret_cast<const jschar *>
-                                           (doc_str.get()),
+  if (!JS_DefineUCProperty(aCx, JSVAL_TO_OBJECT(winVal), doc_str.get(),
                            doc_str.Length(), JS::ObjectValue(*obj),
                            JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_READONLY | JSPROP_ENUMERATE)) {
@@ -11455,6 +11531,23 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 {
   mStateObjectContainer = scContainer;
   mStateObjectCached = nullptr;
+}
+
+already_AddRefed<Element>
+nsIDocument::CreateHTMLElement(nsIAtom* aTag)
+{
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
+                                           nsIDOMNode::ELEMENT_NODE);
+  MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");
+
+  nsCOMPtr<Element> element;
+  DebugOnly<nsresult> rv = NS_NewHTMLElement(getter_AddRefs(element),
+                                             nodeInfo.forget(),
+                                             mozilla::dom::NOT_FROM_PARSER);
+
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "NS_NewHTMLElement should never fail");
+  return element.forget();
 }
 
 bool

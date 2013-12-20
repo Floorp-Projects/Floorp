@@ -13,6 +13,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
 #include "nsTArray.h"                   // for nsTArray
+#include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 namespace layers {
@@ -94,6 +95,18 @@ LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
     NS_RUNTIMEABORT("ActorDestroy by IPC channel failure at LayerTransactionChild");
   }
 #endif
+}
+
+PTextureChild*
+LayerTransactionChild::AllocPTextureChild()
+{
+  return TextureClient::CreateIPDLActor();
+}
+
+bool
+LayerTransactionChild::DeallocPTextureChild(PTextureChild* actor)
+{
+  return TextureClient::DestroyIPDLActor(actor);
 }
 
 }  // namespace layers

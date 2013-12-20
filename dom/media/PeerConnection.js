@@ -684,15 +684,21 @@ RTCPeerConnection.prototype = {
   },
 
   addStream: function(stream, constraints) {
+    if (!constraints) {
+      constraints = {};
+    }
+    this._mustValidateConstraints(constraints,
+                                  "addStream passed invalid constraints");
     if (stream.currentTime === undefined) {
       throw new this._win.DOMError("", "Invalid stream passed to addStream!");
     }
-    // TODO: Implement constraints.
-    this._queueOrRun({ func: this._addStream, args: [stream], wait: false });
+    this._queueOrRun({ func: this._addStream,
+                       args: [stream, constraints],
+                       wait: false });
   },
 
-  _addStream: function(stream) {
-    this._getPC().addStream(stream);
+  _addStream: function(stream, constraints) {
+    this._getPC().addStream(stream, constraints);
   },
 
   removeStream: function(stream) {
@@ -1051,17 +1057,18 @@ PeerConnectionObserver.prototype = {
   //   closed        The ICE Agent has shut down and is no longer responding to
   //                 STUN requests.
 
-  handleIceConnectionStateChange: function(iceState) {
+  handleIceConnectionStateChange: function(iceConnectionState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
 
-    if (iceState === 'failed') {
+    if (iceConnectionState === 'failed') {
       histogram.add(false);
     }
     if (this._dompc.iceConnectionState === 'checking' &&
-        (iceState === 'completed' || iceState === 'connected')) {
+        (iceConnectionState === 'completed' ||
+         iceConnectionState === 'connected')) {
           histogram.add(true);
     }
-    this._dompc.changeIceConnectionState(iceState);
+    this._dompc.changeIceConnectionState(iceConnectionState);
   },
 
   // This method is responsible for updating iceGatheringState. This
@@ -1105,7 +1112,7 @@ PeerConnectionObserver.prototype = {
         break;
 
       case "IceConnectionState":
-        this.handleIceConnectionStateChange(this._dompc._pc.iceState);
+        this.handleIceConnectionStateChange(this._dompc._pc.iceConnectionState);
         break;
 
       case "IceGatheringState":

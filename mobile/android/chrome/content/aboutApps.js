@@ -23,15 +23,17 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
     .getInterface(Ci.nsIDOMWindow)
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
+document.addEventListener("DOMContentLoaded", onLoad, false);
+
 var AppsUI = {
   uninstall: null,
   shortcut: null
 };
 
-function openLink(aElement) {
+function openLink(aEvent) {
   try {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-    let url = formatter.formatURLPref(aElement.getAttribute("pref"));
+    let url = formatter.formatURLPref(aEvent.target.getAttribute("pref"));
     let BrowserApp = gChromeWin.BrowserApp;
     BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
   } catch (ex) {}
@@ -41,7 +43,9 @@ var ContextMenus = {
   target: null,
 
   init: function() {
-    document.addEventListener("contextmenu", ContextMenus, false);
+    document.addEventListener("contextmenu", this, false);
+    document.getElementById("addToHomescreenLabel").addEventListener("click", this.addToHomescreen, false);
+    document.getElementById("uninstallLabel").addEventListener("click", this.uninstall, false);
   },
 
   handleEvent: function(event) {
@@ -81,6 +85,11 @@ function onLoad(aEvent) {
     let url = formatter.formatURLPref(link.getAttribute("pref"));
     link.setAttribute("href", url);
   } catch (e) {}
+
+  let elmts = document.querySelectorAll("[pref]");
+  for (let i = 0; i < elmts.length; i++) {
+    elmts[i].addEventListener("click",  openLink,  false);
+  }
 
   navigator.mozApps.mgmt.oninstall = onInstall;
   navigator.mozApps.mgmt.onuninstall = onUninstall;
@@ -155,3 +164,4 @@ function onUninstall(aEvent) {
       document.getElementById("main-container").classList.add("hidden");
   }
 }
+

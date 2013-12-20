@@ -17,23 +17,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=674720
 
 </div>
 <pre id="test">
+<script type="text/javascript;version=1.8" src="http://mochi.test:8888/tests/dom/contacts/tests/shared.js"></script>
 <script class="testbody" type="text/javascript">
-
 "use strict";
-
-if (SpecialPowers.isMainProcess()) {
-  SpecialPowers.Cu.import("resource://gre/modules/ContactService.jsm");
-  SpecialPowers.Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
-}
-
-SpecialPowers.addPermission("contacts-write", true, document);
-SpecialPowers.addPermission("contacts-read", true, document);
-SpecialPowers.addPermission("contacts-create", true, document);
-
-var isAndroid = (navigator.userAgent.indexOf("Android") !== -1);
-var androidVersion = SpecialPowers.Cc['@mozilla.org/system-info;1']
-                                  .getService(SpecialPowers.Ci.nsIPropertyBag2)
-                                  .getProperty('version');
 
 var utils = SpecialPowers.getDOMWindowUtils(window);
 
@@ -105,15 +91,6 @@ var sample_id1;
 var createResult1;
 var findResult1;
 
-function onUnwantedSuccess() {
-  ok(false, "onUnwantedSuccess: shouldn't get here");
-}
-
-function onFailure() {
-  ok(false, "in on Failure!");
-  next();
-}
-
 function verifyBlob(blob1, blob2, isLast)
 {
   is(blob1 instanceof SpecialPowers.Ci.nsIDOMBlob, true,
@@ -161,9 +138,6 @@ function verifyBlobArray(blobs1, blobs2)
 }
 
 var req;
-var index = 0;
-
-var mozContacts = window.navigator.mozContacts
 
 var steps = [
   function () {
@@ -241,28 +215,7 @@ var steps = [
   }
 ];
 
-function next() {
-  ok(true, "Begin!");
-  if (index >= steps.length) {
-    ok(false, "Shouldn't get here!");
-    return;
-  }
-  try {
-    steps[index]();
-  } catch(ex) {
-    ok(false, "Caught exception", ex);
-  }
-  index += 1;
-}
-
-// Skip tests on Android < 4.0 due to test failures on tbpl (see bugs 897924 & 888891)
-if (!isAndroid || androidVersion >= 14) {
-  SimpleTest.waitForExplicitFinish();
-  addLoadEvent(next);
-} else {
-  ok(true, "Skip tests on Android < 4.0 (bugs 897924 & 888891");
-}
-
+start_tests();
 </script>
 </pre>
 </body>

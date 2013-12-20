@@ -26,7 +26,7 @@ obtain a copy of the source code by running:
 
 Or, if you prefer Git:
 
-    git clone git://github.com/mozilla/mozilla-central.git
+    git clone https://git.mozilla.org/integration/gecko-dev.git
 '''
 
 

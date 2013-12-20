@@ -382,11 +382,9 @@ struct TelemetryHistogram {
   uint32_t bucketCount;
   uint32_t histogramType;
   uint32_t id_offset;
-  uint32_t comment_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;
-  const char *comment() const;
 };
 
 #include "TelemetryHistogramData.inc"
@@ -396,12 +394,6 @@ const char *
 TelemetryHistogram::id() const
 {
   return &gHistogramStringTable[this->id_offset];
-}
-
-const char *
-TelemetryHistogram::comment() const
-{
-  return &gHistogramStringTable[this->comment_offset];
 }
 
 bool
@@ -947,8 +939,8 @@ mFailedLockCount(0)
     "addons.sqlite", "content-prefs.sqlite", "cookies.sqlite",
     "downloads.sqlite", "extensions.sqlite", "formhistory.sqlite",
     "index.sqlite", "healthreport.sqlite", "permissions.sqlite",
-    "places.sqlite", "search.sqlite", "signons.sqlite", "urlclassifier3.sqlite",
-    "webappsstore.sqlite"
+    "places.sqlite", "search.sqlite", "seer.sqlite", "signons.sqlite",
+    "urlclassifier3.sqlite", "webappsstore.sqlite"
   };
 
   for (size_t i = 0; i < ArrayLength(trackedDBs); i++)
@@ -1951,25 +1943,19 @@ TelemetryImpl::GetLateWrites(JSContext *cx, JS::Value *ret)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetRegisteredHistograms(JSContext *cx, JS::Value *ret)
+TelemetryImpl::RegisteredHistograms(uint32_t *aCount, char*** aHistograms)
 {
   size_t count = ArrayLength(gHistograms);
-  JS::Rooted<JSObject*> info(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
-  if (!info)
-    return NS_ERROR_FAILURE;
+  char** histograms = static_cast<char**>(nsMemory::Alloc(count * sizeof(char*)));
 
   for (size_t i = 0; i < count; ++i) {
-    JSString *comment = JS_InternString(cx, gHistograms[i].comment());
-
-    if (!(comment
-          && JS_DefineProperty(cx, info, gHistograms[i].id(),
-                               STRING_TO_JSVAL(comment), nullptr, nullptr,
-                               JSPROP_ENUMERATE))) {
-      return NS_ERROR_FAILURE;
-    }
+    const char* h = gHistograms[i].id();
+    size_t len = strlen(h);
+    histograms[i] = static_cast<char*>(nsMemory::Clone(h, len+1));
   }
 
-  *ret = OBJECT_TO_JSVAL(info);
+  *aCount = count;
+  *aHistograms = histograms;
   return NS_OK;
 }
 
@@ -2197,28 +2183,28 @@ TelemetryImpl::RecordSlowStatement(const nsACString &sql,
 {
   if (!sTelemetry || !sTelemetry->mCanRecord)
     return;
-  
-  nsAutoCString dbNameComment;
-  dbNameComment.AppendPrintf(" /* %s */", dbName.BeginReading());
-  
+
   bool isFirefoxDB = sTelemetry->mTrackedDBs.Contains(dbName);
   if (isFirefoxDB) {
     nsAutoCString sanitizedSQL(SanitizeSQL(sql));
     if (sanitizedSQL.Length() > kMaxSlowStatementLength) {
       sanitizedSQL.SetLength(kMaxSlowStatementLength);
       sanitizedSQL += "...";
-      sanitizedSQL += dbNameComment;
     }
+    sanitizedSQL.AppendPrintf(" /* %s */", nsPromiseFlatCString(dbName).get());
     StoreSlowSQL(sanitizedSQL, delay, Sanitized);
   } else {
     // Report aggregate DB-level statistics for addon DBs
     nsAutoCString aggregate;
-    aggregate.AppendPrintf("Untracked SQL for %s", dbName.BeginReading());
+    aggregate.AppendPrintf("Untracked SQL for %s",
+                           nsPromiseFlatCString(dbName).get());
     StoreSlowSQL(aggregate, delay, Sanitized);
   }
 
-  nsAutoCString fullSQL(sql);
-  fullSQL += dbNameComment;
+  nsAutoCString fullSQL;
+  fullSQL.AppendPrintf("%s /* %s */",
+                       nsPromiseFlatCString(sql).get(),
+                       nsPromiseFlatCString(dbName).get());
   StoreSlowSQL(fullSQL, delay, Unsanitized);
 }
 

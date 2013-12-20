@@ -25,6 +25,10 @@
 // to new bindings.
 #define DOM_OBJECT_SLOT_SOW 2
 
+// The total number of slots non-proxy DOM objects use by default.
+// Specific objects may have more for storing cached values.
+#define DOM_INSTANCE_RESERVED_SLOTS 3
+
 // NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
 // LSetDOMProperty. Those constants need to be changed accordingly if this value
 // changes.

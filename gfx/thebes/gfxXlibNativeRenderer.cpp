@@ -531,10 +531,14 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     DrawingMethod method;
     cairo_surface_t* cairoTarget = nullptr;
     DrawTarget* drawTarget = nullptr;
+    gfxPoint deviceTranslation;
     if (ctx->IsCairo()) {
         cairoTarget = cairo_get_group_target(ctx->GetCairo());
+        deviceTranslation = ctx->CurrentMatrix().GetTranslation();
     } else {
         drawTarget = ctx->GetDrawTarget();
+        Matrix dtTransform = drawTarget->GetTransform();
+        deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
         cairoTarget = static_cast<cairo_surface_t*>
             (drawTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
     }
@@ -552,7 +556,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         if (method == eCopyBackground) {
             NS_ASSERTION(cairoTarget, "eCopyBackground only used when there's a cairoTarget");
             cairo_set_operator(tmpCtx, CAIRO_OPERATOR_SOURCE);
-            gfxPoint pt = -(offset + ctx->CurrentMatrix().GetTranslation());
+            gfxPoint pt = -(offset + deviceTranslation);
             cairo_set_source_surface(tmpCtx, cairoTarget, pt.x, pt.y);
             // The copy from the tempXlibSurface to the target context should
             // use operator SOURCE, but that would need a mask to bound the

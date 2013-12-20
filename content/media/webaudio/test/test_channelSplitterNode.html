@@ -42,9 +42,9 @@ addLoadEvent(function() {
     return function(e) {
       is(e.inputBuffer.numberOfChannels, 1, "Correct input channel count");
       if (i < 4) {
-        compareBuffers(e.inputBuffer.getChannelData(0), buffer.getChannelData(i));
+        compareChannels(e.inputBuffer.getChannelData(0), buffer.getChannelData(i));
       } else {
-        compareBuffers(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
+        compareChannels(e.inputBuffer.getChannelData(0), emptyBuffer.getChannelData(0));
       }
       e.target.onaudioprocess = null;
       ++channelsSeen;

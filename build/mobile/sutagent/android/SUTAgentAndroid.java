@@ -67,6 +67,7 @@ public class SUTAgentAndroid extends Activity
     public static int    nChargeLevel = 0;
     public static int    nBatteryTemp = 0;
     public static long   nCreateTimeMillis = System.currentTimeMillis();
+    public static String sTestRoot = "";
 
     String lineSep = System.getProperty("line.separator");
     public PrintWriter dataOut = null;
@@ -162,6 +163,7 @@ public class SUTAgentAndroid extends Activity
 
         DoCommand dc = new DoCommand(getApplication());
 
+        Log.i("SUTAgentAndroid", dc.prgVersion);
         dc.FixDataLocalPermissions();
 
         // Get configuration settings from "ini" file
@@ -177,8 +179,13 @@ public class SUTAgentAndroid extends Activity
         SUTAgentAndroid.RegSvrIPPort = dc.GetIniData("Registration Server", "PORT", sIniFile);
         SUTAgentAndroid.HardwareID = dc.GetIniData("Registration Server", "HARDWARE", sIniFile);
         SUTAgentAndroid.Pool = dc.GetIniData("Registration Server", "POOL", sIniFile);
+        SUTAgentAndroid.sTestRoot = dc.GetIniData("Device", "TestRoot", sIniFile);
         SUTAgentAndroid.Abi = android.os.Build.CPU_ABI;
         log(dc, "onCreate");
+
+        dc.SetTestRoot(SUTAgentAndroid.sTestRoot);
+
+        Log.i("SUTAgentAndroid", "Test Root: " + SUTAgentAndroid.sTestRoot);
 
         tv = (TextView) this.findViewById(R.id.Textview01);
 
@@ -281,7 +288,9 @@ public class SUTAgentAndroid extends Activity
         sLocalIPAddr = getLocalIpAddress();
         Toast.makeText(getApplication().getApplicationContext(), "SUTAgent [" + sLocalIPAddr + "] ...", Toast.LENGTH_LONG).show();
 
-        String sConfig = "Unique ID: " + sUniqueID + lineSep;
+        String sConfig = dc.prgVersion + lineSep;
+        sConfig += "Test Root: " + sTestRoot + lineSep;
+        sConfig += "Unique ID: " + sUniqueID + lineSep;
         sConfig += "HWID: " + hwid + lineSep;
         sConfig += "ABI: " + Abi + lineSep;
         sConfig += "OS Info" + lineSep;

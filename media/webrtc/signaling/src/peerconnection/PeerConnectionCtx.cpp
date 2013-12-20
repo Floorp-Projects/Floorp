@@ -26,6 +26,7 @@
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
+#include "mozilla/Preferences.h"
 #endif
 
 #include "nsIObserverService.h"
@@ -73,14 +74,20 @@ MediaConstraintsExternal::MediaConstraintsExternal(
 #ifdef MOZILLA_INTERNAL_API
   Apply(aSrc.mMandatory.mOfferToReceiveAudio, &c->offer_to_receive_audio, true);
   Apply(aSrc.mMandatory.mOfferToReceiveVideo, &c->offer_to_receive_video, true);
+  if (!Preferences::GetBool("media.peerconnection.video.enabled", true)) {
+    c->offer_to_receive_video.was_passed = true;
+    c->offer_to_receive_video.value = false;
+  }
   Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
         true);
+  Apply(aSrc.mMandatory.mMozBundleOnly, &c->moz_bundle_only, true);
   if (aSrc.mOptional.WasPassed()) {
     const Sequence<MediaConstraintSet> &array = aSrc.mOptional.Value();
     for (uint32_t i = 0; i < array.Length(); i++) {
       Apply(array[i].mOfferToReceiveAudio, &c->offer_to_receive_audio);
       Apply(array[i].mOfferToReceiveVideo, &c->offer_to_receive_video);
       Apply(array[i].mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
+      Apply(array[i].mMozBundleOnly, &c->moz_bundle_only);
     }
   }
 #endif

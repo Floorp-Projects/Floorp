@@ -26,9 +26,9 @@ Bindings::Bindings()
 
 inline
 AliasedFormalIter::AliasedFormalIter(JSScript *script)
-  : begin_(script->bindings.bindingArray()),
+  : begin_(script->bindingArray()),
     p_(begin_),
-    end_(begin_ + (script->funHasAnyAliasedFormal ? script->bindings.numArgs() : 0)),
+    end_(begin_ + (script->funHasAnyAliasedFormal() ? script->numArgs() : 0)),
     slot_(CallObject::RESERVED_SLOTS)
 {
     settle();
@@ -67,7 +67,7 @@ JSScript::getFunction(size_t index)
 inline JSFunction *
 JSScript::getCallerFunction()
 {
-    JS_ASSERT(savedCallerFun);
+    JS_ASSERT(savedCallerFun());
     return getFunction(0);
 }
 
@@ -76,7 +76,7 @@ JSScript::functionOrCallerFunction()
 {
     if (function())
         return function();
-    if (savedCallerFun)
+    if (savedCallerFun())
         return getCallerFunction();
     return nullptr;
 }
@@ -98,6 +98,7 @@ JSScript::global() const
      * A JSScript always marks its compartment's global (via bindings) so we
      * can assert that maybeGlobal is non-null here.
      */
+    js::AutoThreadSafeAccess ts(this);
     return *compartment()->maybeGlobal();
 }
 
@@ -109,24 +110,30 @@ JSScript::principals()
 
 inline JSFunction *
 JSScript::originalFunction() const {
-    if (!isCallsiteClone)
+    if (!isCallsiteClone())
         return nullptr;
     return &enclosingScopeOrOriginalFunction_->as<JSFunction>();
 }
 
 inline void
-JSScript::setOriginalFunctionObject(JSObject *fun) {
-    JS_ASSERT(isCallsiteClone);
+JSScript::setIsCallsiteClone(JSObject *fun) {
+    JS_ASSERT(shouldCloneAtCallsite());
+    shouldCloneAtCallsite_ = false;
+    isCallsiteClone_ = true;
+    JS_ASSERT(isCallsiteClone());
     JS_ASSERT(fun->is<JSFunction>());
     enclosingScopeOrOriginalFunction_ = fun;
 }
 
 inline void
-JSScript::setBaselineScript(js::jit::BaselineScript *baselineScript) {
+JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript) {
 #ifdef JS_ION
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(tenuredZone(), baseline);
 #endif
+    mozilla::Maybe<js::AutoLockForCompilation> lock;
+    if (maybecx)
+        lock.construct(maybecx);
     baseline = baselineScript;
     updateBaselineOrIonRaw();
 }

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Util.h"
+#include "mozilla/ArrayUtils.h"
 
 #include "gfxWindowsPlatform.h"
 
@@ -33,6 +33,8 @@
 #include "mozilla/layers/CompositorParent.h"   // for CompositorParent::IsInCompositorThread
 #include "DeviceManagerD3D9.h"
 
+#include "WinUtils.h"
+
 #ifdef CAIRO_HAS_DWRITE_FONT
 #include "gfxDWriteFontList.h"
 #include "gfxDWriteFonts.h"
@@ -45,10 +47,6 @@
 #include "gfx2DGlue.h"
 
 #include <string>
-
-using namespace mozilla;
-using namespace mozilla::gfx;
-using namespace mozilla::layers;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 #include "gfxD2DSurface.h"
@@ -67,6 +65,9 @@ using namespace mozilla::layers;
 #include "d3dkmtQueryStatistics.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
+using namespace mozilla::layers;
+using namespace mozilla::widget;
 
 #ifdef CAIRO_HAS_D2D_SURFACE
 
@@ -209,7 +210,7 @@ typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
   ID3D11DeviceContext *ppImmediateContext
 );
 
-class GPUAdapterReporter : public MemoryMultiReporter
+class GPUAdapterReporter : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
     static bool GetDXGIAdapter(IDXGIAdapter **DXGIAdapter)
@@ -229,9 +230,7 @@ class GPUAdapterReporter : public MemoryMultiReporter
     }
 
 public:
-    GPUAdapterReporter()
-      : MemoryMultiReporter("gpu-adapter")
-    {}
+    NS_DECL_ISUPPORTS
 
     NS_IMETHOD
     CollectReports(nsIMemoryReporterCallback* aCb,
@@ -341,6 +340,8 @@ public:
     }
 };
 
+NS_IMPL_ISUPPORTS1(GPUAdapterReporter, nsIMemoryReporter)
+
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
@@ -363,8 +364,6 @@ gfxWindowsPlatform::gfxWindowsPlatform()
      */ 
     CoInitialize(nullptr); 
 
-    mScreenDC = GetDC(nullptr);
-
 #ifdef CAIRO_HAS_D2D_SURFACE
     RegisterStrongMemoryReporter(new GfxD2DSurfaceCacheReporter());
     RegisterStrongMemoryReporter(new GfxD2DSurfaceVramReporter());
@@ -384,7 +383,6 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
 {
     mDeviceManager = nullptr;
 
-    ::ReleaseDC(nullptr, mScreenDC);
     // not calling FT_Done_FreeType because cairo may still hold references to
     // these FT_Faces.  See bug 458169.
 #ifdef CAIRO_HAS_D2D_SURFACE
@@ -399,6 +397,12 @@ gfxWindowsPlatform::~gfxWindowsPlatform()
      * Uninitialize COM 
      */ 
     CoUninitialize();
+}
+
+double
+gfxWindowsPlatform::GetDPIScale()
+{
+  return WinUtils::LogToPhysFactor();
 }
 
 void
@@ -1118,7 +1122,7 @@ gfxWindowsPlatform::UseClearTypeAlways()
 }
 
 void 
-gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion)
+gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
 {
     DWORD versInfoSize, vers[4] = {0};
     // version info not available case
@@ -1479,6 +1483,26 @@ bool
 gfxWindowsPlatform::IsOptimus()
 {
   return GetModuleHandleA("nvumdshim.dll");
+}
+
+int
+gfxWindowsPlatform::GetScreenDepth() const
+{
+    // if the system doesn't have all displays with the same
+    // pixel format, just return 24 and move on with life.
+    if (!GetSystemMetrics(SM_SAMEDISPLAYFORMAT))
+        return 24;
+
+    HDC hdc = GetDC(nullptr);
+    if (!hdc)
+        return 24;
+
+    int depth = GetDeviceCaps(hdc, BITSPIXEL) *
+                GetDeviceCaps(hdc, PLANES);
+
+    ReleaseDC(nullptr, hdc);
+
+    return depth;
 }
 
 IDXGIAdapter1*

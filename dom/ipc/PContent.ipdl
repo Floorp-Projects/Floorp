@@ -79,6 +79,12 @@ struct DeviceStorageAvailableParams
   nsString storageName;
 };
 
+struct DeviceStorageFormatParams
+{
+  nsString type;
+  nsString storageName;
+};
+
 struct DeviceStorageAddParams
 {
   nsString type;
@@ -119,6 +125,7 @@ union DeviceStorageParams
   DeviceStorageFreeSpaceParams;
   DeviceStorageUsedSpaceParams;
   DeviceStorageAvailableParams;
+  DeviceStorageFormatParams;
 };
 
 struct FMRadioRequestEnableParams
@@ -302,7 +309,7 @@ child:
 
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
                      int32_t mountGeneration, bool isMediaPresent,
-                     bool isSharing);
+                     bool isSharing, bool isFormatting);
 
     // Ask the Nuwa process to create a new child process.
     NuwaFork();
@@ -318,6 +325,11 @@ child:
     async UnregisterSheet(URIParams uri, uint32_t type);
 
     NotifyPhoneStateChange(nsString newState);
+
+    /**
+     * Notify idle observers in the child
+     */
+    NotifyIdleObserver(uint64_t observerId, nsCString topic, nsString str);
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
@@ -483,6 +495,20 @@ parent:
     sync SpeakerManagerGetSpeakerStatus()
         returns (bool value);
 
+    /**
+     * Notifies the parent about a recording device is starting or shutdown.
+     * @param recordingStatus starting or shutdown
+     * @param pageURL URL that request that changing the recording status
+     * @param isAudio recording start with microphone
+     * @param isVideo recording start with camera
+     */
+    async RecordingDeviceEvents(nsString recordingStatus,
+                                nsString pageURL,
+                                bool isAudio,
+                                bool isVideo);
+
+    AddIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
+    RemoveIdleObserver(uint64_t observerId, uint32_t idleTimeInS);
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);

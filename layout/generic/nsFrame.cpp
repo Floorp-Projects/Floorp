@@ -85,9 +85,10 @@
 #include "mozilla/gfx/Tools.h"
 
 using namespace mozilla;
+using namespace mozilla::css;
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
-using namespace mozilla::css;
 
 // Struct containing cached metrics for box-wrapped frames.
 struct nsBoxLayoutMetrics
@@ -990,6 +991,16 @@ nsRect
 nsIFrame::GetPaddingRect() const
 {
   return GetPaddingRectRelativeToSelf() + GetPosition();
+}
+
+nsRect
+nsIFrame::GetMarginRectRelativeToSelf() const
+{
+  nsMargin m = GetUsedMargin();
+  ApplySkipSides(m);
+  nsRect r(0, 0, mRect.width, mRect.height);
+  r.Inflate(m);
+  return r;
 }
 
 bool
@@ -4881,7 +4892,13 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey,
     // Plugins can transition from not rendering anything to rendering,
     // and still only call this. So always invalidate, with specifying
     // the display item type just in case.
-    if (aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN) {
+    //
+    // In the bug 930056, dialer app startup but not shown on the
+    // screen because sometimes we don't have any retainned data
+    // for remote type displayitem and thus Repaint event is not
+    // triggered. So, always invalidate here as well.
+    if (aDisplayItemKey == nsDisplayItem::TYPE_PLUGIN ||
+        aDisplayItemKey == nsDisplayItem::TYPE_REMOTE) {
       InvalidateFrame();
     } else {
       InvalidateFrame(aDisplayItemKey);
@@ -5294,6 +5311,9 @@ nsIFrame::ListGeneric(FILE* out, int32_t aIndent, uint32_t aFlags) const
       nsAutoString atomString;
       pseudoTag->ToString(atomString);
       fprintf(out, "%s", NS_LossyConvertUTF16toASCII(atomString).get());
+    }
+    if (mParent && mStyleContext->GetParent() != mParent->StyleContext()) {
+      fprintf(out, ",parent=%p", mStyleContext->GetParent());
     }
   }
   fputs("]", out);
@@ -8103,6 +8123,27 @@ nsIFrame::IsPseudoStackingContextFromStyle() {
   return disp->mOpacity != 1.0f ||
          disp->IsPositioned(this) ||
          disp->IsFloating(this);
+}
+
+Element*
+nsIFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
+{
+  nsIFrame* frame = nullptr;
+
+  if (aType == nsCSSPseudoElements::ePseudo_before) {
+    frame = nsLayoutUtils::GetBeforeFrame(this);
+  } else if (aType == nsCSSPseudoElements::ePseudo_after) {
+    frame = nsLayoutUtils::GetAfterFrame(this);
+  }
+
+  if (frame) {
+    nsIContent* content = frame->GetContent();
+    if (content->IsElement()) {
+      return content->AsElement();
+    }
+  }
+  
+  return nullptr;
 }
 
 nsIFrame::ContentOffsets::ContentOffsets()

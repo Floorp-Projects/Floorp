@@ -18,6 +18,8 @@ let certList = [
   // Test for successful EV validation
   'int-ev-valid',
   'ev-valid',
+  'no-ocsp-url-cert', // a cert signed by the EV auth that has no OCSP url
+                      // but that contains a valid CRLDP.
 
   // Testing a root that looks like EV but is not EV enabled
   'int-non-ev-root',
@@ -34,10 +36,10 @@ var gOCSPResponseCounter = 0;
 
 function start_ocsp_responder() {
   const SERVER_PORT = 8888;
-
   gHttpServer = new HttpServer();
   gHttpServer.registerPrefixHandler("/",
       function handleServerCallback(aRequest, aResponse) {
+        do_check_neq(aRequest.host, "crl.example.com"); // No CRL checks
         let cert_nick = aRequest.path.slice(1, aRequest.path.length - 1);
         do_print("Generating ocsp response for '" + cert_nick + "'");
         aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
@@ -55,6 +57,7 @@ function start_ocsp_responder() {
         gOCSPResponseCounter++;
       });
   gHttpServer.identity.setPrimary("http", "www.example.com", SERVER_PORT);
+  gHttpServer.identity.add("http", "crl.example.com", SERVER_PORT);
   gHttpServer.start(SERVER_PORT);
 }
 
@@ -91,7 +94,9 @@ function run_test() {
   load_ca("non-evroot-ca");
 
   // setup and start ocsp responder
-  Services.prefs.setCharPref("network.dns.localDomains", 'www.example.com');
+  Services.prefs.setCharPref("network.dns.localDomains",
+                             'www.example.com, crl.example.com');
+
   start_ocsp_responder();
 
   run_next_test();
@@ -105,6 +110,11 @@ add_test(function() {
 
 add_test(function() {
   check_ee_for_ev("non-ev-root", false);
+  run_next_test();
+});
+
+add_test(function() {
+  check_ee_for_ev("no-ocsp-url-cert", false);
   run_next_test();
 });
 

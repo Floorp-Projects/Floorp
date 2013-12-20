@@ -22,6 +22,8 @@
 
 #include <dlfcn.h>
 
+#include "nsCocoaFeatures.h"
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 
@@ -60,9 +62,6 @@ DisableFontActivation()
 
 gfxPlatformMac::gfxPlatformMac()
 {
-    mOSXVersion = 0;
-    OSXVersion();
-
     DisableFontActivation();
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
@@ -333,16 +332,7 @@ gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
 int32_t 
 gfxPlatformMac::OSXVersion()
 {
-    if (!mOSXVersion) {
-        // minor version is not accurate, use gestaltSystemVersionMajor, gestaltSystemVersionMinor, gestaltSystemVersionBugFix for these
-        OSErr err = ::Gestalt(gestaltSystemVersion, reinterpret_cast<SInt32*>(&mOSXVersion));
-        if (err != noErr) {
-            //This should probably be changed when our minimum version changes
-            NS_ERROR("Couldn't determine OS X version, assuming 10.6");
-            mOSXVersion = MAC_OS_X_VERSION_10_6_HEX;
-        }
-    }
-    return mOSXVersion;
+    return nsCocoaFeatures::OSXVersion();
 }
 
 uint32_t

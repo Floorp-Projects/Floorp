@@ -19,9 +19,14 @@ class ContainerWriter {
 public:
   ContainerWriter()
     : mInitialized(false)
+    , mIsWritingComplete(false)
   {}
   virtual ~ContainerWriter() {}
-
+  // Mapping to DOMLocalMediaStream::TrackTypeHints
+  enum {
+    HAS_AUDIO = 1 << 0,
+    HAS_VIDEO = 1 << 1,
+  };
   enum {
     END_OF_STREAM = 1 << 0
   };
@@ -44,6 +49,11 @@ public:
    */
   virtual nsresult SetMetadata(TrackMetadataBase* aMetadata) = 0;
 
+  /**
+   * Indicate if the writer has finished to output data
+   */
+  virtual bool IsWritingComplete() { return mIsWritingComplete; }
+
   enum {
     FLUSH_NEEDED = 1 << 0,
     GET_HEADER = 1 << 1
@@ -59,9 +69,9 @@ public:
    */
   virtual nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                                     uint32_t aFlags = 0) = 0;
-
 protected:
   bool mInitialized;
+  bool mIsWritingComplete;
 };
 }
 #endif

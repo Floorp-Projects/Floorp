@@ -12,14 +12,16 @@ function SourcesView() {
   dumpn("SourcesView was instantiated");
 
   this.togglePrettyPrint = this.togglePrettyPrint.bind(this);
+  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
+  this.toggleBreakpoints = this.toggleBreakpoints.bind(this);
+
   this._onEditorLoad = this._onEditorLoad.bind(this);
   this._onEditorUnload = this._onEditorUnload.bind(this);
   this._onEditorCursorActivity = this._onEditorCursorActivity.bind(this);
   this._onSourceSelect = this._onSourceSelect.bind(this);
   this._onSourceClick = this._onSourceClick.bind(this);
-  this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
-  this.toggleBlackBoxing = this.toggleBlackBoxing.bind(this);
   this._onStopBlackBoxing = this._onStopBlackBoxing.bind(this);
+  this._onBreakpointRemoved = this._onBreakpointRemoved.bind(this);
   this._onBreakpointClick = this._onBreakpointClick.bind(this);
   this._onBreakpointCheckboxClick = this._onBreakpointCheckboxClick.bind(this);
   this._onConditionalPopupShowing = this._onConditionalPopupShowing.bind(this);
@@ -27,6 +29,7 @@ function SourcesView() {
   this._onConditionalPopupHiding = this._onConditionalPopupHiding.bind(this);
   this._onConditionalTextboxInput = this._onConditionalTextboxInput.bind(this);
   this._onConditionalTextboxKeyPress = this._onConditionalTextboxKeyPress.bind(this);
+
   this.updateToolbarButtonsState = this.updateToolbarButtonsState.bind(this);
 }
 
@@ -52,6 +55,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._blackBoxButton = document.getElementById("black-box");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
+    this._toggleBreakpointsButton = document.getElementById("toggle-breakpoints");
 
     if (Prefs.prettyPrintEnabled) {
       this._prettyPrintButton.removeAttribute("hidden");
@@ -221,6 +225,16 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Returns all breakpoints for all sources.
+   *
+   * @return array
+   *         The breakpoints for all sources if any, an empty array otherwise.
+   */
+  getAllBreakpoints: function(aStore = []) {
+    return this.getOtherBreakpoints(undefined, aStore);
+  },
+
+  /**
    * Returns all breakpoints which are not at the specified source url and line.
    *
    * @param object aLocation [optional]
@@ -273,6 +287,9 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let disableSelfId = prefix + "disableSelf-" + identifier + "-menuitem";
     document.getElementById(enableSelfId).setAttribute("hidden", "true");
     document.getElementById(disableSelfId).removeAttribute("hidden");
+
+    // Update the breakpoint toggle button checked state.
+    this._toggleBreakpointsButton.removeAttribute("checked");
 
     // Update the checkbox state if necessary.
     if (!aOptions.silent) {
@@ -375,6 +392,29 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Update the checked/unchecked and enabled/disabled states of the buttons in
+   * the sources toolbar based on the currently selected source's state.
+   */
+  updateToolbarButtonsState: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+
+    if (sourceClient.isBlackBoxed) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
+    }
+
+    if (sourceClient.isPrettyPrinted) {
+      this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
+    }
+  },
+
+  /**
    * Toggle the pretty printing of the selected source.
    */
   togglePrettyPrint: function() {
@@ -395,17 +435,63 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 
     DebuggerView.showProgressBar();
     const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldPrettyPrint = !sourceClient.isPrettyPrinted;
 
-    if (gThreadClient.source(source).isPrettyPrinted) {
-      this._prettyPrintButton.removeAttribute("checked");
-    } else {
+    if (shouldPrettyPrint) {
       this._prettyPrintButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("checked");
     }
 
     DebuggerController.SourceScripts.togglePrettyPrint(source)
       .then(resetEditor, printError)
       .then(DebuggerView.showEditor)
       .then(this.updateToolbarButtonsState);
+  },
+
+  /**
+   * Toggle the black boxed state of the selected source.
+   */
+  toggleBlackBoxing: function() {
+    const { source } = this.selectedItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+    const shouldBlackBox = !sourceClient.isBlackBoxed;
+
+    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
+    // the pretty print button and check/uncheck the black box button
+    // immediately. Then, once we actually get the results from the server, make
+    // sure that it is in the correct state again by calling
+    // `updateToolbarButtonsState`.
+
+    if (shouldBlackBox) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+      this._blackBoxButton.setAttribute("checked", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+      this._blackBoxButton.removeAttribute("checked");
+    }
+
+    DebuggerController.SourceScripts.setBlackBoxing(source, shouldBlackBox)
+      .then(this.updateToolbarButtonsState,
+            this.updateToolbarButtonsState);
+  },
+
+  /**
+   * Toggles all breakpoints enabled/disabled.
+   */
+  toggleBreakpoints: function() {
+    let breakpoints = this.getAllBreakpoints();
+    let hasBreakpoints = breakpoints.length > 0;
+    let hasEnabledBreakpoints = breakpoints.some(e => !e.attachment.disabled);
+
+    if (hasBreakpoints && hasEnabledBreakpoints) {
+      this._toggleBreakpointsButton.setAttribute("checked", true);
+      this._onDisableAll();
+    } else {
+      this._toggleBreakpointsButton.removeAttribute("checked");
+      this._onEnableAll();
+    }
   },
 
   /**
@@ -686,35 +772,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     // The container is not empty and an actual item was selected.
     DebuggerView.setEditorLocation(sourceItem.value);
 
-    // Set window title.
-    let script = sourceItem.value.split(" -> ").pop();
-    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
+    // Set window title. No need to split the url by " -> " here, because it was
+    // already sanitized when the source was added.
+    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", sourceItem.value);
 
     DebuggerView.maybeShowBlackBoxMessage();
     this.updateToolbarButtonsState();
-  },
-
-  /**
-   * Update the checked/unchecked and enabled/disabled states of the buttons in
-   * the sources toolbar based on the currently selected source's state.
-   */
-  updateToolbarButtonsState: function() {
-    const { source } = this.selectedItem.attachment;
-    const sourceClient = gThreadClient.source(source);
-
-    if (sourceClient.isBlackBoxed) {
-      this._prettyPrintButton.setAttribute("disabled", true);
-      this._blackBoxButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("disabled");
-      this._blackBoxButton.removeAttribute("checked");
-    }
-
-    if (sourceClient.isPrettyPrinted) {
-      this._prettyPrintButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("checked");
-    }
   },
 
   /**
@@ -726,38 +789,12 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
-   * Toggle the black boxed state of the selected source.
-   */
-  toggleBlackBoxing: function() {
-    const { source } = this.selectedItem.attachment;
-    const sourceClient = gThreadClient.source(source);
-    const shouldBlackBox = !sourceClient.isBlackBoxed;
-
-    // Be optimistic that the (un-)black boxing will succeed, so enable/disable
-    // the pretty print button and check/uncheck the black box button
-    // immediately. Then, once we actually get the results from the server, make
-    // sure that it is in the correct state again by calling
-    // `updateToolbarButtonsState`.
-
-    if (shouldBlackBox) {
-      this._prettyPrintButton.setAttribute("disabled", true);
-      this._blackBoxButton.setAttribute("checked", true);
-    } else {
-      this._prettyPrintButton.removeAttribute("disabled");
-      this._blackBoxButton.removeAttribute("checked");
-    }
-
-    DebuggerController.SourceScripts.blackBox(source, shouldBlackBox)
-      .then(this.updateToolbarButtonsState,
-            this.updateToolbarButtonsState);
-  },
-
-  /**
    * The click listener for the "stop black boxing" button.
    */
   _onStopBlackBoxing: function() {
-    let sourceForm = this.selectedItem.attachment.source;
-    DebuggerController.SourceScripts.blackBox(sourceForm, false)
+    const { source } = this.selectedItem.attachment;
+
+    DebuggerController.SourceScripts.setBlackBoxing(source, false)
       .then(this.updateToolbarButtonsState,
             this.updateToolbarButtonsState);
   },
@@ -1020,6 +1057,376 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
 });
 
 /**
+ * Functions handling the traces UI.
+ */
+function TracerView() {
+  this._selectedItem = null;
+  this._matchingItems = null;
+  this.widget = null;
+
+  this._highlightItem = this._highlightItem.bind(this);
+  this._isNotSelectedItem = this._isNotSelectedItem.bind(this);
+
+  this._unhighlightMatchingItems =
+    DevToolsUtils.makeInfallible(this._unhighlightMatchingItems.bind(this));
+  this._onToggleTracing =
+    DevToolsUtils.makeInfallible(this._onToggleTracing.bind(this));
+  this._onStartTracing =
+    DevToolsUtils.makeInfallible(this._onStartTracing.bind(this));
+  this._onClear = DevToolsUtils.makeInfallible(this._onClear.bind(this));
+  this._onSelect = DevToolsUtils.makeInfallible(this._onSelect.bind(this));
+  this._onMouseOver =
+    DevToolsUtils.makeInfallible(this._onMouseOver.bind(this));
+  this._onSearch = DevToolsUtils.makeInfallible(this._onSearch.bind(this));
+}
+
+TracerView.MAX_TRACES = 200;
+
+TracerView.prototype = Heritage.extend(WidgetMethods, {
+  /**
+   * Initialization function, called when the debugger is started.
+   */
+  initialize: function() {
+    dumpn("Initializing the TracerView");
+
+    this._traceButton = document.getElementById("trace");
+    this._tracerTab = document.getElementById("tracer-tab");
+
+    // Remove tracer related elements from the dom and tear everything down if
+    // the tracer isn't enabled.
+    if (!Prefs.tracerEnabled) {
+      this._traceButton.remove();
+      this._traceButton = null;
+      this._tracerTab.remove();
+      this._tracerTab = null;
+      document.getElementById("tracer-tabpanel").remove();
+      this.widget = null;
+      return;
+    }
+
+    this.widget = new FastListWidget(document.getElementById("tracer-traces"));
+
+    this._traceButton.removeAttribute("hidden");
+    this._tracerTab.removeAttribute("hidden");
+
+    this._tracerDeck = document.getElementById("tracer-deck");
+    this._search = document.getElementById("tracer-search");
+
+    this._template = document.getElementsByClassName("trace-item-template")[0];
+    this._templateItem = this._template.getElementsByClassName("trace-item")[0];
+    this._templateTypeIcon = this._template.getElementsByClassName("trace-type")[0];
+    this._templateNameNode = this._template.getElementsByClassName("trace-name")[0];
+
+    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("mouseover", this._onMouseOver, false);
+    this.widget.addEventListener("mouseout", this._unhighlightMatchingItems, false);
+
+    this._search.addEventListener("input", this._onSearch, false);
+
+    this._startTooltip = L10N.getStr("startTracingTooltip");
+    this._stopTooltip = L10N.getStr("stopTracingTooltip");
+    this._traceButton.setAttribute("tooltiptext", this._startTooltip);
+  },
+
+  /**
+   * Destruction function, called when the debugger is closed.
+   */
+  destroy: function() {
+    dumpn("Destroying the TracerView");
+
+    if (!this.widget) {
+      return;
+    }
+
+    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("mouseover", this._onMouseOver, false);
+    this.widget.removeEventListener("mouseout", this._unhighlightMatchingItems, false);
+    this._search.removeEventListener("input", this._onSearch, false);
+  },
+
+  /**
+   * Function invoked by the "toggleTracing" command to switch the tracer state.
+   */
+  _onToggleTracing: function() {
+    if (DebuggerController.Tracer.tracing) {
+      this._onStopTracing();
+    } else {
+      this._onStartTracing();
+    }
+  },
+
+  /**
+   * Function invoked either by the "startTracing" command or by
+   * _onToggleTracing to start execution tracing in the backend.
+   */
+  _onStartTracing: function() {
+    this._tracerDeck.selectedIndex = 0;
+    this._traceButton.setAttribute("checked", true);
+    this._traceButton.setAttribute("tooltiptext", this._stopTooltip);
+    this.empty();
+    DebuggerController.Tracer.startTracing();
+  },
+
+  /**
+   * Function invoked by _onToggleTracing to stop execution tracing in the
+   * backend.
+   */
+  _onStopTracing: function() {
+    this._traceButton.removeAttribute("checked");
+    this._traceButton.setAttribute("tooltiptext", this._startTooltip);
+    DebuggerController.Tracer.stopTracing();
+  },
+
+  /**
+   * Function invoked by the "clearTraces" command to empty the traces pane.
+   */
+  _onClear: function() {
+    this.empty();
+  },
+
+  /**
+   * Populate the given parent scope with the variable with the provided name
+   * and value.
+   *
+   * @param String aName
+   *        The name of the variable.
+   * @param Object aParent
+   *        The parent scope.
+   * @param Object aValue
+   *        The value of the variable.
+   */
+  _populateVariable: function(aName, aParent, aValue) {
+    let item = aParent.addItem(aName, { value: aValue });
+    if (aValue) {
+      DebuggerView.Variables.controller.populate(
+        item, new DebuggerController.Tracer.WrappedObject(aValue));
+      item.expand();
+      item.twisty = false;
+    }
+  },
+
+  /**
+   * Handler for the widget's "select" event. Displays parameters, exception, or
+   * return value depending on whether the selected trace is a call, throw, or
+   * return respectively.
+   *
+   * @param Object traceItem
+   *        The selected trace item.
+   */
+  _onSelect: function _onSelect({ detail: traceItem }) {
+    if (!traceItem) {
+      return;
+    }
+
+    const data = traceItem.attachment.trace;
+    const { location: { url, line } } = data;
+    DebuggerView.setEditorLocation(url, line, { noDebug: true });
+
+    DebuggerView.Variables.empty();
+    const scope = DebuggerView.Variables.addScope();
+
+    if (data.type == "call") {
+      const params = DevToolsUtils.zip(data.parameterNames, data.arguments);
+      for (let [name, val] of params) {
+        if (val === undefined) {
+          scope.addItem(name, { value: "<value not available>" });
+        } else {
+          this._populateVariable(name, scope, val);
+        }
+      }
+    } else {
+      const varName = "<" +
+        (data.type == "throw" ? "exception" : data.type) +
+        ">";
+      this._populateVariable(varName, scope, data.returnVal);
+    }
+
+    scope.expand();
+    DebuggerView.showInstrumentsPane();
+  },
+
+  /**
+   * Add the hover frame enter/exit highlighting to a given item.
+   */
+  _highlightItem: function(aItem) {
+    aItem.target.querySelector(".trace-item")
+      .classList.add("selected-matching");
+  },
+
+  /**
+   * Remove the hover frame enter/exit highlighting to a given item.
+   */
+  _unhighlightItem: function(aItem) {
+    if (!aItem || !aItem.target) {
+      return;
+    }
+    const match = aItem.target.querySelector(".selected-matching");
+    if (match) {
+      match.classList.remove("selected-matching");
+    }
+  },
+
+  /**
+   * Remove the frame enter/exit pair highlighting we do when hovering.
+   */
+  _unhighlightMatchingItems: function() {
+    if (this._matchingItems) {
+      this._matchingItems.forEach(this._unhighlightItem);
+      this._matchingItems = null;
+    }
+  },
+
+  /**
+   * Returns true if the given item is not the selected item.
+   */
+  _isNotSelectedItem: function(aItem) {
+    return aItem !== this.selectedItem;
+  },
+
+  /**
+   * Highlight the frame enter/exit pair of items for the given item.
+   */
+  _highlightMatchingItems: function(aItem) {
+    this._unhighlightMatchingItems();
+    this._matchingItems = this.items.filter(t => t.value == aItem.value);
+    this._matchingItems
+      .filter(this._isNotSelectedItem)
+      .forEach(this._highlightItem);
+  },
+
+  /**
+   * Listener for the mouseover event.
+   */
+  _onMouseOver: function({ target }) {
+    const traceItem = this.getItemForElement(target);
+    if (traceItem) {
+      this._highlightMatchingItems(traceItem);
+    }
+  },
+
+  /**
+   * Listener for typing in the search box.
+   */
+  _onSearch: function() {
+    const query = this._search.value.trim().toLowerCase();
+    this.filterContents(item =>
+      item.attachment.trace.name.toLowerCase().contains(query));
+  },
+
+  /**
+   * Select the traces tab in the sidebar.
+   */
+  selectTab: function() {
+    const tabs = this._tracerTab.parentElement;
+    tabs.selectedIndex = Array.indexOf(tabs.children, this._tracerTab);
+    this._tracerDeck.selectedIndex = 0;
+  },
+
+  /**
+   * Commit all staged items to the widget. Overridden so that we can call
+   * |FastListWidget.prototype.flush|.
+   */
+  commit: function() {
+    WidgetMethods.commit.call(this);
+    // TODO: Accessing non-standard widget properties. Figure out what's the
+    // best way to expose such things. Bug 895514.
+    this.widget.flush();
+  },
+
+  /**
+   * Adds the trace record provided as an argument to the view.
+   *
+   * @param object aTrace
+   *        The trace record coming from the tracer actor.
+   */
+  addTrace: function(aTrace) {
+    const { type, frameId } = aTrace;
+
+    // Create the element node for the trace item.
+    let view = this._createView(aTrace);
+
+    // Append a source item to this container.
+    this.push([view, aTrace.frameId, ""], {
+      staged: true,
+      attachment: {
+        trace: aTrace
+      }
+    });
+  },
+
+  /**
+   * Customization function for creating an item's UI.
+   *
+   * @return nsIDOMNode
+   *         The network request view.
+   */
+  _createView: function({ type, name, frameId, parameterNames, returnVal,
+                          location, depth, arguments: args }) {
+    let fragment = document.createDocumentFragment();
+
+    this._templateItem.setAttribute("tooltiptext", SourceUtils.trimUrl(location.url));
+    this._templateItem.style.MozPaddingStart = depth + "em";
+
+    const TYPES = ["call", "yield", "return", "throw"];
+    for (let t of TYPES) {
+      this._templateTypeIcon.classList.toggle("trace-" + t, t == type);
+    }
+    this._templateTypeIcon.setAttribute("value", {
+      call: "\u2192",
+      yield: "Y",
+      return: "\u2190",
+      throw: "E",
+      terminated: "TERMINATED"
+    }[type]);
+
+    this._templateNameNode.setAttribute("value", name);
+
+    // All extra syntax and parameter nodes added.
+    const addedNodes = [];
+
+    if (parameterNames) {
+      const syntax = (p) => {
+        const el = document.createElement("label");
+        el.setAttribute("value", p);
+        el.classList.add("trace-syntax");
+        el.classList.add("plain");
+        addedNodes.push(el);
+        return el;
+      };
+
+      this._templateItem.appendChild(syntax("("));
+
+      for (let i = 0, n = parameterNames.length; i < n; i++) {
+        let param = document.createElement("label");
+        param.setAttribute("value", parameterNames[i]);
+        param.classList.add("trace-param");
+        param.classList.add("plain");
+        addedNodes.push(param);
+        this._templateItem.appendChild(param);
+
+        if (i + 1 !== n) {
+          this._templateItem.appendChild(syntax(", "));
+        }
+      }
+
+      this._templateItem.appendChild(syntax(")"));
+    }
+
+    // Flatten the DOM by removing one redundant box (the template container).
+    for (let node of this._template.childNodes) {
+      fragment.appendChild(node.cloneNode(true));
+    }
+
+    // Remove any added nodes from the template.
+    for (let node of addedNodes) {
+      this._templateItem.removeChild(node);
+    }
+
+    return fragment;
+  }
+});
+
+/**
  * Utility functions for handling sources.
  */
 let SourceUtils = {
@@ -1085,38 +1492,14 @@ let SourceUtils = {
 
     try {
       // Use an nsIURL to parse all the url path parts.
-      var uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+      let url = aUrl.split(" -> ").pop();
+      var uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
     } catch (e) {
       // This doesn't look like a url, or nsIURL can't handle it.
       return "";
     }
 
-    let { scheme, directory, fileName } = uri;
-    let hostPort;
-    // Add-on SDK jar: URLs will cause accessing hostPort to throw.
-    if (scheme != "jar") {
-      hostPort = uri.hostPort;
-    }
-    let lastDir = directory.split("/").reverse()[1];
-    let group = [];
-
-    // Only show interesting schemes, http is implicit.
-    if (scheme != "http") {
-      group.push(scheme);
-    }
-    // Hostnames don't always exist for files or some resource urls.
-    // e.g. file://foo/bar.js or resource:///foo/bar.js don't have a host.
-    if (hostPort) {
-      // If the hostname is a dot-separated identifier, show the first 2 parts.
-      group.push(hostPort.split(".").slice(0, 2).join("."));
-    }
-    // Append the last directory if the path leads to an actual file.
-    // e.g. http://foo.org/bar/ should only show "foo.org", not "foo.org bar"
-    if (fileName) {
-      group.push(lastDir);
-    }
-
-    let groupLabel = group.join(" ");
+    let groupLabel = uri.prePath;
     let unicodeLabel = NetworkHelper.convertToUnicode(unescape(groupLabel));
     this._groupsCache.set(aUrl, unicodeLabel)
     return unicodeLabel;
@@ -1263,6 +1646,263 @@ let SourceUtils = {
     // Give up.
     return aUrl.spec;
   }
+};
+
+/**
+ * Functions handling the variables bubble UI.
+ */
+function VariableBubbleView() {
+  dumpn("VariableBubbleView was instantiated");
+
+  this._onMouseMove = this._onMouseMove.bind(this);
+  this._onMouseLeave = this._onMouseLeave.bind(this);
+  this._onMouseScroll = this._onMouseScroll.bind(this);
+  this._onPopupHiding = this._onPopupHiding.bind(this);
+}
+
+VariableBubbleView.prototype = {
+  /**
+   * Initialization function, called when the debugger is started.
+   */
+  initialize: function() {
+    dumpn("Initializing the VariableBubbleView");
+
+    this._tooltip = new Tooltip(document);
+    this._editorContainer = document.getElementById("editor");
+
+    this._tooltip.defaultPosition = EDITOR_VARIABLE_POPUP_POSITION;
+    this._tooltip.defaultShowDelay = EDITOR_VARIABLE_HOVER_DELAY;
+
+    this._tooltip.panel.addEventListener("popuphiding", this._onPopupHiding);
+    this._editorContainer.addEventListener("mousemove", this._onMouseMove, false);
+    this._editorContainer.addEventListener("mouseleave", this._onMouseLeave, false);
+    this._editorContainer.addEventListener("scroll", this._onMouseScroll, true);
+  },
+
+  /**
+   * Destruction function, called when the debugger is closed.
+   */
+  destroy: function() {
+    dumpn("Destroying the VariableBubbleView");
+
+    this._tooltip.panel.removeEventListener("popuphiding", this._onPopupHiding);
+    this._editorContainer.removeEventListener("mousemove", this._onMouseMove, false);
+    this._editorContainer.removeEventListener("mouseleave", this._onMouseLeave, false);
+    this._editorContainer.removeEventListener("scroll", this._onMouseScroll, true);
+  },
+
+  /**
+   * Searches for an identifier underneath the specified position in the
+   * source editor, and if found, opens a VariablesView inspection popup.
+   *
+   * @param number x, y
+   *        The left/top coordinates where to look for an identifier.
+   */
+  _findIdentifier: function(x, y) {
+    let editor = DebuggerView.editor;
+
+    // Calculate the editor's line and column at the current x and y coords.
+    let hoveredPos = editor.getPositionFromCoords({ left: x, top: y });
+    let hoveredOffset = editor.getOffset(hoveredPos);
+    let hoveredLine = hoveredPos.line;
+    let hoveredColumn = hoveredPos.ch;
+
+    // A source contains multiple scripts. Find the start index of the script
+    // containing the specified offset relative to its parent source.
+    let contents = editor.getText();
+    let location = DebuggerView.Sources.selectedValue;
+    let parsedSource = DebuggerController.Parser.get(contents, location);
+    let scriptInfo = parsedSource.getScriptInfo(hoveredOffset);
+
+    // If the script length is negative, we're not hovering JS source code.
+    if (scriptInfo.length == -1) {
+      return;
+    }
+
+    // Using the script offset, determine the actual line and column inside the
+    // script, to use when finding identifiers.
+    let scriptStart = editor.getPosition(scriptInfo.start);
+    let scriptLineOffset = scriptStart.line;
+    let scriptColumnOffset = (hoveredLine == scriptStart.line ? scriptStart.ch : 0);
+
+    let scriptLine = hoveredLine - scriptLineOffset;
+    let scriptColumn = hoveredColumn - scriptColumnOffset;
+    let identifierInfo = parsedSource.getIdentifierAt({
+      line: scriptLine + 1,
+      column: scriptColumn,
+      scriptIndex: scriptInfo.index
+    });
+
+    // If the info is null, we're not hovering any identifier.
+    if (!identifierInfo) {
+      return;
+    }
+
+    // Transform the line and column relative to the parsed script back
+    // to the context of the parent source.
+    let { start: identifierStart, end: identifierEnd } = identifierInfo.location;
+    let identifierCoords = {
+      line: identifierStart.line + scriptLineOffset,
+      column: identifierStart.column + scriptColumnOffset,
+      length: identifierEnd.column - identifierStart.column
+    };
+
+    // Evaluate the identifier in the current stack frame and show the
+    // results in a VariablesView inspection popup.
+    DebuggerController.StackFrames.evaluate(identifierInfo.evalString)
+      .then(frameFinished => {
+        if ("return" in frameFinished) {
+          this.showContents({
+            coords: identifierCoords,
+            evalPrefix: identifierInfo.evalString,
+            objectActor: frameFinished.return
+          });
+        } else {
+          let msg = "Evaluation has thrown for: " + identifierInfo.evalString;
+          console.warn(msg);
+          dumpn(msg);
+        }
+      })
+      .then(null, err => {
+        let msg = "Couldn't evaluate: " + err.message;
+        console.error(msg);
+        dumpn(msg);
+      });
+  },
+
+  /**
+   * Shows an inspection popup for a specified object actor grip.
+   *
+   * @param string object
+   *        An object containing the following properties:
+   *          - coords: the inspected identifier coordinates in the editor,
+   *                    containing the { line, column, length } properties.
+   *          - evalPrefix: a prefix for the variables view evaluation macros.
+   *          - objectActor: the value grip for the object actor.
+   */
+  showContents: function({ coords, evalPrefix, objectActor }) {
+    let editor = DebuggerView.editor;
+    let { line, column, length } = coords;
+
+    // Highlight the function found at the mouse position.
+    this._markedText = editor.markText(
+      { line: line - 1, ch: column },
+      { line: line - 1, ch: column + length });
+
+    // If the grip represents a primitive value, use a more lightweight
+    // machinery to display it.
+    if (VariablesView.isPrimitive({ value: objectActor })) {
+      let className = VariablesView.getClass(objectActor);
+      let textContent = VariablesView.getString(objectActor);
+      this._tooltip.setTextContent([textContent], className, "plain");
+    } else {
+      this._tooltip.setVariableContent(objectActor, {
+        searchPlaceholder: L10N.getStr("emptyPropertiesFilterText"),
+        searchEnabled: Prefs.variablesSearchboxVisible,
+        eval: aString => {
+          DebuggerController.StackFrames.evaluate(aString);
+          DebuggerView.VariableBubble.hideContents();
+        }
+      }, {
+        getEnvironmentClient: aObject => gThreadClient.environment(aObject),
+        getObjectClient: aObject => gThreadClient.pauseGrip(aObject),
+        simpleValueEvalMacro: this._getSimpleValueEvalMacro(evalPrefix),
+        getterOrSetterEvalMacro: this._getGetterOrSetterEvalMacro(evalPrefix),
+        overrideValueEvalMacro: this._getOverrideValueEvalMacro(evalPrefix)
+      }, {
+        fetched: (aEvent, aType) => {
+          if (aType == "properties") {
+            window.emit(EVENTS.FETCHED_BUBBLE_PROPERTIES);
+          }
+        }
+      });
+    }
+
+    // Calculate the x, y coordinates for the variable bubble anchor.
+    let identifierCenter = { line: line - 1, ch: column + length / 2 };
+    let anchor = editor.getCoordsFromPosition(identifierCenter);
+
+    this._tooltip.defaultOffsetX = anchor.left + EDITOR_VARIABLE_POPUP_OFFSET_X;
+    this._tooltip.defaultOffsetY = anchor.top + EDITOR_VARIABLE_POPUP_OFFSET_Y;
+    this._tooltip.show(this._editorContainer);
+  },
+
+  /**
+   * Hides the inspection popup.
+   */
+  hideContents: function() {
+    clearNamedTimeout("editor-mouse-move");
+    this._tooltip.hide();
+  },
+
+  /**
+   * Functions for getting customized variables view evaluation macros.
+   *
+   * @param string aPrefix
+   *        See the corresponding VariablesView.* functions.
+   */
+  _getSimpleValueEvalMacro: function(aPrefix) {
+    return (item, string) =>
+      VariablesView.simpleValueEvalMacro(item, string, aPrefix);
+  },
+  _getGetterOrSetterEvalMacro: function(aPrefix) {
+    return (item, string) =>
+      VariablesView.getterOrSetterEvalMacro(item, string, aPrefix);
+  },
+  _getOverrideValueEvalMacro: function(aPrefix) {
+    return (item, string) =>
+      VariablesView.overrideValueEvalMacro(item, string, aPrefix);
+  },
+
+  /**
+   * The mousemove listener for the source editor.
+   */
+  _onMouseMove: function({ clientX: x, clientY: y }) {
+    // Prevent the variable inspection popup from showing when the thread client
+    // is not paused, or while a popup is already visible.
+    if (gThreadClient && gThreadClient.state != "paused" || !this._tooltip.isHidden()) {
+      clearNamedTimeout("editor-mouse-move");
+      return;
+    }
+    // Allow events to settle down first. If the mouse hovers over
+    // a certain point in the editor long enough, try showing a variable bubble.
+    setNamedTimeout("editor-mouse-move",
+      EDITOR_VARIABLE_HOVER_DELAY, () => this._findIdentifier(x, y));
+  },
+
+  /**
+   * The mouseleave listener for the source editor container node.
+   */
+  _onMouseLeave: function() {
+    clearNamedTimeout("editor-mouse-move");
+  },
+
+  /**
+   * The mousescroll listener for the source editor container node.
+   */
+  _onMouseScroll: function() {
+    this.hideContents();
+  },
+
+  /**
+   * Listener handling the popup hiding event.
+   */
+  _onPopupHiding: function({ target }) {
+    if (this._tooltip.panel != target) {
+      return;
+    }
+    if (this._markedText) {
+      this._markedText.clear();
+      this._markedText = null;
+    }
+    if (!this._tooltip.isEmpty()) {
+      this._tooltip.empty();
+    }
+  },
+
+  _editorContainer: null,
+  _markedText: null,
+  _tooltip: null
 };
 
 /**
@@ -2518,6 +3158,8 @@ LineResults.size = function() {
  * Preliminary setup for the DebuggerView object.
  */
 DebuggerView.Sources = new SourcesView();
+DebuggerView.VariableBubble = new VariableBubbleView();
+DebuggerView.Tracer = new TracerView();
 DebuggerView.WatchExpressions = new WatchExpressionsView();
 DebuggerView.EventListeners = new EventListenersView();
 DebuggerView.GlobalSearch = new GlobalSearchView();

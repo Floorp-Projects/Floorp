@@ -5,9 +5,9 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONException;
@@ -45,13 +45,12 @@ public class Tab {
     private int mFaviconSize;
     private boolean mHasFeeds;
     private boolean mHasOpenSearch;
-    private JSONObject mIdentityData;
+    private SiteIdentity mSiteIdentity;
     private boolean mReaderEnabled;
     private BitmapDrawable mThumbnail;
     private int mHistoryIndex;
     private int mHistorySize;
     private int mParentId;
-    private HomePager.Page mAboutHomePage;
     private boolean mExternal;
     private boolean mBookmark;
     private boolean mReadingListItem;
@@ -94,14 +93,13 @@ public class Tab {
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
-        mAboutHomePage = HomePager.Page.TOP_SITES;
         mTitle = title == null ? "" : title;
         mFavicon = null;
         mFaviconUrl = null;
         mFaviconSize = 0;
         mHasFeeds = false;
         mHasOpenSearch = false;
-        mIdentityData = null;
+        mSiteIdentity = new SiteIdentity();
         mReaderEnabled = false;
         mEnteringReaderMode = false;
         mThumbnail = null;
@@ -145,15 +143,6 @@ public class Tab {
     public int getParentId() {
         return mParentId;
     }
-
-    public HomePager.Page getAboutHomePage() {
-        return mAboutHomePage;
-    }
-
-    private void setAboutHomePage(HomePager.Page page) {
-        mAboutHomePage = page;
-    }
-
 
     // may be null if user-entered query hasn't yet been resolved to a URI
     public synchronized String getURL() {
@@ -246,17 +235,12 @@ public class Tab {
         return mHasOpenSearch;
     }
 
-    public String getSecurityMode() {
-        try {
-            return mIdentityData.getString("mode");
-        } catch (Exception e) {
-            // If mIdentityData is null, or we get a JSONException
-            return SiteIdentityPopup.UNKNOWN;
-        }
+    public SecurityMode getSecurityMode() {
+        return mSiteIdentity.getSecurityMode();
     }
 
-    public JSONObject getIdentityData() {
-        return mIdentityData;
+    public SiteIdentity getSiteIdentity() {
+        return mSiteIdentity;
     }
 
     public boolean getReaderEnabled() {
@@ -415,7 +399,7 @@ public class Tab {
     }
 
     public void updateIdentityData(JSONObject identityData) {
-        mIdentityData = identityData;
+        mSiteIdentity.update(identityData);
     }
 
     public void setReaderEnabled(boolean readerEnabled) {
@@ -661,11 +645,6 @@ public class Tab {
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
         setErrorType(ErrorType.NONE);
 
-        final String homePage = message.getString("aboutHomePage");
-        if (!TextUtils.isEmpty(homePage)) {
-            setAboutHomePage(HomePager.Page.valueOf(homePage));
-        }
-
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
 
@@ -675,7 +654,7 @@ public class Tab {
     }
 
     void handleDocumentStart(boolean showProgress, String url) {
-        setState(shouldShowProgress(url) ? STATE_SUCCESS : STATE_LOADING);
+        setState(showProgress ? STATE_LOADING : STATE_SUCCESS);
         updateIdentityData(null);
         setReaderEnabled(false);
     }

@@ -137,12 +137,8 @@ nsReturnRef<HRTFKernel> HRTFElevation::calculateKernelForAzimuthElevation(int az
             // Feed in zeros get the data remaining in the resampler.
             spx_uint32_t out_index = out_len;
             in_len = speex_resampler_get_input_latency(resampler);
-            nsAutoTArray<AudioDataValue, 256> zeros;
-            zeros.SetLength(in_len);
-            PodZero(zeros.Elements(), in_len);
             out_len = resampled.Length() - out_index;
-            RESAMPLER_PROCESS(resampler, 0,
-                              zeros.Elements(), &in_len,
+            RESAMPLER_PROCESS(resampler, 0, nullptr, &in_len,
                               resampled.Elements() + out_index, &out_len);
             out_index += out_len;
             // There may be some uninitialized samples remaining for very low

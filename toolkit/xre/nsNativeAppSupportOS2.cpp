@@ -1372,7 +1372,7 @@ void nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index, nsCString& aString
 
 void nsNativeAppSupportOS2::ActivateLastWindow() {
     nsCOMPtr<nsIDOMWindow> navWin;
-    GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
+    GetMostRecentWindow( MOZ_UTF16("navigator:browser"), getter_AddRefs( navWin ) );
     if ( navWin )
         // Activate that window.
         activateWindow( navWin );

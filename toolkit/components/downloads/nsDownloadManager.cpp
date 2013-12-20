@@ -1370,7 +1370,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsIFile **aResult)
   // XDG user dir spec, with a fallback to Home/Downloads
 
   nsXPIDLString folderName;
-  mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsFolder").get(),
+  mBundle->GetStringFromName(MOZ_UTF16("downloadsFolder"),
                              getter_Copies(folderName));
 
 #if defined (XP_MACOSX)
@@ -2438,26 +2438,26 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 #ifndef XP_MACOSX
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMultiple").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsg").get(),
-                           NS_LITERAL_STRING("dontQuitButtonWin").get());
+                           MOZ_UTF16("quitCancelDownloadsAlertTitle"),
+                           MOZ_UTF16("quitCancelDownloadsAlertMsgMultiple"),
+                           MOZ_UTF16("quitCancelDownloadsAlertMsg"),
+                           MOZ_UTF16("dontQuitButtonWin"));
 #else
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertTitle").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMacMultiple").get(),
-                           NS_LITERAL_STRING("quitCancelDownloadsAlertMsgMac").get(),
-                           NS_LITERAL_STRING("dontQuitButtonMac").get());
+                           MOZ_UTF16("quitCancelDownloadsAlertTitle"),
+                           MOZ_UTF16("quitCancelDownloadsAlertMsgMacMultiple"),
+                           MOZ_UTF16("quitCancelDownloadsAlertMsgMac"),
+                           MOZ_UTF16("dontQuitButtonMac"));
 #endif
   } else if (strcmp(aTopic, "offline-requested") == 0 && currDownloadCount) {
     nsCOMPtr<nsISupportsPRBool> cancelDownloads =
       do_QueryInterface(aSubject, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
-                           NS_LITERAL_STRING("offlineCancelDownloadsAlertTitle").get(),
-                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsgMultiple").get(),
-                           NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get(),
-                           NS_LITERAL_STRING("dontGoOfflineButton").get());
+                           MOZ_UTF16("offlineCancelDownloadsAlertTitle"),
+                           MOZ_UTF16("offlineCancelDownloadsAlertMsgMultiple"),
+                           MOZ_UTF16("offlineCancelDownloadsAlertMsg"),
+                           MOZ_UTF16("dontGoOfflineButton"));
   }
   else if (strcmp(aTopic, NS_IOSERVICE_GOING_OFFLINE_TOPIC) == 0) {
     // Pause all downloads, and mark them to auto-resume.
@@ -2473,7 +2473,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
       do_GetService("@mozilla.org/download-manager-ui;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     return dmui->Show(nullptr, nullptr, nsIDownloadManagerUI::REASON_USER_INTERACTED,
-                      aData && NS_strcmp(aData, NS_LITERAL_STRING("private").get()) == 0);
+                      aData && NS_strcmp(aData, MOZ_UTF16("private")) == 0);
   } else if (strcmp(aTopic, "sleep_notification") == 0 ||
              strcmp(aTopic, "suspend_process_notification") == 0) {
     // Pause downloads if we're sleeping, and mark the downloads as auto-resume
@@ -2508,10 +2508,10 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     NS_ENSURE_SUCCESS(rv, rv);
 
     ConfirmCancelDownloads(mCurrentPrivateDownloads.Count(), cancelDownloads,
-                           NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertTitle").get(),
-                           NS_LITERAL_STRING("leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple").get(),
-                           NS_LITERAL_STRING("leavePrivateBrowsingWindowsCancelDownloadsAlertMsg").get(),
-                           NS_LITERAL_STRING("dontLeavePrivateBrowsingButton").get());
+                           MOZ_UTF16("leavePrivateBrowsingCancelDownloadsAlertTitle"),
+                           MOZ_UTF16("leavePrivateBrowsingWindowsCancelDownloadsAlertMsgMultiple"),
+                           MOZ_UTF16("leavePrivateBrowsingWindowsCancelDownloadsAlertMsg"),
+                           MOZ_UTF16("dontLeavePrivateBrowsingButton"));
   }
 
   return NS_OK;
@@ -2541,11 +2541,11 @@ nsDownloadManager::ConfirmCancelDownloads(int32_t aCount,
   if (aCount > 1) {
     mBundle->FormatStringFromName(aCancelMessageMultiple, strings, 1,
                                   getter_Copies(message));
-    mBundle->FormatStringFromName(NS_LITERAL_STRING("cancelDownloadsOKTextMultiple").get(),
+    mBundle->FormatStringFromName(MOZ_UTF16("cancelDownloadsOKTextMultiple"),
                                   strings, 1, getter_Copies(quitButton));
   } else {
     mBundle->GetStringFromName(aCancelMessageSingle, getter_Copies(message));
-    mBundle->GetStringFromName(NS_LITERAL_STRING("cancelDownloadsOKText").get(),
+    mBundle->GetStringFromName(MOZ_UTF16("cancelDownloadsOKText"),
                                getter_Copies(quitButton));
   }
 
@@ -2555,7 +2555,7 @@ nsDownloadManager::ConfirmCancelDownloads(int32_t aCount,
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
   nsCOMPtr<nsIDOMWindow> dmWindow;
   if (wm) {
-    wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
+    wm->GetMostRecentWindow(MOZ_UTF16("Download:Manager"),
                             getter_AddRefs(dmWindow));
   }
 
@@ -2708,10 +2708,10 @@ nsDownload::SetState(DownloadState aState)
               nsXPIDLString title, message;
 
               mDownloadManager->mBundle->GetStringFromName(
-                  NS_LITERAL_STRING("downloadsCompleteTitle").get(),
+                  MOZ_UTF16("downloadsCompleteTitle"),
                   getter_Copies(title));
               mDownloadManager->mBundle->GetStringFromName(
-                  NS_LITERAL_STRING("downloadsCompleteMsg").get(),
+                  MOZ_UTF16("downloadsCompleteMsg"),
                   getter_Copies(message));
 
               bool removeWhenDone =
@@ -3679,7 +3679,7 @@ nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
   // Get title for alert.
   nsXPIDLString title;
   nsresult rv = bundle->GetStringFromName(
-    NS_LITERAL_STRING("downloadErrorAlertTitle").get(), getter_Copies(title));
+    MOZ_UTF16("downloadErrorAlertTitle"), getter_Copies(title));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get a generic message if we weren't supplied one
@@ -3687,7 +3687,7 @@ nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
   message = aMessage;
   if (message.IsEmpty()) {
     rv = bundle->GetStringFromName(
-      NS_LITERAL_STRING("downloadErrorGeneric").get(), getter_Copies(message));
+      MOZ_UTF16("downloadErrorGeneric"), getter_Copies(message));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3696,7 +3696,7 @@ nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
     do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMWindow> dmWindow;
-  rv = wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
+  rv = wm->GetMostRecentWindow(MOZ_UTF16("Download:Manager"),
                                getter_AddRefs(dmWindow));
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -1,0 +1,19 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+PARALLEL_DIRS += ['interfaces']
+
+TEST_DIRS += ['tests']
+
+EXTRA_JS_MODULES += [
+  'FxAccounts.jsm',
+  'FxAccountsClient.jsm',
+  'FxAccountsCommon.js'
+]
+
+# For now, we will only be using the FxA manager in B2G.
+if CONFIG['MOZ_B2G']:
+  EXTRA_JS_MODULES += ['FxAccountsManager.jsm']

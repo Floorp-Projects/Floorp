@@ -137,6 +137,8 @@ function testSteps()
         .objectStore(objectStoreName).clear()
         .onsuccess = continueToNextStep;
       yield undefined;
+
+      objectStore = index = null; // Bug 943409 workaround.
     }
   }
 

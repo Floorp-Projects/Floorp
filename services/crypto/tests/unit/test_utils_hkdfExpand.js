@@ -93,16 +93,28 @@ function expand_hex(prk, info, len) {
   return CommonUtils.bytesAsHex(CryptoUtils.hkdfExpand(prk, info, len));
 }
 
+function hkdf_hex(ikm, salt, info, len) {
+  ikm = _hexToString(ikm);
+  if (salt)
+    salt = _hexToString(salt);
+  info = _hexToString(info);
+  return CommonUtils.bytesAsHex(CryptoUtils.hkdf(ikm, salt, info, len));
+}
+
 function run_test() {
   _("Verifying Test Case 1");
   do_check_eq(extract_hex(tc1.salt, tc1.IKM), tc1.PRK);
   do_check_eq(expand_hex(tc1.PRK, tc1.info, tc1.L), tc1.OKM);
+  do_check_eq(hkdf_hex(tc1.IKM, tc1.salt, tc1.info, tc1.L), tc1.OKM);
 
   _("Verifying Test Case 2");
   do_check_eq(extract_hex(tc2.salt, tc2.IKM), tc2.PRK);
   do_check_eq(expand_hex(tc2.PRK, tc2.info, tc2.L), tc2.OKM);
+  do_check_eq(hkdf_hex(tc2.IKM, tc2.salt, tc2.info, tc2.L), tc2.OKM);
 
   _("Verifying Test Case 3");
   do_check_eq(extract_hex(tc3.salt, tc3.IKM), tc3.PRK);
   do_check_eq(expand_hex(tc3.PRK, tc3.info, tc3.L), tc3.OKM);
+  do_check_eq(hkdf_hex(tc3.IKM, tc3.salt, tc3.info, tc3.L), tc3.OKM);
+  do_check_eq(hkdf_hex(tc3.IKM, undefined, tc3.info, tc3.L), tc3.OKM);
 }

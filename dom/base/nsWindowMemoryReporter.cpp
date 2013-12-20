@@ -166,7 +166,7 @@ AppendWindowURI(nsGlobalWindow *aWindow, nsACString& aStr)
   }
 }
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(WindowsMallocSizeOf)
+MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf)
 
 // The key is the window ID.
 typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;

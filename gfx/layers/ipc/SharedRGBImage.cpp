@@ -9,6 +9,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator, etc
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
+#include "mozilla/layers/ImageDataSerializer.h"  // for ImageDataSerializer
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureClient.h"  // for BufferTextureClient, etc
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
@@ -83,8 +84,11 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
     return rgbImageDep.forget();
   }
   nsRefPtr<SharedRGBImage> rgbImage = static_cast<SharedRGBImage*>(image.get());
-  rgbImage->Allocate(gfx::ToIntSize(aSize),
-                     gfx::ImageFormatToSurfaceFormat(aImageFormat));
+  if (!rgbImage->Allocate(gfx::ToIntSize(aSize),
+                          gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
+    NS_WARNING("Failed to allocate a shared image");
+    return nullptr;
+  }
   return image.forget();
 }
 
@@ -100,7 +104,7 @@ DeprecatedSharedRGBImage::GetBufferSize()
   return mSize.width * mSize.height * gfxASurface::BytesPerPixel(mImageFormat);
 }
 
-gfxIntSize
+gfx::IntSize
 DeprecatedSharedRGBImage::GetSize()
 {
   return mSize;
@@ -203,11 +207,15 @@ SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
 uint8_t*
 SharedRGBImage::GetBuffer()
 {
-  return mTextureClient ? mTextureClient->GetBuffer()
-                        : nullptr;
+  if (!mTextureClient) {
+    return nullptr;
+  }
+
+  ImageDataSerializer serializer(mTextureClient->GetBuffer());
+  return serializer.GetData();
 }
 
-gfxIntSize
+gfx::IntSize
 SharedRGBImage::GetSize()
 {
   return ThebesIntSize(mSize);

@@ -43,6 +43,7 @@ class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
 class WatchpointMap;
+class StaticBlockObject;
 
 namespace analyze {
     class ScriptAnalysis;
@@ -81,11 +82,29 @@ struct JSTryNote {
 
 namespace js {
 
+// A block scope has a range in bytecode: it is entered at some offset, and left
+// at some later offset.  Scopes can be nested.  Given an offset, the
+// BlockScopeNote containing that offset whose with the highest start value
+// indicates the block scope.  The block scope list is sorted by increasing
+// start value.
+//
+// It is possible to leave a scope nonlocally, for example via a "break"
+// statement, so there may be short bytecode ranges in a block scope in which we
+// are popping the block chain in preparation for a goto.  These exits are also
+// nested with respect to outer scopes.  The scopes in these exits are indicated
+// by the "index" field, just like any other block.  If a nonlocal exit pops the
+// last block scope, the index will be NoBlockScopeIndex.
+//
 struct BlockScopeNote {
-    uint32_t        index;      // Index of StaticScopeObject in the object array.
-    uint32_t        start;      // Bytecode offset at which this scope starts.
+    static const uint32_t NoBlockScopeIndex = UINT32_MAX;
+
+    uint32_t        index;      // Index of StaticScopeObject in the object
+                                // array, or NoBlockScopeIndex if there is no
+                                // block scope in this range.
+    uint32_t        start;      // Bytecode offset at which this scope starts,
+                                // from script->main().
     uint32_t        length;     // Bytecode length of scope.
-    uint32_t        padding;    // Pad to 64-bit boundary.
+    uint32_t        parent;     // Index of parent block scope in notes, or UINT32_MAX.
 };
 
 struct ConstArray {
@@ -184,11 +203,13 @@ class Bindings
     bool bindingArrayUsingTemporaryStorage() const {
         return bindingArrayAndFlag_ & TEMPORARY_STORAGE_BIT;
     }
+
+  public:
+
     Binding *bindingArray() const {
         return reinterpret_cast<Binding *>(bindingArrayAndFlag_ & ~TEMPORARY_STORAGE_BIT);
     }
 
-  public:
     inline Bindings();
 
     /*
@@ -224,7 +245,14 @@ class Bindings
     bool bindingIsAliased(unsigned bindingIndex);
 
     /* Return whether this scope has any aliased bindings. */
-    bool hasAnyAliasedBindings() const { return callObjShape_ && !callObjShape_->isEmptyShape(); }
+    bool hasAnyAliasedBindings() const {
+        if (!callObjShape_)
+            return false;
+
+        // Binding shapes are immutable once constructed.
+        AutoThreadSafeAccess ts(callObjShape_);
+        return !callObjShape_->isEmptyShape();
+    }
 
     void trace(JSTracer *trc);
 };
@@ -459,6 +487,10 @@ class ScriptSourceObject : public JSObject
                                       const ReadOnlyCompileOptions &options);
 
     ScriptSource *source() {
+        // Script source objects are immutable.
+        AutoThreadSafeAccess ts0(this);
+        AutoThreadSafeAccess ts1(lastProperty());
+        AutoThreadSafeAccess ts2(lastProperty()->base());
         return static_cast<ScriptSource *>(getReservedSlot(SOURCE_SLOT).toPrivate());
     }
 
@@ -487,12 +519,43 @@ GeneratorKindFromBits(unsigned val) {
     return static_cast<GeneratorKind>(val);
 }
 
+/*
+ * NB: after a successful XDR_DECODE, XDRScript callers must do any required
+ * subsequent set-up of owning function or script object and then call
+ * js_CallNewScriptHook.
+ */
+template<XDRMode mode>
+bool
+XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+          HandleFunction fun, MutableHandleScript scriptp);
+
+JSScript *
+CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
+            NewObjectKind newKind = GenericObject);
+
+/*
+ * Code any constant value.
+ */
+template<XDRMode mode>
+bool
+XDRScriptConst(XDRState<mode> *xdr, MutableHandleValue vp);
+
 } /* namespace js */
 
 class JSScript : public js::gc::BarrieredCell<JSScript>
 {
     static const uint32_t stepFlagMask = 0x80000000U;
     static const uint32_t stepCountMask = 0x7fffffffU;
+
+    template <js::XDRMode mode>
+    friend
+    bool
+    js::XDRScript(js::XDRState<mode> *xdr, js::HandleObject enclosingScope, js::HandleScript enclosingScript,
+                  js::HandleFunction fun, js::MutableHandleScript scriptp);
+
+    friend JSScript *
+    js::CloneScript(JSContext *cx, js::HandleObject enclosingScope, js::HandleFunction fun, js::HandleScript src,
+                    js::NewObjectKind newKind);
 
   public:
     //
@@ -506,10 +569,31 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     js::Bindings    bindings;   /* names of top-level variables in this script
                                    (and arguments if this is a function script) */
 
+    bool hasAnyAliasedBindings() const {
+        js::AutoThreadSafeAccess ts(this);
+        return bindings.hasAnyAliasedBindings();
+    }
+
+    js::Binding *bindingArray() const {
+        js::AutoThreadSafeAccess ts(this);
+        return bindings.bindingArray();
+    }
+
+    unsigned numArgs() const {
+        js::AutoThreadSafeAccess ts(this);
+        return bindings.numArgs();
+    }
+
+    js::Shape *callObjShape() const {
+        js::AutoThreadSafeAccess ts(this);
+        return bindings.callObjShape();
+    }
+
     // Word-sized fields.
 
+  private:
+    jsbytecode      *code_;     /* bytecodes and their immediate operands */
   public:
-    jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint8_t         *data;      /* pointer to variable-length data array (see
                                    comment above Create() for details) */
 
@@ -549,53 +633,49 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     // 32-bit fields.
 
-  public:
-    uint32_t        length;     /* length of code vector */
+    uint32_t        length_;    /* length of code vector */
+    uint32_t        dataSize_;  /* size of the used part of the data array */
 
-    uint32_t        dataSize;   /* size of the used part of the data array */
+    uint32_t        lineno_;    /* base line number of script */
+    uint32_t        column_;    /* base column of script, optionally set */
 
-    uint32_t        lineno;     /* base line number of script */
-    uint32_t        column;     /* base column of script, optionally set */
-
-    uint32_t        mainOffset; /* offset of main entry point from code, after
+    uint32_t        mainOffset_;/* offset of main entry point from code, after
                                    predef'ing prolog */
 
-    uint32_t        natoms;     /* length of atoms array */
+    uint32_t        natoms_;    /* length of atoms array */
 
     /* Range of characters in scriptSource which contains this script's source. */
-    uint32_t        sourceStart;
-    uint32_t        sourceEnd;
+    uint32_t        sourceStart_;
+    uint32_t        sourceEnd_;
 
-  private:
     uint32_t        useCount;   /* Number of times the script has been called
-                                 * or has had backedges taken. Reset if the
-                                 * script's JIT code is forcibly discarded. */
+                                 * or has had backedges taken. When running in
+                                 * ion, also increased for any inlined scripts.
+                                 * Reset if the script's JIT code is forcibly
+                                 * discarded. */
 
 #ifdef DEBUG
     // Unique identifier within the compartment for this script, used for
     // printing analysis information.
     uint32_t        id_;
-  private:
     uint32_t        idpad;
 #endif
 
     // 16-bit fields.
 
-  private:
     uint16_t        PADDING16;
     uint16_t        version;    /* JS version under which script was compiled */
 
-  public:
-    uint16_t        funLength;  /* ES6 function length */
+    uint16_t        funLength_; /* ES6 function length */
 
-    uint16_t        nfixed;     /* number of slots besides stack operands in
+    uint16_t        nfixed_;    /* number of slots besides stack operands in
                                    slot array */
 
-    uint16_t        nTypeSets;  /* number of type sets used in this script for
+    uint16_t        nTypeSets_; /* number of type sets used in this script for
                                    dynamic type monitoring */
 
-    uint16_t        nslots;     /* vars plus maximum stack depth */
-    uint16_t        staticLevel;/* static level for display maintenance */
+    uint16_t        nslots_;    /* vars plus maximum stack depth */
+    uint16_t        staticLevel_;/* static level for display maintenance */
 
     // Bit fields.
 
@@ -618,74 +698,95 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     // The GeneratorKind of the script.
     uint8_t         generatorKindBits_:2;
 
-    // Unused padding; feel free to steal these if you need them.
-    uint8_t         padToByte_:1;
-
     // 1-bit fields.
 
-  public:
-    bool            noScriptRval:1; /* no need for result value of last
-                                       expression statement */
-    bool            savedCallerFun:1; /* can call getCallerFunction() */
-    bool            strict:1; /* code is in strict mode */
-    bool            explicitUseStrict:1; /* code has "use strict"; explicitly */
-    bool            compileAndGo:1;   /* see Parser::compileAndGo */
-    bool            selfHosted:1;     /* see Parser::selfHostingMode */
-    bool            bindingsAccessedDynamically:1; /* see FunctionContextFlags */
-    bool            funHasExtensibleScope:1;       /* see FunctionContextFlags */
-    bool            funNeedsDeclEnvObject:1;       /* see FunctionContextFlags */
-    bool            funHasAnyAliasedFormal:1;      /* true if any formalIsAliased(i) */
-    bool            warnedAboutUndefinedProp:1; /* have warned about uses of
-                                                   undefined properties in this
-                                                   script */
-    bool            hasSingletons:1;  /* script has singleton objects */
-    bool            treatAsRunOnce:1; /* script is a lambda to treat as running once. */
-    bool            hasRunOnce:1;     /* if treatAsRunOnce, whether script has executed. */
-    bool            hasBeenCloned:1;  /* script has been reused for a clone. */
-    bool            isActiveEval:1;   /* script came from eval(), and is still active */
-    bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
+    // No need for result value of last expression statement.
+    bool noScriptRval_:1;
+
+    // Can call getCallerFunction().
+    bool savedCallerFun_:1;
+
+    // Code is in strict mode.
+    bool strict_:1;
+
+    // Code has "use strict"; explicitly.
+    bool explicitUseStrict_:1;
+
+    // See Parser::compileAndGo.
+    bool compileAndGo_:1;
+
+    // see Parser::selfHostingMode.
+    bool selfHosted_:1;
+
+    // See FunctionContextFlags.
+    bool bindingsAccessedDynamically_:1;
+    bool funHasExtensibleScope_:1;
+    bool funNeedsDeclEnvObject_:1;
+
+    // True if any formalIsAliased(i).
+    bool funHasAnyAliasedFormal_:1;
+
+    // Have warned about uses of undefined properties in this script.
+    bool warnedAboutUndefinedProp_:1;
+
+    // Script has singleton objects.
+    bool hasSingletons_:1;
+
+    // Script is a lambda to treat as running once.
+    bool treatAsRunOnce_:1;
+
+    // If treatAsRunOnce, whether script has executed.
+    bool hasRunOnce_:1;
+
+    // Script has been reused for a clone.
+    bool hasBeenCloned_:1;
+
+    // Script came from eval(), and is still active.
+    bool isActiveEval_:1;
+
+    // Script came from eval(), and is in eval cache.
+    bool isCachedEval_:1;
 
     // Set for functions defined at the top level within an 'eval' script.
-    bool directlyInsideEval:1;
+    bool directlyInsideEval_:1;
 
     // Both 'arguments' and f.apply() are used. This is likely to be a wrapper.
-    bool usesArgumentsAndApply:1;
+    bool usesArgumentsAndApply_:1;
 
     /* script is attempted to be cloned anew at each callsite. This is
        temporarily needed for ParallelArray selfhosted code until type
        information can be made context sensitive. See discussion in
        bug 826148. */
-    bool            shouldCloneAtCallsite:1;
-    bool            isCallsiteClone:1; /* is a callsite clone; has a link to the original function */
-    bool            shouldInline:1;    /* hint to inline when possible */
-    bool            uninlineable:1;    /* explicitly marked as uninlineable */
-#ifdef JS_ION
-    bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
-    bool            failedShapeGuard:1; /* script has had hoisted shape guard fail */
-    bool            hadFrequentBailouts:1;
-#else
-    bool            failedBoundsCheckPad:1;
-    bool            failedShapeGuardPad:1;
-    bool            hadFrequentBailoutsPad:1;
-#endif
-    bool            invalidatedIdempotentCache:1; /* idempotent cache has triggered invalidation */
+    bool shouldCloneAtCallsite_:1;
+    bool isCallsiteClone_:1; /* is a callsite clone; has a link to the original function */
+    bool shouldInline_:1;    /* hint to inline when possible */
+
+    // IonMonkey compilation hints.
+    bool failedBoundsCheck_:1; /* script has had hoisted bounds checks fail */
+    bool failedShapeGuard_:1; /* script has had hoisted shape guard fail */
+    bool hadFrequentBailouts_:1;
+    bool uninlineable_:1;    /* explicitly marked as uninlineable */
+
+    // Idempotent cache has triggered invalidation.
+    bool invalidatedIdempotentCache_:1;
 
     // If the generator was created implicitly via a generator expression,
     // isGeneratorExp will be true.
-    bool            isGeneratorExp:1;
+    bool isGeneratorExp_:1;
 
-    bool            hasScriptCounts:1;/* script has an entry in
-                                         JSCompartment::scriptCountsMap */
-    bool            hasDebugScript:1; /* script has an entry in
-                                         JSCompartment::debugScriptMap */
-    bool            hasFreezeConstraints:1; /* freeze constraints for stack
-                                             * type sets have been generated */
+    // Script has an entry in JSCompartment::scriptCountsMap.
+    bool hasScriptCounts_:1;
 
-  private:
+    // Script has an entry in JSCompartment::debugScriptMap.
+    bool hasDebugScript_:1;
+
+    // Freeze constraints for stack type sets have been generated.
+    bool hasFreezeConstraints_:1;
+
     /* See comments below. */
-    bool            argsHasVarBinding_:1;
-    bool            needsArgsAnalysis_:1;
-    bool            needsArgsObj_:1;
+    bool argsHasVarBinding_:1;
+    bool needsArgsAnalysis_:1;
+    bool needsArgsObj_:1;
 
     //
     // End of fields.  Start methods.
@@ -719,15 +820,225 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     void setVersion(JSVersion v) { version = v; }
 
+    // Script bytecode is immutable after creation.
+    jsbytecode *code() const {
+        js::AutoThreadSafeAccess ts(this);
+        return code_;
+    }
+    size_t length() const {
+        js::AutoThreadSafeAccess ts(this);
+        return length_;
+    }
+
+    void setCode(jsbytecode *code) { code_ = code; }
+    void setLength(size_t length) { length_ = length; }
+
+    jsbytecode *codeEnd() const { return code() + length(); }
+
+    bool containsPC(const jsbytecode *pc) const {
+        return pc >= code() && pc < codeEnd();
+    }
+
+    size_t pcToOffset(const jsbytecode *pc) const {
+        JS_ASSERT(containsPC(pc));
+        return size_t(pc - code());
+    }
+
+    jsbytecode *offsetToPC(size_t offset) const {
+        JS_ASSERT(offset < length());
+        return code() + offset;
+    }
+
+    size_t mainOffset() const {
+        js::AutoThreadSafeAccess ts(this);
+        return mainOffset_;
+    }
+
+    size_t lineno() const {
+        js::AutoThreadSafeAccess ts(this);
+        return lineno_;
+    }
+
+    size_t column() const {
+        js::AutoThreadSafeAccess ts(this);
+        return column_;
+    }
+
+    void setColumn(size_t column) { column_ = column; }
+
+    size_t nfixed() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nfixed_;
+    }
+
+    size_t nslots() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nslots_;
+    }
+
+    size_t staticLevel() const {
+        js::AutoThreadSafeAccess ts(this);
+        return staticLevel_;
+    }
+
+    size_t nTypeSets() const {
+        js::AutoThreadSafeAccess ts(this);
+        return nTypeSets_;
+    }
+
+    size_t funLength() const {
+        js::AutoThreadSafeAccess ts(this);
+        return funLength_;
+    }
+
+    size_t sourceStart() const {
+        js::AutoThreadSafeAccess ts(this);
+        return sourceStart_;
+    }
+
+    size_t sourceEnd() const {
+        js::AutoThreadSafeAccess ts(this);
+        return sourceEnd_;
+    }
+
+    bool noScriptRval() const {
+        js::AutoThreadSafeAccess ts(this);
+        return noScriptRval_;
+    }
+
+    bool savedCallerFun() const { return savedCallerFun_; }
+
+    bool strict() const {
+        js::AutoThreadSafeAccess ts(this);
+        return strict_;
+    }
+
+    bool explicitUseStrict() const { return explicitUseStrict_; }
+
+    bool compileAndGo() const {
+        js::AutoThreadSafeAccess ts(this);
+        return compileAndGo_;
+    }
+
+    bool selfHosted() const { return selfHosted_; }
+    bool bindingsAccessedDynamically() const { return bindingsAccessedDynamically_; }
+    bool funHasExtensibleScope() const {
+        js::AutoThreadSafeAccess ts(this);
+        return funHasExtensibleScope_;
+    }
+    bool funNeedsDeclEnvObject() const {
+        js::AutoThreadSafeAccess ts(this);
+        return funNeedsDeclEnvObject_;
+    }
+    bool funHasAnyAliasedFormal() const {
+        js::AutoThreadSafeAccess ts(this);
+        return funHasAnyAliasedFormal_;
+    }
+
+    bool hasSingletons() const { return hasSingletons_; }
+    bool treatAsRunOnce() const {
+        js::AutoThreadSafeAccess ts(this);
+        return treatAsRunOnce_;
+    }
+    bool hasRunOnce() const { return hasRunOnce_; }
+    bool hasBeenCloned() const { return hasBeenCloned_; }
+
+    void setTreatAsRunOnce() { treatAsRunOnce_ = true; }
+    void setHasRunOnce() { hasRunOnce_ = true; }
+    void setHasBeenCloned() { hasBeenCloned_ = true; }
+
+    bool isActiveEval() const { return isActiveEval_; }
+    bool isCachedEval() const { return isCachedEval_; }
+    bool directlyInsideEval() const { return directlyInsideEval_; }
+
+    void cacheForEval() {
+        JS_ASSERT(isActiveEval() && !isCachedEval());
+        isActiveEval_ = false;
+        isCachedEval_ = true;
+    }
+
+    void uncacheForEval() {
+        JS_ASSERT(isCachedEval() && !isActiveEval());
+        isCachedEval_ = false;
+        isActiveEval_ = true;
+    }
+
+    void setActiveEval() { isActiveEval_ = true; }
+    void setDirectlyInsideEval() { directlyInsideEval_ = true; }
+
+    bool usesArgumentsAndApply() const {
+        js::AutoThreadSafeAccess ts(this);
+        return usesArgumentsAndApply_;
+    }
+    void setUsesArgumentsAndApply() { usesArgumentsAndApply_ = true; }
+
+    bool shouldCloneAtCallsite() const {
+        js::AutoThreadSafeAccess ts(this);
+        return shouldCloneAtCallsite_;
+    }
+    bool shouldInline() const {
+        js::AutoThreadSafeAccess ts(this);
+        return shouldInline_;
+    }
+
+    void setShouldCloneAtCallsite() { shouldCloneAtCallsite_ = true; }
+    void setShouldInline() { shouldInline_ = true; }
+
+    bool isCallsiteClone() const {
+        js::AutoThreadSafeAccess ts(this);
+        return isCallsiteClone_;
+    }
+    bool isGeneratorExp() const { return isGeneratorExp_; }
+
+    bool failedBoundsCheck() const {
+        js::AutoThreadSafeAccess ts(this);
+        return failedBoundsCheck_;
+    }
+    bool failedShapeGuard() const {
+        js::AutoThreadSafeAccess ts(this);
+        return failedShapeGuard_;
+    }
+    bool hadFrequentBailouts() const {
+        js::AutoThreadSafeAccess ts(this);
+        return hadFrequentBailouts_;
+    }
+    bool uninlineable() const {
+        js::AutoThreadSafeAccess ts(this);
+        return uninlineable_;
+    }
+    bool invalidatedIdempotentCache() const {
+        js::AutoThreadSafeAccess ts(this);
+        return invalidatedIdempotentCache_;
+    }
+
+    void setFailedBoundsCheck() { failedBoundsCheck_ = true; }
+    void setFailedShapeGuard() { failedShapeGuard_ = true; }
+    void setHadFrequentBailouts() { hadFrequentBailouts_ = true; }
+    void setUninlineable() { uninlineable_ = true; }
+    void setInvalidatedIdempotentCache() { invalidatedIdempotentCache_ = true; }
+
+    bool hasScriptCounts() const { return hasScriptCounts_; }
+
+    bool hasFreezeConstraints() const { return hasFreezeConstraints_; }
+    void setHasFreezeConstraints() { hasFreezeConstraints_ = true; }
+    void clearHasFreezeConstraints() { hasFreezeConstraints_ = false; }
+
+    bool warnedAboutUndefinedProp() const { return warnedAboutUndefinedProp_; }
+    void setWarnedAboutUndefinedProp() { warnedAboutUndefinedProp_ = true; }
+
     /* See ContextFlags::funArgumentsHasLocalBinding comment. */
-    bool argumentsHasVarBinding() const { return argsHasVarBinding_; }
-    jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
+    bool argumentsHasVarBinding() const {
+        js::AutoThreadSafeAccess ts(this);
+        return argsHasVarBinding_;
+    }
+    jsbytecode *argumentsBytecode() const { JS_ASSERT(code()[0] == JSOP_ARGUMENTS); return code(); }
     void setArgumentsHasVarBinding();
     bool argumentsAliasesFormals() const {
-        return argumentsHasVarBinding() && !strict;
+        return argumentsHasVarBinding() && !strict();
     }
 
     js::GeneratorKind generatorKind() const {
+        js::AutoThreadSafeAccess ts(this);
         return js::GeneratorKindFromBits(generatorKindBits_);
     }
     bool isGenerator() const { return generatorKind() != js::NotGenerator; }
@@ -751,7 +1062,12 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * that needsArgsObj is only called after the script has been analyzed.
      */
     bool analyzedArgsUsage() const { return !needsArgsAnalysis_; }
-    bool needsArgsObj() const { JS_ASSERT(analyzedArgsUsage()); return needsArgsObj_; }
+    bool needsArgsObj() const {
+        js::AutoThreadSafeAccess ts(this);
+        JS_ASSERT(js::CurrentThreadCanReadCompilationData());
+        JS_ASSERT(analyzedArgsUsage());
+        return needsArgsObj_;
+    }
     void setNeedsArgsObj(bool needsArgsObj);
     static bool argumentsOptimizationFailed(JSContext *cx, js::HandleScript script);
 
@@ -765,7 +1081,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * opcodes won't be emitted at all.
      */
     bool argsObjAliasesFormals() const {
-        return needsArgsObj() && !strict;
+        return needsArgsObj() && !strict();
     }
 
     bool hasAnyIonScript() const {
@@ -773,9 +1089,17 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     bool hasIonScript() const {
+        // Note: While a script's baseline script is protected by the
+        // compilation lock, writes to the ion script are not. This helps lock
+        // ordering issues in CodeGenerator::link. Tests of script->ion during
+        // off thread compilation can therefore race, though these are fairly
+        // benign and the IonScript itself is never accessed.
+        js::AutoThreadSafeAccess ts(this);
         return ion && ion != ION_DISABLED_SCRIPT && ion != ION_COMPILING_SCRIPT;
     }
     bool canIonCompile() const {
+        // Note: see above comment.
+        js::AutoThreadSafeAccess ts(this);
         return ion != ION_DISABLED_SCRIPT;
     }
 
@@ -801,6 +1125,8 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     bool hasBaselineScript() const {
+        JS_ASSERT(js::CurrentThreadCanReadCompilationData());
+        js::AutoThreadSafeAccess ts(this);
         return baseline && baseline != BASELINE_DISABLED_SCRIPT;
     }
     bool canBaselineCompile() const {
@@ -808,9 +1134,10 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     js::jit::BaselineScript *baselineScript() const {
         JS_ASSERT(hasBaselineScript());
+        js::AutoThreadSafeAccess ts(this);
         return baseline;
     }
-    inline void setBaselineScript(js::jit::BaselineScript *baselineScript);
+    inline void setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript);
 
     void updateBaselineOrIonRaw();
 
@@ -819,6 +1146,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     bool canParallelIonCompile() const {
+        js::AutoThreadSafeAccess ts(this);
         return parallelIon != ION_DISABLED_SCRIPT;
     }
 
@@ -859,18 +1187,24 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      * Original compiled function for the script, if it has a function.
      * nullptr for global and eval scripts.
      */
-    JSFunction *function() const { return function_; }
+    JSFunction *function() const {
+        js::AutoThreadSafeAccess ts(this);
+        return function_;
+    }
     inline void setFunction(JSFunction *fun);
 
     JSFunction *originalFunction() const;
-    void setOriginalFunctionObject(JSObject *fun);
+    void setIsCallsiteClone(JSObject *fun);
 
     JSFlatString *sourceData(JSContext *cx);
 
     static bool loadSource(JSContext *cx, js::ScriptSource *ss, bool *worked);
 
     void setSourceObject(JSObject *object);
-    JSObject *sourceObject() const { return sourceObject_; }
+    JSObject *sourceObject() const {
+        js::AutoThreadSafeAccess ts(this);
+        return sourceObject_;
+    }
     js::ScriptSource *scriptSource() const;
     JSPrincipals *originPrincipals() const { return scriptSource()->originPrincipals(); }
     const char *filename() const { return scriptSource()->filename(); }
@@ -878,7 +1212,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
   public:
 
     /* Return whether this script was compiled for 'eval' */
-    bool isForEval() { return isCachedEval || isActiveEval; }
+    bool isForEval() { return isCachedEval() || isActiveEval(); }
 
 #ifdef DEBUG
     unsigned id();
@@ -907,8 +1241,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     /* See StaticScopeIter comment. */
     JSObject *enclosingStaticScope() const {
-        if (isCallsiteClone)
+        if (isCallsiteClone())
             return nullptr;
+        js::AutoThreadSafeAccess ts(this);
         return enclosingScopeOrOriginalFunction_;
     }
 
@@ -929,7 +1264,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool makeAnalysis(JSContext *cx);
 
   public:
-    uint32_t getUseCount() const  { return useCount; }
+    uint32_t getUseCount() const {
+        // Note: We ignore races when reading the use count of a script off thread.
+        js::AutoThreadSafeAccess ts(this);
+        return useCount;
+    }
     uint32_t incUseCount(uint32_t amount = 1) { return useCount += amount; }
     uint32_t *addressOfUseCount() { return &useCount; }
     static size_t offsetOfUseCount() { return offsetof(JSScript, useCount); }
@@ -944,7 +1283,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     void destroyScriptCounts(js::FreeOp *fop);
 
     jsbytecode *main() {
-        return code + mainOffset;
+        return code() + mainOffset();
     }
 
     /*
@@ -959,10 +1298,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 
     /* Script notes are allocated right after the code. */
-    jssrcnote *notes() { return (jssrcnote *)(code + length); }
+    jssrcnote *notes() { return (jssrcnote *)(code() + length()); }
 
-    bool hasArray(ArrayKind kind)           { return (hasArrayBits & (1 << kind)); }
-    void setHasArray(ArrayKind kind)        { hasArrayBits |= (1 << kind); }
+    bool hasArray(ArrayKind kind) {
+        js::AutoThreadSafeAccess ts(this);
+        return (hasArrayBits & (1 << kind));
+    }
+    void setHasArray(ArrayKind kind) { hasArrayBits |= (1 << kind); }
     void cloneHasArray(JSScript *script) { hasArrayBits = script->hasArrayBits; }
 
     bool hasConsts()        { return hasArray(CONSTS);      }
@@ -979,40 +1321,50 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     size_t trynotesOffset()   { return OFF(regexpsOffset,    hasRegexps,    js::ObjectArray);     }
     size_t blockScopesOffset(){ return OFF(trynotesOffset,   hasTrynotes,   js::TryNoteArray);    }
 
+    size_t dataSize() const { return dataSize_; }
+
     js::ConstArray *consts() {
         JS_ASSERT(hasConsts());
+        js::AutoThreadSafeAccess ts(this);
         return reinterpret_cast<js::ConstArray *>(data + constsOffset());
     }
 
     js::ObjectArray *objects() {
         JS_ASSERT(hasObjects());
+        js::AutoThreadSafeAccess ts(this);
         return reinterpret_cast<js::ObjectArray *>(data + objectsOffset());
     }
 
     js::ObjectArray *regexps() {
         JS_ASSERT(hasRegexps());
+        js::AutoThreadSafeAccess ts(this);
         return reinterpret_cast<js::ObjectArray *>(data + regexpsOffset());
     }
 
     js::TryNoteArray *trynotes() {
         JS_ASSERT(hasTrynotes());
+        js::AutoThreadSafeAccess ts(this);
         return reinterpret_cast<js::TryNoteArray *>(data + trynotesOffset());
     }
 
     js::BlockScopeArray *blockScopes() {
         JS_ASSERT(hasBlockScopes());
+        js::AutoThreadSafeAccess ts(this);
         return reinterpret_cast<js::BlockScopeArray *>(data + blockScopesOffset());
     }
 
     bool hasLoops();
 
+    size_t natoms() const { return natoms_; }
+
     js::HeapPtrAtom &getAtom(size_t index) const {
-        JS_ASSERT(index < natoms);
+        js::AutoThreadSafeAccess ts(this);
+        JS_ASSERT(index < natoms());
         return atoms[index];
     }
 
     js::HeapPtrAtom &getAtom(jsbytecode *pc) const {
-        JS_ASSERT(pc >= code && pc + sizeof(uint32_t) < code + length);
+        JS_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getAtom(GET_UINT32_INDEX(pc));
     }
 
@@ -1021,7 +1373,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
 
     js::PropertyName *getName(jsbytecode *pc) const {
-        JS_ASSERT(pc >= code && pc + sizeof(uint32_t) < code + length);
+        JS_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getAtom(GET_UINT32_INDEX(pc))->asPropertyName();
     }
 
@@ -1033,11 +1385,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     size_t innerObjectsStart() {
         // The first object contains the caller if savedCallerFun is used.
-        return savedCallerFun ? 1 : 0;
+        return savedCallerFun() ? 1 : 0;
     }
 
     JSObject *getObject(jsbytecode *pc) {
-        JS_ASSERT(pc >= code && pc + sizeof(uint32_t) < code + length);
+        JS_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getObject(GET_UINT32_INDEX(pc));
     }
 
@@ -1057,17 +1409,19 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         return arr->vector[index];
     }
 
+    js::StaticBlockObject *getBlockScope(jsbytecode *pc);
+
     /*
      * The isEmpty method tells whether this script has code that computes any
      * result (not return value, result AKA normal completion value) other than
      * JSVAL_VOID, or any other effects.
      */
     bool isEmpty() const {
-        if (length > 3)
+        if (length() > 3)
             return false;
 
-        jsbytecode *pc = code;
-        if (noScriptRval && JSOp(*pc) == JSOP_FALSE)
+        jsbytecode *pc = code();
+        if (noScriptRval() && JSOp(*pc) == JSOP_FALSE)
             ++pc;
         return JSOp(*pc) == JSOP_RETRVAL;
     }
@@ -1093,12 +1447,11 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
   public:
     bool hasBreakpointsAt(jsbytecode *pc);
-    bool hasAnyBreakpointsOrStepMode() { return hasDebugScript; }
+    bool hasAnyBreakpointsOrStepMode() { return hasDebugScript_; }
 
     js::BreakpointSite *getBreakpointSite(jsbytecode *pc)
     {
-        JS_ASSERT(size_t(pc - code) < length);
-        return hasDebugScript ? debugScript()->breakpoints[pc - code] : nullptr;
+        return hasDebugScript_ ? debugScript()->breakpoints[pcToOffset(pc)] : nullptr;
     }
 
     js::BreakpointSite *getOrCreateBreakpointSite(JSContext *cx, jsbytecode *pc);
@@ -1126,10 +1479,10 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      */
     bool changeStepModeCount(JSContext *cx, int delta);
 
-    bool stepModeEnabled() { return hasDebugScript && !!debugScript()->stepMode; }
+    bool stepModeEnabled() { return hasDebugScript_ && !!debugScript()->stepMode; }
 
 #ifdef DEBUG
-    uint32_t stepModeCount() { return hasDebugScript ? (debugScript()->stepMode & stepCountMask) : 0; }
+    uint32_t stepModeCount() { return hasDebugScript_ ? (debugScript()->stepMode & stepCountMask) : 0; }
 #endif
 
     void finalize(js::FreeOp *fop);
@@ -1359,6 +1712,7 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     }
 
     bool usesArgumentsAndApply() const {
+        AutoThreadSafeAccess ts(this);
         return usesArgumentsAndApply_;
     }
     void setUsesArgumentsAndApply() {
@@ -1383,9 +1737,11 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
         return sourceObject()->source();
     }
     uint32_t begin() const {
+        AutoThreadSafeAccess ts(this);
         return begin_;
     }
     uint32_t end() const {
+        AutoThreadSafeAccess ts(this);
         return end_;
     }
     uint32_t lineno() const {
@@ -1484,8 +1840,7 @@ struct ScriptAndCounts
     ScriptCounts scriptCounts;
 
     PCCounts &getPCCounts(jsbytecode *pc) const {
-        JS_ASSERT(unsigned(pc - script->code) < script->length);
-        return scriptCounts.pcCountsVector[pc - script->code];
+        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
     }
 
     jit::IonScriptCounts *getIonCounts() const {
@@ -1536,10 +1891,6 @@ extern void
 CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *linenop,
                             JSPrincipals **origin, LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
-extern JSScript *
-CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
-            NewObjectKind newKind = GenericObject);
-
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                     NewObjectKind newKind = GenericObject);
@@ -1556,16 +1907,6 @@ NormalizeOriginPrincipals(JSPrincipals *principals, JSPrincipals *originPrincipa
 {
     return originPrincipals ? originPrincipals : principals;
 }
-
-/*
- * NB: after a successful XDR_DECODE, XDRScript callers must do any required
- * subsequent set-up of owning function or script object and then call
- * js_CallNewScriptHook.
- */
-template<XDRMode mode>
-bool
-XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-          HandleFunction fun, MutableHandleScript scriptp);
 
 } /* namespace js */
 

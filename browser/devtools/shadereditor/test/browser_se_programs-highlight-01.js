@@ -14,8 +14,10 @@ function ifWebGLSupported() {
   });
 
   reload(target);
-  let firstProgramActor = yield once(gFront, "program-linked");
-  let secondProgramActor = yield once(gFront, "program-linked");
+  let [firstProgramActor, secondProgramActor] = yield promise.all([
+    getPrograms(gFront, 2),
+    once(panel.panelWin, EVENTS.SOURCES_SHOWN)
+  ]).then(([programs]) => programs);
 
   let vsEditor = yield ShadersEditorsView._getEditor("vs");
   let fsEditor = yield ShadersEditorsView._getEditor("fs");
@@ -88,10 +90,4 @@ function getItemLabel(aPanel, aIndex) {
 function getBlackBoxCheckbox(aPanel, aIndex) {
   return aPanel.panelWin.document.querySelectorAll(
     ".side-menu-widget-item-checkbox")[aIndex];
-}
-
-function once(aTarget, aEvent) {
-  let deferred = promise.defer();
-  aTarget.once(aEvent, deferred.resolve);
-  return deferred.promise;
 }
