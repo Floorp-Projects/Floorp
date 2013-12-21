@@ -55,9 +55,10 @@ if (outOfProcess) {
   let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
   loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
   let specialPowersObserver = new specialpowers.SpecialPowersObserver();
-  specialPowersObserver.init();
 
   let mm = container.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+  specialPowersObserver.init(mm);
+
   mm.addMessageListener("SPPrefService", specialPowersObserver);
   mm.addMessageListener("SPProcessCrashService", specialPowersObserver);
   mm.addMessageListener("SPPingService", specialPowersObserver);
