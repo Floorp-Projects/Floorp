@@ -845,7 +845,7 @@ Sync11Service.prototype = {
     // We want let UI consumers of the following notification know as soon as
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
-    this.identity.syncKey = null;
+    this.identity.resetSyncKey();
     this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");

@@ -49,6 +49,7 @@
     <dimen name="menu_item_state_icon">18dp</dimen>
     <dimen name="menu_item_row_height">44dp</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
+    <dimen name="menu_item_more_offset">5dp</dimen>
     <dimen name="menu_popup_arrow_margin">5dip</dimen>
     <dimen name="menu_popup_arrow_width">40dip</dimen>
     <dimen name="menu_popup_offset">8dp</dimen>

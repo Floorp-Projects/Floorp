@@ -28,4 +28,5 @@ this.DevToolsUtils = {
   defineLazyPrototypeGetter: defineLazyPrototypeGetter,
   getProperty: getProperty,
   hasSafeGetter: hasSafeGetter,
+  isSafeJSObject: isSafeJSObject,
 };
