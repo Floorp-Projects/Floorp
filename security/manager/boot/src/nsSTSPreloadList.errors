@@ -8,8 +8,6 @@ appengine.google.com: did not receive HSTS header
 bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
-bitbucket.org: max-age too low: 2592000
-blog.lookout.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
@@ -21,6 +19,7 @@ chrome.google.com: did not receive HSTS header
 cloud.google.com: did not receive HSTS header
 code.google.com: did not receive HSTS header
 codereview.chromium.org: did not receive HSTS header
+crate.io: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
@@ -68,6 +67,12 @@ neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
 packagist.org: max-age too low: 2592000
+passport.yandex.by: did not receive HSTS header
+passport.yandex.com: did not receive HSTS header
+passport.yandex.com.tr: did not receive HSTS header
+passport.yandex.kz: did not receive HSTS header
+passport.yandex.ru: did not receive HSTS header
+passport.yandex.ua: did not receive HSTS header
 paypal.com: max-age too low: 14400
 payroll.xero.com: max-age too low: 3600
 platform.lookout.com: could not connect to host
