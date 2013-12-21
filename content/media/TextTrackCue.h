@@ -83,9 +83,8 @@ public:
 
   void SetStartTime(double aStartTime)
   {
-    if (mStartTime == aStartTime) {
+    if (mStartTime == aStartTime)
       return;
-    }
 
     mStartTime = aStartTime;
     CueChanged();
@@ -98,9 +97,8 @@ public:
 
   void SetEndTime(double aEndTime)
   {
-    if (mEndTime == aEndTime) {
+    if (mEndTime == aEndTime)
       return;
-    }
 
     mEndTime = aEndTime;
     CueChanged();
@@ -113,9 +111,8 @@ public:
 
   void SetPauseOnExit(bool aPauseOnExit)
   {
-    if (mPauseOnExit == aPauseOnExit) {
+    if (mPauseOnExit == aPauseOnExit)
       return;
-    }
 
     mPauseOnExit = aPauseOnExit;
     CueChanged();
@@ -143,9 +140,8 @@ public:
 
   void SetVertical(const DirectionSetting& aVertical)
   {
-    if (mVertical == aVertical) {
+    if (mVertical == aVertical)
       return;
-    }
 
     mReset = true;
     mVertical = aVertical;
@@ -159,9 +155,8 @@ public:
 
   void SetSnapToLines(bool aSnapToLines)
   {
-    if (mSnapToLines == aSnapToLines) {
+    if (mSnapToLines == aSnapToLines)
       return;
-    }
 
     mReset = true;
     mSnapToLines = aSnapToLines;
@@ -220,9 +215,9 @@ public:
 
   void SetPosition(int32_t aPosition, ErrorResult& aRv)
   {
-    if (mPosition == aPosition) {
+    // XXXhumph: validate? bug 868519.
+    if (mPosition == aPosition)
       return;
-    }
 
     if (aPosition > 100 || aPosition < 0){
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -262,9 +257,8 @@ public:
 
   void SetAlign(AlignSetting& aAlign)
   {
-    if (mAlign == aAlign) {
+    if (mAlign == aAlign)
       return;
-    }
 
     mReset = true;
     mAlign = aAlign;
@@ -278,9 +272,8 @@ public:
 
   void SetText(const nsAString& aText)
   {
-    if (mText == aText) {
+    if (mText == aText)
       return;
-    }
 
     mReset = true;
     mText = aText;
