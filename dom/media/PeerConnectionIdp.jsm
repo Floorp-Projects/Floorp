@@ -244,7 +244,7 @@ PeerConnectionIdp.prototype = {
       }
 
       this.assertion = btoa(JSON.stringify(assertion));
-      callback(this.wrapSdp(sdp));
+      callback(this.wrapSdp(sdp), this.assertion);
     }
 
     this._getIdentityAssertion(fingerprint, onAssertion.bind(this));

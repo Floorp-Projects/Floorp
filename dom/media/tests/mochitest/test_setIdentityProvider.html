@@ -30,21 +30,18 @@ function theTest() {
       // identity information, since the call will complete before the identity
       // provider has a chance to finish verifying... that's OK, but it makes
       // testing more difficult
+
       function checkOrSetupCheck(pc, pfx, idp, name) {
-        if (pc.peerIdentity) {
+        function checkIdentity() {
           is(pc.peerIdentity.idp, idp, pfx + "IdP is correct");
           is(pc.peerIdentity.name, name + "@" + idp, pfx + "identity is correct");
+        }
+        if (pc.peerIdentity) {
+          checkIdentity();
         } else {
           ++outstanding;
-          pc.onidentityresult = function checkIdentity(e) {
-            console.log("Got result", e, e.assertion, e.peerIdentity);
-            if (e.assertion) {
-              return;
-            }
-            ok(e.peerIdentity, pfx + "identity result contains identity");
-            is(e.peerIdentity, e.target.peerIdentity, pfx + "identity result is on PC");
-            is(e.peerIdentity.idp, idp, pfx + "IdP is correct");
-            is(e.peerIdentity.name, name + "@" + idp, pfx + "identity is correct");
+          pc.onpeeridentity = function checkIdentityEvent(e) {
+            checkIdentity();
             --outstanding;
             if (outstanding <= 0) {
               test.next();
