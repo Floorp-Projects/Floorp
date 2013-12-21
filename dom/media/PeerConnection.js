@@ -366,6 +366,7 @@ RTCPeerConnection.prototype = {
     this.makeGetterSetterEH("onclosedconnection");
     this.makeGetterSetterEH("oniceconnectionstatechange");
     this.makeGetterSetterEH("onidentityresult");
+    this.makeGetterSetterEH("onpeeridentity");
 
     this._pc = new this._win.PeerConnectionImpl();
 
@@ -753,10 +754,7 @@ RTCPeerConnection.prototype = {
           []
       );
 
-      let args = { peerIdentity: this._peerIdentity };
-      let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult",
-                                                            args);
-      this.dispatchEvent(ev);
+      this.dispatchEvent(new this._win.Event("peeridentity"));
     } else {
       notificationBox.appendNotification(
           "Identity of your WebRTC peer is not verified",
@@ -779,6 +777,12 @@ RTCPeerConnection.prototype = {
     this._localIdp.setIdentityProvider(provider, protocol, username);
   },
 
+  _gotIdentityAssertion: function(assertion){
+    let args = { assertion: assertion };
+    let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult", args);
+    this.dispatchEvent(ev);
+  },
+
   // we're going off spec with the error callback here.
   getIdentityAssertion: function(errorCallback) {
     this._checkClosed();
@@ -794,9 +798,7 @@ RTCPeerConnection.prototype = {
 
     function gotAssertion(assertion) {
       if (assertion) {
-        let args = { assertion: assertion };
-        let ev = new this._win.RTCPeerConnectionIdentityEvent("identityresult", args);
-        this.dispatchEvent(ev);
+        this._gotIdentityAssertion(assertion);
       } else {
         errorCallback("IdP did not produce an assertion");
       }
@@ -1099,6 +1101,9 @@ PeerConnectionObserver.prototype = {
     let pc = this._dompc;
     let fp = pc._impl.fingerprint;
     pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
+      if (assertion) {
+        pc._gotIdentityAssertion(assertion);
+      }
       this.callCB(pc._onCreateOfferSuccess,
                   new pc._win.mozRTCSessionDescription({ type: "offer",
                                                          sdp: sdp }));
@@ -1115,6 +1120,9 @@ PeerConnectionObserver.prototype = {
     let pc = this._dompc;
     let fp = pc._impl.fingerprint;
     pc._localIdp.appendIdentityToSDP(sdp, fp, function(sdp, assertion) {
+      if (assertion) {
+        pc._gotIdentityAssertion(assertion);
+      }
       this.callCB (pc._onCreateAnswerSuccess,
                    new pc._win.mozRTCSessionDescription({ type: "answer",
                                                           sdp: sdp }));

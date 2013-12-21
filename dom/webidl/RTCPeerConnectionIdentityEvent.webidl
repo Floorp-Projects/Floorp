@@ -8,7 +8,6 @@
  */
 
 dictionary RTCPeerConnectionIdentityEventInit : EventInit {
-  RTCIdentityAssertion? peerIdentity = null;
   DOMString? assertion = null;
 };
 
@@ -16,6 +15,5 @@ dictionary RTCPeerConnectionIdentityEventInit : EventInit {
  Constructor(DOMString type,
              optional RTCPeerConnectionIdentityEventInit eventInitDict)]
 interface RTCPeerConnectionIdentityEvent : Event {
-  readonly attribute RTCIdentityAssertion? peerIdentity;
   readonly attribute DOMString? assertion;
 };

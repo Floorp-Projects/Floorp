@@ -148,6 +148,8 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute EventHandler onclosedconnection;
   [Pref="media.peerconnection.identity.enabled"]
   attribute EventHandler onidentityresult;
+  [Pref="media.peerconnection.identity.enabled"]
+  attribute EventHandler onpeeridentity;
 };
 
 callback RTCLogCallback = void (sequence<DOMString> logMessages);
