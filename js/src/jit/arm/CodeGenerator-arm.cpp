@@ -703,19 +703,21 @@ CodeGeneratorARM::modICommon(MMod *mir, Register lhs, Register rhs, Register out
     // the flags necessary for LT to trigger, we don't test X, and take the
     // bailout because the EQ flag is set.
     // if (Y > 0), we don't set EQ, and we don't trigger LT, so we don't take the bailout.
-    masm.ma_cmp(rhs, Imm32(0));
-    masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
-    if (mir->isTruncated()) {
-        // NaN|0 == 0 and (0 % -X)|0 == 0
-        Label skip;
-        masm.ma_b(&skip, Assembler::NotEqual);
-        masm.ma_mov(Imm32(0), output);
-        masm.ma_b(&done);
-        masm.bind(&skip);
-    } else {
-        JS_ASSERT(mir->fallible());
-        if (!bailoutIf(Assembler::Equal, snapshot))
-            return false;
+    if (mir->canBeDivideByZero() || mir->canBeNegativeDividend()) {
+        masm.ma_cmp(rhs, Imm32(0));
+        masm.ma_cmp(lhs, Imm32(0), Assembler::LessThan);
+        if (mir->isTruncated()) {
+            // NaN|0 == 0 and (0 % -X)|0 == 0
+            Label skip;
+            masm.ma_b(&skip, Assembler::NotEqual);
+            masm.ma_mov(Imm32(0), output);
+            masm.ma_b(&done);
+            masm.bind(&skip);
+        } else {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Equal, snapshot))
+                return false;
+        }
     }
 
     return true;
@@ -740,16 +742,18 @@ CodeGeneratorARM::visitModI(LModI *ins)
     masm.ma_smod(lhs, rhs, output);
 
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
-    if (mir->isTruncated()) {
-        // -0.0|0 == 0
-    } else {
-        JS_ASSERT(mir->fallible());
-        // See if X < 0
-        masm.ma_cmp(output, Imm32(0));
-        masm.ma_b(&done, Assembler::NotEqual);
-        masm.ma_cmp(callTemp, Imm32(0));
-        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
-            return false;
+    if (mir->canBeNegativeDividend()) {
+        if (mir->isTruncated()) {
+            // -0.0|0 == 0
+        } else {
+            JS_ASSERT(mir->fallible());
+            // See if X < 0
+            masm.ma_cmp(output, Imm32(0));
+            masm.ma_b(&done, Assembler::NotEqual);
+            masm.ma_cmp(callTemp, Imm32(0));
+            if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+                return false;
+        }
     }
 
     masm.bind(&done);
@@ -802,16 +806,18 @@ CodeGeneratorARM::visitSoftModI(LSoftModI *ins)
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
 
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
-    if (mir->isTruncated()) {
-        // -0.0|0 == 0
-    } else {
-        JS_ASSERT(mir->fallible());
-        // See if X < 0
-        masm.ma_cmp(r1, Imm32(0));
-        masm.ma_b(&done, Assembler::NotEqual);
-        masm.ma_cmp(callTemp, Imm32(0));
-        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
-            return false;
+    if (mir->canBeNegativeDividend()) {
+        if (mir->isTruncated()) {
+            // -0.0|0 == 0
+        } else {
+            JS_ASSERT(mir->fallible());
+            // See if X < 0
+            masm.ma_cmp(r1, Imm32(0));
+            masm.ma_b(&done, Assembler::NotEqual);
+            masm.ma_cmp(callTemp, Imm32(0));
+            if (!bailoutIf(Assembler::Signed, ins->snapshot()))
+                return false;
+        }
     }
     masm.bind(&done);
     return true;
@@ -830,12 +836,14 @@ CodeGeneratorARM::visitModPowTwoI(LModPowTwoI *ins)
     masm.ma_rsb(Imm32(0), out, NoSetCond, Assembler::Signed);
     masm.ma_and(Imm32((1<<ins->shift())-1), out);
     masm.ma_rsb(Imm32(0), out, SetCond, Assembler::Signed);
-    if (!mir->isTruncated()) {
-        JS_ASSERT(mir->fallible());
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
-    } else {
-        // -0|0 == 0
+    if (mir->canBeNegativeDividend()) {
+        if (!mir->isTruncated()) {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        } else {
+            // -0|0 == 0
+        }
     }
     masm.bind(&fin);
     return true;
@@ -849,12 +857,14 @@ CodeGeneratorARM::visitModMaskI(LModMaskI *ins)
     Register tmp = ToRegister(ins->getTemp(0));
     MMod *mir = ins->mir();
     masm.ma_mod_mask(src, dest, tmp, ins->shift());
-    if (!mir->isTruncated()) {
-        JS_ASSERT(mir->fallible());
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
-    } else {
-        // -0|0 == 0
+    if (mir->canBeNegativeDividend()) {
+        if (!mir->isTruncated()) {
+            JS_ASSERT(mir->fallible());
+            if (!bailoutIf(Assembler::Zero, ins->snapshot()))
+                return false;
+        } else {
+            // -0|0 == 0
+        }
     }
     return true;
 }
