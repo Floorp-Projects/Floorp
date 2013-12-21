@@ -73,6 +73,9 @@
 <!ENTITY pref_category_datareporting "Data choices">
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
 <!ENTITY pref_category_add_search_providers "Add more search providers">
+<!ENTITY pref_category_search_restore_defaults "Restore search engines">
+<!ENTITY pref_search_restore_defaults "Restore defaults">
+<!ENTITY pref_search_restore_defaults_summary "Restore defaults">
 <!-- Localization note (pref_search_tip) : "TIP" as in "hint", "clue" etc. Displayed as an
      advisory message on the customise search providers settings page explaining how to add new
      search providers.-->

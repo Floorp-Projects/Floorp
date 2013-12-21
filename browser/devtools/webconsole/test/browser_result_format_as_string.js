@@ -28,10 +28,10 @@ function performTest(hud)
     ok(!hud.outputNode.querySelector("#foobar"), "no #foobar element found");
 
     ok(msg, "eval output node found");
-    is(msg.textContent.indexOf("HTMLDivElement"), -1,
-       "HTMLDivElement string is not displayed");
-    isnot(msg.textContent.indexOf("HTMLParagraphElement"), -1,
-          "HTMLParagraphElement string is displayed");
+    is(msg.textContent.indexOf("<div>"), -1,
+       "<div> string is not displayed");
+    isnot(msg.textContent.indexOf("<p>"), -1,
+          "<p> string is displayed");
 
     EventUtils.synthesizeMouseAtCenter(msg, {type: "mousemove"});
     ok(!gBrowser._bug772506, "no content variable");

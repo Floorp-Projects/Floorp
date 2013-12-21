@@ -523,8 +523,9 @@ this.FxAccounts.prototype = Object.freeze({
           return null;
         }
         if (!internal.isUserEmailVerified(data)) {
-          // If the email is not verified, start polling for verification and
-          // return the unverified account credentials.
+          // If the email is not verified, start polling for verification,
+          // but return null right away.  We don't want to return a promise
+          // that might not be fulfilled for a long time.
           internal.startVerifiedCheck(data);
         }
         return data;
@@ -558,6 +559,15 @@ this.FxAccounts.prototype = Object.freeze({
           });
       });
   },
+
+  getKeys: function() {
+    return internal.getKeys();
+  },
+
+  whenVerified: function(userData) {
+    return internal.whenVerified(userData);
+  },
+
 
   /**
    * Sign the current user out.

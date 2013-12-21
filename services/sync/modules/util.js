@@ -38,6 +38,7 @@ this.Utils = {
   safeAtoB: CommonUtils.safeAtoB,
   byteArrayToString: CommonUtils.byteArrayToString,
   bytesAsHex: CommonUtils.bytesAsHex,
+  hexToBytes: CommonUtils.hexToBytes,
   encodeBase32: CommonUtils.encodeBase32,
   decodeBase32: CommonUtils.decodeBase32,
 
@@ -60,7 +61,7 @@ this.Utils = {
    *
    * @usage MyObj._catch = Utils.catch;
    *        MyObj.foo = function() { this._catch(func)(); }
-   *        
+   *
    * Optionally pass a function which will be called if an
    * exception occurs.
    */
@@ -101,7 +102,7 @@ this.Utils = {
       }
     };
   },
-  
+
   isLockException: function isLockException(ex) {
     return ex && ex.indexOf && ex.indexOf("Could not acquire lock.") == 0;
   },
@@ -109,14 +110,14 @@ this.Utils = {
   /**
    * Wrap functions to notify when it starts and finishes executing or if it
    * threw an error.
-   * 
+   *
    * The message is a combination of a provided prefix, the local name, and
    * the event. Possible events are: "start", "finish", "error". The subject
    * is the function's return value on "finish" or the caught exception on
    * "error". The data argument is the predefined data value.
-   * 
+   *
    * Example:
-   * 
+   *
    * @usage function MyObj(name) {
    *          this.name = name;
    *          this._notify = Utils.notify("obj:");
@@ -524,7 +525,7 @@ this.Utils = {
     // Something else -- just return.
     return pp;
   },
-  
+
   normalizeAccount: function normalizeAccount(acc) {
     return acc.trim();
   },
@@ -567,7 +568,7 @@ this.Utils = {
 
     if (status == slots.SLOT_NOT_LOGGED_IN)
       return true;
-    
+
     // something wacky happened, pretend MP is locked
     return true;
   },
@@ -586,7 +587,7 @@ this.Utils = {
     } catch(e) {}
     return false;
   },
-  
+
   /**
    * Return a value for a backoff interval.  Maximum is eight hours, unless
    * Status.backoffInterval is higher.
