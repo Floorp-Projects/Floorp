@@ -1216,7 +1216,8 @@ public:
           MOZ_ASSERT(target == globalTarget->GetWrapperPreserveColor());
 
           // Icky, we have to fire an InternalScriptErrorEvent...
-          InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
+          MOZ_ASSERT(!NS_IsMainThread());
+          InternalScriptErrorEvent event(true, NS_USER_DEFINED_EVENT);
           event.lineNr = aLineNumber;
           event.errorMsg = aMessage.get();
           event.fileName = aFilename.get();
@@ -1231,6 +1232,7 @@ public:
         }
         else if ((sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
           // Icky, we have to fire an InternalScriptErrorEvent...
+          MOZ_ASSERT(NS_IsMainThread());
           InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
           event.lineNr = aLineNumber;
           event.errorMsg = aMessage.get();
@@ -3122,6 +3124,7 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
       do_QueryInterface(windowAction.mWindow);
     MOZ_ASSERT(sgo);
 
+    MOZ_ASSERT(NS_IsMainThread());
     InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
     event.lineNr = aLineNumber;
     event.errorMsg = aMessage.BeginReading();
