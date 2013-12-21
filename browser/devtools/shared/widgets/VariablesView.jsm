@@ -27,6 +27,9 @@ Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+  "resource://gre/modules/PluralForm.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1",
   "nsIClipboardHelper");
@@ -2346,7 +2349,10 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       this._valueLabel.classList.remove(VariablesView.getClass(prevGrip));
     }
     this._valueGrip = aGrip;
-    this._valueString = VariablesView.getString(aGrip, true);
+    this._valueString = VariablesView.getString(aGrip, {
+      concise: true,
+      noEllipsis: true,
+    });
     this._valueClassName = VariablesView.getClass(aGrip);
 
     this._valueLabel.classList.add(this._valueClassName);
@@ -3118,12 +3124,16 @@ VariablesView.getGrip = function(aValue) {
  *
  * @param any aGrip
  *        @see Variable.setGrip
- * @param boolean aConciseFlag
- *        Return a concisely formatted property string.
+ * @param object aOptions
+ *        Options:
+ *        - concise: boolean that tells you want a concisely formatted string.
+ *        - noStringQuotes: boolean that tells to not quote strings.
+ *        - noEllipsis: boolean that tells to not add an ellipsis after the
+ *        initial text of a longString.
  * @return string
  *         The formatted property string.
  */
-VariablesView.getString = function(aGrip, aConciseFlag) {
+VariablesView.getString = function(aGrip, aOptions = {}) {
   if (aGrip && typeof aGrip == "object") {
     switch (aGrip.type) {
       case "undefined":
@@ -3133,18 +3143,30 @@ VariablesView.getString = function(aGrip, aConciseFlag) {
       case "-Infinity":
       case "-0":
         return aGrip.type;
-      case "longString":
-        return "\"" + aGrip.initial + "\"";
       default:
-        if (!aConciseFlag) {
-          return "[" + aGrip.type + " " + aGrip.class + "]";
+        let stringifier = VariablesView.stringifiers.byType[aGrip.type];
+        if (stringifier) {
+          let result = stringifier(aGrip, aOptions);
+          if (result != null) {
+            return result;
+          }
         }
-        return aGrip.class;
+
+        if (aGrip.displayString) {
+          return VariablesView.getString(aGrip.displayString, aOptions);
+        }
+
+        if (aGrip.type == "object" && aOptions.concise) {
+          return aGrip.class;
+        }
+
+        return "[" + aGrip.type + " " + aGrip.class + "]";
     }
   }
+
   switch (typeof aGrip) {
     case "string":
-      return "\"" + aGrip + "\"";
+      return VariablesView.stringifiers.byType.string(aGrip, aOptions);
     case "boolean":
       return aGrip ? "true" : "false";
     case "number":
@@ -3154,6 +3176,367 @@ VariablesView.getString = function(aGrip, aConciseFlag) {
     default:
       return aGrip + "";
   }
+};
+
+/**
+ * The VariablesView stringifiers are used by VariablesView.getString(). These
+ * are organized by object type, object class and by object actor preview kind.
+ * Some objects share identical ways for previews, for example Arrays, Sets and
+ * NodeLists.
+ *
+ * Any stringifier function must return a string. If null is returned, * then
+ * the default stringifier will be used. When invoked, the stringifier is
+ * given the same two arguments as those given to VariablesView.getString().
+ */
+VariablesView.stringifiers = {};
+
+VariablesView.stringifiers.byType = {
+  string: function(aGrip, {noStringQuotes}) {
+    if (noStringQuotes) {
+      return aGrip;
+    }
+    return uneval(aGrip);
+  },
+
+  longString: function({initial}, {noStringQuotes, noEllipsis}) {
+    let ellipsis = noEllipsis ? "" : Scope.ellipsis;
+    if (noStringQuotes) {
+      return initial + ellipsis;
+    }
+    let result = uneval(initial);
+    if (!ellipsis) {
+      return result;
+    }
+    return result.substr(0, result.length - 1) + ellipsis + '"';
+  },
+
+  object: function(aGrip, aOptions) {
+    let {preview} = aGrip;
+    let stringifier;
+    if (preview && preview.kind) {
+      stringifier = VariablesView.stringifiers.byObjectKind[preview.kind];
+    }
+    if (!stringifier && aGrip.class) {
+      stringifier = VariablesView.stringifiers.byObjectClass[aGrip.class];
+    }
+    if (stringifier) {
+      return stringifier(aGrip, aOptions);
+    }
+    return null;
+  },
+}; // VariablesView.stringifiers.byType
+
+VariablesView.stringifiers.byObjectClass = {
+  Function: function(aGrip, {concise}) {
+    // TODO: Bug 948484 - support arrow functions and ES6 generators
+
+    let name = aGrip.userDisplayName || aGrip.displayName || aGrip.name || "";
+    name = VariablesView.getString(name, { noStringQuotes: true });
+
+    // TODO: Bug 948489 - Support functions with destructured parameters and
+    // rest parameters
+    let params = aGrip.parameterNames || "";
+    if (!concise) {
+      return "function " + name + "(" + params + ")";
+    }
+    return (name || "function ") + "(" + params + ")";
+  },
+
+  RegExp: function({displayString}) {
+    return VariablesView.getString(displayString, { noStringQuotes: true });
+  },
+
+  Date: function({preview}) {
+    if (!preview || !("timestamp" in preview)) {
+      return null;
+    }
+
+    if (typeof preview.timestamp != "number") {
+      return new Date(preview.timestamp).toString(); // invalid date
+    }
+
+    return "Date " + new Date(preview.timestamp).toISOString();
+  },
+}; // VariablesView.stringifiers.byObjectClass
+
+VariablesView.stringifiers.byObjectKind = {
+  ArrayLike: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+    if (concise) {
+      return aGrip.class + "[" + preview.length + "]";
+    }
+
+    if (!preview.items) {
+      return null;
+    }
+
+    let shown = 0, result = [], lastHole = null;
+    for (let item of preview.items) {
+      if (item === null) {
+        if (lastHole !== null) {
+          result[lastHole] += ",";
+        } else {
+          result.push("");
+        }
+        lastHole = result.length - 1;
+      } else {
+        lastHole = null;
+        result.push(VariablesView.getString(item, { concise: true }));
+      }
+      shown++;
+    }
+
+    if (shown < preview.length) {
+      let n = preview.length - shown;
+      result.push(VariablesView.stringifiers._getNMoreString(n));
+    } else if (lastHole !== null) {
+      // make sure we have the right number of commas...
+      result[lastHole] += ",";
+    }
+
+    let prefix = aGrip.class == "Array" ? "" : aGrip.class + " ";
+    return prefix + "[" + result.join(", ") + "]";
+  },
+
+  MapLike: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+    if (concise || !preview.entries) {
+      let size = typeof preview.size == "number" ?
+                   "[" + preview.size + "]" : "";
+      return aGrip.class + size;
+    }
+
+    let entries = [];
+    for (let [key, value] of preview.entries) {
+      let keyString = VariablesView.getString(key, {
+        concise: true,
+        noStringQuotes: true,
+      });
+      let valueString = VariablesView.getString(value, { concise: true });
+      entries.push(keyString + ": " + valueString);
+    }
+
+    if (typeof preview.size == "number" && preview.size > entries.length) {
+      let n = preview.size - entries.length;
+      entries.push(VariablesView.stringifiers._getNMoreString(n));
+    }
+
+    return aGrip.class + " {" + entries.join(", ") + "}";
+  },
+
+  ObjectWithText: function(aGrip, {concise}) {
+    if (concise) {
+      return aGrip.class;
+    }
+
+    return aGrip.class + " " + VariablesView.getString(aGrip.preview.text);
+  },
+
+  ObjectWithURL: function(aGrip, {concise}) {
+    let result = aGrip.class;
+    let url = aGrip.preview.url;
+    if (!VariablesView.isFalsy({ value: url })) {
+      result += " \u2192 " + WebConsoleUtils.abbreviateSourceURL(url,
+                             { onlyCropQuery: !concise });
+    }
+    return result;
+  },
+
+  // Stringifier for any kind of object.
+  Object: function(aGrip, {concise}) {
+    if (concise) {
+      return aGrip.class;
+    }
+
+    let {preview} = aGrip;
+    let props = [];
+    for (let key of Object.keys(preview.ownProperties || {})) {
+      let value = preview.ownProperties[key];
+      let valueString = "";
+      if (value.get) {
+        valueString = "Getter";
+      } else if (value.set) {
+        valueString = "Setter";
+      } else {
+        valueString = VariablesView.getString(value.value, { concise: true });
+      }
+      props.push(key + ": " + valueString);
+    }
+
+    for (let key of Object.keys(preview.safeGetterValues || {})) {
+      let value = preview.safeGetterValues[key];
+      let valueString = VariablesView.getString(value.getterValue,
+                                                { concise: true });
+      props.push(key + ": " + valueString);
+    }
+
+    if (!props.length) {
+      return null;
+    }
+
+    if (preview.ownPropertiesLength) {
+      let previewLength = Object.keys(preview.ownProperties).length;
+      let diff = preview.ownPropertiesLength - previewLength;
+      if (diff > 0) {
+        props.push(VariablesView.stringifiers._getNMoreString(diff));
+      }
+    }
+
+    let prefix = aGrip.class != "Object" ? aGrip.class + " " : "";
+    return prefix + "{" + props.join(", ") + "}";
+  }, // Object
+
+  Error: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+    let name = VariablesView.getString(preview.name, { noStringQuotes: true });
+    if (concise) {
+      return name || aGrip.class;
+    }
+
+    let msg = name + ": " +
+              VariablesView.getString(preview.message, { noStringQuotes: true });
+
+    if (!VariablesView.isFalsy({ value: preview.stack })) {
+      msg += "\n" + STR.GetStringFromName("variablesViewErrorStacktrace") +
+             "\n" + preview.stack;
+    }
+
+    return msg;
+  },
+
+  DOMException: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+    if (concise) {
+      return preview.name || aGrip.class;
+    }
+
+    let msg = aGrip.class + " [" + preview.name + ": " +
+              VariablesView.getString(preview.message) + "\n" +
+              "code: " + preview.code + "\n" +
+              "nsresult: 0x" + (+preview.result).toString(16);
+
+    if (preview.filename) {
+      msg += "\nlocation: " + preview.filename;
+      if (preview.lineNumber) {
+        msg += ":" + preview.lineNumber;
+      }
+    }
+
+    return msg + "]";
+  },
+
+  DOMEvent: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+    if (!preview.type) {
+      return null;
+    }
+
+    if (concise) {
+      return aGrip.class + " " + preview.type;
+    }
+
+    let result = preview.type;
+
+    if (preview.eventKind == "key" && preview.modifiers &&
+        preview.modifiers.length) {
+      result += " " + preview.modifiers.join("-");
+    }
+
+    let props = [];
+    if (preview.target) {
+      let target = VariablesView.getString(preview.target, { concise: true });
+      props.push("target: " + target);
+    }
+
+    for (let prop in preview.properties) {
+      let value = preview.properties[prop];
+      props.push(prop + ": " + VariablesView.getString(value, { concise: true }));
+    }
+
+    return result + " {" + props.join(", ") + "}";
+  }, // DOMEvent
+
+  DOMNode: function(aGrip, {concise}) {
+    let {preview} = aGrip;
+
+    switch (preview.nodeType) {
+      case Ci.nsIDOMNode.DOCUMENT_NODE: {
+        let location = WebConsoleUtils.abbreviateSourceURL(preview.location,
+                                                           { onlyCropQuery: !concise });
+        return aGrip.class + " \u2192 " + location;
+      }
+
+      case Ci.nsIDOMNode.ATTRIBUTE_NODE: {
+        let value = VariablesView.getString(preview.value, { noStringQuotes: true });
+        return preview.nodeName + '="' + escapeHTML(value) + '"';
+      }
+
+      case Ci.nsIDOMNode.TEXT_NODE:
+        return preview.nodeName + " " +
+               VariablesView.getString(preview.textContent);
+
+      case Ci.nsIDOMNode.COMMENT_NODE: {
+        let comment = VariablesView.getString(preview.textContent,
+                                              { noStringQuotes: true });
+        return "<!--" + comment + "-->";
+      }
+
+      case Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE: {
+        if (concise || !preview.childNodes) {
+          return aGrip.class + "[" + preview.childNodesLength + "]";
+        }
+        let nodes = [];
+        for (let node of preview.childNodes) {
+          nodes.push(VariablesView.getString(node));
+        }
+        if (nodes.length < preview.childNodesLength) {
+          let n = preview.childNodesLength - nodes.length;
+          nodes.push(VariablesView.stringifiers._getNMoreString(n));
+        }
+        return aGrip.class + " [" + nodes.join(", ") + "]";
+      }
+
+      case Ci.nsIDOMNode.ELEMENT_NODE: {
+        let attrs = preview.attributes;
+        if (!concise) {
+          let n = 0, result = "<" + preview.nodeName;
+          for (let name in attrs) {
+            let value = VariablesView.getString(attrs[name],
+                                                { noStringQuotes: true });
+            result += " " + name + '="' + escapeHTML(value) + '"';
+            n++;
+          }
+          if (preview.attributesLength > n) {
+            result += " " + Scope.ellipsis;
+          }
+          return result + ">";
+        }
+
+        let result = "<" + preview.nodeName;
+        if (attrs.id) {
+          result += "#" + attrs.id;
+        }
+        return result + ">";
+      }
+
+      default:
+        return null;
+    }
+  }, // DOMNode
+}; // VariablesView.stringifiers.byObjectKind
+
+
+/**
+ * Get the "N more…" formatted string, given an N. This is used for displaying
+ * how many elements are not displayed in an object preview (eg. an array).
+ *
+ * @private
+ * @param number aNumber
+ * @return string
+ */
+VariablesView.stringifiers._getNMoreString = function(aNumber) {
+  let str = STR.GetStringFromName("variablesViewMoreObjects");
+  return PluralForm.get(aNumber, str).replace("#1", aNumber);
 };
 
 /**
@@ -3207,6 +3590,22 @@ let generateId = (function() {
     return aName.toLowerCase().trim().replace(/\s+/g, "-") + (++count);
   };
 })();
+
+/**
+ * Escape some HTML special characters. We do not need full HTML serialization
+ * here, we just want to make strings safe to display in HTML attributes, for
+ * the stringifiers.
+ *
+ * @param string aString
+ * @return string
+ */
+function escapeHTML(aString) {
+  return aString.replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+}
+
 
 /**
  * An Editable encapsulates the UI of an edit box that overlays a label,

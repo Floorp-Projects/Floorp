@@ -3,18 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let WebConsoleUtils, gDevTools, TargetFactory, console, promise, require;
+let WebConsoleUtils, TargetFactory, require;
+let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+let {Promise: promise} = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 (() => {
-  gDevTools = Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools;
-  console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
-  promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
-
-  let tools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-  let utils = tools.require("devtools/toolkit/webconsole/utils");
-  TargetFactory = tools.TargetFactory;
+  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  let utils = devtools.require("devtools/toolkit/webconsole/utils");
+  TargetFactory = devtools.TargetFactory;
   WebConsoleUtils = utils.Utils;
-  require = tools.require;
+  require = devtools.require;
 })();
 // promise._reportErrors = true; // please never leave me.
 
@@ -152,15 +152,20 @@ function findLogEntry(aString)
  * @param function [aCallback]
  *        Optional function to invoke after the Web Console completes
  *        initialization (web-console-created).
+ * @return object
+ *         A promise that is resolved once the web console is open.
  */
 function openConsole(aTab, aCallback = function() { })
 {
+  let deferred = promise.defer();
   let target = TargetFactory.forTab(aTab || tab);
   gDevTools.showToolbox(target, "webconsole").then(function(toolbox) {
     let hud = toolbox.getCurrentPanel().hud;
     hud.jsterm._lazyVariablesView = false;
     aCallback(hud);
+    deferred.resolve(hud);
   });
+  return deferred.promise;
 }
 
 /**
@@ -1258,4 +1263,154 @@ function whenDelayedStartupFinished(aWindow, aCallback)
       executeSoon(aCallback);
     }
   }, "browser-delayed-startup-finished", false);
+}
+
+/**
+ * Check the web console output for the given inputs. Each input is checked for
+ * the expected JS eval result, the result of calling print(), the result of
+ * console.log(). The JS eval result is also checked if it opens the variables
+ * view on click.
+ *
+ * @param object hud
+ *        The web console instance to work with.
+ * @param array inputTests
+ *        An array of input tests. An input test element is an object. Each
+ *        object has the following properties:
+ *        - input: string, JS input value to execute.
+ *
+ *        - output: string|RegExp, expected JS eval result.
+ *
+ *        - inspectable: boolean, when true, the test runner expects the JS eval
+ *        result is an object that can be clicked for inspection.
+ *
+ *        - noClick: boolean, when true, the test runner does not click the JS
+ *        eval result. Some objects, like |window|, have a lot of properties and
+ *        opening vview for them is very slow (they can cause timeouts in debug
+ *        builds).
+ *
+ *        - printOutput: string|RegExp, optional, expected output for
+ *        |print(input)|. If this is not provided, printOutput = output.
+ *
+ *        - variablesViewLabel: string|RegExp, optional, the expected variables
+ *        view label when the object is inspected. If this is not provided, then
+ *        |output| is used.
+ */
+function checkOutputForInputs(hud, inputTests)
+{
+  let eventHandlers = new Set();
+
+  function* runner()
+  {
+    for (let [i, entry] of inputTests.entries()) {
+      info("checkInput(" + i + "): " + entry.input);
+      yield checkInput(entry);
+    }
+
+    for (let fn of eventHandlers) {
+      hud.jsterm.off("variablesview-open", fn);
+    }
+  }
+
+  function* checkInput(entry)
+  {
+    yield checkConsoleLog(entry);
+    yield checkPrintOutput(entry);
+    yield checkJSEval(entry);
+  }
+
+  function checkConsoleLog(entry)
+  {
+    hud.jsterm.clearOutput();
+    hud.jsterm.execute("console.log(" + entry.input + ")");
+
+    return waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "console.log() output: " + entry.output,
+        text: entry.output,
+        category: CATEGORY_WEBDEV,
+        severity: SEVERITY_LOG,
+      }],
+    });
+  }
+
+  function checkPrintOutput(entry)
+  {
+    hud.jsterm.clearOutput();
+    hud.jsterm.execute("print(" + entry.input + ")");
+
+    let printOutput = entry.printOutput || entry.output;
+
+    return waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "print() output: " + printOutput,
+        text: printOutput,
+        category: CATEGORY_OUTPUT,
+      }],
+    });
+  }
+
+  function* checkJSEval(entry)
+  {
+    hud.jsterm.clearOutput();
+    hud.jsterm.execute(entry.input);
+
+    let [result] = yield waitForMessages({
+      webconsole: hud,
+      messages: [{
+        name: "JS eval output: " + entry.output,
+        text: entry.output,
+        category: CATEGORY_OUTPUT,
+      }],
+    });
+
+    if (!entry.noClick) {
+      let msg = [...result.matched][0];
+      yield checkObjectClick(entry, msg);
+    }
+  }
+
+  function checkObjectClick(entry, msg)
+  {
+    let body = msg.querySelector(".body a") || msg.querySelector(".body");
+    ok(body, "the message body");
+
+    let deferred = promise.defer();
+
+    entry._onVariablesViewOpen = onVariablesViewOpen.bind(null, entry, deferred);
+    hud.jsterm.on("variablesview-open", entry._onVariablesViewOpen);
+    eventHandlers.add(entry._onVariablesViewOpen);
+
+    body.scrollIntoView();
+    EventUtils.synthesizeMouse(body, 2, 2, {}, hud.iframeWindow);
+
+    if (entry.inspectable) {
+      info("message body tagName '" + body.tagName +  "' className '" + body.className + "'");
+      return deferred.promise; // wait for the panel to open if we need to.
+    }
+
+    return promise.resolve(null);
+  }
+
+  function onVariablesViewOpen(entry, deferred, event, view, options)
+  {
+    let label = entry.variablesViewLabel || entry.output;
+    if (typeof label == "string" && options.label != label) {
+      return;
+    }
+    if (label instanceof RegExp && !label.test(options.label)) {
+      return;
+    }
+
+    hud.jsterm.off("variablesview-open", entry._onVariablesViewOpen);
+    eventHandlers.delete(entry._onVariablesViewOpen);
+    entry._onVariablesViewOpen = null;
+
+    ok(entry.inspectable, "variables view was shown");
+
+    deferred.resolve(null);
+  }
+
+  return Task.spawn(runner);
 }

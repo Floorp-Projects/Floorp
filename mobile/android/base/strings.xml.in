@@ -21,7 +21,11 @@
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
   <string name="android_package_name">@ANDROID_PACKAGE_NAME@</string>
   <string name="content_authority_db_browser">@ANDROID_PACKAGE_NAME@.db.browser</string>
+  <string name="content_authority_db_formhistory">@ANDROID_PACKAGE_NAME@.db.formhistory</string>
+  <string name="content_authority_db_passwords">@ANDROID_PACKAGE_NAME@.db.passwords</string>
+  <string name="content_authority_db_tabs">@ANDROID_PACKAGE_NAME@.db.tabs</string>
   <string name="moz_android_shared_account_type">@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@</string>
+  <string name="moz_android_shared_fxaccount_type">@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@</string>
 #include ../services/strings.xml.in
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
@@ -89,7 +93,11 @@
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
   <string name="pref_category_add_search_providers">&pref_category_add_search_providers;</string>
+  <string name="pref_category_search_restore_defaults">&pref_category_search_restore_defaults;</string>
+  <string name="pref_search_restore_defaults">&pref_search_restore_defaults;</string>
+  <string name="pref_search_restore_defaults_summary">&pref_search_restore_defaults_summary;</string>
   <string name="pref_search_tip">&pref_search_tip;</string>
+
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_docs">&pref_developer_remotedebugging_docs;</string>

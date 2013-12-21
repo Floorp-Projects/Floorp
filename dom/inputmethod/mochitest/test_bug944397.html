@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=944397
+-->
+<head>
+  <title>Basic test for InputMethod API.</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=944397">Mozilla Bug 944397</a>
+<input type="text" />
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+inputmethod_setup(function() {
+  runTest();
+});
+
+// The frame script running in file_test_app.html.
+function appFrameScript() {
+  let input = content.document.getElementById('test-input');
+  input.oninput = function() {
+    sendAsyncMessage('test:InputMethod:oninput', {});
+  };
+}
+
+function runTest() {
+  var timeoutId = null;
+
+  // Create an app frame to recieve keyboard inputs.
+  let app = document.createElement('iframe');
+  app.src = 'file_test_app.html';
+  app.setAttribute('mozbrowser', true);
+  document.body.appendChild(app);
+  app.addEventListener('mozbrowserloadend', function() {
+    let mm = SpecialPowers.getBrowserFrameMessageManager(app);
+    mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
+    mm.addMessageListener("test:InputMethod:oninput", function() {
+      ok(true, 'Keyboard input was received.');
+      clearTimeout(timeoutId);
+      inputmethod_cleanup();
+    });
+  });
+
+  // Create a browser frame to load the input method app.
+  let keyboard = document.createElement('iframe');
+  keyboard.setAttribute('mozbrowser', true);
+  document.body.appendChild(keyboard);
+
+  let path = location.pathname;
+  let imeUrl = location.protocol + '//' + location.host +
+               path.substring(0, path.lastIndexOf('/')) +
+               '/file_inputmethod.html#data';
+  SpecialPowers.pushPermissions([{
+    type: 'input',
+    allow: true,
+    context: imeUrl
+  }], function() {
+     let req = keyboard.setInputMethodActive(true);
+
+     req.onsuccess = function() {
+       ok(true, 'setInputMethodActive succeeded.');
+       timeoutId = setTimeout(function() {
+        inputmethod_cleanup();
+        ok(false, 'Failed to generate keyboard input.');
+       }, 60000);
+     };
+
+     req.onerror = function() {
+       ok(false, 'setInputMethodActive failed: ' + this.error.name);
+       inputmethod_cleanup();
+     };
+
+     // Loads the input method app to the browser frame after a delay.
+     setTimeout(function() {
+       keyboard.src = imeUrl;
+     }, 100);
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
+
