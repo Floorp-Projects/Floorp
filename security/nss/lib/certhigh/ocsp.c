@@ -107,7 +107,7 @@ static SECItem *
 ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena, 
                                        CERTOCSPRequest *request,
                                        const char *location,
-				       const char *mechanism,
+				       const char *method,
 				       PRTime time,
                                        PRBool addServiceLocator,
                                        void *pwArg,
@@ -1629,8 +1629,8 @@ loser:
  * results in a NULL being returned (and an appropriate error set).
  */
 SECItem *
-CERT_GetSPKIDigest(PLArenaPool *arena, const CERTCertificate *cert,
-                           SECOidTag digestAlg, SECItem *fill)
+CERT_GetSubjectPublicKeyDigest(PLArenaPool *arena, const CERTCertificate *cert,
+                               SECOidTag digestAlg, SECItem *fill)
 {
     SECItem spk;
 
@@ -1716,19 +1716,19 @@ ocsp_CreateCertID(PLArenaPool *arena, CERTCertificate *cert, PRTime time)
         goto loser;
     }
 
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_SHA1,
-				   &(certID->issuerKeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_SHA1,
+				       &certID->issuerKeyHash) == NULL) {
 	goto loser;
     }
     certID->issuerSHA1KeyHash.data = certID->issuerKeyHash.data;
     certID->issuerSHA1KeyHash.len = certID->issuerKeyHash.len;
     /* cache the other two hash algorithms as well */
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_MD5,
-				   &(certID->issuerMD5KeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_MD5,
+				       &certID->issuerMD5KeyHash) == NULL) {
 	goto loser;
     }
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_MD2,
-				   &(certID->issuerMD2KeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_MD2,
+				       &certID->issuerMD2KeyHash) == NULL) {
 	goto loser;
     }
 
@@ -3467,7 +3467,7 @@ loser:
 }
 
 /*
- * FUNCTION: CERT_GetEncodedOCSPResponseByMechanism
+ * FUNCTION: CERT_GetEncodedOCSPResponseByMethod
  *   Creates and sends a request to an OCSP responder, then reads and
  *   returns the (encoded) response.
  * INPUTS:
@@ -3485,10 +3485,10 @@ loser:
  *     sent and whether there are any trusted responders in place.
  *   const char *location
  *     The location of the OCSP responder (a URL).
- *   const char *mechanism
- *     The protocol mechanisms used when retrieving the OCSP response.
+ *   const char *method
+ *     The protocol method used when retrieving the OCSP response.
  *     Currently support: "GET" (http GET) and "POST" (http POST).
- *     Additionals mechanisms for http or other protocols might be added
+ *     Additionals methods for http or other protocols might be added
  *     in the future.
  *   PRTime time
  *     Indicates the time for which the certificate status is to be 
@@ -3518,19 +3518,19 @@ loser:
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
 SECItem *
-CERT_GetEncodedOCSPResponseByMechanism(PLArenaPool *arena, CERTCertList *certList,
-				       const char *location, const char *mechanism,
-				       PRTime time, PRBool addServiceLocator,
-				       CERTCertificate *signerCert, void *pwArg,
-				       CERTOCSPRequest **pRequest)
+CERT_GetEncodedOCSPResponseByMethod(PLArenaPool *arena, CERTCertList *certList,
+				    const char *location, const char *method,
+				    PRTime time, PRBool addServiceLocator,
+				    CERTCertificate *signerCert, void *pwArg,
+				    CERTOCSPRequest **pRequest)
 {
     CERTOCSPRequest *request;
     request = CERT_CreateOCSPRequest(certList, time, addServiceLocator,
                                      signerCert);
     if (!request)
         return NULL;
-    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location, 
-                                                  mechanism, time, addServiceLocator, 
+    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location,
+                                                  method, time, addServiceLocator,
                                                   pwArg, pRequest);
 }
 
@@ -3540,7 +3540,7 @@ CERT_GetEncodedOCSPResponseByMechanism(PLArenaPool *arena, CERTCertList *certLis
  *   returns the (encoded) response.
  *
  * This is a legacy API that behaves identically to
- * CERT_GetEncodedOCSPResponseByMechanism using the "POST" mechanism.
+ * CERT_GetEncodedOCSPResponseByMethod using the "POST" method.
  */
 SECItem *
 CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
@@ -3549,9 +3549,9 @@ CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
 			    CERTCertificate *signerCert, void *pwArg,
 			    CERTOCSPRequest **pRequest)
 {
-    return CERT_GetEncodedOCSPResponseByMechanism(arena, certList, location,
-                                                  "POST", time, addServiceLocator,
-						  signerCert, pwArg, pRequest);
+    return CERT_GetEncodedOCSPResponseByMethod(arena, certList, location,
+					       "POST", time, addServiceLocator,
+					       signerCert, pwArg, pRequest);
 }
 
 /* URL encode a buffer that consists of base64-characters, only,
@@ -3624,7 +3624,7 @@ static SECItem *
 ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena,
                                        CERTOCSPRequest *request,
                                        const char *location,
-				       const char *mechanism,
+				       const char *method,
 				       PRTime time,
                                        PRBool addServiceLocator,
                                        void *pwArg,
@@ -3646,10 +3646,10 @@ ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena,
     if (encodedRequest == NULL)
 	goto loser;
 
-    if (!strcmp(mechanism, "GET")) {
+    if (!strcmp(method, "GET")) {
         encodedResponse = cert_GetOCSPResponse(arena, location, encodedRequest);
     }
-    else if (!strcmp(mechanism, "POST")) {
+    else if (!strcmp(method, "POST")) {
         encodedResponse = CERT_PostOCSPRequest(arena, location, encodedRequest);
     }
     else {
@@ -3673,7 +3673,7 @@ static SECItem *
 cert_FetchOCSPResponse(PLArenaPool *arena,  const char *location, 
                        const SECItem *encodedRequest);
 
-/* using HTTP GET mechanism */
+/* using HTTP GET method */
 static SECItem *
 cert_GetOCSPResponse(PLArenaPool *arena, const char *location, 
                      const SECItem *encodedRequest)
@@ -3683,7 +3683,7 @@ cert_GetOCSPResponse(PLArenaPool *arena, const char *location,
     size_t pathLength;
     PRInt32 urlEncodedBufLength;
     size_t base64size;
-    unsigned char b64ReqBuf[max_get_request_size+1];
+    char b64ReqBuf[max_get_request_size+1];
     size_t slashLengthIfNeeded = 0;
     size_t getURLLength;
     SECItem *item;
@@ -3705,7 +3705,8 @@ cert_GetOCSPResponse(PLArenaPool *arena, const char *location,
 	return NULL;
     }
     memset(b64ReqBuf, 0, sizeof(b64ReqBuf));
-    PL_Base64Encode(encodedRequest->data, encodedRequest->len, b64ReqBuf);
+    PL_Base64Encode((const char*)encodedRequest->data, encodedRequest->len,
+		    b64ReqBuf);
 
     urlEncodedBufLength = ocsp_UrlEncodeBase64Buf(b64ReqBuf, NULL);
     getURLLength = pathLength + urlEncodedBufLength + slashLengthIfNeeded;
@@ -3777,7 +3778,7 @@ ocsp_GetEncodedOCSPResponseForSingleCert(PLArenaPool *arena,
                                          CERTOCSPCertID *certID, 
                                          CERTCertificate *singleCert, 
                                          const char *location,
-					 const char *mechanism,
+					 const char *method,
 					 PRTime time,
                                          PRBool addServiceLocator,
                                          void *pwArg,
@@ -3788,8 +3789,8 @@ ocsp_GetEncodedOCSPResponseForSingleCert(PLArenaPool *arena,
                                                addServiceLocator, NULL);
     if (!request)
         return NULL;
-    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location, 
-                                                  mechanism, time, addServiceLocator, 
+    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location,
+                                                  method, time, addServiceLocator,
                                                   pwArg, pRequest);
 }
 
@@ -3880,19 +3881,22 @@ ocsp_matchcert(SECItem *certIndex,CERTCertificate *testCert)
     item.data = buf;
     item.len = SHA1_LENGTH;
 
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_SHA1, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_SHA1,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
 	return PR_TRUE;
     }
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_MD5, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_MD5,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
 	return PR_TRUE;
     }
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_MD2, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_MD2,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
@@ -4445,7 +4449,7 @@ ocsp_AuthorizedResponderForCertID(CERTCertDBHandle *handle,
 
     hashAlg = SECOID_FindOIDTag(&certID->hashAlgorithm.algorithm);
 
-    keyHash = CERT_GetSPKIDigest(NULL, signerCert, hashAlg, NULL);
+    keyHash = CERT_GetSubjectPublicKeyDigest(NULL, signerCert, hashAlg, NULL);
     if (keyHash != NULL) {
 
         keyHashEQ =
@@ -4492,7 +4496,7 @@ ocsp_AuthorizedResponderForCertID(CERTCertDBHandle *handle,
         return PR_FALSE;
     }
 
-    keyHash = CERT_GetSPKIDigest(NULL, issuerCert, hashAlg, NULL);
+    keyHash = CERT_GetSubjectPublicKeyDigest(NULL, issuerCert, hashAlg, NULL);
     nameHash = CERT_GetSubjectNameDigest(NULL, issuerCert, hashAlg, NULL);
 
     CERT_DestroyCertificate(issuerCert);
@@ -5278,22 +5282,21 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
      */
 
     do {
-	const char *mechanism;
+	const char *method;
 	PRBool validResponseWithAccurateInfo = PR_FALSE;
 	retry = PR_FALSE;
 	*rv_ocsp = SECFailure;
 
 	if (currentStage == stageGET) {
-	    mechanism = "GET";
-	} else if (currentStage == stagePOST) {
-	    mechanism = "POST";
+	    method = "GET";
 	} else {
-	    PORT_Assert(0); /* our code is flawed */
+	    PORT_Assert(currentStage == stagePOST);
+	    method = "POST";
 	}
 
 	encodedResponse = 
 	    ocsp_GetEncodedOCSPResponseForSingleCert(NULL, certID, cert,
-						     location, mechanism,
+						     location, method,
 						     time, locationIsDefault,
 						     pwArg, &request);
 
@@ -5308,6 +5311,8 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
 		    case ocspCertStatus_good:
 		    case ocspCertStatus_revoked:
 			validResponseWithAccurateInfo = PR_TRUE;
+			break;
+		    default:
 			break;
 		}
 		*rv_ocsp = ocsp_SingleResponseCertHasGoodStatus(singleResponse, time);

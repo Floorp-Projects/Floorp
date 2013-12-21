@@ -4160,10 +4160,6 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
         }
     }
 
-#ifdef DEBUG
-    PropertyTree::dumpShapes(rt);
-#endif
-
     {
         gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_DESTROY);
 

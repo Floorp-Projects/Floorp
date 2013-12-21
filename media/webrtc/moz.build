@@ -6,11 +6,38 @@
 
 include('/build/gyp.mozbuild')
 
+webrtc_non_unified_sources = [
+    'trunk/webrtc/common_audio/vad/vad_core.c',                                  # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/common_audio/vad/webrtc_vad.c',                                # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_coding/codecs/g722/g722_decode.c',               # Because of name clash in the saturate function
+    'trunk/webrtc/modules/audio_coding/codecs/g722/g722_encode.c',               # Because of name clash in the saturate function
+    'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c',   # Because of name clash in the kDampFilter variable
+    'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c', # Because of name clash in the kDampFilter variable
+    'trunk/webrtc/modules/audio_coding/neteq4/audio_vector.cc',                  # Because of explicit template specializations
+    'trunk/webrtc/modules/audio_device/opensl/opensles_input.cc',                # Because of name clash in the kOption variable
+    'trunk/webrtc/modules/audio_device/opensl/opensles_output.cc',               # Because of name clash in the kOption variable
+    'trunk/webrtc/modules/audio_device/win/audio_device_core_win.cc',            # Because of ordering assumptions in strsafe.h
+    'trunk/webrtc/modules/audio_processing/aec/aec_core.c',                      # Because of name clash in the ComfortNoise function
+    'trunk/webrtc/modules/audio_processing/aecm/aecm_core.c',                    # Because of name clash in the ComfortNoise function
+    'trunk/webrtc/modules/audio_processing/aecm/echo_control_mobile.c',          # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_processing/agc/analog_agc.c',                    # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_processing/echo_cancellation_impl.cc',           # Because of name clash in the MapError function
+    'trunk/webrtc/modules/audio_processing/echo_control_mobile_impl.cc',         # Because of name clash in the MapError function
+    'trunk/webrtc/modules/audio_processing/gain_control_impl.cc',                # Because of name clash in the Handle typedef
+    'trunk/webrtc/modules/audio_processing/high_pass_filter_impl.cc',            # Because of name clash in the Handle typedef
+    'trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc',           # Because of name clash in the Handle typedef
+    'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.mm',       # Because of name clash in the nsAutoreleasePool class
+    'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.mm',  # Because of name clash in the nsAutoreleasePool class
+    'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
+    'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
+]
+
 GYP_DIRS += ['trunk']
 
 GYP_DIRS['trunk'].input = 'trunk/peerconnection.gyp'
 GYP_DIRS['trunk'].variables = gyp_vars
 GYP_DIRS['trunk'].sandbox_vars['FINAL_LIBRARY'] = 'webrtc'
+GYP_DIRS['trunk'].non_unified_sources += webrtc_non_unified_sources
 
 if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS += ['signaling']
@@ -20,11 +47,158 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         build_for_test=0
     )
     GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
+    signaling_non_unified_sources = [
+        'signaling/src/sipcc/core/gsm/fim.c',        # Because of name clash in the logTag variable
+        'signaling/src/sipcc/core/gsm/gsm_sdp.c',    # Because of name clash in the logTag variable
+        'signaling/src/sipcc/core/gsm/lsm.c',        # Because of name clash in the logTag variable
+        'signaling/src/sipcc/core/sdp/sdp_base64.c', # Because of name clash with the macro PADDING
+    ]
+    # These files cannot be built in unified mode because they force NSPR logging.
+    signaling_non_unified_sources_2 = [
+        'signaling/src/callcontrol/CallControlManagerImpl.cpp',
+        'signaling/src/common/browser_logging/CSFLog.cpp',
+        'signaling/src/media-conduit/AudioConduit.cpp',
+        'signaling/src/media-conduit/VideoConduit.cpp',
+        'signaling/src/media/CSFAudioControlWrapper.cpp',
+        'signaling/src/media/CSFVideoControlWrapper.cpp',
+        'signaling/src/media/VcmSIPCCBinding.cpp',
+        'signaling/src/mediapipeline/MediaPipeline.cpp',
+        'signaling/src/mediapipeline/SrtpFlow.cpp',
+        'signaling/src/peerconnection/MediaStreamList.cpp',
+        'signaling/src/peerconnection/PeerConnectionCtx.cpp',
+        'signaling/src/peerconnection/PeerConnectionImpl.cpp',
+        'signaling/src/peerconnection/PeerConnectionMedia.cpp',
+        'signaling/src/sipcc/core/ccapp/call_logger.c',
+        'signaling/src/sipcc/core/ccapp/capability_set.c',
+        'signaling/src/sipcc/core/ccapp/cc_call_feature.c',
+        'signaling/src/sipcc/core/ccapp/cc_config.c',
+        'signaling/src/sipcc/core/ccapp/cc_device_feature.c',
+        'signaling/src/sipcc/core/ccapp/cc_device_manager.c',
+        'signaling/src/sipcc/core/ccapp/cc_info.c',
+        'signaling/src/sipcc/core/ccapp/cc_service.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_call.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_call_info.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_config.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_device.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_device_info.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_feature_info.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_line_info.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_service.c',
+        'signaling/src/sipcc/core/ccapp/ccapi_snapshot.c',
+        'signaling/src/sipcc/core/ccapp/ccapp_task.c',
+        'signaling/src/sipcc/core/ccapp/ccprovider.c',
+        'signaling/src/sipcc/core/ccapp/conf_roster.c',
+        'signaling/src/sipcc/core/common/cfgfile_utils.c',
+        'signaling/src/sipcc/core/common/config_api.c',
+        'signaling/src/sipcc/core/common/config_parser.c',
+        'signaling/src/sipcc/core/common/init.c',
+        'signaling/src/sipcc/core/common/logger.c',
+        'signaling/src/sipcc/core/common/misc.c',
+        'signaling/src/sipcc/core/common/plat.c',
+        'signaling/src/sipcc/core/common/platform_api.c',
+        'signaling/src/sipcc/core/common/prot_configmgr.c',
+        'signaling/src/sipcc/core/common/resource_manager.c',
+        'signaling/src/sipcc/core/common/subscription_handler.c',
+        'signaling/src/sipcc/core/common/ui.c',
+        'signaling/src/sipcc/core/gsm/ccapi.c',
+        'signaling/src/sipcc/core/gsm/ccapi_strings.c',
+        'signaling/src/sipcc/core/gsm/dcsm.c',
+        'signaling/src/sipcc/core/gsm/fsm.c',
+        'signaling/src/sipcc/core/gsm/fsmb2bcnf.c',
+        'signaling/src/sipcc/core/gsm/fsmcac.c',
+        'signaling/src/sipcc/core/gsm/fsmcnf.c',
+        'signaling/src/sipcc/core/gsm/fsmdef.c',
+        'signaling/src/sipcc/core/gsm/fsmxfr.c',
+        'signaling/src/sipcc/core/gsm/gsm.c',
+        'signaling/src/sipcc/core/gsm/gsm_sdp_crypto.c',
+        'signaling/src/sipcc/core/gsm/media_cap_tbl.c',
+        'signaling/src/sipcc/core/gsm/sm.c',
+        'signaling/src/sipcc/core/gsm/subapi.c',
+        'signaling/src/sipcc/core/sdp/ccsdp.c',
+        'signaling/src/sipcc/core/sdp/sdp_access.c',
+        'signaling/src/sipcc/core/sdp/sdp_attr.c',
+        'signaling/src/sipcc/core/sdp/sdp_attr_access.c',
+        'signaling/src/sipcc/core/sdp/sdp_config.c',
+        'signaling/src/sipcc/core/sdp/sdp_main.c',
+        'signaling/src/sipcc/core/sdp/sdp_services_unix.c',
+        'signaling/src/sipcc/core/sdp/sdp_token.c',
+        'signaling/src/sipcc/core/sdp/sdp_utils.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_callinfo.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_cc.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_common_util.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_core.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_debug.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_info.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_messaging.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_platform.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_platform_tcp.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_platform_timers.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_platform_tls.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_platform_udp.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_pmh.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_publish.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_register.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_reldev.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_sdp.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_spi_utils.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_subsmanager.c',
+        'signaling/src/sipcc/core/sipstack/ccsip_task.c',
+        'signaling/src/sipcc/core/sipstack/httpish.c',
+        'signaling/src/sipcc/core/sipstack/sip_common_regmgr.c',
+        'signaling/src/sipcc/core/sipstack/sip_common_transport.c',
+        'signaling/src/sipcc/core/sipstack/sip_csps_transport.c',
+        'signaling/src/sipcc/core/sipstack/sip_interface_regmgr.c',
+        'signaling/src/sipcc/core/sipstack/sip_platform_task.c',
+        'signaling/src/sipcc/core/sipstack/sip_platform_win32_task.c',
+        'signaling/src/sipcc/core/src-common/configapp.c',
+        'signaling/src/sipcc/core/src-common/dialplan.c',
+        'signaling/src/sipcc/core/src-common/dialplanint.c',
+        'signaling/src/sipcc/core/src-common/digcalc.c',
+        'signaling/src/sipcc/core/src-common/kpml_common_util.c',
+        'signaling/src/sipcc/core/src-common/kpmlmap.c',
+        'signaling/src/sipcc/core/src-common/misc_apps_task.c',
+        'signaling/src/sipcc/core/src-common/pres_sub_not_handler.c',
+        'signaling/src/sipcc/core/src-common/publish_int.c',
+        'signaling/src/sipcc/core/src-common/string_lib.c',
+        'signaling/src/sipcc/core/src-common/util_ios_queue.c',
+        'signaling/src/sipcc/cpr/android/cpr_android_init.c',
+        'signaling/src/sipcc/cpr/android/cpr_android_stdio.c',
+        'signaling/src/sipcc/cpr/android/cpr_android_timers_using_select.c',
+        'signaling/src/sipcc/cpr/darwin/cpr_darwin_init.c',
+        'signaling/src/sipcc/cpr/darwin/cpr_darwin_stdio.c',
+        'signaling/src/sipcc/cpr/darwin/cpr_darwin_timers_using_select.c',
+        'signaling/src/sipcc/cpr/linux/cpr_linux_init.c',
+        'signaling/src/sipcc/cpr/linux/cpr_linux_ipc.c',
+        'signaling/src/sipcc/cpr/linux/cpr_linux_stdio.c',
+        'signaling/src/sipcc/cpr/linux/cpr_linux_timers_using_select.c',
+        'signaling/src/sipcc/cpr/win32/cpr_win_stdio.c',
+        'signaling/src/sipcc/cpr/win32/cpr_win_timers.c',
+        'signaling/src/sipcc/plat/common/dns_utils.c',
+        'signaling/src/sipcc/plat/csf2g/reset_api.c',
+        'signaling/src/sipcc/plat/win32/dns_utils.c',
+        'signaling/src/sipcc/plat/win32/mystub.c',
+        'signaling/src/sipcc/plat/win32/plat_api_stub.c',
+        'signaling/src/sipcc/plat/win32/plat_api_win.c',
+        'signaling/src/softphonewrapper/CC_SIPCCCall.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCCallInfo.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCCallServerInfo.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCDevice.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCDeviceInfo.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCFeatureInfo.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCLine.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCLineInfo.cpp',
+        'signaling/src/softphonewrapper/CC_SIPCCService.cpp',
+        'signaling/src/softphonewrapper/ccapi_plat_api_impl.cpp',
+    ]
+
+    GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources
+    GYP_DIRS['signaling'].non_unified_sources += signaling_non_unified_sources_2
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     GYP_DIRS += ['trunk/testing']
     GYP_DIRS['trunk/testing'].input = 'trunk/testing/gtest.gyp'
     GYP_DIRS['trunk/testing'].variables = gyp_vars
+    GYP_DIRS['trunk/testing'].non_unified_sources += webrtc_non_unified_sources
 
     if CONFIG['MOZ_WEBRTC_SIGNALING']:
         GYP_DIRS += ['signalingtest']
@@ -33,3 +207,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         GYP_DIRS['signalingtest'].variables.update(
             build_for_test=1
         )
+        GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
+        GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources_2

@@ -41,11 +41,11 @@
 
           // Test Node.cloneNode when no arguments are given
           clonedNode = hasChildren.cloneNode();
-          is(clonedNode.hasChildNodes(), true, "Node.cloneNode with true " +
-            "default on a node with children clones the child nodes.");
+          is(clonedNode.hasChildNodes(), false, "Node.cloneNode with false " +
+            "default on a node with children does not clone the child nodes.");
 
           clonedNode = noChildren.cloneNode();
-          is(clonedNode.hasChildNodes(), false, "Node.cloneNode with true " +
+          is(clonedNode.hasChildNodes(), false, "Node.cloneNode with false " +
             "default on a node without children doesn't clone child nodes." );
 
           SimpleTest.finish();

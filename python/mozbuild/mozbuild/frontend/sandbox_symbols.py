@@ -581,6 +581,7 @@ VARIABLES = {
             'variables': dict,
             'input': unicode,
             'sandbox_vars': dict,
+            'non_unified_sources': StrictOrderingOnAppendList,
         }), list,
         """Defines a list of object directories handled by gyp configurations.
 
@@ -595,6 +596,9 @@ VARIABLES = {
             - sandbox_vars, a dictionary containing variables and values to
               pass to the mozbuild processor on top of those derived from gyp
               configuration.
+            - non_unified_sources, a list containing sources files, relative to
+              the current moz.build, that should be excluded from source file
+              unification.
 
         Typical use looks like:
             GYP_DIRS += ['foo', 'bar']

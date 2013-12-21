@@ -1110,7 +1110,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 {
     JS_ASSERT(fun->isInterpretedLazy());
 
-    LazyScript *lazy = fun->lazyScriptOrNull();
+    Rooted<LazyScript*> lazy(cx, fun->lazyScriptOrNull());
     if (lazy) {
         // Trigger a pre barrier on the lazy script being overwritten.
         if (cx->zone()->needsBarrier())

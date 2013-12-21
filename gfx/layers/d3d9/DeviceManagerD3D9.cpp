@@ -12,12 +12,13 @@
 #include "Nv3DVUtils.h"
 #include "plstr.h"
 #include <algorithm>
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxWindowsPlatform.h"
 #include "TextureD3D9.h"
 #include "mozilla/gfx/Point.h"
 
-using mozilla::gfx::IntSize;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -548,7 +549,7 @@ bool
 LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
                 uint32_t aMaskTexRegister)
 {
-  gfxIntSize size;
+  gfx::IntSize size;
   nsRefPtr<IDirect3DTexture9> texture =
     static_cast<LayerD3D9*>(aMask->ImplData())->GetAsTexture(&size);
   
@@ -559,7 +560,7 @@ LoadMaskTexture(Layer* aMask, IDirect3DDevice9* aDevice,
   gfxMatrix maskTransform;
   bool maskIs2D = aMask->GetEffectiveTransform().CanDraw2D(&maskTransform);
   NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
-  gfxRect bounds = gfxRect(gfxPoint(), size);
+  gfxRect bounds = gfxRect(gfxPoint(), gfx::ThebesIntSize(size));
   bounds = maskTransform.TransformBounds(bounds);
 
   aDevice->SetVertexShaderConstantF(DeviceManagerD3D9::sMaskQuadRegister, 

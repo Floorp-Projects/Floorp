@@ -25,7 +25,6 @@
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
 #endif
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
@@ -252,7 +251,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
 }
 
 already_AddRefed<gfxASurface>
-LayerManagerComposite::CreateOptimalMaskSurface(const gfxIntSize &aSize)
+LayerManagerComposite::CreateOptimalMaskSurface(const IntSize &aSize)
 {
   NS_RUNTIMEABORT("Should only be called on the drawing side");
   return nullptr;
@@ -786,7 +785,7 @@ LayerComposite::Destroy()
 }
 
 bool
-LayerManagerComposite::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
+LayerManagerComposite::CanUseCanvasLayerForSize(const IntSize &aSize)
 {
   return mCompositor->CanUseCanvasLayerForSize(gfx::IntSize(aSize.width,
                                                             aSize.height));

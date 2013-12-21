@@ -303,7 +303,7 @@ nsSVGTextPathProperty::DoUpdate()
   //
   // Note that we still have to post the restyle event when we
   // change from being valid to invalid, so that mPositions on the
-  // nsSVGTextFrame2 gets updated, skipping the <textPath>, ensuring
+  // SVGTextFrame gets updated, skipping the <textPath>, ensuring
   // that nothing gets painted for that element.
   bool nowValid = TargetIsValid();
   if (!mValid && !nowValid) {

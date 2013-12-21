@@ -14,6 +14,7 @@ function run_test()
              do_check_eq(extra.TestKey, "TestValue");
              do_check_true(/xpcom_runtime_abort/.test(extra.Notes));
              do_check_false("OOMAllocationSize" in extra);
+             do_check_true(/Intentional crash/.test(extra.AbortMessage));
            },
           // process will exit with a zero exit status
           true);
