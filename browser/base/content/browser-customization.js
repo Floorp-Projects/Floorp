@@ -44,6 +44,14 @@ let CustomizationHandler = {
     PlacesToolbarHelper.customizeStart();
     BookmarkingUI.customizeStart();
     DownloadsButton.customizeStart();
+
+    // The additional padding on the sides of the browser
+    // can cause the customize tab to get clipped.
+    let tabContainer = gBrowser.tabContainer;
+    if (tabContainer.getAttribute("overflow") == "true") {
+      let tabstrip = tabContainer.mTabstrip;
+      tabstrip.ensureElementIsVisible(gBrowser.selectedTab, true);
+    }
   },
 
   _customizationEnding: function(aDetails) {
