@@ -69,6 +69,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
   JSContext* cx = nullptr;
   nsIGlobalObject* globalObject = nullptr;
+  Maybe< JS::Rooted<JSObject*> > callbackRooter;
 
   if (mIsMainThread) {
     // Now get the global and JSContext for this callback.
@@ -89,6 +90,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                              // This happens - Removing it causes
                              // test_bug293235.xul to go orange.
                              : nsContentUtils::GetSafeJSContext();
+      callbackRooter.construct(cx, realCallback);
       globalObject = win;
     } else {
       // No DOM Window. Store the global and use the SafeJSContext.
@@ -96,9 +98,11 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       globalObject = xpc::GetNativeForGlobal(glob);
       MOZ_ASSERT(globalObject);
       cx = nsContentUtils::GetSafeJSContext();
+      callbackRooter.construct(cx, realCallback);
     }
   } else {
     cx = workers::GetCurrentThreadJSContext();
+    callbackRooter.construct(cx, realCallback);
     globalObject = workers::GetCurrentThreadWorkerPrivate()->GlobalScope();
   }
 
