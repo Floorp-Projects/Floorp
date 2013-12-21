@@ -110,12 +110,11 @@ GrallocImage::SetData(const Data& aData)
   }
 
   uint8_t* yChannel = static_cast<uint8_t*>(vaddr);
-  gfxIntSize ySize = gfxIntSize(aData.mYSize.width,
-                                aData.mYSize.height);
+  gfx::IntSize ySize = aData.mYSize;
   int32_t yStride = graphicBuffer->getStride();
 
   uint8_t* vChannel = yChannel + (yStride * ySize.height);
-  gfxIntSize uvSize = gfxIntSize(ySize.width / 2,
+  gfx::IntSize uvSize = gfx::IntSize(ySize.width / 2,
                                  ySize.height / 2);
   // Align to 16 bytes boundary
   int32_t uvStride = ((yStride / 2) + 15) & ~0x0F;

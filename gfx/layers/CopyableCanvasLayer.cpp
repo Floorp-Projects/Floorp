@@ -16,6 +16,7 @@
 #include "gfxPlatform.h"                // for gfxPlatform, gfxImageFormat
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils
+#include "gfx2DGlue.h"                  // for thebes --> moz2d transition
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
@@ -105,7 +106,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
       return;
     }
 
-    gfxIntSize readSize(sharedSurf->Size());
+    IntSize readSize(ToIntSize(sharedSurf->Size()));
     gfxImageFormat format = (GetContentFlags() & CONTENT_OPAQUE)
                             ? gfxImageFormatRGB24
                             : gfxImageFormatARGB32;
@@ -128,7 +129,7 @@ CopyableCanvasLayer::UpdateSurface(gfxASurface* aDestSurface, Layer* aMaskLayer)
       SharedSurface_Basic* sharedSurf_Basic = SharedSurface_Basic::Cast(surfGL);
       readSurf = sharedSurf_Basic->GetData();
     } else {
-      if (resultSurf->GetSize() != readSize ||
+      if (ToIntSize(resultSurf->GetSize()) != readSize ||
           !(readSurf = resultSurf->GetAsImageSurface()) ||
           readSurf->Format() != format)
       {
@@ -213,14 +214,14 @@ CopyableCanvasLayer::PaintWithOpacity(gfxContext* aContext,
 }
 
 gfxImageSurface*
-CopyableCanvasLayer::GetTempSurface(const gfxIntSize& aSize, const gfxImageFormat aFormat)
+CopyableCanvasLayer::GetTempSurface(const IntSize& aSize, const gfxImageFormat aFormat)
 {
   if (!mCachedTempSurface ||
       aSize.width != mCachedSize.width ||
       aSize.height != mCachedSize.height ||
       aFormat != mCachedFormat)
   {
-    mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+    mCachedTempSurface = new gfxImageSurface(ThebesIntSize(aSize), aFormat);
     mCachedSize = aSize;
     mCachedFormat = aFormat;
   }

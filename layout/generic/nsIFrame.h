@@ -302,7 +302,7 @@ typedef uint64_t nsFrameState;
 // the frames for future reference.
 #define NS_FRAME_NO_COMPONENT_ALPHA                 NS_FRAME_STATE_BIT(45)
 
-// The frame is a descendant of nsSVGTextFrame2 and is thus used for SVG
+// The frame is a descendant of SVGTextFrame and is thus used for SVG
 // text layout.
 #define NS_FRAME_IS_SVG_TEXT                        NS_FRAME_STATE_BIT(47)
 
@@ -2933,7 +2933,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * distance beats a closer y distance.
    *
    * Normally, this function will only check the distance between this
-   * frame's rectangle and the specified point.  nsSVGTextFrame2 overrides
+   * frame's rectangle and the specified point.  SVGTextFrame overrides
    * this so that it can manage all of its descendant frames and take
    * into account any SVG text layout.
    *

@@ -275,21 +275,20 @@ pkix_OcspChecker_CheckExternal(
         }
 
         do {
-                const char *mechanism;
+                const char *method;
                 passed = PKIX_TRUE;
 
                 retry = PR_FALSE;
                 if (currentStage == stageGET) {
-                        mechanism = "GET";
-                } else if (currentStage == stagePOST) {
-                        mechanism = "POST";
+                        method = "GET";
                 } else {
-                        PORT_Assert(0); /* our code is flawed */
+                        PORT_Assert(currentStage == stagePOST);
+                        method = "POST";
                 }
 
                 /* send request and create a response object */
                 PKIX_CHECK_NO_GOTO(
-                    pkix_pl_OcspResponse_Create(request, mechanism, NULL,
+                    pkix_pl_OcspResponse_Create(request, method, NULL,
                                                 checker->certVerifyFcn,
                                                 &nbioContext,
                                                 &response,

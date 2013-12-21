@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['test', 'ipc']
 
-XPIDL_MODULE = 'dom_devicestorage'
-
 EXPORTS += [
     'DeviceStorage.h',
     'nsDeviceStorage.h',

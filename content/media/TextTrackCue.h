@@ -14,6 +14,7 @@
 #include "nsIWebVTTParserWrapper.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -82,8 +83,9 @@ public:
 
   void SetStartTime(double aStartTime)
   {
-    if (mStartTime == aStartTime)
+    if (mStartTime == aStartTime) {
       return;
+    }
 
     mStartTime = aStartTime;
     CueChanged();
@@ -96,8 +98,9 @@ public:
 
   void SetEndTime(double aEndTime)
   {
-    if (mEndTime == aEndTime)
+    if (mEndTime == aEndTime) {
       return;
+    }
 
     mEndTime = aEndTime;
     CueChanged();
@@ -110,8 +113,9 @@ public:
 
   void SetPauseOnExit(bool aPauseOnExit)
   {
-    if (mPauseOnExit == aPauseOnExit)
+    if (mPauseOnExit == aPauseOnExit) {
       return;
+    }
 
     mPauseOnExit = aPauseOnExit;
     CueChanged();
@@ -139,8 +143,9 @@ public:
 
   void SetVertical(const DirectionSetting& aVertical)
   {
-    if (mVertical == aVertical)
+    if (mVertical == aVertical) {
       return;
+    }
 
     mReset = true;
     mVertical = aVertical;
@@ -154,24 +159,58 @@ public:
 
   void SetSnapToLines(bool aSnapToLines)
   {
-    if (mSnapToLines == aSnapToLines)
+    if (mSnapToLines == aSnapToLines) {
       return;
+    }
 
     mReset = true;
     mSnapToLines = aSnapToLines;
     CueChanged();
   }
 
-  double Line() const
+  void GetLine(OwningLongOrAutoKeyword& aLine) const
   {
-    return mLine;
+    if (mLine.IsLong()) {
+      aLine.SetAsLong() = mLine.GetAsLong();
+      return;
+    }
+    aLine.SetAsAutoKeyword() = mLine.GetAsAutoKeyword();
   }
 
-  void SetLine(double aLine)
+  void SetLine(const LongOrAutoKeyword& aLine)
   {
-    //XXX: TODO Line position can be a keyword auto. bug882299
+    if (aLine.IsLong() &&
+        (mLine.IsAutoKeyword() || (aLine.GetAsLong() != mLine.GetAsLong()))) {
+      mLine.SetAsLong() = aLine.GetAsLong();
+      CueChanged();
+      mReset = true;
+      return;
+    }
+    if (mLine.IsLong()) {
+      mLine.SetAsAutoKeyword() = aLine.GetAsAutoKeyword();
+      CueChanged();
+      mReset = true;
+    }
+  }
+
+  AlignSetting LineAlign() const
+  {
+    return mLineAlign;
+  }
+
+  void SetLineAlign(AlignSetting& aLineAlign, ErrorResult& aRv)
+  {
+    if (mLineAlign == aLineAlign)
+      return;
+
+    if (aLineAlign == AlignSetting::Left ||
+        aLineAlign == AlignSetting::Right) {
+      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
     mReset = true;
-    mLine = aLine;
+    mLineAlign = aLineAlign;
+    CueChanged();
   }
 
   int32_t Position() const
@@ -181,9 +220,9 @@ public:
 
   void SetPosition(int32_t aPosition, ErrorResult& aRv)
   {
-    // XXXhumph: validate? bug 868519.
-    if (mPosition == aPosition)
+    if (mPosition == aPosition) {
       return;
+    }
 
     if (aPosition > 100 || aPosition < 0){
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -223,8 +262,9 @@ public:
 
   void SetAlign(AlignSetting& aAlign)
   {
-    if (mAlign == aAlign)
+    if (mAlign == aAlign) {
       return;
+    }
 
     mReset = true;
     mAlign = aAlign;
@@ -238,8 +278,9 @@ public:
 
   void SetText(const nsAString& aText)
   {
-    if (mText == aText)
+    if (mText == aText) {
       return;
+    }
 
     mReset = true;
     mText = aText;
@@ -322,8 +363,9 @@ private:
   bool mSnapToLines;
   nsString mRegionId;
   DirectionSetting mVertical;
-  int mLine;
+  LongOrAutoKeyword mLine;
   AlignSetting mAlign;
+  AlignSetting mLineAlign;
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state

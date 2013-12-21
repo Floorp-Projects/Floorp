@@ -184,6 +184,10 @@ class TreeMetadataEmitter(LoggingMixin):
             raise SandboxValidationError('XPIDL_MODULE must be defined if '
                 'XPIDL_SOURCES is defined.')
 
+        if xpidl_module and not sandbox['XPIDL_SOURCES']:
+            raise SandboxValidationError('XPIDL_MODULE cannot be defined '
+                'unless there are XPIDL_SOURCES: %s' % sandbox['RELATIVEDIR'])
+
         if sandbox['XPIDL_SOURCES'] and sandbox['NO_DIST_INSTALL']:
             self.log(logging.WARN, 'mozbuild_warning', dict(
                 path=sandbox.main_path),

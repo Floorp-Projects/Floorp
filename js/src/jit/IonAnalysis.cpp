@@ -2044,14 +2044,14 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
         if (!definitelyExecuted)
             return true;
 
-        if (!types::AddClearDefiniteGetterSetterForPrototypeChain(cx, type, NameToId(setprop->name()))) {
+        RootedId id(cx, NameToId(setprop->name()));
+        if (!types::AddClearDefiniteGetterSetterForPrototypeChain(cx, type, id)) {
             // The prototype chain already contains a getter/setter for this
             // property, or type information is too imprecise.
             return true;
         }
 
         DebugOnly<unsigned> slotSpan = baseobj->slotSpan();
-        RootedId id(cx, NameToId(setprop->name()));
         RootedValue value(cx, UndefinedValue());
         if (!DefineNativeProperty(cx, baseobj, id, value, nullptr, nullptr,
                                   JSPROP_ENUMERATE, 0, 0))

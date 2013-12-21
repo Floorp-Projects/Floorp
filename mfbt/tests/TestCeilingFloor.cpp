@@ -3,9 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
 using mozilla::CeilingLog2;
+using mozilla::DebugOnly;
 using mozilla::FloorLog2;
 using mozilla::RoundUpPow2;
 
@@ -69,7 +71,7 @@ TestRoundUpPow2()
   MOZ_ASSERT(RoundUpPow2(32) == 32);
   MOZ_ASSERT(RoundUpPow2(33) == 64);
 
-  size_t MaxPow2 = size_t(1) << (sizeof(size_t) * CHAR_BIT - 1);
+  DebugOnly<size_t> MaxPow2 = size_t(1) << (sizeof(size_t) * CHAR_BIT - 1);
   MOZ_ASSERT(RoundUpPow2(MaxPow2 - 1) == MaxPow2);
   MOZ_ASSERT(RoundUpPow2(MaxPow2) == MaxPow2);
   // not valid to round up when past the max power of two
