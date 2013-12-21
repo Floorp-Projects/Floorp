@@ -41,7 +41,6 @@ TextTrackCue::SetDefaultCueSettings()
   mSnapToLines = true;
   mLine = WEBVTT_AUTO;
   mAlign = AlignSetting::Middle;
-  mLineAlign = AlignSetting::Start;
   mVertical = DirectionSetting::_empty;
 }
 
