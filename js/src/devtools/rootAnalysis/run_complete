@@ -233,8 +233,10 @@ sub run_build
         print CONFIG "$prefix_dir\n";
         print CONFIG Cwd::abs_path("$result_dir/build_xgill.log")."\n";
         print CONFIG "$address\n";
-        print CONFIG "-fplugin-arg-xgill-annfile=$ann_file\n"
-          if ($ann_file ne "" && -e $ann_file);
+        my @extra = ("-fplugin-arg-xgill-mangle=1");
+        push(@extra, "-fplugin-arg-xgill-annfile=$ann_file")
+            if ($ann_file ne "" && -e $ann_file);
+        print CONFIG join(" ", @extra) . "\n";
         close(CONFIG);
 
 	# Tell the wrapper where to find the config

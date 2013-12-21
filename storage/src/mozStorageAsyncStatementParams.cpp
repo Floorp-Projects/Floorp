@@ -93,6 +93,8 @@ AsyncStatementParams::NewResolve(
   bool *_retval
 )
 {
+  JS::Rooted<JSObject*> scopeObj(aCtx, aScopeObj);
+
   NS_ENSURE_TRUE(mStatement, NS_ERROR_NOT_INITIALIZED);
   // We do not throw at any point after this because we want to allow the
   // prototype chain to be checked for the property.
@@ -103,7 +105,7 @@ AsyncStatementParams::NewResolve(
     uint32_t idx = JSID_TO_INT(aId);
     // All indexes are good because we don't know how many parameters there
     // really are.
-    ok = ::JS_DefineElement(aCtx, aScopeObj, idx, JSVAL_VOID, nullptr,
+    ok = ::JS_DefineElement(aCtx, scopeObj, idx, JSVAL_VOID, nullptr,
                             nullptr, 0);
     resolved = true;
   }
@@ -111,13 +113,13 @@ AsyncStatementParams::NewResolve(
     // We are unable to tell if there's a parameter with this name and so
     // we must assume that there is.  This screws the rest of the prototype
     // chain, but people really shouldn't be depending on this anyways.
-    ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nullptr,
+    ok = ::JS_DefinePropertyById(aCtx, scopeObj, aId, JSVAL_VOID, nullptr,
                                  nullptr, 0);
     resolved = true;
   }
 
   *_retval = ok;
-  *_objp = resolved && ok ? aScopeObj : nullptr;
+  *_objp = resolved && ok ? scopeObj.get() : nullptr;
   return NS_OK;
 }
 
