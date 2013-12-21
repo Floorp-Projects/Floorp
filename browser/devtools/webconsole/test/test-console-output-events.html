@@ -1,0 +1,23 @@
+<!DOCTYPE HTML>
+<html dir="ltr" lang="en-US">
+<head>
+  <meta charset="utf-8">
+  <title>Test the web console output for DOM events</title>
+  <!--
+  - Any copyright is dedicated to the Public Domain.
+  - http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+</head>
+<body>
+  <p>hello world!</p>
+  <script type="text/javascript">
+function testDOMEvents() {
+  function eventLogger(ev) {
+    console.log("eventLogger", ev);
+  }
+  document.addEventListener("mousemove", eventLogger);
+  document.addEventListener("keypress", eventLogger);
+}
+  </script>
+</body>
+</html>

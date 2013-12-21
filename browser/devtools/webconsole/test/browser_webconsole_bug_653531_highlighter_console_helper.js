@@ -88,8 +88,7 @@ function performWebConsoleTests(hud)
 
   function onNodeOutput(node)
   {
-    isnot(node.textContent.indexOf("[object HTMLHeadingElement"), -1,
-          "correct output for $0");
+    isnot(node.textContent.indexOf("<h1>"), -1, "correct output for $0");
 
     jsterm.clearOutput();
     jsterm.execute("$0.textContent = 'bug653531'", onNodeUpdate);

@@ -58,7 +58,7 @@ function testPauseOnExceptionsDisabled() {
 
     is(innerNodes[0].querySelector(".name").getAttribute("value"), "this",
       "Should have the right property name for 'this'.");
-    is(innerNodes[0].querySelector(".value").getAttribute("value"), "HTMLButtonElement",
+    is(innerNodes[0].querySelector(".value").getAttribute("value"), "<button>",
       "Should have the right property value for 'this'.");
 
     let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {
@@ -124,7 +124,7 @@ function testPauseOnExceptionsEnabled() {
 
       is(innerNodes[0].querySelector(".name").getAttribute("value"), "this",
         "Should have the right property name for 'this'.");
-      is(innerNodes[0].querySelector(".value").getAttribute("value"), "HTMLButtonElement",
+      is(innerNodes[0].querySelector(".value").getAttribute("value"), "<button>",
         "Should have the right property value for 'this'.");
 
       let finished = waitForDebuggerEvents(gPanel, gDebugger.EVENTS.AFTER_FRAMES_CLEARED).then(() => {

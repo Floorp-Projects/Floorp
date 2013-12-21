@@ -46,7 +46,7 @@ function onConsoleMessage(aResults)
 {
   let clickable = aResults[0].clickableElements[0];
   ok(clickable, "clickable object found");
-  isnot(clickable.textContent.indexOf("[object Object]"), -1,
+  isnot(clickable.textContent.indexOf('{hello: "world!",'), -1,
         "message text check");
 
   gJSTerm.once("variablesview-fetched", onObjFetch);

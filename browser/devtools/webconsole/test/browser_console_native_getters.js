@@ -30,7 +30,7 @@ function consoleOpened(hud)
   waitForMessages({
     webconsole: hud,
     messages: [{
-      text: "[object HTMLDocument]",
+      text: "HTMLDocument \u2192 data:text/html;charset=utf8",
       category: CATEGORY_OUTPUT,
       objects: true,
     }],
@@ -90,7 +90,7 @@ function testParagraphs()
   waitForMessages({
     webconsole: gWebConsole,
     messages: [{
-      text: "[object NodeList]",
+      text: "NodeList [",
       category: CATEGORY_OUTPUT,
       objects: true,
     }],

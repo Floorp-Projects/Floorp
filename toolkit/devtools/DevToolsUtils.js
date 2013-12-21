@@ -6,6 +6,7 @@
 
 /* General utilities used throughout devtools. */
 
+let Cu = Components.utils;
 let { Promise: promise } = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
@@ -235,5 +236,26 @@ this.getProperty = function getProperty(aObj, aKey) {
 this.hasSafeGetter = function hasSafeGetter(aDesc) {
   let fn = aDesc.get;
   return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
+};
+
+/**
+ * Check if it is safe to read properties and execute methods from the given JS
+ * object. Safety is defined as being protected from unintended code execution
+ * from content scripts (or cross-compartment code).
+ *
+ * See bugs 945920 and 946752 for discussion.
+ *
+ * @type Object aObj
+ *       The object to check.
+ * @return Boolean
+ *         True if it is safe to read properties from aObj, or false otherwise.
+ */
+this.isSafeJSObject = function isSafeJSObject(aObj) {
+  if (Cu.getGlobalForObject(aObj) ==
+      Cu.getGlobalForObject(isSafeJSObject)) {
+    return true; // aObj is not a cross-compartment wrapper.
+  }
+
+  return Cu.isXrayWrapper(aObj);
 };
 
