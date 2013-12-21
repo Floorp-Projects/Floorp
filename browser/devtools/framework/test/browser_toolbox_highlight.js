@@ -65,20 +65,20 @@ function unhighlightTab(toolId) {
 
 function checkHighlighted(toolId) {
   let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(tab.classList.contains("highlighted"), "The highlighted class is present");
+  ok(tab.hasAttribute("highlighted"), "The highlighted attribute is present");
   ok(!tab.hasAttribute("selected") || tab.getAttribute("selected") != "true",
      "The tab is not selected");
 }
 
 function checkNoHighlightWhenSelected(toolId) {
   let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(tab.classList.contains("highlighted"), "The highlighted class is present");
+  ok(tab.hasAttribute("highlighted"), "The highlighted attribute is present");
   ok(tab.hasAttribute("selected") && tab.getAttribute("selected") == "true",
      "and the tab is selected, so the orange glow will not be present.");
 }
 
 function checkNoHighlight(toolId) {
   let tab = toolbox.doc.getElementById("toolbox-tab-" + toolId);
-  ok(!tab.classList.contains("highlighted"),
-     "The highlighted class is not present");
+  ok(!tab.hasAttribute("highlighted"),
+     "The highlighted attribute is not present");
 }

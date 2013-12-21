@@ -29,7 +29,7 @@ function test()
 
     findVariableViewProperties(aVar, [
       { name: "testProp", value: "testValue" },
-      { name: "document", value: "HTMLDocument" },
+      { name: "document", value: /HTMLDocument \u2192 data:/ },
     ], { webconsole: hud }).then(finishTest);
   }
 }
