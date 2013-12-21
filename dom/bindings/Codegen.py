@@ -6717,13 +6717,13 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
 
     name = getUnionMemberName(type)
 
-    tryNextCode = ("tryNext = true;\n"
-                   "return true;")
-    if type.isGeckoInterface():
-         prefix = "" if ownsMembers else "mUnion."
-         tryNextCode = ("if (%smType != %seUninitialized) {"
-                        "  %sDestroy%s();"
-                        "}") % (prefix, prefix, prefix, name) + tryNextCode
+    # By the time tryNextCode is invoked, we're guaranteed the union has been
+    # constructed as some type, since we've been trying to convert into the
+    # corresponding member.
+    prefix = "" if ownsMembers else "mUnion."
+    tryNextCode = ("%sDestroy%s();\n"
+                   "tryNext = true;\n"
+                   "return true;" % (prefix, name))
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
         isDefinitelyObject=not type.isDictionary(),
@@ -6742,10 +6742,12 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
 
     if type.isObject():
         if ownsMembers:
-            body = ("mValue.mObject.SetValue(obj);\n"
+            body = ("MOZ_ASSERT(mType == eUninitialized);\n"
+                    "mValue.mObject.SetValue(obj);\n"
                     "mType = eObject;")
         else:
-            body = ("mUnion.mValue.mObject.SetValue(cx, obj);\n"
+            body = ("MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);\n"
+                    "mUnion.mValue.mObject.SetValue(cx, obj);\n"
                     "mUnion.mType = mUnion.eObject;")
         setter = ClassMethod("SetToObject", "void",
                              [Argument("JSContext*", "cx"),
@@ -6832,11 +6834,13 @@ class CGUnionStruct(CGThing):
                                        body="return mType == eNull;",
                                        bodyInHeader=True))
             methods.append(ClassMethod("SetNull", "void", [], inline=True,
-                                       body="mType = eNull;",
+                                       body=("MOZ_ASSERT(mType == eUninitialized);\n"
+                                             "mType = eNull;"),
                                        bodyInHeader=True))
             destructorCases.append(CGCase("eNull", None))
             assignmentCases.append(CGCase("eNull",
-                                          CGGeneric("mType = eNull;")))
+                                          CGGeneric("MOZ_ASSERT(mType == eUninitialized);\n"
+                                                    "mType = eNull;")))
             toJSValCases.append(CGCase("eNull", CGGeneric("rval.setNull();\n"
                                                           "return true;")))
 
@@ -6845,7 +6849,11 @@ class CGUnionStruct(CGThing):
                                             t, self.descriptorProvider,
                                             ownsMembers=self.ownsMembers)
             if vars["name"] != "Object" or self.ownsMembers:
-                body=string.Template("mType = e${name};\n"
+                body=string.Template("if (mType == e${name}) {\n"
+                                     "  return mValue.m${name}.Value();\n"
+                                     "}\n"
+                                     "MOZ_ASSERT(mType == eUninitialized);\n"
+                                     "mType = e${name};\n"
                                      "return mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
                 # bodyInHeader must be false for return values because they own
                 # their union members and we don't want include headers in
@@ -7038,7 +7046,8 @@ class CGUnionConversionStruct(CGThing):
 
         if self.type.hasNullableType:
             methods.append(ClassMethod("SetNull", "bool", [],
-                                       body=("mUnion.mType = mUnion.eNull;\n"
+                                       body=("MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);\n"
+                                             "mUnion.mType = mUnion.eNull;\n"
                                              "return true;"),
                                        inline=True, bodyInHeader=True))
 
@@ -7047,7 +7056,8 @@ class CGUnionConversionStruct(CGThing):
                                             t, self.descriptorProvider)
             methods.append(vars["setter"])
             if vars["name"] != "Object":
-                body=string.Template("mUnion.mType = mUnion.e${name};\n"
+                body=string.Template("MOZ_ASSERT(mUnion.mType == mUnion.eUninitialized);\n"
+                                     "mUnion.mType = mUnion.e${name};\n"
                                      "return mUnion.mValue.m${name}.SetValue(${ctorArgs});").substitute(vars)
                 methods.append(ClassMethod("SetAs" + vars["name"],
                                            vars["structType"] + "&",

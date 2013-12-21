@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script>
+    function tweak() {
+      var oldShadowRoot = document.getElementById('outer').createShadowRoot();
+      oldShadowRoot.innerHTML = 'Hello';
+
+      var youngShadowRoot = document.getElementById('outer').createShadowRoot();
+      youngShadowRoot.innerHTML = '<shadow></shadow><content></content>World';
+    }
+  </script>
+</head>
+<body onload="tweak()">
+<div id="outer"></div>
+</body>
+</html>

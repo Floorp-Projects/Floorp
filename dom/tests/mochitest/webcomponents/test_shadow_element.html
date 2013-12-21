@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=887538
+-->
+<head>
+  <title>Test for HTMLShadowElement</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="grabme"></div>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887538">Bug 887538</a>
+<script>
+var host = document.createElement("span");
+
+// Create three shadow roots on a single host and make sure that shadow elements
+// are associated with the correct shadow root.
+var firstShadow = host.createShadowRoot();
+firstShadow.innerHTML = '<shadow id="shadowone"></shadow>';
+var secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<shadow id="shadowtwo"></shadow>';
+var thirdShadow = host.createShadowRoot();
+thirdShadow.innerHTML = '<shadow id="shadowthree"></shadow>';
+
+is(firstShadow.getElementById("shadowone").olderShadowRoot, null, "Shadow element in oldest ShadowRoot should not be associated with a ShadowRoot.");
+is(secondShadow.getElementById("shadowtwo").olderShadowRoot, firstShadow, "Shadow element should be associated with older ShadowRoot.");
+is(thirdShadow.getElementById("shadowthree").olderShadowRoot, secondShadow, "Shadow element should be associated with older ShadowRoot.");
+
+// Only the first ShadowRoot in tree order is an insertion point.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<shadow id="shadowone"></shadow><shadow id="shadowtwo"></shadow>';
+var shadowElemOne = secondShadow.getElementById("shadowone");
+var shadowElemTwo = secondShadow.getElementById("shadowtwo");
+
+is(shadowElemOne.olderShadowRoot, firstShadow, "First <shadow> in tree order should be an insertion point.");
+is(shadowElemTwo.olderShadowRoot, null, "Second <shadow> in tree order should not be an insertion point.");
+
+// Remove the first <shadow> element and make sure the second <shadow> element becomes an insertion point.
+secondShadow.removeChild(shadowElemOne);
+is(shadowElemOne.olderShadowRoot, null, "<shadow> element not in a ShadowRoot is not an insertion point.");
+is(shadowElemTwo.olderShadowRoot, firstShadow, "Second <shadow> element should become insertion point after first is removed.");
+
+// Insert a <shadow> element before the current shadow insertion point and make sure that it becomes an insertion point.
+secondShadow.insertBefore(shadowElemOne, shadowElemTwo);
+is(shadowElemOne.olderShadowRoot, firstShadow, "<shadow> element inserted as first in tree order should become an insertion point.");
+is(shadowElemTwo.olderShadowRoot, null, "<shadow> element should no longer be an insertion point it another is inserted before.");
+
+// <shadow> element in fallback content is not an insertion point.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<content><shadow id="shadowone"></shadow></content><shadow id="shadowtwo"></shadow>';
+shadowElemOne = secondShadow.getElementById("shadowone");
+shadowElemTwo = secondShadow.getElementById("shadowtwo");
+
+is(shadowElemOne.olderShadowRoot, null, "<shadow> element in fallback content is not an insertion point.");
+is(shadowElemTwo.olderShadowRoot, null, "<shadow> element preceeded by another <shadow> element is not an insertion point.");
+
+// <shadow> element that is descendant of shadow element is not an insertion point.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<shadow><shadow id="shadowone"></shadow></shadow>';
+shadowElemOne = secondShadow.getElementById("shadowone");
+is(shadowElemOne.olderShadowRoot, null, "<shadow> element that is descendant of shadow element is not an insertion point.");
+
+// Check projection of <content> elements through <shadow> elements.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+secondShadow = host.createShadowRoot();
+firstShadow.innerHTML = '<content id="firstcontent"></content>';
+secondShadow.innerHTML = '<shadow><span id="one"></span><content id="secondcontent"></content><span id="four"></span></shadow>';
+host.innerHTML = '<span id="two"></span><span id="three"></span>';
+var firstContent = firstShadow.getElementById("firstcontent");
+var secondContent = secondShadow.getElementById("secondcontent");
+var firstDistNodes = firstContent.getDistributedNodes();
+var secondDistNodes = secondContent.getDistributedNodes();
+
+is(secondDistNodes.length, 2, "There should be two distributed nodes from the host.");
+ok(secondDistNodes[0].id == "two" &&
+   secondDistNodes[1].id == "three", "Nodes projected from host should preserve order.");
+
+is(firstDistNodes.length, 4, "There should be four distributed nodes, two from the first shadow, two from the second shadow.");
+ok(firstDistNodes[0].id == "one" &&
+   firstDistNodes[1].id == "two" &&
+   firstDistNodes[2].id == "three" &&
+   firstDistNodes[3].id == "four", "Reprojection through shadow should preserve node order.");
+
+// Remove a node from the host and make sure that it is removed from all insertion points.
+host.removeChild(host.firstChild);
+firstDistNodes = firstContent.getDistributedNodes();
+secondDistNodes = secondContent.getDistributedNodes();
+
+is(secondDistNodes.length, 1, "There should be one distriubted node remaining after removing node from host.");
+ok(secondDistNodes[0].id == "three", "Span with id=two should have been removed from content element.");
+is(firstDistNodes.length, 3, "There should be three distributed nodes remaining after removing node from host.");
+ok(firstDistNodes[0].id == "one" &&
+   firstDistNodes[1].id == "three" &&
+   firstDistNodes[2].id == "four", "Reprojection through shadow should preserve node order.");
+
+// Check projection of <shadow> elements to <content> elements.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<span id="firstspan"><shadow></shadow></span>';
+thirdShadow = secondShadow.getElementById("firstspan").createShadowRoot();
+thirdShadow.innerHTML = '<content id="firstcontent"></content>';
+firstContent = thirdShadow.getElementById("firstcontent");
+var shadowChild = document.createElement("span");
+firstShadow.appendChild(shadowChild);
+
+is(firstContent.getDistributedNodes()[0], shadowChild, "Elements in shadow insertioin point should be projected into content insertion points.");
+
+// Remove child of ShadowRoot and check that projected node is removed from insertion point.
+firstShadow.removeChild(firstShadow.firstChild);
+
+is(firstContent.getDistributedNodes().length, 0, "Reprojected element was removed from ShadowRoot, thus it should be removed from content insertion point.");
+
+// Check deeply nested projection of <shadow> elements.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+firstShadow.innerHTML = '<content></content>';
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<shadow><content></content></shadow>';
+thirdShadow = host.createShadowRoot();
+thirdShadow.innerHTML = '<span id="firstspan"><shadow><content></content></shadow></span>';
+var fourthShadow = thirdShadow.getElementById("firstspan").createShadowRoot();
+fourthShadow.innerHTML = '<content id="firstcontent"></content>';
+firstContent = fourthShadow.getElementById("firstcontent");
+host.innerHTML = '<span></span>';
+
+is(firstContent.getDistributedNodes()[0], host.firstChild, "Child of host should be projected to insertion point.");
+
+// Remove node and make sure that it is removed from distributed nodes.
+host.removeChild(host.firstChild);
+
+is(firstContent.getDistributedNodes().length, 0, "Node removed from host should be removed from insertion point.");
+
+// Check projection of fallback content through <shadow> elements.
+host = document.createElement("span");
+firstShadow = host.createShadowRoot();
+firstShadow.innerHTML = '<content><span id="firstspan"></span></content>';
+secondShadow = host.createShadowRoot();
+secondShadow.innerHTML = '<span id="secondspan"><shadow id="firstshadow"></shadow></span>';
+firstShadowElem = secondShadow.getElementById("firstshadow");
+thirdShadow = secondShadow.getElementById("secondspan").createShadowRoot();
+thirdShadow.innerHTML = '<content id="firstcontent"></content>';
+firstContent = thirdShadow.getElementById("firstcontent");
+
+is(firstContent.getDistributedNodes().length, 1, "There should be one node distributed from fallback content.");
+is(firstContent.getDistributedNodes()[0], firstShadow.getElementById("firstspan"), "Fallback content should be distributed.");
+
+// Add some content to the host (causing the fallback content to be dropped) and make sure distribution nodes are updated.
+
+var newElem = document.createElement("div");
+firstShadowElem.appendChild(newElem);
+
+is(firstContent.getDistributedNodes().length, 1, "There should be one node distributed from the host.");
+is(firstContent.getDistributedNodes()[0], newElem, "Distributed node should be from host, not fallback content.");
+
+// Remove the distribution node and check that fallback content is used.
+firstShadowElem.removeChild(newElem);
+
+is(firstContent.getDistributedNodes().length, 1, "There should be one node distributed from fallback content.");
+is(firstContent.getDistributedNodes()[0], firstShadow.getElementById("firstspan"), "Fallback content should be distributed after removing node from host.");
+
+</script>
+</body>
+</html>
+
