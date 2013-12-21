@@ -840,9 +840,7 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                     if typeNeedsRooting(f):
                         headers.add("mozilla/dom/RootedDictionary.h")
                 elif f.isEnum():
-                    # Need to see the actual definition of the enum,
-                    # unfortunately.
-                    headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                    headers.add(CGHeaders.getDeclarationFilename(f))
 
     map(addInfoForType, getAllTypes(descriptors, dictionaries, callbacks))
 
