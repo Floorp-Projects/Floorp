@@ -6,7 +6,7 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_test(function test_missing_crypto_collection() {
+add_identity_test(this, function test_missing_crypto_collection() {
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
   let johnColls  = johnHelper.collections;
@@ -24,7 +24,7 @@ add_test(function test_missing_crypto_collection() {
     };
   }
 
-  setBasicCredentials("johndoe", "ilovejane", "a-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa");
+  yield configureIdentity({username: "johndoe"});
 
   let handlers = {
     "/1.1/johndoe/info/collections": maybe_empty(johnHelper.handler),
@@ -70,7 +70,9 @@ add_test(function test_missing_crypto_collection() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    let deferred = Promise.defer();
+    server.stop(deferred.resolve);
+    yield deferred.promise;
   }
 });
 
