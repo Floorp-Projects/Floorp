@@ -621,6 +621,15 @@ tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
   border-color: @metro_orange@ !important;
 }
 
+#stack[keyboardVisible] tabmodalprompt > spacer {
+  min-height: 20px;
+  max-height: 20px;
+}
+
+#stack[keyboardVisible] tabmodalprompt .info\.body {
+  max-height: 15vh;
+}
+
 @media (max-width: 600px) {
   .mainContainer {
     padding: 5vh 5vw;
