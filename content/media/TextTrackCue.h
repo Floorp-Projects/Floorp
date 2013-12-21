@@ -174,26 +174,6 @@ public:
     mLine = aLine;
   }
 
-  AlignSetting LineAlign() const
-  {
-    return mLineAlign;
-  }
-
-  void SetLineAlign(AlignSetting& aLineAlign, ErrorResult& aRv)
-  {
-    if (mLineAlign == aLineAlign)
-      return;
-
-    if (aLineAlign == AlignSetting::Left ||
-        aLineAlign == AlignSetting::Right) {
-      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    }
-
-    mReset = true;
-    mLineAlign = aLineAlign;
-    CueChanged();
-  }
-
   int32_t Position() const
   {
     return mPosition;
@@ -344,7 +324,6 @@ private:
   DirectionSetting mVertical;
   int mLine;
   AlignSetting mAlign;
-  AlignSetting mLineAlign;
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state
