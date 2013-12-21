@@ -190,19 +190,6 @@ HTMLPropertiesCollection::ContentRemoved(nsIDocument *aDocument,
   mIsDirty = true;
 }
 
-class TreeOrderComparator {
-  public:
-    bool Equals(const nsGenericHTMLElement* aElem1,
-                const nsGenericHTMLElement* aElem2) const {
-      return aElem1 == aElem2;
-    }
-    bool LessThan(const nsGenericHTMLElement* aElem1,
-                  const nsGenericHTMLElement* aElem2) const {
-      return nsContentUtils::PositionIsBefore(const_cast<nsGenericHTMLElement*>(aElem1),
-                                              const_cast<nsGenericHTMLElement*>(aElem2));
-    }
-};
-
 static PLDHashOperator
 MarkDirty(const nsAString& aKey, PropertyNodeList* aEntry, void* aData)
 {

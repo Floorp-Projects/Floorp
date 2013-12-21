@@ -753,7 +753,16 @@ Element::CreateShadowRoot(ErrorResult& aError)
 
   nsRefPtr<ShadowRoot> shadowRoot = new ShadowRoot(this, nodeInfo.forget(),
                                                    protoBinding);
+
+  // Replace the old ShadowRoot with the new one and let the old
+  // ShadowRoot know about the younger ShadowRoot because the old
+  // ShadowRoot is projected into the younger ShadowRoot's shadow
+  // insertion point (if it exists).
+  ShadowRoot* olderShadow = GetShadowRoot();
   SetShadowRoot(shadowRoot);
+  if (olderShadow) {
+    olderShadow->SetYoungerShadow(shadowRoot);
+  }
 
   // xblBinding takes ownership of docInfo.
   nsRefPtr<nsXBLBinding> xblBinding = new nsXBLBinding(shadowRoot, protoBinding);
