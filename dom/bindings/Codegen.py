@@ -6367,15 +6367,15 @@ class CGMemberJITInfo(CGThing):
                 "  JSJitInfo::%s,\n"
                 "  %s,  /* isInfallible. False in setters. */\n"
                 "  %s,  /* isMovable.  Not relevant for setters. */\n"
-                "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
-                "  %s,  /* hasSlot.  Only relevant for getters. */\n"
-                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                "  %s,  /* isInSlot.  Only relevant for getters. */\n"
                 "  %s,  /* returnType.  Not relevant for setters. */\n"
+                "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
+                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
                 "  %s,  /* argTypes.  Only relevant for methods */\n"
                 "  nullptr /* parallelNative */\n"
                 "};\n" % (argTypesDecl, infoName, opName, protoID, depth,
-                          opType, failstr, movablestr, aliasSet, slotStr,
-                          slotIndex, returnType, argTypes))
+                          opType, failstr, movablestr, slotStr, returnType,
+                          aliasSet, slotIndex, argTypes))
 
     def define(self):
         if self.member.isAttr():
