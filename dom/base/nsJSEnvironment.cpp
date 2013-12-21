@@ -180,6 +180,7 @@ static uint32_t sCleanupsSinceLastGC = UINT32_MAX;
 static bool sNeedsFullCC = false;
 static bool sNeedsGCAfterCC = false;
 static nsJSContext *sContextList = nullptr;
+static bool sIncrementalCC = false;
 
 static nsScriptNameSpaceManager *gNameSpaceManager;
 
