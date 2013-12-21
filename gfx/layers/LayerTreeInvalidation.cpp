@@ -11,11 +11,11 @@
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxColor.h"                   // for gfxRGBA
 #include "GraphicsFilter.h"             // for GraphicsFilter
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "gfxPoint3D.h"                 // for gfxPoint3D
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for gfxUtils
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
+#include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr, etc
 #include "nsDataHashtable.h"            // for nsDataHashtable
@@ -351,7 +351,7 @@ struct ImageLayerProperties : public LayerPropertiesBase
 
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;
-  gfxIntSize mScaleToSize;
+  gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
 };
 

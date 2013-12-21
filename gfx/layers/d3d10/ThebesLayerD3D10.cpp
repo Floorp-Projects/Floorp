@@ -200,7 +200,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
       // No point in retaining parts which were not valid.
       retainRegion.And(retainRegion, mValidRegion);
 
-      CreateNewTextures(gfxIntSize(newTextureRect.width, newTextureRect.height), mode);
+      CreateNewTextures(gfx::IntSize(newTextureRect.width, newTextureRect.height), mode);
 
       nsIntRect largeRect = retainRegion.GetLargestRectangle();
 
@@ -227,7 +227,7 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
   mTextureRect = newTextureRect;
 
   if (!mTexture || (mode == SURFACE_COMPONENT_ALPHA && !mTextureOnWhite)) {
-    CreateNewTextures(gfxIntSize(newTextureRect.width, newTextureRect.height), mode);
+    CreateNewTextures(gfx::IntSize(newTextureRect.width, newTextureRect.height), mode);
     mValidRegion.SetEmpty();
   }
 
@@ -433,7 +433,7 @@ ThebesLayerD3D10::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode)
 }
 
 void
-ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
+ThebesLayerD3D10::CreateNewTextures(const gfx::IntSize &aSize, SurfaceMode aMode)
 {
   if (aSize.width == 0 || aSize.height == 0) {
     // Nothing to do.

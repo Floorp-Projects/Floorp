@@ -30,7 +30,22 @@
 #endif
 
 #undef PNG_ARM_NEON_OPT /* This may have been defined in pngpriv.h */
-#define PNG_ARM_NEON_OPT 0
+#ifdef __ARM_NEON__
+#  ifdef MOZ_PNG_HAVE_ARM_NEON
+#    ifdef MOZ_PNG_HAVE_ARM_NEON_CHECK
+#      define PNG_ARM_NEON_CHECK_SUPPORTED
+#      define PNG_ARM_NEON_OPT 1
+#    else
+#      define PNG_ARM_NEON_OPT 2
+#    endif
+#    define PNG_ALIGNED_MEMORY_SUPPORTED
+     /* Accept the PNG_ARM_NEON_IMPLEMENTATION setting from pngpriv.h. */
+#  else
+#    define PNG_ARM_NEON_OPT 0
+#  endif
+#else
+#  define PNG_ARM_NEON_OPT 0
+#endif
 
 #define PNG_BENIGN_READ_ERRORS_SUPPORTED
 #define PNG_READ_SUPPORTED

@@ -408,7 +408,7 @@ void
 nsBlockFrame::InvalidateFrame(uint32_t aDisplayItemKey)
 {
   if (IsSVGText()) {
-    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame2,
+    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame,
                  "unexpected block frame in SVG text");
     GetParent()->InvalidateFrame();
     return;
@@ -420,7 +420,7 @@ void
 nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey)
 {
   if (IsSVGText()) {
-    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame2,
+    NS_ASSERTION(GetParent()->GetType() == nsGkAtoms::svgTextFrame,
                  "unexpected block frame in SVG text");
     GetParent()->InvalidateFrame();
     return;

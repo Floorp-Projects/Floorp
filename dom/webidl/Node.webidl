@@ -69,9 +69,7 @@ interface Node : EventTarget {
   void normalize();
 
   [Throws]
-  Node cloneNode();
-  [Throws]
-  Node cloneNode(boolean deep);
+  Node cloneNode(optional boolean deep = false);
   [Pure]
   boolean isEqualNode(Node? node);
 

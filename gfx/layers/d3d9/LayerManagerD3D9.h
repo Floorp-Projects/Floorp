@@ -78,12 +78,12 @@ public:
 
   void SetRoot(Layer* aLayer);
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize)
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize)
   {
     if (!mDeviceManager)
       return false;
     int32_t maxSize = mDeviceManager->GetMaxTextureSize();
-    return aSize <= gfxIntSize(maxSize, maxSize);
+    return aSize <= gfx::IntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const
@@ -248,7 +248,7 @@ public:
    * If aSize is non-null and a texture is successfully returned, aSize will
    * contain the size of the texture.
    */
-  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfxIntSize* aSize)
+  virtual already_AddRefed<IDirect3DTexture9> GetAsTexture(gfx::IntSize* aSize)
   {
     return nullptr;
   }

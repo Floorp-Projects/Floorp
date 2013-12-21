@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['mochitest']
 
-XPIDL_MODULE = 'dom_browserelement'
-
 EXPORTS.mozilla += [
     'BrowserElementParent.h',
 ]

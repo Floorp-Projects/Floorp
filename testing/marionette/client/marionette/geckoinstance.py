@@ -58,7 +58,8 @@ class B2GDesktopInstance(GeckoInstance):
 
     required_prefs = {"focusmanager.testmode": True}
 
-apps = {'b2gdesktop': B2GDesktopInstance}
+apps = {'b2g': B2GDesktopInstance,
+        'b2gdesktop': B2GDesktopInstance}
 
 
 class CloneRunner(Runner):

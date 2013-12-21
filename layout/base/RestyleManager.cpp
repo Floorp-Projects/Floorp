@@ -27,7 +27,7 @@
 #include "nsPlaceholderFrame.h"
 #include "nsBlockFrame.h"
 #include "nsViewportFrame.h"
-#include "nsSVGTextFrame2.h"
+#include "SVGTextFrame.h"
 #include "StickyScrollContainer.h"
 #include "nsIRootBox.h"
 #include "nsIDOMMutationEvent.h"
@@ -204,14 +204,14 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
     }
     if (aChange & nsChangeHint_UpdateTextPath) {
       if (aFrame->IsSVGText()) {
-        // Invalidate and reflow the entire nsSVGTextFrame2:
+        // Invalidate and reflow the entire SVGTextFrame:
         NS_ASSERTION(aFrame->GetContent()->IsSVG(nsGkAtoms::textPath),
                      "expected frame for a <textPath> element");
         nsIFrame* text = nsLayoutUtils::GetClosestFrameOfType(
                                                       aFrame,
-                                                      nsGkAtoms::svgTextFrame2);
-        NS_ASSERTION(text, "expected to find an ancestor nsSVGTextFrame2");
-        static_cast<nsSVGTextFrame2*>(text)->NotifyGlyphMetricsChange();
+                                                      nsGkAtoms::svgTextFrame);
+        NS_ASSERTION(text, "expected to find an ancestor SVGTextFrame");
+        static_cast<SVGTextFrame*>(text)->NotifyGlyphMetricsChange();
       } else {
         NS_ABORT_IF_FALSE(false, "unexpected frame got "
                                  "nsChangeHint_UpdateTextPath");

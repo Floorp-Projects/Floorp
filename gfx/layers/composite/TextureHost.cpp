@@ -495,17 +495,17 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     RefPtr<gfx::DataSourceSurface> tempY =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
                                                     yuvDeserializer.GetYStride(),
-                                                    gfx::ToIntSize(yuvDeserializer.GetYSize()),
+                                                    yuvDeserializer.GetYSize(),
                                                     gfx::FORMAT_A8);
     RefPtr<gfx::DataSourceSurface> tempCb =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
                                                     yuvDeserializer.GetCbCrStride(),
-                                                    gfx::ToIntSize(yuvDeserializer.GetCbCrSize()),
+                                                    yuvDeserializer.GetCbCrSize(),
                                                     gfx::FORMAT_A8);
     RefPtr<gfx::DataSourceSurface> tempCr =
       gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
                                                     yuvDeserializer.GetCbCrStride(),
-                                                    gfx::ToIntSize(yuvDeserializer.GetCbCrSize()),
+                                                    yuvDeserializer.GetCbCrSize(),
                                                     gfx::FORMAT_A8);
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");

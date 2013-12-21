@@ -6,8 +6,6 @@
 
 TEST_DIRS += ['tests']
 
-XPIDL_MODULE = 'dom_promise'
-
 EXPORTS.mozilla.dom += [
     'Promise.h',
     'PromiseNativeHandler.h'
