@@ -5,7 +5,6 @@
 include protocol PGrallocBuffer;
 
 
-using gfxIntSize from "nsSize.h";
 using struct gfxPoint from "gfxPoint.h";
 using struct nsIntRect from "nsRect.h";
 using nsIntRegion from "nsRegion.h";
@@ -100,7 +99,7 @@ struct SurfaceDescriptorGralloc {
    * that GraphicBuffer's size and actual video's size are different.
    * Extra size member is necessary. See Bug 850566.
    */
-  nsIntSize size;
+  IntSize size;
 
   /**
    * We can have one source producing gralloc buffers and sharing them
@@ -144,7 +143,7 @@ struct RGBImage {
 
 struct MemoryImage {
   uintptr_t data;
-  gfxIntSize size;
+  IntSize size;
   uint32_t stride;
   uint32_t format;
 };

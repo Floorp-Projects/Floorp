@@ -13,6 +13,12 @@ Cu.import("resource://services-sync/service.js");
 let scheduler = Service.scheduler;
 let clientsEngine = Service.clientsEngine;
 
+function promiseStopServer(server) {
+  let deferred = Promise.defer();
+  server.stop(deferred.resolve);
+  return deferred.promise;
+}
+
 function sync_httpd_setup() {
   let global = new ServerWBO("global", {
     syncID: Service.syncID,
@@ -36,14 +42,13 @@ function sync_httpd_setup() {
 }
 
 function setUp(server) {
-  setBasicCredentials("johndoe", "ilovejane", "abcdeabcdeabcdeabcdeabcdea");
+  yield configureIdentity({username: "johndoe"});
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
-
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Service.identity.syncKeyBundle);
-  return serverKeys.upload(Service.resource(Service.cryptoKeysURL));
+  serverKeys.upload(Service.resource(Service.cryptoKeysURL));
 }
 
 function run_test() {
@@ -55,7 +60,7 @@ function run_test() {
   run_next_test();
 }
 
-add_test(function test_successful_sync_adjustSyncInterval() {
+add_identity_test(this, function test_successful_sync_adjustSyncInterval() {
   _("Test successful sync calling adjustSyncInterval");
   let syncSuccesses = 0;
   function onSyncFinish() {
@@ -65,7 +70,7 @@ add_test(function test_successful_sync_adjustSyncInterval() {
   Svc.Obs.add("weave:service:sync:finish", onSyncFinish);
 
   let server = sync_httpd_setup();
-  setUp(server);
+  yield setUp(server);
 
   // Confirm defaults
   do_check_false(scheduler.idle);
@@ -151,10 +156,10 @@ add_test(function test_successful_sync_adjustSyncInterval() {
 
   Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
   Service.startOver();
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
 });
 
-add_test(function test_unsuccessful_sync_adjustSyncInterval() {
+add_identity_test(this, function test_unsuccessful_sync_adjustSyncInterval() {
   _("Test unsuccessful sync calling adjustSyncInterval");
 
   let syncFailures = 0;
@@ -169,7 +174,7 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
   Svc.Prefs.set("firstSync", "notReady");
 
   let server = sync_httpd_setup();
-  setUp(server);
+  yield setUp(server);
 
   // Confirm defaults
   do_check_false(scheduler.idle);
@@ -256,12 +261,12 @@ add_test(function test_unsuccessful_sync_adjustSyncInterval() {
 
   Service.startOver();
   Svc.Obs.remove("weave:service:sync:error", onSyncError);
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
 });
 
-add_test(function test_back_triggers_sync() {
+add_identity_test(this, function test_back_triggers_sync() {
   let server = sync_httpd_setup();
-  setUp(server);
+  yield setUp(server);
 
   // Single device: no sync triggered.
   scheduler.idle = true;
@@ -272,6 +277,7 @@ add_test(function test_back_triggers_sync() {
   clientsEngine._store.create({id: "foo", cleartext: "bar"});
   scheduler.updateClientMode();
 
+  let deferred = Promise.defer();
   Svc.Obs.add("weave:service:sync:finish", function onSyncFinish() {
     Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
 
@@ -281,17 +287,18 @@ add_test(function test_back_triggers_sync() {
     clientsEngine.resetClient();
 
     Service.startOver();
-    server.stop(run_next_test);
+    server.stop(deferred.resolve);
   });
 
   scheduler.idle = true;
   scheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
   do_check_false(scheduler.idle);
+  yield deferred.promise;
 });
 
-add_test(function test_adjust_interval_on_sync_error() {
+add_identity_test(this, function test_adjust_interval_on_sync_error() {
   let server = sync_httpd_setup();
-  setUp(server);
+  yield setUp(server);
 
   let syncFailures = 0;
   function onSyncError() {
@@ -317,17 +324,17 @@ add_test(function test_adjust_interval_on_sync_error() {
 
   Svc.Obs.remove("weave:service:sync:error", onSyncError);
   Service.startOver();
-  server.stop(run_next_test);
+  yield promiseStopServer(server);
 });
 
-add_test(function test_bug671378_scenario() {
+add_identity_test(this, function test_bug671378_scenario() {
   // Test scenario similar to bug 671378. This bug appeared when a score
   // update occurred that wasn't large enough to trigger a sync so
   // scheduleNextSync() was called without a time interval parameter,
   // setting nextSync to a non-zero value and preventing the timer from
   // being adjusted in the next call to scheduleNextSync().
   let server = sync_httpd_setup();
-  setUp(server);
+  yield setUp(server);
 
   let syncSuccesses = 0;
   function onSyncFinish() {
@@ -343,6 +350,7 @@ add_test(function test_bug671378_scenario() {
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
   do_check_eq(scheduler.syncTimer.delay, scheduler.singleDeviceInterval);
 
+  let deferred = Promise.defer();
   // Wrap scheduleNextSync so we are notified when it is finished.
   scheduler._scheduleNextSync = scheduler.scheduleNextSync;
   scheduler.scheduleNextSync = function() {
@@ -358,7 +366,7 @@ add_test(function test_bug671378_scenario() {
       scheduler.scheduleNextSync = scheduler._scheduleNextSync;
       Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
       Service.startOver();
-      server.stop(run_next_test);
+      server.stop(deferred.resolve);
     }
   };
 
@@ -381,6 +389,7 @@ add_test(function test_bug671378_scenario() {
 
   clientsEngine._store.create({id: "foo", cleartext: "bar"});
   Service.sync();
+  yield deferred.promise;
 });
 
 add_test(function test_adjust_timer_larger_syncInterval() {

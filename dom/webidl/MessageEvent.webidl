@@ -48,9 +48,6 @@ dictionary MessageEventInit : EventInit {
   any data;
   DOMString origin;
   DOMString lastEventId;
-
-  // TODO bug 767926 - This should be: (WindowProxy or MessagePort)? source;
-  object? source = null;
-
+  (WindowProxy or MessagePort)? source = null;
   sequence<MessagePort>? ports;
 };

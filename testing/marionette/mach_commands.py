@@ -55,8 +55,6 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     else:
         options.bin = bin
         path, exe = os.path.split(options.bin)
-        if 'b2g' in exe:
-            options.app = 'b2gdesktop'
 
     options.address = address
 

@@ -92,9 +92,9 @@ public:
   enum {
     MAX_TEXTURE_SIZE = 8192
   };
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize)
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize)
   {
-    return aSize <= gfxIntSize(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
+    return aSize <= gfx::IntSize(MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
   }
 
   virtual int32_t GetMaxTextureSize() const
@@ -110,14 +110,14 @@ public:
   virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer();
 
   virtual already_AddRefed<gfxASurface>
-    CreateOptimalSurface(const gfxIntSize &aSize,
+    CreateOptimalSurface(const gfx::IntSize &aSize,
                          gfxImageFormat imageFormat);
 
   virtual already_AddRefed<gfxASurface>
-    CreateOptimalMaskSurface(const gfxIntSize &aSize);
+    CreateOptimalMaskSurface(const gfx::IntSize &aSize);
 
   virtual TemporaryRef<mozilla::gfx::DrawTarget>
-    CreateDrawTarget(const mozilla::gfx::IntSize &aSize,
+    CreateDrawTarget(const gfx::IntSize &aSize,
                      mozilla::gfx::SurfaceFormat aFormat);
 
   virtual LayersBackend GetBackendType() { return LAYERS_D3D10; }
@@ -230,7 +230,7 @@ public:
    * Any layer that can be used as a mask layer should override this method.
    * If aSize is non-null, it will contain the size of the texture.
    */
-  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfxIntSize* aSize)
+  virtual already_AddRefed<ID3D10ShaderResourceView> GetAsTexture(gfx::IntSize* aSize)
   {
     return nullptr;
   }
