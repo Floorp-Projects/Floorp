@@ -11,6 +11,7 @@ var gSmallTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
   { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"vp9.webm", type:"video/webm", width:320, height:240, duration:4 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
   { name:"bogus.duh", type:"bogus/duh" }
@@ -156,6 +157,10 @@ var gPlayTests = [
   // Test playback of a WebM file with non-zero start time.
   { name:"split.webm", type:"video/webm", duration:1.967 },
 
+  // Test playback of a WebM file with vp9 video
+  //{ name:"vp9.webm", type:"video/webm", duration:4 },
+  { name:"vp9cake.webm", type:"video/webm", duration:7.966 },
+
   // Test playback of a raw file
   { name:"seek.yuv", type:"video/x-raw-yuv", duration:1.833 },
 
@@ -166,6 +171,8 @@ var gPlayTests = [
 
   // Opus data in an ogg container
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
+  // Opus data in a webm container
+  { name:"detodos.webm", type:"audio/webm; codecs=opus", duration:2.9135 },
 
   // Multichannel Opus in an ogg container
   { name:"test-1-mono.opus", type:"audio/ogg; codecs=opus", duration:1.044 },

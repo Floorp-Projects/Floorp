@@ -17,16 +17,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=882541
   var div2;
 
   div2 = div.cloneNode();
-  is(div2.childNodes.length, 1, "cloneNode() should do a deep clone");
+  is(div2.childNodes.length, 0, "cloneNode() should do a shallow clone");
 
   div2 = div.cloneNode(undefined);
   is(div2.childNodes.length, 0, "cloneNode(undefined) should do a shallow clone");
 
+  div2 = div.cloneNode(true);
+  is(div2.childNodes.length, 1, "cloneNode(true) should do a deep clone");
+
   div2 = document.importNode(div);
-  is(div2.childNodes.length, 1, "importNode(node) should do a deep import");
+  is(div2.childNodes.length, 0, "importNode(node) should do a deep import");
 
   div2 = document.importNode(div, undefined);
-  is(div2.childNodes.length, 0, "cloneNode(undefined) should do a shallow import");
+  is(div2.childNodes.length, 0, "importNode(undefined) should do a shallow import");
+
+  div2 = document.importNode(div, true);
+  is(div2.childNodes.length, 1, "importNode(true) should do a deep import");
 
   </script>
 </head>

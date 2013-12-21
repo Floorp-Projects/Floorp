@@ -34,7 +34,7 @@ typedef SVGTextContentElement SVGTextPathElementBase;
 
 class SVGTextPathElement MOZ_FINAL : public SVGTextPathElementBase
 {
-friend class ::nsSVGTextFrame2;
+friend class ::SVGTextFrame;
 
 protected:
   friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,

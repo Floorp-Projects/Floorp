@@ -91,6 +91,13 @@ let gSyncPane = {
     if (Weave.Status.service == Weave.CLIENT_NOT_CONFIGURED ||
         Weave.Svc.Prefs.get("firstSync", "") == "notReady") {
       this.page = PAGE_NO_ACCOUNT;
+      let service = Components.classes["@mozilla.org/weave/service;1"]
+                    .getService(Components.interfaces.nsISupports)
+                    .wrappedJSObject;
+      // no concept of "pair" in an fxAccounts world.
+      if (service.fxAccountsEnabled) {
+        document.getElementById("pairDevice").hidden = true;
+      }
     } else if (Weave.Status.login == Weave.LOGIN_FAILED_INVALID_PASSPHRASE ||
                Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED) {
       this.needsUpdate();
@@ -151,13 +158,24 @@ let gSyncPane = {
    *          "reset" -- reset sync
    */
   openSetup: function (wizardType) {
-    let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
-    if (win) {
-      win.focus();
+    let service = Components.classes["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+
+    if (service.fxAccountsEnabled) {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      win.switchToTabHavingURI("about:accounts", true);
+      // seeing as we are doing this in a tab we close the prefs dialog.
+      window.close();
     } else {
-      window.openDialog("chrome://browser/content/sync/setup.xul",
-                        "weaveSetup", "centerscreen,chrome,resizable=no",
-                        wizardType);
+      let win = Services.wm.getMostRecentWindow("Weave:AccountSetup");
+      if (win) {
+        win.focus();
+      } else {
+        window.openDialog("chrome://browser/content/sync/setup.xul",
+                          "weaveSetup", "centerscreen,chrome,resizable=no",
+                          wizardType);
+      }
     }
   },
 

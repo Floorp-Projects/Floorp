@@ -759,8 +759,8 @@ class BuildReader(object):
             gyp_dir = sandbox['GYP_DIRS'][target_dir]
             for v in ('input', 'variables'):
                 if not getattr(gyp_dir, v):
-                    raise Exception('Missing value for GYP_DIRS["%s"].%s' %
-                        (target_dir, v))
+                    raise SandboxValidationError('Missing value for '
+                        'GYP_DIRS["%s"].%s' % (target_dir, v))
 
             # The make backend assumes sandboxes for sub-directories are
             # emitted after their parent, so accumulate the gyp sandboxes.
@@ -768,11 +768,19 @@ class BuildReader(object):
             # configuration, but we need to add the gyp objdirs to that sandbox
             # first.
             from .gyp_reader import read_from_gyp
+            non_unified_sources = set()
+            for s in gyp_dir.non_unified_sources:
+                source = mozpath.normpath(mozpath.join(curdir, s))
+                if not os.path.exists(source):
+                    raise SandboxValidationError('Cannot find %s referenced '
+                        'from %s' % (source, path))
+                non_unified_sources.add(source)
             for gyp_sandbox in read_from_gyp(self.config,
                                              mozpath.join(curdir, gyp_dir.input),
                                              mozpath.join(sandbox['OBJDIR'],
                                                           target_dir),
-                                             gyp_dir.variables):
+                                             gyp_dir.variables,
+                                             non_unified_sources = non_unified_sources):
                 gyp_sandbox.update(gyp_dir.sandbox_vars)
                 gyp_sandboxes.append(gyp_sandbox)
 

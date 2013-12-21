@@ -786,18 +786,17 @@ public:
   AutoLockTextureHost(TextureHost* aTexture)
     : mTexture(aTexture)
   {
-    MOZ_ASSERT(mTexture);
-    mLocked = aTexture->Lock();
+    mLocked = mTexture ? mTexture->Lock() : false;
   }
 
   ~AutoLockTextureHost()
   {
-    if (mLocked) {
+    if (mTexture && mLocked) {
       mTexture->Unlock();
     }
   }
 
-  bool Failed() { return !mLocked; }
+  bool Failed() { return mTexture && !mLocked; }
 
 private:
   RefPtr<TextureHost> mTexture;

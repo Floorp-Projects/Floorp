@@ -415,7 +415,7 @@ gfxPlatform::Init()
 
     if (useOffMainThreadCompositing && (XRE_GetProcessType() == GeckoProcessType_Default)) {
         CompositorParent::StartUp();
-        if (Preferences::GetBool("layers.async-video.enabled", false)) {
+        if (AsyncVideoEnabled()) {
             ImageBridgeChild::StartUp();
         }
     }
@@ -2221,4 +2221,14 @@ gfxPlatform::ComponentAlphaEnabled()
 
   InitLayersAccelerationPrefs();
   return sComponentAlphaEnabled;
+}
+
+bool
+gfxPlatform::AsyncVideoEnabled()
+{
+#ifdef XP_WIN
+  return false;
+#else
+  return Preferences::GetBool("layers.async-video.enabled", false);
+#endif
 }
