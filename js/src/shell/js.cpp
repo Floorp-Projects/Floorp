@@ -4836,10 +4836,10 @@ static const JSJitInfo dom_x_getterinfo = {
     JSJitInfo::Getter,
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
-    JSJitInfo::AliasNone, /* aliasSet */
     false,    /* isInSlot */
-    0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    JSJitInfo::AliasNone, /* aliasSet */
+    0,        /* slotIndex */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
@@ -4851,10 +4851,10 @@ static const JSJitInfo dom_x_setterinfo = {
     JSJitInfo::Setter,
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
-    JSJitInfo::AliasEverything, /* aliasSet */
     false,    /* isInSlot */
-    0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    JSJitInfo::AliasEverything, /* aliasSet */
+    0,        /* slotIndex */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
@@ -4866,10 +4866,10 @@ static const JSJitInfo doFoo_methodinfo = {
     JSJitInfo::Method,
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
-    JSJitInfo::AliasEverything, /* aliasSet */
     false,    /* isInSlot */
-    0,        /* slotIndex */
     JSVAL_TYPE_UNKNOWN, /* returnType */
+    JSJitInfo::AliasEverything, /* aliasSet */
+    0,        /* slotIndex */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
