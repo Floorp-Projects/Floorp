@@ -5544,6 +5544,13 @@ JSObject::dump()
     if (obj->isDelegate()) fprintf(stderr, " delegate");
     if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) fprintf(stderr, " not_extensible");
     if (obj->isIndexed()) fprintf(stderr, " indexed");
+    if (obj->isBoundFunction()) fprintf(stderr, " bound_function");
+    if (obj->isVarObj()) fprintf(stderr, " varobj");
+    if (obj->watched()) fprintf(stderr, " watched");
+    if (obj->isIteratedSingleton()) fprintf(stderr, " iterated_singleton");
+    if (obj->isNewTypeUnknown()) fprintf(stderr, " new_type_unknown");
+    if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
+    if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
 
     if (obj->isNative()) {
         if (obj->inDictionaryMode())
