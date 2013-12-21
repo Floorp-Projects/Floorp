@@ -34,7 +34,7 @@ function performTest(hud)
   }).then(([result]) => {
     let clickable = result.clickableElements[0];
     ok(clickable, "the console.log() object anchor was found");
-    isnot(clickable.textContent.indexOf("Object"), -1,
+    isnot(clickable.textContent.indexOf('{abba: "omgBug676722"}'), -1,
           "clickable node content is correct");
 
     hud.jsterm.once("variablesview-fetched",

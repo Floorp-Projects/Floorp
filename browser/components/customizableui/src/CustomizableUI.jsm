@@ -1695,7 +1695,10 @@ let CustomizableUIInternal = {
 
       // If the widget doesn't have an existing placement, and it hasn't been
       // seen before, then add it to its default area so it can be used.
-      if (autoAdd && !widget.currentArea && !gSeenWidgets.has(widget.id)) {
+      // If the widget is not removable, we *have* to add it to its default
+      // area here.
+      let canBeAutoAdded = autoAdd && !gSeenWidgets.has(widget.id);
+      if (!widget.currentArea && (!widget.removable || canBeAutoAdded)) {
         this.beginBatchUpdate();
         try {
           gSeenWidgets.add(widget.id);

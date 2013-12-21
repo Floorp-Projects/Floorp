@@ -61,6 +61,7 @@ function WebConsoleActor(aConnection, aParentActor)
 
   this._protoChains = new Map();
   this._netEvents = new Map();
+  this._gripDepth = 0;
 
   this._onObserverNotification = this._onObserverNotification.bind(this);
   if (this.parentActor.isRootActor) {
@@ -79,6 +80,13 @@ WebConsoleActor.prototype =
    * @see jsdebugger.jsm
    */
   dbg: null,
+
+  /**
+   * This is used by the ObjectActor to keep track of the depth of grip() calls.
+   * @private
+   * @type number
+   */
+  _gripDepth: null,
 
   /**
    * Actor pool for all of the actors we send to the client.

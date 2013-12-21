@@ -54,7 +54,7 @@ function initialChecks() {
 
   is(arrayVar.target.querySelector(".name").getAttribute("value"), "largeArray",
     "Should have the right property name for 'largeArray'.");
-  is(arrayVar.target.querySelector(".value").getAttribute("value"), "Int8Array",
+  is(arrayVar.target.querySelector(".value").getAttribute("value"), "Int8Array[10000]",
     "Should have the right property value for 'largeArray'.");
   ok(arrayVar.target.querySelector(".value").className.contains("token-other"),
     "Should have the right token class for 'largeArray'.");
