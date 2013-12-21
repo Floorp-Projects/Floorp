@@ -2275,6 +2275,22 @@ public:
   }
 };
 
+namespace mozilla {
+namespace dom {
+
+class TreeOrderComparator {
+public:
+  bool Equals(nsINode* aElem1, nsINode* aElem2) const {
+    return aElem1 == aElem2;
+  }
+  bool LessThan(nsINode* aElem1, nsINode* aElem2) const {
+    return nsContentUtils::PositionIsBefore(aElem1, aElem2);
+  }
+};
+
+} // namespace dom
+} // namespace mozilla
+
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
     foundInterface = static_cast<_interface *>(_allocator);                   \

@@ -217,6 +217,8 @@ static const PRUnichar sHTMLTagUnicodeName_section[] =
   {'s', 'e', 'c', 't', 'i', 'o', 'n', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_select[] =
   {'s', 'e', 'l', 'e', 'c', 't', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_shadow[] =
+  {'s', 'h', 'a', 'd', 'o', 'w', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_small[] =
   {'s', 'm', 'a', 'l', 'l', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_source[] =

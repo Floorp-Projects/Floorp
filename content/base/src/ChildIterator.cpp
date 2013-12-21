@@ -8,6 +8,8 @@
 #include "nsContentUtils.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/HTMLContentElement.h"
+#include "mozilla/dom/HTMLShadowElement.h"
+#include "mozilla/dom/ShadowRoot.h"
 
 namespace mozilla {
 namespace dom {
@@ -73,6 +75,17 @@ ExplicitChildIterator::GetNextChild()
     }
     mIndexInInserted = 0;
     mChild = mChild->GetNextSibling();
+  } else if (mShadowIterator) {
+    // If we're inside of a <shadow> element, look through the
+    // explicit children of the projected ShadowRoot via
+    // the mShadowIterator.
+    nsIContent* nextChild = mShadowIterator->GetNextChild();
+    if (nextChild) {
+      return nextChild;
+    }
+
+    mShadowIterator = nullptr;
+    mChild = mChild->GetNextSibling();
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
     MOZ_ASSERT(mChild);
@@ -93,24 +106,49 @@ ExplicitChildIterator::GetNextChild()
 
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
-  while (mChild && nsContentUtils::IsContentInsertionPoint(mChild)) {
-    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-    if (!assignedChildren.IsEmpty()) {
-      // Iterate through elements projected on insertion point.
-      mIndexInInserted = 1;
-      return assignedChildren[0];
-    }
+  while (mChild) {
+    // If the current child being iterated is a shadow insertion point then
+    // the iterator needs to go into the projected ShadowRoot.
+    if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
+      // Look for the next child in the projected ShadowRoot for the <shadow>
+      // element.
+      HTMLShadowElement* shadowElem = static_cast<HTMLShadowElement*>(mChild);
+      ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
+      if (projectedShadow) {
+        mShadowIterator = new ExplicitChildIterator(projectedShadow);
+        nsIContent* nextChild = mShadowIterator->GetNextChild();
+        if (nextChild) {
+          return nextChild;
+        }
+        mShadowIterator = nullptr;
+      }
+      mChild = mChild->GetNextSibling();
+    } else if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+      // If the current child being iterated is a content insertion point
+      // then the iterator needs to return the nodes distributed into
+      // the content insertion point.
+      MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
+      if (!assignedChildren.IsEmpty()) {
+        // Iterate through elements projected on insertion point.
+        mIndexInInserted = 1;
+        return assignedChildren[0];
+      }
 
-    // Insertion points inside fallback/default content
-    // are considered inactive and do not get assigned nodes.
-    mDefaultChild = mChild->GetFirstChild();
-    if (mDefaultChild) {
-      return mDefaultChild;
-    }
+      // Insertion points inside fallback/default content
+      // are considered inactive and do not get assigned nodes.
+      mDefaultChild = mChild->GetFirstChild();
+      if (mDefaultChild) {
+        return mDefaultChild;
+      }
 
-    // If we have an insertion point with no assigned nodes and
-    // no default content, move on to the next node.
-    mChild = mChild->GetNextSibling();
+      // If we have an insertion point with no assigned nodes and
+      // no default content, move on to the next node.
+      mChild = mChild->GetNextSibling();
+    } else {
+      // mChild is not an insertion point, thus it is the next node to
+      // return from this iterator.
+      break;
+    }
   }
 
   return mChild;
@@ -146,18 +184,22 @@ FlattenedChildIterator::FlattenedChildIterator(nsIContent* aParent)
   }
 }
 
-nsIContent* FlattenedChildIterator::Get()
+nsIContent*
+ExplicitChildIterator::Get()
 {
   MOZ_ASSERT(!mIsFirst);
 
   if (mIndexInInserted) {
     XBLChildrenElement* point = static_cast<XBLChildrenElement*>(mChild);
     return point->mInsertedChildren[mIndexInInserted - 1];
+  } else if (mShadowIterator)  {
+    return mShadowIterator->Get();
   }
   return mDefaultChild ? mDefaultChild : mChild;
 }
 
-nsIContent* FlattenedChildIterator::GetPreviousChild()
+nsIContent*
+ExplicitChildIterator::GetPreviousChild()
 {
   // If we're already in the inserted-children array, look there first
   if (mIndexInInserted) {
@@ -167,6 +209,13 @@ nsIContent* FlattenedChildIterator::GetPreviousChild()
     if (--mIndexInInserted) {
       return assignedChildren[mIndexInInserted - 1];
     }
+    mChild = mChild->GetPreviousSibling();
+  } else if (mShadowIterator) {
+    nsIContent* previousChild = mShadowIterator->GetPreviousChild();
+    if (previousChild) {
+      return previousChild;
+    }
+    mShadowIterator = nullptr;
     mChild = mChild->GetPreviousSibling();
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
@@ -186,19 +235,43 @@ nsIContent* FlattenedChildIterator::GetPreviousChild()
 
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
-  while (mChild && nsContentUtils::IsContentInsertionPoint(mChild)) {
-    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-    if (!assignedChildren.IsEmpty()) {
-      mIndexInInserted = assignedChildren.Length();
-      return assignedChildren[mIndexInInserted - 1];
-    }
+  while (mChild) {
+    if (ShadowRoot::IsShadowInsertionPoint(mChild)) {
+      // If the current child being iterated is a shadow insertion point then
+      // the iterator needs to go into the projected ShadowRoot.
+      HTMLShadowElement* shadowElem = static_cast<HTMLShadowElement*>(mChild);
+      ShadowRoot* projectedShadow = shadowElem->GetOlderShadowRoot();
+      if (projectedShadow) {
+        // Create a ExplicitChildIterator that begins iterating from the end.
+        mShadowIterator = new ExplicitChildIterator(projectedShadow, false);
+        nsIContent* previousChild = mShadowIterator->GetPreviousChild();
+        if (previousChild) {
+          return previousChild;
+        }
+        mShadowIterator = nullptr;
+      }
+      mChild = mChild->GetPreviousSibling();
+    } else if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+      // If the current child being iterated is a content insertion point
+      // then the iterator needs to return the nodes distributed into
+      // the content insertion point.
+      MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
+      if (!assignedChildren.IsEmpty()) {
+        mIndexInInserted = assignedChildren.Length();
+        return assignedChildren[mIndexInInserted - 1];
+      }
 
-    mDefaultChild = mChild->GetLastChild();
-    if (mDefaultChild) {
-      return mDefaultChild;
-    }
+      mDefaultChild = mChild->GetLastChild();
+      if (mDefaultChild) {
+        return mDefaultChild;
+      }
 
-    mChild = mChild->GetPreviousSibling();
+      mChild = mChild->GetPreviousSibling();
+    } else {
+      // mChild is not an insertion point, thus it is the next node to
+      // return from this iterator.
+      break;
+    }
   }
 
   if (!mChild) {
