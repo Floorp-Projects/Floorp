@@ -30,10 +30,10 @@ LayerTransactionChild::Destroy()
 }
 
 PGrallocBufferChild*
-LayerTransactionChild::AllocPGrallocBufferChild(const gfxIntSize&,
-                                           const uint32_t&,
-                                           const uint32_t&,
-                                           MaybeMagicGrallocBufferHandle*)
+LayerTransactionChild::AllocPGrallocBufferChild(const IntSize&,
+                                                const uint32_t&,
+                                                const uint32_t&,
+                                                MaybeMagicGrallocBufferHandle*)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   return GrallocBufferActor::Create();

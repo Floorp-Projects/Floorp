@@ -34,16 +34,30 @@
  *      algorithm: GCM, then HMAC-SHA1, then HMAC-SHA256, then HMAC-MD5.
  *    * Within message authentication algorithm sections, order by asymmetric
  *      signature algorithm: ECDSA, then RSA, then DSS.
+ *
+ * Exception: Because some servers ignore the high-order byte of the cipher
+ * suite ID, we must be careful about adding cipher suites with IDs larger
+ * than 0x00ff; see bug 946147. For these broken servers, the first four cipher
+ * suites, with the MSB zeroed, look like:
+ *      TLS_KRB5_EXPORT_WITH_RC4_40_MD5 {0x00,0x2B }
+ *      TLS_RSA_WITH_AES_128_CBC_SHA { 0x00,0x2F }
+ *      TLS_RSA_WITH_3DES_EDE_CBC_SHA { 0x00,0x0A }
+ *      TLS_RSA_WITH_DES_CBC_SHA { 0x00,0x09 }
+ * The broken server only supports the third and fourth ones and will select
+ * the third one.
  */
 const PRUint16 SSL_ImplementedCiphers[] = {
 #ifdef NSS_ENABLE_ECC
     TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
     TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+    /* TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA must appear before
+     * TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA to work around bug 946147.
+     */
+    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
     TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
-    TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
     TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA,
     TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,

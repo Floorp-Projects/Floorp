@@ -1756,6 +1756,8 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     void markChildren(JSTracer *trc);
     void finalize(js::FreeOp *fop);
 
+    static inline js::ThingRootKind rootKind() { return js::THING_ROOT_LAZY_SCRIPT; }
+
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
         return mallocSizeOf(table_);

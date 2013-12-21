@@ -591,6 +591,19 @@ js::Nursery::MinorGCCallback(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
         *thingp = trc->nursery->moveToTenured(trc, static_cast<JSObject *>(*thingp));
 }
 
+static void
+CheckHashTablesAfterMovingGC(JSRuntime *rt)
+{
+#if defined(DEBUG)
+    /* Check that internal hash tables no longer have any pointers into the nursery. */
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        c->checkNewTypeObjectTableAfterMovingGC();
+        if (c->debugScopes)
+            c->debugScopes->checkHashTablesAfterMovingGC(rt);
+    }
+#endif
+}
+
 void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes)
 {
@@ -612,6 +625,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     /* Move objects pointed to by roots from the nursery to the major heap. */
     MinorCollectionTracer trc(rt, this);
     rt->gcStoreBuffer.mark(&trc); // This must happen first.
+    CheckHashTablesAfterMovingGC(rt);
     MarkRuntime(&trc);
     Debugger::markAll(&trc);
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {

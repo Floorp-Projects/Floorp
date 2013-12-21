@@ -3393,6 +3393,9 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     jsbytecode *pc;
     cache.getScriptedLocation(&script, &pc);
 
+    // Override the return value when the script is invalidated (bug 728188).
+    AutoDetectInvalidation adi(cx, res.address(), ion);
+
     if (cache.isDisabled()) {
         if (!GetObjectElementOperation(cx, JSOp(*pc), obj, /* wasObject = */true, idval, res))
             return false;
@@ -3400,9 +3403,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         return true;
     }
 
-    // Override the return value if we are invalidated (bug 728188).
-    AutoFlushCache afc ("GetElementCache", cx->runtime()->jitRuntime());
-    AutoDetectInvalidation adi(cx, res.address(), ion);
+    AutoFlushCache afc("GetElementCache", cx->runtime()->jitRuntime());
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))

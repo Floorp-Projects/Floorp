@@ -96,7 +96,7 @@ public:
 
 protected:
   /**
-   * Traverses a frame tree, marking any nsSVGTextFrame2 frames as dirty
+   * Traverses a frame tree, marking any SVGTextFrame frames as dirty
    * and calling InvalidateRenderingObservers() on it.
    */
   static void ReflowSVGNonDisplayText(nsIFrame* aContainer);

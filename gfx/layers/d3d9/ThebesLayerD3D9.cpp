@@ -120,7 +120,7 @@ ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
       // the new visible region
       retainRegion.And(mValidRegion, mVisibleRegion);
 
-      CreateNewTextures(gfxIntSize(visibleRect.width, visibleRect.height), aMode);
+      CreateNewTextures(gfx::IntSize(visibleRect.width, visibleRect.height), aMode);
 
       // If our texture creation failed this can mean a device reset is pending and we
       // should silently ignore the failure. In the future when device failures
@@ -140,7 +140,7 @@ ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
       mTextureRect = visibleRect;
     }
   } else {
-    CreateNewTextures(gfxIntSize(visibleRect.width, visibleRect.height), aMode);
+    CreateNewTextures(gfx::IntSize(visibleRect.width, visibleRect.height), aMode);
     mTextureRect = visibleRect;
     
     NS_ASSERTION(mValidRegion.IsEmpty(), "Someone forgot to empty the region");
@@ -598,8 +598,8 @@ ThebesLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 }
 
 void
-ThebesLayerD3D9::CreateNewTextures(const gfxIntSize &aSize,
-                                   SurfaceMode aMode)
+ThebesLayerD3D9::CreateNewTextures(const gfx::IntSize &aSize,
+                                  SurfaceMode aMode)
 {
   if (aSize.width == 0 || aSize.height == 0) {
     // Nothing to do.

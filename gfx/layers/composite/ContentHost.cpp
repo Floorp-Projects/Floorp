@@ -6,7 +6,7 @@
 #include "mozilla/layers/ContentHost.h"
 #include "LayersLogging.h"              // for AppendToString
 #include "gfx2DGlue.h"                  // for ContentForFormat
-#include "gfxPoint.h"                   // for gfxIntSize
+#include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/layers/Compositor.h"  // for Compositor
@@ -523,7 +523,7 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // Correct for rotation
   destRegion.MoveBy(aData.rotation());
 
-  gfxIntSize size = aData.rect().Size();
+  IntSize size = aData.rect().Size();
   nsIntRect destBounds = destRegion.GetBounds();
   destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
                     (destBounds.y >= size.height) ? -size.height : 0);
@@ -620,7 +620,7 @@ DeprecatedContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // Correct for rotation
   destRegion.MoveBy(aData.rotation());
 
-  gfxIntSize size = aData.rect().Size();
+  IntSize size = aData.rect().Size();
   nsIntRect destBounds = destRegion.GetBounds();
   destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
                     (destBounds.y >= size.height) ? -size.height : 0);

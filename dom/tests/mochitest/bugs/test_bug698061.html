@@ -23,8 +23,8 @@ var d = document.createElement("div");
 d.innerHTML = "<span>hello </span><span>world</span>";
 
 var imported = document.importNode(d);
-is(imported.childNodes.length, 2, "Should have cloned child nodes!");
-is(imported.textContent, "hello world", "Should have cloned text!");
+is(imported.childNodes.length, 0, "Should not have cloned child nodes with no deep arg!");
+is(imported.textContent, "", "Should not have cloned text with no deep arg!");
 
 imported = document.importNode(d, true);
 is(imported.childNodes.length, 2, "Should have cloned child nodes!");
