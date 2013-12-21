@@ -103,21 +103,30 @@ function getSuccessors(body)
     return body.successors;
 }
 
-function otherDestructorName(name)
+// Split apart a function from sixgill into its mangled and unmangled name. If
+// no mangled name was given, use the unmangled name as its mangled name
+function splitFunction(func)
 {
-    // gcc's information for destructors can be pretty messed up. Some functions
-    // have destructors with no arguments, some have destructors with an int32
-    // argument, some have both, and which one matches what the programmer wrote
-    // is anyone's guess. Work around this by treating calls to one destructor
-    // form as a call to both destructor forms.
-    if (!/::~/.test(name))
-        return null;
+    var split = func.indexOf("|");
+    if (split == -1)
+        return [ func, func ];
+    return [ func.substr(0, split), func.substr(split+1) ];
+}
 
-    if (/\(int32\)/.test(name))
-        return name.replace("(int32)","()");
-    if (/\(\)/.test(name))
-        return name.replace("()","(int32)");
-    return null;
+function mangled(fullname)
+{
+    var split = fullname.indexOf("|");
+    if (split == -1)
+        return fullname;
+    return fullname.substr(0, split);
+}
+
+function readable(fullname)
+{
+    var split = fullname.indexOf("|");
+    if (split == -1)
+        return fullname;
+    return fullname.substr(split+1);
 }
 
 function xdbLibrary()
