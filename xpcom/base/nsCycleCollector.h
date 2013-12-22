@@ -41,7 +41,11 @@ void nsCycleCollector_dispatchDeferredDeletion(bool aContinuation = false);
 bool nsCycleCollector_doDeferredDeletion();
 
 void nsCycleCollector_collect(nsICycleCollectorListener *aManualListener);
-void nsCycleCollector_scheduledCollect();
+
+// If aSliceTime is negative, the CC will run to completion.  If aSliceTime
+// is 0, only a minimum quantum of work will be done.  Otherwise, aSliceTime
+// will be used as the time budget for the slice, in ms.
+void nsCycleCollector_scheduledCollect(int64_t aSliceTime);
 
 uint32_t nsCycleCollector_suspectedCount();
 void nsCycleCollector_shutdown();

@@ -124,6 +124,12 @@ static PRLogModuleInfo* gJSDiagnostics;
 // Maximum amount of time that should elapse between incremental CC slices
 static const int64_t kICCIntersliceDelay = 32; // ms
 
+// Time budget for an incremental CC slice
+static const int64_t kICCSliceBudget = 10; // ms
+
+// Maximum total duration for an ICC
+static const uint32_t kMaxICCDuration = 2000; // ms
+
 // Force a CC after this long if there's more than NS_CC_FORCED_PURPLE_LIMIT
 // objects in the purple buffer.
 #define NS_CC_FORCED                (2 * 60 * PR_USEC_PER_SEC) // 2 min
@@ -2019,6 +2025,22 @@ struct CycleCollectorStats
 
 CycleCollectorStats gCCStats;
 
+static int64_t
+ICCSliceTime()
+{
+  // If CC is not incremental, use an unlimited budget.
+  if (!sIncrementalCC) {
+    return -1;
+  }
+
+  // If an ICC is in progress and is taking too long, finish it off.
+  if (gCCStats.mBeginTime != 0 &&
+      TimeBetween(gCCStats.mBeginTime, PR_Now()) >= kMaxICCDuration) {
+    return -1;
+  }
+
+  return kICCSliceBudget;
+}
 
 static void
 PrepareForCycleCollection(int32_t aExtraForgetSkippableCalls = 0)
@@ -2076,15 +2098,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 //static
 void
-nsJSContext::ScheduledCycleCollectNow()
+nsJSContext::ScheduledCycleCollectNow(int64_t aSliceTime)
 {
   if (!NS_IsMainThread()) {
     return;
   }
 
   PROFILER_LABEL("CC", "ScheduledCycleCollectNow");
+
+  // Ideally, the slice time would be decreased by the amount of
+  // time spent on PrepareForCycleCollection().
   PrepareForCycleCollection();
-  nsCycleCollector_scheduledCollect();
+  nsCycleCollector_scheduledCollect(aSliceTime);
 }
 
 static void
@@ -2108,7 +2133,7 @@ ICCTimerFired(nsITimer* aTimer, void* aClosure)
     }
   }
 
-  nsJSContext::ScheduledCycleCollectNow();
+  nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
 }
 
 //static
@@ -2359,7 +2384,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC. Let CycleCollectNow finish the current IGC, if any,
       // because that will allow us to include the GC time in the CC pause.
-      nsJSContext::ScheduledCycleCollectNow();
+      nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.
