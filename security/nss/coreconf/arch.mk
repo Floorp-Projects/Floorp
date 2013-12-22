@@ -146,7 +146,7 @@ endif
 # uses fibers).
 #
 # If OS_TARGET is not specified, it defaults to $(OS_ARCH), i.e., no
-# cross-compilation.
+# cross-compilation, except on Windows, where it defaults to WIN95.
 #
 
 #
@@ -185,7 +185,7 @@ ifeq ($(OS_ARCH), Windows_NT)
     endif
 endif
 #
-# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
+# If uname -s returns "CYGWIN_NT-*", we assume that we are using
 # the uname.exe in the Cygwin tools.
 #
 ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
@@ -205,7 +205,7 @@ ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
     endif
 endif
 #
-# If uname -s returns "MINGW32_NT-5.1", we assume that we are using
+# If uname -s returns "MINGW32_NT-*", we assume that we are using
 # the uname.exe in the MSYS toolkit.
 #
 ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
@@ -235,7 +235,11 @@ ifeq ($(OS_TARGET),Android)
 endif
 
 ifndef OS_TARGET
+ifeq ($(OS_ARCH), WINNT)
+    OS_TARGET = WIN95
+else
     OS_TARGET = $(OS_ARCH)
+endif
 endif
 
 ifeq ($(OS_TARGET), WIN95)
