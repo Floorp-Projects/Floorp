@@ -301,18 +301,13 @@ let DocShellCapabilitiesListener = {
   _latestCapabilities: "",
 
   init: function () {
-    let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-
-    webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+    gFrameTree.addObserver(this);
   },
 
   /**
-   * onLocationChange() is called as soon as we start loading a page after
-   * we are certain that there's nothing blocking the load (e.g. a content
-   * policy added by AdBlock or the like).
+   * onFrameTreeReset() is called as soon as we start loading a page.
    */
-  onLocationChange: function() {
+  onFrameTreeReset: function() {
     // The order of docShell capabilities cannot change while we're running
     // so calling join() without sorting before is totally sufficient.
     let caps = DocShellCapabilities.collect(docShell).join(",");
@@ -322,15 +317,7 @@ let DocShellCapabilitiesListener = {
       this._latestCapabilities = caps;
       MessageQueue.push("disallow", () => caps || null);
     }
-  },
-
-  onStateChange: function () {},
-  onProgressChange: function () {},
-  onStatusChange: function () {},
-  onSecurityChange: function () {},
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference])
+  }
 };
 
 /**
