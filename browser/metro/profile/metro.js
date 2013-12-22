@@ -546,7 +546,7 @@ pref("browser.chrome.toolbar_tips", false);
 pref("pdfjs.disabled", true);
 // Used by pdf.js to know the first time firefox is run with it installed so it
 // can become the default pdf viewer.
-pref("pdfjs.firstRun", false);
+pref("pdfjs.firstRun", true);
 // The values of preferredAction and alwaysAskBeforeHandling before pdf.js
 // became the default.
 pref("pdfjs.previousHandler.preferredAction", 0);
