@@ -25,6 +25,8 @@
 
     <style name="Widget.BaseTextView" parent="android:style/Widget.Holo.Light.TextView"/>
 
+    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.Holo.ProgressBar.Horizontal"/>
+
 
     <!--
         Application styles. All customizations that are not specific
