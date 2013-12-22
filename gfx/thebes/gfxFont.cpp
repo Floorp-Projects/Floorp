@@ -4061,13 +4061,10 @@ gfxFontGroup::gfxFontGroup(const nsAString& aFamilies,
     , mUnderlineOffset(UNDERLINE_OFFSET_NOT_SET)
     , mHyphenWidth(-1)
     , mTextPerf(nullptr)
+    , mPageLang(gfxPlatform::GetFontPrefLangFor(aStyle->language))
+    , mSkipDrawing(false)
 {
-    mUserFontSet = nullptr;
     SetUserFontSet(aUserFontSet);
-
-    mSkipDrawing = false;
-
-    mPageLang = gfxPlatform::GetFontPrefLangFor(mStyle.language);
     BuildFontList();
 }
 
@@ -4215,7 +4212,6 @@ gfxFontGroup::HasFont(const gfxFontEntry *aFontEntry)
 gfxFontGroup::~gfxFontGroup()
 {
     mFonts.Clear();
-    SetUserFontSet(nullptr);
 }
 
 gfxFontGroup *
@@ -5110,9 +5106,7 @@ gfxFontGroup::GetUserFontSet()
 void 
 gfxFontGroup::SetUserFontSet(gfxUserFontSet *aUserFontSet)
 {
-    NS_IF_RELEASE(mUserFontSet);
     mUserFontSet = aUserFontSet;
-    NS_IF_ADDREF(mUserFontSet);
     mCurrGeneration = GetGeneration();
 }
 
