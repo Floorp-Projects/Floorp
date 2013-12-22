@@ -33,13 +33,14 @@ class SVGTransform;
  *
  * See the architecture comment in SVGAnimatedTransformList.h.
  */
-class DOMSVGTransformList MOZ_FINAL : public nsWrapperCache
+class DOMSVGTransformList MOZ_FINAL : public nsISupports,
+                                      public nsWrapperCache
 {
   friend class dom::SVGTransform;
 
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGTransformList)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGTransformList)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGTransformList)
 
   DOMSVGTransformList(dom::SVGAnimatedTransformList *aAList,
                       const SVGTransformList &aInternalList)
