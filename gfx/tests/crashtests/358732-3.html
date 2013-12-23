@@ -1,0 +1,24 @@
+<html>
+<head>
+<title>Testcase 3 - Bug 358732 – Crash in _moz_cairo_win32_scaled_font_select_font, part 2</title>
+<script id="script">
+var i=0;
+function doe() {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var navigator1 = top.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
+var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
+var docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+docviewer.textZoom=i;
+i=i+0.2;
+if (i>10)
+ i = 0;
+}
+setInterval(doe, 50);
+
+</script>
+</head>
+<body>
+text&#8889;&#74746;&#48236;&#79202;&#67671;&#9251;&#14635;<sup>&#8889;&#74746;&#48236;&#79202;&#67671;&#9251;&#14635;
+text
+</body>
+</html>
