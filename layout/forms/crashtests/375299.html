@@ -1,0 +1,17 @@
+<html><head>
+<title>Testcase bug - Crash [@ nsFileControlFrame::CreateAnonymousContent] when removing stylesheet with binding and removing file input</title>
+<style>
+body {-moz-binding:url("375299-binding.xml#a"); }
+</style>
+</head><body onload="doe()">
+<input type="file">
+
+<script>
+function doe() {
+var x=document.getElementsByTagName('input')[0];
+x.parentNode.removeChild(x);
+var y=document.getElementsByTagName('style')[0];
+y.parentNode.removeChild(y);
+}
+</script>
+</body></html>
