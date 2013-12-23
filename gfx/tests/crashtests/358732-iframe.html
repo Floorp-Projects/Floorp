@@ -1,0 +1,38 @@
+<object>&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;
+&#5787;&#5787;&#5787;&#5787;&#5787;
+&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;
+&#5787;&#5787;&#5787;&#5787;
+<i>&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;&#5787;
+
+<script>
+var doc = document;
+if (document.getElementById('content')) {
+  doc = document.getElementById('content').contentDocument;
+}
+
+var docviewer;
+function do_onload() {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var navigator = parent.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
+var docShell = navigator.QueryInterface(Components.interfaces.nsIDocShell);
+docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+setTimeout(doe,500, 0.2);
+}
+do_onload();
+
+
+
+function doe(i) {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+ docviewer.textZoom += i;
+
+if (docviewer.textZoom >=4)
+  i = -0.2;
+
+if (docviewer.textZoom <=0)
+  i = 0.2;
+window.status = docviewer.textZoom;
+setTimeout(doe, 100, i);
+}
+</script>

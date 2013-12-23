@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+ xmlns:html="http://www.w3.org/1999/xhtml"
+ xmlns:mathml="http://www.w3.org/1998/Math/MathML"
+ xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+ xmlns:svg="http://www.w3.org/2000/svg"
+ xmlns:xforms="http://www.w3.org/2002/xforms">&#1593;<svg:foreignObject x="0" y="0" width="100%" height="100%"></svg:foreignObject>
+<html:script><![CDATA[
+/*template*/
+var doc = document;
+if (document.getElementById('content'))
+  doc = document.getElementById('content').contentDocument;
+
+function addfirstletter(){
+var x=doc.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='\
+*::first-letter {float: right; text-transform: uppercase; background-color:red; font-size:600%;}\
+';
+doc.documentElement.appendChild(x);
+}
+
+setTimeout(addfirstletter,200);
+
+/*template*/
+
+/*template*/
+var doc = document;
+if (document.getElementById('content'))
+  doc = document.getElementById('content').contentDocument;
+
+function addfirstline(){
+var x=doc.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='\
+*::first-line { text-transform: uppercase; background-color:green; font-size:110%; height: 110%;}\
+*::after { content:"anonymous text"; float:right;border:3px solid black;text-transform: uppercase;height: 90%;}\
+*::before { content:"before text"; float:right;border:3px solid black;font-size: 10px;width:80%;}\
+';
+doc.documentElement.appendChild(x);
+}
+setTimeout(addfirstline,200);
+
+/*template*/
+/*template*/
+var doc = document;
+if (document.getElementById('content'))
+  doc = document.getElementById('content').contentDocument;
+
+var timers=0;
+function doe(aObj, aNested, aCurrentTimer){
+var temp =0;
+for (var i in aObj) {
+try {
+if (i == 'ordinal')
+ continue;
+if (typeof aObj[i] == 'object') {
+  if (aNested >= 1000 || aObj[i] == window.location || aOb[i] == doc.documentElement.boxObject)
+    continue;
+  setTimeout(doe,500, aObj[i], ++aNested, timers);
+  timers++;
+  if (aOb[i] == doc.documentElement.boxObject.firstChild) {
+  alert(i);
+   continue;
+  };
+}
+if (i == 'textContent' || i == 'innerHTML')
+  continue;
+}
+catch(e){}
+try {
+ //if (temp == 68 && aNested == 21 && aCurrentTimer >= 116) {
+ // alert(i + '-'+ aObj[i]);
+ // return;
+ // }
+ 
+if (typeof aObj[i] == 'function') {
+if (i =='removeChild' || i == 'getBoxObjectFor' || i == 'enableRollup')
+aObj[i](doc.documentElement);
+}
+else {
+ aObj[i]= 'on';
+}
+ temp+=1;
+}
+catch (e) {
+
+}
+}
+}
+
+setTimeout(doe,0, doc.documentElement, 300);
+
+/*template*/
+
+]]></html:script>
+</svg>
