@@ -11,8 +11,8 @@
 #include <sys/socket.h>
 
 #include "base/message_loop.h"
-#include "BluetoothServiceBluedroid.h"
 #include "BluetoothSocketObserver.h"
+#include "BluetoothUtils.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/RefPtr.h"
 #include "nsThreadUtils.h"
