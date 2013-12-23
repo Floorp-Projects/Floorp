@@ -477,6 +477,10 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     mTrackBuffer[i]->Start();
   }
 
+  if (!mDecoder) {
+    return NS_ERROR_FAILURE;
+  }
+
   // If the duration is 0, imply the stream is live stream.
   if (duration) {
     // Not live stream.
@@ -525,6 +529,13 @@ RtspMediaResource::OnDisconnected(uint8_t aTrackIdx, nsresult aReason)
   for (uint32_t i = 0 ; i < mTrackBuffer.Length(); ++i) {
     mTrackBuffer[i]->Stop();
     mTrackBuffer[i]->Reset();
+  }
+
+  // If mDecoder is null pointer, it means this OnDisconnected event is
+  // triggered when media element was destroyed and mDecoder was already
+  // shutdown.
+  if (!mDecoder) {
+    return NS_OK;
   }
 
   if (aReason == NS_ERROR_NOT_INITIALIZED ||
@@ -580,6 +591,12 @@ nsresult RtspMediaResource::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   mMediaStreamController->Stop();
+  // Since mDecoder is not an nsCOMPtr in BaseMediaResource, we have to
+  // explicitly set it as null pointer in order to prevent misuse from this
+  // object (RtspMediaResource).
+  if (mDecoder) {
+    mDecoder = nullptr;
+  }
   return NS_OK;
 }
 
