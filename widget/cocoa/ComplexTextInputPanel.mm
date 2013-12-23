@@ -162,12 +162,11 @@ using namespace mozilla;
     viewRect.origin = [[view window] convertBaseToScreen:viewRect.origin];
   }
   NSRect selfRect = [self frame];
-  // XXX Is this work well with Retina display?
   CGFloat minWidth = static_cast<CGFloat>(
                        Preferences::GetUint("ui.plugin.panel.min-width", 500));
   NSRect rect = NSMakeRect(viewRect.origin.x,
                            viewRect.origin.y - selfRect.size.height,
-                           std::min(viewRect.size.width, minWidth),
+                           std::max(viewRect.size.width, minWidth),
                            selfRect.size.height);
 
   // Adjust to screen.
