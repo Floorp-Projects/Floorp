@@ -909,17 +909,19 @@ TypeCompartment::resolvePending(JSContext *cx)
  * probing.  TODO: replace these with jshashtables.
  */
 const unsigned SET_ARRAY_SIZE = 8;
+const unsigned SET_CAPACITY_OVERFLOW = 1u << 30;
 
 /* Get the capacity of a set with the given element count. */
 static inline unsigned
 HashSetCapacity(unsigned count)
 {
     JS_ASSERT(count >= 2);
+    JS_ASSERT(count < SET_CAPACITY_OVERFLOW);
 
     if (count <= SET_ARRAY_SIZE)
         return SET_ARRAY_SIZE;
 
-    return 1 << (mozilla::FloorLog2(count) + 2);
+    return 1u << (mozilla::FloorLog2(count) + 2);
 }
 
 /* Compute the FNV hash for the low 32 bits of v. */
@@ -956,6 +958,9 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
             insertpos = (insertpos + 1) & (capacity - 1);
         }
     }
+
+    if (count >= SET_CAPACITY_OVERFLOW)
+        return nullptr;
 
     count++;
     unsigned newCapacity = HashSetCapacity(count);
