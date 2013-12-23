@@ -4,6 +4,35 @@
 
 /*global intl_Collator: false, */
 
+/* ES6 Draft September 5, 2013 21.1.3.3 */
+function String_codePointAt(pos) {
+    // Steps 1-3.
+    CheckObjectCoercible(this);
+    var S = ToString(this);
+
+    // Steps 4-5.
+    var position = ToInteger(pos);
+
+    // Step 6.
+    var size = S.length;
+
+    // Step 7.
+    if (position < 0 || position >= size)
+        return undefined;
+
+    // Steps 8-9.
+    var first = callFunction(std_String_charCodeAt, S, position);
+    if (first < 0xD800 || first > 0xDBFF || position + 1 === size)
+        return first;
+
+    // Steps 10-11.
+    var second = callFunction(std_String_charCodeAt, S, position + 1);
+    if (second < 0xDC00 || second > 0xDFFF)
+        return first;
+
+    // Step 12.
+    return (first - 0xD800) * 0x400 + (second - 0xDC00) + 0x10000;
+}
 
 var collatorCache = new Record();
 
@@ -117,6 +146,45 @@ function String_localeCompare(that) {
     return intl_CompareStrings(collator, S, That);
 }
 
+/* ES6 Draft September 5, 2013 21.1.2.2 */
+function String_static_fromCodePoint() {
+    // Step 1. is not relevant
+    // Step 2.
+    var length = arguments.length;
+
+    // Step 3.
+    var elements = new List();
+
+    // Step 4-5., 5g.
+    for (var nextIndex = 0; nextIndex < length; nextIndex++) {
+        // Step 5a.
+        var next = arguments[nextIndex];
+        // Step 5b-c.
+        var nextCP = ToNumber(next);
+
+        // Step 5d.
+        if (nextCP !== ToInteger(nextCP) || std_isNaN(nextCP))
+            ThrowError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
+
+        // Step 5e.
+        if (nextCP < 0 || nextCP > 0x10FFFF)
+            ThrowError(JSMSG_NOT_A_CODEPOINT, ToString(nextCP));
+
+        // Step 5f.
+        // Inlined UTF-16 Encoding
+        if (nextCP <= 0xFFFF) {
+            elements.push(nextCP);
+            continue;
+        }
+
+        elements.push((((nextCP - 0x10000) / 0x400) | 0) + 0xD800);
+        elements.push((nextCP - 0x10000) % 0x400 + 0xDC00);
+    }
+
+    // Step 6.
+    return callFunction(std_Function_apply, std_String_fromCharCode, null, elements);
+}
+
 /**
  * Compare String str1 against String str2, using the locale and collation
  * options provided.
@@ -131,3 +199,4 @@ function String_static_localeCompare(str1, str2) {
     var options = arguments.length > 3 ? arguments[3] : undefined;
     return callFunction(String_localeCompare, str1, str2, locales, options);
 }
+
