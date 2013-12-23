@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_bluetooth_bluetoothutils_h__
 #define mozilla_dom_bluetooth_bluetoothutils_h__
 
+#include <hardware/bluetooth.h>
+
 #include "BluetoothCommon.h"
 #include "js/TypeDecls.h"
 
@@ -16,17 +18,21 @@ class BluetoothNamedValue;
 class BluetoothValue;
 class BluetoothReplyRunnable;
 
+const bt_interface_t*
+GetBluetoothInterface();
+
+void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType);
+
+void
+BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
+                      nsAString& aRetBdAddress);
+
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
             JS::Handle<JSObject*> aObj);
-
-nsString
-GetObjectPathFromAddress(const nsAString& aAdapterPath,
-                         const nsAString& aDeviceAddress);
-
-nsString
-GetAddressFromObjectPath(const nsAString& aObjectPath);
 
 bool
 BroadcastSystemMessage(const nsAString& aType,
@@ -36,10 +42,6 @@ void
 DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
                        const BluetoothValue& aValue,
                        const nsAString& aErrorStr);
-
-void
-ParseAtCommand(const nsACString& aAtCommand, const int aStart,
-               nsTArray<nsCString>& aRetValues);
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
