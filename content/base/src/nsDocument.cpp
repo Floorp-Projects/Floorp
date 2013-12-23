@@ -1639,7 +1639,8 @@ nsDocument::Release()
   NS_PRECONDITION(0 != mRefCnt, "dup release");
   NS_ASSERT_OWNINGTHREAD(nsDocument);
   nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsDocument)::Upcast(this);
-  nsrefcnt count = mRefCnt.decr(base);
+  bool shouldDelete = false;
+  nsrefcnt count = mRefCnt.decr(base, &shouldDelete);
   NS_LOG_RELEASE(this, count, "nsDocument");
   if (count == 0) {
     if (mStackRefCnt && !mNeedsReleaseAfterStackRefCntRelease) {
@@ -1647,8 +1648,13 @@ nsDocument::Release()
       NS_ADDREF_THIS();
       return mRefCnt.get();
     }
-    NS_ASSERT_OWNINGTHREAD(nsDocument);
+    mRefCnt.incr(base);
     nsNodeUtils::LastRelease(this);
+    mRefCnt.decr(base);
+    if (shouldDelete) {
+      mRefCnt.stabilizeForDeletion();
+      DeleteCycleCollectable();
+    }
   }
   return count;
 }
