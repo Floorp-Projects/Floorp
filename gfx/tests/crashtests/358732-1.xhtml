@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>
+Testcase bug 358732 - Crash in _moz_cairo_win32_scaled_font_select_font, part 2
+</title>
+<style>
+  svg, #div{border: 10px solid black;}
+</style>
+
+</head>
+<body>
+This should not crash Mozilla within 5 seconds
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="position:absolute;left:0px;top:50px;"><g id="g">
+<foreignObject id="rotate" x="0" y="0" width="800" height="800">
+  <iframe xmlns="http://www.w3.org/1999/xhtml" style="width:800px; height: 800px;" src="358732-iframe.html"></iframe>
+</foreignObject>
+</g></svg>
+
+
+
+</body>
+</html>
