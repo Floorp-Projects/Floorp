@@ -1,0 +1,28 @@
+<HTML><HEAD style="display: table-row;"></HEAD>
+<BODY style="display: table-row;">
+<CODE>
+<span>
+<IFRAME style="display:table-column-group;"></IFRAME>
+</span>
+</CODE>
+<span style="display:table-column-group;"></span>
+<SCRIPT>
+function doe2() {
+document.body.setAttribute('style', '');
+document.getElementsByTagName('head')[0].setAttribute('style', '');
+document.body.offsetHeight;
+document.getElementsByTagName('span')[0].setAttribute('style', 'display: table-row;');
+}
+setTimeout(doe2,100);
+
+function tripleclick(){
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+var wu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindowUtils);
+wu.sendMouseEvent('mousedown',  500, 500, 0, 3, 0);
+setTimeout(tripleclick,20);
+setTimeout(function(){window.location.reload()}, 200);
+}
+setTimeout(tripleclick,200);
+</SCRIPT>
+</BODY></HTML>
