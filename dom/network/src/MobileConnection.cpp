@@ -102,8 +102,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
   mWindow = do_GetWeakReference(aWindow);
   mListener = new Listener(this);
 
-  if (!CheckPermission("mobilenetwork") &&
-      CheckPermission("mobileconnection")) {
+  if (CheckPermission("mobileconnection")) {
     DebugOnly<nsresult> rv = mProvider->RegisterMobileConnectionMsg(mClientId, mListener);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Failed registering mobile connection messages with provider");
