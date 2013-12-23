@@ -834,6 +834,10 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/metro/chrome/chrome.manifest
 @BINPATH@/metro/chrome/@AB_CD@@JAREXT@
 @BINPATH@/metro/chrome/@AB_CD@.manifest
+#ifdef NIGHTLY_BUILD
+@BINPATH@/metro/chrome/shumway.manifest
+@BINPATH@/metro/chrome/shumway/*
+#endif
 @BINPATH@/metro/chrome/pdfjs.manifest
 @BINPATH@/metro/chrome/pdfjs/*
 @BINPATH@/metro/components

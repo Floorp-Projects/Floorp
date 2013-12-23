@@ -48,4 +48,16 @@ libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest
           $(foreach exclude,$(exclude_files), -X $(srcdir)/pdfjs/$(exclude)) \
           $(DIST)/bin/metro/chrome
 	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest 'manifest chrome/pdfjs.manifest')
+
+ifdef NIGHTLY_BUILD
+$(DIST)/bin/metro/chrome/shumway.manifest: $(GLOBAL_DEPS)
+	printf 'manifest shumway/chrome.manifest' > $@
+
+libs:: $(DIST)/bin/metro/chrome/shumway.manifest
+	$(PYTHON) $(topsrcdir)/config/nsinstall.py \
+	  $(srcdir)/shumway \
+          $(foreach exclude,$(exclude_files), -X $(srcdir)/shumway/$(exclude)) \
+          $(DIST)/bin/metro/chrome
+	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest 'manifest chrome/shumway.manifest')
+endif
 endif
