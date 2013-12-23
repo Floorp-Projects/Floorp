@@ -1,0 +1,29 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<object id="mw_ij" xmlns="http://www.w3.org/1999/xhtml" style="display: none;"/>
+
+<textnode xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <dir xmlns="http://www.w3.org/1999/xhtml" style="overflow: scroll;position: fixed;"/>
+</textnode>
+
+<wizardpage id="mw_ab" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <label id="mw_kl">
+    <toolbox style="float: right;"/>
+  </label>
+</wizardpage>
+
+<listbox id="mw_cd" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"/>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+function doe() {
+document.getElementById('mw_ab').insertBefore(document.getElementById('mw_cd'), document.getElementById('mw_ab').childNodes[0]);
+document.documentElement.offsetHeight;
+document.getElementById('mw_ij').appendChild(document.getElementById('mw_kl'));
+document.documentElement.offsetHeight;
+}
+setTimeout(doe, 100);
+
+setTimeout(function() {window.location=window.location;}, 500);
+</script>
+
+</html>
