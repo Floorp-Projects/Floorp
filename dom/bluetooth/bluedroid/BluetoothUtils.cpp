@@ -8,6 +8,7 @@
 
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
+#include "BluetoothServiceBluedroid.h"
 #include "BluetoothUtils.h"
 #include "jsapi.h"
 #include "mozilla/Scoped.h"
@@ -21,6 +22,38 @@
 #include "nsServiceManagerUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
+
+const bt_interface_t*
+GetBluetoothInterface()
+{
+  return BluetoothServiceBluedroid::GetBluetoothInterface();
+}
+
+void
+StringToBdAddressType(const nsAString& aBdAddress,
+                      bt_bdaddr_t *aRetBdAddressType)
+{
+  NS_ConvertUTF16toUTF8 bdAddressUTF8(aBdAddress);
+  const char* str = bdAddressUTF8.get();
+
+  for (int i = 0; i < 6; i++) {
+    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
+    str++;
+  }
+}
+
+void
+BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
+{
+  uint8_t* addr = aBdAddressType->address;
+  char bdstr[18];
+
+  sprintf(bdstr, "%02x:%02x:%02x:%02x:%02x:%02x",
+          (int)addr[0],(int)addr[1],(int)addr[2],
+          (int)addr[3],(int)addr[4],(int)addr[5]);
+
+  aRetBdAddress = NS_ConvertUTF8toUTF16(bdstr);
+}
 
 bool
 SetJsObject(JSContext* aContext,
@@ -72,37 +105,6 @@ SetJsObject(JSContext* aContext,
   return true;
 }
 
-nsString
-GetObjectPathFromAddress(const nsAString& aAdapterPath,
-                         const nsAString& aDeviceAddress)
-{
-  // The object path would be like /org/bluez/2906/hci0/dev_00_23_7F_CB_B4_F1,
-  // and the adapter path would be the first part of the object path, according
-  // to the example above, it's /org/bluez/2906/hci0.
-  nsString devicePath(aAdapterPath);
-  devicePath.AppendLiteral("/dev_");
-  devicePath.Append(aDeviceAddress);
-  devicePath.ReplaceChar(':', '_');
-  return devicePath;
-}
-
-nsString
-GetAddressFromObjectPath(const nsAString& aObjectPath)
-{
-  // The object path would be like /org/bluez/2906/hci0/dev_00_23_7F_CB_B4_F1,
-  // and the adapter path would be the first part of the object path, according
-  // to the example above, it's /org/bluez/2906/hci0.
-  nsString address(aObjectPath);
-  int addressHead = address.RFind("/") + 5;
-
-  MOZ_ASSERT(addressHead + BLUETOOTH_ADDRESS_LENGTH == (int)address.Length());
-
-  address.Cut(0, addressHead);
-  address.ReplaceChar('_', ':');
-
-  return address;
-}
-
 bool
 BroadcastSystemMessage(const nsAString& aType,
                        const InfallibleTArray<BluetoothNamedValue>& aData)
@@ -152,27 +154,6 @@ DispatchBluetoothReply(BluetoothReplyRunnable* aRunnable,
   if (NS_FAILED(NS_DispatchToMainThread(aRunnable))) {
     BT_WARNING("Failed to dispatch to main thread!");
   }
-}
-
-void
-ParseAtCommand(const nsACString& aAtCommand, const int aStart,
-               nsTArray<nsCString>& aRetValues)
-{
-  int length = aAtCommand.Length();
-  int begin = aStart;
-
-  for (int i = aStart; i < length; ++i) {
-    // Use ',' as separator
-    if (aAtCommand[i] == ',') {
-      nsCString tmp(nsDependentCSubstring(aAtCommand, begin, i - begin));
-      aRetValues.AppendElement(tmp);
-
-      begin = i + 1;
-    }
-  }
-
-  nsCString tmp(nsDependentCSubstring(aAtCommand, begin));
-  aRetValues.AppendElement(tmp);
 }
 
 void
