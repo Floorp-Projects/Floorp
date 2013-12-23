@@ -564,11 +564,6 @@ class MIRGraph
         return *alloc_;
     }
 
-    template <typename T>
-    T * allocate(size_t count = 1) {
-        return reinterpret_cast<T *>(alloc_->allocate(sizeof(T) * count));
-    }
-
     void addBlock(MBasicBlock *block);
     void insertBlockAfter(MBasicBlock *at, MBasicBlock *block);
 
