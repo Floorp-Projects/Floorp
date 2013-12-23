@@ -545,6 +545,12 @@ this.EF_TYPE_TRANSPARENT = 0;
 this.EF_TYPE_LINEAR_FIXED = 1;
 this.EF_TYPE_CYCLIC = 3;
 
+// TS 102.221 11.1.1.4.3 Table 11.5: File descriptor byte.
+this.UICC_EF_STRUCTURE = {};
+this.UICC_EF_STRUCTURE[this.EF_TYPE_TRANSPARENT]= 1;
+this.UICC_EF_STRUCTURE[this.EF_TYPE_LINEAR_FIXED]= 2;
+this.UICC_EF_STRUCTURE[this.EF_TYPE_CYCLIC]= 6;
+
 // Status code of EFsms
 // see 3GPP TS 51.011 clause 10.5.3
 this.EFSMS_STATUS_FREE       = 0x00;
@@ -687,10 +693,24 @@ this.CSIM_IMSI_M_PROGRAMMED_BYTE = 7;
 this.CSIM_IMSI_M_MCC_BYTE = 8;
 
 /**
- * STK constants.
+ * Tags for Ber Tlv.
+ * See 3GPP TS 101 220 clause 7.2 - Assigned TLV tag values.
  */
-//  Tags for Ber Tlv.
 this.BER_UNKNOWN_TAG = 0x00;
+this.BER_FCP_TEMPLATE_TAG = 0x62;
+this.BER_FCP_FILE_SIZE_DATA_TAG = 0x80;
+this.BER_FCP_FILE_SIZE_TOTAL_TAG = 0x81;
+this.BER_FCP_FILE_DESCRIPTOR_TAG = 0x82;
+this.BER_FCP_FILE_IDENTIFIER_TAG = 0x83;
+this.BER_FCP_DF_NAME_TAG = 0x84; // AID.
+this.BER_FCP_PROPRIETARY_PRIMITIVE_TAG = 0x85;
+this.BER_FCP_SFI_SUPPORT_TAG = 0x88;
+this.BER_FCP_LIFE_CYCLE_STATUS_TAG = 0x8a;
+this.BER_FCP_SA_REFERENCE_FORMAT_TAG = 0x8b; // Security Attribute - Reference Format.
+this.BER_FCP_SA_COMPACT_FORMAT_TAG = 0x8c; // Security Attribute - Compact Format.
+this.BER_FCP_SAT_EXPANDED_FORMAT_TAG = 0xab; // Security Attribute Template - Expanded Format.
+this.BER_FCP_PROPRIETARY_TEMPLATE_TAG = 0xa5;
+this.BER_FCP_PIN_STATUS_DATA_OBJECTS_TAG = 0xc6;
 this.BER_PROACTIVE_COMMAND_TAG = 0xd0;
 this.BER_SMS_PP_DOWNLOAD_TAG = 0xd1;
 this.BER_MENU_SELECTION_TAG = 0xd3;
