@@ -659,6 +659,9 @@ skip-if(B2G) fails-if(Android) random-if(d2d) == 373381-3.html 373381-3-ref.html
 skip-if(B2G) fails-if(Android) == 373381-4.html 373381-4-ref.html
 == 373383-1.html 373383-1-ref.html
 == 373433-1.html 373433-1-ref.html
+== 373533-1.xhtml about:blank
+== 373533-2.xhtml about:blank
+== 373533-3.xhtml about:blank
 == 374038-1.xul 374038-1-ref.xul
 == 374038-2.xul 374038-2-ref.xul
 random-if(d2d) == 374719-1.xul 374719-1-ref.xul
