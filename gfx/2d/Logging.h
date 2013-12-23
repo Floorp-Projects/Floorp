@@ -83,6 +83,8 @@ public:
   Log &operator <<(bool aBool) { mMessage << (aBool ? "true" : "false"); return *this; }
   Log &operator <<(int aInt) { mMessage << aInt; return *this; }
   Log &operator <<(unsigned int aInt) { mMessage << aInt; return *this; }
+  Log &operator <<(long aLong) { mMessage << aLong; return *this; }
+  Log &operator <<(unsigned long aLong) { mMessage << aLong; return *this; }
   Log &operator <<(Float aFloat) { mMessage << aFloat; return *this; }
   Log &operator <<(double aDouble) { mMessage << aDouble; return *this; }
   Log &operator <<(const Point &aPoint)
