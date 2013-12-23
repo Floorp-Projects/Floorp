@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+<title>Testcase bug - Crash [@ nsHTMLReflowState::GetNearestContainingBlock] with testcase using generated content, xbl and mathml</title>
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="a">
+<content><children>
+<div xmlns="http://www.w3.org/1999/xhtml" style="position: absolute;">
+<div style="position: absolute;"/>
+</div>
+</children></content>
+</binding></bindings>
+<style>
+  mtable::after { content:"anonymous text"; }
+  mtable::before { content:"before text"; }
+</style>
+
+<thead style="overflow: scroll;">
+  <mathml:mrow>
+    <mathml:mtable>
+      <tfoot style="-moz-binding: url(#a);" id="a_1">
+        <td style="-moz-binding: url(#a);"/>
+      </tfoot>
+    </mathml:mtable>
+    <td id="a_2"/>
+  </mathml:mrow>
+</thead>
+
+<script xmlns="http://www.w3.org/1999/xhtml">
+  function doe() {
+    document.getElementById('a_1').style.borderCollapse = "";
+    document.documentElement.offsetHeight;
+    document.getElementById('a_2').parentNode.removeChild(document.getElementById('a_2'));  
+  }
+  setTimeout(doe, 400);
+</script>
+</html>
