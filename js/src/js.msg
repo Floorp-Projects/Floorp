@@ -223,7 +223,7 @@ MSG_DEF(JSMSG_TOO_MANY_CATCH_VARS,    169, 0, JSEXN_SYNTAXERR, "too many catch v
 MSG_DEF(JSMSG_NEGATIVE_REPETITION_COUNT, 170, 0, JSEXN_RANGEERR, "repeat count must be non-negative")
 MSG_DEF(JSMSG_INVALID_FOR_OF_INIT,    171, 0, JSEXN_SYNTAXERR, "for-of loop variable declaration may not have an initializer")
 MSG_DEF(JSMSG_INVALID_MAP_ITERABLE,   172, 0, JSEXN_TYPEERR, "iterable for map should have array-like objects")
-MSG_DEF(JSMSG_UNUSED173,              173, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_NOT_A_CODEPOINT,        173, 1, JSEXN_RANGEERR, "{0} is not a valid code point")
 MSG_DEF(JSMSG_UNUSED174,              174, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_NESTING_GENERATOR,      175, 0, JSEXN_TYPEERR, "already executing generator")
 MSG_DEF(JSMSG_UNUSED176,              176, 0, JSEXN_NONE, "")
