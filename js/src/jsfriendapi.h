@@ -8,6 +8,7 @@
 #define jsfriendapi_h
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/TypedEnum.h"
 
 #include "jsbytecode.h"
 #include "jspubtd.h"
@@ -1447,7 +1448,7 @@ typedef bool
                   void *specializedThis, const JSJitMethodCallArgs& args);
 
 struct JSJitInfo {
-    enum OpType {
+    enum OpType MOZ_ENUM_TYPE(uint8_t) {
         Getter,
         Setter,
         Method,
@@ -1475,7 +1476,7 @@ struct JSJitInfo {
         ArgTypeListEnd = (1 << 31)
     };
 
-    enum AliasSet {
+    enum AliasSet MOZ_ENUM_TYPE(uint8_t) {
         // An enum that describes what this getter/setter/method aliases.  This
         // determines what things can be hoisted past this call, and if this
         // call is movable what it can be hoisted past.
@@ -1525,7 +1526,7 @@ struct JSJitInfo {
                                of the actual argument types being passed in. */
     // XXXbz should we have a JSGetterJitInfo subclass or something?
     // XXXbz should we have a JSValueType for the type of the member?
-    size_t slotIndex;       /* If isInSlot is true, the index of the slot to get
+    uint16_t slotIndex;     /* If isInSlot is true, the index of the slot to get
                                the value from.  Otherwise 0. */
     const ArgType* const argTypes; /* For a method, a list of sets of types that
                                       the function expects.  This can be used,
