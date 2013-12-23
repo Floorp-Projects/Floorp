@@ -2047,11 +2047,12 @@ nsRuleNode::ResolveVariableReferences(const nsStyleStructID aSID,
       &aContext->StyleVariables()->mVariables;
     nsCSSValueTokenStream* tokenStream = value->GetTokenStreamValue();
 
+    // XXX Should pass in sheet here (see bug 952338).
     parser.ParsePropertyWithVariableReferences(
         tokenStream->mPropertyID, tokenStream->mShorthandPropertyID,
         tokenStream->mTokenStream, variables, aRuleData,
         tokenStream->mSheetURI, tokenStream->mBaseURI,
-        tokenStream->mSheetPrincipal, tokenStream->mSheet,
+        tokenStream->mSheetPrincipal, nullptr,
         tokenStream->mLineNumber, tokenStream->mLineOffset);
     aRuleData->mCanStoreInRuleTree = false;
     anyTokenStreams = true;
