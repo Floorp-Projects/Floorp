@@ -141,6 +141,12 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     return NS_OK;
 }
 
+void
+OfflineCacheUpdateParent::Kill()
+{
+    unused << SendFinish(false, false);
+}
+
 NS_IMETHODIMP
 OfflineCacheUpdateParent::UpdateStateChanged(nsIOfflineCacheUpdate *aUpdate, uint32_t state)
 {
