@@ -1,0 +1,13 @@
+<html>
+<head>
+<title>Bug 370174 – Crash [@ FindBlockFrameOrBR] with unminimised testcase triple-clicking at the bottom of the page</title>
+</head>
+<body>
+<script>
+function doe() {
+document.documentElement.innerHTML = '';
+}
+setTimeout(doe, 300);
+</script>
+</body>
+</html>
