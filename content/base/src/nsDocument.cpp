@@ -1648,7 +1648,7 @@ nsDocument::Release()
       NS_ADDREF_THIS();
       return mRefCnt.get();
     }
-    mRefCnt.incr();
+    mRefCnt.incr(base);
     nsNodeUtils::LastRelease(this);
     mRefCnt.decr(base);
     if (shouldDelete) {
