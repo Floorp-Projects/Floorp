@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>Testcase bug - Crash [@ nsSubDocumentFrame::Reflow] with testcase, using first-letter, first-line, inline-block  and iframes</title>
+</head>
+<body>
+<div style="width:1440px;" id="a">
+<div>
+<fieldset>
+
+<legend style="display: inline-block;"></legend>
+<span></span>
+<iframe></iframe>
+<iframe></iframe>
+<legend style="display: list-item;">
+<iframe></iframe>
+</legend>
+</fieldset>
+</div>
+</div>
+<script>
+function addfirstline(){
+var x=document.createElementNS('http://www.w3.org/1999/xhtml','style');
+x.innerHTML='\
+#a *::first-letter { }\
+#a *::first-line {}\
+#a *::after { content:"anonymous text"; text-transform: uppercase;height: 90%;}\
+#a *::before { content:"before text"; font-size: 10px;}\
+';
+document.documentElement.appendChild(x);
+}
+setTimeout(addfirstline,200);
+
+var j=0;
+function replacestyles(i){
+var x=document.getElementById('a').getElementsByTagName('*');
+if (j>=2) return;
+if (x[i] && x[i+1])
+  {
+var temp = x[i+1].getAttribute('style');
+x[i+1].setAttribute('style', x[i].getAttribute('style'));
+x[i].setAttribute('style', temp);
+}
+else { i = 0;j++;}
+  i++;
+setTimeout(replacestyles,50,i);
+}
+setTimeout(replacestyles,500,0);
+</script>
+</body>
+</html>
