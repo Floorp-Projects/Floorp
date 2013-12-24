@@ -40,6 +40,8 @@ public:
              const URIParams& documentURI,
              const bool& stickDocument);
 
+    void Kill();
+
     OfflineCacheUpdateParent(uint32_t aAppId, bool aIsInBrowser);
     ~OfflineCacheUpdateParent();
 

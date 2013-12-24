@@ -12,23 +12,13 @@
 #include "BluetoothCommon.h"
 #include "BluetoothService.h"
 
-typedef char bdstr_t[18];
-
-const bt_interface_t*
-GetBluetoothInterface();
-
-void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType);
-void
-BdAddressTypeToString(bt_bdaddr_t* aBdAddressType,
-                      nsAString& aRetBdAddress);
-
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothServiceBluedroid : public BluetoothService
 {
 public:
+  static const bt_interface_t* GetBluetoothInterface();
+
   BluetoothServiceBluedroid();
   ~BluetoothServiceBluedroid();
 

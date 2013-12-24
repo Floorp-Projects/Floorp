@@ -16,7 +16,6 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothPropertyContainer.cpp',
         'BluetoothReplyRunnable.cpp',
         'BluetoothService.cpp',
-        'BluetoothUtils.cpp',
         'BluetoothUuid.cpp',
         'ipc/BluetoothChild.cpp',
         'ipc/BluetoothParent.cpp',
@@ -37,6 +36,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluez/BluetoothOppManager.cpp',
                 'bluez/BluetoothSocket.cpp',
                 'bluez/BluetoothUnixSocketConnector.cpp',
+                'bluez/BluetoothUtils.cpp',
                 'bluez/gonk/BluetoothGonkService.cpp',
                 'bluez/linux/BluetoothDBusService.cpp',
             ]
@@ -52,6 +52,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothHfpManager.cpp',
                 'bluedroid/BluetoothOppManager.cpp',
                 'bluedroid/BluetoothSocket.cpp',
+                'bluedroid/BluetoothUtils.cpp',
                 'bluedroid/gonk/BluetoothServiceBluedroid.cpp',
             ]
             LOCAL_INCLUDES += [

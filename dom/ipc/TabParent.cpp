@@ -1559,8 +1559,12 @@ TabParent::AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
                                                     IsBrowserElement());
 
   nsresult rv = update->Schedule(aManifestURI, aDocumentURI, stickDocument);
-  if (NS_FAILED(rv))
-    return nullptr;
+  if (NS_FAILED(rv)) {
+    // Must dispatch since the parent is not at this moment ready yet.
+    nsRefPtr<nsRunnableMethod<mozilla::docshell::OfflineCacheUpdateParent> > event =
+      NS_NewRunnableMethod(update, &mozilla::docshell::OfflineCacheUpdateParent::Kill);
+    NS_DispatchToCurrentThread(event);
+  }
 
   POfflineCacheUpdateParent* result = update.get();
   update.forget();
@@ -1574,6 +1578,14 @@ TabParent::DeallocPOfflineCacheUpdateParent(mozilla::docshell::POfflineCacheUpda
     static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(actor);
 
   update->Release();
+  return true;
+}
+
+bool
+TabParent::RecvSetOfflinePermission(const IPC::Principal& aPrincipal)
+{
+  nsIPrincipal* principal = aPrincipal;
+  nsContentUtils::MaybeAllowOfflineAppByDefault(principal, nullptr);
   return true;
 }
 
