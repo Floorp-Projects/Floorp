@@ -45,6 +45,42 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumber)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGNumber)
 NS_INTERFACE_MAP_END
 
+namespace mozilla {
+
+//----------------------------------------------------------------------
+// Helper class: AutoChangeNumberNotifier
+// Stack-based helper class to pair calls to WillChangeNumberList and
+// DidChangeNumberList.
+class MOZ_STACK_CLASS AutoChangeNumberNotifier
+{
+public:
+  AutoChangeNumberNotifier(DOMSVGNumber* aNumber MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mNumber(aNumber)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mNumber->HasOwner(),
+               "Expecting list to have an owner for notification");
+    mEmptyOrOldValue =
+      mNumber->Element()->WillChangeNumberList(mNumber->mAttrEnum);
+  }
+
+  ~AutoChangeNumberNotifier()
+  {
+    mNumber->Element()->DidChangeNumberList(mNumber->mAttrEnum,
+                                            mEmptyOrOldValue);
+    if (mNumber->mList->IsAnimating()) {
+      mNumber->Element()->AnimationNeedsResample();
+    }
+  }
+
+private:
+  DOMSVGNumber* mNumber;
+  nsAttrValue   mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+}
+
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
                            uint8_t aAttrEnum,
                            uint32_t aListIndex,
@@ -95,12 +131,8 @@ DOMSVGNumber::SetValue(float aValue)
     if (InternalItem() == aValue) {
       return NS_OK;
     }
-    nsAttrValue emptyOrOldValue = Element()->WillChangeNumberList(mAttrEnum);
+    AutoChangeNumberNotifier notifier(this);
     InternalItem() = aValue;
-    Element()->DidChangeNumberList(mAttrEnum, emptyOrOldValue);
-    if (mList->mAList->IsAnimating()) {
-      Element()->AnimationNeedsResample();
-    }
     return NS_OK;
   }
   mValue = aValue;

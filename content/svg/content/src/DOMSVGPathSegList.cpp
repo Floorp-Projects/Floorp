@@ -50,6 +50,35 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGPathSegList)
 NS_INTERFACE_MAP_END
 
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangePathSegListNotifier
+// Stack-based helper class to pair calls to WillChangePathSegList and
+// DidChangePathSegList.
+class MOZ_STACK_CLASS AutoChangePathSegListNotifier
+{
+public:
+  AutoChangePathSegListNotifier(DOMSVGPathSegList* aPathSegList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mPathSegList(aPathSegList)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mEmptyOrOldValue =
+      mPathSegList->Element()->WillChangePathSegList();
+  }
+
+  ~AutoChangePathSegListNotifier()
+  {
+    mPathSegList->Element()->DidChangePathSegList(mEmptyOrOldValue);
+    if (mPathSegList->AttrIsAnimating()) {
+      mPathSegList->Element()->AnimationNeedsResample();
+    }
+  }
+
+private:
+  DOMSVGPathSegList* mPathSegList;
+  nsAttrValue        mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 /* static */ already_AddRefed<DOMSVGPathSegList>
 DOMSVGPathSegList::GetDOMWrapper(void *aList,
                                  nsSVGElement *aElement,
@@ -238,7 +267,7 @@ DOMSVGPathSegList::Clear(ErrorResult& aError)
   }
 
   if (LengthNoFlush() > 0) {
-    nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
+    AutoChangePathSegListNotifier notifier(this);
     // DOM list items that are to be removed must be removed before we change
     // the internal list, otherwise they wouldn't be able to copy their
     // internal counterparts' values!
@@ -255,10 +284,6 @@ DOMSVGPathSegList::Clear(ErrorResult& aError)
     }
 
     InternalList().Clear();
-    Element()->DidChangePathSegList(emptyOrOldValue);
-    if (AttrIsAnimating()) {
-      Element()->AnimationNeedsResample();
-    }
   }
 }
 
@@ -349,7 +374,7 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
     return nullptr;
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
+  AutoChangePathSegListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.
   MaybeInsertNullInAnimValListAt(aIndex, internalIndex, argCount);
 
@@ -366,10 +391,6 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
 
   UpdateListIndicesFromIndex(aIndex + 1, argCount + 1);
 
-  Element()->DidChangePathSegList(emptyOrOldValue);
-  if (AttrIsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -393,7 +414,7 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
     domItem = domItem->Clone(); // must do this before changing anything!
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
+  AutoChangePathSegListNotifier notifier(this);
   if (ItemAt(aIndex)) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
@@ -434,10 +455,6 @@ DOMSVGPathSegList::ReplaceItem(DOMSVGPathSeg& aNewItem,
     }
   }
 
-  Element()->DidChangePathSegList(emptyOrOldValue);
-  if (AttrIsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -457,7 +474,7 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
   // We have to return the removed item, so get it, creating it if necessary:
   nsRefPtr<DOMSVGPathSeg> result = GetItemAt(aIndex);
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangePathSegList();
+  AutoChangePathSegListNotifier notifier(this);
   // Notify the DOM item of removal *before* modifying the lists so that the
   // DOM item can copy its *old* value:
   ItemAt(aIndex)->RemovingFromList();
@@ -479,10 +496,6 @@ DOMSVGPathSegList::RemoveItem(uint32_t aIndex,
 
   UpdateListIndicesFromIndex(aIndex, -(argCount + 1));
 
-  Element()->DidChangePathSegList(emptyOrOldValue);
-  if (AttrIsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return result.forget();
 }
 

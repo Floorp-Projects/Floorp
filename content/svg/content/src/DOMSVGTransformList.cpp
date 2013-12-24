@@ -76,6 +76,35 @@ DOMSVGTransformList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
   return mozilla::dom::SVGTransformListBinding::Wrap(cx, scope, this);
 }
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeTransformListNotifier
+// Stack-based helper class to pair calls to WillChangeTransformList and
+// DidChangeTransformList.
+class MOZ_STACK_CLASS AutoChangeTransformListNotifier
+{
+public:
+  AutoChangeTransformListNotifier(DOMSVGTransformList* aTransformList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mTransformList(aTransformList)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mEmptyOrOldValue =
+      mTransformList->Element()->WillChangeTransformList();
+  }
+
+  ~AutoChangeTransformListNotifier()
+  {
+    mTransformList->Element()->DidChangeTransformList(mEmptyOrOldValue);
+    if (mTransformList->IsAnimating()) {
+      mTransformList->Element()->AnimationNeedsResample();
+    }
+  }
+
+private:
+  DOMSVGTransformList* mTransformList;
+  nsAttrValue          mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 void
 DOMSVGTransformList::InternalListLengthWillChange(uint32_t aNewLength)
 {
@@ -133,7 +162,7 @@ DOMSVGTransformList::Clear(ErrorResult& error)
   }
 
   if (LengthNoFlush() > 0) {
-    nsAttrValue emptyOrOldValue = Element()->WillChangeTransformList();
+    AutoChangeTransformListNotifier notifier(this);
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGTransform internal counterparts and copy
     // their values. This also notifies the animVal list:
@@ -141,10 +170,6 @@ DOMSVGTransformList::Clear(ErrorResult& error)
 
     mItems.Clear();
     InternalList().Clear();
-    Element()->DidChangeTransformList(emptyOrOldValue);
-    if (mAList->IsAnimating()) {
-      Element()->AnimationNeedsResample();
-    }
   }
 }
 
@@ -226,7 +251,7 @@ DOMSVGTransformList::InsertItemBefore(SVGTransform& newItem,
     return nullptr;
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeTransformList();
+  AutoChangeTransformListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.
   MaybeInsertNullInAnimValListAt(index);
 
@@ -240,10 +265,6 @@ DOMSVGTransformList::InsertItemBefore(SVGTransform& newItem,
 
   UpdateListIndicesFromIndex(mItems, index + 1);
 
-  Element()->DidChangeTransformList(emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -266,7 +287,7 @@ DOMSVGTransformList::ReplaceItem(SVGTransform& newItem,
     domItem = newItem.Clone(); // must do this before changing anything!
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeTransformList();
+  AutoChangeTransformListNotifier notifier(this);
   if (mItems[index]) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
@@ -280,10 +301,6 @@ DOMSVGTransformList::ReplaceItem(SVGTransform& newItem,
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, index, IsAnimValList());
 
-  Element()->DidChangeTransformList(emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -300,7 +317,7 @@ DOMSVGTransformList::RemoveItem(uint32_t index, ErrorResult& error)
     return nullptr;
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeTransformList();
+  AutoChangeTransformListNotifier notifier(this);
   // Now that we know we're removing, keep animVal list in sync as necessary.
   // Do this *before* touching InternalList() so the removed item can get its
   // internal value.
@@ -318,10 +335,6 @@ DOMSVGTransformList::RemoveItem(uint32_t index, ErrorResult& error)
 
   UpdateListIndicesFromIndex(mItems, index);
 
-  Element()->DidChangeTransformList(emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return result.forget();
 }
 
