@@ -8691,7 +8691,7 @@ if test "$MOZ_X11"; then
             exit(1);
         }
     ], [],
-    [ AC_MSG_ERROR([Could not compile basic X program.]) ])
+    [ AC_MSG_ERROR([Can't find X headers (install libxt-dev (Debian/Ubuntu), libXt-devel (Fedora), or xorg-x11-libXt-devel (SuSE)).]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
     if test -n "$MISSING_X"; then
