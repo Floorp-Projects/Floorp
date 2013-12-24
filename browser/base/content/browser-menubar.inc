@@ -27,12 +27,6 @@
                           accesskey="&newPrivateWindow.accesskey;"
                           command="Tools:PrivateBrowsing"
                           key="key_privatebrowsing"/>
-                <menuitem id="menu_openLocation"
-                          class="show-only-for-keyboard"
-                          label="&openLocationCmd.label;"
-                          command="Browser:OpenLocation"
-                          key="focusURLBar"
-                          accesskey="&openLocationCmd.accesskey;"/>
                 <menuitem id="menu_openFile"
                           label="&openFileCmd.label;"
                           command="Browser:OpenFile"
