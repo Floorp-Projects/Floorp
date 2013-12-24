@@ -108,27 +108,6 @@ public:
   }
 
   /**
-   * Sets this length's value, converting the supplied user unit value to this
-   * lengths *current* unit (i.e. leaving the length's unit unchanged).
-   *
-   * This method returns true, unless the user unit value couldn't be
-   * converted to this length's current unit, in which case it returns false
-   * (and the length is left unchanged).
-   */
-  bool SetFromUserUnitValue(float aUserUnitValue,
-                              nsSVGElement *aElement,
-                              uint8_t aAxis) {
-    float uuPerUnit = GetUserUnitsPerUnit(aElement, aAxis);
-    float value = aUserUnitValue / uuPerUnit;
-    if (uuPerUnit > 0 && NS_finite(value)) {
-      mValue = value;
-      NS_ASSERTION(IsValid(), "Set invalid SVGLength");
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Get this length's value in the units specified.
    *
    * This method returns numeric_limits<float>::quiet_NaN() if it is not
@@ -137,24 +116,6 @@ public:
   float GetValueInSpecifiedUnit(uint8_t aUnit,
                                 const nsSVGElement *aElement,
                                 uint8_t aAxis) const;
-
-  /**
-   * Convert this length's value to the unit specified.
-   *
-   * This method returns true, unless it isn't possible to convert the
-   * length to the specified unit. In that case the length is left unchanged
-   * and this method returns false.
-   */
-  bool ConvertToUnit(uint32_t aUnit, nsSVGElement *aElement, uint8_t aAxis) {
-    float val = GetValueInSpecifiedUnit(aUnit, aElement, aAxis);
-    if (NS_finite(val)) {
-      mValue = val;
-      mUnit = aUnit;
-      NS_ASSERTION(IsValid(), "Set invalid SVGLength");
-      return true;
-    }
-    return false;
-  }
 
   bool IsPercentage() const {
     return mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE;
@@ -165,14 +126,6 @@ public:
            unit <= nsIDOMSVGLength::SVG_LENGTHTYPE_PC;
   }
 
-private:
-
-#ifdef DEBUG
-  bool IsValid() const {
-    return NS_finite(mValue) && IsValidUnitType(mUnit);
-  }
-#endif
-
   /**
    * Returns the number of user units per current unit.
    *
@@ -181,6 +134,14 @@ private:
    * the comments for GetUserUnitsPerInch and GetUserUnitsPerPercent).
    */
   float GetUserUnitsPerUnit(const nsSVGElement *aElement, uint8_t aAxis) const;
+
+private:
+
+#ifdef DEBUG
+  bool IsValid() const {
+    return NS_finite(mValue) && IsValidUnitType(mUnit);
+  }
+#endif
 
   /**
    * The conversion factor between user units (CSS px) and CSS inches is

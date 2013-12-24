@@ -39,6 +39,8 @@ class SVGMatrix;
  */
 class DOMSVGPoint MOZ_FINAL : public nsISVGPoint
 {
+  friend class AutoChangePointNotifier;
+
   typedef mozilla::gfx::Point Point;
 
 public:

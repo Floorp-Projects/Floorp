@@ -50,6 +50,7 @@ class SVGAnimatedPointList;
 class DOMSVGPointList MOZ_FINAL : public nsISupports,
                                   public nsWrapperCache
 {
+  friend class AutoChangePointListNotifier;
   friend class nsISVGPoint;
   friend class mozilla::DOMSVGPoint;
 

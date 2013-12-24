@@ -49,6 +49,7 @@ class SVGAnimatedPathSegList;
 class DOMSVGPathSegList MOZ_FINAL : public nsISupports,
                                     public nsWrapperCache
 {
+  friend class AutoChangePathSegListNotifier;
   friend class DOMSVGPathSeg;
 
 public:
