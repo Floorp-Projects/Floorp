@@ -38,11 +38,11 @@
 #ifdef MOZ_USE_WIFI_TICKLER
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/WeakPtr.h"
 #include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
-#include "nsWeakReference.h"
 #include "prio.h"
 
 class nsIPrefBranch;
@@ -53,10 +53,10 @@ namespace net {
 
 #ifdef MOZ_USE_WIFI_TICKLER
 
-class Tickler MOZ_FINAL : public nsSupportsWeakReference
+class Tickler MOZ_FINAL : public SupportsWeakPtr<Tickler>
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Tickler)
 
   // These methods are main thread only
   Tickler();
@@ -100,10 +100,10 @@ private:
 
 #else // not defined MOZ_USE_WIFI_TICKLER
 
-class Tickler MOZ_FINAL : public nsISupports
+class Tickler MOZ_FINAL
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Tickler)
 
   Tickler() { }
   ~Tickler() { }
