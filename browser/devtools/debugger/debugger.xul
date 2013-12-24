@@ -74,6 +74,8 @@
              oncommand="DebuggerView.WatchExpressions._onCmdAddExpression()"/>
     <command id="removeAllWatchExpressionsCommand"
              oncommand="DebuggerView.WatchExpressions._onCmdRemoveAllExpressions()"/>
+    <command id="toggleAutoPrettyPrint"
+             oncommand="DebuggerView.Options._toggleAutoPrettyPrint()"/>
     <command id="togglePauseOnExceptions"
              oncommand="DebuggerView.Options._togglePauseOnExceptions()"/>
     <command id="toggleIgnoreCaughtExceptions"
@@ -172,6 +174,11 @@
                onpopupshowing="DebuggerView.Options._onPopupShowing()"
                onpopuphiding="DebuggerView.Options._onPopupHiding()"
                onpopuphidden="DebuggerView.Options._onPopupHidden()">
+      <menuitem id="auto-pretty-print"
+                type="checkbox"
+                label="&debuggerUI.autoPrettyPrint;"
+                accesskey="&debuggerUI.autoPrettyPrint.key;"
+                command="toggleAutoPrettyPrint"/>
       <menuitem id="pause-on-exceptions"
                 type="checkbox"
                 label="&debuggerUI.pauseExceptions;"

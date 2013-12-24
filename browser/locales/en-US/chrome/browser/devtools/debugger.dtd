@@ -41,6 +41,11 @@
   -  button that pretty prints the selected source. -->
 <!ENTITY debuggerUI.sources.prettyPrint "Prettify Source">
 
+<!-- LOCALIZATION NOTE (debuggerUI.autoPrettyPrint): This is the label for the
+  -  checkbox that toggles auto pretty print. -->
+<!ENTITY debuggerUI.autoPrettyPrint     "Auto Prettify Minified Sources">
+<!ENTITY debuggerUI.autoPrettyPrint.key "P">
+
 <!-- LOCALIZATION NOTE (debuggerUI.sources.toggleBreakpoints): This is the tooltip for the
   -  button that toggles all breakpoints for all sources. -->
 <!ENTITY debuggerUI.sources.toggleBreakpoints "Enable/disable all breakpoints">
@@ -66,7 +71,7 @@
 <!ENTITY debuggerUI.pauseExceptions     "Pause on exceptions">
 <!ENTITY debuggerUI.pauseExceptions.key "E">
 
-<!-- LOCALIZATION NOTE (debuggerUI.pauseExceptions): This is the label for the
+<!-- LOCALIZATION NOTE (debuggerUI.ignoreCaughtExceptions): This is the label for the
   -  checkbox that toggles ignoring caught exceptions. -->
 <!ENTITY debuggerUI.ignoreCaughtExceptions     "Ignore caught exceptions">
 <!ENTITY debuggerUI.ignoreCaughtExceptions.key "C">
