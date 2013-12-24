@@ -54,6 +54,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=876475
           accOrElmOrID: "ol_li_one",
           expected: [["1.", "ol item 1"], ["1.", "ol item 1"]]
         },{
+          accOrElmOrID: "ol_li_two",
+          expected: [["2.", "lnk", "ol item 2"], ["2.", "ol item 2", "lnk"]]
+        },{
+          accOrElmOrID: "listitem_link",
+          expected: [["2.", "lnk", "ol item 2"], ["2.", "ol item 2", "lnk"]]
+        },{
           accOrElmOrID: "textarea",
           expected: [["txtarea", "Here lies treasure."], ["Here lies treasure.", "txtarea"]]
         },{
@@ -102,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=876475
       <div id="togglebutton_pressed" aria-pressed="true" role="button" tabindex="-1">I am pressed!</div>
       <ol id="ordered_list">
         <li id="ol_li_one">ol item 1</li>
-        <li id="ol_li_two">ol item 2</li>
+        <li id="ol_li_two"><a id="listitem_link" href="mozilla.org">ol item 2</a></li>
         <li id="ol_li_three">ol item 3</li>
         <li id="ol_li_three">ol item 4</li>
       </ol>
