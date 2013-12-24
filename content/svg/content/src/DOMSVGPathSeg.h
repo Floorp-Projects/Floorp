@@ -86,6 +86,8 @@ namespace mozilla {
  */
 class DOMSVGPathSeg : public nsWrapperCache
 {
+  friend class AutoChangePathSegNotifier;
+
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGPathSeg)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGPathSeg)

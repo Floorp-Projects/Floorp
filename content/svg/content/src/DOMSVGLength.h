@@ -68,6 +68,8 @@ namespace mozilla {
  */
 class DOMSVGLength MOZ_FINAL : public nsIDOMSVGLength
 {
+  friend class AutoChangeLengthNotifier;
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(MOZILLA_DOMSVGLENGTH_IID)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

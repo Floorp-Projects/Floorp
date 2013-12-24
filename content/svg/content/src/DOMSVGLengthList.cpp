@@ -74,6 +74,36 @@ DOMSVGLengthList::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope)
   return mozilla::dom::SVGLengthListBinding::Wrap(cx, scope, this);
 }
 
+//----------------------------------------------------------------------
+// Helper class: AutoChangeLengthListNotifier
+// Stack-based helper class to pair calls to WillChangeLengthList and
+// DidChangeLengthList.
+class MOZ_STACK_CLASS AutoChangeLengthListNotifier
+{
+public:
+  AutoChangeLengthListNotifier(DOMSVGLengthList* aLengthList MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mLengthList(aLengthList)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    mEmptyOrOldValue =
+      mLengthList->Element()->WillChangeLengthList(mLengthList->AttrEnum());
+  }
+
+  ~AutoChangeLengthListNotifier()
+  {
+    mLengthList->Element()->DidChangeLengthList(mLengthList->AttrEnum(),
+                                                mEmptyOrOldValue);
+    if (mLengthList->IsAnimating()) {
+      mLengthList->Element()->AnimationNeedsResample();
+    }
+  }
+
+private:
+  DOMSVGLengthList* mLengthList;
+  nsAttrValue       mEmptyOrOldValue;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 void
 DOMSVGLengthList::InternalListLengthWillChange(uint32_t aNewLength)
 {
@@ -130,7 +160,7 @@ DOMSVGLengthList::Clear(ErrorResult& aError)
   }
 
   if (LengthNoFlush() > 0) {
-    nsAttrValue emptyOrOldValue = Element()->WillChangeLengthList(AttrEnum());
+    AutoChangeLengthListNotifier notifier(this);
     // Notify any existing DOM items of removal *before* truncating the lists
     // so that they can find their SVGLength internal counterparts and copy
     // their values. This also notifies the animVal list:
@@ -138,10 +168,6 @@ DOMSVGLengthList::Clear(ErrorResult& aError)
 
     mItems.Clear();
     InternalList().Clear();
-    Element()->DidChangeLengthList(AttrEnum(), emptyOrOldValue);
-    if (mAList->IsAnimating()) {
-      Element()->AnimationNeedsResample();
-    }
   }
 }
 
@@ -233,7 +259,7 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
     return nullptr;
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeLengthList(AttrEnum());
+  AutoChangeLengthListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.
   MaybeInsertNullInAnimValListAt(index);
 
@@ -247,10 +273,6 @@ DOMSVGLengthList::InsertItemBefore(nsIDOMSVGLength *newItem,
 
   UpdateListIndicesFromIndex(mItems, index + 1);
 
-  Element()->DidChangeLengthList(AttrEnum(), emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -277,7 +299,7 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
     domItem = domItem->Copy(); // must do this before changing anything!
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeLengthList(AttrEnum());
+  AutoChangeLengthListNotifier notifier(this);
   if (mItems[index]) {
     // Notify any existing DOM item of removal *before* modifying the lists so
     // that the DOM item can copy the *old* value at its index:
@@ -291,10 +313,6 @@ DOMSVGLengthList::ReplaceItem(nsIDOMSVGLength *newItem,
   // would end up reading bad data from InternalList()!
   domItem->InsertingIntoList(this, AttrEnum(), index, IsAnimValList());
 
-  Element()->DidChangeLengthList(AttrEnum(), emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return domItem.forget();
 }
 
@@ -312,7 +330,7 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
     return nullptr;
   }
 
-  nsAttrValue emptyOrOldValue = Element()->WillChangeLengthList(AttrEnum());
+  AutoChangeLengthListNotifier notifier(this);
   // Now that we know we're removing, keep animVal list in sync as necessary.
   // Do this *before* touching InternalList() so the removed item can get its
   // internal value.
@@ -330,10 +348,6 @@ DOMSVGLengthList::RemoveItem(uint32_t index,
 
   UpdateListIndicesFromIndex(mItems, index);
 
-  Element()->DidChangeLengthList(AttrEnum(), emptyOrOldValue);
-  if (mAList->IsAnimating()) {
-    Element()->AnimationNeedsResample();
-  }
   return result.forget();
 }
 
