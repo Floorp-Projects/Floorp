@@ -237,38 +237,6 @@ IsReady()
   return true;
 }
 
-const bt_interface_t*
-GetBluetoothInterface()
-{
-  return sBtInterface;
-}
-
-void
-StringToBdAddressType(const nsAString& aBdAddress,
-                      bt_bdaddr_t *aRetBdAddressType)
-{
-  NS_ConvertUTF16toUTF8 bdAddressUTF8(aBdAddress);
-  const char* str = bdAddressUTF8.get();
-
-  for (int i = 0; i < 6; i++) {
-    aRetBdAddressType->address[i] = (uint8_t) strtoul(str, (char **)&str, 16);
-    str++;
-  }
-}
-
-void
-BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
-{
-  uint8_t* addr = aBdAddressType->address;
-  bdstr_t bdstr;
-
-  sprintf((char*)bdstr, "%02x:%02x:%02x:%02x:%02x:%02x",
-          (int)addr[0],(int)addr[1],(int)addr[2],
-          (int)addr[3],(int)addr[4],(int)addr[5]);
-
-  aRetBdAddress = NS_ConvertUTF8toUTF16((char*)bdstr);
-}
-
 static void
 AdapterStateChangeCallback(bt_state_t aStatus)
 {
@@ -1214,6 +1182,12 @@ ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
   if (sControllerArray.Length() == 1) {
     sControllerArray[0]->Start();
   }
+}
+
+const bt_interface_t*
+BluetoothServiceBluedroid::GetBluetoothInterface()
+{
+  return sBtInterface;
 }
 
 void

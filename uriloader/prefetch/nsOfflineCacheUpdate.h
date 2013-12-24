@@ -31,6 +31,8 @@
 #include "nsWeakReference.h"
 #include "nsICryptoHash.h"
 #include "mozilla/Attributes.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 class nsOfflineCacheUpdate;
 
@@ -356,10 +358,13 @@ public:
                                            nsIPrefBranch *aPrefBranch,
                                            bool *aPinned);
 
+    static nsTHashtable<nsCStringHashKey>* AllowedDomains();
+
 private:
     nsresult ProcessNextUpdate();
 
     nsTArray<nsRefPtr<nsOfflineCacheUpdate> > mUpdates;
+    static nsTHashtable<nsCStringHashKey>* mAllowedDomains;
 
     bool mDisabled;
     bool mUpdateRunning;
