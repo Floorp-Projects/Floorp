@@ -3,7 +3,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
+
+// Used to detect minification for automatic pretty printing
+const SAMPLE_SIZE = 30; // no of lines
+const INDENT_COUNT_THRESHOLD = 20; // percentage
 
 /**
  * Functions handling the sources UI.
@@ -769,8 +774,19 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     if (!sourceItem) {
       return;
     }
+    const { source } = sourceItem.attachment;
+    const sourceClient = gThreadClient.source(source);
+
     // The container is not empty and an actual item was selected.
     DebuggerView.setEditorLocation(sourceItem.value);
+
+    if (Prefs.autoPrettyPrint && !sourceClient.isPrettyPrinted) {
+      DebuggerController.SourceScripts.getText(source).then(([, aText]) => {
+        if (SourceUtils.isMinified(sourceClient, aText)) {
+          this.togglePrettyPrint();
+        }
+      }).then(null, e => DevToolsUtils.reportException("_onSourceSelect", e));
+    }
 
     // Set window title. No need to split the url by " -> " here, because it was
     // already sanitized when the source was added.
@@ -1432,6 +1448,7 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
 let SourceUtils = {
   _labelsCache: new Map(), // Can't use WeakMaps because keys are strings.
   _groupsCache: new Map(),
+  _minifiedCache: new WeakMap(),
 
   /**
    * Returns true if the specified url and/or content type are specific to
@@ -1446,13 +1463,53 @@ let SourceUtils = {
   },
 
   /**
-   * Clears the labels cache, populated by methods like
+   * Determines if the source text is minified by using
+   * the percentage indented of a subset of lines
+   *
+   * @param string aText
+   *        The source text.
+   * @return boolean
+   *        True if source text is minified.
+   */
+  isMinified: function(sourceClient, aText){
+    if (this._minifiedCache.has(sourceClient)) {
+      return this._minifiedCache.get(sourceClient);
+    }
+
+    let isMinified;
+    let lineEndIndex = 0;
+    let lineStartIndex = 0;
+    let lines = 0;
+    let indentCount = 0;
+
+    // Strip comments.
+    aText = aText.replace(/\/\*[\S\s]*?\*\/|\/\/(.+|\n)/g, "");
+
+    while (lines++ < SAMPLE_SIZE) {
+      lineEndIndex = aText.indexOf("\n", lineStartIndex);
+      if (lineEndIndex == -1) {
+         break;
+      }
+      if (/^\s+/.test(aText.slice(lineStartIndex, lineEndIndex))) {
+        indentCount++;
+      }
+      lineStartIndex = lineEndIndex + 1;
+    }
+    isMinified = ((indentCount / lines ) * 100) < INDENT_COUNT_THRESHOLD;
+
+    this._minifiedCache.set(sourceClient, isMinified);
+    return isMinified;
+  },
+
+  /**
+   * Clears the labels, groups and minify cache, populated by methods like
    * SourceUtils.getSourceLabel or Source Utils.getSourceGroup.
    * This should be done every time the content location changes.
    */
   clearCache: function() {
     this._labelsCache.clear();
     this._groupsCache.clear();
+    this._minifiedCache.clear();
   },
 
   /**
