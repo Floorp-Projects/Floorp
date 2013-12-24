@@ -919,8 +919,8 @@ BrowserElementChild.prototype = {
         this._pendingSetInputMethodActive.push(data);
         return;
       }
-      sendAsyncMsg('got-set-input-method-active', msgData);
       msgData.successRv = null;
+      sendAsyncMsg('got-set-input-method-active', msgData);
       return;
     }
     // Unwrap to access webpage content.
