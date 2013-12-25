@@ -107,16 +107,15 @@ struct JSSettings
   JSContentChromeSettings chrome;
   JSContentChromeSettings content;
   JSGCSettingsArray gcSettings;
-  bool jitHardening;
+
 #ifdef JS_GC_ZEAL
   uint8_t gcZeal;
   uint32_t gcZealFrequency;
 #endif
 
   JSSettings()
-  : jitHardening(false)
 #ifdef JS_GC_ZEAL
-  , gcZeal(0), gcZealFrequency(0)
+  : gcZeal(0), gcZealFrequency(0)
 #endif
   {
     for (uint32_t index = 0; index < ArrayLength(gcSettings); index++) {
