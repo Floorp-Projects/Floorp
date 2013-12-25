@@ -85,6 +85,7 @@ public:
     : mLengthList(aLengthList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mLengthList, "Expecting non-null lengthList");
     mEmptyOrOldValue =
       mLengthList->Element()->WillChangeLengthList(mLengthList->AttrEnum());
   }
@@ -99,7 +100,7 @@ public:
   }
 
 private:
-  DOMSVGLengthList* mLengthList;
+  DOMSVGLengthList* const mLengthList;
   nsAttrValue       mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

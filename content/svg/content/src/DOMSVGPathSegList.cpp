@@ -61,6 +61,7 @@ public:
     : mPathSegList(aPathSegList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mPathSegList, "Expecting non-null pathSegList");
     mEmptyOrOldValue =
       mPathSegList->Element()->WillChangePathSegList();
   }
@@ -74,7 +75,7 @@ public:
   }
 
 private:
-  DOMSVGPathSegList* mPathSegList;
+  DOMSVGPathSegList* const mPathSegList;
   nsAttrValue        mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

@@ -79,6 +79,7 @@ public:
     : mPointList(aPointList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mPointList, "Expecting non-null pointList");
     mEmptyOrOldValue =
       mPointList->Element()->WillChangePointList();
   }
@@ -92,7 +93,7 @@ public:
   }
 
 private:
-  DOMSVGPointList* mPointList;
+  DOMSVGPointList* const mPointList;
   nsAttrValue      mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
