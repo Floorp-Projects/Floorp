@@ -14,7 +14,7 @@
 #include "nsSVGAttrTearoffTable.h"
 
 namespace {
-  const double radPerDegree = 2.0 * M_PI / 360.0;
+  const double kRadPerDegree = 2.0 * M_PI / 360.0;
 }
 
 namespace mozilla {
@@ -76,6 +76,7 @@ public:
     : mTransform(aTransform)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mTransform, "Expecting non-null transform");
     if (mTransform->HasOwner()) {
       mEmptyOrOldValue =
         mTransform->Element()->WillChangeTransformList();
@@ -93,7 +94,7 @@ public:
   }
 
 private:
-  SVGTransform* mTransform;
+  SVGTransform* const mTransform;
   nsAttrValue   mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -261,13 +262,14 @@ SVGTransform::SetSkewX(float angle, ErrorResult& rv)
     return;
   }
 
-  if (!NS_finite(tan(angle * radPerDegree))) {
+  if (!NS_finite(tan(angle * kRadPerDegree))) {
     rv.Throw(NS_ERROR_RANGE_ERR);
     return;
   }
 
   AutoChangeTransformNotifier notifier(this);
-  Transform().SetSkewX(angle);
+  DebugOnly<nsresult> result = Transform().SetSkewX(angle);
+  MOZ_ASSERT(NS_SUCCEEDED(result), "SetSkewX unexpectedly failed");
 }
 
 void
@@ -283,13 +285,14 @@ SVGTransform::SetSkewY(float angle, ErrorResult& rv)
     return;
   }
 
-  if (!NS_finite(tan(angle * radPerDegree))) {
+  if (!NS_finite(tan(angle * kRadPerDegree))) {
     rv.Throw(NS_ERROR_RANGE_ERR);
     return;
   }
 
   AutoChangeTransformNotifier notifier(this);
-  Transform().SetSkewY(angle);
+  DebugOnly<nsresult> result = Transform().SetSkewY(angle);
+  MOZ_ASSERT(NS_SUCCEEDED(result), "SetSkewY unexpectedly failed");
 }
 
 //----------------------------------------------------------------------

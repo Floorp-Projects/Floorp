@@ -48,6 +48,7 @@ public:
     : mStringList(aStringList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mStringList, "Expecting non-null stringList");
     mEmptyOrOldValue =
       mStringList->mElement->WillChangeStringList(mStringList->mIsConditionalProcessingAttribute,
                                                   mStringList->mAttrEnum);
@@ -60,7 +61,7 @@ public:
   }
 
 private:
-  DOMSVGStringList* mStringList;
+  DOMSVGStringList* const mStringList;
   nsAttrValue       mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };

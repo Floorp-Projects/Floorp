@@ -14,7 +14,7 @@
 
 // See the architecture comment in DOMSVGAnimatedNumberList.h.
 
-using namespace mozilla;
+namespace mozilla {
 
 // We could use NS_IMPL_CYCLE_COLLECTION_1, except that in Unlink() we need to
 // clear our list's weak ref to us to be safe. (The other option would be to
@@ -35,17 +35,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMSVGNumber)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMSVGNumber)
+}
+DOMCI_DATA(SVGNumber, mozilla::DOMSVGNumber)
 
-DOMCI_DATA(SVGNumber, DOMSVGNumber)
-
+namespace mozilla {
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumber)
-  NS_INTERFACE_MAP_ENTRY(DOMSVGNumber) // pseudo-interface
+  NS_INTERFACE_MAP_ENTRY(mozilla::DOMSVGNumber) // pseudo-interface
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGNumber)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(SVGNumber)
 NS_INTERFACE_MAP_END
-
-namespace mozilla {
 
 //----------------------------------------------------------------------
 // Helper class: AutoChangeNumberNotifier
@@ -58,6 +57,7 @@ public:
     : mNumber(aNumber)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mNumber, "Expecting non-null number");
     MOZ_ASSERT(mNumber->HasOwner(),
                "Expecting list to have an owner for notification");
     mEmptyOrOldValue =
@@ -74,12 +74,10 @@ public:
   }
 
 private:
-  DOMSVGNumber* mNumber;
+  DOMSVGNumber* const mNumber;
   nsAttrValue   mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-}
 
 DOMSVGNumber::DOMSVGNumber(DOMSVGNumberList *aList,
                            uint8_t aAttrEnum,
@@ -190,3 +188,4 @@ DOMSVGNumber::IndexIsValid()
 }
 #endif
 
+} // namespace mozilla

@@ -10,7 +10,7 @@
 #include "nsTextFormatter.h"
 
 namespace {
-  const double radPerDegree = 2.0 * M_PI / 360.0;
+  const double kRadPerDegree = 2.0 * M_PI / 360.0;
 }
 
 namespace mozilla {
@@ -115,7 +115,7 @@ nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy)
   mType    = SVG_TRANSFORM_ROTATE;
   mMatrix.Reset();
   mMatrix.Translate(gfxPoint(aCx, aCy));
-  mMatrix.Rotate(aAngle*radPerDegree);
+  mMatrix.Rotate(aAngle*kRadPerDegree);
   mMatrix.Translate(gfxPoint(-aCx, -aCy));
   mAngle   = aAngle;
   mOriginX = aCx;
@@ -125,7 +125,7 @@ nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy)
 nsresult
 nsSVGTransform::SetSkewX(float aAngle)
 {
-  double ta = tan(aAngle*radPerDegree);
+  double ta = tan(aAngle*kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   mType    = SVG_TRANSFORM_SKEWX;
@@ -140,7 +140,7 @@ nsSVGTransform::SetSkewX(float aAngle)
 nsresult
 nsSVGTransform::SetSkewY(float aAngle)
 {
-  double ta = tan(aAngle*radPerDegree);
+  double ta = tan(aAngle*kRadPerDegree);
   NS_ENSURE_FINITE(ta, NS_ERROR_RANGE_ERR);
 
   mType    = SVG_TRANSFORM_SKEWY;

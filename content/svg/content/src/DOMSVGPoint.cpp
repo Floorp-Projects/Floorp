@@ -27,6 +27,7 @@ public:
     : mPoint(aPoint)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mPoint, "Expecting non-null point");
     MOZ_ASSERT(mPoint->HasOwner(),
                "Expecting list to have an owner for notification");
     mEmptyOrOldValue =
@@ -42,7 +43,7 @@ public:
   }
 
 private:
-  DOMSVGPoint* mPoint;
+  DOMSVGPoint* const mPoint;
   nsAttrValue  mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
