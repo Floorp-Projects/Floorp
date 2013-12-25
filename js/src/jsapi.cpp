@@ -873,12 +873,6 @@ JS::ContextOptionsRef(JSContext *cx)
     return cx->options();
 }
 
-JS_PUBLIC_API(void)
-JS_SetJitHardening(JSRuntime *rt, bool enabled)
-{
-    rt->setJitHardening(!!enabled);
-}
-
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {

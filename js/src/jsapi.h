@@ -1624,9 +1624,6 @@ class JS_PUBLIC_API(AutoSaveContextOptions) {
 
 } /* namespace JS */
 
-extern JS_PUBLIC_API(void)
-JS_SetJitHardening(JSRuntime *rt, bool enabled);
-
 extern JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void);
 

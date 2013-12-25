@@ -176,21 +176,14 @@ private:
     }
 };
 
-enum AllocationBehavior
-{
-    AllocationCanRandomize,
-    AllocationDeterministic
-};
-
 class ExecutableAllocator {
     typedef void (*DestroyCallback)(void* addr, size_t size);
     enum ProtectionSetting { Writable, Executable };
     DestroyCallback destroyCallback;
 
 public:
-    explicit ExecutableAllocator(AllocationBehavior allocBehavior)
-      : destroyCallback(NULL),
-        allocBehavior(allocBehavior)
+    ExecutableAllocator()
+      : destroyCallback(NULL)
     {
         if (!pageSize) {
             pageSize = determinePageSize();
@@ -221,7 +214,7 @@ public:
         for (size_t i = 0; i < m_smallPools.length(); i++)
             m_smallPools[i]->release();
 
-	m_smallPools.clear();
+        m_smallPools.clear();
     }
 
     // alloc() returns a pointer to some memory, and also (by reference) a
@@ -264,10 +257,6 @@ public:
 
     void setDestroyCallback(DestroyCallback destroyCallback) {
         this->destroyCallback = destroyCallback;
-    }
-
-    void setRandomize(bool enabled) {
-        allocBehavior = enabled ? AllocationCanRandomize : AllocationDeterministic;
     }
 
 private:
@@ -502,7 +491,6 @@ private:
     typedef js::HashSet<ExecutablePool *, js::DefaultHasher<ExecutablePool *>, js::SystemAllocPolicy>
             ExecPoolHashSet;
     ExecPoolHashSet m_pools;    // All pools, just for stats purposes.
-    AllocationBehavior allocBehavior;
 
     static size_t determinePageSize();
 };
