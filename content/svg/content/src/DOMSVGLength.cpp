@@ -59,6 +59,7 @@ public:
     : mLength(aLength)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mLength, "Expecting non-null length");
     MOZ_ASSERT(mLength->HasOwner(),
                "Expecting list to have an owner for notification");
     mEmptyOrOldValue =
@@ -75,7 +76,7 @@ public:
   }
 
 private:
-  DOMSVGLength* mLength;
+  DOMSVGLength* const mLength;
   nsAttrValue   mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -162,11 +163,13 @@ DOMSVGLength::SetValue(float aUserUnitValue)
       return NS_OK;
     }
     float uuPerUnit = InternalItem().GetUserUnitsPerUnit(Element(), Axis());
-    float newValue = aUserUnitValue / uuPerUnit;
-    if (uuPerUnit > 0 && NS_finite(newValue)) {
-      AutoChangeLengthNotifier notifier(this);
-      InternalItem().SetValueAndUnit(newValue, InternalItem().GetUnit());
-      return NS_OK;
+    if (uuPerUnit > 0) {
+      float newValue = aUserUnitValue / uuPerUnit;
+      if (NS_finite(newValue)) {
+        AutoChangeLengthNotifier notifier(this);
+        InternalItem().SetValueAndUnit(newValue, InternalItem().GetUnit());
+        return NS_OK;
+      }
     }
   } else if (mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER ||
              mUnit == nsIDOMSVGLength::SVG_LENGTHTYPE_PX) {

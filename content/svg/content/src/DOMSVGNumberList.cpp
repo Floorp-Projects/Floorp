@@ -86,6 +86,7 @@ public:
     : mNumberList(aNumberList)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    MOZ_ASSERT(mNumberList, "Expecting non-null numberList");
     mEmptyOrOldValue =
       mNumberList->Element()->WillChangeNumberList(mNumberList->AttrEnum());
   }
@@ -100,7 +101,7 @@ public:
   }
 
 private:
-  DOMSVGNumberList* mNumberList;
+  DOMSVGNumberList* const mNumberList;
   nsAttrValue       mEmptyOrOldValue;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
