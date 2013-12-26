@@ -579,7 +579,7 @@ TabParent::SetDocShell(nsIDocShell *aDocShell)
 
 PDocumentRendererParent*
 TabParent::AllocPDocumentRendererParent(const nsRect& documentRect,
-                                        const gfxMatrix& transform,
+                                        const gfx::Matrix& transform,
                                         const nsString& bgcolor,
                                         const uint32_t& renderFlags,
                                         const bool& flushLayout,

@@ -254,14 +254,14 @@ public:
                                   const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
 
     virtual PDocumentRendererChild*
-    AllocPDocumentRendererChild(const nsRect& documentRect, const gfxMatrix& transform,
+    AllocPDocumentRendererChild(const nsRect& documentRect, const gfx::Matrix& transform,
                                 const nsString& bgcolor,
                                 const uint32_t& renderFlags, const bool& flushLayout,
                                 const nsIntSize& renderSize);
     virtual bool DeallocPDocumentRendererChild(PDocumentRendererChild* actor);
     virtual bool RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                                   const nsRect& documentRect,
-                                                  const gfxMatrix& transform,
+                                                  const gfx::Matrix& transform,
                                                   const nsString& bgcolor,
                                                   const uint32_t& renderFlags,
                                                   const bool& flushLayout,

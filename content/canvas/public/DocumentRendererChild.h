@@ -19,11 +19,11 @@ class DocumentRendererChild : public PDocumentRendererChild
 public:
     DocumentRendererChild();
     virtual ~DocumentRendererChild();
-    
+
     bool RenderDocument(nsIDOMWindow *window,
-                        const nsRect& documentRect, const gfxMatrix& transform,
+                        const nsRect& documentRect, const gfx::Matrix& transform,
                         const nsString& bgcolor,
-                        uint32_t renderFlags, bool flushLayout, 
+                        uint32_t renderFlags, bool flushLayout,
                         const nsIntSize& renderSize, nsCString& data);
 
 private:
