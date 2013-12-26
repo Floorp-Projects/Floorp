@@ -644,14 +644,14 @@ nsSVGUtils::GetUserToCanvasTM(nsIFrame *aFrame, uint32_t aFor)
   nsISVGChildFrame* svgFrame = do_QueryFrame(aFrame);
   NS_ASSERTION(svgFrame, "bad frame");
 
-  gfxMatrix tm;
+  gfx::Matrix tm;
   if (svgFrame) {
     nsSVGElement *content = static_cast<nsSVGElement*>(aFrame->GetContent());
     tm = content->PrependLocalTransformsTo(
-                    GetCanvasTM(aFrame->GetParent(), aFor),
+                    gfx::ToMatrix(GetCanvasTM(aFrame->GetParent(), aFor)),
                     nsSVGElement::eUserSpaceToParent);
   }
-  return tm;
+  return ThebesMatrix(tm);
 }
 
 void 
@@ -1185,7 +1185,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
         !static_cast<const nsSVGElement*>(content)->HasValidDimensions()) {
       return bbox;
     }
-    gfxMatrix matrix;
+    gfx::Matrix matrix;
     if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
       // The spec says getBBox "Returns the tight bounding box in *current user
       // space*". So we should really be doing this for all elements, but that
@@ -1195,7 +1195,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
       matrix = element->PrependLocalTransformsTo(matrix,
                           nsSVGElement::eChildToUserSpace);
     }
-    return svg->GetBBoxContribution(matrix, aFlags).ToThebesRect();
+    return svg->GetBBoxContribution(ThebesMatrix(matrix), aFlags).ToThebesRect();
   }
   return nsSVGIntegrationUtils::GetSVGBBoxForNonSVGFrame(aFrame);
 }
@@ -1797,14 +1797,13 @@ nsSVGUtils::GetSVGGlyphExtents(Element* aElement,
     return false;
   }
 
-  gfxMatrix transform(aSVGToAppSpace);
+  gfx::Matrix transform = gfx::ToMatrix(aSVGToAppSpace);
   nsIContent* content = frame->GetContent();
   if (content->IsSVG()) {
-    transform = static_cast<nsSVGElement*>(content)->
-                  PrependLocalTransformsTo(aSVGToAppSpace);
+    transform = static_cast<nsSVGElement*>(content)->PrependLocalTransformsTo(transform);
   }
 
-  *aResult = svgFrame->GetBBoxContribution(transform,
+  *aResult = svgFrame->GetBBoxContribution(ThebesMatrix(transform),
     nsSVGUtils::eBBoxIncludeFill | nsSVGUtils::eBBoxIncludeFillGeometry |
     nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeStrokeGeometry |
     nsSVGUtils::eBBoxIncludeMarkers).ToThebesRect();

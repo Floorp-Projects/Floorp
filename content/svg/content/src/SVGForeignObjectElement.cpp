@@ -70,15 +70,15 @@ SVGForeignObjectElement::Height()
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ gfxMatrix
-SVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+/* virtual */ gfx::Matrix
+SVGForeignObjectElement::PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
                                                   TransformTypes aWhich) const
 {
   NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
                     "Skipping eUserSpaceToParent transforms makes no sense");
 
   // 'transform' attribute:
-  gfxMatrix fromUserSpace =
+  gfx::Matrix fromUserSpace =
     SVGGraphicsElement::PrependLocalTransformsTo(aMatrix, aWhich);
   if (aWhich == eUserSpaceToParent) {
     return fromUserSpace;
@@ -87,7 +87,7 @@ SVGForeignObjectElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   float x, y;
   const_cast<SVGForeignObjectElement*>(this)->
     GetAnimatedLengthValues(&x, &y, nullptr);
-  gfxMatrix toUserSpace = gfxMatrix().Translate(gfxPoint(x, y));
+  gfx::Matrix toUserSpace = gfx::Matrix().Translate(x, y);
   if (aWhich == eChildToUserSpace) {
     return toUserSpace;
   }

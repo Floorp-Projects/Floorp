@@ -348,10 +348,9 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
         // For textPath, a transform on the referenced path affects the
         // textPath layout, so when calculating the actual path length
         // we need to take that into account.
-        gfxMatrix matrix = PrependLocalTransformsTo(gfxMatrix());
+        gfx::Matrix matrix = PrependLocalTransformsTo(gfx::Matrix());
         if (!matrix.IsIdentity()) {
-          RefPtr<PathBuilder> builder =
-            path->TransformedCopyToBuilder(ToMatrix(matrix));
+          RefPtr<PathBuilder> builder = path->TransformedCopyToBuilder(matrix);
           path = builder->Finish();
         }
       }
