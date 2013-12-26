@@ -19,9 +19,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsContentUtils.h"
-#include "mozilla/gfx/Matrix.h"
 
-using namespace mozilla;
 using namespace mozilla::dom;
 
 nsIFrame*
@@ -71,7 +69,7 @@ MapFrameRectToFilterSpace(const nsRect* aRect,
 static gfxMatrix
 GetUserToFrameSpaceInCSSPxTransform(nsIFrame *aFrame)
 {
-  gfx::Matrix userToFrameSpaceInCSSPx;
+  gfxMatrix userToFrameSpaceInCSSPx;
 
   if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
     int32_t appUnitsPerCSSPx = aFrame->PresContext()->AppUnitsPerCSSPixel();
@@ -88,17 +86,16 @@ GetUserToFrameSpaceInCSSPxTransform(nsIFrame *aFrame)
     if (aFrame->GetType() == nsGkAtoms::svgInnerSVGFrame) {
       userToFrameSpaceInCSSPx =
         static_cast<nsSVGElement*>(aFrame->GetContent())->
-          PrependLocalTransformsTo(gfx::Matrix());
+          PrependLocalTransformsTo(gfxMatrix());
     } else {
       gfxPoint targetsUserSpaceOffset =
         nsLayoutUtils::RectToGfxRect(aFrame->GetRect(), appUnitsPerCSSPx).
                          TopLeft();
-      userToFrameSpaceInCSSPx.Translate(-targetsUserSpaceOffset.x,
-                                        -targetsUserSpaceOffset.y);
+      userToFrameSpaceInCSSPx.Translate(-targetsUserSpaceOffset);
     }
   }
   // else, for all other frames, leave as the identity matrix
-  return ThebesMatrix(userToFrameSpaceInCSSPx);
+  return userToFrameSpaceInCSSPx;
 }
 
 class MOZ_STACK_CLASS nsSVGFilterFrame::AutoFilterReferencer

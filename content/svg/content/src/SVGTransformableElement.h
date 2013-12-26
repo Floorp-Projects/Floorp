@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
-#include "mozilla/gfx/Matrix.h"
+#include "gfxMatrix.h"
 
 namespace mozilla {
 namespace dom {
@@ -48,10 +48,10 @@ public:
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
 
-  virtual gfx::Matrix PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
-  virtual const gfx::Matrix* GetAnimateMotionTransform() const MOZ_OVERRIDE;
-  virtual void SetAnimateMotionTransform(const gfx::Matrix* aMatrix) MOZ_OVERRIDE;
+  virtual const gfxMatrix* GetAnimateMotionTransform() const MOZ_OVERRIDE;
+  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) MOZ_OVERRIDE;
 
   virtual nsSVGAnimatedTransformList*
     GetAnimatedTransformList(uint32_t aFlags = 0) MOZ_OVERRIDE;
@@ -67,7 +67,7 @@ protected:
   nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;
 
   // XXX maybe move this to property table, to save space on un-animated elems?
-  nsAutoPtr<gfx::Matrix> mAnimateMotionTransform;
+  nsAutoPtr<gfxMatrix> mAnimateMotionTransform;
 };
 
 } // namespace dom

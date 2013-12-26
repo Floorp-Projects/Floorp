@@ -839,9 +839,9 @@ nsSVGOuterSVGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
       1.0f / PresContext()->AppUnitsToFloatCSSPixels(
                                 PresContext()->AppUnitsPerDevPixel());
 
-    gfx::Matrix tm = content->PrependLocalTransformsTo(
-                     gfx::Matrix().Scale(devPxPerCSSPx, devPxPerCSSPx));
-    mCanvasTM = new gfxMatrix(ThebesMatrix(tm));
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+                     gfxMatrix().Scale(devPxPerCSSPx, devPxPerCSSPx));
+    mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
 }
@@ -943,9 +943,10 @@ nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) con
 
   if (hasTransform && aTransform) {
     // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
-    *aTransform = ThebesMatrix(
-      content->PrependLocalTransformsTo(gfx::Matrix(),
-                                        nsSVGElement::eChildToUserSpace));
+    gfxMatrix identity;
+    *aTransform =
+      content->PrependLocalTransformsTo(identity,
+                                        nsSVGElement::eChildToUserSpace);
   }
 
   return hasTransform;

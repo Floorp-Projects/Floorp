@@ -240,8 +240,8 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
     if ((transformList && transformList->HasTransform()) ||
         content->GetAnimateMotionTransform()) {
       if (aOwnTransform) {
-        *aOwnTransform = ThebesMatrix(content->PrependLocalTransformsTo(gfx::Matrix(),
-                                    nsSVGElement::eUserSpaceToParent));
+        *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                    nsSVGElement::eUserSpaceToParent);
       }
       foundTransform = true;
     }
@@ -401,14 +401,15 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
   while (kid) {
     nsISVGChildFrame* svgKid = do_QueryFrame(kid);
     if (svgKid) {
-      gfx::Matrix transform = gfx::ToMatrix(aToBBoxUserspace);
+      gfxMatrix transform = aToBBoxUserspace;
       nsIContent *content = kid->GetContent();
       if (content->IsSVG()) {
-        transform = static_cast<nsSVGElement*>(content)->PrependLocalTransformsTo(transform);
+        transform = static_cast<nsSVGElement*>(content)->
+                      PrependLocalTransformsTo(aToBBoxUserspace);
       }
       // We need to include zero width/height vertical/horizontal lines, so we have
       // to use UnionEdges.
-      bboxUnion.UnionEdges(svgKid->GetBBoxContribution(ThebesMatrix(transform), aFlags));
+      bboxUnion.UnionEdges(svgKid->GetBBoxContribution(transform, aFlags));
     }
     kid = kid->GetNextSibling();
   }

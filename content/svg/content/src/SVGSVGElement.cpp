@@ -946,15 +946,15 @@ SVGSVGElement::GetLength(uint8_t aCtxType)
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-/* virtual */ gfx::Matrix
-SVGSVGElement::PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
+/* virtual */ gfxMatrix
+SVGSVGElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                                         TransformTypes aWhich) const
 {
   NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
                     "Skipping eUserSpaceToParent transforms makes no sense");
 
   // 'transform' attribute:
-  gfx::Matrix fromUserSpace =
+  gfxMatrix fromUserSpace =
     SVGSVGElementBase::PrependLocalTransformsTo(aMatrix, aWhich);
   if (aWhich == eUserSpaceToParent) {
     return fromUserSpace;
@@ -965,21 +965,21 @@ SVGSVGElement::PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
     const_cast<SVGSVGElement*>(this)->GetAnimatedLengthValues(&x, &y, nullptr);
     if (aWhich == eAllTransforms) {
       // the common case
-      return gfx::ToMatrix(GetViewBoxTransform()) * gfx::Matrix().Translate(x, y) * fromUserSpace;
+      return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y)) * fromUserSpace;
     }
     NS_ABORT_IF_FALSE(aWhich == eChildToUserSpace, "Unknown TransformTypes");
-    return gfx::ToMatrix(GetViewBoxTransform()) * gfx::Matrix().Translate(x, y);
+    return GetViewBoxTransform() * gfxMatrix().Translate(gfxPoint(x, y));
   }
 
   if (IsRoot()) {
-    gfx::Matrix zoomPanTM;
-    zoomPanTM.Translate(mCurrentTranslate.GetX(), mCurrentTranslate.GetY());
+    gfxMatrix zoomPanTM;
+    zoomPanTM.Translate(gfxPoint(mCurrentTranslate.GetX(), mCurrentTranslate.GetY()));
     zoomPanTM.Scale(mCurrentScale, mCurrentScale);
-    return gfx::ToMatrix(GetViewBoxTransform()) * zoomPanTM * fromUserSpace;
+    return GetViewBoxTransform() * zoomPanTM * fromUserSpace;
   }
 
   // outer-<svg>, but inline in some other content:
-  return gfx::ToMatrix(GetViewBoxTransform()) * fromUserSpace;
+  return GetViewBoxTransform() * fromUserSpace;
 }
 
 /* virtual */ bool
