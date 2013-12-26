@@ -72,6 +72,7 @@
 #include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
 #include "ipc/nsGUIEventIPC.h"
+#include "mozilla/gfx/Matrix.h"
 
 #ifdef DEBUG
 #include "PCOMContentPermissionRequestChild.h"
@@ -1981,7 +1982,7 @@ TabChild::DispatchWidgetEvent(WidgetGUIEvent& event)
 
 PDocumentRendererChild*
 TabChild::AllocPDocumentRendererChild(const nsRect& documentRect,
-                                      const gfxMatrix& transform,
+                                      const mozilla::gfx::Matrix& transform,
                                       const nsString& bgcolor,
                                       const uint32_t& renderFlags,
                                       const bool& flushLayout,
@@ -2000,7 +2001,7 @@ TabChild::DeallocPDocumentRendererChild(PDocumentRendererChild* actor)
 bool
 TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
                                            const nsRect& documentRect,
-                                           const gfxMatrix& transform,
+                                           const mozilla::gfx::Matrix& transform,
                                            const nsString& bgcolor,
                                            const uint32_t& renderFlags,
                                            const bool& flushLayout,
