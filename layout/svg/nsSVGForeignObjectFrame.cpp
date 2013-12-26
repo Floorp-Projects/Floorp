@@ -184,8 +184,8 @@ nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
-      *aOwnTransform = ThebesMatrix(content->PrependLocalTransformsTo(gfx::Matrix(),
-                                  nsSVGElement::eUserSpaceToParent));
+      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent);
     }
     foundTransform = true;
   }
@@ -502,11 +502,11 @@ nsSVGForeignObjectFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     SVGForeignObjectElement *content =
       static_cast<SVGForeignObjectElement*>(mContent);
 
-    gfx::Matrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfx::Matrix() :
-                                 gfx::ToMatrix(parent->GetCanvasTM(aFor, aTransformRoot)));
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+        this == aTransformRoot ? gfxMatrix() :
+                                 parent->GetCanvasTM(aFor, aTransformRoot));
 
-    mCanvasTM = new gfxMatrix(ThebesMatrix(tm));
+    mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
 }

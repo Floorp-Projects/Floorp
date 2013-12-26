@@ -132,7 +132,7 @@ public:
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
   // nsSVGElement specializations:
-  virtual gfx::Matrix PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
+  virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
                       TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 

@@ -11,7 +11,6 @@
 #include "nsSMILValue.h"
 #include "nsDebug.h"
 #include "nsSVGElement.h"
-#include "gfx2DGlue.h"
 
 namespace mozilla {
 
@@ -41,7 +40,7 @@ SVGMotionSMILAttr::ClearAnimValue()
 nsresult
 SVGMotionSMILAttr::SetAnimValue(const nsSMILValue& aValue)
 {
-  gfx::Matrix matrix = gfx::ToMatrix(SVGMotionSMILType::CreateMatrix(aValue));
+  gfxMatrix matrix = SVGMotionSMILType::CreateMatrix(aValue);
   mSVGElement->SetAnimateMotionTransform(&matrix);
   return NS_OK;
 }

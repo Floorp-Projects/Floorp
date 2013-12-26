@@ -3845,11 +3845,11 @@ SVGTextFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     dom::SVGTextContentElement *content = static_cast<dom::SVGTextContentElement*>(mContent);
 
-    gfx::Matrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfx::Matrix() :
-                                 gfx::ToMatrix(parent->GetCanvasTM(aFor, aTransformRoot)));
+    gfxMatrix tm = content->PrependLocalTransformsTo(
+        this == aTransformRoot ? gfxMatrix() :
+                                 parent->GetCanvasTM(aFor, aTransformRoot));
 
-    mCanvasTM = new gfxMatrix(ThebesMatrix(tm));
+    mCanvasTM = new gfxMatrix(tm);
   }
   return *mCanvasTM;
 }
@@ -4731,9 +4731,10 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
     return nullptr;
   }
 
-  gfx::Matrix matrix = element->PrependLocalTransformsTo(gfx::Matrix());
+  gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
   if (!matrix.IsIdentity()) {
-    RefPtr<PathBuilder> builder = path->TransformedCopyToBuilder(matrix);
+    RefPtr<PathBuilder> builder =
+      path->TransformedCopyToBuilder(ToMatrix(matrix));
     path = builder->Finish();
   }
 
