@@ -14,6 +14,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
@@ -78,11 +79,11 @@ nsSVGGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     SVGGraphicsElement *content = static_cast<SVGGraphicsElement*>(mContent);
-    gfxMatrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfxMatrix() :
-                                 parent->GetCanvasTM(aFor, aTransformRoot));
+    gfx::Matrix tm = content->PrependLocalTransformsTo(
+        this == aTransformRoot ? gfx::Matrix() :
+                                 gfx::ToMatrix(parent->GetCanvasTM(aFor, aTransformRoot)));
 
-    mCanvasTM = new gfxMatrix(tm);
+    mCanvasTM = new gfxMatrix(ThebesMatrix(tm));
   }
   return *mCanvasTM;
 }

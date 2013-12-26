@@ -14,6 +14,7 @@
 #include "nsSVGEffects.h"
 #include "nsSVGUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
@@ -317,11 +318,11 @@ nsSVGClipPathFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 {
   SVGClipPathElement *content = static_cast<SVGClipPathElement*>(mContent);
 
-  gfxMatrix tm =
+  gfx::Matrix tm =
     content->PrependLocalTransformsTo(mClipParentMatrix ?
-                                      *mClipParentMatrix : gfxMatrix());
+                                      gfx::ToMatrix(*mClipParentMatrix) : gfx::Matrix());
 
-  return nsSVGUtils::AdjustMatrixForUnits(tm,
+  return nsSVGUtils::AdjustMatrixForUnits(ThebesMatrix(tm),
                                           &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS],
                                           mClipParent);
 }

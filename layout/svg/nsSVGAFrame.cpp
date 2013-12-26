@@ -146,11 +146,11 @@ nsSVGAFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
     nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
     dom::SVGAElement *content = static_cast<dom::SVGAElement*>(mContent);
 
-    gfxMatrix tm = content->PrependLocalTransformsTo(
-        this == aTransformRoot ? gfxMatrix() :
-                                 parent->GetCanvasTM(aFor, aTransformRoot));
+    gfx::Matrix tm = content->PrependLocalTransformsTo(
+        this == aTransformRoot ? gfx::Matrix() :
+                                 gfx::ToMatrix(parent->GetCanvasTM(aFor, aTransformRoot)));
 
-    mCanvasTM = new gfxMatrix(tm);
+    mCanvasTM = new gfxMatrix(ThebesMatrix(tm));
   }
 
   return *mCanvasTM;
