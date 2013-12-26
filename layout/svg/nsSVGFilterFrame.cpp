@@ -101,12 +101,13 @@ GetUserToFrameSpaceInCSSPxTransform(nsIFrame *aFrame)
   return ThebesMatrix(userToFrameSpaceInCSSPx);
 }
 
-class nsSVGFilterFrame::AutoFilterReferencer
+class MOZ_STACK_CLASS nsSVGFilterFrame::AutoFilterReferencer
 {
 public:
-  AutoFilterReferencer(nsSVGFilterFrame *aFrame)
+  AutoFilterReferencer(nsSVGFilterFrame *aFrame MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mFrame(aFrame)
   {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     // Reference loops should normally be detected in advance and handled, so
     // we're not expecting to encounter them here
     NS_ABORT_IF_FALSE(!mFrame->mLoopFlag, "Undetected reference loop!");
@@ -117,6 +118,7 @@ public:
   }
 private:
   nsSVGFilterFrame *mFrame;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class MOZ_STACK_CLASS nsAutoFilterInstance {

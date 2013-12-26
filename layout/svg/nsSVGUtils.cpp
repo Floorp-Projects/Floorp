@@ -151,12 +151,14 @@ NS_SVGDisplayListPaintingEnabled()
 static mozilla::gfx::UserDataKey sSVGAutoRenderStateKey;
 
 SVGAutoRenderState::SVGAutoRenderState(nsRenderingContext *aContext,
-                                       RenderMode aMode)
+                                       RenderMode aMode
+                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : mContext(aContext)
   , mOriginalRenderState(nullptr)
   , mMode(aMode)
   , mPaintingToWindow(false)
 {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mOriginalRenderState = aContext->RemoveUserData(&sSVGAutoRenderStateKey);
   // We always remove ourselves from aContext before it dies, so
   // passing nullptr as the destroy function is okay.

@@ -71,11 +71,13 @@ private:
   // automatically sets and clears the mInUse flag on the mask frame
   // (to prevent nasty reference loops). It's easy to mess this up
   // and break things, so this helper makes the code far more robust.
-  class AutoMaskReferencer
+  class MOZ_STACK_CLASS AutoMaskReferencer
   {
   public:
-    AutoMaskReferencer(nsSVGMaskFrame *aFrame)
+    AutoMaskReferencer(nsSVGMaskFrame *aFrame
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
        : mFrame(aFrame) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       NS_ASSERTION(!mFrame->mInUse, "reference loop!");
       mFrame->mInUse = true;
     }
@@ -84,6 +86,7 @@ private:
     }
   private:
     nsSVGMaskFrame *mFrame;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   nsIFrame *mMaskParent;
