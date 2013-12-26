@@ -213,9 +213,11 @@ nsSVGMarkerFrame::SetParentCoordCtxProvider(SVGSVGElement *aContext)
 
 nsSVGMarkerFrame::AutoMarkerReferencer::AutoMarkerReferencer(
     nsSVGMarkerFrame *aFrame,
-    nsSVGPathGeometryFrame *aMarkedFrame)
+    nsSVGPathGeometryFrame *aMarkedFrame
+    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
       : mFrame(aFrame)
 {
+  MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mFrame->mInUse = true;
   mFrame->mMarkedFrame = aMarkedFrame;
 

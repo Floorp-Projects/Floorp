@@ -80,11 +80,13 @@ public:
   // automatically sets and clears the mInUse flag on the clip path frame
   // (to prevent nasty reference loops). It's easy to mess this up
   // and break things, so this helper makes the code far more robust.
-  class AutoClipPathReferencer
+  class MOZ_STACK_CLASS AutoClipPathReferencer
   {
   public:
-    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame)
+    AutoClipPathReferencer(nsSVGClipPathFrame *aFrame
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
        : mFrame(aFrame) {
+      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
       NS_ASSERTION(!mFrame->mInUse, "reference loop!");
       mFrame->mInUse = true;
     }
@@ -93,6 +95,7 @@ public:
     }
   private:
     nsSVGClipPathFrame *mFrame;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
   };
 
   nsIFrame *mClipParent;
