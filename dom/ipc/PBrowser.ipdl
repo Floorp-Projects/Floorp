@@ -19,7 +19,7 @@ include URIParams;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
-using struct gfxMatrix from "gfxMatrix.h";
+using struct mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
 using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
@@ -423,7 +423,7 @@ child:
      * and if true, |flushLayout| will do just that before rendering
      * the document.  The rendered image will be of size |renderSize|.
      */
-    PDocumentRenderer(nsRect documentRect, gfxMatrix transform,
+    PDocumentRenderer(nsRect documentRect, Matrix transform,
                       nsString bgcolor,
                       uint32_t renderFlags, bool flushLayout,
                       nsIntSize renderSize);
