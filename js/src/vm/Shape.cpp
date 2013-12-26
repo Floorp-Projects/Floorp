@@ -1156,7 +1156,7 @@ JSObject::clear(JSContext *cx, HandleObject obj)
     obj->checkShapeConsistency();
 }
 
-void
+bool
 JSObject::rollbackProperties(ExclusiveContext *cx, uint32_t slotSpan)
 {
     /*
@@ -1165,10 +1165,21 @@ JSObject::rollbackProperties(ExclusiveContext *cx, uint32_t slotSpan)
      * removal of the last properties.
      */
     JS_ASSERT(!inDictionaryMode() && slotSpan <= this->slotSpan());
-    while (this->slotSpan() != slotSpan) {
-        JS_ASSERT(lastProperty()->hasSlot() && getSlot(lastProperty()->slot()).isUndefined());
-        removeLastProperty(cx);
+    while (true) {
+        if (lastProperty()->isEmptyShape()) {
+            JS_ASSERT(slotSpan == 0);
+            break;
+        } else {
+            uint32_t slot = lastProperty()->slot();
+            if (slot < slotSpan)
+                break;
+            JS_ASSERT(getSlot(slot).isUndefined());
+        }
+        if (!removeProperty(cx, lastProperty()->propid()))
+            return false;
     }
+
+    return true;
 }
 
 Shape *
@@ -1588,9 +1599,6 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
 {
     JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
     JS_ASSERT_IF(parent, cx->isInsideCurrentCompartment(parent));
-#ifdef JSGC_GENERATIONAL
-    JS_ASSERT_IF(metadata && cx->hasNursery(), !cx->nursery().isInside(metadata));
-#endif
 
     InitialShapeSet &table = cx->compartment()->initialShapes;
 
@@ -1660,10 +1668,6 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
     InitialShapeEntry::Lookup lookup(shape->getObjectClass(), TaggedProto(proto),
                                      shape->getObjectParent(), shape->getObjectMetadata(),
                                      shape->numFixedSlots(), shape->getObjectFlags());
-
-    /* Bug 929547 - we do not rekey based on metadata object moves */
-    DebugOnly<JSObject *> metadata = shape->getObjectMetadata();
-    JS_ASSERT_IF(metadata, !gc::IsInsideNursery(cx->compartment()->runtimeFromAnyThread(), metadata));
 
     InitialShapeSet::Ptr p = cx->compartment()->initialShapes.lookup(lookup);
     JS_ASSERT(p);
