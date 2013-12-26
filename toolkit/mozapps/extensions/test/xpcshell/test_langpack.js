@@ -27,6 +27,12 @@ registerDirectory("XREAppDist", distroDir.parent);
 var chrome = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
   .getService(Components.interfaces.nsIXULChromeRegistry);
 
+function do_unregister_manifest() {
+  let path = profileDir.clone();
+  path.append("langpack-x-testing@tests.mozilla.org.xpi");
+  Components.manager.removeBootstrappedManifestLocation(path);
+}
+
 function do_check_locale_not_registered(provider) {
   let didThrow = false;
   try {
@@ -203,6 +209,7 @@ function run_test_4() {
 // Tests that a restart shuts down and restarts the add-on
 function run_test_5() {
   shutdownManager();
+  do_unregister_manifest();
   // check chrome reg that language pack is not registered
   do_check_locale_not_registered("test-langpack");
   startupManager(false);
@@ -279,6 +286,7 @@ function run_test_8() {
     do_check_false(b1.hasResource("bootstrap.js"));
 
     shutdownManager();
+    do_unregister_manifest();
     // check chrome reg that language pack is not registered
     do_check_locale_not_registered("test-langpack");
     startupManager(false);
@@ -320,6 +328,7 @@ function run_test_9() {
     do_check_false(b1.hasResource("bootstrap.js"));
 
     shutdownManager();
+    do_unregister_manifest();
     // check chrome reg that language pack is not registered
     do_check_locale_not_registered("test-langpack");
     startupManager(false);
