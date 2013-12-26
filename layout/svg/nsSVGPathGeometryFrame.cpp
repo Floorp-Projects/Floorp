@@ -163,8 +163,8 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
-      *aOwnTransform = ThebesMatrix(content->PrependLocalTransformsTo(gfx::Matrix(),
-                                               nsSVGElement::eUserSpaceToParent));
+      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent);
     }
     foundTransform = true;
   }
@@ -512,9 +512,9 @@ nsSVGPathGeometryFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
   nsSVGContainerFrame *parent = static_cast<nsSVGContainerFrame*>(mParent);
   dom::SVGGraphicsElement *content = static_cast<dom::SVGGraphicsElement*>(mContent);
 
-  return ThebesMatrix(content->PrependLocalTransformsTo(
-      this == aTransformRoot ? gfx::Matrix() :
-                               gfx::ToMatrix(parent->GetCanvasTM(aFor, aTransformRoot))));
+  return content->PrependLocalTransformsTo(
+      this == aTransformRoot ? gfxMatrix() :
+                               parent->GetCanvasTM(aFor, aTransformRoot));
 }
 
 //----------------------------------------------------------------------

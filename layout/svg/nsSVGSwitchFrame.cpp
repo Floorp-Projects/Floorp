@@ -13,8 +13,6 @@
 
 class nsRenderingContext;
 
-using namespace mozilla;
-
 typedef nsSVGGFrame nsSVGSwitchFrameBase;
 
 class nsSVGSwitchFrame : public nsSVGSwitchFrameBase
@@ -232,12 +230,12 @@ nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     nsISVGChildFrame* svgKid = do_QueryFrame(kid);
     if (svgKid) {
       nsIContent *content = kid->GetContent();
-      gfx::Matrix transform = gfx::ToMatrix(aToBBoxUserspace);
+      gfxMatrix transform = aToBBoxUserspace;
       if (content->IsSVG()) {
         transform = static_cast<nsSVGElement*>(content)->
-                      PrependLocalTransformsTo(transform);
+                      PrependLocalTransformsTo(aToBBoxUserspace);
       }
-      return svgKid->GetBBoxContribution(ThebesMatrix(transform), aFlags);
+      return svgKid->GetBBoxContribution(transform, aFlags);
     }
   }
   return SVGBBox();
