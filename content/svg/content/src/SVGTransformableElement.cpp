@@ -85,14 +85,14 @@ SVGTransformableElement::IsEventAttributeName(nsIAtom* aName)
 //----------------------------------------------------------------------
 // nsSVGElement overrides
 
-gfxMatrix
-SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
+gfx::Matrix
+SVGTransformableElement::PrependLocalTransformsTo(const gfx::Matrix &aMatrix,
                                                   TransformTypes aWhich) const
 {
   NS_ABORT_IF_FALSE(aWhich != eChildToUserSpace || aMatrix.IsIdentity(),
                     "Skipping eUserSpaceToParent transforms makes no sense");
 
-  gfxMatrix result(aMatrix);
+  gfx::Matrix result(aMatrix);
 
   if (aWhich == eChildToUserSpace) {
     // We don't have anything to prepend.
@@ -109,30 +109,30 @@ SVGTransformableElement::PrependLocalTransformsTo(const gfxMatrix &aMatrix,
   // any transformations from the |transform| attribute. So since we're
   // PRE-multiplying, we need to apply the animateMotion transform *first*.
   if (mAnimateMotionTransform) {
-    result.PreMultiply(*mAnimateMotionTransform);
+    result = *mAnimateMotionTransform * result;
   }
 
   if (mTransforms) {
-    result.PreMultiply(mTransforms->GetAnimValue().GetConsolidationMatrix());
+    result = gfx::ToMatrix(mTransforms->GetAnimValue().GetConsolidationMatrix()) * result;
   }
 
   return result;
 }
 
-const gfxMatrix*
+const gfx::Matrix*
 SVGTransformableElement::GetAnimateMotionTransform() const
 {
   return mAnimateMotionTransform.get();
 }
 
 void
-SVGTransformableElement::SetAnimateMotionTransform(const gfxMatrix* aMatrix)
+SVGTransformableElement::SetAnimateMotionTransform(const gfx::Matrix* aMatrix)
 {
   if ((!aMatrix && !mAnimateMotionTransform) ||
       (aMatrix && mAnimateMotionTransform && *aMatrix == *mAnimateMotionTransform)) {
     return;
   }
-  mAnimateMotionTransform = aMatrix ? new gfxMatrix(*aMatrix) : nullptr;
+  mAnimateMotionTransform = aMatrix ? new gfx::Matrix(*aMatrix) : nullptr;
   DidAnimateTransformList();
   nsIFrame* frame = GetPrimaryFrame();
   if (frame) {

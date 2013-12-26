@@ -18,6 +18,7 @@
 #include "SVGAnimationElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsContentUtils.h"
+#include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
@@ -180,7 +181,7 @@ SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
 static gfxMatrix
 GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 {
-  gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
+  gfx::Matrix matrix = aElement->PrependLocalTransformsTo(gfx::Matrix(),
     aHaveRecursed ? nsSVGElement::eAllTransforms : nsSVGElement::eUserSpaceToParent);
   nsSVGElement *element = aElement;
   nsIContent *ancestor = aElement->GetFlattenedTreeParent();
@@ -188,7 +189,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
   while (ancestor && ancestor->IsSVG() &&
                      ancestor->Tag() != nsGkAtoms::foreignObject) {
     element = static_cast<nsSVGElement*>(ancestor);
-    matrix *= element->PrependLocalTransformsTo(gfxMatrix()); // i.e. *A*ppend
+    matrix *= element->PrependLocalTransformsTo(gfx::Matrix()); // i.e. *A*ppend
     if (!aScreenCTM && SVGContentUtils::EstablishesViewport(element)) {
       if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
           !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
@@ -196,7 +197,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
         return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
       }
       // XXX spec seems to say x,y translation should be undone for IsInnerSVG
-      return matrix;
+      return ThebesMatrix(matrix);
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }
@@ -215,14 +216,14 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
     // transforms in this case since that's what we've been doing for
     // a while, and it keeps us consistent with WebKit and Opera (if not
     // really with the ambiguous spec).
-    matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
+    matrix = aElement->PrependLocalTransformsTo(gfx::Matrix());
   }
   if (!ancestor || !ancestor->IsElement()) {
-    return matrix;
+    return ThebesMatrix(matrix);
   }
   if (ancestor->IsSVG()) {
     return
-      matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
+      ThebesMatrix(matrix) * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
   }
 
   // XXX this does not take into account CSS transform, or that the non-SVG
@@ -241,7 +242,7 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
       }
     }
   }
-  return matrix * gfxMatrix().Translate(gfxPoint(x, y));
+  return ThebesMatrix(matrix * gfx::Matrix().Translate(x, y));
 }
 
 gfxMatrix
