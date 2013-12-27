@@ -105,6 +105,17 @@ public:
   // rendering context to use for measurement
   nsRenderingContext* rendContext;
 
+  const nsMargin& ComputedPhysicalMargin() const { return mComputedMargin; }
+  const nsMargin& ComputedPhysicalBorderPadding() const { return mComputedBorderPadding; }
+  const nsMargin& ComputedPhysicalPadding() const { return mComputedPadding; }
+
+  // We may need to eliminate the (few) users of these writable-reference accessors
+  // as part of migrating to logical coordinates.
+  nsMargin& ComputedPhysicalMargin() { return mComputedMargin; }
+  nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
+  nsMargin& ComputedPhysicalPadding() { return mComputedPadding; }
+
+protected:
   // Computed margin values
   nsMargin         mComputedMargin;
 
@@ -114,6 +125,7 @@ public:
   // Computed padding values
   nsMargin         mComputedPadding;
 
+public:
   // Callers using this constructor must call InitOffsets on their own.
   nsCSSOffsetState(nsIFrame *aFrame, nsRenderingContext *aRenderingContext)
     : frame(aFrame)
@@ -234,22 +246,6 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // percentage widths, etc.) of this reflow state's frame.
   const nsHTMLReflowState *mCBReflowState;
 
-  // the available width in which to reflow the frame. The space
-  // represents the amount of room for the frame's margin, border,
-  // padding, and content area. The frame size you choose should fit
-  // within the available width.
-  nscoord              availableWidth;
-
-  // A value of NS_UNCONSTRAINEDSIZE for the available height means
-  // you can choose whatever size you want. In galley mode the
-  // available height is always NS_UNCONSTRAINEDSIZE, and only page
-  // mode or multi-column layout involves a constrained height. The
-  // element's the top border and padding, and content, must fit. If the
-  // element is complete after reflow then its bottom border, padding
-  // and margin (and similar for its complete ancestors) will need to
-  // fit in this height.
-  nscoord              availableHeight;
-
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
   nsCSSFrameType   mFrameType;
@@ -264,7 +260,48 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // This takes on an arbitrary value the first time a block is reflowed
   nscoord mBlockDelta;
 
+  // Accessors for the private fields below. Forcing all callers to use these
+  // will allow us to introduce logical-coordinate versions and gradually
+  // change clients from physical to logical as needed; and potentially switch
+  // the internal fields from physical to logical coordinates in due course,
+  // while maintaining compatibility with not-yet-updated code.
+  nscoord AvailableWidth() const { return mAvailableWidth; }
+  nscoord AvailableHeight() const { return mAvailableHeight; }
+  nscoord ComputedWidth() const { return mComputedWidth; }
+  nscoord ComputedHeight() const { return mComputedHeight; }
+  nscoord ComputedMinWidth() const { return mComputedMinWidth; }
+  nscoord ComputedMaxWidth() const { return mComputedMaxWidth; }
+  nscoord ComputedMinHeight() const { return mComputedMinHeight; }
+  nscoord ComputedMaxHeight() const { return mComputedMaxHeight; }
+  const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
+
+  nscoord& AvailableWidth() { return mAvailableWidth; }
+  nscoord& AvailableHeight() { return mAvailableHeight; }
+  nscoord& ComputedWidth() { return mComputedWidth; }
+  nscoord& ComputedHeight() { return mComputedHeight; }
+  nscoord& ComputedMinWidth() { return mComputedMinWidth; }
+  nscoord& ComputedMaxWidth() { return mComputedMaxWidth; }
+  nscoord& ComputedMinHeight() { return mComputedMinHeight; }
+  nscoord& ComputedMaxHeight() { return mComputedMaxHeight; }
+  nsMargin& ComputedPhysicalOffsets() { return mComputedOffsets; }
+
 private:
+  // the available width in which to reflow the frame. The space
+  // represents the amount of room for the frame's margin, border,
+  // padding, and content area. The frame size you choose should fit
+  // within the available width.
+  nscoord              mAvailableWidth;
+
+  // A value of NS_UNCONSTRAINEDSIZE for the available height means
+  // you can choose whatever size you want. In galley mode the
+  // available height is always NS_UNCONSTRAINEDSIZE, and only page
+  // mode or multi-column layout involves a constrained height. The
+  // element's the top border and padding, and content, must fit. If the
+  // element is complete after reflow then its bottom border, padding
+  // and margin (and similar for its complete ancestors) will need to
+  // fit in this height.
+  nscoord              mAvailableHeight;
+
   // The computed width specifies the frame's content area width, and it does
   // not apply to inline non-replaced elements
   //
@@ -290,7 +327,6 @@ private:
   // means you use your intrinsic height as the computed height
   nscoord          mComputedHeight;
 
-public:
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
   nsMargin         mComputedOffsets;
@@ -301,6 +337,7 @@ public:
   nscoord          mComputedMinWidth, mComputedMaxWidth;
   nscoord          mComputedMinHeight, mComputedMaxHeight;
 
+public:
   // Cached pointers to the various style structs used during intialization
   const nsStyleDisplay*    mStyleDisplay;
   const nsStyleVisibility* mStyleVisibility;
@@ -518,11 +555,9 @@ public:
             (frame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT));
   }
 
-  nscoord ComputedWidth() const { return mComputedWidth; }
   // This method doesn't apply min/max computed widths to the value passed in.
   void SetComputedWidth(nscoord aComputedWidth);
 
-  nscoord ComputedHeight() const { return mComputedHeight; }
   // This method doesn't apply min/max computed heights to the value passed in.
   void SetComputedHeight(nscoord aComputedHeight);
 
