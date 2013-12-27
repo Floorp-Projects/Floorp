@@ -840,12 +840,6 @@ BaselineCompiler::emit_JSOP_LABEL()
 }
 
 bool
-BaselineCompiler::emit_JSOP_NOTEARG()
-{
-    return true;
-}
-
-bool
 BaselineCompiler::emit_JSOP_POP()
 {
     frame.pop();

@@ -2064,8 +2064,6 @@ EmitNameOp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool callC
             if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                 return false;
         }
-        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-            return false;
     }
 
     return true;
@@ -2134,9 +2132,6 @@ EmitPropOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return false;
 
     if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_SWAP) < 0)
-        return false;
-
-    if (op == JSOP_CALLPROP && Emit1(cx, bce, JSOP_NOTEARG) < 0)
         return false;
 
     return true;
@@ -2247,8 +2242,6 @@ EmitElemOpBase(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op)
 
     if (op == JSOP_CALLELEM) {
         if (Emit1(cx, bce, JSOP_SWAP) < 0)
-            return false;
-        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
             return false;
     }
     return true;
@@ -4357,8 +4350,6 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                         // @@ITERATOR OBJ
         return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-        return false;
     if (EmitCall(cx, bce, JSOP_CALL, 0) < 0)                   // ITER
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
@@ -4434,11 +4425,7 @@ EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                         // ITER NEXT ITER
         return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-        return false;
     if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                    // ITER NEXT ITER UNDEFINED
-        return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
         return false;
     if (EmitCall(cx, bce, JSOP_CALL, 1) < 0)                   // ITER RESULT
         return false;
@@ -5164,8 +5151,6 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // @@ITERATOR ITERABLE
         return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-        return false;
     if (EmitCall(cx, bce, JSOP_CALL, 0) < 0)                     // ITER
         return false;
     CheckTypeSet(cx, bce, JSOP_CALL);
@@ -5236,11 +5221,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // EXCEPTION ITER THROW ITER
         return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // EXCEPTION ITER THROW ITER
-        return false;
     if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)3) < 0)            // ITER THROW ITER EXCEPTION
-        return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // ITER THROW ITER EXCEPTION
         return false;
     if (EmitCall(cx, bce, JSOP_CALL, 1) < 0)                     // ITER RESULT
         return false;
@@ -5277,11 +5258,7 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
         return false;
     if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // RECEIVED ITER NEXT ITER
         return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // RECEIVED ITER NEXT ITER
-        return false;
     if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)3) < 0)            // ITER NEXT ITER RECEIVED
-        return false;
-    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // ITER NEXT ITER RECEIVED
         return false;
     if (EmitCall(cx, bce, JSOP_CALL, 1) < 0)                     // ITER RESULT
         return false;
@@ -5528,14 +5505,10 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             ParseNode *thisArg = funNode->pn_next;
             if (!EmitTree(cx, bce, thisArg))
                 return false;
-            if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-                return false;
             bool oldEmittingForInit = bce->emittingForInit;
             bce->emittingForInit = false;
             for (ParseNode *argpn = thisArg->pn_next; argpn; argpn = argpn->pn_next) {
                 if (!EmitTree(cx, bce, argpn))
-                    return false;
-                if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
                     return false;
             }
             bce->emittingForInit = oldEmittingForInit;
@@ -5587,8 +5560,6 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         JSOp thisop = pn->isKind(PNK_GENEXP) ? JSOP_THIS : JSOP_UNDEFINED;
         if (Emit1(cx, bce, thisop) < 0)
             return false;
-        if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
-            return false;
     }
 
     if (emitArgs) {
@@ -5602,8 +5573,6 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (!spread) {
             for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
                 if (!EmitTree(cx, bce, pn3))
-                    return false;
-                if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
                     return false;
             }
         } else {
