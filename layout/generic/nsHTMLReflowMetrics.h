@@ -203,21 +203,62 @@ public:
   // have to be initialized, but there are some bad frame classes that
   // aren't properly setting them when returning from Reflow()...
   nsHTMLReflowMetrics(mozilla::WritingMode aWritingMode, uint32_t aFlags = 0)
-    : mWidth(0)
-    , mHeight(0)
-    , mAscent(ASK_FOR_BASELINE)
+    : mISize(0)
+    , mBSize(0)
+    , mBlockStartAscent(ASK_FOR_BASELINE)
     , mFlags(aFlags)
     , mWritingMode(aWritingMode)
   {}
 
-  const nscoord& Width() const { return mWidth; }
-  const nscoord& Height() const { return mHeight; }
-  const nscoord& TopAscent() const { return mAscent; }
+  nscoord ISize() const { return mISize; }
+  nscoord BSize() const { return mBSize; }
 
-  nscoord& Width() { return mWidth; }
-  nscoord& Height() { return mHeight; }
+  nscoord& ISize() { return mISize; }
+  nscoord& BSize() { return mBSize; }
 
-  void SetTopAscent(nscoord aAscent) { mAscent = aAscent; }
+  nscoord Width() const { return mWritingMode.IsVertical() ? mBSize : mISize; }
+  nscoord Height() const { return mWritingMode.IsVertical() ? mISize : mBSize; }
+
+  nscoord TopAscent() const
+  {
+    return mWritingMode.IsVertical() ? 0 : mBlockStartAscent;
+  }
+  nscoord LeftAscent() const
+  {
+    return mWritingMode.IsVertical() && mWritingMode.IsVerticalLR() ?
+           mBlockStartAscent : 0;
+  }
+  nscoord RightAscent() const
+  {
+    return mWritingMode.IsVertical() && !mWritingMode.IsVerticalLR() ?
+           mBlockStartAscent : 0;
+  }
+
+  nscoord& Width() { return mWritingMode.IsVertical() ? mBSize : mISize; }
+  nscoord& Height() { return mWritingMode.IsVertical() ? mISize : mBSize; }
+
+  void SetBlockStartAscent(mozilla::WritingMode aWritingMode, nscoord aAscent)
+  {
+    NS_ASSERTION(aWritingMode == mWritingMode, "writing mode mismatch");
+    mBlockStartAscent = aAscent;
+  }
+  void SetTopAscent(nscoord aAscent)
+  {
+    NS_ASSERTION(!mWritingMode.IsVertical(), "writing mode mismatch");
+    mBlockStartAscent = aAscent;
+  }
+  void SetLeftAscent(nscoord aAscent)
+  {
+    NS_ASSERTION(mWritingMode.IsVertical() && mWritingMode.IsVerticalLR(),
+                 "writing mode mismatch");
+    mBlockStartAscent = aAscent;
+  }
+  void SetRightAscent(nscoord aAscent)
+  {
+    NS_ASSERTION(mWritingMode.IsVertical() && !mWritingMode.IsVerticalLR(),
+                 "writing mode mismatch");
+    mBlockStartAscent = aAscent;
+  }
 
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
@@ -261,8 +302,8 @@ public:
   mozilla::WritingMode GetWritingMode() const { return mWritingMode; }
 
 private:
-  nscoord mWidth, mHeight; // [OUT] desired width and height (border-box)
-  nscoord mAscent;         // [OUT] baseline (from top), or ASK_FOR_BASELINE
+  nscoord mISize, mBSize; // [OUT] desired width and height (border-box)
+  nscoord mBlockStartAscent; // [OUT] baseline (in Block direction), or ASK_FOR_BASELINE
 
 public:
   uint32_t mFlags;
