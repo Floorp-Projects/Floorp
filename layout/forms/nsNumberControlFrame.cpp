@@ -82,7 +82,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
 
-  nsHTMLReflowMetrics wrappersDesiredSize;
+  nsHTMLReflowMetrics wrappersDesiredSize(aReflowState.GetWritingMode());
   nsIFrame* outerWrapperFrame = mOuterWrapper->GetPrimaryFrame();
   if (outerWrapperFrame) { // display:none?
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
@@ -98,14 +98,14 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     computedHeight =
       outerWrapperFrame ? outerWrapperFrame->GetSize().height : 0;
   }
-  aDesiredSize.width = aReflowState.ComputedWidth() +
+  aDesiredSize.Width() = aReflowState.ComputedWidth() +
                          aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.height = computedHeight +
+  aDesiredSize.Height() = computedHeight +
                           aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
   if (outerWrapperFrame) {
-    aDesiredSize.ascent = wrappersDesiredSize.ascent +
-                            outerWrapperFrame->GetPosition().y;
+    aDesiredSize.SetTopAscent(wrappersDesiredSize.TopAscent() +
+                            outerWrapperFrame->GetPosition().y);
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();

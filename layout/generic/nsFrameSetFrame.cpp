@@ -623,19 +623,19 @@ nsHTMLFramesetFrame::GetDesiredSize(nsPresContext*           aPresContext,
   if (nullptr == framesetParent) {
     if (aPresContext->IsPaginated()) {
       // XXX This needs to be changed when framesets paginate properly
-      aDesiredSize.width = aReflowState.AvailableWidth();
-      aDesiredSize.height = aReflowState.AvailableHeight();
+      aDesiredSize.Width() = aReflowState.AvailableWidth();
+      aDesiredSize.Height() = aReflowState.AvailableHeight();
     } else {
       nsRect area = aPresContext->GetVisibleArea();
 
-      aDesiredSize.width = area.width;
-      aDesiredSize.height= area.height;
+      aDesiredSize.Width() = area.width;
+      aDesiredSize.Height() = area.height;
     }
   } else {
     nsSize size;
     framesetParent->GetSizeOfChild(this, size);
-    aDesiredSize.width  = size.width;
-    aDesiredSize.height = size.height;
+    aDesiredSize.Width() = size.width;
+    aDesiredSize.Height() = size.height;
   }
 }
 
@@ -739,9 +739,9 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   nsHTMLReflowState reflowState(aPresContext, aReflowState, aChild, aSize);
   reflowState.SetComputedWidth(std::max(0, aSize.width - reflowState.ComputedPhysicalBorderPadding().LeftRight()));
   reflowState.SetComputedHeight(std::max(0, aSize.height - reflowState.ComputedPhysicalBorderPadding().TopBottom()));
-  nsHTMLReflowMetrics metrics;
-  metrics.width = aSize.width;
-  metrics.height= aSize.height;
+  nsHTMLReflowMetrics metrics(aReflowState.GetWritingMode());
+  metrics.Width() = aSize.width;
+  metrics.Height() = aSize.height;
   nsReflowStatus status;
 
   ReflowChild(aChild, aPresContext, metrics, reflowState, aOffset.x,
@@ -749,8 +749,8 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 
   // Place and size the child
-  metrics.width = aSize.width;
-  metrics.height = aSize.height;
+  metrics.Width() = aSize.width;
+  metrics.Height() = aSize.height;
   FinishReflowChild(aChild, aPresContext, nullptr, metrics, aOffset.x, aOffset.y, 0);
 }
 
@@ -856,10 +856,10 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
 
-  nscoord width  = (aDesiredSize.width <= aReflowState.AvailableWidth())
-    ? aDesiredSize.width : aReflowState.AvailableWidth();
-  nscoord height = (aDesiredSize.height <= aReflowState.AvailableHeight())
-    ? aDesiredSize.height : aReflowState.AvailableHeight();
+  nscoord width  = (aDesiredSize.Width() <= aReflowState.AvailableWidth())
+    ? aDesiredSize.Width() : aReflowState.AvailableWidth();
+  nscoord height = (aDesiredSize.Height() <= aReflowState.AvailableHeight())
+    ? aDesiredSize.Height() : aReflowState.AvailableHeight();
 
   bool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
   if (firstTime) {
@@ -970,7 +970,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
         borderFrame->mWidth = borderWidth;
         borderChildX++;
       }
-      nsSize borderSize(aDesiredSize.width, borderWidth);
+      nsSize borderSize(aDesiredSize.Width(), borderWidth);
       ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
       borderFrame = nullptr;
       offset.y += borderWidth;
@@ -1000,7 +1000,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
             borderFrame->mWidth = borderWidth;
             borderChildX++;
           }
-          nsSize borderSize(borderWidth, aDesiredSize.height);
+          nsSize borderSize(borderWidth, aDesiredSize.Height());
           ReflowPlaceChild(borderFrame, aPresContext, aReflowState, offset, borderSize);
           borderFrame = nullptr;
         }

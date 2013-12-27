@@ -186,19 +186,19 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
-  aMetrics.width = aReflowState.ComputedWidth();
-  aMetrics.height = aReflowState.ComputedHeight();
+  aMetrics.Width() = aReflowState.ComputedWidth();
+  aMetrics.Height() = aReflowState.ComputedHeight();
 
   // stash this away so we can compute our inner area later
   mBorderPadding   = aReflowState.ComputedPhysicalBorderPadding();
 
-  aMetrics.width += mBorderPadding.left + mBorderPadding.right;
-  aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
+  aMetrics.Width() += mBorderPadding.left + mBorderPadding.right;
+  aMetrics.Height() += mBorderPadding.top + mBorderPadding.bottom;
 
   if (GetPrevInFlow()) {
-    nscoord y = GetContinuationOffset(&aMetrics.width);
-    aMetrics.height -= y + mBorderPadding.top;
-    aMetrics.height = std::max(0, aMetrics.height);
+    nscoord y = GetContinuationOffset(&aMetrics.Width());
+    aMetrics.Height() -= y + mBorderPadding.top;
+    aMetrics.Height() = std::max(0, aMetrics.Height());
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
@@ -209,7 +209,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsIFrame* childFrame = mFrames.FirstChild();
   NS_ASSERTION(!childFrame->GetNextSibling(), "HTML canvas should have 1 kid");
-  nsHTMLReflowMetrics childDesiredSize(aMetrics.mFlags);
+  nsHTMLReflowMetrics childDesiredSize(aReflowState.GetWritingMode(), aMetrics.mFlags);
   nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame,
                                      availSize);
   ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState,
@@ -219,7 +219,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsHTMLCanvasFrame::Reflow: size=%d,%d",
-                  aMetrics.width, aMetrics.height));
+                  aMetrics.Width(), aMetrics.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 
   return NS_OK;

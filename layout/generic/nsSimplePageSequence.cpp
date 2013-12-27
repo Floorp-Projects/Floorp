@@ -111,9 +111,9 @@ nsSimplePageSequenceFrame::SetDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
     // can act as a background in print preview but also handle overflow
     // in child page frames correctly.
     // Use availableWidth so we don't cause a needless horizontal scrollbar.
-    aDesiredSize.width = std::max(aReflowState.AvailableWidth(),
+    aDesiredSize.Width() = std::max(aReflowState.AvailableWidth(),
                                 nscoord(aWidth * PresContext()->GetPrintPreviewScale()));
-    aDesiredSize.height = std::max(aReflowState.ComputedHeight(),
+    aDesiredSize.Height() = std::max(aReflowState.ComputedHeight(),
                                  nscoord(aHeight * PresContext()->GetPrintPreviewScale()));
 }
 
@@ -200,7 +200,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  nsHTMLReflowMetrics kidSize;
+  nsHTMLReflowMetrics kidSize(aReflowState.GetWritingMode());
   for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
     // Set the shared data into the page frame before reflow
     nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);
@@ -224,10 +224,10 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
 
     FinishReflowChild(kidFrame, aPresContext, nullptr, kidSize, x, y, 0);
-    y += kidSize.height;
+    y += kidSize.Height();
     y += pageCSSMargin.bottom;
 
-    maxXMost = std::max(maxXMost, x + kidSize.width + pageCSSMargin.right);
+    maxXMost = std::max(maxXMost, x + kidSize.Width() + pageCSSMargin.right);
 
     // Is the page complete?
     nsIFrame* kidNextInFlow = kidFrame->GetNextInFlow();

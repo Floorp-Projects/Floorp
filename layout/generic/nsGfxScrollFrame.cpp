@@ -329,9 +329,9 @@ nsHTMLScrollFrame::TryLayout(ScrollReflowState* aState,
   // XXXldb Can we depend more on ComputeSize here?
   nsSize desiredInsideBorderSize;
   desiredInsideBorderSize.width = vScrollbarDesiredWidth +
-    std::max(aKidMetrics->width, hScrollbarMinWidth);
+    std::max(aKidMetrics->Width(), hScrollbarMinWidth);
   desiredInsideBorderSize.height = hScrollbarDesiredHeight +
-    std::max(aKidMetrics->height, vScrollbarMinHeight);
+    std::max(aKidMetrics->Height(), vScrollbarMinHeight);
   aState->mInsideBorderSize =
     ComputeInsideBorderSize(aState, desiredInsideBorderSize);
   nsSize scrollPortSize = nsSize(std::max(0, aState->mInsideBorderSize.width - vScrollbarDesiredWidth),
@@ -552,7 +552,7 @@ nsresult
 nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
                                   const nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
+  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.GetWritingMode(), aDesiredSize.mFlags);
   nsresult rv = ReflowScrolledFrame(aState, GuessHScrollbarNeeded(*aState),
       GuessVScrollbarNeeded(*aState), &kidDesiredSize, true);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -581,7 +581,7 @@ nsHTMLScrollFrame::ReflowContents(ScrollReflowState* aState,
       aState->mStyles.mHorizontal != NS_STYLE_OVERFLOW_SCROLL) {
     nsSize insideBorderSize =
       ComputeInsideBorderSize(aState,
-                              nsSize(kidDesiredSize.width, kidDesiredSize.height));
+                              nsSize(kidDesiredSize.Width(), kidDesiredSize.Height()));
     nsRect scrolledRect =
       mHelper.GetScrolledRectInternal(kidDesiredSize.ScrollableOverflow(),
                                      insideBorderSize);
@@ -835,9 +835,9 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     }
   }
 
-  aDesiredSize.width = state.mInsideBorderSize.width +
+  aDesiredSize.Width() = state.mInsideBorderSize.width +
     state.mComputedBorder.LeftRight();
-  aDesiredSize.height = state.mInsideBorderSize.height +
+  aDesiredSize.Height() = state.mInsideBorderSize.height +
     state.mComputedBorder.TopBottom();
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();

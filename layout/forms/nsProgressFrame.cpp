@@ -118,9 +118,9 @@ NS_IMETHODIMP nsProgressFrame::Reflow(nsPresContext*           aPresContext,
 
   ReflowBarFrame(barFrame, aPresContext, aReflowState, aStatus);
 
-  aDesiredSize.width = aReflowState.ComputedWidth() +
+  aDesiredSize.Width() = aReflowState.ComputedWidth() +
                        aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.height = aReflowState.ComputedHeight() +
+  aDesiredSize.Height() = aReflowState.ComputedHeight() +
                         aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -193,7 +193,7 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   xoffset += reflowState.ComputedPhysicalMargin().left;
   yoffset += reflowState.ComputedPhysicalMargin().top;
 
-  nsHTMLReflowMetrics barDesiredSize;
+  nsHTMLReflowMetrics barDesiredSize(aReflowState.GetWritingMode());
   ReflowChild(aBarFrame, aPresContext, barDesiredSize, reflowState, xoffset,
               yoffset, 0, aStatus);
   FinishReflowChild(aBarFrame, aPresContext, &reflowState, barDesiredSize,

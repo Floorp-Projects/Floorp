@@ -277,11 +277,11 @@ nsTableRowGroupFrame::PlaceChild(nsPresContext*         aPresContext,
                                      aOriginalKidVisualOverflow, isFirstReflow);
 
   // Adjust the running y-offset
-  aReflowState.y += aDesiredSize.height;
+  aReflowState.y += aDesiredSize.Height();
 
   // If our height is constrained then update the available height
   if (NS_UNCONSTRAINEDSIZE != aReflowState.availSize.height) {
-    aReflowState.availSize.height -= aDesiredSize.height;
+    aReflowState.availSize.height -= aDesiredSize.Height();
   }
 }
 
@@ -362,8 +362,9 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
 
       // XXXldb We used to only pass aDesiredSize.mFlags through for the
       // incremental reflow codepath.
-      nsHTMLReflowMetrics desiredSize(aDesiredSize.mFlags);
-      desiredSize.width = desiredSize.height = 0;
+      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode(),
+                                      aDesiredSize.mFlags);
+      desiredSize.Width() = desiredSize.Height() = 0;
   
       // Reflow the child into the available space, giving it as much height as
       // it wants. We'll deal with splitting later after we've computed the row
@@ -407,10 +408,10 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
             // Because other cells in the row may need to be aligned
             // differently, repaint the entire row
             nsRect kidRect(0, aReflowState.y,
-                           desiredSize.width, desiredSize.height);
+                           desiredSize.Width(), desiredSize.Height());
             InvalidateFrame();
           }
-          else if (oldKidRect.height != desiredSize.height)
+          else if (oldKidRect.height != desiredSize.Height())
             needToCalcRowHeights = true;
         } else {
           needToCalcRowHeights = true;
@@ -441,8 +442,8 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     aReflowState.y -= cellSpacingY;
 
   // Return our desired rect
-  aDesiredSize.width = aReflowState.reflowState.AvailableWidth();
-  aDesiredSize.height = aReflowState.y;
+  aDesiredSize.Width() = aReflowState.reflowState.AvailableWidth();
+  aDesiredSize.Height() = aReflowState.y;
 
   if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
     DidResizeRows(aDesiredSize);
@@ -792,7 +793,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*           aPresContext,
 
   DidResizeRows(aDesiredSize);
 
-  aDesiredSize.height = rowGroupHeight; // Adjust our desired size
+  aDesiredSize.Height() = rowGroupHeight; // Adjust our desired size
 }
 
 nscoord
@@ -1032,7 +1033,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
   nsresult rv = NS_OK;
   nsTableRowFrame* prevRowFrame = nullptr;
-  aDesiredSize.height = 0;
+  aDesiredSize.Height() = 0;
 
   nscoord availWidth  = aReflowState.AvailableWidth();
   nscoord availHeight = aReflowState.AvailableHeight();
@@ -1063,7 +1064,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
       // Reflow the row in the availabe space and have it split if it is the 1st
       // row (on the page) or there is at least 5% of the current page available 
       // XXX this 5% should be made a preference 
-      if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20)) { 
+      if (!prevRowFrame || (availHeight - aDesiredSize.Height() > pageHeight / 20)) { 
         nsSize availSize(availWidth, std::max(availHeight - rowRect.y, 0));
         // don't let the available height exceed what CalculateRowHeights set for it
         availSize.height = std::min(availSize.height, rowRect.height);
@@ -1075,7 +1076,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
                                          
         InitChildReflowState(*aPresContext, borderCollapse, rowReflowState);
         rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
-        nsHTMLReflowMetrics rowMetrics;
+        nsHTMLReflowMetrics rowMetrics(aReflowState.GetWritingMode());
 
         // Get the old size before we reflow.
         nsRect oldRowRect = rowFrame->GetRect();
@@ -1086,7 +1087,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         rv = ReflowChild(rowFrame, aPresContext, rowMetrics, rowReflowState,
                          0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
         if (NS_FAILED(rv)) return rv;
-        rowFrame->SetSize(nsSize(rowMetrics.width, rowMetrics.height));
+        rowFrame->SetSize(nsSize(rowMetrics.Width(), rowMetrics.Height()));
         rowFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
         rowFrame->DidResize();
 
@@ -1102,16 +1103,16 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
-          if ((rowMetrics.height <= rowReflowState.AvailableHeight()) || isTopOfPage) {
+          if ((rowMetrics.Height() <= rowReflowState.AvailableHeight()) || isTopOfPage) {
             // The row stays on this page because either it split ok or we're on the top of page.
             // If top of page and the height exceeded the avail height, then there will be data loss
-            NS_ASSERTION(rowMetrics.height <= rowReflowState.AvailableHeight(), 
+            NS_ASSERTION(rowMetrics.Height() <= rowReflowState.AvailableHeight(), 
                          "data loss - incomplete row needed more height than available, on top of page");
             CreateContinuingRowFrame(*aPresContext, *rowFrame, (nsIFrame**)&contRow);
             if (contRow) {
-              aDesiredSize.height += rowMetrics.height;
+              aDesiredSize.Height() += rowMetrics.Height();
               if (prevRowFrame) 
-                aDesiredSize.height += cellSpacingY;
+                aDesiredSize.Height() += cellSpacingY;
             }
             else return NS_ERROR_NULL_POINTER;
           }
@@ -1126,7 +1127,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           // style than its content, or (3) it contains a rowspan >1 cell which hasn't been
           // reflowed with a constrained height yet (we will find out when SplitSpanningCells is
           // called below)
-          if (rowMetrics.height > availSize.height ||
+          if (rowMetrics.Height() > availSize.height ||
               (NS_INLINE_IS_BREAK_BEFORE(aStatus) && !aRowForcedPageBreak)) {
             // cases (1) and (2)
             if (isTopOfPage) { 
@@ -1136,9 +1137,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
               if (nextRowFrame) {
                 aStatus = NS_FRAME_NOT_COMPLETE;
               }
-              aDesiredSize.height += rowMetrics.height;
+              aDesiredSize.Height() += rowMetrics.Height();
               if (prevRowFrame) 
-                aDesiredSize.height += cellSpacingY;
+                aDesiredSize.Height() += cellSpacingY;
               NS_WARNING("data loss - complete row needed more height than available, on top of page");
             }
             else {
@@ -1147,7 +1148,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
             }
           }
         }
-      } //if (!prevRowFrame || (availHeight - aDesiredSize.height > pageHeight / 20))
+      } //if (!prevRowFrame || (availHeight - aDesiredSize.Height() > pageHeight / 20))
       else { 
         // put the row on the next page to give it more height
         rowIsOnPage = false;
@@ -1169,7 +1170,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         }
         else {
           // We can't push children, so let our parent reflow us again with more space
-          aDesiredSize.height = rowRect.YMost();
+          aDesiredSize.Height() = rowRect.YMost();
           aStatus = NS_FRAME_COMPLETE;
           break;
         }
@@ -1189,7 +1190,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           }
           else {
             // We can't push children, so let our parent reflow us again with more space
-            aDesiredSize.height = rowRect.YMost();
+            aDesiredSize.Height() = rowRect.YMost();
             aStatus = NS_FRAME_COMPLETE;
             UndoContinuedRow(aPresContext, contRow);
             contRow = nullptr;
@@ -1210,7 +1211,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
           // Call SplitSpanningCells again with rowBefore as the last row on the page
           SplitSpanningCells(*aPresContext, aReflowState, *aTableFrame, 
                              *firstRowThisPage, *rowBefore, aReflowState.mFlags.mIsTopOfPage, 
-                             spanningRowBottom, contRow, firstTruncatedRow, aDesiredSize.height);
+                             spanningRowBottom, contRow, firstTruncatedRow, aDesiredSize.Height());
           if (firstTruncatedRow) {
             if (aReflowState.mFlags.mIsTopOfPage) {
               // We were better off with the 1st call to SplitSpanningCells, do it again
@@ -1220,12 +1221,12 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
               spanningRowBottom = oldSpanningRowBottom;
               SplitSpanningCells(*aPresContext, aReflowState, *aTableFrame, *firstRowThisPage,
                                  *lastRowThisPage, aReflowState.mFlags.mIsTopOfPage, spanningRowBottom, contRow, 
-                                 firstTruncatedRow, aDesiredSize.height);
+                                 firstTruncatedRow, aDesiredSize.Height());
               NS_WARNING("data loss in a row spanned cell");
             }
             else {
               // Let our parent reflow us again with more space
-              aDesiredSize.height = rowRect.YMost();
+              aDesiredSize.Height() = rowRect.YMost();
               aStatus = NS_FRAME_COMPLETE;
               UndoContinuedRow(aPresContext, contRow);
               contRow = nullptr;
@@ -1234,7 +1235,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         } // if (firstTruncatedRow == firstRowThisPage)
       } // if (firstTruncatedRow)
       else {
-        aDesiredSize.height = std::max(aDesiredSize.height, yMost);
+        aDesiredSize.Height() = std::max(aDesiredSize.Height(), yMost);
         if (contRow) {
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
@@ -1248,7 +1249,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
       break;
     } // if (rowRect.YMost() > availHeight)
     else { 
-      aDesiredSize.height = rowRect.YMost();
+      aDesiredSize.Height() = rowRect.YMost();
       prevRowFrame = rowFrame;
       // see if there is a page break after the row
       nsTableRowFrame* nextRow = rowFrame->GetNextRow();
@@ -1308,7 +1309,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   if (aReflowState.mFlags.mTableIsSplittable &&
       NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight() &&
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
-       aDesiredSize.height > aReflowState.AvailableHeight())) {
+       aDesiredSize.Height() > aReflowState.AvailableHeight())) {
     // Nope, find a place to split the row group 
     bool specialReflow = (bool)aReflowState.mFlags.mSpecialHeightReflow;
     ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = false;
@@ -1330,14 +1331,14 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
                     (aReflowState.ComputedHeight() > 0)); 
   
   // just set our width to what was available. The table will calculate the width and not use our value.
-  aDesiredSize.width = aReflowState.AvailableWidth();
+  aDesiredSize.Width() = aReflowState.AvailableWidth();
 
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
   if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
+      nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
   

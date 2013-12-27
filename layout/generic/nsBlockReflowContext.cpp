@@ -28,7 +28,7 @@ nsBlockReflowContext::nsBlockReflowContext(nsPresContext* aPresContext,
                                            const nsHTMLReflowState& aParentRS)
   : mPresContext(aPresContext),
     mOuterReflowState(aParentRS),
-    mMetrics()
+    mMetrics(aParentRS.GetWritingMode())
 {
 }
 
@@ -252,8 +252,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   mFrame->WillReflow(mPresContext);
 
 #ifdef DEBUG
-  mMetrics.width = nscoord(0xdeadbeef);
-  mMetrics.height = nscoord(0xdeadbeef);
+  mMetrics.Width() = nscoord(0xdeadbeef);
+  mMetrics.Height() = nscoord(0xdeadbeef);
 #endif
 
   mOuterReflowState.mFloatManager->Translate(tx, ty);
@@ -262,16 +262,16 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
 
 #ifdef DEBUG
   if (!NS_INLINE_IS_BREAK_BEFORE(aFrameReflowStatus)) {
-    if (CRAZY_WIDTH(mMetrics.width) || CRAZY_HEIGHT(mMetrics.height)) {
+    if (CRAZY_WIDTH(mMetrics.Width()) || CRAZY_HEIGHT(mMetrics.Height())) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
-      printf(" metrics=%d,%d!\n", mMetrics.width, mMetrics.height);
+      printf(" metrics=%d,%d!\n", mMetrics.Width(), mMetrics.Height());
     }
-    if ((mMetrics.width == nscoord(0xdeadbeef)) ||
-        (mMetrics.height == nscoord(0xdeadbeef))) {
+    if ((mMetrics.Width() == nscoord(0xdeadbeef)) ||
+        (mMetrics.Height() == nscoord(0xdeadbeef))) {
       printf("nsBlockReflowContext: ");
       nsFrame::ListTag(stdout, mFrame);
-      printf(" didn't set w/h %d,%d!\n", mMetrics.width, mMetrics.height);
+      printf(" didn't set w/h %d,%d!\n", mMetrics.Width(), mMetrics.Height());
     }
   }
 #endif
@@ -339,7 +339,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // Mark the frame as non-dirty; it has been reflowed (or we wouldn't
   // be here), and we don't want to assert in CachedIsEmpty()
   mFrame->RemoveStateBits(NS_FRAME_IS_DIRTY);
-  bool empty = 0 == mMetrics.height && aLine->CachedIsEmpty();
+  bool empty = 0 == mMetrics.Height() && aLine->CachedIsEmpty();
   if (empty) {
     // Collapse the bottom margin with the top margin that was already
     // applied.
@@ -376,9 +376,9 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   // See if the frame fit. If it's the first frame or empty then it
   // always fits. If the height is unconstrained then it always fits,
   // even if there's some sort of integer overflow that makes y +
-  // mMetrics.height appear to go beyond the available height.
+  // mMetrics.Height() appear to go beyond the available height.
   if (!empty && !aForceFit && mSpace.height != NS_UNCONSTRAINEDSIZE) {
-    nscoord yMost = position.y - backupContainingBlockAdvance + mMetrics.height;
+    nscoord yMost = position.y - backupContainingBlockAdvance + mMetrics.Height();
     if (yMost > mSpace.YMost()) {
       // didn't fit, we must acquit.
       mFrame->DidReflow(mPresContext, &aReflowState, nsDidReflowStatus::FINISHED);
@@ -387,7 +387,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
   }
 
   aInFlowBounds = nsRect(position.x, position.y - backupContainingBlockAdvance,
-                         mMetrics.width, mMetrics.height);
+                         mMetrics.Width(), mMetrics.Height());
   
   aReflowState.ApplyRelativePositioning(&position);
   

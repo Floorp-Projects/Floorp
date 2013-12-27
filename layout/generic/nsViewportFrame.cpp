@@ -210,7 +210,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
         NS_SUBTREE_DIRTY(mFrames.FirstChild())) {
       // Reflow our one-and-only principal child frame
       nsIFrame*           kidFrame = mFrames.FirstChild();
-      nsHTMLReflowMetrics kidDesiredSize;
+      nsHTMLReflowMetrics kidDesiredSize(aReflowState.GetWritingMode());
       nsSize              availableSpace(aReflowState.AvailableWidth(),
                                          aReflowState.AvailableHeight());
       nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
@@ -220,7 +220,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
       kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
       rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                        0, 0, 0, aStatus);
-      kidHeight = kidDesiredSize.height;
+      kidHeight = kidDesiredSize.Height();
 
       FinishReflowChild(kidFrame, aPresContext, nullptr, kidDesiredSize, 0, 0, 0);
     } else {
@@ -232,10 +232,10 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
                "shouldn't happen anymore");
 
   // Return the max size as our desired size
-  aDesiredSize.width = aReflowState.AvailableWidth();
+  aDesiredSize.Width() = aReflowState.AvailableWidth();
   // Being flowed initially at an unconstrained height means we should
   // return our child's intrinsic size.
-  aDesiredSize.height = aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE
+  aDesiredSize.Height() = aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE
                           ? aReflowState.ComputedHeight()
                           : kidHeight;
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -252,11 +252,11 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
     if (reflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE) {
       // We have an intrinsic-height document with abs-pos/fixed-pos children.
       // Set the available height and mComputedHeight to our chosen height.
-      reflowState.AvailableHeight() = aDesiredSize.height;
+      reflowState.AvailableHeight() = aDesiredSize.Height();
       // Not having border/padding simplifies things
       NS_ASSERTION(reflowState.ComputedPhysicalBorderPadding() == nsMargin(0,0,0,0),
                    "Viewports can't have border/padding");
-      reflowState.SetComputedHeight(aDesiredSize.height);
+      reflowState.SetComputedHeight(aDesiredSize.Height());
     }
 
     nsRect rect = AdjustReflowStateAsContainingBlock(&reflowState);

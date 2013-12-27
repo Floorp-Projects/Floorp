@@ -709,15 +709,15 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     ascent = GetBoxAscent(state);
   }
 
-  aDesiredSize.width  = mRect.width;
-  aDesiredSize.height = mRect.height;
-  aDesiredSize.ascent = ascent;
+  aDesiredSize.Width() = mRect.width;
+  aDesiredSize.Height() = mRect.height;
+  aDesiredSize.SetTopAscent(ascent);
 
   aDesiredSize.mOverflowAreas = GetOverflowAreas();
 
 #ifdef DO_NOISY_REFLOW
   {
-    printf("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
+    printf("%p ** nsBF(done) W:%d H:%d  ", this, aDesiredSize.Width(), aDesiredSize.Height());
 
     if (maxElementSize) {
       printf("MW:%d\n", *maxElementWidth); 
@@ -913,9 +913,9 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
                                   nsSize(mRect.width, NS_UNCONSTRAINEDSIZE));
 
     // Set up a |desiredSize| to pass into ReflowAbsoluteFrames
-    nsHTMLReflowMetrics desiredSize;
-    desiredSize.width  = mRect.width;
-    desiredSize.height = mRect.height;
+    nsHTMLReflowMetrics desiredSize(reflowState.GetWritingMode());
+    desiredSize.Width() = mRect.width;
+    desiredSize.Height() = mRect.height;
 
     // get the ascent (cribbed from ::Reflow)
     nscoord ascent = mRect.height;
@@ -925,7 +925,7 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
     if (!(mState & NS_STATE_IS_ROOT)) {
       ascent = GetBoxAscent(aState);
     }
-    desiredSize.ascent = ascent;
+    desiredSize.SetTopAscent(ascent);
     desiredSize.mOverflowAreas = GetOverflowAreas();
 
     // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames

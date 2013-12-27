@@ -215,7 +215,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
 
     // In the floating first-letter case, we need to set this ourselves;
     // nsLineLayout::BeginSpan will set it in the other case
-    mBaseline = aMetrics.ascent;
+    mBaseline = aMetrics.TopAscent();
   }
   else {
     // Pretend we are a span and reflow the child frame
@@ -231,13 +231,13 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // Place and size the child and update the output metrics
-  kid->SetRect(nsRect(bp.left, bp.top, aMetrics.width, aMetrics.height));
+  kid->SetRect(nsRect(bp.left, bp.top, aMetrics.Width(), aMetrics.Height()));
   kid->FinishAndStoreOverflow(&aMetrics);
   kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
 
-  aMetrics.width += lr;
-  aMetrics.height += tb;
-  aMetrics.ascent += bp.top;
+  aMetrics.Width() += lr;
+  aMetrics.Height() += tb;
+  aMetrics.SetTopAscent(aMetrics.TopAscent() + bp.top);
 
   // Ensure that the overflow rect contains the child textframe's overflow rect.
   // Note that if this is floating, the overline/underline drawable area is in

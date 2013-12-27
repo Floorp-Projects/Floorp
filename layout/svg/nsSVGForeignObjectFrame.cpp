@@ -145,8 +145,8 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   DoReflow();
 
-  aDesiredSize.width = aReflowState.ComputedWidth();
-  aDesiredSize.height = aReflowState.ComputedHeight();
+  aDesiredSize.Width() = aReflowState.ComputedWidth();
+  aDesiredSize.Height() = aReflowState.ComputedHeight();
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   aStatus = NS_FRAME_COMPLETE;
 
@@ -553,7 +553,7 @@ nsSVGForeignObjectFrame::DoReflow()
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,
                                 nsSize(mRect.width, NS_UNCONSTRAINEDSIZE));
-  nsHTMLReflowMetrics desiredSize;
+  nsHTMLReflowMetrics desiredSize(reflowState.GetWritingMode());
   nsReflowStatus status;
 
   // We don't use mRect.height above because that tells the child to do
@@ -568,8 +568,8 @@ nsSVGForeignObjectFrame::DoReflow()
 
   ReflowChild(kid, presContext, desiredSize, reflowState, 0, 0,
               NS_FRAME_NO_MOVE_FRAME, status);
-  NS_ASSERTION(mRect.width == desiredSize.width &&
-               mRect.height == desiredSize.height, "unexpected size");
+  NS_ASSERTION(mRect.width == desiredSize.Width() &&
+               mRect.height == desiredSize.Height(), "unexpected size");
   FinishReflowChild(kid, presContext, &reflowState, desiredSize, 0, 0,
                     NS_FRAME_NO_MOVE_FRAME);
   
