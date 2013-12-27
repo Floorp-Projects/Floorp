@@ -215,8 +215,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
     default:printf("<unknown>%d", aReflowState.reason);break;
   }
   
-  printSize("AW", aReflowState.availableWidth);
-  printSize("AH", aReflowState.availableHeight);
+  printSize("AW", aReflowState.AvailableWidth());
+  printSize("AH", aReflowState.AvailableHeight());
   printSize("CW", aReflowState.ComputedWidth());
   printSize("CH", aReflowState.ComputedHeight());
 
@@ -232,7 +232,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
 
   nsMargin m;
-  m = aReflowState.mComputedBorderPadding;
+  m = aReflowState.ComputedPhysicalBorderPadding();
 
   //GetBorderAndPadding(m);
 
@@ -269,11 +269,11 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // XXXbz the width handling here seems to be wrong, since
   // mComputedMin/MaxWidth is a content-box size, whole
   // computedSize.width is a border-box size...
-  if (computedSize.width > aReflowState.mComputedMaxWidth)
-    computedSize.width = aReflowState.mComputedMaxWidth;
+  if (computedSize.width > aReflowState.ComputedMaxWidth())
+    computedSize.width = aReflowState.ComputedMaxWidth();
 
-  if (computedSize.width < aReflowState.mComputedMinWidth)
-    computedSize.width = aReflowState.mComputedMinWidth;
+  if (computedSize.width < aReflowState.ComputedMinWidth())
+    computedSize.width = aReflowState.ComputedMinWidth();
 
   // Now adjust computedSize.height for our min and max computed
   // height.  The only problem is that those are content-box sizes,
@@ -281,8 +281,8 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // m.TopBottom() before adjusting, then readd it.
   computedSize.height = std::max(0, computedSize.height - m.TopBottom());
   computedSize.height = NS_CSS_MINMAX(computedSize.height,
-                                      aReflowState.mComputedMinHeight,
-                                      aReflowState.mComputedMaxHeight);
+                                      aReflowState.ComputedMinHeight(),
+                                      aReflowState.ComputedMaxHeight());
   computedSize.height += m.TopBottom();
 
   nsRect r(mRect.x, mRect.y, computedSize.width, computedSize.height);

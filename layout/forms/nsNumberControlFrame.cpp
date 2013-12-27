@@ -99,9 +99,9 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
       outerWrapperFrame ? outerWrapperFrame->GetSize().height : 0;
   }
   aDesiredSize.width = aReflowState.ComputedWidth() +
-                         aReflowState.mComputedBorderPadding.LeftRight();
+                         aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   aDesiredSize.height = computedHeight +
-                          aReflowState.mComputedBorderPadding.TopBottom();
+                          aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
   if (outerWrapperFrame) {
     aDesiredSize.ascent = wrappersDesiredSize.ascent +
@@ -137,10 +137,10 @@ nsNumberControlFrame::
                                        nsSize(inputFrameContentBoxWidth,
                                               NS_UNCONSTRAINEDSIZE));
 
-  nscoord xoffset = aParentReflowState.mComputedBorderPadding.left +
-                      wrapperReflowState.mComputedMargin.left;
-  nscoord yoffset = aParentReflowState.mComputedBorderPadding.top +
-                      wrapperReflowState.mComputedMargin.top;
+  nscoord xoffset = aParentReflowState.ComputedPhysicalBorderPadding().left +
+                      wrapperReflowState.ComputedPhysicalMargin().left;
+  nscoord yoffset = aParentReflowState.ComputedPhysicalBorderPadding().top +
+                      wrapperReflowState.ComputedPhysicalMargin().top;
 
   nsReflowStatus childStatus;
   nsresult rv = ReflowChild(aOuterWrapperFrame, aPresContext,

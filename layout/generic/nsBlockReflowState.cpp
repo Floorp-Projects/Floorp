@@ -48,10 +48,10 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   const nsMargin& borderPadding = BorderPadding();
 
-  if (aTopMarginRoot || 0 != aReflowState.mComputedBorderPadding.top) {
+  if (aTopMarginRoot || 0 != aReflowState.ComputedPhysicalBorderPadding().top) {
     SetFlag(BRS_ISTOPMARGINROOT, true);
   }
-  if (aBottomMarginRoot || 0 != aReflowState.mComputedBorderPadding.bottom) {
+  if (aBottomMarginRoot || 0 != aReflowState.ComputedPhysicalBorderPadding().bottom) {
     SetFlag(BRS_ISBOTTOMMARGINROOT, true);
   }
   if (GetFlag(BRS_ISTOPMARGINROOT)) {
@@ -87,11 +87,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   // specified style height then we may end up limiting our height if
   // the availableHeight is constrained (this situation occurs when we
   // are paginated).
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight()) {
     // We are in a paginated situation. The bottom edge is just inside
     // the bottom border and padding. The content area height doesn't
     // include either border or padding edge.
-    mBottomEdge = aReflowState.availableHeight - borderPadding.bottom;
+    mBottomEdge = aReflowState.AvailableHeight() - borderPadding.bottom;
     mContentArea.height = std::max(0, mBottomEdge - borderPadding.top);
   }
   else {
@@ -142,7 +142,7 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
   } else {
     nsMargin frameMargin;
     nsCSSOffsetState os(aFrame, mReflowState.rendContext, mContentArea.width);
-    frameMargin = os.mComputedMargin;
+    frameMargin = os.ComputedPhysicalMargin();
 
     nscoord leftFloatXOffset = aFloatAvailableSpace.x - mContentArea.x;
     leftOffset = std::max(leftFloatXOffset, frameMargin.left) -
@@ -175,7 +175,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   aResult.y = mY;
   aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
     ? NS_UNCONSTRAINEDSIZE
-    : mReflowState.availableHeight - mY;
+    : mReflowState.AvailableHeight() - mY;
   // mY might be greater than mBottomEdge if the block's top margin pushes
   // it off the page/column. Negative available height can confuse other code
   // and is nonsense in principle.
@@ -568,17 +568,17 @@ FloatMarginWidth(const nsHTMLReflowState& aCBReflowState,
     nsSize(aCBReflowState.ComputedWidth(),
            aCBReflowState.ComputedHeight()),
     aFloatAvailableWidth,
-    nsSize(aFloatOffsetState.mComputedMargin.LeftRight(),
-           aFloatOffsetState.mComputedMargin.TopBottom()),
-    nsSize(aFloatOffsetState.mComputedBorderPadding.LeftRight() -
-             aFloatOffsetState.mComputedPadding.LeftRight(),
-           aFloatOffsetState.mComputedBorderPadding.TopBottom() -
-             aFloatOffsetState.mComputedPadding.TopBottom()),
-    nsSize(aFloatOffsetState.mComputedPadding.LeftRight(),
-           aFloatOffsetState.mComputedPadding.TopBottom()),
+    nsSize(aFloatOffsetState.ComputedPhysicalMargin().LeftRight(),
+           aFloatOffsetState.ComputedPhysicalMargin().TopBottom()),
+    nsSize(aFloatOffsetState.ComputedPhysicalBorderPadding().LeftRight() -
+             aFloatOffsetState.ComputedPhysicalPadding().LeftRight(),
+           aFloatOffsetState.ComputedPhysicalBorderPadding().TopBottom() -
+             aFloatOffsetState.ComputedPhysicalPadding().TopBottom()),
+    nsSize(aFloatOffsetState.ComputedPhysicalPadding().LeftRight(),
+           aFloatOffsetState.ComputedPhysicalPadding().TopBottom()),
     true).width +
-  aFloatOffsetState.mComputedMargin.LeftRight() +
-  aFloatOffsetState.mComputedBorderPadding.LeftRight();
+  aFloatOffsetState.ComputedPhysicalMargin().LeftRight() +
+  aFloatOffsetState.ComputedPhysicalBorderPadding().LeftRight();
 }
 
 bool
@@ -659,7 +659,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
     mReflowState.mFlags.mIsTopOfPage && IsAdjacentWithTop();
 
   for (;;) {
-    if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE &&
+    if (mReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE &&
         floatAvailableSpace.mRect.height <= 0 &&
         !mustPlaceFloat) {
       // No space, nowhere to put anything.
@@ -987,7 +987,7 @@ nsBlockReflowState::ClearFloats(nscoord aY, uint8_t aBreakType,
         // See if there's room in the next band.
         newY += floatAvailableSpace.mRect.height;
       } else {
-        if (mReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
+        if (mReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
           // Stop trying to clear here; we'll just get pushed to the
           // next column or page and try again there.
           break;

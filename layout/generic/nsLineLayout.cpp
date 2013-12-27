@@ -775,13 +775,13 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     reflowState.mLineLayout = this;
     reflowState.mFlags.mIsTopOfPage = mIsTopOfPage;
     if (reflowState.ComputedWidth() == NS_UNCONSTRAINEDSIZE)
-      reflowState.availableWidth = availableSpaceOnLine;
-    pfd->mMargin = reflowState.mComputedMargin;
-    pfd->mBorderPadding = reflowState.mComputedBorderPadding;
+      reflowState.AvailableWidth() = availableSpaceOnLine;
+    pfd->mMargin = reflowState.ComputedPhysicalMargin();
+    pfd->mBorderPadding = reflowState.ComputedPhysicalBorderPadding();
     pfd->SetFlag(PFD_RELATIVEPOS,
                  reflowState.mStyleDisplay->IsRelativelyPositionedStyle());
     if (pfd->GetFlag(PFD_RELATIVEPOS)) {
-      pfd->mOffsets = reflowState.mComputedOffsets;
+      pfd->mOffsets = reflowState.ComputedPhysicalOffsets();
     }
 
     // Apply start margins (as appropriate) to the frame computing the
@@ -1083,7 +1083,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   else {
     pfd->mBounds.x += ltr ? pfd->mMargin.left : pfd->mMargin.right;
 
-    NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth,
+    NS_WARN_IF_FALSE(NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth(),
                      "have unconstrained width; this should only result from "
                      "very large sizes, not attempts at intrinsic width "
                      "calculation");
@@ -1092,7 +1092,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
       // in the reflow state), adjust available width to account for the
       // left margin. The right margin will be accounted for when we
       // finish flowing the frame.
-      aReflowState.availableWidth -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
+      aReflowState.AvailableWidth() -= ltr ? pfd->mMargin.left : pfd->mMargin.right;
     }
   }
 }

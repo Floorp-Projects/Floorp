@@ -169,8 +169,8 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* kid = mFrames.FirstChild();
 
   // Setup reflow state for our child
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
-  const nsMargin& bp = aReflowState.mComputedBorderPadding;
+  nsSize availSize(aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
+  const nsMargin& bp = aReflowState.ComputedPhysicalBorderPadding();
   nscoord lr = bp.left + bp.right;
   nscoord tb = bp.top + bp.bottom;
   NS_ASSERTION(availSize.width != NS_UNCONSTRAINEDSIZE,

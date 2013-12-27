@@ -410,7 +410,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // XXXbz this will, for small-height dropdowns, have extra space on the right
   // edge for the scrollbar we don't show... but that's the best we can do here
   // for now.
-  nsSize availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
+  nsSize availSize(aReflowState.AvailableWidth(), NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDropdownFrame,
                                    availSize);
 
@@ -418,8 +418,8 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
   // then expand it out.  We want our border-box width to end up the same as
   // the dropdown's so account for both sets of mComputedBorderPadding.
   nscoord forcedWidth = aReflowState.ComputedWidth() +
-    aReflowState.mComputedBorderPadding.LeftRight() -
-    kidReflowState.mComputedBorderPadding.LeftRight();
+    aReflowState.ComputedPhysicalBorderPadding().LeftRight() -
+    kidReflowState.ComputedPhysicalBorderPadding().LeftRight();
   kidReflowState.SetComputedWidth(std::max(kidReflowState.ComputedWidth(),
                                          forcedWidth));
 
@@ -1255,7 +1255,7 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
     state.SetComputedHeight(mComboBox->mListControlFrame->GetHeightOfARow());
   }
   nscoord computedWidth = mComboBox->mDisplayWidth -
-    state.mComputedBorderPadding.LeftRight();
+    state.ComputedPhysicalBorderPadding().LeftRight();
   if (computedWidth < 0) {
     computedWidth = 0;
   }

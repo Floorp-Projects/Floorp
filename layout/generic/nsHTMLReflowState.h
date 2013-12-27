@@ -513,10 +513,10 @@ public:
    * size computed so far.
    */
   nscoord ApplyMinMaxWidth(nscoord aWidth) const {
-    if (NS_UNCONSTRAINEDSIZE != mComputedMaxWidth) {
-      aWidth = std::min(aWidth, mComputedMaxWidth);
+    if (NS_UNCONSTRAINEDSIZE != ComputedMaxWidth()) {
+      aWidth = std::min(aWidth, ComputedMaxWidth());
     }
-    return std::max(aWidth, mComputedMinWidth);
+    return std::max(aWidth, ComputedMinWidth());
   }
 
   /**
@@ -531,12 +531,12 @@ public:
   nscoord ApplyMinMaxHeight(nscoord aHeight, nscoord aConsumed = 0) const {
     aHeight += aConsumed;
 
-    if (NS_UNCONSTRAINEDSIZE != mComputedMaxHeight) {
-      aHeight = std::min(aHeight, mComputedMaxHeight);
+    if (NS_UNCONSTRAINEDSIZE != ComputedMaxHeight()) {
+      aHeight = std::min(aHeight, ComputedMaxHeight());
     }
 
-    if (NS_UNCONSTRAINEDSIZE != mComputedMinHeight) {
-      aHeight = std::max(aHeight, mComputedMinHeight);
+    if (NS_UNCONSTRAINEDSIZE != ComputedMinHeight()) {
+      aHeight = std::max(aHeight, ComputedMinHeight());
     }
 
     return aHeight - aConsumed;
@@ -566,7 +566,7 @@ public:
     // state when reflowing fixed-pos kids.  In that case we actually don't
     // want to mess with the resize flags, because comparing the frame's rect
     // to the munged computed width is pointless.
-    mComputedHeight = aComputedHeight;
+    ComputedHeight() = aComputedHeight;
   }
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
@@ -588,7 +588,7 @@ public:
                                        nsPoint* aPosition);
 
   void ApplyRelativePositioning(nsPoint* aPosition) const {
-    ApplyRelativePositioning(frame, mComputedOffsets, aPosition);
+    ApplyRelativePositioning(frame, ComputedPhysicalOffsets(), aPosition);
   }
 
 #ifdef DEBUG

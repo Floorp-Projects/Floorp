@@ -180,7 +180,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("enter nsHTMLCanvasFrame::Reflow: availSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
+                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -190,7 +190,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.height = aReflowState.ComputedHeight();
 
   // stash this away so we can compute our inner area later
-  mBorderPadding   = aReflowState.mComputedBorderPadding;
+  mBorderPadding   = aReflowState.ComputedPhysicalBorderPadding();
 
   aMetrics.width += mBorderPadding.left + mBorderPadding.right;
   aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;

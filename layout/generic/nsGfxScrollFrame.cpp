@@ -214,18 +214,18 @@ static nsSize ComputeInsideBorderSize(ScrollReflowState* aState,
   nscoord contentWidth = aState->mReflowState.ComputedWidth();
   if (contentWidth == NS_UNCONSTRAINEDSIZE) {
     contentWidth = aDesiredInsideBorderSize.width -
-      aState->mReflowState.mComputedPadding.LeftRight();
+      aState->mReflowState.ComputedPhysicalPadding().LeftRight();
   }
   nscoord contentHeight = aState->mReflowState.ComputedHeight();
   if (contentHeight == NS_UNCONSTRAINEDSIZE) {
     contentHeight = aDesiredInsideBorderSize.height -
-      aState->mReflowState.mComputedPadding.TopBottom();
+      aState->mReflowState.ComputedPhysicalPadding().TopBottom();
   }
 
   contentWidth  = aState->mReflowState.ApplyMinMaxWidth(contentWidth);
   contentHeight = aState->mReflowState.ApplyMinMaxHeight(contentHeight);
-  return nsSize(contentWidth + aState->mReflowState.mComputedPadding.LeftRight(),
-                contentHeight + aState->mReflowState.mComputedPadding.TopBottom());
+  return nsSize(contentWidth + aState->mReflowState.ComputedPhysicalPadding().LeftRight(),
+                contentHeight + aState->mReflowState.ComputedPhysicalPadding().TopBottom());
 }
 
 static void
@@ -388,8 +388,8 @@ nsHTMLScrollFrame::ScrolledContentDependsOnHeight(ScrollReflowState* aState)
   // based on the presence of a horizontal scrollbar.
   return (mHelper.mScrolledFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT) ||
     aState->mReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
-    aState->mReflowState.mComputedMinHeight > 0 ||
-    aState->mReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE;
+    aState->mReflowState.ComputedMinHeight() > 0 ||
+    aState->mReflowState.ComputedMaxHeight() != NS_UNCONSTRAINEDSIZE;
 }
 
 nsresult
@@ -401,13 +401,13 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
 {
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
   // be OK
-  nscoord paddingLR = aState->mReflowState.mComputedPadding.LeftRight();
+  nscoord paddingLR = aState->mReflowState.ComputedPhysicalPadding().LeftRight();
 
   nscoord availWidth = aState->mReflowState.ComputedWidth() + paddingLR;
 
   nscoord computedHeight = aState->mReflowState.ComputedHeight();
-  nscoord computedMinHeight = aState->mReflowState.mComputedMinHeight;
-  nscoord computedMaxHeight = aState->mReflowState.mComputedMaxHeight;
+  nscoord computedMinHeight = aState->mReflowState.ComputedMinHeight();
+  nscoord computedMaxHeight = aState->mReflowState.ComputedMaxHeight();
   if (!ShouldPropagateComputedHeightToScrolledContent()) {
     computedHeight = NS_UNCONSTRAINEDSIZE;
     computedMinHeight = 0;
@@ -439,12 +439,12 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   kidReflowState.Init(presContext, -1, -1, nullptr,
-                      &aState->mReflowState.mComputedPadding);
+                      &aState->mReflowState.ComputedPhysicalPadding());
   kidReflowState.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowState.mFlags.mAssumingVScrollbar = aAssumeVScroll;
   kidReflowState.SetComputedHeight(computedHeight);
-  kidReflowState.mComputedMinHeight = computedMinHeight;
-  kidReflowState.mComputedMaxHeight = computedMaxHeight;
+  kidReflowState.ComputedMinHeight() = computedMinHeight;
+  kidReflowState.ComputedMaxHeight() = computedMaxHeight;
 
   // Temporarily set mHasHorizontalScrollbar/mHasVerticalScrollbar to
   // reflect our assumptions while we reflow the child.
@@ -789,8 +789,8 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     mHelper.mScrolledFrame->GetScrollableOverflowRectRelativeToParent();
   nsPoint oldScrollPosition = mHelper.GetScrollPosition();
 
-  state.mComputedBorder = aReflowState.mComputedBorderPadding -
-    aReflowState.mComputedPadding;
+  state.mComputedBorder = aReflowState.ComputedPhysicalBorderPadding() -
+    aReflowState.ComputedPhysicalPadding();
 
   nsresult rv = ReflowContents(&state, aDesiredSize);
   if (NS_FAILED(rv))
