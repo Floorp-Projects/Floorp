@@ -101,7 +101,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
       if (marginStyle.GetUnit(side) == eStyleUnit_Auto) {
         pageContentMargin.Side(side) = mPD->mReflowMargin.Side(side);
       } else {
-        pageContentMargin.Side(side) = kidReflowState.mComputedMargin.Side(side);
+        pageContentMargin.Side(side) = kidReflowState.ComputedPhysicalMargin().Side(side);
       }
     }
 
@@ -144,19 +144,19 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
                  !frame->GetNextInFlow(), "bad child flow list");
   }
   PR_PL(("PageFrame::Reflow %p ", this));
-  PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.availableWidth, aReflowState.availableHeight));
+  PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   // Return our desired size
-  aDesiredSize.width = aReflowState.availableWidth;
-  if (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.width = aReflowState.AvailableWidth();
+  if (aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
+    aDesiredSize.height = aReflowState.AvailableHeight();
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);
 
   PR_PL(("PageFrame::Reflow %p ", this));
-  PR_PL(("[%d,%d]\n", aReflowState.availableWidth, aReflowState.availableHeight));
+  PR_PL(("[%d,%d]\n", aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -662,8 +662,8 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
   // Override reflow, since we don't want to deal with what our
   // computed values are.
   aDesiredSize.width = GetIntrinsicWidth();
-  aDesiredSize.height = (aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE ?
-                         0 : aReflowState.availableHeight);
+  aDesiredSize.height = (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ?
+                         0 : aReflowState.AvailableHeight());
   // round the height down to the nearest pixel
   aDesiredSize.height -=
     aDesiredSize.height % nsPresContext::CSSPixelsToAppUnits(1);

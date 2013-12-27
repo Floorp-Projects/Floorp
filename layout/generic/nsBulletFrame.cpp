@@ -1666,7 +1666,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
-  const nsMargin& borderPadding = aReflowState.mComputedBorderPadding;
+  const nsMargin& borderPadding = aReflowState.ComputedPhysicalBorderPadding();
   if (!mSuppressPadding ||
       aPresContext->HasAuthorSpecifiedRules(this,
                                             NS_AUTHOR_SPECIFIED_PADDING)) {

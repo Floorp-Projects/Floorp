@@ -441,7 +441,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
     aReflowState.y -= cellSpacingY;
 
   // Return our desired rect
-  aDesiredSize.width = aReflowState.reflowState.availableWidth;
+  aDesiredSize.width = aReflowState.reflowState.AvailableWidth();
   aDesiredSize.height = aReflowState.y;
 
   if (aReflowState.reflowState.mFlags.mSpecialHeightReflow) {
@@ -926,8 +926,8 @@ nsTableRowGroupFrame::SplitSpanningCells(nsPresContext&           aPresContext,
         bool isTopOfPage = (row == &aFirstRow) && aFirstRowIsTopOfPage;
 
         nsRect rowRect = row->GetRect();
-        nsSize rowAvailSize(aReflowState.availableWidth,
-                            std::max(aReflowState.availableHeight - rowRect.y,
+        nsSize rowAvailSize(aReflowState.AvailableWidth(),
+                            std::max(aReflowState.AvailableHeight() - rowRect.y,
                                    0));
         // don't let the available height exceed what
         // CalculateRowHeights set for it
@@ -1034,8 +1034,8 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
   nsTableRowFrame* prevRowFrame = nullptr;
   aDesiredSize.height = 0;
 
-  nscoord availWidth  = aReflowState.availableWidth;
-  nscoord availHeight = aReflowState.availableHeight;
+  nscoord availWidth  = aReflowState.AvailableWidth();
+  nscoord availHeight = aReflowState.AvailableHeight();
   
   const bool borderCollapse = aTableFrame->IsBorderCollapse();
   nscoord cellSpacingY = aTableFrame->GetCellSpacingY();
@@ -1102,10 +1102,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
 
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // The row frame is incomplete and all of the rowspan 1 cells' block frames split
-          if ((rowMetrics.height <= rowReflowState.availableHeight) || isTopOfPage) {
+          if ((rowMetrics.height <= rowReflowState.AvailableHeight()) || isTopOfPage) {
             // The row stays on this page because either it split ok or we're on the top of page.
             // If top of page and the height exceeded the avail height, then there will be data loss
-            NS_ASSERTION(rowMetrics.height <= rowReflowState.availableHeight, 
+            NS_ASSERTION(rowMetrics.height <= rowReflowState.AvailableHeight(), 
                          "data loss - incomplete row needed more height than available, on top of page");
             CreateContinuingRowFrame(*aPresContext, *rowFrame, (nsIFrame**)&contRow);
             if (contRow) {
@@ -1306,9 +1306,9 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
   // See if all the frames fit. Do not try to split anything if we're
   // not paginated ... we can't split across columns yet.
   if (aReflowState.mFlags.mTableIsSplittable &&
-      NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
+      NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight() &&
       (NS_FRAME_NOT_COMPLETE == aStatus || splitDueToPageBreak || 
-       aDesiredSize.height > aReflowState.availableHeight)) {
+       aDesiredSize.height > aReflowState.AvailableHeight())) {
     // Nope, find a place to split the row group 
     bool specialReflow = (bool)aReflowState.mFlags.mSpecialHeightReflow;
     ((nsHTMLReflowState::ReflowStateFlags&)aReflowState.mFlags).mSpecialHeightReflow = false;
@@ -1330,7 +1330,7 @@ nsTableRowGroupFrame::Reflow(nsPresContext*           aPresContext,
                     (aReflowState.ComputedHeight() > 0)); 
   
   // just set our width to what was available. The table will calculate the width and not use our value.
-  aDesiredSize.width = aReflowState.availableWidth;
+  aDesiredSize.width = aReflowState.AvailableWidth();
 
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();
 

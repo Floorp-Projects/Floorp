@@ -457,13 +457,13 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
     if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
       aMetrics.width = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
-                               aReflowState.mComputedMinWidth,
-                               aReflowState.mComputedMaxWidth);
+                               aReflowState.ComputedMinWidth(),
+                               aReflowState.ComputedMaxWidth());
     }
     if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
       aMetrics.height = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_HEIGHT),
-                                aReflowState.mComputedMinHeight,
-                                aReflowState.mComputedMaxHeight);
+                                aReflowState.ComputedMinHeight(),
+                                aReflowState.ComputedMaxHeight());
     }
 
 #if defined(MOZ_WIDGET_GTK)
@@ -481,8 +481,8 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // Make up a number.
   if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
     aMetrics.width =
-      (aReflowState.mComputedMinWidth != NS_UNCONSTRAINEDSIZE) ?
-        aReflowState.mComputedMinWidth : 0;
+      (aReflowState.ComputedMinWidth() != NS_UNCONSTRAINEDSIZE) ?
+        aReflowState.ComputedMinWidth() : 0;
   }
 
   // At this point, the height has an unconstrained value only in two cases:
@@ -491,8 +491,8 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // In either case, we have to make up a number.
   if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
     aMetrics.height =
-      (aReflowState.mComputedMinHeight != NS_UNCONSTRAINEDSIZE) ?
-        aReflowState.mComputedMinHeight : 0;
+      (aReflowState.ComputedMinHeight() != NS_UNCONSTRAINEDSIZE) ?
+        aReflowState.ComputedMinHeight() : 0;
   }
 
   // XXXbz don't add in the border and padding, because we screw up our
@@ -531,7 +531,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   nsRect r(0, 0, aMetrics.width, aMetrics.height);
-  r.Deflate(aReflowState.mComputedBorderPadding);
+  r.Deflate(aReflowState.ComputedPhysicalBorderPadding());
 
   if (mInnerView) {
     nsViewManager* vm = mInnerView->GetViewManager();

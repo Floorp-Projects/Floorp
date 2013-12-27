@@ -247,7 +247,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("enter nsVideoFrame::Reflow: availSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
+                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -257,7 +257,7 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
   aMetrics.height = aReflowState.ComputedHeight();
 
   // stash this away so we can compute our inner area later
-  mBorderPadding   = aReflowState.mComputedBorderPadding;
+  mBorderPadding   = aReflowState.ComputedPhysicalBorderPadding();
 
   aMetrics.width += mBorderPadding.left + mBorderPadding.right;
   aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
@@ -271,8 +271,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
       // Reflow the poster frame.
       nsImageFrame* imageFrame = static_cast<nsImageFrame*>(child);
       nsHTMLReflowMetrics kidDesiredSize;
-      nsSize availableSize = nsSize(aReflowState.availableWidth,
-                                    aReflowState.availableHeight);
+      nsSize availableSize = nsSize(aReflowState.AvailableWidth(),
+                                    aReflowState.AvailableHeight());
       nsHTMLReflowState kidReflowState(aPresContext,
                                        aReflowState,
                                        imageFrame,
@@ -324,8 +324,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
     } else if (child->GetContent() == mCaptionDiv) {
       // Reflow to caption div
       nsHTMLReflowMetrics kidDesiredSize;
-      nsSize availableSize = nsSize(aReflowState.availableWidth,
-                                    aReflowState.availableHeight);
+      nsSize availableSize = nsSize(aReflowState.AvailableWidth(),
+                                    aReflowState.AvailableHeight());
       nsHTMLReflowState kidReflowState(aPresContext,
                                        aReflowState,
                                        child,
@@ -333,8 +333,8 @@ nsVideoFrame::Reflow(nsPresContext*           aPresContext,
                                        aMetrics.width,
                                        aMetrics.height);
       nsSize size(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
-      size.width -= kidReflowState.mComputedBorderPadding.LeftRight();
-      size.height -= kidReflowState.mComputedBorderPadding.TopBottom();
+      size.width -= kidReflowState.ComputedPhysicalBorderPadding().LeftRight();
+      size.height -= kidReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
       kidReflowState.SetComputedWidth(std::max(size.width, 0));
       kidReflowState.SetComputedHeight(std::max(size.height, 0));

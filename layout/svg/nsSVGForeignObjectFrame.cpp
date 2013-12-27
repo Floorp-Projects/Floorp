@@ -558,8 +558,8 @@ nsSVGForeignObjectFrame::DoReflow()
 
   // We don't use mRect.height above because that tells the child to do
   // page/column breaking at that height.
-  NS_ASSERTION(reflowState.mComputedBorderPadding == nsMargin(0, 0, 0, 0) &&
-               reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+  NS_ASSERTION(reflowState.ComputedPhysicalBorderPadding() == nsMargin(0, 0, 0, 0) &&
+               reflowState.ComputedPhysicalMargin() == nsMargin(0, 0, 0, 0),
                "style system should ensure that :-moz-svg-foreign-content "
                "does not get styled");
   NS_ASSERTION(reflowState.ComputedWidth() == mRect.width,

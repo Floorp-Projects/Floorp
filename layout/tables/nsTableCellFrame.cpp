@@ -844,9 +844,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   aStatus = NS_FRAME_COMPLETE;
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
+  nsSize availSize(aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
 
-  nsMargin borderPadding = aReflowState.mComputedPadding;
+  nsMargin borderPadding = aReflowState.ComputedPhysicalPadding();
   nsMargin border;
   GetBorderWidth(border);
   borderPadding += border;
@@ -868,7 +868,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
 
   nsHTMLReflowMetrics kidSize(aDesiredSize.mFlags);
   kidSize.width = kidSize.height = 0;
-  SetPriorAvailWidth(aReflowState.availableWidth);
+  SetPriorAvailWidth(aReflowState.AvailableWidth());
   nsIFrame* firstKid = mFrames.FirstChild();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
@@ -981,7 +981,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
       // the height that they could honor in the pass 2 reflow
       SetHasPctOverHeight(true);
     }
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.AvailableHeight()) {
       aDesiredSize.height = mRect.height;
     }
   }

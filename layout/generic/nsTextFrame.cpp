@@ -7592,7 +7592,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-  ReflowText(*aReflowState.mLineLayout, aReflowState.availableWidth,
+  ReflowText(*aReflowState.mLineLayout, aReflowState.AvailableWidth(),
              aReflowState.rendContext, aMetrics, aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);

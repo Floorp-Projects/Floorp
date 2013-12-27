@@ -640,8 +640,8 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   printf("\n-------------Starting BoxFrame Reflow ----------------------------\n");
   printf("%p ** nsBF::Reflow %d ", this, myCounter++);
   
-  printSize("AW", aReflowState.availableWidth);
-  printSize("AH", aReflowState.availableHeight);
+  printSize("AW", aReflowState.AvailableWidth());
+  printSize("AH", aReflowState.AvailableHeight());
   printSize("CW", aReflowState.ComputedWidth());
   printSize("CH", aReflowState.ComputedHeight());
 
@@ -658,7 +658,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
 
   nsMargin m;
-  m = aReflowState.mComputedBorderPadding;
+  m = aReflowState.ComputedPhysicalBorderPadding();
   // GetBorderAndPadding(m);
 
   nsSize prefSize(0,0);
@@ -681,7 +681,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
     computedSize.height = prefSize.height;
     // prefSize is border-box but min/max constraints are content-box.
     nscoord verticalBorderPadding =
-      aReflowState.mComputedBorderPadding.TopBottom();
+      aReflowState.ComputedPhysicalBorderPadding().TopBottom();
     nscoord contentHeight = computedSize.height - verticalBorderPadding;
     // Note: contentHeight might be negative, but that's OK because min-height
     // is never negative.

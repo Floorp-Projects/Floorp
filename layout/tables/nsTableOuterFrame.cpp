@@ -381,11 +381,11 @@ nsTableOuterFrame::GetChildMargin(nsPresContext*           aPresContext,
   // create and init the child reflow state
   // XXX We really shouldn't construct a reflow state to do this.
   nsHTMLReflowState childRS(aPresContext, aOuterRS, aChildFrame,
-                            nsSize(aAvailWidth, aOuterRS.availableHeight),
+                            nsSize(aAvailWidth, aOuterRS.AvailableHeight()),
                             -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(*aPresContext, childRS);
 
-  aMargin = childRS.mComputedMargin;
+  aMargin = childRS.ComputedPhysicalMargin();
 }
 
 static nsSize
@@ -491,19 +491,19 @@ ChildShrinkWrapWidth(nsRenderingContext *aRenderingContext,
   nsCSSOffsetState offsets(aChildFrame, aRenderingContext, aCBSize.width);
   nsSize size = aChildFrame->ComputeSize(aRenderingContext, aCBSize,
                   aAvailableWidth,
-                  nsSize(offsets.mComputedMargin.LeftRight(),
-                         offsets.mComputedMargin.TopBottom()),
-                  nsSize(offsets.mComputedBorderPadding.LeftRight() -
-                           offsets.mComputedPadding.LeftRight(),
-                         offsets.mComputedBorderPadding.TopBottom() -
-                           offsets.mComputedPadding.TopBottom()),
-                  nsSize(offsets.mComputedPadding.LeftRight(),
-                         offsets.mComputedPadding.TopBottom()),
+                  nsSize(offsets.ComputedPhysicalMargin().LeftRight(),
+                         offsets.ComputedPhysicalMargin().TopBottom()),
+                  nsSize(offsets.ComputedPhysicalBorderPadding().LeftRight() -
+                           offsets.ComputedPhysicalPadding().LeftRight(),
+                         offsets.ComputedPhysicalBorderPadding().TopBottom() -
+                           offsets.ComputedPhysicalPadding().TopBottom()),
+                  nsSize(offsets.ComputedPhysicalPadding().LeftRight(),
+                         offsets.ComputedPhysicalPadding().TopBottom()),
                   true);
   if (aMarginResult)
-    *aMarginResult = offsets.mComputedMargin.LeftRight();
-  return size.width + offsets.mComputedMargin.LeftRight() +
-                      offsets.mComputedBorderPadding.LeftRight();
+    *aMarginResult = offsets.ComputedPhysicalMargin().LeftRight();
+  return size.width + offsets.ComputedPhysicalMargin().LeftRight() +
+                      offsets.ComputedPhysicalBorderPadding().LeftRight();
 }
 
 /* virtual */ nsSize
@@ -802,14 +802,14 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*           aPresContext,
                                          nscoord                  aAvailWidth)
 { 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
-  nscoord availHeight = aOuterRS.availableHeight;
+  nscoord availHeight = aOuterRS.AvailableHeight();
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
     if (mCaptionFrames.FirstChild() == aChildFrame) {
       availHeight = NS_UNCONSTRAINEDSIZE;
     } else {
       nsMargin margin;
       GetChildMargin(aPresContext, aOuterRS, aChildFrame,
-                     aOuterRS.availableWidth, margin);
+                     aOuterRS.AvailableWidth(), margin);
     
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != margin.top, "No unconstrainedsize arithmetic, please");
       availHeight -= margin.top;
@@ -938,8 +938,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
                           captionRSSpace, aOuterRS.ComputedWidth());
     nscoord innerAvailWidth = aOuterRS.ComputedWidth() -
-      (captionRS->ComputedWidth() + captionRS->mComputedMargin.LeftRight() +
-       captionRS->mComputedBorderPadding.LeftRight());
+      (captionRS->ComputedWidth() + captionRS->ComputedPhysicalMargin().LeftRight() +
+       captionRS->ComputedPhysicalBorderPadding().LeftRight());
     OuterBeginReflowChild(aPresContext, InnerTableFrame(), aOuterRS,
                           innerRSSpace, innerAvailWidth);
 
@@ -961,7 +961,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     // neither are auto).  (We take advantage of that later when we call
     // GetCaptionOrigin, though.)
     nscoord innerBorderWidth = innerRS->ComputedWidth() +
-                               innerRS->mComputedBorderPadding.LeftRight();
+                               innerRS->ComputedPhysicalBorderPadding().LeftRight();
     OuterBeginReflowChild(aPresContext, mCaptionFrames.FirstChild(), aOuterRS,
                           captionRSSpace, innerBorderWidth);
   } else {
@@ -986,11 +986,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     if (NS_FAILED(rv)) return rv;
     captionSize.width = captionMet.width;
     captionSize.height = captionMet.height;
-    captionMargin = captionRS->mComputedMargin;
+    captionMargin = captionRS->ComputedPhysicalMargin();
     // Now that we know the height of the caption, reduce the available height
     // for the table frame if we are height constrained and the caption is above
     // or below the inner table.
-    if (NS_UNCONSTRAINEDSIZE != aOuterRS.availableHeight) {
+    if (NS_UNCONSTRAINEDSIZE != aOuterRS.AvailableHeight()) {
       nscoord captionHeight = 0;
       switch (captionSide) {
         case NS_STYLE_CAPTION_SIDE_TOP:
@@ -1001,8 +1001,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
           break;
         }
       }
-      innerRS->availableHeight =
-        std::max(0, innerRS->availableHeight - captionHeight);
+      innerRS->AvailableHeight() =
+        std::max(0, innerRS->AvailableHeight() - captionHeight);
     }
   } else {
     captionSize.SizeTo(0,0);
@@ -1018,7 +1018,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   nsSize innerSize;
   innerSize.width = innerMet.width;
   innerSize.height = innerMet.height;
-  nsMargin innerMargin = innerRS->mComputedMargin;
+  nsMargin innerMargin = innerRS->ComputedPhysicalMargin();
 
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
 
