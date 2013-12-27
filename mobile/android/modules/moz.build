@@ -15,4 +15,5 @@ EXTRA_JS_MODULES += [
     'Prompt.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
+    'SimpleServiceDiscovery.jsm',
 ]
