@@ -21,7 +21,6 @@ class nsLineLayout;
 class nsIPercentHeightObserver;
 struct nsHypotheticalBox;
 
-
 /**
  * @return aValue clamped to [aMinValue, aMaxValue].
  *
@@ -99,6 +98,9 @@ typedef uint32_t  nsCSSFrameType;
 // border, and margin, since those values are needed more often.
 struct nsCSSOffsetState {
 public:
+  typedef mozilla::WritingMode WritingMode;
+  typedef mozilla::LogicalMargin LogicalMargin;
+
   // the frame being reflowed
   nsIFrame*           frame;
 
@@ -115,7 +117,22 @@ public:
   nsMargin& ComputedPhysicalBorderPadding() { return mComputedBorderPadding; }
   nsMargin& ComputedPhysicalPadding() { return mComputedPadding; }
 
+  LogicalMargin ComputedLogicalMargin() const
+    { return LogicalMargin(mWritingMode, mComputedMargin); }
+  LogicalMargin ComputedLogicalBorderPadding() const
+    { return LogicalMargin(mWritingMode, mComputedBorderPadding); }
+  LogicalMargin ComputedLogicalPadding() const
+    { return LogicalMargin(mWritingMode, mComputedPadding); }
+
+  WritingMode GetWritingMode() const { return mWritingMode; }
+
 protected:
+  // cached copy of the frame's writing-mode, for logical coordinates
+  WritingMode      mWritingMode;
+
+  // These are PHYSICAL coordinates (for now).
+  // Will probably become logical in due course.
+
   // Computed margin values
   nsMargin         mComputedMargin;
 
@@ -130,6 +147,7 @@ public:
   nsCSSOffsetState(nsIFrame *aFrame, nsRenderingContext *aRenderingContext)
     : frame(aFrame)
     , rendContext(aRenderingContext)
+    , mWritingMode(aFrame->GetWritingMode())
   {
   }
 
@@ -141,6 +159,7 @@ public:
                    nscoord aContainingBlockWidth)
     : frame(aFrame)
     , rendContext(aRenderingContext)
+    , mWritingMode(aFrame->GetWritingMode())
   {
     MOZ_ASSERT(!aFrame->IsFlexItem(),
                "We're about to resolve vertical percent margin & padding "
@@ -273,7 +292,6 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   nscoord ComputedMaxWidth() const { return mComputedMaxWidth; }
   nscoord ComputedMinHeight() const { return mComputedMinHeight; }
   nscoord ComputedMaxHeight() const { return mComputedMaxHeight; }
-  const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
 
   nscoord& AvailableWidth() { return mAvailableWidth; }
   nscoord& AvailableHeight() { return mAvailableHeight; }
@@ -283,7 +301,48 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   nscoord& ComputedMaxWidth() { return mComputedMaxWidth; }
   nscoord& ComputedMinHeight() { return mComputedMinHeight; }
   nscoord& ComputedMaxHeight() { return mComputedMaxHeight; }
+
+  nscoord AvailableISize() const
+    { return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth; }
+  nscoord AvailableBSize() const
+    { return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight; }
+  nscoord ComputedISize() const
+    { return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth; }
+  nscoord ComputedBSize() const
+    { return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight; }
+  nscoord ComputedMinISize() const
+    { return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth; }
+  nscoord ComputedMaxISize() const
+    { return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth; }
+  nscoord ComputedMinBSize() const
+    { return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight; }
+  nscoord ComputedMaxBSize() const
+    { return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight; }
+
+  nscoord& AvailableISize()
+    { return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth; }
+  nscoord& AvailableBSize()
+    { return mWritingMode.IsVertical() ? mAvailableWidth : mAvailableHeight; }
+  nscoord& ComputedISize()
+    { return mWritingMode.IsVertical() ? mComputedHeight : mComputedWidth; }
+  nscoord& ComputedBSize()
+    { return mWritingMode.IsVertical() ? mComputedWidth : mComputedHeight; }
+  nscoord& ComputedMinISize()
+    { return mWritingMode.IsVertical() ? mComputedMinHeight : mComputedMinWidth; }
+  nscoord& ComputedMaxISize()
+    { return mWritingMode.IsVertical() ? mComputedMaxHeight : mComputedMaxWidth; }
+  nscoord& ComputedMinBSize()
+    { return mWritingMode.IsVertical() ? mComputedMinWidth : mComputedMinHeight; }
+  nscoord& ComputedMaxBSize()
+    { return mWritingMode.IsVertical() ? mComputedMaxWidth : mComputedMaxHeight; }
+
+  // XXX this will need to change when we make mComputedOffsets logical;
+  // we won't be able to return a reference for the physical offsets
+  const nsMargin& ComputedPhysicalOffsets() const { return mComputedOffsets; }
   nsMargin& ComputedPhysicalOffsets() { return mComputedOffsets; }
+
+  LogicalMargin ComputedLogicalOffsets() const
+    { return LogicalMargin(mWritingMode, mComputedOffsets); }
 
 private:
   // the available width in which to reflow the frame. The space
@@ -328,7 +387,7 @@ private:
   nscoord          mComputedHeight;
 
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
-  // 'positioned' elements
+  // 'positioned' elements. These are PHYSICAL coordinates (for now).
   nsMargin         mComputedOffsets;
 
   // Computed values for 'min-width/max-width' and 'min-height/max-height'
