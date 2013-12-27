@@ -8043,17 +8043,17 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   }
 
   // fix the computed height
-  NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+  NS_ASSERTION(reflowState.ComputedPhysicalMargin() == nsMargin(0, 0, 0, 0),
                "reflow state should not set margin for reflow roots");
   if (size.height != NS_UNCONSTRAINEDSIZE) {
     nscoord computedHeight =
-      size.height - reflowState.mComputedBorderPadding.TopBottom();
+      size.height - reflowState.ComputedPhysicalBorderPadding().TopBottom();
     computedHeight = std::max(computedHeight, 0);
     reflowState.SetComputedHeight(computedHeight);
   }
   NS_ASSERTION(reflowState.ComputedWidth() ==
                  size.width -
-                   reflowState.mComputedBorderPadding.LeftRight(),
+                   reflowState.ComputedPhysicalBorderPadding().LeftRight(),
                "reflow state computed incorrect width");
 
   mPresContext->ReflowStarted(aInterruptible);

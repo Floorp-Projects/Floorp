@@ -5169,8 +5169,8 @@ SVGTextFrame::DoReflow()
   nsHTMLReflowMetrics desiredSize;
   nsReflowStatus status;
 
-  NS_ASSERTION(reflowState.mComputedBorderPadding == nsMargin(0, 0, 0, 0) &&
-               reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
+  NS_ASSERTION(reflowState.ComputedPhysicalBorderPadding() == nsMargin(0, 0, 0, 0) &&
+               reflowState.ComputedPhysicalMargin() == nsMargin(0, 0, 0, 0),
                "style system should ensure that :-moz-svg-text "
                "does not get styled");
 

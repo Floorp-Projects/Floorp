@@ -316,16 +316,16 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("enter nsSVGOuterSVGFrame::Reflow: availSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
+                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
   aStatus = NS_FRAME_COMPLETE;
 
   aDesiredSize.width  = aReflowState.ComputedWidth() +
-                          aReflowState.mComputedBorderPadding.LeftRight();
+                          aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   aDesiredSize.height = aReflowState.ComputedHeight() +
-                          aReflowState.mComputedBorderPadding.TopBottom();
+                          aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
   NS_ASSERTION(!GetPrevInFlow(), "SVG can't currently be broken across pages.");
 

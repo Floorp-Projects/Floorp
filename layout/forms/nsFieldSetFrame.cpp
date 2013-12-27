@@ -454,7 +454,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   // need logic here to push and pull overflow frames.
   // Since we're not applying our padding in this frame, we need to add it here
   // to compute the available width for our children.
-  nsSize availSize(aReflowState.ComputedWidth() + aReflowState.mComputedPadding.LeftRight(),
+  nsSize availSize(aReflowState.ComputedWidth() + aReflowState.ComputedPhysicalPadding().LeftRight(),
                    NS_UNCONSTRAINEDSIZE);
   NS_ASSERTION(!inner ||
       nsLayoutUtils::IntrinsicForContainer(aReflowState.rendContext,
@@ -470,7 +470,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                "Bogus availSize.width; should be bigger");
 
   // get our border and padding
-  nsMargin border = aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+  nsMargin border = aReflowState.ComputedPhysicalBorderPadding() - aReflowState.ComputedPhysicalPadding();
 
   // Figure out how big the legend is if there is one. 
   // get the legend's margin
@@ -527,7 +527,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
                                      availSize, -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
     // Override computed padding, in case it's percentage padding
     kidReflowState.Init(aPresContext, -1, -1, nullptr,
-                        &aReflowState.mComputedPadding);
+                        &aReflowState.ComputedPhysicalPadding());
     // Our child is "height:100%" but we actually want its height to be reduced
     // by the amount of content-height the legend is eating up, unless our
     // height is unconstrained (in which case the child's will be too).
@@ -536,19 +536,19 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
          std::max(0, aReflowState.ComputedHeight() - mLegendSpace));
     }
 
-    if (aReflowState.mComputedMinHeight > 0) {
-      kidReflowState.mComputedMinHeight =
-        std::max(0, aReflowState.mComputedMinHeight - mLegendSpace);
+    if (aReflowState.ComputedMinHeight() > 0) {
+      kidReflowState.ComputedMinHeight() =
+        std::max(0, aReflowState.ComputedMinHeight() - mLegendSpace);
     }
 
-    if (aReflowState.mComputedMaxHeight != NS_UNCONSTRAINEDSIZE) {
-      kidReflowState.mComputedMaxHeight =
-        std::max(0, aReflowState.mComputedMaxHeight - mLegendSpace);
+    if (aReflowState.ComputedMaxHeight() != NS_UNCONSTRAINEDSIZE) {
+      kidReflowState.ComputedMaxHeight() =
+        std::max(0, aReflowState.ComputedMaxHeight() - mLegendSpace);
     }
 
     nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
     // Reflow the frame
-    NS_ASSERTION(kidReflowState.mComputedMargin == nsMargin(0,0,0,0),
+    NS_ASSERTION(kidReflowState.ComputedPhysicalMargin() == nsMargin(0,0,0,0),
                  "Margins on anonymous fieldset child not supported!");
     nsPoint pt(border.left, border.top + mLegendSpace);
     ReflowChild(inner, aPresContext, kidDesiredSize, kidReflowState,
@@ -575,7 +575,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     // the legend is postioned horizontally within the inner's content rect
     // (so that padding on the fieldset affects the legend position).
     nsRect innerContentRect = contentRect;
-    innerContentRect.Deflate(aReflowState.mComputedPadding);
+    innerContentRect.Deflate(aReflowState.ComputedPhysicalPadding());
     // if the inner content rect is larger than the legend, we can align the legend
     if (innerContentRect.width > mLegendRect.width) {
       int32_t align = static_cast<nsLegendFrame*>
@@ -597,7 +597,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
       // otherwise make place for the legend
       mLegendRect.x = innerContentRect.x;
       innerContentRect.width = mLegendRect.width;
-      contentRect.width = mLegendRect.width + aReflowState.mComputedPadding.LeftRight();
+      contentRect.width = mLegendRect.width + aReflowState.ComputedPhysicalPadding().LeftRight();
     }
 
     // place the legend
@@ -618,7 +618,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
   } else {
     nscoord min = border.TopBottom() + mLegendRect.height;
     aDesiredSize.height =
-      aReflowState.ComputedHeight() + aReflowState.mComputedBorderPadding.TopBottom();
+      aReflowState.ComputedHeight() + aReflowState.ComputedPhysicalBorderPadding().TopBottom();
     if (aDesiredSize.height < min)
       aDesiredSize.height = min;
   }

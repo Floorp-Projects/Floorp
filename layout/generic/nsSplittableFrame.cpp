@@ -237,7 +237,7 @@ nsSplittableFrame::GetEffectiveComputedHeight(const nsHTMLReflowState& aReflowSt
   if (aConsumedHeight != 0 && aConsumedHeight != NS_INTRINSICSIZE) {
     // We just subtracted our top-border padding, since it was included in the
     // first frame's height. Add it back to get the content height.
-    height += aReflowState.mComputedBorderPadding.top;
+    height += aReflowState.ComputedPhysicalBorderPadding().top;
   }
 
   // We may have stretched the frame beyond its computed height. Oh well.
@@ -265,9 +265,9 @@ nsSplittableFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
     // height, though, then we're going to need a next-in-flow, it just hasn't
     // been created yet.
 
-    if (NS_UNCONSTRAINEDSIZE != aReflowState->availableHeight) {
+    if (NS_UNCONSTRAINEDSIZE != aReflowState->AvailableHeight()) {
       nscoord effectiveCH = this->GetEffectiveComputedHeight(*aReflowState);
-      if (effectiveCH > aReflowState->availableHeight) {
+      if (effectiveCH > aReflowState->AvailableHeight()) {
         // Our content height is going to exceed our available height, so we're
         // going to need a next-in-flow.
         skip |= 1 << NS_SIDE_BOTTOM;

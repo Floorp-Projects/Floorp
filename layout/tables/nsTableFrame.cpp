@@ -106,7 +106,7 @@ struct nsTableReflowState {
                      nsTableFrame&            aTableFrame)
     : reflowState(aReflowState)
   {
-    Init(aPresContext, aTableFrame, aReflowState.availableWidth, aReflowState.availableHeight);
+    Init(aPresContext, aTableFrame, aReflowState.AvailableWidth(), aReflowState.AvailableHeight());
   }
 
 };
@@ -1702,7 +1702,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
     CalcBCBorders();
   }
 
-  aDesiredSize.width = aReflowState.availableWidth;
+  aDesiredSize.width = aReflowState.AvailableWidth();
 
   // Check for an overflow list, and append any row group frames being pushed
   MoveOverflowToChildList(aPresContext);
@@ -1738,7 +1738,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
     bool needToInitiateSpecialReflow =
       !!(GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     // see if an extra reflow will be necessary in pagination mode when there is a specified table height
-    if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)) {
+    if (isPaginated && !GetPrevInFlow() && (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight())) {
       nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState);
       if ((tableSpecifiedHeight > 0) &&
           (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
@@ -1757,7 +1757,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
     // if we need to initiate a special height reflow, then don't constrain the
     // height of the reflow before that
     nscoord availHeight = needToInitiateSpecialReflow
-                          ? NS_UNCONSTRAINEDSIZE : aReflowState.availableHeight;
+                          ? NS_UNCONSTRAINEDSIZE : aReflowState.AvailableHeight();
 
     ReflowTable(aDesiredSize, aReflowState, availHeight,
                 lastChildReflowed, aStatus);
@@ -1777,7 +1777,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
       CalcDesiredHeight(aReflowState, aDesiredSize);
       mutable_rs.mFlags.mSpecialHeightReflow = true;
 
-      ReflowTable(aDesiredSize, aReflowState, aReflowState.availableHeight,
+      ReflowTable(aDesiredSize, aReflowState, aReflowState.AvailableHeight(),
                   lastChildReflowed, aStatus);
 
       if (lastChildReflowed && NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
@@ -1799,7 +1799,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   aDesiredSize.width = aReflowState.ComputedWidth() +
-                       aReflowState.mComputedBorderPadding.LeftRight();
+                       aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   if (!haveDesiredHeight) {
     CalcDesiredHeight(aReflowState, aDesiredSize);
   }
@@ -1810,7 +1810,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
   SetColumnDimensions(aDesiredSize.height, borderPadding);
   if (NeedToCollapse() &&
-      (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)) {
+      (NS_UNCONSTRAINEDSIZE != aReflowState.AvailableWidth())) {
     AdjustForCollapsingRowsCols(aDesiredSize, borderPadding);
   }
 
@@ -1868,7 +1868,7 @@ nsTableFrame::ReflowTable(nsHTMLReflowMetrics&     aDesiredSize,
   // Constrain our reflow width to the computed table width (of the 1st in flow).
   // and our reflow height to our avail height minus border, padding, cellspacing
   aDesiredSize.width = aReflowState.ComputedWidth() +
-                       aReflowState.mComputedBorderPadding.LeftRight();
+                       aReflowState.ComputedPhysicalBorderPadding().LeftRight();
   nsTableReflowState reflowState(*PresContext(), aReflowState, *this,
                                  aDesiredSize.width, aAvailHeight);
   ReflowChildren(reflowState, aStatus, aLastChildReflowed,
@@ -2487,7 +2487,7 @@ void GetSeparateModelBorderPadding(const nsHTMLReflowState* aReflowState,
   const nsStyleBorder* border = aStyleContext.StyleBorder();
   aBorderPadding = border->GetComputedBorder();
   if (aReflowState) {
-    aBorderPadding += aReflowState->mComputedPadding;
+    aBorderPadding += aReflowState->ComputedPhysicalPadding();
   }
 }
 
@@ -2873,8 +2873,8 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       if (isPaginated &&
           (NS_INLINE_IS_BREAK_BEFORE(aStatus) ||
            (NS_FRAME_IS_COMPLETE(aStatus) &&
-            (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight) &&
-            kidReflowState.availableHeight < desiredSize.height))) {
+            (NS_UNCONSTRAINEDSIZE != kidReflowState.AvailableHeight()) &&
+            kidReflowState.AvailableHeight() < desiredSize.height))) {
         if (ShouldAvoidBreakInside(aReflowState.reflowState)) {
           aStatus = NS_INLINE_LINE_BREAK_BEFORE();
           break;
@@ -2930,7 +2930,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       pageBreak = false;
       // see if there is a page break after this row group or before the next one
       if (NS_FRAME_IS_COMPLETE(aStatus) && isPaginated &&
-          (NS_UNCONSTRAINEDSIZE != kidReflowState.availableHeight)) {
+          (NS_UNCONSTRAINEDSIZE != kidReflowState.AvailableHeight())) {
         nsIFrame* nextKid =
           (childX + 1 < rowGroups.Length()) ? rowGroups[childX + 1] : nullptr;
         pageBreak = PageBreakAfter(kidFrame, nextKid);

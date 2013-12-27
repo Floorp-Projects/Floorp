@@ -501,8 +501,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
 
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
-                                     nsSize(aReflowState.availableWidth,
-                                            aReflowState.availableHeight));
+                                     nsSize(aReflowState.AvailableWidth(),
+                                            aReflowState.AvailableHeight()));
 
     if (aReflowState.mFlags.mVResize &&
         (kidFrame->GetStateBits() & NS_FRAME_CONTAINS_RELATIVE_HEIGHT)) {
@@ -511,8 +511,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
       kidReflowState.mFlags.mVResize = true;
     }
 
-    nsPoint kidPt(kidReflowState.mComputedMargin.left,
-                  kidReflowState.mComputedMargin.top);
+    nsPoint kidPt(kidReflowState.ComputedPhysicalMargin().left,
+                  kidReflowState.ComputedPhysicalMargin().top);
 
     kidReflowState.ApplyRelativePositioning(&kidPt);
 
@@ -563,7 +563,7 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     aDesiredSize.width = aReflowState.ComputedWidth();
     if (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE) {
       aDesiredSize.height = kidFrame->GetRect().height +
-        kidReflowState.mComputedMargin.TopBottom();
+        kidReflowState.ComputedPhysicalMargin().TopBottom();
     } else {
       aDesiredSize.height = aReflowState.ComputedHeight();
     }

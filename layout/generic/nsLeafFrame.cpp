@@ -51,7 +51,7 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsLeafFrame");
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsLeafFrame::Reflow: aMaxSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
+                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -103,16 +103,16 @@ void
 nsLeafFrame::AddBordersAndPadding(const nsHTMLReflowState& aReflowState,
                                   nsHTMLReflowMetrics& aMetrics)
 {
-  aMetrics.width += aReflowState.mComputedBorderPadding.LeftRight();
-  aMetrics.height += aReflowState.mComputedBorderPadding.TopBottom();
+  aMetrics.width += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  aMetrics.height += aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 }
 
 void
 nsLeafFrame::SizeToAvailSize(const nsHTMLReflowState& aReflowState,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width  = aReflowState.availableWidth; // FRAME
-  aDesiredSize.height = aReflowState.availableHeight;
+  aDesiredSize.width  = aReflowState.AvailableWidth(); // FRAME
+  aDesiredSize.height = aReflowState.AvailableHeight();
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   FinishAndStoreOverflow(&aDesiredSize);  
 }

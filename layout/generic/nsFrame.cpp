@@ -4181,7 +4181,7 @@ nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
 
     // The containing block for the abs pos kids is formed by our padding edge.
     nsMargin computedBorder =
-      aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
+      aReflowState.ComputedPhysicalBorderPadding() - aReflowState.ComputedPhysicalPadding();
     nscoord containingBlockWidth =
       aDesiredSize.width - computedBorder.LeftRight();
     nscoord containingBlockHeight =
@@ -7808,12 +7808,12 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       parentReflowState.SetComputedWidth(std::max(parentSize.width, 0));
     if (parentSize.height != NS_INTRINSICSIZE)
       parentReflowState.SetComputedHeight(std::max(parentSize.height, 0));
-    parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
+    parentReflowState.ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
     // XXX use box methods
-    parentFrame->GetPadding(parentReflowState.mComputedPadding);
-    parentFrame->GetBorder(parentReflowState.mComputedBorderPadding);
-    parentReflowState.mComputedBorderPadding +=
-      parentReflowState.mComputedPadding;
+    parentFrame->GetPadding(parentReflowState.ComputedPhysicalPadding());
+    parentFrame->GetBorder(parentReflowState.ComputedPhysicalBorderPadding());
+    parentReflowState.ComputedPhysicalBorderPadding() +=
+      parentReflowState.ComputedPhysicalPadding();
 
     // Construct the parent chain manually since constructing it normally
     // messes up dimensions.
@@ -7850,7 +7850,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // border-box
     if (aWidth != NS_INTRINSICSIZE) {
       nscoord computedWidth =
-        aWidth - reflowState.mComputedBorderPadding.LeftRight();
+        aWidth - reflowState.ComputedPhysicalBorderPadding().LeftRight();
       computedWidth = std::max(computedWidth, 0);
       reflowState.SetComputedWidth(computedWidth);
     }
@@ -7863,20 +7863,20 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     if (!IsFrameOfType(eBlockFrame)) {
       if (aHeight != NS_INTRINSICSIZE) {
         nscoord computedHeight =
-          aHeight - reflowState.mComputedBorderPadding.TopBottom();
+          aHeight - reflowState.ComputedPhysicalBorderPadding().TopBottom();
         computedHeight = std::max(computedHeight, 0);
         reflowState.SetComputedHeight(computedHeight);
       } else {
         reflowState.SetComputedHeight(
           ComputeSize(aRenderingContext, availSize, availSize.width,
-                      nsSize(reflowState.mComputedMargin.LeftRight(),
-                             reflowState.mComputedMargin.TopBottom()),
-                      nsSize(reflowState.mComputedBorderPadding.LeftRight() -
-                               reflowState.mComputedPadding.LeftRight(),
-                             reflowState.mComputedBorderPadding.TopBottom() -
-                               reflowState.mComputedPadding.TopBottom()),
-                      nsSize(reflowState.mComputedPadding.LeftRight(),
-                               reflowState.mComputedPadding.TopBottom()),
+                      nsSize(reflowState.ComputedPhysicalMargin().LeftRight(),
+                             reflowState.ComputedPhysicalMargin().TopBottom()),
+                      nsSize(reflowState.ComputedPhysicalBorderPadding().LeftRight() -
+                               reflowState.ComputedPhysicalPadding().LeftRight(),
+                             reflowState.ComputedPhysicalBorderPadding().TopBottom() -
+                               reflowState.ComputedPhysicalPadding().TopBottom()),
+                      nsSize(reflowState.ComputedPhysicalPadding().LeftRight(),
+                               reflowState.ComputedPhysicalPadding().TopBottom()),
                       false).height
           );
       }
@@ -9020,8 +9020,8 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     char width[16];
     char height[16];
 
-    DR_state->PrettyUC(aReflowState.availableWidth, width);
-    DR_state->PrettyUC(aReflowState.availableHeight, height);
+    DR_state->PrettyUC(aReflowState.AvailableWidth(), width);
+    DR_state->PrettyUC(aReflowState.AvailableHeight(), height);
     printf("Reflow a=%s,%s ", width, height);
 
     DR_state->PrettyUC(aReflowState.ComputedWidth(), width);
@@ -9057,8 +9057,8 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
       printf("cnt=%d \n", DR_state->mCount);
     if (DR_state->mDisplayPixelErrors) {
       int32_t p2t = aPresContext->AppUnitsPerDevPixel();
-      CheckPixelError(aReflowState.availableWidth, p2t);
-      CheckPixelError(aReflowState.availableHeight, p2t);
+      CheckPixelError(aReflowState.AvailableWidth(), p2t);
+      CheckPixelError(aReflowState.AvailableHeight(), p2t);
       CheckPixelError(aReflowState.ComputedWidth(), p2t);
       CheckPixelError(aReflowState.ComputedHeight(), p2t);
     }
@@ -9300,8 +9300,8 @@ nsHTMLReflowState::DisplayInitConstraintsEnter(nsIFrame* aFrame,
     DR_state->PrettyUC(aContainingBlockHeight, height);
     printf(" cb=%s,%s", width, height);
 
-    DR_state->PrettyUC(aState->availableWidth, width);
-    DR_state->PrettyUC(aState->availableHeight, height);
+    DR_state->PrettyUC(aState->AvailableWidth(), width);
+    DR_state->PrettyUC(aState->AvailableHeight(), height);
     printf(" as=%s,%s", width, height);
 
     DR_state->PrintMargin("b", aBorder);
@@ -9326,15 +9326,15 @@ nsHTMLReflowState::DisplayInitConstraintsExit(nsIFrame* aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     char cmiw[16], cw[16], cmxw[16], cmih[16], ch[16], cmxh[16];
-    DR_state->PrettyUC(aState->mComputedMinWidth, cmiw);
-    DR_state->PrettyUC(aState->mComputedWidth, cw);
-    DR_state->PrettyUC(aState->mComputedMaxWidth, cmxw);
-    DR_state->PrettyUC(aState->mComputedMinHeight, cmih);
-    DR_state->PrettyUC(aState->mComputedHeight, ch);
-    DR_state->PrettyUC(aState->mComputedMaxHeight, cmxh);
+    DR_state->PrettyUC(aState->ComputedMinWidth(), cmiw);
+    DR_state->PrettyUC(aState->ComputedWidth(), cw);
+    DR_state->PrettyUC(aState->ComputedMaxWidth(), cmxw);
+    DR_state->PrettyUC(aState->ComputedMinHeight(), cmih);
+    DR_state->PrettyUC(aState->ComputedHeight(), ch);
+    DR_state->PrettyUC(aState->ComputedMaxHeight(), cmxh);
     printf("InitConstraints= cw=(%s <= %s <= %s) ch=(%s <= %s <= %s)",
            cmiw, cw, cmxw, cmih, ch, cmxh);
-    DR_state->PrintMargin("co", &aState->mComputedOffsets);
+    DR_state->PrintMargin("co", &aState->ComputedPhysicalOffsets());
     putchar('\n');
   }
   DR_state->DeleteTreeNode(*treeNode);
@@ -9388,9 +9388,9 @@ nsCSSOffsetState::DisplayInitOffsetsExit(nsIFrame* aFrame,
   if (treeNode->mDisplay) {
     DR_state->DisplayFrameTypeInfo(aFrame, treeNode->mIndent);
     printf("InitOffsets=");
-    DR_state->PrintMargin("m", &aState->mComputedMargin);
-    DR_state->PrintMargin("p", &aState->mComputedPadding);
-    DR_state->PrintMargin("p+b", &aState->mComputedBorderPadding);
+    DR_state->PrintMargin("m", &aState->ComputedPhysicalMargin());
+    DR_state->PrintMargin("p", &aState->ComputedPhysicalPadding());
+    DR_state->PrintMargin("p+b", &aState->ComputedPhysicalBorderPadding());
     putchar('\n');
   }
   DR_state->DeleteTreeNode(*treeNode);

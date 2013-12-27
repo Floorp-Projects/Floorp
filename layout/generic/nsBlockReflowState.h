@@ -93,7 +93,7 @@ public:
 
   bool IsAdjacentWithTop() const {
     return mY ==
-      ((mFlags & BRS_ISFIRSTINFLOW) ? mReflowState.mComputedBorderPadding.top : 0);
+      ((mFlags & BRS_ISFIRSTINFLOW) ? mReflowState.ComputedPhysicalBorderPadding().top : 0);
   }
 
   /**
@@ -101,7 +101,7 @@ public:
    * we are not the first in flow.
    */
   nsMargin BorderPadding() const {
-    nsMargin result = mReflowState.mComputedBorderPadding;
+    nsMargin result = mReflowState.ComputedPhysicalBorderPadding();
     if (!(mFlags & BRS_ISFIRSTINFLOW)) {
       result.top = 0;
       if (mFlags & BRS_ISOVERFLOWCONTAINER) {

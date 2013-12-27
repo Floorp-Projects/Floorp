@@ -807,7 +807,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("enter nsImageFrame::Reflow: availSize=%d,%d",
-                  aReflowState.availableWidth, aReflowState.availableHeight));
+                  aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
@@ -833,13 +833,13 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   aMetrics.height = mComputedSize.height;
 
   // add borders and padding
-  aMetrics.width  += aReflowState.mComputedBorderPadding.LeftRight();
-  aMetrics.height += aReflowState.mComputedBorderPadding.TopBottom();
+  aMetrics.width  += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  aMetrics.height += aReflowState.ComputedPhysicalBorderPadding().TopBottom();
   
   if (GetPrevInFlow()) {
     aMetrics.width = GetPrevInFlow()->GetSize().width;
     nscoord y = GetContinuationOffset();
-    aMetrics.height -= y + aReflowState.mComputedBorderPadding.top;
+    aMetrics.height -= y + aReflowState.ComputedPhysicalBorderPadding().top;
     aMetrics.height = std::max(0, aMetrics.height);
   }
 
@@ -859,11 +859,11 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
   if (aPresContext->IsPaginated() &&
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
-      NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight && 
-      aMetrics.height > aReflowState.availableHeight) { 
+      NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight() && 
+      aMetrics.height > aReflowState.AvailableHeight()) { 
     // our desired height was greater than 0, so to avoid infinite
     // splitting, use 1 pixel as the min
-    aMetrics.height = std::max(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.availableHeight);
+    aMetrics.height = std::max(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.AvailableHeight());
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
