@@ -1141,7 +1141,7 @@ bool
 CodeGenerator::visitStackArgT(LStackArgT *lir)
 {
     const LAllocation *arg = lir->getArgument();
-    MIRType argType = lir->mir()->getArgument()->type();
+    MIRType argType = lir->type();
     uint32_t argslot = lir->argslot();
     JS_ASSERT(argslot - 1u < graph.argumentSlotCount());
 

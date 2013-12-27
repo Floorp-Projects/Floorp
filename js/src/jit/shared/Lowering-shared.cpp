@@ -77,10 +77,6 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
             LAllocation *type = snapshot->typeOfSlot(i);
             LAllocation *payload = snapshot->payloadOfSlot(i);
 
-            if (ins->isPassArg())
-                ins = ins->toPassArg()->getArgument();
-            JS_ASSERT(!ins->isPassArg());
-
             if (ins->isBox())
                 ins = ins->toBox()->getOperand(0);
 
@@ -131,10 +127,6 @@ LIRGeneratorShared::buildSnapshot(LInstruction *ins, MResumePoint *rp, BailoutKi
         MResumePoint *mir = *it;
         for (size_t j = 0, e = mir->numOperands(); j < e; ++i, ++j) {
             MDefinition *def = mir->getOperand(j);
-
-            if (def->isPassArg())
-                def = def->toPassArg()->getArgument();
-            JS_ASSERT(!def->isPassArg());
 
             if (def->isBox())
                 def = def->toBox()->getOperand(0);

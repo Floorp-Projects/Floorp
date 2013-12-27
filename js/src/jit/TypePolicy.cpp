@@ -525,16 +525,22 @@ template bool Float32Policy<0>::staticAdjustInputs(TempAllocator &alloc, MInstru
 template bool Float32Policy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool Float32Policy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 
+static void
+EnsureOperandNotFloat32(TempAllocator &alloc, MInstruction *def, unsigned op)
+{
+    MDefinition *in = def->getOperand(op);
+    if (in->type() == MIRType_Float32) {
+        MToDouble *replace = MToDouble::New(alloc, in);
+        def->block()->insertBefore(def, replace);
+        def->replaceOperand(op, replace);
+    }
+}
+
 template <unsigned Op>
 bool
 NoFloatPolicy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def)
 {
-    MDefinition *in = def->getOperand(Op);
-    if (in->type() == MIRType_Float32) {
-        MToDouble *replace = MToDouble::New(alloc, in);
-        def->block()->insertBefore(def, replace);
-        def->replaceOperand(Op, replace);
-    }
+    EnsureOperandNotFloat32(alloc, def, Op);
     return true;
 }
 
@@ -640,17 +646,19 @@ CallPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     MCall *call = ins->toCall();
 
     MDefinition *func = call->getFunction();
-    if (func->type() == MIRType_Object)
-        return true;
+    if (func->type() != MIRType_Object) {
+        // If the function is impossible to call,
+        // bail out by causing a subsequent unbox to fail.
+        if (func->type() != MIRType_Value)
+            func = boxAt(alloc, call, func);
 
-    // If the function is impossible to call,
-    // bail out by causing a subsequent unbox to fail.
-    if (func->type() != MIRType_Value)
-        func = boxAt(alloc, call, func);
+        MInstruction *unbox = MUnbox::New(alloc, func, MIRType_Object, MUnbox::Fallible);
+        call->block()->insertBefore(call, unbox);
+        call->replaceFunction(unbox);
+    }
 
-    MInstruction *unbox = MUnbox::New(alloc, func, MIRType_Object, MUnbox::Fallible);
-    call->block()->insertBefore(call, unbox);
-    call->replaceFunction(unbox);
+    for (uint32_t i = 0; i < call->numStackArgs(); i++)
+        EnsureOperandNotFloat32(alloc, call, MCall::IndexOfStackArg(i));
 
     return true;
 }

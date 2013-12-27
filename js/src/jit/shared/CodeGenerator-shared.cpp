@@ -140,10 +140,6 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
         uint32_t i = slotno + *startIndex;
         MDefinition *mir = resumePoint->getOperand(slotno);
 
-        if (mir->isPassArg())
-            mir = mir->toPassArg()->getArgument();
-        JS_ASSERT(!mir->isPassArg());
-
         if (mir->isBox())
             mir = mir->toBox()->getOperand(0);
 
