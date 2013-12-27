@@ -442,26 +442,26 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // By default, we have no area
-  aMetrics.width = 0;
-  aMetrics.height = 0;
+  aMetrics.Width() = 0;
+  aMetrics.Height() = 0;
 
   if (IsHidden(false)) {
     return;
   }
   
-  aMetrics.width = aReflowState.ComputedWidth();
-  aMetrics.height = aReflowState.ComputedHeight();
+  aMetrics.Width() = aReflowState.ComputedWidth();
+  aMetrics.Height() = aReflowState.ComputedHeight();
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsIAtom *atom = mContent->Tag();
   if (atom == nsGkAtoms::applet || atom == nsGkAtoms::embed) {
-    if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.width = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
+    if (aMetrics.Width() == NS_UNCONSTRAINEDSIZE) {
+      aMetrics.Width() = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_WIDTH),
                                aReflowState.ComputedMinWidth(),
                                aReflowState.ComputedMaxWidth());
     }
-    if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
-      aMetrics.height = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_HEIGHT),
+    if (aMetrics.Height() == NS_UNCONSTRAINEDSIZE) {
+      aMetrics.Height() = clamped(nsPresContext::CSSPixelsToAppUnits(EMBED_DEF_HEIGHT),
                                 aReflowState.ComputedMinHeight(),
                                 aReflowState.ComputedMaxHeight());
     }
@@ -471,16 +471,16 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
     // exceed the maximum size of X coordinates.  See bug #225357 for
     // more information.  In theory Gtk2 can handle large coordinates,
     // but underlying plugins can't.
-    aMetrics.height = std::min(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.height);
-    aMetrics.width = std::min(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.width);
+    aMetrics.Height() = std::min(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.Height());
+    aMetrics.Width() = std::min(aPresContext->DevPixelsToAppUnits(INT16_MAX), aMetrics.Width());
 #endif
   }
 
   // At this point, the width has an unconstrained value only if we have
   // nothing to go on (no width set, no information from the plugin, nothing).
   // Make up a number.
-  if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
-    aMetrics.width =
+  if (aMetrics.Width() == NS_UNCONSTRAINEDSIZE) {
+    aMetrics.Width() =
       (aReflowState.ComputedMinWidth() != NS_UNCONSTRAINEDSIZE) ?
         aReflowState.ComputedMinWidth() : 0;
   }
@@ -489,8 +489,8 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   // a) We are in standards mode with percent heights and parent is auto-height
   // b) We have no height information at all.
   // In either case, we have to make up a number.
-  if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
-    aMetrics.height =
+  if (aMetrics.Height() == NS_UNCONSTRAINEDSIZE) {
+    aMetrics.Height() =
       (aReflowState.ComputedMinHeight() != NS_UNCONSTRAINEDSIZE) ?
         aReflowState.ComputedMinHeight() : 0;
   }
@@ -530,7 +530,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-  nsRect r(0, 0, aMetrics.width, aMetrics.height);
+  nsRect r(0, 0, aMetrics.Width(), aMetrics.Height());
   r.Deflate(aReflowState.ComputedPhysicalBorderPadding());
 
   if (mInnerView) {

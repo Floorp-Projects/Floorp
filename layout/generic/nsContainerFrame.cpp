@@ -1043,9 +1043,9 @@ nsContainerFrame::FinishReflowChild(nsIFrame*                  aKidFrame,
   nsPoint curOrigin = aKidFrame->GetPosition();
 
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
-    aKidFrame->SetRect(nsRect(aX, aY, aDesiredSize.width, aDesiredSize.height));
+    aKidFrame->SetRect(nsRect(aX, aY, aDesiredSize.Width(), aDesiredSize.Height()));
   } else {
-    aKidFrame->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
+    aKidFrame->SetSize(nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
   }
 
   if (aKidFrame->HasView()) {
@@ -1147,7 +1147,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
 
       // Initialize reflow params
       nsSize availSpace(prevRect.width, aReflowState.AvailableHeight());
-      nsHTMLReflowMetrics desiredSize;
+      nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
       nsHTMLReflowState frameState(aPresContext, aReflowState,
                                    frame, availSpace);
       nsReflowStatus frameStatus;
@@ -1157,7 +1157,7 @@ nsContainerFrame::ReflowOverflowContainerChildren(nsPresContext*           aPres
                        prevRect.x, 0, aFlags, frameStatus, &tracker);
       NS_ENSURE_SUCCESS(rv, rv);
       //XXXfr Do we need to override any shrinkwrap effects here?
-      // e.g. desiredSize.width = prevRect.width;
+      // e.g. desiredSize.Width() = prevRect.width;
       rv = FinishReflowChild(frame, aPresContext, &frameState, desiredSize,
                              prevRect.x, 0, aFlags);
       NS_ENSURE_SUCCESS(rv, rv);

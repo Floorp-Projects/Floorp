@@ -1538,8 +1538,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     if (status & imgIRequest::STATUS_SIZE_AVAILABLE &&
         !(status & imgIRequest::STATUS_ERROR)) {
       // auto size the image
-      aMetrics.width = mIntrinsicSize.width;
-      aMetrics.ascent = aMetrics.height = mIntrinsicSize.height;
+      aMetrics.Width() = mIntrinsicSize.width;
+      aMetrics.SetTopAscent(aMetrics.Height() = mIntrinsicSize.height);
 
       AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 
@@ -1563,8 +1563,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   nsAutoString text;
   switch (myList->mListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE:
-      aMetrics.width = 0;
-      aMetrics.ascent = aMetrics.height = 0;
+      aMetrics.Width() = aMetrics.Height() = 0;
+      aMetrics.SetTopAscent(0);
       break;
 
     case NS_STYLE_LIST_STYLE_DISC:
@@ -1574,8 +1574,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       bulletSize = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
-      aMetrics.width = aMetrics.height = bulletSize;
-      aMetrics.ascent = bulletSize + mPadding.bottom;
+      aMetrics.Width() = aMetrics.Height() = bulletSize;
+      aMetrics.SetTopAscent(bulletSize + mPadding.bottom);
       break;
 
     default:
@@ -1636,12 +1636,12 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(*myList, text);
-      aMetrics.height = fm->MaxHeight();
+      aMetrics.Height() = fm->MaxHeight();
       aRenderingContext->SetFont(fm);
-      aMetrics.width =
+      aMetrics.Width() =
         nsLayoutUtils::GetStringWidth(this, aRenderingContext,
                                       text.get(), text.Length());
-      aMetrics.ascent = fm->MaxAscent();
+      aMetrics.SetTopAscent(fm->MaxAscent());
       break;
   }
 }
@@ -1675,9 +1675,9 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
     mPadding.bottom += NSToCoordRound(borderPadding.bottom * inflation);
     mPadding.left += NSToCoordRound(borderPadding.left * inflation);
   }
-  aMetrics.width += mPadding.left + mPadding.right;
-  aMetrics.height += mPadding.top + mPadding.bottom;
-  aMetrics.ascent += mPadding.top;
+  aMetrics.Width() += mPadding.left + mPadding.right;
+  aMetrics.Height() += mPadding.top + mPadding.bottom;
+  aMetrics.SetTopAscent(aMetrics.TopAscent() + mPadding.top);
 
   // XXX this is a bit of a hack, we're assuming that no glyphs used for bullets
   // overflow their font-boxes. It'll do for now; to fix it for real, we really
@@ -1693,19 +1693,19 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 /* virtual */ nscoord
 nsBulletFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
-  nsHTMLReflowMetrics metrics;
-  DISPLAY_MIN_WIDTH(this, metrics.width);
+  nsHTMLReflowMetrics metrics(GetWritingMode());
+  DISPLAY_MIN_WIDTH(this, metrics.Width());
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
-  return metrics.width;
+  return metrics.Width();
 }
 
 /* virtual */ nscoord
 nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
-  nsHTMLReflowMetrics metrics;
-  DISPLAY_PREF_WIDTH(this, metrics.width);
+  nsHTMLReflowMetrics metrics(GetWritingMode());
+  DISPLAY_PREF_WIDTH(this, metrics.Width());
   GetDesiredSize(PresContext(), aRenderingContext, metrics, 1.0f);
-  return metrics.width;
+  return metrics.Width();
 }
 
 NS_IMETHODIMP

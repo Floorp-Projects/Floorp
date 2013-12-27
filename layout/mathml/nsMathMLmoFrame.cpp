@@ -828,26 +828,26 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   }
   if (isAccent && firstChild) {
     // see bug 188467 for what is going on here
-    nscoord dy = aDesiredStretchSize.ascent - (mBoundingMetrics.ascent + leading);
-    aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
-    aDesiredStretchSize.height = aDesiredStretchSize.ascent + mBoundingMetrics.descent;
+    nscoord dy = aDesiredStretchSize.TopAscent() - (mBoundingMetrics.ascent + leading);
+    aDesiredStretchSize.SetTopAscent(mBoundingMetrics.ascent + leading);
+    aDesiredStretchSize.Height() = aDesiredStretchSize.TopAscent() + mBoundingMetrics.descent;
 
     firstChild->SetPosition(firstChild->GetPosition() - nsPoint(0, dy));
   }
   else if (useMathMLChar) {
     nscoord ascent = fm->MaxAscent();
     nscoord descent = fm->MaxDescent();
-    aDesiredStretchSize.ascent = std::max(mBoundingMetrics.ascent + leading, ascent);
-    aDesiredStretchSize.height = aDesiredStretchSize.ascent +
+    aDesiredStretchSize.SetTopAscent(std::max(mBoundingMetrics.ascent + leading, ascent));
+    aDesiredStretchSize.Height() = aDesiredStretchSize.TopAscent() +
                                  std::max(mBoundingMetrics.descent + leading, descent);
   }
-  aDesiredStretchSize.width = mBoundingMetrics.width;
+  aDesiredStretchSize.Width() = mBoundingMetrics.width;
   aDesiredStretchSize.mBoundingMetrics = mBoundingMetrics;
   mReference.x = 0;
-  mReference.y = aDesiredStretchSize.ascent;
+  mReference.y = aDesiredStretchSize.TopAscent();
   // Place our mMathMLChar, its origin is in our coordinate system
   if (useMathMLChar) {
-    nscoord dy = aDesiredStretchSize.ascent - mBoundingMetrics.ascent;
+    nscoord dy = aDesiredStretchSize.TopAscent() - mBoundingMetrics.ascent;
     mMathMLChar.SetRect(nsRect(0, dy, charSize.width, charSize.ascent + charSize.descent));
   }
 
@@ -869,7 +869,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     }
 
     mBoundingMetrics.width += leadingSpace + trailingSpace;
-    aDesiredStretchSize.width = mBoundingMetrics.width;
+    aDesiredStretchSize.Width() = mBoundingMetrics.width;
     aDesiredStretchSize.mBoundingMetrics.width = mBoundingMetrics.width;
 
     nscoord dx = (StyleVisibility()->mDirection ?
@@ -961,9 +961,9 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
     // return empty space for now, but this is not yet final since there
     // can be lspace and rspace attributes that reclaim some room.
     // These will be dealt with later in Stretch().
-    aDesiredSize.width = 0;
-    aDesiredSize.height = 0;
-    aDesiredSize.ascent = 0;
+    aDesiredSize.Width() = 0;
+    aDesiredSize.Height() = 0;
+    aDesiredSize.SetTopAscent(0);
     aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
     aStatus = NS_FRAME_COMPLETE;
 
@@ -1006,7 +1006,7 @@ nsMathMLmoFrame::GetIntrinsicWidthMetrics(nsRenderingContext *aRenderingContext,
   ProcessOperatorData();
   if (UseMathMLChar()) {
     uint32_t stretchHint = GetStretchHint(mFlags, mPresentationData, true);
-    aDesiredSize.width = mMathMLChar.
+    aDesiredSize.Width() = mMathMLChar.
       GetMaxWidth(PresContext(), *aRenderingContext,
                   stretchHint, mMaxSize,
                   NS_MATHML_OPERATOR_MAXSIZE_IS_ABSOLUTE(mFlags));
@@ -1020,9 +1020,9 @@ nsMathMLmoFrame::GetIntrinsicWidthMetrics(nsRenderingContext *aRenderingContext,
   // embellished container but for determining total intrinsic width it should
   // be safe to include it for the core here instead.
   bool isRTL = StyleVisibility()->mDirection;
-  aDesiredSize.width +=
+  aDesiredSize.Width() +=
     mEmbellishData.leadingSpace + mEmbellishData.trailingSpace;
-  aDesiredSize.mBoundingMetrics.width = aDesiredSize.width;
+  aDesiredSize.mBoundingMetrics.width = aDesiredSize.Width();
   if (isRTL) {
     aDesiredSize.mBoundingMetrics.leftBearing += mEmbellishData.trailingSpace;
     aDesiredSize.mBoundingMetrics.rightBearing += mEmbellishData.trailingSpace;

@@ -276,15 +276,15 @@ nsMathMLmpaddedFrame::UpdateValue(int32_t                  aSign,
     if (eCSSUnit_Percent == unit || eCSSUnit_Number == unit) {
       switch(aPseudoUnit) {
         case NS_MATHML_PSEUDO_UNIT_WIDTH:
-             scaler = aDesiredSize.width;
+             scaler = aDesiredSize.Width();
              break;
 
         case NS_MATHML_PSEUDO_UNIT_HEIGHT:
-             scaler = aDesiredSize.ascent;
+             scaler = aDesiredSize.TopAscent();
              break;
 
         case NS_MATHML_PSEUDO_UNIT_DEPTH:
-             scaler = aDesiredSize.height - aDesiredSize.ascent;
+             scaler = aDesiredSize.Height() - aDesiredSize.TopAscent();
              break;
 
         default:
@@ -339,8 +339,8 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
     return rv;
   }
 
-  nscoord height = aDesiredSize.ascent;
-  nscoord depth  = aDesiredSize.height - aDesiredSize.ascent;
+  nscoord height = aDesiredSize.TopAscent();
+  nscoord depth  = aDesiredSize.Height() - aDesiredSize.TopAscent();
   // The REC says:
   //
   // "The lspace attribute ('leading' space) specifies the horizontal location
@@ -366,7 +366,7 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   // refer "to the horizontal distance between the positioning point of the
   // mpadded and the positioning point for the following content".  MathML2
   // doesn't make the distinction.
-  nscoord width  = aDesiredSize.width;
+  nscoord width  = aDesiredSize.Width();
   nscoord voffset = 0;
 
   int32_t pseudoUnit;
@@ -430,19 +430,19 @@ nsMathMLmpaddedFrame::Place(nsRenderingContext& aRenderingContext,
   nscoord dx = (StyleVisibility()->mDirection ?
                 width - initialWidth - lspace : lspace);
     
-  aDesiredSize.ascent = height;
-  aDesiredSize.width = mBoundingMetrics.width;
-  aDesiredSize.height = depth + aDesiredSize.ascent;
+  aDesiredSize.SetTopAscent(height);
+  aDesiredSize.Width() = mBoundingMetrics.width;
+  aDesiredSize.Height() = depth + aDesiredSize.TopAscent();
   mBoundingMetrics.ascent = height;
   mBoundingMetrics.descent = depth;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
+  mReference.y = aDesiredSize.TopAscent();
 
   if (aPlaceOrigin) {
     // Finish reflowing child frames, positioning their origins.
-    PositionRowChildFrames(dx, aDesiredSize.ascent - voffset);
+    PositionRowChildFrames(dx, aDesiredSize.TopAscent() - voffset);
   }
 
   return NS_OK;

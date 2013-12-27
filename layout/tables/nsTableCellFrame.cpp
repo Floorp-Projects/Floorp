@@ -606,9 +606,9 @@ void nsTableCellFrame::VerticallyAlignChild(nscoord aMaxAscent)
   }
 
   firstKid->SetPosition(nsPoint(kidRect.x, kidYTop));
-  nsHTMLReflowMetrics desiredSize;
-  desiredSize.width = mRect.width;
-  desiredSize.height = mRect.height;
+  nsHTMLReflowMetrics desiredSize(GetWritingMode()); // ???
+  desiredSize.Width() = mRect.width;
+  desiredSize.Height() = mRect.height;
 
   nsRect overflow(nsPoint(0,0), GetSize());
   overflow.Inflate(GetBorderOverflow());
@@ -785,9 +785,9 @@ void DebugCheckChildSize(nsIFrame*            aChild,
                          nsHTMLReflowMetrics& aMet,
                          nsSize&              aAvailSize)
 {
-  if ((aMet.width < 0) || (aMet.width > PROBABLY_TOO_LARGE)) {
+  if ((aMet.Width() < 0) || (aMet.Width() > PROBABLY_TOO_LARGE)) {
     printf("WARNING: cell content %p has large width %d \n",
-           static_cast<void*>(aChild), int32_t(aMet.width));
+           static_cast<void*>(aChild), int32_t(aMet.Width()));
   }
 }
 #endif
@@ -866,8 +866,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   if (availSize.height < 0)
     availSize.height = 1;
 
-  nsHTMLReflowMetrics kidSize(aDesiredSize.mFlags);
-  kidSize.width = kidSize.height = 0;
+  nsHTMLReflowMetrics kidSize(aReflowState.GetWritingMode(), aDesiredSize.mFlags);
+  kidSize.Width() = kidSize.Height() = 0;
   SetPriorAvailWidth(aReflowState.AvailableWidth());
   nsIFrame* firstKid = mFrames.FirstChild();
   NS_ASSERTION(firstKid, "Frame construction error, a table cell always has an inner cell frame");
@@ -943,7 +943,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   if (prevInFlow) {
     isEmpty = static_cast<nsTableCellFrame*>(prevInFlow)->GetContentEmpty();
   } else {
-    isEmpty = !CellHasVisibleContent(kidSize.height, tableFrame, firstKid);
+    isEmpty = !CellHasVisibleContent(kidSize.Height(), tableFrame, firstKid);
   }
   SetContentEmpty(isEmpty);
 
@@ -955,14 +955,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
                                      firstReflow);
 
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
-  nscoord cellHeight = kidSize.height;
+  nscoord cellHeight = kidSize.Height();
 
   if (NS_UNCONSTRAINEDSIZE != cellHeight) {
     cellHeight += topInset + bottomInset;
   }
 
   // next determine the cell's width
-  nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
+  nscoord cellWidth = kidSize.Width();      // at this point, we've factored in the cell's style attributes
 
   // factor in border and padding
   if (NS_UNCONSTRAINEDSIZE != cellWidth) {
@@ -970,26 +970,26 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // set the cell's desired size and max element size
-  aDesiredSize.width   = cellWidth;
-  aDesiredSize.height  = cellHeight;
+  aDesiredSize.Width() = cellWidth;
+  aDesiredSize.Height() = cellHeight;
 
   // the overflow area will be computed when the child will be vertically aligned
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {
-    if (aDesiredSize.height > mRect.height) {
+    if (aDesiredSize.Height() > mRect.height) {
       // set a bit indicating that the pct height contents exceeded
       // the height that they could honor in the pass 2 reflow
       SetHasPctOverHeight(true);
     }
     if (NS_UNCONSTRAINEDSIZE == aReflowState.AvailableHeight()) {
-      aDesiredSize.height = mRect.height;
+      aDesiredSize.Height() = mRect.height;
     }
   }
 
   // If our parent is in initial reflow, it'll handle invalidating our
   // entire overflow rect.
   if (!(GetParent()->GetStateBits() & NS_FRAME_FIRST_REFLOW) &&
-      nsSize(aDesiredSize.width, aDesiredSize.height) != mRect.Size()) {
+      nsSize(aDesiredSize.Width(), aDesiredSize.Height()) != mRect.Size()) {
     InvalidateFrame();
   }
 

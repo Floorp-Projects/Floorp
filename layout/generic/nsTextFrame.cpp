@@ -2716,9 +2716,9 @@ static bool IsJustifiableCharacter(const nsTextFragment* aFrag, int32_t aPos,
 void
 nsTextFrame::ClearMetrics(nsHTMLReflowMetrics& aMetrics)
 {
-  aMetrics.width = 0;
-  aMetrics.height = 0;
-  aMetrics.ascent = 0;
+  aMetrics.Width() = 0;
+  aMetrics.Height() = 0;
+  aMetrics.SetTopAscent(0);
   mAscent = 0;
 }
 
@@ -7996,15 +7996,15 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 
   // Setup metrics for caller
   // Disallow negative widths
-  aMetrics.width = NSToCoordCeil(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
+  aMetrics.Width() = NSToCoordCeil(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
   if (transformedCharsFit == 0 && !usedHyphenation) {
-    aMetrics.ascent = 0;
-    aMetrics.height = 0;
+    aMetrics.SetTopAscent(0);
+    aMetrics.Height() = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
     // Use actual text metrics for floating first letter frame.
-    aMetrics.ascent = NSToCoordCeil(textMetrics.mAscent);
-    aMetrics.height = aMetrics.ascent + NSToCoordCeil(textMetrics.mDescent);
+    aMetrics.SetTopAscent(NSToCoordCeil(textMetrics.mAscent));
+    aMetrics.Height() = aMetrics.TopAscent() + NSToCoordCeil(textMetrics.mDescent);
   } else {
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
@@ -8012,15 +8012,15 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nsFontMetrics* fm = provider.GetFontMetrics();
     nscoord fontAscent = fm->MaxAscent();
     nscoord fontDescent = fm->MaxDescent();
-    aMetrics.ascent = std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent);
+    aMetrics.SetTopAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
     nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
-    aMetrics.height = aMetrics.ascent + descent;
+    aMetrics.Height() = aMetrics.TopAscent() + descent;
   }
 
-  NS_ASSERTION(aMetrics.ascent >= 0, "Negative ascent???");
-  NS_ASSERTION(aMetrics.height - aMetrics.ascent >= 0, "Negative descent???");
+  NS_ASSERTION(aMetrics.TopAscent() >= 0, "Negative ascent???");
+  NS_ASSERTION(aMetrics.Height() - aMetrics.TopAscent() >= 0, "Negative descent???");
 
-  mAscent = aMetrics.ascent;
+  mAscent = aMetrics.TopAscent();
 
   // Handle text that runs outside its normal bounds.
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
@@ -8139,7 +8139,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 #ifdef NOISY_REFLOW
   ListTag(stdout);
   printf(": desiredSize=%d,%d(b=%d) status=%x\n",
-         aMetrics.width, aMetrics.height, aMetrics.ascent,
+         aMetrics.Width(), aMetrics.Height(), aMetrics.TopAscent(),
          aStatus);
 #endif
 }

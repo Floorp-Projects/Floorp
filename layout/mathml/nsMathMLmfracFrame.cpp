@@ -185,8 +185,8 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   ////////////////////////////////////
   // Get the children's desired sizes
   nsBoundingMetrics bmNum, bmDen;
-  nsHTMLReflowMetrics sizeNum;
-  nsHTMLReflowMetrics sizeDen;
+  nsHTMLReflowMetrics sizeNum(aDesiredSize.GetWritingMode());
+  nsHTMLReflowMetrics sizeDen(aDesiredSize.GetWritingMode());
   nsIFrame* frameDen = nullptr;
   nsIFrame* frameNum = mFrames.FirstChild();
   if (frameNum) 
@@ -319,8 +319,8 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     // XXX Need revisiting the width. TeX uses the exact width
     // e.g. in $$\huge\frac{\displaystyle\int}{i}$$
     nscoord width = std::max(bmNum.width, bmDen.width);
-    nscoord dxNum = leftSpace + (width - sizeNum.width)/2;
-    nscoord dxDen = leftSpace + (width - sizeDen.width)/2;
+    nscoord dxNum = leftSpace + (width - sizeNum.Width())/2;
+    nscoord dxDen = leftSpace + (width - sizeDen.Width())/2;
     width += leftSpace + rightSpace;
 
     // see if the numalign attribute is there 
@@ -329,7 +329,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     if (value.EqualsLiteral("left"))
       dxNum = leftSpace;
     else if (value.EqualsLiteral("right"))
-      dxNum = width - rightSpace - sizeNum.width;
+      dxNum = width - rightSpace - sizeNum.Width();
 
     // see if the denomalign attribute is there 
     GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::denomalign_,
@@ -337,7 +337,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     if (value.EqualsLiteral("left"))
       dxDen = leftSpace;
     else if (value.EqualsLiteral("right"))
-      dxDen = width - rightSpace - sizeDen.width;
+      dxDen = width - rightSpace - sizeDen.Width();
 
     mBoundingMetrics.rightBearing =
       std::max(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
@@ -351,14 +351,14 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     mBoundingMetrics.descent = bmDen.descent + denShift;
     mBoundingMetrics.width = width;
 
-    aDesiredSize.ascent = sizeNum.ascent + numShift;
-    aDesiredSize.height = aDesiredSize.ascent +
-      sizeDen.height - sizeDen.ascent + denShift;
-    aDesiredSize.width = mBoundingMetrics.width;
+    aDesiredSize.SetTopAscent(sizeNum.TopAscent() + numShift);
+    aDesiredSize.Height() = aDesiredSize.TopAscent() +
+      sizeDen.Height() - sizeDen.TopAscent() + denShift;
+    aDesiredSize.Width() = mBoundingMetrics.width;
     aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
     mReference.x = 0;
-    mReference.y = aDesiredSize.ascent;
+    mReference.y = aDesiredSize.TopAscent();
 
     if (aPlaceOrigin) {
       nscoord dy;
@@ -366,10 +366,10 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       dy = 0;
       FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dxNum, dy, 0);
       // place denominator
-      dy = aDesiredSize.height - sizeDen.height;
+      dy = aDesiredSize.Height() - sizeDen.Height();
       FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dxDen, dy, 0);
       // place the fraction bar - dy is top of bar
-      dy = aDesiredSize.ascent - (axisHeight + actualRuleThickness/2);
+      dy = aDesiredSize.TopAscent() - (axisHeight + actualRuleThickness/2);
       mLineRect.SetRect(leftSpace, dy, width - (leftSpace + rightSpace),
                         actualRuleThickness);
     }
@@ -462,35 +462,35 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       trailingSpace;
 
     // Set aDesiredSize
-    aDesiredSize.ascent = mBoundingMetrics.ascent + padding;
-    aDesiredSize.height =
+    aDesiredSize.SetTopAscent(mBoundingMetrics.ascent + padding);
+    aDesiredSize.Height() =
       mBoundingMetrics.ascent + mBoundingMetrics.descent + 2 * padding;
-    aDesiredSize.width = mBoundingMetrics.width;
+    aDesiredSize.Width() = mBoundingMetrics.width;
     aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
     mReference.x = 0;
-    mReference.y = aDesiredSize.ascent;
+    mReference.y = aDesiredSize.TopAscent();
     
     if (aPlaceOrigin) {
       nscoord dx, dy;
 
       // place numerator
-      dx = MirrorIfRTL(aDesiredSize.width, sizeNum.width,
+      dx = MirrorIfRTL(aDesiredSize.Width(), sizeNum.Width(),
                        leadingSpace);
-      dy = aDesiredSize.ascent - numShift - sizeNum.ascent;
+      dy = aDesiredSize.TopAscent() - numShift - sizeNum.TopAscent();
       FinishReflowChild(frameNum, presContext, nullptr, sizeNum, dx, dy, 0);
 
       // place the fraction bar
-      dx = MirrorIfRTL(aDesiredSize.width, mLineRect.width,
+      dx = MirrorIfRTL(aDesiredSize.Width(), mLineRect.width,
                        leadingSpace + bmNum.width);
-      dy = aDesiredSize.ascent - mBoundingMetrics.ascent;
+      dy = aDesiredSize.TopAscent() - mBoundingMetrics.ascent;
       mLineRect.SetRect(dx, dy,
-                        mLineRect.width, aDesiredSize.height - 2 * padding);
+                        mLineRect.width, aDesiredSize.Height() - 2 * padding);
 
       // place denominator
-      dx = MirrorIfRTL(aDesiredSize.width, sizeDen.width,
+      dx = MirrorIfRTL(aDesiredSize.Width(), sizeDen.Width(),
                        leadingSpace + bmNum.width + mLineRect.width);
-      dy = aDesiredSize.ascent + denShift - sizeDen.ascent;
+      dy = aDesiredSize.TopAscent() + denShift - sizeDen.TopAscent();
       FinishReflowChild(frameDen, presContext, nullptr, sizeDen, dx, dy, 0);
     }
 

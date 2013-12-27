@@ -488,9 +488,9 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
   }
 
   // set values of reflow's out parameters
-  aDesiredSize.width = aReflowState.ComputedWidth() +
+  aDesiredSize.Width() = aReflowState.ComputedWidth() +
                        aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.height = aReflowState.ComputedHeight() +
+  aDesiredSize.Height() = aReflowState.ComputedHeight() +
                         aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
   // computation of the ascent wrt the input height
@@ -506,9 +506,9 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
                                                       inflation);
   NS_ENSURE_SUCCESS(rv, rv);
   // now adjust for our borders and padding
-  aDesiredSize.ascent = 
+  aDesiredSize.SetTopAscent( 
         nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight) 
-        + aReflowState.ComputedPhysicalBorderPadding().top;
+        + aReflowState.ComputedPhysicalBorderPadding().top);
 
   // overflow handling
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -563,7 +563,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                       + kidReflowState.ComputedPhysicalMargin().top;
 
   // reflow the child
-  nsHTMLReflowMetrics desiredSize;  
+  nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
   ReflowChild(aKid, aPresContext, desiredSize, kidReflowState, 
               xOffset, yOffset, 0, aStatus);
 

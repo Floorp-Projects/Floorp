@@ -65,10 +65,10 @@ nsScrollbarFrame::Reflow(nsPresContext*          aPresContext,
   // nsGfxScrollFrame may have told us to shrink to nothing. If so, make sure our
   // desired size agrees.
   if (aReflowState.AvailableWidth() == 0) {
-    aDesiredSize.width = 0;
+    aDesiredSize.Width() = 0;
   }
   if (aReflowState.AvailableHeight() == 0) {
-    aDesiredSize.height = 0;
+    aDesiredSize.Height() = 0;
   }
 
   return NS_OK;

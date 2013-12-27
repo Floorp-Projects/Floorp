@@ -84,11 +84,11 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 {
   DO_GLOBAL_REFLOW_COUNT("BRFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
-  aMetrics.height = 0; // BR frames with height 0 are ignored in quirks
+  aMetrics.Height() = 0; // BR frames with height 0 are ignored in quirks
                        // mode by nsLineLayout::VerticalAlignFrames .
                        // However, it's not always 0.  See below.
-  aMetrics.width = 0;
-  aMetrics.ascent = 0;
+  aMetrics.Width() = 0;
+  aMetrics.SetTopAscent(0);
 
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
@@ -118,12 +118,11 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       aReflowState.rendContext->SetFont(fm); // FIXME: maybe not needed?
       if (fm) {
         nscoord logicalHeight = aReflowState.CalcLineHeight();
-        aMetrics.height = logicalHeight;
-        aMetrics.ascent =
-          nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight);
+        aMetrics.Height() = logicalHeight;
+        aMetrics.SetTopAscent(nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight));
       }
       else {
-        aMetrics.ascent = aMetrics.height = 0;
+        aMetrics.SetTopAscent(aMetrics.Height() = 0);
       }
 
       // XXX temporary until I figure out a better solution; see the
@@ -132,7 +131,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       // XXX This also fixes bug 10036!
       // Warning: nsTextControlFrame::CalculateSizeStandard depends on
       // the following line, see bug 228752.
-      aMetrics.width = 1;
+      aMetrics.Width() = 1;
     }
 
     // Return our reflow status
@@ -151,7 +150,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 
   aMetrics.SetOverflowAreasToDesiredBounds();
 
-  mAscent = aMetrics.ascent;
+  mAscent = aMetrics.TopAscent();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;

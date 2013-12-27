@@ -293,16 +293,16 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   Layout(state);
   
   // ok our child could have gotten bigger. So lets get its bounds
-  aDesiredSize.width  = mRect.width;
-  aDesiredSize.height = mRect.height;
-  aDesiredSize.ascent = GetBoxAscent(state);
+  aDesiredSize.Width() = mRect.width;
+  aDesiredSize.Height() = mRect.height;
+  aDesiredSize.SetTopAscent(GetBoxAscent(state));
 
   // the overflow rect is set in SetBounds() above
   aDesiredSize.mOverflowAreas = GetOverflowAreas();
 
 #ifdef DO_NOISY_REFLOW
   {
-    printf("%p ** nsLBF(done) W:%d H:%d  ", this, aDesiredSize.width, aDesiredSize.height);
+    printf("%p ** nsLBF(done) W:%d H:%d  ", this, aDesiredSize.Width(), aDesiredSize.Height());
 
     if (maxElementWidth) {
       printf("MW:%d\n", *maxElementWidth); 
