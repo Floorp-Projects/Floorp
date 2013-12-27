@@ -63,8 +63,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   NS_PRECONDITION(aRenderingContext, "no rendering context");
   NS_PRECONDITION(aFrame, "no frame");
   parentReflowState = nullptr;
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
+  mAvailableWidth = aAvailableSpace.width;
+  mAvailableHeight = aAvailableSpace.height;
   mFloatManager = nullptr;
   mLineLayout = nullptr;
   memset(&mFlags, 0, sizeof(mFlags));
@@ -160,8 +160,8 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
     frame->AddStateBits(parentReflowState->frame->GetStateBits() &
                         NS_FRAME_IS_DIRTY);
 
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
+  mAvailableWidth = aAvailableSpace.width;
+  mAvailableHeight = aAvailableSpace.height;
 
   mFloatManager = aParentReflowState.mFloatManager;
   if (frame->IsFrameOfType(nsIFrame::eLineParticipant))
@@ -300,7 +300,7 @@ nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         const nsMargin* aBorder,
                         const nsMargin* aPadding)
 {
-  NS_WARN_IF_FALSE(availableWidth != NS_UNCONSTRAINEDSIZE,
+  NS_WARN_IF_FALSE(mAvailableWidth != NS_UNCONSTRAINEDSIZE,
                    "have unconstrained width; this should only result from "
                    "very large sizes, not attempts at intrinsic width "
                    "calculation");
@@ -1427,7 +1427,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
       frame->ComputeSize(rendContext,
                          nsSize(containingBlockWidth,
                                 containingBlockHeight),
-                         containingBlockWidth, // XXX or availableWidth?
+                         containingBlockWidth, // XXX or mAvailableWidth?
                          nsSize(mComputedMargin.LeftRight() +
                                   mComputedOffsets.LeftRight(),
                                 mComputedMargin.TopBottom() +
@@ -1891,11 +1891,11 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
     mComputedMargin.SizeTo(0, 0, 0, 0);
     mComputedOffsets.SizeTo(0, 0, 0, 0);
 
-    mComputedWidth = availableWidth - mComputedBorderPadding.LeftRight();
+    mComputedWidth = mAvailableWidth - mComputedBorderPadding.LeftRight();
     if (mComputedWidth < 0)
       mComputedWidth = 0;
-    if (availableHeight != NS_UNCONSTRAINEDSIZE) {
-      mComputedHeight = availableHeight - mComputedBorderPadding.TopBottom();
+    if (mAvailableHeight != NS_UNCONSTRAINEDSIZE) {
+      mComputedHeight = mAvailableHeight - mComputedBorderPadding.TopBottom();
       if (mComputedHeight < 0)
         mComputedHeight = 0;
     } else {
@@ -2025,7 +2025,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
       // calc() with percentages acts like auto on internal table elements
       if (eStyleUnit_Auto == widthUnit ||
           (width.IsCalcUnit() && width.CalcHasPercent())) {
-        mComputedWidth = availableWidth;
+        mComputedWidth = mAvailableWidth;
 
         if ((mComputedWidth != NS_UNCONSTRAINEDSIZE) && !rowOrRowGroup){
           // Internal table elements don't have margins. Only tables and
@@ -2106,7 +2106,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
         frame->ComputeSize(rendContext,
                            nsSize(aContainingBlockWidth,
                                   aContainingBlockHeight),
-                           availableWidth,
+                           mAvailableWidth,
                            nsSize(mComputedMargin.LeftRight(),
                                   mComputedMargin.TopBottom()),
                            nsSize(mComputedBorderPadding.LeftRight() -
@@ -2128,7 +2128,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
           !IsSideCaption(frame, mStyleDisplay) &&
           mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
           !flexContainerFrame) {
-        CalculateBlockSideMargins(availableWidth, mComputedWidth, aFrameType);
+        CalculateBlockSideMargins(mAvailableWidth, mComputedWidth, aFrameType);
       }
     }
   }
@@ -2625,8 +2625,8 @@ void
 nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
                                 nsReflowStatus* aStatus) const
 {
-  if (availableHeight != NS_UNCONSTRAINEDSIZE &&
-      availableHeight < aMetrics.height &&
+  if (mAvailableHeight != NS_UNCONSTRAINEDSIZE &&
+      mAvailableHeight < aMetrics.height &&
       !mFlags.mIsTopOfPage) {
     *aStatus |= NS_FRAME_TRUNCATED;
   } else {
