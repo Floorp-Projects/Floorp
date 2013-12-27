@@ -492,10 +492,10 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
   // don't need to be reflowed. The normal child is always comes before
   // the fixed-pos placeholders, because we insert it at the start
   // of the child list, above.
-  nsHTMLReflowMetrics kidDesiredSize;
+  nsHTMLReflowMetrics kidDesiredSize(aReflowState.GetWritingMode());
   if (mFrames.IsEmpty()) {
     // We have no child frame, so return an empty size
-    aDesiredSize.width = aDesiredSize.height = 0;
+    aDesiredSize.Width() = aDesiredSize.Height() = 0;
   } else {
     nsIFrame* kidFrame = mFrames.FirstChild();
     bool kidDirty = (kidFrame->GetStateBits() & NS_FRAME_IS_DIRTY) != 0;
@@ -560,12 +560,12 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     // Return our desired size. Normally it's what we're told, but
     // sometimes we can be given an unconstrained height (when a window
     // is sizing-to-content), and we should compute our desired height.
-    aDesiredSize.width = aReflowState.ComputedWidth();
+    aDesiredSize.Width() = aReflowState.ComputedWidth();
     if (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE) {
-      aDesiredSize.height = kidFrame->GetRect().height +
+      aDesiredSize.Height() = kidFrame->GetRect().height +
         kidReflowState.ComputedPhysicalMargin().TopBottom();
     } else {
-      aDesiredSize.height = aReflowState.ComputedHeight();
+      aDesiredSize.Height() = aReflowState.ComputedHeight();
     }
 
     aDesiredSize.SetOverflowAreasToDesiredBounds();

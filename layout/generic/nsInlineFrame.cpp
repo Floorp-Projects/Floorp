@@ -648,7 +648,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // line-height calculations. However, continuations of an inline
   // that are empty we force to empty so that things like collapsed
   // whitespace in an inline element don't affect the line-height.
-  aMetrics.width = lineLayout->EndSpan(this);
+  aMetrics.Width() = lineLayout->EndSpan(this);
 
   // Compute final width.
 
@@ -656,7 +656,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   // continuation or if we're in a part of an {ib} split other than the first
   // one.
   if (!GetPrevContinuation() && !FrameIsNonFirstInIBSplit()) {
-    aMetrics.width += ltr ? aReflowState.ComputedPhysicalBorderPadding().left
+    aMetrics.Width() += ltr ? aReflowState.ComputedPhysicalBorderPadding().left
                           : aReflowState.ComputedPhysicalBorderPadding().right;
   }
 
@@ -670,7 +670,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   if (NS_FRAME_IS_COMPLETE(aStatus) &&
       !LastInFlow()->GetNextContinuation() &&
       !FrameIsNonLastInIBSplit()) {
-    aMetrics.width += ltr ? aReflowState.ComputedPhysicalBorderPadding().right
+    aMetrics.Width() += ltr ? aReflowState.ComputedPhysicalBorderPadding().right
                           : aReflowState.ComputedPhysicalBorderPadding().left;
   }
 
@@ -690,14 +690,14 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // The height of our box is the sum of our font size plus the top
     // and bottom border and padding. The height of children do not
     // affect our height.
-    aMetrics.ascent = fm->MaxAscent();
-    aMetrics.height = fm->MaxHeight();
+    aMetrics.SetTopAscent(fm->MaxAscent());
+    aMetrics.Height() = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-    aMetrics.ascent = aMetrics.height = 0;
+    aMetrics.SetTopAscent(aMetrics.Height() = 0);
   }
-  aMetrics.ascent += aReflowState.ComputedPhysicalBorderPadding().top;
-  aMetrics.height += aReflowState.ComputedPhysicalBorderPadding().top +
+  aMetrics.SetTopAscent(aMetrics.TopAscent() + aReflowState.ComputedPhysicalBorderPadding().top);
+  aMetrics.Height() += aReflowState.ComputedPhysicalBorderPadding().top +
     aReflowState.ComputedPhysicalBorderPadding().bottom;
 
   // For now our overflow area is zero. The real value will be
@@ -707,7 +707,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
   printf(": metrics=%d,%d ascent=%d\n",
-         aMetrics.width, aMetrics.height, aMetrics.ascent);
+         aMetrics.Width(), aMetrics.Height(), aMetrics.TopAscent());
 #endif
 
   return rv;

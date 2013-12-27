@@ -39,7 +39,7 @@ void
 nsHTMLReflowMetrics::SetOverflowAreasToDesiredBounds()
 {
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
-    mOverflowAreas.Overflow(otype).SetRect(0, 0, width, height);
+    mOverflowAreas.Overflow(otype).SetRect(0, 0, Width(), Height());
   }
 }
 
@@ -48,7 +48,7 @@ nsHTMLReflowMetrics::UnionOverflowAreasWithDesiredBounds()
 {
   // FIXME: We should probably change scrollable overflow to use
   // UnionRectIncludeEmpty (but leave visual overflow using UnionRect).
-  nsRect rect(0, 0, width, height);
+  nsRect rect(0, 0, Width(), Height());
   NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
     nsRect& o = mOverflowAreas.Overflow(otype);
     o.UnionRect(o, rect);

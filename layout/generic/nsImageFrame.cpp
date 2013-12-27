@@ -829,18 +829,18 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   mComputedSize = 
     nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
 
-  aMetrics.width = mComputedSize.width;
-  aMetrics.height = mComputedSize.height;
+  aMetrics.Width() = mComputedSize.width;
+  aMetrics.Height() = mComputedSize.height;
 
   // add borders and padding
-  aMetrics.width  += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aMetrics.height += aReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  aMetrics.Width()  += aReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  aMetrics.Height() += aReflowState.ComputedPhysicalBorderPadding().TopBottom();
   
   if (GetPrevInFlow()) {
-    aMetrics.width = GetPrevInFlow()->GetSize().width;
+    aMetrics.Width() = GetPrevInFlow()->GetSize().width;
     nscoord y = GetContinuationOffset();
-    aMetrics.height -= y + aReflowState.ComputedPhysicalBorderPadding().top;
-    aMetrics.height = std::max(0, aMetrics.height);
+    aMetrics.Height() -= y + aReflowState.ComputedPhysicalBorderPadding().top;
+    aMetrics.Height() = std::max(0, aMetrics.Height());
   }
 
 
@@ -860,10 +860,10 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   if (aPresContext->IsPaginated() &&
       ((loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) || (mState & IMAGE_SIZECONSTRAINED)) &&
       NS_UNCONSTRAINEDSIZE != aReflowState.AvailableHeight() && 
-      aMetrics.height > aReflowState.AvailableHeight()) { 
+      aMetrics.Height() > aReflowState.AvailableHeight()) { 
     // our desired height was greater than 0, so to avoid infinite
     // splitting, use 1 pixel as the min
-    aMetrics.height = std::max(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.AvailableHeight());
+    aMetrics.Height() = std::max(nsPresContext::CSSPixelsToAppUnits(1), aReflowState.AvailableHeight());
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
@@ -898,7 +898,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
-                  aMetrics.width, aMetrics.height));
+                  aMetrics.Width(), aMetrics.Height()));
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
   return NS_OK;
 }

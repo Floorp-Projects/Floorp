@@ -2439,7 +2439,7 @@ public:
 
   bool FinishAndStoreOverflow(nsHTMLReflowMetrics* aMetrics) {
     return FinishAndStoreOverflow(aMetrics->mOverflowAreas,
-                                  nsSize(aMetrics->width, aMetrics->height));
+                                  nsSize(aMetrics->Width(), aMetrics->Height()));
   }
 
   /**

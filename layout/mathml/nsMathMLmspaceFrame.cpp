@@ -109,9 +109,9 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
   mBoundingMetrics.leftBearing = 0;
   mBoundingMetrics.rightBearing = mBoundingMetrics.width;
 
-  aDesiredSize.ascent = mHeight;
-  aDesiredSize.width = std::max(0, mBoundingMetrics.width);
-  aDesiredSize.height = aDesiredSize.ascent + mDepth;
+  aDesiredSize.SetTopAscent(mHeight);
+  aDesiredSize.Width() = std::max(0, mBoundingMetrics.width);
+  aDesiredSize.Height() = aDesiredSize.TopAscent() + mDepth;
   // Also return our bounding metrics
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
@@ -127,7 +127,7 @@ nsMathMLmspaceFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
   ProcessAttributes(PresContext());
   mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.width = mWidth;
-  aDesiredSize.width = std::max(0, mBoundingMetrics.width);
+  aDesiredSize.Width() = std::max(0, mBoundingMetrics.width);
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   return NS_OK;
 }

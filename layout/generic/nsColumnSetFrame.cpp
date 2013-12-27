@@ -563,7 +563,8 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         kidReflowState.mFlags.mNextInFlowUntouched = true;
       }
     
-      nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
+      nsHTMLReflowMetrics kidDesiredSize(aReflowState.GetWritingMode(),
+                                         aDesiredSize.mFlags);
 
       // XXX it would be cool to consult the float manager for the
       // previous block to figure out the region of floats from the
@@ -582,7 +583,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     
 #ifdef DEBUG_roc
       printf("*** Reflowed child #%d %p: status = %d, desiredSize=%d,%d CarriedOutBottomMargin=%d\n",
-             columnCount, (void*)child, aStatus, kidDesiredSize.width, kidDesiredSize.height,
+             columnCount, (void*)child, aStatus, kidDesiredSize.Width(), kidDesiredSize.Height(),
              kidDesiredSize.mCarriedOutBottomMargin.get());
 #endif
 
@@ -749,9 +750,9 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     contentSize.width = aReflowState.ApplyMinMaxWidth(contentSize.width);
   }
 
-  aDesiredSize.height = contentSize.height +
+  aDesiredSize.Height() = contentSize.height +
                         borderPadding.TopBottom();
-  aDesiredSize.width = contentSize.width +
+  aDesiredSize.Width() = contentSize.width +
                        borderPadding.LeftRight();
   aDesiredSize.mOverflowAreas = overflowRects;
   aDesiredSize.UnionOverflowAreasWithDesiredBounds();

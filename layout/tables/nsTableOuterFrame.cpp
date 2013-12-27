@@ -870,7 +870,7 @@ nsTableOuterFrame::UpdateReflowMetrics(uint8_t              aCaptionSide,
                                        const nsMargin&      aCaptionMargin)
 {
   SetDesiredSize(aCaptionSide, aInnerMargin, aCaptionMargin,
-                 aMet.width, aMet.height);
+                 aMet.Width(), aMet.Height());
 
   aMet.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aMet.mOverflowAreas, InnerTableFrame());
@@ -891,7 +891,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   uint8_t captionSide = GetCaptionSide();
 
   // Initialize out parameters
-  aDesiredSize.width = aDesiredSize.height = 0;
+  aDesiredSize.Width() = aDesiredSize.Height() = 0;
   aStatus = NS_FRAME_COMPLETE;
 
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
@@ -976,7 +976,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   // First reflow the caption.
-  nsHTMLReflowMetrics captionMet;
+  nsHTMLReflowMetrics captionMet(captionRS->GetWritingMode());
   nsSize captionSize;
   nsMargin captionMargin;
   if (mCaptionFrames.NotEmpty()) {
@@ -984,8 +984,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
     rv = OuterDoReflowChild(aPresContext, mCaptionFrames.FirstChild(),
                             *captionRS, captionMet, capStatus);
     if (NS_FAILED(rv)) return rv;
-    captionSize.width = captionMet.width;
-    captionSize.height = captionMet.height;
+    captionSize.width = captionMet.Width();
+    captionSize.height = captionMet.Height();
     captionMargin = captionRS->ComputedPhysicalMargin();
     // Now that we know the height of the caption, reduce the available height
     // for the table frame if we are height constrained and the caption is above
@@ -1011,13 +1011,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
 
   // Then, now that we know how much to reduce the width of the inner
   // table to account for side captions, reflow the inner table.
-  nsHTMLReflowMetrics innerMet;
+  nsHTMLReflowMetrics innerMet(innerRS->GetWritingMode());
   rv = OuterDoReflowChild(aPresContext, InnerTableFrame(), *innerRS,
                           innerMet, aStatus);
   if (NS_FAILED(rv)) return rv;
   nsSize innerSize;
-  innerSize.width = innerMet.width;
-  innerSize.height = innerMet.height;
+  innerSize.width = innerMet.Width();
+  innerSize.height = innerMet.Height();
   nsMargin innerMargin = innerRS->ComputedPhysicalMargin();
 
   nsSize   containSize = GetContainingBlockSize(aOuterRS);

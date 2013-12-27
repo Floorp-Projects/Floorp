@@ -83,8 +83,8 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
     // XXX Shouldn't we do something more friendly when invalid margins
     //     are set?
     if (maxSize.width < onePixelInTwips || maxSize.height < onePixelInTwips) {
-      aDesiredSize.width  = 0;
-      aDesiredSize.height = 0;
+      aDesiredSize.Width() = 0;
+      aDesiredSize.Height() = 0;
       NS_WARNING("Reflow aborted; no space for content");
       return NS_OK;
     }
@@ -144,12 +144,12 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*           aPresContext,
                  !frame->GetNextInFlow(), "bad child flow list");
   }
   PR_PL(("PageFrame::Reflow %p ", this));
-  PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.width, aDesiredSize.height, aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
+  PR_PL(("[%d,%d][%d,%d]\n", aDesiredSize.Width(), aDesiredSize.Height(), aReflowState.AvailableWidth(), aReflowState.AvailableHeight()));
 
   // Return our desired size
-  aDesiredSize.width = aReflowState.AvailableWidth();
+  aDesiredSize.Width() = aReflowState.AvailableWidth();
   if (aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.height = aReflowState.AvailableHeight();
+    aDesiredSize.Height() = aReflowState.AvailableHeight();
   }
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
@@ -661,12 +661,12 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
 
   // Override reflow, since we don't want to deal with what our
   // computed values are.
-  aDesiredSize.width = GetIntrinsicWidth();
-  aDesiredSize.height = (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ?
+  aDesiredSize.Width() = GetIntrinsicWidth();
+  aDesiredSize.Height() = (aReflowState.AvailableHeight() == NS_UNCONSTRAINEDSIZE ?
                          0 : aReflowState.AvailableHeight());
   // round the height down to the nearest pixel
-  aDesiredSize.height -=
-    aDesiredSize.height % nsPresContext::CSSPixelsToAppUnits(1);
+  aDesiredSize.Height() -=
+    aDesiredSize.Height() % nsPresContext::CSSPixelsToAppUnits(1);
 
   // Note: not using NS_FRAME_FIRST_REFLOW here, since it's not clear whether
   // DidReflow will always get called before the next Reflow() call.

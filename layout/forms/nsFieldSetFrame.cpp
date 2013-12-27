@@ -481,17 +481,17 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     legendReflowState.construct(aPresContext, aReflowState, legend, availSize);
   }
   if (reflowLegend) {
-    nsHTMLReflowMetrics legendDesiredSize;
+    nsHTMLReflowMetrics legendDesiredSize(aReflowState.GetWritingMode());
 
     ReflowChild(legend, aPresContext, legendDesiredSize, legendReflowState.ref(),
                 0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
 #ifdef NOISY_REFLOW
-    printf("  returned (%d, %d)\n", legendDesiredSize.width, legendDesiredSize.height);
+    printf("  returned (%d, %d)\n", legendDesiredSize.Width(), legendDesiredSize.Height());
 #endif
     // figure out the legend's rectangle
     legendMargin = legend->GetUsedMargin();
-    mLegendRect.width  = legendDesiredSize.width + legendMargin.left + legendMargin.right;
-    mLegendRect.height = legendDesiredSize.height + legendMargin.top + legendMargin.bottom;
+    mLegendRect.width  = legendDesiredSize.Width() + legendMargin.left + legendMargin.right;
+    mLegendRect.height = legendDesiredSize.Height() + legendMargin.top + legendMargin.bottom;
     mLegendRect.x = 0;
     mLegendRect.y = 0;
 
@@ -546,7 +546,8 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
         std::max(0, aReflowState.ComputedMaxHeight() - mLegendSpace);
     }
 
-    nsHTMLReflowMetrics kidDesiredSize(aDesiredSize.mFlags);
+    nsHTMLReflowMetrics kidDesiredSize(kidReflowState.GetWritingMode(),
+                                       aDesiredSize.mFlags);
     // Reflow the frame
     NS_ASSERTION(kidReflowState.ComputedPhysicalMargin() == nsMargin(0,0,0,0),
                  "Margins on anonymous fieldset child not supported!");
@@ -612,17 +613,17 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
 
   // Return our size and our result
   if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-    aDesiredSize.height = mLegendSpace + 
+    aDesiredSize.Height() = mLegendSpace + 
                           border.TopBottom() +
                           (inner ? inner->GetRect().height : 0);
   } else {
     nscoord min = border.TopBottom() + mLegendRect.height;
-    aDesiredSize.height =
+    aDesiredSize.Height() =
       aReflowState.ComputedHeight() + aReflowState.ComputedPhysicalBorderPadding().TopBottom();
-    if (aDesiredSize.height < min)
-      aDesiredSize.height = min;
+    if (aDesiredSize.Height() < min)
+      aDesiredSize.Height() = min;
   }
-  aDesiredSize.width = contentRect.width + border.LeftRight();
+  aDesiredSize.Width() = contentRect.width + border.LeftRight();
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   if (legend)
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, legend);

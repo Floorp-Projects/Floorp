@@ -94,8 +94,8 @@ nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
 
   if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
     float inflation = nsLayoutUtils::FontSizeInflationFor(this);
-    aDesiredSize.width *= inflation;
-    aDesiredSize.height *= inflation;
+    aDesiredSize.Width() *= inflation;
+    aDesiredSize.Height() *= inflation;
     aDesiredSize.UnionOverflowAreasWithDesiredBounds();
     FinishAndStoreOverflow(&aDesiredSize);
   }

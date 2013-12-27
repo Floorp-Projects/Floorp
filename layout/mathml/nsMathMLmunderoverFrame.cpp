@@ -330,14 +330,14 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   // Get the children's desired sizes
 
   nsBoundingMetrics bmBase, bmUnder, bmOver;
-  nsHTMLReflowMetrics baseSize;
-  nsHTMLReflowMetrics underSize;
-  nsHTMLReflowMetrics overSize;
+  nsHTMLReflowMetrics baseSize(aDesiredSize.GetWritingMode());
+  nsHTMLReflowMetrics underSize(aDesiredSize.GetWritingMode());
+  nsHTMLReflowMetrics overSize(aDesiredSize.GetWritingMode());
   nsIFrame* overFrame = nullptr;
   nsIFrame* underFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();
-  underSize.ascent = 0; 
-  overSize.ascent = 0;
+  underSize.SetTopAscent(0);
+  overSize.SetTopAscent(0);
   bool haveError = false;
   if (baseFrame) {
     if (tag == nsGkAtoms::munder_ ||
@@ -560,8 +560,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nsBoundingMetrics bmAnonymousBase = mBoundingMetrics;
   nscoord ascentAnonymousBase =
     std::max(mBoundingMetrics.ascent + overDelta2,
-           overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
-  ascentAnonymousBase = std::max(ascentAnonymousBase, baseSize.ascent);
+           overSize.TopAscent() + bmOver.descent + overDelta1 + bmBase.ascent);
+  ascentAnonymousBase = std::max(ascentAnonymousBase, baseSize.TopAscent());
 
   // Width of non-spacing marks is zero so use left and right bearing.
   nscoord underWidth = bmUnder.width;
@@ -600,35 +600,35 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   mBoundingMetrics.rightBearing = 
     std::max(dxAnonymousBase + bmAnonymousBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
-  aDesiredSize.ascent = ascentAnonymousBase;
-  aDesiredSize.height = aDesiredSize.ascent +
+  aDesiredSize.SetTopAscent(ascentAnonymousBase);
+  aDesiredSize.Height() = aDesiredSize.TopAscent() +
     std::max(mBoundingMetrics.descent + underDelta2,
            bmAnonymousBase.descent + underDelta1 + bmUnder.ascent +
-             underSize.height - underSize.ascent);
-  aDesiredSize.height = std::max(aDesiredSize.height,
-                               aDesiredSize.ascent +
-                               baseSize.height - baseSize.ascent);
-  aDesiredSize.width = mBoundingMetrics.width;
+             underSize.Height() - underSize.TopAscent());
+  aDesiredSize.Height() = std::max(aDesiredSize.Height(),
+                               aDesiredSize.TopAscent() +
+                               baseSize.Height() - baseSize.TopAscent());
+  aDesiredSize.Width() = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
+  mReference.y = aDesiredSize.TopAscent();
 
   if (aPlaceOrigin) {
     nscoord dy;
     // place overscript
     if (overFrame) {
-      dy = aDesiredSize.ascent - mBoundingMetrics.ascent + bmOver.ascent 
-        - overSize.ascent;
+      dy = aDesiredSize.TopAscent() - mBoundingMetrics.ascent + bmOver.ascent 
+        - overSize.TopAscent();
       FinishReflowChild (overFrame, PresContext(), nullptr, overSize, dxOver, dy, 0);
     }
     // place base
-    dy = aDesiredSize.ascent - baseSize.ascent;
+    dy = aDesiredSize.TopAscent() - baseSize.TopAscent();
     FinishReflowChild (baseFrame, PresContext(), nullptr, baseSize, dxBase, dy, 0);
     // place underscript
     if (underFrame) {
-      dy = aDesiredSize.ascent + mBoundingMetrics.descent - bmUnder.descent 
-        - underSize.ascent;
+      dy = aDesiredSize.TopAscent() + mBoundingMetrics.descent - bmUnder.descent 
+        - underSize.TopAscent();
       FinishReflowChild (underFrame, PresContext(), nullptr, underSize,
                          dxUnder, dy, 0);
     }
