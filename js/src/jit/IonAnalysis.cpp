@@ -109,7 +109,6 @@ jit::EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph)
             for (MUseDefIterator uses(*ins); uses; uses++) {
                 if (uses.def()->block() != *block ||
                     uses.def()->isBox() ||
-                    uses.def()->isPassArg() ||
                     uses.def()->isPhi())
                 {
                     maxDefinition = UINT32_MAX;
@@ -972,8 +971,6 @@ TypeAnalyzer::checkFloatCoherency()
 
         for (MDefinitionIterator def(*block); def; def++) {
             if (def->type() != MIRType_Float32)
-                continue;
-            if (def->isPassArg()) // no check for PassArg as it is broken, see bug 915479
                 continue;
 
             for (MUseDefIterator use(*def); use; use++) {

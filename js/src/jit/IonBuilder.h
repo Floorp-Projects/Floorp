@@ -932,7 +932,7 @@ class CallInfo
         args_[i] = def;
     }
 
-    MDefinition *thisArg() {
+    MDefinition *thisArg() const {
         JS_ASSERT(thisArg_);
         return thisArg_;
     }
@@ -941,7 +941,7 @@ class CallInfo
         thisArg_ = thisArg;
     }
 
-    bool constructing() {
+    bool constructing() const {
         return constructing_;
     }
 
@@ -952,55 +952,18 @@ class CallInfo
         setter_ = true;
     }
 
-    void wrapArgs(TempAllocator &alloc, MBasicBlock *current) {
-        thisArg_ = wrap(alloc, current, thisArg_);
-        for (uint32_t i = 0; i < argc(); i++)
-            args_[i] = wrap(alloc, current, args_[i]);
-    }
-
-    void unwrapArgs() {
-        thisArg_ = unwrap(thisArg_);
-        for (uint32_t i = 0; i < argc(); i++)
-            args_[i] = unwrap(args_[i]);
-    }
-
     MDefinition *fun() const {
         JS_ASSERT(fun_);
         return fun_;
     }
 
     void setFun(MDefinition *fun) {
-        JS_ASSERT(!fun->isPassArg());
         fun_ = fun;
     }
-
-    bool isWrapped() {
-        bool wrapped = thisArg()->isPassArg();
-
-#if DEBUG
+    void setFoldedUnchecked() {
+        thisArg_->setFoldedUnchecked();
         for (uint32_t i = 0; i < argc(); i++)
-            JS_ASSERT(args_[i]->isPassArg() == wrapped);
-#endif
-
-        return wrapped;
-    }
-
-  private:
-    static MDefinition *unwrap(MDefinition *arg) {
-        JS_ASSERT(arg->isPassArg());
-        MPassArg *passArg = arg->toPassArg();
-        MBasicBlock *block = passArg->block();
-        MDefinition *wrapped = passArg->getArgument();
-        wrapped->setFoldedUnchecked();
-        passArg->replaceAllUsesWith(wrapped);
-        block->discard(passArg);
-        return wrapped;
-    }
-    static MDefinition *wrap(TempAllocator &alloc, MBasicBlock *current, MDefinition *arg) {
-        JS_ASSERT(!arg->isPassArg());
-        MPassArg *passArg = MPassArg::New(alloc, arg);
-        current->add(passArg);
-        return passArg;
+            getArg(i)->setFoldedUnchecked();
     }
 };
 

@@ -288,44 +288,6 @@ LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter *ins)
 }
 
 bool
-LIRGenerator::visitPrepareCall(MPrepareCall *ins)
-{
-    allocateArguments(ins->argc());
-
-#ifdef DEBUG
-    if (!prepareCallStack_.append(ins))
-        return false;
-#endif
-
-    return true;
-}
-
-bool
-LIRGenerator::visitPassArg(MPassArg *arg)
-{
-    MDefinition *opd = arg->getArgument();
-    uint32_t argslot = getArgumentSlot(arg->getArgnum());
-    JS_ASSERT(arg->getArgnum() < prepareCallStack_.back()->argc());
-
-    // Pass through the virtual register of the operand.
-    // This causes snapshots to correctly copy the operand on the stack.
-    //
-    // This keeps the backing store around longer than strictly required.
-    // We could do better by informing snapshots about the argument vector.
-    arg->setVirtualRegister(opd->virtualRegister());
-
-    // Values take a slow path.
-    if (opd->type() == MIRType_Value) {
-        LStackArgV *stack = new(alloc()) LStackArgV(argslot);
-        return useBox(stack, 0, opd) && add(stack);
-    }
-
-    // Known types can move constant types and/or payloads.
-    LStackArgT *stack = new(alloc()) LStackArgT(argslot, useRegisterOrConstant(opd));
-    return add(stack, arg);
-}
-
-bool
 LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
 {
     LCreateThisWithTemplate *lir = new(alloc()) LCreateThisWithTemplate();
@@ -403,6 +365,32 @@ LIRGenerator::visitComputeThis(MComputeThis *ins)
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
+bool
+LIRGenerator::lowerCallArguments(MCall *call)
+{
+    uint32_t argc = call->numStackArgs();
+    if (argc > maxargslots_)
+        maxargslots_ = argc;
+
+    for (size_t i = 0; i < argc; i++) {
+        MDefinition *arg = call->getArg(i);
+        uint32_t argslot = argc - i;
+
+        // Values take a slow path.
+        if (arg->type() == MIRType_Value) {
+            LStackArgV *stack = new(alloc()) LStackArgV(argslot);
+            if (!useBox(stack, 0, arg) || !add(stack))
+                return false;
+        } else {
+            // Known types can move constant types and/or payloads.
+            LStackArgT *stack = new(alloc()) LStackArgT(argslot, arg->type(), useRegisterOrConstant(arg));
+            if (!add(stack))
+                return false;
+        }
+    }
+
+    return true;
+}
 
 bool
 LIRGenerator::visitCall(MCall *call)
@@ -412,13 +400,11 @@ LIRGenerator::visitCall(MCall *call)
     JS_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
     JS_ASSERT(call->getFunction()->type() == MIRType_Object);
 
+    if (!lowerCallArguments(call))
+        return false;
+
     // Height of the current argument vector.
-    uint32_t argslot = getArgumentSlotForCall();
-    freeArguments(call->numStackArgs());
-
-    // Check MPrepareCall/MCall nesting.
-    JS_ASSERT(prepareCallStack_.popCopy() == call->getPrepareCall());
-
+    uint32_t argslot = call->numStackArgs();
     JSFunction *target = call->getSingleTarget();
 
     // Call DOM functions.
@@ -1861,46 +1847,31 @@ LIRGenerator::visitToString(MToString *ins)
 }
 
 static bool
-MustCloneRegExpForCall(MPassArg *arg)
+MustCloneRegExpForCall(MCall *call, uint32_t useIndex)
 {
-    // |arg| is a regex literal flowing into a call. Return |false| iff
+    // We have a regex literal flowing into a call. Return |false| iff
     // this is a native call that does not let the regex escape.
 
-    JS_ASSERT(arg->getArgument()->isRegExp());
-
-    for (MUseIterator iter(arg->usesBegin()); iter != arg->usesEnd(); iter++) {
-        MNode *node = iter->consumer();
-        if (!node->isDefinition())
-            return true;
-
-        MDefinition *def = node->toDefinition();
-        if (!def->isCall())
-            return true;
-
-        MCall *call = def->toCall();
-        JSFunction *target = call->getSingleTarget();
-        if (!target || !target->isNative())
-            return true;
-
-        if (iter->index() == MCall::IndexOfThis() &&
-            (target->native() == regexp_exec || target->native() == regexp_test))
-        {
-            continue;
-        }
-
-        if (iter->index() == MCall::IndexOfArgument(0) &&
-            (target->native() == str_split ||
-             target->native() == str_replace ||
-             target->native() == str_match ||
-             target->native() == str_search))
-        {
-            continue;
-        }
-
+    JSFunction *target = call->getSingleTarget();
+    if (!target || !target->isNative())
         return true;
+
+    if (useIndex == MCall::IndexOfThis() &&
+        (target->native() == regexp_exec || target->native() == regexp_test))
+    {
+        return false;
     }
 
-    return false;
+    if (useIndex == MCall::IndexOfArgument(0) &&
+        (target->native() == str_split ||
+         target->native() == str_replace ||
+         target->native() == str_match ||
+         target->native() == str_search))
+    {
+        return false;
+    }
+
+    return true;
 }
 
 
@@ -1925,7 +1896,7 @@ MustCloneRegExp(MRegExp *regexp)
             continue;
         }
 
-        if (def->isPassArg() && !MustCloneRegExpForCall(def->toPassArg()))
+        if (def->isCall() && !MustCloneRegExpForCall(def->toCall(), iter->index()))
             continue;
 
         return true;
@@ -3509,29 +3480,6 @@ LIRGenerator::updateResumeState(MBasicBlock *block)
         SpewResumePoint(block, nullptr, lastResumePoint_);
 }
 
-void
-LIRGenerator::allocateArguments(uint32_t argc)
-{
-    argslots_ += argc;
-    if (argslots_ > maxargslots_)
-        maxargslots_ = argslots_;
-}
-
-uint32_t
-LIRGenerator::getArgumentSlot(uint32_t argnum)
-{
-    // First slot has index 1.
-    JS_ASSERT(argnum < argslots_);
-    return argslots_ - argnum ;
-}
-
-void
-LIRGenerator::freeArguments(uint32_t argc)
-{
-    JS_ASSERT(argc <= argslots_);
-    argslots_ -= argc;
-}
-
 bool
 LIRGenerator::visitBlock(MBasicBlock *block)
 {
@@ -3631,8 +3579,5 @@ LIRGenerator::generate()
         lirGraph_.setOsrBlock(graph.osrBlock()->lir());
 
     lirGraph_.setArgumentSlotCount(maxargslots_);
-
-    JS_ASSERT(argslots_ == 0);
-    JS_ASSERT(prepareCallStack_.empty());
     return true;
 }
