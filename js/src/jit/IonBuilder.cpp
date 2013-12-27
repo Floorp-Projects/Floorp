@@ -1512,9 +1512,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_REST:
         return jsop_rest();
 
-      case JSOP_NOTEARG:
-        return jsop_notearg();
-
       case JSOP_GETARG:
       case JSOP_CALLARG:
         if (info().argsObjAliasesFormals()) {
@@ -3810,13 +3807,6 @@ IonBuilder::jsop_neg()
 
     if (!jsop_binary(JSOP_MUL, negator, right))
         return false;
-    return true;
-}
-
-bool
-IonBuilder::jsop_notearg()
-{
-    // :TODO: Remove JSOP_NOTEARG (bug 953284).
     return true;
 }
 
