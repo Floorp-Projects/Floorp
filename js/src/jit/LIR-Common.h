@@ -961,21 +961,22 @@ class LComputeThis : public LInstructionHelper<1, BOX_PIECES, 0>
 class LStackArgT : public LInstructionHelper<0, 1, 0>
 {
     uint32_t argslot_; // Index into frame-scope argument vector.
+    MIRType type_;
 
   public:
     LIR_HEADER(StackArgT)
 
-    LStackArgT(uint32_t argslot, const LAllocation &arg)
-      : argslot_(argslot)
+    LStackArgT(uint32_t argslot, MIRType type, const LAllocation &arg)
+      : argslot_(argslot),
+        type_(type)
     {
         setOperand(0, arg);
     }
-
-    MPassArg *mir() const {
-        return this->mir_->toPassArg();
-    }
     uint32_t argslot() const {
         return argslot_;
+    }
+    MIRType type() const {
+        return type_;
     }
     const LAllocation *getArgument() {
         return getOperand(0);

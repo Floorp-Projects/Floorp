@@ -2069,10 +2069,6 @@ RangeAnalysis::addRangeAssertions()
             if (r.isUnknown() || (ins->type() == MIRType_Int32 && r.isUnknownInt32()))
                 continue;
 
-            // Range-checking PassArgs breaks stuff.
-            if (ins->isPassArg())
-                continue;
-
             MAssertRange *guard = MAssertRange::New(alloc(), ins, new(alloc()) Range(r));
 
             // The code that removes beta nodes assumes that it can find them
