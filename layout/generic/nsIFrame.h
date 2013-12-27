@@ -30,6 +30,7 @@
 #include "FramePropertyTable.h"
 #include "mozilla/TypedEnum.h"
 #include "nsDirection.h"
+#include "WritingModes.h"
 #include <algorithm>
 #include "nsITheme.h"
 #include "gfx3DMatrix.h"
@@ -872,6 +873,13 @@ public:
    * must also be called.
    */
   virtual void SetParent(nsIFrame* aParent) = 0;
+
+  /**
+   * The frame's writing-mode, used for logical layout computations.
+   */
+  mozilla::WritingMode GetWritingMode() const {
+    return mozilla::WritingMode(StyleVisibility());
+  }
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
