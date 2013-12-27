@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <URLBase>http://example.com</URLBase>
+  <device>
+    <deviceType>urn:dial-multiscreen-org:device:dial:1</deviceType>
+    <friendlyName>Pretend Device</friendlyName>
+    <manufacturer>Copy Cat Inc.</manufacturer>
+    <modelName>Eureka Dongle</modelName>
+    <UDN>uuid:5ec9ff92-e8b2-4a94-a72c-76b34e6dabb1</UDN>
+  </device>
+</root>
