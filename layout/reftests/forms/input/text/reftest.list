@@ -5,3 +5,4 @@ HTTP(..) == baseline-1.html baseline-1-ref.html
 HTTP(..) == centering-1.xul centering-1-ref.xul
 == dynamic-height-1.xul dynamic-height-1-ref.xul
 needs-focus == select.html select-ref.html
+== intrinsic-size.html intrinsic-size-ref.html
