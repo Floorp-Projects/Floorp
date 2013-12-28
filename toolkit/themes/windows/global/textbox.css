@@ -20,8 +20,8 @@ textbox {
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 2px 2px 3px;
-  -moz-padding-start: 4px;
+  padding: 2px 3px 3px;
+  -moz-padding-start: 5px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
@@ -60,7 +60,7 @@ textbox[disabled="true"] {
 textbox.plain {
   -moz-appearance: none !important;
   background-color: transparent;
-  padding: 0px !important;
+  padding: 0px 1px !important;
   margin: 0px !important;
   border: none !important;
 }
