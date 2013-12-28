@@ -35,7 +35,8 @@
 
       var baseInvokerFunc = synthClick;
       var charIter = new charIterator(wholeText, aLines);
-      //charIter.debugOffset = 0;
+      //charIter.debugOffset = 10; // enable to run tests at given offset only
+
       while (charIter.next()) {
         aQueue.push(new tmpl_moveTo(aID, baseInvokerFunc, wholeText, charIter));
         baseInvokerFunc = synthRightKey;
@@ -147,7 +148,25 @@
               (isAfterWordEnd ? nnWord : nWord).end ]
           ];
 
-          return lineTests.concat(wordTests);
+          // Character boundary tests.
+          var prevOffset = this.offset > 1 ? this.offset - 1 : 0;
+          var nextOffset = this.offset >= aWholeText.length ?
+            this.offset : this.offset + 1;
+          var nextAfterNextOffset = nextOffset >= aWholeText.length ?
+            nextOffset : nextOffset + 1;
+
+          var charTests = [
+            [ testTextBeforeOffset, BOUNDARY_CHAR,
+              prevOffset, this.offset ],
+            [ testTextAtOffset, BOUNDARY_CHAR,
+              this.offset,
+              this.mAtWrappedLineEnd ? this.offset : nextOffset ],
+            [ testTextAfterOffset, BOUNDARY_CHAR,
+              this.mAtWrappedLineEnd ? this.offset : nextOffset,
+              this.mAtWrappedLineEnd ? nextOffset : nextAfterNextOffset ]
+          ];
+
+          return lineTests.concat(wordTests.concat(charTests));
         }
       });
 
