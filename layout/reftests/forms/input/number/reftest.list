@@ -15,7 +15,7 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:
-== show-value.html show-value-ref.html
+fuzzy(2,6) == show-value.html show-value-ref.html
 
 # disabled
 == number-disabled.html number-disabled-ref.html
