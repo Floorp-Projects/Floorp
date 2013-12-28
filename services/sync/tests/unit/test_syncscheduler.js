@@ -607,11 +607,11 @@ add_test(function test_back_triggersSync() {
     cleanUpAndGo();
   });
 
-  // Send a 'back' event to trigger sync soonish.
-  scheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+  // Send an 'active' event to trigger sync soonish.
+  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
 });
 
-add_test(function test_back_triggersSync_observesBackoff() {
+add_test(function test_active_triggersSync_observesBackoff() {
   // Confirm defaults.
   do_check_false(scheduler.idle);
 
@@ -636,8 +636,8 @@ add_test(function test_back_triggersSync_observesBackoff() {
     cleanUpAndGo();
   }, IDLE_OBSERVER_BACK_DELAY * 1.5, {}, "timer");
 
-  // Send a 'back' event to try to trigger sync soonish.
-  scheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+  // Send an 'active' event to try to trigger sync soonish.
+  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
 });
 
 add_test(function test_back_debouncing() {
@@ -657,7 +657,7 @@ add_test(function test_back_debouncing() {
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
   // Create spurious back-then-idle events as observed on OS X:
-  scheduler.observe(null, "back", Svc.Prefs.get("scheduler.idleTime"));
+  scheduler.observe(null, "active", Svc.Prefs.get("scheduler.idleTime"));
   scheduler.observe(null, "idle", Svc.Prefs.get("scheduler.idleTime"));
 
   timer = Utils.namedTimer(function () {
