@@ -3,12 +3,12 @@
 
 #mac html|input, #mac html|textarea {
   margin: 4px;
-  padding: 0 1px;
+  padding: 0;
 }
 
 #win html|input, #win html|textarea {
   margin: 2px 4px;
-  padding: 2px 3px 3px;
+  padding: 2px 2px 3px;
   -moz-padding-start: 4px;
 }
 
@@ -19,7 +19,7 @@
 
 #linux html|input, #linux html|textarea {
   margin: 2px 4px;
-  padding: 2px 5px 3px;
+  padding: 2px 4px 3px;
 }
 
 textbox[multiline="true"], html|textarea {
@@ -34,7 +34,7 @@ html|input, html|textarea {
 }
 
 html|input.ac {
-  padding: 0 4px !important;
+  padding:  0 3px !important;
 }
 
 html|input.empty {
@@ -54,12 +54,12 @@ html|input.num {
 }
 
 #win html|input.num {
-  padding: 0 1px !important;
+  padding: 0 !important;
 }
 
 #linux html|input.num {
   -moz-margin-end: 3px;
-  padding: 3px 4px;
+  padding: 3px;
 }
 
 html|div.plainfield {

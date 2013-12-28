@@ -190,6 +190,17 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
     if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
+
+    // Also add in the padding of our value div child.  Note that it hasn't
+    // been reflowed yet, so we can't get its used padding, but it shouldn't be
+    // using percentage padding anyway.
+    nsMargin childPadding;
+    nsIFrame* firstChild = GetFirstPrincipalChild();
+    if (firstChild && firstChild->StylePadding()->GetPadding(childPadding)) {
+      aIntrinsicSize.width += childPadding.LeftRight();
+    } else {
+      NS_ERROR("Percentage padding on value div?");
+    }
   }
 
   // Increment width with cols * letter-spacing.
@@ -524,28 +535,32 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                                            nsHTMLReflowMetrics& aParentDesiredSize)
 {
   // compute available size and frame offsets for child
-  nsSize availSize(aReflowState.ComputedWidth() +
-                   aReflowState.ComputedPhysicalPadding().LeftRight(),
-                   aReflowState.ComputedHeight() +
-                   aReflowState.ComputedPhysicalPadding().TopBottom());
+  nsSize availSize(aReflowState.ComputedWidth(), 
+                   aReflowState.ComputedHeight());
+  availSize.width = std::max(availSize.width, 0);
+  availSize.height = std::max(availSize.height, 0);
   
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, 
                                    aKid, availSize);
 
   // Set computed width and computed height for the child
-  // Set computed height for the child
-  kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
-  kidReflowState.SetComputedWidth(aReflowState.ComputedWidth());
+  nscoord width = availSize.width;
+  width -= kidReflowState.ComputedPhysicalMargin().LeftRight() +
+              kidReflowState.ComputedPhysicalBorderPadding().LeftRight();
+  width = std::max(width, 0);
+  kidReflowState.SetComputedWidth(width);
 
-  // Set computed height for the child
-  kidReflowState.SetComputedHeight(aReflowState.ComputedHeight());
-  kidReflowState.SetComputedWidth(aReflowState.ComputedWidth());
+  nscoord height = availSize.height;
+  height -= kidReflowState.ComputedPhysicalMargin().TopBottom() +
+              kidReflowState.ComputedPhysicalBorderPadding().TopBottom();
+  height = std::max(height, 0);       
+  kidReflowState.SetComputedHeight(height); 
 
-  // Offset the frame by the size of the parent's border.
-  nscoord xOffset = aReflowState.ComputedPhysicalBorderPadding().left -
-                    aReflowState.ComputedPhysicalPadding().left;
-  nscoord yOffset = aReflowState.ComputedPhysicalBorderPadding().top -
-                    aReflowState.ComputedPhysicalPadding().top;
+  // compute the offsets
+  nscoord xOffset = aReflowState.ComputedPhysicalBorderPadding().left
+                      + kidReflowState.ComputedPhysicalMargin().left;
+  nscoord yOffset = aReflowState.ComputedPhysicalBorderPadding().top
+                      + kidReflowState.ComputedPhysicalMargin().top;
 
   // reflow the child
   nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());

@@ -10,4 +10,3 @@ skip-if(B2G) fails-if(Android) fails-if(gtk2Widget) != rtl.html no-resize.html #
 == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
 == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
-fuzzy(51,6749) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html
