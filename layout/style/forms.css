@@ -54,7 +54,7 @@ input {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
-  padding: 1px;
+  padding: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
   background-color: -moz-Field;
   color: -moz-FieldText;
@@ -97,8 +97,6 @@ input::-moz-placeholder {
 textarea {
   margin: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
-  /* The 1px horizontal padding is for parity with Win/IE */
-  padding: 0px 1px;
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
@@ -129,7 +127,12 @@ textarea::-moz-placeholder {
   white-space: pre;
   overflow: auto;
   border: 0px !important;
-  padding: inherit !important;
+  /*
+   * The 1px horizontal padding is for parity with Win/IE.
+   * We need to mark it !important to make sure it can't be changed on the
+   * placeholder.
+   */
+  padding: 0px 1px !important;
   margin: 0px;
   text-decoration: inherit;
   -moz-text-decoration-color: inherit;
