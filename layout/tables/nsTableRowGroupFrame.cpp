@@ -362,7 +362,7 @@ nsTableRowGroupFrame::ReflowChildren(nsPresContext*         aPresContext,
 
       // XXXldb We used to only pass aDesiredSize.mFlags through for the
       // incremental reflow codepath.
-      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState,
+      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode(),
                                       aDesiredSize.mFlags);
       desiredSize.Width() = desiredSize.Height() = 0;
   
@@ -1076,7 +1076,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
                                          
         InitChildReflowState(*aPresContext, borderCollapse, rowReflowState);
         rowReflowState.mFlags.mIsTopOfPage = isTopOfPage; // set top of page
-        nsHTMLReflowMetrics rowMetrics(aReflowState);
+        nsHTMLReflowMetrics rowMetrics(aReflowState.GetWritingMode());
 
         // Get the old size before we reflow.
         nsRect oldRowRect = rowFrame->GetRect();
