@@ -302,6 +302,10 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   nscoord& ComputedMinHeight() { return mComputedMinHeight; }
   nscoord& ComputedMaxHeight() { return mComputedMaxHeight; }
 
+  // ISize and BSize are logical-coordinate dimensions:
+  // ISize is the size in the writing mode's inline direction (which equates to
+  // width in horizontal writing modes, height in vertical ones), and BSize is
+  // the size in the block-progression direction.
   nscoord AvailableISize() const
     { return mWritingMode.IsVertical() ? mAvailableHeight : mAvailableWidth; }
   nscoord AvailableBSize() const
