@@ -44,7 +44,6 @@ const SSDP_DISCOVER_TIMEOUT = 10000;
 var SimpleServiceDiscovery = {
   _targets: new Map(),
   _services: new Map(),
-  _localAddress: null,
   _searchSocket: null,
   _searchInterval: 0,
   _searchTimestamp: 0,
@@ -212,12 +211,6 @@ var SimpleServiceDiscovery = {
 
     xhr.addEventListener("load", (function() {
       if (xhr.status == 200) {
-        if (!this._localAddress) {
-          xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal);
-          this._localAddress = xhr.channel.localAddress;
-        }
-        aService.localAddress = this._localAddress;
-
         let doc = xhr.responseXML;
         aService.appsURL = xhr.getResponseHeader("Application-URL");
         if (aService.appsURL && !aService.appsURL.endsWith("/"))
