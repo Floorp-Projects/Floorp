@@ -57,6 +57,11 @@ class SVGAnimatedPreserveAspectRatio;
 class nsSVGAnimatedTransformList;
 class SVGStringList;
 class DOMSVGStringList;
+
+namespace gfx {
+class Matrix;
+}
+
 }
 
 struct gfxMatrix;
@@ -168,8 +173,8 @@ public:
   // Setter for to set the current <animateMotion> transformation
   // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
   // subclass has the useful implementation.
-  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
-  virtual const gfxMatrix* GetAnimateMotionTransform() const { return nullptr; }
+  virtual void SetAnimateMotionTransform(const mozilla::gfx::Matrix* aMatrix) {/*no-op*/}
+  virtual const mozilla::gfx::Matrix* GetAnimateMotionTransform() const { return nullptr; }
 
   bool IsStringAnimatable(uint8_t aAttrEnum) {
     return GetStringInfo().mStringInfo[aAttrEnum].mIsAnimatable;
