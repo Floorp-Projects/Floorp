@@ -398,6 +398,11 @@ protected:
   int32_t AdjustCaretOffset(int32_t aOffset) const;
 
   /**
+   * Return true if caret is at end of line.
+   */
+  bool IsCaretAtEndOfLine() const;
+
+  /**
    * Return true if the given offset points to terminal empty line if any.
    */
   bool IsEmptyLastLineOffset(int32_t aOffset)
