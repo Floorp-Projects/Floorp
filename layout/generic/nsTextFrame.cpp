@@ -124,19 +124,45 @@ void
 TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
                             uint32_t aOffset, uint32_t aLength)
 {
-  // We could binary-search for the first record that falls within the range,
-  // but as the number of tabs is normally small and we usually process them
-  // sequentially from the beginning of the line, it doesn't seem worth doing
-  // at this point.
-  for (uint32_t i = 0; i < mWidths.Length(); ++i) {
-    TabWidth& tw = mWidths[i];
-    if (tw.mOffset < aOffset) {
-      continue;
+  uint32_t i = 0, len = mWidths.Length();
+
+  // If aOffset is non-zero, do a binary search to find where to start
+  // processing the tab widths, in case the list is really long. (See bug
+  // 953247.)
+  // We need to start from the first entry where mOffset >= aOffset.
+  if (aOffset > 0) {
+    uint32_t lo = 0, hi = len;
+    while (lo < hi) {
+      i = (lo + hi) / 2;
+      const TabWidth& tw = mWidths[i];
+      if (tw.mOffset < aOffset) {
+        // mWidths[i] precedes the target range; new search range
+        // will be [i+1, hi)
+        lo = ++i;
+        continue;
+      }
+      if (tw.mOffset > aOffset) {
+        // mWidths[i] is within (or beyond) the target range;
+        // new search range is [lo, i). If it turns out that
+        // mWidths[i] was the first entry within the range,
+        // we'll never move hi any further, and end up exiting
+        // when i == lo == this value of hi.
+        hi = i;
+        continue;
+      }
+      // Found an exact match for aOffset, so end search now
+      break;
     }
-    if (tw.mOffset - aOffset >= aLength) {
+  }
+
+  uint32_t limit = aOffset + aLength;
+  while (i < len) {
+    const TabWidth& tw = mWidths[i];
+    if (tw.mOffset >= limit) {
       break;
     }
     aSpacing[tw.mOffset - aOffset].mAfter += tw.mWidth;
+    i++;
   }
 }
 
