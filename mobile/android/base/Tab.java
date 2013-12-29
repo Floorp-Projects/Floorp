@@ -653,6 +653,7 @@ public class Tab {
         clearFavicon();
 
         setHasFeeds(false);
+        setHasOpenSearch(false);
         updateTitle(null);
         updateIdentityData(null);
         setReaderEnabled(false);
