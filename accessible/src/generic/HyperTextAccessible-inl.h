@@ -128,14 +128,18 @@ HyperTextAccessible::AdjustCaretOffset(int32_t aOffset) const
   // at the line should provide the line with the visual caret, otherwise
   // screen readers will announce the wrong line as the user presses up or
   // down arrow and land at the end of a line.
-  if (aOffset > 0) {
-    nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
-    if (frameSelection &&
-      frameSelection->GetHint() == nsFrameSelection::HINTLEFT) {
-      return aOffset - 1;
-    }
-  }
+  if (aOffset > 0 && IsCaretAtEndOfLine())
+    return aOffset - 1;
+
   return aOffset;
+}
+
+inline bool
+HyperTextAccessible::IsCaretAtEndOfLine() const
+{
+  nsRefPtr<nsFrameSelection> frameSelection = FrameSelection();
+  return frameSelection &&
+    frameSelection->GetHint() == nsFrameSelection::HINTLEFT;
 }
 
 inline Selection*
