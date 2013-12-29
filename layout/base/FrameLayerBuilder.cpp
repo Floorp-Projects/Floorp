@@ -21,6 +21,7 @@
 #include "nsSVGIntegrationUtils.h"
 #include "ImageContainer.h"
 #include "ActiveLayerTracker.h"
+#include "gfx2DGlue.h"
 
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/Tools.h"
@@ -3596,15 +3597,15 @@ FrameLayerBuilder::DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile, bo
 }
 #endif
 
-gfxRect
+gfx::Rect
 CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t A2D)
 {
   nsRect bounds = aRects[0].mRect;
   for (uint32_t i = 1; i < aRects.Length(); ++i) {
     bounds.UnionRect(bounds, aRects[i].mRect);
    }
- 
-  return nsLayoutUtils::RectToGfxRect(bounds, A2D);
+
+  return gfx::ToRect(nsLayoutUtils::RectToGfxRect(bounds, A2D));
 }
 
 static void
@@ -3657,25 +3658,26 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   }
 
   // calculate a more precise bounding rect
-  gfxRect boundingRect = CalculateBounds(newData.mRoundedClipRects,
-                                         newData.mAppUnitsPerDevPixel);
+  gfx::Rect boundingRect = CalculateBounds(newData.mRoundedClipRects,
+                                           newData.mAppUnitsPerDevPixel);
   boundingRect.Scale(mParameters.mXScale, mParameters.mYScale);
 
   uint32_t maxSize = mManager->GetMaxTextureSize();
   NS_ASSERTION(maxSize > 0, "Invalid max texture size");
-  gfxSize surfaceSize(std::min<float>(boundingRect.Width(), maxSize),
-                      std::min<float>(boundingRect.Height(), maxSize));
+  gfx::Size surfaceSize(std::min<gfx::Float>(boundingRect.Width(), maxSize),
+                        std::min<gfx::Float>(boundingRect.Height(), maxSize));
 
   // maskTransform is applied to the clip when it is painted into the mask (as a
   // component of imageTransform), and its inverse used when the mask is used for
   // masking.
   // It is the transform from the masked layer's space to mask space
-  gfxMatrix maskTransform;
+  gfx::Matrix maskTransform;
   maskTransform.Scale(surfaceSize.width/boundingRect.Width(),
                       surfaceSize.height/boundingRect.Height());
-  maskTransform.Translate(-boundingRect.TopLeft());
+  gfx::Point p = boundingRect.TopLeft();
+  maskTransform.Translate(-p.x, -p.y);
   // imageTransform is only used when the clip is painted to the mask
-  gfxMatrix imageTransform = maskTransform;
+  gfx::Matrix imageTransform = maskTransform;
   imageTransform.Scale(mParameters.mXScale, mParameters.mYScale);
 
   nsAutoPtr<MaskLayerImageCache::MaskLayerImageKey> newKey(
@@ -3688,7 +3690,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
                                             mContainerFrame->PresContext()));
     newKey->mRoundedClipRects[i].ScaleAndTranslate(imageTransform);
   }
- 
+
   const MaskLayerImageCache::MaskLayerImageKey* lookupKey = newKey;
 
   // check to see if we can reuse a mask image
@@ -3710,7 +3712,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
     }
 
     nsRefPtr<gfxContext> context = new gfxContext(surface);
-    context->Multiply(imageTransform);
+    context->Multiply(ThebesMatrix(imageTransform));
 
     // paint the clipping rects with alpha to create the mask
     context->SetColor(gfxRGBA(1, 1, 1, 1));
@@ -3735,8 +3737,9 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
   }
 
   maskLayer->SetContainer(container);
-  
-  gfx3DMatrix matrix = gfx3DMatrix::From2D(maskTransform.Invert());
+
+  maskTransform.Invert();
+  gfx3DMatrix matrix = gfx3DMatrix::From2D(ThebesMatrix(maskTransform));
   matrix.Translate(gfxPoint3D(mParameters.mOffset.x, mParameters.mOffset.y, 0));
   maskLayer->SetBaseTransform(matrix);
 
