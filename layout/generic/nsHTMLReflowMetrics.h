@@ -210,14 +210,6 @@ public:
     , mWritingMode(aWritingMode)
   {}
 
-  nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0)
-    : mISize(0)
-    , mBSize(0)
-    , mBlockStartAscent(ASK_FOR_BASELINE)
-    , mFlags(aFlags)
-    , mWritingMode(aState.GetWritingMode())
-  {}
-
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to
   // width in horizontal writing modes, height in vertical ones), and BSize is

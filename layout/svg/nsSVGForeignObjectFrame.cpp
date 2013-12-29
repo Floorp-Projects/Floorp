@@ -553,7 +553,7 @@ nsSVGForeignObjectFrame::DoReflow()
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,
                                 nsSize(mRect.width, NS_UNCONSTRAINEDSIZE));
-  nsHTMLReflowMetrics desiredSize(reflowState);
+  nsHTMLReflowMetrics desiredSize(reflowState.GetWritingMode());
   nsReflowStatus status;
 
   // We don't use mRect.height above because that tells the child to do
