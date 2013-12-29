@@ -6,9 +6,9 @@
 #ifndef MASKLAYERIMAGECACHE_H_
 #define MASKLAYERIMAGECACHE_H_
 
-#include "gfxMatrix.h"
 #include "DisplayItemClip.h"
 #include "nsPresContext.h"
+#include "mozilla/gfx/Matrix.h"
 
 namespace mozilla {
 
@@ -73,16 +73,16 @@ public:
     // Applies the scale and translate components of aTransform.
     // It is an error to pass a matrix which does more than just scale
     // and translate.
-    void ScaleAndTranslate(const gfxMatrix& aTransform)
+    void ScaleAndTranslate(const gfx::Matrix& aTransform)
     {
-      NS_ASSERTION(aTransform.xy == 0 && aTransform.yx == 0,
+      NS_ASSERTION(aTransform._12 == 0 && aTransform._21 == 0,
                    "Transform has a component other than scale and translate");
 
-      mRect = aTransform.Transform(mRect);
+      mRect = aTransform.TransformBounds(mRect);
 
       for (size_t i = 0; i < ArrayLength(mRadii); i += 2) {
-        mRadii[i] *= aTransform.xx;
-        mRadii[i + 1] *= aTransform.yy;
+        mRadii[i] *= aTransform._11;
+        mRadii[i + 1] *= aTransform._22;
       }
     }
 
@@ -111,7 +111,7 @@ public:
       return hash;
     }
 
-    gfxRect mRect;
+    gfx::Rect mRect;
     // Indices into mRadii are the NS_CORNER_* constants in nsStyleConsts.h
     gfxFloat mRadii[8];
 
