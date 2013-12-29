@@ -161,7 +161,7 @@ nsSVGLength2::GetAxisLength(SVGSVGElement *aCtx) const
 float
 nsSVGLength2::GetAxisLength(nsIFrame *aNonSVGFrame) const
 {
-  gfxSize size =
+  gfx::Size size =
     nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(aNonSVGFrame);
   float length;
   switch (mCtxType) {

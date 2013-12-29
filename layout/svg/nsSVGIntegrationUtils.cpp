@@ -22,6 +22,7 @@
 #include "nsSVGUtils.h"
 #include "FrameLayerBuilder.h"
 #include "BasicLayers.h"
+#include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -185,7 +186,7 @@ nsSVGIntegrationUtils::GetContinuationUnionSize(nsIFrame* aNonSVGFrame)
   return nsLayoutUtils::GetAllInFlowRectsUnion(firstFrame, firstFrame).Size();
 }
 
-/* static */ gfxSize
+/* static */ gfx::Size
 nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
 {
   NS_ASSERTION(!aNonSVGFrame->IsFrameOfType(nsIFrame::eSVG),
@@ -194,8 +195,8 @@ nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(nsIFrame* aNonSVGFrame)
     nsLayoutUtils::FirstContinuationOrSpecialSibling(aNonSVGFrame);
   nsRect r = nsLayoutUtils::GetAllInFlowRectsUnion(firstFrame, firstFrame);
   nsPresContext* presContext = firstFrame->PresContext();
-  return gfxSize(presContext->AppUnitsToFloatCSSPixels(r.width),
-                 presContext->AppUnitsToFloatCSSPixels(r.height));
+  return gfx::Size(presContext->AppUnitsToFloatCSSPixels(r.width),
+                   presContext->AppUnitsToFloatCSSPixels(r.height));
 }
 
 gfxRect
