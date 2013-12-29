@@ -1337,8 +1337,8 @@ public:
    * is non-null and the frame has an SVG parent with children-only transforms,
    * then aFromParentTransforms will be set to these transforms.
    */
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransforms = nullptr,
-                                gfxMatrix *aFromParentTransforms = nullptr) const;
+  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransforms = nullptr,
+                                mozilla::gfx::Matrix *aFromParentTransforms = nullptr) const;
 
   /**
    * Returns whether this frame will attempt to preserve the 3d transforms of its

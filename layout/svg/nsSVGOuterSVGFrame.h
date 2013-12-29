@@ -98,8 +98,8 @@ public:
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                gfxMatrix *aFromParentTransform) const MOZ_OVERRIDE {
+  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform,
+                                mozilla::gfx::Matrix *aFromParentTransform) const MOZ_OVERRIDE {
     // Our anonymous wrapper performs the transforms. We simply
     // return whether we are transformed here but don't apply the transforms
     // themselves.
@@ -133,7 +133,7 @@ public:
   void RegisterForeignObject(nsSVGForeignObjectFrame* aFrame);
   void UnregisterForeignObject(nsSVGForeignObjectFrame* aFrame);
 
-  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const MOZ_OVERRIDE {
+  virtual bool HasChildrenOnlyTransform(mozilla::gfx::Matrix *aTransform) const MOZ_OVERRIDE {
     // Our anonymous wrapper child must claim our children-only transforms as
     // its own so that our real children (the frames it wraps) are transformed
     // by them, and we must pretend we don't have any children-only transforms
@@ -271,7 +271,7 @@ public:
     return static_cast<nsSVGOuterSVGFrame*>(mParent)->GetCanvasTM(aFor, aTransformRoot);
   }
 
-  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const MOZ_OVERRIDE;
+  virtual bool HasChildrenOnlyTransform(mozilla::gfx::Matrix *aTransform) const MOZ_OVERRIDE;
 };
 
 #endif

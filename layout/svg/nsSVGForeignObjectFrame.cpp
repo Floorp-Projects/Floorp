@@ -165,8 +165,8 @@ nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 bool
-nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                          gfxMatrix *aFromParentTransform) const
+nsSVGForeignObjectFrame::IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform,
+                                          mozilla::gfx::Matrix *aFromParentTransform) const
 {
   bool foundTransform = false;
 
@@ -184,8 +184,8 @@ nsSVGForeignObjectFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
-      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
-                                  nsSVGElement::eUserSpaceToParent);
+      *aOwnTransform = gfx::ToMatrix(content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent));
     }
     foundTransform = true;
   }

@@ -69,7 +69,7 @@ public:
    * due to a root-<svg> having its currentScale/currentTransform properties
    * set. If aTransform is non-null, then it will be set to the transform.
    */
-  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const {
+  virtual bool HasChildrenOnlyTransform(mozilla::gfx::Matrix *aTransform) const {
     return false;
   }
 
@@ -142,8 +142,8 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform = nullptr,
-                                gfxMatrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;
+  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform = nullptr,
+                                mozilla::gfx::Matrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,

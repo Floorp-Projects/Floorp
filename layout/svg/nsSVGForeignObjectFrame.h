@@ -65,8 +65,8 @@ public:
       ~(nsIFrame::eSVG | nsIFrame::eSVGForeignObject));
   }
 
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                gfxMatrix *aFromParentTransform) const MOZ_OVERRIDE;
+  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform,
+                                mozilla::gfx::Matrix *aFromParentTransform) const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
