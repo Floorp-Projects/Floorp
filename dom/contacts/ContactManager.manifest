@@ -1,12 +1,3 @@
-component {9cbfa81c-bcab-4ca9-b0d2-f4318f295e33} ContactManager.js
-contract @mozilla.org/contactAddress;1 {9cbfa81c-bcab-4ca9-b0d2-f4318f295e33}
-
-component {ad19a543-69e4-44f0-adfa-37c011556bc1} ContactManager.js
-contract @mozilla.org/contactField;1 {ad19a543-69e4-44f0-adfa-37c011556bc1}
-
-component {4d42c5a9-ea5d-4102-80c3-40cc986367ca} ContactManager.js
-contract @mozilla.org/contactTelField;1 {4d42c5a9-ea5d-4102-80c3-40cc986367ca}
-
 component {72a5ee28-81d8-4af8-90b3-ae935396cc66} ContactManager.js
 contract @mozilla.org/contact;1 {72a5ee28-81d8-4af8-90b3-ae935396cc66}
 
