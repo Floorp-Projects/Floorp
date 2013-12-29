@@ -814,7 +814,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                                             kidFrame, nsSize(0,0),
                                             nsHTMLReflowState::CALLER_WILL_INIT);
       InitChildReflowState(*aPresContext, nsSize(0,0), false, kidReflowState);
-      nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+      nsHTMLReflowMetrics desiredSize(aReflowState);
       nsReflowStatus  status;
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, status);
       kidFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
@@ -869,7 +869,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       nscoord availCellWidth =
         CalcAvailWidth(aTableFrame, *cellFrame, cellSpacingX);
 
-      nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+      nsHTMLReflowMetrics desiredSize(aReflowState);
 
       // If the avail width is not the same as last time we reflowed the cell or
       // the cell wants to be bigger than what was available last time or
@@ -1091,7 +1091,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*          aPresContext,
   InitChildReflowState(*aPresContext, availSize, borderCollapse, cellReflowState);
   cellReflowState.mFlags.mIsTopOfPage = aIsTopOfPage;
 
-  nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+  nsHTMLReflowMetrics desiredSize(aReflowState);
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);

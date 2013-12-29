@@ -563,7 +563,7 @@ nsTextControlFrame::ReflowTextControlChild(nsIFrame*                aKid,
                       + kidReflowState.ComputedPhysicalMargin().top;
 
   // reflow the child
-  nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+  nsHTMLReflowMetrics desiredSize(aReflowState);
   ReflowChild(aKid, aPresContext, desiredSize, kidReflowState, 
               xOffset, yOffset, 0, aStatus);
 
