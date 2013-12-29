@@ -283,7 +283,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                         aFirstKid, availSize);
 
   nsReflowStatus contentsReflowStatus;
-  nsHTMLReflowMetrics contentsDesiredSize(aButtonReflowState.GetWritingMode());
+  nsHTMLReflowMetrics contentsDesiredSize(aButtonReflowState);
   ReflowChild(aFirstKid, aPresContext,
               contentsDesiredSize, contentsReflowState,
               xoffset,
