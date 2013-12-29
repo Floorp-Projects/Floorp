@@ -144,8 +144,8 @@ nsSVGPathGeometryFrame::GetType() const
 }
 
 bool
-nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                         gfxMatrix *aFromParentTransform) const
+nsSVGPathGeometryFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
+                                         gfx::Matrix *aFromParentTransform) const
 {
   bool foundTransform = false;
 
@@ -163,8 +163,8 @@ nsSVGPathGeometryFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
   if ((transformList && transformList->HasTransform()) ||
       content->GetAnimateMotionTransform()) {
     if (aOwnTransform) {
-      *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
-                                  nsSVGElement::eUserSpaceToParent);
+      *aOwnTransform = gfx::ToMatrix(content->PrependLocalTransformsTo(gfxMatrix(),
+                                  nsSVGElement::eUserSpaceToParent));
     }
     foundTransform = true;
   }

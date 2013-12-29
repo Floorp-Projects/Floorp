@@ -293,14 +293,14 @@ nsSVGInnerSVGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 }
 
 bool
-nsSVGInnerSVGFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
+nsSVGInnerSVGFrame::HasChildrenOnlyTransform(gfx::Matrix *aTransform) const
 {
   SVGSVGElement *content = static_cast<SVGSVGElement*>(mContent);
 
   if (content->HasViewBoxOrSyntheticViewBox()) {
     // XXX Maybe return false if the transform is the identity transform?
     if (aTransform) {
-      *aTransform = content->GetViewBoxTransform();
+      *aTransform = gfx::ToMatrix(content->GetViewBoxTransform());
     }
     return true;
   }

@@ -1026,8 +1026,8 @@ nsIFrame::HasOpacity() const
 }
 
 bool
-nsIFrame::IsSVGTransformed(gfxMatrix *aOwnTransforms,
-                           gfxMatrix *aFromParentTransforms) const
+nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
+                           gfx::Matrix *aFromParentTransforms) const
 {
   return false;
 }

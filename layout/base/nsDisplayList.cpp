@@ -4102,7 +4102,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
   gfx3DMatrix result;
   // Call IsSVGTransformed() regardless of the value of
   // disp->mSpecifiedTransform, since we still need any transformFromSVGParent.
-  gfxMatrix svgTransform, transformFromSVGParent;
+  mozilla::gfx::Matrix svgTransform, transformFromSVGParent;
   bool hasSVGTransforms =
     frame && frame->IsSVGTransformed(&svgTransform, &transformFromSVGParent);
   /* Transformed frames always have a transform, or are preserving 3d (and might still have perspective!) */
@@ -4115,18 +4115,18 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /
                              aAppUnitsPerPixel;
-    svgTransform.x0 *= pixelsPerCSSPx;
-    svgTransform.y0 *= pixelsPerCSSPx;
-    result = gfx3DMatrix::From2D(svgTransform);
+    svgTransform._31 *= pixelsPerCSSPx;
+    svgTransform._32 *= pixelsPerCSSPx;
+    result = gfx3DMatrix::From2D(ThebesMatrix(svgTransform));
   }
 
   if (hasSVGTransforms && !transformFromSVGParent.IsIdentity()) {
     // Correct the translation components for zoom:
     float pixelsPerCSSPx = frame->PresContext()->AppUnitsPerCSSPixel() /
                              aAppUnitsPerPixel;
-    transformFromSVGParent.x0 *= pixelsPerCSSPx;
-    transformFromSVGParent.y0 *= pixelsPerCSSPx;
-    result = result * gfx3DMatrix::From2D(transformFromSVGParent);
+    transformFromSVGParent._31 *= pixelsPerCSSPx;
+    transformFromSVGParent._32 *= pixelsPerCSSPx;
+    result = result * gfx3DMatrix::From2D(ThebesMatrix(transformFromSVGParent));
   }
 
   if (aProperties.mChildPerspective > 0.0) {
