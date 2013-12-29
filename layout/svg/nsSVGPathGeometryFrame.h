@@ -66,8 +66,8 @@ public:
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsSVGTransformed(gfxMatrix *aOwnTransforms = nullptr,
-                                gfxMatrix *aFromParentTransforms = nullptr) const MOZ_OVERRIDE;
+  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransforms = nullptr,
+                                mozilla::gfx::Matrix *aFromParentTransforms = nullptr) const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE

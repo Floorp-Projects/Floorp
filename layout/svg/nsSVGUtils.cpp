@@ -763,11 +763,11 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
     int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxMatrix tm = GetCanvasTM(aFrame, nsISVGChildFrame::FOR_PAINTING, aTransformRoot);
     if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
-      gfxMatrix childrenOnlyTM;
+      gfx::Matrix childrenOnlyTM;
       if (static_cast<nsSVGContainerFrame*>(aFrame)->
             HasChildrenOnlyTransform(&childrenOnlyTM)) {
         // Undo the children-only transform:
-        tm = childrenOnlyTM.Invert() * tm;
+        tm = ThebesMatrix(childrenOnlyTM).Invert() * tm;
       }
     }
     nsIntRect bounds = TransformFrameRectToOuterSVG(overflowRect,

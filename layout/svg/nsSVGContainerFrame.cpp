@@ -220,8 +220,8 @@ nsSVGDisplayContainerFrame::RemoveFrame(ChildListID aListID,
 }
 
 bool
-nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
-                                             gfxMatrix *aFromParentTransform) const
+nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
+                                             gfx::Matrix *aFromParentTransform) const
 {
   bool foundTransform = false;
 
@@ -240,8 +240,8 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfxMatrix *aOwnTransform,
     if ((transformList && transformList->HasTransform()) ||
         content->GetAnimateMotionTransform()) {
       if (aOwnTransform) {
-        *aOwnTransform = content->PrependLocalTransformsTo(gfxMatrix(),
-                                    nsSVGElement::eUserSpaceToParent);
+        *aOwnTransform = gfx::ToMatrix(content->PrependLocalTransformsTo(gfxMatrix(),
+                                    nsSVGElement::eUserSpaceToParent));
       }
       foundTransform = true;
     }

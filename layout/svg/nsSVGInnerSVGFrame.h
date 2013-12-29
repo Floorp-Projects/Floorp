@@ -65,7 +65,7 @@ public:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor,
                                 nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE;
 
-  virtual bool HasChildrenOnlyTransform(gfxMatrix *aTransform) const MOZ_OVERRIDE;
+  virtual bool HasChildrenOnlyTransform(mozilla::gfx::Matrix *aTransform) const MOZ_OVERRIDE;
 
   // nsISVGSVGFrame interface:
   virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) MOZ_OVERRIDE;

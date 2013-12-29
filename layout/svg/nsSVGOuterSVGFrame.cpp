@@ -932,7 +932,7 @@ nsSVGOuterSVGAnonChildFrame::GetType() const
 }
 
 bool
-nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) const
+nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfx::Matrix *aTransform) const
 {
   // We must claim our nsSVGOuterSVGFrame's children-only transforms as our own
   // so that the children we are used to wrap are transformed properly.
@@ -944,9 +944,9 @@ nsSVGOuterSVGAnonChildFrame::HasChildrenOnlyTransform(gfxMatrix *aTransform) con
   if (hasTransform && aTransform) {
     // Outer-<svg> doesn't use x/y, so we can pass eChildToUserSpace here.
     gfxMatrix identity;
-    *aTransform =
+    *aTransform = gfx::ToMatrix(
       content->PrependLocalTransformsTo(identity,
-                                        nsSVGElement::eChildToUserSpace);
+                                        nsSVGElement::eChildToUserSpace));
   }
 
   return hasTransform;
