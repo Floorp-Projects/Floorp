@@ -5166,7 +5166,7 @@ SVGTextFrame::DoReflow()
   nsHTMLReflowState reflowState(presContext, kid,
                                 renderingContext,
                                 nsSize(width, NS_UNCONSTRAINEDSIZE));
-  nsHTMLReflowMetrics desiredSize(reflowState);
+  nsHTMLReflowMetrics desiredSize(reflowState.GetWritingMode());
   nsReflowStatus status;
 
   NS_ASSERTION(reflowState.ComputedPhysicalBorderPadding() == nsMargin(0, 0, 0, 0) &&

@@ -2684,7 +2684,7 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
-  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
+  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
   desiredSize.Width() = desiredSize.Height() = 0;
   nsReflowStatus status;
   nsresult rv = ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
@@ -2717,7 +2717,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
   nsRect origTfootVisualOverflow = aTfoot->GetVisualOverflowRect();
           
   nsReflowStatus footerStatus;
-  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
+  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
   desiredSize.Width() = desiredSize.Height() = 0;
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowState,
               aReflowState.x, aReflowState.y, 0, footerStatus);
@@ -2823,7 +2823,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       nsRect oldKidRect = kidFrame->GetRect();
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
-      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
+      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
       desiredSize.Width() = desiredSize.Height() = 0;
 
       // Reflow the child into the available space

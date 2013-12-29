@@ -193,7 +193,7 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   xoffset += reflowState.ComputedPhysicalMargin().left;
   yoffset += reflowState.ComputedPhysicalMargin().top;
 
-  nsHTMLReflowMetrics barDesiredSize(aReflowState);
+  nsHTMLReflowMetrics barDesiredSize(aReflowState.GetWritingMode());
   ReflowChild(aBarFrame, aPresContext, barDesiredSize, reflowState, xoffset,
               yoffset, 0, aStatus);
   FinishReflowChild(aBarFrame, aPresContext, &reflowState, barDesiredSize,

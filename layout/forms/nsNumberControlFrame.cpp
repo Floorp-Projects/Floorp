@@ -82,7 +82,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
 
-  nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
+  nsHTMLReflowMetrics wrappersDesiredSize(aReflowState.GetWritingMode());
   nsIFrame* outerWrapperFrame = mOuterWrapper->GetPrimaryFrame();
   if (outerWrapperFrame) { // display:none?
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
