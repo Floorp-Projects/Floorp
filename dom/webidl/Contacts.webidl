@@ -4,29 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactAddress;1"]
-interface ContactAddress {
-  attribute object?    type; // DOMString[]
-  attribute DOMString? streetAddress;
-  attribute DOMString? locality;
-  attribute DOMString? region;
-  attribute DOMString? postalCode;
-  attribute DOMString? countryName;
-  attribute boolean?   pref;
-
-  [ChromeOnly]
-  void initialize(optional sequence<DOMString>? type,
-                  optional DOMString? streetAddress,
-                  optional DOMString? locality,
-                  optional DOMString? region,
-                  optional DOMString? postalCode,
-                  optional DOMString? countryName,
-                  optional boolean? pref);
-
-  object toJSON();
-};
-
-dictionary ContactAddressInit {
+dictionary ContactAddress {
   sequence<DOMString>? type;
   DOMString? streetAddress;
   DOMString? locality;
@@ -36,45 +14,15 @@ dictionary ContactAddressInit {
   boolean? pref;
 };
 
-
-[ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactField;1"]
-interface ContactField {
-  attribute object?    type; // DOMString[]
-  attribute DOMString? value;
-  attribute boolean?   pref;
-
-  [ChromeOnly]
-  void initialize(optional sequence<DOMString>? type,
-                  optional DOMString? value,
-                  optional boolean? pref);
-
-  object toJSON();
-};
-
-dictionary ContactFieldInit {
+dictionary ContactField {
   sequence<DOMString>? type;
   DOMString?           value;
   boolean?             pref;
 };
 
-
-[ChromeOnly, Constructor, JSImplementation="@mozilla.org/contactTelField;1"]
-interface ContactTelField : ContactField {
-  attribute DOMString? carrier;
-
-  [ChromeOnly]
-  void initialize(optional sequence<DOMString>? type,
-                  optional DOMString? value,
-                  optional DOMString? carrier,
-                  optional boolean? pref);
-
-  object toJSON();
-};
-
-dictionary ContactTelFieldInit : ContactFieldInit {
+dictionary ContactTelField : ContactField {
   DOMString? carrier;
 };
-
 
 dictionary ContactProperties {
   Date?                          bday;
@@ -85,13 +33,13 @@ dictionary ContactProperties {
 
   sequence<Blob>?                photo;
 
-  sequence<ContactAddressInit>?  adr;
+  sequence<ContactAddress>?  adr;
 
-  sequence<ContactFieldInit>?    email;
-  sequence<ContactFieldInit>?    url;
-  sequence<ContactFieldInit>?    impp;
+  sequence<ContactField>?    email;
+  sequence<ContactField>?    url;
+  sequence<ContactField>?    impp;
 
-  sequence<ContactTelFieldInit>? tel;
+  sequence<ContactTelField>? tel;
 
   sequence<DOMString>?           name;
   sequence<DOMString>?           honorificPrefix;
@@ -110,43 +58,43 @@ dictionary ContactProperties {
 [Constructor(optional ContactProperties properties),
  JSImplementation="@mozilla.org/contact;1"]
 interface mozContact {
-           attribute DOMString    id;
-  readonly attribute Date?        published;
-  readonly attribute Date?        updated;
+                 attribute DOMString  id;
+        readonly attribute Date?      published;
+        readonly attribute Date?      updated;
 
-           attribute Date?        bday;
-           attribute Date?        anniversary;
+                 attribute Date?      bday;
+                 attribute Date?      anniversary;
 
-           attribute DOMString?   sex;
-           attribute DOMString?   genderIdentity;
+                 attribute DOMString? sex;
+                 attribute DOMString? genderIdentity;
 
-           attribute object?      photo;
+  [Cached, Pure] attribute sequence<Blob>?            photo;
 
-           attribute object?      adr;
+  [Cached, Pure] attribute sequence<ContactAddress>?  adr;
 
-           attribute object?      email;
-           attribute object?      url;
-           attribute object?      impp;
+  [Cached, Pure] attribute sequence<ContactField>?    email;
+  [Cached, Pure] attribute sequence<ContactField>?    url;
+  [Cached, Pure] attribute sequence<ContactField>?    impp;
 
-           attribute object?      tel;
+  [Cached, Pure] attribute sequence<ContactTelField>? tel;
 
-           attribute object?      name;
-           attribute object?      honorificPrefix;
-           attribute object?      givenName;
-           attribute object?      additionalName;
-           attribute object?      familyName;
-           attribute object?      honorificSuffix;
-           attribute object?      nickname;
-           attribute object?      category;
-           attribute object?      org;
-           attribute object?      jobTitle;
-           attribute object?      note;
-           attribute object?      key;
+  [Cached, Pure] attribute sequence<DOMString>?       name;
+  [Cached, Pure] attribute sequence<DOMString>?       honorificPrefix;
+  [Cached, Pure] attribute sequence<DOMString>?       givenName;
+  [Cached, Pure] attribute sequence<DOMString>?       additionalName;
+  [Cached, Pure] attribute sequence<DOMString>?       familyName;
+  [Cached, Pure] attribute sequence<DOMString>?       honorificSuffix;
+  [Cached, Pure] attribute sequence<DOMString>?       nickname;
+  [Cached, Pure] attribute sequence<DOMString>?       category;
+  [Cached, Pure] attribute sequence<DOMString>?       org;
+  [Cached, Pure] attribute sequence<DOMString>?       jobTitle;
+  [Cached, Pure] attribute sequence<DOMString>?       note;
+  [Cached, Pure] attribute sequence<DOMString>?       key;
 
   [ChromeOnly]
   void setMetadata(DOMString id, Date? published, Date? updated);
 
-  object toJSON();
+  jsonifier;
 };
 
 dictionary ContactFindSortOptions {

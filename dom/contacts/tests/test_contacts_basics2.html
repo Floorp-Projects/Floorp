@@ -552,7 +552,8 @@ var steps = [
         honorificPrefix: [],
         honorificSuffix: [{foo: "bar"}],
         sex: 17,
-        genderIdentity: 18
+        genderIdentity: 18,
+        email: [{type: ["foo"], value: "bar"}]
     };
     obj.honorificPrefix.__defineGetter__('0',(function() {
       var c = 0;
@@ -566,13 +567,15 @@ var steps = [
       }
     })());
     createResult1 = new mozContact(obj);
+    createResult1.email.push({aeiou: "abcde"});
     req = mozContacts.save(createResult1);
     req.onsuccess = function () {
       checkContacts(createResult1, {
         honorificPrefix: ["string"],
         honorificSuffix: ["[object Object]"],
         sex: "17",
-        genderIdentity: "18"
+        genderIdentity: "18",
+        email: [{type: ["foo"], value: "bar"}, {}]
       });
       next();
     };
@@ -696,13 +699,13 @@ var steps = [
       impp: [{value: undefined}],
       tel: [{value: undefined}],
     });
-    ise(c.adr[0].streetAddress, null, "adr.streetAddress is null");
-    ise(c.adr[0].locality, null, "adr.locality is null");
-    ise(c.adr[0].pref, null, "adr.pref is null");
-    ise(c.email[0].value, null, "email.value is null");
-    ise(c.url[0].value, null, "url.value is null");
-    ise(c.impp[0].value, null, "impp.value is null");
-    ise(c.tel[0].value, null, "tel.value is null");
+    ise(c.adr[0].streetAddress, undefined, "adr.streetAddress is undefined");
+    ise(c.adr[0].locality, undefined, "adr.locality is undefined");
+    ise(c.adr[0].pref, undefined, "adr.pref is undefined");
+    ise(c.email[0].value, undefined, "email.value is undefined");
+    ise(c.url[0].value, undefined, "url.value is undefined");
+    ise(c.impp[0].value, undefined, "impp.value is undefined");
+    ise(c.tel[0].value, undefined, "tel.value is undefined");
     next();
   },
   function() {
@@ -721,6 +724,50 @@ var steps = [
     testArrayProp("url");
     next();
   },
+  function() {
+    ok(true, "Passing a mozContact with invalid data to save() should throw");
+    var c = new mozContact({
+      photo: [],
+      tel: []
+    });
+    c.photo.push({});
+    SimpleTest.doesThrow(()=>navigator.mozContacts.save(c), "Invalid data in Blob array");
+    c.tel.push(123);
+    SimpleTest.doesThrow(()=>navigator.mozContacts.save(c), "Invalid data in dictionary array");
+    next();
+  },
+  function() {
+    ok(true, "Inline changes to array properties should be seen by save");
+    var c = new mozContact({
+      name: [],
+      familyName: [],
+      givenName: [],
+      nickname: [],
+      tel: [],
+      adr: [],
+      email: []
+    });
+    for (var prop of Object.getOwnPropertyNames(properties1)) {
+      if (!Array.isArray(properties1[prop])) {
+        continue;
+      }
+      for (var i = 0; i < properties1[prop].length; ++i) {
+        c[prop].push(properties1[prop][i]);
+      }
+    }
+    req = navigator.mozContacts.save(c);
+    req.onsuccess = function() {
+      req = navigator.mozContacts.find(defaultOptions);
+      req.onsuccess = function() {
+        ise(req.result.length, 1, "Got 1 contact");
+        checkContacts(req.result[0], properties1);
+        next();
+      };
+      req.onerror = onFailure;
+    };
+    req.onerror = onFailure;
+  },
+  clearDatabase,
   function () {
     ok(true, "all done!\n");
     SimpleTest.finish();
