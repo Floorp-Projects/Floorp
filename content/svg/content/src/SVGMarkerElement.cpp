@@ -296,7 +296,7 @@ SVGMarkerElement::GetPreserveAspectRatio()
 //----------------------------------------------------------------------
 // public helpers
 
-gfxMatrix
+gfx::Matrix
 SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
                                      float aX, float aY, float aAutoAngle,
                                      bool aIsStart)
@@ -317,9 +317,9 @@ SVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
       break;
   }
 
-  return gfxMatrix(cos(angle) * scale,   sin(angle) * scale,
-                   -sin(angle) * scale,  cos(angle) * scale,
-                   aX,                    aY);
+  return gfx::Matrix(cos(angle) * scale,   sin(angle) * scale,
+                     -sin(angle) * scale,  cos(angle) * scale,
+                     aX,                    aY);
 }
 
 nsSVGViewBoxRect
