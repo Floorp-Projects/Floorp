@@ -5,7 +5,6 @@
 
 // Keep in (case-insensitive) order:
 #include "gfxContext.h"
-#include "gfxMatrix.h"
 #include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "nsIImageLoadingContent.h"
@@ -484,7 +483,7 @@ nsSVGImageFrame::ReflowSVG()
   gfxSize scaleFactors = GetCanvasTM(FOR_OUTERSVG_TM).ScaleFactors(true);
   bool applyScaling = fabs(scaleFactors.width) >= 1e-6 &&
                       fabs(scaleFactors.height) >= 1e-6;
-  gfxMatrix scaling;
+  Matrix scaling;
   if (applyScaling) {
     scaling.Scale(scaleFactors.width, scaleFactors.height);
   }
