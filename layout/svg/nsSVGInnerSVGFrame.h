@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
-#include "gfxMatrix.h"
 
 class nsRenderingContext;
 

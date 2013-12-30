@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
-#include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "nsSVGEffects.h"
 #include "nsSVGGFrame.h"

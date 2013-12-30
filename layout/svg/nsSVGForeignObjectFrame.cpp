@@ -8,7 +8,6 @@
 
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
-#include "gfxMatrix.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutUtils.h"
