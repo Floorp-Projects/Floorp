@@ -233,12 +233,12 @@ nsSVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
   SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
   element->GetAnimatedLengthValues(&x, &y, &width, &height, nullptr);
 
-  gfxMatrix viewBoxTM =
+  Matrix viewBoxTM =
     SVGContentUtils::GetViewBoxTransform(width, height,
                                          0, 0, aNativeWidth, aNativeHeight,
                                          element->mPreserveAspectRatio);
 
-  return viewBoxTM *
+  return ThebesMatrix(viewBoxTM) *
          gfxMatrix().Translate(gfxPoint(x, y)) *
          GetCanvasTM(aFor, aTransformRoot);
 }
