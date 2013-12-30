@@ -42,6 +42,8 @@
  * calculating the progress of the parent reporter.
  */
 
+"use strict";
+
 const gDebugExpectedDurations = false;
 
 function ProgressReporter() {

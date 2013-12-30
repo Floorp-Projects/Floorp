@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var kMaxChunkDuration = 30; // ms
 
 function escapeHTML(html) {
@@ -129,18 +131,16 @@ TreeView.prototype = {
       data: data[0].getData()
     });
     this._processPendingActionsChunk();
-    if (this._initSelection === true) {
-      this._initSelection = false;
-      this._select(this._horizontalScrollbox.firstChild);
-      this._toggle(this._horizontalScrollbox.firstChild);
-    }
     changeFocus(this._container);
   },
   // Provide a snapshot of the reverse selection to restore with 'invert callback'
   getReverseSelectionSnapshot: function TreeView__getReverseSelectionSnapshot(isJavascriptOnly) {
-    if (!this._selectedNode)
-      return;
     var snapshot = [];
+
+    if (!this._selectedNode) {
+      return snapshot;
+    }
+
     var curr = this._selectedNode.data;
 
     while(curr) {

@@ -1,3 +1,5 @@
+"use strict";
+
 const Cu = Components.utils;
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const { L10N_BUNDLE } = require("devtools/profiler/consts");
