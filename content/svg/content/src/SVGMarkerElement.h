@@ -121,9 +121,9 @@ public:
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
   // public helpers
-  gfxMatrix GetMarkerTransform(float aStrokeWidth,
-                               float aX, float aY, float aAutoAngle,
-                               bool aIsStart);
+  mozilla::gfx::Matrix GetMarkerTransform(float aStrokeWidth,
+                                          float aX, float aY, float aAutoAngle,
+                                          bool aIsStart);
   nsSVGViewBoxRect GetViewBoxRect();
   gfxMatrix GetViewBoxTransform();
 
