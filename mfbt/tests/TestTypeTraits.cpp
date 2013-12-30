@@ -6,6 +6,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
+using mozilla::IsArray;
 using mozilla::IsBaseOf;
 using mozilla::IsClass;
 using mozilla::IsConvertible;
@@ -18,6 +19,10 @@ using mozilla::IsSigned;
 using mozilla::IsUnsigned;
 using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
+
+static_assert(!IsArray<bool>::value, "bool not an array");
+static_assert(IsArray<bool[]>::value, "bool[] is an array");
+static_assert(IsArray<bool[5]>::value, "bool[5] is an array");
 
 static_assert(!IsLvalueReference<bool>::value, "bool not an lvalue reference");
 static_assert(!IsLvalueReference<bool*>::value, "bool* not an lvalue reference");

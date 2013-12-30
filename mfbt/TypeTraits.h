@@ -9,6 +9,8 @@
 #ifndef mozilla_TypeTraits_h
 #define mozilla_TypeTraits_h
 
+#include "mozilla/Types.h"
+
 /*
  * These traits are approximate copies of the traits and semantics from C++11's
  * <type_traits> header.  Don't add traits not in that header!  When all
@@ -112,6 +114,31 @@ struct IsFloatingPointHelper
 template<typename T>
 struct IsFloatingPoint
   : detail::IsFloatingPointHelper<typename RemoveCV<T>::Type>
+{};
+
+namespace detail {
+
+template<typename T>
+struct IsArrayHelper : FalseType {};
+
+template<typename T, decltype(sizeof(1)) N>
+struct IsArrayHelper<T[N]> : TrueType {};
+
+template<typename T>
+struct IsArrayHelper<T[]> : TrueType {};
+
+} // namespace detail
+
+/**
+ * IsArray determines whether a type is an array type, of known or unknown
+ * length.
+ *
+ * mozilla::IsArray<int>::value is false;
+ * mozilla::IsArray<int[]>::value is true;
+ * mozilla::IsArray<int[5]>::value is true.
+ */
+template<typename T>
+struct IsArray : detail::IsArrayHelper<typename RemoveCV<T>::Type>
 {};
 
 /**
