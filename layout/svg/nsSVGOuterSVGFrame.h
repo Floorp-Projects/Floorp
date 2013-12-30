@@ -7,7 +7,6 @@
 #define __NS_SVGOUTERSVGFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "gfxMatrix.h"
 #include "nsISVGSVGFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsRegion.h"
@@ -114,7 +113,7 @@ public:
                       const nsIntRect *aDirtyRect,
                       nsIFrame* aTransformRoot = nullptr) MOZ_OVERRIDE;
 
-  virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
 
   // nsSVGContainerFrame methods:

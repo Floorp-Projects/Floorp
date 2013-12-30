@@ -320,7 +320,7 @@ public:
   NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint& aPoint) MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
   NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
-  virtual SVGBBox GetBBoxContribution(const gfxMatrix& aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
 
   // nsSVGContainerFrame methods:

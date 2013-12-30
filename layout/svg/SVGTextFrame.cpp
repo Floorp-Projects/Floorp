@@ -3801,7 +3801,7 @@ TextRenderedRunFlagsForBBoxContribution(const TextRenderedRun& aRun,
 }
 
 SVGBBox
-SVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+SVGTextFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
                                   uint32_t aFlags)
 {
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
@@ -3814,8 +3814,9 @@ SVGTextFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   TextRenderedRunIterator it(this);
   for (TextRenderedRun run = it.Current(); run.mFrame; run = it.Next()) {
     uint32_t flags = TextRenderedRunFlagsForBBoxContribution(run, aFlags);
+    gfxMatrix m = ThebesMatrix(aToBBoxUserspace);
     SVGBBox bboxForRun =
-      run.GetUserSpaceRect(presContext, flags, &aToBBoxUserspace);
+      run.GetUserSpaceRect(presContext, flags, &m);
     bbox.UnionEdges(bboxForRun);
   }
 

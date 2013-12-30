@@ -7,7 +7,6 @@
 #include "nsSVGOuterSVGFrame.h"
 
 // Keep others in (case-insensitive) order:
-#include "gfxMatrix.h"
 #include "nsDisplayList.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
@@ -805,7 +804,7 @@ nsSVGOuterSVGFrame::PaintSVG(nsRenderingContext* aContext,
 }
 
 SVGBBox
-nsSVGOuterSVGFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+nsSVGOuterSVGFrame::GetBBoxContribution(const gfx::Matrix &aToBBoxUserspace,
                                         uint32_t aFlags)
 {
   NS_ASSERTION(GetFirstPrincipalChild()->GetType() ==

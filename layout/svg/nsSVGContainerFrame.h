@@ -7,7 +7,6 @@
 #define NS_SVGCONTAINERFRAME_H
 
 #include "mozilla/Attributes.h"
-#include "gfxMatrix.h"
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsIFrame.h"
@@ -153,7 +152,7 @@ public:
   NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const mozilla::gfx::Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return true; }
 };
