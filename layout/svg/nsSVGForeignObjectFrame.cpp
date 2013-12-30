@@ -465,7 +465,7 @@ nsSVGForeignObjectFrame::NotifySVGChanged(uint32_t aFlags)
 }
 
 SVGBBox
-nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+nsSVGForeignObjectFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                              uint32_t aFlags)
 {
   SVGForeignObjectElement *content =
@@ -481,7 +481,7 @@ nsSVGForeignObjectFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     // XXX ReportToConsole
     return SVGBBox();
   }
-  return aToBBoxUserspace.TransformBounds(gfxRect(0.0, 0.0, w, h));
+  return aToBBoxUserspace.TransformBounds(gfx::Rect(0.0, 0.0, w, h));
 }
 
 //----------------------------------------------------------------------

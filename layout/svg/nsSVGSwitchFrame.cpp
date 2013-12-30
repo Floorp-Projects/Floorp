@@ -13,6 +13,8 @@
 
 class nsRenderingContext;
 
+using namespace mozilla::gfx;
+
 typedef nsSVGGFrame nsSVGSwitchFrameBase;
 
 class nsSVGSwitchFrame : public nsSVGSwitchFrameBase
@@ -57,7 +59,7 @@ public:
   NS_IMETHODIMP_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint);
   NS_IMETHODIMP_(nsRect) GetCoveredRegion();
   virtual void ReflowSVG();
-  virtual SVGBBox GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags);
 
 private:
@@ -222,7 +224,7 @@ nsSVGSwitchFrame::ReflowSVG()
 }
 
 SVGBBox
-nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+nsSVGSwitchFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags)
 {
   nsIFrame* kid = GetActiveChildFrame();
@@ -230,12 +232,12 @@ nsSVGSwitchFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     nsISVGChildFrame* svgKid = do_QueryFrame(kid);
     if (svgKid) {
       nsIContent *content = kid->GetContent();
-      gfxMatrix transform = aToBBoxUserspace;
+      gfxMatrix transform = ThebesMatrix(aToBBoxUserspace);
       if (content->IsSVG()) {
         transform = static_cast<nsSVGElement*>(content)->
-                      PrependLocalTransformsTo(aToBBoxUserspace);
+                      PrependLocalTransformsTo(transform);
       }
-      return svgKid->GetBBoxContribution(transform, aFlags);
+      return svgKid->GetBBoxContribution(ToMatrix(transform), aFlags);
     }
   }
   return SVGBBox();
