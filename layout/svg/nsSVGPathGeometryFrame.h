@@ -98,7 +98,7 @@ protected:
   NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return false; }
 
 protected:
-  void GeneratePath(gfxContext *aContext, const gfxMatrix &aTransform);
+  void GeneratePath(gfxContext *aContext, const Matrix &aTransform);
 
 private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
