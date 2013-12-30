@@ -25,6 +25,7 @@ CPP_UNIT_TESTS += [
     'TestSHA1.cpp',
     'TestTypedEnum.cpp',
     'TestTypeTraits.cpp',
+    'TestUniquePtr.cpp',
     'TestWeakPtr.cpp',
 ]
 
