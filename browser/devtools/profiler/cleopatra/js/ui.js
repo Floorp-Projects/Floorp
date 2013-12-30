@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var EIDETICKER_BASE_URL = "http://eideticker.wrla.ch/";
 
 var gDebugLog = false;
@@ -1448,7 +1450,6 @@ function loadRawProfile(reporter, rawProfile, profileId) {
     appendVideoCapture : gAppendVideoCapture,  
     profileId: profileId,
   });
-  gVideoCapture = null;
   parseRequest.addEventListener("progress", function (progress, action) {
     if (action)
       reporter.setAction(action);
@@ -1879,9 +1880,8 @@ function viewOptionsChanged() {
   });
 }
 
-function loadQueryData(queryData) {
+function loadQueryData(queryDataOriginal) {
   var isFiltersChanged = false;
-  var queryDataOriginal = queryData;
   var queryData = {};
   for (var i in queryDataOriginal) {
     queryData[i] = unQueryEscape(queryDataOriginal[i]);
