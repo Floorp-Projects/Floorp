@@ -33,7 +33,7 @@ var AppsUI = {
 function openLink(aEvent) {
   try {
     let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
-    let url = formatter.formatURLPref(aEvent.target.getAttribute("pref"));
+    let url = formatter.formatURLPref(aEvent.currentTarget.getAttribute("pref"));
     let BrowserApp = gChromeWin.BrowserApp;
     BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id });
   } catch (ex) {}
