@@ -325,7 +325,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
   gfxSize scaleFactors = GetCanvasTM(FOR_OUTERSVG_TM).ScaleFactors(true);
   bool applyScaling = fabs(scaleFactors.width) >= 1e-6 &&
                       fabs(scaleFactors.height) >= 1e-6;
-  gfxMatrix scaling;
+  gfx::Matrix scaling;
   if (applyScaling) {
     scaling.Scale(scaleFactors.width, scaleFactors.height);
   }
@@ -398,7 +398,7 @@ nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
 }
 
 SVGBBox
-nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                             uint32_t aFlags)
 {
   SVGBBox bbox;
@@ -411,7 +411,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
   nsRefPtr<gfxContext> tmpCtx =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
 
-  GeneratePath(tmpCtx, aToBBoxUserspace);
+  GeneratePath(tmpCtx, ThebesMatrix(aToBBoxUserspace));
   tmpCtx->IdentityMatrix();
 
   // Be careful when replacing the following logic to get the fill and stroke
@@ -455,7 +455,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     }
     bbox.UnionEdges(nsSVGUtils::PathExtentsToMaxStrokeExtents(pathExtents,
                                                               this,
-                                                              aToBBoxUserspace));
+                                                              ThebesMatrix(aToBBoxUserspace)));
   }
 
   // Account for markers:

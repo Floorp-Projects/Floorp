@@ -94,7 +94,7 @@ public:
                      nsSVGMark *aMark,
                      float aStrokeWidth);
 
-  SVGBBox GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+  SVGBBox GetMarkBBoxContribution(const mozilla::gfx::Matrix &aToBBoxUserspace,
                                   uint32_t aFlags,
                                   nsSVGPathGeometryFrame *aMarkedFrame,
                                   const nsSVGMark *aMark,

@@ -392,7 +392,7 @@ nsSVGDisplayContainerFrame::NotifySVGChanged(uint32_t aFlags)
 
 SVGBBox
 nsSVGDisplayContainerFrame::GetBBoxContribution(
-  const gfxMatrix &aToBBoxUserspace,
+  const Matrix &aToBBoxUserspace,
   uint32_t aFlags)
 {
   SVGBBox bboxUnion;
@@ -401,15 +401,15 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
   while (kid) {
     nsISVGChildFrame* svgKid = do_QueryFrame(kid);
     if (svgKid) {
-      gfxMatrix transform = aToBBoxUserspace;
+      gfxMatrix transform = gfx::ThebesMatrix(aToBBoxUserspace);
       nsIContent *content = kid->GetContent();
       if (content->IsSVG()) {
         transform = static_cast<nsSVGElement*>(content)->
-                      PrependLocalTransformsTo(aToBBoxUserspace);
+                      PrependLocalTransformsTo(transform);
       }
       // We need to include zero width/height vertical/horizontal lines, so we have
       // to use UnionEdges.
-      bboxUnion.UnionEdges(svgKid->GetBBoxContribution(transform, aFlags));
+      bboxUnion.UnionEdges(svgKid->GetBBoxContribution(gfx::ToMatrix(transform), aFlags));
     }
     kid = kid->GetNextSibling();
   }

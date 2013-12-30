@@ -15,6 +15,7 @@
 #include "nsSVGPathGeometryFrame.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 nsIFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -153,7 +154,7 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
 }
 
 SVGBBox
-nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
+nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
                                           uint32_t aFlags,
                                           nsSVGPathGeometryFrame *aMarkedFrame,
                                           const nsSVGMark *aMark,
@@ -187,7 +188,7 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const gfxMatrix &aToBBoxUserspace,
     content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle, mIsStart);
   gfxMatrix viewBoxTM = content->GetViewBoxTransform();
 
-  gfxMatrix tm = viewBoxTM * markerTM * aToBBoxUserspace;
+  Matrix tm = ToMatrix(viewBoxTM * markerTM) * aToBBoxUserspace;
 
   nsISVGChildFrame* child = do_QueryFrame(GetAnonymousChildFrame(this));
   // When we're being called to obtain the invalidation area, we need to
