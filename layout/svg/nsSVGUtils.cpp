@@ -1033,17 +1033,17 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
 }
 
 bool
-nsSVGUtils::HitTestRect(const gfxMatrix &aMatrix,
+nsSVGUtils::HitTestRect(const gfx::Matrix &aMatrix,
                         float aRX, float aRY, float aRWidth, float aRHeight,
                         float aX, float aY)
 {
-  gfxRect rect(aRX, aRY, aRWidth, aRHeight);
+  gfx::Rect rect(aRX, aRY, aRWidth, aRHeight);
   if (rect.IsEmpty() || aMatrix.IsSingular()) {
     return false;
   }
-  gfxMatrix toRectSpace = aMatrix;
+  gfx::Matrix toRectSpace = aMatrix;
   toRectSpace.Invert();
-  gfxPoint p = toRectSpace.Transform(gfxPoint(aX, aY));
+  gfx::Point p = toRectSpace * gfx::Point(aX, aY);
   return rect.x <= p.x && p.x <= rect.XMost() &&
          rect.y <= p.y && p.y <= rect.YMost();
 }
