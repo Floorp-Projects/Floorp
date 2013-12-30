@@ -165,8 +165,8 @@ nsSVGForeignObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 bool
-nsSVGForeignObjectFrame::IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform,
-                                          mozilla::gfx::Matrix *aFromParentTransform) const
+nsSVGForeignObjectFrame::IsSVGTransformed(Matrix *aOwnTransform,
+                                          Matrix *aFromParentTransform) const
 {
   bool foundTransform = false;
 

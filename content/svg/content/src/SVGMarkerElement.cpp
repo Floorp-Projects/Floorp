@@ -13,7 +13,7 @@
 #include "mozilla/dom/SVGMarkerElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/Preferences.h"
-#include "gfxMatrix.h"
+#include "mozilla/gfx/Matrix.h"
 #include "SVGContentUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Marker)
@@ -334,7 +334,7 @@ SVGMarkerElement::GetViewBoxRect()
            mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
 }
 
-gfxMatrix
+gfx::Matrix
 SVGMarkerElement::GetViewBoxTransform()
 {
   if (!mViewBoxToViewportTransform) {
@@ -342,13 +342,13 @@ SVGMarkerElement::GetViewBoxTransform()
       mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx);
     float viewportHeight = 
       mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx);
-   
+
     nsSVGViewBoxRect viewbox = GetViewBoxRect();
 
     NS_ABORT_IF_FALSE(viewbox.width > 0.0f && viewbox.height > 0.0f,
                       "Rendering should be disabled");
 
-    gfxMatrix viewBoxTM =
+    gfx::Matrix viewBoxTM =
       SVGContentUtils::GetViewBoxTransform(viewportWidth, viewportHeight,
                                            viewbox.x, viewbox.y,
                                            viewbox.width, viewbox.height,
@@ -357,11 +357,11 @@ SVGMarkerElement::GetViewBoxTransform()
     float refX = mLengthAttributes[REFX].GetAnimValue(mCoordCtx);
     float refY = mLengthAttributes[REFY].GetAnimValue(mCoordCtx);
 
-    gfxPoint ref = viewBoxTM.Transform(gfxPoint(refX, refY));
+    gfx::Point ref = viewBoxTM * gfx::Point(refX, refY);
 
-    gfxMatrix TM = viewBoxTM * gfxMatrix().Translate(gfxPoint(-ref.x, -ref.y));
+    gfx::Matrix TM = viewBoxTM * gfx::Matrix().Translate(-ref.x, -ref.y);
 
-    mViewBoxToViewportTransform = new gfxMatrix(TM);
+    mViewBoxToViewportTransform = new gfx::Matrix(TM);
   }
 
   return *mViewBoxToViewportTransform;

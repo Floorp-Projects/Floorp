@@ -31,8 +31,6 @@ typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
  */
 class nsSVGPatternFrame : public nsSVGPatternFrameBase
 {
-  typedef mozilla::gfx::Matrix Matrix;
-
 public:
   NS_DECL_FRAMEARENA_HELPERS
 

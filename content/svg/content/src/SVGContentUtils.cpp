@@ -272,7 +272,7 @@ SVGContentUtils::AngleBisect(float a1, float a2)
   return r;
 }
 
-gfxMatrix
+gfx::Matrix
 SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                                      float aViewboxX, float aViewboxY,
                                      float aViewboxWidth, float aViewboxHeight,
@@ -284,7 +284,7 @@ SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight
                              aPreserveAspectRatio.GetAnimValue());
 }
 
-gfxMatrix
+gfx::Matrix
 SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight,
                                      float aViewboxX, float aViewboxY,
                                      float aViewboxWidth, float aViewboxHeight,
@@ -361,11 +361,11 @@ SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight
     }
     else NS_NOTREACHED("Unknown value for meetOrSlice");
   }
-  
+
   if (aViewboxX) e += -a * aViewboxX;
   if (aViewboxY) f += -d * aViewboxY;
-  
-  return gfxMatrix(a, 0.0f, 0.0f, d, e, f);
+
+  return gfx::Matrix(a, 0.0f, 0.0f, d, e, f);
 }
 
 static bool

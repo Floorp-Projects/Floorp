@@ -168,7 +168,7 @@ public:
     return HasViewBoxRect() || ShouldSynthesizeViewBox();
   }
 
-  gfxMatrix GetViewBoxTransform() const;
+  gfx::Matrix GetViewBoxTransform() const;
 
   bool HasChildrenOnlyTransform() const {
     return mHasChildrenOnlyTransform;

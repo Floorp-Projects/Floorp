@@ -88,9 +88,9 @@ nsSVGMarkerFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
 
   Matrix markerTM = content->GetMarkerTransform(mStrokeWidth, mX, mY,
                                                 mAutoAngle, mIsStart);
-  gfxMatrix viewBoxTM = content->GetViewBoxTransform();
+  Matrix viewBoxTM = content->GetViewBoxTransform();
 
-  return viewBoxTM * ThebesMatrix(markerTM) * markedTM;
+  return ThebesMatrix(viewBoxTM * markerTM) * markedTM;
 }
 
 static nsIFrame*
@@ -186,9 +186,9 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
 
   Matrix markerTM =
     content->GetMarkerTransform(mStrokeWidth, mX, mY, mAutoAngle, mIsStart);
-  gfxMatrix viewBoxTM = content->GetViewBoxTransform();
+  Matrix viewBoxTM = content->GetViewBoxTransform();
 
-  Matrix tm = ToMatrix(viewBoxTM) * markerTM * aToBBoxUserspace;
+  Matrix tm = viewBoxTM * markerTM * aToBBoxUserspace;
 
   nsISVGChildFrame* child = do_QueryFrame(GetAnonymousChildFrame(this));
   // When we're being called to obtain the invalidation area, we need to
