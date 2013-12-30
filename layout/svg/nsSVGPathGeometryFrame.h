@@ -66,8 +66,8 @@ public:
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransforms = nullptr,
-                                mozilla::gfx::Matrix *aFromParentTransforms = nullptr) const MOZ_OVERRIDE;
+  virtual bool IsSVGTransformed(Matrix *aOwnTransforms = nullptr,
+                                Matrix *aFromParentTransforms = nullptr) const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
@@ -93,7 +93,7 @@ protected:
   NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual SVGBBox GetBBoxContribution(const mozilla::gfx::Matrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return false; }
 

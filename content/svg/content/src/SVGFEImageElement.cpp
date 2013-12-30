@@ -229,12 +229,12 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   imageContainer->GetWidth(&nativeSize.width);
   imageContainer->GetHeight(&nativeSize.height);
 
-  gfxMatrix viewBoxTM =
+  Matrix viewBoxTM =
     SVGContentUtils::GetViewBoxTransform(aFilterSubregion.width, aFilterSubregion.height,
                                          0, 0, nativeSize.width, nativeSize.height,
                                          mPreserveAspectRatio);
   Matrix xyTM = Matrix().Translate(aFilterSubregion.x, aFilterSubregion.y);
-  Matrix TM = ToMatrix(viewBoxTM) * xyTM;
+  Matrix TM = viewBoxTM * xyTM;
 
   Filter filter = ToFilter(nsLayoutUtils::GetGraphicsFilterForFrame(frame));
 

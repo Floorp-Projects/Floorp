@@ -133,7 +133,7 @@ public:
    * @param aFlags Flags indicating whether, stroke, for example, should be
    *   included in the bbox calculation.
    */
-  virtual SVGBBox GetBBoxContribution(const mozilla::gfx::Matrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) = 0;
 
   // Are we a container frame?

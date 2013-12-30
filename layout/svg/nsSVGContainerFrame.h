@@ -68,7 +68,7 @@ public:
    * due to a root-<svg> having its currentScale/currentTransform properties
    * set. If aTransform is non-null, then it will be set to the transform.
    */
-  virtual bool HasChildrenOnlyTransform(mozilla::gfx::Matrix *aTransform) const {
+  virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const {
     return false;
   }
 
@@ -141,8 +141,8 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual bool IsSVGTransformed(mozilla::gfx::Matrix *aOwnTransform = nullptr,
-                                mozilla::gfx::Matrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;
+  virtual bool IsSVGTransformed(Matrix *aOwnTransform = nullptr,
+                                Matrix *aFromParentTransform = nullptr) const MOZ_OVERRIDE;
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
@@ -152,7 +152,7 @@ public:
   NS_IMETHOD_(nsRect) GetCoveredRegion() MOZ_OVERRIDE;
   virtual void ReflowSVG() MOZ_OVERRIDE;
   virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual SVGBBox GetBBoxContribution(const mozilla::gfx::Matrix &aToBBoxUserspace,
+  virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
                                       uint32_t aFlags) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsDisplayContainer() MOZ_OVERRIDE { return true; }
 };
