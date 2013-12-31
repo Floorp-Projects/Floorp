@@ -46,6 +46,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 using namespace android;
 
 /**
@@ -1693,7 +1694,7 @@ GonkFrameBuilder(Image* aImage, void* aBuffer, uint32_t aWidth, uint32_t aHeight
   GrallocImage* videoImage = static_cast<GrallocImage*>(aImage);
   GrallocImage::GrallocData data;
   data.mGraphicBuffer = static_cast<layers::GraphicBufferLocked*>(aBuffer);
-  data.mPicSize = gfxIntSize(aWidth, aHeight);
+  data.mPicSize = IntSize(aWidth, aHeight);
   videoImage->SetData(data);
 }
 

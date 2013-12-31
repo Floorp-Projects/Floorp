@@ -38,8 +38,7 @@ SharedTextureClientOGL::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   if (!IsAllocated()) {
     return false;
   }
-  nsIntSize nsSize(mSize.width, mSize.height);
-  aOutDescriptor = SharedTextureDescriptor(mShareType, mHandle, nsSize, mInverted);
+  aOutDescriptor = SharedTextureDescriptor(mShareType, mHandle, mSize, mInverted);
   return true;
 }
 

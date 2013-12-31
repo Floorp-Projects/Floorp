@@ -94,6 +94,7 @@ Fake_AudioGenerator(DOMMediaStream* aStream) : mStream(aStream), mCount(0) {
 class Fake_VideoGenerator {
  public:
   typedef mozilla::DOMMediaStream DOMMediaStream;
+  typedef mozilla::gfx::IntSize IntSize;
 
   Fake_VideoGenerator(DOMMediaStream* aStream) {
     mStream = aStream;
@@ -135,15 +136,15 @@ class Fake_VideoGenerator {
 
     mozilla::layers::PlanarYCbCrData data;
     data.mYChannel = frame;
-    data.mYSize = gfxIntSize(WIDTH, HEIGHT);
+    data.mYSize = IntSize(WIDTH, HEIGHT);
     data.mYStride = (int32_t) (WIDTH * lumaBpp / 8.0);
     data.mCbCrStride = (int32_t) (WIDTH * chromaBpp / 8.0);
     data.mCbChannel = frame + HEIGHT * data.mYStride;
     data.mCrChannel = data.mCbChannel + HEIGHT * data.mCbCrStride / 2;
-    data.mCbCrSize = gfxIntSize(WIDTH / 2, HEIGHT / 2);
+    data.mCbCrSize = IntSize(WIDTH / 2, HEIGHT / 2);
     data.mPicX = 0;
     data.mPicY = 0;
-    data.mPicSize = gfxIntSize(WIDTH, HEIGHT);
+    data.mPicSize = IntSize(WIDTH, HEIGHT);
     data.mStereoMode = mozilla::STEREO_MODE_MONO;
 
     // SetData copies data, so we can free the frame

@@ -3788,8 +3788,8 @@ ContainerState::SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
     GetMaskLayerImageCache()->FindImageFor(&lookupKey);
 
   if (!container) {
-    nsIntSize surfaceSizeInt = nsIntSize(NSToIntCeil(surfaceSize.width),
-                                         NSToIntCeil(surfaceSize.height));
+    IntSize surfaceSizeInt(NSToIntCeil(surfaceSize.width),
+                           NSToIntCeil(surfaceSize.height));
     // no existing mask image, so build a new one
     nsRefPtr<gfxASurface> surface =
       aLayer->Manager()->CreateOptimalMaskSurface(surfaceSizeInt);

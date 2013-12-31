@@ -523,7 +523,7 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // Correct for rotation
   destRegion.MoveBy(aData.rotation());
 
-  IntSize size = aData.rect().Size();
+  IntSize size = aData.rect().Size().ToIntSize();
   nsIntRect destBounds = destRegion.GetBounds();
   destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
                     (destBounds.y >= size.height) ? -size.height : 0);
@@ -620,7 +620,7 @@ DeprecatedContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
   // Correct for rotation
   destRegion.MoveBy(aData.rotation());
 
-  IntSize size = aData.rect().Size();
+  IntSize size = aData.rect().Size().ToIntSize();
   nsIntRect destBounds = destRegion.GetBounds();
   destRegion.MoveBy((destBounds.x >= size.width) ? -size.width : 0,
                     (destBounds.y >= size.height) ? -size.height : 0);

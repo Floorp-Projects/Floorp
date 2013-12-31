@@ -2289,8 +2289,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
       UpdateTranslucentWindowAlphaInternal(aBoundsRect, imageBuffer, stride);
   } else {
       nsRefPtr<gfxImageSurface> img =
-          new gfxImageSurface(ThebesIntSize(aBoundsRect.Size()),
-                              gfxImageFormatA8);
+          new gfxImageSurface(aBoundsRect.Size(), gfxImageFormatA8);
       if (img && !img->CairoStatus()) {
           img->SetDeviceOffset(-aBoundsRect.TopLeft());
 

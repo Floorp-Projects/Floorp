@@ -59,15 +59,15 @@ TileGenFunc(GLContext* gl,
             return nullptr;
     }
 }
-already_AddRefed<TextureImage>
 
+already_AddRefed<TextureImage>
 TextureImage::Create(GLContext* gl,
                      const nsIntSize& size,
                      TextureImage::ContentType contentType,
                      GLenum wrapMode,
                      TextureImage::Flags flags)
 {
-    return CreateTextureImage(gl, size, contentType, wrapMode, flags);
+    return Create(gl, size.ToIntSize(), contentType, wrapMode, flags);
 }
 
 // Moz2D equivalent...
@@ -78,7 +78,7 @@ TextureImage::Create(GLContext* gl,
                      GLenum wrapMode,
                      TextureImage::Flags flags)
 {
-    return Create(gl, ThebesIntSize(size), contentType, wrapMode, flags);
+    return CreateTextureImage(gl, size, contentType, wrapMode, flags);
 }
 
 bool
@@ -275,7 +275,7 @@ gfx::IntSize TextureImage::GetSize() const {
 TextureImage::TextureImage(const gfx::IntSize& aSize,
              GLenum aWrapMode, ContentType aContentType,
              Flags aFlags)
-    : mSize(ThebesIntSize(aSize))
+    : mSize(aSize)
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
     , mFilter(GraphicsFilter::FILTER_GOOD)

@@ -36,6 +36,7 @@ using namespace mozilla;
 using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 using namespace mozilla::layers;
+using namespace mozilla::gfx;
 using namespace std;
 
 #ifdef MOZ_WIDGET_GTK
@@ -2578,7 +2579,7 @@ PluginInstanceChild::NPN_FinalizeAsyncSurface(NPAsyncSurface *surface)
                 RemoteImageData *data = mRemoteImageData;
                 if (data->mBitmap.mData == bitmapData->mRemotePtr) {
                     data->mBitmap.mData = nullptr;
-                    data->mSize = gfxIntSize(0, 0);
+                    data->mSize = IntSize(0, 0);
                     data->mWasUpdated = true;
                 }
             }
@@ -2593,7 +2594,7 @@ PluginInstanceChild::NPN_FinalizeAsyncSurface(NPAsyncSurface *surface)
                 RemoteImageData *data = mRemoteImageData;
                 if (data->mTextureHandle == surface->sharedHandle) {
                     data->mTextureHandle = nullptr;
-                    data->mSize = gfxIntSize(0, 0);
+                    data->mSize = IntSize(0, 0);
                     data->mWasUpdated = true;
                 }
             }
@@ -2619,7 +2620,7 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
     if (!surface) {
         CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
         data->mBitmap.mData = nullptr;
-        data->mSize = gfxIntSize(0, 0);
+        data->mSize = IntSize(0, 0);
         data->mWasUpdated = true;
     } else {
         switch (mDrawingModel) {
@@ -2633,7 +2634,7 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
               
                 CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
                 data->mBitmap.mData = (unsigned char*)bitmapData->mRemotePtr;
-                data->mSize = gfxIntSize(surface->size.width, surface->size.height);
+                data->mSize = IntSize(surface->size.width, surface->size.height);
                 data->mFormat = surface->format == NPImageFormatBGRX32 ?
                                 RemoteImageData::BGRX32 : RemoteImageData::BGRA32;
                 data->mBitmap.mStride = surface->bitmap.stride;
@@ -2645,7 +2646,7 @@ PluginInstanceChild::NPN_SetCurrentAsyncSurface(NPAsyncSurface *surface, NPRect 
             {
                 CrossProcessMutexAutoLock autoLock(*mRemoteImageDataMutex);
                 data->mType = RemoteImageData::DXGI_TEXTURE_HANDLE;
-                data->mSize = gfxIntSize(surface->size.width, surface->size.height);
+                data->mSize = IntSize(surface->size.width, surface->size.height);
                 data->mFormat = surface->format == NPImageFormatBGRX32 ?
                                 RemoteImageData::BGRX32 : RemoteImageData::BGRA32;
                 data->mTextureHandle = surface->sharedHandle;

@@ -246,9 +246,9 @@ DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
   if (!serializer.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
-                          ThebesIntSize(aData.mYSize), aData.mYStride,
-                          ThebesIntSize(aData.mCbCrSize), aData.mCbCrStride,
-                          aData.mYSkip, aData.mCbSkip)) {
+                           aData.mYSize, aData.mYStride,
+                           aData.mCbCrSize, aData.mCbCrStride,
+                           aData.mYSkip, aData.mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
   }
   mData.mYChannel = serializer.GetYData();
