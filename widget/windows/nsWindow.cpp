@@ -7259,14 +7259,16 @@ static bool IsDifferentThreadWindow(HWND aWnd)
   return ::GetCurrentThreadId() != ::GetWindowThreadProcessId(aWnd, nullptr);
 }
 
+// static
 bool
-nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
+nsWindow::EventIsInsideWindow(UINT aMessage, nsWindow* aWindow)
 {
   RECT r;
 
-  if (Msg == WM_ACTIVATEAPP)
+  if (aMessage == WM_ACTIVATEAPP) {
     // don't care about activation/deactivation
     return false;
+  }
 
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
@@ -7275,141 +7277,175 @@ nsWindow::EventIsInsideWindow(UINT Msg, nsWindow* aWindow)
   mp.y = GET_Y_LPARAM(pos);
 
   // was the event inside this window?
-  return (bool) PtInRect(&r, mp);
+  return static_cast<bool>(::PtInRect(&r, mp));
 }
 
-// Handle events that may cause a popup (combobox, XPMenu, etc) to need to rollup.
+// static
 bool
-nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult)
+nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
+                         WPARAM aWParam, LPARAM aLParam, LRESULT* aResult)
 {
-  NS_ASSERTION(outResult, "Bad outResult");
+  NS_ASSERTION(aResult, "Bad outResult");
 
-  *outResult = MA_NOACTIVATE;
+  *aResult = MA_NOACTIVATE;
 
-  if (!::IsWindowVisible(inWnd))
+  if (!::IsWindowVisible(aWnd)) {
     return false;
+  }
+
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE(rollupListener, false);
-  nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  if (!rollupWidget)
+
+  nsCOMPtr<nsIWidget> popup = rollupListener->GetRollupWidget();
+  if (!popup) {
     return false;
+  }
 
-  inMsg = WinUtils::GetNativeMessage(inMsg);
-  if (inMsg == WM_LBUTTONDOWN || inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN ||
-      inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL || inMsg == WM_ACTIVATE ||
-      (inMsg == WM_KILLFOCUS && IsDifferentThreadWindow((HWND)inWParam)) ||
-      inMsg == WM_NCRBUTTONDOWN ||
-      inMsg == WM_MOVING ||
-      inMsg == WM_SIZING ||
-      inMsg == WM_NCLBUTTONDOWN ||
-      inMsg == WM_NCMBUTTONDOWN ||
-      inMsg == WM_MOUSEACTIVATE ||
-      inMsg == WM_ACTIVATEAPP ||
-      inMsg == WM_MENUSELECT) {
-    // Rollup if the event is outside the popup.
-    bool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)(rollupWidget.get()));
+  UINT nativeMessage = WinUtils::GetNativeMessage(aMessage);
+  switch (nativeMessage) {
+    case WM_LBUTTONDOWN:
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+    case WM_NCLBUTTONDOWN:
+    case WM_NCRBUTTONDOWN:
+    case WM_NCMBUTTONDOWN:
+      break;
 
-    if (rollup && (inMsg == WM_MOUSEWHEEL || inMsg == WM_MOUSEHWHEEL)) {
-      rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-      *outResult = MA_ACTIVATE;
-    }
+    case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+      break;
 
-    // If we're dealing with menus, we probably have submenus and we don't
-    // want to rollup if the click is in a parent menu of the current submenu.
-    uint32_t popupsToRollup = UINT32_MAX;
-    if (rollup) {
-      nsAutoTArray<nsIWidget*, 5> widgetChain;
-      uint32_t sameTypeCount = rollupListener->GetSubmenuWidgetChain(&widgetChain);
-      for ( uint32_t i = 0; i < widgetChain.Length(); ++i ) {
-        nsIWidget* widget = widgetChain[i];
-        if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
-          // don't roll up if the mouse event occurred within a menu of the
-          // same type. If the mouse event occurred in a menu higher than
-          // that, roll up, but pass the number of popups to Rollup so
-          // that only those of the same type close up.
-          if (i < sameTypeCount) {
-            rollup = false;
-          } else {
-            popupsToRollup = sameTypeCount;
-          }
-          break;
+    case WM_ACTIVATE:
+    case WM_ACTIVATEAPP:
+    case WM_MOUSEACTIVATE:
+      break;
+
+    case WM_KILLFOCUS:
+      // If focus moves to other window created in different process/thread,
+      // e.g., a plugin window, popups should be rolled up.
+      if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
+        break;
+      }
+      return false;
+
+    case WM_MOVING:
+    case WM_SIZING:
+    case WM_MENUSELECT:
+      break;
+
+    default:
+      return false;
+  }
+
+  // Basically, rollup the popup if the event is outside it.
+  bool rollup =
+    !EventIsInsideWindow(nativeMessage, static_cast<nsWindow*>(popup.get()));
+
+  // We need to check if the popup thinks that it should cause closing itself
+  // when mouse wheel events are fired outside the rollup widget.
+  if (rollup &&
+      (nativeMessage == WM_MOUSEWHEEL || nativeMessage == WM_MOUSEHWHEEL)) {
+    rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
+    *aResult = MA_ACTIVATE;
+  }
+
+  // If we're dealing with menus, we probably have submenus and we don't want
+  // to rollup some of them if the click is in a parent menu of the current
+  // submenu.
+  uint32_t popupsToRollup = UINT32_MAX;
+  if (rollup) {
+    nsAutoTArray<nsIWidget*, 5> widgetChain;
+    uint32_t sameTypeCount =
+      rollupListener->GetSubmenuWidgetChain(&widgetChain);
+    for (uint32_t i = 0; i < widgetChain.Length(); ++i) {
+      nsIWidget* widget = widgetChain[i];
+      if (EventIsInsideWindow(nativeMessage, static_cast<nsWindow*>(widget))) {
+        // don't roll up if the mouse event occurred within a menu of the
+        // same type. If the mouse event occurred in a menu higher than that,
+        // roll up, but pass the number of popups to Rollup so that only those
+        // of the same type close up.
+        if (i < sameTypeCount) {
+          rollup = false;
+        } else {
+          popupsToRollup = sameTypeCount;
         }
-      } // foreach parent menu widget
+        break;
+      }
+    }
+  }
+
+  if (nativeMessage == WM_MOUSEACTIVATE) {
+    // Prevent the click inside the popup from causing a change in window
+    // activation. Since the popup is shown non-activated, we need to eat any
+    // requests to activate the window while it is displayed. Windows will
+    // automatically activate the popup on the mousedown otherwise.
+    if (!rollup) {
+      return true;
     }
 
-    if (inMsg == WM_MOUSEACTIVATE) {
-      // Prevent the click inside the popup from causing a change in window
-      // activation. Since the popup is shown non-activated, we need to eat
-      // any requests to activate the window while it is displayed. Windows
-      // will automatically activate the popup on the mousedown otherwise.
+    if (HIWORD(aLParam) == WM_MOUSEMOVE) {
+      // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
+      // must be enabled in Windows.
+      rollup = rollupListener->ShouldRollupOnMouseActivate();
       if (!rollup) {
         return true;
-      } else {
-        UINT uMsg = HIWORD(inLParam);
-        if (uMsg == WM_MOUSEMOVE) {
-          // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
-          // must be enabled in Windows.
-          rollup = rollupListener->ShouldRollupOnMouseActivate();
-          if (!rollup) {
-            return true;
-          }
-        }
       }
     }
-    // if we've still determined that we should still rollup everything, do it.
-    else if (rollup) {
-      // only need to deal with the last rollup for left mouse down events.
-      NS_ASSERTION(!mLastRollup, "mLastRollup is null");
 
-      bool consumeRollupEvent;
-      if (inMsg == WM_LBUTTONDOWN) {
-        POINT pt;
-        pt.x = GET_X_LPARAM(inLParam);
-        pt.y = GET_Y_LPARAM(inLParam);
-        ::ClientToScreen(inWnd, &pt);
-        nsIntPoint pos(pt.x, pt.y);
+    return false;
+  }
 
-        consumeRollupEvent = rollupListener->Rollup(popupsToRollup, &pos, &mLastRollup);
-        NS_IF_ADDREF(mLastRollup);
-      }
-      else {
-        consumeRollupEvent = rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
-      }
+  if (!rollup) {
+    return false;
+  }
 
-      // Tell hook to stop processing messages
-      sProcessHook = false;
-      sRollupMsgId = 0;
-      sRollupMsgWnd = nullptr;
+  // Only need to deal with the last rollup for left mouse down events.
+  NS_ASSERTION(!mLastRollup, "mLastRollup is null");
 
-      // return TRUE tells Windows that the event is consumed,
-      // false allows the event to be dispatched
-      //
-      // So if we are NOT supposed to be consuming events, let it go through
-      if (consumeRollupEvent && inMsg != WM_RBUTTONDOWN) {
-        *outResult = MA_ACTIVATE;
+  bool consumeRollupEvent;
+  if (nativeMessage == WM_LBUTTONDOWN) {
+    POINT pt;
+    pt.x = GET_X_LPARAM(aLParam);
+    pt.y = GET_Y_LPARAM(aLParam);
+    ::ClientToScreen(aWnd, &pt);
+    nsIntPoint pos(pt.x, pt.y);
 
-        // However, don't activate panels
-        if (inMsg == WM_MOUSEACTIVATE) {
-          nsWindow* activateWindow = WinUtils::GetNSWindowPtr(inWnd);
-          if (activateWindow) {
-            nsWindowType wintype;
-            activateWindow->GetWindowType(wintype);
-            if (wintype == eWindowType_popup && activateWindow->PopupType() == ePopupTypePanel) {
-              *outResult = popupsToRollup != UINT32_MAX ? MA_NOACTIVATEANDEAT : MA_NOACTIVATE;
-            }
-          }
-        }
-        return true;
-      }
-      // if we are only rolling up some popups, don't activate and don't let
-      // the event go through. This prevents clicks menus higher in the
-      // chain from opening when a context menu is open
-      if (popupsToRollup != UINT32_MAX && inMsg == WM_MOUSEACTIVATE) {
-        *outResult = MA_NOACTIVATEANDEAT;
-        return true;
+    consumeRollupEvent =
+      rollupListener->Rollup(popupsToRollup, &pos, &mLastRollup);
+    NS_IF_ADDREF(mLastRollup);
+  } else {
+    consumeRollupEvent =
+      rollupListener->Rollup(popupsToRollup, nullptr, nullptr);
+  }
+
+  // Tell hook to stop processing messages
+  sProcessHook = false;
+  sRollupMsgId = 0;
+  sRollupMsgWnd = nullptr;
+
+  // If we are NOT supposed to be consuming events, let it go through
+  if (consumeRollupEvent && nativeMessage != WM_RBUTTONDOWN) {
+    *aResult = MA_ACTIVATE;
+
+    // However, don't activate panels
+    if (nativeMessage == WM_MOUSEACTIVATE) {
+      nsWindow* activateWindow = WinUtils::GetNSWindowPtr(aWnd);
+      if (activateWindow && activateWindow->mWindowType == eWindowType_popup &&
+          activateWindow->PopupType() == ePopupTypePanel) {
+        *aResult = popupsToRollup != UINT32_MAX ? MA_NOACTIVATEANDEAT :
+                                                  MA_NOACTIVATE;
       }
     }
-  } // if event that might trigger a popup to rollup
+    return true;
+  }
+
+  // If we are only rolling up some popups, don't activate and don't let the
+  // event go through. This prevents clicks menus higher in the chain from
+  // opening when a context menu is open
+  if (popupsToRollup != UINT32_MAX && nativeMessage == WM_MOUSEACTIVATE) {
+    *aResult = MA_NOACTIVATEANDEAT;
+    return true;
+  }
 
   return false;
 }
