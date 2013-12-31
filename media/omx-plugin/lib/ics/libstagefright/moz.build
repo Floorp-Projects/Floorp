@@ -13,3 +13,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
 LIBRARY_NAME = 'stagefright'
 
 FORCE_SHARED_LIB = True
+
+LOCAL_INCLUDES += [
+    '/media/omx-plugin/include/ics',
+    '/media/omx-plugin/include/ics/media/stagefright/openmax',
+]
+

@@ -18,3 +18,9 @@ UNIFIED_SOURCES += [
 LIBRARY_NAME = 'spellchecker'
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../hunspell/src',
+    '/content/base/src',
+    '/editor/libeditor/base',
+]

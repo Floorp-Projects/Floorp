@@ -20,10 +20,6 @@ USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES        += \
-                -I$(srcdir)/../../../content/media/plugins \
-                $(NULL)
-
 EXTRA_DSO_LDOPTS += \
 		-L$(DEPTH)/media/omx-plugin/lib/gb/libutils \
 		-lutils \
@@ -33,7 +29,3 @@ EXTRA_DSO_LDOPTS += \
 		-lstagefright_color_conversion \
 		$(NULL)
 
-INCLUDES        += \
-                -I$(srcdir)/../include/gb \
-                -I$(srcdir)/../include/gb/media/stagefright/openmax \
-                $(NULL)

@@ -30,3 +30,8 @@ if CONFIG['TARGET_XPCOM_ABI']:
     DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']
 
 DEFINES['MOZ_NO_MOZALLOC'] = True
+
+LOCAL_INCLUDES += [
+    '../../build',
+]
+

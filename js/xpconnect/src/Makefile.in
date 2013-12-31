@@ -3,29 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LOCAL_INCLUDES = \
-		-I$(srcdir)/../wrappers \
-		-I$(srcdir)/../loader \
-		-I$(topsrcdir)/caps/include \
-		-I$(topsrcdir)/content/base/src \
-		-I$(topsrcdir)/content/base/public \
-		-I$(topsrcdir)/content/events/src \
-		-I$(topsrcdir)/content/html/content/src \
-		-I$(topsrcdir)/content/html/document/src \
-		-I$(topsrcdir)/content/svg/content/src \
-		-I$(topsrcdir)/layout/style \
-		-I$(topsrcdir)/layout/base \
-		-I$(topsrcdir)/dom/base \
-		-I$(topsrcdir)/xpcom/ds \
-		-I$(topsrcdir)/js/ipc \
-		$(NULL)
-
-ifdef MOZ_B2G_BT
-LOCAL_INCLUDES += \
-    -I$(topsrcdir)/dom/bluetooth \
-    $(NULL)
-endif
-
 EXTRA_MDDEPEND_FILES = dom_qsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
 
 INSTALL_TARGETS += extra_export_files

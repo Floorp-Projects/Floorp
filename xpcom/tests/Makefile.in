@@ -9,10 +9,6 @@ MOZ_DEBUG_SYMBOLS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES	= \
-                -I$(srcdir)/../ds \
-		$(NULL)
-
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
 ifneq (,$(SIMPLE_PROGRAMS))

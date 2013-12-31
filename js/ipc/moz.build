@@ -22,3 +22,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 DEFINES['BIN_SUFFIX'] = '"%s"' % CONFIG['BIN_SUFFIX']
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/js/ipc',
+    '/js/public',
+    '/js/xpconnect/src',
+]
+

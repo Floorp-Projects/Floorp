@@ -344,8 +344,6 @@ DIST_GARBAGE = config.cache config.log config.status* \
 distclean::
 	$(RM) $(DIST_GARBAGE)
 
-INCLUDES	+= -I$(srcdir)
-
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
 DEFINES         += -D_CRT_RAND_S
