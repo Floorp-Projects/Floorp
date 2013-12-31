@@ -337,6 +337,20 @@ protected:
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
   }
+  HWND                    GetOwnerWnd() const
+  {
+    return ::GetWindow(mWnd, GW_OWNER);
+  }
+  bool                    IsOwnerForegroundWindow() const
+  {
+    HWND owner = GetOwnerWnd();
+    return owner && owner == ::GetForegroundWindow();
+  }
+  bool                    IsPopup() const
+  {
+    return mWindowType == eWindowType_popup;
+  }
+
 
   /**
    * Event processing helpers
@@ -358,7 +372,7 @@ protected:
                                               bool *aEventDispatched);
   LRESULT                 ProcessKeyDownMessage(const MSG &aMsg,
                                                 bool *aEventDispatched);
-  static bool             EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
+  static bool             EventIsInsideWindow(nsWindow* aWindow);
   // Convert nsEventStatus value to a windows boolean
   static bool             ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const bool aIsSleepMode);
@@ -405,6 +419,8 @@ protected:
   static void             ScheduleHookTimer(HWND aWnd, UINT aMsgId);
   static void             RegisterSpecialDropdownHooks();
   static void             UnregisterSpecialDropdownHooks();
+  static bool             GetPopupsToRollup(nsIRollupListener* aRollupListener,
+                                            uint32_t* aPopupsToRollup);
   static bool             DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESULT* outResult);
 
   /**
