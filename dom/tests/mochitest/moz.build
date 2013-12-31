@@ -11,7 +11,6 @@ DIRS += [
     'chrome',
     'crypto',
     'general',
-    'whatwg',
     'geolocation',
     'localstorage',
     'orientation',
@@ -30,4 +29,9 @@ MOCHITEST_MANIFESTS += [
     'dom-level1-core/mochitest.ini',
     'dom-level2-core/mochitest.ini',
     'dom-level2-html/mochitest.ini',
+    'whatwg/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'whatwg/chrome.ini',
 ]
