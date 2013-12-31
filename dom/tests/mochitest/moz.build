@@ -17,7 +17,6 @@ DIRS += [
     'sessionstorage',
     'storageevent',
     'notification',
-    'webapps',
     'webcomponents',
 ]
 
@@ -28,10 +27,12 @@ MOCHITEST_MANIFESTS += [
     'dom-level1-core/mochitest.ini',
     'dom-level2-core/mochitest.ini',
     'dom-level2-html/mochitest.ini',
+    'webapps/mochitest.ini',
     'whatwg/mochitest.ini',
 ]
 
 MOCHITEST_CHROME_MANIFESTS += [
+    'webapps/chrome.ini',
     'whatwg/chrome.ini',
 ]
 
