@@ -7261,15 +7261,9 @@ static bool IsDifferentThreadWindow(HWND aWnd)
 
 // static
 bool
-nsWindow::EventIsInsideWindow(UINT aMessage, nsWindow* aWindow)
+nsWindow::EventIsInsideWindow(nsWindow* aWindow)
 {
   RECT r;
-
-  if (aMessage == WM_ACTIVATEAPP) {
-    // don't care about activation/deactivation
-    return false;
-  }
-
   ::GetWindowRect(aWindow->mWnd, &r);
   DWORD pos = ::GetMessagePos();
   POINT mp;
@@ -7301,6 +7295,9 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     return false;
   }
 
+  bool rollup = false;
+
+  nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
   UINT nativeMessage = WinUtils::GetNativeMessage(aMessage);
   switch (nativeMessage) {
     case WM_LBUTTONDOWN:
@@ -7309,21 +7306,35 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_NCLBUTTONDOWN:
     case WM_NCRBUTTONDOWN:
     case WM_NCMBUTTONDOWN:
+      rollup = !EventIsInsideWindow(popupWindow);
       break;
 
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL:
+      // We need to check if the popup thinks that it should cause closing
+      // itself when mouse wheel events are fired outside the rollup widget.
+      if (!EventIsInsideWindow(popupWindow)) {
+        rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
+        *aResult = MA_ACTIVATE;
+      }
+      break;
+
+    case WM_ACTIVATEAPP:
+      rollup = true;
       break;
 
     case WM_ACTIVATE:
-    case WM_ACTIVATEAPP:
     case WM_MOUSEACTIVATE:
+      // XXX Why do we need to check the message pos?
+      rollup = !EventIsInsideWindow(popupWindow);
       break;
 
     case WM_KILLFOCUS:
       // If focus moves to other window created in different process/thread,
       // e.g., a plugin window, popups should be rolled up.
       if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
+        // XXX Why do we need to check the message pos?
+        rollup = !EventIsInsideWindow(popupWindow);
         break;
       }
       return false;
@@ -7331,35 +7342,25 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_MOVING:
     case WM_SIZING:
     case WM_MENUSELECT:
+      // XXX Why do we need to check the message pos?
+      rollup = !EventIsInsideWindow(popupWindow);
       break;
 
     default:
       return false;
   }
 
-  // Basically, rollup the popup if the event is outside it.
-  bool rollup =
-    !EventIsInsideWindow(nativeMessage, static_cast<nsWindow*>(popup.get()));
-
-  // We need to check if the popup thinks that it should cause closing itself
-  // when mouse wheel events are fired outside the rollup widget.
-  if (rollup &&
-      (nativeMessage == WM_MOUSEWHEEL || nativeMessage == WM_MOUSEHWHEEL)) {
-    rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
-    *aResult = MA_ACTIVATE;
-  }
-
   // If we're dealing with menus, we probably have submenus and we don't want
   // to rollup some of them if the click is in a parent menu of the current
   // submenu.
   uint32_t popupsToRollup = UINT32_MAX;
-  if (rollup) {
+  if (rollup && nativeMessage != WM_ACTIVATEAPP) {
     nsAutoTArray<nsIWidget*, 5> widgetChain;
     uint32_t sameTypeCount =
       rollupListener->GetSubmenuWidgetChain(&widgetChain);
     for (uint32_t i = 0; i < widgetChain.Length(); ++i) {
       nsIWidget* widget = widgetChain[i];
-      if (EventIsInsideWindow(nativeMessage, static_cast<nsWindow*>(widget))) {
+      if (EventIsInsideWindow(static_cast<nsWindow*>(widget))) {
         // don't roll up if the mouse event occurred within a menu of the
         // same type. If the mouse event occurred in a menu higher than that,
         // roll up, but pass the number of popups to Rollup so that only those
