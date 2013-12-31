@@ -1130,7 +1130,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
         mLines.front() != mLines.back() &&
         mLines.begin().next()->IsBlock()))) {
     // Reflow the bullet
-    nsHTMLReflowMetrics metrics(aReflowState.GetWritingMode());
+    nsHTMLReflowMetrics metrics(aReflowState);
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
     bool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
@@ -2363,7 +2363,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
   // Handle an odd-ball case: a list-item with no lines
   if (HasOutsideBullet() && mLines.empty()) {
-    nsHTMLReflowMetrics metrics(aState.mReflowState.GetWritingMode());
+    nsHTMLReflowMetrics metrics(aState.mReflowState);
     nsIFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, aState, metrics,
                  aState.mReflowState.ComputedPhysicalBorderPadding().top);
@@ -4056,7 +4056,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
        (mLines.front() != mLines.back() &&
         0 == mLines.front()->mBounds.height &&
         aLine == mLines.begin().next()))) {
-    nsHTMLReflowMetrics metrics(aState.mReflowState.GetWritingMode());
+    nsHTMLReflowMetrics metrics(aState.mReflowState);
     nsIFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, aState, metrics, aState.mY);
     NS_ASSERTION(!BulletIsEmpty() || metrics.Height() == 0,

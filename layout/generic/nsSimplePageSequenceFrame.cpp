@@ -200,7 +200,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   nscoord maxXMost = 0;
 
   // Tile the pages vertically
-  nsHTMLReflowMetrics kidSize(aReflowState.GetWritingMode());
+  nsHTMLReflowMetrics kidSize(aReflowState);
   for (nsIFrame* kidFrame = mFrames.FirstChild(); nullptr != kidFrame; ) {
     // Set the shared data into the page frame before reflow
     nsPageFrame * pf = static_cast<nsPageFrame*>(kidFrame);

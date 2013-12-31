@@ -14,6 +14,8 @@
 
 //----------------------------------------------------------------------
 
+class nsHTMLReflowState;
+
 // Option flags
 #define NS_REFLOW_CALC_BOUNDING_METRICS  0x0001
 
@@ -209,6 +211,8 @@ public:
     , mFlags(aFlags)
     , mWritingMode(aWritingMode)
   {}
+
+  nsHTMLReflowMetrics(const nsHTMLReflowState& aState, uint32_t aFlags = 0);
 
   // ISize and BSize are logical-coordinate dimensions:
   // ISize is the size in the writing mode's inline direction (which equates to

@@ -439,7 +439,7 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
     flags = 0;
   }
   nsRect rect = mDropdownFrame->GetRect();
-  nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+  nsHTMLReflowMetrics desiredSize(aReflowState);
   nsReflowStatus ignoredStatus;
   nsresult rv = ReflowChild(mDropdownFrame, aPresContext, desiredSize,
                             kidReflowState, rect.x, rect.y, flags,
