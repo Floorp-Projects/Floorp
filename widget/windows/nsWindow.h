@@ -358,7 +358,7 @@ protected:
                                               bool *aEventDispatched);
   LRESULT                 ProcessKeyDownMessage(const MSG &aMsg,
                                                 bool *aEventDispatched);
-  static bool             EventIsInsideWindow(UINT Msg, nsWindow* aWindow);
+  static bool             EventIsInsideWindow(nsWindow* aWindow);
   // Convert nsEventStatus value to a windows boolean
   static bool             ConvertStatus(nsEventStatus aStatus);
   static void             PostSleepWakeNotification(const bool aIsSleepMode);
