@@ -1,3 +1,0 @@
-{
-  "Setting boundary points on a detached Range must throw INVALID_STATE_ERR": true
-}
