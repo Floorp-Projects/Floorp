@@ -1147,8 +1147,8 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
       FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
       FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
       MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-      RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize());
-      RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize());
+      RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize().ToIntSize());
+      RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize().ToIntSize());
       RefPtr<DrawTarget> dt = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
       result.mContext = new gfxContext(dt);
     } else {
@@ -1157,7 +1157,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   } else {
     nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
     MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize());
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
     result.mContext = new gfxContext(dt);
   }
   if (!result.mContext) {
@@ -1226,7 +1226,7 @@ ContentClientIncremental::GetUpdateSurface(BufferType aType,
     return nullptr;
   }
   SurfaceDescriptor desc;
-  if (!mForwarder->AllocSurfaceDescriptor(gfxIntSize(rgnSize.width, rgnSize.height),
+  if (!mForwarder->AllocSurfaceDescriptor(rgnSize.Size().ToIntSize(),
                                           mContentType,
                                           &desc)) {
     NS_WARNING("creating SurfaceDescriptor failed!");

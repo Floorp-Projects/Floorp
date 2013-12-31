@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+using namespace mozilla::gfx;
+
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) PR_LOG(GetMediaManagerLog(), PR_LOG_DEBUG, msg)
@@ -77,15 +79,15 @@ MediaEngineWebRTCVideoSource::DeliverFrame(
 
   layers::PlanarYCbCrData data;
   data.mYChannel = frame;
-  data.mYSize = gfxIntSize(mWidth, mHeight);
+  data.mYSize = IntSize(mWidth, mHeight);
   data.mYStride = mWidth * lumaBpp/ 8;
   data.mCbCrStride = mWidth * chromaBpp / 8;
   data.mCbChannel = frame + mHeight * data.mYStride;
   data.mCrChannel = data.mCbChannel + mHeight * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(mWidth/ 2, mHeight/ 2);
+  data.mCbCrSize = IntSize(mWidth/ 2, mHeight/ 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = gfxIntSize(mWidth, mHeight);
+  data.mPicSize = IntSize(mWidth, mHeight);
   data.mStereoMode = STEREO_MODE_MONO;
 
   videoImage->SetData(data);

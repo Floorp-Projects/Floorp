@@ -414,7 +414,7 @@ ImageLayerD3D10::GetAsTexture(gfx::IntSize* aSize)
     return nullptr;
   }
 
-  *aSize = gfx::ThebesIntSize(image->GetSize());
+  *aSize = image->GetSize();
   bool dontCare;
   nsRefPtr<ID3D10ShaderResourceView> result = GetImageSRView(image, dontCare);
   return result.forget();

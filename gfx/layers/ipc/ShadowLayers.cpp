@@ -669,8 +669,8 @@ ShadowLayerForwarder::GetDescriptorSurfaceSize(
   }
 
   nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
-  size = surface->GetSize();
-  *aSurface = surface.forget().get();
+  size = surface->GetSize().ToIntSize();
+  surface.forget(aSurface);
   return size;
 }
 
@@ -829,7 +829,7 @@ gfx::IntSize
 AutoOpenSurface::Size()
 {
   if (mSurface) {
-    return mSurface->GetSize();
+    return mSurface->GetSize().ToIntSize();
   }
   return ShadowLayerForwarder::GetDescriptorSurfaceSize(
     mDescriptor, mMode, getter_AddRefs(mSurface));
