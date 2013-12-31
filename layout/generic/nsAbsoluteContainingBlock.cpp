@@ -383,7 +383,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       aReflowState.ComputedWidth() + aReflowState.ComputedPhysicalPadding().LeftRight();
   }
 
-  nsHTMLReflowMetrics kidDesiredSize(aReflowState.GetWritingMode());
+  nsHTMLReflowMetrics kidDesiredSize(aReflowState);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
                                    aContainingBlock.width,
