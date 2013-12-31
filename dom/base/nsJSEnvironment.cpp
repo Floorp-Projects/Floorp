@@ -157,7 +157,7 @@ static nsITimer *sICCTimer;
 static nsITimer *sFullGCTimer;
 static nsITimer *sInterSliceGCTimer;
 
-static PRTime sLastCCEndTime;
+static TimeStamp sLastCCEndTime;
 
 static bool sCCLockedOut;
 static PRTime sCCLockedOutTime;
@@ -1981,18 +1981,27 @@ FireForgetSkippable(uint32_t aSuspected, bool aRemoveChildless)
 
 MOZ_ALWAYS_INLINE
 static uint32_t
-TimeBetween(PRTime start, PRTime end)
+TimeBetween(TimeStamp start, TimeStamp end)
 {
   MOZ_ASSERT(end >= start);
-  return (uint32_t)(end - start) / PR_USEC_PER_MSEC;
+  return (uint32_t) ((end - start).ToMilliseconds());
+}
+
+static uint32_t
+TimeUntilNow(TimeStamp start)
+{
+  if (start.IsNull()) {
+    return 0;
+  }
+  return TimeBetween(start, TimeStamp::Now());
 }
 
 struct CycleCollectorStats
 {
   void Clear()
   {
-    mBeginSliceTime = 0;
-    mBeginTime = 0;
+    mBeginSliceTime = TimeStamp();
+    mBeginTime = TimeStamp();
     mMaxGCDuration = 0;
     mRanSyncForgetSkippable = false;
     mSuspected = 0;
@@ -2003,10 +2012,10 @@ struct CycleCollectorStats
   void PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls = 0);
 
   // Time the current slice began, including any GC finishing.
-  PRTime mBeginSliceTime;
+  TimeStamp mBeginSliceTime;
 
   // Time the current cycle collection began.
-  PRTime mBeginTime;
+  TimeStamp mBeginTime;
 
   // The longest GC finishing duration for any slice of the current CC.
   uint32_t mMaxGCDuration;
@@ -2036,8 +2045,7 @@ ICCSliceTime()
   }
 
   // If an ICC is in progress and is taking too long, finish it off.
-  if (gCCStats.mBeginTime != 0 &&
-      TimeBetween(gCCStats.mBeginTime, PR_Now()) >= kMaxICCDuration) {
+  if (TimeUntilNow(gCCStats.mBeginTime) >= kMaxICCDuration) {
     return -1;
   }
 
@@ -2047,14 +2055,14 @@ ICCSliceTime()
 void
 CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls)
 {
-  mBeginSliceTime = PR_Now();
+  mBeginSliceTime = TimeStamp::Now();
 
   // Before we begin the cycle collection, make sure there is no active GC.
-  PRTime endGCTime;
+  TimeStamp endGCTime;
   if (sCCLockedOut) {
     mAnyLockedOut = true;
     FinishAnyIncrementalGC();
-    endGCTime = PR_Now();
+    endGCTime = TimeStamp::Now();
     uint32_t gcTime = TimeBetween(mBeginSliceTime, endGCTime);
     mMaxGCDuration = std::max(mMaxGCDuration, gcTime);
   } else {
@@ -2077,7 +2085,7 @@ CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippabl
 
     if (ranSyncForgetSkippable) {
       mMaxSkippableDuration =
-        std::max(mMaxSkippableDuration, TimeBetween(endGCTime, PR_Now()));
+        std::max(mMaxSkippableDuration, TimeUntilNow(endGCTime));
       mRanSyncForgetSkippable = true;
     }
 
@@ -2144,7 +2152,7 @@ nsJSContext::BeginCycleCollectionCallback()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  gCCStats.mBeginTime = gCCStats.mBeginSliceTime ? gCCStats.mBeginSliceTime : PR_Now();
+  gCCStats.mBeginTime = gCCStats.mBeginSliceTime.IsNull() ? TimeStamp::Now() : gCCStats.mBeginSliceTime;
   gCCStats.mSuspected = nsCycleCollector_suspectedCount();
 
   KillCCTimer();
@@ -2182,7 +2190,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     PokeGC(JS::gcreason::CC_WAITING);
   }
 
-  PRTime endCCTime = PR_Now();
+  TimeStamp endCCTime = TimeStamp::Now();
 
   // Log information about the CC via telemetry, JSON and the console.
   uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTime);
@@ -2190,7 +2198,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE, gCCStats.mRanSyncForgetSkippable);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL, ccNowDuration);
 
-  if (sLastCCEndTime) {
+  if (!sLastCCEndTime.IsNull()) {
     uint32_t timeBetween = TimeBetween(sLastCCEndTime, gCCStats.mBeginTime);
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN, timeBetween);
   }
@@ -2336,7 +2344,7 @@ ShouldTriggerCC(uint32_t aSuspected)
   return sNeedsFullCC ||
          aSuspected > NS_CC_PURPLE_LIMIT ||
          (aSuspected > NS_CC_FORCED_PURPLE_LIMIT &&
-          sLastCCEndTime + NS_CC_FORCED < PR_Now());
+          TimeUntilNow(sLastCCEndTime) > NS_CC_FORCED);
 }
 
 static uint32_t
@@ -2758,7 +2766,7 @@ mozilla::dom::StartupJSEnvironment()
   sGCTimer = sFullGCTimer = sCCTimer = sICCTimer = nullptr;
   sCCLockedOut = false;
   sCCLockedOutTime = 0;
-  sLastCCEndTime = 0;
+  sLastCCEndTime = TimeStamp();
   sHasRunGC = false;
   sPendingLoadCount = 0;
   sLoadingInProgress = false;
