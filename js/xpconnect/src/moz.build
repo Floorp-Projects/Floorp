@@ -91,3 +91,25 @@ DEFINES['JS_THREADSAFE'] = True
 
 if CONFIG['MOZ_JSDEBUGGER']:
     DEFINES['MOZ_JSDEBUGGER'] = True
+
+LOCAL_INCLUDES += [
+    '../loader',
+    '../wrappers',
+    '/caps/include',
+    '/content/base/public',
+    '/content/base/src',
+    '/content/events/src',
+    '/content/html/content/src',
+    '/content/html/document/src',
+    '/content/svg/content/src',
+    '/dom/base',
+    '/js/ipc',
+    '/layout/base',
+    '/layout/style',
+    '/xpcom/ds',
+]
+
+if CONFIG['MOZ_B2G_BT']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth',
+    ]

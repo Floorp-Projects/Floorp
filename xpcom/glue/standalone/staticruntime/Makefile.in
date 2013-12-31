@@ -5,10 +5,6 @@
 
 DIST_INSTALL	= 1
 
-LOCAL_INCLUDES	= \
-	-I$(srcdir)/../../../build \
-	$(NULL)
-
 # Statically link to the CRT on Windows
 USE_STATIC_LIBS = 1
 

@@ -117,3 +117,8 @@ if not CONFIG['MOZILLA_INTERNAL_API']:
     CPP_UNIT_TESTS += [
         'TestStringAPI.cpp',
     ]
+
+LOCAL_INCLUDES += [
+    '../ds',
+]
+

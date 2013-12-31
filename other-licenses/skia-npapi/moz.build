@@ -19,3 +19,12 @@ UNIFIED_SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 DEFINES['SK_BUILD_FOR_ANDROID_NDK'] = True
+
+LOCAL_INCLUDES += [
+    '/dom/plugins/base',
+    '/dom/plugins/base/android',
+    '/gfx/gl',
+    '/gfx/skia/include/config',
+    '/gfx/skia/include/core',
+]
+

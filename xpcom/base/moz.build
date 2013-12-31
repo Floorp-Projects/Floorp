@@ -153,5 +153,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xpcom_core'
 
+LOCAL_INCLUDES += [
+    '../build',
+    '/xpcom/ds',
+]
+
+
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True

@@ -4,11 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZILLA_INTERNAL_API = 1
-
-LOCAL_INCLUDES = \
-		-I$(srcdir)/../unix \
-		-I$(srcdir)/../../../../xptinfo/src \
-		$(NULL)
-include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES	+= -I$(srcdir)/../..

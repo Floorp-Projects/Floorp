@@ -27,3 +27,8 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
     CPP_UNIT_TESTS += [
         'test_deadlock_detector.cpp',
     ]
+
+LOCAL_INCLUDES += [
+    '../src',
+]
+

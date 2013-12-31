@@ -36,6 +36,11 @@ else:
 
 FINAL_LIBRARY = 'xpcom_core'
 
+LOCAL_INCLUDES += [
+    '../..',
+    '../../../../xptinfo/src',
+]
+
 if CONFIG['TARGET_CPU'] != 'x86_64':
     if not CONFIG['GNU_CXX']:
         # FIXME: bug 413019

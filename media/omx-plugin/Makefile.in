@@ -25,17 +25,13 @@ ifdef GNU_CXX
 CXXFLAGS += -Wno-multichar
 endif
 
-INCLUDES        += \
-                -I$(srcdir)/../../content/media/plugins \
-                $(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 EXTRA_DSO_LDOPTS += \
                -lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
                -lhardware -lcutils \
 		$(NULL)
 
-INCLUDES        += \
+CXXFLAGS += \
                 -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/ \
                 -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
@@ -56,9 +52,4 @@ EXTRA_DSO_LDOPTS += \
 		-L$(DEPTH)/media/omx-plugin/lib/ics/libvideoeditorplayer \
 		-lvideoeditorplayer \
 		$(NULL)
-
-INCLUDES        += \
-                -I$(srcdir)/include/ics \
-                -I$(srcdir)/include/ics/media/stagefright/openmax \
-                $(NULL)
 endif
