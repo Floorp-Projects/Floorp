@@ -12,7 +12,6 @@ DIRS += [
     'failures/html/dom/errors',
     'failures/html/dom/lists',
     'failures/html/dom/nodes',
-    'failures/html/dom/ranges',
     'failures/html/html/browsers/the-window-object',
     'failures/html/html/browsers/the-window-object/named-access-on-the-window-object',
     'failures/html/html/dom/documents/dta',
