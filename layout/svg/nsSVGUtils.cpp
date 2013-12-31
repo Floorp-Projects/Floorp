@@ -1293,10 +1293,11 @@ nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
     // space rather so we need to invert the transform
     // to the screen co-ordinate space to get there.
     // See http://www.w3.org/TR/SVGTiny12/painting.html#NonScalingStroke
-    gfxMatrix transform = SVGContentUtils::GetCTM(
-                            static_cast<nsSVGElement*>(content), true);
+    gfx::Matrix transform = SVGContentUtils::GetCTM(
+                              static_cast<nsSVGElement*>(content), true);
     if (!transform.IsSingular()) {
-      return transform.Invert();
+      transform.Invert();
+      return ThebesMatrix(transform);
     }
   }
   return gfxMatrix();
