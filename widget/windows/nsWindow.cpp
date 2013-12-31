@@ -7276,6 +7276,36 @@ nsWindow::EventIsInsideWindow(nsWindow* aWindow)
 
 // static
 bool
+nsWindow::GetPopupsToRollup(nsIRollupListener* aRollupListener,
+                            uint32_t* aPopupsToRollup)
+{
+  // If we're dealing with menus, we probably have submenus and we don't want
+  // to rollup some of them if the click is in a parent menu of the current
+  // submenu.
+  *aPopupsToRollup = UINT32_MAX;
+  nsAutoTArray<nsIWidget*, 5> widgetChain;
+  uint32_t sameTypeCount =
+    aRollupListener->GetSubmenuWidgetChain(&widgetChain);
+  for (uint32_t i = 0; i < widgetChain.Length(); ++i) {
+    nsIWidget* widget = widgetChain[i];
+    if (EventIsInsideWindow(static_cast<nsWindow*>(widget))) {
+      // Don't roll up if the mouse event occurred within a menu of the
+      // same type. If the mouse event occurred in a menu higher than that,
+      // roll up, but pass the number of popups to Rollup so that only those
+      // of the same type close up.
+      if (i < sameTypeCount) {
+        return false;
+      }
+
+      *aPopupsToRollup = sameTypeCount;
+      break;
+    }
+  }
+  return true;
+}
+
+// static
+bool
 nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
                          WPARAM aWParam, LPARAM aLParam, LRESULT* aResult)
 {
@@ -7296,6 +7326,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
   }
 
   bool rollup = false;
+  uint32_t popupsToRollup = UINT32_MAX;
 
   nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
   UINT nativeMessage = WinUtils::GetNativeMessage(aMessage);
@@ -7306,7 +7337,8 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_NCLBUTTONDOWN:
     case WM_NCRBUTTONDOWN:
     case WM_NCMBUTTONDOWN:
-      rollup = !EventIsInsideWindow(popupWindow);
+      rollup = !EventIsInsideWindow(popupWindow) &&
+               GetPopupsToRollup(rollupListener, &popupsToRollup);
       break;
 
     case WM_MOUSEWHEEL:
@@ -7314,7 +7346,8 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       // We need to check if the popup thinks that it should cause closing
       // itself when mouse wheel events are fired outside the rollup widget.
       if (!EventIsInsideWindow(popupWindow)) {
-        rollup = rollupListener->ShouldRollupOnMouseWheelEvent();
+        rollup = rollupListener->ShouldRollupOnMouseWheelEvent() &&
+                 GetPopupsToRollup(rollupListener, &popupsToRollup);
         *aResult = MA_ACTIVATE;
       }
       break;
@@ -7326,7 +7359,8 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_ACTIVATE:
     case WM_MOUSEACTIVATE:
       // XXX Why do we need to check the message pos?
-      rollup = !EventIsInsideWindow(popupWindow);
+      rollup = !EventIsInsideWindow(popupWindow) &&
+               GetPopupsToRollup(rollupListener, &popupsToRollup);
       break;
 
     case WM_KILLFOCUS:
@@ -7334,7 +7368,8 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       // e.g., a plugin window, popups should be rolled up.
       if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
         // XXX Why do we need to check the message pos?
-        rollup = !EventIsInsideWindow(popupWindow);
+        rollup = !EventIsInsideWindow(popupWindow) &&
+                 GetPopupsToRollup(rollupListener, &popupsToRollup);
         break;
       }
       return false;
@@ -7343,36 +7378,12 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_SIZING:
     case WM_MENUSELECT:
       // XXX Why do we need to check the message pos?
-      rollup = !EventIsInsideWindow(popupWindow);
+      rollup = !EventIsInsideWindow(popupWindow) &&
+               GetPopupsToRollup(rollupListener, &popupsToRollup);
       break;
 
     default:
       return false;
-  }
-
-  // If we're dealing with menus, we probably have submenus and we don't want
-  // to rollup some of them if the click is in a parent menu of the current
-  // submenu.
-  uint32_t popupsToRollup = UINT32_MAX;
-  if (rollup && nativeMessage != WM_ACTIVATEAPP) {
-    nsAutoTArray<nsIWidget*, 5> widgetChain;
-    uint32_t sameTypeCount =
-      rollupListener->GetSubmenuWidgetChain(&widgetChain);
-    for (uint32_t i = 0; i < widgetChain.Length(); ++i) {
-      nsIWidget* widget = widgetChain[i];
-      if (EventIsInsideWindow(static_cast<nsWindow*>(widget))) {
-        // don't roll up if the mouse event occurred within a menu of the
-        // same type. If the mouse event occurred in a menu higher than that,
-        // roll up, but pass the number of popups to Rollup so that only those
-        // of the same type close up.
-        if (i < sameTypeCount) {
-          rollup = false;
-        } else {
-          popupsToRollup = sameTypeCount;
-        }
-        break;
-      }
-    }
   }
 
   if (nativeMessage == WM_MOUSEACTIVATE) {
