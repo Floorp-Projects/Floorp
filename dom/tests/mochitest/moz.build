@@ -16,7 +16,6 @@ DIRS += [
     'orientation',
     'sessionstorage',
     'storageevent',
-    'pointerlock',
     'notification',
     'webapps',
     'webcomponents',
@@ -35,3 +34,9 @@ MOCHITEST_MANIFESTS += [
 MOCHITEST_CHROME_MANIFESTS += [
     'whatwg/chrome.ini',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk2':
+    # Bug 788164.
+    MOCHITEST_MANIFESTS += [
+        'pointerlock/mochitest.ini',
+    ]
