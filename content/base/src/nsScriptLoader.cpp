@@ -784,16 +784,18 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  JSObject *unrootedGlobal;
-  nsCOMPtr<nsIScriptContext> context = GetScriptContext(&unrootedGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
+  if (!globalObject) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
   if (!context) {
     return NS_ERROR_FAILURE;
   }
 
-  JSContext* unpushedCx = context->GetNativeContext();
-  JSAutoRequest ar(unpushedCx);
-  JS::Rooted<JSObject*> global(unpushedCx, unrootedGlobal);
-  AutoPushJSContext cx(unpushedCx);
+  AutoPushJSContext cx(context->GetNativeContext());
+  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   JS::CompileOptions options(cx);
   FillCompileOptionsForRequest(aRequest, global, &options);
@@ -934,8 +936,8 @@ nsScriptLoader::FireScriptEvaluated(nsresult aResult,
   aRequest->FireScriptEvaluated(aResult);
 }
 
-nsIScriptContext *
-nsScriptLoader::GetScriptContext(JSObject **aGlobal)
+already_AddRefed<nsIScriptGlobalObject>
+nsScriptLoader::GetScriptGlobalObject()
 {
   nsPIDOMWindow *pwin = mDocument->GetInnerWindow();
   if (!pwin) {
@@ -951,8 +953,7 @@ nsScriptLoader::GetScriptContext(JSObject **aGlobal)
     return nullptr;
   }
 
-  *aGlobal = globalObject->GetGlobalJSObject();
-  return globalObject->GetScriptContext();
+  return globalObject.forget();
 }
 
 void
@@ -997,19 +998,21 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   // Get the script-type to be used by this element.
   NS_ASSERTION(scriptContent, "no content - what is default script-type?");
 
+  nsCOMPtr<nsIScriptGlobalObject> globalObject = GetScriptGlobalObject();
+  if (!globalObject) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Make sure context is a strong reference since we access it after
   // we've executed a script, which may cause all other references to
   // the context to go away.
-  JSObject *unrootedGlobal;
-  nsCOMPtr<nsIScriptContext> context = GetScriptContext(&unrootedGlobal);
+  nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
   if (!context) {
     return NS_ERROR_FAILURE;
   }
 
-  JSContext* unpushedCx = context->GetNativeContext();
-  JSAutoRequest ar(unpushedCx);
-  JS::Rooted<JSObject*> global(unpushedCx, unrootedGlobal);
-  AutoPushJSContext cx(unpushedCx);
+  AutoPushJSContext cx(context->GetNativeContext());
+  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
 
   bool oldProcessingScriptTag = context->GetProcessingScriptTag();
   context->SetProcessingScriptTag(true);
