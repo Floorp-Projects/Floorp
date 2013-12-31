@@ -1916,7 +1916,7 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext* aPresContext,
     // As we've already finished reflow, positionedParts's size and overflow
     // areas have already been assigned, so we just pull them back out.
     nsSize size(positionedPart->GetSize());
-    nsHTMLReflowMetrics desiredSize(aReflowState.GetWritingMode());
+    nsHTMLReflowMetrics desiredSize(aReflowState);
     desiredSize.Width() = size.width;
     desiredSize.Height() = size.height;
     desiredSize.mOverflowAreas = positionedPart->GetOverflowAreasRelativeToSelf();
@@ -2798,7 +2798,7 @@ nsTableFrame::SetupHeaderFooterChild(const nsTableReflowState& aReflowState,
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   InitChildReflowState(kidReflowState);
   kidReflowState.mFlags.mIsTopOfPage = true;
-  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
+  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
   desiredSize.Width() = desiredSize.Height() = 0;
   nsReflowStatus status;
   nsresult rv = ReflowChild(aFrame, presContext, desiredSize, kidReflowState,
@@ -2831,7 +2831,7 @@ nsTableFrame::PlaceRepeatedFooter(nsTableReflowState& aReflowState,
   nsRect origTfootVisualOverflow = aTfoot->GetVisualOverflowRect();
           
   nsReflowStatus footerStatus;
-  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
+  nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
   desiredSize.Width() = desiredSize.Height() = 0;
   ReflowChild(aTfoot, presContext, desiredSize, footerReflowState,
               aReflowState.x, aReflowState.y, 0, footerStatus);
@@ -2937,7 +2937,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
       nsRect oldKidRect = kidFrame->GetRect();
       nsRect oldKidVisualOverflow = kidFrame->GetVisualOverflowRect();
 
-      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState.GetWritingMode());
+      nsHTMLReflowMetrics desiredSize(aReflowState.reflowState);
       desiredSize.Width() = desiredSize.Height() = 0;
 
       // Reflow the child into the available space
