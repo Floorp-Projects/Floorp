@@ -7325,7 +7325,6 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     return false;
   }
 
-  bool rollup = false;
   uint32_t popupsToRollup = UINT32_MAX;
 
   nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
@@ -7337,40 +7336,66 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_NCLBUTTONDOWN:
     case WM_NCRBUTTONDOWN:
     case WM_NCMBUTTONDOWN:
-      rollup = !EventIsInsideWindow(popupWindow) &&
-               GetPopupsToRollup(rollupListener, &popupsToRollup);
-      break;
+      if (!EventIsInsideWindow(popupWindow) &&
+          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+        break;
+      }
+      return false;
 
     case WM_MOUSEWHEEL:
     case WM_MOUSEHWHEEL:
       // We need to check if the popup thinks that it should cause closing
       // itself when mouse wheel events are fired outside the rollup widget.
       if (!EventIsInsideWindow(popupWindow)) {
-        rollup = rollupListener->ShouldRollupOnMouseWheelEvent() &&
-                 GetPopupsToRollup(rollupListener, &popupsToRollup);
         *aResult = MA_ACTIVATE;
+        if (rollupListener->ShouldRollupOnMouseWheelEvent() &&
+            GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+          break;
+        }
       }
-      break;
+      return false;
 
     case WM_ACTIVATEAPP:
-      rollup = true;
       break;
 
     case WM_ACTIVATE:
+      // XXX Why do we need to check the message pos?
+      if (!EventIsInsideWindow(popupWindow) &&
+          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+        break;
+      }
+      return false;
+
     case WM_MOUSEACTIVATE:
       // XXX Why do we need to check the message pos?
-      rollup = !EventIsInsideWindow(popupWindow) &&
-               GetPopupsToRollup(rollupListener, &popupsToRollup);
-      break;
+      if (!EventIsInsideWindow(popupWindow) &&
+          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+        // WM_MOUSEACTIVATE may be caused by moving the mouse (e.g., X-mouse
+        // of TweakUI is enabled. Then, check if the popup should be rolled up
+        // with rollup listener. If not, just consume the message.
+        if (HIWORD(aLParam) == WM_MOUSEMOVE &&
+            !rollupListener->ShouldRollupOnMouseActivate()) {
+          return true;
+        }
+        // Otherwise, it should be handled by wndproc.
+        return false;
+      }
+
+      // Prevent the click inside the popup from causing a change in window
+      // activation. Since the popup is shown non-activated, we need to eat any
+      // requests to activate the window while it is displayed. Windows will
+      // automatically activate the popup on the mousedown otherwise.
+      return true;
 
     case WM_KILLFOCUS:
       // If focus moves to other window created in different process/thread,
       // e.g., a plugin window, popups should be rolled up.
       if (IsDifferentThreadWindow(reinterpret_cast<HWND>(aWParam))) {
         // XXX Why do we need to check the message pos?
-        rollup = !EventIsInsideWindow(popupWindow) &&
-                 GetPopupsToRollup(rollupListener, &popupsToRollup);
-        break;
+        if (!EventIsInsideWindow(popupWindow) &&
+            GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+          break;
+        }
       }
       return false;
 
@@ -7378,37 +7403,14 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     case WM_SIZING:
     case WM_MENUSELECT:
       // XXX Why do we need to check the message pos?
-      rollup = !EventIsInsideWindow(popupWindow) &&
-               GetPopupsToRollup(rollupListener, &popupsToRollup);
-      break;
+      if (!EventIsInsideWindow(popupWindow) &&
+          GetPopupsToRollup(rollupListener, &popupsToRollup)) {
+        break;
+      }
+      return false;
 
     default:
       return false;
-  }
-
-  if (nativeMessage == WM_MOUSEACTIVATE) {
-    // Prevent the click inside the popup from causing a change in window
-    // activation. Since the popup is shown non-activated, we need to eat any
-    // requests to activate the window while it is displayed. Windows will
-    // automatically activate the popup on the mousedown otherwise.
-    if (!rollup) {
-      return true;
-    }
-
-    if (HIWORD(aLParam) == WM_MOUSEMOVE) {
-      // WM_MOUSEACTIVATE cause by moving the mouse - X-mouse (eg. TweakUI)
-      // must be enabled in Windows.
-      rollup = rollupListener->ShouldRollupOnMouseActivate();
-      if (!rollup) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  if (!rollup) {
-    return false;
   }
 
   // Only need to deal with the last rollup for left mouse down events.
