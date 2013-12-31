@@ -337,6 +337,20 @@ protected:
     return mTransparencyMode == eTransparencyGlass ||
            mTransparencyMode == eTransparencyBorderlessGlass;
   }
+  HWND                    GetOwnerWnd() const
+  {
+    return ::GetWindow(mWnd, GW_OWNER);
+  }
+  bool                    IsOwnerForegroundWindow() const
+  {
+    HWND owner = GetOwnerWnd();
+    return owner && owner == ::GetForegroundWindow();
+  }
+  bool                    IsPopup() const
+  {
+    return mWindowType == eWindowType_popup;
+  }
+
 
   /**
    * Event processing helpers
