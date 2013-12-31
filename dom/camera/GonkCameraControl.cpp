@@ -46,8 +46,8 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
-using namespace mozilla::gfx;
 using namespace android;
+using mozilla::gfx::IntSize;
 
 /**
  * See bug 783682.  Most camera implementations, despite claiming they
