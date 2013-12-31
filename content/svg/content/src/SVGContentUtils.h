@@ -102,7 +102,7 @@ public:
                                   const PRUnichar **aParams,
                                   uint32_t aParamsLength);
 
-  static gfxMatrix GetCTM(nsSVGElement *aElement, bool aScreenCTM);
+  static mozilla::gfx::Matrix GetCTM(nsSVGElement *aElement, bool aScreenCTM);
 
   /**
    * Check if this is one of the SVG elements that SVG 1.1 Full says
