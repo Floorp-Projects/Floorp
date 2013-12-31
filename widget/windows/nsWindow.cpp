@@ -7426,24 +7426,6 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
   // If we are NOT supposed to be consuming events, let it go through
   if (consumeRollupEvent && nativeMessage != WM_RBUTTONDOWN) {
     *aResult = MA_ACTIVATE;
-
-    // However, don't activate panels
-    if (nativeMessage == WM_MOUSEACTIVATE) {
-      nsWindow* activateWindow = WinUtils::GetNSWindowPtr(aWnd);
-      if (activateWindow && activateWindow->mWindowType == eWindowType_popup &&
-          activateWindow->PopupType() == ePopupTypePanel) {
-        *aResult = popupsToRollup != UINT32_MAX ? MA_NOACTIVATEANDEAT :
-                                                  MA_NOACTIVATE;
-      }
-    }
-    return true;
-  }
-
-  // If we are only rolling up some popups, don't activate and don't let the
-  // event go through. This prevents clicks menus higher in the chain from
-  // opening when a context menu is open
-  if (popupsToRollup != UINT32_MAX && nativeMessage == WM_MOUSEACTIVATE) {
-    *aResult = MA_NOACTIVATEANDEAT;
     return true;
   }
 
