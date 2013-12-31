@@ -8,6 +8,7 @@ MOCHITEST_FILES := \
   test_CharacterData-insertData.html \
   test_CharacterData-remove.html \
   test_CharacterData-replaceData.html \
+  test_Comment-constructor.html \
   test_Document-adoptNode.html \
   test_Document-createComment.html \
   test_Document-createElement.html \

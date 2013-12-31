@@ -9,4 +9,6 @@ MOCHITEST_FILES := \
   test_script-languages-02.html \
   test_script-noembed-noframes-iframe.xhtml \
   test_script-onload-string.html \
+  test_script-text.html \
+  test_script-text.xhtml \
   $(NULL)

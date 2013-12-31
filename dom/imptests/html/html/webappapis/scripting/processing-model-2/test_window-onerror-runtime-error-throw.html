@@ -16,6 +16,7 @@
 
   <div id="log"></div>
   <script>
+    setup({allow_uncaught_exception:true});
     var error_count = 0;
     window.onerror = function(msg, url, lineno) {
       ++error_count;

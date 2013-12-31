@@ -61,4 +61,37 @@ test(function() {
   assert_array_equals(called, ["First", "Second"],
                       "Should have continued to call other event listeners")
 }, "Exceptions from event listeners must not be propagated.")
+
+async_test(function() {
+  var results = []
+  var outerb = document.createElement("b")
+  var middleb = outerb.appendChild(document.createElement("b"))
+  var innerb = middleb.appendChild(document.createElement("b"))
+  outerb.addEventListener("x", this.step_func(function() {
+    middleb.addEventListener("x", this.step_func(function() {
+      results.push("middle")
+    }), true)
+    results.push("outer")
+  }), true)
+  innerb.dispatchEvent(new Event("x"))
+  assert_array_equals(results, ["outer", "middle"])
+  this.done()
+}, "Event listeners added during dispatch should be called");
+
+async_test(function() {
+  var results = []
+  var b = document.createElement("b")
+  b.addEventListener("x", this.step_func(function() {
+    results.push(1)
+  }), true)
+  b.addEventListener("x", this.step_func(function() {
+    results.push(2)
+  }), false)
+  b.addEventListener("x", this.step_func(function() {
+    results.push(3)
+  }), true)
+  b.dispatchEvent(new Event("x"))
+  assert_array_equals(results, [1, 2, 3])
+  this.done()
+}, "Event listeners should be called in order of addition")
 </script>

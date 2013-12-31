@@ -251,6 +251,8 @@ test(function() {
       var EventTargetProto = EventTarget.prototype;
       assert_true(id in window, id + " in window");
       assert_equals(window[id], EventTargetProto[id]);
+      assert_data_propdesc(Object.getOwnPropertyDescriptor(EventTargetProto, id),
+                           true, true, true);
       assert_data_propdesc(Object.getOwnPropertyDescriptor(window, id),
                            true, true, true);
     }, "EventTarget method: " + id);

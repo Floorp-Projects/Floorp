@@ -1,6 +1,7 @@
 <!doctype html>
 <title>Range.cloneContents() tests</title>
-<link rel=author title="Aryeh Gregor" href=ayg@aryeh.name>
+<link rel="author" title="Aryeh Gregor" href=ayg@aryeh.name>
+<meta name=timeout content=long>
 <p>To debug test failures, add a query parameter "subtest" with the test id (like
 "?subtest=5").  Only that test will be run.  Then you can look at the resulting
 iframe in the DOM.
@@ -410,8 +411,6 @@ function testCloneContents(i) {
 	});
 	fragTests[i].done();
 }
-
-setup({timeout: 60000});
 
 // First test a Range that has the no-op detach() called on it, synchronously
 test(function() {
