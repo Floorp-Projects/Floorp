@@ -27,3 +27,9 @@ FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xpconnect_s'
+
+LOCAL_INCLUDES += [
+    '../../../dom/base',
+    '../src',
+]
+

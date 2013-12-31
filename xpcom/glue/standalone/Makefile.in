@@ -6,10 +6,6 @@
 
 DIST_INSTALL	= 1
 
-LOCAL_INCLUDES	= \
-	-I$(srcdir)/../../build \
-	$(NULL)
-
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
 STL_FLAGS	=
 

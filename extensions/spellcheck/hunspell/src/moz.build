@@ -28,3 +28,8 @@ if not CONFIG['MOZ_NATIVE_HUNSPELL']:
     DEFINES['HUNSPELL_STATIC'] = True
 
 FINAL_LIBRARY = 'spellchecker'
+
+LOCAL_INCLUDES += [
+    '/extensions/spellcheck/src',
+]
+

@@ -20,11 +20,6 @@ USE_STATIC_LIBS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES        += \
-                -I$(topsrcdir)/media/omx-plugin/include/gb \
-                -I$(topsrcdir)/media/omx-plugin/include/gb/media/stagefright/openmax \
-                $(NULL)
-
 # EXTRA_DSO_LDOPTS += \
 # 		-L$(DEPTH)/media/omx-plugin/lib/gb/libutils \
 # 		-lutils \

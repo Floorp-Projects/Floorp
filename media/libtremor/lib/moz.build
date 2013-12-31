@@ -26,3 +26,8 @@ if CONFIG['OS_ARCH'] == 'AIX':
 
 if CONFIG['TARGET_CPU'] == 'arm' and CONFIG['GNU_CC'] and not CONFIG['MOZ_THUMB2']:
     DEFINES['_ARM_ASSEM_'] = True
+
+LOCAL_INCLUDES += [
+    '/media/libtremor/include/tremor',
+]
+

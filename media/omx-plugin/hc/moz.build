@@ -11,3 +11,10 @@ SOURCES += [
 LIBRARY_NAME = 'omxpluginhc'
 
 FORCE_SHARED_LIB = True
+
+LOCAL_INCLUDES += [
+    '../../../content/media/plugins',
+    '../include/gb',
+    '../include/gb/media/stagefright/openmax',
+]
+

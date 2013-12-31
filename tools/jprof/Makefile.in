@@ -10,11 +10,3 @@ OS_LIBS = \
 	-liberty \
 	$(NULL)
 
-HELPER_SCRIPTS	= jprofsig
-HELPER_SCRIPTS	:= $(addprefix $(srcdir)/, $(HELPER_SCRIPTS))
-
-include $(topsrcdir)/config/rules.mk
-
-INCLUDES += \
-	-I$(srcdir)/stub \
-	$(NULL)

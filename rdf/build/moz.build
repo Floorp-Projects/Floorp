@@ -15,3 +15,9 @@ SOURCES += [
 LIBRARY_NAME = 'rdf'
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../base/src',
+    '../content/src',
+    '../datasource/src',
+]

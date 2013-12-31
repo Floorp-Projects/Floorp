@@ -12,3 +12,7 @@ UNIFIED_SOURCES += [
 LIBRARY_NAME = 'universalchardet'
 
 FINAL_LIBRARY = 'xul'
+
+LOCAL_INCLUDES += [
+    '../base',
+]

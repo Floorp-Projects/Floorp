@@ -22,3 +22,8 @@ FINAL_LIBRARY = 'browsercomps'
 
 for var in ('MOZ_APP_NAME', 'MOZ_MACBUNDLE_NAME'):
     DEFINES[var] = CONFIG[var]
+
+LOCAL_INCLUDES += [
+    '../../build',
+]
+

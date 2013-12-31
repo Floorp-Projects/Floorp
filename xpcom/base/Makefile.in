@@ -19,11 +19,6 @@ ifdef MOZ_WIDGET_GTK
 CXXFLAGS        += $(TK_CFLAGS)
 endif
 
-LOCAL_INCLUDES += \
-		-I$(srcdir)/../build \
-		-I$(topsrcdir)/xpcom/ds \
-		$(NULL)
-
 # We generate ErrorListCxxDefines.h from ErrorList.h using regex.  The -n option
 # suppresses printing the pattern space, and the p at the end prints it anyway,
 # so we don't print lines that don't match the pattern to start with.
