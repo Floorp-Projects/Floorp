@@ -533,8 +533,8 @@ BufferTextureClient::UpdateYCbCr(const PlanarYCbCrData& aData)
   YCbCrImageDataSerializer serializer(GetBuffer());
   MOZ_ASSERT(serializer.IsValid());
   if (!serializer.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
-                           ThebesIntSize(aData.mYSize), aData.mYStride,
-                           ThebesIntSize(aData.mCbCrSize), aData.mCbCrStride,
+                           aData.mYSize, aData.mYStride,
+                           aData.mCbCrSize, aData.mCbCrStride,
                            aData.mYSkip, aData.mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
     return false;
@@ -635,8 +635,8 @@ DeprecatedTextureClientShmem::EnsureAllocated(gfx::IntSize aSize,
     mContentType = aContentType;
     mSize = aSize;
 
-    if (!mForwarder->AllocSurfaceDescriptor(gfxIntSize(mSize.width, mSize.height),
-                                            mContentType, &mDescriptor)) {
+    if (!mForwarder->AllocSurfaceDescriptor(mSize, mContentType,
+                                            &mDescriptor)) {
       NS_WARNING("creating SurfaceDescriptor failed!");
     }
     if (mContentType == GFX_CONTENT_COLOR_ALPHA) {
@@ -885,8 +885,8 @@ AutoLockYCbCrClient::Update(PlanarYCbCrImage* aImage)
 
   YCbCrImageDataSerializer serializer(shmem.get<uint8_t>());
   if (!serializer.CopyData(data->mYChannel, data->mCbChannel, data->mCrChannel,
-                           ThebesIntSize(data->mYSize), data->mYStride,
-                           ThebesIntSize(data->mCbCrSize), data->mCbCrStride,
+                           data->mYSize, data->mYStride,
+                           data->mCbCrSize, data->mCbCrStride,
                            data->mYSkip, data->mCbSkip)) {
     NS_WARNING("Failed to copy image data!");
     return false;

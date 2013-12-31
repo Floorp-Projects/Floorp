@@ -42,6 +42,7 @@
 #include "mozilla/gfx/Point.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 // Logging context
 MOZ_MTLOG_MODULE("mediapipeline")
@@ -1212,15 +1213,15 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
 
   layers::PlanarYCbCrData data;
   data.mYChannel = frame;
-  data.mYSize = gfxIntSize(width_, height_);
+  data.mYSize = IntSize(width_, height_);
   data.mYStride = width_ * lumaBpp/ 8;
   data.mCbCrStride = width_ * chromaBpp / 8;
   data.mCbChannel = frame + height_ * data.mYStride;
   data.mCrChannel = data.mCbChannel + height_ * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(width_/ 2, height_/ 2);
+  data.mCbCrSize = IntSize(width_/ 2, height_/ 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = gfxIntSize(width_, height_);
+  data.mPicSize = IntSize(width_, height_);
   data.mStereoMode = STEREO_MODE_MONO;
 
   videoImage->SetData(data);

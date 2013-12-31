@@ -76,7 +76,7 @@ TakeAndDestroyXlibSurface(SurfaceDescriptor* aSurface)
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
   : mId(aSurf->XDrawable())
-  , mSize(aSurf->GetSize())
+  , mSize(aSurf->GetSize().ToIntSize())
 {
   const XRenderPictFormat *pictFormat = aSurf->XRenderFormat();
   if (pictFormat) {
