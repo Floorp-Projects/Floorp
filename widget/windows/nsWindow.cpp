@@ -5180,18 +5180,15 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         }
       }
       break;
-      
+
     case WM_MOUSEACTIVATE:
-      if (mWindowType == eWindowType_popup) {
-        // a popup with a parent owner should not be activated when clicked
-        // but should still allow the mouse event to be fired, so the return
-        // value is set to MA_NOACTIVATE. But if the owner isn't the frontmost
-        // window, just use default processing so that the window is activated.
-        HWND owner = ::GetWindow(mWnd, GW_OWNER);
-        if (owner && owner == ::GetForegroundWindow()) {
-          *aRetValue = MA_NOACTIVATE;
-          result = true;
-        }
+      // A popup with a parent owner should not be activated when clicked but
+      // should still allow the mouse event to be fired, so the return value
+      // is set to MA_NOACTIVATE. But if the owner isn't the frontmost window,
+      // just use default processing so that the window is activated.
+      if (IsPopup() && IsOwnerForegroundWindow()) {
+        *aRetValue = MA_NOACTIVATE;
+        result = true;
       }
       break;
 
@@ -7311,6 +7308,7 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
 {
   NS_ASSERTION(aResult, "Bad outResult");
 
+  // XXX Why do we use the return value of WM_MOUSEACTIVATE for all messages?
   *aResult = MA_NOACTIVATE;
 
   if (!::IsWindowVisible(aWnd)) {
