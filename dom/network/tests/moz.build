@@ -8,3 +8,5 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini', 'unit_ipc/xpcshell.ini']
 
 if CONFIG['MOZ_B2G_RIL']:
     XPCSHELL_TESTS_MANIFESTS += ['unit_stats/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
