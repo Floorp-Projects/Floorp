@@ -176,7 +176,7 @@ TreeView.prototype = {
     this.restoreSelectionSnapshot(frames, false);
   },
   // Take a selection snapshot and restore the selection
-  restoreSelectionSnapshot: function TreeView_restoreSelectionSnapshot(snapshot, allowNonContigious) {
+  restoreSelectionSnapshot: function TreeView_restoreSelectionSnapshot(snapshot, allowNonContiguous) {
     var currNode = this._horizontalScrollbox.firstChild;
     if (currNode.data.name == snapshot[0] || snapshot[0] == "(total)") {
       snapshot.shift();
@@ -193,7 +193,7 @@ TreeView.prototype = {
           continue next_level;
         }
       }
-      if (allowNonContigious === true) {
+      if (allowNonContiguous) {
         // We need to do a Breadth-first search to find a match
         var pendingSearch = [currNode.data];
         while (pendingSearch.length > 0) {
