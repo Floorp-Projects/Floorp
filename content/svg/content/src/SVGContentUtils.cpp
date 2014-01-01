@@ -19,6 +19,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "nsContentUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -177,7 +178,7 @@ SVGContentUtils::GetNearestViewportElement(nsIContent *aContent)
   return nullptr;
 }
 
-static gfxMatrix
+static gfx::Matrix
 GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
 {
   gfxMatrix matrix = aElement->PrependLocalTransformsTo(gfxMatrix(),
@@ -193,20 +194,20 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
       if (!element->NodeInfo()->Equals(nsGkAtoms::svg, kNameSpaceID_SVG) &&
           !element->NodeInfo()->Equals(nsGkAtoms::symbol, kNameSpaceID_SVG)) {
         NS_ERROR("New (SVG > 1.1) SVG viewport establishing element?");
-        return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+        return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
       }
       // XXX spec seems to say x,y translation should be undone for IsInnerSVG
-      return matrix;
+      return gfx::ToMatrix(matrix);
     }
     ancestor = ancestor->GetFlattenedTreeParent();
   }
   if (!aScreenCTM) {
     // didn't find a nearestViewportElement
-    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+    return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
   if (element->Tag() != nsGkAtoms::svg) {
     // Not a valid SVG fragment
-    return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
+    return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0); // singular
   }
   if (element == aElement && !aHaveRecursed) {
     // We get here when getScreenCTM() is called on an outer-<svg>.
@@ -218,11 +219,11 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
     matrix = aElement->PrependLocalTransformsTo(gfxMatrix());
   }
   if (!ancestor || !ancestor->IsElement()) {
-    return matrix;
+    return gfx::ToMatrix(matrix);
   }
   if (ancestor->IsSVG()) {
     return
-      matrix * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
+      gfx::ToMatrix(matrix) * GetCTMInternal(static_cast<nsSVGElement*>(ancestor), true, true);
   }
 
   // XXX this does not take into account CSS transform, or that the non-SVG
@@ -241,10 +242,10 @@ GetCTMInternal(nsSVGElement *aElement, bool aScreenCTM, bool aHaveRecursed)
       }
     }
   }
-  return matrix * gfxMatrix().Translate(gfxPoint(x, y));
+  return gfx::ToMatrix(matrix) * gfx::Matrix().Translate(x, y);
 }
 
-gfxMatrix
+gfx::Matrix
 SVGContentUtils::GetCTM(nsSVGElement *aElement, bool aScreenCTM)
 {
   return GetCTMInternal(aElement, aScreenCTM, false);
