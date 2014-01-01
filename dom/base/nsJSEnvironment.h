@@ -110,7 +110,7 @@ public:
   // If aSliceTime is negative, the CC will run to completion.  If aSliceTime
   // is 0, only a minimum quantum of work will be done.  Otherwise, aSliceTime
   // will be used as the time budget for the slice, in ms.
-  static void ScheduledCycleCollectNow(int64_t aSliceTime);
+  static void RunCycleCollectorSlice(int64_t aSliceTime);
 
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);
