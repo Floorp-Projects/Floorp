@@ -2306,13 +2306,8 @@ nsCycleCollector::ForgetSkippable(bool aRemoveChildlessNodes,
     CheckThreadSafety();
 
     // If we remove things from the purple buffer during graph building, we may
-    // lose track of an object that was mutated during graph building. This should
-    // only happen when somebody calls nsJSContext::CycleCollectNow explicitly
-    // requesting extra forget skippable calls, during an incremental collection.
-    // See bug 950949 for fixing this so we actually run the forgetSkippable calls.
-    if (mIncrementalPhase != IdlePhase) {
-        return;
-    }
+    // lose track of an object that was mutated during graph building.
+    MOZ_ASSERT(mIncrementalPhase == IdlePhase);
 
     if (mJSRuntime) {
         mJSRuntime->PrepareForForgetSkippable();
