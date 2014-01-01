@@ -52,6 +52,8 @@
  *  Mihai Sucan (Mozilla Corp.)
  */
 
+"use strict";
+
 const {components, Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 
@@ -428,7 +430,8 @@ let NetworkHelper = {
       return true;
     }
 
-    switch (this.mimeCategoryMap[aMimeType]) {
+    let category = this.mimeCategoryMap[aMimeType] || null;
+    switch (category) {
       case "txt":
       case "js":
       case "json":
