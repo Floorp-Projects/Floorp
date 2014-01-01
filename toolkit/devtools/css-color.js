@@ -121,9 +121,7 @@ CssColor.prototype = {
   },
 
   get specialValue() {
-    if (SPECIALVALUES.has(this.authored)) {
-      return this.authored;
-    }
+    return SPECIALVALUES.has(this.authored) ? this.authored : null;
   },
 
   get name() {

@@ -145,8 +145,10 @@ function Editor(config) {
 
   // Overwrite default config with user-provided, if needed.
   Object.keys(config).forEach((k) => {
-    if (k != "extraKeys")
-      return this.config[k] = config[k];
+    if (k != "extraKeys") {
+      this.config[k] = config[k];
+      return;
+    }
 
     if (!config.extraKeys)
       return;
@@ -161,11 +163,15 @@ function Editor(config) {
   // indenting with tabs, insert one tab. Otherwise insert N
   // whitespaces where N == indentUnit option.
   this.config.extraKeys.Tab = (cm) => {
-    if (cm.somethingSelected())
-      return void cm.indentSelection("add");
+    if (cm.somethingSelected()) {
+      cm.indentSelection("add");
+      return;
+    }
 
-    if (this.config.indentWithTabs)
-      return void cm.replaceSelection("\t", "end", "+input");
+    if (this.config.indentWithTabs) {
+      cm.replaceSelection("\t", "end", "+input");
+      return;
+    }
 
     var num = cm.getOption("indentUnit");
     if (cm.getCursor().ch !== 0) num -= 1;
@@ -250,8 +256,10 @@ Editor.prototype = {
         let tail = { line: line, ch: this.getText(line).length };
 
         // Shift-click on a gutter selects the whole line.
-        if (ev.shiftKey)
-          return void cm.setSelection(head, tail);
+        if (ev.shiftKey) {
+          cm.setSelection(head, tail);
+          return;
+        }
 
         this.emit("gutterClick", line);
       });
@@ -325,12 +333,15 @@ Editor.prototype = {
   replaceText: function (value, from, to) {
     let cm = editors.get(this);
 
-    if (!from)
-      return void this.setText(value);
+    if (!from) {
+      this.setText(value);
+      return;
+    }
 
     if (!to) {
       let text = cm.getRange({ line: 0, ch: 0 }, from);
-      return void this.setText(text + value);
+      this.setText(text + value);
+      return;
     }
 
     cm.replaceRange(value, from, to);
@@ -757,8 +768,10 @@ Editor.prototype = {
       let cm  = editors.get(this);
       let ctx = { ed: this, cm: cm };
 
-      if (name === "initialize")
-        return void funcs[name](ctx);
+      if (name === "initialize") {
+        funcs[name](ctx);
+        return;
+      }
 
       this[name] = funcs[name].bind(null, ctx);
     });
@@ -901,8 +914,10 @@ function controller(ed) {
         "cmd_findAgain": "findNext"
       };
 
-      if (map[cmd])
-        return void cm.execCommand(map[cmd]);
+      if (map[cmd]) {
+        cm.execCommand(map[cmd]);
+        return;
+      }
 
       if (cmd == "cmd_gotoLine")
         ed.jumpToLine(cm);
