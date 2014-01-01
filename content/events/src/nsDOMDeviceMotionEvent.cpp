@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMDeviceMotionEvent.h"
-#include "nsDOMClassInfoID.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -19,82 +19,73 @@ NS_IMPL_ADDREF_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceMotionEvent, nsDOMEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDeviceMotionEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceMotionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
-
-NS_IMETHODIMP
-nsDOMDeviceMotionEvent::InitDeviceMotionEvent(const nsAString & aEventTypeArg,
-                                              bool aCanBubbleArg,
-                                              bool aCancelableArg,
-                                              nsIDOMDeviceAcceleration* aAcceleration,
-                                              nsIDOMDeviceAcceleration* aAccelerationIncludingGravity,
-                                              nsIDOMDeviceRotationRate* aRotationRate,
-                                              double aInterval)
-{
-  nsresult rv = nsDOMEvent::InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mAcceleration = aAcceleration;
-  mAccelerationIncludingGravity = aAccelerationIncludingGravity;
-  mRotationRate = aRotationRate;
-  mInterval = aInterval;
-  return NS_OK;
-}
 
 void
 nsDOMDeviceMotionEvent::InitDeviceMotionEvent(const nsAString& aType,
                                               bool aCanBubble,
                                               bool aCancelable,
-                                              nsIDOMDeviceAcceleration* aAcceleration,
-                                              nsIDOMDeviceAcceleration* aAccelerationIncludingGravity,
-                                              nsIDOMDeviceRotationRate* aRotationRate,
-                                              double aInterval,
+                                              const DeviceAccelerationInit& aAcceleration,
+                                              const DeviceAccelerationInit& aAccelerationIncludingGravity,
+                                              const DeviceRotationRateInit& aRotationRate,
+                                              Nullable<double> aInterval,
                                               ErrorResult& aRv)
 {
-  aRv = InitDeviceMotionEvent(aType,
-                              aCanBubble,
-                              aCancelable,
-                              aAcceleration,
-                              aAccelerationIncludingGravity,
-                              aRotationRate,
-                              aInterval);
+  aRv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  mAcceleration = new nsDOMDeviceAcceleration(this, aAcceleration.mX,
+                                              aAcceleration.mY,
+                                              aAcceleration.mZ);
+
+  mAccelerationIncludingGravity =
+    new nsDOMDeviceAcceleration(this, aAccelerationIncludingGravity.mX,
+                                aAccelerationIncludingGravity.mY,
+                                aAccelerationIncludingGravity.mZ);
+
+  mRotationRate = new nsDOMDeviceRotationRate(this, aRotationRate.mAlpha,
+                                              aRotationRate.mBeta,
+                                              aRotationRate.mGamma);
+  mInterval = aInterval;
 }
 
-NS_IMETHODIMP
-nsDOMDeviceMotionEvent::GetAcceleration(nsIDOMDeviceAcceleration **aAcceleration)
+already_AddRefed<nsDOMDeviceMotionEvent>
+nsDOMDeviceMotionEvent::Constructor(const GlobalObject& aGlobal,
+                                    const nsAString& aType,
+                                    const DeviceMotionEventInit& aEventInitDict,
+                                    ErrorResult& aRv)
 {
-  NS_ENSURE_ARG_POINTER(aAcceleration);
+  nsCOMPtr<mozilla::dom::EventTarget> t =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<nsDOMDeviceMotionEvent> e =
+    new nsDOMDeviceMotionEvent(t, nullptr, nullptr);
+  aRv = e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  bool trusted = e->Init(t);
 
-  NS_IF_ADDREF(*aAcceleration = GetAcceleration());
-  return NS_OK;
-}
+  e->mAcceleration = new nsDOMDeviceAcceleration(e,
+    aEventInitDict.mAcceleration.mX,
+    aEventInitDict.mAcceleration.mY,
+    aEventInitDict.mAcceleration.mZ);
 
-NS_IMETHODIMP
-nsDOMDeviceMotionEvent::GetAccelerationIncludingGravity(nsIDOMDeviceAcceleration **aAccelerationIncludingGravity)
-{
-  NS_ENSURE_ARG_POINTER(aAccelerationIncludingGravity);
+  e->mAccelerationIncludingGravity = new nsDOMDeviceAcceleration(e,
+    aEventInitDict.mAccelerationIncludingGravity.mX,
+    aEventInitDict.mAccelerationIncludingGravity.mY,
+    aEventInitDict.mAccelerationIncludingGravity.mZ);
 
-  NS_IF_ADDREF(*aAccelerationIncludingGravity =
-               GetAccelerationIncludingGravity());
-  return NS_OK;
-}
+  e->mRotationRate = new nsDOMDeviceRotationRate(e,
+    aEventInitDict.mRotationRate.mAlpha,
+    aEventInitDict.mRotationRate.mBeta,
+    aEventInitDict.mRotationRate.mGamma);
 
-NS_IMETHODIMP
-nsDOMDeviceMotionEvent::GetRotationRate(nsIDOMDeviceRotationRate **aRotationRate)
-{
-  NS_ENSURE_ARG_POINTER(aRotationRate);
+  e->mInterval = aEventInitDict.mInterval;
+  e->SetTrusted(trusted);
 
-  NS_IF_ADDREF(*aRotationRate = GetRotationRate());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceMotionEvent::GetInterval(double *aInterval)
-{
-  NS_ENSURE_ARG_POINTER(aInterval);
-
-  *aInterval = Interval();
-  return NS_OK;
+  return e.forget();
 }
 
 
@@ -112,91 +103,39 @@ NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aInstancePtrResult,
 }
 
 
-DOMCI_DATA(DeviceAcceleration, nsDOMDeviceAcceleration)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMDeviceAcceleration, mOwner)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMDeviceAcceleration)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceAcceleration)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceAcceleration)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceAcceleration)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsDOMDeviceAcceleration, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsDOMDeviceAcceleration, Release)
 
-NS_IMPL_ADDREF(nsDOMDeviceAcceleration)
-NS_IMPL_RELEASE(nsDOMDeviceAcceleration)
-
-nsDOMDeviceAcceleration::nsDOMDeviceAcceleration(double aX, double aY, double aZ)
-: mX(aX), mY(aY), mZ(aZ)
+nsDOMDeviceAcceleration::nsDOMDeviceAcceleration(nsDOMDeviceMotionEvent* aOwner,
+                                                 Nullable<double> aX,
+                                                 Nullable<double> aY,
+                                                 Nullable<double> aZ)
+: mOwner(aOwner), mX(aX), mY(aY), mZ(aZ)
 {
+  SetIsDOMBinding();
 }
 
 nsDOMDeviceAcceleration::~nsDOMDeviceAcceleration()
 {
 }
 
-NS_IMETHODIMP
-nsDOMDeviceAcceleration::GetX(double *aX)
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(nsDOMDeviceRotationRate, mOwner)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsDOMDeviceRotationRate, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsDOMDeviceRotationRate, Release)
+
+nsDOMDeviceRotationRate::nsDOMDeviceRotationRate(nsDOMDeviceMotionEvent* aOwner,
+                                                 Nullable<double> aAlpha,
+                                                 Nullable<double> aBeta,
+                                                 Nullable<double> aGamma)
+: mOwner(aOwner), mAlpha(aAlpha), mBeta(aBeta), mGamma(aGamma)
 {
-  NS_ENSURE_ARG_POINTER(aX);
-  *aX = mX;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceAcceleration::GetY(double *aY)
-{
-  NS_ENSURE_ARG_POINTER(aY);
-  *aY = mY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceAcceleration::GetZ(double *aZ)
-{
-  NS_ENSURE_ARG_POINTER(aZ);
-  *aZ = mZ;
-  return NS_OK;
-}
-
-
-DOMCI_DATA(DeviceRotationRate, nsDOMDeviceRotationRate)
-
-NS_INTERFACE_MAP_BEGIN(nsDOMDeviceRotationRate)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMDeviceRotationRate)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDeviceRotationRate)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DeviceRotationRate)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsDOMDeviceRotationRate)
-NS_IMPL_RELEASE(nsDOMDeviceRotationRate)
-
-nsDOMDeviceRotationRate::nsDOMDeviceRotationRate(double aAlpha, double aBeta, double aGamma)
-: mAlpha(aAlpha), mBeta(aBeta), mGamma(aGamma)
-{
+  SetIsDOMBinding();
 }
 
 nsDOMDeviceRotationRate::~nsDOMDeviceRotationRate()
 {
-}
-
-NS_IMETHODIMP
-nsDOMDeviceRotationRate::GetAlpha(double *aAlpha)
-{
-  NS_ENSURE_ARG_POINTER(aAlpha);
-  *aAlpha = mAlpha;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceRotationRate::GetBeta(double *aBeta)
-{
-  NS_ENSURE_ARG_POINTER(aBeta);
-  *aBeta = mBeta;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMDeviceRotationRate::GetGamma(double *aGamma)
-{
-  NS_ENSURE_ARG_POINTER(aGamma);
-  *aGamma = mGamma;
-  return NS_OK;
 }
