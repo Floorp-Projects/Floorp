@@ -1497,7 +1497,7 @@ GLContext::PublishFrame()
 {
     MOZ_ASSERT(mScreen);
 
-    if (!mScreen->PublishFrame(ThebesIntSize(OffscreenSize())))
+    if (!mScreen->PublishFrame(OffscreenSize()))
         return false;
 
     return true;

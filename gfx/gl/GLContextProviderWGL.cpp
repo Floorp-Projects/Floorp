@@ -445,7 +445,7 @@ IsValidSizeForFormat(HDC hDC, int format,
 bool
 GLContextWGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
 {
-    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
+    return ResizeScreenBuffer(aNewSize);
 }
 
 static GLContextWGL *
@@ -696,7 +696,7 @@ GLContextProviderWGL::CreateOffscreen(const gfxIntSize& size,
         return nullptr;
     }
 
-    if (!glContext->InitOffscreen(size, caps))
+    if (!glContext->InitOffscreen(ToIntSize(size), caps))
         return nullptr;
 
     return glContext.forget();
