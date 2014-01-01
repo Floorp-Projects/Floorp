@@ -1079,7 +1079,7 @@ enum ccPhase {
 };
 
 enum ccType {
-    ScheduledCC, /* Automatically triggered, based on time or the purple buffer. */
+    SliceCC,     /* If a CC is in progress, continue it. Otherwise, start a new one. */
     ManualCC,    /* Explicitly triggered. */
     ShutdownCC   /* Shutdown CC, used for finding leaks. */
 };
@@ -3032,7 +3032,7 @@ nsCycleCollector::Collect(ccType aCCType,
 
     mActivelyCollecting = false;
 
-    if (aCCType != ScheduledCC && !startedIdle) {
+    if (aCCType != SliceCC && !startedIdle) {
         // We were in the middle of an incremental CC (using its own listener).
         // Somebody has forced a CC, so after having finished out the current CC,
         // run the CC again using the new listener.
@@ -3042,7 +3042,7 @@ nsCycleCollector::Collect(ccType aCCType,
         }
     }
 
-    MOZ_ASSERT_IF(aCCType != ScheduledCC, mIncrementalPhase == IdlePhase);
+    MOZ_ASSERT_IF(aCCType != SliceCC, mIncrementalPhase == IdlePhase);
 
     return collectedAny;
 }
@@ -3062,7 +3062,8 @@ nsCycleCollector::PrepareForGarbageCollection()
 
     SliceBudget unlimitedBudget;
     PrintPhase("PrepareForGarbageCollection");
-    Collect(ScheduledCC, unlimitedBudget, nullptr);
+    // Use SliceCC because we only want to finish the CC in progress.
+    Collect(SliceCC, unlimitedBudget, nullptr);
     MOZ_ASSERT(mIncrementalPhase == IdlePhase);
 }
 
@@ -3092,7 +3093,7 @@ nsCycleCollector::ShouldMergeZones(ccType aCCType)
         return false;
     }
 
-    if (aCCType == ScheduledCC && mJSRuntime->UsefulToMergeZones()) {
+    if (aCCType == SliceCC && mJSRuntime->UsefulToMergeZones()) {
         mMergedInARow++;
         return true;
     } else {
@@ -3547,7 +3548,7 @@ nsCycleCollector_collect(nsICycleCollectorListener *aManualListener)
 }
 
 void
-nsCycleCollector_scheduledCollect(int64_t aSliceTime)
+nsCycleCollector_collectSlice(int64_t aSliceTime)
 {
     CollectorData *data = sCollectorData.get();
 
@@ -3555,14 +3556,14 @@ nsCycleCollector_scheduledCollect(int64_t aSliceTime)
     MOZ_ASSERT(data);
     MOZ_ASSERT(data->mCollector);
 
-    PROFILER_LABEL("CC", "nsCycleCollector_scheduledCollect");
+    PROFILER_LABEL("CC", "nsCycleCollector_collectSlice");
     SliceBudget budget;
     if (aSliceTime > 0) {
         budget = SliceBudget::TimeBudget(aSliceTime);
     } else if (aSliceTime == 0) {
         budget = SliceBudget::WorkBudget(1);
     }
-    data->mCollector->Collect(ScheduledCC, budget, nullptr);
+    data->mCollector->Collect(SliceCC, budget, nullptr);
 }
 
 void
