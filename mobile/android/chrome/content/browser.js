@@ -1521,6 +1521,10 @@ var BrowserApp = {
         break;
 
       case "Locale:Changed":
+        // The value provided to Locale:Changed should be a BCP47 language tag
+        // understood by Gecko -- for example, "es-ES" or "de".
+        console.log("Locale:Changed: " + aData);
+
         // TODO: do we need to be more nuanced here -- e.g., checking for the
         // OS locale -- or should it always be false on Fennec?
         Services.prefs.setBoolPref("intl.locale.matchOS", false);
