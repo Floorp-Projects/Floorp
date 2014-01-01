@@ -197,7 +197,7 @@ public:
 bool
 GLContextCGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
 {
-    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
+    return ResizeScreenBuffer(aNewSize);
 }
 
 static GLContextCGL *
@@ -271,7 +271,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& size,
     nsRefPtr<GLContextCGL> glContext = CreateOffscreenFBOContext();
     if (glContext &&
         glContext->Init() &&
-        glContext->InitOffscreen(size, caps))
+        glContext->InitOffscreen(ToIntSize(size), caps))
     {
         return glContext.forget();
     }

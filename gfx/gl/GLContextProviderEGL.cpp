@@ -615,7 +615,7 @@ protected:
 bool
 GLContextEGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
 {
-    return ResizeScreenBuffer(ThebesIntSize(aNewSize));
+    return ResizeScreenBuffer(aNewSize);
 }
 
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
@@ -883,7 +883,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
     if (!glContext)
         return nullptr;
 
-    if (!glContext->InitOffscreen(size, caps))
+    if (!glContext->InitOffscreen(ToIntSize(size), caps))
         return nullptr;
 
     return glContext.forget();
