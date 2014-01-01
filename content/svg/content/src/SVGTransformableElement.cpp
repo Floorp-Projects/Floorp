@@ -194,8 +194,8 @@ SVGTransformableElement::GetCTM()
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(Flush_Layout);
   }
-  gfxMatrix m = SVGContentUtils::GetCTM(this, false);
-  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
+  gfx::Matrix m = SVGContentUtils::GetCTM(this, false);
+  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(ThebesMatrix(m));
   return mat.forget();
 }
 
@@ -207,8 +207,8 @@ SVGTransformableElement::GetScreenCTM()
     // Flush all pending notifications so that our frames are up to date
     currentDoc->FlushPendingNotifications(Flush_Layout);
   }
-  gfxMatrix m = SVGContentUtils::GetCTM(this, true);
-  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(m);
+  gfx::Matrix m = SVGContentUtils::GetCTM(this, true);
+  nsRefPtr<SVGMatrix> mat = m.IsSingular() ? nullptr : new SVGMatrix(ThebesMatrix(m));
   return mat.forget();
 }
 
