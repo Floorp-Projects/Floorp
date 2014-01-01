@@ -1305,7 +1305,7 @@ function getLocale() {
   if (gLocale)
     return gLocale;
 
-  for each (res in ['app', 'gre']) {
+  for (let res of ['app', 'gre']) {
     var channel = Services.io.newChannel("resource://" + res + "/" + FILE_UPDATE_LOCALE, null, null);
     try {
       var inputStream = channel.open();
