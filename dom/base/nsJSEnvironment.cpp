@@ -2008,6 +2008,7 @@ struct CycleCollectorStats
     mMaxSkippableDuration = 0;
     mMaxSliceTime = 0;
     mAnyLockedOut = false;
+    mExtraForgetSkippableCalls = 0;
   }
 
   void PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls = 0);
@@ -2016,7 +2017,10 @@ struct CycleCollectorStats
   {
     uint32_t sliceTime = TimeUntilNow(mBeginSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
+    MOZ_ASSERT(mExtraForgetSkippableCalls == 0, "Forget to reset extra forget skippable calls?");
   }
+
+  void RunForgetSkippable();
 
   // Time the current slice began, including any GC finishing.
   TimeStamp mBeginSliceTime;
@@ -2042,6 +2046,8 @@ struct CycleCollectorStats
 
   // True if we were locked out by the GC in any slice of the current CC.
   bool mAnyLockedOut;
+
+  int32_t mExtraForgetSkippableCalls;
 };
 
 CycleCollectorStats gCCStats;
@@ -2079,27 +2085,35 @@ CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippabl
     endGCTime = mBeginSliceTime;
   }
 
+  mExtraForgetSkippableCalls = aExtraForgetSkippableCalls;
+}
+
+void
+CycleCollectorStats::RunForgetSkippable()
+{
   // Run forgetSkippable synchronously to reduce the size of the CC graph. This
   // is particularly useful if we recently finished a GC.
-  if (aExtraForgetSkippableCalls >= 0) {
+  if (mExtraForgetSkippableCalls >= 0) {
+    TimeStamp beginForgetSkippable = TimeStamp::Now();
     bool ranSyncForgetSkippable = false;
     while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
       ranSyncForgetSkippable = true;
     }
 
-    for (int32_t i = 0; i < aExtraForgetSkippableCalls; ++i) {
+    for (int32_t i = 0; i < mExtraForgetSkippableCalls; ++i) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
       ranSyncForgetSkippable = true;
     }
 
     if (ranSyncForgetSkippable) {
       mMaxSkippableDuration =
-        std::max(mMaxSkippableDuration, TimeUntilNow(endGCTime));
+        std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
       mRanSyncForgetSkippable = true;
     }
 
   }
+  mExtraForgetSkippableCalls = 0;
 }
 
 //static
@@ -2168,6 +2182,8 @@ nsJSContext::BeginCycleCollectionCallback()
   gCCStats.mSuspected = nsCycleCollector_suspectedCount();
 
   KillCCTimer();
+
+  gCCStats.RunForgetSkippable();
 
   MOZ_ASSERT(!sICCTimer, "Tried to create a new ICC timer when one already existed.");
 
