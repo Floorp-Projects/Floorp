@@ -11,11 +11,27 @@
 #include "mozilla/Attributes.h"
 #include "nsSize.h"
 #include "nsAutoPtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/gfx/Types.h"
 
 class gfxImageSurface;
 
 namespace mozilla {
+
+namespace gfx {
+class DataSourceSurface;
+}
+
 namespace gl {
+
+void ReadPixelsIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
+void ReadScreenIntoImageSurface(GLContext* aGL, gfxImageSurface* aSurface);
+
+already_AddRefed<gfxImageSurface>
+GetTexImage(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
+
+TemporaryRef<gfx::DataSourceSurface>
+ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
 
 class GLReadTexImageHelper MOZ_FINAL
 {
@@ -25,7 +41,6 @@ class GLReadTexImageHelper MOZ_FINAL
     GLuint mPrograms[4];
 
     GLuint TextureImageProgramFor(GLenum aTextureTarget, int aShader);
-    bool ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize);
 
     bool DidGLErrorOccur(const char* str);
 

@@ -42,6 +42,7 @@
 #include "nsString.h"                   // for nsString, nsAutoCString, etc
 #include "DecomposeIntoNoRepeatTriangles.h"
 #include "ScopedGLHelpers.h"
+#include "GLReadTexImageHelper.h"
 
 #if MOZ_ANDROID_OMTC
 #include "TexturePoolOGL.h"
@@ -1485,8 +1486,16 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfxMatrix& aTransform)
     mGLContext->fReadBuffer(LOCAL_GL_BACK);
   }
 
-  RefPtr<SourceSurface> source =
-    mGLContext->ReadPixelsToSourceSurface(IntSize(width, height));
+  RefPtr<DataSourceSurface> source =
+        Factory::CreateDataSourceSurface(rect.Size(), gfx::FORMAT_B8G8R8A8);
+  // XXX we should do this properly one day without using the gfxImageSurface
+  nsRefPtr<gfxImageSurface> surf =
+    new gfxImageSurface(source->GetData(),
+                        gfxIntSize(width, height),
+                        source->Stride(),
+                        gfxImageFormatARGB32);
+  ReadPixelsIntoImageSurface(mGLContext, surf);
+  source->MarkDirty();
 
   // Map from GL space to Cairo space and reverse the world transform.
   Matrix glToCairoTransform = ToMatrix(aTransform);
