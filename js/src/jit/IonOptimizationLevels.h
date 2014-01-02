@@ -24,6 +24,8 @@ enum OptimizationLevel
     Optimization_Count
 };
 
+#ifdef JS_ION
+
 #ifdef DEBUG
 inline const char *
 OptimizationLevelString(OptimizationLevel level)
@@ -213,6 +215,8 @@ class OptimizationInfos
 };
 
 extern OptimizationInfos js_IonOptimizations;
+
+#endif // JS_ION
 
 } // namespace jit
 } // namespace js

@@ -14,14 +14,20 @@ interface nsIDOMMozNetworkStatsData : nsISupports
   readonly attribute jsval           date;      // Date.
 };
 
-[scriptable, builtinclass, uuid(b6fc4b14-628d-4c99-bf4e-e4ed56916cbe)]
+[scriptable, builtinclass, uuid(f1996e44-1057-4d4b-8ff8-919e76c4cfa9)]
 interface nsIDOMMozNetworkStats : nsISupports
 {
   /**
-   * Manifest URL of an application for specifying the per-app
-   * stats of the specified app. If null, system stats are returned.
+   * App manifest URL of an application for specifying the per-app stats of the
+   * specified app.
    */
-  readonly attribute DOMString    manifestURL;
+  readonly attribute DOMString    appManifestURL;
+
+  /**
+   * Service type is used to retrieve the corresponding "system-only" stats.
+   * E.g., "Tethering", "OTA", etc.
+   */
+  readonly attribute DOMString    serviceType;
 
   /**
    * Network the returned data belongs to.

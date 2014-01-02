@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<input id="test-input" type="text" value="Yolo"/>
+<script type="application/javascript;version=1.7">
+  let input = document.getElementById('test-input');
+  input.focus();
+  
+  input.addEventListener('keydown', function(e) {
+    e.preventDefault();
+  });
+</script>
+</body>
+</html>
