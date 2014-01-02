@@ -1210,6 +1210,11 @@ bool
 FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode executionMode,
                   CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
 
+// Update the actual types in any scripts queried by constraints with any
+// speculative types added during the definite properties analysis.
+void
+FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *constraints);
+
 struct ArrayTableKey;
 typedef HashMap<ArrayTableKey,ReadBarriered<TypeObject>,ArrayTableKey,SystemAllocPolicy> ArrayTypeTable;
 
