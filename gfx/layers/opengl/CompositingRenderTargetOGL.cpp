@@ -5,6 +5,7 @@
 
 #include "CompositingRenderTargetOGL.h"
 #include "GLContext.h"
+#include "GLReadTexImageHelper.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -61,7 +62,7 @@ CompositingRenderTargetOGL::Dump(Compositor* aCompositor)
 {
   MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
   CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(aCompositor);
-  return mGL->GetTexImage(mTextureHandle, true, compositorOGL->GetFBOFormat());
+  return GetTexImage(mGL, mTextureHandle, true, compositorOGL->GetFBOFormat());
 }
 #endif
 

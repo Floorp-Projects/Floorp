@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceEGL.h"
-
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "ScopedGLHelpers.h"
@@ -12,6 +11,7 @@
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
 #include "TextureGarbageBin.h"
+#include "GLReadTexImageHelper.h"
 
 using namespace mozilla::gfx;
 
@@ -181,7 +181,7 @@ SharedSurface_EGLImage::Fence()
                                 ThebesIntSize(mPixels->GetSize()),
                                 mPixels->Stride(),
                                 SurfaceFormatToImageFormat(mPixels->GetFormat()));
-        mGL->ReadScreenIntoImageSurface(wrappedData);
+        ReadScreenIntoImageSurface(mGL, wrappedData);
         mPixels->MarkDirty();
         return;
     }
