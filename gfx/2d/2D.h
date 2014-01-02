@@ -1016,6 +1016,15 @@ public:
     CreateDataSourceSurface(const IntSize &aSize, SurfaceFormat aFormat);
 
   /*
+   * This creates a simple data source surface for a certain size with a
+   * specific stride, which must be large enough to fit all pixels.
+   * It allocates new memory for the surface. This memory is freed when
+   * the surface is destroyed.
+   */
+  static TemporaryRef<DataSourceSurface>
+    CreateDataSourceSurfaceWithStride(const IntSize &aSize, SurfaceFormat aFormat, int32_t aStride);
+
+  /*
    * This creates a simple data source surface for some existing data. It will
    * wrap this data and the data for this source surface. The caller is
    * responsible for deallocating the memory only after destruction of the

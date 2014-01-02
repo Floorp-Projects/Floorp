@@ -37,5 +37,18 @@ SourceSurfaceAlignedRawData::Init(const IntSize &aSize,
   return mArray != nullptr;
 }
 
+bool
+SourceSurfaceAlignedRawData::InitWithStride(const IntSize &aSize,
+                                            SurfaceFormat aFormat,
+                                            int32_t aStride)
+{
+  mStride = aStride;
+  mArray.Realloc(mStride * aSize.height);
+  mSize = aSize;
+  mFormat = aFormat;
+
+  return mArray != nullptr;
+}
+
 }
 }

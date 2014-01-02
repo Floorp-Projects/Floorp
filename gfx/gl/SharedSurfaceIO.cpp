@@ -21,7 +21,7 @@ SharedSurface_IOSurface::Create(MacIOSurface* surface, GLContext *gl, bool hasAl
     MOZ_ASSERT(surface);
     MOZ_ASSERT(gl);
 
-    gfxIntSize size(surface->GetWidth(), surface->GetHeight());
+    gfx::IntSize size(surface->GetWidth(), surface->GetHeight());
     return new SharedSurface_IOSurface(surface, gl, size, hasAlpha);
 }
 
@@ -57,7 +57,7 @@ SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei hei
 
 SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                                                  GLContext* gl,
-                                                 const gfxIntSize& size,
+                                                 const gfx::IntSize& size,
                                                  bool hasAlpha)
   : SharedSurface_GL(SharedSurfaceType::IOSurface, AttachmentType::GLTexture, gl, size, hasAlpha)
   , mSurface(surface)
@@ -96,7 +96,7 @@ SharedSurface_IOSurface::~SharedSurface_IOSurface()
 }
 
 SharedSurface*
-SurfaceFactory_IOSurface::CreateShared(const gfxIntSize& size)
+SurfaceFactory_IOSurface::CreateShared(const gfx::IntSize& size)
 {
     bool hasAlpha = mReadCaps.alpha;
     RefPtr<MacIOSurface> surf =
