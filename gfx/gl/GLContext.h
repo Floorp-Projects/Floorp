@@ -2564,25 +2564,6 @@ public:
 
     virtual bool RenewSurface() { return false; }
 
-    already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture,
-                                                  bool aYInvert,
-                                                  SurfaceFormat aFormat);
-
-    /**
-     * Call ReadPixels into an existing gfxImageSurface.
-     * The image surface must be using image format RGBA32 or RGB24,
-     * and must have stride == width*4.
-     * Note that neither ReadPixelsIntoImageSurface nor
-     * ReadScreenIntoImageSurface call dest->Flush/MarkDirty.
-     */
-    void ReadPixelsIntoImageSurface(gfxImageSurface* dest);
-
-    // Similar to ReadPixelsIntoImageSurface, but pulls from the screen
-    // instead of the currently bound framebuffer.
-    void ReadScreenIntoImageSurface(gfxImageSurface* dest);
-
-    TemporaryRef<gfx::SourceSurface> ReadPixelsToSourceSurface(const gfx::IntSize &aSize);
-
     // Shared code for GL extensions and GLX extensions.
     static bool ListHasExtension(const GLubyte *extensions,
                                  const char *extension);
