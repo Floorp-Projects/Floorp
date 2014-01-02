@@ -17,7 +17,7 @@ using namespace JS;
 #define IS_TEAROFF_CLASS(clazz) ((clazz) == &XPC_WN_Tearoff_JSClass)
 
 XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
-                               JSContext* cx       /* = GetDefaultJSContext() */,
+                               JSContext* cx,
                                HandleObject obj    /* = nullptr               */,
                                HandleObject funobj /* = nullptr               */,
                                HandleId name       /* = JSID_VOID             */,
