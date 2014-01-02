@@ -30,6 +30,7 @@
 #include "gfxPlatform.h"
 #include "GLContext.h"
 #include "gfxUtils.h"
+#include "gfx2DGlue.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -1232,7 +1233,7 @@ GLContextProviderGLX::CreateOffscreen(const gfxIntSize& size,
     if (!glContext)
         return nullptr;
 
-    if (!glContext->InitOffscreen(size, caps))
+    if (!glContext->InitOffscreen(ToIntSize(size), caps))
         return nullptr;
 
     return glContext.forget();

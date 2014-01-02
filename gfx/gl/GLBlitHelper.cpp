@@ -14,7 +14,7 @@ namespace gl {
 
 static void
 RenderbufferStorageBySamples(GLContext* aGL, GLsizei aSamples,
-                             GLenum aInternalFormat, const gfxIntSize& aSize)
+                             GLenum aInternalFormat, const gfx::IntSize& aSize)
 {
     if (aSamples) {
         aGL->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
@@ -31,7 +31,7 @@ RenderbufferStorageBySamples(GLContext* aGL, GLsizei aSamples,
 
 GLuint
 CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
-              GLenum aType, const gfxIntSize& aSize)
+              GLenum aType, const gfx::IntSize& aSize)
 {
     GLuint tex = 0;
     aGL->fGenTextures(1, &tex);
@@ -57,7 +57,7 @@ CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
 
 GLuint
 CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                          const gfxIntSize& aSize)
+                          const gfx::IntSize& aSize)
 {
     MOZ_ASSERT(aFormats.color_texInternalFormat);
     MOZ_ASSERT(aFormats.color_texFormat);
@@ -73,7 +73,7 @@ CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
 
 GLuint
 CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
-                   const gfxIntSize& aSize)
+                   const gfx::IntSize& aSize)
 {
     GLuint rb = 0;
     aGL->fGenRenderbuffers(1, &rb);
@@ -87,7 +87,7 @@ CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
 
 void
 CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                const gfxIntSize& aSize, bool aMultisample,
+                                const gfx::IntSize& aSize, bool aMultisample,
                                 GLuint* aColorMSRB, GLuint* aDepthRB,
                                 GLuint* aStencilRB)
 {
@@ -351,7 +351,7 @@ GLBlitHelper::InitTexQuadProgram(GLenum target)
 }
 
 bool
-GLBlitHelper::UseTexQuadProgram(GLenum target, const gfxIntSize& srcSize)
+GLBlitHelper::UseTexQuadProgram(GLenum target, const gfx::IntSize& srcSize)
 {
     if (!InitTexQuadProgram(target)) {
         return false;
@@ -397,8 +397,8 @@ GLBlitHelper::DeleteTexBlitProgram()
 
 void
 GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                        const gfxIntSize& srcSize,
-                                        const gfxIntSize& destSize)
+                                        const gfx::IntSize& srcSize,
+                                        const gfx::IntSize& destSize)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
     MOZ_ASSERT(!destFB || mGL->fIsFramebuffer(destFB));
@@ -419,8 +419,8 @@ GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
 
 void
 GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
-                                        const gfxIntSize& srcSize,
-                                        const gfxIntSize& destSize,
+                                        const gfx::IntSize& srcSize,
+                                        const gfx::IntSize& destSize,
                                         const GLFormats& srcFormats)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
@@ -443,8 +443,8 @@ GLBlitHelper::BlitFramebufferToFramebuffer(GLuint srcFB, GLuint destFB,
 
 void
 GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
-                                    const gfxIntSize& srcSize,
-                                    const gfxIntSize& destSize,
+                                    const gfx::IntSize& srcSize,
+                                    const gfx::IntSize& destSize,
                                     GLenum srcTarget)
 {
     MOZ_ASSERT(mGL->fIsTexture(srcTex));
@@ -563,8 +563,8 @@ GLBlitHelper::BlitTextureToFramebuffer(GLuint srcTex, GLuint destFB,
 
 void
 GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
-                                    const gfxIntSize& srcSize,
-                                    const gfxIntSize& destSize,
+                                    const gfx::IntSize& srcSize,
+                                    const gfx::IntSize& destSize,
                                     GLenum destTarget)
 {
     MOZ_ASSERT(!srcFB || mGL->fIsFramebuffer(srcFB));
@@ -590,8 +590,8 @@ GLBlitHelper::BlitFramebufferToTexture(GLuint srcFB, GLuint destTex,
 
 void
 GLBlitHelper::BlitTextureToTexture(GLuint srcTex, GLuint destTex,
-                                const gfxIntSize& srcSize,
-                                const gfxIntSize& destSize,
+                                const gfx::IntSize& srcSize,
+                                const gfx::IntSize& destSize,
                                 GLenum srcTarget, GLenum destTarget)
 {
     MOZ_ASSERT(mGL->fIsTexture(srcTex));

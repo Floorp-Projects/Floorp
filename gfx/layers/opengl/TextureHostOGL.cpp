@@ -771,7 +771,7 @@ SurfaceStreamHostOGL::Lock()
 
   mSize = IntSize(sharedSurf->Size().width, sharedSurf->Size().height);
 
-  gfxImageSurface* toUpload = nullptr;
+  DataSourceSurface* toUpload = nullptr;
   switch (sharedSurf->Type()) {
     case SharedSurfaceType::GLTextureShare: {
       SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
@@ -820,7 +820,7 @@ SurfaceStreamHostOGL::Lock()
 
   if (toUpload) {
     // mBounds seems to end up as (0,0,0,0) a lot, so don't use it?
-    nsIntSize size(toUpload->GetSize());
+    nsIntSize size(ThebesIntSize(toUpload->GetSize()));
     nsIntRect rect(nsIntPoint(0,0), size);
     nsIntRegion bounds(rect);
     mFormat = UploadSurfaceToTexture(mGL,

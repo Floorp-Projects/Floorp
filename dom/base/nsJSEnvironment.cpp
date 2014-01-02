@@ -2008,6 +2008,7 @@ struct CycleCollectorStats
     mMaxSkippableDuration = 0;
     mMaxSliceTime = 0;
     mAnyLockedOut = false;
+    mExtraForgetSkippableCalls = 0;
   }
 
   void PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls = 0);
@@ -2016,7 +2017,10 @@ struct CycleCollectorStats
   {
     uint32_t sliceTime = TimeUntilNow(mBeginSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
+    MOZ_ASSERT(mExtraForgetSkippableCalls == 0, "Forget to reset extra forget skippable calls?");
   }
+
+  void RunForgetSkippable();
 
   // Time the current slice began, including any GC finishing.
   TimeStamp mBeginSliceTime;
@@ -2042,6 +2046,8 @@ struct CycleCollectorStats
 
   // True if we were locked out by the GC in any slice of the current CC.
   bool mAnyLockedOut;
+
+  int32_t mExtraForgetSkippableCalls;
 };
 
 CycleCollectorStats gCCStats;
@@ -2079,27 +2085,35 @@ CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippabl
     endGCTime = mBeginSliceTime;
   }
 
+  mExtraForgetSkippableCalls = aExtraForgetSkippableCalls;
+}
+
+void
+CycleCollectorStats::RunForgetSkippable()
+{
   // Run forgetSkippable synchronously to reduce the size of the CC graph. This
   // is particularly useful if we recently finished a GC.
-  if (aExtraForgetSkippableCalls >= 0) {
+  if (mExtraForgetSkippableCalls >= 0) {
+    TimeStamp beginForgetSkippable = TimeStamp::Now();
     bool ranSyncForgetSkippable = false;
     while (sCleanupsSinceLastGC < NS_MAJOR_FORGET_SKIPPABLE_CALLS) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
       ranSyncForgetSkippable = true;
     }
 
-    for (int32_t i = 0; i < aExtraForgetSkippableCalls; ++i) {
+    for (int32_t i = 0; i < mExtraForgetSkippableCalls; ++i) {
       FireForgetSkippable(nsCycleCollector_suspectedCount(), false);
       ranSyncForgetSkippable = true;
     }
 
     if (ranSyncForgetSkippable) {
       mMaxSkippableDuration =
-        std::max(mMaxSkippableDuration, TimeUntilNow(endGCTime));
+        std::max(mMaxSkippableDuration, TimeUntilNow(beginForgetSkippable));
       mRanSyncForgetSkippable = true;
     }
 
   }
+  mExtraForgetSkippableCalls = 0;
 }
 
 //static
@@ -2119,18 +2133,18 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 //static
 void
-nsJSContext::ScheduledCycleCollectNow(int64_t aSliceTime)
+nsJSContext::RunCycleCollectorSlice(int64_t aSliceTime)
 {
   if (!NS_IsMainThread()) {
     return;
   }
 
-  PROFILER_LABEL("CC", "ScheduledCycleCollectNow");
+  PROFILER_LABEL("CC", "RunCycleCollectorSlice");
 
   // Ideally, the slice time would be decreased by the amount of
   // time spent on PrepareForCycleCollection().
   gCCStats.PrepareForCycleCollectionSlice();
-  nsCycleCollector_scheduledCollect(aSliceTime);
+  nsCycleCollector_collectSlice(aSliceTime);
   gCCStats.FinishCycleCollectionSlice();
 }
 
@@ -2155,7 +2169,7 @@ ICCTimerFired(nsITimer* aTimer, void* aClosure)
     }
   }
 
-  nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
+  nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
 }
 
 //static
@@ -2168,6 +2182,8 @@ nsJSContext::BeginCycleCollectionCallback()
   gCCStats.mSuspected = nsCycleCollector_suspectedCount();
 
   KillCCTimer();
+
+  gCCStats.RunForgetSkippable();
 
   MOZ_ASSERT(!sICCTimer, "Tried to create a new ICC timer when one already existed.");
 
@@ -2420,9 +2436,9 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       }
     } else {
       // We are in the final timer fire and still meet the conditions for
-      // triggering a CC. Let CycleCollectNow finish the current IGC, if any,
-      // because that will allow us to include the GC time in the CC pause.
-      nsJSContext::ScheduledCycleCollectNow(ICCSliceTime());
+      // triggering a CC. Let RunCycleCollectorSlice finish the current IGC, if
+      // any because that will allow us to include the GC time in the CC pause.
+      nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.

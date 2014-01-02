@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include "mozilla/Attributes.h"
 #include "GLDefs.h"
-#include "gfxPoint.h"
+#include "mozilla/gfx/Point.h"
 #include "SurfaceTypes.h"
 
 namespace mozilla {
@@ -32,14 +32,14 @@ protected:
     const SharedSurfaceType mType;
     const APITypeT mAPI;
     const AttachmentType mAttachType;
-    const gfxIntSize mSize;
+    const gfx::IntSize mSize;
     const bool mHasAlpha;
     bool mIsLocked;
 
     SharedSurface(SharedSurfaceType type,
                   APITypeT api,
                   AttachmentType attachType,
-                  const gfxIntSize& size,
+                  const gfx::IntSize& size,
                   bool hasAlpha)
         : mType(type)
         , mAPI(api)
@@ -93,7 +93,7 @@ public:
         return mAttachType;
     }
 
-    const gfxIntSize& Size() const {
+    const gfx::IntSize& Size() const {
         return mSize;
     }
 

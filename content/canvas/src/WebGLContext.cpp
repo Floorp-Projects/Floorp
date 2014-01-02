@@ -397,7 +397,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         PresentScreenBuffer();
 
         // ResizeOffscreen scraps the current prod buffer before making a new one.
-        gl->ResizeOffscreen(gfxIntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
+        gl->ResizeOffscreen(gfx::IntSize(width, height)); // Doesn't matter if it succeeds (soft-fail)
         // It's unlikely that we'll get a proper-sized context if we recreate if we didn't on resize
 
         // everything's good, we're done here
