@@ -761,7 +761,13 @@ LinearScanAllocator::assign(LAllocation allocation)
         }
     }
 
-    if (reg && allocation.isMemory()) {
+    bool useAsCanonicalSpillSlot = allocation.isMemory();
+    // Only canonically spill argument values when frame arguments are not
+    // modified in the body.
+    if (mir->modifiesFrameArguments())
+        useAsCanonicalSpillSlot = allocation.isStackSlot();
+
+    if (reg && useAsCanonicalSpillSlot) {
         if (reg->canonicalSpill()) {
             JS_ASSERT(allocation == *reg->canonicalSpill());
 

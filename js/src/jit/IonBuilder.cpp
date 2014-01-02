@@ -9152,6 +9152,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
         JS_ASSERT(script()->uninlineable && !isInlineBuilder());
 
         MSetFrameArgument *store = MSetFrameArgument::New(alloc(), arg, val);
+        modifiesFrameArguments_ = true;
         current->add(store);
         current->setArg(arg);
         return true;
