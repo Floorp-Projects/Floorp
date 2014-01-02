@@ -874,22 +874,6 @@ nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
 }
 
 void
-nsSVGUtils::CompositePatternMatrix(gfxContext *aContext,
-                                   gfxPattern *aPattern,
-                                   const gfxMatrix &aCTM, float aWidth, float aHeight, float aOpacity)
-{
-  if (aCTM.IsSingular())
-    return;
-
-  aContext->Save();
-  SetClipRect(aContext, aCTM, gfxRect(0, 0, aWidth, aHeight));
-  aContext->Multiply(aCTM);
-  aContext->SetPattern(aPattern);
-  aContext->Paint(aOpacity);
-  aContext->Restore();
-}
-
-void
 nsSVGUtils::SetClipRect(gfxContext *aContext,
                         const gfxMatrix &aCTM,
                         const gfxRect &aRect)
@@ -900,17 +884,6 @@ nsSVGUtils::SetClipRect(gfxContext *aContext,
   gfxContextMatrixAutoSaveRestore matrixAutoSaveRestore(aContext);
   aContext->Multiply(aCTM);
   aContext->Clip(aRect);
-}
-
-void
-nsSVGUtils::ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect)
-{
-  gfxRect r = aGfxRect;
-  r.RoundOut();
-  gfxRect r2(aRect->x, aRect->y, aRect->width, aRect->height);
-  r = r.Intersect(r2);
-  *aRect = nsIntRect(int32_t(r.X()), int32_t(r.Y()),
-                     int32_t(r.Width()), int32_t(r.Height()));
 }
 
 gfxRect

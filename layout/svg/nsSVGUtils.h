@@ -425,18 +425,9 @@ public:
                                      const gfxPoint &aSurfaceOffset,
                                      const gfxMatrix &aCTM);
 
-  static void CompositePatternMatrix(gfxContext *aContext,
-                                     gfxPattern *aPattern,
-                                     const gfxMatrix &aCTM, float aWidth, float aHeight, float aOpacity);
-
   static void SetClipRect(gfxContext *aContext,
                           const gfxMatrix &aCTM,
                           const gfxRect &aRect);
-
-  /**
-   * Restricts aRect to pixels that intersect aGfxRect.
-   */
-  static void ClipToGfxRect(nsIntRect* aRect, const gfxRect& aGfxRect);
 
   /* Using group opacity instead of fill or stroke opacity on a
    * geometry object seems to be a common authoring mistake.  If we're
