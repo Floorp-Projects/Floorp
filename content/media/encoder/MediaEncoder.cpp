@@ -37,8 +37,6 @@ PRLogModuleInfo* gMediaEncoderLog;
 
 namespace mozilla {
 
-static nsIThread* sEncoderThread = nullptr;
-
 void
 MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                        TrackID aID,
@@ -75,11 +73,6 @@ MediaEncoder::NotifyRemoved(MediaStreamGraph* aGraph)
 
 }
 
-bool
-MediaEncoder::OnEncoderThread()
-{
-  return NS_GetCurrentThread() == sEncoderThread;
-}
 /* static */
 already_AddRefed<MediaEncoder>
 MediaEncoder::CreateEncoder(const nsAString& aMIMEType, uint8_t aTrackTypes)
@@ -179,9 +172,7 @@ MediaEncoder::GetEncodedData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
                              nsAString& aMIMEType)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  if (!sEncoderThread) {
-    sEncoderThread = NS_GetCurrentThread();
-  }
+
   aMIMEType = mMIMEType;
 
   bool reloop = true;
