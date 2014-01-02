@@ -1448,11 +1448,10 @@ JSObject *
 js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
                       NewObjectKind newKind)
 {
-    JS_ASSERT(type->proto->hasNewType(&JSObject::class_, type));
     JS_ASSERT(parent);
 
     JS_ASSERT(allocKind <= gc::FINALIZE_OBJECT_LAST);
-    if (CanBeFinalizedInBackground(allocKind, &JSObject::class_))
+    if (CanBeFinalizedInBackground(allocKind, type->clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
     NewObjectCache &cache = cx->runtime()->newObjectCache;
@@ -1462,19 +1461,19 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
         newKind == GenericObject &&
         !cx->compartment()->hasObjectMetadataCallback())
     {
-        if (cache.lookupType(&JSObject::class_, type, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, &JSObject::class_));
+        if (cache.lookupType(type->clasp, type, allocKind, &entry)) {
+            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, type->clasp));
             if (obj)
                 return obj;
         }
     }
 
-    JSObject *obj = NewObject(cx, &JSObject::class_, type, parent, allocKind, newKind);
+    JSObject *obj = NewObject(cx, type->clasp, type, parent, allocKind, newKind);
     if (!obj)
         return nullptr;
 
     if (entry != -1 && !obj->hasDynamicSlots())
-        cache.fillType(entry, &JSObject::class_, type, allocKind, obj);
+        cache.fillType(entry, type->clasp, type, allocKind, obj);
 
     return obj;
 }
