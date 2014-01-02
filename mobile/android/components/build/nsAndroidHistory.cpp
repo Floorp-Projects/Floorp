@@ -42,8 +42,16 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   if (!aContent || !aURI)
     return NS_OK;
 
+  // Silently return if URI is something we would never add to DB.
+  bool canAdd;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
   nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
+  rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
 
