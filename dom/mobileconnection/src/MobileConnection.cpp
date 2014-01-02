@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/network/MobileConnection.h"
+#include "mozilla/dom/MobileConnection.h"
 
 #include "GeneratedEvents.h"
 #include "mozilla/dom/CFStateChangeEvent.h"
@@ -23,7 +23,7 @@
 
 #define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
 
-using namespace mozilla::dom::network;
+using namespace mozilla::dom;
 
 class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
 {
