@@ -330,7 +330,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     JSObject2WrappedJSMap* map;
     nsXPCWrappedJS* root = nullptr;
     nsXPCWrappedJS* wrapper = nullptr;
-    nsXPCWrappedJSClass* clazz = nullptr;
+    nsRefPtr<nsXPCWrappedJSClass> clazz;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     bool release_root = false;
 
@@ -340,7 +340,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         return NS_ERROR_FAILURE;
     }
 
-    nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, &clazz);
+    nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, getter_AddRefs(clazz));
     if (!clazz)
         return NS_ERROR_FAILURE;
     // from here on we need to return through 'return_wrapper'
@@ -404,9 +404,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     root->mNext = wrapper;
 
 return_wrapper:
-    if (clazz)
-        NS_RELEASE(clazz);
-
     if (release_root)
         NS_RELEASE(root);
 
