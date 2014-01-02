@@ -473,28 +473,22 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
 static JSContext *
 GetContextFromObjectOrDefault(nsXPCWrappedJS* wrapper)
 {
-    // Don't stomp over a running context.
+    // First, try the cx stack.
     XPCJSContextStack* stack = XPCJSRuntime::Get()->GetJSContextStack();
-    if (stack && stack->Peek())
+    if (stack->Peek())
         return stack->Peek();
 
-    // In order to get a context, we need a context.
-    XPCCallContext ccx(NATIVE_CALLER);
-    if (!ccx.IsValid())
-        return nullptr;
-
-    RootedObject obj(ccx, wrapper->GetJSObject());
-    JSAutoCompartment ac(ccx, obj);
-    XPCWrappedNativeScope* scope = GetObjectScope(obj);
-    XPCContext *xpcc = scope->GetContext();
-
+    // If the cx stack is empty, try the wrapper's JSObject.
+    JSCompartment *c = js::GetObjectCompartment(wrapper->GetJSObject());
+    XPCContext *xpcc = EnsureCompartmentPrivate(c)->scope->GetContext();
     if (xpcc) {
         JSContext *cx = xpcc->GetJSContext();
         JS_AbortIfWrongThread(JS_GetRuntime(cx));
         return cx;
     }
 
-    return XPCCallContext::GetDefaultJSContext();
+    // Fall back to the safe JSContext.
+    return stack->GetSafeJSContext();
 }
 
 class SameOriginCheckedComponent MOZ_FINAL : public nsISecurityCheckedComponent
