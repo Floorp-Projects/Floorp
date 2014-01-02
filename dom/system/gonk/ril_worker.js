@@ -10944,6 +10944,15 @@ let BerTlvHelper = {
   retrieveFileIdentifier: function retrieveFileIdentifier(length) {
     return {fileId : (GsmPDUHelper.readHexOctet() << 8) +
                       GsmPDUHelper.readHexOctet()};
+  },
+
+  searchForNextTag: function searchForNextTag(tag, iter) {
+    for (let [index, tlv] in iter) {
+      if (tlv.tag === tag) {
+        return tlv;
+      }
+    }
+    return null;
   }
 };
 BerTlvHelper[BER_FCP_TEMPLATE_TAG] = function BER_FCP_TEMPLATE_TAG(length) {
@@ -11223,9 +11232,60 @@ let ICCIOHelper = {
   processICCIOGetResponse: function processICCIOGetResponse(options) {
     let strLen = Buf.readInt32();
 
+    let peek = GsmPDUHelper.readHexOctet();
+    Buf.seekIncoming(-1 * Buf.PDU_HEX_OCTET_SIZE);
+    if (peek === BER_FCP_TEMPLATE_TAG) {
+      this.processUSimGetResponse(options, strLen / 2);
+    } else {
+      this.processSimGetResponse(options);
+    }
+    Buf.readStringDelimiter(strLen);
+
+    if (options.callback) {
+      options.callback(options);
+    }
+  },
+
+  /**
+   * Helper function for processing USIM get response.
+   */
+  processUSimGetResponse: function processUSimGetResponse(options, octetLen) {
+    let berTlv = BerTlvHelper.decode(octetLen);
+    // See TS 102 221 Table 11.4 for the content order of getResponse.
+    let iter = Iterator(berTlv.value);
+    let tlv = BerTlvHelper.searchForNextTag(BER_FCP_FILE_DESCRIPTOR_TAG,
+                                            iter);
+    if (!tlv || (tlv.value.fileStructure !== UICC_EF_STRUCTURE[options.type])) {
+      throw new Error("Expected EF type " + UICC_EF_STRUCTURE[options.type] +
+                      " but read " + tlv.value.fileStructure);
+    }
+
+    if (tlv.value.fileStructure === UICC_EF_STRUCTURE[EF_TYPE_LINEAR_FIXED] ||
+        tlv.value.fileStructure === UICC_EF_STRUCTURE[EF_TYPE_CYCLIC]) {
+      options.recordSize = tlv.value.recordLength;
+      options.totalRecords = tlv.value.numOfRecords;
+    }
+
+    tlv = BerTlvHelper.searchForNextTag(BER_FCP_FILE_IDENTIFIER_TAG, iter);
+    if (!tlv || (tlv.value.fileId !== options.fileId)) {
+      throw new Error("Expected file ID " + options.fileId.toString(16) +
+                      " but read " + fileId.toString(16));
+    }
+
+    tlv = BerTlvHelper.searchForNextTag(BER_FCP_FILE_SIZE_DATA_TAG, iter);
+    if (!tlv) {
+      throw new Error("Unexpected file size data");
+    }
+    options.fileSize = tlv.value.fileSizeData;
+  },
+
+  /**
+   * Helper function for processing SIM get response.
+   */
+  processSimGetResponse: function processSimGetResponse(options) {
     // The format is from TS 51.011, clause 9.2.1
 
-    // Skip RFU, data[0] data[1]
+    // Skip RFU, data[0] data[1].
     Buf.seekIncoming(2 * Buf.PDU_HEX_OCTET_SIZE);
 
     // File size, data[2], data[3]
@@ -11259,6 +11319,7 @@ let ICCIOHelper = {
       throw new Error("Expected EF type " + options.type + " but read " + efType);
     }
 
+    // TODO: Bug 952025.
     // Length of a record, data[14].
     // Only available for LINEAR_FIXED and CYCLIC.
     if (efType == EF_TYPE_LINEAR_FIXED || efType == EF_TYPE_CYCLIC) {
@@ -11266,12 +11327,6 @@ let ICCIOHelper = {
       options.totalRecords = options.fileSize / options.recordSize;
     } else {
       Buf.seekIncoming(1 * Buf.PDU_HEX_OCTET_SIZE);
-    }
-
-    Buf.readStringDelimiter(strLen);
-
-    if (options.callback) {
-      options.callback(options);
     }
   },
 
