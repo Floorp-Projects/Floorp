@@ -6250,8 +6250,7 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
     // If we're at the end of a preformatted line which has a terminating
     // linefeed, we want to reduce the offset by one to make sure that the
     // selection is placed before the linefeed character.
-    if (StyleText()->NewlineIsSignificant() &&
-        HasTerminalNewline()) {
+    if (HasSignificantTerminalNewline()) {
       --selectedOffset;
     }
   }
@@ -7478,8 +7477,7 @@ nsTextFrame::SetLength(int32_t aLength, nsLineLayout* aLineLayout,
   if (end < f->mContentOffset) {
     // Our frame is shrinking. Give the text to our next in flow.
     if (aLineLayout &&
-        StyleText()->WhiteSpaceIsSignificant() &&
-        HasTerminalNewline() &&
+        HasSignificantTerminalNewline() &&
         GetParent()->GetType() != nsGkAtoms::letterFrame &&
         (aSetLengthFlags & ALLOW_FRAME_CREATION_AND_DESTRUCTION)) {
       // Whatever text we hand to our next-in-flow will end up in a frame all of
@@ -8562,9 +8560,9 @@ nsTextFrame::AdjustOffsetsForBidi(int32_t aStart, int32_t aEnd)
  * false if it is not a text frame.
  */
 bool
-nsTextFrame::HasTerminalNewline() const
+nsTextFrame::HasSignificantTerminalNewline() const
 {
-  return ::HasTerminalNewline(this);
+  return ::HasTerminalNewline(this) && StyleText()->NewlineIsSignificant();
 }
 
 bool
