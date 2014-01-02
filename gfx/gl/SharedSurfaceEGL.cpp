@@ -25,7 +25,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
                                bool hasAlpha,
                                EGLContext context)
 {
-    GLLibraryEGL* egl = prodGL->GetLibraryEGL();
+    GLLibraryEGL* egl = &sEGLLibrary;
     MOZ_ASSERT(egl);
 
     if (!HasExtensions(egl, prodGL))
@@ -134,7 +134,7 @@ CreateTexturePipe(GLLibraryEGL* const egl, GLContext* const gl,
     if (!tex)
         return false;
 
-    EGLContext context = gl->GetEGLContext();
+    EGLContext context = (EGLContext) gl->GetNativeData(GLContext::NativeGLContext);
     MOZ_ASSERT(context);
     EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(tex);
     EGLImage image = egl->fCreateImage(egl->Display(), context,
@@ -287,7 +287,7 @@ SurfaceFactory_EGLImage*
 SurfaceFactory_EGLImage::Create(GLContext* prodGL,
                                         const SurfaceCaps& caps)
 {
-    EGLContext context = prodGL->GetEGLContext();
+    EGLContext context = prodGL->GetNativeData(GLContext::NativeGLContext);
 
     return new SurfaceFactory_EGLImage(prodGL, context, caps);
 }

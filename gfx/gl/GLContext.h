@@ -2443,9 +2443,6 @@ public:
     bool IsOwningThreadCurrent();
     void DispatchToOwningThread(nsIRunnable *event);
 
-    virtual EGLContext GetEGLContext() { return nullptr; }
-    virtual GLLibraryEGL* GetLibraryEGL() { return nullptr; }
-
     /**
      * Only on EGL.
      *

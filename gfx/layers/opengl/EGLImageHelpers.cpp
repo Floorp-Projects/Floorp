@@ -22,28 +22,16 @@ EGLImageCreateFromNativeBuffer(GLContext* aGL, void* aBuffer)
         LOCAL_EGL_NONE, LOCAL_EGL_NONE
     };
 
-    GLLibraryEGL* egl = aGL->GetLibraryEGL();
-    if (!egl) {
-        NS_WARNING("Failed to obtain pointer to EGL. Returning EGL_NO_IMAGE.");
-        return EGL_NO_IMAGE;
-    }
-
-    return egl->fCreateImage(egl->Display(),
-                             EGL_NO_CONTEXT,
-                             LOCAL_EGL_NATIVE_BUFFER_ANDROID,
-                             aBuffer, attrs);
+    return sEGLLibrary.fCreateImage(sEGLLibrary.Display(),
+                                     EGL_NO_CONTEXT,
+                                     LOCAL_EGL_NATIVE_BUFFER_ANDROID,
+                                     aBuffer, attrs);
 }
 
 void
 EGLImageDestroy(GLContext* aGL, EGLImage aImage)
 {
-    GLLibraryEGL* egl = aGL->GetLibraryEGL();
-    if (!egl) {
-        NS_WARNING("Failed to obtain pointer to EGL. Image not destroyed.");
-        return;
-    }
-
-    egl->fDestroyImage(egl->Display(), aImage);
+    sEGLLibrary.fDestroyImage(sEGLLibrary.Display(), aImage);
 }
 
 } // namespace layers
