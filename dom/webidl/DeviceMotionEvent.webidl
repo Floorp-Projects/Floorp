@@ -4,23 +4,55 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-interface DeviceAcceleration;
-interface DeviceRotationRate;
+[NoInterfaceObject]
+interface DeviceAcceleration {
+  readonly attribute double? x;
+  readonly attribute double? y;
+  readonly attribute double? z;
+};
 
-interface DeviceMotionEvent : Event
-{
+[NoInterfaceObject]
+interface DeviceRotationRate {
+  readonly attribute double? alpha;
+  readonly attribute double? beta;
+  readonly attribute double? gamma;
+};
+
+[Constructor(DOMString type, optional DeviceMotionEventInit eventInitDict)]
+interface DeviceMotionEvent : Event {
+  readonly attribute DeviceAcceleration? acceleration;
+  readonly attribute DeviceAcceleration? accelerationIncludingGravity;
+  readonly attribute DeviceRotationRate? rotationRate;
+  readonly attribute double? interval;
+};
+
+dictionary DeviceAccelerationInit {
+  double? x = null;
+  double? y = null;
+  double? z = null;
+};
+
+dictionary DeviceRotationRateInit {
+  double? alpha = null;
+  double? beta = null;
+  double? gamma = null;
+};
+
+dictionary DeviceMotionEventInit : EventInit {
+  DeviceAccelerationInit acceleration;
+  DeviceAccelerationInit accelerationIncludingGravity;
+  DeviceRotationRateInit rotationRate;
+  double? interval = null;
+};
+
+// Mozilla extensions.
+partial interface DeviceMotionEvent {
   [Throws]
   void initDeviceMotionEvent(DOMString type,
                              boolean canBubble,
                              boolean cancelable,
-                             DeviceAcceleration? acceleration,
-                             DeviceAcceleration? accelerationIncludingGravity,
-                             DeviceRotationRate? rotationRate,
-                             double interval);
-
-  readonly attribute DeviceAcceleration? acceleration;
-  readonly attribute DeviceAcceleration? accelerationIncludingGravity;
-  readonly attribute DeviceRotationRate? rotationRate;
-  readonly attribute double interval;
+                             DeviceAccelerationInit acceleration,
+                             DeviceAccelerationInit accelerationIncludingGravity,
+                             DeviceRotationRateInit rotationRate,
+                             double? interval);
 };
-
