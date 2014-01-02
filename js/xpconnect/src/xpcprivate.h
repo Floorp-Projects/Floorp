@@ -2536,7 +2536,7 @@ protected:
 private:
     JS::Heap<JSObject*> mJSObj;
     nsRefPtr<nsXPCWrappedJSClass> mClass;
-    nsXPCWrappedJS* mRoot;
+    nsXPCWrappedJS* mRoot;    // If mRoot != this, it is an owning pointer.
     nsXPCWrappedJS* mNext;
     nsCOMPtr<nsISupports> mOuter;    // only set in root
 };
