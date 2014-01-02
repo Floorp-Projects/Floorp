@@ -8,7 +8,7 @@
 #include "mozilla/dom/MozMobileConnectionArrayBinding.h"
 #include "mozilla/Preferences.h"
 
-using namespace mozilla::dom::network;
+using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MobileConnectionArray)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MobileConnectionArray)
