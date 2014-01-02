@@ -12,6 +12,7 @@
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLBlitTextureImageHelper.h"
+#include "GLReadTexImageHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 #include "gfxPlatform.h"
@@ -275,11 +276,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mWorkAroundDriverBugs(true)
 {
     mOwningThread = NS_GetCurrentThread();
-
-    mReadTextureImagePrograms[0] = 0;
-    mReadTextureImagePrograms[1] = 0;
-    mReadTextureImagePrograms[2] = 0;
-    mReadTextureImagePrograms[3] = 0;
 }
 
 GLContext::~GLContext() {
@@ -1605,11 +1601,7 @@ GLContext::MarkDestroyed()
 
         mBlitHelper = nullptr;
         mBlitTextureImageHelper = nullptr;
-
-        fDeleteProgram(mReadTextureImagePrograms[0]);
-        fDeleteProgram(mReadTextureImagePrograms[1]);
-        fDeleteProgram(mReadTextureImagePrograms[2]);
-        fDeleteProgram(mReadTextureImagePrograms[3]);
+        mReadTexImageHelper = nullptr;
 
         mTexGarbageBin->GLContextTeardown();
     } else {
@@ -1693,340 +1685,6 @@ GLContext::GetTexImage(GLuint aTexture, bool aYInvert, SurfaceFormat aFormat)
     }
     return surf.forget();
 }
-
-static float
-gReadTextureImageVerts[4*4] = {
-    -1.0f, -1.0f, 0.0f, 1.0f,
-     1.0f, -1.0f, 0.0f, 1.0f,
-    -1.0f,  1.0f, 0.0f, 1.0f,
-     1.0f,  1.0f, 0.0f, 1.0f
-};
-
-static float*
-ReadTextureVertexArray()
-{
-    return gReadTextureImageVerts;
-}
-
-static float
-gReadTextureImageTexcoords[2*4] = {
-    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f
-};
-
-static float*
-ReadTextureTexCoordArray(float aWidth, float aHeight, bool aFlip)
-{
-    const float u0 = 0.0f;
-    const float u1 = aWidth;
-    const float v0 = (aFlip) ? aHeight : 0.0f;
-    const float v1 = (aFlip) ? 0.0f : aHeight;
-
-    float* uvs = gReadTextureImageTexcoords;
-    uvs[0] = u0;
-    uvs[1] = v0;
-    uvs[2] = u1;
-    uvs[3] = v0;
-    uvs[4] = u0;
-    uvs[5] = v1;
-    uvs[6] = u1;
-    uvs[7] = v1;
-
-    return uvs;
-}
-
-static const char*
-gReadTextureImageVS =
-    "attribute vec4 aVertex;\n"
-    "attribute vec2 aTexCoord;\n"
-    "varying vec2 vTexCoord;\n"
-    "void main() { gl_Position = aVertex; vTexCoord = aTexCoord; }";
-
-static const char*
-gReadTextureImageFS[] = {
-    /* TEXTURE_2D */
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "varying vec2 vTexCoord;\n"
-    "uniform sampler2D uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
-    ,
-    /* TEXTURE_2D with R/B swizzling */
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "varying vec2 vTexCoord;\n"
-    "uniform sampler2D uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord).bgra; }"
-    ,
-    /* TEXTURE_EXTERNAL */
-    "#extension GL_OES_EGL_image_external : require\n"
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "varying vec2 vTexCoord;\n"
-    "uniform samplerExternalOES uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
-    ,
-    /* TEXTURE_RECTANGLE */
-    "#extension GL_ARB_texture_rectangle\n"
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
-    "varying vec2 vTexCoord;\n"
-    "uniform sampler2DRect uTexture;\n"
-    "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }"
-};
-
-GLuint
-GLContext::TextureImageProgramFor(GLenum aTextureTarget, int aShader) {
-    int variant = 0;
-    if (aTextureTarget == LOCAL_GL_TEXTURE_2D &&
-        (aShader == layers::BGRALayerProgramType ||
-         aShader == layers::BGRXLayerProgramType))
-    {   // Need to swizzle R/B.
-        variant = 1;
-    } else if (aTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
-        variant = 2;
-    } else if (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) {
-        variant = 3;
-    }
-
-    /* This might be overkill, but assure that we don't access out-of-bounds */
-    MOZ_ASSERT((size_t) variant < ArrayLength(mReadTextureImagePrograms));
-    if (!mReadTextureImagePrograms[variant]) {
-        GLuint vs = fCreateShader(LOCAL_GL_VERTEX_SHADER);
-        fShaderSource(vs, 1, (const GLchar**) &gReadTextureImageVS, NULL);
-        fCompileShader(vs);
-
-        GLuint fs = fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
-        fShaderSource(fs, 1, (const GLchar**) &gReadTextureImageFS[variant], NULL);
-        fCompileShader(fs);
-
-        GLuint program = fCreateProgram();
-        fAttachShader(program, vs);
-        fAttachShader(program, fs);
-        fBindAttribLocation(program, 0, "aVertex");
-        fBindAttribLocation(program, 1, "aTexCoord");
-        fLinkProgram(program);
-
-        GLint success;
-        fGetProgramiv(program, LOCAL_GL_LINK_STATUS, &success);
-
-        if (!success) {
-            fDeleteProgram(program);
-            program = 0;
-        }
-
-        fDeleteShader(vs);
-        fDeleteShader(fs);
-
-        mReadTextureImagePrograms[variant] = program;
-    }
-
-    return mReadTextureImagePrograms[variant];
-}
-
-static bool
-DidGLErrorOccur(GLContext* aGL, const char* str)
-{
-    GLenum error = aGL->fGetError();
-    if (error != LOCAL_GL_NO_ERROR) {
-        printf_stderr("GL ERROR: %s (0x%04x) %s\n",
-                      aGL->GLErrorToString(error), error, str);
-        return true;
-    }
-
-    return false;
-}
-
-bool
-GLContext::ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize) {
-    GLint oldPackAlignment;
-    fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &oldPackAlignment);
-
-    if (oldPackAlignment != 4)
-        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
-
-    fReadPixels(0, 0, aSize.width, aSize.height,
-                LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE,
-                aSurface->Data());
-
-    bool result = DidGLErrorOccur(this, "when reading pixels into surface");
-
-    if (oldPackAlignment != 4)
-        fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, oldPackAlignment);
-
-    return result;
-}
-
-#define CLEANUP_IF_GLERROR_OCCURRED(x)                                      \
-    if (DidGLErrorOccur(this, (x))) {                                       \
-        isurf = nullptr;                                                    \
-        break;                                                              \
-    }
-
-already_AddRefed<gfxImageSurface>
-GLContext::ReadTextureImage(GLuint aTextureId,
-                            GLenum aTextureTarget,
-                            const gfxIntSize& aSize,
-    /* ShaderProgramType */ int aShaderProgram,
-                            bool aYInvert)
-{
-    // Check aShaderProgram is in bounds for a layers::ShaderProgramType
-    MOZ_ASSERT(0 <= aShaderProgram && aShaderProgram < NumProgramTypes);
-
-    if (aTextureTarget != LOCAL_GL_TEXTURE_2D &&
-        aTextureTarget != LOCAL_GL_TEXTURE_EXTERNAL &&
-        aTextureTarget != LOCAL_GL_TEXTURE_RECTANGLE_ARB)
-    {
-        printf_stderr("ReadTextureImage target is not TEXTURE_2D || "
-                      "TEXTURE_EXTERNAL || TEXTURE_RECTANGLE\n");
-        return nullptr;
-    }
-
-    MakeCurrent();
-
-    /* Allocate resulting image surface */
-    nsRefPtr<gfxImageSurface> isurf;
-    isurf = new gfxImageSurface(aSize, gfxImageFormatARGB32);
-    if (!isurf || isurf->CairoStatus()) {
-        isurf = nullptr;
-        return isurf.forget();
-    }
-
-    realGLboolean oldBlend, oldScissor;
-    GLint oldrb, oldfb, oldprog, oldTexUnit, oldTex;
-    GLuint rb, fb;
-
-    do {
-        /* Save current GL state */
-        oldBlend = fIsEnabled(LOCAL_GL_BLEND);
-        oldScissor = fIsEnabled(LOCAL_GL_SCISSOR_TEST);
-
-        fGetIntegerv(LOCAL_GL_RENDERBUFFER_BINDING, &oldrb);
-        fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &oldfb);
-        fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &oldprog);
-        fGetIntegerv(LOCAL_GL_ACTIVE_TEXTURE, &oldTexUnit);
-        fActiveTexture(LOCAL_GL_TEXTURE0);
-        switch (aTextureTarget) {
-        case LOCAL_GL_TEXTURE_2D:
-            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, &oldTex);
-            break;
-        case LOCAL_GL_TEXTURE_EXTERNAL:
-            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_EXTERNAL, &oldTex);
-            break;
-        case LOCAL_GL_TEXTURE_RECTANGLE:
-            fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_RECTANGLE, &oldTex);
-            break;
-        default: /* Already checked above */
-            break;
-        }
-
-        /* Set required GL state */
-        fDisable(LOCAL_GL_BLEND);
-        fDisable(LOCAL_GL_SCISSOR_TEST);
-
-        PushViewportRect(nsIntRect(0, 0, aSize.width, aSize.height));
-
-        /* Setup renderbuffer */
-        fGenRenderbuffers(1, &rb);
-        fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, rb);
-
-        GLenum rbInternalFormat =
-            IsGLES2()
-                ? (IsExtensionSupported(OES_rgb8_rgba8) ? LOCAL_GL_RGBA8 : LOCAL_GL_RGBA4)
-                : LOCAL_GL_RGBA;
-        fRenderbufferStorage(LOCAL_GL_RENDERBUFFER, rbInternalFormat, aSize.width, aSize.height);
-        CLEANUP_IF_GLERROR_OCCURRED("when binding and creating renderbuffer");
-
-        /* Setup framebuffer */
-        fGenFramebuffers(1, &fb);
-        fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
-        fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
-                                 LOCAL_GL_RENDERBUFFER, rb);
-        CLEANUP_IF_GLERROR_OCCURRED("when binding and creating framebuffer");
-
-        if (fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-            printf_stderr("framebuffer is incomplete\n");
-            break; //goto cleanup;
-        }
-
-        /* Setup vertex and fragment shader */
-        layers::ShaderProgramType shaderProgram = (ShaderProgramType) aShaderProgram;
-        GLuint program = TextureImageProgramFor(aTextureTarget, shaderProgram);
-        if (!program) {
-            printf_stderr("failed to compile program for texture target %u and"
-                          " shader program type %d\n",
-                          aTextureTarget, aShaderProgram);
-            break; // goto cleanup;
-        }
-
-        fUseProgram(program);
-        CLEANUP_IF_GLERROR_OCCURRED("when using program");
-        fUniform1i(fGetUniformLocation(program, "uTexture"), 0);
-        CLEANUP_IF_GLERROR_OCCURRED("when setting uniform location");
-
-        /* Setup quad geometry */
-        fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-        fEnableVertexAttribArray(0);
-        fEnableVertexAttribArray(1);
-
-        float w = (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) ? (float) aSize.width : 1.0f;
-        float h = (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) ? (float) aSize.height : 1.0f;
-        fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, ReadTextureVertexArray());
-        fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, ReadTextureTexCoordArray(w, h, aYInvert));
-
-        /* Bind the texture */
-        if (aTextureId) {
-            fBindTexture(aTextureTarget, aTextureId);
-            CLEANUP_IF_GLERROR_OCCURRED("when binding texture");
-        }
-
-        /* Draw quad */
-        fClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-        fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-        CLEANUP_IF_GLERROR_OCCURRED("when clearing color buffer");
-
-        fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
-        CLEANUP_IF_GLERROR_OCCURRED("when drawing texture");
-
-        fDisableVertexAttribArray(1);
-        fDisableVertexAttribArray(0);
-
-        /* Read-back draw results */
-        ReadBackPixelsIntoSurface(isurf, aSize);
-        CLEANUP_IF_GLERROR_OCCURRED("when reading pixels into surface");
-    } while (false);
-
-    /* Restore GL state */
-//cleanup:
-    fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, oldrb);
-    fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, oldfb);
-    fUseProgram(oldprog);
-
-    // note that deleting 0 has no effect in any of these calls
-    fDeleteRenderbuffers(1, &rb);
-    fDeleteFramebuffers(1, &fb);
-
-    if (oldBlend)
-        fEnable(LOCAL_GL_BLEND);
-
-    if (oldScissor)
-        fEnable(LOCAL_GL_SCISSOR_TEST);
-
-    if (aTextureId)
-        fBindTexture(aTextureTarget, oldTex);
-
-    if (oldTexUnit != LOCAL_GL_TEXTURE0)
-        fActiveTexture(oldTexUnit);
-
-    PopViewportRect();
-
-    return isurf.forget();
-}
-
-#undef CLEANUP_IF_GLERROR_OCCURRED
 
 static bool
 GetActualReadFormats(GLContext* gl, GLenum destFormat, GLenum destType,
@@ -2577,6 +2235,16 @@ GLContext::BlitTextureImageHelper()
     }
 
     return mBlitTextureImageHelper;
+}
+
+GLReadTexImageHelper*
+GLContext::ReadTexImageHelper()
+{
+    if (!mReadTexImageHelper) {
+        mReadTexImageHelper = new GLReadTexImageHelper(this);
+    }
+
+    return mReadTexImageHelper;
 }
 
 bool
