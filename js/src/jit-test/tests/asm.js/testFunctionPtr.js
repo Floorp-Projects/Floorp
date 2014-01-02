@@ -12,7 +12,7 @@ assertAsmTypeFail(USE_ASM + "function f() {} function g(i) {i=i|0} var tbl=[f,g]
 assertAsmTypeFail(USE_ASM + "function f() {} function g() {return 0} var tbl=[f,g]; return f");
 assertAsmTypeFail(USE_ASM + "function f(i) {i=i|0} function g(i) {i=+i} var tbl=[f,g]; return f");
 assertAsmTypeFail(USE_ASM + "function f() {return 0} function g() {return 0.0} var tbl=[f,g]; return f");
-assertAsmTypeFail(USE_ASM + "var tbl=0; function g() {tbl[0&1]()} return g");
+assertAsmTypeFail(USE_ASM + "var tbl=0; function g() {tbl[0&1]()|0} return g");
 assertEq(asmLink(asmCompile(USE_ASM + "function f() { return 42 } var tbl=[f]; return f"))(), 42);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 0} function g() {return 1} var tbl=[f,g]; return f"))(), 0);
 
@@ -26,6 +26,7 @@ assertAsmTypeFail(USE_ASM + "function f() {return 42} function g(i) { i=i|0; ret
 assertAsmTypeFail(USE_ASM + "function f(i) {i=i|0} function g(i) { i=i|0; return tbl[i&1]()|0 } var tbl=[f,f]; return g");
 assertAsmTypeFail(USE_ASM + "function f(i) {i=i|0} function g(i) { i=i|0; return tbl[i&1](3.0)|0 } var tbl=[f,f]; return g");
 assertAsmTypeFail(USE_ASM + "function f(d) {d=+d} function g(i) { i=i|0; return tbl[i&1](3)|0 } var tbl=[f,f]; return g");
+assertAsmTypeFail(USE_ASM + "function g() {tbl[0&1]()|0} return g");
 assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 42} function g(i) { i=i|0; return tbl[i&1]()|0 } var tbl=[f,f]; return g"))(0), 42);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 42} function g(i) { i=i|0; return tbl[i&1]()|0 } const tbl=[f,f]; return g"))(0), 42);
 assertEq(asmLink(asmCompile(USE_ASM + "function f() {return 42} function g() {return 13} function h(i) { i=i|0; return tbl[i&1]()|0 } var tbl=[f,g]; return h"))(1), 13);
