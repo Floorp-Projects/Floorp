@@ -394,7 +394,6 @@ const MozLangGroupData MozLangGroups[] = {
     { nsGkAtoms::x_telu,         "te" },
     { nsGkAtoms::x_tibt,         "bo" },
     { nsGkAtoms::Unicode,        0    },
-    { nsGkAtoms::x_user_def,     0    }
 };
 
 static bool

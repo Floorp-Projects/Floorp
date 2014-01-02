@@ -1996,9 +1996,6 @@ GK_ATOM(ko_xxx, "ko-xxx")
 GK_ATOM(x_central_euro, "x-central-euro")
 GK_ATOM(x_symbol, "x-symbol")
 
-// referenced in all.js
-GK_ATOM(x_user_def, "x-user-def")
-
 // additional languages that have special case transformations
 GK_ATOM(az, "az")
 GK_ATOM(ba, "ba")
