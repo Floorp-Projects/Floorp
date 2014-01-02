@@ -969,19 +969,19 @@ var SelectionHelperUI = {
 
     if (json.updateStart) {
       let x = this._msgTarget.btocx(json.start.xPos, true);
-      let y = this._msgTarget.btocx(json.start.yPos, true);
+      let y = this._msgTarget.btocy(json.start.yPos, true);
       this.startMark.position(x, y);
     }
 
     if (json.updateEnd) {
       let x = this._msgTarget.btocx(json.end.xPos, true);
-      let y = this._msgTarget.btocx(json.end.yPos, true);
+      let y = this._msgTarget.btocy(json.end.yPos, true);
       this.endMark.position(x, y);
     }
 
     if (json.updateCaret) {
       let x = this._msgTarget.btocx(json.caret.xPos, true);
-      let y = this._msgTarget.btocx(json.caret.yPos, true);
+      let y = this._msgTarget.btocy(json.caret.yPos, true);
       // If selectionRangeFound is set SelectionHelper found a range we can
       // attach to. If not, there's no text in the control, and hence no caret
       // position information we can use.
