@@ -2328,9 +2328,12 @@ AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScri
             JSObject *obj = objects->vector[i];
             if (obj->is<JSFunction>() && obj->as<JSFunction>().isInterpreted()) {
                 JSFunction *fun = &obj->as<JSFunction>();
-                RootedScript innerInnerScript(cx, fun->nonLazyScript());
-                if (!AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript))
+                RootedScript innerInnerScript(cx, fun->getOrCreateScript(cx));
+                if (!innerInnerScript ||
+                    !AnalyzeEntrainedVariablesInScript(cx, script, innerInnerScript))
+                {
                     return false;
+                }
             }
         }
     }
