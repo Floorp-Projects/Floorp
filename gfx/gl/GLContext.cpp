@@ -253,7 +253,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
           bool isOffscreen)
   : mInitialized(false),
     mIsOffscreen(isOffscreen),
-    mIsGlobalSharedContext(false),
     mContextLost(false),
     mVersion(0),
     mProfile(ContextProfile::Unknown),
