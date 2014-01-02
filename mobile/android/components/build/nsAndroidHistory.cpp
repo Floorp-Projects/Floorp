@@ -42,8 +42,16 @@ nsAndroidHistory::RegisterVisitedCallback(nsIURI *aURI, Link *aContent)
   if (!aContent || !aURI)
     return NS_OK;
 
+  // Silently return if URI is something we would never add to DB.
+  bool canAdd;
+  nsresult rv = CanAddURI(aURI, &canAdd);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!canAdd) {
+    return NS_OK;
+  }
+
   nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
+  rv = aURI->GetSpec(uri);
   if (NS_FAILED(rv)) return rv;
   NS_ConvertUTF8toUTF16 uriString(uri);
 
@@ -99,7 +107,8 @@ inline bool
 nsAndroidHistory::IsRecentlyVisitedURI(nsIURI* aURI) {
   bool equals = false;
   RecentlyVisitedArray::index_type i;
-  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
+  RecentlyVisitedArray::size_type length = mRecentlyVisitedURIs.Length();
+  for (i = 0; i < length && !equals; ++i) {
     aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
   }
   return equals;
