@@ -9,7 +9,7 @@
 
 #include "Latency.h"
 #include "nsThreadUtils.h"
-#include <prlog.h>
+#include "prlog.h"
 #include <cmath>
 #include <algorithm>
 
