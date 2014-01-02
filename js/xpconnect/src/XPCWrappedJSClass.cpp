@@ -24,6 +24,7 @@
 
 using namespace xpc;
 using namespace JS;
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
@@ -588,7 +589,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_NOINTERFACE;
     }
 
-    JSContext *context = GetContextFromObjectOrDefault(self);
+    AutoPushJSContext context(GetContextFromObjectOrDefault(self));
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid()) {
         *aInstancePtr = nullptr;
@@ -1111,7 +1112,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // the whole nsIXPCFunctionThisTranslator bit.  That code uses ccx to
     // convert natives to JSObjects, but we do NOT plan to pass those JSObjects
     // to our real callee.
-    JSContext *context = GetContextFromObjectOrDefault(wrapper);
+    AutoPushJSContext context(GetContextFromObjectOrDefault(wrapper));
     XPCCallContext ccx(NATIVE_CALLER, context);
     if (!ccx.IsValid())
         return retval;
