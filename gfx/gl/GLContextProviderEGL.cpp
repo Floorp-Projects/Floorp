@@ -363,15 +363,6 @@ public:
         mIsDoubleBuffered = aIsDB;
     }
 
-    virtual EGLContext GetEGLContext() {
-        return mContext;
-    }
-
-    virtual GLLibraryEGL* GetLibraryEGL() {
-        return &sEGLLibrary;
-    }
-
-
     bool SupportsRobustness()
     {
         return sEGLLibrary.HasRobustness();
