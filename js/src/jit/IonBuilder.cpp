@@ -349,10 +349,10 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpreted() && info().executionMode() == DefinitePropertiesAnalysis) {
-        if (!target->getOrCreateScript(analysisContext))
+        RootedScript script(analysisContext, target->getOrCreateScript(analysisContext));
+        if (!script)
             return InliningDecision_Error;
 
-        RootedScript script(analysisContext, target->nonLazyScript());
         if (!script->hasBaselineScript() && script->canBaselineCompile()) {
             MethodStatus status = BaselineCompile(analysisContext, script);
             if (status == Method_Error)
@@ -3830,7 +3830,7 @@ class AutoAccumulateReturns
 bool
 IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 {
-    JS_ASSERT(target->isInterpreted());
+    JS_ASSERT(target->hasScript());
     JS_ASSERT(IsIonInlinablePC(pc));
 
     callInfo.setImplicitlyUsedUnchecked();
