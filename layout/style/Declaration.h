@@ -310,9 +310,10 @@ public:
    */
   void GetCustomPropertyNameAt(uint32_t aIndex, nsAString& aResult) const {
     MOZ_ASSERT(mOrder[aIndex] >= eCSSProperty_COUNT);
+    uint32_t variableIndex = mOrder[aIndex] - eCSSProperty_COUNT;
     aResult.Truncate();
     aResult.AppendLiteral("var-");
-    aResult.Append(mVariableOrder[aIndex]);
+    aResult.Append(mVariableOrder[variableIndex]);
   }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
