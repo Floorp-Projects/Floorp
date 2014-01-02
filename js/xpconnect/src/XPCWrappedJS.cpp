@@ -357,9 +357,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             *wrapperResult = wrapper;
             return NS_OK;
         }
-    }
-
-    if (!root) {
+    } else {
         // build the root wrapper
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
