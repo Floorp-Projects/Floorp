@@ -204,7 +204,7 @@
                 oncommand="gSyncUI.doSync(event);"/>
 #endif
       <menuitem id="switch-to-metro"
-                label="&switchToMetroCmd.label;"
+                label="&switchToMetroCmd2.label;"
                 oncommand="SwitchToMetro()"/>
       <menuitem id="appmenu-quit"
                 class="menuitem-iconic"
