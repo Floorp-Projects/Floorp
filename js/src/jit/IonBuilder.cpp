@@ -9006,6 +9006,7 @@ IonBuilder::jsop_setarg(uint32_t arg)
             return abort("JSOP_SETARG with magic arguments in inlined function.");
 
         MSetFrameArgument *store = MSetFrameArgument::New(arg, val);
+        modifiesFrameArguments_ = true;
         current->add(store);
         current->setArg(arg);
         return true;
