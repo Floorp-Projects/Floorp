@@ -668,44 +668,16 @@ NS_IMPL_ISUPPORTS1(PageFaultsHardReporter, nsIMemoryReporter)
 
 #ifdef HAVE_JEMALLOC_STATS
 
+// This has UNITS_PERCENTAGE, so it is multiplied by 100.
 static int64_t
-HeapAllocated()
+HeapOverheadRatio(jemalloc_stats_t* aStats)
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) stats.allocated;
-}
-
-// This has UNITS_PERCENTAGE, so it is multiplied by 100x.
-static int64_t
-HeapOverheadRatio()
-{
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
     return (int64_t) 10000 *
-      (stats.waste + stats.bookkeeping + stats.page_cache) /
-      ((double)stats.allocated);
+      (aStats->waste + aStats->bookkeeping + aStats->page_cache) /
+      ((double)aStats->allocated);
 }
 
-class HeapAllocatedReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
-    {
-        return MOZ_COLLECT_REPORT(
-            "heap-allocated", KIND_OTHER, UNITS_BYTES, HeapAllocated(),
-"Memory mapped by the heap allocator that is currently allocated to the "
-"application.  This may exceed the amount of memory requested by the "
-"application because the allocator regularly rounds up request sizes. (The "
-"exact amount requested is not recorded.)");
-    }
-};
-NS_IMPL_ISUPPORTS1(HeapAllocatedReporter, nsIMemoryReporter)
-
-class HeapOverheadWasteReporter MOZ_FINAL : public nsIMemoryReporter
+class JemallocHeapReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
     NS_DECL_ISUPPORTS
@@ -715,107 +687,69 @@ public:
     {
         jemalloc_stats_t stats;
         jemalloc_stats(&stats);
-        int64_t amount = stats.waste;
+
+        nsresult rv;
+
+        rv = MOZ_COLLECT_REPORT(
+            "heap-allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
+"Memory mapped by the heap allocator that is currently allocated to the "
+"application.  This may exceed the amount of memory requested by the "
+"application because the allocator regularly rounds up request sizes. (The "
+"exact amount requested is not recorded.)");
+        NS_ENSURE_SUCCESS(rv, rv);
 
         // We mark this and the other heap-overhead reporters as KIND_NONHEAP
         // because KIND_HEAP memory means "counted in heap-allocated", which
         // this is not.
-        return MOZ_COLLECT_REPORT(
-            "explicit/heap-overhead/waste", KIND_NONHEAP, UNITS_BYTES, amount,
+        rv = MOZ_COLLECT_REPORT(
+            "explicit/heap-overhead/waste", KIND_NONHEAP, UNITS_BYTES,
+            stats.waste,
 "Committed bytes which do not correspond to an active allocation and which the "
 "allocator is not intentionally keeping alive (i.e., not 'heap-bookkeeping' or "
 "'heap-page-cache').  Although the allocator will waste some space under any "
 "circumstances, a large value here may indicate that the heap is highly "
 "fragmented, or that allocator is performing poorly for some other reason.");
-    }
-};
-NS_IMPL_ISUPPORTS1(HeapOverheadWasteReporter, nsIMemoryReporter)
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadBookkeepingReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        int64_t amount = stats.bookkeeping;
-
-        return MOZ_COLLECT_REPORT(
+        rv = MOZ_COLLECT_REPORT(
             "explicit/heap-overhead/bookkeeping", KIND_NONHEAP, UNITS_BYTES,
-            amount,
+            stats.bookkeeping,
             "Committed bytes which the heap allocator uses for internal data "
             "structures.");
-    }
-};
-NS_IMPL_ISUPPORTS1(HeapOverheadBookkeepingReporter, nsIMemoryReporter)
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadPageCacheReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        int64_t amount = stats.page_cache;
-
-        return MOZ_COLLECT_REPORT(
+        rv = MOZ_COLLECT_REPORT(
             "explicit/heap-overhead/page-cache", KIND_NONHEAP, UNITS_BYTES,
-            amount,
+            stats.page_cache,
 "Memory which the allocator could return to the operating system, but hasn't. "
 "The allocator keeps this memory around as an optimization, so it doesn't "
 "have to ask the OS the next time it needs to fulfill a request. This value "
 "is typically not larger than a few megabytes.");
-    }
-};
-NS_IMPL_ISUPPORTS1(HeapOverheadPageCacheReporter, nsIMemoryReporter)
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapCommittedReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        int64_t amount = stats.allocated + stats.waste +
-                         stats.bookkeeping + stats.page_cache;
-
-        return MOZ_COLLECT_REPORT(
-            "heap-committed", KIND_OTHER, UNITS_BYTES, amount,
+        rv = MOZ_COLLECT_REPORT(
+            "heap-committed", KIND_OTHER, UNITS_BYTES,
+            stats.allocated + stats.waste + stats.bookkeeping + stats.page_cache,
 "Memory mapped by the heap allocator that is committed, i.e. in physical "
 "memory or paged to disk.  This value corresponds to 'heap-allocated' + "
 "'heap-waste' + 'heap-bookkeeping' + 'heap-page-cache', but because "
 "these values are read at different times, the result probably won't match "
 "exactly.");
-    }
-};
-NS_IMPL_ISUPPORTS1(HeapCommittedReporter, nsIMemoryReporter)
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadRatioReporter MOZ_FINAL : public nsIMemoryReporter
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
-    {
-        return MOZ_COLLECT_REPORT(
+        rv = MOZ_COLLECT_REPORT(
             "heap-overhead-ratio", KIND_OTHER, UNITS_PERCENTAGE,
-            HeapOverheadRatio(),
+            HeapOverheadRatio(&stats),
 "Ratio of committed, unused bytes to allocated bytes; i.e., "
 "'heap-overhead' / 'heap-allocated'.  This measures the overhead of "
 "the heap allocator relative to amount of memory allocated.");
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return NS_OK;
     }
 };
-NS_IMPL_ISUPPORTS1(HeapOverheadRatioReporter, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS1(JemallocHeapReporter, nsIMemoryReporter)
+
 #endif  // HAVE_JEMALLOC_STATS
 
 // Why is this here?  At first glance, you'd think it could be defined and
@@ -912,12 +846,7 @@ nsMemoryReporterManager::Init()
 #endif
 
 #ifdef HAVE_JEMALLOC_STATS
-    RegisterStrongReporter(new HeapAllocatedReporter());
-    RegisterStrongReporter(new HeapOverheadWasteReporter());
-    RegisterStrongReporter(new HeapOverheadBookkeepingReporter());
-    RegisterStrongReporter(new HeapOverheadPageCacheReporter());
-    RegisterStrongReporter(new HeapCommittedReporter());
-    RegisterStrongReporter(new HeapOverheadRatioReporter());
+    RegisterStrongReporter(new JemallocHeapReporter());
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
@@ -1556,7 +1485,9 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
 {
 #ifdef HAVE_JEMALLOC_STATS
-    *aAmount = HeapAllocated();
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    *aAmount = stats.allocated;
     return NS_OK;
 #else
     *aAmount = 0;
@@ -1569,7 +1500,9 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapOverheadRatio(int64_t* aAmount)
 {
 #ifdef HAVE_JEMALLOC_STATS
-    *aAmount = HeapOverheadRatio();
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    *aAmount = HeapOverheadRatio(&stats);
     return NS_OK;
 #else
     *aAmount = 0;
