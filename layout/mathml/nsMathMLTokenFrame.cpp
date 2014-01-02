@@ -44,7 +44,6 @@ nsMathMLTokenFrame::GetMathMLFrameType()
        (StyleFont()->mFont.style == NS_STYLE_FONT_STYLE_ITALIC ||
         HasAnyStateBits(TEXT_IS_IN_SINGLE_CHAR_MI))) ||
       mathVariant == NS_MATHML_MATHVARIANT_ITALIC ||
-      mathVariant == NS_MATHML_MATHVARIANT_ITALIC ||
       mathVariant == NS_MATHML_MATHVARIANT_BOLD_ITALIC ||
       mathVariant == NS_MATHML_MATHVARIANT_SANS_SERIF_ITALIC ||
       mathVariant == NS_MATHML_MATHVARIANT_SANS_SERIF_BOLD_ITALIC) {

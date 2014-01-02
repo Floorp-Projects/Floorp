@@ -39,6 +39,7 @@
 #include "GLContextProvider.h"
 #include "GLContext.h"
 #include "ScopedGLHelpers.h"
+#include "GLReadTexImageHelper.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -623,7 +624,7 @@ WebGLContext::Render(gfxContext *ctx, GraphicsFilter f, uint32_t aFlags)
         return NS_ERROR_FAILURE;
 
     gl->MakeCurrent();
-    gl->ReadScreenIntoImageSurface(surf);
+    ReadScreenIntoImageSurface(gl, surf);
 
     bool srcPremultAlpha = mOptions.premultipliedAlpha;
     bool dstPremultAlpha = aFlags & RenderFlagPremultAlpha;
