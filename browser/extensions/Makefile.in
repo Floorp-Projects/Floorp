@@ -39,6 +39,7 @@ libs:: $(FINAL_TARGET)/chrome/shumway.manifest
 endif
 
 ifdef MOZ_METRO
+ifdef NIGHTLY_BUILD
 $(DIST)/bin/metro/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
 	printf 'manifest pdfjs/chrome.manifest' > $@
 
@@ -49,7 +50,6 @@ libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest
           $(DIST)/bin/metro/chrome
 	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest 'manifest chrome/pdfjs.manifest')
 
-ifdef NIGHTLY_BUILD
 $(DIST)/bin/metro/chrome/shumway.manifest: $(GLOBAL_DEPS)
 	printf 'manifest shumway/chrome.manifest' > $@
 
