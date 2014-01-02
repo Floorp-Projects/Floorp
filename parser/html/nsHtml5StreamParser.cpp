@@ -1203,13 +1203,17 @@ nsHtml5StreamParser::PreferredForInternalEncodingDecl(nsACString& aEncoding)
     return false;
   }
 
-  if (newEncoding.EqualsLiteral("UTF-16") ||
-      newEncoding.EqualsLiteral("UTF-16BE") ||
+  if (newEncoding.EqualsLiteral("UTF-16BE") ||
       newEncoding.EqualsLiteral("UTF-16LE")) {
     mTreeBuilder->MaybeComplainAboutCharset("EncMetaUtf16",
                                             true,
                                             mTokenizer->getLineNumber());
     newEncoding.Assign("UTF-8");
+  }
+
+  if (newEncoding.EqualsLiteral("x-user-defined")) {
+    // WebKit/Blink hack for Indian and Armenian legacy sites
+    newEncoding.Assign("windows-1252");
   }
 
   if (newEncoding.Equals(mCharset)) {
