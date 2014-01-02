@@ -2114,6 +2114,8 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, HandleFunction fun,
         return true;
     }
 
+    types::FinishDefinitePropertiesAnalysis(cx, constraints);
+
     if (!SplitCriticalEdges(graph))
         return false;
 
