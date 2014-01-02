@@ -1258,8 +1258,6 @@ GLContextProviderGLX::GetGlobalContext(const ContextFlags aFlag)
 
         gfxIntSize dummySize = gfxIntSize(16, 16);
         gGlobalContext[libType] = CreateOffscreenPixmapContext(dummySize, libType);
-        if (gGlobalContext[libType])
-            gGlobalContext[libType]->SetIsGlobalSharedContext(true);
     }
 
     return gGlobalContext[libType];
