@@ -30,61 +30,74 @@ GLReadTexImageHelper::~GLReadTexImageHelper()
     mGL->fDeleteProgram(mPrograms[3]);
 }
 
-static const char*
-readTextureImageVS =
-    "attribute vec4 aVertex;\n"
+static const GLchar
+readTextureImageVS[] =
+    "attribute vec2 aVertex;\n"
     "attribute vec2 aTexCoord;\n"
     "varying vec2 vTexCoord;\n"
-    "void main() { gl_Position = aVertex; vTexCoord = aTexCoord; }";
+    "void main() { gl_Position = vec4(aVertex, 0, 1); vTexCoord = aTexCoord; }";
 
-static const char*
-readTextureImageFS[] = {
-    /* TEXTURE_2D */
+static const GLchar
+readTextureImageFS_TEXTURE_2D[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "varying vec2 vTexCoord;\n"
     "uniform sampler2D uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
-    ,
-    /* TEXTURE_2D with R/B swizzling */
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }";
+
+
+static const GLchar
+readTextureImageFS_TEXTURE_2D_BGRA[] =
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "varying vec2 vTexCoord;\n"
     "uniform sampler2D uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord).bgra; }"
-    ,
-    /* TEXTURE_EXTERNAL */
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord).bgra; }";
+
+static const GLchar
+readTextureImageFS_TEXTURE_EXTERNAL[] =
     "#extension GL_OES_EGL_image_external : require\n"
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "varying vec2 vTexCoord;\n"
     "uniform samplerExternalOES uTexture;\n"
-    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }"
-    ,
-    /* TEXTURE_RECTANGLE */
+    "void main() { gl_FragColor = texture2D(uTexture, vTexCoord); }";
+
+static const GLchar
+readTextureImageFS_TEXTURE_RECTANGLE[] =
     "#extension GL_ARB_texture_rectangle\n"
     "#ifdef GL_ES\n"
     "precision mediump float;\n"
     "#endif\n"
     "varying vec2 vTexCoord;\n"
     "uniform sampler2DRect uTexture;\n"
-    "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }"
-};
+    "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }";
 
 GLuint
 GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget, int aShader) {
     int variant = 0;
-    if (aTextureTarget == LOCAL_GL_TEXTURE_2D &&
-        (aShader == layers::BGRALayerProgramType ||
-         aShader == layers::BGRXLayerProgramType))
-    {   // Need to swizzle R/B.
-        variant = 1;
+    const GLchar* readTextureImageFS = nullptr;
+    if (aTextureTarget == LOCAL_GL_TEXTURE_2D)
+    {
+        if (aShader == layers::BGRALayerProgramType ||
+            aShader == layers::BGRXLayerProgramType)
+        {   // Need to swizzle R/B.
+            readTextureImageFS = readTextureImageFS_TEXTURE_2D_BGRA;
+            variant = 1;
+        }
+        else
+        {
+            readTextureImageFS = readTextureImageFS_TEXTURE_2D;
+            variant = 0;
+        }
     } else if (aTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL) {
+        readTextureImageFS = readTextureImageFS_TEXTURE_EXTERNAL;
         variant = 2;
     } else if (aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE) {
+        readTextureImageFS = readTextureImageFS_TEXTURE_RECTANGLE;
         variant = 3;
     }
 
@@ -92,11 +105,12 @@ GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget, int aShader)
     MOZ_ASSERT((size_t) variant < ArrayLength(mPrograms));
     if (!mPrograms[variant]) {
         GLuint vs = mGL->fCreateShader(LOCAL_GL_VERTEX_SHADER);
-        mGL->fShaderSource(vs, 1, (const GLchar**) &readTextureImageVS, NULL);
+        const GLchar* vsSourcePtr = &readTextureImageVS[0];
+        mGL->fShaderSource(vs, 1, &vsSourcePtr, nullptr);
         mGL->fCompileShader(vs);
 
         GLuint fs = mGL->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
-        mGL->fShaderSource(fs, 1, (const GLchar**) &readTextureImageFS[variant], NULL);
+        mGL->fShaderSource(fs, 1, &readTextureImageFS, nullptr);
         mGL->fCompileShader(fs);
 
         GLuint program = mGL->fCreateProgram();
@@ -138,6 +152,11 @@ GLReadTexImageHelper::DidGLErrorOccur(const char* str)
 
 bool
 GLReadTexImageHelper::ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize) {
+    MOZ_ASSERT(aSurface->Format() == gfxImageFormatARGB32);
+    MOZ_ASSERT(aSurface->Width() >= aSize.width);
+    MOZ_ASSERT(aSurface->Height() >= aSize.height);
+    MOZ_ASSERT(aSurface->Stride() == 4 * aSurface->Width());
+
     GLint oldPackAlignment;
     mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &oldPackAlignment);
 
@@ -172,23 +191,16 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
     // Check aShaderProgram is in bounds for a layers::ShaderProgramType
     MOZ_ASSERT(0 <= aShaderProgram && aShaderProgram < NumProgramTypes);
 
-    if (aTextureTarget != LOCAL_GL_TEXTURE_2D &&
-        aTextureTarget != LOCAL_GL_TEXTURE_EXTERNAL &&
-        aTextureTarget != LOCAL_GL_TEXTURE_RECTANGLE_ARB)
-    {
-        printf_stderr("ReadTextureImage target is not TEXTURE_2D || "
-                      "TEXTURE_EXTERNAL || TEXTURE_RECTANGLE\n");
-        return nullptr;
-    }
+    MOZ_ASSERT(aTextureTarget == LOCAL_GL_TEXTURE_2D ||
+               aTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL ||
+               aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
     mGL->MakeCurrent();
 
     /* Allocate resulting image surface */
-    nsRefPtr<gfxImageSurface> isurf;
-    isurf = new gfxImageSurface(aSize, gfxImageFormatARGB32);
+    nsRefPtr<gfxImageSurface> isurf = new gfxImageSurface(aSize, gfxImageFormatARGB32);
     if (!isurf || isurf->CairoStatus()) {
-        isurf = nullptr;
-        return isurf.forget();
+        return nullptr;
     }
 
     realGLboolean oldBlend, oldScissor;
@@ -243,20 +255,12 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
                                       LOCAL_GL_RENDERBUFFER, rb);
         CLEANUP_IF_GLERROR_OCCURRED("when binding and creating framebuffer");
 
-        if (mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-            printf_stderr("framebuffer is incomplete\n");
-            break; //goto cleanup;
-        }
+        MOZ_ASSERT(mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
         /* Setup vertex and fragment shader */
         layers::ShaderProgramType shaderProgram = (layers::ShaderProgramType) aShaderProgram;
         GLuint program = TextureImageProgramFor(aTextureTarget, shaderProgram);
-        if (!program) {
-            printf_stderr("failed to compile program for texture target %u and"
-                          " shader program type %d\n",
-                          aTextureTarget, aShaderProgram);
-            break; // goto cleanup;
-        }
+        MOZ_ASSERT(program);
 
         mGL->fUseProgram(program);
         CLEANUP_IF_GLERROR_OCCURRED("when using program");
@@ -273,13 +277,13 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
 
 
         const float
-        vertexArray[4*4] = {
-            -1.0f, -1.0f, 0.0f, 1.0f,
-            1.0f, -1.0f, 0.0f, 1.0f,
-            -1.0f,  1.0f, 0.0f, 1.0f,
-            1.0f,  1.0f, 0.0f, 1.0f
-        };
-        mGL->fVertexAttribPointer(0, 4, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, vertexArray);
+        vertexArray[4*2] = {
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f,  1.0f,
+            1.0f,  1.0f
+         };
+        mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, vertexArray);
 
         const float u0 = 0.0f;
         const float u1 = w;
