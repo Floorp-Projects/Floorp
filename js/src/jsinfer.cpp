@@ -889,10 +889,8 @@ CheckFrozenTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTypeSet *actual
         TypeSet::TypeList list;
         frozen->enumerateTypes(&list);
 
-        for (size_t i = 0; i < list.length(); i++) {
-            // Note: On OOM this will preserve the type set's contents.
+        for (size_t i = 0; i < list.length(); i++)
             actual->addType(cx, list[i]);
-        }
     }
 
     return true;
@@ -994,6 +992,41 @@ types::FinishCompilation(JSContext *cx, HandleScript script, ExecutionMode execu
     }
 
     return true;
+}
+
+static void
+CheckDefinitePropertiesTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTypeSet *actual)
+{
+    // The definite properties analysis happens on the main thread, so no new
+    // types can have been added to actual. The analysis may have updated the
+    // contents of |frozen| though with new speculative types, and these need
+    // to be reflected in |actual| for AddClearDefiniteFunctionUsesInScript
+    // to work.
+    JS_ASSERT(actual->isSubset(frozen));
+
+    if (!frozen->isSubset(actual)) {
+        TypeSet::TypeList list;
+        frozen->enumerateTypes(&list);
+
+        for (size_t i = 0; i < list.length(); i++)
+            actual->addType(cx, list[i]);
+    }
+}
+
+void
+types::FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *constraints)
+{
+    for (size_t i = 0; i < constraints->numFrozenScripts(); i++) {
+        const CompilerConstraintList::FrozenScript &entry = constraints->frozenScript(i);
+        JS_ASSERT(entry.script->types);
+
+        CheckDefinitePropertiesTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script));
+        unsigned nargs = entry.script->function() ? entry.script->function()->nargs() : 0;
+        for (size_t i = 0; i < nargs; i++)
+            CheckDefinitePropertiesTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i));
+        for (size_t i = 0; i < entry.script->nTypeSets(); i++)
+            CheckDefinitePropertiesTypeSet(cx, &entry.bytecodeTypes[i], &entry.script->types->typeArray()[i]);
+    }
 }
 
 namespace {
