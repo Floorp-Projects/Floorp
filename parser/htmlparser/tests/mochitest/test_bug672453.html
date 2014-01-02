@@ -25,7 +25,8 @@ var tests = [
   "file_bug672453_http_unsupported.html",
   "file_bug672453_bomless_utf16.html",
   "file_bug672453_meta_utf16.html",
-  "file_bug672453_meta_non_superset.html"
+  "file_bug672453_meta_non_superset.html",
+  "file_bug672453_meta_userdefined.html",
 ];
 
 var expectedErrors = [
@@ -68,7 +69,12 @@ var expectedErrors = [
     sourceName: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_non_superset.html",
     lineNumber: 1,
     isWarning: false,
-    isException: false }
+    isException: false },
+  { errorMessage: "A meta tag was used to declare the character encoding as x-user-defined. This was interpreted as a windows-1252 declaration instead for compatibility with intentionally mis-encoded legacy fonts. This site should migrate to Unicode.",
+    sourceName: "http://mochi.test:8888/tests/parser/htmlparser/tests/mochitest/file_bug672453_meta_userdefined.html",
+    lineNumber: 1,
+    isWarning: false,
+    isException: false },
 ];
 
 SimpleTest.waitForExplicitFinish();

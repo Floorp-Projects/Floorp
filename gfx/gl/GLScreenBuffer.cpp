@@ -9,6 +9,7 @@
 #include "gfxImageSurface.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
+#include "GLReadTexImageHelper.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceStream.h"
 #ifdef MOZ_WIDGET_GONK
@@ -498,7 +499,7 @@ GLScreenBuffer::Readback(SharedSurface_GL* src, gfxImageSurface* dest)
     MOZ_ASSERT(buffer);
 
     ScopedBindFramebuffer autoFB(mGL, buffer->FB());
-    mGL->ReadPixelsIntoImageSurface(dest);
+    ReadPixelsIntoImageSurface(mGL, dest);
 
     delete buffer;
 
