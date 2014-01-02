@@ -614,19 +614,11 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
-    nsXPCWrappedJS* sibling;
-
     // Checks for any existing wrapper explicitly constructed for this iid.
     // This includes the current 'self' wrapper. This also deals with the
     // nsISupports case (for which it returns mRoot).
-    if (nullptr != (sibling = self->Find(aIID))) {
-        NS_ADDREF(sibling);
-        *aInstancePtr = sibling->GetXPTCStub();
-        return NS_OK;
-    }
-
-    // Check if asking for an interface from which one of our wrappers inherits.
-    if (nullptr != (sibling = self->FindInherited(aIID))) {
+    // Also check if asking for an interface from which one of our wrappers inherits.
+    if (nsXPCWrappedJS* sibling = self->FindOrFindInherited(aIID)) {
         NS_ADDREF(sibling);
         *aInstancePtr = sibling->GetXPTCStub();
         return NS_OK;
