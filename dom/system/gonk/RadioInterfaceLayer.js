@@ -2873,6 +2873,12 @@ RadioInterface.prototype = {
     }
 
     let callback = (function(response) {
+      if (response.errorMsg) {
+        // Request fails. Rollback to the original radiostate.
+        let state = message.enabled ? RIL.GECKO_DETAILED_RADIOSTATE_DISABLED
+                                    : RIL.GECKO_DETAILED_RADIOSTATE_ENABLED;
+        this.handleDetailedRadioStateChanged(state);
+      }
       this.setRadioEnabledResponse(target, response);
       return false;
     }).bind(this);

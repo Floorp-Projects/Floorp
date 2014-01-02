@@ -154,7 +154,9 @@ var BrowserUI = {
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
+#ifdef NIGHTLY_BUILD
         PdfJs.init();
+#endif
       } catch(ex) {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
