@@ -391,9 +391,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
     wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root);
 
-    wrapper->mNext = root->mNext;
-    root->mNext = wrapper;
-
     if (release_root)
         NS_RELEASE(root);
 
@@ -418,9 +415,11 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
 
-    if (!IsRootWrapper())
+    if (!IsRootWrapper()) {
         NS_ADDREF(mRoot);
-
+        mNext = mRoot->mNext;
+        mRoot->mNext = this;
+    }
 }
 
 nsXPCWrappedJS::~nsXPCWrappedJS()
