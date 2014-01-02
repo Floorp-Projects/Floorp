@@ -351,8 +351,8 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
     root = map->Find(rootJSObj);
     if (root) {
-        if ((nullptr != (wrapper = root->Find(aIID))) ||
-            (nullptr != (wrapper = root->FindInherited(aIID)))) {
+        wrapper = root->FindOrFindInherited(aIID);
+        if (wrapper) {
             NS_ADDREF(wrapper);
             *wrapperResult = wrapper;
             return NS_OK;
