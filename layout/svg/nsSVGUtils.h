@@ -111,21 +111,6 @@ class SourceSurface;
 
 #define NS_STATE_SVG_TEXT_IN_REFLOW              NS_FRAME_STATE_BIT(24)
 
-/**
- * Byte offsets of channels in a native packed gfxColor or cairo image surface.
- */
-#ifdef IS_BIG_ENDIAN
-#define GFX_ARGB32_OFFSET_A 0
-#define GFX_ARGB32_OFFSET_R 1
-#define GFX_ARGB32_OFFSET_G 2
-#define GFX_ARGB32_OFFSET_B 3
-#else
-#define GFX_ARGB32_OFFSET_A 3
-#define GFX_ARGB32_OFFSET_R 2
-#define GFX_ARGB32_OFFSET_G 1
-#define GFX_ARGB32_OFFSET_B 0
-#endif
-
 // maximum dimension of an offscreen surface - choose so that
 // the surface size doesn't overflow a 32-bit signed int using
 // 4 bytes per pixel; in line with gfxASurface::CheckSurfaceSize
@@ -246,55 +231,6 @@ public:
   typedef mozilla::dom::Element Element;
 
   static void Init();
-
-  /*
-   * Converts image data from premultipled to unpremultiplied alpha
-   */
-  static void UnPremultiplyImageDataAlpha(uint8_t *data, 
-                                          int32_t stride, 
-                                          const nsIntRect &rect);
-  /*
-   * Converts image data from unpremultipled to premultiplied alpha
-   */
-  static void PremultiplyImageDataAlpha(uint8_t *data, 
-                                        int32_t stride, 
-                                        const nsIntRect &rect);
-  /*
-   * Converts image data from premultiplied sRGB to Linear RGB
-   */
-  static void ConvertImageDataToLinearRGB(uint8_t *data, 
-                                          int32_t stride, 
-                                          const nsIntRect &rect);
-  /*
-   * Converts image data from LinearRGB to premultiplied sRGB
-   */
-  static void ConvertImageDataFromLinearRGB(uint8_t *data, 
-                                            int32_t stride, 
-                                            const nsIntRect &rect);
-
-  /*
-   * Converts image data from sRGB to luminance
-   */
-  static void ComputesRGBLuminanceMask(uint8_t *aData,
-                                       int32_t aStride,
-                                       const nsIntRect &aRect,
-                                       float aOpacity);
-
-  /*
-   * Converts image data from sRGB to luminance assuming
-   * Linear RGB Interpolation
-   */
-  static void ComputeLinearRGBLuminanceMask(uint8_t *aData,
-                                            int32_t aStride,
-                                            const nsIntRect &aRect,
-                                            float aOpacity);
-  /*
-   * Converts image data to luminance using the value of alpha as luminance
-   */
-  static void ComputeAlphaMask(uint8_t *aData,
-                               int32_t aStride,
-                               const nsIntRect &aRect,
-                               float aOpacity);
 
   /**
    * Gets the nearest nsSVGInnerSVGFrame or nsSVGOuterSVGFrame frame. aFrame
