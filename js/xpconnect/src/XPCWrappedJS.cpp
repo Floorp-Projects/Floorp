@@ -399,9 +399,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     if (release_root)
         NS_RELEASE(root);
 
-    if (!wrapper)
-        return NS_ERROR_FAILURE;
-
     *wrapperResult = wrapper;
     return NS_OK;
 }
