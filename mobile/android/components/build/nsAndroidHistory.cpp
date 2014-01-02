@@ -107,7 +107,8 @@ inline bool
 nsAndroidHistory::IsRecentlyVisitedURI(nsIURI* aURI) {
   bool equals = false;
   RecentlyVisitedArray::index_type i;
-  for (i = 0; i < mRecentlyVisitedURIs.Length() && !equals; ++i) {
+  RecentlyVisitedArray::size_type length = mRecentlyVisitedURIs.Length();
+  for (i = 0; i < length && !equals; ++i) {
     aURI->Equals(mRecentlyVisitedURIs.ElementAt(i), &equals);
   }
   return equals;
