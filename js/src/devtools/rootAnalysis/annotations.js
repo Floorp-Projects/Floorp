@@ -76,16 +76,9 @@ var ignoreCallees = {
     "js::Class.trace" : true,
     "js::Class.finalize" : true,
     "JSRuntime.destroyPrincipals" : true,
-    "nsIGlobalObject.GetGlobalJSObject" : true, // virtual but no implementation can GC
-    "nsAXPCNativeCallContext.GetJSContext" : true,
-    "js::jit::MDefinition.op" : true, // macro generated virtuals just return a constant
-    "js::jit::MDefinition.opName" : true, // macro generated virtuals just return a constant
-    "js::jit::LInstruction.getDef" : true, // virtual but no implementation can GC
-    "js::jit::IonCache.kind" : true, // macro generated virtuals just return a constant
     "icu_50::UObject.__deleting_dtor" : true, // destructors in ICU code can't cause GC
     "mozilla::CycleCollectedJSRuntime.DescribeCustomObjects" : true, // During tracing, cannot GC.
     "mozilla::CycleCollectedJSRuntime.NoteCustomGCThingXPCOMChildren" : true, // During tracing, cannot GC.
-    "nsIThreadManager.GetIsMainThread" : true,
     "PLDHashTableOps.hashKey" : true,
     "z_stream_s.zfree" : true,
 };
@@ -240,7 +233,7 @@ function isSuppressConstructor(name)
 // nsISupports subclasses' methods may be scriptable (or overridden
 // via binary XPCOM), and so may GC. But some fields just aren't going
 // to get overridden with something that can GC.
-function isOverridableField(csu, field)
+function isOverridableField(initialCSU, csu, field)
 {
     if (csu != 'nsISupports')
         return false;
@@ -250,7 +243,12 @@ function isOverridableField(csu, field)
         return false;
     if (field == 'GetNativeContext')
         return false;
-    if (field == 'GetThreadFromPRThread')
+    if (field == "GetGlobalJSObject")
         return false;
+    if (field == "GetIsMainThread")
+        return false;
+    if (initialCSU == 'nsIXPConnectJSObjectHolder' && field == 'GetJSObject')
+        return false;
+
     return true;
 }
