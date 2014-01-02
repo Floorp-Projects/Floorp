@@ -434,8 +434,6 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
 
-    NS_ADDREF(aClass);
-
     if (!IsRootWrapper())
         NS_ADDREF(mRoot);
 
@@ -496,7 +494,7 @@ nsXPCWrappedJS::Unlink()
         NS_RELEASE(mRoot);
     }
 
-    NS_IF_RELEASE(mClass);
+    mClass = nullptr;
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if (rt->GCIsRunning()) {
@@ -647,7 +645,7 @@ nsXPCWrappedJS::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if (iid)
             NS_Free(iid);
-        XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
+        XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass.get()));
 
         if (!IsRootWrapper())
             XPC_LOG_OUTDENT();
