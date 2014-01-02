@@ -41,6 +41,7 @@
 #include "GLContextSymbols.h"
 #include "mozilla/GenericRefCounted.h"
 #include "mozilla/Scoped.h"
+#include "gfx2DGlue.h"
 
 #ifdef DEBUG
 #define MOZ_ENABLE_GL_TRACKING 1
@@ -2377,7 +2378,6 @@ protected:
 
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
-    typedef gfxImageFormat ImageFormat;
     typedef gfx::SurfaceFormat SurfaceFormat;
 
 public:
@@ -2493,7 +2493,7 @@ public:
      *
      * Only valid if IsOffscreen() returns true.
      */
-    virtual bool ResizeOffscreen(const gfxIntSize& size) {
+    virtual bool ResizeOffscreen(const gfx::IntSize& size) {
         return ResizeScreenBuffer(size);
     }
 
@@ -2502,7 +2502,7 @@ public:
      *
      * Only valid if IsOffscreen() returns true.
      */
-    const gfxIntSize& OffscreenSize() const;
+    const gfx::IntSize& OffscreenSize() const;
 
     void BindFB(GLuint fb) {
         fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
@@ -2714,7 +2714,7 @@ public:
         return thisShared == otherShared;
     }
 
-    bool InitOffscreen(const gfxIntSize& size, const SurfaceCaps& caps) {
+    bool InitOffscreen(const gfx::IntSize& size, const SurfaceCaps& caps) {
         if (!CreateScreenBuffer(size, caps))
             return false;
 
@@ -2735,7 +2735,7 @@ public:
 
 protected:
     // Note that it does -not- clear the resized buffers.
-    bool CreateScreenBuffer(const gfxIntSize& size, const SurfaceCaps& caps) {
+    bool CreateScreenBuffer(const gfx::IntSize& size, const SurfaceCaps& caps) {
         if (!IsOffscreenSizeAllowed(size))
             return false;
 
@@ -2757,11 +2757,11 @@ protected:
         return false;
     }
 
-    bool CreateScreenBufferImpl(const gfxIntSize& size,
+    bool CreateScreenBufferImpl(const gfx::IntSize& size,
                                 const SurfaceCaps& caps);
 
 public:
-    bool ResizeScreenBuffer(const gfxIntSize& size);
+    bool ResizeScreenBuffer(const gfx::IntSize& size);
 
 protected:
     SurfaceCaps mCaps;
@@ -2861,7 +2861,7 @@ public:
 
     void EmptyTexGarbageBin();
 
-    bool IsOffscreenSizeAllowed(const gfxIntSize& aSize) const;
+    bool IsOffscreenSizeAllowed(const gfx::IntSize& aSize) const;
 
 protected:
     GLuint mReadTextureImagePrograms[4];

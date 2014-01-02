@@ -27,7 +27,7 @@ namespace gl {
 
 GLScreenBuffer*
 GLScreenBuffer::Create(GLContext* gl,
-                     const gfxIntSize& size,
+                     const gfx::IntSize& size,
                      const SurfaceCaps& caps)
 {
     if (caps.antialias &&
@@ -347,8 +347,8 @@ GLScreenBuffer::AssureBlitted()
         BindReadFB_Internal(drawFB);
         BindDrawFB_Internal(readFB);
 
-        const gfxIntSize&  srcSize = mDraw->Size();
-        const gfxIntSize& destSize = mRead->Size();
+        const gfx::IntSize&  srcSize = mDraw->Size();
+        const gfx::IntSize& destSize = mRead->Size();
 
         mGL->raw_fBlitFramebuffer(0, 0,  srcSize.width,  srcSize.height,
                                   0, 0, destSize.width, destSize.height,
@@ -381,7 +381,7 @@ GLScreenBuffer::Morph(SurfaceFactory_GL* newFactory, SurfaceStreamType streamTyp
 }
 
 void
-GLScreenBuffer::Attach(SharedSurface* surface, const gfxIntSize& size)
+GLScreenBuffer::Attach(SharedSurface* surface, const gfx::IntSize& size)
 {
     ScopedBindFramebuffer autoFB(mGL);
 
@@ -419,7 +419,7 @@ GLScreenBuffer::Attach(SharedSurface* surface, const gfxIntSize& size)
 }
 
 bool
-GLScreenBuffer::Swap(const gfxIntSize& size)
+GLScreenBuffer::Swap(const gfx::IntSize& size)
 {
     SharedSurface* nextSurf = mStream->SwapProducer(mFactory, size);
     if (!nextSurf) {
@@ -438,7 +438,7 @@ GLScreenBuffer::Swap(const gfxIntSize& size)
 }
 
 bool
-GLScreenBuffer::PublishFrame(const gfxIntSize& size)
+GLScreenBuffer::PublishFrame(const gfx::IntSize& size)
 {
     AssureBlitted();
 
@@ -447,7 +447,7 @@ GLScreenBuffer::PublishFrame(const gfxIntSize& size)
 }
 
 bool
-GLScreenBuffer::Resize(const gfxIntSize& size)
+GLScreenBuffer::Resize(const gfx::IntSize& size)
 {
     SharedSurface* surface = mStream->Resize(mFactory, size);
     if (!surface)
@@ -458,7 +458,7 @@ GLScreenBuffer::Resize(const gfxIntSize& size)
 }
 
 DrawBuffer*
-GLScreenBuffer::CreateDraw(const gfxIntSize& size)
+GLScreenBuffer::CreateDraw(const gfx::IntSize& size)
 {
     GLContext* gl = mFactory->GL();
     const GLFormats& formats = mFactory->Formats();
@@ -482,7 +482,7 @@ void
 GLScreenBuffer::Readback(SharedSurface_GL* src, gfxImageSurface* dest)
 {
     MOZ_ASSERT(src && dest);
-    MOZ_ASSERT(dest->GetSize() == src->Size());
+    MOZ_ASSERT(ToIntSize(dest->GetSize()) == src->Size());
     MOZ_ASSERT(dest->Format() == (src->HasAlpha() ? gfxImageFormatARGB32
                                                   : gfxImageFormatRGB24));
 
@@ -514,7 +514,7 @@ DrawBuffer*
 DrawBuffer::Create(GLContext* const gl,
                    const SurfaceCaps& caps,
                    const GLFormats& formats,
-                   const gfxIntSize& size)
+                   const gfx::IntSize& size)
 {
     if (!caps.color) {
         MOZ_ASSERT(!caps.alpha && !caps.depth && !caps.stencil);
@@ -681,7 +681,7 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
     mSurf = surf;
 }
 
-const gfxIntSize&
+const gfx::IntSize&
 ReadBuffer::Size() const
 {
     return mSurf->Size();
