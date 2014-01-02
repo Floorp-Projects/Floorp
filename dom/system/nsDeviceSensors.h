@@ -6,13 +6,11 @@
 #define nsDeviceSensors_h
 
 #include "nsIDeviceSensors.h"
-#include "nsIDOMDeviceMotionEvent.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsIDOMDeviceOrientationEvent.h"
-#include "nsIDOMDeviceMotionEvent.h"
 #include "nsDOMDeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/HalSensor.h"
@@ -28,6 +26,8 @@ class EventTarget;
 
 class nsDeviceSensors : public nsIDeviceSensors, public mozilla::hal::ISensorObserver
 {
+  typedef mozilla::dom::DeviceAccelerationInit DeviceAccelerationInit;
+  typedef mozilla::dom::DeviceRotationRateInit DeviceRotationRateInit;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDEVICESENSORS
@@ -74,9 +74,9 @@ private:
 
   mozilla::TimeStamp mLastDOMMotionEventTime;
   bool mIsUserProximityNear;
-  nsRefPtr<nsDOMDeviceAcceleration> mLastAcceleration;
-  nsRefPtr<nsDOMDeviceAcceleration> mLastAccelerationIncluduingGravity;
-  nsRefPtr<nsDOMDeviceRotationRate> mLastRotationRate;
+  mozilla::Maybe<DeviceAccelerationInit> mLastAcceleration;
+  mozilla::Maybe<DeviceAccelerationInit> mLastAccelerationIncluduingGravity;
+  mozilla::Maybe<DeviceRotationRateInit> mLastRotationRate;
 };
 
 #endif

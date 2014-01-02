@@ -9750,6 +9750,7 @@ class CGBindingRoot(CGThing):
         bindingHeaders = [header for (header, include) in
                           bindingHeaders.iteritems() if include]
         declareIncludes = ['mozilla/dom/BindingDeclarations.h',
+                          'mozilla/dom/Nullable.h',
                           'mozilla/ErrorResult.h',
                           'jspubtd.h',
                           'js/RootingAPI.h',
