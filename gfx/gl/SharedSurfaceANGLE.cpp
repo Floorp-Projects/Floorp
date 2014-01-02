@@ -12,6 +12,10 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace gl {
 
+class GLContextEGL;
+void SetEGLSurfaceOverride(GLContextEGL* context, EGLSurface surf);
+GLContextEGL* DowncastGLContextEGL(GLContext* context);
+
 SurfaceFactory_ANGLEShareHandle*
 SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl,
                                         ID3D10Device1* d3d,
@@ -45,7 +49,7 @@ SharedSurface_ANGLEShareHandle::~SharedSurface_ANGLEShareHandle()
 void
 SharedSurface_ANGLEShareHandle::LockProdImpl()
 {
-    mGL->SetEGLSurfaceOverride(mPBuffer);
+    SetEGLSurfaceOverride(DowncastGLContextEGL(mGL), mPBuffer);
 }
 
 void
