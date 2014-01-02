@@ -507,15 +507,11 @@ gfxOS2FontGroup::gfxOS2FontGroup(const nsAString& aFamilies,
     nsTArray<nsString> familyArray;
     ForEachFont(FontCallback, &familyArray);
 
-    // To be able to easily search for glyphs in other fonts, append a few good
-    // replacement candidates to the list. The best ones are the Unicode fonts that
-    // are set up, and if the user was so clever to set up the User Defined fonts,
-    // then these are probable candidates, too.
+    // To be able to easily search for glyphs in other fonts, append the
+    // Unicode fonts as replacement candidates to the list.
     nsString fontString;
     gfxPlatform::GetPlatform()->GetPrefFonts(nsGkAtoms::Unicode, fontString, false);
     ForEachFont(fontString, nsGkAtoms::Unicode, FontCallback, &familyArray);
-    gfxPlatform::GetPlatform()->GetPrefFonts(nsGkAtoms::x_user_def, fontString, false);
-    ForEachFont(fontString, nsGkAtoms::x_user_def, FontCallback, &familyArray);
 
     // Should append some default font if there are no available fonts.
     // Let's use Helv which should be available on any OS/2 system; if

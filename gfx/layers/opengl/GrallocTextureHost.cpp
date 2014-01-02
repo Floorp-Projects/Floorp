@@ -11,7 +11,7 @@
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "EGLImageHelpers.h"
-#include "GLContextUtils.h"
+#include "GLReadTexImageHelper.h"
 
 namespace mozilla {
 namespace layers {
