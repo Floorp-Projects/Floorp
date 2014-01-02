@@ -343,19 +343,19 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, getter_AddRefs(clazz));
     if (!clazz)
         return NS_ERROR_FAILURE;
-    // from here on we need to return through 'return_wrapper'
 
     // always find the root JSObject
     JS::RootedObject rootJSObj(cx, clazz->GetRootJSObject(cx, jsObj));
     if (!rootJSObj)
-        goto return_wrapper;
+        return NS_ERROR_FAILURE;
 
     root = map->Find(rootJSObj);
     if (root) {
         if ((nullptr != (wrapper = root->Find(aIID))) ||
             (nullptr != (wrapper = root->FindInherited(aIID)))) {
             NS_ADDREF(wrapper);
-            goto return_wrapper;
+            *wrapperResult = wrapper;
+            return NS_OK;
         }
     }
 
@@ -367,14 +367,15 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
 
             map->Add(cx, root);
 
-            goto return_wrapper;
+            *wrapperResult = wrapper;
+            return NS_OK;
         } else {
             // just a root wrapper
             nsXPCWrappedJSClass* rootClazz = nullptr;
             nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports),
                                               &rootClazz);
             if (!rootClazz)
-                goto return_wrapper;
+                return NS_ERROR_FAILURE;
 
             root = new nsXPCWrappedJS(cx, rootJSObj, rootClazz, nullptr);
             NS_RELEASE(rootClazz);
@@ -395,7 +396,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     wrapper->mNext = root->mNext;
     root->mNext = wrapper;
 
-return_wrapper:
     if (release_root)
         NS_RELEASE(root);
 
