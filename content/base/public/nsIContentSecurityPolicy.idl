@@ -15,7 +15,7 @@ interface nsIDocShell;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(781b6511-f1fa-4e2c-8eff-1739d091eb2f)]
+[scriptable, uuid(ff46c14e-5b2d-4aca-8961-d0b0d987cb81)]
 interface nsIContentSecurityPolicy : nsISupports
 {
 
@@ -122,6 +122,25 @@ interface nsIContentSecurityPolicy : nsISupports
                           in unsigned long aContentType,
                           out boolean shouldReportViolation);
 
+   /**
+    * Whether this policy accepts the given inline resource based on the hash
+    * of its content.
+    * @param aContent
+    *     The content of the inline resource to hash (and compare to the
+    *     hashes listed in the policy)
+    * @param aContentType
+    *     The type of inline element (script or style)
+    * @param shouldReportViolation
+    *     Whether this inline resource should be reported as a hash-source
+    *     violation. If there are no hash-sources in the policy, this is
+    *     always false.
+    * @return
+    *     Whether or not this inline resource is whitelisted by a hash-source
+    */
+   boolean getAllowsHash(in AString aContent,
+                         in unsigned short aContentType,
+                         out boolean shouldReportViolation);
+
   /**
    * For each violated policy (of type violationType), log policy violation on
    * the Error Console and send a report to report-uris present in the violated
@@ -139,18 +158,26 @@ interface nsIContentSecurityPolicy : nsISupports
    *     (optional) If this is a nonce violation, include the nonce so we can
    *     recheck to determine which policies were violated and send the
    *     appropriate reports.
+   * @param aContent
+   *     (optional) If this is a hash violation, include contents of the inline
+   *     resource in the question so we can recheck the hash in order to
+   *     determine which policies were violated and send the appropriate
+   *     reports.
    */
   void logViolationDetails(in unsigned short violationType,
                            in AString sourceFile,
                            in AString scriptSample,
                            in int32_t lineNum,
-                           [optional] in AString nonce);
+                           [optional] in AString nonce,
+                           [optional] in AString content);
 
   const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
   const unsigned short VIOLATION_TYPE_EVAL          = 2;
   const unsigned short VIOLATION_TYPE_INLINE_STYLE  = 3;
   const unsigned short VIOLATION_TYPE_NONCE_SCRIPT  = 4;
   const unsigned short VIOLATION_TYPE_NONCE_STYLE   = 5;
+  const unsigned short VIOLATION_TYPE_HASH_SCRIPT   = 6;
+  const unsigned short VIOLATION_TYPE_HASH_STYLE    = 7;
 
   /**
    * Called after the CSP object is created to fill in the appropriate request
