@@ -919,6 +919,14 @@ JSObject *
 NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc::AllocKind allocKind,
                   NewObjectKind newKind = GenericObject);
 
+inline JSObject *
+NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent,
+                  NewObjectKind newKind = GenericObject)
+{
+    gc::AllocKind allocKind = gc::GetGCObjectKind(type->clasp);
+    return NewObjectWithType(cx, type, parent, allocKind, newKind);
+}
+
 JSObject *
 NewReshapedObject(JSContext *cx, HandleTypeObject type, JSObject *parent,
                   gc::AllocKind allocKind, HandleShape shape,
