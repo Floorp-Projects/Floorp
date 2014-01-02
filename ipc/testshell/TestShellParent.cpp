@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentParent.h"
 
 #include "nsAutoPtr.h"
+#include "nsCxPusher.h"
 
 using namespace mozilla;
 using mozilla::ipc::TestShellParent;
@@ -60,7 +61,8 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
 {
   NS_ENSURE_TRUE(*mCallback.ToJSValPtr() != JSVAL_NULL && mCx, false);
 
-  JSAutoRequest ar(mCx);
+  // We're pulling a cx off the heap, so make sure it's stack-top.
+  AutoCxPusher pusher(mCx);
   NS_ENSURE_TRUE(mCallback.ToJSObject(), false);
   JSAutoCompartment ac(mCx, mCallback.ToJSObject());
   JS::Rooted<JSObject*> global(mCx, JS::CurrentGlobalOrNull(mCx));
