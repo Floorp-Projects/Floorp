@@ -9,6 +9,7 @@
 #include "ScopedGLHelpers.h"
 #include "gfxImageSurface.h"
 #include "mozilla/gfx/2D.h"
+#include "GLReadTexImageHelper.h"
 
 using namespace mozilla::gfx;
 
@@ -308,7 +309,7 @@ SharedSurface_Basic::Fence()
                           ThebesIntSize(mData->GetSize()),
                           mData->Stride(),
                           SurfaceFormatToImageFormat(mData->GetFormat()));
-    mGL->ReadScreenIntoImageSurface(wrappedData);
+    ReadScreenIntoImageSurface(mGL, wrappedData);
     mData->MarkDirty();
 }
 

@@ -1178,10 +1178,10 @@ short vcmAddRemoteStreamHint(
  * Get DTLS key data
  *
  *  @param[in]  peerconnection - the peerconnection in use
- *  @param[out] digest_algp    - the digest algorithm e.g. 'SHA-1'
- *  @param[in] max_digest_alg_len - length of string
+ *  @param[out] digest_algp    - the digest algorithm e.g. 'sha-256'
+ *  @param[in] max_digest_alg_len - available length of string
  *  @param[out] digestp        - the digest string
- *  @param[in] max_digest_len - length of string
+ *  @param[in] max_digest_len - available length of string
  *
  *  Returns: zero(0) for success; otherwise, ERROR for failure
  */
@@ -1197,33 +1197,10 @@ static short vcmGetDtlsIdentity_m(const char *peerconnection,
   sipcc::PeerConnectionWrapper pc(peerconnection);
   ENSURE_PC(pc, VCM_ERROR);
 
-  unsigned char digest[TransportLayerDtls::kMaxDigestLength];
-  size_t digest_len;
-
-  mozilla::RefPtr<DtlsIdentity> id = pc.impl()->GetIdentity();
-
-  if (!id) {
-    return VCM_ERROR;
-  }
-
-  nsresult res = id->ComputeFingerprint("sha-256", digest, sizeof(digest),
-                                        &digest_len);
-  if (!NS_SUCCEEDED(res)) {
-    CSFLogError( logTag, "%s: Could not compute identity fingerprint", __FUNCTION__);
-    return VCM_ERROR;
-  }
-
-  // digest_len should be 32 for SHA-256
-  PR_ASSERT(digest_len == 32);
-  std::string fingerprint_txt = DtlsIdentity::FormatFingerprint(digest, digest_len);
-  if (max_digest_len <= fingerprint_txt.size()) {
-    CSFLogError( logTag, "%s: Formatted digest will not fit in provided buffer",
-                 __FUNCTION__);
-    return VCM_ERROR;
-  }
-
-  sstrncpy(digest_algp, "sha-256", max_digest_alg_len);
-  sstrncpy(digestp, fingerprint_txt.c_str(), max_digest_len);
+  std::string algorithm = pc.impl()->GetFingerprintAlgorithm();
+  sstrncpy(digest_algp, algorithm.c_str(), max_digest_alg_len);
+  std::string value = pc.impl()->GetFingerprintHexValue();
+  sstrncpy(digestp, value.c_str(), max_digest_len);
 
   return 0;
 }
