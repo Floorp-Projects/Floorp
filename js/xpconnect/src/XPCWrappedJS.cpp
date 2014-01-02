@@ -424,8 +424,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     : mJSObj(aJSObj),
       mClass(aClass),
       mRoot(root ? root : MOZ_THIS_IN_INITIALIZER_LIST()),
-      mNext(nullptr),
-      mOuter(nullptr)
+      mNext(nullptr)
 {
     InitStub(GetClass()->GetIID());
 
@@ -501,10 +500,9 @@ nsXPCWrappedJS::Unlink()
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if (rt->GCIsRunning()) {
-            nsContentUtils::DeferredFinalize(mOuter);
-            mOuter = nullptr;
+            nsContentUtils::DeferredFinalize(mOuter.forget().get());
         } else {
-            NS_RELEASE(mOuter);
+            mOuter = nullptr;
         }
     }
 }

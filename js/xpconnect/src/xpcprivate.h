@@ -2515,7 +2515,7 @@ public:
                        "Only one aggregated native can be set");
             return;
         }
-        NS_ADDREF(mRoot->mOuter = aNative);
+        mRoot->mOuter = aNative;
     }
 
     void TraceJS(JSTracer* trc);
@@ -2538,7 +2538,7 @@ private:
     nsXPCWrappedJSClass* mClass;
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
-    nsISupports* mOuter;    // only set in root
+    nsCOMPtr<nsISupports> mOuter;    // only set in root
 };
 
 /***************************************************************************/
