@@ -64,7 +64,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
         runOnce = false;
     }
 
-    GLLibraryEGL* egl = prodGL->GetLibraryEGL();
+    GLLibraryEGL* egl = &sEGLLibrary;
     MOZ_ASSERT(egl);
 
     DEBUG_PRINT("SharedSurface_Gralloc::Create -------\n");

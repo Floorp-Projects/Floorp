@@ -2005,7 +2005,6 @@ pref("font.minimum-size.tr", 0);
 pref("font.minimum-size.x-cans", 0);
 pref("font.minimum-size.x-western", 0);
 pref("font.minimum-size.x-unicode", 0);
-pref("font.minimum-size.x-user-def", 0);
 
 /*
  * A value greater than zero enables font size inflation for
@@ -3332,10 +3331,6 @@ pref("font.name.serif.x-unicode", "Charis SIL Compact");
 pref("font.name.sans-serif.x-unicode", "Fira Sans OT");
 pref("font.name.monospace.x-unicode", "Fira Mono OT");
 
-pref("font.name.serif.x-user-def", "Charis SIL Compact");
-pref("font.name.sans-serif.x-user-def", "Fira Sans OT");
-pref("font.name.monospace.x-user-def", "Fira Mono OT");
-
 pref("font.name.serif.x-western", "Charis SIL Compact");
 pref("font.name.sans-serif.x-western", "Fira Sans OT");
 pref("font.name.monospace.x-western", "Fira Mono OT");
@@ -3417,12 +3412,6 @@ pref("font.name.monospace.x-unicode", "Droid Sans Mono");
 pref("font.name-list.serif.x-unicode", "Droid Serif");
 pref("font.name-list.sans-serif.x-unicode", "Clear Sans, Roboto, Droid Sans");
 
-pref("font.name.serif.x-user-def", "Charis SIL Compact");
-pref("font.name.sans-serif.x-user-def", "Clear Sans");
-pref("font.name.monospace.x-user-def", "Droid Sans Mono");
-pref("font.name-list.serif.x-user-def", "Droid Serif");
-pref("font.name-list.sans-serif.x-user-def", "Clear Sans, Roboto, Droid Sans");
-
 pref("font.name.serif.x-western", "Charis SIL Compact");
 pref("font.name.sans-serif.x-western", "Clear Sans");
 pref("font.name.monospace.x-western", "Droid Sans Mono");
@@ -3498,10 +3487,6 @@ pref("font.size.fixed.x-cyrillic", 12);
 pref("font.default.x-unicode", "sans-serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 12);
-
-pref("font.default.x-user-def", "sans-serif");
-pref("font.size.variable.x-user-def", 16);
-pref("font.size.fixed.x-user-def", 12);
 
 pref("font.default.x-western", "sans-serif");
 pref("font.size.variable.x-western", 16);
@@ -3695,10 +3680,6 @@ pref("font.name.serif.x-unicode", "serif");
 pref("font.name.sans-serif.x-unicode", "sans-serif");
 pref("font.name.monospace.x-unicode", "monospace");
 
-pref("font.name.serif.x-user-def", "serif");
-pref("font.name.sans-serif.x-user-def", "sans-serif");
-pref("font.name.monospace.x-user-def", "monospace");
-
 pref("font.name.serif.x-western", "serif");
 pref("font.name.sans-serif.x-western", "sans-serif");
 pref("font.name.monospace.x-western", "monospace");
@@ -3759,10 +3740,6 @@ pref("font.size.fixed.x-cyrillic", 12);
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);
 pref("font.size.fixed.x-unicode", 12);
-
-pref("font.default.x-user-def", "serif");
-pref("font.size.variable.x-user-def", 16);
-pref("font.size.fixed.x-user-def", 12);
 
 pref("font.default.x-western", "serif");
 pref("font.size.variable.x-western", 16);
