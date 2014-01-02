@@ -35,6 +35,11 @@ nsHtml5MetaScanner::tryCharset(nsString* charset)
     mCharset.Assign("UTF-8");
     return true;
   }
+  if (encoding.EqualsLiteral("x-user-defined")) {
+    // WebKit/Blink hack for Indian and Armenian legacy sites
+    mCharset.Assign("windows-1252");
+    return true;
+  }
   mCharset.Assign(encoding);
   return true;
 }
