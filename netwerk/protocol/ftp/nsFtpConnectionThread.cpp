@@ -2225,9 +2225,13 @@ nsFtpState::SaveNetworkStats(bool enforce)
         return rv;
     }
 
-    networkStatsServiceProxy->SaveAppStats(appId, mActiveNetwork,
-                                           PR_Now() / 1000, mCountRecv,
-                                           0, nullptr);
+    networkStatsServiceProxy->SaveAppStats(appId,
+                                           mActiveNetwork,
+                                           PR_Now() / 1000,
+                                           mCountRecv,
+                                           0,
+                                           false,
+                                           nullptr);
 
     // Reset the counters after saving.
     mCountRecv = 0;

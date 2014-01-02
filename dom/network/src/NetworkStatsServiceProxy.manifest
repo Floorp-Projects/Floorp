@@ -1,2 +1,2 @@
-component {8fbd115d-f590-474c-96dc-e2b6803ca975} NetworkStatsServiceProxy.js
-contract @mozilla.org/networkstatsServiceProxy;1 {8fbd115d-f590-474c-96dc-e2b6803ca975}
+component {705c01d6-8574-464c-8ec9-ac1522a45546} NetworkStatsServiceProxy.js
+contract @mozilla.org/networkstatsServiceProxy;1 {705c01d6-8574-464c-8ec9-ac1522a45546}
