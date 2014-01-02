@@ -70,6 +70,7 @@ namespace mozilla {
         class TextureGarbageBin;
         class GLBlitHelper;
         class GLBlitTextureImageHelper;
+        class GLReadTexImageHelper;
     }
 
     namespace layers {
@@ -2581,35 +2582,6 @@ public:
 
     virtual bool RenewSurface() { return false; }
 
-private:
-    /**
-     * Helpers for ReadTextureImage
-     */
-    GLuint TextureImageProgramFor(GLenum aTextureTarget, int aShader);
-    bool ReadBackPixelsIntoSurface(gfxImageSurface* aSurface, const gfxIntSize& aSize);
-
-public:
-    /**
-     * Read the image data contained in aTexture, and return it as an ImageSurface.
-     * If GL_RGBA is given as the format, a gfxImageFormatARGB32 surface is returned.
-     * Not implemented yet:
-     * If GL_RGB is given as the format, a gfxImageFormatRGB24 surface is returned.
-     * If GL_LUMINANCE is given as the format, a gfxImageFormatA8 surface is returned.
-     *
-     * THIS IS EXPENSIVE.  It is ridiculously expensive.  Only do this
-     * if you absolutely positively must, and never in any performance
-     * critical path.
-     *
-     * NOTE: aShaderProgram is really mozilla::layers::ShaderProgramType. It is
-     * passed as int to eliminate including LayerManagerOGLProgram.h in this
-     * hub header.
-     */
-    already_AddRefed<gfxImageSurface> ReadTextureImage(GLuint aTextureId,
-                                                       GLenum aTextureTarget,
-                                                       const gfxIntSize& aSize,
-                               /* ShaderProgramType */ int aShaderProgram,
-                                                       bool aYInvert = false);
-
     already_AddRefed<gfxImageSurface> GetTexImage(GLuint aTexture,
                                                   bool aYInvert,
                                                   SurfaceFormat aFormat);
@@ -2689,11 +2661,13 @@ protected:
 
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
     ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
+    ScopedDeletePtr<GLReadTexImageHelper> mReadTexImageHelper;
 
 public:
 
     GLBlitHelper* BlitHelper();
     GLBlitTextureImageHelper* BlitTextureImageHelper();
+    GLReadTexImageHelper* ReadTexImageHelper();
 
     // Assumes shares are created by all sharing with the same global context.
     bool SharesWith(const GLContext* other) const {
@@ -2861,8 +2835,6 @@ public:
     bool IsOffscreenSizeAllowed(const gfx::IntSize& aSize) const;
 
 protected:
-    GLuint mReadTextureImagePrograms[4];
-
     bool InitWithPrefix(const char *prefix, bool trygl);
 
     void InitExtensions();
