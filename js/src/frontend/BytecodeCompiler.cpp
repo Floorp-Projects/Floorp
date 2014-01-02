@@ -72,7 +72,9 @@ CheckArgumentsWithinEval(JSContext *cx, Parser<FullParseHandler> &parser, Handle
 
     // Force construction of arguments objects for functions that use
     // |arguments| within an eval.
-    RootedScript script(cx, fun->nonLazyScript());
+    RootedScript script(cx, fun->getOrCreateScript(cx));
+    if (!script)
+        return false;
     if (script->argumentsHasVarBinding()) {
         if (!JSScript::argumentsOptimizationFailed(cx, script))
             return false;
@@ -123,7 +125,9 @@ MaybeCheckEvalFreeVariables(ExclusiveContext *cxArg, HandleScript evalCaller, Ha
         RootedObject scope(cx, scopeChain);
         while (scope->is<ScopeObject>() || scope->is<DebugScopeObject>()) {
             if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
-                RootedScript script(cx, scope->as<CallObject>().callee().nonLazyScript());
+                RootedScript script(cx, scope->as<CallObject>().callee().getOrCreateScript(cx));
+                if (!script)
+                    return false;
                 if (script->argumentsHasVarBinding()) {
                     if (!JSScript::argumentsOptimizationFailed(cx, script))
                         return false;

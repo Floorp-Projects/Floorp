@@ -455,7 +455,9 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
     if (!clone)
         return nullptr;
 
-    RootedScript srcScript(cx, srcFun->nonLazyScript());
+    RootedScript srcScript(cx, srcFun->getOrCreateScript(cx));
+    if (!srcScript)
+        return nullptr;
     RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, clone, srcScript));
     if (!clonedScript)
         return nullptr;

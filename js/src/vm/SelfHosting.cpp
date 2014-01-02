@@ -225,7 +225,9 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[1].isObject());
 
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    RootedScript funScript(cx, fun->nonLazyScript());
+    RootedScript funScript(cx, fun->getOrCreateScript(cx));
+    if (!funScript)
+        return false;
     RootedObject flags(cx, &args[1].toObject());
 
     RootedId id(cx);
@@ -958,7 +960,9 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     // JSFunction::generatorKind can't handle lazy self-hosted functions, so we make sure there
     // aren't any.
     JS_ASSERT(!sourceFun->isGenerator());
-    RootedScript sourceScript(cx, sourceFun->nonLazyScript());
+    RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
+    if (!sourceScript)
+        return false;
     JS_ASSERT(!sourceScript->enclosingStaticScope());
     JSScript *cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
     if (!cscript)
