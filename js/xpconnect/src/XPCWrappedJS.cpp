@@ -364,8 +364,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
             wrapper = root = new nsXPCWrappedJS(cx, jsObj, clazz, nullptr);
-            if (!root)
-                goto return_wrapper;
 
             map->Add(cx, root);
 
@@ -381,9 +379,6 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
             root = new nsXPCWrappedJS(cx, rootJSObj, rootClazz, nullptr);
             NS_RELEASE(rootClazz);
 
-            if (!root)
-                goto return_wrapper;
-
             release_root = true;
 
             map->Add(cx, root);
@@ -394,11 +389,8 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     MOZ_ASSERT(root,"bad root");
     MOZ_ASSERT(clazz,"bad clazz");
 
-    if (!wrapper) {
+    if (!wrapper)
         wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root);
-        if (!wrapper)
-            goto return_wrapper;
-    }
 
     wrapper->mNext = root->mNext;
     root->mNext = wrapper;
