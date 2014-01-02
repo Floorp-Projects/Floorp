@@ -84,7 +84,6 @@
             <menuitem value="x-cans"          label="&font.langGroup.canadian;"/>
             <menuitem value="x-western"       label="&font.langGroup.latin1;"/>
             <menuitem value="x-unicode"       label="&font.langGroup.unicode;"/>
-            <menuitem value="x-user-def"      label="&font.langGroup.user-def;"/>
           </menupopup>
         </menulist>
       </caption>

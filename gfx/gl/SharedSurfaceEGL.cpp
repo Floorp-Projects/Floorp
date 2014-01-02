@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceEGL.h"
-
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "ScopedGLHelpers.h"
@@ -12,6 +11,7 @@
 #include "SurfaceFactory.h"
 #include "GLLibraryEGL.h"
 #include "TextureGarbageBin.h"
+#include "GLReadTexImageHelper.h"
 
 using namespace mozilla::gfx;
 
@@ -25,7 +25,7 @@ SharedSurface_EGLImage::Create(GLContext* prodGL,
                                bool hasAlpha,
                                EGLContext context)
 {
-    GLLibraryEGL* egl = prodGL->GetLibraryEGL();
+    GLLibraryEGL* egl = &sEGLLibrary;
     MOZ_ASSERT(egl);
 
     if (!HasExtensions(egl, prodGL))
@@ -134,7 +134,7 @@ CreateTexturePipe(GLLibraryEGL* const egl, GLContext* const gl,
     if (!tex)
         return false;
 
-    EGLContext context = gl->GetEGLContext();
+    EGLContext context = (EGLContext) gl->GetNativeData(GLContext::NativeGLContext);
     MOZ_ASSERT(context);
     EGLClientBuffer buffer = reinterpret_cast<EGLClientBuffer>(tex);
     EGLImage image = egl->fCreateImage(egl->Display(), context,
@@ -181,7 +181,7 @@ SharedSurface_EGLImage::Fence()
                                 ThebesIntSize(mPixels->GetSize()),
                                 mPixels->Stride(),
                                 SurfaceFormatToImageFormat(mPixels->GetFormat()));
-        mGL->ReadScreenIntoImageSurface(wrappedData);
+        ReadScreenIntoImageSurface(mGL, wrappedData);
         mPixels->MarkDirty();
         return;
     }
@@ -287,7 +287,7 @@ SurfaceFactory_EGLImage*
 SurfaceFactory_EGLImage::Create(GLContext* prodGL,
                                         const SurfaceCaps& caps)
 {
-    EGLContext context = prodGL->GetEGLContext();
+    EGLContext context = prodGL->GetNativeData(GLContext::NativeGLContext);
 
     return new SurfaceFactory_EGLImage(prodGL, context, caps);
 }
