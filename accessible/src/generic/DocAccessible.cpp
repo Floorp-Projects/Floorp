@@ -800,6 +800,9 @@ NS_IMETHODIMP
 DocAccessible::Observe(nsISupports* aSubject, const char* aTopic,
                        const PRUnichar* aData)
 {
+  if (IsDefunct())
+    return NS_OK;
+
   if (!nsCRT::strcmp(aTopic,"obs_documentCreated")) {    
     // State editable will now be set, readonly is now clear
     // Normally we only fire delayed events created from the node, not an
