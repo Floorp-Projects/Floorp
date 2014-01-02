@@ -10,8 +10,9 @@ interface nsIDOMMozMobileConnectionInfo;
 interface nsIDOMMozMobileNetworkInfo;
 interface nsIDOMMozMobileCellInfo;
 interface nsIDOMMozMobileCFInfo;
+interface nsIVariant;
 
-[scriptable, builtinclass, uuid(f55510a9-8dfc-44f5-90ab-355d1e721808)]
+[scriptable, builtinclass, uuid(389ad352-4e43-4c1a-85e9-bae745554326)]
 interface nsIDOMMozMobileConnection : nsIDOMEventTarget
 {
   const long ICC_SERVICE_CLASS_VOICE = (1 << 0);
@@ -91,6 +92,13 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
   readonly attribute DOMString radioState;
 
   /**
+   * Array of network types that are supported by this radio.
+   *
+   * Possible values: 'gsm', 'wcdma', 'cdma', 'evdo', 'lte'
+   */
+  readonly attribute nsIVariant supportedNetworkTypes;
+
+  /**
    * Search for available networks.
    *
    * If successful, the request's onsuccess will be called, and the request's
@@ -135,8 +143,8 @@ interface nsIDOMMozMobileConnection : nsIDOMEventTarget
    * @param type
    *        DOMString indicates the desired preferred network type.
    *        Possible values: 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto',
-                             'cdma/evdo', 'cdma', 'evdo', or
-                             'wcdma/gsm/cdma/evdo'.
+   *                         'cdma/evdo', 'cdma', 'evdo', or
+   *                         'wcdma/gsm/cdma/evdo'.
    *
    * If successful, the request's onsuccess will be called.
    *
