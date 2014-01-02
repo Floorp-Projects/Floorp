@@ -2535,7 +2535,7 @@ protected:
 
 private:
     JS::Heap<JSObject*> mJSObj;
-    nsXPCWrappedJSClass* mClass;
+    nsRefPtr<nsXPCWrappedJSClass> mClass;
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
     nsCOMPtr<nsISupports> mOuter;    // only set in root
