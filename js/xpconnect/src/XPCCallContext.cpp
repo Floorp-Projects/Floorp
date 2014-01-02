@@ -24,7 +24,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
                                unsigned argc       /* = NO_ARGS               */,
                                jsval *argv         /* = nullptr               */,
                                jsval *rval         /* = nullptr               */)
-    :   mPusher(cx),
+    :   mAr(cx),
         mState(INIT_FAILED),
         mXPC(nsXPConnect::XPConnect()),
         mXPCContext(nullptr),
@@ -36,6 +36,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mName(cx)
 {
     MOZ_ASSERT(cx);
+    MOZ_ASSERT(cx == XPCJSRuntime::Get()->GetJSContextStack()->Peek());
 
     if (!mXPC)
         return;
