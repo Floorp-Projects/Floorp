@@ -492,7 +492,6 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
     return evalOK;
 }
 
-
 bool
 nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
                                            JS::Handle<jsid> id, JSAccessMode mode,
@@ -529,6 +528,15 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> 
 
     return true;
 }
+
+// static
+bool
+nsScriptSecurityManager::JSPrincipalsSubsume(JSPrincipals *first,
+                                             JSPrincipals *second)
+{
+    return nsJSPrincipals::get(first)->Subsumes(nsJSPrincipals::get(second));
+}
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckPropertyAccess(JSContext* cx,
@@ -2137,7 +2145,8 @@ nsresult nsScriptSecurityManager::Init()
 
     static const JSSecurityCallbacks securityCallbacks = {
         CheckObjectAccess,
-        ContentSecurityPolicyPermitsJSAction
+        ContentSecurityPolicyPermitsJSAction,
+        JSPrincipalsSubsume,
     };
 
     MOZ_ASSERT(!JS_GetSecurityCallbacks(sRuntime));
