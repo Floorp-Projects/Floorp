@@ -291,7 +291,9 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       const kPanelId = "PanelUI-popup";
-      let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
+      let areaType = CustomizableUI.getAreaType(this.currentArea);
+      let inPanel = areaType == CustomizableUI.TYPE_MENU_PANEL;
+      let inToolbar = areaType == CustomizableUI.TYPE_TOOLBAR;
       let noautoclose = inPanel ? "true" : null;
       let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
 
@@ -358,10 +360,14 @@ const CustomizableWidgets = [{
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomChange", false);
       Services.obs.addObserver(updateZoomResetButton, "browser-fullZoom:zoomReset", false);
 
-      if (inPanel && this.currentArea) {
+      if (inPanel) {
         let panel = aDocument.getElementById(kPanelId);
         panel.addEventListener("popupshowing", updateZoomResetButton);
       } else {
+        if (inToolbar) {
+          let container = window.gBrowser.tabContainer;
+          container.addEventListener("TabSelect", updateZoomResetButton);
+        }
         updateZoomResetButton();
       }
 
@@ -373,9 +379,13 @@ const CustomizableWidgets = [{
           updateCombinedWidgetStyle(node, aArea, true);
           updateZoomResetButton();
 
-          if (aArea == CustomizableUI.AREA_PANEL) {
+          let areaType = CustomizableUI.getAreaType(aArea);
+          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.addEventListener("popupshowing", updateZoomResetButton);
+          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+            let container = window.gBrowser.tabContainer;
+            container.addEventListener("TabSelect", updateZoomResetButton);
           }
         }.bind(this),
 
@@ -383,9 +393,13 @@ const CustomizableWidgets = [{
           if (aWidgetId != this.id)
             return;
 
-          if (aPrevArea == CustomizableUI.AREA_PANEL) {
+          let areaType = CustomizableUI.getAreaType(aPrevArea);
+          if (areaType == CustomizableUI.TYPE_MENU_PANEL) {
             let panel = aDocument.getElementById(kPanelId);
             panel.removeEventListener("popupshowing", updateZoomResetButton);
+          } else if (areaType == CustomizableUI.TYPE_TOOLBAR) {
+            let container = window.gBrowser.tabContainer;
+            container.removeEventListener("TabSelect", updateZoomResetButton);
           }
 
           // When a widget is demoted to the palette ('removed'), it's visual
@@ -417,6 +431,8 @@ const CustomizableWidgets = [{
           Services.obs.removeObserver(updateZoomResetButton, "browser-fullZoom:zoomReset");
           let panel = aDoc.getElementById(kPanelId);
           panel.removeEventListener("popupshowing", updateZoomResetButton);
+          let container = aDoc.defaultView.gBrowser.tabContainer;
+          container.removeEventListener("TabSelect", updateZoomResetButton);
         }.bind(this),
 
         onWidgetDrag: function(aWidgetId, aArea) {
