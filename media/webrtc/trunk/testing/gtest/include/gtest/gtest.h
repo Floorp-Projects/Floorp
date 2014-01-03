@@ -1500,6 +1500,118 @@ class EqHelper<true> {
   }
 };
 
+// The helper function for {ASSERT|EXPECT}_NE.
+template <typename T1, typename T2>
+AssertionResult CmpHelperNE(const char* expected_expression,
+                            const char* actual_expression,
+                            const T1& expected,
+                            const T2& actual) {
+#ifdef _MSC_VER
+# pragma warning(push)          // Saves the current warning state.
+# pragma warning(disable:4389)  // Temporarily disables warning on
+                                // signed/unsigned mismatch.
+#endif
+
+  if (expected != actual) {
+    return AssertionSuccess();
+  }
+
+#ifdef _MSC_VER
+# pragma warning(pop)          // Restores the warning state.
+#endif
+
+  return NeFailure(expected_expression,
+                   actual_expression,
+                   FormatForComparisonFailureMessage(expected, actual),
+                   FormatForComparisonFailureMessage(actual, expected),
+                   false);
+}
+
+// With this overloaded version, we allow anonymous enums to be used
+// in {ASSERT|EXPECT}_NE when compiled with gcc 4, as anonymous enums
+// can be implicitly cast to BiggestInt.
+GTEST_API_ AssertionResult CmpHelperNE(const char* expected_expression,
+                                       const char* actual_expression,
+                                       BiggestInt expected,
+                                       BiggestInt actual);
+
+// The helper class for {ASSERT|EXPECT}_NE.  The template argument
+// lhs_is_null_literal is true iff the first argument to ASSERT_NE()
+// is a null pointer literal.  The following default implementation is
+// for lhs_is_null_literal being false.
+template <bool lhs_is_null_literal>
+class NeHelper {
+ public:
+  // This templatized version is for the general case.
+  template <typename T1, typename T2>
+  static AssertionResult Compare(const char* expected_expression,
+                                 const char* actual_expression,
+                                 const T1& expected,
+                                 const T2& actual) {
+    return CmpHelperNE(expected_expression, actual_expression, expected,
+                       actual);
+  }
+
+  // With this overloaded version, we allow anonymous enums to be used
+  // in {ASSERT|EXPECT}_NE when compiled with gcc 4, as anonymous
+  // enums can be implicitly cast to BiggestInt.
+  //
+  // Even though its body looks the same as the above version, we
+  // cannot merge the two, as it will make anonymous enums unhappy.
+  static AssertionResult Compare(const char* expected_expression,
+                                 const char* actual_expression,
+                                 BiggestInt expected,
+                                 BiggestInt actual) {
+    return CmpHelperNE(expected_expression, actual_expression, expected,
+                       actual);
+  }
+};
+
+// This specialization is used when the first argument to ASSERT_NE()
+// is a null pointer literal, like NULL, false, or 0.
+template <>
+class NeHelper<true> {
+ public:
+  // We define two overloaded versions of Compare().  The first
+  // version will be picked when the second argument to ASSERT_NE() is
+  // NOT a pointer, e.g. ASSERT_NE(0, AnIntFunction()) or
+  // EXPECT_NE(false, a_bool).
+  template <typename T1, typename T2>
+  static AssertionResult Compare(
+      const char* expected_expression,
+      const char* actual_expression,
+      const T1& expected,
+      const T2& actual,
+      // The following line prevents this overload from being considered if T2
+      // is not a pointer type.  We need this because ASSERT_NE(NULL, my_ptr)
+      // expands to Compare("", "", NULL, my_ptr), which requires a conversion
+      // to match the Secret* in the other overload, which would otherwise make
+      // this template match better.
+      typename EnableIf<!is_pointer<T2>::value>::type* = 0) {
+    return CmpHelperNE(expected_expression, actual_expression, expected,
+                       actual);
+  }
+
+  // This version will be picked when the second argument to ASSERT_NE() is a
+  // pointer, e.g. ASSERT_NE(NULL, a_pointer).
+  template <typename T>
+  static AssertionResult Compare(
+      const char* expected_expression,
+      const char* actual_expression,
+      // We used to have a second template parameter instead of Secret*.  That
+      // template parameter would deduce to 'long', making this a better match
+      // than the first overload even without the first overload's EnableIf.
+      // Unfortunately, gcc with -Wconversion-null warns when "passing NULL to
+      // non-pointer argument" (even a deduced integral argument), so the old
+      // implementation caused warnings in user code.
+      Secret* /* expected (NULL) */,
+      T* actual) {
+    // We already know that 'expected' is a null pointer.
+    return CmpHelperNE(expected_expression, actual_expression,
+                       static_cast<T*>(NULL), actual);
+  }
+};
+
 // A macro for implementing the helper functions needed to implement
 // ASSERT_?? and EXPECT_??.  It is here just to avoid copy-and-paste
 // of similar code.
@@ -1528,8 +1640,6 @@ GTEST_API_ AssertionResult CmpHelper##op_name(\
 
 // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
 
-// Implements the helper function for {ASSERT|EXPECT}_NE
-GTEST_IMPL_CMP_HELPER_(NE, !=);
 // Implements the helper function for {ASSERT|EXPECT}_LE
 GTEST_IMPL_CMP_HELPER_(LE, <=);
 // Implements the helper function for {ASSERT|EXPECT}_LT
@@ -1928,8 +2038,10 @@ class TestWithParam : public Test, public WithParamInterface<T> {
   EXPECT_PRED_FORMAT2(::testing::internal:: \
                       EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
                       expected, actual)
-#define EXPECT_NE(expected, actual) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
+#define EXPECT_NE(val1, val2) \
+  EXPECT_PRED_FORMAT2(::testing::internal:: \
+                      NeHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      val1, val2)
 #define EXPECT_LE(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2)
 #define EXPECT_LT(val1, val2) \
@@ -1944,7 +2056,9 @@ class TestWithParam : public Test, public WithParamInterface<T> {
                       EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
                       expected, actual)
 #define GTEST_ASSERT_NE(val1, val2) \
-  ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperNE, val1, val2)
+  ASSERT_PRED_FORMAT2(::testing::internal:: \
+                      NeHelper<GTEST_IS_NULL_LITERAL_(val1)>::Compare, \
+                      val1, val2)
 #define GTEST_ASSERT_LE(val1, val2) \
   ASSERT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2)
 #define GTEST_ASSERT_LT(val1, val2) \

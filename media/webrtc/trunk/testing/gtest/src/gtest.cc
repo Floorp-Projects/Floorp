@@ -1007,6 +1007,43 @@ AssertionResult EqFailure(const char* expected_expression,
   return AssertionFailure() << msg;
 }
 
+// Constructs and returns the message for an equality assertion
+// (e.g. ASSERT_NE, EXPECT_NE, etc) failure.
+//
+// The first four parameters are the expressions used in the assertion
+// and their values, as strings.  For example, for ASSERT_NE(foo, bar)
+// where foo is 5 and bar is 6, we have:
+//
+//   expected_expression: "foo"
+//   actual_expression:   "bar"
+//   expected_value:      "5"
+//   actual_value:        "6"
+//
+// The ignoring_case parameter is true iff the assertion is a
+// *_STRCASENE*.  When it's true, the string " (ignoring case)" will
+// be inserted into the message.
+AssertionResult NeFailure(const char* expected_expression,
+                          const char* actual_expression,
+                          const String& expected_value,
+                          const String& actual_value,
+                          bool ignoring_case) {
+  Message msg;
+  msg << "Value of: " << actual_expression;
+  if (actual_value != actual_expression) {
+    msg << "\n  Actual: " << actual_value;
+  }
+
+  msg << "\nExpected: " << expected_expression;
+  if (ignoring_case) {
+    msg << " (ignoring case)";
+  }
+  if (expected_value != expected_expression) {
+    msg << "\nWhich is: " << expected_value;
+  }
+
+  return AssertionFailure() << msg;
+}
+
 // Constructs a failure message for Boolean assertions such as EXPECT_TRUE.
 String GetBoolAssertionFailureMessage(const AssertionResult& assertion_result,
                                       const char* expression_text,
