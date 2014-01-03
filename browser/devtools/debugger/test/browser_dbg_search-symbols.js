@@ -48,10 +48,10 @@ function htmlSearch() {
   once(gDebugger, "popupshown").then(() => {
     writeInfo();
 
-    ok(gFilteredFunctions.selectedValue,
-      "An item should be selected in the filtered functions view.");
-    ok(gFilteredFunctions.selectedLabel,
-      "An item should be selected in the filtered functions view.");
+    is(gFilteredFunctions.selectedIndex, 0,
+      "An item should be selected in the filtered functions view (1).");
+    ok(gFilteredFunctions.selectedItem,
+      "An item should be selected in the filtered functions view (2).");
 
     if (gSources.selectedValue.indexOf(".html") != -1) {
       let expectedResults = [
@@ -63,21 +63,33 @@ function htmlSearch() {
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
-        is(gFilteredFunctions.selectedItem.label,
-          gDebugger.SourceUtils.trimUrlLength(label + "()"),
-          "The corect label (" + label + ") is currently selected.");
-        ok(gFilteredFunctions.selectedItem.value.contains(value),
-          "The corect value (" + value + ") is attached.");
-        is(gFilteredFunctions.selectedItem.description, description,
-          "The corect description (" + description + ") is currently shown.");
+        let target = gFilteredFunctions.selectedItem.target;
+
+        if (label) {
+          is(target.querySelector(".results-panel-item-label").getAttribute("value"),
+            gDebugger.SourceUtils.trimUrlLength(label + "()"),
+            "The corect label (" + label + ") is currently selected.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (value) {
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+            "The corect value (" + value + ") is attached.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-below"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (description) {
+          is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
+            "The corect description (" + description + ") is currently shown.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-before"),
+            "Shouldn't create empty label nodes.");
+        }
 
         ok(isCaretPos(gPanel, line, column),
           "The editor didn't jump to the correct line.");
-
-        ok(gSources.selectedLabel.contains(value),
-          "The current source isn't the correct one, according to the label.");
-        ok(gSources.selectedValue.contains(value),
-          "The current source isn't the correct one, according to the value.");
 
         EventUtils.sendKey("DOWN", gDebugger);
       }
@@ -101,10 +113,10 @@ function firstJsSearch() {
   once(gDebugger, "popupshown").then(() => {
     writeInfo();
 
-    ok(gFilteredFunctions.selectedValue,
-      "An item should be selected in the filtered functions view.");
-    ok(gFilteredFunctions.selectedLabel,
-      "An item should be selected in the filtered functions view.");
+    is(gFilteredFunctions.selectedIndex, 0,
+      "An item should be selected in the filtered functions view (1).");
+    ok(gFilteredFunctions.selectedItem,
+      "An item should be selected in the filtered functions view (2).");
 
     if (gSources.selectedValue.indexOf("-01.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
@@ -122,21 +134,33 @@ function firstJsSearch() {
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
-        is(gFilteredFunctions.selectedItem.label,
-          gDebugger.SourceUtils.trimUrlLength(label + "()"),
-          "The corect label (" + label + ") is currently selected.");
-        ok(gFilteredFunctions.selectedItem.value.contains(value),
-          "The corect value (" + value + ") is attached.");
-        is(gFilteredFunctions.selectedItem.description, description,
-          "The corect description (" + description + ") is currently shown.");
+        let target = gFilteredFunctions.selectedItem.target;
+
+        if (label) {
+          is(target.querySelector(".results-panel-item-label").getAttribute("value"),
+            gDebugger.SourceUtils.trimUrlLength(label + "()"),
+            "The corect label (" + label + ") is currently selected.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (value) {
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+            "The corect value (" + value + ") is attached.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-below"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (description) {
+          is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
+            "The corect description (" + description + ") is currently shown.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-before"),
+            "Shouldn't create empty label nodes.");
+        }
 
         ok(isCaretPos(gPanel, line, column),
           "The editor didn't jump to the correct line.");
-
-        ok(gSources.selectedLabel.contains(value),
-          "The current source isn't the correct one, according to the label.");
-        ok(gSources.selectedValue.contains(value),
-          "The current source isn't the correct one, according to the value.");
 
         EventUtils.sendKey("DOWN", gDebugger);
       }
@@ -160,10 +184,10 @@ function secondJsSearch() {
   once(gDebugger, "popupshown").then(() => {
     writeInfo();
 
-    ok(gFilteredFunctions.selectedValue,
-      "An item should be selected in the filtered functions view.");
-    ok(gFilteredFunctions.selectedLabel,
-      "An item should be selected in the filtered functions view.");
+    is(gFilteredFunctions.selectedIndex, 0,
+      "An item should be selected in the filtered functions view (1).");
+    ok(gFilteredFunctions.selectedItem,
+      "An item should be selected in the filtered functions view (2).");
 
     if (gSources.selectedValue.indexOf("-02.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
@@ -181,21 +205,33 @@ function secondJsSearch() {
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
-        is(gFilteredFunctions.selectedItem.label,
-          gDebugger.SourceUtils.trimUrlLength(label + "()"),
-          "The corect label (" + label + ") is currently selected.");
-        ok(gFilteredFunctions.selectedItem.value.contains(value),
-          "The corect value (" + value + ") is attached.");
-        is(gFilteredFunctions.selectedItem.description, description,
-          "The corect description (" + description + ") is currently shown.");
+        let target = gFilteredFunctions.selectedItem.target;
+
+        if (label) {
+          is(target.querySelector(".results-panel-item-label").getAttribute("value"),
+            gDebugger.SourceUtils.trimUrlLength(label + "()"),
+            "The corect label (" + label + ") is currently selected.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (value) {
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+            "The corect value (" + value + ") is attached.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-below"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (description) {
+          is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
+            "The corect description (" + description + ") is currently shown.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-before"),
+            "Shouldn't create empty label nodes.");
+        }
 
         ok(isCaretPos(gPanel, line, column),
           "The editor didn't jump to the correct line.");
-
-        ok(gSources.selectedLabel.contains(value),
-          "The current source isn't the correct one, according to the label.");
-        ok(gSources.selectedValue.contains(value),
-          "The current source isn't the correct one, according to the value.");
 
         EventUtils.sendKey("DOWN", gDebugger);
       }
@@ -219,10 +255,10 @@ function thirdJsSearch() {
   once(gDebugger, "popupshown").then(() => {
     writeInfo();
 
-    ok(gFilteredFunctions.selectedValue,
-      "An item should be selected in the filtered functions view.");
-    ok(gFilteredFunctions.selectedLabel,
-      "An item should be selected in the filtered functions view.");
+    is(gFilteredFunctions.selectedIndex, 0,
+      "An item should be selected in the filtered functions view (1).");
+    ok(gFilteredFunctions.selectedItem,
+      "An item should be selected in the filtered functions view (2).");
 
     if (gSources.selectedValue.indexOf("-03.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
@@ -240,21 +276,33 @@ function thirdJsSearch() {
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
-        is(gFilteredFunctions.selectedItem.label,
-          gDebugger.SourceUtils.trimUrlLength(label + "()"),
-          "The corect label (" + label + ") is currently selected.");
-        ok(gFilteredFunctions.selectedItem.value.contains(value),
-          "The corect value (" + value + ") is attached.");
-        is(gFilteredFunctions.selectedItem.description, description,
-          "The corect description (" + description + ") is currently shown.");
+        let target = gFilteredFunctions.selectedItem.target;
+
+        if (label) {
+          is(target.querySelector(".results-panel-item-label").getAttribute("value"),
+            gDebugger.SourceUtils.trimUrlLength(label + "()"),
+            "The corect label (" + label + ") is currently selected.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (value) {
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+            "The corect value (" + value + ") is attached.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-below"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (description) {
+          is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
+            "The corect description (" + description + ") is currently shown.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-before"),
+            "Shouldn't create empty label nodes.");
+        }
 
         ok(isCaretPos(gPanel, line, column),
           "The editor didn't jump to the correct line.");
-
-        ok(gSources.selectedLabel.contains(value),
-          "The current source isn't the correct one, according to the label.");
-        ok(gSources.selectedValue.contains(value),
-          "The current source isn't the correct one, according to the value.");
 
         EventUtils.sendKey("DOWN", gDebugger);
       }
@@ -278,10 +326,10 @@ function filterSearch() {
   once(gDebugger, "popupshown").then(() => {
     writeInfo();
 
-    ok(gFilteredFunctions.selectedValue,
-      "An item should be selected in the filtered functions view.");
-    ok(gFilteredFunctions.selectedLabel,
-      "An item should be selected in the filtered functions view.");
+    is(gFilteredFunctions.selectedIndex, 0,
+      "An item should be selected in the filtered functions view (1).");
+    ok(gFilteredFunctions.selectedItem,
+      "An item should be selected in the filtered functions view (2).");
 
     if (gSources.selectedValue.indexOf("-03.js") != -1) {
       let s = " " + gDebugger.L10N.getStr("functionSearchSeparatorLabel") + " ";
@@ -296,21 +344,33 @@ function filterSearch() {
       ];
 
       for (let [label, value, description, line, column] of expectedResults) {
-        is(gFilteredFunctions.selectedItem.label,
-          gDebugger.SourceUtils.trimUrlLength(label + "()"),
-          "The corect label (" + label + ") is currently selected.");
-        ok(gFilteredFunctions.selectedItem.value.contains(value),
-          "The corect value (" + value + ") is attached.");
-        is(gFilteredFunctions.selectedItem.description, description,
-          "The corect description (" + description + ") is currently shown.");
+        let target = gFilteredFunctions.selectedItem.target;
+
+        if (label) {
+          is(target.querySelector(".results-panel-item-label").getAttribute("value"),
+            gDebugger.SourceUtils.trimUrlLength(label + "()"),
+            "The corect label (" + label + ") is currently selected.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (value) {
+          ok(target.querySelector(".results-panel-item-label-below").getAttribute("value").contains(value),
+            "The corect value (" + value + ") is attached.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-below"),
+            "Shouldn't create empty label nodes.");
+        }
+        if (description) {
+          is(target.querySelector(".results-panel-item-label-before").getAttribute("value"), description,
+            "The corect description (" + description + ") is currently shown.");
+        } else {
+          ok(!target.querySelector(".results-panel-item-label-before"),
+            "Shouldn't create empty label nodes.");
+        }
 
         ok(isCaretPos(gPanel, line, column),
           "The editor didn't jump to the correct line.");
-
-        ok(gSources.selectedLabel.contains(value),
-          "The current source isn't the correct one, according to the label.");
-        ok(gSources.selectedValue.contains(value),
-          "The current source isn't the correct one, according to the value.");
 
         EventUtils.sendKey("DOWN", gDebugger);
       }
@@ -368,7 +428,7 @@ function showSource(aLabel) {
   let deferred = promise.defer();
 
   waitForSourceShown(gPanel, aLabel).then(deferred.resolve);
-  gSources.selectedLabel = aLabel;
+  gSources.selectedItem = e => e.attachment.label == aLabel;
 
   return deferred.promise;
 }

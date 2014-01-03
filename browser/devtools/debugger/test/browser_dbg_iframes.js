@@ -43,10 +43,10 @@ function test() {
       "Found the expected number of entries in the sources widget.");
     is(gEditor.getText().indexOf("debugger"), 348,
       "The correct source was loaded initially.");
-    is(gSources.selectedLabel, "doc_inline-debugger-statement.html",
-      "The currently selected source label is incorrect.");
+    is(gSources.selectedValue, EXAMPLE_URL + "doc_inline-debugger-statement.html",
+      "The currently selected source value is incorrect (0).");
     is(gSources.selectedValue, gSources.values[0],
-      "The currently selected source value is incorrect.");
+      "The currently selected source value is incorrect (1).");
   }
 
   function checkIframePause() {

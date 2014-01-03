@@ -31,9 +31,9 @@ function ifWebGLSupported() {
     once(panel.panelWin, EVENTS.SOURCES_SHOWN)
   ]).then(([programs, ]) => programs);
 
-  is(ShadersListView.labels[0], L10N.getFormatStr("shadersList.programLabel", 0),
+  is(ShadersListView.attachments[0].label, L10N.getFormatStr("shadersList.programLabel", 0),
     "The correct first label is shown in the shaders list.");
-  is(ShadersListView.labels[1], L10N.getFormatStr("shadersList.programLabel", 1),
+  is(ShadersListView.attachments[1].label, L10N.getFormatStr("shadersList.programLabel", 1),
     "The correct second label is shown in the shaders list.");
 
   let vertexShader = yield firstProgramActor.getVertexShader();
