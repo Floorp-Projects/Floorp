@@ -258,28 +258,31 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 static PLDHashTable sEventListenerManagersHash;
 
-class DOMEventListenerManagersHashReporter MOZ_FINAL : public MemoryUniReporter
+class DOMEventListenerManagersHashReporter MOZ_FINAL : public nsIMemoryReporter
 {
-public:
-  DOMEventListenerManagersHashReporter()
-    : MemoryUniReporter(
-        "explicit/dom/event-listener-managers-hash",
-        KIND_HEAP,
-        UNITS_BYTES,
-        "Memory used by the event listener manager's hash table.")
-  {}
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
-private:
-  int64_t Amount()
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData)
   {
     // We don't measure the |nsEventListenerManager| objects pointed to by the
     // entries because those references are non-owning.
-    return sEventListenerManagersHash.ops
-         ? PL_DHashTableSizeOfExcludingThis(&sEventListenerManagersHash,
-                                            nullptr, MallocSizeOf)
-         : 0;
+    int64_t amount = sEventListenerManagersHash.ops
+                   ? PL_DHashTableSizeOfExcludingThis(
+                       &sEventListenerManagersHash, nullptr, MallocSizeOf)
+                   : 0;
+
+    return MOZ_COLLECT_REPORT(
+      "explicit/dom/event-listener-managers-hash", KIND_HEAP, UNITS_BYTES,
+      amount,
+      "Memory used by the event listener manager's hash table.");
   }
 };
+
+NS_IMPL_ISUPPORTS1(DOMEventListenerManagersHashReporter, nsIMemoryReporter)
 
 class EventListenerManagerMapEntry : public PLDHashEntryHdr
 {

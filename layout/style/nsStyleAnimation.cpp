@@ -752,7 +752,9 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
           //  (1) GetUnit() == eCSSUnit_Null
           //  (2) GetUnit() == eCSSUnit_Enumerated &&
           //      GetIntValue() == NS_STYLE_BOX_SHADOW_INSET
-          NS_ABORT_IF_FALSE(color1.GetUnit() == color2.GetUnit() &&
+          NS_ABORT_IF_FALSE(((color1.IsNumericColorUnit() &&
+                              color2.IsNumericColorUnit()) ||
+                             (color1.GetUnit() == color2.GetUnit())) &&
                             inset1 == inset2,
                             "AddWeighted should have failed");
         }
@@ -2685,7 +2687,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return false;
   }
 
-  val.AppendToString(aProperty, aSpecifiedValue);
+  val.AppendToString(aProperty, aSpecifiedValue, nsCSSValue::eNormalized);
   return true;
 }
 

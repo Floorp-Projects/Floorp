@@ -1512,15 +1512,18 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     }
 
   case eCSSFontDesc_Style:
-    val.AppendToString(eCSSProperty_font_style, aResult);
+    val.AppendToString(eCSSProperty_font_style, aResult,
+                        nsCSSValue::eNormalized);
     return NS_OK;
 
   case eCSSFontDesc_Weight:
-    val.AppendToString(eCSSProperty_font_weight, aResult);
+    val.AppendToString(eCSSProperty_font_weight, aResult,
+                       nsCSSValue::eNormalized);
     return NS_OK;
 
   case eCSSFontDesc_Stretch:
-    val.AppendToString(eCSSProperty_font_stretch, aResult);
+    val.AppendToString(eCSSProperty_font_stretch, aResult,
+                       nsCSSValue::eNormalized);
     return NS_OK;
 
   case eCSSFontDesc_FontFeatureSettings:
@@ -1528,7 +1531,8 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_FontLanguageOverride:
-    val.AppendToString(eCSSProperty_font_language_override, aResult);
+    val.AppendToString(eCSSProperty_font_language_override, aResult,
+                       nsCSSValue::eNormalized);
     return NS_OK;
 
   case eCSSFontDesc_Src:
@@ -1585,6 +1589,15 @@ NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::GetPropertyValue(const nsAString & propertyName,
                                          nsAString & aResult)
 {
+  return GetPropertyValue(nsCSSProps::LookupFontDesc(propertyName), aResult);
+}
+
+NS_IMETHODIMP
+nsCSSFontFaceStyleDecl::GetAuthoredPropertyValue(const nsAString& propertyName,
+                                                 nsAString& aResult)
+{
+  // We don't return any authored property values different from
+  // GetPropertyValue, currently.
   return GetPropertyValue(nsCSSProps::LookupFontDesc(propertyName), aResult);
 }
 

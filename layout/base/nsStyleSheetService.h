@@ -28,8 +28,8 @@ class nsIStyleSheet;
   "@mozilla.org/content/style-sheet-service;1"
 
 class nsStyleSheetService MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-  , public nsIStyleSheetService
+  : public nsIStyleSheetService
+  , public nsIMemoryReporter
 {
  public:
   nsStyleSheetService() NS_HIDDEN;
@@ -37,6 +37,7 @@ class nsStyleSheetService MOZ_FINAL
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTYLESHEETSERVICE
+  NS_DECL_NSIMEMORYREPORTER
 
   NS_HIDDEN_(nsresult) Init();
 
@@ -48,8 +49,6 @@ class nsStyleSheetService MOZ_FINAL
 
   static nsStyleSheetService *GetInstance();
   static nsStyleSheetService *gInstance;
-
-  int64_t Amount() MOZ_OVERRIDE;
 
  private:
 

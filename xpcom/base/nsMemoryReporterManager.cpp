@@ -79,48 +79,46 @@ ResidentFastDistinguishedAmount(int64_t* aN)
 }
 
 #define HAVE_RESIDENT_UNIQUE_REPORTER
-class ResidentUniqueReporter MOZ_FINAL : public MemoryUniReporter
+class ResidentUniqueReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  ResidentUniqueReporter()
-    : MemoryUniReporter("resident-unique", KIND_OTHER, UNITS_BYTES,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        // You might be tempted to calculate USS by subtracting the "shared"
+        // value from the "resident" value in /proc/<pid>/statm. But at least
+        // on Linux, statm's "shared" value actually counts pages backed by
+        // files, which has little to do with whether the pages are actually
+        // shared. /proc/self/smaps on the other hand appears to give us the
+        // correct information.
+
+        FILE *f = fopen("/proc/self/smaps", "r");
+        if (NS_WARN_IF(!f))
+            return NS_ERROR_UNEXPECTED;
+
+        int64_t amount = 0;
+        char line[256];
+        while (fgets(line, sizeof(line), f)) {
+            long long val = 0;
+            if (sscanf(line, "Private_Dirty: %lld kB", &val) == 1 ||
+                sscanf(line, "Private_Clean: %lld kB", &val) == 1) {
+                amount += val * 1024; // convert from kB to bytes
+            }
+        }
+
+        fclose(f);
+
+        return MOZ_COLLECT_REPORT(
+            "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process that is present in physical memory and not "
 "shared with any other processes.  This is also known as the process's unique "
 "set size (USS).  This is the amount of RAM we'd expect to be freed if we "
-"closed this process.")
-  {}
-
-private:
-  NS_IMETHOD GetAmount(int64_t *aAmount)
-  {
-    // You might be tempted to calculate USS by subtracting the "shared" value
-    // from the "resident" value in /proc/<pid>/statm.  But at least on Linux,
-    // statm's "shared" value actually counts pages backed by files, which has
-    // little to do with whether the pages are actually shared.
-    // /proc/self/smaps on the other hand appears to give us the correct
-    // information.
-
-    *aAmount = 0;
-
-    FILE *f = fopen("/proc/self/smaps", "r");
-    if (NS_WARN_IF(!f))
-        return NS_ERROR_UNEXPECTED;
-
-    int64_t total = 0;
-    char line[256];
-    while (fgets(line, sizeof(line), f)) {
-      long long val = 0;
-      if (sscanf(line, "Private_Dirty: %lld kB", &val) == 1 ||
-          sscanf(line, "Private_Clean: %lld kB", &val) == 1) {
-        total += val * 1024; // convert from kB to bytes
-      }
+"closed this process.");
     }
-    *aAmount = total;
-
-    fclose(f);
-    return NS_OK;
-  }
 };
+NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__)
@@ -241,9 +239,8 @@ PrivateDistinguishedAmount(int64_t* aN)
 {
     int64_t priv;
     nsresult rv = GetKinfoVmentrySelf(&priv, NULL);
-    if (NS_SUCCEEDED(rv))
-        *aN = priv * getpagesize();
-
+    NS_ENSURE_SUCCESS(rv, rv);
+    *aN = priv * getpagesize();
     return NS_OK;
 }
 
@@ -491,78 +488,98 @@ PrivateDistinguishedAmount(int64_t* aN)
 #endif  // XP_<PLATFORM>
 
 #ifdef HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER
-class VsizeMaxContiguousReporter MOZ_FINAL : public MemoryUniReporter
+class VsizeMaxContiguousReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    VsizeMaxContiguousReporter()
-      : MemoryUniReporter("vsize-max-contiguous", KIND_OTHER, UNITS_BYTES,
-"Size of the maximum contiguous block of available virtual memory.")
-    {}
+    NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetAmount(int64_t* aAmount)
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
     {
-        return VsizeMaxContiguousDistinguishedAmount(aAmount);
+        int64_t amount;
+        nsresult rv = VsizeMaxContiguousDistinguishedAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return MOZ_COLLECT_REPORT(
+            "vsize-max-contiguous", KIND_OTHER, UNITS_BYTES, amount,
+            "Size of the maximum contiguous block of available virtual "
+            "memory.");
     }
 };
+NS_IMPL_ISUPPORTS1(VsizeMaxContiguousReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_PRIVATE_REPORTER
-class PrivateReporter MOZ_FINAL : public MemoryUniReporter
+class PrivateReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    PrivateReporter()
-      : MemoryUniReporter("private", KIND_OTHER, UNITS_BYTES,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        int64_t amount;
+        nsresult rv = PrivateDistinguishedAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return MOZ_COLLECT_REPORT(
+            "private", KIND_OTHER, UNITS_BYTES, amount,
 "Memory that cannot be shared with other processes, including memory that is "
 "committed and marked MEM_PRIVATE, data that is not mapped, and executable "
-"pages that have been written to.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount)
-    {
-        return PrivateDistinguishedAmount(aAmount);
+"pages that have been written to.");
     }
 };
+NS_IMPL_ISUPPORTS1(PrivateReporter, nsIMemoryReporter)
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
-class VsizeReporter MOZ_FINAL : public MemoryUniReporter
+class VsizeReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    VsizeReporter()
-      : MemoryUniReporter("vsize", KIND_OTHER, UNITS_BYTES,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        int64_t amount;
+        nsresult rv = VsizeDistinguishedAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return MOZ_COLLECT_REPORT(
+            "vsize", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process, including code and data segments, the heap, "
 "thread stacks, memory explicitly mapped by the process via mmap and similar "
 "operations, and memory shared with other processes. This is the vsize figure "
 "as reported by 'top' and 'ps'.  This figure is of limited use on Mac, where "
 "processes share huge amounts of memory with one another.  But even on other "
 "operating systems, 'resident' is a much better measure of the memory "
-"resources used by the process.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount)
-    {
-        return VsizeDistinguishedAmount(aAmount);
+"resources used by the process.");
     }
 };
+NS_IMPL_ISUPPORTS1(VsizeReporter, nsIMemoryReporter)
 
-class ResidentReporter MOZ_FINAL : public MemoryUniReporter
+class ResidentReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    ResidentReporter()
-      : MemoryUniReporter("resident", KIND_OTHER, UNITS_BYTES,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        int64_t amount;
+        nsresult rv = ResidentDistinguishedAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return MOZ_COLLECT_REPORT(
+            "resident", KIND_OTHER, UNITS_BYTES, amount,
 "Memory mapped by the process that is present in physical memory, also known "
 "as the resident set size (RSS).  This is the best single figure to use when "
 "considering the memory resources used by the process, but it depends both on "
 "other processes being run and details of the OS kernel and so is best used "
 "for comparing the memory usage of a single process at different points in "
-"time.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount)
-    {
-        return ResidentDistinguishedAmount(aAmount);
+"time.");
     }
 };
+NS_IMPL_ISUPPORTS1(ResidentReporter, nsIMemoryReporter)
+
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
 
 #ifdef XP_UNIX
@@ -571,12 +588,23 @@ public:
 
 #define HAVE_PAGE_FAULT_REPORTERS 1
 
-class PageFaultsSoftReporter MOZ_FINAL : public MemoryUniReporter
+class PageFaultsSoftReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    PageFaultsSoftReporter()
-      : MemoryUniReporter("page-faults-soft", KIND_OTHER,
-                           UNITS_COUNT_CUMULATIVE,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        struct rusage usage;
+        int err = getrusage(RUSAGE_SELF, &usage);
+        if (err != 0) {
+            return NS_ERROR_FAILURE;
+        }
+        int64_t amount = usage.ru_minflt;
+
+        return MOZ_COLLECT_REPORT(
+            "page-faults-soft", KIND_OTHER, UNITS_COUNT_CUMULATIVE, amount,
 "The number of soft page faults (also known as 'minor page faults') that "
 "have occurred since the process started.  A soft page fault occurs when the "
 "process tries to access a page which is present in physical memory but is "
@@ -585,20 +613,10 @@ public:
 "present in physical memory. A process may experience many thousands of soft "
 "page faults even when the machine has plenty of available physical memory, "
 "and because the OS services a soft page fault without accessing the disk, "
-"they impact performance much less than hard page faults.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount)
-    {
-        struct rusage usage;
-        int err = getrusage(RUSAGE_SELF, &usage);
-        if (err != 0) {
-            return NS_ERROR_FAILURE;
-        }
-        *aAmount = usage.ru_minflt;
-        return NS_OK;
+"they impact performance much less than hard page faults.");
     }
 };
+NS_IMPL_ISUPPORTS1(PageFaultsSoftReporter, nsIMemoryReporter)
 
 static nsresult
 PageFaultsHardDistinguishedAmount(int64_t* aAmount)
@@ -612,12 +630,20 @@ PageFaultsHardDistinguishedAmount(int64_t* aAmount)
     return NS_OK;
 }
 
-class PageFaultsHardReporter MOZ_FINAL : public MemoryUniReporter
+class PageFaultsHardReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    PageFaultsHardReporter()
-      : MemoryUniReporter("page-faults-hard", KIND_OTHER,
-                           UNITS_COUNT_CUMULATIVE,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        int64_t amount;
+        nsresult rv = PageFaultsHardDistinguishedAmount(&amount);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return MOZ_COLLECT_REPORT(
+            "page-faults-hard", KIND_OTHER, UNITS_COUNT_CUMULATIVE, amount,
 "The number of hard page faults (also known as 'major page faults') that have "
 "occurred since the process started.  A hard page fault occurs when a process "
 "tries to access a page which is not present in physical memory. The "
@@ -626,14 +652,12 @@ public:
 "the process tries to use more memory than your machine has available, you "
 "may see many thousands of hard page faults. Because accessing the disk is up "
 "to a million times slower than accessing RAM, the program may run very "
-"slowly when it is experiencing more than 100 or so hard page faults a second.")
-    {}
-
-    NS_IMETHOD GetAmount(int64_t* aAmount)
-    {
-        return PageFaultsHardDistinguishedAmount(aAmount);
+"slowly when it is experiencing more than 100 or so hard page faults a "
+"second.");
     }
 };
+NS_IMPL_ISUPPORTS1(PageFaultsHardReporter, nsIMemoryReporter)
+
 #endif  // HAVE_PAGE_FAULT_REPORTERS
 
 /**
@@ -644,134 +668,88 @@ public:
 
 #ifdef HAVE_JEMALLOC_STATS
 
+// This has UNITS_PERCENTAGE, so it is multiplied by 100.
 static int64_t
-HeapAllocated()
+HeapOverheadRatio(jemalloc_stats_t* aStats)
 {
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
-    return (int64_t) stats.allocated;
-}
-
-// This has UNITS_PERCENTAGE, so it is multiplied by 100x.
-static int64_t
-HeapOverheadRatio()
-{
-    jemalloc_stats_t stats;
-    jemalloc_stats(&stats);
     return (int64_t) 10000 *
-      (stats.waste + stats.bookkeeping + stats.page_cache) /
-      ((double)stats.allocated);
+      (aStats->waste + aStats->bookkeeping + aStats->page_cache) /
+      ((double)aStats->allocated);
 }
 
-class HeapAllocatedReporter MOZ_FINAL : public MemoryUniReporter
+class JemallocHeapReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-    HeapAllocatedReporter()
-      : MemoryUniReporter("heap-allocated", KIND_OTHER, UNITS_BYTES,
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+    {
+        jemalloc_stats_t stats;
+        jemalloc_stats(&stats);
+
+        nsresult rv;
+
+        rv = MOZ_COLLECT_REPORT(
+            "heap-allocated", KIND_OTHER, UNITS_BYTES, stats.allocated,
 "Memory mapped by the heap allocator that is currently allocated to the "
 "application.  This may exceed the amount of memory requested by the "
 "application because the allocator regularly rounds up request sizes. (The "
-"exact amount requested is not recorded.)")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE { return HeapAllocated(); }
-};
+"exact amount requested is not recorded.)");
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadWasteReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    // We mark this and the other heap-overhead reporters as KIND_NONHEAP
-    // because KIND_HEAP memory means "counted in heap-allocated", which this
-    // is not.
-    HeapOverheadWasteReporter()
-      : MemoryUniReporter("explicit/heap-overhead/waste",
-                           KIND_NONHEAP, UNITS_BYTES,
+        // We mark this and the other heap-overhead reporters as KIND_NONHEAP
+        // because KIND_HEAP memory means "counted in heap-allocated", which
+        // this is not.
+        rv = MOZ_COLLECT_REPORT(
+            "explicit/heap-overhead/waste", KIND_NONHEAP, UNITS_BYTES,
+            stats.waste,
 "Committed bytes which do not correspond to an active allocation and which the "
 "allocator is not intentionally keeping alive (i.e., not 'heap-bookkeeping' or "
 "'heap-page-cache').  Although the allocator will waste some space under any "
 "circumstances, a large value here may indicate that the heap is highly "
-"fragmented, or that allocator is performing poorly for some other reason.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return stats.waste;
-    }
-};
+"fragmented, or that allocator is performing poorly for some other reason.");
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadBookkeepingReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    HeapOverheadBookkeepingReporter()
-      : MemoryUniReporter("explicit/heap-overhead/bookkeeping",
-                           KIND_NONHEAP, UNITS_BYTES,
-"Committed bytes which the heap allocator uses for internal data structures.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return stats.bookkeeping;
-    }
-};
+        rv = MOZ_COLLECT_REPORT(
+            "explicit/heap-overhead/bookkeeping", KIND_NONHEAP, UNITS_BYTES,
+            stats.bookkeeping,
+            "Committed bytes which the heap allocator uses for internal data "
+            "structures.");
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadPageCacheReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    HeapOverheadPageCacheReporter()
-      : MemoryUniReporter("explicit/heap-overhead/page-cache",
-                           KIND_NONHEAP, UNITS_BYTES,
+        rv = MOZ_COLLECT_REPORT(
+            "explicit/heap-overhead/page-cache", KIND_NONHEAP, UNITS_BYTES,
+            stats.page_cache,
 "Memory which the allocator could return to the operating system, but hasn't. "
 "The allocator keeps this memory around as an optimization, so it doesn't "
 "have to ask the OS the next time it needs to fulfill a request. This value "
-"is typically not larger than a few megabytes.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) stats.page_cache;
-    }
-};
+"is typically not larger than a few megabytes.");
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapCommittedReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    HeapCommittedReporter()
-      : MemoryUniReporter("heap-committed", KIND_OTHER, UNITS_BYTES,
+        rv = MOZ_COLLECT_REPORT(
+            "heap-committed", KIND_OTHER, UNITS_BYTES,
+            stats.allocated + stats.waste + stats.bookkeeping + stats.page_cache,
 "Memory mapped by the heap allocator that is committed, i.e. in physical "
 "memory or paged to disk.  This value corresponds to 'heap-allocated' + "
 "'heap-waste' + 'heap-bookkeeping' + 'heap-page-cache', but because "
 "these values are read at different times, the result probably won't match "
-"exactly.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        jemalloc_stats_t stats;
-        jemalloc_stats(&stats);
-        return (int64_t) (stats.allocated + stats.waste +
-                          stats.bookkeeping + stats.page_cache);
-    }
-};
+"exactly.");
+        NS_ENSURE_SUCCESS(rv, rv);
 
-class HeapOverheadRatioReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-    HeapOverheadRatioReporter()
-      : MemoryUniReporter("heap-overhead-ratio", KIND_OTHER,
-                           UNITS_PERCENTAGE,
+        rv = MOZ_COLLECT_REPORT(
+            "heap-overhead-ratio", KIND_OTHER, UNITS_PERCENTAGE,
+            HeapOverheadRatio(&stats),
 "Ratio of committed, unused bytes to allocated bytes; i.e., "
 "'heap-overhead' / 'heap-allocated'.  This measures the overhead of "
-"the heap allocator relative to amount of memory allocated.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE { return HeapOverheadRatio(); }
+"the heap allocator relative to amount of memory allocated.");
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return NS_OK;
+    }
 };
+NS_IMPL_ISUPPORTS1(JemallocHeapReporter, nsIMemoryReporter)
+
 #endif  // HAVE_JEMALLOC_STATS
 
 // Why is this here?  At first glance, you'd think it could be defined and
@@ -779,19 +757,23 @@ private:
 // However, the obvious time to register it is when the table is initialized,
 // and that happens before XPCOM components are initialized, which means the
 // RegisterStrongMemoryReporter call fails.  So instead we do it here.
-class AtomTablesReporter MOZ_FINAL : public MemoryUniReporter
+class AtomTablesReporter MOZ_FINAL : public nsIMemoryReporter
 {
+    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+
 public:
-    AtomTablesReporter()
-      : MemoryUniReporter("explicit/atom-tables", KIND_HEAP, UNITS_BYTES,
-"Memory used by the dynamic and static atoms tables.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE
+    NS_DECL_ISUPPORTS
+
+    NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
     {
-        return NS_SizeOfAtomTablesIncludingThis(MallocSizeOf);
+        return MOZ_COLLECT_REPORT(
+            "explicit/atom-tables", KIND_HEAP, UNITS_BYTES,
+            NS_SizeOfAtomTablesIncludingThis(MallocSizeOf),
+            "Memory used by the dynamic and static atoms tables.");
     }
 };
+NS_IMPL_ISUPPORTS1(AtomTablesReporter, nsIMemoryReporter)
 
 #ifdef MOZ_DMD
 
@@ -813,8 +795,7 @@ public:
     do {                                                                      \
       nsresult rv;                                                            \
       rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
-                                   nsIMemoryReporter::KIND_HEAP,              \
-                                   nsIMemoryReporter::UNITS_BYTES, _amount,   \
+                                   KIND_HEAP, UNITS_BYTES, _amount,           \
                                    NS_LITERAL_CSTRING(_desc), aData);         \
       if (NS_WARN_IF(NS_FAILED(rv)))                                          \
           return rv;                                                          \
@@ -843,7 +824,6 @@ public:
     return NS_OK;
   }
 };
-
 NS_IMPL_ISUPPORTS1(DMDReporter, nsIMemoryReporter)
 
 } // namespace dmd
@@ -866,12 +846,7 @@ nsMemoryReporterManager::Init()
 #endif
 
 #ifdef HAVE_JEMALLOC_STATS
-    RegisterStrongReporter(new HeapAllocatedReporter());
-    RegisterStrongReporter(new HeapOverheadWasteReporter());
-    RegisterStrongReporter(new HeapOverheadBookkeepingReporter());
-    RegisterStrongReporter(new HeapOverheadPageCacheReporter());
-    RegisterStrongReporter(new HeapCommittedReporter());
-    RegisterStrongReporter(new HeapOverheadRatioReporter());
+    RegisterStrongReporter(new JemallocHeapReporter());
 #endif
 
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
@@ -1510,7 +1485,9 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
 {
 #ifdef HAVE_JEMALLOC_STATS
-    *aAmount = HeapAllocated();
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    *aAmount = stats.allocated;
     return NS_OK;
 #else
     *aAmount = 0;
@@ -1523,7 +1500,9 @@ NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapOverheadRatio(int64_t* aAmount)
 {
 #ifdef HAVE_JEMALLOC_STATS
-    *aAmount = HeapOverheadRatio();
+    jemalloc_stats_t stats;
+    jemalloc_stats(&stats);
+    *aAmount = HeapOverheadRatio(&stats);
     return NS_OK;
 #else
     *aAmount = 0;
@@ -1759,11 +1738,6 @@ nsMemoryReporterManager::SizeOfTab(nsIDOMWindow* aTopWindow,
 
     return NS_OK;
 }
-
-// Most memory reporters don't need thread safety, but some do.  Make them all
-// thread-safe just to be safe.  Memory reporters are created and destroyed
-// infrequently enough that the performance cost should be negligible.
-NS_IMPL_ISUPPORTS1(MemoryUniReporter, nsIMemoryReporter)
 
 namespace mozilla {
 

@@ -850,7 +850,7 @@ static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
   bool    result = false;
   nsCSSUnit unit = aValue.GetUnit();
 
-  if (eCSSUnit_Color == unit) {
+  if (aValue.IsNumericColorUnit()) {
     aResult = aValue.GetColorValue();
     result = true;
   }

@@ -1209,8 +1209,9 @@ class MOZ_STACK_CLASS ModuleCompiler
         unsigned mask() const { return mask_; }
         unsigned globalDataOffset() const { return globalDataOffset_; }
 
-        void initElems(FuncPtrVector &&elems) { elems_ = Move(elems); JS_ASSERT(!elems_.empty()); }
-        unsigned numElems() const { JS_ASSERT(!elems_.empty()); return elems_.length(); }
+        bool initialized() const { return !elems_.empty(); }
+        void initElems(FuncPtrVector &&elems) { elems_ = Move(elems); JS_ASSERT(initialized()); }
+        unsigned numElems() const { JS_ASSERT(initialized()); return elems_.length(); }
         const Func &elem(unsigned i) const { return *elems_[i]; }
     };
 
@@ -4088,6 +4089,7 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
       case AsmJSMathBuiltin_log:    arity = 1; doubleCallee = AsmJSImm_LogD; floatCallee = AsmJSImm_LogF;      break;
       case AsmJSMathBuiltin_pow:    arity = 2; doubleCallee = AsmJSImm_PowD; floatCallee = AsmJSImm_Invalid;   break;
       case AsmJSMathBuiltin_atan2:  arity = 2; doubleCallee = AsmJSImm_ATan2D; floatCallee = AsmJSImm_Invalid; break;
+      default: MOZ_ASSUME_UNREACHABLE("unexpected mathBuiltin");
     }
 
     if (retType == RetType::Float && floatCallee == AsmJSImm_Invalid)
@@ -5700,6 +5702,11 @@ CheckFuncPtrTables(ModuleCompiler &m)
             if (!CheckFuncPtrTable(m, var))
                 return false;
         }
+    }
+
+    for (unsigned i = 0; i < m.numFuncPtrTables(); i++) {
+        if (!m.funcPtrTable(i).initialized())
+            return m.fail(nullptr, "expecting function-pointer table");
     }
 
     return true;

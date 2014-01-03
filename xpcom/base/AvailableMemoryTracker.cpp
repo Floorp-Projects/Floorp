@@ -331,69 +331,59 @@ LowMemoryEventsVirtualDistinguishedAmount()
   return sNumLowVirtualMemEvents;
 }
 
-class LowMemoryEventsVirtualReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-  LowMemoryEventsVirtualReporter()
-    : MemoryUniReporter("low-memory-events/virtual",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
-"Number of low-virtual-memory events fired since startup. We fire such an "
-"event if we notice there is less than memory.low_virtual_mem_threshold_mb of "
-"virtual address space available (if zero, this behavior is disabled).  The "
-"process will probably crash if it runs out of virtual address space, so "
-"this event is dire.")
-  {}
-
-private:
-  int64_t Amount() MOZ_OVERRIDE
-  {
-    // This memory reporter shouldn't be installed on 64-bit machines, since we
-    // force-disable virtual-memory tracking there.
-    MOZ_ASSERT(sizeof(void*) == 4);
-
-    return LowMemoryEventsVirtualDistinguishedAmount();
-  }
-};
-
-class LowCommitSpaceEventsReporter MOZ_FINAL : public MemoryUniReporter
-{
-public:
-  LowCommitSpaceEventsReporter()
-    : MemoryUniReporter("low-commit-space-events",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
-"Number of low-commit-space events fired since startup. We fire such an "
-"event if we notice there is less than memory.low_commit_space_threshold_mb of "
-"commit space available (if zero, this behavior is disabled).  Windows will "
-"likely kill the process if it runs out of commit space, so this event is "
-"dire.")
-  {}
-
-private:
-  int64_t Amount() MOZ_OVERRIDE { return sNumLowCommitSpaceEvents; }
-};
-
 static int64_t
 LowMemoryEventsPhysicalDistinguishedAmount()
 {
   return sNumLowPhysicalMemEvents;
 }
 
-class LowMemoryEventsPhysicalReporter MOZ_FINAL : public MemoryUniReporter
+class LowEventsReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
-  LowMemoryEventsPhysicalReporter()
-    : MemoryUniReporter("low-memory-events/physical",
-                         KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData)
+  {
+    nsresult rv;
+
+    // We only do virtual-memory tracking on 32-bit builds.
+    if (sizeof(void*) == 4) {
+      rv = MOZ_COLLECT_REPORT(
+        "low-memory-events/virtual", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+        LowMemoryEventsVirtualDistinguishedAmount(),
+"Number of low-virtual-memory events fired since startup. We fire such an "
+"event if we notice there is less than memory.low_virtual_mem_threshold_mb of "
+"virtual address space available (if zero, this behavior is disabled). The "
+"process will probably crash if it runs out of virtual address space, so "
+"this event is dire.");
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = MOZ_COLLECT_REPORT(
+      "low-commit-space-events", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+      sNumLowCommitSpaceEvents,
+"Number of low-commit-space events fired since startup. We fire such an "
+"event if we notice there is less than memory.low_commit_space_threshold_mb of "
+"commit space available (if zero, this behavior is disabled). Windows will "
+"likely kill the process if it runs out of commit space, so this event is "
+"dire.");
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = MOZ_COLLECT_REPORT(
+      "low-memory-events/physical", KIND_OTHER, UNITS_COUNT_CUMULATIVE,
+      LowMemoryEventsPhysicalDistinguishedAmount(),
 "Number of low-physical-memory events fired since startup. We fire such an "
 "event if we notice there is less than memory.low_physical_memory_threshold_mb "
 "of physical memory available (if zero, this behavior is disabled).  The "
 "machine will start to page if it runs out of physical memory.  This may "
-"cause it to run slowly, but it shouldn't cause it to crash.")
-  {}
+"cause it to run slowly, but it shouldn't cause it to crash.");
+    NS_ENSURE_SUCCESS(rv, rv);
 
-private:
-  int64_t Amount() MOZ_OVERRIDE { return LowMemoryEventsPhysicalDistinguishedAmount(); }
+    return NS_OK;
+  }
 };
+NS_IMPL_ISUPPORTS1(LowEventsReporter, nsIMemoryReporter)
 
 #endif // defined(XP_WIN)
 
@@ -510,11 +500,7 @@ void Activate()
   Preferences::AddUintVarCache(&sLowMemoryNotificationIntervalMS,
       "memory.low_memory_notification_interval_ms", 10000);
 
-  RegisterStrongMemoryReporter(new LowCommitSpaceEventsReporter());
-  RegisterStrongMemoryReporter(new LowMemoryEventsPhysicalReporter());
-  if (sizeof(void*) == 4) {
-    RegisterStrongMemoryReporter(new LowMemoryEventsVirtualReporter());
-  }
+  RegisterStrongMemoryReporter(new LowEventsReporter());
   RegisterLowMemoryEventsVirtualDistinguishedAmount(LowMemoryEventsVirtualDistinguishedAmount);
   RegisterLowMemoryEventsPhysicalDistinguishedAmount(LowMemoryEventsPhysicalDistinguishedAmount);
   sHooksActive = true;
