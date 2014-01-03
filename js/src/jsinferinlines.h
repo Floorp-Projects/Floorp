@@ -1380,24 +1380,7 @@ TypeObject::getProperty(unsigned i)
 }
 
 inline void
-TypeObjectAddendum::writeBarrierPre(TypeObjectAddendum *type)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!type)
-        return;
-
-    switch (type->kind) {
-      case NewScript:
-        return TypeNewScript::writeBarrierPre(type->asNewScript());
-
-      case TypedObject:
-        return TypeTypedObject::writeBarrierPre(type->asTypedObject());
-    }
-#endif
-}
-
-inline void
-TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
+NewScriptAddendum::writeBarrierPre(NewScriptAddendum *newScript)
 {
 #ifdef JSGC_INCREMENTAL
     if (!newScript || !newScript->fun->runtimeFromAnyThread()->needsBarrier())
