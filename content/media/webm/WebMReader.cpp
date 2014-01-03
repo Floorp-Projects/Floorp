@@ -442,7 +442,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         mInfo.mAudio.mRate = mOpusParser->mRate;
 
         mInfo.mAudio.mChannels = mOpusParser->mChannels;
-        mInfo.mAudio.mChannels = mInfo.mAudio.mChannels > 2 ? 2 : mInfo.mAudio.mChannels;
         mChannels = mInfo.mAudio.mChannels;
         mSeekPreroll = params.seek_preroll;
 #endif

@@ -69,6 +69,7 @@
 
 #include "nsIMarkupDocumentViewer.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"
 
 #ifdef XP_MACOSX
@@ -89,7 +90,6 @@ nsWebShellWindow::nsWebShellWindow(uint32_t aChromeFlags)
   , mSPTimerLock("nsWebShellWindow.mSPTimerLock")
 {
 }
-
 
 nsWebShellWindow::~nsWebShellWindow()
 {
@@ -300,7 +300,7 @@ nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget)
   nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
 
   if (!presShell) {
-    bool dying;
+    mozilla::DebugOnly<bool> dying;
     MOZ_ASSERT(NS_SUCCEEDED(mDocShell->IsBeingDestroyed(&dying)) && dying,
                "No presShell, but window is not being destroyed");
   } else if (eventTarget) {
