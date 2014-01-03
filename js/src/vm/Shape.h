@@ -560,6 +560,9 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
          * be unset (except during object densification of sparse indexes), and
          * are transferred from shape to shape as the object's last property
          * changes.
+         *
+         * If you add a new flag here, please add appropriate code to
+         * JSObject::dump to dump it as part of object representation.
          */
 
         DELEGATE            =    0x8,

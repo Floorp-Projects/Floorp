@@ -73,11 +73,7 @@ extern "C" {
   typedef NSUInteger CGSWindowFilterRef;
   extern CGSConnection _CGSDefaultConnection(void);
   extern CGError CGSSetWindowShadowAndRimParameters(const CGSConnection cid, CGSWindow wid, float standardDeviation, float density, int offsetX, int offsetY, unsigned int flags);
-  extern CGError CGSNewCIFilterByName(CGSConnection cid, CFStringRef filterName, CGSWindowFilterRef *outFilter);
-  extern CGError CGSSetCIFilterValuesFromDictionary(CGSConnection cid, CGSWindowFilterRef filter, CFDictionaryRef filterValues);
-  extern CGError CGSAddWindowFilter(CGSConnection cid, CGSWindow wid, CGSWindowFilterRef filter, NSInteger flags);
-  extern CGError CGSRemoveWindowFilter(CGSConnection cid, CGSWindow wid, CGSWindowFilterRef filter);
-  extern CGError CGSReleaseCIFilter(CGSConnection cid, CGSWindowFilterRef filter);
+  extern CGError CGSSetWindowBackgroundBlurRadius(CGSConnection cid, CGSWindow wid, NSUInteger blur);
 }
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
@@ -106,7 +102,6 @@ nsCocoaWindow::nsCocoaWindow()
 , mSheetWindowParent(nil)
 , mPopupContentView(nil)
 , mShadowStyle(NS_STYLE_WINDOW_SHADOW_DEFAULT)
-, mWindowFilter(0)
 , mBackingScaleFactor(0.0)
 , mAnimationType(nsIWidget::eGenericWindowAnimation)
 , mWindowMadeHere(false)
@@ -129,7 +124,6 @@ void nsCocoaWindow::DestroyNativeWindow()
   if (!mWindow)
     return;
 
-  CleanUpWindowFilter();
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
   [mWindow setDelegate:nil];
@@ -766,7 +760,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
       NS_OBJC_END_TRY_LOGONLY_BLOCK;
       SendSetZLevelEvent();
       AdjustWindowShadow();
-      SetUpWindowFilter();
+      SetWindowBackgroundBlur();
       // If our popup window is a non-native context menu, tell the OS (and
       // other programs) that a menu has opened.  This is how the OS knows to
       // close other programs' context menus when ours open.
@@ -885,7 +879,6 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
       if (mWindowType == eWindowType_popup && nativeParentWindow)
         [nativeParentWindow removeChildWindow:mWindow];
 
-      CleanUpWindowFilter();
       [mWindow orderOut:nil];
       // Unless it's explicitly removed from NSApp's "window cache", a popup
       // window will keep receiving mouse-moved events even after it's been
@@ -962,47 +955,25 @@ nsCocoaWindow::AdjustWindowShadow()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+static const NSUInteger kWindowBackgroundBlurRadius = 4;
+
 void
-nsCocoaWindow::SetUpWindowFilter()
+nsCocoaWindow::SetWindowBackgroundBlur()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow || ![mWindow isVisible] || [mWindow windowNumber] == -1)
     return;
 
-  CleanUpWindowFilter();
-
-  // Only blur the background of menus and fake sheets, but not on PPC
-  // because it results in blank windows (bug 547723).
-#ifndef __ppc__
+  // Only blur the background of menus and fake sheets.
   if (mShadowStyle != NS_STYLE_WINDOW_SHADOW_MENU &&
       mShadowStyle != NS_STYLE_WINDOW_SHADOW_SHEET)
-#endif
     return;
 
-  // Create a CoreImage filter and set it up
   CGSConnection cid = _CGSDefaultConnection();
-  CGSNewCIFilterByName(cid, (CFStringRef)@"CIGaussianBlur", &mWindowFilter);
-  NSDictionary *options = [NSDictionary dictionaryWithObject:[NSNumber numberWithFloat:2.0] forKey:@"inputRadius"];
-  CGSSetCIFilterValuesFromDictionary(cid, mWindowFilter, (CFDictionaryRef)options);
-
-  // Now apply the filter to the window
-  NSInteger compositingType = 1 << 0; // Under the window
-  CGSAddWindowFilter(cid, [mWindow windowNumber], mWindowFilter, compositingType);
+  CGSSetWindowBackgroundBlurRadius(cid, [mWindow windowNumber], kWindowBackgroundBlurRadius);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void
-nsCocoaWindow::CleanUpWindowFilter()
-{
-  if (!mWindow || !mWindowFilter || [mWindow windowNumber] == -1)
-    return;
-
-  CGSConnection cid = _CGSDefaultConnection();
-  CGSRemoveWindowFilter(cid, [mWindow windowNumber], mWindowFilter);
-  CGSReleaseCIFilter(cid, mWindowFilter);
-  mWindowFilter = 0;
 }
 
 nsresult
@@ -1937,7 +1908,7 @@ NS_IMETHODIMP nsCocoaWindow::SetWindowShadowStyle(int32_t aStyle)
   mShadowStyle = aStyle;
   [mWindow setHasShadow:(aStyle != NS_STYLE_WINDOW_SHADOW_NONE)];
   AdjustWindowShadow();
-  SetUpWindowFilter();
+  SetWindowBackgroundBlur();
 
   return NS_OK;
 

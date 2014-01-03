@@ -948,7 +948,7 @@ this.PushService = {
       return;
     }
 
-    [action, data] = this._requestQueue.shift();
+    let [action, data] = this._requestQueue.shift();
     data.messageType = action;
     if (!this._ws) {
       // If our websocket is not ready and our state is STATE_READY we may as

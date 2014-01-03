@@ -80,13 +80,17 @@ class MethodHandler(object):
         # in a given context.
         'conditions',
 
+        # argparse.ArgumentParser instance to use as the basis for command
+        # arguments.
+        'parser',
+
         # Arguments added to this command's parser. This is a 2-tuple of
         # positional and named arguments, respectively.
         'arguments',
     )
 
     def __init__(self, cls, method, name, category=None, description=None,
-        allow_all_arguments=False, conditions=None, arguments=None,
+        allow_all_arguments=False, conditions=None, parser=None, arguments=None,
         pass_context=False):
 
         self.cls = cls
@@ -96,6 +100,7 @@ class MethodHandler(object):
         self.description = description
         self.allow_all_arguments = allow_all_arguments
         self.conditions = conditions or []
+        self.parser = parser
         self.arguments = arguments or []
         self.pass_context = pass_context
 
