@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=951997
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Permission Prompt Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=951997">Permission prompt web content test</a>
+<script type="application/javascript">
+
+"use strict";
+
+const APP_URL = "SandboxPromptTest.html";
+
+var gUrl = SimpleTest.getTestFileURL("permission_handler_chrome.js");
+var gScript = SpecialPowers.loadChromeScript(gUrl);
+var gResult = [
+  {
+    type: "audio-capture",
+    prompt: false
+  },
+  {
+    type: "geolocation",
+    prompt: false
+  },
+  {
+    type: "desktop-notification",
+    prompt: false
+  }
+];
+
+// Create a sanbox iframe.
+function loadBrowser() {
+  var iframe = document.createElement("iframe");
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.src = APP_URL;
+  document.body.appendChild(iframe);
+}
+
+// send test counts to chrome script.
+gScript.sendAsyncMessage("test.counts", gResult.length);
+
+gScript.addMessageListener("permission.granted", function (aName) {
+  gResult.forEach(function(aType, aIndex) {
+    if (aType.type == aName) {
+      aType.prompt = true;
+    }
+  });
+
+  if(gResult.every(function(aType) { return aType.prompt; })) {
+    ok(true, "Get all permission prompts");
+    gScript.destroy();
+    SimpleTest.finish();
+  }});
+
+// Add permissions to this app. We use ALLOW_ACTION here. The ContentPermissionPrompt
+// should prompt for permission, not allow it without prompt.
+SpecialPowers.pushPrefEnv({"set": [["media.navigator.permission.disabled", false]]},
+  function() {
+    SpecialPowers.addPermission('audio-capture',
+      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
+    SpecialPowers.addPermission('geolocation',
+      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
+    SpecialPowers.addPermission('desktop-notification',
+      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
+    loadBrowser();
+  });
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
