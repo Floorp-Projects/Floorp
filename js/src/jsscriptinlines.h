@@ -91,6 +91,13 @@ JSScript::getRegExp(size_t index)
     return (js::RegExpObject *) obj;
 }
 
+inline js::RegExpObject *
+JSScript::getRegExp(jsbytecode *pc)
+{
+    JS_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    return getRegExp(GET_UINT32_INDEX(pc));
+}
+
 inline js::GlobalObject &
 JSScript::global() const
 {

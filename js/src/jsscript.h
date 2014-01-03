@@ -1390,6 +1390,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     inline JSFunction *functionOrCallerFunction();
 
     inline js::RegExpObject *getRegExp(size_t index);
+    inline js::RegExpObject *getRegExp(jsbytecode *pc);
 
     const js::Value &getConst(size_t index) {
         js::ConstArray *arr = consts();
