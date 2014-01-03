@@ -2495,6 +2495,12 @@ public:
 
     nsXPCWrappedJS* Find(REFNSIID aIID);
     nsXPCWrappedJS* FindInherited(REFNSIID aIID);
+    nsXPCWrappedJS* FindOrFindInherited(REFNSIID aIID) {
+        nsXPCWrappedJS* wrapper = Find(aIID);
+        if (wrapper)
+            return wrapper;
+        return FindInherited(aIID);
+    }
 
     bool IsRootWrapper() const {return mRoot == this;}
     bool IsValid() const {return mJSObj != nullptr;}
@@ -2515,7 +2521,7 @@ public:
                        "Only one aggregated native can be set");
             return;
         }
-        NS_ADDREF(mRoot->mOuter = aNative);
+        mRoot->mOuter = aNative;
     }
 
     void TraceJS(JSTracer* trc);
@@ -2535,10 +2541,10 @@ protected:
 
 private:
     JS::Heap<JSObject*> mJSObj;
-    nsXPCWrappedJSClass* mClass;
-    nsXPCWrappedJS* mRoot;
+    nsRefPtr<nsXPCWrappedJSClass> mClass;
+    nsXPCWrappedJS* mRoot;    // If mRoot != this, it is an owning pointer.
     nsXPCWrappedJS* mNext;
-    nsISupports* mOuter;    // only set in root
+    nsCOMPtr<nsISupports> mOuter;    // only set in root
 };
 
 /***************************************************************************/
