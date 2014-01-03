@@ -4781,17 +4781,13 @@ class MDefFun : public MUnaryInstruction
 class MRegExp : public MNullaryInstruction
 {
     CompilerRoot<RegExpObject *> source_;
-    CompilerRootObject prototype_;
     bool mustClone_;
 
-    MRegExp(types::CompilerConstraintList *constraints, RegExpObject *source, JSObject *prototype, bool mustClone)
+    MRegExp(types::CompilerConstraintList *constraints, RegExpObject *source, bool mustClone)
       : source_(source),
-        prototype_(prototype),
         mustClone_(mustClone)
     {
         setResultType(MIRType_Object);
-
-        JS_ASSERT(source->getProto() == prototype);
         setResultTypeSet(MakeSingletonTypeSet(constraints, source));
     }
 
@@ -4799,10 +4795,9 @@ class MRegExp : public MNullaryInstruction
     INSTRUCTION_HEADER(RegExp)
 
     static MRegExp *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
-                        RegExpObject *source, JSObject *prototype,
-                        bool mustClone)
+                        RegExpObject *source, bool mustClone)
     {
-        return new(alloc) MRegExp(constraints, source, prototype, mustClone);
+        return new(alloc) MRegExp(constraints, source, mustClone);
     }
 
     bool mustClone() const {
@@ -4810,9 +4805,6 @@ class MRegExp : public MNullaryInstruction
     }
     RegExpObject *source() const {
         return source_;
-    }
-    JSObject *getRegExpPrototype() const {
-        return prototype_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
