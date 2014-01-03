@@ -378,10 +378,6 @@ MozInputMethod.prototype = {
   },
 
   get mgmt() {
-    if (!WindowMap.isActive(this._window)) {
-      return null;
-    }
-
     return this._mgmt;
   },
 
