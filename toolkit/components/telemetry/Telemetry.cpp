@@ -23,6 +23,8 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOMPrivate.h"
+#include "nsIXULAppInfo.h"
+#include "nsVersionComparator.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIXPConnect.h"
@@ -56,6 +58,8 @@
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
 #endif
+
+#define EXPIRED_ID "__expired__"
 
 namespace {
 
@@ -388,9 +392,11 @@ struct TelemetryHistogram {
   uint32_t bucketCount;
   uint32_t histogramType;
   uint32_t id_offset;
+  uint32_t expiration_offset;
   bool extendedStatisticsOK;
 
   const char *id() const;
+  const char *expiration() const;
 };
 
 #include "TelemetryHistogramData.inc"
@@ -402,31 +408,27 @@ TelemetryHistogram::id() const
   return &gHistogramStringTable[this->id_offset];
 }
 
-bool
-TelemetryHistogramType(Histogram *h, uint32_t *result)
+const char *
+TelemetryHistogram::expiration() const
 {
-  switch (h->histogram_type()) {
-  case Histogram::HISTOGRAM:
-    *result = nsITelemetry::HISTOGRAM_EXPONENTIAL;
-    break;
-  case Histogram::LINEAR_HISTOGRAM:
-    *result = nsITelemetry::HISTOGRAM_LINEAR;
-    break;
-  case Histogram::BOOLEAN_HISTOGRAM:
-    *result = nsITelemetry::HISTOGRAM_BOOLEAN;
-    break;
-  case Histogram::FLAG_HISTOGRAM:
-    *result = nsITelemetry::HISTOGRAM_FLAG;
-    break;
-  default:
-    return false;
-  }
-  return true;
+  return &gHistogramStringTable[this->expiration_offset];
+}
+
+bool
+IsExpired(const char *expiration){
+  static Version current_version = Version(MOZ_APP_VERSION);
+  MOZ_ASSERT(expiration);
+  return strcmp(expiration, "never") && (mozilla::Version(expiration) <= current_version);
+}
+
+bool
+IsExpired(const Histogram *histogram){
+  return histogram->histogram_name() == EXPIRED_ID;
 }
 
 nsresult
-HistogramGet(const char *name, uint32_t min, uint32_t max, uint32_t bucketCount,
-             uint32_t histogramType, Histogram **result)
+HistogramGet(const char *name, const char *expiration, uint32_t min, uint32_t max,
+             uint32_t bucketCount, uint32_t histogramType, Histogram **result)
 {
   if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN
       && histogramType != nsITelemetry::HISTOGRAM_FLAG) {
@@ -439,6 +441,14 @@ HistogramGet(const char *name, uint32_t min, uint32_t max, uint32_t bucketCount,
 
     if (min < 1)
       return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  if (IsExpired(expiration)) {
+    name = EXPIRED_ID;
+    min = 1;
+    max = 2;
+    bucketCount = 3;
+    histogramType = nsITelemetry::HISTOGRAM_LINEAR;
   }
 
   switch (histogramType) {
@@ -472,20 +482,22 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 
   const TelemetryHistogram &p = gHistograms[id];
-  nsresult rv = HistogramGet(p.id(), p.min, p.max, p.bucketCount, p.histogramType, &h);
+  nsresult rv = HistogramGet(p.id(), p.expiration(), p.min, p.max, p.bucketCount, p.histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
 
 #ifdef DEBUG
   // Check that the C++ Histogram code computes the same ranges as the
   // Python histogram code.
-  const struct bounds &b = gBucketLowerBoundIndex[id];
-  if (b.length != 0) {
-    MOZ_ASSERT(size_t(b.length) == h->bucket_count(),
-               "C++/Python bucket # mismatch");
-    for (int i = 0; i < b.length; ++i) {
-      MOZ_ASSERT(gBucketLowerBounds[b.offset + i] == h->ranges(i),
-                 "C++/Python bucket mismatch");
+  if (!IsExpired(p.expiration())) {
+    const struct bounds &b = gBucketLowerBoundIndex[id];
+    if (b.length != 0) {
+      MOZ_ASSERT(size_t(b.length) == h->bucket_count(),
+                 "C++/Python bucket # mismatch");
+      for (int i = 0; i < b.length; ++i) {
+        MOZ_ASSERT(gBucketLowerBounds[b.offset + i] == h->ranges(i),
+                   "C++/Python bucket mismatch");
+      }
     }
   }
 #endif
@@ -966,12 +978,13 @@ TelemetryImpl::InitMemoryReporter() {
 }
 
 NS_IMETHODIMP
-TelemetryImpl::NewHistogram(const nsACString &name, uint32_t min, uint32_t max,
-                            uint32_t bucketCount, uint32_t histogramType,
+TelemetryImpl::NewHistogram(const nsACString &name, const nsACString &expiration, uint32_t min,
+                            uint32_t max, uint32_t bucketCount, uint32_t histogramType,
                             JSContext *cx, JS::Value *ret)
 {
   Histogram *h;
-  nsresult rv = HistogramGet(PromiseFlatCString(name).get(), min, max, bucketCount, histogramType, &h);
+  nsresult rv = HistogramGet(PromiseFlatCString(name).get(), PromiseFlatCString(expiration).get(),
+                             min, max, bucketCount, histogramType, &h);
   if (NS_FAILED(rv))
     return rv;
   h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
@@ -1089,20 +1102,23 @@ NS_IMETHODIMP
 TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_name,
                              JSContext *cx, JS::Value *ret)
 {
-  Histogram *existing;
-  nsresult rv = GetHistogramByName(existing_name, &existing);
-  if (NS_FAILED(rv))
+  Telemetry::ID id;
+  nsresult rv = GetHistogramEnumId(PromiseFlatCString(existing_name).get(), &id);
+  if (NS_FAILED(rv)) {
     return rv;
+  }
+  const TelemetryHistogram &p = gHistograms[id];
 
-  uint32_t histogramType;
-  bool success = TelemetryHistogramType(existing, &histogramType);
-  if (!success)
-    return NS_ERROR_INVALID_ARG;
+  Histogram *existing;
+  rv = GetHistogramByEnumId(id, &existing);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   Histogram *clone;
-  rv = HistogramGet(PromiseFlatCString(name).get(), existing->declared_min(),
-                    existing->declared_max(), existing->bucket_count(),
-                    histogramType, &clone);
+  rv = HistogramGet(PromiseFlatCString(name).get(), p.expiration(),
+                    existing->declared_min(), existing->declared_max(),
+                    existing->bucket_count(), p.histogramType, &clone);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1302,7 +1318,7 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::Value *ret)
   JS::Rooted<JSObject*> hobj(cx);
   for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
     Histogram *h = *it;
-    if (!ShouldReflectHistogram(h) || IsEmpty(h)) {
+    if (!ShouldReflectHistogram(h) || IsEmpty(h) || IsExpired(h)) {
       continue;
     }
 
@@ -1333,7 +1349,7 @@ TelemetryImpl::CreateHistogramForAddon(const nsACString &name,
                                        AddonHistogramInfo &info)
 {
   Histogram *h;
-  nsresult rv = HistogramGet(PromiseFlatCString(name).get(),
+  nsresult rv = HistogramGet(PromiseFlatCString(name).get(), "never",
                              info.min, info.max, info.bucketCount,
                              info.histogramType, &h);
   if (NS_FAILED(rv)) {
@@ -1950,15 +1966,21 @@ NS_IMETHODIMP
 TelemetryImpl::RegisteredHistograms(uint32_t *aCount, char*** aHistograms)
 {
   size_t count = ArrayLength(gHistograms);
+  size_t offset = 0;
   char** histograms = static_cast<char**>(nsMemory::Alloc(count * sizeof(char*)));
 
   for (size_t i = 0; i < count; ++i) {
+    if (IsExpired(gHistograms[i].expiration())) {
+      offset++;
+      continue;
+    }
+
     const char* h = gHistograms[i].id();
     size_t len = strlen(h);
-    histograms[i] = static_cast<char*>(nsMemory::Clone(h, len+1));
+    histograms[i - offset] = static_cast<char*>(nsMemory::Clone(h, len+1));
   }
 
-  *aCount = count;
+  *aCount = count - offset;
   *aHistograms = histograms;
   return NS_OK;
 }

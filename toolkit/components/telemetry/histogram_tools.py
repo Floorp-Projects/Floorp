@@ -4,6 +4,7 @@
 
 import json
 import math
+import re
 
 from collections import OrderedDict
 
@@ -54,7 +55,7 @@ def exponential_buckets(dmin, dmax, n_buckets):
         ret_array[bucket_index] = current
     return ret_array
 
-always_allowed_keys = ['kind', 'description', 'cpp_guard']
+always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version']
 
 class Histogram:
     """A class for representing a histogram definition."""
@@ -75,6 +76,7 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._kind = definition['kind']
         self._cpp_guard = definition.get('cpp_guard')
         self._extended_statistics_ok = definition.get('extended_statistics_ok', False)
+        self._expiration = definition.get('expires_in_version')
         self.compute_bucket_parameters(definition)
         table = { 'boolean': 'BOOLEAN',
                   'flag': 'FLAG',
@@ -96,6 +98,10 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         """Return the kind of the histogram.
 Will be one of 'boolean', 'flag', 'enumerated', 'linear', or 'exponential'."""
         return self._kind
+
+    def expiration(self):
+        """Return the expiration version of the histogram."""
+        return self._expiration
 
     def nsITelemetry_kind(self):
         """Return the nsITelemetry constant corresponding to the kind of
@@ -161,6 +167,19 @@ is enabled."""
             }
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
+
+        Histogram.check_expiration(name, definition)
+
+    @staticmethod
+    def check_expiration(name, definition):
+        expiration = definition['expires_in_version']
+
+        if not expiration:
+            return
+
+        if not re.match(r'[1-9][0-9]*\..*|never', expiration):
+            raise BaseException, '%s not permitted as an expiration version for %s; the complete version name is required ' \
+                                 '(see https://developer.mozilla.org/en-US/docs/Performance/Adding_a_new_Telemetry_probe)' % (expiration, name)
 
     @staticmethod
     def check_keys(name, definition, allowed_keys):
