@@ -123,7 +123,10 @@ class CommandAction(argparse.Action):
         if handler.allow_all_arguments:
             parser_args['prefix_chars'] = '+'
 
-        subparser = argparse.ArgumentParser(**parser_args)
+        if handler.parser:
+            subparser = handler.parser
+        else:
+            subparser = argparse.ArgumentParser(**parser_args)
 
         for arg in handler.arguments:
             subparser.add_argument(*arg[0], **arg[1])
@@ -216,9 +219,25 @@ class CommandAction(argparse.Action):
         if handler.allow_all_arguments:
             parser_args['prefix_chars'] = '+'
 
-        c_parser = argparse.ArgumentParser(**parser_args)
-
-        group = c_parser.add_argument_group('Command Arguments')
+        if handler.parser:
+            c_parser = handler.parser
+            c_parser.formatter_class = NoUsageFormatter
+            try:
+                # By default argparse adds two groups called "positional arguments"
+                # and "optional arguments". We want to rename these to reflect standard
+                # mach terminology.
+                c_parser._action_groups[0].title = 'Command Parameters'
+                c_parser._action_groups[1].title = 'Command Arguments'
+            except:
+                # If argparse changes the internal data structures here continue;
+                # this will just make the output more ugly
+                pass
+            if not handler.description:
+                handler.description = c_parser.description
+                c_parser.description = None
+        else:
+            c_parser = argparse.ArgumentParser(**parser_args)
+            group = c_parser.add_argument_group('Command Arguments')
 
         for arg in handler.arguments:
             group.add_argument(*arg[0], **arg[1])
@@ -234,3 +253,6 @@ class CommandAction(argparse.Action):
         print('')
         c_parser.print_help()
 
+class NoUsageFormatter(argparse.HelpFormatter):
+    def _format_usage(self, *args, **kwargs):
+        return ""
