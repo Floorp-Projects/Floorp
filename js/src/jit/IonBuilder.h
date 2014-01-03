@@ -433,7 +433,7 @@ class IonBuilder : public MIRGenerator
                                      TypeRepresentationSet *out);
     bool typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
                                         TypeRepresentationSet *out,
-                                        types::TypeTypedObject::Kind kind);
+                                        types::TypedObjectAddendum::Kind kind);
     bool lookupTypedObjectField(MDefinition *typedObj,
                                 PropertyName *name,
                                 int32_t *fieldOffset,
