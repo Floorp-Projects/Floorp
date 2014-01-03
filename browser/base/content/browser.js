@@ -1056,6 +1056,7 @@ var gBrowserInit = {
     gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
     var homeButton = document.getElementById("home-button");
+    gHomeButton.init();
     gHomeButton.updateTooltip(homeButton);
     gHomeButton.updatePersonalToolbarStyle(homeButton);
 
@@ -1247,6 +1248,7 @@ var gBrowserInit = {
     }
 
     BookmarkingUI.uninit();
+    gHomeButton.uninit();
 
     TabsInTitlebar.uninit();
 
@@ -4756,6 +4758,16 @@ function fireSidebarFocusedEvent() {
 
 
 var gHomeButton = {
+  init: function() {
+    gNavToolbox.addEventListener("customizationchange",
+                                 this.onCustomizationChange);
+  },
+
+  uninit: function() {
+    gNavToolbox.removeEventListener("customizationchange",
+                                    this.onCustomizationChange);
+  },
+
   prefDomain: "browser.startup.homepage",
   observe: function (aSubject, aTopic, aPrefName)
   {
@@ -4807,7 +4819,11 @@ var gHomeButton = {
                                || homeButton.parentNode.parentNode.id == "PersonalToolbar" ?
                              homeButton.className.replace("toolbarbutton-1", "bookmark-item") :
                              homeButton.className.replace("bookmark-item", "toolbarbutton-1");
-  }
+  },
+
+  onCustomizationChange: function(aEvent) {
+    gHomeButton.updatePersonalToolbarStyle();
+  },
 };
 
 /**
