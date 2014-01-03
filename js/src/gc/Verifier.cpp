@@ -454,6 +454,15 @@ gc::StartVerifyPreBarriers(JSRuntime *rt)
     if (rt->gcVerifyPreData || rt->gcIncrementalState != NO_INCREMENTAL)
         return;
 
+    /*
+     * The post barrier verifier requires the storebuffer to be enabled, but the
+     * pre barrier verifier disables it as part of disabling GGC.  Don't allow
+     * starting the pre barrier verifier if the post barrier verifier is already
+     * running.
+     */
+    if (rt->gcVerifyPostData)
+        return;
+
     MinorGC(rt, JS::gcreason::EVICT_NURSERY);
 
     AutoPrepareForTracing prep(rt, WithAtoms);
