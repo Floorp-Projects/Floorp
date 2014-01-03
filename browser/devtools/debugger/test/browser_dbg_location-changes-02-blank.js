@@ -36,25 +36,16 @@ function testLocationChange() {
     is(gSources.itemCount, 0,
       "Found no entries in the sources widget.");
 
-    is(gSources.selectedLabel, "",
-      "There should be no selected source label.");
     is(gSources.selectedValue, "",
       "There should be no selected source value.");
     is(gEditor.getText().length, 0,
       "The source editor should not have any text displayed.");
 
-    is(gSources.widget.getAttribute("label"), gDebugger.L10N.getStr("noSourcesText"),
-      "The sources widget should display a notice that there are no sources availalble.");
-    is(gSources.widget.getAttribute("tooltiptext"), "",
-      "The sources widget shouldn't have any tooltip text attribute when there are no sources available.");
-
-    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 1,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-text").length, 1,
       "The sources widget should now display a notice (1).");
-    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice").length, 1,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-text")[0].getAttribute("value"),
+       gDebugger.L10N.getStr("noSourcesText"),
       "The sources widget should now display a notice (2).");
-    is(gDebugger.document.querySelector("#sources .side-menu-widget-empty-notice").getAttribute("value"),
-       gSources.widget.getAttribute("label"),
-      "The sources widget should now display a notice (3).");
 
     closeDebuggerAndFinish(gPanel);
   });

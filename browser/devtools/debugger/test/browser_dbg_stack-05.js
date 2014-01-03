@@ -162,6 +162,7 @@ registerCleanupFunction(function() {
   gPanel = null;
   gDebugger = null;
   gEditor = null;
+  gSources = null;
   gFrames = null;
   gClassicFrames = null;
 });

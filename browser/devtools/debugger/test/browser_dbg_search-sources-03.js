@@ -82,11 +82,11 @@ function verifySourcesPane() {
   is(gSources.visibleItems.length, 3,
     "There should be no hidden items in the sources container.");
 
-  isnot(gSources.labels.indexOf("code_script-switching-01.js"), -1,
+  ok(gSources.getItemForAttachment(e => e.label == "code_script-switching-01.js"),
     "The first source's label should be correct.");
-  isnot(gSources.labels.indexOf("code_test-editor-mode"), -1,
+  ok(gSources.getItemForAttachment(e => e.label == "code_test-editor-mode"),
     "The second source's label should be correct.");
-  isnot(gSources.labels.indexOf("doc_editor-mode.html"), -1,
+  ok(gSources.getItemForAttachment(e => e.label == "doc_editor-mode.html"),
     "The third source's label should be correct.");
 }
 
