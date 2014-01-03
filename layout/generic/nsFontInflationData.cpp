@@ -82,6 +82,7 @@ nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame *aBFCFrame)
 
 nsFontInflationData::nsFontInflationData(nsIFrame *aBFCFrame)
   : mBFCFrame(aBFCFrame)
+  , mNCAWidth(0)
   , mTextAmount(0)
   , mTextThreshold(0)
   , mInflationEnabled(false)
