@@ -784,7 +784,8 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
     }
 
-#ifdef JS_THREADSAFE
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+# define JS_WORKER_THREADS
 
     js::WorkerThreadState *workerThreadState;
 
@@ -810,7 +811,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setUsedByExclusiveThread(JS::Zone *zone);
     void clearUsedByExclusiveThread(JS::Zone *zone);
 
-#endif // JS_THREADSAFE
+#endif // JS_THREADSAFE && JS_ION
 
     bool currentThreadHasExclusiveAccess() {
 #if defined(JS_WORKER_THREADS) && defined(DEBUG)
@@ -822,7 +823,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
     bool exclusiveThreadsPresent() const {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
         return numExclusiveThreads > 0;
 #else
         return false;

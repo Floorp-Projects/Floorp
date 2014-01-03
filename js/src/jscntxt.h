@@ -389,7 +389,7 @@ class ExclusiveContext : public ThreadSafeContext
         return runtime_->scriptDataTable();
     }
 
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     // Since JSRuntime::workerThreadState is necessarily initialized from the
     // main thread before the first worker thread can access it, there is no
     // possibility for a race read/writing it.
@@ -1032,7 +1032,7 @@ bool intrinsic_NewParallelArray(JSContext *cx, unsigned argc, Value *vp);
 
 class AutoLockForExclusiveAccess
 {
-#ifdef JS_THREADSAFE
+#ifdef JS_WORKER_THREADS
     JSRuntime *runtime;
 
     void init(JSRuntime *rt) {
@@ -1068,7 +1068,7 @@ class AutoLockForExclusiveAccess
             runtime->mainThreadHasExclusiveAccess = false;
         }
     }
-#else // JS_THREADSAFE
+#else // JS_WORKER_THREADS
   public:
     AutoLockForExclusiveAccess(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -1080,7 +1080,7 @@ class AutoLockForExclusiveAccess
         // An empty destructor is needed to avoid warnings from clang about
         // unused local variables of this type.
     }
-#endif // JS_THREADSAFE
+#endif // JS_WORKER_THREADS
 
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
