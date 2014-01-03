@@ -585,13 +585,13 @@ let FormAssistant = {
       case "Forms:ReplaceSurroundingText": {
         CompositionManager.endComposition('');
 
-        let text = json.text;
-        let beforeLength = json.beforeLength;
-        let afterLength = json.afterLength;
         let selectionRange = getSelectionRange(target);
-
-        replaceSurroundingText(target, text, selectionRange[0], beforeLength,
-                               afterLength);
+        replaceSurroundingText(target,
+                               json.text,
+                               selectionRange[0],
+                               selectionRange[1],
+                               json.offset,
+                               json.length);
 
         if (json.requestId) {
           sendAsyncMessage("Forms:ReplaceSurroundingText:Result:OK", {
@@ -1064,25 +1064,24 @@ function getPlaintextEditor(element) {
   return editor;
 }
 
-function replaceSurroundingText(element, text, selectionStart, beforeLength,
-                                afterLength) {
+function replaceSurroundingText(element, text, selectionStart, selectionEnd,
+                                offset, length) {
   let editor = FormAssistant.editor;
   if (!editor) {
     return;
   }
 
   // Check the parameters.
-  if (beforeLength < 0) {
-    beforeLength = 0;
+  let start = selectionStart + offset;
+  if (start < 0) {
+    start = 0;
   }
-  if (afterLength < 0) {
-    afterLength = 0;
+  if (length < 0) {
+    length = 0;
   }
+  let end = start + length;
 
-  let start = selectionStart - beforeLength;
-  let end = selectionStart + afterLength;
-
-  if (beforeLength != 0 || afterLength != 0) {
+  if (selectionStart != start || selectionEnd != end) {
     // Change selection range before replacing.
     setSelectionRange(element, start, end);
   }
