@@ -325,6 +325,7 @@ ShellOperationCallback(JSContext *cx)
 
     bool result;
     if (!gTimeoutFunc.isNull()) {
+        JSAutoCompartment ac(cx, &gTimeoutFunc.toObject());
         RootedValue returnedValue(cx);
         if (!JS_CallFunctionValue(cx, nullptr, gTimeoutFunc, 0, nullptr, returnedValue.address()))
             return false;
