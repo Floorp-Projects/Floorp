@@ -2427,7 +2427,10 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     shouldBuildLayer =
       wantSubAPZC &&
       (wantLayerV || wantLayerH) &&
-      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
+      // If we are the root scroll frame for the display root then we don't need a scroll
+      // info layer to make a RecordFrameMetrics call for us as
+      // nsDisplayList::PaintForFrame already calls RecordFrameMetrics for us.
+      (!mIsRoot || aBuilder->RootReferenceFrame()->PresContext() != mOuter->PresContext());
   }
 
   if (shouldBuildLayer) {
