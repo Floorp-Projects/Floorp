@@ -5984,8 +5984,7 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   }
 
   // If this is a preformatted text frame, see if it ends with a newline
-  if (aFrame->HasTerminalNewline() &&
-      aFrame->StyleText()->NewlineIsSignificant()) {
+  if (aFrame->HasSignificantTerminalNewline()) {
     int32_t startOffset, endOffset;
     aFrame->GetOffsets(startOffset, endOffset);
     result.mContent = aFrame->GetContent();
@@ -6145,8 +6144,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       // we're placed before the linefeed character on the previous line.
       if (offset < 0 && jumpedLine &&
           aPos->mDirection == eDirPrevious &&
-          current->StyleText()->NewlineIsSignificant() &&
-          current->HasTerminalNewline()) {
+          current->HasSignificantTerminalNewline()) {
         --aPos->mContentOffset;
       }
       
@@ -6218,8 +6216,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
             // If we've crossed the line boundary, check to make sure that we
             // have not consumed a trailing newline as whitesapce if it's significant.
             if (jumpedLine && wordSelectEatSpace &&
-                current->HasTerminalNewline() &&
-                current->StyleText()->NewlineIsSignificant()) {
+                current->HasSignificantTerminalNewline()) {
               offsetAdjustment = -1;
             }
           } else {
@@ -6395,7 +6392,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       FrameContentRange range = GetRangeForFrame(targetFrame.frame);
       aPos->mResultContent = range.content;
       aPos->mContentOffset = endOfLine ? range.end : range.start;
-      if (endOfLine && targetFrame.frame->HasTerminalNewline()) {
+      if (endOfLine && targetFrame.frame->HasSignificantTerminalNewline()) {
         // Do not position the caret after the terminating newline if we're
         // trying to move to the end of line (see bug 596506)
         --aPos->mContentOffset;
@@ -7365,11 +7362,11 @@ nsIFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 }
 
 /**
- * @return true if this text frame ends with a newline character.  It
- * should return false if this is not a text frame.
+ * @return true if this text frame ends with a newline character which is
+ * treated as preformatted. It should return false if this is not a text frame.
  */
 bool
-nsIFrame::HasTerminalNewline() const
+nsIFrame::HasSignificantTerminalNewline() const
 {
   return false;
 }

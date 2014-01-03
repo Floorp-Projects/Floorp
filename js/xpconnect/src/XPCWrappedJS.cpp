@@ -330,7 +330,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     JSObject2WrappedJSMap* map;
     nsXPCWrappedJS* root = nullptr;
     nsXPCWrappedJS* wrapper = nullptr;
-    nsXPCWrappedJSClass* clazz = nullptr;
+    nsRefPtr<nsXPCWrappedJSClass> clasp;
     XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
     bool release_root = false;
 
@@ -340,49 +340,43 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         return NS_ERROR_FAILURE;
     }
 
-    nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, &clazz);
-    if (!clazz)
+    nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID, getter_AddRefs(clasp));
+    if (!clasp)
         return NS_ERROR_FAILURE;
-    // from here on we need to return through 'return_wrapper'
 
     // always find the root JSObject
-    JS::RootedObject rootJSObj(cx, clazz->GetRootJSObject(cx, jsObj));
+    JS::RootedObject rootJSObj(cx, clasp->GetRootJSObject(cx, jsObj));
     if (!rootJSObj)
-        goto return_wrapper;
+        return NS_ERROR_FAILURE;
 
     root = map->Find(rootJSObj);
     if (root) {
-        if ((nullptr != (wrapper = root->Find(aIID))) ||
-            (nullptr != (wrapper = root->FindInherited(aIID)))) {
+        wrapper = root->FindOrFindInherited(aIID);
+        if (wrapper) {
             NS_ADDREF(wrapper);
-            goto return_wrapper;
+            *wrapperResult = wrapper;
+            return NS_OK;
         }
-    }
-
-    if (!root) {
+    } else {
         // build the root wrapper
         if (rootJSObj == jsObj) {
             // the root will do double duty as the interface wrapper
-            wrapper = root = new nsXPCWrappedJS(cx, jsObj, clazz, nullptr);
-            if (!root)
-                goto return_wrapper;
+            wrapper = root = new nsXPCWrappedJS(cx, jsObj, clasp, nullptr);
 
             map->Add(cx, root);
 
-            goto return_wrapper;
+            *wrapperResult = wrapper;
+            return NS_OK;
         } else {
             // just a root wrapper
-            nsXPCWrappedJSClass* rootClazz = nullptr;
+            nsXPCWrappedJSClass* rootClasp = nullptr;
             nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports),
-                                              &rootClazz);
-            if (!rootClazz)
-                goto return_wrapper;
+                                              &rootClasp);
+            if (!rootClasp)
+                return NS_ERROR_FAILURE;
 
-            root = new nsXPCWrappedJS(cx, rootJSObj, rootClazz, nullptr);
-            NS_RELEASE(rootClazz);
-
-            if (!root)
-                goto return_wrapper;
+            root = new nsXPCWrappedJS(cx, rootJSObj, rootClasp, nullptr);
+            NS_RELEASE(rootClasp);
 
             release_root = true;
 
@@ -391,27 +385,14 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     }
 
     // at this point we have a root and may need to build the specific wrapper
-    MOZ_ASSERT(root,"bad root");
-    MOZ_ASSERT(clazz,"bad clazz");
+    MOZ_ASSERT(root, "bad root");
+    MOZ_ASSERT(clasp, "bad clasp");
+    MOZ_ASSERT(!wrapper, "no wrapper found yet");
 
-    if (!wrapper) {
-        wrapper = new nsXPCWrappedJS(cx, jsObj, clazz, root);
-        if (!wrapper)
-            goto return_wrapper;
-    }
-
-    wrapper->mNext = root->mNext;
-    root->mNext = wrapper;
-
-return_wrapper:
-    if (clazz)
-        NS_RELEASE(clazz);
+    wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root);
 
     if (release_root)
         NS_RELEASE(root);
-
-    if (!wrapper)
-        return NS_ERROR_FAILURE;
 
     *wrapperResult = wrapper;
     return NS_OK;
@@ -424,8 +405,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     : mJSObj(aJSObj),
       mClass(aClass),
       mRoot(root ? root : MOZ_THIS_IN_INITIALIZER_LIST()),
-      mNext(nullptr),
-      mOuter(nullptr)
+      mNext(nullptr)
 {
     InitStub(GetClass()->GetIID());
 
@@ -435,11 +415,11 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
     NS_ADDREF_THIS();
     NS_ADDREF_THIS();
 
-    NS_ADDREF(aClass);
-
-    if (!IsRootWrapper())
+    if (!IsRootWrapper()) {
         NS_ADDREF(mRoot);
-
+        mNext = mRoot->mNext;
+        mRoot->mNext = this;
+    }
 }
 
 nsXPCWrappedJS::~nsXPCWrappedJS()
@@ -497,14 +477,13 @@ nsXPCWrappedJS::Unlink()
         NS_RELEASE(mRoot);
     }
 
-    NS_IF_RELEASE(mClass);
+    mClass = nullptr;
     if (mOuter) {
         XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
         if (rt->GCIsRunning()) {
-            nsContentUtils::DeferredFinalize(mOuter);
-            mOuter = nullptr;
+            nsContentUtils::DeferredFinalize(mOuter.forget().get());
         } else {
-            NS_RELEASE(mOuter);
+            mOuter = nullptr;
         }
     }
 }
@@ -649,7 +628,7 @@ nsXPCWrappedJS::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if (iid)
             NS_Free(iid);
-        XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass));
+        XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %x", mClass.get()));
 
         if (!IsRootWrapper())
             XPC_LOG_OUTDENT();

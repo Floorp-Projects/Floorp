@@ -2828,7 +2828,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * @return true if this text frame ends with a newline character.  It
    * should return false if this is not a text frame.
    */
-  virtual bool HasTerminalNewline() const;
+  virtual bool HasSignificantTerminalNewline() const;
 
   static bool AddCSSPrefSize(nsIFrame* aBox, nsSize& aSize, bool& aWidth, bool& aHeightSet);
   static bool AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox,
