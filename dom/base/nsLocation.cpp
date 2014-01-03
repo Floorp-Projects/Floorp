@@ -30,6 +30,7 @@
 #include "nsContentUtils.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
+#include "ScriptSettings.h"
 
 static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
@@ -123,10 +124,10 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
     nsCOMPtr<nsIDocument> doc;
     nsCOMPtr<nsIURI> docOriginalURI, docCurrentURI, principalURI;
-    nsCOMPtr<nsPIDOMWindow> entryPoint =
-      do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
-    if (entryPoint) {
-      doc = entryPoint->GetDoc();
+    nsCOMPtr<nsPIDOMWindow> incumbent =
+      do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
+    if (incumbent) {
+      doc = incumbent->GetDoc();
     }
     if (doc) {
       docOriginalURI = doc->GetOriginalURI();
