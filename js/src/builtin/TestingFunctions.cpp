@@ -115,14 +115,6 @@ GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_SetProperty(cx, info, "threadsafe", value))
         return false;
 
-#ifdef JS_WORKER_THREADS
-    value = BooleanValue(true);
-#else
-    value = BooleanValue(false);
-#endif
-    if (!JS_SetProperty(cx, info, "worker-threads", value))
-        return false;
-
 #ifdef JS_MORE_DETERMINISTIC
     value = BooleanValue(true);
 #else
