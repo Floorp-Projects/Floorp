@@ -1021,10 +1021,10 @@ types::FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *c
         JS_ASSERT(entry.script->types);
 
         CheckDefinitePropertiesTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script));
-        unsigned nargs = entry.script->function() ? entry.script->function()->nargs() : 0;
+        unsigned nargs = entry.script->function() ? entry.script->function()->nargs : 0;
         for (size_t i = 0; i < nargs; i++)
             CheckDefinitePropertiesTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i));
-        for (size_t i = 0; i < entry.script->nTypeSets(); i++)
+        for (size_t i = 0; i < entry.script->nTypeSets; i++)
             CheckDefinitePropertiesTypeSet(cx, &entry.bytecodeTypes[i], &entry.script->types->typeArray()[i]);
     }
 }
