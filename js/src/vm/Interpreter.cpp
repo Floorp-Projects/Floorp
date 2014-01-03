@@ -500,19 +500,13 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
         /*
          * We must call the thisObject hook in case we are not called from the
          * interpreter, where a prior bytecode has computed an appropriate
-         * |this| already.  But don't do that if fval is a DOM function.
+         * |this| already.
          */
-        if (!fval.isObject() || !fval.toObject().is<JSFunction>() ||
-            !fval.toObject().as<JSFunction>().isNative() ||
-            !fval.toObject().as<JSFunction>().jitInfo() ||
-            !fval.toObject().as<JSFunction>().jitInfo()->isDOMJitInfo())
-        {
-            RootedObject thisObj(cx, &args.thisv().toObject());
-            JSObject *thisp = JSObject::thisObject(cx, thisObj);
-            if (!thisp)
-                return false;
-            args.setThis(ObjectValue(*thisp));
-        }
+        RootedObject thisObj(cx, &args.thisv().toObject());
+        JSObject *thisp = JSObject::thisObject(cx, thisObj);
+        if (!thisp)
+             return false;
+        args.setThis(ObjectValue(*thisp));
     }
 
     if (!Invoke(cx, args))
