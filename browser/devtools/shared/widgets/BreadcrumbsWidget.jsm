@@ -17,7 +17,9 @@ this.EXPORTED_SYMBOLS = ["BreadcrumbsWidget"];
 
 /**
  * A breadcrumb-like list of items.
- * This widget should be used in tandem with the WidgetMethods in ViewHelpers.jsm
+ *
+ * Note: this widget should be used in tandem with the WidgetMethods in
+ * ViewHelpers.jsm.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
@@ -59,8 +61,8 @@ BreadcrumbsWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @param string | nsIDOMNode aContents
-   *        The string or node displayed in the container.
+   * @param nsIDOMNode aContents
+   *        The node displayed in the container.
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
@@ -113,7 +115,9 @@ BreadcrumbsWidget.prototype = {
    * Gets the currently selected child node in this container.
    * @return nsIDOMNode
    */
-  get selectedItem() this._selectedItem,
+  get selectedItem() {
+    return this._selectedItem;
+  },
 
   /**
    * Sets the currently selected child node in this container.
@@ -133,17 +137,37 @@ BreadcrumbsWidget.prototype = {
         node.removeAttribute("checked");
       }
     }
+  },
+
+  /**
+   * Returns the value of the named attribute on this container.
+   *
+   * @param string aName
+   *        The name of the attribute.
+   * @return string
+   *         The current attribute value.
+   */
+  getAttribute: function(aName) {
+    if (aName == "scrollPosition") return this._list.scrollPosition;
+    if (aName == "scrollWidth") return this._list.scrollWidth;
+    return this._parent.getAttribute(aName);
+  },
+
+  /**
+   * Ensures the specified element is visible.
+   *
+   * @param nsIDOMNode aElement
+   *        The element to make visible.
+   */
+  ensureElementIsVisible: function(aElement) {
+    if (!aElement) {
+      return;
+    }
 
     // Repeated calls to ensureElementIsVisible would interfere with each other
     // and may sometimes result in incorrect scroll positions.
     setNamedTimeout("breadcrumb-select", ENSURE_SELECTION_VISIBLE_DELAY, () => {
-      if (this._selectedItem &&
-        // Sometimes the this._list doesn't have some methods, because the node
-        // is accessed while it's not visible or has been removed from the DOM.
-        // Avoid outputing an exception to the console in those cases.
-        this._list.ensureElementIsVisible) {
-        this._list.ensureElementIsVisible(this._selectedItem);
-      }
+      this._list.ensureElementIsVisible(aElement);
     });
   },
 
@@ -183,8 +207,8 @@ BreadcrumbsWidget.prototype = {
  *
  * @param BreadcrumbsWidget aWidget
  *        The widget to contain this breadcrumb.
- * @param string | nsIDOMNode aContents
- *        The string or node displayed in the container.
+ * @param nsIDOMNode aContents
+ *        The node displayed in the container.
  */
 function Breadcrumb(aWidget, aContents) {
   this.document = aWidget.document;
@@ -205,14 +229,6 @@ Breadcrumb.prototype = {
    *        The string or node displayed in the container.
    */
   set contents(aContents) {
-    // If this item's view contents are a string, then create a label to hold
-    // the text displayed in this breadcrumb.
-    if (typeof aContents == "string") {
-      let label = this.document.createElement("label");
-      label.setAttribute("value", aContents);
-      this.contents = label;
-      return;
-    }
     // If there are already some contents displayed, replace them.
     if (this._target.hasChildNodes()) {
       this._target.replaceChild(aContents, this._target.firstChild);

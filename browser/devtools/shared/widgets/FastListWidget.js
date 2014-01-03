@@ -1,3 +1,10 @@
+/* -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu, Ci } = require("chrome");
 const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
@@ -107,7 +114,9 @@ FastListWidget.prototype = {
    * Gets the currently selected child node in this container.
    * @return nsIDOMNode
    */
-  get selectedItem() this._selectedItem,
+  get selectedItem() {
+    return this._selectedItem;
+  },
 
   /**
    * Sets the currently selected child node in this container.
@@ -122,11 +131,9 @@ FastListWidget.prototype = {
     for (let node of menuArray) {
       if (node == child) {
         node.classList.add("selected");
-        node.parentNode.classList.add("selected");
         this._selectedItem = node;
       } else {
         node.classList.remove("selected");
-        node.parentNode.classList.remove("selected");
       }
     }
 
@@ -193,7 +200,7 @@ FastListWidget.prototype = {
     // Ensure the element is visible but not scrolled horizontally.
     let boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
     boxObject.ensureElementIsVisible(element);
-    boxObject.scrollBy(-element.clientWidth, 0);
+    boxObject.scrollBy(-this._list.clientWidth, 0);
   },
 
   window: null,
