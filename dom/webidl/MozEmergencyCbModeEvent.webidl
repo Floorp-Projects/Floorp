@@ -4,13 +4,19 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type,
-             optional MozEmergencyCbModeEventInit eventInitDict),
- HeaderFile="GeneratedEventClasses.h"]
+[Pref="dom.mobileconnection.enabled",
+ Constructor(DOMString type, optional MozEmergencyCbModeEventInit eventInitDict)]
 interface MozEmergencyCbModeEvent : Event
 {
-  readonly attribute boolean        active;
-  readonly attribute unsigned long  timeoutMs;
+  /**
+   * Whether the mode is activated.
+   */
+  readonly attribute boolean active;
+
+  /**
+   * Automatically exit the mode after the timeoutMs ms.
+   */
+  readonly attribute unsigned long timeoutMs;
 };
 
 dictionary MozEmergencyCbModeEventInit : EventInit
