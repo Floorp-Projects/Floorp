@@ -1839,7 +1839,7 @@ DEFINE_REGISTER_SIZE_OF_TAB(NonJS);
 namespace mozilla {
 namespace dmd {
 
-class DoNothingCallback : public nsIHandleReportCallback
+class DoNothingCallback MOZ_FINAL : public nsIHandleReportCallback
 {
 public:
     NS_DECL_ISUPPORTS
