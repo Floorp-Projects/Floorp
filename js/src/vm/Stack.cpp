@@ -521,6 +521,18 @@ ScriptFrameIter::settleOnActivation()
             continue;
         }
 
+        // If the caller supplied principals, only show activations which are subsumed (of the same
+        // origin or of an origin accessible) by these principals.
+        if (data_.principals_) {
+            if (JSSubsumesOp subsumes = data_.cx_->runtime()->securityCallbacks->subsumes) {
+                JS::AutoAssertNoGC nogc;
+                if (!subsumes(data_.principals_, activation->compartment()->principals)) {
+                    ++data_.activations_;
+                    continue;
+                }
+            }
+        }
+
 #ifdef JS_ION
         if (activation->isJit()) {
             data_.ionFrames_ = jit::IonFrameIterator(data_.activations_);
@@ -565,11 +577,12 @@ ScriptFrameIter::settleOnActivation()
 }
 
 ScriptFrameIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption,
-                            ContextOption contextOption)
+                            ContextOption contextOption, JSPrincipals *principals)
   : perThread_(perThread),
     cx_(cx),
     savedOption_(savedOption),
     contextOption_(contextOption),
+    principals_(principals),
     pc_(nullptr),
     interpFrames_(nullptr),
     activations_(cx->runtime())
@@ -584,6 +597,7 @@ ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
     cx_(other.cx_),
     savedOption_(other.savedOption_),
     contextOption_(other.contextOption_),
+    principals_(other.principals_),
     state_(other.state_),
     pc_(other.pc_),
     interpFrames_(other.interpFrames_),
@@ -595,7 +609,7 @@ ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
 }
 
 ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
-  : data_(cx, &cx->runtime()->mainThread, savedOption, CURRENT_CONTEXT)
+  : data_(cx, &cx->runtime()->mainThread, savedOption, CURRENT_CONTEXT, nullptr)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
 #endif
@@ -603,8 +617,9 @@ ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
     settleOnActivation();
 }
 
-ScriptFrameIter::ScriptFrameIter(JSContext *cx, ContextOption contextOption, SavedOption savedOption)
-  : data_(cx, &cx->runtime()->mainThread, savedOption, contextOption)
+ScriptFrameIter::ScriptFrameIter(JSContext *cx, ContextOption contextOption,
+                                 SavedOption savedOption, JSPrincipals *principals)
+  : data_(cx, &cx->runtime()->mainThread, savedOption, contextOption, principals)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
 #endif
