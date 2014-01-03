@@ -928,11 +928,13 @@ nsBoxFrame::DoLayout(nsBoxLayoutState& aState)
     desiredSize.SetTopAscent(ascent);
     desiredSize.mOverflowAreas = GetOverflowAreas();
 
+    AddStateBits(NS_FRAME_IN_REFLOW);
     // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames
     // (just a dummy value; hopefully that's OK)
     nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
     ReflowAbsoluteFrames(aState.PresContext(), desiredSize,
                          reflowState, reflowStatus);
+    RemoveStateBits(NS_FRAME_IN_REFLOW);
   }
 
   return rv;
