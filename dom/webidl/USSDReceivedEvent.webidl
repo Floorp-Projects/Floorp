@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h", Pref="dom.icc.enabled"]
+[Pref="dom.mobileconnection.enabled",
+ Constructor(DOMString type, optional USSDReceivedEventInit eventInitDict)]
 interface USSDReceivedEvent : Event
 {
   readonly attribute DOMString? message;
