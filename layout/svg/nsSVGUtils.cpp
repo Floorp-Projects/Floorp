@@ -1052,14 +1052,6 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 /*static*/ gfxRect
 nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                          nsSVGGeometryFrame* aFrame,
-                                          const gfxMatrix& aMatrix)
-{
-  return ::PathExtentsToMaxStrokeExtents(aPathExtents, aFrame, 0.5, aMatrix);
-}
-
-/*static*/ gfxRect
-nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                           nsTextFrame* aFrame,
                                           const gfxMatrix& aMatrix)
 {
