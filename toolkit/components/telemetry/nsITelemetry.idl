@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(cb97b7b4-dce6-45fa-be6a-47e436a9aef9)]
+[scriptable, uuid(3bdb3c83-1ac0-482a-9c3d-b15141174af4)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -139,6 +139,7 @@ interface nsITelemetry : nsISupports
    * Create and return a histogram.  Parameters:
    *
    * @param name Unique histogram name
+   * @param expiration Expiration version
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram.
@@ -149,7 +150,7 @@ interface nsITelemetry : nsISupports
    *   clear() - Zeros out the histogram's buckets and sum
    */
   [implicit_jscontext]
-  jsval newHistogram(in ACString name, in uint32_t min, in uint32_t max, in uint32_t bucket_count, in unsigned long histogram_type);
+  jsval newHistogram(in ACString name, in ACString expiration, in uint32_t min, in uint32_t max, in uint32_t bucket_count, in unsigned long histogram_type);
 
   /**
    * Create a histogram using the current state of an existing histogram.  The
