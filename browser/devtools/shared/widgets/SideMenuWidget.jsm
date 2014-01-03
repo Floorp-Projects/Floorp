@@ -8,26 +8,16 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
-
-XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-  "resource://gre/modules/devtools/Loader.jsm");
-
-Object.defineProperty(this, "NetworkHelper", {
-  get: function() {
-    return devtools.require("devtools/toolkit/webconsole/network-helper");
-  },
-  configurable: true,
-  enumerable: true
-});
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
 
 /**
  * A simple side menu, with the ability of grouping menu items.
- * This widget should be used in tandem with the WidgetMethods in ViewHelpers.jsm
+ *
+ * Note: this widget should be used in tandem with the WidgetMethods in
+ * ViewHelpers.jsm.
  *
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
@@ -73,6 +63,7 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions={}) {
 
   // Delegate some of the associated node's methods to satisfy the interface
   // required by MenuContainer instances.
+  ViewHelpers.delegateWidgetAttributeMethods(this, aNode);
   ViewHelpers.delegateWidgetEventMethods(this, aNode);
 };
 
@@ -81,12 +72,6 @@ SideMenuWidget.prototype = {
    * Specifies if groups in this container should be sorted alphabetically.
    */
   sortedGroups: true,
-
-  /**
-   * Specifies if this container should try to keep the selected item visible.
-   * (For example, when new items are added the selection is brought into view).
-   */
-  maintainSelectionVisible: true,
 
   /**
    * Specifies that the container viewport should be "stuck" to the
@@ -102,24 +87,17 @@ SideMenuWidget.prototype = {
    *
    * @param number aIndex
    *        The position in the container intended for this item.
-   * @param string | nsIDOMNode aContents
-   *        The string or node displayed in the container.
-   * @param string aTooltip [optional]
-   *        A tooltip attribute for the displayed item.
-   * @param string aGroup [optional]
-   *        The group to place the displayed item into.
-   * @param Object aAttachment [optional]
-   *        Extra data for the user.
+   * @param nsIDOMNode aContents
+   *        The node displayed in the container.
+   * @param object aAttachment [optional]
+   *        Some attached primitive/object. Custom options supported:
+   *          - group: a string specifying the group to place this item into
+   *          - checkboxState: the checked state of the checkbox, if shown
+   *          - checkboxTooltip: the tooltip text for the checkbox, if shown
    * @return nsIDOMNode
    *         The element associated with the displayed item.
    */
-  insertItemAt: function(aIndex, aContents, aTooltip = "", aGroup = "", aAttachment={}) {
-    aTooltip = NetworkHelper.convertToUnicode(unescape(aTooltip));
-    aGroup = NetworkHelper.convertToUnicode(unescape(aGroup));
-
-    // Invalidate any notices set on this widget.
-    this.removeAttribute("notice");
-
+  insertItemAt: function(aIndex, aContents, aAttachment={}) {
     // Maintaining scroll position at the bottom when a new item is inserted
     // depends on several factors (the order of testing is important to avoid
     // needlessly expensive operations that may cause reflows):
@@ -133,13 +111,10 @@ SideMenuWidget.prototype = {
       // 4. The list should already be scrolled at the bottom.
       (this._list.scrollTop + this._list.clientHeight >= this._list.scrollHeight);
 
-    let group = this._getMenuGroupForName(aGroup);
-    let item = this._getMenuItemForGroup(group, aContents, aTooltip, aAttachment);
+    let group = this._getMenuGroupForName(aAttachment.group);
+    let item = this._getMenuItemForGroup(group, aContents, aAttachment);
     let element = item.insertSelfAt(aIndex);
 
-    if (this.maintainSelectionVisible) {
-      this.ensureElementIsVisible(this.selectedItem);
-    }
     if (maintainScrollAtBottom) {
       this._list.scrollTop = this._list.scrollHeight;
     }
@@ -171,7 +146,6 @@ SideMenuWidget.prototype = {
       // Remove the item itself, not the contents.
       aChild.parentNode.remove();
     } else {
-      // Groups with no title don't have any special internal structure.
       aChild.remove();
     }
 
@@ -208,7 +182,9 @@ SideMenuWidget.prototype = {
    * Gets the currently selected child node in this container.
    * @return nsIDOMNode
    */
-  get selectedItem() this._selectedItem,
+  get selectedItem() {
+    return this._selectedItem;
+  },
 
   /**
    * Sets the currently selected child node in this container.
@@ -230,8 +206,6 @@ SideMenuWidget.prototype = {
         node.parentNode.classList.remove("selected");
       }
     }
-
-    this.ensureElementIsVisible(this.selectedItem);
   },
 
   /**
@@ -247,14 +221,8 @@ SideMenuWidget.prototype = {
 
     // Ensure the element is visible but not scrolled horizontally.
     let boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
-
-    // Sometimes the boxObject doesn't have some methods, because the node
-    // is accessed while it's not visible or has been removed from the DOM.
-    // Avoid outputing an exception to the console in those cases.
-    if (boxObject.ensureElementIsVisible && boxObject.scrollBy) {
-      boxObject.ensureElementIsVisible(aElement);
-      boxObject.scrollBy(-aElement.clientWidth, 0);
-    }
+    boxObject.ensureElementIsVisible(aElement);
+    boxObject.scrollBy(-this._list.clientWidth, 0);
   },
 
   /**
@@ -281,18 +249,6 @@ SideMenuWidget.prototype = {
   },
 
   /**
-   * Returns the value of the named attribute on this container.
-   *
-   * @param string aName
-   *        The name of the attribute.
-   * @return string
-   *         The current attribute value.
-   */
-  getAttribute: function(aName) {
-    return this._parent.getAttribute(aName);
-  },
-
-  /**
    * Adds a new attribute or changes an existing attribute on this container.
    *
    * @param string aName
@@ -303,8 +259,8 @@ SideMenuWidget.prototype = {
   setAttribute: function(aName, aValue) {
     this._parent.setAttribute(aName, aValue);
 
-    if (aName == "notice") {
-      this.notice = aValue;
+    if (aName == "emptyText") {
+      this._textWhenEmpty = aValue;
     }
   },
 
@@ -317,8 +273,8 @@ SideMenuWidget.prototype = {
   removeAttribute: function(aName) {
     this._parent.removeAttribute(aName);
 
-    if (aName == "notice") {
-      this._removeNotice();
+    if (aName == "emptyText") {
+      this._removeEmptyText();
     }
   },
 
@@ -339,50 +295,43 @@ SideMenuWidget.prototype = {
   },
 
   /**
-   * Sets the text displayed in this container as a notice.
+   * Sets the text displayed in this container as a when empty.
    * @param string aValue
    */
-  set notice(aValue) {
-    if (this._noticeTextNode) {
-      this._noticeTextNode.setAttribute("value", aValue);
+  set _textWhenEmpty(aValue) {
+    if (this._emptyTextNode) {
+      this._emptyTextNode.setAttribute("value", aValue);
     }
-    this._noticeTextValue = aValue;
-    this._appendNotice();
+    this._emptyTextValue = aValue;
+    this._showEmptyText();
   },
 
   /**
-   * Creates and appends a label representing a notice in this container.
+   * Creates and appends a label signaling that this container is empty.
    */
-  _appendNotice: function() {
-    if (this._noticeTextNode || !this._noticeTextValue) {
+  _showEmptyText: function() {
+    if (this._emptyTextNode || !this._emptyTextValue) {
       return;
     }
-
-    let container = this.document.createElement("vbox");
-    container.className = "side-menu-widget-empty-notice-container";
-    container.setAttribute("theme", this._theme);
-
     let label = this.document.createElement("label");
-    label.className = "plain side-menu-widget-empty-notice";
-    label.setAttribute("value", this._noticeTextValue);
-    container.appendChild(label);
+    label.className = "plain side-menu-widget-empty-text";
+    label.setAttribute("value", this._emptyTextValue);
+    label.setAttribute("theme", this._theme);
 
-    this._parent.insertBefore(container, this._list);
-    this._noticeTextContainer = container;
-    this._noticeTextNode = label;
+    this._parent.insertBefore(label, this._list);
+    this._emptyTextNode = label;
   },
 
   /**
    * Removes the label representing a notice in this container.
    */
-  _removeNotice: function() {
-    if (!this._noticeTextNode) {
+  _removeEmptyText: function() {
+    if (!this._emptyTextNode) {
       return;
     }
 
-    this._parent.removeChild(this._noticeTextContainer);
-    this._noticeTextContainer = null;
-    this._noticeTextNode = null;
+    this._parent.removeChild(this._emptyTextNode);
+    this._emptyTextNode = null;
   },
 
   /**
@@ -417,15 +366,13 @@ SideMenuWidget.prototype = {
    *
    * @param SideMenuGroup aGroup
    *        The group to contain the menu item.
-   * @param string | nsIDOMNode aContents
-   *        The string or node displayed in the container.
-   * @param string aTooltip [optional]
-   *        A tooltip attribute for the displayed item.
+   * @param nsIDOMNode aContents
+   *        The node displayed in the container.
    * @param object aAttachment [optional]
-   *        The attachement object.
+   *        Some attached primitive/object.
    */
-  _getMenuItemForGroup: function(aGroup, aContents, aTooltip, aAttachment) {
-    return new SideMenuItem(aGroup, aContents, aTooltip, aAttachment, {
+  _getMenuItemForGroup: function(aGroup, aContents, aAttachment) {
+    return new SideMenuItem(aGroup, aContents, aAttachment, {
       theme: this._theme,
       showArrow: this._showArrows,
       showCheckbox: this._showItemCheckboxes
@@ -445,10 +392,8 @@ SideMenuWidget.prototype = {
   _orderedGroupElementsArray: null,
   _orderedMenuElementsArray: null,
   _itemsByElement: null,
-  _ensureVisibleTimeout: null,
-  _noticeTextContainer: null,
-  _noticeTextNode: null,
-  _noticeTextValue: ""
+  _emptyTextNode: null,
+  _emptyTextValue: ""
 };
 
 /**
@@ -568,10 +513,8 @@ SideMenuGroup.prototype = {
  *
  * @param SideMenuGroup aGroup
  *        The group to contain this menu item.
- * @param string aTooltip [optional]
- *        A tooltip attribute for the displayed item.
- * @param string | nsIDOMNode aContents
- *        The string or node displayed in the container.
+ * @param nsIDOMNode aContents
+ *        The node displayed in the container.
  * @param object aAttachment [optional]
  *        The attachment object.
  * @param object aOptions [optional]
@@ -580,7 +523,7 @@ SideMenuGroup.prototype = {
  *          - showArrow: specifies if a horizontal arrow should be displayed.
  *          - showCheckbox: specifies if a checkbox should be displayed.
  */
-function SideMenuItem(aGroup, aContents, aTooltip, aAttachment={}, aOptions={}) {
+function SideMenuItem(aGroup, aContents, aAttachment={}, aOptions={}) {
   this.document = aGroup.document;
   this.window = aGroup.window;
   this.ownerView = aGroup;
@@ -588,7 +531,6 @@ function SideMenuItem(aGroup, aContents, aTooltip, aAttachment={}, aOptions={}) 
   if (aOptions.showArrow || aOptions.showCheckbox) {
     let container = this._container = this.document.createElement("hbox");
     container.className = "side-menu-widget-item";
-    container.setAttribute("tooltiptext", aTooltip);
     container.setAttribute("theme", aOptions.theme);
 
     let target = this._target = this.document.createElement("vbox");
@@ -671,17 +613,6 @@ SideMenuItem.prototype = {
    *        The string or node displayed in the container.
    */
   set contents(aContents) {
-    // If this item's view contents are a string, then create a label to hold
-    // the text displayed in this breadcrumb.
-    if (typeof aContents == "string") {
-      let label = this.document.createElement("label");
-      label.className = "side-menu-widget-item-label";
-      label.setAttribute("value", aContents);
-      label.setAttribute("crop", "start");
-      label.setAttribute("flex", "1");
-      this.contents = label;
-      return;
-    }
     // If there are already some contents displayed, replace them.
     if (this._target.hasChildNodes()) {
       this._target.replaceChild(aContents, this._target.firstChild);

@@ -27,7 +27,7 @@ function Sidebar(el) {
 
   this.document = el.ownerDocument;
   this.widget = new SideMenuWidget(el, { showArrows: true });
-  this.widget.notice = L10N.getStr("profiler.sidebarNotice");
+  this.emptyText = L10N.getStr("profiler.sidebarNotice");
 
   this.widget.addEventListener("select", (ev) => {
     if (!ev.detail)
