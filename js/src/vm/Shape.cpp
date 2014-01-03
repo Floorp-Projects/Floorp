@@ -1658,7 +1658,7 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, Hand
         PodZero(&entries[entry]);
     if (!proto->is<GlobalObject>() && lookupProto(clasp, proto, kind, &entry))
         PodZero(&entries[entry]);
-    if (lookupType(clasp, type, kind, &entry))
+    if (lookupType(type, kind, &entry))
         PodZero(&entries[entry]);
 }
 
