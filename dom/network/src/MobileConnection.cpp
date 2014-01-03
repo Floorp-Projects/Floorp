@@ -5,15 +5,15 @@
 #include "mozilla/dom/network/MobileConnection.h"
 
 #include "GeneratedEvents.h"
+#include "mozilla/dom/CFStateChangeEvent.h"
+#include "mozilla/dom/DataErrorEvent.h"
+#include "mozilla/dom/MozEmergencyCbModeEvent.h"
+#include "mozilla/dom/MozOtaStatusEvent.h"
+#include "mozilla/dom/USSDReceivedEvent.h"
 #include "mozilla/Preferences.h"
 #include "nsDOMEvent.h"
-#include "nsIDOMCFStateChangeEvent.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMDOMRequest.h"
-#include "nsIDOMDataErrorEvent.h"
-#include "nsIDOMMozEmergencyCbModeEvent.h"
-#include "nsIDOMMozOtaStatusEvent.h"
-#include "nsIDOMUSSDReceivedEvent.h"
 #include "nsIPermissionManager.h"
 
 #include "nsJSUtils.h"
@@ -610,16 +610,16 @@ MobileConnection::NotifyUssdReceived(const nsAString& aMessage,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMUSSDReceivedEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  USSDReceivedEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mMessage = aMessage;
+  init.mSessionEnded = aSessionEnded;
 
-  nsCOMPtr<nsIDOMUSSDReceivedEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitUSSDReceivedEvent(NS_LITERAL_STRING("ussdreceived"),
-                                          false, false,
-                                          aMessage, aSessionEnded);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<USSDReceivedEvent> event =
+    USSDReceivedEvent::Constructor(this, NS_LITERAL_STRING("ussdreceived"), init);
 
-  return DispatchTrustedEvent(ce);
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP
@@ -629,15 +629,15 @@ MobileConnection::NotifyDataError(const nsAString& aMessage)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMDataErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  DataErrorEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mMessage = aMessage;
 
-  nsCOMPtr<nsIDOMDataErrorEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitDataErrorEvent(NS_LITERAL_STRING("dataerror"),
-                                       false, false, aMessage);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<DataErrorEvent> event =
+    DataErrorEvent::Constructor(this, NS_LITERAL_STRING("dataerror"), init);
 
-  return DispatchTrustedEvent(ce);
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP
@@ -652,17 +652,20 @@ MobileConnection::NotifyCFStateChange(bool aSuccess,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMCFStateChangeEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  CFStateChangeEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mSuccess = aSuccess;
+  init.mAction = aAction;
+  init.mReason = aReason;
+  init.mNumber = aNumber;
+  init.mTimeSeconds = aSeconds;
+  init.mServiceClass = aServiceClass;
 
-  nsCOMPtr<nsIDOMCFStateChangeEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitCFStateChangeEvent(NS_LITERAL_STRING("cfstatechange"),
-                                           false, false,
-                                           aSuccess, aAction, aReason, aNumber,
-                                           aSeconds, aServiceClass);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<CFStateChangeEvent> event =
+    CFStateChangeEvent::Constructor(this, NS_LITERAL_STRING("cfstatechange"), init);
 
-  return DispatchTrustedEvent(ce);
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP
@@ -673,18 +676,16 @@ MobileConnection::NotifyEmergencyCbModeChanged(bool aActive,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozEmergencyCbModeEvent(getter_AddRefs(event), this, nullptr,
-                                   nullptr);
-  MOZ_ASSERT(event);
+  MozEmergencyCbModeEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mActive = aActive;
+  init.mTimeoutMs = aTimeoutMs;
 
-  nsCOMPtr<nsIDOMMozEmergencyCbModeEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitMozEmergencyCbModeEvent(
-      NS_LITERAL_STRING("emergencycbmodechange"), false, false,
-      aActive, aTimeoutMs);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<MozEmergencyCbModeEvent> event =
+    MozEmergencyCbModeEvent::Constructor(this, NS_LITERAL_STRING("emergencycbmodechange"), init);
 
-  return DispatchTrustedEvent(ce);
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP
@@ -694,16 +695,15 @@ MobileConnection::NotifyOtaStatusChanged(const nsAString& aStatus)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozOtaStatusEvent(getter_AddRefs(event), this, nullptr, nullptr);
-  MOZ_ASSERT(event);
+  MozOtaStatusEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mStatus = aStatus;
 
-  nsCOMPtr<nsIDOMMozOtaStatusEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitMozOtaStatusEvent(NS_LITERAL_STRING("otastatuschange"),
-                                          false, false, aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<MozOtaStatusEvent> event =
+    MozOtaStatusEvent::Constructor(this, NS_LITERAL_STRING("otastatuschange"), init);
 
-  return DispatchTrustedEvent(ce);
+  return DispatchTrustedEvent(event);
 }
 
 NS_IMETHODIMP

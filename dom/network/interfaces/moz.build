@@ -18,12 +18,7 @@ XPIDL_SOURCES += [
 
 if CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
-        'nsIDOMCFStateChangeEvent.idl',
-        'nsIDOMDataErrorEvent.idl',
         'nsIDOMMobileConnection.idl',
-        'nsIDOMMozEmergencyCbModeEvent.idl',
-        'nsIDOMMozOtaStatusEvent.idl',
-        'nsIDOMUSSDReceivedEvent.idl',
         'nsIMobileConnectionProvider.idl',
     ]
 

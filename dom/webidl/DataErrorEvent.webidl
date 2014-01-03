@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional DataErrorEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Pref="dom.mobileconnection.enabled",
+ Constructor(DOMString type, optional DataErrorEventInit eventInitDict)]
 interface DataErrorEvent : Event
 {
   readonly attribute DOMString? message;
