@@ -1,0 +1,16 @@
+<html>
+<body>
+<script>
+
+// invoke audio-capture permission prompt
+navigator.mozGetUserMedia({audio: true}, function () {}, function () {});
+
+// invoke geolocation permission prompt
+navigator.geolocation.getCurrentPosition(function (pos) {});
+
+// invoke desktop-notification prompt
+Notification.requestPermission(function (perm) {});
+
+</script>
+</body>
+</html>
