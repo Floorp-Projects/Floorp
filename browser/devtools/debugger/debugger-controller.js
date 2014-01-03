@@ -887,11 +887,8 @@ StackFrames.prototype = {
       }
     } while ((environment = environment.parent));
 
-    // Signal that scope environments have been shown and commit the current
-    // variables view hierarchy to briefly flash items that changed between the
-    // previous and current scope/variables/properties.
+    // Signal that scope environments have been shown.
     window.emit(EVENTS.FETCHED_SCOPES);
-    DebuggerView.Variables.commitHierarchy();
   },
 
   /**
@@ -1005,11 +1002,8 @@ StackFrames.prototype = {
         expRef.separatorStr = L10N.getStr("variablesSeparatorLabel");
       }
 
-      // Signal that watch expressions have been fetched and commit the
-      // current variables view hierarchy to briefly flash items that changed
-      // between the previous and current scope/variables/properties.
+      // Signal that watch expressions have been fetched.
       window.emit(EVENTS.FETCHED_WATCH_EXPRESSIONS);
-      DebuggerView.Variables.commitHierarchy();
     });
   },
 
