@@ -293,12 +293,14 @@ this.DataStore.prototype = {
 
   sendNotification: function(aId, aOperation, aRevisionId) {
     debug("SendNotification");
-    if (aOperation != REVISION_VOID) {
-      cpmm.sendAsyncMessage("DataStore:Changed",
-                            { store: this.name, owner: this.owner,
-                              message: { revisionId: aRevisionId, id: aId,
-                                         operation: aOperation } } );
+    if (aOperation == REVISION_VOID) {
+      aOperation = "cleared";
     }
+
+    cpmm.sendAsyncMessage("DataStore:Changed",
+                          { store: this.name, owner: this.owner,
+                            message: { revisionId: aRevisionId, id: aId,
+                                       operation: aOperation } } );
   },
 
   receiveMessage: function(aMessage) {
