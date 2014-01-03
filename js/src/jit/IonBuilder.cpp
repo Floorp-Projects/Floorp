@@ -5202,6 +5202,9 @@ IonBuilder::makeCallHelper(JSFunction *target, CallInfo &callInfo, bool cloneAtC
     for (int32_t i = callInfo.argc() - 1; i >= 0; i--)
         call->addArg(i + 1, callInfo.getArg(i));
 
+    // Now that we've told it about all the args, compute whether it's movable
+    call->computeMovable();
+
     // Inline the constructor on the caller-side.
     if (callInfo.constructing()) {
         MDefinition *create = createThis(target, callInfo.fun());
