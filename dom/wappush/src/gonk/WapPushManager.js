@@ -136,8 +136,7 @@ this.WapPushManager = {
       sender:         sender,
       contentType:    msg.contentType,
       content:        msg.content,
-      authInfo:       authInfo,
-      serviceId:      options.serviceId
+      authInfo:       authInfo
     });
   },
 
