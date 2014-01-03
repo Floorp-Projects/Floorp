@@ -1607,9 +1607,15 @@ OffThreadCompilationAvailable(JSContext *cx)
 }
 
 static void
-TrackAllProperties(JSContext *cx, JSObject *obj)
+TrackCallObjectProperties(JSContext *cx, CallObject *obj)
 {
     JS_ASSERT(obj->hasSingletonType());
+
+    // Keep track of run-once call objects.
+    JS_ASSERT(obj->callee().hasSingletonType());
+    types::TypeObject *type = obj->callee().getType(cx);
+    if (type && !type->hasRunOnceCallObject())
+        type->initAddendum(types::TypeObject::RunOnceCallObject, obj);
 
     for (Shape::Range<NoGC> range(obj->lastProperty()); !range.empty(); range.popFront())
         types::EnsureTrackPropertyTypes(cx, obj, range.front().propid());
@@ -1626,14 +1632,14 @@ TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame
 
     while (environment && !environment->is<GlobalObject>()) {
         if (environment->is<CallObject>() && environment->hasSingletonType())
-            TrackAllProperties(cx, environment);
+            TrackCallObjectProperties(cx, &environment->as<CallObject>());
         environment = environment->enclosingScope();
     }
 
     if (baselineFrame) {
         JSObject *scope = baselineFrame->scopeChain();
         if (scope->is<CallObject>() && scope->hasSingletonType())
-            TrackAllProperties(cx, scope);
+            TrackCallObjectProperties(cx, &scope->as<CallObject>());
     }
 }
 

@@ -401,8 +401,8 @@ enum MOZ_ENUM_TYPE(uint32_t) {
     /* Whether this type object is associated with some allocation site. */
     OBJECT_FLAG_FROM_ALLOCATION_SITE  = 0x1,
 
-    /* If set, addendum information should not be installed on this object. */
-    OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
+    /* If set, new script addendums should not be installed on this object. */
+    OBJECT_FLAG_NEW_SCRIPT_CLEARED    = 0x2,
 
     /*
      * If set, the object's prototype might be in the nursery and can't be
@@ -464,7 +464,11 @@ enum MOZ_ENUM_TYPE(uint32_t) {
     /* Mask for objects created with unknown properties. */
     OBJECT_FLAG_UNKNOWN_MASK =
         OBJECT_FLAG_DYNAMIC_MASK
-      | OBJECT_FLAG_SETS_MARKED_UNKNOWN
+      | OBJECT_FLAG_SETS_MARKED_UNKNOWN,
+
+    /* Mask and shift storing the kind of addendum attached to a typed object. */
+    OBJECT_FLAG_ADDENDUM_MASK         = 0x03000000,
+    OBJECT_FLAG_ADDENDUM_SHIFT        = 24
 };
 typedef uint32_t TypeObjectFlags;
 
@@ -757,43 +761,6 @@ struct Property
     static jsid getKey(Property *p) { return p->id; }
 };
 
-struct TypeNewScript;
-struct TypeTypedObject;
-
-struct TypeObjectAddendum
-{
-    enum Kind {
-        NewScript,
-        TypedObject
-    };
-
-    TypeObjectAddendum(Kind kind);
-
-    const Kind kind;
-
-    bool isNewScript() {
-        return kind == NewScript;
-    }
-
-    TypeNewScript *asNewScript() {
-        JS_ASSERT(isNewScript());
-        return (TypeNewScript*) this;
-    }
-
-    bool isTypedObject() {
-        return kind == TypedObject;
-    }
-
-    TypeTypedObject *asTypedObject() {
-        JS_ASSERT(isTypedObject());
-        return (TypeTypedObject*) this;
-    }
-
-    static inline void writeBarrierPre(TypeObjectAddendum *type);
-
-    static void writeBarrierPost(TypeObjectAddendum *newScript, void *addr) {}
-};
-
 /*
  * Information attached to a TypeObject if it is always constructed using 'new'
  * on a particular script. This is used to manage state related to the definite
@@ -804,9 +771,9 @@ struct TypeObjectAddendum
  * remove the definite property information and repair the JS stack if the
  * constraints are violated.
  */
-struct TypeNewScript : public TypeObjectAddendum
+struct NewScriptAddendum
 {
-    TypeNewScript();
+    NewScriptAddendum();
 
     HeapPtrFunction fun;
 
@@ -842,17 +809,17 @@ struct TypeNewScript : public TypeObjectAddendum
     };
     Initializer *initializerList;
 
-    static inline void writeBarrierPre(TypeNewScript *newScript);
+    static inline void writeBarrierPre(NewScriptAddendum *newScript);
 };
 
-struct TypeTypedObject : public TypeObjectAddendum
+struct TypedObjectAddendum
 {
     enum Kind {
         TypeDescriptor,
         Datum,
     };
 
-    TypeTypedObject(Kind kind, TypeRepresentation *repr);
+    TypedObjectAddendum(Kind kind, TypeRepresentation *repr);
 
     const Kind kind;
     TypeRepresentation *const typeRepr;
@@ -953,21 +920,40 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     static const size_t LAZY_SINGLETON = 1;
     bool lazy() const { return singleton() == (JSObject *) LAZY_SINGLETON; }
 
+    /* Different data that can be stored in the TypeObject's addendum. */
+    enum AddendumKind {
+        /*
+         * For 'new' type objects for some prototype, the addendum might be a
+         * NewScriptAddendume describing definite properties for the type.
+         */
+        NewScript,
+
+        /*
+         * For type objects describing ECMA typed objects, the addendum is
+         * a TypedObjectAddendum with the objects' representation.
+         */
+        TypedObject,
+
+        /*
+         * For type objects on non-singleton interpreted functions, the
+         * addendum is the script's canonical JSFunction.
+         */
+        InterpretedFunction,
+
+        /*
+         * For type objects on singleton run-once functions, the addendum might
+         * be the script's unique CallObject.
+         */
+        RunOnceCallObject
+    };
+
   private:
     /* Flags for this object. */
     TypeObjectFlags flags_;
 
-    /*
-     * This field allows various special classes of objects to attach
-     * additional information to a type object:
-     *
-     * - `TypeNewScript`: If addendum is a `TypeNewScript`, it
-     *   indicates that objects of this type have always been
-     *   constructed using 'new' on the specified script, which adds
-     *   some number of properties to the object in a definite order
-     *   before the object escapes.
-     */
-    HeapPtr<TypeObjectAddendum> addendum;
+    /* Associated addendum data, with a type given according to the above enum. */
+    void *addendum;
+
   public:
 
     TypeObjectFlags flags() const {
@@ -986,31 +972,39 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
         flags_ &= ~flags;
     }
 
-    bool hasNewScript() const {
+    bool hasAddendum() const {
         JS_ASSERT(CurrentThreadCanReadCompilationData());
         AutoThreadSafeAccess ts(this);
-        return addendum && addendum->isNewScript();
+        return addendum != nullptr;
     }
 
-    TypeNewScript *newScript() {
-        JS_ASSERT(CurrentThreadCanReadCompilationData());
+    AddendumKind addendumKind() const {
+        JS_ASSERT(hasAddendum());
         AutoThreadSafeAccess ts(this);
-        return addendum->asNewScript();
+        return (AddendumKind) ((flags_ & OBJECT_FLAG_ADDENDUM_MASK) >> OBJECT_FLAG_ADDENDUM_SHIFT);
+    }
+
+    void initAddendum(AddendumKind kind, void *addendum);
+
+    bool hasNewScript() const {
+        return hasAddendum() && addendumKind() == NewScript;
+    }
+
+    NewScriptAddendum *newScript() {
+        JS_ASSERT(hasNewScript());
+        AutoThreadSafeAccess ts(this);
+        return reinterpret_cast<NewScriptAddendum *>(addendum);
     }
 
     bool hasTypedObject() {
-        JS_ASSERT(CurrentThreadCanReadCompilationData());
-        AutoThreadSafeAccess ts(this);
-        return addendum && addendum->isTypedObject();
+        return hasAddendum() && addendumKind() == TypedObject;
     }
 
-    TypeTypedObject *typedObject() {
-        JS_ASSERT(CurrentThreadCanReadCompilationData());
+    TypedObjectAddendum *typedObject() {
+        JS_ASSERT(hasTypedObject());
         AutoThreadSafeAccess ts(this);
-        return addendum->asTypedObject();
+        return reinterpret_cast<TypedObjectAddendum *>(addendum);
     }
-
-    void setAddendum(TypeObjectAddendum *addendum);
 
     /*
      * Tag the type object for a binary data type descriptor, instance,
@@ -1020,8 +1014,28 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      * and the method has no effect.
      */
     bool addTypedObjectAddendum(JSContext *cx,
-                                TypeTypedObject::Kind kind ,
+                                TypedObjectAddendum::Kind kind ,
                                 TypeRepresentation *repr);
+
+    bool hasInterpretedFunction() {
+        return hasAddendum() && addendumKind() == InterpretedFunction;
+    }
+
+    JSFunction *interpretedFunction() {
+        JS_ASSERT(hasInterpretedFunction());
+        AutoThreadSafeAccess ts(this);
+        return reinterpret_cast<JSFunction *>(addendum);
+    }
+
+    bool hasRunOnceCallObject() {
+        return hasAddendum() && addendumKind() == RunOnceCallObject;
+    }
+
+    CallObject *runOnceCallObject() {
+        JS_ASSERT(hasRunOnceCallObject());
+        AutoThreadSafeAccess ts(this);
+        return reinterpret_cast<CallObject *>(addendum);
+    }
 
   private:
     /*
@@ -1059,13 +1073,6 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      */
     Property **propertySet;
   public:
-
-    /* If this is an interpreted function, the function object. */
-    HeapPtrFunction interpretedFunction;
-
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding;
-#endif
 
     inline TypeObject(const Class *clasp, TaggedProto proto, TypeObjectFlags initialFlags);
 
@@ -1136,9 +1143,8 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void markStateChange(ExclusiveContext *cx);
     void setFlags(ExclusiveContext *cx, TypeObjectFlags flags);
     void markUnknown(ExclusiveContext *cx);
-    void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
-    void clearTypedObjectAddendum(ExclusiveContext *cx);
+    void fixTypesForClearedNewScriptAddendum(ExclusiveContext *cx);
     bool isPropertyNonData(jsid id);
     bool isPropertyNonWritable(jsid id);
 
@@ -1374,7 +1380,8 @@ struct TypeObjectKey
     TaggedProto proto();
     bool hasTenuredProto();
     JSObject *singleton();
-    TypeNewScript *newScript();
+    NewScriptAddendum *newScript();
+    CallObject *runOnceCallObject();
 
     bool unknownProperties();
     bool hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags);
