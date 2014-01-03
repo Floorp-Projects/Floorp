@@ -73,6 +73,7 @@ PARALLEL_DIRS += [
     'camera',
     'audiochannel',
     'promise',
+    'smil',
     'telephony',
     'inputmethod',
     'webidl',
