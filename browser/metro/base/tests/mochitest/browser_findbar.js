@@ -26,6 +26,12 @@ gTests.push({
     EventUtils.sendString("bar");
     is(textbox.value, "bar", "Type 'bar' into find bar");
 
+    EventUtils.synthesizeKey("f", { accelKey: true});
+    yield waitForEvent(Elements.findbar, "transitionend");
+    ok(document.commandDispatcher.focusedElement, textbox.inputField, "textbox field is focused with Ctrl-F");
+    is(textbox.selectionStart, 0, "textbox field is selected with Ctrl-F.");
+    is(textbox.selectionEnd, textbox.value.length, "textbox field is selected with Ctrl-F.");
+    
     EventUtils.synthesizeKey("VK_ESCAPE", { accelKey: true });
     yield waitForEvent(Elements.findbar, "transitionend");
     is(Elements.findbar.isShowing, false, "Hide find bar with Esc");
