@@ -117,10 +117,13 @@ private:
     CheckObjectAccess(JSContext *cx, JS::Handle<JSObject*> obj,
                       JS::Handle<jsid> id, JSAccessMode mode,
                       JS::MutableHandle<JS::Value> vp);
-    
+
     // Decides, based on CSP, whether or not eval() and stuff can be executed.
     static bool
     ContentSecurityPolicyPermitsJSAction(JSContext *cx);
+
+    static bool
+    JSPrincipalsSubsume(JSPrincipals *first, JSPrincipals *second);
 
     // Returns null if a principal cannot be found; generally callers
     // should error out at that point.

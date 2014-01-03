@@ -51,6 +51,19 @@ function runTest() {
   keyboard.setAttribute('mozbrowser', true);
   document.body.appendChild(keyboard);
 
+  // Bug 953044 setInputMethodActive(false) before input method app loads should
+  // always succeed.
+  let req = keyboard.setInputMethodActive(false);
+  req.onsuccess = function() {
+    ok(true, 'setInputMethodActive before loading succeeded.');
+  };
+
+  req.onerror = function() {
+   ok(false, 'setInputMethodActive before loading failed: ' + this.error.name);
+   clearTimeout(timeoutId);
+   inputmethod_cleanup();
+  };
+
   let path = location.pathname;
   let imeUrl = location.protocol + '//' + location.host +
                path.substring(0, path.lastIndexOf('/')) +

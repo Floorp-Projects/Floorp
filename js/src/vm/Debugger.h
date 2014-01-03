@@ -37,8 +37,12 @@ class Breakpoint;
  * swept in the same group as the debugger.  This is a conservative approach,
  * and compartments may be unnecessarily grouped, however it results in a
  * simpler and faster implementation.
+ *
+ * If InvisibleKeysOk is true, then the map can have keys in invisible-to-
+ * debugger compartments. If it is false, we assert that such entries are never
+ * created.
  */
-template <class Key, class Value>
+template <class Key, class Value, bool InvisibleKeysOk=false>
 class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 {
   private:
@@ -78,7 +82,8 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         JS_ASSERT(v->compartment() == Base::compartment);
-        JS_ASSERT(!k->compartment()->options_.invisibleToDebugger());
+        JS_ASSERT(!k->compartment()->options_.mergeable());
+        JS_ASSERT_IF(!InvisibleKeysOk, !k->compartment()->options_.invisibleToDebugger());
         JS_ASSERT(!Base::has(k));
         if (!incZoneCount(k->zone()))
             return false;
@@ -218,7 +223,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     ScriptWeakMap scripts;
 
     /* The map from debuggee source script objects to their Debugger.Source instances. */
-    typedef DebuggerWeakMap<EncapsulatedPtrObject, RelocatablePtrObject> SourceWeakMap;
+    typedef DebuggerWeakMap<EncapsulatedPtrObject, RelocatablePtrObject, true> SourceWeakMap;
     SourceWeakMap sources;
 
     /* The map from debuggee objects to their Debugger.Object instances. */

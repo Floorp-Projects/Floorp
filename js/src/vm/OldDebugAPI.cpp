@@ -833,23 +833,6 @@ JS_GetGlobalDebugHooks(JSRuntime *rt)
 
 /************************************************************************/
 
-JS_PUBLIC_API(void)
-JS_DumpBytecode(JSContext *cx, JSScript *scriptArg)
-{
-#if defined(DEBUG)
-    Rooted<JSScript*> script(cx, scriptArg);
-
-    Sprinter sprinter(cx);
-    if (!sprinter.init())
-        return;
-
-    fprintf(stdout, "--- SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
-    js_Disassemble(cx, script, true, &sprinter);
-    fputs(sprinter.string(), stdout);
-    fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
-#endif
-}
-
 extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
 {
@@ -866,30 +849,6 @@ JS_DumpPCCounts(JSContext *cx, JSScript *scriptArg)
     fprintf(stdout, "--- END SCRIPT %s:%d ---\n", script->filename(), (int) script->lineno());
 }
 
-namespace {
-
-typedef Vector<JSScript *, 0, SystemAllocPolicy> ScriptsToDump;
-
-static void
-DumpBytecodeScriptCallback(JSRuntime *rt, void *data, JSScript *script)
-{
-    static_cast<ScriptsToDump *>(data)->append(script);
-}
-
-} /* anonymous namespace */
-
-JS_PUBLIC_API(void)
-JS_DumpCompartmentBytecode(JSContext *cx)
-{
-    ScriptsToDump scripts;
-    IterateScripts(cx->runtime(), cx->compartment(), &scripts, DumpBytecodeScriptCallback);
-
-    for (size_t i = 0; i < scripts.length(); i++) {
-        if (scripts[i]->enclosingScriptsCompiledSuccessfully())
-            JS_DumpBytecode(cx, scripts[i]);
-    }
-}
-
 JS_PUBLIC_API(void)
 JS_DumpCompartmentPCCounts(JSContext *cx)
 {
@@ -898,7 +857,7 @@ JS_DumpCompartmentPCCounts(JSContext *cx)
         if (script->compartment() != cx->compartment())
             continue;
 
-        if (script->hasScriptCounts() && script->enclosingScriptsCompiledSuccessfully())
+        if (script->hasScriptCounts())
             JS_DumpPCCounts(cx, script);
     }
 
@@ -1358,7 +1317,11 @@ JSAbstractFramePtr::evaluateUCInStackFrame(JSContext *cx,
 
 JSBrokenFrameIterator::JSBrokenFrameIterator(JSContext *cx)
 {
-    NonBuiltinScriptFrameIter iter(cx);
+    // Show all frames on the stack whose principal is subsumed by the current principal.
+    NonBuiltinScriptFrameIter iter(cx,
+                                   ScriptFrameIter::ALL_CONTEXTS,
+                                   ScriptFrameIter::GO_THROUGH_SAVED,
+                                   cx->compartment()->principals);
     data_ = iter.copyData();
 }
 

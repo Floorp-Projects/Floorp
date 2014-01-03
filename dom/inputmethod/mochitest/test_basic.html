@@ -82,7 +82,7 @@ function test_sendKey() {
 function test_deleteSurroundingText() {
   // Remove one character before current cursor position and move the cursor
   // position back to 2.
-  gContext.deleteSurroundingText(1, 0).then(function() {
+  gContext.deleteSurroundingText(-1, 1).then(function() {
     ok(true, 'deleteSurroundingText finished');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Yuan',
        'deleteSurroundingText should changed the input field correctly.');
@@ -95,7 +95,7 @@ function test_deleteSurroundingText() {
 
 function test_replaceSurroundingText() {
   // Replace 'Yuan' with 'Xulei'.
-  gContext.replaceSurroundingText('Xulei', 2, 2).then(function() {
+  gContext.replaceSurroundingText('Xulei', -2, 4).then(function() {
     ok(true, 'replaceSurroundingText finished');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Xulei',
        'replaceSurroundingText changed the input field correctly.');

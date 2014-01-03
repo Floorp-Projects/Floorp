@@ -2587,6 +2587,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     explicit CompartmentOptions()
       : version_(JSVERSION_UNKNOWN)
       , invisibleToDebugger_(false)
+      , mergeable_(false)
     {
         zone_.spec = JS::FreshZone;
     }
@@ -2602,9 +2603,19 @@ class JS_PUBLIC_API(CompartmentOptions)
     // of the embedding, and references to them should never leak out to script.
     // This flag causes the this compartment to skip firing onNewGlobalObject
     // and makes addDebuggee a no-op for this global.
-    bool invisibleToDebugger() { return invisibleToDebugger_; }
+    bool invisibleToDebugger() const { return invisibleToDebugger_; }
     CompartmentOptions &setInvisibleToDebugger(bool flag) {
         invisibleToDebugger_ = flag;
+        return *this;
+    }
+
+    // Compartments used for off-thread compilation have their contents merged
+    // into a target compartment when the compilation is finished. This is only
+    // allowed if this flag is set.  The invisibleToDebugger flag must also be
+    // set for such compartments.
+    bool mergeable() const { return mergeable_; }
+    CompartmentOptions &setMergeable(bool flag) {
+        mergeable_ = flag;
         return *this;
     }
 
@@ -2631,6 +2642,7 @@ class JS_PUBLIC_API(CompartmentOptions)
   private:
     JSVersion version_;
     bool invisibleToDebugger_;
+    bool mergeable_;
     Override baselineOverride_;
     Override typeInferenceOverride_;
     Override ionOverride_;
@@ -3182,6 +3194,7 @@ JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
 struct JSSecurityCallbacks {
     JSCheckAccessOp            checkObjectAccess;
     JSCSPEvalChecker           contentSecurityPolicyAllows;
+    JSSubsumesOp               subsumes;
 };
 
 extern JS_PUBLIC_API(void)
