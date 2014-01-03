@@ -6,8 +6,7 @@
 
 #include "jsworkers.h"
 
-#ifdef JS_THREADSAFE
-
+#ifdef JS_WORKER_THREADS
 #include "mozilla/DebugOnly.h"
 
 #include "jsnativestack.h"
@@ -53,8 +52,6 @@ js::EnsureWorkerThreadsInitialized(ExclusiveContext *cx)
 
     return true;
 }
-
-#ifdef JS_ION
 
 bool
 js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
@@ -113,8 +110,6 @@ FinishOffThreadIonCompile(jit::IonBuilder *builder)
     compartment->jitCompartment()->finishedOffThreadCompilations().append(builder);
 }
 
-#endif // JS_ION
-
 static inline bool
 CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *target)
 {
@@ -126,7 +121,6 @@ CompiledScriptMatches(JSCompartment *compartment, JSScript *script, JSScript *ta
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
 {
-#ifdef JS_ION
     JSRuntime *rt = compartment->runtimeFromMainThread();
 
     if (!rt->workerThreadState)
@@ -172,7 +166,6 @@ js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
             compilations.popBack();
         }
     }
-#endif // JS_ION
 }
 
 static const JSClass workerGlobalClass = {
@@ -693,7 +686,6 @@ WorkerThread::ThreadMain(void *arg)
 void
 WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 {
-#ifdef JS_ION
     JS_ASSERT(state.isLocked());
     JS_ASSERT(state.canStartAsmJSCompile());
     JS_ASSERT(idle());
@@ -735,15 +727,11 @@ WorkerThread::handleAsmJSWorkload(WorkerThreadState &state)
 
     // Notify the main thread in case it's blocked waiting for a LifoAlloc.
     state.notifyAll(WorkerThreadState::CONSUMER);
-#else
-    MOZ_CRASH();
-#endif // JS_ION
 }
 
 void
 WorkerThread::handleIonWorkload(WorkerThreadState &state)
 {
-#ifdef JS_ION
     JS_ASSERT(state.isLocked());
     JS_ASSERT(state.canStartIonCompile());
     JS_ASSERT(idle());
@@ -780,9 +768,6 @@ WorkerThread::handleIonWorkload(WorkerThreadState &state)
     // this incorporation can be delayed indefinitely without affecting
     // performance as long as the main thread is actually executing Ion code.
     runtime->triggerOperationCallback(JSRuntime::TriggerCallbackAnyThreadDontStopIon);
-#else
-    MOZ_CRASH();
-#endif // JS_ION
 }
 
 void
@@ -1013,11 +998,9 @@ WorkerThread::threadLoop()
     }
 }
 
-#else /* JS_THREADSAFE */
+#else /* JS_WORKER_THREADS */
 
 using namespace js;
-
-#ifdef JS_ION
 
 bool
 js::StartOffThreadAsmJSCompile(ExclusiveContext *cx, AsmJSParallelTask *asmData)
@@ -1030,8 +1013,6 @@ js::StartOffThreadIonCompile(JSContext *cx, jit::IonBuilder *builder)
 {
     MOZ_ASSUME_UNREACHABLE("Off thread compilation not available in non-THREADSAFE builds");
 }
-
-#endif // JS_ION
 
 void
 js::CancelOffThreadIonCompile(JSCompartment *compartment, JSScript *script)
@@ -1083,4 +1064,4 @@ ExclusiveContext::addPendingOverRecursed()
     MOZ_ASSUME_UNREACHABLE("Off thread compilation not available.");
 }
 
-#endif /* JS_THREADSAFE */
+#endif /* JS_WORKER_THREADS */
