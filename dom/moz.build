@@ -76,6 +76,7 @@ PARALLEL_DIRS += [
     'telephony',
     'inputmethod',
     'webidl',
+    'xslt',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

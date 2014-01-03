@@ -16,7 +16,6 @@ PARALLEL_DIRS += [
     'xml',
     'xul',
     'xbl',
-    'xslt',
 ]
 
 TEST_TOOL_DIRS += ['test']
