@@ -1490,58 +1490,6 @@ NS_IMETHODIMP nsWebBrowser::SetTitle(const PRUnichar* aTitle)
 // nsWebBrowser::nsIScrollable
 //*****************************************************************************
 
-NS_IMETHODIMP nsWebBrowser::GetCurScrollPos(int32_t aScrollOrientation, 
-   int32_t* aCurPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->GetCurScrollPos(aScrollOrientation, aCurPos);
-}
-
-NS_IMETHODIMP nsWebBrowser::SetCurScrollPos(int32_t aScrollOrientation, 
-   int32_t aCurPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->SetCurScrollPos(aScrollOrientation, aCurPos);
-}
-
-NS_IMETHODIMP nsWebBrowser::SetCurScrollPosEx(int32_t aCurHorizontalPos, 
-   int32_t aCurVerticalPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->SetCurScrollPosEx(aCurHorizontalPos, 
-      aCurVerticalPos);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetScrollRange(int32_t aScrollOrientation,
-   int32_t* aMinPos, int32_t* aMaxPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->GetScrollRange(aScrollOrientation, aMinPos,
-      aMaxPos);
-}
-
-NS_IMETHODIMP nsWebBrowser::SetScrollRange(int32_t aScrollOrientation,
-   int32_t aMinPos, int32_t aMaxPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->SetScrollRange(aScrollOrientation, aMinPos,
-      aMaxPos);
-}
-
-NS_IMETHODIMP nsWebBrowser::SetScrollRangeEx(int32_t aMinHorizontalPos,
-   int32_t aMaxHorizontalPos, int32_t aMinVerticalPos, int32_t aMaxVerticalPos)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsScrollable->SetScrollRangeEx(aMinHorizontalPos,
-      aMaxHorizontalPos, aMinVerticalPos, aMaxVerticalPos);
-}
-
 NS_IMETHODIMP nsWebBrowser::GetDefaultScrollbarPreferences(int32_t aScrollOrientation,
    int32_t* aScrollbarPref)
 {
