@@ -497,12 +497,6 @@ extern JS_PUBLIC_API(bool)
 JS_DefineDebuggerObject(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(void)
-JS_DumpBytecode(JSContext *cx, JSScript *script);
-
-extern JS_PUBLIC_API(void)
-JS_DumpCompartmentBytecode(JSContext *cx);
-
-extern JS_PUBLIC_API(void)
 JS_DumpPCCounts(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(void)
