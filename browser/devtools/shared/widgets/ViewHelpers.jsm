@@ -568,7 +568,7 @@ DevToolsUtils.defineLazyPrototypeGetter(Item.prototype, "_itemsByElement", Map);
  *   - An "item" is an instance of an Item.
  *   - An "element" or "node" is a nsIDOMNode.
  *
- * The supplied widget can be any object interfacing the following methods:
+ * The supplied widget can be any object implementing the following methods:
  *   - function:nsIDOMNode insertItemAt(aIndex:number, aNode:nsIDOMNode, aValue:string)
  *   - function:nsIDOMNode getItemAtIndex(aIndex:number)
  *   - function removeChild(aChild:nsIDOMNode)
@@ -581,7 +581,7 @@ DevToolsUtils.defineLazyPrototypeGetter(Item.prototype, "_itemsByElement", Map);
  *   - function addEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
  *   - function removeEventListener(aName:string, aCallback:function, aBubbleFlag:boolean)
  *
- * Optional methods that can be interfaced by the widget:
+ * Optional methods that can be implemented by the widget:
  *   - function ensureElementIsVisible(aChild:nsIDOMNode)
  *
  * Optional attributes that may be handled (when calling get/set/removeAttribute):
@@ -601,8 +601,9 @@ this.WidgetMethods = {
   set widget(aWidget) {
     this._widget = aWidget;
 
-    // Can't use a WeakMap for itemsByValue because keys are strings, and
-    // itemsByElement needs to be iterable.
+
+    // Can't use a WeakMap for _itemsByValue because keys are strings, and
+    // can't use one for _itemsByElement either, since it needs to be iterable.
     XPCOMUtils.defineLazyGetter(this, "_itemsByValue", () => new Map());
     XPCOMUtils.defineLazyGetter(this, "_itemsByElement", () => new Map());
     XPCOMUtils.defineLazyGetter(this, "_stagedItems", () => []);
@@ -657,7 +658,7 @@ this.WidgetMethods = {
     if (aOptions.staged) {
       // An ulterior commit operation will ignore any specified index, so
       // no reason to keep it around.
-      delete aOptions.index;
+      aOptions.index = undefined;
       return void this._stagedItems.push({ item: item, options: aOptions });
     }
     // Find the target position in this container and insert the item there.
