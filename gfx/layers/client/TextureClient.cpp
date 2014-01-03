@@ -289,12 +289,16 @@ void TextureClient::ForceRemove()
 void
 TextureClient::Finalize()
 {
-  if (mActor) {
-    // this will call ForceRemove in the right thread, using a sync proxy if needed
-    mActor->GetForwarder()->RemoveTexture(this);
+  // Always make a temporary strong reference to the actor before we use it,
+  // in case TextureChild::ActorDestroy might null mActor concurrently.
+  RefPtr<TextureChild> actor = mActor;
 
-    // mActor has a raw pointer to us, mActor->mTextureClient. Null it before we die.
-    mActor->mTextureClient = nullptr;
+  if (actor) {
+    // this will call ForceRemove in the right thread, using a sync proxy if needed
+    actor->GetForwarder()->RemoveTexture(this);
+
+    // The actor has a raw pointer to us, actor->mTextureClient. Null it before we die.
+    actor->mTextureClient = nullptr;
   }
 }
 
