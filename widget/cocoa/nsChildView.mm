@@ -2007,14 +2007,12 @@ nsChildView::NotifyDirtyRegion(const nsIntRegion& aDirtyRegion)
   }
 }
 
-static const CGFloat kTitlebarHighlightHeight = 6;
-
 nsIntRect
 nsChildView::RectContainingTitlebarControls()
 {
-  // Start with a 6px high strip at the top of the window for the highlight line.
+  // Start with a thin strip at the top of the window for the highlight line.
   NSRect rect = NSMakeRect(0, 0, [mView bounds].size.width,
-                           kTitlebarHighlightHeight);
+                           [(ChildView*)mView cornerRadius]);
 
   // Add the rects of the titlebar controls.
   for (id view in [(BaseWindow*)[mView window] titlebarControls]) {
@@ -2174,7 +2172,7 @@ DrawTitlebarHighlight(NSSize aWindowSize, CGFloat aRadius, CGFloat aDevicePixelW
   // masked away in a later step.
   NSBezierPath* path = [NSBezierPath bezierPath];
   [path setWindingRule:NSEvenOddWindingRule];
-  NSRect pathRect = NSMakeRect(0, 0, aWindowSize.width, kTitlebarHighlightHeight + 2);
+  NSRect pathRect = NSMakeRect(0, 0, aWindowSize.width, aRadius + 2);
   [path appendBezierPathWithRect:pathRect];
   pathRect = NSInsetRect(pathRect, aDevicePixelWidth, aDevicePixelWidth);
   CGFloat innerRadius = aRadius - aDevicePixelWidth;
@@ -2182,11 +2180,13 @@ DrawTitlebarHighlight(NSSize aWindowSize, CGFloat aRadius, CGFloat aDevicePixelW
   [path addClip];
 
   // Now we fill the path with a subtle highlight gradient.
-  NSColor* topColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.4];
-  NSColor* bottomColor = [NSColor colorWithDeviceWhite:1.0 alpha:0.0];
-  NSGradient* gradient = [[NSGradient alloc] initWithStartingColor:topColor endingColor:bottomColor];
-  [gradient drawInRect:NSMakeRect(0, 0, aWindowSize.width, kTitlebarHighlightHeight) angle:90];
-  [gradient release];
+  // We don't use NSGradient because it's 5x to 15x slower than the manual fill,
+  // as indicated by the performance test in bug 880620.
+  for (CGFloat y = 0; y < aRadius; y += aDevicePixelWidth) {
+    CGFloat t = y / aRadius;
+    [[NSColor colorWithDeviceWhite:1.0 alpha:0.4 * (1.0 - t)] set];
+    NSRectFill(NSMakeRect(0, y, aWindowSize.width, aDevicePixelWidth));
+  }
 
   [NSGraphicsContext restoreGraphicsState];
 }
