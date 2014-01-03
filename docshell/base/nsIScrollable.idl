@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=2 sw=2 et tw=78:
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,92 +10,46 @@
 /**
  * The nsIScrollable is an interface that can be implemented by a control that
  * supports scrolling.  This is a generic interface without concern for the 
- * type of content that may be inside.  It simply deals blindly with scroll
- * position as a composite of the lowest possible scroll position, the highest
- * possible position and the current position lying somewhere between the 
- * min and the max.
- *
- * XXXroc in our tree, only get/setDefaultScrollbarPreferences and
- * getScrollbarVisibility are actually used externally. We should gut
- * the rest. nsDocShell is using twips for all these coordinates
- * which is going to confuse people anyway...
+ * type of content that may be inside.
  */
-
-[scriptable, uuid(919e792a-6490-40b8-bba5-f9e9ad5640c8)]
+[scriptable, uuid(3507fc93-313e-4a4c-8ca8-4d0ea0f97315)]
 interface nsIScrollable : nsISupports
 {
-	/*
-	Constants declaring the two scroll orientations a scroll bar can be in.
-        ScrollOrientation_X - Horizontal scrolling.  When passing this
-                in to a scroll position method you are requesting or
-                setting the positions for the horizontal scroll bar.
-        ScrollOrientation_Y - Vertical scrolling.  When passing this
-                in to a scroll position you are requesting or setting
-                the positions for the vertical scroll bar.
-	*/
-	const long ScrollOrientation_X = 1;
-	const long ScrollOrientation_Y = 2;
+  /**
+   * Constants declaring the two scroll orientations a scrollbar can be in.
+   * ScrollOrientation_X - Horizontal scrolling.  When passing this
+   *         in to a method you are requesting or setting data for the
+   *         horizontal scrollbar.
+   * ScrollOrientation_Y - Vertical scrolling.  When passing this
+   *         in to a method you are requesting or setting data for the
+   *         vertical scrollbar.
+   */
+  const long ScrollOrientation_X = 1;
+  const long ScrollOrientation_Y = 2;
 
-	/*
-	Retrieves or Sets the current thumb position to the curPos passed in for the
-	scrolling orientation passed in.  curPos should be between minPos and maxPos.
+  /**
+   * Constants declaring the states of the scrollbars.
+   * ScrollPref_Auto - bars visible only when needed.
+   * ScrollPref_Never - bars never visible, even when scrolling still possible.
+   * ScrollPref_Always - bars always visible, even when scrolling is not possible
+   */
+  const long Scrollbar_Auto = 1;
+  const long Scrollbar_Never = 2;
+  const long Scrollbar_Always = 3;
 
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-	long getCurScrollPos(in long scrollOrientation);
-	void setCurScrollPos(in long scrollOrientation, in long curPos);
+  /**
+   * Get or set the default scrollbar state for all documents in
+   * this shell.
+   */
+  long getDefaultScrollbarPreferences(in long scrollOrientation);
+  void setDefaultScrollbarPreferences(in long scrollOrientation,
+                                      in long scrollbarPref);
 
-	/*
-	This function atomizes the ability to scroll in two dimensions at the same
-	time.
-	*/
-	void setCurScrollPosEx(in long curHorizontalPos, in long curVerticalPos);
-
-	/*
-	Retrieves or Sets the valid ranges for the thumb.  When maxPos is set to 
-	something less than the current thumb position, curPos is set = to maxPos.
-
-	@return	NS_OK - Setting or Getting completed successfully.
-				NS_ERROR_INVALID_ARG - returned when curPos is not within the
-					minPos and maxPos.
-	*/
-	void getScrollRange(in long scrollOrientation, out long minPos, out long maxPos);
-	void setScrollRange(in long scrollOrientation, in long minPos, in long maxPos);
-
-	/*
-	This function atomizes the ability to set the ranges in two dimensions at 
-	the same time.
-	*/
-	void setScrollRangeEx(in long minHorizontalPos, in long maxHorizontalPos,
-		in long minVerticalPos, in long maxVerticalPos);
-
-	/*
-	Constants declaring the states of the scroll bars.
-	ScrollPref_Auto - bars visible only when needed.
-	ScrollPref_Never - bars never visible, even when scrolling still possible.
-	ScrollPref_Always - bars always visible, even when scrolling is not possible
-	*/
-	const long Scrollbar_Auto = 1;
-	const long Scrollbar_Never = 2;
-	const long Scrollbar_Always = 3;
-
-	/*
-	Retrieves or Set the preferences for the scroll bar.
-	current is 'scrolling preference for this document'
-	default is 'scrolling preference for all documents in this shell'
-	resetScrollbarPreferences resets current to default
-	*/
-	long getDefaultScrollbarPreferences(in long scrollOrientation);
-	void setDefaultScrollbarPreferences(in long scrollOrientation, in long scrollbarPref);
-
-	/*
-	Get information about whether the vertical and horizontal scrollbars are
-	currently visible.  nullptr is a valid argument.  If you are only interested
-	in one of the visibility settings pass nullptr in for the one you aren't
-	interested in.
-	*/
-	void getScrollbarVisibility(out boolean verticalVisible, 
-		out boolean horizontalVisible);
+  /**
+   * Get information about whether the vertical and horizontal scrollbars are
+   * currently visible.  If you are only interested in one of the visibility
+   * settings pass nullptr in for the one you aren't interested in.
+   */
+  void getScrollbarVisibility(out boolean verticalVisible,
+                              out boolean horizontalVisible);
 };
