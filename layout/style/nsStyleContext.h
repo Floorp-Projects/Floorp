@@ -340,6 +340,7 @@ public:
 
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
+  static void AssertStyleStructMaxDifferenceValid();
 #endif
 
 protected:
