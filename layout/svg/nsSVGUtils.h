@@ -42,7 +42,6 @@ class nsStyleCoord;
 class nsSVGDisplayContainerFrame;
 class nsSVGElement;
 class nsSVGEnum;
-class nsSVGGeometryFrame;
 class nsSVGLength2;
 class nsSVGOuterSVGFrame;
 class nsSVGPathGeometryFrame;
@@ -507,9 +506,6 @@ public:
    *
    * This should die once bug 478152 is fixed.
    */
-  static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               nsSVGGeometryFrame* aFrame,
-                                               const gfxMatrix& aMatrix);
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
                                                nsTextFrame* aFrame,
                                                const gfxMatrix& aMatrix);
