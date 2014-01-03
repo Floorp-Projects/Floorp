@@ -47,19 +47,23 @@ class StringTable:
             return ", ".join(map(toCChar, string))
         f.write("const char %s[] = {\n" % name)
         for (string, offset) in entries[:-1]:
-            f.write("  /* %5d */ %s, '\\0',\n"
-                    % (offset, explodeToCharArray(string)))
+            e = explodeToCharArray(string)
+            if e:
+                f.write("  /* %5d */ %s, '\\0',\n"
+                        % (offset, explodeToCharArray(string)))
+            else:
+                f.write("  /* %5d */ '\\0',\n" % offset)
         f.write("  /* %5d */ %s, '\\0' };\n\n"
                 % (entries[-1][1], explodeToCharArray(entries[-1][0])))
 
-def print_array_entry(histogram, name_index):
+def print_array_entry(histogram, name_index, exp_index):
     cpp_guard = histogram.cpp_guard()
     if cpp_guard:
         print "#if defined(%s)" % cpp_guard
-    print "  { %s, %s, %s, %s, %d, %s }," \
+    print "  { %s, %s, %s, %s, %d, %d, %s }," \
         % (histogram.low(), histogram.high(),
            histogram.n_buckets(), histogram.nsITelemetry_kind(),
-           name_index,
+           name_index, exp_index,
            "true" if histogram.extended_statistics_ok() else "false")
     if cpp_guard:
         print "#endif"
@@ -70,7 +74,8 @@ def write_histogram_table(histograms):
     print "const TelemetryHistogram gHistograms[] = {"
     for histogram in histograms:
         name_index = table.stringIndex(histogram.name())
-        print_array_entry(histogram, name_index)
+        exp_index = table.stringIndex(histogram.expiration())
+        print_array_entry(histogram, name_index, exp_index)
     print "};"
 
     strtab_name = "gHistogramStringTable"
