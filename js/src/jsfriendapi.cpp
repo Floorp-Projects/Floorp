@@ -443,12 +443,6 @@ js::RunningWithTrustedPrincipals(JSContext *cx)
     return cx->runningWithTrustedPrincipals();
 }
 
-JS_FRIEND_API(bool)
-js::IsOriginalScriptFunction(JSFunction *fun)
-{
-    return fun->nonLazyScript()->function() == fun;
-}
-
 JS_FRIEND_API(JSScript *)
 js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext *cx)
 {

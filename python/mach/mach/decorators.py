@@ -56,8 +56,8 @@ def CommandProvider(cls):
         if not isinstance(value, types.FunctionType):
             continue
 
-        command_name, category, description, allow_all, conditions = getattr(
-            value, '_mach_command', (None, None, None, None, None))
+        command_name, category, description, allow_all, conditions, parser = getattr(
+            value, '_mach_command', (None, None, None, None, None, None))
 
         if command_name is None:
             continue
@@ -83,7 +83,7 @@ def CommandProvider(cls):
 
         handler = MethodHandler(cls, attr, command_name, category=category,
             description=description, allow_all_arguments=allow_all,
-            conditions=conditions, arguments=arguments,
+            conditions=conditions, parser=parser, arguments=arguments,
             pass_context=pass_context)
 
         Registrar.register_command_handler(handler)
@@ -105,6 +105,9 @@ class Command(object):
          allow_all_args -- Bool indicating whether to allow unknown arguments
              through to the command.
 
+         parser -- an optional argparse.ArgumentParser instance to use as
+             the basis for the command arguments.
+
     For example:
 
         @Command('foo', category='misc', description='Run the foo action')
@@ -112,16 +115,17 @@ class Command(object):
             pass
     """
     def __init__(self, name, category=None, description=None,
-        allow_all_args=False, conditions=None):
+                 allow_all_args=False, conditions=None, parser=None):
         self._name = name
         self._category = category
         self._description = description
         self._allow_all_args = allow_all_args
         self._conditions = conditions
+        self._parser = parser
 
     def __call__(self, func):
         func._mach_command = (self._name, self._category, self._description,
-            self._allow_all_args, self._conditions)
+                              self._allow_all_args, self._conditions, self._parser)
 
         return func
 

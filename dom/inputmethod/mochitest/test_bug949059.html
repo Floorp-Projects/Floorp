@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=949059
+-->
+<head>
+  <title>Test "mgmt" property of MozInputMethod.</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=949059">Mozilla Bug 949059</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+inputmethod_setup(function() {
+  runTest();
+});
+
+function runTest() {
+  let im = navigator.mozInputMethod;
+
+  // Treat current page as an input method and activate it.
+  SpecialPowers.wrap(im).setActive(true);
+  ok(im.mgmt, 'The mgmt property should not be null.');
+
+  // Deactivate current page.
+  SpecialPowers.wrap(im).setActive(false);
+  ok(im.mgmt, 'The mgmt property should not be null.');
+
+  inputmethod_cleanup();
+}
+
+</script>
+</pre>
+</body>
+</html>
+

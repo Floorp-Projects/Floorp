@@ -378,10 +378,6 @@ MozInputMethod.prototype = {
   },
 
   get mgmt() {
-    if (!WindowMap.isActive(this._window)) {
-      return null;
-    }
-
     return this._mgmt;
   },
 
@@ -695,8 +691,8 @@ MozInputContext.prototype = {
         contextId: self._contextId,
         requestId: resolverId,
         text: text,
-        beforeLength: offset || 0,
-        afterLength: length || 0
+        offset: offset || 0,
+        length: length || 0
       });
     });
   },

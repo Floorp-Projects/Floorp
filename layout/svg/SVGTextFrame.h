@@ -615,17 +615,6 @@ private:
                       SVGTextContextPaint* aThisContextPaint);
 
   /**
-   * Sets the current pattern for |aFrame| to the fill or stroke style of the
-   * outer text context. Will also set the paint opacity to transparent if the
-   * paint is set to "none".
-   */
-  bool SetupContextPaint(gfxContext* aContext,
-                        nsIFrame* aFrame,
-                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                        float& aOpacity,
-                        gfxTextContextPaint* aContextPaint);
-
-  /**
    * Stores in |aTargetPaint| information on how to reconstruct the current
    * fill or stroke pattern. Will also set the paint opacity to transparent if
    * the paint is set to "none".
