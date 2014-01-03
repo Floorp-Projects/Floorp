@@ -183,11 +183,7 @@ public:
   virtual bool IsSelfEmpty() MOZ_OVERRIDE { return IsEmpty(); }
   virtual nscoord GetBaseline() const MOZ_OVERRIDE;
   
-  /**
-   * @return true if this text frame ends with a newline character.  It
-   * should return false if this is not a text frame.
-   */
-  virtual bool HasTerminalNewline() const MOZ_OVERRIDE;
+  virtual bool HasSignificantTerminalNewline() const MOZ_OVERRIDE;
 
   /**
    * Returns true if this text frame is logically adjacent to the end of the

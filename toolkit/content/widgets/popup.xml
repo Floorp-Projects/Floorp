@@ -517,6 +517,7 @@
           var titleText = null;
           var XLinkTitleText = null;
           var SVGTitleText = null;
+          var XULtooltiptextText = null;
           var lookingForSVGTitle = true;
           var direction = tipElement.ownerDocument.dir;
 
@@ -575,11 +576,17 @@
             } catch(e) {}
           }
 
-          while ((titleText == null) && (XLinkTitleText == null) &&
-                 (SVGTitleText == null) && tipElement) {
-            if (tipElement.nodeType == Node.ELEMENT_NODE &&
-                tipElement.namespaceURI != XULNS) {
-              titleText = tipElement.getAttribute("title");
+          // Check texts against null so that title="" can be used to undefine a
+          // title on a child element.
+          while (tipElement &&
+                 (titleText == null) && (XLinkTitleText == null) &&
+                 (SVGTitleText == null) && (XULtooltiptextText == null)) {
+
+            if (tipElement.nodeType == Node.ELEMENT_NODE) {
+              if (tipElement.namespaceURI == XULNS)
+                XULtooltiptextText = tipElement.getAttribute("tooltiptext");
+              else
+                titleText = tipElement.getAttribute("title");
 
               if ((tipElement instanceof HTMLAnchorElement ||
                    tipElement instanceof HTMLAreaElement ||
@@ -610,7 +617,7 @@
 
           this.style.direction = direction;
 
-          return [titleText, XLinkTitleText, SVGTitleText].some(function (t) {
+          return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(function (t) {
             if (t && /\S/.test(t)) {
               // Make CRLF and CR render one line break each.
               this.label = t.replace(/\r\n?/g, '\n');

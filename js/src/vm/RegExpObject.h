@@ -323,7 +323,7 @@ class RegExpCompartment
      * if there is a result. This is used in CreateRegExpMatchResult to set
      * the input/index properties faster.
      */
-    HeapPtrObject matchResultTemplateObject_;
+    ReadBarriered<JSObject> matchResultTemplateObject_;
 
   public:
     RegExpCompartment(JSRuntime *rt);
@@ -339,7 +339,7 @@ class RegExpCompartment
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
 
     /* Get or create template object used to base the result of .exec() on. */
-    HeapPtrObject &getOrCreateMatchResultTemplateObject(JSContext *cx);
+    JSObject *getOrCreateMatchResultTemplateObject(JSContext *cx);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
