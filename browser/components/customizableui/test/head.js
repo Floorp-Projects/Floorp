@@ -246,6 +246,36 @@ function promisePanelElementHidden(win, aPanel) {
   return deferred.promise;
 }
 
+function subviewShown(aSubview) {
+  let deferred = Promise.defer();
+  let win = aSubview.ownerDocument.defaultView;
+  let timeoutId = win.setTimeout(() => {
+    deferred.reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
+  }, 20000);
+  function onViewShowing(e) {
+    aSubview.removeEventListener("ViewShowing", onViewShowing);
+    win.clearTimeout(timeoutId);
+    deferred.resolve();
+  };
+  aSubview.addEventListener("ViewShowing", onViewShowing);
+  return deferred.promise;
+}
+
+function subviewHidden(aSubview) {
+  let deferred = Promise.defer();
+  let win = aSubview.ownerDocument.defaultView;
+  let timeoutId = win.setTimeout(() => {
+    deferred.reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
+  }, 20000);
+  function onViewHiding(e) {
+    aSubview.removeEventListener("ViewHiding", onViewHiding);
+    win.clearTimeout(timeoutId);
+    deferred.resolve();
+  };
+  aSubview.addEventListener("ViewHiding", onViewHiding);
+  return deferred.promise;
+}
+
 function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
   function tryNow() {
     tries++;
