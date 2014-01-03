@@ -27,9 +27,6 @@ using namespace mozilla;
 nsStyleSheetService *nsStyleSheetService::gInstance = nullptr;
 
 nsStyleSheetService::nsStyleSheetService()
-  : MemoryUniReporter("explicit/layout/style-sheet-service",
-                       KIND_HEAP, UNITS_BYTES,
-"Memory used for style sheets held by the style sheet service.")
 {
   PR_STATIC_ASSERT(0 == AGENT_SHEET && 1 == USER_SHEET && 2 == AUTHOR_SHEET);
   NS_ASSERTION(!gInstance, "Someone is using CreateInstance instead of GetService");
@@ -45,8 +42,8 @@ nsStyleSheetService::~nsStyleSheetService()
   nsLayoutStatics::Release();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(
-  nsStyleSheetService, MemoryUniReporter, nsIStyleSheetService)
+NS_IMPL_ISUPPORTS2(
+  nsStyleSheetService, nsIStyleSheetService, nsIMemoryReporter)
 
 void
 nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
@@ -282,13 +279,19 @@ static size_t
 SizeOfElementIncludingThis(nsIStyleSheet* aElement,
                            MallocSizeOf aMallocSizeOf, void *aData)
 {
-    return aElement->SizeOfIncludingThis(aMallocSizeOf);
+  return aElement->SizeOfIncludingThis(aMallocSizeOf);
 }
 
-int64_t
-nsStyleSheetService::Amount()
+MOZ_DEFINE_MALLOC_SIZE_OF(StyleSheetServiceMallocSizeOf)
+
+NS_IMETHODIMP
+nsStyleSheetService::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                    nsISupports* aData)
 {
-  return SizeOfIncludingThis(MallocSizeOf);
+  return MOZ_COLLECT_REPORT(
+    "explicit/layout/style-sheet-service", KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(StyleSheetServiceMallocSizeOf),
+    "Memory used for style sheets held by the style sheet service.");
 }
 
 size_t

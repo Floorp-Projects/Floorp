@@ -20,7 +20,7 @@
 #define VARIANT_KEYWORD         0x000001  // K
 #define VARIANT_LENGTH          0x000002  // L
 #define VARIANT_PERCENT         0x000004  // P
-#define VARIANT_COLOR           0x000008  // C eCSSUnit_Color, eCSSUnit_Ident (e.g.  "red")
+#define VARIANT_COLOR           0x000008  // C eCSSUnit_*Color, eCSSUnit_Ident (e.g.  "red")
 #define VARIANT_URL             0x000010  // U
 #define VARIANT_NUMBER          0x000020  // N
 #define VARIANT_INTEGER         0x000040  // I

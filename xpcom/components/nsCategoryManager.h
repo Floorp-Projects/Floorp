@@ -98,12 +98,13 @@ private:
  * This implementation is thread-safe.
  */
 class nsCategoryManager MOZ_FINAL
-  : public mozilla::MemoryUniReporter
-  , public nsICategoryManager
+  : public nsICategoryManager
+  , public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICATEGORYMANAGER
+  NS_DECL_NSIMEMORYREPORTER
 
   /**
    * Suppress or unsuppress notifications of category changes to the
@@ -123,8 +124,6 @@ public:
 
   static nsCategoryManager* GetSingleton();
   static void Destroy();
-
-  int64_t Amount() MOZ_OVERRIDE;
 
 private:
   static nsCategoryManager* gCategoryManager;

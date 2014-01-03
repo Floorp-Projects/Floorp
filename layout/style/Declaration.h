@@ -63,6 +63,7 @@ public:
   bool HasProperty(nsCSSProperty aProperty) const;
 
   void GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
+  void GetAuthoredValue(nsCSSProperty aProperty, nsAString& aValue) const;
 
   bool HasImportantData() const {
     return mImportantData || mImportantVariables;
@@ -278,9 +279,14 @@ private:
   Declaration& operator=(const Declaration& aCopy) MOZ_DELETE;
   bool operator==(const Declaration& aCopy) const MOZ_DELETE;
 
+  void GetValue(nsCSSProperty aProperty, nsAString& aValue,
+                nsCSSValue::Serialization aValueSerialization) const;
+
   static void AppendImportanceToString(bool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   bool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  bool AppendValueToString(nsCSSProperty aProperty, nsAString& aResult,
+                           nsCSSValue::Serialization aValueSerialization) const;
   // Helper for ToString with strange semantics regarding aValue.
   void AppendPropertyAndValueToString(nsCSSProperty aProperty,
                                       nsAutoString& aValue,

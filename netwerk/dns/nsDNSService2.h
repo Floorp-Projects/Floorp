@@ -19,25 +19,22 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
-class nsDNSService MOZ_FINAL : public mozilla::MemoryUniReporter
-                             , public nsPIDNSService
+class nsDNSService MOZ_FINAL : public nsPIDNSService
                              , public nsIObserver
+                             , public nsIMemoryReporter
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSPIDNSSERVICE
     NS_DECL_NSIDNSSERVICE
     NS_DECL_NSIOBSERVER
+    NS_DECL_NSIMEMORYREPORTER
 
     nsDNSService();
     ~nsDNSService();
 
     static nsIDNSService* GetXPCOMSingleton();
 
-    int64_t Amount() MOZ_OVERRIDE
-    {
-        return SizeOfIncludingThis(MallocSizeOf);
-    }
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:

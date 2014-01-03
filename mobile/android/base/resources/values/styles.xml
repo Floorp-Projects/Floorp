@@ -22,6 +22,8 @@
 
     <style name="Widget.BaseTextView" parent="android:style/Widget.TextView"/>
 
+    <style name="Widget.ProgressBar.Horizontal" parent="android:style/Widget.ProgressBar.Horizontal"/>
+
     <!--
         Application styles. All customizations that are not specific
         to a particular API level can go here.

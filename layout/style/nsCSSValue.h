@@ -209,8 +209,15 @@ enum nsCSSUnit {
   eCSSUnit_Integer      = 70,     // (int) simple value
   eCSSUnit_Enumerated   = 71,     // (int) value has enumerated meaning
 
-  eCSSUnit_EnumColor    = 80,     // (int) enumerated color (kColorKTable)
-  eCSSUnit_Color        = 81,     // (nscolor) an RGBA value
+  eCSSUnit_EnumColor           = 80,   // (int) enumerated color (kColorKTable)
+  eCSSUnit_RGBColor            = 81,   // (nscolor) an opaque RGBA value specified as rgb()
+  eCSSUnit_RGBAColor           = 82,   // (nscolor) an RGBA value specified as rgba()
+  eCSSUnit_HexColor            = 83,   // (nscolor) an opaque RGBA value specified as #rrggbb
+  eCSSUnit_ShortHexColor       = 84,   // (nscolor) an opaque RGBA value specified as #rgb
+  eCSSUnit_PercentageRGBColor  = 85,   // (nsCSSValueFloatColor*)
+  eCSSUnit_PercentageRGBAColor = 86,   // (nsCSSValueFloatColor*)
+  eCSSUnit_HSLColor            = 87,   // (nsCSSValueFloatColor*)
+  eCSSUnit_HSLAColor           = 88,   // (nsCSSValueFloatColor*)
 
   eCSSUnit_Percent      = 90,     // (float) 1.0 == 100%) value is percentage of something
   eCSSUnit_Number       = 91,     // (float) value is numeric (usually multiplier, different behavior that percent)
@@ -267,6 +274,7 @@ struct nsCSSValuePairList;
 struct nsCSSValuePairList_heap;
 struct nsCSSValueTriplet;
 struct nsCSSValueTriplet_heap;
+class nsCSSValueFloatColor;
 
 class nsCSSValue {
 public:
@@ -303,11 +311,15 @@ public:
     return !(*this == aOther);
   }
 
+  // Enum for AppendToString's aValueSerialization argument.
+  enum Serialization { eNormalized, eAuthorSpecified };
+
   /**
    * Serialize |this| as a specified value for |aProperty| and append
    * it to |aResult|.
    */
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      Serialization aValueSerialization) const;
 
   nsCSSUnit GetUnit() const { return mUnit; }
   bool      IsLengthUnit() const
@@ -348,6 +360,35 @@ public:
     { return eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Element; }
   bool      UnitHasArrayValue() const
     { return eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Calc_Divided; }
+
+  // Checks for the nsCSSValue being of a particular type of color unit:
+  //
+  //   - IsIntegerColorUnit returns true for:
+  //       eCSSUnit_RGBColor             -- rgb(int,int,int)
+  //       eCSSUnit_RGBAColor            -- rgba(int,int,int,float)
+  //       eCSSUnit_HexColor             -- #rrggbb
+  //       eCSSUnit_ShortHexColor        -- #rgb
+  //
+  //   - IsFLoatColorUnit returns true for:
+  //       eCSSUnit_PercentageRGBColor   -- rgb(%,%,%)
+  //       eCSSUnit_PercentageRGBAColor  -- rgba(%,%,%,float)
+  //       eCSSUnit_HSLColor             -- hsl(float,%,%)
+  //       eCSSUnit_HSLAColor            -- hsla(float,%,%,float)
+  //
+  //   - IsNumericColorUnit returns true for any of the above units.
+  //
+  // Note that color keywords and system colors are represented by
+  // eCSSUnit_EnumColor and eCSSUnit_Ident.
+  bool IsIntegerColorUnit() const { return IsIntegerColorUnit(mUnit); }
+  bool IsFloatColorUnit() const { return IsFloatColorUnit(mUnit); }
+  bool IsNumericColorUnit() const { return IsNumericColorUnit(mUnit); }
+  static bool IsIntegerColorUnit(nsCSSUnit aUnit)
+  { return eCSSUnit_RGBColor <= aUnit && aUnit <= eCSSUnit_ShortHexColor; }
+  static bool IsFloatColorUnit(nsCSSUnit aUnit)
+  { return eCSSUnit_PercentageRGBColor <= aUnit &&
+           aUnit <= eCSSUnit_HSLAColor; }
+  static bool IsNumericColorUnit(nsCSSUnit aUnit)
+  { return IsIntegerColorUnit(aUnit) || IsFloatColorUnit(aUnit); }
 
   int32_t GetIntValue() const
   {
@@ -402,12 +443,7 @@ public:
     return GetBufferValue(mValue.mString);
   }
 
-  nscolor GetColorValue() const
-  {
-    NS_ABORT_IF_FALSE((mUnit == eCSSUnit_Color), "not a color value");
-    return mValue.mColor;
-  }
-
+  nscolor GetColorValue() const;
   bool IsNonTransparentColor() const;
 
   Array* GetArrayValue() const
@@ -503,6 +539,11 @@ public:
   void SetFloatValue(float aValue, nsCSSUnit aUnit);
   void SetStringValue(const nsString& aValue, nsCSSUnit aUnit);
   void SetColorValue(nscolor aValue);
+  void SetIntegerColorValue(nscolor aValue, nsCSSUnit aUnit);
+  void SetFloatColorValue(float aComponent1,
+                          float aComponent2,
+                          float aComponent3,
+                          float aAlpha, nsCSSUnit aUnit);
   void SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   void SetURLValue(mozilla::css::URLValue* aURI);
   void SetImageValue(mozilla::css::ImageValue* aImage);
@@ -573,6 +614,7 @@ protected:
     nsCSSValueSharedList* mSharedList;
     nsCSSValuePairList_heap* mPairList;
     nsCSSValuePairList* mPairListDependent;
+    nsCSSValueFloatColor* mFloatColor;
   } mValue;
 };
 
@@ -687,7 +729,8 @@ struct nsCSSValueList {
 
   nsCSSValueList* Clone() const;  // makes a deep copy
   void CloneInto(nsCSSValueList* aList) const; // makes a deep copy into aList
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(nsCSSValueList const& aOther) const;
   bool operator!=(const nsCSSValueList& aOther) const
@@ -737,7 +780,8 @@ struct nsCSSValueSharedList {
 
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueSharedList)
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(nsCSSValueSharedList const& aOther) const;
   bool operator!=(const nsCSSValueSharedList& aOther) const
@@ -777,7 +821,8 @@ struct nsCSSRect {
   nsCSSRect(const nsCSSRect& aCopy);
   ~nsCSSRect();
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(const nsCSSRect& aOther) const {
     return mTop == aOther.mTop &&
@@ -906,7 +951,8 @@ struct nsCSSValuePair {
            mYValue.GetUnit() != eCSSUnit_Null;
   }
 
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -991,7 +1037,8 @@ struct nsCSSValueTriplet {
                mZValue.GetUnit() != eCSSUnit_Null;
     }
 
-    void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+    void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                        nsCSSValue::Serialization aValueSerialization) const;
 
     nsCSSValue mXValue;
     nsCSSValue mYValue;
@@ -1048,7 +1095,8 @@ struct nsCSSValuePairList {
   ~nsCSSValuePairList();
 
   nsCSSValuePairList* Clone() const; // makes a deep copy
-  void AppendToString(nsCSSProperty aProperty, nsAString& aResult) const;
+  void AppendToString(nsCSSProperty aProperty, nsAString& aResult,
+                      nsCSSValue::Serialization aValueSerialization) const;
 
   bool operator==(const nsCSSValuePairList& aOther) const;
   bool operator!=(const nsCSSValuePairList& aOther) const
@@ -1283,6 +1331,46 @@ struct nsCSSValueTokenStream {
 private:
   nsCSSValueTokenStream(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
   nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) MOZ_DELETE;
+};
+
+class nsCSSValueFloatColor {
+public:
+  nsCSSValueFloatColor(float aComponent1, float aComponent2, float aComponent3,
+                       float aAlpha)
+    : mComponent1(aComponent1)
+    , mComponent2(aComponent2)
+    , mComponent3(aComponent3)
+    , mAlpha(aAlpha)
+  {
+    MOZ_COUNT_CTOR(nsCSSValueFloatColor);
+  }
+
+  ~nsCSSValueFloatColor()
+  {
+    MOZ_COUNT_DTOR(nsCSSValueFloatColor);
+  }
+
+  bool operator==(nsCSSValueFloatColor& aOther) const;
+
+  nscolor GetColorValue(nsCSSUnit aUnit) const;
+  bool IsNonTransparentColor() const;
+
+  void AppendToString(nsCSSUnit aUnit, nsAString& aResult) const;
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  NS_INLINE_DECL_REFCOUNTING(nsCSSValueFloatColor)
+
+private:
+  // FIXME: We should not be clamping specified RGB color components.
+  float mComponent1;  // 0..1 for RGB, 0..360 for HSL
+  float mComponent2;  // 0..1
+  float mComponent3;  // 0..1
+  float mAlpha;       // 0..1
+
+  nsCSSValueFloatColor(const nsCSSValueFloatColor& aOther) MOZ_DELETE;
+  nsCSSValueFloatColor& operator=(const nsCSSValueFloatColor& aOther)
+                                                                   MOZ_DELETE;
 };
 
 struct nsCSSCornerSizes {

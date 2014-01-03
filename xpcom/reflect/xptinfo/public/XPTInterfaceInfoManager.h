@@ -26,11 +26,12 @@ class xptiTypelibGuts;
 namespace mozilla {
 
 class XPTInterfaceInfoManager MOZ_FINAL
-    : public mozilla::MemoryUniReporter
-    , public nsIInterfaceInfoManager
+    : public nsIInterfaceInfoManager
+    , public nsIMemoryReporter
 {
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
+    NS_DECL_NSIMEMORYREPORTER
 
 public:
     // GetSingleton() is infallible
@@ -49,7 +50,6 @@ public:
     xptiInterfaceEntry* GetInterfaceEntryForIID(const nsIID *iid);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
-    int64_t Amount() MOZ_OVERRIDE;
 
 private:
     XPTInterfaceInfoManager();
