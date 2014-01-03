@@ -181,6 +181,9 @@ let DebuggerView = {
     // Relay events from the VariablesView.
     this.Variables.on("fetched", (aEvent, aType) => {
       switch (aType) {
+        case "scopes":
+          window.emit(EVENTS.FETCHED_SCOPES);
+          break;
         case "variables":
           window.emit(EVENTS.FETCHED_VARIABLES);
           break;
