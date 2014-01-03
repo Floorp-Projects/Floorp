@@ -500,8 +500,7 @@ nsWindowMemoryReporter::CollectReports(nsIMemoryReporterCallback* aCb,
   do {                                                                        \
     nsresult rv;                                                              \
     rv = aCb->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path),             \
-                       nsIMemoryReporter::KIND_OTHER,                         \
-                       nsIMemoryReporter::UNITS_BYTES, _amount,               \
+                       KIND_OTHER, UNITS_BYTES, _amount,                      \
                        NS_LITERAL_CSTRING(_desc), aClosure);                  \
     NS_ENSURE_SUCCESS(rv, rv);                                                \
   } while (0)
@@ -800,6 +799,9 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   mDetachedWindows.Enumerate(CheckForGhostWindowsEnumerator,
                              &ghostEnumData);
 }
+
+NS_IMPL_ISUPPORTS1(nsWindowMemoryReporter::GhostWindowsReporter,
+                   nsIMemoryReporter)
 
 /* static */ int64_t
 nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()

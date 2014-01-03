@@ -136,16 +136,23 @@ static int64_t gCanvasAzureMemoryUsed = 0;
 // This is KIND_OTHER because it's not always clear where in memory the pixels
 // of a canvas are stored.  Furthermore, this memory will be tracked by the
 // underlying surface implementations.  See bug 655638 for details.
-class Canvas2dPixelsReporter MOZ_FINAL : public MemoryUniReporter
+class Canvas2dPixelsReporter MOZ_FINAL : public nsIMemoryReporter
 {
-  public:
-    Canvas2dPixelsReporter()
-      : MemoryUniReporter("canvas-2d-pixels", KIND_OTHER, UNITS_BYTES,
-"Memory used by 2D canvases. Each canvas requires (width * height * 4) bytes.")
-    {}
-private:
-    int64_t Amount() MOZ_OVERRIDE { return gCanvasAzureMemoryUsed; }
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData)
+  {
+    return MOZ_COLLECT_REPORT(
+      "canvas-2d-pixels", KIND_OTHER, UNITS_BYTES,
+      gCanvasAzureMemoryUsed,
+      "Memory used by 2D canvases. Each canvas requires "
+      "(width * height * 4) bytes.");
+  }
 };
+
+NS_IMPL_ISUPPORTS1(Canvas2dPixelsReporter, nsIMemoryReporter)
 
 class CanvasRadialGradient : public CanvasGradient
 {
@@ -583,7 +590,7 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     return false;
   }
 
-  if (value.GetUnit() == eCSSUnit_Color) {
+  if (value.IsNumericColorUnit()) {
     // if we already have a color we can just use it directly
     *aColor = value.GetColorValue();
   } else {

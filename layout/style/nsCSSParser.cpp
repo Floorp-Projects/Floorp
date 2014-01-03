@@ -738,14 +738,16 @@ protected:
   int32_t ParseChoice(nsCSSValue aValues[],
                       const nsCSSProperty aPropIDs[], int32_t aNumIDs);
   bool ParseColor(nsCSSValue& aValue);
-  bool ParseColorComponent(uint8_t& aComponent,
-                             int32_t& aType, char aStop);
+  bool ParseNumberColorComponent(uint8_t& aComponent, char aStop);
+  bool ParsePercentageColorComponent(float& aComponent, char aStop);
   // ParseHSLColor parses everything starting with the opening '('
   // up through and including the aStop char.
-  bool ParseHSLColor(nscolor& aColor, char aStop);
+  bool ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
+                     char aStop);
   // ParseColorOpacity will enforce that the color ends with a ')'
   // after the opacity
   bool ParseColorOpacity(uint8_t& aOpacity);
+  bool ParseColorOpacity(float& aOpacity);
   bool ParseEnum(nsCSSValue& aValue, const int32_t aKeywordTable[]);
   bool ParseVariant(nsCSSValue& aValue,
                       int32_t aVariantMask,
@@ -5271,12 +5273,6 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
   return declaration;
 }
 
-// The types to pass to ParseColorComponent.  These correspond to the
-// various datatypes that can go within rgb().
-#define COLOR_TYPE_UNKNOWN 0
-#define COLOR_TYPE_INTEGERS 1
-#define COLOR_TYPE_PERCENTAGES 2
-
 bool
 CSSParserImpl::ParseColor(nsCSSValue& aValue)
 {
@@ -5292,7 +5288,12 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
     case eCSSToken_Hash:
       // #xxyyzz
       if (NS_HexToRGB(tk->mIdent, &rgba)) {
-        aValue.SetColorValue(rgba);
+        MOZ_ASSERT(tk->mIdent.Length() == 3 || tk->mIdent.Length() == 6,
+                   "unexpected hex color length");
+        nsCSSUnit unit = tk->mIdent.Length() == 3 ?
+                           eCSSUnit_ShortHexColor :
+                           eCSSUnit_HexColor;
+        aValue.SetIntegerColorValue(rgba, unit);
         return true;
       }
       break;
@@ -5316,27 +5317,54 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
     case eCSSToken_Function:
       if (mToken.mIdent.LowerCaseEqualsLiteral("rgb")) {
         // rgb ( component , component , component )
-        uint8_t r, g, b;
-        int32_t type = COLOR_TYPE_UNKNOWN;
-        if (ParseColorComponent(r, type, ',') &&
-            ParseColorComponent(g, type, ',') &&
-            ParseColorComponent(b, type, ')')) {
-          aValue.SetColorValue(NS_RGB(r,g,b));
-          return true;
+        if (GetToken(true)) {
+          UngetToken();
+        }
+        if (mToken.mType == eCSSToken_Number) {
+          uint8_t r, g, b;
+          if (ParseNumberColorComponent(r, ',') &&
+              ParseNumberColorComponent(g, ',') &&
+              ParseNumberColorComponent(b, ')')) {
+            aValue.SetIntegerColorValue(NS_RGB(r, g, b), eCSSUnit_RGBColor);
+            return true;
+          }
+        } else {
+          float r, g, b;
+          if (ParsePercentageColorComponent(r, ',') &&
+              ParsePercentageColorComponent(g, ',') &&
+              ParsePercentageColorComponent(b, ')')) {
+            aValue.SetFloatColorValue(r, g, b, 1.0f,
+                                      eCSSUnit_PercentageRGBColor);
+            return true;
+          }
         }
         SkipUntil(')');
         return false;
       }
       else if (mToken.mIdent.LowerCaseEqualsLiteral("rgba")) {
         // rgba ( component , component , component , opacity )
-        uint8_t r, g, b, a;
-        int32_t type = COLOR_TYPE_UNKNOWN;
-        if (ParseColorComponent(r, type, ',') &&
-            ParseColorComponent(g, type, ',') &&
-            ParseColorComponent(b, type, ',') &&
-            ParseColorOpacity(a)) {
-          aValue.SetColorValue(NS_RGBA(r, g, b, a));
-          return true;
+        if (GetToken(true)) {
+          UngetToken();
+        }
+        if (mToken.mType == eCSSToken_Number) {
+          uint8_t r, g, b, a;
+          if (ParseNumberColorComponent(r, ',') &&
+              ParseNumberColorComponent(g, ',') &&
+              ParseNumberColorComponent(b, ',') &&
+              ParseColorOpacity(a)) {
+            aValue.SetIntegerColorValue(NS_RGBA(r, g, b, a),
+                                        eCSSUnit_RGBAColor);
+            return true;
+          }
+        } else {
+          float r, g, b, a;
+          if (ParsePercentageColorComponent(r, ',') &&
+              ParsePercentageColorComponent(g, ',') &&
+              ParsePercentageColorComponent(b, ',') &&
+              ParseColorOpacity(a)) {
+            aValue.SetFloatColorValue(r, g, b, a, eCSSUnit_PercentageRGBAColor);
+            return true;
+          }
         }
         SkipUntil(')');
         return false;
@@ -5344,8 +5372,9 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
       else if (mToken.mIdent.LowerCaseEqualsLiteral("hsl")) {
         // hsl ( hue , saturation , lightness )
         // "hue" is a number, "saturation" and "lightness" are percentages.
-        if (ParseHSLColor(rgba, ')')) {
-          aValue.SetColorValue(rgba);
+        float h, s, l;
+        if (ParseHSLColor(h, s, l, ')')) {
+          aValue.SetFloatColorValue(h, s, l, 1.0f, eCSSUnit_HSLColor);
           return true;
         }
         SkipUntil(')');
@@ -5355,11 +5384,10 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         // hsla ( hue , saturation , lightness , opacity )
         // "hue" is a number, "saturation" and "lightness" are percentages,
         // "opacity" is a number.
-        uint8_t a;
-        if (ParseHSLColor(rgba, ',') &&
+        float h, s, l, a;
+        if (ParseHSLColor(h, s, l, ',') &&
             ParseColorOpacity(a)) {
-          aValue.SetColorValue(NS_RGBA(NS_GET_R(rgba), NS_GET_G(rgba),
-                                       NS_GET_B(rgba), a));
+          aValue.SetFloatColorValue(h, s, l, a, eCSSUnit_HSLAColor);
           return true;
         }
         SkipUntil(')');
@@ -5414,7 +5442,7 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
         break;
     }
     if (NS_HexToRGB(str, &rgba)) {
-      aValue.SetColorValue(rgba);
+      aValue.SetIntegerColorValue(rgba, eCSSUnit_HexColor);
       return true;
     }
   }
@@ -5425,67 +5453,52 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
   return false;
 }
 
-// aType will be set if we have already parsed other color components
-// in this color spec
 bool
-CSSParserImpl::ParseColorComponent(uint8_t& aComponent,
-                                   int32_t& aType,
-                                   char aStop)
+CSSParserImpl::ParseNumberColorComponent(uint8_t& aComponent, char aStop)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
     return false;
   }
-  float value;
-  nsCSSToken* tk = &mToken;
-  switch (tk->mType) {
-  case eCSSToken_Number:
-    switch (aType) {
-      case COLOR_TYPE_UNKNOWN:
-        aType = COLOR_TYPE_INTEGERS;
-        break;
-      case COLOR_TYPE_INTEGERS:
-        break;
-      case COLOR_TYPE_PERCENTAGES:
-        REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
-        UngetToken();
-        return false;
-      default:
-        NS_NOTREACHED("Someone forgot to add the new color component type in here");
-    }
 
-    if (!mToken.mIntegerValid) {
-      REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
-      UngetToken();
-      return false;
-    }
-    value = tk->mNumber;
-    break;
-  case eCSSToken_Percentage:
-    switch (aType) {
-      case COLOR_TYPE_UNKNOWN:
-        aType = COLOR_TYPE_PERCENTAGES;
-        break;
-      case COLOR_TYPE_INTEGERS:
-        REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
-        UngetToken();
-        return false;
-      case COLOR_TYPE_PERCENTAGES:
-        break;
-      default:
-        NS_NOTREACHED("Someone forgot to add the new color component type in here");
-    }
-    value = tk->mNumber * 255.0f;
-    break;
-  default:
-    REPORT_UNEXPECTED_TOKEN(PEColorBadRGBContents);
+  if (mToken.mType != eCSSToken_Number || !mToken.mIntegerValid) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedInt);
     UngetToken();
     return false;
   }
+
+  float value = mToken.mNumber;
+  if (value < 0.0f) value = 0.0f;
+  if (value > 255.0f) value = 255.0f;
+
   if (ExpectSymbol(aStop, true)) {
-    if (value < 0.0f) value = 0.0f;
-    if (value > 255.0f) value = 255.0f;
     aComponent = NSToIntRound(value);
+    return true;
+  }
+  REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
+  return false;
+}
+
+bool
+CSSParserImpl::ParsePercentageColorComponent(float& aComponent, char aStop)
+{
+  if (!GetToken(true)) {
+    REPORT_UNEXPECTED_EOF(PEColorComponentEOF);
+    return false;
+  }
+
+  if (mToken.mType != eCSSToken_Percentage) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedPercent);
+    UngetToken();
+    return false;
+  }
+
+  float value = mToken.mNumber;
+  if (value < 0.0f) value = 0.0f;
+  if (value > 1.0f) value = 1.0f;
+
+  if (ExpectSymbol(aStop, true)) {
+    aComponent = value;
     return true;
   }
   REPORT_UNEXPECTED_TOKEN_CHAR(PEColorComponentBadTerm, aStop);
@@ -5494,7 +5507,7 @@ CSSParserImpl::ParseColorComponent(uint8_t& aComponent,
 
 
 bool
-CSSParserImpl::ParseHSLColor(nscolor& aColor,
+CSSParserImpl::ParseHSLColor(float& aHue, float& aSaturation, float& aLightness,
                              char aStop)
 {
   float h, s, l;
@@ -5553,7 +5566,9 @@ CSSParserImpl::ParseHSLColor(nscolor& aColor,
   if (l > 1.0f) l = 1.0f;
 
   if (ExpectSymbol(aStop, true)) {
-    aColor = NS_HSL2RGB(h, s, l);
+    aHue = h;
+    aSaturation = s;
+    aLightness = l;
     return true;
   }
 
@@ -5564,6 +5579,24 @@ CSSParserImpl::ParseHSLColor(nscolor& aColor,
 
 bool
 CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
+{
+  float floatOpacity;
+  if (!ParseColorOpacity(floatOpacity)) {
+    return false;
+  }
+
+  uint8_t value = nsStyleUtil::FloatToColorComponent(floatOpacity);
+  // Need to compare to something slightly larger
+  // than 0.5 due to floating point inaccuracies.
+  NS_ASSERTION(fabs(255.0f*mToken.mNumber - value) <= 0.51f,
+               "FloatToColorComponent did something weird");
+
+  aOpacity = value;
+  return true;
+}
+
+bool
+CSSParserImpl::ParseColorOpacity(float& aOpacity)
 {
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PEColorOpacityEOF);
@@ -5576,25 +5609,18 @@ CSSParserImpl::ParseColorOpacity(uint8_t& aOpacity)
     return false;
   }
 
+  if (!ExpectSymbol(')', true)) {
+    REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
+    return false;
+  }
+
   if (mToken.mNumber < 0.0f) {
     mToken.mNumber = 0.0f;
   } else if (mToken.mNumber > 1.0f) {
     mToken.mNumber = 1.0f;
   }
 
-  uint8_t value = nsStyleUtil::FloatToColorComponent(mToken.mNumber);
-  // Need to compare to something slightly larger
-  // than 0.5 due to floating point inaccuracies.
-  NS_ASSERTION(fabs(255.0f*mToken.mNumber - value) <= 0.51f,
-               "FloatToColorComponent did something weird");
-
-  if (!ExpectSymbol(')', true)) {
-    REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
-    return false;
-  }
-
-  aOpacity = value;
-
+  aOpacity = mToken.mNumber;
   return true;
 }
 
@@ -8114,7 +8140,7 @@ CSSParserImpl::ParseBackground()
 
   // If we get to this point without seeing a color, provide a default.
   if (color.GetUnit() == eCSSUnit_Null) {
-    color.SetColorValue(NS_RGBA(0,0,0,0));
+    color.SetIntegerColorValue(NS_RGBA(0,0,0,0), eCSSUnit_RGBAColor);
   }
 
   AppendValue(eCSSProperty_background_image,      image);
@@ -12069,8 +12095,8 @@ CSSParserImpl::ParseShadowItem(nsCSSValue& aValue, bool aIsBoxShadow)
   } else {
     // Must be a color (as string or color value)
     NS_ASSERTION(xOrColor.GetUnit() == eCSSUnit_Ident ||
-                 xOrColor.GetUnit() == eCSSUnit_Color ||
-                 xOrColor.GetUnit() == eCSSUnit_EnumColor,
+                 xOrColor.GetUnit() == eCSSUnit_EnumColor ||
+                 xOrColor.IsNumericColorUnit(),
                  "Must be a color value");
     val->Item(IndexColor) = xOrColor;
     haveColor = true;

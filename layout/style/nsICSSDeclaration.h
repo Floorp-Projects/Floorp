@@ -50,6 +50,9 @@ public:
   NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,
                               nsAString& aValue) = 0;
 
+  NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,
+                                      nsAString& aValue) = 0;
+
   /**
    * Method analogous to nsIDOMCSSStyleDeclaration::SetProperty.  This
    * method does NOT allow setting a priority (the priority will
@@ -125,6 +128,10 @@ public:
                         mozilla::ErrorResult& rv) {
     rv = GetPropertyValue(aPropName, aValue);
   }
+  void GetAuthoredPropertyValue(const nsAString& aPropName, nsString& aValue,
+                                mozilla::ErrorResult& rv) {
+    rv = GetAuthoredPropertyValue(aPropName, aValue);
+  }
   void GetPropertyPriority(const nsAString& aPropName, nsString& aPriority) {
     GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
   }
@@ -145,10 +152,12 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
-#define NS_DECL_NSICSSDECLARATION                               \
-  NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,    \
-                              nsAString& aValue);               \
-  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,    \
+#define NS_DECL_NSICSSDECLARATION                                   \
+  NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,          \
+                              nsAString& aValue);                   \
+  NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,   \
+                                      nsAString& aValue);           \
+  NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,          \
                               const nsAString& aValue);
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
