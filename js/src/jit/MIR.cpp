@@ -690,12 +690,15 @@ MCallDOMNative::getAliasSet() const
         // getArg(0) is "this", so skip it
         MDefinition *arg = getArg(argIndex+1);
         MIRType actualType = arg->type();
-        // The only way to get side-effects is if we're passing in
-        // something that might be an object to an argument that
-        // expects a numeric, string, or boolean value.
-        if ((actualType == MIRType_Value || actualType == MIRType_Object) &&
-            (*argType &
-             (JSJitInfo::Boolean | JSJitInfo::String | JSJitInfo::Numeric)))
+        // The only way to reliably avoid side-effects given the informtion we
+        // have here is if we're passing in a known primitive value to an
+        // argument that expects a primitive value.  XXXbz maybe we need to
+        // communicate better information.  For example, a sequence argument
+        // will sort of unavoidably have side effects, while a typed array
+        // argument won't have any, but both are claimed to be
+        // JSJitInfo::Object.
+        if ((actualType == MIRType_Value || actualType == MIRType_Object) ||
+            (*argType & JSJitInfo::Object))
          {
              return AliasSet::Store(AliasSet::Any);
          }
@@ -704,6 +707,59 @@ MCallDOMNative::getAliasSet() const
     // We checked all the args, and they check out.  So we only
     // alias DOM mutations.
     return AliasSet::Load(AliasSet::DOMProperty);
+}
+
+void
+MCallDOMNative::computeMovable()
+{
+    // We are movable if the jitinfo says we can be and if we're also not
+    // effectful.  The jitinfo can't check for the latter, since it depends on
+    // the types of our arguments.
+    JS_ASSERT(getSingleTarget() && getSingleTarget()->isNative());
+
+    const JSJitInfo *jitInfo = getSingleTarget()->jitInfo();
+    JS_ASSERT(jitInfo);
+
+    JS_ASSERT_IF(jitInfo->isMovable,
+                 jitInfo->aliasSet != JSJitInfo::AliasEverything);
+
+    if (jitInfo->isMovable && !isEffectful())
+        setMovable();
+}
+
+bool
+MCallDOMNative::congruentTo(MDefinition *ins) const
+{
+    if (!isMovable())
+        return false;
+
+    if (!ins->isCall())
+        return false;
+
+    MCall *call = ins->toCall();
+
+    if (!call->isCallDOMNative())
+        return false;
+
+    if (getSingleTarget() != call->getSingleTarget())
+        return false;
+
+    if (isConstructing() != call->isConstructing())
+        return false;
+
+    if (numActualArgs() != call->numActualArgs())
+        return false;
+
+    if (needsArgCheck() != call->needsArgCheck())
+        return false;
+
+    if (!congruentIfOperandsEqual(call))
+        return false;
+
+    // The other call had better be movable at this point!
+    JS_ASSERT(call->isMovable());
+
+    return true;
 }
 
 MApplyArgs *
