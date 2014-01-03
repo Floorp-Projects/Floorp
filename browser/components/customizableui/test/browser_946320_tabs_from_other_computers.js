@@ -43,6 +43,7 @@ add_task(function() {
 
   let syncPrefBranch = new Preferences("services.sync.");
   syncPrefBranch.resetBranch("");
+  Services.logins.removeAllLogins();
 
   let hiddenPanelPromise = promisePanelHidden(window);
   PanelUI.toggle({type: "command"});
