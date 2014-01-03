@@ -2889,7 +2889,8 @@ function WidgetGroupWrapper(aWidget) {
   });
 
   this.__defineGetter__("areaType", function() {
-    return gAreas.get(aWidget.currentArea).get("type");
+    let areaProps = gAreas.get(aWidget.currentArea);
+    return areaProps && areaProps.get("type");
   });
 
   Object.freeze(this);
@@ -2990,7 +2991,8 @@ function XULWidgetGroupWrapper(aWidgetId) {
       return null;
     }
 
-    return gAreas.get(placement.area).get("type");
+    let areaProps = gAreas.get(placement.area);
+    return areaProps && areaProps.get("type");
   });
 
   this.__defineGetter__("instances", function() {

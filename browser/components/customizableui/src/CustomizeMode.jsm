@@ -396,6 +396,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_NAVBAR);
+    if (!this._customizing) {
+      this.dispatchToolboxEvent("customizationchange");
+    }
   },
 
   addToPanel: function(aNode) {
@@ -404,6 +407,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
     CustomizableUI.addWidgetToArea(aNode.id, CustomizableUI.AREA_PANEL);
+    if (!this._customizing) {
+      this.dispatchToolboxEvent("customizationchange");
+    }
   },
 
   removeFromArea: function(aNode) {
@@ -412,6 +418,9 @@ CustomizeMode.prototype = {
       aNode = aNode.firstChild;
     }
     CustomizableUI.removeWidgetFromArea(aNode.id);
+    if (!this._customizing) {
+      this.dispatchToolboxEvent("customizationchange");
+    }
   },
 
   populatePalette: function() {
