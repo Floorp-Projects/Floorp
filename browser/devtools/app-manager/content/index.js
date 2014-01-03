@@ -37,6 +37,10 @@ let UI = {
   },
 
   onUnload: function() {
+    for (let [target, toolbox] of this._handledTargets) {
+      toolbox.destroy();
+    }
+
     window.removeEventListener("unload", this.onUnload);
     window.removeEventListener("message", this.onMessage);
     if (this.connection) {
@@ -62,6 +66,7 @@ let UI = {
           this.selectTab("projects");
           break;
         case "toolbox-raise":
+          window.top.focus();
           this.selectTab(json.uid);
           break;
         case "toolbox-close":
@@ -158,7 +163,8 @@ let UI = {
 
   openAndShowToolboxForTarget: function(target, name, icon) {
     let host = devtools.Toolbox.HostType.CUSTOM;
-    if (!this._handledTargets.has(target)) {
+    let toolbox = gDevTools.getToolbox(target);
+    if (!toolbox) {
       let uid = "uid" + this._toolboxTabCursor++;
       let iframe = this.createToolboxTab(name, icon, uid);
       let options = { customIframe: iframe , uid: uid };
@@ -170,12 +176,6 @@ let UI = {
         });
       });
     } else {
-      let toolbox = this._handledTargets.get(target);
-      if (!toolbox) {
-        // Target is handled, but toolbox is still being
-        // created.
-        return promise.resolve(null);
-      }
       return gDevTools.showToolbox(target, null, host);
     }
   }

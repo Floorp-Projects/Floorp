@@ -44,6 +44,16 @@ var httpserver = new HttpServer();
 var serverStarted = false;
 var gFinished = false;
 
+function test_expired_histogram() {
+  var histogram_id = "FOOBAR";
+  var dummy = Telemetry.newHistogram(histogram_id, "30", 1, 2, 3, Telemetry.HISTOGRAM_EXPONENTIAL);
+
+  dummy.add(1);
+
+  do_check_eq(TelemetryPing.getPayload()["histograms"][histogram_id], undefined);
+  do_check_eq(TelemetryPing.getPayload()["histograms"]["TELEMETRY_TEST_EXPIRED"], undefined);
+}
+
 function telemetry_ping () {
   TelemetryPing.gatherStartup();
   TelemetryPing.enableLoadSaveNotifications();
@@ -98,7 +108,7 @@ function nonexistentServerObserver(aSubject, aTopic, aData) {
 }
 
 function setupTestData() {
-  Telemetry.newHistogram(IGNORE_HISTOGRAM, 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
+  Telemetry.newHistogram(IGNORE_HISTOGRAM, "never", 1, 2, 3, Telemetry.HISTOGRAM_BOOLEAN);
   Telemetry.histogramFrom(IGNORE_CLONED_HISTOGRAM, IGNORE_HISTOGRAM_TO_CLONE);
   Services.startup.interrupted = true;
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
@@ -499,6 +509,7 @@ function actualTest() {
   registerFakePluginHost();
 
   runInvalidJSONTest();
+  test_expired_histogram();
 
   addWrappedObserver(nonexistentServerObserver, "telemetry-test-xhr-complete");
   telemetry_ping();

@@ -97,7 +97,7 @@ class MediaRecorder::Session: public nsIObserver
     nsRefPtr<Session> mSession;
   };
 
-  // Record thread task.
+  // Record thread task and it run in Media Encoder thread.
   // Fetch encoded Audio/Video data from MediaEncoder.
   class ExtractRunnable : public nsRunnable
   {
@@ -114,7 +114,7 @@ class MediaRecorder::Session: public nsIObserver
     }
 
   private:
-    nsRefPtr<Session> mSession;
+    Session* mSession;
   };
 
   // For Ensure recorder has tracks to record.
