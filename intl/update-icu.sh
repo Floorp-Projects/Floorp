@@ -11,6 +11,10 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+# Ensure that $Date$ in the checked-out svn files expands timezone-agnostically,
+# so that this script's behavior is consistent when run from any time zone.
+export TZ=UTC
+
 icu_dir=`dirname $0`/icu
 rm -rf ${icu_dir}
 svn export $1 ${icu_dir}
