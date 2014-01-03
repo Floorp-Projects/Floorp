@@ -82,6 +82,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         JS_ASSERT(v->compartment() == Base::compartment);
+        JS_ASSERT(!k->compartment()->options_.mergeable());
         JS_ASSERT_IF(!InvisibleKeysOk, !k->compartment()->options_.invisibleToDebugger());
         JS_ASSERT(!Base::has(k));
         if (!incZoneCount(k->zone()))
