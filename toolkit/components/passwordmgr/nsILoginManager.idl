@@ -12,9 +12,19 @@ interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
-[scriptable, uuid(338c8597-1e32-4682-b5c7-cf8142c0bd1d)]
+[scriptable, uuid(f5f2a39a-dffe-4eb9-ad28-340afd53b1a3)]
 
 interface nsILoginManager : nsISupports {
+    /**
+     * This promise is resolved when initialization is complete, and is rejected
+     * in case initialization failed.  This includes the initial loading of the
+     * login data as well as any migration from previous versions.
+     *
+     * Calling any method of nsILoginManager before this promise is resolved
+     * might trigger the synchronous initialization fallback.
+     */
+    readonly attribute jsval initializationPromise;
+
 
     /**
      * Store a new login in the login manager.
