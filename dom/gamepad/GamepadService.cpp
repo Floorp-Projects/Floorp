@@ -65,7 +65,7 @@ GamepadService::GamepadService()
 NS_IMETHODIMP
 GamepadService::Observe(nsISupports* aSubject,
                         const char* aTopic,
-                        const PRUnichar* aData)
+                        const char16_t* aData)
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

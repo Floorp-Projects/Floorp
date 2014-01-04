@@ -83,7 +83,7 @@ void WalkDescendantsClearAncestorDirAuto(mozilla::dom::Element* aElement);
  * directionality needs to change
  */
 void SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
-                                     const PRUnichar* aBuffer, uint32_t aLength,
+                                     const char16_t* aBuffer, uint32_t aLength,
                                      bool aNotify);
 
 /**

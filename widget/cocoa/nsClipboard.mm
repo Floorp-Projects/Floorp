@@ -149,11 +149,11 @@ nsClipboard::TransferableFromPasteboard(nsITransferable *aTransferable, NSPasteb
       dataLength = signedDataLength;
 
       // skip BOM (Byte Order Mark to distinguish little or big endian)      
-      PRUnichar* clipboardDataPtrNoBOM = (PRUnichar*)clipboardDataPtr;
+      char16_t* clipboardDataPtrNoBOM = (char16_t*)clipboardDataPtr;
       if ((dataLength > 2) &&
           ((clipboardDataPtrNoBOM[0] == 0xFEFF) ||
            (clipboardDataPtrNoBOM[0] == 0xFFFE))) {
-        dataLength -= sizeof(PRUnichar);
+        dataLength -= sizeof(char16_t);
         clipboardDataPtrNoBOM += 1;
       }
 
@@ -401,7 +401,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
       NSString* nativeString;
       if (data)
-        nativeString = [NSString stringWithCharacters:(const unichar*)data length:(dataSize / sizeof(PRUnichar))];
+        nativeString = [NSString stringWithCharacters:(const unichar*)data length:(dataSize / sizeof(char16_t))];
       else
         nativeString = [NSString string];
       
@@ -515,7 +515,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       urlObject->GetData(url);
 
       // A newline embedded in the URL means that the form is actually URL + title.
-      int32_t newlinePos = url.FindChar(PRUnichar('\n'));
+      int32_t newlinePos = url.FindChar(char16_t('\n'));
       if (newlinePos >= 0) {
         url.Truncate(newlinePos);
 

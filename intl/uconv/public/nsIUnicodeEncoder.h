@@ -40,7 +40,7 @@ public:
   /**
    * Converts a character from Unicode to a Charset.
    */
-  NS_IMETHOD Convert(PRUnichar aChar, char * aDest, int32_t * aDestLength) = 0;
+  NS_IMETHOD Convert(char16_t aChar, char * aDest, int32_t * aDestLength) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
@@ -51,7 +51,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
 //
 //    p = the buffer pointer   (char*)
 //    e = encoder              (nsIUnicodeEncoder*)
-//    s = string               (PRUnichar*)
+//    s = string               (char16_t*)
 //    l = string length        (int32_t)
 //   sb = static buffer        (char[])
 //  sbl = static buffer length (uint32_t)
@@ -132,7 +132,7 @@ public:
    *                    NS_ERROR_UENC_NOMAPPING if character without mapping
    *                    was encountered and the behavior was set to "signal".
    */
-  NS_IMETHOD Convert(const PRUnichar * aSrc, int32_t * aSrcLength, 
+  NS_IMETHOD Convert(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength) = 0;
 
   /**
@@ -158,7 +158,7 @@ public:
    * @return            NS_OK_UENC_EXACTLENGTH if an exact length was computed
    *                    NS_OK if all we have is an approximation
    */
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength, 
+  NS_IMETHOD GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
       int32_t * aDestLength) = 0;
 
   /**
@@ -173,7 +173,7 @@ public:
    * @param aOrder      [IN] the behavior; taken from the enum
    */
   NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior, 
-      nsIUnicharEncoder * aEncoder, PRUnichar aChar) = 0;
+      nsIUnicharEncoder * aEncoder, char16_t aChar) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeEncoder, NS_IUNICODEENCODER_IID)

@@ -22,13 +22,13 @@ nsBasicUTF7Decoder::nsBasicUTF7Decoder(char aLastChar, char aEscChar)
 nsresult nsBasicUTF7Decoder::DecodeDirect(
                              const char * aSrc, 
                              int32_t * aSrcLength, 
-                             PRUnichar * aDest, 
+                             char16_t * aDest, 
                              int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
-  PRUnichar * destEnd = aDest + *aDestLength;
-  PRUnichar * dest = aDest;
+  char16_t * destEnd = aDest + *aDestLength;
+  char16_t * dest = aDest;
   nsresult res = NS_OK;
   char ch;
 
@@ -60,13 +60,13 @@ nsresult nsBasicUTF7Decoder::DecodeDirect(
 nsresult nsBasicUTF7Decoder::DecodeBase64(
                              const char * aSrc, 
                              int32_t * aSrcLength, 
-                             PRUnichar * aDest, 
+                             char16_t * aDest, 
                              int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
-  PRUnichar * destEnd = aDest + *aDestLength;
-  PRUnichar * dest = aDest;
+  char16_t * destEnd = aDest + *aDestLength;
+  char16_t * dest = aDest;
   nsresult res = NS_OK;
   char ch;
   uint32_t value;
@@ -94,7 +94,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
           break;
         }
         mEncBits += value >> 2;
-        *(dest++) = (PRUnichar) mEncBits;
+        *(dest++) = (char16_t) mEncBits;
         mEncBits = (value & 0x03) << 14;
         break;
       case 3:
@@ -109,7 +109,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
           break;
         }
         mEncBits += value >> 4;
-        *(dest++) = (PRUnichar) mEncBits;
+        *(dest++) = (char16_t) mEncBits;
         mEncBits = (value & 0x0f) << 12;
         break;
       case 6:
@@ -121,7 +121,7 @@ nsresult nsBasicUTF7Decoder::DecodeBase64(
           break;
         }
         mEncBits += value;
-        *(dest++) = (PRUnichar) mEncBits;
+        *(dest++) = (char16_t) mEncBits;
         mEncBits = 0;
         break;
     }
@@ -157,13 +157,13 @@ uint32_t nsBasicUTF7Decoder::CharToValue(char aChar) {
 
 NS_IMETHODIMP nsBasicUTF7Decoder::ConvertNoBuff(const char * aSrc, 
                                                 int32_t * aSrcLength, 
-                                                PRUnichar * aDest, 
+                                                char16_t * aDest, 
                                                 int32_t * aDestLength)
 {
   const char * srcEnd = aSrc + *aSrcLength;
   const char * src = aSrc;
-  PRUnichar * destEnd = aDest + *aDestLength;
-  PRUnichar * dest = aDest;
+  char16_t * destEnd = aDest + *aDestLength;
+  char16_t * dest = aDest;
   int32_t bcr,bcw;
   nsresult res = NS_OK;
 

@@ -851,7 +851,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
             ::CFStringGetCharacters(familyName, ::CFRangeMake(0, len),
                                     buffer.Elements());
             buffer[len] = 0;
-            nsDependentString familyName(reinterpret_cast<PRUnichar*>(buffer.Elements()), len);
+            nsDependentString familyName(reinterpret_cast<char16_t*>(buffer.Elements()), len);
 
             bool needsBold;  // ignored in the system fallback case
 

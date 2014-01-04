@@ -2624,14 +2624,14 @@ nsCrypto::SignText(JSContext* aContext,
   NS_ASSERTION(nicknames->numnicknames == numberOfCerts,
                "nicknames->numnicknames != numberOfCerts");
 
-  nsAutoArrayPtr<PRUnichar*> certNicknameList(new PRUnichar*[nicknames->numnicknames * 2]);
+  nsAutoArrayPtr<char16_t*> certNicknameList(new char16_t*[nicknames->numnicknames * 2]);
   if (!certNicknameList) {
     aReturn.Append(internalError);
 
     return;
   }
 
-  PRUnichar** certDetailsList = certNicknameList.get() + nicknames->numnicknames;
+  char16_t** certDetailsList = certNicknameList.get() + nicknames->numnicknames;
 
   int32_t certsToUse;
   for (node = CERT_LIST_HEAD(certList), certsToUse = 0;
@@ -2672,8 +2672,8 @@ nsCrypto::SignText(JSContext* aContext,
     // of the selected cert.
     int32_t selectedIndex = -1;
     rv = fsd->ConfirmSignText(uiContext, utf16Host, aStringToSign,
-                              const_cast<const PRUnichar**>(certNicknameList.get()),
-                              const_cast<const PRUnichar**>(certDetailsList),
+                              const_cast<const char16_t**>(certNicknameList.get()),
+                              const_cast<const char16_t**>(certDetailsList),
                               certsToUse, &selectedIndex, password,
                               &canceled);
     if (NS_FAILED(rv) || canceled) {

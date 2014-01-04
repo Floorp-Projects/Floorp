@@ -351,7 +351,7 @@ bool
 xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes);
 
 bool
-xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, JS::MutableHandleValue pval, const PRUnichar **pstr);
+xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, JS::MutableHandleValue pval, const char16_t **pstr);
 
 
 nsresult

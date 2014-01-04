@@ -52,13 +52,13 @@ nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stri
   int32_t aLength = stringIn.Length();
 
   if (aLength <= 64) {
-    PRUnichar conversionBuffer[64];
+    char16_t conversionBuffer[64];
     ToLowerCase(PromiseFlatString(stringIn).get(), conversionBuffer, aLength);
     stringOut.Assign(conversionBuffer, aLength);
   }
   else {
-    PRUnichar* conversionBuffer;
-    conversionBuffer = new PRUnichar[aLength];
+    char16_t* conversionBuffer;
+    conversionBuffer = new char16_t[aLength];
     if (!conversionBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -92,7 +92,7 @@ nsresult nsCollation::UnicodeToChar(const nsAString& aSrc, char** dst)
 
   if (NS_SUCCEEDED(res)) {
     const nsPromiseFlatString& src = PromiseFlatString(aSrc);
-    const PRUnichar *unichars = src.get();
+    const char16_t *unichars = src.get();
     int32_t unicharLength = src.Length();
     int32_t dstLength;
     res = mEncoder->GetMaxLength(unichars, unicharLength, &dstLength);

@@ -388,7 +388,7 @@ NS_IMPL_ISUPPORTS1(NotificationObserver, nsIObserver)
 
 NS_IMETHODIMP
 NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                              const PRUnichar* aData)
+                              const char16_t* aData)
 {
   if (!strcmp("alertclickcallback", aTopic)) {
     mNotification->DispatchTrustedEvent(NS_LITERAL_STRING("click"));

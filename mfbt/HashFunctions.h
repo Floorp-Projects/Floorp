@@ -344,7 +344,7 @@ HashString(const char16_t* str, size_t length)
 #endif
 
 /*
- * On Windows, wchar_t (PRUnichar) is not the same as uint16_t, even though it's
+ * On Windows, wchar_t (char16_t) is not the same as uint16_t, even though it's
  * the same width!
  */
 #ifdef WIN32

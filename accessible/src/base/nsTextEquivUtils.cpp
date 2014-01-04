@@ -130,7 +130,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
             display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
           isHTMLBlock = true;
           if (!aString->IsEmpty()) {
-            aString->Append(PRUnichar(' '));
+            aString->Append(char16_t(' '));
           }
         }
       }
@@ -146,7 +146,7 @@ nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent *aContent,
         aContent->AppendTextTo(*aString);
       }
       if (isHTMLBlock && !aString->IsEmpty()) {
-        aString->Append(PRUnichar(' '));
+        aString->Append(char16_t(' '));
       }
     }
     
@@ -334,12 +334,12 @@ nsTextEquivUtils::AppendString(nsAString *aString,
 
   // Insert spaces to insure that words from controls aren't jammed together.
   if (!aString->IsEmpty() && !nsCoreUtils::IsWhitespace(aString->Last()))
-    aString->Append(PRUnichar(' '));
+    aString->Append(char16_t(' '));
 
   aString->Append(aTextEquivalent);
 
   if (!nsCoreUtils::IsWhitespace(aString->Last()))
-    aString->Append(PRUnichar(' '));
+    aString->Append(char16_t(' '));
 
   return true;
 }

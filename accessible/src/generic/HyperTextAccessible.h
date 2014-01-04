@@ -26,9 +26,9 @@ struct DOMPoint {
 
 // This character marks where in the text returned via nsIAccessibleText(),
 // that embedded object characters exist
-const PRUnichar kEmbeddedObjectChar = 0xfffc;
-const PRUnichar kImaginaryEmbeddedObjectChar = ' ';
-const PRUnichar kForcedNewLineChar = '\n';
+const char16_t kEmbeddedObjectChar = 0xfffc;
+const char16_t kImaginaryEmbeddedObjectChar = ' ';
+const char16_t kForcedNewLineChar = '\n';
 
 /**
   * Special Accessible that knows how contain both text and embedded objects
@@ -188,7 +188,7 @@ public:
     return true;
   }
 
-  PRUnichar CharAt(int32_t aOffset)
+  char16_t CharAt(int32_t aOffset)
   {
     nsAutoString charAtOffset;
     CharAt(aOffset, charAtOffset);
@@ -198,7 +198,7 @@ public:
   /**
    * Return true if char at the given offset equals to given char.
    */
-  bool IsCharAt(int32_t aOffset, PRUnichar aChar)
+  bool IsCharAt(int32_t aOffset, char16_t aChar)
     { return CharAt(aOffset) == aChar; }
 
   /**

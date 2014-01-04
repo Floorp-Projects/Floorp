@@ -21,7 +21,7 @@ net_GetURLSpecFromActualFile(nsIFile *aFile, nsACString &result)
     if (NS_FAILED(rv)) return rv;
   
     // Replace \ with / to convert to an url
-    path.ReplaceChar(PRUnichar(0x5Cu), PRUnichar(0x2Fu));
+    path.ReplaceChar(char16_t(0x5Cu), char16_t(0x2Fu));
 
     nsAutoCString escPath;
 

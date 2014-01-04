@@ -88,7 +88,7 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
     }
   }
 
-  PRUnichar* stringData = nullptr;
+  char16_t* stringData = nullptr;
   uint32_t stringLen = 0;
   rv = aValue->GetAsWStringWithSize(&stringLen, &stringData);
   NS_ENSURE_SUCCESS(rv, rv);

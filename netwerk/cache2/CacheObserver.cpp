@@ -175,7 +175,7 @@ CacheStorageEvictHelper::ClearStorage(bool const aPrivate,
 NS_IMETHODIMP
 CacheObserver::Observe(nsISupports* aSubject,
                        const char* aTopic,
-                       const PRUnichar* aData)
+                       const char16_t* aData)
 {
   if (!strcmp(aTopic, "prefservice:after-app-defaults")) {
     CacheFileIOManager::Init();

@@ -14,7 +14,7 @@
 
 #ifndef nscore_h___
 #include "nscore.h"
-  // for |PRUnichar|
+  // for |char16_t|
 #endif
 
 // This file may be used (through nsUTF8Utils.h) from non-XPCOM code, in
@@ -33,7 +33,7 @@
 #endif
 
 /*
- * Some macros for converting PRUnichar (UTF-16) to and from Unicode scalar
+ * Some macros for converting char16_t (UTF-16) to and from Unicode scalar
  * values.
  *
  * Note that UTF-16 represents all Unicode scalar values up to U+10FFFF by
@@ -73,19 +73,19 @@
 // Since (c - 0x10000) >> 10 == (c >> 10) - 0x0080 and 
 // 0xD7C0 == 0xD800 - 0x0080,
 // ((c - 0x10000) >> 10) + 0xD800 can be simplified to
-#define H_SURROGATE(c) PRUnichar(PRUnichar(uint32_t(c) >> 10) + \
-                                 PRUnichar(0xD7C0)) 
+#define H_SURROGATE(c) char16_t(char16_t(uint32_t(c) >> 10) + \
+                                 char16_t(0xD7C0)) 
 // where it's to be noted that 0xD7C0 is not bitwise-OR'd
 // but added.
 
 // Since 0x10000 & 0x03FF == 0, 
 // (c - 0x10000) & 0x03FF == c & 0x03FF so that
 // ((c - 0x10000) & 0x03FF) | 0xDC00 is equivalent to
-#define L_SURROGATE(c) PRUnichar(PRUnichar(uint32_t(c) & uint32_t(0x03FF)) | \
-                                 PRUnichar(0xDC00))
+#define L_SURROGATE(c) char16_t(char16_t(uint32_t(c) & uint32_t(0x03FF)) | \
+                                 char16_t(0xDC00))
 
 #define IS_IN_BMP(ucs) (uint32_t(ucs) < PLANE1_BASE)
-#define UCS2_REPLACEMENT_CHAR PRUnichar(0xFFFD)
+#define UCS2_REPLACEMENT_CHAR char16_t(0xFFFD)
 
 #define UCS_END uint32_t(0x00110000)
 #define IS_VALID_CHAR(c) ((uint32_t(c) < UCS_END) && !IS_SURROGATE(c))
@@ -94,9 +94,9 @@
 template <class CharT> struct nsCharTraits {};
 
 template <>
-struct nsCharTraits<PRUnichar>
+struct nsCharTraits<char16_t>
   {
-    typedef PRUnichar char_type;
+    typedef char16_t char_type;
     typedef uint16_t  unsigned_char_type;
     typedef char      incompatible_char_type;
 
@@ -324,7 +324,7 @@ struct nsCharTraits<char>
   {
     typedef char           char_type;
     typedef unsigned char  unsigned_char_type;
-    typedef PRUnichar      incompatible_char_type;
+    typedef char16_t      incompatible_char_type;
 
     static char_type *sEmptyBuffer;
 

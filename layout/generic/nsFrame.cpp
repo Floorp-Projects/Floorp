@@ -5410,7 +5410,7 @@ nsFrame::XMLQuote(nsString& aString)
 {
   int32_t i, len = aString.Length();
   for (i = 0; i < len; i++) {
-    PRUnichar ch = aString.CharAt(i);
+    char16_t ch = aString.CharAt(i);
     if (ch == '<') {
       nsAutoString tmp(NS_LITERAL_STRING("&lt;"));
       aString.Cut(i, 1);

@@ -111,7 +111,7 @@ struct SingletonDestroyer MOZ_FINAL : public nsIObserver
 NS_IMPL_ISUPPORTS1(SingletonDestroyer, nsIObserver)
 
 NS_IMETHODIMP
-SingletonDestroyer::Observe(nsISupports*, const char* aTopic, const PRUnichar*)
+SingletonDestroyer::Observe(nsISupports*, const char* aTopic, const char16_t*)
 {
   MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));
   MacPowerInformationService::Shutdown();

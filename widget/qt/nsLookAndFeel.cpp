@@ -430,7 +430,7 @@ GetSystemFontInfo(const char *aClassName, nsString *aFontName,
   QFont qFont = QApplication::font(aClassName);
 
   NS_NAMED_LITERAL_STRING(quote, "\"");
-  nsString family((PRUnichar*)qFont.family().data());
+  nsString family((char16_t*)qFont.family().data());
   *aFontName = quote + family + quote;
 
   aFontStyle->systemFont = true;

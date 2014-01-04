@@ -274,7 +274,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             bool addSpace = false;
             bool first = true;
             strRes->mValue.SetCapacity(resultStr.Length());
-            PRUnichar c;
+            char16_t c;
             uint32_t src;
             for (src = 0; src < resultStr.Length(); src++) {
                 c = resultStr.CharAt(src);
@@ -283,7 +283,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 }
                 else {
                     if (addSpace && !first)
-                        strRes->mValue.Append(PRUnichar(' '));
+                        strRes->mValue.Append(char16_t(' '));
 
                     strRes->mValue.Append(c);
                     addSpace = false;

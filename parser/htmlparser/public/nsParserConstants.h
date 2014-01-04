@@ -6,34 +6,34 @@
 
 #ifndef nsParserConstants_h_
 #define nsParserConstants_h_
-const PRUnichar  kNewLine          = '\n';
-const PRUnichar  kCR               = '\r';
-const PRUnichar  kLF               = '\n';
-const PRUnichar  kTab              = '\t';
-const PRUnichar  kSpace            = ' ';
-const PRUnichar  kQuote            = '"';
-const PRUnichar  kApostrophe       = '\'';
-const PRUnichar  kLessThan         = '<';
-const PRUnichar  kGreaterThan      = '>';
-const PRUnichar  kAmpersand        = '&';
-const PRUnichar  kForwardSlash     = '/';
-const PRUnichar  kBackSlash        = '\\';
-const PRUnichar  kEqual            = '=';
-const PRUnichar  kMinus            = '-';
-const PRUnichar  kPlus             = '+';
-const PRUnichar  kExclamation      = '!';
-const PRUnichar  kSemicolon        = ';';
-const PRUnichar  kHashsign         = '#';
-const PRUnichar  kAsterisk         = '*';
-const PRUnichar  kUnderbar         = '_';
-const PRUnichar  kComma            = ',';
-const PRUnichar  kLeftParen        = '(';
-const PRUnichar  kRightParen       = ')';
-const PRUnichar  kLeftBrace        = '{';
-const PRUnichar  kRightBrace       = '}';
-const PRUnichar  kQuestionMark     = '?';
-const PRUnichar  kLeftSquareBracket  = '[';
-const PRUnichar  kRightSquareBracket = ']';
-const PRUnichar kNullCh           = '\0';
+const char16_t  kNewLine          = '\n';
+const char16_t  kCR               = '\r';
+const char16_t  kLF               = '\n';
+const char16_t  kTab              = '\t';
+const char16_t  kSpace            = ' ';
+const char16_t  kQuote            = '"';
+const char16_t  kApostrophe       = '\'';
+const char16_t  kLessThan         = '<';
+const char16_t  kGreaterThan      = '>';
+const char16_t  kAmpersand        = '&';
+const char16_t  kForwardSlash     = '/';
+const char16_t  kBackSlash        = '\\';
+const char16_t  kEqual            = '=';
+const char16_t  kMinus            = '-';
+const char16_t  kPlus             = '+';
+const char16_t  kExclamation      = '!';
+const char16_t  kSemicolon        = ';';
+const char16_t  kHashsign         = '#';
+const char16_t  kAsterisk         = '*';
+const char16_t  kUnderbar         = '_';
+const char16_t  kComma            = ',';
+const char16_t  kLeftParen        = '(';
+const char16_t  kRightParen       = ')';
+const char16_t  kLeftBrace        = '{';
+const char16_t  kRightBrace       = '}';
+const char16_t  kQuestionMark     = '?';
+const char16_t  kLeftSquareBracket  = '[';
+const char16_t  kRightSquareBracket = ']';
+const char16_t kNullCh           = '\0';
 
 #endif // nsParserConstants_h_

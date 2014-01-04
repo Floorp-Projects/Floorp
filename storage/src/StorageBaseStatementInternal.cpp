@@ -201,12 +201,12 @@ StorageBaseStatementInternal::ExecuteAsync(
 NS_IMETHODIMP
 StorageBaseStatementInternal::EscapeStringForLIKE(
   const nsAString &aValue,
-  const PRUnichar aEscapeChar,
+  const char16_t aEscapeChar,
   nsAString &_escapedString
 )
 {
-  const PRUnichar MATCH_ALL('%');
-  const PRUnichar MATCH_ONE('_');
+  const char16_t MATCH_ALL('%');
+  const char16_t MATCH_ONE('_');
 
   _escapedString.Truncate(0);
 

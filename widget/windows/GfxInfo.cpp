@@ -513,15 +513,15 @@ GfxInfo::Init()
     // with bad Intel driver installations where the DriverVersion reported
     // by the registry was not the version of the DLL.
     bool is64bitApp = sizeof(void*) == 8;
-    const PRUnichar *dllFileName = is64bitApp
+    const char16_t *dllFileName = is64bitApp
                                  ? MOZ_UTF16("igd10umd64.dll")
                                  : MOZ_UTF16("igd10umd32.dll"),
                     *dllFileName2 = is64bitApp
                                  ? MOZ_UTF16("igd10iumd64.dll")
                                  : MOZ_UTF16("igd10iumd32.dll");
     nsString dllVersion, dllVersion2;
-    gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
-    gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName2, dllVersion2);
+    gfxWindowsPlatform::GetDLLVersion((char16_t*)dllFileName, dllVersion);
+    gfxWindowsPlatform::GetDLLVersion((char16_t*)dllFileName2, dllVersion2);
 
     uint64_t dllNumericVersion = 0, dllNumericVersion2 = 0,
              driverNumericVersion = 0, knownSafeMismatchVersion = 0;

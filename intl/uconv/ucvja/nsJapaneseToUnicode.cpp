@@ -34,7 +34,7 @@
 
 NS_IMETHODIMP nsShiftJISToUnicode::Convert(
    const char * aSrc, int32_t * aSrcLen,
-     PRUnichar * aDest, int32_t * aDestLen)
+     char16_t * aDest, int32_t * aDestLen)
 {
    static const uint8_t sbIdx[256] =
    {
@@ -74,14 +74,14 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
 
    const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
    const unsigned char* src =(unsigned char*) aSrc;
-   PRUnichar* destEnd = aDest + *aDestLen;
-   PRUnichar* dest = aDest;
+   char16_t* destEnd = aDest + *aDestLen;
+   char16_t* dest = aDest;
    while (src < srcEnd) {
        switch (mState) {
           case 0:
           if (*src <= 0x80) {
             // ASCII
-            *dest++ = (PRUnichar) *src;
+            *dest++ = (char16_t) *src;
             if (dest >= destEnd) {
               goto error1;
             }
@@ -116,7 +116,7 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                  goto error_invalidchar;
                *dest++ = UNICODE_REPLACEMENT_CHARACTER;
             } else {
-               PRUnichar ch = gJapaneseMap[mData+off];
+               char16_t ch = gJapaneseMap[mData+off];
                if(ch == 0xfffd) {
                  if (mErrBehavior == kOnError_Signal)
                    goto error_invalidchar;
@@ -170,15 +170,15 @@ error1:
    return NS_OK_UDEC_MOREOUTPUT;
 }
 
-PRUnichar
+char16_t
 nsShiftJISToUnicode::GetCharacterForUnMapped()
 {
-  return PRUnichar(SJIS_UNMAPPED);
+  return char16_t(SJIS_UNMAPPED);
 }
 
 NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
    const char * aSrc, int32_t * aSrcLen,
-     PRUnichar * aDest, int32_t * aDestLen)
+     char16_t * aDest, int32_t * aDestLen)
 {
    static const uint8_t sbIdx[256] =
    {
@@ -234,8 +234,8 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
 
    const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
    const unsigned char* src =(unsigned char*) aSrc;
-   PRUnichar* destEnd = aDest + *aDestLen;
-   PRUnichar* dest = aDest;
+   char16_t* destEnd = aDest + *aDestLen;
+   char16_t* dest = aDest;
    while((src < srcEnd))
    {
        switch(mState)
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
             }
           } else {
             // ASCII
-            *dest++ = (PRUnichar) *src;
+            *dest++ = (char16_t) *src;
             if(dest >= destEnd)
               goto error1;
           }
@@ -384,7 +384,7 @@ error1:
 
 NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
    const char * aSrc, int32_t * aSrcLen,
-     PRUnichar * aDest, int32_t * aDestLen)
+     char16_t * aDest, int32_t * aDestLen)
 {
    static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -469,8 +469,8 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
 
    const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
    const unsigned char* src =(unsigned char*) aSrc;
-   PRUnichar* destEnd = aDest + *aDestLen;
-   PRUnichar* dest = aDest;
+   char16_t* destEnd = aDest + *aDestLen;
+   char16_t* dest = aDest;
    while((src < srcEnd))
    {
      
@@ -490,7 +490,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
               if (CHECK_OVERRUN(dest, destEnd, 1))
                 goto error1;
-              *dest++ = (PRUnichar) *src;
+              *dest++ = (char16_t) *src;
             }
           break;
           
@@ -506,13 +506,13 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else  {
               if (CHECK_OVERRUN(dest, destEnd, 2))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
+              *dest++ = (char16_t) 0x1b;
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
               mState = mLastLegalState;
             }
@@ -543,14 +543,14 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else  {
               if (CHECK_OVERRUN(dest, destEnd, 3))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
-              *dest++ = (PRUnichar) '(';
+              *dest++ = (char16_t) 0x1b;
+              *dest++ = (char16_t) '(';
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
               mState = mLastLegalState;
             }
@@ -571,14 +571,14 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else  {
               if (CHECK_OVERRUN(dest, destEnd, 3))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
-              *dest++ = (PRUnichar) '$';
+              *dest++ = (char16_t) 0x1b;
+              *dest++ = (char16_t) '$';
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
               mState = mLastLegalState;
             }
@@ -594,15 +594,15 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else  {
               if (CHECK_OVERRUN(dest, destEnd, 4))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
-              *dest++ = (PRUnichar) '$';
-              *dest++ = (PRUnichar) '(';
+              *dest++ = (char16_t) 0x1b;
+              *dest++ = (char16_t) '$';
+              *dest++ = (char16_t) '(';
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
               mState = mLastLegalState;
             }
@@ -625,7 +625,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               // to map them to Yen and Overbar
               if (CHECK_OVERRUN(dest, destEnd, 1))
                 goto error1;
-              *dest++ = (PRUnichar) *src;
+              *dest++ = (char16_t) *src;
               ++mRunLength;
             }
           break;
@@ -785,7 +785,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 goto error2;
               } else {
                 unsigned char gb[2];
-                PRUnichar uni;
+                char16_t uni;
                 int32_t gbLen = 2, uniLen = 1;
                 // ((mData/94)+0x21) is the original 1st byte.
                 // *src is the present 2nd byte.
@@ -843,7 +843,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 goto error2;
               } else {              
                 unsigned char ksc[2];
-                PRUnichar uni;
+                char16_t uni;
                 int32_t kscLen = 2, uniLen = 1;
                 // ((mData/94)+0x21) is the original 1st byte.
                 // *src is the present 2nd byte.
@@ -888,14 +888,14 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else  {
               if (CHECK_OVERRUN(dest, destEnd, 3))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
-              *dest++ = (PRUnichar) '.';
+              *dest++ = (char16_t) 0x1b;
+              *dest++ = (char16_t) '.';
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
             }
           break;
@@ -925,7 +925,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 } else {
                   // Put one character with ISO-8859-7 encoding.
                   unsigned char gr = *src | 0x80;
-                  PRUnichar uni;
+                  char16_t uni;
                   int32_t grLen = 1, uniLen = 1;
                   // Convert ISO-8859-7 to unicode.
                   mISO88597Decoder->Convert((const char *)&gr, &grLen,
@@ -941,14 +941,14 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
               if (CHECK_OVERRUN(dest, destEnd, 3))
                 goto error1;
-              *dest++ = (PRUnichar) 0x1b;
-              *dest++ = (PRUnichar) 'N';
+              *dest++ = (char16_t) 0x1b;
+              *dest++ = (char16_t) 'N';
               if (0x80 & *src) {
                 if (mErrBehavior == kOnError_Signal)
                   goto error3;
                 *dest++ = UNICODE_REPLACEMENT_CHARACTER;
               } else {
-                *dest++ = (PRUnichar) *src;
+                *dest++ = (char16_t) *src;
               }
             }
           break;

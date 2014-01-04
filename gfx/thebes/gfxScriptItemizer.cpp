@@ -124,14 +124,14 @@ HasMirroredChar(uint32_t aCh)
     return GetCharProps1(aCh).mMirrorOffsetIndex != 0;
 }
 
-gfxScriptItemizer::gfxScriptItemizer(const PRUnichar *src, uint32_t length)
+gfxScriptItemizer::gfxScriptItemizer(const char16_t *src, uint32_t length)
     : textPtr(src), textLength(length)
 {
     reset();
 }
 
 void
-gfxScriptItemizer::SetText(const PRUnichar *src, uint32_t length)
+gfxScriptItemizer::SetText(const char16_t *src, uint32_t length)
 {
     textPtr  = src;
     textLength = length;

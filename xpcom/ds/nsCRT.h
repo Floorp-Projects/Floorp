@@ -21,7 +21,7 @@
 #  endif /* XP_UNIX */
 #endif /* XP_WIN || XP_OS2 */
 
-extern const PRUnichar kIsoLatin1ToUCS2[256];
+extern const char16_t kIsoLatin1ToUCS2[256];
 
 // This macro can be used in a class declaration for classes that want
 // to ensure that their instance memory is zeroed.
@@ -122,9 +122,9 @@ public:
   static char* strtok(char* str, const char* delims, char* *newStr); 
 
   /// Like strcmp except for ucs2 strings
-  static int32_t strcmp(const PRUnichar* s1, const PRUnichar* s2);
+  static int32_t strcmp(const char16_t* s1, const char16_t* s2);
   /// Like strcmp except for ucs2 strings
-  static int32_t strncmp(const PRUnichar* s1, const PRUnichar* s2,
+  static int32_t strncmp(const char16_t* s1, const char16_t* s2,
                          uint32_t aMaxLen);
 
   // The GNU libc has memmem, which is strstr except for binary data
@@ -142,18 +142,18 @@ public:
   static bool IsUpper(char aChar) { return NS_IsUpper(aChar); }
   static bool IsLower(char aChar) { return NS_IsLower(aChar); }
 
-  static bool IsAscii(PRUnichar aChar) { return NS_IsAscii(aChar); }
-  static bool IsAscii(const PRUnichar* aString) { return NS_IsAscii(aString); }
-  static bool IsAsciiAlpha(PRUnichar aChar) { return NS_IsAsciiAlpha(aChar); }
-  static bool IsAsciiDigit(PRUnichar aChar) { return NS_IsAsciiDigit(aChar); }
-  static bool IsAsciiSpace(PRUnichar aChar) { return NS_IsAsciiWhitespace(aChar); }
+  static bool IsAscii(char16_t aChar) { return NS_IsAscii(aChar); }
+  static bool IsAscii(const char16_t* aString) { return NS_IsAscii(aString); }
+  static bool IsAsciiAlpha(char16_t aChar) { return NS_IsAsciiAlpha(aChar); }
+  static bool IsAsciiDigit(char16_t aChar) { return NS_IsAsciiDigit(aChar); }
+  static bool IsAsciiSpace(char16_t aChar) { return NS_IsAsciiWhitespace(aChar); }
   static bool IsAscii(const char* aString) { return NS_IsAscii(aString); }
   static bool IsAscii(const char* aString, uint32_t aLength) { return NS_IsAscii(aString, aLength); }
 };
 
 
 inline bool
-NS_IS_SPACE(PRUnichar c)
+NS_IS_SPACE(char16_t c)
 {
   return ((int(c) & 0x7f) == int(c)) && isspace(int(c));
 }

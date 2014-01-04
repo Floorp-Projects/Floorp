@@ -39,7 +39,7 @@ nsLocale::~nsLocale(void)
 NS_IMETHODIMP
 nsLocale::GetCategory(const nsAString& category, nsAString& result)
 {
-  const PRUnichar *value = (const PRUnichar*) 
+  const char16_t *value = (const char16_t*) 
     PL_HashTableLookup(fHashtable, PromiseFlatString(category).get());
 
   if (value)
@@ -54,11 +54,11 @@ nsLocale::GetCategory(const nsAString& category, nsAString& result)
 NS_IMETHODIMP
 nsLocale::AddCategory(const nsAString &category, const nsAString &value)
 {
-  PRUnichar* newKey = ToNewUnicode(category);
+  char16_t* newKey = ToNewUnicode(category);
   if (!newKey)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  PRUnichar* newValue = ToNewUnicode(value);
+  char16_t* newValue = ToNewUnicode(value);
   if (!newValue) {
     nsMemory::Free(newKey);
     return NS_ERROR_OUT_OF_MEMORY;
@@ -77,7 +77,7 @@ nsLocale::AddCategory(const nsAString &category, const nsAString &value)
 PLHashNumber
 nsLocale::Hash_HashFunction(const void* key)
 {
-  const PRUnichar* ptr = (const PRUnichar *) key;
+  const char16_t* ptr = (const char16_t *) key;
   PLHashNumber hash;
 
   hash = (PLHashNumber)0;
@@ -92,7 +92,7 @@ nsLocale::Hash_HashFunction(const void* key)
 int
 nsLocale::Hash_CompareNSString(const void* s1, const void* s2)
 {
-  return !nsCRT::strcmp((const PRUnichar *) s1, (const PRUnichar *) s2);
+  return !nsCRT::strcmp((const char16_t *) s1, (const char16_t *) s2);
 }
 
 
@@ -100,8 +100,8 @@ int
 nsLocale::Hash_EnumerateDelete(PLHashEntry *he, int hashIndex, void *arg)
 {
   // delete an entry
-  nsMemory::Free((PRUnichar *)he->key);
-  nsMemory::Free((PRUnichar *)he->value);
+  nsMemory::Free((char16_t *)he->key);
+  nsMemory::Free((char16_t *)he->value);
 
   return (HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE);
 }

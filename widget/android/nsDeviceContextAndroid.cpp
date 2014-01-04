@@ -52,7 +52,7 @@ nsDeviceContextSpecAndroid::Init(nsIWidget* aWidget,
 
 NS_IMETHODIMP
 nsDeviceContextSpecAndroid::BeginDocument(const nsAString& aTitle,
-                                          PRUnichar* aPrintToFileName,
+                                          char16_t* aPrintToFileName,
                                           int32_t aStartPage,
                                           int32_t aEndPage)
 {

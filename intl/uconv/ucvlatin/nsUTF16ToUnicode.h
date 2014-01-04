@@ -17,7 +17,7 @@ protected:
   nsUTF16ToUnicodeBase() { Reset();}
 
   nsresult UTF16ConvertToUnicode(const char * aSrc,
-                                 int32_t * aSrcLength, PRUnichar * aDest,
+                                 int32_t * aSrcLength, char16_t * aDest,
                                  int32_t * aDestLength, bool aSwapBytes);
 
 public: 
@@ -33,9 +33,9 @@ protected:
   // to store an odd byte left over between runs
   uint8_t mOddByte;
   // to store an odd high surrogate left over between runs
-  PRUnichar mOddHighSurrogate;
+  char16_t mOddHighSurrogate;
   // to store an odd low surrogate left over between runs
-  PRUnichar mOddLowSurrogate;
+  char16_t mOddLowSurrogate;
 };
 
 // UTF-16 big endian
@@ -44,7 +44,7 @@ class nsUTF16BEToUnicode : public nsUTF16ToUnicodeBase
 public:
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      PRUnichar * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength); 
 };
 
 // UTF-16 little endian
@@ -53,7 +53,7 @@ class nsUTF16LEToUnicode : public nsUTF16ToUnicodeBase
 public:
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      PRUnichar * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength); 
 };
 
 // UTF-16 with BOM
@@ -63,7 +63,7 @@ public:
 
   nsUTF16ToUnicode() { Reset();}
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-      PRUnichar * aDest, int32_t * aDestLength); 
+      char16_t * aDest, int32_t * aDestLength); 
 
   NS_IMETHOD Reset();
 

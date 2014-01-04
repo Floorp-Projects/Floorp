@@ -48,7 +48,7 @@
 #include "nsTString.h"
 #include "string-template-undef.h"
 
-static_assert(sizeof(PRUnichar) == 2, "size of PRUnichar must be 2");
+static_assert(sizeof(char16_t) == 2, "size of char16_t must be 2");
 static_assert(sizeof(nsString::char_type) == 2,
               "size of nsString::char_type must be 2");
 static_assert(nsString::char_type(-1) > nsString::char_type(0),
@@ -64,12 +64,12 @@ class NS_LossyConvertUTF16toASCII : public nsAutoCString
   {
     public:
       explicit
-      NS_LossyConvertUTF16toASCII( const PRUnichar* aString )
+      NS_LossyConvertUTF16toASCII( const char16_t* aString )
         {
           LossyAppendUTF16toASCII(aString, *this);
         }
 
-      NS_LossyConvertUTF16toASCII( const PRUnichar* aString, uint32_t aLength )
+      NS_LossyConvertUTF16toASCII( const char16_t* aString, uint32_t aLength )
         {
           LossyAppendUTF16toASCII(Substring(aString, aLength), *this);
         }
@@ -117,7 +117,7 @@ class NS_ConvertASCIItoUTF16 : public nsAutoString
 
     private:
         // NOT TO BE IMPLEMENTED
-      NS_ConvertASCIItoUTF16( PRUnichar );
+      NS_ConvertASCIItoUTF16( char16_t );
   };
 
 
@@ -128,21 +128,21 @@ class NS_ConvertUTF16toUTF8 : public nsAutoCString
   {
     public:
       explicit
-      NS_ConvertUTF16toUTF8( const PRUnichar* aString )
+      NS_ConvertUTF16toUTF8( const char16_t* aString )
         {
           AppendUTF16toUTF8(aString, *this);
         }
 
-      NS_ConvertUTF16toUTF8( const PRUnichar* aString, uint32_t aLength )
+      NS_ConvertUTF16toUTF8( const char16_t* aString, uint32_t aLength )
         {
           AppendUTF16toUTF8(Substring(aString, aLength), *this);
         }
 
 #ifdef MOZ_USE_CHAR16_WRAPPER
-      NS_ConvertUTF16toUTF8( char16ptr_t aString ) : NS_ConvertUTF16toUTF8(static_cast<const PRUnichar*>(aString)) {}
+      NS_ConvertUTF16toUTF8( char16ptr_t aString ) : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString)) {}
 
       NS_ConvertUTF16toUTF8( char16ptr_t aString, uint32_t aLength )
-        : NS_ConvertUTF16toUTF8(static_cast<const PRUnichar*>(aString), aLength) {}
+        : NS_ConvertUTF16toUTF8(static_cast<const char16_t*>(aString), aLength) {}
 #endif
 
       explicit
@@ -179,7 +179,7 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString
 
     private:
         // NOT TO BE IMPLEMENTED
-      NS_ConvertUTF8toUTF16( PRUnichar );
+      NS_ConvertUTF8toUTF16( char16_t );
   };
 
 
@@ -220,6 +220,6 @@ inline int32_t MaxInt(int32_t x, int32_t y)
  * Return the given buffer to the heap manager. Calls allocator::Free()
  */
 inline void Recycle( char* aBuffer) { nsMemory::Free(aBuffer); }
-inline void Recycle( PRUnichar* aBuffer) { nsMemory::Free(aBuffer); }
+inline void Recycle( char16_t* aBuffer) { nsMemory::Free(aBuffer); }
 
 #endif // !defined(nsString_h___)

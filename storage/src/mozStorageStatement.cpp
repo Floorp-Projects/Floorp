@@ -827,8 +827,8 @@ Statement::GetString(uint32_t aIndex,
     _value.Truncate(0);
     _value.SetIsVoid(true);
   } else {
-    const PRUnichar *value =
-      static_cast<const PRUnichar *>(::sqlite3_column_text16(mDBStatement,
+    const char16_t *value =
+      static_cast<const char16_t *>(::sqlite3_column_text16(mDBStatement,
                                                              aIndex));
     _value.Assign(value, ::sqlite3_column_bytes16(mDBStatement, aIndex) / 2);
   }
@@ -876,12 +876,12 @@ Statement::GetSharedUTF8String(uint32_t aIndex,
 NS_IMETHODIMP
 Statement::GetSharedString(uint32_t aIndex,
                            uint32_t *_length,
-                           const PRUnichar **_value)
+                           const char16_t **_value)
 {
   if (_length)
     *_length = ::sqlite3_column_bytes16(mDBStatement, aIndex);
 
-  *_value = static_cast<const PRUnichar *>(::sqlite3_column_text16(mDBStatement,
+  *_value = static_cast<const char16_t *>(::sqlite3_column_text16(mDBStatement,
                                                                    aIndex));
   return NS_OK;
 }

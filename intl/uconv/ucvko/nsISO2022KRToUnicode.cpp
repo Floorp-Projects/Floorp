@@ -7,14 +7,14 @@
 #include "nsICharsetConverterManager.h"
 #include "nsServiceManagerUtils.h"
 
-NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen, PRUnichar * aDest, int32_t * aDestLen)
+NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen, char16_t * aDest, int32_t * aDestLen)
 {
   static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
   const unsigned char* srcEnd = (unsigned char*)aSrc + *aSrcLen;
   const unsigned char* src =(unsigned char*) aSrc;
-  PRUnichar* destEnd = aDest + *aDestLen;
-  PRUnichar* dest = aDest;
+  char16_t* destEnd = aDest + *aDestLen;
+  char16_t* dest = aDest;
   while((src < srcEnd))
   {
     // if LF/CR, return to US-ASCII unconditionally.
@@ -45,7 +45,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
         else {
           if (CHECK_OVERRUN(dest, destEnd, 1))
             goto error1;
-          *dest++ = (PRUnichar) *src;
+          *dest++ = (char16_t) *src;
         }
         break;
           
@@ -56,8 +56,8 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
         else  {
           if (CHECK_OVERRUN(dest, destEnd, 2))
             goto error1;
-          *dest++ = (PRUnichar) 0x1b;
-          *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+          *dest++ = (char16_t) 0x1b;
+          *dest++ = (0x80 & *src) ? 0xFFFD : (char16_t) *src;
           mState =  mLastLegalState;
         }
         break;
@@ -69,9 +69,9 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
         else  {
           if (CHECK_OVERRUN(dest, destEnd, 3))
             goto error1;
-          *dest++ = (PRUnichar) 0x1b;
-          *dest++ = (PRUnichar) '$';
-          *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+          *dest++ = (char16_t) 0x1b;
+          *dest++ = (char16_t) '$';
+          *dest++ = (0x80 & *src) ? 0xFFFD : (char16_t) *src;
           mState = mLastLegalState;
         }
         break;
@@ -85,10 +85,10 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
         else  {
           if (CHECK_OVERRUN(dest, destEnd, 4))
             goto error1;
-          *dest++ = (PRUnichar) 0x1b;
-          *dest++ = (PRUnichar) '$';
-          *dest++ = (PRUnichar) ')';
-          *dest++ = (0x80 & *src) ? 0xFFFD : (PRUnichar) *src;
+          *dest++ = (char16_t) 0x1b;
+          *dest++ = (char16_t) '$';
+          *dest++ = (char16_t) ')';
+          *dest++ = (0x80 & *src) ? 0xFFFD : (char16_t) *src;
           mState = mLastLegalState;
         }
         break;
@@ -112,7 +112,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
           if (CHECK_OVERRUN(dest, destEnd, 1))
             goto error1;
           mState = mState_KSX1001_1992;
-          *dest++ = (PRUnichar) *src;
+          *dest++ = (char16_t) *src;
           ++mRunLength;
         } 
         else {         // Everything else is invalid.
@@ -141,7 +141,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, int32_t * aSrcLen
             if (CHECK_OVERRUN(dest, destEnd, 1))
               goto error1;
             unsigned char ksx[2];
-            PRUnichar uni;
+            char16_t uni;
             int32_t ksxLen = 2, uniLen = 1;
             // mData is the original 1st byte.
             // *src is the present 2nd byte.

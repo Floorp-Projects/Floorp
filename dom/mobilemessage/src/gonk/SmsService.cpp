@@ -58,7 +58,7 @@ SmsService::SmsService()
 NS_IMETHODIMP
 SmsService::Observe(nsISupports* aSubject,
                     const char* aTopic,
-                    const PRUnichar* aData)
+                    const char16_t* aData)
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString data(aData);

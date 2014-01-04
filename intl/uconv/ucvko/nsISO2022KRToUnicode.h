@@ -28,7 +28,7 @@ public:
   }
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength,
-     PRUnichar * aDest, int32_t * aDestLength) ;
+     char16_t * aDest, int32_t * aDestLength) ;
   
   NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
      int32_t * aDestLength) 

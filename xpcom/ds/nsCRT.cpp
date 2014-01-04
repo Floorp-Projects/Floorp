@@ -79,11 +79,11 @@ char* nsCRT::strtok(char* string, const char* delims, char* *newStr)
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-int32_t nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2) {
+int32_t nsCRT::strcmp(const char16_t* s1, const char16_t* s2) {
   if(s1 && s2) {
     for (;;) {
-      PRUnichar c1 = *s1++;
-      PRUnichar c2 = *s2++;
+      char16_t c1 = *s1++;
+      char16_t c2 = *s2++;
       if (c1 != c2) {
         if (c1 < c2) return -1;
         return 1;
@@ -109,12 +109,12 @@ int32_t nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2) {
  * @param   s1 and s2 both point to unichar strings
  * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
-int32_t nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, uint32_t n) {
+int32_t nsCRT::strncmp(const char16_t* s1, const char16_t* s2, uint32_t n) {
   if(s1 && s2) { 
     if(n != 0) {
       do {
-        PRUnichar c1 = *s1++;
-        PRUnichar c2 = *s2++;
+        char16_t c1 = *s1++;
+        char16_t c2 = *s2++;
         if (c1 != c2) {
           if (c1 < c2) return -1;
           return 1;

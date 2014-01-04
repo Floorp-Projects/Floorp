@@ -354,13 +354,13 @@ static int32_t
 ParsePS(const nsString& aBuffer, int32_t aIndex)
 {
   for (;;) {
-    PRUnichar ch = aBuffer.CharAt(aIndex);
-    if ((ch == PRUnichar(' ')) || (ch == PRUnichar('\t')) ||
-        (ch == PRUnichar('\n')) || (ch == PRUnichar('\r'))) {
+    char16_t ch = aBuffer.CharAt(aIndex);
+    if ((ch == char16_t(' ')) || (ch == char16_t('\t')) ||
+        (ch == char16_t('\n')) || (ch == char16_t('\r'))) {
       ++aIndex;
-    } else if (ch == PRUnichar('-')) {
+    } else if (ch == char16_t('-')) {
       int32_t tmpIndex;
-      if (aBuffer.CharAt(aIndex+1) == PRUnichar('-') &&
+      if (aBuffer.CharAt(aIndex+1) == char16_t('-') &&
           kNotFound != (tmpIndex=aBuffer.Find("--",false,aIndex+2,-1))) {
         aIndex = tmpIndex + 2;
       } else {
@@ -393,8 +393,8 @@ ParseDocTypeDecl(const nsString &aBuffer,
   do {
     theIndex = aBuffer.FindChar('<', theIndex);
     if (theIndex == kNotFound) break;
-    PRUnichar nextChar = aBuffer.CharAt(theIndex+1);
-    if (nextChar == PRUnichar('!')) {
+    char16_t nextChar = aBuffer.CharAt(theIndex+1);
+    if (nextChar == char16_t('!')) {
       int32_t tmpIndex = theIndex + 2;
       if (kNotFound !=
           (theIndex=aBuffer.Find("DOCTYPE", true, tmpIndex, 0))) {
@@ -404,7 +404,7 @@ ParseDocTypeDecl(const nsString &aBuffer,
       }
       theIndex = ParsePS(aBuffer, tmpIndex);
       theIndex = aBuffer.FindChar('>', theIndex);
-    } else if (nextChar == PRUnichar('?')) {
+    } else if (nextChar == char16_t('?')) {
       theIndex = aBuffer.FindChar('>', theIndex);
     } else {
       break;
@@ -431,8 +431,8 @@ ParseDocTypeDecl(const nsString &aBuffer,
     // Now find the beginning and end of the public identifier
     // and the system identifier (if present).
 
-    PRUnichar lit = aBuffer.CharAt(theIndex);
-    if ((lit != PRUnichar('\"')) && (lit != PRUnichar('\'')))
+    char16_t lit = aBuffer.CharAt(theIndex);
+    if ((lit != char16_t('\"')) && (lit != char16_t('\'')))
       return false;
 
     // Start is the first character, excluding the quote, and End is
@@ -443,15 +443,15 @@ ParseDocTypeDecl(const nsString &aBuffer,
     if (kNotFound == PublicIDEnd)
       return false;
     theIndex = ParsePS(aBuffer, PublicIDEnd + 1);
-    PRUnichar next = aBuffer.CharAt(theIndex);
-    if (next == PRUnichar('>')) {
+    char16_t next = aBuffer.CharAt(theIndex);
+    if (next == char16_t('>')) {
       // There was a public identifier, but no system
       // identifier,
       // so do nothing.
       // This is needed to avoid the else at the end, and it's
       // also the most common case.
-    } else if ((next == PRUnichar('\"')) ||
-               (next == PRUnichar('\''))) {
+    } else if ((next == char16_t('\"')) ||
+               (next == char16_t('\''))) {
       // We found a system identifier.
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
       int32_t SystemIDStart = theIndex + 1;
@@ -460,7 +460,7 @@ ParseDocTypeDecl(const nsString &aBuffer,
         return false;
       aSystemID =
         Substring(aBuffer, SystemIDStart, SystemIDEnd - SystemIDStart);
-    } else if (next == PRUnichar('[')) {
+    } else if (next == char16_t('[')) {
       // We found an internal subset.
       *aResultFlags |= PARSE_DTD_HAVE_INTERNAL_SUBSET;
     } else {
@@ -480,8 +480,8 @@ ParseDocTypeDecl(const nsString &aBuffer,
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
 
       theIndex = ParsePS(aBuffer, tmpIndex+6);
-      PRUnichar next = aBuffer.CharAt(theIndex);
-      if (next != PRUnichar('\"') && next != PRUnichar('\''))
+      char16_t next = aBuffer.CharAt(theIndex);
+      if (next != char16_t('\"') && next != char16_t('\''))
         return false;
 
       int32_t SystemIDStart = theIndex + 1;
@@ -494,10 +494,10 @@ ParseDocTypeDecl(const nsString &aBuffer,
       theIndex = ParsePS(aBuffer, SystemIDEnd + 1);
     }
 
-    PRUnichar nextChar = aBuffer.CharAt(theIndex);
-    if (nextChar == PRUnichar('['))
+    char16_t nextChar = aBuffer.CharAt(theIndex);
+    if (nextChar == char16_t('['))
       *aResultFlags |= PARSE_DTD_HAVE_INTERNAL_SUBSET;
-    else if (nextChar != PRUnichar('>'))
+    else if (nextChar != char16_t('>'))
       return false;
   }
   return true;
@@ -850,7 +850,7 @@ nsParser::WillBuildModel(nsString& aFilename)
 
   if (eDTDMode_unknown == mParserContext->mDTDMode ||
       eDTDMode_autodetect == mParserContext->mDTDMode) {
-    PRUnichar buf[1025];
+    char16_t buf[1025];
     nsFixedString theBuffer(buf, 1024, 0);
 
     // Grab 1024 characters, starting at the first non-whitespace
@@ -1385,7 +1385,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
 
         nsString& thisTag = aTagStack[theIndex];
         // was there an xmlns=?
-        int32_t endOfTag = thisTag.FindChar(PRUnichar(' '));
+        int32_t endOfTag = thisTag.FindChar(char16_t(' '));
         if (endOfTag == -1) {
           endContext.Append(thisTag);
         } else {

@@ -277,7 +277,7 @@ nsXULControllers::CanCreateWrapper(const nsIID * iid, char **_retval)
 }
 
 NS_IMETHODIMP
-nsXULControllers::CanCallMethod(const nsIID * iid, const PRUnichar *methodName,
+nsXULControllers::CanCallMethod(const nsIID * iid, const char16_t *methodName,
                                 char **_retval)
 {
   // OK if you're cool enough
@@ -287,7 +287,7 @@ nsXULControllers::CanCallMethod(const nsIID * iid, const PRUnichar *methodName,
 
 NS_IMETHODIMP
 nsXULControllers::CanGetProperty(const nsIID * iid,
-                                 const PRUnichar *propertyName,
+                                 const char16_t *propertyName,
                                  char **_retval)
 {
   // OK if you're cool enough
@@ -298,7 +298,7 @@ nsXULControllers::CanGetProperty(const nsIID * iid,
 
 NS_IMETHODIMP
 nsXULControllers::CanSetProperty(const nsIID * iid,
-                                 const PRUnichar *propertyName,
+                                 const char16_t *propertyName,
                                  char **_retval)
 {
   // OK if you're cool enough

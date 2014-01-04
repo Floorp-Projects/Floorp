@@ -1754,7 +1754,7 @@ nsHttpHandler::GetCacheSessionNameForStoragePolicy(
 NS_IMETHODIMP
 nsHttpHandler::Observe(nsISupports *subject,
                        const char *topic,
-                       const PRUnichar *data)
+                       const char16_t *data)
 {
     LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 

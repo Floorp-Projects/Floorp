@@ -12,7 +12,7 @@
 
 // Basic mapping from Hankaku to Zenkaku
 // Nigori and Maru are taken care of outside this basic mapping
-static const PRUnichar gBasicMapping[0x40] =
+static const char16_t gBasicMapping[0x40] =
 {
 // 0xff60
 0xff60,0x3002,0x300c,0x300d,0x3001,0x30fb,0x30f2,0x30a1,
@@ -138,18 +138,18 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(int32_t aCharset,
   return NS_OK;
 }
 
-nsresult nsUnicodeToISO2022JP::ConvertHankaku(const PRUnichar * aSrc,
+nsresult nsUnicodeToISO2022JP::ConvertHankaku(const char16_t * aSrc,
                                               int32_t * aSrcLength,
                                               char * aDest,
                                               int32_t * aDestLength)
 {
   nsresult res = NS_OK;
 
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
-  PRUnichar srcChar, tempChar;
+  char16_t srcChar, tempChar;
   int32_t bcr, bcw;
 
   bcw = destEnd - dest;
@@ -169,7 +169,7 @@ nsresult nsUnicodeToISO2022JP::ConvertHankaku(const PRUnichar * aSrc,
 
     if (src < srcEnd) {
       // if the character could take a modifier, and the next char
-      // is a modifier, modify it and eat one PRUnichar
+      // is a modifier, modify it and eat one char16_t
       if (NEED_TO_CHECK_NIGORI(srcChar) && IS_NIGORI(*src)) {
         tempChar += NIGORI_MODIFIER;
         ++src;
@@ -196,15 +196,15 @@ nsresult nsUnicodeToISO2022JP::ConvertHankaku(const PRUnichar * aSrc,
 // Subclassing of nsTableEncoderSupport class [implementation]
 
 NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
-                                    const PRUnichar * aSrc, 
+                                    const char16_t * aSrc, 
                                     int32_t * aSrcLength, 
                                     char * aDest, 
                                     int32_t * aDestLength)
 {
   nsresult res = NS_OK;
 
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
   int32_t bcr, bcw;

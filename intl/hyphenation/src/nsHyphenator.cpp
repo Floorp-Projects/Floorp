@@ -80,7 +80,7 @@ nsHyphenator::Hyphenate(const nsAString& aString,
     }
 
     if (inWord) {
-      const PRUnichar *begin = aString.BeginReading();
+      const char16_t *begin = aString.BeginReading();
       NS_ConvertUTF16toUTF8 utf8(begin + wordStart,
                                  wordLimit - wordStart);
       nsAutoTArray<char,200> utf8hyphens;
@@ -98,8 +98,8 @@ nsHyphenator::Hyphenate(const nsAString& aString,
         // string directly) to Unicode character indexing.
         // We then need to convert this to utf16 code unit offsets for Gecko.
         const char *hyphPtr = utf8hyphens.Elements();
-        const PRUnichar *cur = begin + wordStart;
-        const PRUnichar *end = begin + wordLimit;
+        const char16_t *cur = begin + wordStart;
+        const char16_t *end = begin + wordLimit;
         while (cur < end) {
           if (*hyphPtr & 0x01) {
             aHyphens[cur - begin] = true;

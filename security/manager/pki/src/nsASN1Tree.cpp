@@ -390,21 +390,21 @@ nsNSSASN1Tree::SetCellText(int32_t row, nsITreeColumn* col,
 
 /* void performAction (in wstring action); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::PerformAction(const PRUnichar *action)
+nsNSSASN1Tree::PerformAction(const char16_t *action)
 {
   return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::PerformActionOnRow(const PRUnichar *action, int32_t row)
+nsNSSASN1Tree::PerformActionOnRow(const char16_t *action, int32_t row)
 {
   return NS_OK;
 }
 
 /* void performActionOnCell (in wstring action, in long row, in nsITreeColumn col); */
 NS_IMETHODIMP 
-nsNSSASN1Tree::PerformActionOnCell(const PRUnichar *action, int32_t row, 
+nsNSSASN1Tree::PerformActionOnCell(const char16_t *action, int32_t row, 
                                    nsITreeColumn* col)
 {
   return NS_OK;

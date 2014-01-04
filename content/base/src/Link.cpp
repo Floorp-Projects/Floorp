@@ -301,7 +301,7 @@ Link::GetProtocol(nsAString &_protocol)
     (void)uri->GetScheme(scheme);
     CopyASCIItoUTF16(scheme, _protocol);
   }
-  _protocol.Append(PRUnichar(':'));
+  _protocol.Append(char16_t(':'));
   return;
 }
 
@@ -451,7 +451,7 @@ Link::GetHash(nsAString &_hash)
   nsresult rv = uri->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
     NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
-    _hash.Assign(PRUnichar('#'));
+    _hash.Assign(char16_t('#'));
     AppendUTF8toUTF16(ref, _hash);
   }
 }

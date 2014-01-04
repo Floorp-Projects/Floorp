@@ -1434,7 +1434,7 @@ nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
 
 NS_IMETHODIMP
 nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
-                                  const PRUnichar *aData)
+                                  const char16_t *aData)
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsresult rv;

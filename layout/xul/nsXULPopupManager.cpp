@@ -152,7 +152,7 @@ nsXULPopupManager::Shutdown()
 NS_IMETHODIMP
 nsXULPopupManager::Observe(nsISupports *aSubject,
                            const char *aTopic,
-                           const PRUnichar *aData)
+                           const char16_t *aData)
 {
   if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
     if (mKeyListener) {

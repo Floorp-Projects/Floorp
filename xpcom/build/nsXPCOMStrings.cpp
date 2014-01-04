@@ -25,7 +25,7 @@ NS_StringContainerInit(nsStringContainer &aContainer)
 
 XPCOM_API(nsresult)
 NS_StringContainerInit2(nsStringContainer &aContainer,
-                        const PRUnichar   *aData,
+                        const char16_t   *aData,
                         uint32_t           aDataLength,
                         uint32_t           aFlags)
 {
@@ -42,7 +42,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
     {
       if (NS_WARN_IF(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING))
 	return NS_ERROR_INVALID_ARG;
-      aDataLength = nsCharTraits<PRUnichar>::length(aData);
+      aDataLength = nsCharTraits<char16_t>::length(aData);
     }
 
     if (aFlags & (NS_STRING_CONTAINER_INIT_DEPEND |
@@ -57,7 +57,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
       if (aFlags & NS_STRING_CONTAINER_INIT_ADOPT)
         flags |= nsSubstring::F_OWNED;
 
-      new (&aContainer) nsSubstring(const_cast<PRUnichar *>(aData),
+      new (&aContainer) nsSubstring(const_cast<char16_t *>(aData),
                                     aDataLength, flags);
     }
     else
@@ -79,7 +79,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer)
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(uint32_t)
-NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
+NS_StringGetData(const nsAString &aStr, const char16_t **aData,
                  bool *aTerminated)
 {
   if (aTerminated)
@@ -93,7 +93,7 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
 
 XPCOM_API(uint32_t)
 NS_StringGetMutableData(nsAString &aStr, uint32_t aDataLength,
-                        PRUnichar **aData)
+                        char16_t **aData)
 {
   if (aDataLength != UINT32_MAX) {
     aStr.SetLength(aDataLength);
@@ -109,14 +109,14 @@ NS_StringGetMutableData(nsAString &aStr, uint32_t aDataLength,
   return begin.size_forward();
 }
 
-XPCOM_API(PRUnichar *)
+XPCOM_API(char16_t *)
 NS_StringCloneData(const nsAString &aStr)
 {
   return ToNewUnicode(aStr);
 }
 
 XPCOM_API(nsresult)
-NS_StringSetData(nsAString &aStr, const PRUnichar *aData, uint32_t aDataLength)
+NS_StringSetData(nsAString &aStr, const char16_t *aData, uint32_t aDataLength)
 {
   aStr.Assign(aData, aDataLength);
   return NS_OK; // XXX report errors
@@ -125,7 +125,7 @@ NS_StringSetData(nsAString &aStr, const PRUnichar *aData, uint32_t aDataLength)
 XPCOM_API(nsresult)
 NS_StringSetDataRange(nsAString &aStr,
                       uint32_t aCutOffset, uint32_t aCutLength,
-                      const PRUnichar *aData, uint32_t aDataLength)
+                      const char16_t *aData, uint32_t aDataLength)
 {
   if (aCutOffset == UINT32_MAX)
   {

@@ -393,7 +393,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     mLogFont.lfWeight         = mWeight;
 
     int len = std::min<int>(aName.Length(), LF_FACESIZE - 1);
-    memcpy(&mLogFont.lfFaceName, aName.BeginReading(), len * sizeof(PRUnichar));
+    memcpy(&mLogFont.lfFaceName, aName.BeginReading(), len * sizeof(char16_t));
     mLogFont.lfFaceName[len] = '\0';
 }
 
@@ -526,7 +526,7 @@ GDIFontFamily::FindStyleVariations()
     logFont.lfCharSet = DEFAULT_CHARSET;
     logFont.lfPitchAndFamily = 0;
     uint32_t l = std::min<uint32_t>(mName.Length(), LF_FACESIZE - 1);
-    memcpy(logFont.lfFaceName, mName.get(), l * sizeof(PRUnichar));
+    memcpy(logFont.lfFaceName, mName.get(), l * sizeof(char16_t));
 
     EnumFontFamiliesExW(hdc, &logFont,
                         (FONTENUMPROCW)GDIFontFamily::FamilyAddStylesProc,
@@ -573,7 +573,7 @@ gfxGDIFontList::gfxGDIFontList()
 static void
 RemoveCharsetFromFontSubstitute(nsAString &aName)
 {
-    int32_t comma = aName.FindChar(PRUnichar(','));
+    int32_t comma = aName.FindChar(char16_t(','));
     if (comma >= 0)
         aName.Truncate(comma);
 }
@@ -612,8 +612,8 @@ gfxGDIFontList::GetFontSubstitutes()
             continue;
         }
 
-        nsAutoString substituteName((PRUnichar*) aliasName);
-        nsAutoString actualFontName((PRUnichar*) actualName);
+        nsAutoString substituteName((char16_t*) aliasName);
+        nsAutoString actualFontName((char16_t*) actualName);
         RemoveCharsetFromFontSubstitute(substituteName);
         BuildKeyNameFromFontName(substituteName);
         RemoveCharsetFromFontSubstitute(actualFontName);

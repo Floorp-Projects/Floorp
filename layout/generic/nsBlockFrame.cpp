@@ -55,9 +55,9 @@
 
 static const int MIN_LINES_NEEDING_CURSOR = 20;
 
-static const PRUnichar kDiscCharacter = 0x2022;
-static const PRUnichar kCircleCharacter = 0x25e6;
-static const PRUnichar kSquareCharacter = 0x25aa;
+static const char16_t kDiscCharacter = 0x2022;
+static const char16_t kCircleCharacter = 0x25e6;
+static const char16_t kSquareCharacter = 0x25aa;
 
 #define DISABLE_FLOAT_BREAKING_IN_COLUMNS
 

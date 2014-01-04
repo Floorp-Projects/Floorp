@@ -130,7 +130,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 #ifdef CharT_is_PRUnichar
       int32_t Find( const nsAFlatString& aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
-      int32_t Find( const PRUnichar* aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
+      int32_t Find( const char16_t* aString, int32_t aOffset=0, int32_t aCount=-1 ) const;
 #ifdef MOZ_USE_CHAR16_WRAPPER
       int32_t Find( char16ptr_t aString, int32_t aOffset=0, int32_t aCount=-1 ) const
         {
@@ -157,7 +157,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 #ifdef CharT_is_PRUnichar
       int32_t RFind( const nsAFlatString& aString, int32_t aOffset=-1, int32_t aCount=-1 ) const;
-      int32_t RFind( const PRUnichar* aString, int32_t aOffset=-1, int32_t aCount=-1 ) const;
+      int32_t RFind( const char16_t* aString, int32_t aOffset=-1, int32_t aCount=-1 ) const;
 #endif
 
 
@@ -171,8 +171,8 @@ class nsTString_CharT : public nsTSubstring_CharT
          *  @return  offset in string, or kNotFound
          */
 
-      // int32_t FindChar( PRUnichar aChar, int32_t aOffset=0, int32_t aCount=-1 ) const;
-      int32_t RFindChar( PRUnichar aChar, int32_t aOffset=-1, int32_t aCount=-1 ) const;
+      // int32_t FindChar( char16_t aChar, int32_t aOffset=0, int32_t aCount=-1 ) const;
+      int32_t RFindChar( char16_t aChar, int32_t aOffset=-1, int32_t aCount=-1 ) const;
 
 
         /**
@@ -192,7 +192,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         }
 
 #ifdef CharT_is_PRUnichar
-      int32_t FindCharInSet( const PRUnichar* aString, int32_t aOffset=0 ) const;
+      int32_t FindCharInSet( const char16_t* aString, int32_t aOffset=0 ) const;
 #endif
 
 
@@ -320,7 +320,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          * @return TRUE if successful
          */
 
-      bool SetCharAt( PRUnichar aChar, uint32_t aIndex );
+      bool SetCharAt( char16_t aChar, uint32_t aIndex );
 
 
         /**

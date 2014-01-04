@@ -17,7 +17,7 @@
 #define INVALID_PARAM_VALUE \
     NS_LITERAL_STRING("invalid parameter value for function")
 
-const PRUnichar txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
+const char16_t txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 
 /*
  * FormatNumberFunctionCall
@@ -133,7 +133,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     FormatParseState pState = Prefix;
     inQuote = false;
 
-    PRUnichar c = 0;
+    char16_t c = 0;
     while (pos < formatLen && pState != Finished) {
         c=formatStr.CharAt(pos++);
 
@@ -318,7 +318,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
 
         if (hasFraction || digit != 0 || i < bufIntDigits+minFractionSize) {
             hasFraction = true;
-            res.SetCharAt((PRUnichar)(digit + format->mZeroDigit),
+            res.SetCharAt((char16_t)(digit + format->mZeroDigit),
                           resPos--);
         }
         else {
@@ -353,14 +353,14 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
             res.SetCharAt(format->mGroupingSeparator, resPos--);
         }
 
-        res.SetCharAt((PRUnichar)(digit + format->mZeroDigit), resPos--);
+        res.SetCharAt((char16_t)(digit + format->mZeroDigit), resPos--);
     }
 
     if (carry) {
         if (i%groupSize == 0) {
             res.Insert(format->mGroupingSeparator, resPos + 1);
         }
-        res.Insert((PRUnichar)(1 + format->mZeroDigit), resPos + 1);
+        res.Insert((char16_t)(1 + format->mZeroDigit), resPos + 1);
     }
     
     if (!hasFraction && !intDigits && !carry) {

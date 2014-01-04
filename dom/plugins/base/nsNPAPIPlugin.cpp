@@ -207,7 +207,7 @@ void NS_NotifyPluginCall(PRIntervalTime startTime, NSPluginCallReentry aReentryS
   float runTimeInSeconds = float(endTime) / PR_TicksPerSecond();
   nsAutoString runTimeString;
   runTimeString.AppendFloat(runTimeInSeconds);
-  const PRUnichar* runTime = runTimeString.get();
+  const char16_t* runTime = runTimeString.get();
   notifyUIService->NotifyObservers(nullptr, "experimental-notify-plugin-call",
                                    runTime);
 }

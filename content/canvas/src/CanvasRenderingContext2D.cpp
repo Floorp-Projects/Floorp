@@ -1106,7 +1106,7 @@ CanvasRenderingContext2D::GetImageBuffer(uint8_t** aImageBuffer,
 
 NS_IMETHODIMP
 CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
-                                         const PRUnichar *aEncoderOptions,
+                                         const char16_t *aEncoderOptions,
                                          nsIInputStream **aStream)
 {
   nsCString enccid("@mozilla.org/image/encoder;2?type=");
@@ -2333,7 +2333,7 @@ CanvasRenderingContext2D::GetTextBaseline(nsAString& tb)
 static inline void
 TextReplaceWhitespaceCharacters(nsAutoString& str)
 {
-  str.ReplaceChar("\x09\x0A\x0B\x0C\x0D", PRUnichar(' '));
+  str.ReplaceChar("\x09\x0A\x0B\x0C\x0D", char16_t(' '));
 }
 
 void
@@ -2375,7 +2375,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
 {
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
-  virtual void SetText(const PRUnichar* text, int32_t length, nsBidiDirection direction)
+  virtual void SetText(const char16_t* text, int32_t length, nsBidiDirection direction)
   {
     mFontgrp->UpdateFontList(); // ensure user font generation is current
     mTextRun = mFontgrp->MakeTextRun(text,

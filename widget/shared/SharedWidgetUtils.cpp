@@ -168,7 +168,7 @@ WidgetUtils::GetLatinCharCodeForKeyCode(uint32_t aKeyCode,
 
 // static
 KeyNameIndex
-WidgetUtils::GetDeadKeyNameIndex(PRUnichar aChar)
+WidgetUtils::GetDeadKeyNameIndex(char16_t aChar)
 {
   switch (aChar) {
     case '`':

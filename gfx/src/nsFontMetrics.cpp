@@ -36,7 +36,7 @@ public:
     }
 
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
-                const PRUnichar* aString, int32_t aLength)
+                const char16_t* aString, int32_t aLength)
     {
         mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             aString, aLength,
@@ -287,7 +287,7 @@ nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
 }
 
 nscoord
-nsFontMetrics::GetWidth(const PRUnichar* aString, uint32_t aLength,
+nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
                         nsRenderingContext *aContext)
 {
     if (aLength == 0)
@@ -325,7 +325,7 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
 }
 
 void
-nsFontMetrics::DrawString(const PRUnichar* aString, uint32_t aLength,
+nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
                           nsRenderingContext *aContext,
                           nsRenderingContext *aTextRunConstructionContext)
@@ -347,7 +347,7 @@ nsFontMetrics::DrawString(const PRUnichar* aString, uint32_t aLength,
 }
 
 static nsBoundingMetrics
-GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, uint32_t aLength,
+GetTextBoundingMetrics(nsFontMetrics* aMetrics, const char16_t *aString, uint32_t aLength,
                        nsRenderingContext *aContext, gfxFont::BoundingBoxType aType)
 {
     if (aLength == 0)
@@ -372,7 +372,7 @@ GetTextBoundingMetrics(nsFontMetrics* aMetrics, const PRUnichar *aString, uint32
 }
 
 nsBoundingMetrics
-nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, uint32_t aLength,
+nsFontMetrics::GetBoundingMetrics(const char16_t *aString, uint32_t aLength,
                                   nsRenderingContext *aContext)
 {
   return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
@@ -380,7 +380,7 @@ nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, uint32_t aLength,
 }
 
 nsBoundingMetrics
-nsFontMetrics::GetInkBoundsForVisualOverflow(const PRUnichar *aString, uint32_t aLength,
+nsFontMetrics::GetInkBoundsForVisualOverflow(const char16_t *aString, uint32_t aLength,
                                              nsRenderingContext *aContext)
 {
   return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::LOOSE_INK_EXTENTS);

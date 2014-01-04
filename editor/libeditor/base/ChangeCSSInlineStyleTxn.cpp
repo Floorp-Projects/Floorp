@@ -23,7 +23,7 @@
 
 class nsIEditor;
 
-#define kNullCh (PRUnichar('\0'))
+#define kNullCh (char16_t('\0'))
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED_1(ChangeCSSInlineStyleTxn, EditTxn,
                                      mElement)
@@ -41,9 +41,9 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar *value = ToNewUnicode(aValue);
-  PRUnichar *start = valueList.BeginWriting();
-  PRUnichar *end   = start;
+  char16_t *value = ToNewUnicode(aValue);
+  char16_t *start = valueList.BeginWriting();
+  char16_t *end   = start;
 
   while (kNullCh != *start) {
     while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
@@ -85,8 +85,8 @@ ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAString & aValues, const 
   nsAutoString  outString;
   classStr.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar *start = classStr.BeginWriting();
-  PRUnichar *end   = start;
+  char16_t *start = classStr.BeginWriting();
+  char16_t *end   = start;
 
   while (kNullCh != *start) {
     while ((kNullCh != *start) && nsCRT::IsAsciiSpace(*start)) {  // skip leading space
@@ -102,7 +102,7 @@ ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAString & aValues, const 
     if (start < end) {
       if (!aRemoveValue.Equals(start)) {
         outString.Append(start);
-        outString.Append(PRUnichar(' '));
+        outString.Append(char16_t(' '));
       }
     }
 
@@ -308,7 +308,7 @@ ChangeCSSInlineStyleTxn::AddValueToMultivalueProperty(nsAString & aValues, const
   }
   else if (!ValueIncludes(aValues, aNewValue, false)) {
     // we already have another value but not this one; add it
-    aValues.Append(PRUnichar(' '));
+    aValues.Append(char16_t(' '));
     aValues.Append(aNewValue);
   }
   return NS_OK;

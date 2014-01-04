@@ -140,7 +140,7 @@ NS_IMPL_ISUPPORTS2(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 NS_IMETHODIMP
 SRGBOverrideObserver::Observe(nsISupports *aSubject,
                               const char *aTopic,
-                              const PRUnichar *someData)
+                              const char16_t *someData)
 {
     NS_ASSERTION(NS_strcmp(someData,
                    MOZ_UTF16("gfx.color_mangement.force_srgb")),
@@ -183,7 +183,7 @@ NS_IMPL_ISUPPORTS1(FontPrefsObserver, nsIObserver)
 NS_IMETHODIMP
 FontPrefsObserver::Observe(nsISupports *aSubject,
                            const char *aTopic,
-                           const PRUnichar *someData)
+                           const char16_t *someData)
 {
     if (!someData) {
         NS_ERROR("font pref observer code broken");
@@ -207,7 +207,7 @@ NS_IMPL_ISUPPORTS1(OrientationSyncPrefsObserver, nsIObserver)
 NS_IMETHODIMP
 OrientationSyncPrefsObserver::Observe(nsISupports *aSubject,
                                       const char *aTopic,
-                                      const PRUnichar *someData)
+                                      const char16_t *someData)
 {
     if (!someData) {
         NS_ERROR("orientation sync pref observer broken");
@@ -231,7 +231,7 @@ NS_IMPL_ISUPPORTS1(MemoryPressureObserver, nsIObserver)
 NS_IMETHODIMP
 MemoryPressureObserver::Observe(nsISupports *aSubject,
                                 const char *aTopic,
-                                const PRUnichar *someData)
+                                const char16_t *someData)
 {
     NS_ASSERTION(strcmp(aTopic, "memory-pressure") == 0, "unexpected event topic");
     Factory::PurgeAllCaches();
@@ -1871,7 +1871,7 @@ static void MigratePrefs()
 // default SetupClusterBoundaries, based on Unicode properties;
 // platform subclasses may override if they wish
 void
-gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
+gfxPlatform::SetupClusterBoundaries(gfxTextRun *aTextRun, const char16_t *aString)
 {
     if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) {
         // 8-bit text doesn't have clusters.

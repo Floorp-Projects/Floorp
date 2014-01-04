@@ -42,7 +42,7 @@ nsHtml5Tokenizer::errWarnLtSlashInRcdata()
 // The null checks below annotated MOZ_LIKELY are not actually necessary.
 
 void
-nsHtml5Tokenizer::errUnquotedAttributeValOrNull(PRUnichar c)
+nsHtml5Tokenizer::errUnquotedAttributeValOrNull(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     switch (c) {
@@ -64,7 +64,7 @@ nsHtml5Tokenizer::errUnquotedAttributeValOrNull(PRUnichar c)
 }
 
 void
-nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c)
+nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     switch (c) {
@@ -82,7 +82,7 @@ nsHtml5Tokenizer::errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c)
 }
 
 void
-nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(PRUnichar c)
+nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     if (c == '<') {
@@ -96,7 +96,7 @@ nsHtml5Tokenizer::errBadCharBeforeAttributeNameOrNull(PRUnichar c)
 }
 
 void
-nsHtml5Tokenizer::errBadCharAfterLt(PRUnichar c)
+nsHtml5Tokenizer::errBadCharAfterLt(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errBadCharAfterLt");
@@ -104,7 +104,7 @@ nsHtml5Tokenizer::errBadCharAfterLt(PRUnichar c)
 }
 
 void
-nsHtml5Tokenizer::errQuoteOrLtInAttributeNameOrNull(PRUnichar c)
+nsHtml5Tokenizer::errQuoteOrLtInAttributeNameOrNull(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     if (c == '<') {
@@ -135,8 +135,8 @@ nsHtml5Tokenizer::maybeErrSlashInEndTag(bool selfClosing)
   }
 }
 
-PRUnichar
-nsHtml5Tokenizer::errNcrNonCharacter(PRUnichar ch)
+char16_t
+nsHtml5Tokenizer::errNcrNonCharacter(char16_t ch)
 {
   if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrNonCharacter");
@@ -152,8 +152,8 @@ nsHtml5Tokenizer::errAstralNonCharacter(int32_t ch)
   }
 }
 
-PRUnichar
-nsHtml5Tokenizer::errNcrControlChar(PRUnichar ch)
+char16_t
+nsHtml5Tokenizer::errNcrControlChar(char16_t ch)
 {
   if (MOZ_UNLIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errNcrControlChar");
@@ -314,7 +314,7 @@ nsHtml5Tokenizer::errNoNamedCharacterMatch()
 }
 
 void
-nsHtml5Tokenizer::errQuoteBeforeAttributeName(PRUnichar c)
+nsHtml5Tokenizer::errQuoteBeforeAttributeName(char16_t c)
 {
   if (MOZ_LIKELY(mViewSource)) {
     mViewSource->AddErrorToCurrentNode("errQuoteBeforeAttributeName");

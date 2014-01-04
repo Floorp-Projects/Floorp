@@ -38,8 +38,8 @@ public:
   }
 
   int32_t           lineNr;
-  const PRUnichar*  errorMsg;
-  const PRUnichar*  fileName;
+  const char16_t*  errorMsg;
+  const char16_t*  fileName;
 
   // XXX Not tested by test_assign_event_data.html
   void AssignScriptErrorEventData(const InternalScriptErrorEvent& aEvent,

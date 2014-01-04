@@ -66,22 +66,22 @@ public:
                 nsISupports* aContainer);
 
   // nsIContentSink overrides
-  NS_IMETHOD HandleStartElement(const PRUnichar *aName, 
-                                const PRUnichar **aAtts, 
+  NS_IMETHOD HandleStartElement(const char16_t *aName, 
+                                const char16_t **aAtts, 
                                 uint32_t aAttsCount, 
                                 int32_t aIndex, 
                                 uint32_t aLineNumber) MOZ_OVERRIDE;
 
-  NS_IMETHOD HandleEndElement(const PRUnichar *aName) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEndElement(const char16_t *aName) MOZ_OVERRIDE;
   
-  NS_IMETHOD HandleCDataSection(const PRUnichar *aData, 
+  NS_IMETHOD HandleCDataSection(const char16_t *aData, 
                                 uint32_t aLength) MOZ_OVERRIDE;
 
 protected:
     // nsXMLContentSink overrides
     virtual void MaybeStartLayout(bool aIgnorePendingSheets) MOZ_OVERRIDE;
 
-    bool OnOpenContainer(const PRUnichar **aAtts, 
+    bool OnOpenContainer(const char16_t **aAtts, 
                            uint32_t aAttsCount, 
                            int32_t aNameSpaceID, 
                            nsIAtom* aTagName,
@@ -89,37 +89,37 @@ protected:
 
     bool NotifyForDocElement() MOZ_OVERRIDE { return false; }
 
-    nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+    nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                            nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser) MOZ_OVERRIDE;
     
-    nsresult AddAttributes(const PRUnichar** aAtts, 
+    nsresult AddAttributes(const char16_t** aAtts, 
                            nsIContent* aContent) MOZ_OVERRIDE;
 
 #ifdef MOZ_XUL    
-    nsresult AddAttributesToXULPrototype(const PRUnichar **aAtts, 
+    nsresult AddAttributesToXULPrototype(const char16_t **aAtts, 
                                          uint32_t aAttsCount, 
                                          nsXULPrototypeElement* aElement);
 #endif
 
     // Our own helpers for constructing XBL prototype objects.
     nsresult ConstructBinding(uint32_t aLineNumber);
-    void ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber);
-    void ConstructResource(const PRUnichar **aAtts, nsIAtom* aResourceType);
-    void ConstructImplementation(const PRUnichar **aAtts);
-    void ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumber);
-    void ConstructMethod(const PRUnichar **aAtts);
-    void ConstructParameter(const PRUnichar **aAtts);
-    void ConstructField(const PRUnichar **aAtts, uint32_t aLineNumber);
+    void ConstructHandler(const char16_t **aAtts, uint32_t aLineNumber);
+    void ConstructResource(const char16_t **aAtts, nsIAtom* aResourceType);
+    void ConstructImplementation(const char16_t **aAtts);
+    void ConstructProperty(const char16_t **aAtts, uint32_t aLineNumber);
+    void ConstructMethod(const char16_t **aAtts);
+    void ConstructParameter(const char16_t **aAtts);
+    void ConstructField(const char16_t **aAtts, uint32_t aLineNumber);
   
 
   // nsXMLContentSink overrides
   nsresult FlushText(bool aReleaseTextNode = true) MOZ_OVERRIDE;
 
   // nsIExpatSink overrides
-  NS_IMETHOD ReportError(const PRUnichar* aErrorText,
-                         const PRUnichar* aSourceText,
+  NS_IMETHOD ReportError(const char16_t* aErrorText,
+                         const char16_t* aSourceText,
                          nsIScriptError *aError,
                          bool *_retval) MOZ_OVERRIDE;
 

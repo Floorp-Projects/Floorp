@@ -248,7 +248,7 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
                "unexpected state");
 
   nscoord xHeight = aFontMetrics->XHeight();
-  PRUnichar overBar = 0x00AF;
+  char16_t overBar = 0x00AF;
   nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&overBar, 1);
   aRuleThickness = bm.ascent + bm.descent;
   if (aRuleThickness <= 0 || aRuleThickness >= xHeight) {
@@ -269,7 +269,7 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
                "unexpected state");
 
   nscoord xHeight = aFontMetrics->XHeight();
-  PRUnichar minus = 0x2212; // not '-', but official Unicode minus sign
+  char16_t minus = 0x2212; // not '-', but official Unicode minus sign
   nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&minus, 1);
   aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
   if (aAxisHeight <= 0 || aAxisHeight >= xHeight) {

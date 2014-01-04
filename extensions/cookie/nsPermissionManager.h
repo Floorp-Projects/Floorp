@@ -233,8 +233,8 @@ private:
                                          uint32_t          aPermission,
                                          uint32_t          aExpireType,
                                          int64_t           aExpireTime,
-                                         const PRUnichar  *aData);
-  void     NotifyObservers(nsIPermission *aPermission, const PRUnichar *aData);
+                                         const char16_t  *aData);
+  void     NotifyObservers(nsIPermission *aPermission, const char16_t *aData);
 
   // Finalize all statements, close the DB and null it.
   // if aRebuildOnSuccess, reinitialize database

@@ -346,7 +346,7 @@ getCharAttr(txStylesheetAttr* aAttributes,
             nsIAtom* aName,
             bool aRequired,
             txStylesheetCompilerState& aState,
-            PRUnichar& aChar)
+            char16_t& aChar)
 {
     // Don't reset aChar since it contains the default value
     txStylesheetAttr* attr = nullptr;
@@ -1039,7 +1039,7 @@ txFnStartStripSpace(int32_t aNamespaceID,
         if (NS_FAILED(rv)) {
             // check for "*" or "prefix:*"
             uint32_t length = name.Length();
-            const PRUnichar* c;
+            const char16_t* c;
             name.BeginReading(c);
             if (length == 2 || c[length-1] != '*') {
                 // these can't work

@@ -55,7 +55,7 @@ protected:
 
     // override to prefer CoreText shaping with fonts that depend on AAT
     virtual bool ShapeText(gfxContext      *aContext,
-                           const PRUnichar *aText,
+                           const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
@@ -67,7 +67,7 @@ protected:
 
     // Get width and glyph ID for a character; uses aConvFactor
     // to convert font units as returned by CG to actual dimensions
-    gfxFloat GetCharWidth(CFDataRef aCmap, PRUnichar aUniChar,
+    gfxFloat GetCharWidth(CFDataRef aCmap, char16_t aUniChar,
                           uint32_t *aGlyphID, gfxFloat aConvFactor);
 
     // a weak reference to the CoreGraphics font: this is owned by the

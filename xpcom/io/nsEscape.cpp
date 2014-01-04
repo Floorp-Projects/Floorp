@@ -253,8 +253,8 @@ nsEscapeHTML(const char * string)
     return(rv);
 }
 
-PRUnichar *
-nsEscapeHTML2(const PRUnichar *aSourceBuffer, int32_t aSourceBufferLen)
+char16_t *
+nsEscapeHTML2(const char16_t *aSourceBuffer, int32_t aSourceBufferLen)
 {
   // Calculate the length, if the caller didn't.
   if (aSourceBufferLen < 0) {
@@ -263,12 +263,12 @@ nsEscapeHTML2(const PRUnichar *aSourceBuffer, int32_t aSourceBufferLen)
 
   /* XXX Hardcoded max entity len. */
   if (uint32_t(aSourceBufferLen) >=
-      ((UINT32_MAX - sizeof(PRUnichar)) / (6 * sizeof(PRUnichar))) )
+      ((UINT32_MAX - sizeof(char16_t)) / (6 * sizeof(char16_t))) )
     return nullptr;
 
-  PRUnichar *resultBuffer = (PRUnichar *)nsMemory::Alloc(aSourceBufferLen *
-                            6 * sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
-  PRUnichar *ptr = resultBuffer;
+  char16_t *resultBuffer = (char16_t *)nsMemory::Alloc(aSourceBufferLen *
+                            6 * sizeof(char16_t) + sizeof(char16_t('\0')));
+  char16_t *ptr = resultBuffer;
 
   if (resultBuffer) {
     int32_t i;

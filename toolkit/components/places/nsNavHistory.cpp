@@ -3007,7 +3007,7 @@ nsNavHistory::NotifyOnPageExpired(nsIURI *aURI, PRTime aVisitTime,
 
 NS_IMETHODIMP
 nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
-                    const PRUnichar *aData)
+                    const char16_t *aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
@@ -3436,7 +3436,7 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageBaseStatement* statement,
       );
       NS_ENSURE_SUCCESS(rv, rv);
       revDomain.Truncate(revDomain.Length() - 1);
-      revDomain.Append(PRUnichar('/'));
+      revDomain.Append(char16_t('/'));
       rv = statement->BindStringByName(
         NS_LITERAL_CSTRING("domain_upper") + qIndex, revDomain
       );
@@ -4121,14 +4121,14 @@ nsNavHistory::TitleForDomain(const nsCString& domain, nsACString& aTitle)
 }
 
 void
-nsNavHistory::GetAgeInDaysString(int32_t aInt, const PRUnichar *aName,
+nsNavHistory::GetAgeInDaysString(int32_t aInt, const char16_t *aName,
                                  nsACString& aResult)
 {
   nsIStringBundle *bundle = GetBundle();
   if (bundle) {
     nsAutoString intString;
     intString.AppendInt(aInt);
-    const PRUnichar* strings[1] = { intString.get() };
+    const char16_t* strings[1] = { intString.get() };
     nsXPIDLString value;
     nsresult rv = bundle->FormatStringFromName(aName, strings,
                                                1, getter_Copies(value));
@@ -4141,7 +4141,7 @@ nsNavHistory::GetAgeInDaysString(int32_t aInt, const PRUnichar *aName,
 }
 
 void
-nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
+nsNavHistory::GetStringFromName(const char16_t *aName, nsACString& aResult)
 {
   nsIStringBundle *bundle = GetBundle();
   if (bundle) {
@@ -4181,7 +4181,7 @@ nsNavHistory::GetMonthYear(int32_t aMonth, int32_t aYear, nsACString& aResult)
     GetMonthName(aMonth, monthName);
     nsAutoString yearString;
     yearString.AppendInt(aYear);
-    const PRUnichar* strings[2] = {
+    const char16_t* strings[2] = {
       NS_ConvertUTF8toUTF16(monthName).get()
     , yearString.get()
     };
@@ -4265,7 +4265,7 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 //    try to input quotes expecting them to do something and get no results
 //    back.
 
-inline bool isQueryWhitespace(PRUnichar ch)
+inline bool isQueryWhitespace(char16_t ch)
 {
   return ch == ' ';
 }

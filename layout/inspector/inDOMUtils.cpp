@@ -406,7 +406,7 @@ extern const char* const kCSSRawProperties[];
 
 NS_IMETHODIMP
 inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
-                                PRUnichar*** aProps)
+                                char16_t*** aProps)
 {
   // maxCount is the largest number of properties we could have; our actual
   // number might be smaller because properties might be disabled.
@@ -421,8 +421,8 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
     maxCount += (eCSSProperty_COUNT_with_aliases - eCSSProperty_COUNT);
   }
 
-  PRUnichar** props =
-    static_cast<PRUnichar**>(nsMemory::Alloc(maxCount * sizeof(PRUnichar*)));
+  char16_t** props =
+    static_cast<char16_t**>(nsMemory::Alloc(maxCount * sizeof(char16_t*)));
 
 #define DO_PROP(_prop)                                                  \
   PR_BEGIN_MACRO                                                        \
@@ -559,7 +559,7 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
 NS_IMETHODIMP
 inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
                                     uint32_t* aLength,
-                                    PRUnichar*** aValues)
+                                    char16_t*** aValues)
 {
   nsCSSProperty propertyID = nsCSSProps::LookupProperty(aProperty,
                                                         nsCSSProps::eEnabled);
@@ -605,8 +605,8 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
   InsertNoDuplicates(array, NS_LITERAL_STRING("unset"));
 
   *aLength = array.Length();
-  PRUnichar** ret =
-    static_cast<PRUnichar**>(NS_Alloc(*aLength * sizeof(PRUnichar*)));
+  char16_t** ret =
+    static_cast<char16_t**>(NS_Alloc(*aLength * sizeof(char16_t*)));
   for (uint32_t i = 0; i < *aLength; ++i) {
     ret[i] = ToNewUnicode(array[i]);
   }

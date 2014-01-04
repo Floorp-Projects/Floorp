@@ -551,7 +551,7 @@ ConvertAndWrite(const nsAString& aString,
   nsresult rv;
   int32_t charLength, startCharLength;
   const nsPromiseFlatString& flat = PromiseFlatString(aString);
-  const PRUnichar* unicodeBuf = flat.get();
+  const char16_t* unicodeBuf = flat.get();
   int32_t unicodeLength = aString.Length();
   int32_t startLength = unicodeLength;
 
@@ -1023,7 +1023,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
   }
   NS_ASSERTION(!mCachedBuffer->IsReadonly(),
                "DocumentEncoder shouldn't keep reference to non-readonly buffer!");
-  static_cast<PRUnichar*>(mCachedBuffer->Data())[0] = PRUnichar(0);
+  static_cast<char16_t*>(mCachedBuffer->Data())[0] = char16_t(0);
   mCachedBuffer->ToString(0, output, true);
   // output owns the buffer now!
   mCachedBuffer = nullptr;
@@ -1485,7 +1485,7 @@ nsHTMLCopyEncoder::EncodeToStringWithContext(nsAString& aContextString,
   // whitespace info to this.
   nsAutoString infoString;
   infoString.AppendInt(mStartDepth);
-  infoString.Append(PRUnichar(','));
+  infoString.Append(char16_t(','));
   infoString.AppendInt(mEndDepth);
   aInfoString = infoString;
   

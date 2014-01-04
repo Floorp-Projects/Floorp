@@ -40,21 +40,21 @@ void errPrematureEndOfComment();
 
 void errBogusComment();
 
-void errUnquotedAttributeValOrNull(PRUnichar c);
+void errUnquotedAttributeValOrNull(char16_t c);
 
 void errSlashNotFollowedByGt();
 
 void errNoSpaceBetweenAttributes();
 
-void errLtOrEqualsOrGraveInUnquotedAttributeOrNull(PRUnichar c);
+void errLtOrEqualsOrGraveInUnquotedAttributeOrNull(char16_t c);
 
 void errAttributeValueMissing();
 
-void errBadCharBeforeAttributeNameOrNull(PRUnichar c);
+void errBadCharBeforeAttributeNameOrNull(char16_t c);
 
 void errEqualsSignBeforeAttributeName();
 
-void errBadCharAfterLt(PRUnichar c);
+void errBadCharAfterLt(char16_t c);
 
 void errLtGt();
 
@@ -66,9 +66,9 @@ void errNotSemicolonTerminated();
 
 void errNoNamedCharacterMatch();
 
-void errQuoteBeforeAttributeName(PRUnichar c);
+void errQuoteBeforeAttributeName(char16_t c);
 
-void errQuoteOrLtInAttributeNameOrNull(PRUnichar c);
+void errQuoteOrLtInAttributeNameOrNull(char16_t c);
 
 void errExpectedPublicId();
 
@@ -78,13 +78,13 @@ void maybeErrAttributesOnEndTag(nsHtml5HtmlAttributes* attrs);
 
 void maybeErrSlashInEndTag(bool selfClosing);
 
-PRUnichar errNcrNonCharacter(PRUnichar ch);
+char16_t errNcrNonCharacter(char16_t ch);
 
 void errAstralNonCharacter(int32_t ch);
 
 void errNcrSurrogate();
 
-PRUnichar errNcrControlChar(PRUnichar ch);
+char16_t errNcrControlChar(char16_t ch);
 
 void errNcrCr();
 

@@ -6,7 +6,7 @@
 /*
  * A class which represents a fragment of text (eg inside a text
  * node); if only codepoints below 256 are used, the text is stored as
- * a char*; otherwise the text is stored as a PRUnichar*
+ * a char*; otherwise the text is stored as a char16_t*
  */
 
 #include "nsTextFragment.h"
@@ -105,14 +105,14 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
     }
     else {
       size_t m2bSize = aOther.mState.mLength *
-        (aOther.mState.mIs2b ? sizeof(PRUnichar) : sizeof(char));
+        (aOther.mState.mIs2b ? sizeof(char16_t) : sizeof(char));
 
-      m2b = static_cast<PRUnichar*>(moz_malloc(m2bSize));
+      m2b = static_cast<char16_t*>(moz_malloc(m2bSize));
       if (m2b) {
         memcpy(m2b, aOther.m2b, m2bSize);
       } else {
         // allocate a buffer for a single REPLACEMENT CHARACTER
-        m2b = static_cast<PRUnichar*>(moz_xmalloc(sizeof(PRUnichar)));
+        m2b = static_cast<char16_t*>(moz_xmalloc(sizeof(char16_t)));
         m2b[0] = 0xFFFD; // REPLACEMENT CHARACTER
         mState.mIs2b = true;
         mState.mInHeap = true;
@@ -129,7 +129,7 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
 }
 
 static inline int32_t
-FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
+FirstNon8BitUnvectorized(const char16_t *str, const char16_t *end)
 {
   typedef Non8BitParameters<sizeof(size_t)> p;
   const size_t mask = p::mask();
@@ -140,7 +140,7 @@ FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 
   // Align ourselves to a word boundary.
   int32_t alignLen =
-    std::min(len, int32_t(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(PRUnichar)));
+    std::min(len, int32_t(((-NS_PTR_TO_INT32(str)) & alignMask) / sizeof(char16_t)));
   for (; i < alignLen; i++) {
     if (str[i] > 255)
       return i;
@@ -166,7 +166,7 @@ FirstNon8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
 namespace mozilla {
   namespace SSE2 {
-    int32_t FirstNon8Bit(const PRUnichar *str, const PRUnichar *end);
+    int32_t FirstNon8Bit(const char16_t *str, const char16_t *end);
   }
 }
 #endif
@@ -179,7 +179,7 @@ namespace mozilla {
  * there is no non-8bit character before returned value.
  */
 static inline int32_t
-FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
+FirstNon8Bit(const char16_t *str, const char16_t *end)
 {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
   if (mozilla::supports_sse2()) {
@@ -191,7 +191,7 @@ FirstNon8Bit(const PRUnichar *str, const PRUnichar *end)
 }
 
 bool
-nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBidi)
+nsTextFragment::SetTo(const char16_t* aBuffer, int32_t aLength, bool aUpdateBidi)
 {
   ReleaseText();
 
@@ -199,7 +199,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
     return true;
   }
   
-  PRUnichar firstChar = *aBuffer;
+  char16_t firstChar = *aBuffer;
   if (aLength == 1 && firstChar < 256) {
     m1b = sSingleCharSharedString + firstChar;
     mState.mInHeap = false;
@@ -209,8 +209,8 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
     return true;
   }
 
-  const PRUnichar *ucp = aBuffer;
-  const PRUnichar *uend = aBuffer + aLength;
+  const char16_t *ucp = aBuffer;
+  const char16_t *uend = aBuffer + aLength;
 
   // Check if we can use a shared string
   if (aLength <= 1 + TEXTFRAG_WHITE_AFTER_NEWLINE + TEXTFRAG_MAX_NEWLINES &&
@@ -219,13 +219,13 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
       ++ucp;
     }
 
-    const PRUnichar* start = ucp;
+    const char16_t* start = ucp;
     while (ucp < uend && *ucp == '\n') {
       ++ucp;
     }
-    const PRUnichar* endNewLine = ucp;
+    const char16_t* endNewLine = ucp;
 
-    PRUnichar space = ucp < uend && *ucp == '\t' ? '\t' : ' ';
+    char16_t space = ucp < uend && *ucp == '\t' ? '\t' : ' ';
     while (ucp < uend && *ucp == space) {
       ++ucp;
     }
@@ -254,8 +254,8 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
 
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // Use ucs2 storage because we have to
-    size_t m2bSize = aLength * sizeof(PRUnichar);
-    m2b = (PRUnichar *)moz_malloc(m2bSize);
+    size_t m2bSize = aLength * sizeof(char16_t);
+    m2b = (char16_t *)moz_malloc(m2bSize);
     if (!m2b) {
       return false;
     }
@@ -288,7 +288,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, int32_t aLength, bool aUpdateBid
 }
 
 void
-nsTextFragment::CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount)
+nsTextFragment::CopyTo(char16_t *aDest, int32_t aOffset, int32_t aCount)
 {
   NS_ASSERTION(aOffset >= 0, "Bad offset passed to nsTextFragment::CopyTo()!");
   NS_ASSERTION(aCount >= 0, "Bad count passed to nsTextFragment::CopyTo()!");
@@ -303,7 +303,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount)
 
   if (aCount != 0) {
     if (mState.mIs2b) {
-      memcpy(aDest, m2b + aOffset, sizeof(PRUnichar) * aCount);
+      memcpy(aDest, m2b + aOffset, sizeof(char16_t) * aCount);
     } else {
       const char *cp = m1b + aOffset;
       const char *end = cp + aCount;
@@ -314,7 +314,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, int32_t aOffset, int32_t aCount)
 }
 
 bool
-nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateBidi)
+nsTextFragment::Append(const char16_t* aBuffer, uint32_t aLength, bool aUpdateBidi)
 {
   // This is a common case because some callsites create a textnode
   // with a value by creating the node and then calling AppendData.
@@ -326,12 +326,12 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
 
   if (mState.mIs2b) {
     // Already a 2-byte string so the result will be too
-    PRUnichar* buff = (PRUnichar*)moz_realloc(m2b, (mState.mLength + aLength) * sizeof(PRUnichar));
+    char16_t* buff = (char16_t*)moz_realloc(m2b, (mState.mLength + aLength) * sizeof(char16_t));
     if (!buff) {
       return false;
     }
 
-    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
+    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(char16_t));
     mState.mLength += aLength;
     m2b = buff;
 
@@ -348,8 +348,8 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
   if (first16bit != -1) { // aBuffer contains no non-8bit character
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
-    PRUnichar* buff = (PRUnichar*)moz_malloc((mState.mLength + aLength) *
-                                                  sizeof(PRUnichar));
+    char16_t* buff = (char16_t*)moz_malloc((mState.mLength + aLength) *
+                                                  sizeof(char16_t));
     if (!buff) {
       return false;
     }
@@ -358,7 +358,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, uint32_t aLength, bool aUpdateB
     LossyConvertEncoding8to16 converter(buff);
     copy_string(m1b, m1b+mState.mLength, converter);
 
-    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
+    memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(char16_t));
     mState.mLength += aLength;
     mState.mIs2b = true;
 
@@ -422,18 +422,18 @@ nsTextFragment::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 // To save time we only do this when we really want to know, not during
 // every allocation
 void
-nsTextFragment::UpdateBidiFlag(const PRUnichar* aBuffer, uint32_t aLength)
+nsTextFragment::UpdateBidiFlag(const char16_t* aBuffer, uint32_t aLength)
 {
   if (mState.mIs2b && !mState.mIsBidi) {
-    const PRUnichar* cp = aBuffer;
-    const PRUnichar* end = cp + aLength;
+    const char16_t* cp = aBuffer;
+    const char16_t* end = cp + aLength;
     while (cp < end) {
-      PRUnichar ch1 = *cp++;
+      char16_t ch1 = *cp++;
       uint32_t utf32Char = ch1;
       if (NS_IS_HIGH_SURROGATE(ch1) &&
           cp < end &&
           NS_IS_LOW_SURROGATE(*cp)) {
-        PRUnichar ch2 = *cp++;
+        char16_t ch2 = *cp++;
         utf32Char = SURROGATE_TO_UCS4(ch1, ch2);
       }
       if (UTF32_CHAR_IS_BIDI(utf32Char) || IsBidiControl(utf32Char)) {

@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // IWYU pragma: private, include "nsString.h"
 
-#define CharT                               PRUnichar
+#define CharT                               char16_t
 #define CharT_is_PRUnichar                  1
 #define nsTAString_IncompatibleCharT        nsACString
 #define nsTString_CharT                     nsString

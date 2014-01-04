@@ -140,7 +140,7 @@ struct nsCSSToken {
   int32_t         mInteger;
   int32_t         mInteger2;
   nsCSSTokenType  mType;
-  PRUnichar       mSymbol;
+  char16_t       mSymbol;
   bool            mIntegerValid;
   bool            mHasSign;
 
@@ -149,7 +149,7 @@ struct nsCSSToken {
       mSymbol('\0'), mIntegerValid(false), mHasSign(false)
   {}
 
-  bool IsSymbol(PRUnichar aSymbol) const {
+  bool IsSymbol(char16_t aSymbol) const {
     return mType == eCSSToken_Symbol && mSymbol == aSymbol;
   }
 
@@ -330,7 +330,7 @@ protected:
   void SetEOFCharacters(uint32_t aEOFCharacters);
   void AddEOFCharacters(uint32_t aEOFCharacters);
 
-  const PRUnichar *mBuffer;
+  const char16_t *mBuffer;
   uint32_t mOffset;
   uint32_t mCount;
 

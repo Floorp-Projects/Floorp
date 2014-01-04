@@ -92,7 +92,7 @@ nsPopupWindowManager::TestPermission(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 nsPopupWindowManager::Observe(nsISupports *aSubject, 
                               const char *aTopic,
-                              const PRUnichar *aData)
+                              const char16_t *aData)
 {
   nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
   NS_ASSERTION(!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),

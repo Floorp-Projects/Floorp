@@ -2289,7 +2289,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   gLastKeyTime = keyEvent->time;
 
   // Append this keystroke to the search string. 
-  PRUnichar uniChar = ToLowerCase(static_cast<PRUnichar>(keyEvent->charCode));
+  char16_t uniChar = ToLowerCase(static_cast<char16_t>(keyEvent->charCode));
   GetIncrementalString().Append(uniChar);
 
   // See bug 188199, if all letters in incremental string are same, just try to

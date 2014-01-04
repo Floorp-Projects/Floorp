@@ -18,7 +18,7 @@ public:
     nsEntityVersionList() {}
     
     uint32_t mVersion;
-    PRUnichar mEntityListName[kVERSION_STRING_LEN+1];
+    char16_t mEntityListName[kVERSION_STRING_LEN+1];
     nsCOMPtr<nsIStringBundle> mEntities;
 };
 
@@ -41,9 +41,9 @@ public:
 	// nsIEntityConverter
 	//
 	NS_IMETHOD ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval);
-	NS_IMETHOD ConvertToEntity(PRUnichar character, uint32_t entityVersion, char **_retval);
+	NS_IMETHOD ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval);
 
-	NS_IMETHOD ConvertToEntities(const PRUnichar *inString, uint32_t entityVersion, PRUnichar **_retval);
+	NS_IMETHOD ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval);
 
 protected:
 
@@ -51,7 +51,7 @@ protected:
   NS_IMETHOD LoadVersionPropertyFile();
 
   // map version number to version string
-  const PRUnichar* GetVersionName(uint32_t versionNumber);
+  const char16_t* GetVersionName(uint32_t versionNumber);
 
   // map version number to a string bundle
   nsIStringBundle* GetVersionBundleInstance(uint32_t versionNumber);

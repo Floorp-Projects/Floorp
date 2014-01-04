@@ -333,7 +333,7 @@ GetJSValueAsString(JSContext* aCtx,
     _string.SetIsVoid(true);
     return;
   }
-  _string.Assign(static_cast<const PRUnichar*>(chars), length);
+  _string.Assign(static_cast<const char16_t*>(chars), length);
 }
 
 /**
@@ -2900,7 +2900,7 @@ History::IsURIVisited(nsIURI* aURI,
 
 NS_IMETHODIMP
 History::Observe(nsISupports* aSubject, const char* aTopic,
-                 const PRUnichar* aData)
+                 const char16_t* aData)
 {
   if (strcmp(aTopic, TOPIC_PLACES_SHUTDOWN) == 0) {
     Shutdown();

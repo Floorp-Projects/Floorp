@@ -1009,7 +1009,7 @@ mozInlineSpellChecker::IgnoreWord(const nsAString &word)
 // mozInlineSpellChecker::IgnoreWords
 
 NS_IMETHODIMP
-mozInlineSpellChecker::IgnoreWords(const PRUnichar **aWordsToIgnore,
+mozInlineSpellChecker::IgnoreWords(const char16_t **aWordsToIgnore,
                                    uint32_t aCount)
 {
   NS_ENSURE_TRUE(mSpellCheck, NS_ERROR_NOT_INITIALIZED);

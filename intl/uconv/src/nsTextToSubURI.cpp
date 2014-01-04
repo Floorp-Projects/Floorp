@@ -23,7 +23,7 @@ nsTextToSubURI::~nsTextToSubURI()
 NS_IMPL_ISUPPORTS1(nsTextToSubURI, nsITextToSubURI)
 
 NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
-  const char *charset, const PRUnichar *text, char **_retval) 
+  const char *charset, const char16_t *text, char **_retval) 
 {
   if(nullptr == _retval)
     return NS_ERROR_NULL_POINTER;
@@ -38,7 +38,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
      rv = ccm->GetUnicodeEncoder(charset, &encoder);
      NS_RELEASE(ccm);
      if (NS_SUCCEEDED(rv)) {
-       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (PRUnichar)'?');
+       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (char16_t)'?');
        if(NS_SUCCEEDED(rv))
        {
           char buf[256];
@@ -79,7 +79,7 @@ NS_IMETHODIMP  nsTextToSubURI::ConvertAndEscape(
 }
 
 NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
-  const char *charset, const char *text, PRUnichar **_retval) 
+  const char *charset, const char *text, char16_t **_retval) 
 {
   if(nullptr == _retval)
     return NS_ERROR_NULL_POINTER;
@@ -105,11 +105,11 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
     nsIUnicodeDecoder *decoder;
     rv = ccm->GetUnicodeDecoder(charset, &decoder);
     if (NS_SUCCEEDED(rv)) {
-      PRUnichar *pBuf = nullptr;
+      char16_t *pBuf = nullptr;
       int32_t len = strlen(unescaped);
       int32_t outlen = 0;
       if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
-        pBuf = (PRUnichar *) NS_Alloc((outlen+1)*sizeof(PRUnichar));
+        pBuf = (char16_t *) NS_Alloc((outlen+1)*sizeof(char16_t));
         if (nullptr == pBuf)
           rv = NS_ERROR_OUT_OF_MEMORY;
         else {
@@ -180,7 +180,7 @@ nsresult nsTextToSubURI::convertURItoUnicode(const nsAFlatCString &aCharset,
   rv = unicodeDecoder->GetMaxLength(aURI.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar *ustr = (PRUnichar *) NS_Alloc(dstLen * sizeof(PRUnichar));
+  char16_t *ustr = (char16_t *) NS_Alloc(dstLen * sizeof(char16_t));
   NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(aURI.get(), &srcLen, ustr, &dstLen);

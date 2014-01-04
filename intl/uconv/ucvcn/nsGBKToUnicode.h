@@ -37,7 +37,7 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const char* aSrc, int32_t * aSrcLength, PRUnichar *aDest, int32_t * aDestLength);
+  NS_IMETHOD ConvertNoBuff(const char* aSrc, int32_t * aSrcLength, char16_t *aDest, int32_t * aDestLength);
 
 protected:
   nsGBKConvUtil mUtil;
@@ -46,9 +46,9 @@ protected:
 
   virtual void CreateExtensionDecoder();
   virtual void Create4BytesDecoder();
-  bool TryExtensionDecoder(const char* aSrc, PRUnichar* aDest);
-  bool Try4BytesDecoder(const char* aSrc, PRUnichar* aDest);
-  virtual bool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
+  bool TryExtensionDecoder(const char* aSrc, char16_t* aDest);
+  bool Try4BytesDecoder(const char* aSrc, char16_t* aDest);
+  virtual bool DecodeToSurrogate(const char* aSrc, char16_t* aDest);
 
 };
 
@@ -61,7 +61,7 @@ public:
 protected:
   virtual void CreateExtensionDecoder();
   virtual void Create4BytesDecoder();
-  virtual bool DecodeToSurrogate(const char* aSrc, PRUnichar* aDest);
+  virtual bool DecodeToSurrogate(const char* aSrc, char16_t* aDest);
 };
 
 #endif /* nsGBK2312ToUnicode_h___ */

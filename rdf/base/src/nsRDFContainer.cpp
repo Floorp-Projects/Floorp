@@ -173,7 +173,7 @@ RDFContainerImpl::GetCount(int32_t *aCount)
     rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
-    const PRUnichar *s;
+    const char16_t *s;
     rv = nextValLiteral->GetValueConst( &s );
     if (NS_FAILED(rv)) return rv;
 
@@ -670,13 +670,13 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
     rv = nextValNode->QueryInterface(NS_GET_IID(nsIRDFLiteral), getter_AddRefs(nextValLiteral));
     if (NS_FAILED(rv)) return rv;
 
-    const PRUnichar* s;
+    const char16_t* s;
     rv = nextValLiteral->GetValueConst(&s);
     if (NS_FAILED(rv)) return rv;
 
     int32_t nextVal = 0;
     {
-        for (const PRUnichar* p = s; *p != 0; ++p) {
+        for (const char16_t* p = s; *p != 0; ++p) {
             NS_ASSERTION(*p >= '0' && *p <= '9', "not a digit");
             if (*p < '0' || *p > '9')
                 break;

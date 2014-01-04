@@ -58,7 +58,7 @@ DiskSpaceWatcher::FactoryCreate()
 
 NS_IMETHODIMP
 DiskSpaceWatcher::Observe(nsISupports* aSubject, const char* aTopic,
-                          const PRUnichar* aData)
+                          const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -119,8 +119,8 @@ void DiskSpaceWatcher::UpdateState(bool aIsDiskFull, uint64_t aFreeSpace)
     return;
   }
 
-  const PRUnichar stateFull[] = { 'f', 'u', 'l', 'l', 0 };
-  const PRUnichar stateFree[] = { 'f', 'r', 'e', 'e', 0 };
+  const char16_t stateFull[] = { 'f', 'u', 'l', 'l', 0 };
+  const char16_t stateFree[] = { 'f', 'r', 'e', 'e', 0 };
 
   nsCOMPtr<nsISupports> subject;
   CallQueryInterface(gDiskSpaceWatcher.get(), getter_AddRefs(subject));

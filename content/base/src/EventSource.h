@@ -133,8 +133,8 @@ protected:
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
 
   nsresult PrintErrorOnConsole(const char       *aBundleURI,
-                               const PRUnichar  *aError,
-                               const PRUnichar **aFormatStrings,
+                               const char16_t  *aError,
+                               const char16_t **aFormatStrings,
                                uint32_t          aFormatStringsLen);
   nsresult ConsoleError();
 
@@ -148,7 +148,7 @@ protected:
   nsresult ClearFields();
   nsresult ResetEvent();
   nsresult DispatchCurrentMessageEvent();
-  nsresult ParseCharacter(PRUnichar aChr);
+  nsresult ParseCharacter(char16_t aChr);
   bool CheckCanRequestSrc(nsIURI* aSrc = nullptr);  // if null, it tests mSrc
   nsresult CheckHealthOfRequestCallback(nsIRequest *aRequestCallback);
   nsresult OnRedirectVerifyCallback(nsresult result);

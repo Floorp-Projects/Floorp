@@ -29,9 +29,9 @@ class nsParser;
 
 class nsReadEndCondition {
 public:
-  const PRUnichar *mChars;
-  PRUnichar mFilter;
-  explicit nsReadEndCondition(const PRUnichar* aTerminateChars);
+  const char16_t *mChars;
+  char16_t mFilter;
+  explicit nsReadEndCondition(const char16_t* aTerminateChars);
 private:
   nsReadEndCondition(const nsReadEndCondition& aOther); // No copying
   void operator=(const nsReadEndCondition& aOther); // No assigning
@@ -60,7 +60,7 @@ class nsScanner {
        *  @param   ch is the char to accept new value
        *  @return  error code reflecting read status
        */
-      nsresult GetChar(PRUnichar& ch);
+      nsresult GetChar(char16_t& ch);
 
       /**
        *  peek ahead to consume next char from scanner's internal
@@ -70,7 +70,7 @@ class nsScanner {
        *  @param   ch is the char to accept new value
        *  @return  error code reflecting read status
        */
-      nsresult Peek(PRUnichar& ch, uint32_t aOffset=0);
+      nsresult Peek(char16_t& ch, uint32_t aOffset=0);
 
       nsresult Peek(nsAString& aStr, int32_t aNumChars, int32_t aOffset = 0);
 
@@ -81,7 +81,7 @@ class nsScanner {
        *  @param   char to be skipped
        *  @return  error code
        */
-      nsresult SkipOver(PRUnichar aSkipChar);
+      nsresult SkipOver(char16_t aSkipChar);
 
       /**
        *  Skip whitespace on scanner input stream
@@ -125,7 +125,7 @@ class nsScanner {
        *  @return  error code
        */
       nsresult ReadUntil(nsAString& aString,
-                         PRUnichar aTerminal,
+                         char16_t aTerminal,
                          bool addTerminal);
 
       /**
@@ -242,7 +242,7 @@ class nsScanner {
                        bool aTruncate = false,
                        bool aReverse = false);
       void ReplaceCharacter(nsScannerIterator& aPosition,
-                            PRUnichar aChar);
+                            char16_t aChar);
 
       /**
        * Internal method used to cause the internal buffer to
@@ -270,7 +270,7 @@ class nsScanner {
        * @param aReplacementCharacter the replacement character
        *        XML (expat) parser uses 0xffff
        */
-      void OverrideReplacementCharacter(PRUnichar aReplacementCharacter);
+      void OverrideReplacementCharacter(char16_t aReplacementCharacter);
 
   protected:
 
@@ -294,7 +294,7 @@ class nsScanner {
                                        // from the scanner buffer
       bool            mIncremental;
       bool            mHasInvalidCharacter;
-      PRUnichar       mReplacementCharacter;
+      char16_t       mReplacementCharacter;
       int32_t         mFirstNonWhitespacePosition;
       int32_t         mCharsetSource;
       nsCString       mCharset;

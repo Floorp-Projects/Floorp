@@ -111,7 +111,7 @@ nsTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
 
 // nsITXTToHTMLConv methods
 NS_IMETHODIMP
-nsTXTToHTMLConv::SetTitle(const PRUnichar *aTitle)
+nsTXTToHTMLConv::SetTitle(const char16_t *aTitle)
 {
     mPageTitle.Assign(aTitle);
     return NS_OK;
@@ -211,21 +211,21 @@ nsTXTToHTMLConv::Init()
     convToken *token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = false;
-    token->token.Assign(PRUnichar('<'));
+    token->token.Assign(char16_t('<'));
     token->modText.AssignLiteral("&lt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = false;
-    token->token.Assign(PRUnichar('>'));
+    token->token.Assign(char16_t('>'));
     token->modText.AssignLiteral("&gt;");
     mTokens.AppendElement(token);
 
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = false;
-    token->token.Assign(PRUnichar('&'));
+    token->token.Assign(char16_t('&'));
     token->modText.AssignLiteral("&amp;");
     mTokens.AppendElement(token);
 
@@ -238,7 +238,7 @@ nsTXTToHTMLConv::Init()
     token = new convToken;
     if (!token) return NS_ERROR_OUT_OF_MEMORY;
     token->prepend = true;
-    token->token.Assign(PRUnichar('@'));
+    token->token.Assign(char16_t('@'));
     token->modText.AssignLiteral("mailto:");
     mTokens.AppendElement(token);
 

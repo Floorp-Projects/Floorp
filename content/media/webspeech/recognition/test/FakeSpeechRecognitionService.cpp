@@ -58,7 +58,7 @@ FakeSpeechRecognitionService::Abort()
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   MOZ_ASSERT(mRecognition->mTestConfig.mFakeRecognitionService,
              "Got request to fake recognition service event, but "

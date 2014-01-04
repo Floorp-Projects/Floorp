@@ -577,7 +577,7 @@ nsWindowMemoryReporter::GetGhostTimeout()
 
 NS_IMETHODIMP
 nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
-                                const PRUnichar *aData)
+                                const char16_t *aData)
 {
   if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC)) {
     ObserveDOMWindowDetached(aSubject);

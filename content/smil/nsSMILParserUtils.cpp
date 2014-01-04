@@ -32,8 +32,8 @@ const uint32_t MSEC_PER_HOUR = 1000 * 60 * 60;
 #define WALLCLOCK_PREFIX NS_LITERAL_STRING("wallclock(")
 
 inline bool
-SkipWhitespace(RangedPtr<const PRUnichar>& aIter,
-               const RangedPtr<const PRUnichar>& aEnd)
+SkipWhitespace(RangedPtr<const char16_t>& aIter,
+               const RangedPtr<const char16_t>& aEnd)
 {
   while (aIter != aEnd) {
     if (!IsSVGWhitespace(*aIter)) {
@@ -45,8 +45,8 @@ SkipWhitespace(RangedPtr<const PRUnichar>& aIter,
 }
 
 inline bool
-ParseColon(RangedPtr<const PRUnichar>& aIter,
-           const RangedPtr<const PRUnichar>& aEnd)
+ParseColon(RangedPtr<const char16_t>& aIter,
+           const RangedPtr<const char16_t>& aEnd)
 {
   if (aIter == aEnd || *aIter != ':') {
     return false;
@@ -59,15 +59,15 @@ ParseColon(RangedPtr<const PRUnichar>& aIter,
  * Exactly two digits in the range 00 - 59 are expected.
  */
 bool
-ParseSecondsOrMinutes(RangedPtr<const PRUnichar>& aIter,
-                      const RangedPtr<const PRUnichar>& aEnd,
+ParseSecondsOrMinutes(RangedPtr<const char16_t>& aIter,
+                      const RangedPtr<const char16_t>& aEnd,
                       uint32_t& aValue)
 {
   if (aIter == aEnd || !SVGContentUtils::IsDigit(*aIter)) {
     return false;
   }
 
-  RangedPtr<const PRUnichar> iter(aIter);
+  RangedPtr<const char16_t> iter(aIter);
 
   if (++iter == aEnd || !SVGContentUtils::IsDigit(*iter)) {
      return false;
@@ -88,8 +88,8 @@ ParseSecondsOrMinutes(RangedPtr<const PRUnichar>& aIter,
 }
 
 inline bool
-ParseClockMetric(RangedPtr<const PRUnichar>& aIter,
-                 const RangedPtr<const PRUnichar>& aEnd,
+ParseClockMetric(RangedPtr<const char16_t>& aIter,
+                 const RangedPtr<const char16_t>& aEnd,
                  uint32_t& aMultiplier)
 {
   if (aIter == aEnd) {
@@ -132,8 +132,8 @@ ParseClockMetric(RangedPtr<const PRUnichar>& aIter,
  * See http://www.w3.org/TR/SVG/animate.html#ClockValueSyntax
  */
 bool
-ParseClockValue(RangedPtr<const PRUnichar>& aIter,
-                const RangedPtr<const PRUnichar>& aEnd,
+ParseClockValue(RangedPtr<const char16_t>& aIter,
+                const RangedPtr<const char16_t>& aEnd,
                 nsSMILTimeValue* aResult)
 {
   if (aIter == aEnd) {
@@ -151,7 +151,7 @@ ParseClockValue(RangedPtr<const PRUnichar>& aIter,
 
   int32_t clockType = TIMECOUNT_VALUE;
 
-  RangedPtr<const PRUnichar> iter(aIter);
+  RangedPtr<const char16_t> iter(aIter);
 
   // Determine which type of clock value we have by counting the number
   // of colons in the string.
@@ -225,11 +225,11 @@ ParseClockValue(RangedPtr<const PRUnichar>& aIter,
 }
 
 bool
-ParseOffsetValue(RangedPtr<const PRUnichar>& aIter,
-                 const RangedPtr<const PRUnichar>& aEnd,
+ParseOffsetValue(RangedPtr<const char16_t>& aIter,
+                 const RangedPtr<const char16_t>& aEnd,
                  nsSMILTimeValue* aResult)
 {
-  RangedPtr<const PRUnichar> iter(aIter);
+  RangedPtr<const char16_t> iter(aIter);
 
   int32_t sign;
   if (!SVGContentUtils::ParseOptionalSign(iter, aEnd, sign) ||
@@ -248,15 +248,15 @@ bool
 ParseOffsetValue(const nsAString& aSpec,
                  nsSMILTimeValue* aResult)
 {
-  RangedPtr<const PRUnichar> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
-  const RangedPtr<const PRUnichar> end(SVGContentUtils::GetEndRangedPtr(aSpec));
+  RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
+  const RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
   return ParseOffsetValue(iter, end, aResult) && iter == end;
 }
 
 bool
-ParseOptionalOffset(RangedPtr<const PRUnichar>& aIter,
-                    const RangedPtr<const PRUnichar>& aEnd,
+ParseOptionalOffset(RangedPtr<const char16_t>& aIter,
+                    const RangedPtr<const char16_t>& aEnd,
                     nsSMILTimeValue* aResult)
 {
   if (aIter == aEnd) {
@@ -282,8 +282,8 @@ ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
       ACCESSKEY_PREFIX_LC.Length() == ACCESSKEY_PREFIX_CC.Length(),
       "Case variations for accesskey prefix differ in length");
 
-  RangedPtr<const PRUnichar> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
-  RangedPtr<const PRUnichar> end(SVGContentUtils::GetEndRangedPtr(aSpec));
+  RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
+  RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
   iter += ACCESSKEY_PREFIX_LC.Length();
 
@@ -319,8 +319,8 @@ ParseAccessKey(const nsAString& aSpec, nsSMILTimeValueSpecParams& aResult)
 }
 
 void
-MoveToNextToken(RangedPtr<const PRUnichar>& aIter,
-                const RangedPtr<const PRUnichar>& aEnd,
+MoveToNextToken(RangedPtr<const char16_t>& aIter,
+                const RangedPtr<const char16_t>& aEnd,
                 bool aBreakOnDot,
                 bool& aIsAnyCharEscaped)
 {
@@ -365,9 +365,9 @@ ConvertTokenToAtom(const nsAString& aToken,
 
   nsAutoString token(aToken);
 
-  const PRUnichar* read = token.BeginReading();
-  const PRUnichar* const end = token.EndReading();
-  PRUnichar* write = token.BeginWriting();
+  const char16_t* read = token.BeginReading();
+  const char16_t* const end = token.EndReading();
+  char16_t* write = token.BeginWriting();
   bool escape = false;
 
   while (read != end) {
@@ -404,14 +404,14 @@ ParseElementBaseTimeValueSpec(const nsAString& aSpec,
   // defined (for SMIL Animation) so we don't support it here.
   //
 
-  RangedPtr<const PRUnichar> start(SVGContentUtils::GetStartRangedPtr(aSpec));
-  RangedPtr<const PRUnichar> end(SVGContentUtils::GetEndRangedPtr(aSpec));
+  RangedPtr<const char16_t> start(SVGContentUtils::GetStartRangedPtr(aSpec));
+  RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
   if (start == end) {
     return false;
   }
 
-  RangedPtr<const PRUnichar> tokenEnd(start);
+  RangedPtr<const char16_t> tokenEnd(start);
 
   bool requiresUnescaping;
   MoveToNextToken(tokenEnd, end, true, requiresUnescaping);
@@ -697,8 +697,8 @@ bool
 nsSMILParserUtils::ParseClockValue(const nsAString& aSpec,
                                    nsSMILTimeValue* aResult)
 {
-  RangedPtr<const PRUnichar> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
-  RangedPtr<const PRUnichar> end(SVGContentUtils::GetEndRangedPtr(aSpec));
+  RangedPtr<const char16_t> iter(SVGContentUtils::GetStartRangedPtr(aSpec));
+  RangedPtr<const char16_t> end(SVGContentUtils::GetEndRangedPtr(aSpec));
 
   return ::ParseClockValue(iter, end, aResult) && iter == end;
 }

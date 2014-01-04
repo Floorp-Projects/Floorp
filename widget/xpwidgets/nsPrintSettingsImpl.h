@@ -42,8 +42,8 @@ protected:
   } nsHeaderFooterEnum;
 
 
-  nsresult GetMarginStrs(PRUnichar * *aTitle, nsHeaderFooterEnum aType, int16_t aJust);
-  nsresult SetMarginStrs(const PRUnichar * aTitle, nsHeaderFooterEnum aType, int16_t aJust);
+  nsresult GetMarginStrs(char16_t * *aTitle, nsHeaderFooterEnum aType, int16_t aJust);
+  nsresult SetMarginStrs(const char16_t * aTitle, nsHeaderFooterEnum aType, int16_t aJust);
 
   // Members
   nsWeakPtr     mSession; // Should never be touched by Clone or Assign

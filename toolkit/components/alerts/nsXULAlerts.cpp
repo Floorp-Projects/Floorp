@@ -21,7 +21,7 @@ NS_IMPL_ISUPPORTS1(nsXULAlertObserver, nsIObserver)
 
 NS_IMETHODIMP
 nsXULAlertObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                            const PRUnichar* aData)
+                            const char16_t* aData)
 {
   if (!strcmp("alertfinished", aTopic)) {
     nsIDOMWindow* currentAlert = mXULAlerts->mNamedWindows.GetWeak(mAlertName);

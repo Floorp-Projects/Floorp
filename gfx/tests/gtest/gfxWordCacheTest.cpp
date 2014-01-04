@@ -49,7 +49,7 @@ public:
 };
 
 static gfxTextRun *
-MakeTextRun(const PRUnichar *aText, uint32_t aLength,
+MakeTextRun(const char16_t *aText, uint32_t aLength,
            gfxFontGroup *aFontGroup, const gfxFontGroup::Parameters* aParams,
            uint32_t aFlags)
 {

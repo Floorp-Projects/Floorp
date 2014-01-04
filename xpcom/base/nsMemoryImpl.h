@@ -28,14 +28,14 @@ public:
     static nsresult Create(nsISupports* outer,
                            const nsIID& aIID, void **aResult);
 
-    NS_HIDDEN_(nsresult) FlushMemory(const PRUnichar* aReason, bool aImmediate);
-    NS_HIDDEN_(nsresult) RunFlushers(const PRUnichar* aReason);
+    NS_HIDDEN_(nsresult) FlushMemory(const char16_t* aReason, bool aImmediate);
+    NS_HIDDEN_(nsresult) RunFlushers(const char16_t* aReason);
 
 protected:
     struct FlushEvent : public nsIRunnable {
         NS_DECL_ISUPPORTS_INHERITED
         NS_DECL_NSIRUNNABLE
-        const PRUnichar* mReason;
+        const char16_t* mReason;
     };
 
     static mozilla::Atomic<int32_t> sIsFlushing;

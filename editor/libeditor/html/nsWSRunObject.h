@@ -292,10 +292,10 @@ class MOZ_STACK_CLASS nsWSRunObject
     {
       nsCOMPtr<nsIContent> mTextNode;
       uint32_t mOffset;
-      PRUnichar mChar;
+      char16_t mChar;
 
       WSPoint() : mTextNode(0),mOffset(0),mChar(0) {}
-      WSPoint(nsIDOMNode *aNode, int32_t aOffset, PRUnichar aChar) : 
+      WSPoint(nsIDOMNode *aNode, int32_t aOffset, char16_t aChar) : 
                      mTextNode(do_QueryInterface(aNode)),mOffset(aOffset),mChar(aChar)
       {
         if (!mTextNode->IsNodeOfType(nsINode::eDATA_NODE)) {
@@ -304,7 +304,7 @@ class MOZ_STACK_CLASS nsWSRunObject
           mTextNode = nullptr;
         }
       }
-      WSPoint(nsIContent *aTextNode, int32_t aOffset, PRUnichar aChar) : 
+      WSPoint(nsIContent *aTextNode, int32_t aOffset, char16_t aChar) : 
                      mTextNode(aTextNode),mOffset(aOffset),mChar(aChar) {}
     };    
 
@@ -364,7 +364,7 @@ class MOZ_STACK_CLASS nsWSRunObject
                                 nsCOMPtr<nsIDOMNode> *outStartNode, int32_t *outStartOffset,
                                 nsCOMPtr<nsIDOMNode> *outEndNode, int32_t *outEndOffset);
     void     FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, bool after);
-    PRUnichar GetCharAt(nsIContent *aTextNode, int32_t aOffset);
+    char16_t GetCharAt(nsIContent *aTextNode, int32_t aOffset);
     WSPoint  GetWSPointAfter(nsIDOMNode *aNode, int32_t aOffset);
     WSPoint  GetWSPointBefore(nsIDOMNode *aNode, int32_t aOffset);
     nsresult CheckTrailingNBSPOfRun(WSFragment *aRun);

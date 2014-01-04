@@ -66,7 +66,7 @@ typedef enum nsCharType nsCharType;
    *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
    * @return the converted Unichar
    */
-  PRUnichar HandleNumberInChar(PRUnichar aChar, bool aPrevCharArabic, uint32_t aNumFlag);
+  char16_t HandleNumberInChar(char16_t aChar, bool aPrevCharArabic, uint32_t aNumFlag);
 
   /**
    * Scan a Unichar string, converting numbers to Arabic or Hindi forms in place
@@ -78,7 +78,7 @@ typedef enum nsCharType nsCharType;
    *        IBMBIDI_NUMERAL_ARABIC:       convert to Arabic forms (Unicode 0030-0039)
    *        IBMBIDI_NUMERAL_HINDICONTEXT: convert numbers in Arabic text to Hindi, otherwise to Arabic
    */
-  nsresult HandleNumbers(PRUnichar* aBuffer, uint32_t aSize, uint32_t  aNumFlag);
+  nsresult HandleNumbers(char16_t* aBuffer, uint32_t aSize, uint32_t  aNumFlag);
 
   /**
    * Give a UTF-32 codepoint

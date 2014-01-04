@@ -1764,15 +1764,15 @@ ProfileLockedDialog(nsIFile* aProfileDir, nsIFile* aProfileLocalDir,
     NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
 
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    const PRUnichar* params[] = {appName.get(), appName.get()};
+    const char16_t* params[] = {appName.get(), appName.get()};
 
     nsXPIDLString killMessage;
 #ifndef XP_MACOSX
-    static const PRUnichar kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','\0'}; // "restartMessageNoUnlocker"
-    static const PRUnichar kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','\0'}; // "restartMessageUnlocker"
+    static const char16_t kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','\0'}; // "restartMessageNoUnlocker"
+    static const char16_t kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','\0'}; // "restartMessageUnlocker"
 #else
-    static const PRUnichar kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageNoUnlockerMac"
-    static const PRUnichar kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageUnlockerMac"
+    static const char16_t kRestartNoUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','N','o','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageNoUnlockerMac"
+    static const char16_t kRestartUnlocker[] = {'r','e','s','t','a','r','t','M','e','s','s','a','g','e','U','n','l','o','c','k','e','r','M','a','c','\0'}; // "restartMessageUnlockerMac"
 #endif
 
     sb->FormatStringFromName(aUnlocker ? kRestartUnlocker : kRestartNoUnlocker,
@@ -1856,12 +1856,12 @@ ProfileMissingDialog(nsINativeAppSupport* aNative)
     NS_ENSURE_TRUE_LOG(sbs, NS_ERROR_FAILURE);
   
     NS_ConvertUTF8toUTF16 appName(gAppData->name);
-    const PRUnichar* params[] = {appName.get(), appName.get()};
+    const char16_t* params[] = {appName.get(), appName.get()};
   
     nsXPIDLString missingMessage;
   
     // profileMissing  
-    static const PRUnichar kMissing[] = {'p','r','o','f','i','l','e','M','i','s','s','i','n','g','\0'};
+    static const char16_t kMissing[] = {'p','r','o','f','i','l','e','M','i','s','s','i','n','g','\0'};
     sb->FormatStringFromName(kMissing, params, 2, getter_Copies(missingMessage));
   
     nsXPIDLString missingTitle;
@@ -1916,7 +1916,7 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
   nsresult rv;
 
   nsCOMPtr<nsIFile> profD, profLD;
-  PRUnichar* profileNamePtr;
+  char16_t* profileNamePtr;
   nsAutoCString profileName;
 
   {

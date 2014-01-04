@@ -229,7 +229,7 @@ public:
     nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
                                   nsXULPrototypeDocument* aProtoDoc);
 
-    nsresult Compile(const PRUnichar* aText, int32_t aTextLength,
+    nsresult Compile(const char16_t* aText, int32_t aTextLength,
                      nsIURI* aURI, uint32_t aLineNo,
                      nsIDocument* aDocument,
                      nsXULPrototypeDocument* aProtoDoc,

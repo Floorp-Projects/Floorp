@@ -150,21 +150,21 @@ protected:
     void ParseText(nsIRDFNode **aResult);
 
     nsresult FlushText();
-    nsresult AddText(const PRUnichar* aText, int32_t aLength);
+    nsresult AddText(const char16_t* aText, int32_t aLength);
 
     // RDF-specific parsing
-    nsresult OpenRDF(const PRUnichar* aName);
-    nsresult OpenObject(const PRUnichar* aName ,const PRUnichar** aAttributes);
-    nsresult OpenProperty(const PRUnichar* aName, const PRUnichar** aAttributes);
-    nsresult OpenMember(const PRUnichar* aName, const PRUnichar** aAttributes);
-    nsresult OpenValue(const PRUnichar* aName, const PRUnichar** aAttributes);
+    nsresult OpenRDF(const char16_t* aName);
+    nsresult OpenObject(const char16_t* aName ,const char16_t** aAttributes);
+    nsresult OpenProperty(const char16_t* aName, const char16_t** aAttributes);
+    nsresult OpenMember(const char16_t* aName, const char16_t** aAttributes);
+    nsresult OpenValue(const char16_t* aName, const char16_t** aAttributes);
     
-    nsresult GetIdAboutAttribute(const PRUnichar** aAttributes, nsIRDFResource** aResource, bool* aIsAnonymous = nullptr);
-    nsresult GetResourceAttribute(const PRUnichar** aAttributes, nsIRDFResource** aResource);
-    nsresult AddProperties(const PRUnichar** aAttributes, nsIRDFResource* aSubject, int32_t* aCount = nullptr);
-    void SetParseMode(const PRUnichar **aAttributes);
+    nsresult GetIdAboutAttribute(const char16_t** aAttributes, nsIRDFResource** aResource, bool* aIsAnonymous = nullptr);
+    nsresult GetResourceAttribute(const char16_t** aAttributes, nsIRDFResource** aResource);
+    nsresult AddProperties(const char16_t** aAttributes, nsIRDFResource* aSubject, int32_t* aCount = nullptr);
+    void SetParseMode(const char16_t **aAttributes);
 
-    PRUnichar* mText;
+    char16_t* mText;
     int32_t mTextLength;
     int32_t mTextSize;
 
@@ -175,7 +175,7 @@ protected:
      * Hopefully, this will keep namespace definitions intact in a 
      * parse - serialize cycle.
      */
-    void RegisterNamespaces(const PRUnichar **aAttributes);
+    void RegisterNamespaces(const char16_t **aAttributes);
 
     /**
      * Extracts the localname from aExpatName, the name that the Expat parser
@@ -183,7 +183,7 @@ protected:
      * aLocalName will contain the localname in aExpatName.
      * The return value is a dependent string containing just the namespace.
      */
-    const nsDependentSubstring SplitExpatName(const PRUnichar *aExpatName,
+    const nsDependentSubstring SplitExpatName(const char16_t *aExpatName,
                                               nsIAtom **aLocalName);
 
     enum eContainerType { eBag, eSeq, eAlt };
@@ -394,8 +394,8 @@ RDFContentSinkImpl::QueryInterface(REFNSIID iid, void** result)
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName, 
-                                       const PRUnichar **aAtts, 
+RDFContentSinkImpl::HandleStartElement(const char16_t *aName, 
+                                       const char16_t **aAtts, 
                                        uint32_t aAttsCount, 
                                        int32_t aIndex, 
                                        uint32_t aLineNumber)
@@ -439,7 +439,7 @@ RDFContentSinkImpl::HandleStartElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleEndElement(const PRUnichar *aName)
+RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
 {
   FlushText();
 
@@ -490,13 +490,13 @@ RDFContentSinkImpl::HandleEndElement(const PRUnichar *aName)
 }
  
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleComment(const PRUnichar *aName)
+RDFContentSinkImpl::HandleComment(const char16_t *aName)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleCDataSection(const PRUnichar *aData, 
+RDFContentSinkImpl::HandleCDataSection(const char16_t *aData, 
                                        uint32_t aLength)
 {
   return aData ?  AddText(aData, aLength) : NS_OK;
@@ -513,30 +513,30 @@ RDFContentSinkImpl::HandleDoctypeDecl(const nsAString & aSubset,
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleCharacterData(const PRUnichar *aData, 
+RDFContentSinkImpl::HandleCharacterData(const char16_t *aData, 
                                         uint32_t aLength)
 {
   return aData ?  AddText(aData, aLength) : NS_OK;
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget, 
-                                                const PRUnichar *aData)
+RDFContentSinkImpl::HandleProcessingInstruction(const char16_t *aTarget, 
+                                                const char16_t *aData)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-RDFContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aVersion,
-                                         const PRUnichar *aEncoding,
+RDFContentSinkImpl::HandleXMLDeclaration(const char16_t *aVersion,
+                                         const char16_t *aEncoding,
                                          int32_t aStandalone)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
-                                const PRUnichar* aSourceText,
+RDFContentSinkImpl::ReportError(const char16_t* aErrorText, 
+                                const char16_t* aSourceText,
                                 nsIScriptError *aError,
                                 bool *_retval)
 {
@@ -646,7 +646,7 @@ RDFContentSinkImpl::GetDataSource(nsIRDFDataSource*& aDataSource)
 // Text buffering
 
 static bool
-rdf_IsDataInBuffer(PRUnichar* buffer, int32_t length)
+rdf_IsDataInBuffer(char16_t* buffer, int32_t length)
 {
     for (int32_t i = 0; i < length; ++i) {
         if (buffer[i] == ' ' ||
@@ -751,11 +751,11 @@ RDFContentSinkImpl::FlushText()
 
 
 nsresult
-RDFContentSinkImpl::AddText(const PRUnichar* aText, int32_t aLength)
+RDFContentSinkImpl::AddText(const char16_t* aText, int32_t aLength)
 {
     // Create buffer when we first need it
     if (0 == mTextSize) {
-        mText = (PRUnichar *) moz_malloc(sizeof(PRUnichar) * 4096);
+        mText = (char16_t *) moz_malloc(sizeof(char16_t) * 4096);
         if (!mText) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -772,14 +772,14 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, int32_t aLength)
         // don't clobber mText or mTextSize until the new mem is allocated.
         int32_t newSize = (2 * mTextSize > (mTextSize + aLength)) ?
                           (2 * mTextSize) : (mTextSize + aLength);
-        PRUnichar* newText = 
-            (PRUnichar *) moz_realloc(mText, sizeof(PRUnichar) * newSize);
+        char16_t* newText = 
+            (char16_t *) moz_realloc(mText, sizeof(char16_t) * newSize);
         if (!newText)
             return NS_ERROR_OUT_OF_MEMORY;
         mTextSize = newSize;
         mText = newText;
     }
-    memcpy(&mText[mTextLength], aText, sizeof(PRUnichar) * aLength);
+    memcpy(&mText[mTextLength], aText, sizeof(char16_t) * aLength);
     mTextLength += aLength;
 
     return NS_OK;
@@ -794,7 +794,7 @@ rdf_RequiresAbsoluteURI(const nsString& uri)
 }
 
 nsresult
-RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
+RDFContentSinkImpl::GetIdAboutAttribute(const char16_t** aAttributes,
                                         nsIRDFResource** aResource,
                                         bool* aIsAnonymous)
 {
@@ -888,7 +888,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 }
 
 nsresult
-RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
+RDFContentSinkImpl::GetResourceAttribute(const char16_t** aAttributes,
                                          nsIRDFResource** aResource)
 {
   nsCOMPtr<nsIAtom> localName;
@@ -952,7 +952,7 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
 }
 
 nsresult
-RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
+RDFContentSinkImpl::AddProperties(const char16_t** aAttributes,
                                   nsIRDFResource* aSubject,
                                   int32_t* aCount)
 {
@@ -1006,7 +1006,7 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
 }
 
 void
-RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
+RDFContentSinkImpl::SetParseMode(const char16_t **aAttributes)
 {
     nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
@@ -1039,7 +1039,7 @@ RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
 // RDF-specific routines used to build the model
 
 nsresult
-RDFContentSinkImpl::OpenRDF(const PRUnichar* aName)
+RDFContentSinkImpl::OpenRDF(const char16_t* aName)
 {
     // ensure that we're actually reading RDF by making sure that the
     // opening tag is <rdf:RDF>, where "rdf:" corresponds to whatever
@@ -1062,8 +1062,8 @@ RDFContentSinkImpl::OpenRDF(const PRUnichar* aName)
 }
 
 nsresult
-RDFContentSinkImpl::OpenObject(const PRUnichar* aName, 
-                               const PRUnichar** aAttributes)
+RDFContentSinkImpl::OpenObject(const char16_t* aName, 
+                               const char16_t** aAttributes)
 {
     // an "object" non-terminal is either a "description", a "typed
     // node", or a "container", so this change the content sink's
@@ -1136,7 +1136,7 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
 }
 
 nsresult
-RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttributes)
+RDFContentSinkImpl::OpenProperty(const char16_t* aName, const char16_t** aAttributes)
 {
     nsresult rv;
 
@@ -1209,8 +1209,8 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
 }
 
 nsresult
-RDFContentSinkImpl::OpenMember(const PRUnichar* aName, 
-                               const PRUnichar** aAttributes)
+RDFContentSinkImpl::OpenMember(const char16_t* aName, 
+                               const char16_t** aAttributes)
 {
     // ensure that we're actually reading a member element by making
     // sure that the opening tag is <rdf:li>, where "rdf:" corresponds
@@ -1265,7 +1265,7 @@ RDFContentSinkImpl::OpenMember(const PRUnichar* aName,
 
 
 nsresult
-RDFContentSinkImpl::OpenValue(const PRUnichar* aName, const PRUnichar** aAttributes)
+RDFContentSinkImpl::OpenValue(const char16_t* aName, const char16_t** aAttributes)
 {
     // a "value" can either be an object or a string: we'll only get
     // *here* if it's an object, as raw text is added as a leaf.
@@ -1275,7 +1275,7 @@ RDFContentSinkImpl::OpenValue(const PRUnichar* aName, const PRUnichar** aAttribu
 ////////////////////////////////////////////////////////////////////////
 // namespace resolution
 void
-RDFContentSinkImpl::RegisterNamespaces(const PRUnichar **aAttributes)
+RDFContentSinkImpl::RegisterNamespaces(const char16_t **aAttributes)
 {
     nsCOMPtr<nsIRDFXMLSink> sink = do_QueryInterface(mDataSource);
     if (!sink) {
@@ -1284,8 +1284,8 @@ RDFContentSinkImpl::RegisterNamespaces(const PRUnichar **aAttributes)
     NS_NAMED_LITERAL_STRING(xmlns, "http://www.w3.org/2000/xmlns/");
     for (; *aAttributes; aAttributes += 2) {
         // check the namespace
-        const PRUnichar* attr = aAttributes[0];
-        const PRUnichar* xmlnsP = xmlns.BeginReading();
+        const char16_t* attr = aAttributes[0];
+        const char16_t* xmlnsP = xmlns.BeginReading();
         while (*attr ==  *xmlnsP) {
             ++attr;
             ++xmlnsP;
@@ -1295,7 +1295,7 @@ RDFContentSinkImpl::RegisterNamespaces(const PRUnichar **aAttributes)
             continue;
         }
         // get the localname (or "xmlns" for the default namespace)
-        const PRUnichar* endLocal = ++attr;
+        const char16_t* endLocal = ++attr;
         while (*endLocal && *endLocal != 0xFFFF) {
             ++endLocal;
         }
@@ -1312,7 +1312,7 @@ RDFContentSinkImpl::RegisterNamespaces(const PRUnichar **aAttributes)
 // Qualified name resolution
 
 const nsDependentSubstring
-RDFContentSinkImpl::SplitExpatName(const PRUnichar *aExpatName,
+RDFContentSinkImpl::SplitExpatName(const char16_t *aExpatName,
                                    nsIAtom **aLocalName)
 {
     /**
@@ -1325,9 +1325,9 @@ RDFContentSinkImpl::SplitExpatName(const PRUnichar *aExpatName,
      *
      */
 
-    const PRUnichar *uriEnd = aExpatName;
-    const PRUnichar *nameStart = aExpatName;
-    const PRUnichar *pos;
+    const char16_t *uriEnd = aExpatName;
+    const char16_t *nameStart = aExpatName;
+    const char16_t *pos;
     for (pos = aExpatName; *pos; ++pos) {
         if (*pos == 0xFFFF) {
             if (uriEnd != aExpatName) {

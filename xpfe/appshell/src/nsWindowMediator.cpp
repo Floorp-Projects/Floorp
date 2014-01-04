@@ -34,7 +34,7 @@ static bool notifyWindowTitleChange(nsIWindowMediatorListener *aElement, void* a
 // for notifyWindowTitleChange
 struct WindowTitleData {
   nsIXULWindow* mWindow;
-  const PRUnichar *mTitle;
+  const char16_t *mTitle;
 };
 
 nsresult
@@ -187,7 +187,7 @@ nsWindowMediator::GetInfoFor(nsIWidget *aWindow)
 }
 
 NS_IMETHODIMP
-nsWindowMediator::GetEnumerator(const PRUnichar* inType, nsISimpleEnumerator** outEnumerator)
+nsWindowMediator::GetEnumerator(const char16_t* inType, nsISimpleEnumerator** outEnumerator)
 {
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
@@ -200,7 +200,7 @@ nsWindowMediator::GetEnumerator(const PRUnichar* inType, nsISimpleEnumerator** o
 }
 
 NS_IMETHODIMP
-nsWindowMediator::GetXULWindowEnumerator(const PRUnichar* inType, nsISimpleEnumerator** outEnumerator)
+nsWindowMediator::GetXULWindowEnumerator(const char16_t* inType, nsISimpleEnumerator** outEnumerator)
 {
   NS_ENSURE_ARG_POINTER(outEnumerator);
   NS_ENSURE_STATE(mReady);
@@ -214,7 +214,7 @@ nsWindowMediator::GetXULWindowEnumerator(const PRUnichar* inType, nsISimpleEnume
 
 NS_IMETHODIMP
 nsWindowMediator::GetZOrderDOMWindowEnumerator(
-            const PRUnichar *aWindowType, bool aFrontToBack,
+            const char16_t *aWindowType, bool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -233,7 +233,7 @@ nsWindowMediator::GetZOrderDOMWindowEnumerator(
 
 NS_IMETHODIMP
 nsWindowMediator::GetZOrderXULWindowEnumerator(
-            const PRUnichar *aWindowType, bool aFrontToBack,
+            const char16_t *aWindowType, bool aFrontToBack,
             nsISimpleEnumerator **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
@@ -265,7 +265,7 @@ nsWindowMediator::RemoveEnumerator(nsAppShellWindowEnumerator * inEnumerator)
 // Returns the window of type inType ( if null return any window type ) which has the most recent
 // time stamp
 NS_IMETHODIMP
-nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindow** outWindow)
+nsWindowMediator::GetMostRecentWindow(const char16_t* inType, nsIDOMWindow** outWindow)
 {
   NS_ENSURE_ARG_POINTER(outWindow);
   *outWindow = nullptr;
@@ -292,7 +292,7 @@ nsWindowMediator::GetMostRecentWindow(const PRUnichar* inType, nsIDOMWindow** ou
 }
 
 nsWindowInfo*
-nsWindowMediator::MostRecentWindowInfo(const PRUnichar* inType)
+nsWindowMediator::MostRecentWindowInfo(const char16_t* inType)
 {
   int32_t       lastTimeStamp = -1;
   nsAutoString  typeString(inType);
@@ -366,7 +366,7 @@ nsWindowMediator::UpdateWindowTimeStamp(nsIXULWindow* inWindow)
 
 NS_IMETHODIMP
 nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
-                                    const PRUnichar* inTitle)
+                                    const char16_t* inTitle)
 {
   NS_ENSURE_STATE(mReady);
   MutexAutoLock lock(mListLock);
@@ -771,7 +771,7 @@ nsWindowMediator::RemoveListener(nsIWindowMediatorListener* aListener)
 NS_IMETHODIMP
 nsWindowMediator::Observe(nsISupports* aSubject,
                           const char* aTopic,
-                          const PRUnichar* aData)
+                          const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown") && mReady) {
     // Unregistering a window may cause its destructor to run, causing it to

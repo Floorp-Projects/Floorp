@@ -116,8 +116,8 @@ NS_IMPL_ISUPPORTS6(txStylesheetSink,
                    nsIInterfaceRequestor)
 
 NS_IMETHODIMP
-txStylesheetSink::HandleStartElement(const PRUnichar *aName,
-                                     const PRUnichar **aAtts,
+txStylesheetSink::HandleStartElement(const char16_t *aName,
+                                     const char16_t **aAtts,
                                      uint32_t aAttsCount,
                                      int32_t aIndex,
                                      uint32_t aLineNumber)
@@ -136,7 +136,7 @@ txStylesheetSink::HandleStartElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleEndElement(const PRUnichar *aName)
+txStylesheetSink::HandleEndElement(const char16_t *aName)
 {
     nsresult rv = mCompiler->endElement();
     if (NS_FAILED(rv)) {
@@ -149,13 +149,13 @@ txStylesheetSink::HandleEndElement(const PRUnichar *aName)
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleComment(const PRUnichar *aName)
+txStylesheetSink::HandleComment(const char16_t *aName)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleCDataSection(const PRUnichar *aData,
+txStylesheetSink::HandleCDataSection(const char16_t *aData,
                                      uint32_t aLength)
 {
     return HandleCharacterData(aData, aLength);
@@ -172,7 +172,7 @@ txStylesheetSink::HandleDoctypeDecl(const nsAString & aSubset,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleCharacterData(const PRUnichar *aData,
+txStylesheetSink::HandleCharacterData(const char16_t *aData,
                                       uint32_t aLength)
 {
     nsresult rv = mCompiler->characters(Substring(aData, aData + aLength));
@@ -185,23 +185,23 @@ txStylesheetSink::HandleCharacterData(const PRUnichar *aData,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleProcessingInstruction(const PRUnichar *aTarget,
-                                              const PRUnichar *aData)
+txStylesheetSink::HandleProcessingInstruction(const char16_t *aTarget,
+                                              const char16_t *aData)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-txStylesheetSink::HandleXMLDeclaration(const PRUnichar *aVersion,
-                                       const PRUnichar *aEncoding,
+txStylesheetSink::HandleXMLDeclaration(const char16_t *aVersion,
+                                       const char16_t *aEncoding,
                                        int32_t aStandalone)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-txStylesheetSink::ReportError(const PRUnichar *aErrorText,
-                              const PRUnichar *aSourceText,
+txStylesheetSink::ReportError(const char16_t *aErrorText,
+                              const char16_t *aSourceText,
                               nsIScriptError *aError,
                               bool *_retval)
 {
@@ -437,8 +437,8 @@ txCompileObserver::loadURI(const nsAString& aUri,
 void
 txCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
                                    nsresult aResult,
-                                   const PRUnichar *aErrorText,
-                                   const PRUnichar *aParam)
+                                   const char16_t *aErrorText,
+                                   const char16_t *aParam)
 {
     if (NS_SUCCEEDED(aResult)) {
         mProcessor->setStylesheet(aCompiler->getStylesheet());
@@ -680,8 +680,8 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
 
 void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
                                             nsresult aResult,
-                                            const PRUnichar *aErrorText,
-                                            const PRUnichar *aParam)
+                                            const char16_t *aErrorText,
+                                            const char16_t *aParam)
 {
 }
 
