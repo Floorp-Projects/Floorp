@@ -410,7 +410,7 @@ nsWindowsRegKey::WriteStringValue(const nsAString &name, const nsAString &value)
 
   LONG rv = RegSetValueExW(mKey, PromiseFlatString(name).get(), 0, REG_SZ,
                            (const BYTE *) flatValue.get(),
-                           (flatValue.Length() + 1) * sizeof(PRUnichar));
+                           (flatValue.Length() + 1) * sizeof(char16_t));
 
   return (rv == ERROR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
 }

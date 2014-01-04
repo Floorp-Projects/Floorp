@@ -3,7 +3,7 @@
 #include "nsXPIDLString.h"
 
 static void
-nsXPIDLStringTest_Value(PRUnichar** aResult)
+nsXPIDLStringTest_Value(char16_t** aResult)
 {
     *aResult = ToNewUnicode(NS_LITERAL_STRING("Hello, World"));
 }

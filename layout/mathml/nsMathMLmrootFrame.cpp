@@ -24,7 +24,7 @@
 // additional style context to be used by our MathMLChar.
 #define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
 
-static const PRUnichar kSqrChar = PRUnichar(0x221A);
+static const char16_t kSqrChar = char16_t(0x221A);
 
 nsIFrame*
 NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -222,7 +222,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nscoord ruleThickness, leading, em;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
-  PRUnichar one = '1';
+  char16_t one = '1';
   nsBoundingMetrics bmOne = renderingContext.GetBoundingMetrics(&one, 1);
 
   // get the leading to be left at the top of the resulting frame

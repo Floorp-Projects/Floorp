@@ -443,14 +443,14 @@ nsXULCommandDispatcher::Matches(const nsString& aList,
   // okay, now make sure it's not a substring snafu; e.g., 'ur'
   // found inside of 'blur'.
   if (indx > 0) {
-    PRUnichar ch = aList[indx - 1];
-    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
+    char16_t ch = aList[indx - 1];
+    if (! nsCRT::IsAsciiSpace(ch) && ch != char16_t(','))
       return false;
   }
 
   if (indx + aElement.Length() < aList.Length()) {
-    PRUnichar ch = aList[indx + aElement.Length()];
-    if (! nsCRT::IsAsciiSpace(ch) && ch != PRUnichar(','))
+    char16_t ch = aList[indx + aElement.Length()];
+    if (! nsCRT::IsAsciiSpace(ch) && ch != char16_t(','))
       return false;
   }
 

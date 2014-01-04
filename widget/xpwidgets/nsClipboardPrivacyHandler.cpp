@@ -70,7 +70,7 @@ nsClipboardPrivacyHandler::PrepareDataForClipboard(nsITransferable * aTransferab
 }
 
 NS_IMETHODIMP
-nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
+nsClipboardPrivacyHandler::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
 {
   nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard =

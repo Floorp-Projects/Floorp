@@ -117,7 +117,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, bool *aIsMisspelled, nsTArray
   if(!correct){
     if(aSuggestions){
       uint32_t count,i;
-      PRUnichar **words;
+      char16_t **words;
       
       result = mSpellCheckingEngine->Suggest(PromiseFlatString(aWord).get(), &words, &count);
       NS_ENSURE_SUCCESS(result, result); 
@@ -237,7 +237,7 @@ NS_IMETHODIMP
 mozSpellChecker::AddWordToPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
-  PRUnichar empty=0;
+  char16_t empty=0;
   if (!mPersonalDictionary)
     return NS_ERROR_NULL_POINTER;
   res = mPersonalDictionary->AddWord(PromiseFlatString(aWord).get(),&empty);
@@ -248,7 +248,7 @@ NS_IMETHODIMP
 mozSpellChecker::RemoveWordFromPersonalDictionary(const nsAString &aWord)
 {
   nsresult res;
-  PRUnichar empty=0;
+  char16_t empty=0;
   if (!mPersonalDictionary)
     return NS_ERROR_NULL_POINTER;
   res = mPersonalDictionary->RemoveWord(PromiseFlatString(aWord).get(),&empty);
@@ -289,7 +289,7 @@ mozSpellChecker::GetDictionaryList(nsTArray<nsString> *aDictionaryList)
     nsCOMPtr<mozISpellCheckingEngine> engine = spellCheckingEngines[i];
 
     uint32_t count = 0;
-    PRUnichar **words = nullptr;
+    char16_t **words = nullptr;
     engine->GetDictionaryList(&words, &count);
     for (uint32_t k = 0; k < count; k++) {
       nsAutoString dictName;

@@ -19,7 +19,7 @@
  *       See Tokenizer.java.
  *   3.  the length of this sequence of characters,
  *   4.  placeholder flag (0 if argument #is not a placeholder and 1 if it is),
- *   5.  a comma-separated sequence of PRUnichar literals corresponding
+ *   5.  a comma-separated sequence of char16_t literals corresponding
  *       to the code-point(s) of the named character.
  *
  * The macro expansion doesn't have to refer to all or any of these parameters,

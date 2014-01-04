@@ -98,12 +98,12 @@ static nsresult GetExtensionFrom4xRegistryInfo(const nsACString& aMimeType,
   if (NS_FAILED(rv))
     return NS_OK;
 
-  aFileExtension.Insert(PRUnichar('.'), 0);
+  aFileExtension.Insert(char16_t('.'), 0);
       
   // this may be a comma separated list of extensions...just take the 
   // first one for now...
 
-  int32_t pos = aFileExtension.FindChar(PRUnichar(','));
+  int32_t pos = aFileExtension.FindChar(char16_t(','));
   if (pos > 0) {
     // we have a comma separated list of types...
     // truncate everything after the first comma (including the comma)
@@ -238,13 +238,13 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromRegistry(const nsAFlatString& file
 
 /// Looks up the type for the extension aExt and compares it to aType
 /* static */ bool
-nsOSHelperAppService::typeFromExtEquals(const PRUnichar* aExt, const char *aType)
+nsOSHelperAppService::typeFromExtEquals(const char16_t* aExt, const char *aType)
 {
   if (!aType)
     return false;
   nsAutoString fileExtToUse;
-  if (aExt[0] != PRUnichar('.'))
-    fileExtToUse = PRUnichar('.');
+  if (aExt[0] != char16_t('.'))
+    fileExtToUse = char16_t('.');
 
   fileExtToUse.Append(aExt);
 
@@ -498,8 +498,8 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const nsAFl
   // windows registry assumes your file extension is going to include the '.'.
   // so make sure it's there...
   nsAutoString fileExtToUse;
-  if (aFileExt.First() != PRUnichar('.'))
-    fileExtToUse = PRUnichar('.');
+  if (aFileExt.First() != char16_t('.'))
+    fileExtToUse = char16_t('.');
 
   fileExtToUse.Append(aFileExt);
 

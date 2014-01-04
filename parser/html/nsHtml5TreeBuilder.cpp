@@ -66,7 +66,7 @@
 
 #include "nsHtml5TreeBuilder.h"
 
-PRUnichar nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
+char16_t nsHtml5TreeBuilder::REPLACEMENT_CHARACTER[] = { 0xfffd };
 static const char* const QUIRKY_PUBLIC_IDS_DATA[] = { "+//silmaril//dtd html pro v0r11 19970101//", "-//advasoft ltd//dtd html 3.0 aswedit + extensions//", "-//as//dtd html 3.0 aswedit + extensions//", "-//ietf//dtd html 2.0 level 1//", "-//ietf//dtd html 2.0 level 2//", "-//ietf//dtd html 2.0 strict level 1//", "-//ietf//dtd html 2.0 strict level 2//", "-//ietf//dtd html 2.0 strict//", "-//ietf//dtd html 2.0//", "-//ietf//dtd html 2.1e//", "-//ietf//dtd html 3.0//", "-//ietf//dtd html 3.2 final//", "-//ietf//dtd html 3.2//", "-//ietf//dtd html 3//", "-//ietf//dtd html level 0//", "-//ietf//dtd html level 1//", "-//ietf//dtd html level 2//", "-//ietf//dtd html level 3//", "-//ietf//dtd html strict level 0//", "-//ietf//dtd html strict level 1//", "-//ietf//dtd html strict level 2//", "-//ietf//dtd html strict level 3//", "-//ietf//dtd html strict//", "-//ietf//dtd html//", "-//metrius//dtd metrius presentational//", "-//microsoft//dtd internet explorer 2.0 html strict//", "-//microsoft//dtd internet explorer 2.0 html//", "-//microsoft//dtd internet explorer 2.0 tables//", "-//microsoft//dtd internet explorer 3.0 html strict//", "-//microsoft//dtd internet explorer 3.0 html//", "-//microsoft//dtd internet explorer 3.0 tables//", "-//netscape comm. corp.//dtd html//", "-//netscape comm. corp.//dtd strict html//", "-//o'reilly and associates//dtd html 2.0//", "-//o'reilly and associates//dtd html extended 1.0//", "-//o'reilly and associates//dtd html extended relaxed 1.0//", "-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//", "-//softquad//dtd hotmetal pro 4.0::19971010::extensions to html 4.0//", "-//spyglass//dtd html 2.0 extended//", "-//sq//dtd html 2.0 hotmetal + extensions//", "-//sun microsystems corp.//dtd hotjava html//", "-//sun microsystems corp.//dtd hotjava strict html//", "-//w3c//dtd html 3 1995-03-24//", "-//w3c//dtd html 3.2 draft//", "-//w3c//dtd html 3.2 final//", "-//w3c//dtd html 3.2//", "-//w3c//dtd html 3.2s draft//", "-//w3c//dtd html 4.0 frameset//", "-//w3c//dtd html 4.0 transitional//", "-//w3c//dtd html experimental 19960712//", "-//w3c//dtd html experimental 970421//", "-//w3c//dtd w3 html//", "-//w3o//dtd w3 html 3.0//", "-//webtechs//dtd mozilla html 2.0//", "-//webtechs//dtd mozilla html//" };
 staticJArray<const char*,int32_t> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = { QUIRKY_PUBLIC_IDS_DATA, MOZ_ARRAY_LENGTH(QUIRKY_PUBLIC_IDS_DATA) };
 void 
@@ -86,7 +86,7 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
   deepTreeSurrogateParent = nullptr;
   start(fragment);
   charBufferLen = 0;
-  charBuffer = jArray<PRUnichar,int32_t>::newJArray(1024);
+  charBuffer = jArray<char16_t,int32_t>::newJArray(1024);
   framesetOk = true;
   if (fragment) {
     nsIContent** elt;
@@ -151,7 +151,7 @@ nsHtml5TreeBuilder::doctype(nsIAtom* name, nsString* publicIdentifier, nsString*
 }
 
 void 
-nsHtml5TreeBuilder::comment(PRUnichar* buf, int32_t start, int32_t length)
+nsHtml5TreeBuilder::comment(char16_t* buf, int32_t start, int32_t length)
 {
   needToDropLF = false;
   if (!isInForeign()) {
@@ -179,7 +179,7 @@ nsHtml5TreeBuilder::comment(PRUnichar* buf, int32_t start, int32_t length)
 }
 
 void 
-nsHtml5TreeBuilder::characters(const PRUnichar* buf, int32_t start, int32_t length)
+nsHtml5TreeBuilder::characters(const char16_t* buf, int32_t start, int32_t length)
 {
   if (tokenizer->isViewingXmlSource()) {
     return;
@@ -1227,7 +1227,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
               appendToCurrentNodeAndPushElementMayFoster(nsHtml5ElementName::ELT_LABEL, nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES);
               int32_t promptIndex = attributes->getIndex(nsHtml5AttributeName::ATTR_PROMPT);
               if (promptIndex > -1) {
-                autoJArray<PRUnichar,int32_t> prompt = nsHtml5Portability::newCharArrayFromString(attributes->getValueNoBoundsCheck(promptIndex));
+                autoJArray<char16_t,int32_t> prompt = nsHtml5Portability::newCharArrayFromString(attributes->getValueNoBoundsCheck(promptIndex));
                 appendCharacters(stack[currentPtr]->node, prompt, 0, prompt.length);
               } else {
                 appendIsindexPrompt(stack[currentPtr]->node);
@@ -1952,9 +1952,9 @@ nsHtml5TreeBuilder::extractCharsetFromContent(nsString* attributeValue)
   int32_t charsetState = NS_HTML5TREE_BUILDER_CHARSET_INITIAL;
   int32_t start = -1;
   int32_t end = -1;
-  autoJArray<PRUnichar,int32_t> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
+  autoJArray<char16_t,int32_t> buffer = nsHtml5Portability::newCharArrayFromString(attributeValue);
   for (int32_t i = 0; i < buffer.length; i++) {
-    PRUnichar c = buffer[i];
+    char16_t c = buffer[i];
     switch(charsetState) {
       case NS_HTML5TREE_BUILDER_CHARSET_INITIAL: {
         switch(c) {

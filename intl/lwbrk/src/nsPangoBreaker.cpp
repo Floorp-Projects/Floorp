@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 
 void
-NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
+NS_GetComplexLineBreaks(const char16_t* aText, uint32_t aLength,
                         uint8_t* aBreakBefore)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");

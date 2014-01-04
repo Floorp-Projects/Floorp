@@ -124,7 +124,7 @@ MetroUtils::PhysToLog(const nsIntPoint& aPt)
 }
 
 nsresult
-MetroUtils::FireObserver(const char* aMessage, const PRUnichar* aData)
+MetroUtils::FireObserver(const char* aMessage, const char16_t* aData)
 {
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

@@ -1048,10 +1048,10 @@ nsMemoryReporterManager::GetReports(
             do_GetService("@mozilla.org/observer-service;1");
         NS_ENSURE_STATE(obs);
 
-        // Casting the uint32_t generation to |const PRUnichar*| is a hack, but
+        // Casting the uint32_t generation to |const char16_t*| is a hack, but
         // simpler than converting the number to an actual string.
         obs->NotifyObservers(nullptr, "child-memory-reporter-request",
-                             (const PRUnichar*)(uintptr_t)generation);
+                             (const char16_t*)(uintptr_t)generation);
 
         nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
         NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);

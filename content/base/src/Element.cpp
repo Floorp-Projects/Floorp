@@ -2093,8 +2093,8 @@ Element::ListAttributes(FILE* out) const
     nsAutoString value;
     mAttrsAndChildren.AttrAt(index)->ToString(value);
     for (int i = value.Length(); i >= 0; --i) {
-      if (value[i] == PRUnichar('"'))
-        value.Insert(PRUnichar('\\'), uint32_t(i));
+      if (value[i] == char16_t('"'))
+        value.Insert(char16_t('\\'), uint32_t(i));
     }
     buffer.Append(value);
     buffer.AppendLiteral("\"");

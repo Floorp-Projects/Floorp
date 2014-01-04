@@ -185,7 +185,7 @@ CheckPermissionsHelper::GetInterface(const nsIID& aIID,
 NS_IMETHODIMP
 CheckPermissionsHelper::Observe(nsISupports* aSubject,
                                 const char* aTopic,
-                                const PRUnichar* aData)
+                                const char16_t* aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!strcmp(aTopic, TOPIC_PERMISSIONS_RESPONSE), "Bad topic!");

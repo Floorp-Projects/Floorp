@@ -65,9 +65,9 @@ public:
   nsLineBreaker();
   ~nsLineBreaker();
   
-  static inline bool IsSpace(PRUnichar u) { return NS_IsSpace(u); }
+  static inline bool IsSpace(char16_t u) { return NS_IsSpace(u); }
 
-  static inline bool IsComplexASCIIChar(PRUnichar u)
+  static inline bool IsComplexASCIIChar(char16_t u)
   {
     return !((0x0030 <= u && u <= 0x0039) ||
              (0x0041 <= u && u <= 0x005A) ||
@@ -75,7 +75,7 @@ public:
              (0x000a == u));
   }
 
-  static inline bool IsComplexChar(PRUnichar u)
+  static inline bool IsComplexChar(char16_t u)
   {
     return IsComplexASCIIChar(u) ||
            NS_NeedsPlatformNativeHandling(u) ||
@@ -147,7 +147,7 @@ public:
    * @param aSink can be null if the breaks are not actually needed (we may
    * still be setting up state for later breaks)
    */
-  nsresult AppendText(nsIAtom* aHyphenationLanguage, const PRUnichar* aText, uint32_t aLength,
+  nsresult AppendText(nsIAtom* aHyphenationLanguage, const char16_t* aText, uint32_t aLength,
                       uint32_t aFlags, nsILineBreakSink* aSink);
   /**
    * Feed 8-bit text into the linebreaker for analysis. aLength must be nonzero.
@@ -201,11 +201,11 @@ private:
   void UpdateCurrentWordLanguage(nsIAtom *aHyphenationLanguage);
 
   void FindHyphenationPoints(nsHyphenator *aHyphenator,
-                             const PRUnichar *aTextStart,
-                             const PRUnichar *aTextLimit,
+                             const char16_t *aTextStart,
+                             const char16_t *aTextLimit,
                              uint8_t *aBreakState);
 
-  nsAutoTArray<PRUnichar,100> mCurrentWord;
+  nsAutoTArray<char16_t,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
   nsIAtom*                    mCurrentWordLanguage;

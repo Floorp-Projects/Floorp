@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
                      "decode result incorrect");
         printf("decoded = ");
         NS_ConvertUTF8toUTF16 utf(buf);
-        const PRUnichar *u = utf.get();
+        const char16_t *u = utf.get();
         for (int i = 0; u[i]; i++) {
           printf("U+%.4X ", u[i]);
         }

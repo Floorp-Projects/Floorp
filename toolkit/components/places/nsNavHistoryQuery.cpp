@@ -1146,8 +1146,8 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant **aTags)
     rv = out->SetAsEmptyArray();
   else {
     // Note: The resulting nsIVariant dupes both the array and its elements.
-    const PRUnichar **array = reinterpret_cast<const PRUnichar **>
-                              (NS_Alloc(arrayLen * sizeof(PRUnichar *)));
+    const char16_t **array = reinterpret_cast<const char16_t **>
+                              (NS_Alloc(arrayLen * sizeof(char16_t *)));
     NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < arrayLen; ++i) {
@@ -1220,7 +1220,7 @@ NS_IMETHODIMP nsNavHistoryQuery::SetTags(nsIVariant *aTags)
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  PRUnichar **tags = reinterpret_cast<PRUnichar **>(array);
+  char16_t **tags = reinterpret_cast<char16_t **>(array);
   mTags.Clear();
 
   // Finally, add each passed-in tag to our mTags array and then sort it.

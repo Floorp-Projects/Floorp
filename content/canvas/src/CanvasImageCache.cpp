@@ -194,7 +194,7 @@ NS_IMPL_ISUPPORTS1(CanvasImageCacheShutdownObserver, nsIObserver)
 NS_IMETHODIMP
 CanvasImageCacheShutdownObserver::Observe(nsISupports *aSubject,
                                           const char *aTopic,
-                                          const PRUnichar *aData)
+                                          const char16_t *aData)
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     delete gImageCache;

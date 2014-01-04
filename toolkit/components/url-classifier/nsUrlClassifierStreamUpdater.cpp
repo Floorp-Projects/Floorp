@@ -524,7 +524,7 @@ nsUrlClassifierStreamUpdater::OnStopRequest(nsIRequest *request, nsISupports* co
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::Observe(nsISupports *aSubject, const char *aTopic,
-                                      const PRUnichar *aData)
+                                      const char16_t *aData)
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
     if (mIsUpdating && mChannel) {

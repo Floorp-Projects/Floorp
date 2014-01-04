@@ -542,7 +542,7 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* /* aThread */,
 NS_IMETHODIMP
 LazyIdleThread::Observe(nsISupports* /* aSubject */,
                         const char*  aTopic,
-                        const PRUnichar* /* aData */)
+                        const char16_t* /* aData */)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   MOZ_ASSERT(mShutdownMethod == AutomaticShutdown,

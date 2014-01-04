@@ -403,7 +403,7 @@ nsNSSComponent::DispatchEventToWindow(nsIDOMWindow *domWin,
 
 NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const char *name,
-                                              const PRUnichar **params,
+                                              const char16_t **params,
                                               uint32_t numParams,
                                               nsAString &outString)
 {
@@ -443,7 +443,7 @@ nsNSSComponent::GetPIPNSSBundleString(const char *name,
 
 NS_IMETHODIMP
 nsNSSComponent::NSSBundleFormatStringFromName(const char *name,
-                                              const PRUnichar **params,
+                                              const char16_t **params,
                                               uint32_t numParams,
                                               nsAString &outString)
 {
@@ -972,7 +972,7 @@ CipherSuiteChangeObserver::StopObserve()
 nsresult
 CipherSuiteChangeObserver::Observe(nsISupports *aSubject,
                                    const char *aTopic,
-                                   const PRUnichar *someData)
+                                   const char16_t *someData)
 {
   NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::Observe can only be accessed in main thread");
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
@@ -1573,7 +1573,7 @@ static const char* const PROFILE_DO_CHANGE_TOPIC = "profile-do-change";
 
 NS_IMETHODIMP
 nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic, 
-                        const PRUnichar *someData)
+                        const char16_t *someData)
 {
   if (nsCRT::strcmp(aTopic, PROFILE_CHANGE_TEARDOWN_TOPIC) == 0) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("in PSM code, receiving change-teardown\n"));

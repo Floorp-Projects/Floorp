@@ -469,15 +469,15 @@ static bool DecimalLeadingZeroToText(int32_t ordinal, nsString& result)
    result.AppendASCII(cbuf);
    return true;
 }
-static bool OtherDecimalToText(int32_t ordinal, PRUnichar zeroChar, nsString& result)
+static bool OtherDecimalToText(int32_t ordinal, char16_t zeroChar, nsString& result)
 {
-   PRUnichar diff = zeroChar - PRUnichar('0');
+   char16_t diff = zeroChar - char16_t('0');
    // We're going to be appending to whatever is in "result" already, so make
    // sure to only munge the new bits.  Note that we can't just grab the pointer
    // to the new stuff here, since appending to the string can realloc.
    size_t offset = result.Length();
    DecimalToText(ordinal, result);
-   PRUnichar* p = result.BeginWriting() + offset;
+   char16_t* p = result.BeginWriting() + offset;
    if (ordinal < 0) {
      // skip the leading '-'
      ++p;
@@ -492,15 +492,15 @@ static bool TamilToText(int32_t ordinal,  nsString& result)
      // Can't do those in this system.
      return false;
    }
-   PRUnichar diff = 0x0BE6 - PRUnichar('0');
+   char16_t diff = 0x0BE6 - char16_t('0');
    // We're going to be appending to whatever is in "result" already, so make
    // sure to only munge the new bits.  Note that we can't just grab the pointer
    // to the new stuff here, since appending to the string can realloc.
    size_t offset = result.Length();
    DecimalToText(ordinal, result); 
-   PRUnichar* p = result.BeginWriting() + offset;
+   char16_t* p = result.BeginWriting() + offset;
    for(; '\0' != *p ; p++) 
-      if(*p != PRUnichar('0'))
+      if(*p != char16_t('0'))
          *p += diff;
    return true;
 }
@@ -519,8 +519,8 @@ static bool RomanToText(int32_t ordinal, nsString& result, const char* achars, c
   nsAutoString addOn, decStr;
   decStr.AppendInt(ordinal, 10);
   int len = decStr.Length();
-  const PRUnichar* dp = decStr.get();
-  const PRUnichar* end = dp + len;
+  const char16_t* dp = decStr.get();
+  const char16_t* end = dp + len;
   int romanPos = len;
   int n;
 
@@ -529,27 +529,27 @@ static bool RomanToText(int32_t ordinal, nsString& result, const char* achars, c
     addOn.SetLength(0);
     switch(*dp) {
       case '3':
-        addOn.Append(PRUnichar(achars[romanPos]));
+        addOn.Append(char16_t(achars[romanPos]));
         // FALLTHROUGH
       case '2':
-        addOn.Append(PRUnichar(achars[romanPos]));
+        addOn.Append(char16_t(achars[romanPos]));
         // FALLTHROUGH
       case '1':
-        addOn.Append(PRUnichar(achars[romanPos]));
+        addOn.Append(char16_t(achars[romanPos]));
         break;
       case '4':
-        addOn.Append(PRUnichar(achars[romanPos]));
+        addOn.Append(char16_t(achars[romanPos]));
         // FALLTHROUGH
       case '5': case '6':
       case '7': case '8':
-        addOn.Append(PRUnichar(bchars[romanPos]));
+        addOn.Append(char16_t(bchars[romanPos]));
         for(n=0;'5'+n<*dp;n++) {
-          addOn.Append(PRUnichar(achars[romanPos]));
+          addOn.Append(char16_t(achars[romanPos]));
         }
         break;
       case '9':
-        addOn.Append(PRUnichar(achars[romanPos]));
-        addOn.Append(PRUnichar(achars[romanPos+1]));
+        addOn.Append(char16_t(achars[romanPos]));
+        addOn.Append(char16_t(achars[romanPos+1]));
         break;
       default:
         break;
@@ -560,7 +560,7 @@ static bool RomanToText(int32_t ordinal, nsString& result, const char* achars, c
 }
 
 #define ALPHA_SIZE 26
-static const PRUnichar gLowerAlphaChars[ALPHA_SIZE]  = 
+static const char16_t gLowerAlphaChars[ALPHA_SIZE]  = 
 {
 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, // A   B   C   D   E
 0x0066, 0x0067, 0x0068, 0x0069, 0x006A, // F   G   H   I   J
@@ -570,7 +570,7 @@ static const PRUnichar gLowerAlphaChars[ALPHA_SIZE]  =
 0x007A                                  // Z
 };
 
-static const PRUnichar gUpperAlphaChars[ALPHA_SIZE]  = 
+static const char16_t gUpperAlphaChars[ALPHA_SIZE]  = 
 {
 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, // A   B   C   D   E
 0x0046, 0x0047, 0x0048, 0x0049, 0x004A, // F   G   H   I   J
@@ -584,7 +584,7 @@ static const PRUnichar gUpperAlphaChars[ALPHA_SIZE]  =
 #define KATAKANA_CHARS_SIZE 48
 // Page 94 Writing Systems of The World
 // after modification by momoi
-static const PRUnichar gKatakanaChars[KATAKANA_CHARS_SIZE] =
+static const char16_t gKatakanaChars[KATAKANA_CHARS_SIZE] =
 {
 0x30A2, 0x30A4, 0x30A6, 0x30A8, 0x30AA, //  a    i   u    e    o
 0x30AB, 0x30AD, 0x30AF, 0x30B1, 0x30B3, // ka   ki  ku   ke   ko
@@ -600,7 +600,7 @@ static const PRUnichar gKatakanaChars[KATAKANA_CHARS_SIZE] =
 };
 
 #define HIRAGANA_CHARS_SIZE 48 
-static const PRUnichar gHiraganaChars[HIRAGANA_CHARS_SIZE] =
+static const char16_t gHiraganaChars[HIRAGANA_CHARS_SIZE] =
 {
 0x3042, 0x3044, 0x3046, 0x3048, 0x304A, //  a    i    u    e    o
 0x304B, 0x304D, 0x304F, 0x3051, 0x3053, // ka   ki   ku   ke   ko
@@ -618,7 +618,7 @@ static const PRUnichar gHiraganaChars[HIRAGANA_CHARS_SIZE] =
 
 #define HIRAGANA_IROHA_CHARS_SIZE 47
 // Page 94 Writing Systems of The World
-static const PRUnichar gHiraganaIrohaChars[HIRAGANA_IROHA_CHARS_SIZE] =
+static const char16_t gHiraganaIrohaChars[HIRAGANA_IROHA_CHARS_SIZE] =
 {
 0x3044, 0x308D, 0x306F, 0x306B, 0x307B, //  i   ro   ha   ni   ho
 0x3078, 0x3068, 0x3061, 0x308A, 0x306C, // he   to  chi   ri   nu
@@ -633,7 +633,7 @@ static const PRUnichar gHiraganaIrohaChars[HIRAGANA_IROHA_CHARS_SIZE] =
 };
 
 #define KATAKANA_IROHA_CHARS_SIZE 47
-static const PRUnichar gKatakanaIrohaChars[KATAKANA_IROHA_CHARS_SIZE] =
+static const char16_t gKatakanaIrohaChars[KATAKANA_IROHA_CHARS_SIZE] =
 {
 0x30A4, 0x30ED, 0x30CF, 0x30CB, 0x30DB, //  i   ro   ha   ni   ho
 0x30D8, 0x30C8, 0x30C1, 0x30EA, 0x30CC, // he   to  chi   ri   nu
@@ -649,7 +649,7 @@ static const PRUnichar gKatakanaIrohaChars[KATAKANA_IROHA_CHARS_SIZE] =
 
 #define LOWER_GREEK_CHARS_SIZE 24
 // Note: 0x03C2 GREEK FINAL SIGMA is not used in here....
-static const PRUnichar gLowerGreekChars[LOWER_GREEK_CHARS_SIZE] =
+static const char16_t gLowerGreekChars[LOWER_GREEK_CHARS_SIZE] =
 {
 0x03B1, 0x03B2, 0x03B3, 0x03B4, 0x03B5, // alpha  beta  gamma  delta  epsilon
 0x03B6, 0x03B7, 0x03B8, 0x03B9, 0x03BA, // zeta   eta   theta  iota   kappa   
@@ -659,26 +659,26 @@ static const PRUnichar gLowerGreekChars[LOWER_GREEK_CHARS_SIZE] =
 };
 
 #define CJK_HEAVENLY_STEM_CHARS_SIZE 10 
-static const PRUnichar gCJKHeavenlyStemChars[CJK_HEAVENLY_STEM_CHARS_SIZE] =
+static const char16_t gCJKHeavenlyStemChars[CJK_HEAVENLY_STEM_CHARS_SIZE] =
 {
 0x7532, 0x4e59, 0x4e19, 0x4e01, 0x620a,
 0x5df1, 0x5e9a, 0x8f9b, 0x58ec, 0x7678
 };
 #define CJK_EARTHLY_BRANCH_CHARS_SIZE 12 
-static const PRUnichar gCJKEarthlyBranchChars[CJK_EARTHLY_BRANCH_CHARS_SIZE] =
+static const char16_t gCJKEarthlyBranchChars[CJK_EARTHLY_BRANCH_CHARS_SIZE] =
 {
 0x5b50, 0x4e11, 0x5bc5, 0x536f, 0x8fb0, 0x5df3,
 0x5348, 0x672a, 0x7533, 0x9149, 0x620c, 0x4ea5
 };
 #define HANGUL_CHARS_SIZE 14 
-static const PRUnichar gHangulChars[HANGUL_CHARS_SIZE] =
+static const char16_t gHangulChars[HANGUL_CHARS_SIZE] =
 {
 0xac00, 0xb098, 0xb2e4, 0xb77c, 0xb9c8, 0xbc14,
 0xc0ac, 0xc544, 0xc790, 0xcc28, 0xce74, 0xd0c0,
 0xd30c, 0xd558
 };
 #define HANGUL_CONSONANT_CHARS_SIZE 14 
-static const PRUnichar gHangulConsonantChars[HANGUL_CONSONANT_CHARS_SIZE] =
+static const char16_t gHangulConsonantChars[HANGUL_CONSONANT_CHARS_SIZE] =
 {                                      
 0x3131, 0x3134, 0x3137, 0x3139, 0x3141, 0x3142,
 0x3145, 0x3147, 0x3148, 0x314a, 0x314b, 0x314c,
@@ -690,7 +690,7 @@ static const PRUnichar gHangulConsonantChars[HANGUL_CONSONANT_CHARS_SIZE] =
 // per Momoi san's suggestion in bug 102252. 
 // For details, refer to http://www.ethiopic.org/Collation/OrderedLists.html.
 #define ETHIOPIC_HALEHAME_CHARS_SIZE 26
-static const PRUnichar gEthiopicHalehameChars[ETHIOPIC_HALEHAME_CHARS_SIZE] =
+static const char16_t gEthiopicHalehameChars[ETHIOPIC_HALEHAME_CHARS_SIZE] =
 {                                      
 0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
 0x1230, 0x1240, 0x1260, 0x1270, 0x1280, 0x1290,
@@ -699,7 +699,7 @@ static const PRUnichar gEthiopicHalehameChars[ETHIOPIC_HALEHAME_CHARS_SIZE] =
 0x1348, 0x1350
 };
 #define ETHIOPIC_HALEHAME_AM_CHARS_SIZE 33
-static const PRUnichar gEthiopicHalehameAmChars[ETHIOPIC_HALEHAME_AM_CHARS_SIZE] =
+static const char16_t gEthiopicHalehameAmChars[ETHIOPIC_HALEHAME_AM_CHARS_SIZE] =
 {                                      
 0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
 0x1230, 0x1238, 0x1240, 0x1260, 0x1270, 0x1278,
@@ -709,7 +709,7 @@ static const PRUnichar gEthiopicHalehameAmChars[ETHIOPIC_HALEHAME_AM_CHARS_SIZE]
 0x1340, 0x1348, 0x1350
 };
 #define ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE 31
-static const PRUnichar gEthiopicHalehameTiErChars[ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE] =
+static const char16_t gEthiopicHalehameTiErChars[ETHIOPIC_HALEHAME_TI_ER_CHARS_SIZE] =
 {                                      
 0x1200, 0x1208, 0x1210, 0x1218, 0x1228, 0x1230,
 0x1238, 0x1240, 0x1250, 0x1260, 0x1270, 0x1278,
@@ -719,7 +719,7 @@ static const PRUnichar gEthiopicHalehameTiErChars[ETHIOPIC_HALEHAME_TI_ER_CHARS_
 0x1350
 };
 #define ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE 34
-static const PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE] =
+static const char16_t gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_SIZE] =
 {                                      
 0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
 0x1230, 0x1238, 0x1240, 0x1250, 0x1260, 0x1270,
@@ -737,9 +737,9 @@ static const PRUnichar gEthiopicHalehameTiEtChars[ETHIOPIC_HALEHAME_TI_ET_CHARS_
 
 #define NUM_BUF_SIZE 34 
 
-static bool CharListToText(int32_t ordinal, nsString& result, const PRUnichar* chars, int32_t aBase)
+static bool CharListToText(int32_t ordinal, nsString& result, const char16_t* chars, int32_t aBase)
 {
-  PRUnichar buf[NUM_BUF_SIZE];
+  char16_t buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   if (ordinal < 1) {
     return false;
@@ -754,17 +754,17 @@ static bool CharListToText(int32_t ordinal, nsString& result, const PRUnichar* c
   return true;
 }
 
-static const PRUnichar gCJKDecimalChars[10] =
+static const char16_t gCJKDecimalChars[10] =
 {
   0x3007, 0x4e00, 0x4e8c, 0x4e09, 0x56db,
   0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d
 };
-static bool CharListDecimalToText(int32_t ordinal, nsString& result, const PRUnichar* chars)
+static bool CharListDecimalToText(int32_t ordinal, nsString& result, const char16_t* chars)
 {
   if (ordinal < 0) {
     return false;
   }
-  PRUnichar buf[NUM_BUF_SIZE];
+  char16_t buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   do {
     buf[--idx] = chars[ordinal % 10];
@@ -778,14 +778,14 @@ enum CJKIdeographicLang {
   CHINESE, KOREAN, JAPANESE
 };
 struct CJKIdeographicData {
-  const PRUnichar *negative;
-  PRUnichar digit[10];
-  PRUnichar unit[3];
-  PRUnichar unit10K[2];
+  const char16_t *negative;
+  char16_t digit[10];
+  char16_t unit[3];
+  char16_t unit10K[2];
   uint8_t lang;
   bool informal;
 };
-static const PRUnichar gJapaneseNegative[] = {
+static const char16_t gJapaneseNegative[] = {
   0x30de, 0x30a4, 0x30ca, 0x30b9, 0x0000
 };
 static const CJKIdeographicData gDataJapaneseInformal = {
@@ -810,7 +810,7 @@ static const CJKIdeographicData gDataJapaneseFormal = {
   JAPANESE,                   // lang
   false                       // informal
 };
-static const PRUnichar gKoreanNegative[] = {
+static const char16_t gKoreanNegative[] = {
   0xb9c8, 0xc774, 0xb108, 0xc2a4, 0x0020, 0x0000
 };
 static const CJKIdeographicData gDataKoreanHangulFormal = {
@@ -846,7 +846,7 @@ static const CJKIdeographicData gDataKoreanHanjaFormal = {
   KOREAN,                     // lang
   false                       // informal
 };
-static const PRUnichar gSimpChineseNegative[] = {
+static const char16_t gSimpChineseNegative[] = {
   0x8d1f, 0x0000
 };
 static const CJKIdeographicData gDataSimpChineseInformal = {
@@ -871,7 +871,7 @@ static const CJKIdeographicData gDataSimpChineseFormal = {
   CHINESE,                    // lang
   false                       // informal
 };
-static const PRUnichar gTradChineseNegative[] = {
+static const char16_t gTradChineseNegative[] = {
   0x8ca0, 0x0000
 };
 static const CJKIdeographicData gDataTradChineseInformal = {
@@ -900,7 +900,7 @@ static const CJKIdeographicData gDataTradChineseFormal = {
 static const bool CJKIdeographicToText(int32_t ordinal, nsString& result,
                                        const CJKIdeographicData& data)
 {
-  PRUnichar buf[NUM_BUF_SIZE];
+  char16_t buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   int32_t pos = 0;
   bool isNegative = (ordinal < 0);
@@ -975,7 +975,7 @@ static const bool CJKIdeographicToText(int32_t ordinal, nsString& result,
 }
 
 #define HEBREW_GERESH       0x05F3
-static const PRUnichar gHebrewDigit[22] = 
+static const char16_t gHebrewDigit[22] = 
 {
 //   1       2       3       4       5       6       7       8       9
 0x05D0, 0x05D1, 0x05D2, 0x05D3, 0x05D4, 0x05D5, 0x05D6, 0x05D7, 0x05D8,
@@ -1029,7 +1029,7 @@ static bool HebrewToText(int32_t ordinal, nsString& result)
     if ( n3 > 0)
       thousandsGroup.Append(gHebrewDigit[n3-1]);
     if (outputSep) 
-      thousandsGroup.Append((PRUnichar)HEBREW_GERESH);
+      thousandsGroup.Append((char16_t)HEBREW_GERESH);
     if (allText.IsEmpty())
       allText = thousandsGroup;
     else
@@ -1049,14 +1049,14 @@ static bool ArmenianToText(int32_t ordinal, nsString& result)
     return false;
   }
 
-  PRUnichar buf[NUM_BUF_SIZE];
+  char16_t buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   int32_t d = 0;
   do {
     int32_t cur = ordinal % 10;
     if (cur > 0)
     {
-      PRUnichar u = 0x0530 + (d * 9) + cur;
+      char16_t u = 0x0530 + (d * 9) + cur;
       buf[--idx] = u;
     }
     ++d;
@@ -1067,7 +1067,7 @@ static bool ArmenianToText(int32_t ordinal, nsString& result)
 }
 
 
-static const PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
+static const char16_t gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
 //      1       2       3       4       5       6       7       8       9
    0x10D0, 0x10D1, 0x10D2, 0x10D3, 0x10D4, 0x10D5, 0x10D6, 0x10F1, 0x10D7,
 //     10      20      30      40      50      60      70      80      90
@@ -1085,14 +1085,14 @@ static bool GeorgianToText(int32_t ordinal, nsString& result)
     return false;
   }
 
-  PRUnichar buf[NUM_BUF_SIZE];
+  char16_t buf[NUM_BUF_SIZE];
   int32_t idx = NUM_BUF_SIZE;
   int32_t d = 0;
   do {
     int32_t cur = ordinal % 10;
     if (cur > 0)
     {
-      PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
+      char16_t u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
       buf[--idx] = u;
     }
     ++d;
@@ -1154,21 +1154,21 @@ static bool EthiopicToText(int32_t ordinal, nsString& result)
     // put it all together...
     if (tensValue) {
       // map onto Ethiopic "tens":
-      result.Append((PRUnichar) (tensValue +  ETHIOPIC_TEN - 1));
+      result.Append((char16_t) (tensValue +  ETHIOPIC_TEN - 1));
     }
     if (unitsValue) {
       //map onto Ethiopic "units":
-      result.Append((PRUnichar) (unitsValue + ETHIOPIC_ONE - 1));
+      result.Append((char16_t) (unitsValue + ETHIOPIC_ONE - 1));
     }
     // Add a separator for all even groups except the last,
     // and for odd groups with non-zero value.
     if (oddGroup) {
       if (groupValue) {
-        result.Append((PRUnichar) ETHIOPIC_HUNDRED);
+        result.Append((char16_t) ETHIOPIC_HUNDRED);
       }
     } else {
       if (groupIndexFromRight) {
-        result.Append((PRUnichar) ETHIOPIC_TEN_THOUSAND);
+        result.Append((char16_t) ETHIOPIC_TEN_THOUSAND);
       }
     }
   }
@@ -1192,17 +1192,17 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
 
     case NS_STYLE_LIST_STYLE_DISC: // used by counters code only
       // XXX We really need to do this the same way we do list bullets.
-      result.Append(PRUnichar(0x2022));
+      result.Append(char16_t(0x2022));
       break;
 
     case NS_STYLE_LIST_STYLE_CIRCLE: // used by counters code only
       // XXX We really need to do this the same way we do list bullets.
-      result.Append(PRUnichar(0x25E6));
+      result.Append(char16_t(0x25E6));
       break;
 
     case NS_STYLE_LIST_STYLE_SQUARE: // used by counters code only
       // XXX We really need to do this the same way we do list bullets.
-      result.Append(PRUnichar(0x25FE));
+      result.Append(char16_t(0x25FE));
       break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL:

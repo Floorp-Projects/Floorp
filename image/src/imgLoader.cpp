@@ -242,7 +242,7 @@ NS_IMETHODIMP
 nsProgressNotificationProxy::OnStatus(nsIRequest* request,
                                       nsISupports* ctxt,
                                       nsresult status,
-                                      const PRUnichar* statusArg)
+                                      const char16_t* statusArg)
 {
   nsCOMPtr<nsILoadGroup> loadGroup;
   request->GetLoadGroup(getter_AddRefs(loadGroup));
@@ -664,7 +664,7 @@ public:
 NS_IMPL_ISUPPORTS1(imgCacheObserver, nsIObserver)
 
 NS_IMETHODIMP
-imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
+imgCacheObserver::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aSomeData)
 {
   if (strcmp(aTopic, "memory-pressure") == 0) {
     DiscardTracker::DiscardAll();
@@ -861,7 +861,7 @@ imgLoader::RespectPrivacyNotifications()
 }
 
 NS_IMETHODIMP
-imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+imgLoader::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   // We listen for pref change notifications...
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {

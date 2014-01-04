@@ -68,7 +68,7 @@
 #define CANON_CLASS_BITS_1	7
 #define CANON_CLASS_BITS_2	5
 
-static const PRUnichar canon_class_imap[] = {
+static const char16_t canon_class_imap[] = {
 	  272,   400,   528,   656,   784,   784,   784,   784, 
 	  784,   784,   912,   784,   784,   784,   784,  1040, 
 	 1168,   784,   784,   784,   784,   784,   784,   784, 
@@ -522,7 +522,7 @@ static const struct {
 #define CANON_COMPOSE_BITS_1	7
 #define CANON_COMPOSE_BITS_2	5
 
-static const PRUnichar compose_imap[] = {
+static const char16_t compose_imap[] = {
 	  272,   400,   528,   656,   784,   784,   784,   784, 
 	  784,   784,   784,   784,   784,   784,   784,   784, 
 	  784,   784,   784,   784,   784,   784,   784,   784, 
@@ -1557,7 +1557,7 @@ static const struct composition compose_seq[] = {
 #define DECOMP_BITS_2	5
 #define DECOMP_COMPAT	32768
 
-static const PRUnichar decompose_imap[] = {
+static const char16_t decompose_imap[] = {
 	  272,   400,   528,   656,   784,   784,   784,   784, 
 	  784,   784,   784,   784,   784,   784,   784,   912, 
 	  784,   784,   784,   784,   784,   784,   784,   784, 
@@ -1723,7 +1723,7 @@ static const PRUnichar decompose_imap[] = {
 };
 
 static const struct {
-	PRUnichar tbl[32];
+	char16_t tbl[32];
 } decompose_table[] = {
 	{{
 	     0,      0,      0,      0,      0,      0,      0,      0, 

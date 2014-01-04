@@ -36,9 +36,9 @@ GetAuthKey(const char *scheme, const char *host, int32_t port, uint32_t appId, b
 // return true if the two strings are equal or both empty.  an empty string
 // is either null or zero length.
 static bool
-StrEquivalent(const PRUnichar *a, const PRUnichar *b)
+StrEquivalent(const char16_t *a, const char16_t *b)
 {
-    static const PRUnichar emptyStr[] = {0};
+    static const char16_t emptyStr[] = {0};
 
     if (!a)
         a = emptyStr;
@@ -270,7 +270,7 @@ NS_IMPL_ISUPPORTS1(nsHttpAuthCache::AppDataClearObserver, nsIObserver)
 NS_IMETHODIMP
 nsHttpAuthCache::AppDataClearObserver::Observe(nsISupports *subject,
                                                const char *      topic,
-                                               const PRUnichar * data_unicode)
+                                               const char16_t * data_unicode)
 {
     NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_AVAILABLE);
 
@@ -326,33 +326,33 @@ nsHttpAuthCache::ClearAppData(uint32_t appId, bool browserOnly)
 //-----------------------------------------------------------------------------
 
 nsresult
-nsHttpAuthIdentity::Set(const PRUnichar *domain,
-                        const PRUnichar *user,
-                        const PRUnichar *pass)
+nsHttpAuthIdentity::Set(const char16_t *domain,
+                        const char16_t *user,
+                        const char16_t *pass)
 {
-    PRUnichar *newUser, *newPass, *newDomain;
+    char16_t *newUser, *newPass, *newDomain;
 
     int domainLen = domain ? NS_strlen(domain) : 0;
     int userLen   = user   ? NS_strlen(user)   : 0;
     int passLen   = pass   ? NS_strlen(pass)   : 0;
 
     int len = userLen + 1 + passLen + 1 + domainLen + 1;
-    newUser = (PRUnichar *) malloc(len * sizeof(PRUnichar));
+    newUser = (char16_t *) malloc(len * sizeof(char16_t));
     if (!newUser)
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (user)
-        memcpy(newUser, user, userLen * sizeof(PRUnichar));
+        memcpy(newUser, user, userLen * sizeof(char16_t));
     newUser[userLen] = 0;
 
     newPass = &newUser[userLen + 1];
     if (pass)
-        memcpy(newPass, pass, passLen * sizeof(PRUnichar));
+        memcpy(newPass, pass, passLen * sizeof(char16_t));
     newPass[passLen] = 0;
 
     newDomain = &newPass[passLen + 1];
     if (domain)
-        memcpy(newDomain, domain, domainLen * sizeof(PRUnichar));
+        memcpy(newDomain, domain, domainLen * sizeof(char16_t));
     newDomain[domainLen] = 0;
 
     // wait until the end to clear member vars in case input params

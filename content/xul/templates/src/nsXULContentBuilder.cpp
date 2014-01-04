@@ -614,7 +614,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // given node.
             // SynchronizeUsingTemplate contains code used to update textnodes,
             // so make sure to modify both when changing this
-            PRUnichar attrbuf[128];
+            char16_t attrbuf[128];
             nsFixedString attrValue(attrbuf, ArrayLength(attrbuf), 0);
             tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
             if (!attrValue.IsEmpty()) {
@@ -754,7 +754,7 @@ nsXULContentBuilder::CopyAttributesToElement(nsIContent* aTemplateNode,
             // Create a buffer here, because there's a chance that an
             // attribute in the template is going to be an RDF URI, which is
             // usually longish.
-            PRUnichar attrbuf[128];
+            char16_t attrbuf[128];
             nsFixedString attribValue(attrbuf, ArrayLength(attrbuf), 0);
             aTemplateNode->GetAttr(attribNameSpaceID, attribName, attribValue);
             if (!attribValue.IsEmpty()) {
@@ -852,7 +852,7 @@ nsXULContentBuilder::AddPersistentAttributes(Element* aTemplateNode,
         if (! value)
             continue;
 
-        const PRUnichar* valueStr;
+        const char16_t* valueStr;
         rv = value->GetValueConst(&valueStr);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -892,7 +892,7 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
         // This code is similar to that in BuildContentFromTemplate
         if (tmplKid->NodeInfo()->Equals(nsGkAtoms::textnode,
                                         kNameSpaceID_XUL)) {
-            PRUnichar attrbuf[128];
+            char16_t attrbuf[128];
             nsFixedString attrValue(attrbuf, ArrayLength(attrbuf), 0);
             tmplKid->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue);
             if (!attrValue.IsEmpty()) {

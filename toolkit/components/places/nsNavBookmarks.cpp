@@ -2727,7 +2727,7 @@ nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData)
 
 NS_IMETHODIMP
 nsNavBookmarks::Observe(nsISupports *aSubject, const char *aTopic,
-                        const PRUnichar *aData)
+                        const char16_t *aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
