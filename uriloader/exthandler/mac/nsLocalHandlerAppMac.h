@@ -12,7 +12,7 @@ class nsLocalHandlerAppMac : public nsLocalHandlerApp {
   public:
     nsLocalHandlerAppMac() { }
 
-    nsLocalHandlerAppMac(const PRUnichar *aName, nsIFile *aExecutable)
+    nsLocalHandlerAppMac(const char16_t *aName, nsIFile *aExecutable)
       : nsLocalHandlerApp(aName, aExecutable) {} 
 
     nsLocalHandlerAppMac(const nsAString & aName, nsIFile *aExecutable) 

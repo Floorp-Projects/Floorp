@@ -26,12 +26,12 @@ class nsIWordBreaker : public nsISupports
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWORDBREAKER_IID)
 
-  virtual bool BreakInBetween(const PRUnichar* aText1 , uint32_t aTextLen1,
-                                const PRUnichar* aText2 ,
+  virtual bool BreakInBetween(const char16_t* aText1 , uint32_t aTextLen1,
+                                const char16_t* aText2 ,
                                 uint32_t aTextLen2) = 0;
-  virtual nsWordRange FindWord(const PRUnichar* aText1 , uint32_t aTextLen1,
+  virtual nsWordRange FindWord(const char16_t* aText1 , uint32_t aTextLen1,
                                uint32_t aOffset) = 0;
-  virtual int32_t NextWord(const PRUnichar* aText, uint32_t aLen, 
+  virtual int32_t NextWord(const char16_t* aText, uint32_t aLen, 
                            uint32_t aPos) = 0;
                            
 };

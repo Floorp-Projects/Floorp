@@ -39,7 +39,7 @@ private:
 };
 
 NS_IMETHODIMP
-StringUnicharInputStream::Read(PRUnichar* aBuf,
+StringUnicharInputStream::Read(char16_t* aBuf,
                                uint32_t aCount,
                                uint32_t *aReadCount)
 {
@@ -49,12 +49,12 @@ StringUnicharInputStream::Read(PRUnichar* aBuf,
   }
   nsAString::const_iterator iter;
   mString.BeginReading(iter);
-  const PRUnichar* us = iter.get();
+  const char16_t* us = iter.get();
   uint32_t amount = mLen - mPos;
   if (amount > aCount) {
     amount = aCount;
   }
-  memcpy(aBuf, us + mPos, sizeof(PRUnichar) * amount);
+  memcpy(aBuf, us + mPos, sizeof(char16_t) * amount);
   mPos += amount;
   *aReadCount = amount;
   return NS_OK;
@@ -139,7 +139,7 @@ protected:
 
   nsCOMPtr<nsIInputStream> mInput;
   FallibleTArray<char> mByteData;
-  FallibleTArray<PRUnichar> mUnicharData;
+  FallibleTArray<char16_t> mUnicharData;
   
   uint32_t mByteDataOffset;
   uint32_t mUnicharDataOffset;
@@ -180,7 +180,7 @@ nsresult UTF8InputStream::Close()
   return NS_OK;
 }
 
-nsresult UTF8InputStream::Read(PRUnichar* aBuf,
+nsresult UTF8InputStream::Read(char16_t* aBuf,
                                uint32_t aCount,
                                uint32_t *aReadCount)
 {
@@ -200,7 +200,7 @@ nsresult UTF8InputStream::Read(PRUnichar* aBuf,
     readCount = aCount;
   }
   memcpy(aBuf, mUnicharData.Elements() + mUnicharDataOffset,
-         readCount * sizeof(PRUnichar));
+         readCount * sizeof(char16_t));
   mUnicharDataOffset += readCount;
   *aReadCount = readCount;
   return NS_OK;
@@ -269,7 +269,7 @@ UTF8InputStream::ReadString(uint32_t aCount, nsAString& aString,
   if (readCount > aCount) {
     readCount = aCount;
   }
-  const PRUnichar* buf = mUnicharData.Elements() + mUnicharDataOffset;
+  const char16_t* buf = mUnicharData.Elements() + mUnicharDataOffset;
   aString.Assign(buf, readCount);
 
   mUnicharDataOffset += readCount;

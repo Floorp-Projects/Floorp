@@ -39,8 +39,8 @@ static bool pathBeginsWithVolName(const nsACString& path, nsACString& firstPathC
       err = ::FSGetVolumeInfo(0, volumeIndex, nullptr, kFSVolInfoNone, nullptr,
                               &volName, &rootDirectory);
       if (err == noErr) {
-        NS_ConvertUTF16toUTF8 volNameStr(Substring((PRUnichar *)volName.unicode,
-                                                   (PRUnichar *)volName.unicode + volName.length));
+        NS_ConvertUTF16toUTF8 volNameStr(Substring((char16_t *)volName.unicode,
+                                                   (char16_t *)volName.unicode + volName.length));
         gVolumeList->AppendElement(volNameStr);
         volumeIndex++;
       }

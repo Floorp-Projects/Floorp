@@ -326,7 +326,7 @@ nsSecureBrowserUIImpl::SetDocShell(nsIDocShell *aDocShell)
 
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::Observe(nsISupports*, const char*,
-                               const PRUnichar*)
+                               const char16_t*)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1495,7 +1495,7 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
                                       nsIRequest* aRequest,
                                       nsresult aStatus,
-                                      const PRUnichar* aMessage)
+                                      const char16_t* aMessage)
 {
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;

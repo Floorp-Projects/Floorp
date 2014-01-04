@@ -22,7 +22,7 @@ public:
                                     const gfxFontGroup::Parameters* aParams,
                                     gfxFontGroup* aFontGroup, uint32_t aFlags,
                                     nsStyleContext** aStyles, bool aOwnsFactory = true);
-  nsTransformedTextRun* MakeTextRun(const PRUnichar* aString, uint32_t aLength,
+  nsTransformedTextRun* MakeTextRun(const char16_t* aString, uint32_t aLength,
                                     const gfxFontGroup::Parameters* aParams,
                                     gfxFontGroup* aFontGroup, uint32_t aFlags,
                                     nsStyleContext** aStyles, bool aOwnsFactory = true);
@@ -73,7 +73,7 @@ public:
   static nsTransformedTextRun *Create(const gfxTextRunFactory::Parameters* aParams,
                                       nsTransformingTextRunFactory* aFactory,
                                       gfxFontGroup* aFontGroup,
-                                      const PRUnichar* aString, uint32_t aLength,
+                                      const char16_t* aString, uint32_t aLength,
                                       const uint32_t aFlags, nsStyleContext** aStyles,
                                       bool aOwnsFactory);
 
@@ -117,7 +117,7 @@ private:
   nsTransformedTextRun(const gfxTextRunFactory::Parameters* aParams,
                        nsTransformingTextRunFactory* aFactory,
                        gfxFontGroup* aFontGroup,
-                       const PRUnichar* aString, uint32_t aLength,
+                       const char16_t* aString, uint32_t aLength,
                        const uint32_t aFlags, nsStyleContext** aStyles,
                        bool aOwnsFactory)
     : gfxTextRun(aParams, aLength, aFontGroup, aFlags),

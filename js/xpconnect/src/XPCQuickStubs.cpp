@@ -463,14 +463,14 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, HandleValue v,
 
 xpc_qsAUTF8String::xpc_qsAUTF8String(JSContext *cx, HandleValue v, MutableHandleValue pval, bool notpassed)
 {
-    typedef nsCharTraits<PRUnichar> traits;
+    typedef nsCharTraits<char16_t> traits;
     // From the T_UTF8STRING  case in XPCConvert::JSData2Native.
     JSString *s = InitOrStringify<traits>(cx, v, pval, notpassed, eNull, eNull);
     if (!s)
         return;
 
     size_t len;
-    const PRUnichar *chars = JS_GetStringCharsZAndLength(cx, s, &len);
+    const char16_t *chars = JS_GetStringCharsZAndLength(cx, s, &len);
     if (!chars) {
         mValid = false;
         return;

@@ -50,8 +50,8 @@ static uint32_t sUniqueKeyEventId = 0;
 
 struct DeadKeyEntry
 {
-  PRUnichar BaseChar;
-  PRUnichar CompositeChar;
+  char16_t BaseChar;
+  char16_t CompositeChar;
 };
 
 
@@ -88,7 +88,7 @@ public:
                     aEntries * sizeof(DeadKeyEntry)));
   }
 
-  PRUnichar GetCompositeChar(PRUnichar aBaseChar) const;
+  char16_t GetCompositeChar(char16_t aBaseChar) const;
 };
 
 
@@ -290,7 +290,7 @@ ModifierKeyState::EnsureAltGr()
  *****************************************************************************/
 
 void
-UniCharsAndModifiers::Append(PRUnichar aUniChar, Modifiers aModifiers)
+UniCharsAndModifiers::Append(char16_t aUniChar, Modifiers aModifiers)
 {
   MOZ_ASSERT(mLength < 5);
   mChars[mLength] = aUniChar;
@@ -312,7 +312,7 @@ UniCharsAndModifiers::UniCharsEqual(const UniCharsAndModifiers& aOther) const
   if (mLength != aOther.mLength) {
     return false;
   }
-  return !memcmp(mChars, aOther.mChars, mLength * sizeof(PRUnichar));
+  return !memcmp(mChars, aOther.mChars, mLength * sizeof(char16_t));
 }
 
 bool
@@ -332,7 +332,7 @@ UniCharsAndModifiers::operator+=(const UniCharsAndModifiers& aOther)
 {
   uint32_t copyCount = std::min(aOther.mLength, 5 - mLength);
   NS_ENSURE_TRUE(copyCount > 0, *this);
-  memcpy(&mChars[mLength], aOther.mChars, copyCount * sizeof(PRUnichar));
+  memcpy(&mChars[mLength], aOther.mChars, copyCount * sizeof(char16_t));
   memcpy(&mModifiers[mLength], aOther.mModifiers,
          copyCount * sizeof(Modifiers));
   mLength += copyCount;
@@ -395,8 +395,8 @@ VirtualKey::ShiftStateToModifiers(ShiftState aShiftState)
   return modifiers;
 }
 
-inline PRUnichar
-VirtualKey::GetCompositeChar(ShiftState aShiftState, PRUnichar aBaseChar) const
+inline char16_t
+VirtualKey::GetCompositeChar(ShiftState aShiftState, char16_t aBaseChar) const
 {
   return mShiftStates[aShiftState].DeadKey.Table->GetCompositeChar(aBaseChar);
 }
@@ -424,7 +424,7 @@ VirtualKey::MatchingDeadKeyTable(const DeadKeyEntry* aDeadKeyArray,
 
 void
 VirtualKey::SetNormalChars(ShiftState aShiftState,
-                           const PRUnichar* aChars,
+                           const char16_t* aChars,
                            uint32_t aNumOfChars)
 {
   NS_ASSERTION(aShiftState < ArrayLength(mShiftStates), "invalid index");
@@ -444,7 +444,7 @@ VirtualKey::SetNormalChars(ShiftState aShiftState,
 }
 
 void
-VirtualKey::SetDeadChar(ShiftState aShiftState, PRUnichar aDeadChar)
+VirtualKey::SetDeadChar(ShiftState aShiftState, char16_t aDeadChar)
 {
   NS_ASSERTION(aShiftState < ArrayLength(mShiftStates), "invalid index");
 
@@ -900,10 +900,10 @@ NativeKey::ComputeVirtualKeyCodeFromScanCodeEx() const
                              mKeyboardLayout));
 }
 
-PRUnichar
+char16_t
 NativeKey::ComputeUnicharFromScanCode() const
 {
-  return static_cast<PRUnichar>(
+  return static_cast<char16_t>(
            ::MapVirtualKeyEx(ComputeVirtualKeyCodeFromScanCode(),
                              MAPVK_VK_TO_CHAR, mKeyboardLayout));
 }
@@ -1127,8 +1127,8 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   //           should cause composition events because they are not caused
   //           by actual keyboard operation.
 
-  static const PRUnichar U_SPACE = 0x20;
-  static const PRUnichar U_EQUAL = 0x3D;
+  static const char16_t U_SPACE = 0x20;
+  static const char16_t U_EQUAL = 0x3D;
 
   // First, handle normal text input or non-printable key case here.
   if ((!mModKeyState.IsAlt() && !mModKeyState.IsControl()) ||
@@ -1160,7 +1160,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   //     WM_KEYDOWN.  I think that we don't need to keypress event in such
   //     case especially for shortcut keys.
 
-  PRUnichar uniChar;
+  char16_t uniChar;
   // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
   if (mModKeyState.IsControl() && aCharMsg.wParam <= 0x1A) {
     // Bug 16486: Need to account for shift here.
@@ -1182,7 +1182,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
   // accesskeys and make sure that numbers are always passed as such.
   if (uniChar && (mModKeyState.IsControl() || mModKeyState.IsAlt())) {
     KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
-    PRUnichar unshiftedCharCode =
+    char16_t unshiftedCharCode =
       (mVirtualKeyCode >= '0' && mVirtualKeyCode <= '9') ?
         mVirtualKeyCode :  mModKeyState.IsShift() ?
                              ComputeUnicharFromScanCode() : 0;
@@ -1495,7 +1495,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
       // inputs '+' on Thai keyboard layout, a key which is at '=/+'
       // key on ANSI keyboard layout is VK_OEM_PLUS.  Native applications
       // handle it as '+' key if Ctrl key is pressed.
-      PRUnichar charForOEMKeyCode = 0;
+      char16_t charForOEMKeyCode = 0;
       switch (mVirtualKeyCode) {
         case VK_OEM_PLUS:   charForOEMKeyCode = '+'; break;
         case VK_OEM_COMMA:  charForOEMKeyCode = ','; break;
@@ -1746,7 +1746,7 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   // Dead-key was active. See if pressed base character does produce
   // valid composite character.
   int32_t activeDeadKeyIndex = GetKeyIndex(mActiveDeadKey);
-  PRUnichar compositeChar = (baseChars.mLength == 1 && baseChars.mChars[0]) ?
+  char16_t compositeChar = (baseChars.mLength == 1 && baseChars.mChars[0]) ?
     mVirtualKeys[activeDeadKeyIndex].GetCompositeChar(mDeadKeyShiftState,
                                                       baseChars.mChars[0]) : 0;
   if (compositeChar) {
@@ -1825,7 +1825,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
         continue;
       }
       NS_ASSERTION(uint32_t(vki) < ArrayLength(mVirtualKeys), "invalid index");
-      PRUnichar uniChars[5];
+      char16_t uniChars[5];
       int32_t ret =
         ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)uniChars,
                       ArrayLength(uniChars), 0, mKeyboardLayout);
@@ -1834,7 +1834,7 @@ KeyboardLayout::LoadLayout(HKL aLayout)
         shiftStatesWithDeadKeys |= (1 << shiftState);
         // Repeat dead-key to deactivate it and get its character
         // representation.
-        PRUnichar deadChar[2];
+        char16_t deadChar[2];
         ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)deadChar,
                             ArrayLength(deadChar), 0, mKeyboardLayout);
         NS_ASSERTION(ret == 2, "Expecting twice repeated dead-key character");
@@ -1988,7 +1988,7 @@ KeyboardLayout::EnsureDeadKeyActive(bool aIsActive,
 {
   int32_t ret;
   do {
-    PRUnichar dummyChars[5];
+    char16_t dummyChars[5];
     ret = ::ToUnicodeEx(aDeadKey, 0, (PBYTE)aDeadKeyKbdState,
                         (LPWSTR)dummyChars, ArrayLength(dummyChars), 0,
                         mKeyboardLayout);
@@ -2021,8 +2021,8 @@ KeyboardLayout::DeactivateDeadKeyState()
 }
 
 bool
-KeyboardLayout::AddDeadKeyEntry(PRUnichar aBaseChar,
-                                PRUnichar aCompositeChar,
+KeyboardLayout::AddDeadKeyEntry(char16_t aBaseChar,
+                                char16_t aCompositeChar,
                                 DeadKeyEntry* aDeadKeyArray,
                                 uint32_t aEntries)
 {
@@ -2073,7 +2073,7 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
         // Depending on the character the followed the dead-key, the keyboard
         // driver can produce one composite character, or a dead-key character
         // followed by a second character.
-        PRUnichar compositeChars[5];
+        char16_t compositeChars[5];
         int32_t ret =
           ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)compositeChars,
                         ArrayLength(compositeChars), 0, mKeyboardLayout);
@@ -2086,7 +2086,7 @@ KeyboardLayout::GetDeadKeyCombinations(uint8_t aDeadKey,
             // Exactly one composite character produced. Now, when dead-key
             // is not active, repeat the last character one more time to
             // determine the base character.
-            PRUnichar baseChars[5];
+            char16_t baseChars[5];
             ret = ::ToUnicodeEx(virtualKey, 0, kbdState, (LPWSTR)baseChars,
                                 ArrayLength(baseChars), 0, mKeyboardLayout);
             NS_ASSERTION(ret == 1, "One base character expected");
@@ -2603,8 +2603,8 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
  * mozilla::widget::DeadKeyTable
  *****************************************************************************/
 
-PRUnichar
-DeadKeyTable::GetCompositeChar(PRUnichar aBaseChar) const
+char16_t
+DeadKeyTable::GetCompositeChar(char16_t aBaseChar) const
 {
   // Dead-key table is sorted by BaseChar in ascending order.
   // Usually they are too small to use binary search.

@@ -72,7 +72,7 @@ interface nsIAtom : nsISupports
 protected:
   uint32_t mLength;
   uint32_t mHash;
-  PRUnichar* mString;
+  char16_t* mString;
 %}
 };
 
@@ -115,8 +115,8 @@ inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
  * Find an atom that matches the given UTF-16 string.
  * The string is assumed to be zero terminated.  Never returns null.
  */
-extern already_AddRefed<nsIAtom> NS_NewAtom(const PRUnichar* aUTF16String);
-inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
+extern already_AddRefed<nsIAtom> NS_NewAtom(const char16_t* aUTF16String);
+inline already_AddRefed<nsIAtom> do_GetAtom(const char16_t* aUTF16String)
     { return NS_NewAtom(aUTF16String); }
 
 /**

@@ -21,7 +21,7 @@ public:
 
   nsLocalHandlerApp() { }
 
-  nsLocalHandlerApp(const PRUnichar *aName, nsIFile *aExecutable) 
+  nsLocalHandlerApp(const char16_t *aName, nsIFile *aExecutable) 
     : mName(aName), mExecutable(aExecutable) { }
 
   nsLocalHandlerApp(const nsAString & aName, nsIFile *aExecutable) 

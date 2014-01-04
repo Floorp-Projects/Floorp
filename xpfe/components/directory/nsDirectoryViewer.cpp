@@ -708,7 +708,7 @@ void nsHTTPIndex::GetDestination(nsIRDFResource* r, nsXPIDLCString& dest) {
      r->GetValueConst(&temp);
      dest.Adopt(temp ? strdup(temp) : 0);
   } else {
-    const PRUnichar* uri;
+    const char16_t* uri;
     url->GetValueConst(&uri);
     dest.Adopt(ToNewUTF8String(nsDependentString(uri)));
   }

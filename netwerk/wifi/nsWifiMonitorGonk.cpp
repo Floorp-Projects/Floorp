@@ -90,7 +90,7 @@ nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 
 NS_IMETHODIMP
 nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
-                       const PRUnichar *data)
+                       const char16_t *data)
 {
   if (!strcmp(topic, "timer-callback")) {
     LOG(("timer callback\n"));

@@ -172,7 +172,7 @@ TransportSecurityInfo::Flush()
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetErrorMessage(PRUnichar** aText)
+TransportSecurityInfo::GetErrorMessage(char16_t** aText)
 {
   NS_ENSURE_ARG_POINTER(aText);
   *aText = nullptr;
@@ -559,7 +559,7 @@ formatPlainErrorMessage(const nsXPIDLCString &host, int32_t port,
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-  const PRUnichar *params[1];
+  const char16_t *params[1];
   nsresult rv;
 
   nsCOMPtr<nsINSSComponent> component = do_GetService(kNSSComponentCID, &rv);
@@ -755,7 +755,7 @@ AppendErrorTextMismatch(const nsString &host,
                         bool wantsHtml,
                         nsString &returnedMessage)
 {
-  const PRUnichar *params[1];
+  const char16_t *params[1];
   nsresult rv;
 
   ScopedCERTCertificate nssCert;
@@ -812,7 +812,7 @@ AppendErrorTextMismatch(const nsString &host,
     }
   }
   else if (nameCount == 1) {
-    const PRUnichar *params[1];
+    const char16_t *params[1];
     params[0] = allNames.get();
     
     const char *stringID;
@@ -895,7 +895,7 @@ AppendErrorTextTime(nsIX509Cert* ix509,
   bool trueExpired_falseNotYetValid;
   GetDateBoundary(ix509, formattedDate, nowDate, trueExpired_falseNotYetValid);
 
-  const PRUnichar *params[2];
+  const char16_t *params[2];
   params[0] = formattedDate.get(); // might be empty, if helper function had a problem 
   params[1] = nowDate.get();
 
@@ -927,7 +927,7 @@ AppendErrorTextCode(PRErrorCode errorCodeToReport,
     ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
-    const PRUnichar *params[1];
+    const char16_t *params[1];
     params[0] = idU.get();
 
     nsString formattedString;
@@ -962,7 +962,7 @@ formatOverridableCertErrorMessage(nsISSLStatus & sslStatus,
 {
   static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-  const PRUnichar *params[1];
+  const char16_t *params[1];
   nsresult rv;
   nsAutoString hostWithPort;
   nsAutoString hostWithoutPort;

@@ -17,11 +17,11 @@
 #include "nsString.h"
 #include "nsStringIterator.h"
 
-const PRUnichar gt ('>');
-const PRUnichar space (' ');
-const PRUnichar nbsp (0xa0);
-const PRUnichar nl ('\n');
-const PRUnichar cr('\r');
+const char16_t gt ('>');
+const char16_t space (' ');
+const char16_t nbsp (0xa0);
+const char16_t nl ('\n');
+const char16_t cr('\r');
 
 /** Mail citations using the Internet style: > This is a citation
   */
@@ -30,11 +30,11 @@ nsresult
 nsInternetCiter::GetCiteString(const nsAString& aInString, nsAString& aOutString)
 {
   aOutString.Truncate();
-  PRUnichar uch = nl;
+  char16_t uch = nl;
 
   // Strip trailing new lines which will otherwise turn up
   // as ugly quoted empty lines.
-  nsReadingIterator <PRUnichar> beginIter,endIter;
+  nsReadingIterator <char16_t> beginIter,endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
   while(beginIter!= endIter &&
@@ -78,7 +78,7 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
     *aCiteLevel = 0;
 
   aOutString.Truncate();
-  nsReadingIterator <PRUnichar> beginIter,endIter;
+  nsReadingIterator <char16_t> beginIter,endIter;
   aInString.BeginReading(beginIter);
   aInString.EndReading(endIter);
   while (beginIter!= endIter)  // loop over lines
@@ -98,9 +98,9 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsAString& aInString,
       ++beginIter;
     }
     if (aLinebreaksToo)
-      aOutString.Append(PRUnichar(' '));
+      aOutString.Append(char16_t(' '));
     else
-      aOutString.Append(PRUnichar('\n'));    // DOM linebreaks, not NS_LINEBREAK
+      aOutString.Append(char16_t('\n'));    // DOM linebreaks, not NS_LINEBREAK
       // Skip over any more consecutive linebreak-like characters:
     while (beginIter != endIter && (*beginIter == '\r' || *beginIter == '\n'))
       ++beginIter;
@@ -140,7 +140,7 @@ BreakLine(nsAString& aOutString, uint32_t& outStringCol,
     outStringCol = 0;
 }
 
-static inline bool IsSpace(PRUnichar c)
+static inline bool IsSpace(char16_t c)
 {
   return (nsCRT::IsAsciiSpace(c) || (c == nl) || (c == cr) || (c == nbsp));
 }
@@ -154,7 +154,7 @@ nsInternetCiter::Rewrap(const nsAString& aInString,
   // There shouldn't be returns in this string, only dom newlines.
   // Check to make sure:
 #ifdef DEBUG
-  int32_t cr = aInString.FindChar(PRUnichar('\r'));
+  int32_t cr = aInString.FindChar(char16_t('\r'));
   NS_ASSERTION((cr < 0), "Rewrap: CR in string gotten from DOM!\n");
 #endif /* DEBUG */
 

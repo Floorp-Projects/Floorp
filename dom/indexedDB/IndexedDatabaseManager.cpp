@@ -675,7 +675,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aGlobal, JSContext* aCx)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
-                                const PRUnichar* aData)
+                                const char16_t* aData)
 {
   NS_ASSERTION(IsMainProcess(), "Wrong process!");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

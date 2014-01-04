@@ -157,7 +157,7 @@ public:
         uint8_t* ptr = mHeaders[i]->mData.get();
 
         for (int j = 0; j < nameLength; ++j) {
-          PRUnichar c = ((((uint32_t)ptr[j * 2]) << 8) | ptr[j * 2 + 1]);
+          char16_t c = ((((uint32_t)ptr[j * 2]) << 8) | ptr[j * 2 + 1]);
           aRetName += c;
         }
 

@@ -541,7 +541,7 @@ nsStreamTransportService::CreateOutputTransport(nsIOutputStream *stream,
 
 NS_IMETHODIMP
 nsStreamTransportService::Observe(nsISupports *subject, const char *topic,
-                                  const PRUnichar *data)
+                                  const char16_t *data)
 {
   NS_ASSERTION(strcmp(topic, "xpcom-shutdown-threads") == 0, "oops");
 

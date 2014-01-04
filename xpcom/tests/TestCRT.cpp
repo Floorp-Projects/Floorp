@@ -42,8 +42,8 @@ static void Check(const char* s1, const char* s2, int n)
   nsAutoString t1,t2; 
   t1.AssignWithConversion(s1);
   t2.AssignWithConversion(s2);
-  const PRUnichar* us1 = t1.get();
-  const PRUnichar* us2 = t2.get();
+  const char16_t* us1 = t1.get();
+  const char16_t* us2 = t2.get();
 
 #ifdef DEBUG
   int u2 =

@@ -289,7 +289,7 @@ nsObserverService::EnumerateObservers(const char* aTopic,
 // Enumerate observers of aTopic and call Observe on each.
 NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
                                                  const char *aTopic,
-                                                 const PRUnichar *someData)
+                                                 const char16_t *someData)
 {
     LOG(("nsObserverService::NotifyObservers(%s)", aTopic));
 

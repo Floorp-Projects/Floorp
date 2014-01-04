@@ -33,7 +33,7 @@ class UniscribeItem
 public:
     UniscribeItem(gfxContext *aContext, HDC aDC,
                   gfxUniscribeShaper *aShaper,
-                  const PRUnichar *aString, uint32_t aLength,
+                  const char16_t *aString, uint32_t aLength,
                   SCRIPT_ITEM *aItem, uint32_t aIVS) :
         mContext(aContext), mDC(aDC),
         mShaper(aShaper),
@@ -320,14 +320,14 @@ private:
     void GenerateAlternativeString() {
         if (mAlternativeString)
             free(mAlternativeString);
-        mAlternativeString = (PRUnichar *)malloc(mItemLength * sizeof(PRUnichar));
+        mAlternativeString = (char16_t *)malloc(mItemLength * sizeof(char16_t));
         if (!mAlternativeString)
             return;
         memcpy((void *)mAlternativeString, (const void *)mItemString,
-               mItemLength * sizeof(PRUnichar));
+               mItemLength * sizeof(char16_t));
         for (uint32_t i = 0; i < mItemLength; i++) {
             if (NS_IS_HIGH_SURROGATE(mItemString[i]) || NS_IS_LOW_SURROGATE(mItemString[i]))
-                mAlternativeString[i] = PRUnichar(0xFFFD);
+                mAlternativeString[i] = char16_t(0xFFFD);
         }
     }
 
@@ -341,11 +341,11 @@ private:
 
 public:
     // these point to the full string/length of the item
-    const PRUnichar *mItemString;
+    const char16_t *mItemString;
     const uint32_t mItemLength;
 
 private:
-    PRUnichar *mAlternativeString;
+    char16_t *mAlternativeString;
 
 #define AVERAGE_ITEM_LENGTH 40
 
@@ -368,7 +368,7 @@ private:
 class Uniscribe
 {
 public:
-    Uniscribe(const PRUnichar *aString,
+    Uniscribe(const char16_t *aString,
               gfxShapedText *aShapedText,
               uint32_t aOffset, uint32_t aLength):
         mString(aString), mShapedText(aShapedText),
@@ -431,7 +431,7 @@ private:
 
 bool
 gfxUniscribeShaper::ShapeText(gfxContext      *aContext,
-                              const PRUnichar *aText,
+                              const char16_t *aText,
                               uint32_t         aOffset,
                               uint32_t         aLength,
                               int32_t          aScript,

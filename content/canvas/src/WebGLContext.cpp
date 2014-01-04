@@ -73,7 +73,7 @@ using namespace mozilla::layers;
 NS_IMETHODIMP
 WebGLMemoryPressureObserver::Observe(nsISupports* aSubject,
                                      const char* aTopic,
-                                     const PRUnichar* aSomeData)
+                                     const char16_t* aSomeData)
 {
     if (strcmp(aTopic, "memory-pressure"))
         return NS_OK;
@@ -789,7 +789,7 @@ WebGLContext::GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat)
 
 NS_IMETHODIMP
 WebGLContext::GetInputStream(const char* aMimeType,
-                             const PRUnichar* aEncoderOptions,
+                             const char16_t* aEncoderOptions,
                              nsIInputStream **aStream)
 {
     NS_ASSERTION(gl, "GetInputStream on invalid context?");

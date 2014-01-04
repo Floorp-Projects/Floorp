@@ -81,7 +81,7 @@ struct RuleSelectorPair {
 };
 
 #define NS_IS_ANCESTOR_OPERATOR(ch) \
-  ((ch) == PRUnichar(' ') || (ch) == PRUnichar('>'))
+  ((ch) == char16_t(' ') || (ch) == char16_t('>'))
 
 /**
  * A struct representing a particular rule in an ordered list of rules
@@ -1404,7 +1404,7 @@ static bool ValueIncludes(const nsSubstring& aValueList,
                             const nsSubstring& aValue,
                             const nsStringComparator& aComparator)
 {
-  const PRUnichar *p = aValueList.BeginReading(),
+  const char16_t *p = aValueList.BeginReading(),
               *p_end = aValueList.EndReading();
 
   while (p < p_end) {
@@ -1412,13 +1412,13 @@ static bool ValueIncludes(const nsSubstring& aValueList,
     while (p != p_end && nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
-    const PRUnichar *val_start = p;
+    const char16_t *val_start = p;
 
     // look for space or end
     while (p != p_end && !nsContentUtils::IsHTMLWhitespace(*p))
       ++p;
 
-    const PRUnichar *val_end = p;
+    const char16_t *val_end = p;
 
     if (val_start < val_end &&
         aValue.Equals(Substring(val_start, val_end), aComparator))
@@ -1892,7 +1892,7 @@ static bool SelectorMatches(Element* aElement,
             int32_t begin = 0;
             int32_t len = language.Length();
             while (begin < len) {
-              int32_t end = language.FindChar(PRUnichar(','), begin);
+              int32_t end = language.FindChar(char16_t(','), begin);
               if (end == kNotFound) {
                 end = len;
               }
@@ -2298,7 +2298,7 @@ static bool SelectorMatches(Element* aElement,
 //   '~', the indirect adjacent sibling combinator, is greedy
 //   '+' and '>', the direct adjacent sibling and child combinators, are not
 #define NS_IS_GREEDY_OPERATOR(ch) \
-  ((ch) == PRUnichar(' ') || (ch) == PRUnichar('~'))
+  ((ch) == char16_t(' ') || (ch) == char16_t('~'))
 
 static bool SelectorMatchesTree(Element* aPrevElement,
                                   nsCSSSelector* aSelector,
@@ -2310,7 +2310,7 @@ static bool SelectorMatchesTree(Element* aPrevElement,
   Element* prevElement = aPrevElement;
   while (selector) { // check compound selectors
     NS_ASSERTION(!selector->mNext ||
-                 selector->mNext->mOperator != PRUnichar(0),
+                 selector->mNext->mOperator != char16_t(0),
                  "compound selector without combinator");
 
     // If after the previous selector match we are now outside the
@@ -2323,8 +2323,8 @@ static bool SelectorMatchesTree(Element* aPrevElement,
     // for adjacent sibling combinators, the content to test against the
     // selector is the previous sibling *element*
     Element* element = nullptr;
-    if (PRUnichar('+') == selector->mOperator ||
-        PRUnichar('~') == selector->mOperator) {
+    if (char16_t('+') == selector->mOperator ||
+        char16_t('~') == selector->mOperator) {
       // The relevant link must be an ancestor of the node being matched.
       aLookForRelevantLink = false;
       nsIContent* parent = prevElement->GetParent();
@@ -2556,13 +2556,13 @@ nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 }
 #endif
 
-static inline nsRestyleHint RestyleHintForOp(PRUnichar oper)
+static inline nsRestyleHint RestyleHintForOp(char16_t oper)
 {
-  if (oper == PRUnichar('+') || oper == PRUnichar('~')) {
+  if (oper == char16_t('+') || oper == char16_t('~')) {
     return eRestyle_LaterSiblings;
   }
 
-  if (oper != PRUnichar(0)) {
+  if (oper != char16_t(0)) {
     return eRestyle_Subtree;
   }
 

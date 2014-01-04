@@ -13,7 +13,7 @@ nsUnicodeToGB2312V2::nsUnicodeToGB2312V2() :
 {
 }
 
-NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const char16_t * aSrc, 
                                                  int32_t * aSrcLength, 
                                                  char * aDest, 
                                                  int32_t * aDestLength)
@@ -51,7 +51,7 @@ NS_IMETHODIMP nsUnicodeToGB2312V2::ConvertNoBuff(const PRUnichar * aSrc,
         break;
       }
     }
-    iSrcLength++ ;   // each unicode char just count as one in PRUnichar* string
+    iSrcLength++ ;   // each unicode char just count as one in char16_t* string
     aSrc++;  
     if ( iDestLength >= (*aDestLength) && (iSrcLength < *aSrcLength ))
     {

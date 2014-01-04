@@ -70,7 +70,7 @@ public:
   nsCheapString(nsStringBuffer* aBuf)
   {
     if (aBuf)
-      aBuf->ToString(aBuf->StorageSize()/sizeof(PRUnichar) - 1, *this);
+      aBuf->ToString(aBuf->StorageSize()/sizeof(char16_t) - 1, *this);
   }
 };
 
@@ -484,7 +484,7 @@ nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
     {
       nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
-        aResult.SetStringBuffer(str, str->StorageSize()/sizeof(PRUnichar) - 1);
+        aResult.SetStringBuffer(str, str->StorageSize()/sizeof(char16_t) - 1);
       }
       // else aResult is already empty
       return;

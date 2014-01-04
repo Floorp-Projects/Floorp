@@ -19,7 +19,7 @@ public:
                uint32_t outArraySize,
                uint32_t *_verified,
                uint32_t *_count,
-               PRUnichar **tmpUsages);
+               char16_t **tmpUsages);
 
   enum { max_returned_out_array_size = 12 };
 
@@ -36,7 +36,7 @@ private:
                  PRTime time,
                  mozilla::psm::CertVerifier::Flags flags,
                  uint32_t &aCounter,
-                 PRUnichar **outUsages);
+                 char16_t **outUsages);
 
   void verifyFailed(uint32_t *_verified, int err);
 };

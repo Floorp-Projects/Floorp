@@ -72,7 +72,7 @@ public:
 NS_IMETHODIMP
 BluetoothOppManager::Observe(nsISupports* aSubject,
                              const char* aTopic,
-                             const PRUnichar* aData)
+                             const char16_t* aData)
 {
   MOZ_ASSERT(sBluetoothOppManager);
 
@@ -729,12 +729,12 @@ BluetoothOppManager::RetrieveSentFileName()
 }
 
 bool
-BluetoothOppManager::IsReservedChar(PRUnichar c)
+BluetoothOppManager::IsReservedChar(char16_t c)
 {
   return (c < 0x0020 ||
-          c == PRUnichar('?') || c == PRUnichar('|') || c == PRUnichar('<') ||
-          c == PRUnichar('>') || c == PRUnichar('"') || c == PRUnichar(':') ||
-          c == PRUnichar('/') || c == PRUnichar('*') || c == PRUnichar('\\'));
+          c == char16_t('?') || c == char16_t('|') || c == char16_t('<') ||
+          c == char16_t('>') || c == char16_t('"') || c == char16_t(':') ||
+          c == char16_t('/') || c == char16_t('*') || c == char16_t('\\'));
 }
 
 void
@@ -745,7 +745,7 @@ BluetoothOppManager::ValidateFileName()
   for (int i = 0; i < length; ++i) {
     // Replace reserved char of fat file system with '_'
     if (IsReservedChar(mFileName.CharAt(i))) {
-      mFileName.Replace(i, 1, PRUnichar('_'));
+      mFileName.Replace(i, 1, char16_t('_'));
     }
   }
 }
@@ -1075,7 +1075,7 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
 
   int len = aFileName.Length();
   uint8_t* fileName = new uint8_t[(len + 1) * 2];
-  const PRUnichar* fileNamePtr = aFileName.BeginReading();
+  const char16_t* fileNamePtr = aFileName.BeginReading();
 
   for (int i = 0; i < len; i++) {
     fileName[i * 2] = (uint8_t)(fileNamePtr[i] >> 8);

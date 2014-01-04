@@ -770,7 +770,7 @@ BluetoothService::Get()
 
 nsresult
 BluetoothService::Observe(nsISupports* aSubject, const char* aTopic,
-                          const PRUnichar* aData)
+                          const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

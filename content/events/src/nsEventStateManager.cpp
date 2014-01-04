@@ -943,7 +943,7 @@ nsEventStateManager::Shutdown()
 NS_IMETHODIMP
 nsEventStateManager::Observe(nsISupports *aSubject,
                              const char *aTopic,
-                             const PRUnichar *someData)
+                             const char16_t *someData)
 {
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();

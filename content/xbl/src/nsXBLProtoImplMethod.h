@@ -81,7 +81,7 @@ struct nsXBLUncompiledMethod {
 class nsXBLProtoImplMethod: public nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMethod(const PRUnichar* aName);
+  nsXBLProtoImplMethod(const char16_t* aName);
   virtual ~nsXBLProtoImplMethod();
 
   void AppendBodyText(const nsAString& aBody);
@@ -135,7 +135,7 @@ protected:
 
 class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {
 public:
-  nsXBLProtoImplAnonymousMethod(const PRUnichar* aName) :
+  nsXBLProtoImplAnonymousMethod(const char16_t* aName) :
     nsXBLProtoImplMethod(aName)
   {}
   

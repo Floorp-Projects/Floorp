@@ -17,15 +17,15 @@ enum {
 nsresult
 nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
                                             int32_t * aSrcLength,
-                                            PRUnichar * aDest,
+                                            char16_t * aDest,
                                             int32_t * aDestLength,
                                             bool aSwapBytes)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;
-  PRUnichar* dest = aDest;
-  PRUnichar* destEnd = aDest + *aDestLength;
-  PRUnichar oddHighSurrogate;
+  char16_t* dest = aDest;
+  char16_t* destEnd = aDest + *aDestLength;
+  char16_t oddHighSurrogate;
 
   switch(mState) {
     case STATE_FIRST_CALL:
@@ -67,7 +67,7 @@ nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
 
   const char* srcEvenEnd;
 
-  PRUnichar u;
+  char16_t u;
   if (mState == STATE_HALF_CODE_POINT) {
     if (dest == destEnd)
       goto error;
@@ -91,7 +91,7 @@ nsUTF16ToUnicodeBase::UTF16ConvertToUnicode(const char * aSrc,
       goto error;
 
 #if !defined(__sparc__) && !defined(__arm__)
-    u = *(const PRUnichar*)src;
+    u = *(const char16_t*)src;
 #else
     memcpy(&u, src, 2);
 #endif
@@ -192,7 +192,7 @@ nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, int32_t aSrcLength,
 
 NS_IMETHODIMP
 nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
-                            PRUnichar * aDest, int32_t * aDestLength)
+                            char16_t * aDest, int32_t * aDestLength)
 {
   switch (mState) {
     case STATE_FIRST_CALL:
@@ -211,11 +211,11 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       }
 #ifdef IS_LITTLE_ENDIAN
       // on LE machines, BE BOM is 0xFFFE
-      if (0xFFFE != *((PRUnichar*)aSrc)) {
+      if (0xFFFE != *((char16_t*)aSrc)) {
         mState = STATE_NORMAL;
       }
 #else
-      if (0xFEFF != *((PRUnichar*)aSrc)) {
+      if (0xFEFF != *((char16_t*)aSrc)) {
         mState = STATE_NORMAL;
       }
 #endif
@@ -245,7 +245,7 @@ nsUTF16BEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
 
 NS_IMETHODIMP
 nsUTF16LEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
-                            PRUnichar * aDest, int32_t * aDestLength)
+                            char16_t * aDest, int32_t * aDestLength)
 {
   switch (mState) {
     case STATE_FIRST_CALL:
@@ -264,11 +264,11 @@ nsUTF16LEToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
       }
 #ifdef IS_BIG_ENDIAN
       // on BE machines, LE BOM is 0xFFFE
-      if (0xFFFE != *((PRUnichar*)aSrc)) {
+      if (0xFFFE != *((char16_t*)aSrc)) {
         mState = STATE_NORMAL;
       }
 #else
-      if (0xFEFF != *((PRUnichar*)aSrc)) {
+      if (0xFEFF != *((char16_t*)aSrc)) {
         mState = STATE_NORMAL;
       }
 #endif
@@ -306,7 +306,7 @@ nsUTF16ToUnicode::Reset()
 
 NS_IMETHODIMP
 nsUTF16ToUnicode::Convert(const char * aSrc, int32_t * aSrcLength,
-                          PRUnichar * aDest, int32_t * aDestLength)
+                          char16_t * aDest, int32_t * aDestLength)
 {
     if(STATE_FIRST_CALL == mState && *aSrcLength < 2)
     {

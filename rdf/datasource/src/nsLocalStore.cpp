@@ -459,7 +459,7 @@ LocalStoreImpl::DoCommand(nsISupportsArray* aSources,
 }
 
 NS_IMETHODIMP
-LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+LocalStoreImpl::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
     nsresult rv = NS_OK;
 

@@ -1084,7 +1084,7 @@ nsCertTree::GetCellText(int32_t row, nsITreeColumn* col,
   nsresult rv;
   _retval.Truncate();
 
-  const PRUnichar* colID;
+  const char16_t* colID;
   col->GetIdConst(&colID);
 
   treeArrayEl *el = GetThreadDescAtIndex(row);
@@ -1349,14 +1349,14 @@ nsCertTree::SetCellText(int32_t row, nsITreeColumn* col,
 
 /* void performAction (in wstring action); */
 NS_IMETHODIMP 
-nsCertTree::PerformAction(const PRUnichar *action)
+nsCertTree::PerformAction(const char16_t *action)
 {
   return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP 
-nsCertTree::PerformActionOnRow(const PRUnichar *action, int32_t row)
+nsCertTree::PerformActionOnRow(const char16_t *action, int32_t row)
 {
   return NS_OK;
 }
@@ -1365,7 +1365,7 @@ nsCertTree::PerformActionOnRow(const PRUnichar *action, int32_t row)
  *                           in wstring colID); 
  */
 NS_IMETHODIMP 
-nsCertTree::PerformActionOnCell(const PRUnichar *action, int32_t row, 
+nsCertTree::PerformActionOnCell(const char16_t *action, int32_t row, 
                                 nsITreeColumn* col)
 {
   return NS_OK;
@@ -1390,7 +1390,7 @@ nsCertTree::dumpMap()
     }
     nsCOMPtr<nsIX509Cert> ct = GetCertAtIndex(i);
     if (ct) {
-      PRUnichar *goo;
+      char16_t *goo;
       ct->GetCommonName(&goo);
       nsAutoString doo(goo);
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("cert [%d]: %s", i, NS_LossyConvertUTF16toASCII(doo).get()));

@@ -6,7 +6,7 @@
 #include "nsIRDFNode.idl"
 
 %{C++
-#include "nscore.h" // for PRUnichar
+#include "nscore.h" // for char16_t
 %}
 
 [ptr] native const_octet_ptr(const uint8_t);

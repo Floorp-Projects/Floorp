@@ -202,7 +202,7 @@ protected:
   nsPrefBranch()    /* disallow use of this constructer */
     { }
 
-  nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, PRUnichar **return_buf);
+  nsresult   GetDefaultFromPropertiesFile(const char *aPrefName, char16_t **return_buf);
   // As SetCharPref, but without any check on the length of |aValue|
   nsresult   SetCharPrefInternal(const char *aPrefName, const char *aValue);
   // Reject strings that are more than 1Mb, warn if strings are more than 16kb
@@ -242,9 +242,9 @@ public:
   nsresult Init();
 
 private:
-  NS_IMETHOD GetData(PRUnichar**);
-  NS_IMETHOD SetData(const PRUnichar* aData);
-  NS_IMETHOD SetDataWithLength(uint32_t aLength, const PRUnichar *aData);
+  NS_IMETHOD GetData(char16_t**);
+  NS_IMETHOD SetData(const char16_t* aData);
+  NS_IMETHOD SetDataWithLength(uint32_t aLength, const char16_t *aData);
 
   nsCOMPtr<nsISupportsString> mUnicodeString;
 };

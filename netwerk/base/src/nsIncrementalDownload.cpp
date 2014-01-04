@@ -780,7 +780,7 @@ nsIncrementalDownload::OnDataAvailable(nsIRequest *request,
 
 NS_IMETHODIMP
 nsIncrementalDownload::Observe(nsISupports *subject, const char *topic,
-                               const PRUnichar *data)
+                               const char16_t *data)
 {
   if (strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     Cancel(NS_ERROR_ABORT);

@@ -2333,7 +2333,7 @@ PluginModuleChild::CallWindowProcHook(int nCode, WPARAM wParam, LPARAM lParam)
             // message, otherwise fullscreen focus will not work correctly.
             wchar_t szClass[26];
             if (GetClassNameW(pCwp->hwnd, szClass,
-                              sizeof(szClass)/sizeof(PRUnichar)) &&
+                              sizeof(szClass)/sizeof(char16_t)) &&
                 !wcscmp(szClass, kFlashFullscreenClass)) {
                 gDelayFlashFocusReplyUntilEval = true;
             }

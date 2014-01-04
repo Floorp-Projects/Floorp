@@ -72,7 +72,7 @@ public:
   uint32_t  GetNumPrinters()
     { return mGlobalPrinterList ? mGlobalPrinterList->Length() : 0; }
   nsString* GetStringAt(int32_t aInx)    { return &mGlobalPrinterList->ElementAt(aInx); }
-  void      GetDefaultPrinterName(PRUnichar **aDefaultPrinterName);
+  void      GetDefaultPrinterName(char16_t **aDefaultPrinterName);
 
 protected:
   GlobalPrinters() {}
@@ -555,7 +555,7 @@ ns_release_macro(gpointer aData) {
   NS_RELEASE(spoolFile);
 }
 
-NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle, PRUnichar * aPrintToFileName,
+NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle, char16_t * aPrintToFileName,
                                                     int32_t aStartPage, int32_t aEndPage)
 {
   if (mToPrinter) {
@@ -706,7 +706,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
 }
 
 /* readonly attribute wstring defaultPrinterName; */
-NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(char16_t **aDefaultPrinterName)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::GetDefaultPrinterName()\n"));
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
@@ -718,7 +718,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetDefaultPrinterName(PRUnichar **aDefault
 }
 
 /* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
-NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
   DO_PR_DEBUG_LOG(("nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter()"));
   nsresult rv;
@@ -918,7 +918,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const PRUnich
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const PRUnichar *aPrinter, nsIPrintSettings *aPrintSettings)
+NS_IMETHODIMP nsPrinterEnumeratorGTK::DisplayPropertiesDlg(const char16_t *aPrinter, nsIPrintSettings *aPrintSettings)
 {
   return NS_OK;
 }
@@ -968,7 +968,7 @@ void GlobalPrinters::FreeGlobalPrinters()
 }
 
 void 
-GlobalPrinters::GetDefaultPrinterName(PRUnichar **aDefaultPrinterName)
+GlobalPrinters::GetDefaultPrinterName(char16_t **aDefaultPrinterName)
 {
   *aDefaultPrinterName = nullptr;
   

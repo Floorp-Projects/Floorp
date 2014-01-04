@@ -245,10 +245,10 @@ typedef uint8_t DirProp;
 
 #define UTF16_APPEND_CHAR_UNSAFE(s, i, c){ \
                                          if((uint32_t)(c)<=0xffff) { \
-                                         (s)[(i)++]=(PRUnichar)(c); \
+                                         (s)[(i)++]=(char16_t)(c); \
                                          } else { \
-                                         (s)[(i)++]=(PRUnichar)((c)>>10)+0xd7c0; \
-                                         (s)[(i)++]=(PRUnichar)(c)&0x3ff|0xdc00; \
+                                         (s)[(i)++]=(char16_t)((c)>>10)+0xd7c0; \
+                                         (s)[(i)++]=(char16_t)(c)&0x3ff|0xdc00; \
                                          } \
 }
 
@@ -256,11 +256,11 @@ typedef uint8_t DirProp;
 
 #define UTF16_APPEND_CHAR_SAFE(s, i, length, c) { \
                                                 if((PRUInt32)(c)<=0xffff) { \
-                                                (s)[(i)++]=(PRUnichar)(c); \
+                                                (s)[(i)++]=(char16_t)(c); \
                                                 } else if((PRUInt32)(c)<=0x10ffff) { \
                                                 if((i)+1<(length)) { \
-                                                (s)[(i)++]=(PRUnichar)((c)>>10)+0xd7c0; \
-                                                (s)[(i)++]=(PRUnichar)(c)&0x3ff|0xdc00; \
+                                                (s)[(i)++]=(char16_t)((c)>>10)+0xd7c0; \
+                                                (s)[(i)++]=(char16_t)(c)&0x3ff|0xdc00; \
                                                 } else /* not enough space */ { \
                                                 (s)[(i)++]=UTF_ERROR_VALUE; \
                                                 } \
@@ -311,7 +311,7 @@ typedef uint8_t DirProp;
 #define UTF16_PREV_CHAR_SAFE(s, start, i, c, strict) { \
                                                      (c)=(s)[--(i)]; \
                                                      if(IS_SECOND_SURROGATE(c)) { \
-                                                     PRUnichar __c2; \
+                                                     char16_t __c2; \
                                                      if((i)>(start) && IS_FIRST_SURROGATE(__c2=(s)[(i)-1])) { \
                                                      --(i); \
                                                      (c)=GET_UTF_32(__c2, (c)); \
@@ -473,7 +473,7 @@ public:
    *      <strong>The <code>aEmbeddingLevels</code> array must be
    *      at least <code>aLength</code> long.</strong>
    */
-  nsresult SetPara(const PRUnichar *aText, int32_t aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
+  nsresult SetPara(const char16_t *aText, int32_t aLength, nsBidiLevel aParaLevel, nsBidiLevel *aEmbeddingLevels);
 
   /**
    * Get the directionality of the text.
@@ -812,7 +812,7 @@ public:
    *
    * @param aDestSize will receive the number of characters that were written to <code>aDest</code>.
    */
-  nsresult WriteReverse(const PRUnichar *aSrc, int32_t aSrcLength, PRUnichar *aDest, uint16_t aOptions, int32_t *aDestSize);
+  nsresult WriteReverse(const char16_t *aSrc, int32_t aSrcLength, char16_t *aDest, uint16_t aOptions, int32_t *aDestSize);
 
 protected:
   friend class nsBidiPresUtils;
@@ -862,7 +862,7 @@ private:
 
   void Free();
 
-  void GetDirProps(const PRUnichar *aText);
+  void GetDirProps(const char16_t *aText);
 
   nsBidiDirection ResolveExplicitLevels();
 
@@ -884,8 +884,8 @@ private:
 
   static bool PrepareReorder(const nsBidiLevel *aLevels, int32_t aLength, int32_t *aIndexMap, nsBidiLevel *aMinLevel, nsBidiLevel *aMaxLevel);
 
-  int32_t doWriteReverse(const PRUnichar *src, int32_t srcLength,
-                         PRUnichar *dest, uint16_t options);
+  int32_t doWriteReverse(const char16_t *src, int32_t srcLength,
+                         char16_t *dest, uint16_t options);
 
 };
 

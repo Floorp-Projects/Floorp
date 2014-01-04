@@ -113,7 +113,7 @@ UseUniscribe(gfxShapedText *aShapedText,
 
 bool
 gfxGDIFont::ShapeText(gfxContext      *aContext,
-                      const PRUnichar *aText,
+                      const char16_t *aText,
                       uint32_t         aOffset,
                       uint32_t         aLength,
                       int32_t          aScript,
@@ -363,7 +363,7 @@ gfxGDIFont::Initialize()
 
             const MAT2 kIdentityMatrix = { {0, 1}, {0, 0}, {0, 0}, {0, 1} };
             GLYPHMETRICS gm;
-            DWORD len = GetGlyphOutlineW(dc.GetDC(), PRUnichar('x'), GGO_METRICS, &gm, 0, nullptr, &kIdentityMatrix);
+            DWORD len = GetGlyphOutlineW(dc.GetDC(), char16_t('x'), GGO_METRICS, &gm, 0, nullptr, &kIdentityMatrix);
             if (len == GDI_ERROR || gm.gmptGlyphOrigin.y <= 0) {
                 // 56% of ascent, best guess for true type
                 mMetrics->xHeight =
