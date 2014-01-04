@@ -104,6 +104,8 @@ AudioContext::~AudioContext()
   if (window) {
     window->RemoveAudioContext(this);
   }
+
+  UnregisterWeakMemoryReporter(this);
 }
 
 JSObject*
@@ -127,6 +129,9 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<AudioContext> object = new AudioContext(window, false);
+
+  RegisterWeakMemoryReporter(object);
+
   return object.forget();
 }
 
@@ -158,6 +163,9 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
                                                    aNumberOfChannels,
                                                    aLength,
                                                    aSampleRate);
+
+  RegisterWeakMemoryReporter(object);
+
   return object.forget();
 }
 
@@ -636,6 +644,36 @@ void
 AudioContext::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
 {
   mDestination->SetMozAudioChannelType(aValue, aRv);
+}
+
+size_t
+AudioContext::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  // AudioNodes are tracked separately because we do not want the AudioContext
+  // to track all of the AudioNodes it creates, so we wouldn't be able to
+  // traverse them from here.
+
+  size_t amount = aMallocSizeOf(this);
+  if (mListener) {
+    amount += mListener->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  amount += mDecoder.SizeOfExcludingThis(aMallocSizeOf);
+  amount += mDecodeJobs.SizeOfExcludingThis(aMallocSizeOf);
+  for (uint32_t i = 0; i < mDecodeJobs.Length(); ++i) {
+    amount += mDecodeJobs[i]->SizeOfExcludingThis(aMallocSizeOf);
+  }
+  amount += mActiveNodes.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  amount += mPannerNodes.SizeOfExcludingThis(nullptr, aMallocSizeOf);
+  return amount;
+}
+
+NS_IMETHODIMP
+AudioContext::CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData)
+{
+  int64_t amount = SizeOfIncludingThis(MallocSizeOf);
+  return MOZ_COLLECT_REPORT("explicit/webaudio/audiocontext", KIND_HEAP, UNITS_BYTES,
+                            amount, "Memory used by AudioContext objects (Web Audio).");
 }
 
 }

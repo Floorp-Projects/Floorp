@@ -632,5 +632,26 @@ WebAudioDecodeJob::OnFailure(ErrorCode aErrorCode)
   mContext->RemoveFromDecodeQueue(this);
 }
 
+size_t
+WebAudioDecodeJob::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = 0;
+  amount += mContentType.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+  if (mSuccessCallback) {
+    amount += mSuccessCallback->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mFailureCallback) {
+    amount += mFailureCallback->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  if (mOutput) {
+    amount += mOutput->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  amount += mChannelBuffers.SizeOfExcludingThis(aMallocSizeOf);
+  for (uint32_t i = 0; i < mChannelBuffers.Length(); ++i) {
+    amount += mChannelBuffers[i].SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return amount;
+}
+
 }
 
