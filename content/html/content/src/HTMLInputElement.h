@@ -1191,7 +1191,7 @@ protected:
     /**
      * The current value of the input if it has been changed from the default
      */
-    PRUnichar*               mValue;
+    char16_t*               mValue;
     /**
      * The state of the text editor associated with the text/password input
      */

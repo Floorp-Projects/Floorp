@@ -71,7 +71,7 @@ public:
    * is what Uniscribe assumes.)
    */
   static bool
-  IsSpaceCombiningSequenceTail(const PRUnichar* aChars, int32_t aLength) {
+  IsSpaceCombiningSequenceTail(const char16_t* aChars, int32_t aLength) {
     return aLength > 0 && aChars[0] == 0x200D; // ZWJ
   }
 
@@ -96,8 +96,8 @@ public:
    * or an Arabic character preceding this text. We set it to indicate if
    * there's an Arabic character or whitespace preceding the end of this text.
    */
-  static PRUnichar* TransformText(const PRUnichar* aText, uint32_t aLength,
-                                  PRUnichar* aOutput,
+  static char16_t* TransformText(const char16_t* aText, uint32_t aLength,
+                                  char16_t* aOutput,
                                   CompressionMode aCompression,
                                   uint8_t * aIncomingFlags,
                                   gfxSkipCharsBuilder* aSkipChars,

@@ -39,7 +39,7 @@ Spinner::HandleResult(mozIStorageResultSet *aResultSet)
   do_check_eq(row->AsSharedUTF8String(0, &len), (const char*)nullptr);
   do_check_eq(len, 0);
   len = 100;
-  do_check_eq(row->AsSharedWString(0, &len), (const PRUnichar*)nullptr);
+  do_check_eq(row->AsSharedWString(0, &len), (const char16_t*)nullptr);
   do_check_eq(len, 0);
   len = 100;
   do_check_eq(row->AsSharedBlob(0, &len), (const uint8_t*)nullptr);
@@ -72,7 +72,7 @@ test_NULLFallback()
   do_check_eq(stmt->AsSharedUTF8String(0, &len), (const char*)nullptr);
   do_check_eq(len, 0);
   len = 100;
-  do_check_eq(stmt->AsSharedWString(0, &len), (const PRUnichar*)nullptr);
+  do_check_eq(stmt->AsSharedWString(0, &len), (const char16_t*)nullptr);
   do_check_eq(len, 0);
   len = 100;
   do_check_eq(stmt->AsSharedBlob(0, &len), (const uint8_t*)nullptr);
@@ -86,7 +86,7 @@ test_NULLFallback()
   do_check_eq(valueArray->AsSharedUTF8String(0, &len), (const char*)nullptr);
   do_check_eq(len, 0);
   len = 100;
-  do_check_eq(valueArray->AsSharedWString(0, &len), (const PRUnichar*)nullptr);
+  do_check_eq(valueArray->AsSharedWString(0, &len), (const char16_t*)nullptr);
   do_check_eq(len, 0);
   len = 100;
   do_check_eq(valueArray->AsSharedBlob(0, &len), (const uint8_t*)nullptr);

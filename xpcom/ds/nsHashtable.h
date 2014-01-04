@@ -341,7 +341,7 @@ class nsStringKey : public nsHashKey {
     };
 
     nsStringKey(const nsStringKey& aKey);
-    nsStringKey(const PRUnichar* str, int32_t strLen = -1, Ownership own = OWN_CLONE);
+    nsStringKey(const char16_t* str, int32_t strLen = -1, Ownership own = OWN_CLONE);
     nsStringKey(const nsAFlatString& str);
     nsStringKey(const nsAString& str);
     ~nsStringKey(void);
@@ -354,11 +354,11 @@ class nsStringKey : public nsHashKey {
 
     // For when the owner of the hashtable wants to peek at the actual
     // string in the key. No copy is made, so be careful.
-    const PRUnichar* GetString() const { return mStr; }
+    const char16_t* GetString() const { return mStr; }
     uint32_t GetStringLength() const { return mStrLen; }
 
   protected:
-    PRUnichar*  mStr;
+    char16_t*  mStr;
     uint32_t    mStrLen;
     Ownership   mOwnership;
 };

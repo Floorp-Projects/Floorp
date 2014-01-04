@@ -165,7 +165,7 @@ nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHa
 
     for (int i = 0; i < actions.size(); ++i) {
       nsContentHandlerApp* app =
-        new nsContentHandlerApp(nsString((PRUnichar*)actions[i].name().data()), 
+        new nsContentHandlerApp(nsString((char16_t*)actions[i].name().data()), 
                                 mSchemeOrType, actions[i]);
       mPossibleApplications->AppendElement(app, false);
     }

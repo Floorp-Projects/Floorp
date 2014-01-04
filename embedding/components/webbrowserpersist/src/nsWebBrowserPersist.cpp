@@ -990,7 +990,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
     nsIRequest *request, nsISupports *ctxt, nsresult status,
-    const PRUnichar *statusArg)
+    const char16_t *statusArg)
 {
     if (mProgressListener)
     {
@@ -1107,7 +1107,7 @@ nsresult nsWebBrowserPersist::SendErrorStatusChange(
     NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && bundle, NS_ERROR_FAILURE);
     
     nsXPIDLString msgText;
-    const PRUnichar *strings[1];
+    const char16_t *strings[1];
     strings[0] = path.get();
     rv = bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText));
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
@@ -1389,7 +1389,7 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
 }
 
 nsresult
-nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, PRUnichar **aExt)
+nsWebBrowserPersist::GetExtensionForContentType(const char16_t *aContentType, char16_t **aExt)
 {
     NS_ENSURE_ARG_POINTER(aContentType);
     NS_ENSURE_ARG_POINTER(aExt);
@@ -1419,7 +1419,7 @@ nsWebBrowserPersist::GetExtensionForContentType(const PRUnichar *aContentType, P
 }
 
 nsresult
-nsWebBrowserPersist::GetDocumentExtension(nsIDOMDocument *aDocument, PRUnichar **aExt)
+nsWebBrowserPersist::GetDocumentExtension(nsIDOMDocument *aDocument, char16_t **aExt)
 {
     NS_ENSURE_ARG_POINTER(aDocument);
     NS_ENSURE_ARG_POINTER(aExt);
@@ -1431,7 +1431,7 @@ nsWebBrowserPersist::GetDocumentExtension(nsIDOMDocument *aDocument, PRUnichar *
 }
 
 nsresult
-nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const PRUnichar *aContentType, PRUnichar **aRealContentType)
+nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const char16_t *aContentType, char16_t **aRealContentType)
 {
     NS_ENSURE_ARG_POINTER(aDocument);
     NS_ENSURE_ARG_POINTER(aRealContentType);
@@ -2129,7 +2129,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
                 if (nsCRT::IsAsciiAlpha(*p) || nsCRT::IsAsciiDigit(*p)
                     || *p == '.' || *p == '-' ||  *p == '_' || (*p == ' '))
                 {
-                    fileName.Append(PRUnichar(*p));
+                    fileName.Append(char16_t(*p));
                     if (++nameLength == kDefaultMaxFilenameLength)
                     {
                         // Note:
@@ -2152,7 +2152,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
     // the problem, all filenames are made at least one character long.
     if (fileName.IsEmpty())
     {
-        fileName.Append(PRUnichar('a')); // 'a' is for arbitrary
+        fileName.Append(char16_t('a')); // 'a' is for arbitrary
     }
  
 end:
@@ -2818,9 +2818,9 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
         nsAutoString linkRel;
         if (NS_SUCCEEDED(nodeAsLink->GetRel(linkRel)) && !linkRel.IsEmpty())
         {
-            nsReadingIterator<PRUnichar> start;
-            nsReadingIterator<PRUnichar> end;
-            nsReadingIterator<PRUnichar> current;
+            nsReadingIterator<char16_t> start;
+            nsReadingIterator<char16_t> end;
+            nsReadingIterator<char16_t> current;
 
             linkRel.BeginReading(start);
             linkRel.EndReading(end);
@@ -2833,7 +2833,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
                     continue;
 
                 // Grab the next space delimited word
-                nsReadingIterator<PRUnichar> startWord = current;
+                nsReadingIterator<char16_t> startWord = current;
                 do {
                     ++current;
                 } while (current != end && !nsCRT::IsAsciiSpace(*current));
@@ -3583,7 +3583,7 @@ nsWebBrowserPersist::StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet)
 }
 
 bool
-nsWebBrowserPersist::DocumentEncoderExists(const PRUnichar *aContentType)
+nsWebBrowserPersist::DocumentEncoderExists(const char16_t *aContentType)
 {
     // Check if there is an encoder for the desired content type.
     nsAutoCString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
@@ -3636,12 +3636,12 @@ nsWebBrowserPersist::SaveSubframeContent(
         {
             extension.AssignLiteral("htm");
         }
-        aData->mSubFrameExt.Assign(PRUnichar('.'));
+        aData->mSubFrameExt.Assign(char16_t('.'));
         AppendUTF8toUTF16(extension, aData->mSubFrameExt);
     }
     else
     {
-        aData->mSubFrameExt.Assign(PRUnichar('.'));
+        aData->mSubFrameExt.Assign(char16_t('.'));
         aData->mSubFrameExt.Append(ext);
     }
 

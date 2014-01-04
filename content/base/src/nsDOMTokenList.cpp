@@ -235,7 +235,7 @@ nsDOMTokenList::RemoveInternal(const nsAttrValue* aAttr,
       if (lastTokenRemoved && !output.IsEmpty()) {
         NS_ABORT_IF_FALSE(!nsContentUtils::IsHTMLWhitespace(
           output.Last()), "Invalid last output token");
-        output.Append(PRUnichar(' '));
+        output.Append(char16_t(' '));
       }
       lastTokenRemoved = false;
       output.Append(Substring(copyStart, iter));

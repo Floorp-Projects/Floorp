@@ -36,7 +36,7 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
                                nsACString& aLocale) MOZ_OVERRIDE;
   NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
-                     const PRUnichar *someData) MOZ_OVERRIDE;
+                     const char16_t *someData) MOZ_OVERRIDE;
 
 #ifdef MOZ_XUL
   NS_IMETHOD GetXULOverlays(nsIURI *aURI,

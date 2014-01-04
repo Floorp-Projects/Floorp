@@ -490,7 +490,7 @@ BluetoothHfpManager::Get()
 NS_IMETHODIMP
 BluetoothHfpManager::Observe(nsISupports* aSubject,
                              const char* aTopic,
-                             const PRUnichar* aData)
+                             const char16_t* aData)
 {
   if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
     HandleVolumeChanged(nsDependentString(aData));

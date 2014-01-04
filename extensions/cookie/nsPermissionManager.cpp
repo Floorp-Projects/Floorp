@@ -182,7 +182,7 @@ public:
 
   // nsIObserver implementation.
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
+  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data)
   {
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-clear-data"));
 
@@ -1278,7 +1278,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
   return NS_NewArrayEnumerator(aEnum, array);
 }
 
-NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
   ENSURE_NOT_CHILD_PROCESS;
 
@@ -1499,7 +1499,7 @@ nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
                                                    uint32_t          aPermission,
                                                    uint32_t          aExpireType,
                                                    int64_t           aExpireTime,
-                                                   const PRUnichar  *aData)
+                                                   const char16_t  *aData)
 {
   nsCOMPtr<nsIPermission> permission =
     new nsPermission(aHost, aAppId, aIsInBrowserElement, aType, aPermission,
@@ -1516,7 +1516,7 @@ nsPermissionManager::NotifyObserversWithPermission(const nsACString &aHost,
 // "cleared" means the entire permission list was cleared. aPermission is null.
 void
 nsPermissionManager::NotifyObservers(nsIPermission   *aPermission,
-                                     const PRUnichar *aData)
+                                     const char16_t *aData)
 {
   if (mObserverService)
     mObserverService->NotifyObservers(aPermission,

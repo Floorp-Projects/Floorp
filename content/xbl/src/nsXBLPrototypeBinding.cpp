@@ -360,8 +360,8 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
         // children of the real element and get the text nodes' values.
         if (aAttribute == nsGkAtoms::text && aNameSpaceID == kNameSpaceID_XBL) {
           nsContentUtils::GetNodeTextContent(aChangedElement, false, value);
-          value.StripChar(PRUnichar('\n'));
-          value.StripChar(PRUnichar('\r'));
+          value.StripChar(char16_t('\n'));
+          value.StripChar(char16_t('\r'));
           nsAutoString stripVal(value);
           stripVal.StripWhitespace();
           if (stripVal.IsEmpty()) 
@@ -513,8 +513,8 @@ bool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   if (src == nsGkAtoms::text && srcNs == kNameSpaceID_XBL) {
     nsContentUtils::GetNodeTextContent(changeData->mBoundElement, false,
                                        value);
-    value.StripChar(PRUnichar('\n'));
-    value.StripChar(PRUnichar('\r'));
+    value.StripChar(char16_t('\n'));
+    value.StripChar(char16_t('\r'));
     nsAutoString stripVal(value);
     stripVal.StripWhitespace();
 
@@ -1685,7 +1685,7 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
       nsCOMPtr<nsIAtom> tagName = do_GetAtom(display);
       // Check the white list
       if (!CheckTagNameWhiteList(nameSpaceID, tagName)) {
-        const PRUnichar* params[] = { display.get() };
+        const char16_t* params[] = { display.get() };
         nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                         NS_LITERAL_CSTRING("XBL"), nullptr,
                                         nsContentUtils::eXBL_PROPERTIES,

@@ -18,7 +18,7 @@ class nsIObjectOutputStream;
 
 struct nsXBLTextWithLineNumber
 {
-  PRUnichar* mText;
+  char16_t* mText;
   uint32_t mLineNumber;
 
   nsXBLTextWithLineNumber() :
@@ -37,7 +37,7 @@ struct nsXBLTextWithLineNumber
 
   void AppendText(const nsAString& aText) {
     if (mText) {
-      PRUnichar* temp = mText;
+      char16_t* temp = mText;
       mText = ToNewUnicode(nsDependentString(temp) + aText);
       nsMemory::Free(temp);
     } else {
@@ -45,7 +45,7 @@ struct nsXBLTextWithLineNumber
     }
   }
 
-  PRUnichar* GetText() {
+  char16_t* GetText() {
     return mText;
   }
 
@@ -61,7 +61,7 @@ struct nsXBLTextWithLineNumber
 class nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplMember(const PRUnichar* aName)
+  nsXBLProtoImplMember(const char16_t* aName)
     : mNext(nullptr)
     , mExposeToUntrustedContent(false)
   {
@@ -76,7 +76,7 @@ public:
   void SetNext(nsXBLProtoImplMember* aNext) { mNext = aNext; }
   bool ShouldExposeToUntrustedContent() { return mExposeToUntrustedContent; }
   void SetExposeToUntrustedContent(bool aExpose) { mExposeToUntrustedContent = aExpose; }
-  const PRUnichar* GetName() { return mName; }
+  const char16_t* GetName() { return mName; }
 
   virtual nsresult InstallMember(JSContext* aCx,
                                  JS::Handle<JSObject*> aTargetClassObject) = 0;
@@ -92,7 +92,7 @@ public:
 
 protected:
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
-  PRUnichar* mName;               // The name of the field, method, or property.
+  char16_t* mName;               // The name of the field, method, or property.
 
   bool mExposeToUntrustedContent; // If this binding is installed on an element
                                   // in an untrusted scope, should this

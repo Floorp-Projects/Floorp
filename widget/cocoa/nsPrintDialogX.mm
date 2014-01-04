@@ -49,7 +49,7 @@ nsPrintDialogServiceX::Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
     return NS_ERROR_FAILURE;
 
   // Set the print job title
-  PRUnichar** docTitles;
+  char16_t** docTitles;
   uint32_t titleCount;
   nsresult rv = aWebBrowserPrint->EnumerateDocumentNames(&titleCount, &docTitles);
   if (NS_SUCCEEDED(rv) && titleCount > 0) {
@@ -169,7 +169,7 @@ nsPrintDialogServiceX::ShowPageSetup(nsIDOMWindow *aParent,
 - (NSButton*)checkboxWithLabel:(const char*)aLabel andFrame:(NSRect)aRect;
 
 - (NSPopUpButton*)headerFooterItemListWithFrame:(NSRect)aRect
-                                   selectedItem:(const PRUnichar*)aCurrentString;
+                                   selectedItem:(const char16_t*)aCurrentString;
 
 - (void)addOptionsSection;
 
@@ -298,7 +298,7 @@ static const char sHeaderFooterTags[][4] =  {"", "&T", "&U", "&D", "&P", "&PT"};
 }
 
 - (NSPopUpButton*)headerFooterItemListWithFrame:(NSRect)aRect
-                                   selectedItem:(const PRUnichar*)aCurrentString
+                                   selectedItem:(const char16_t*)aCurrentString
 {
   NSPopUpButton* list = [[[NSPopUpButton alloc] initWithFrame:aRect pullsDown:NO] autorelease];
   [list setFont:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]];

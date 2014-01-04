@@ -22,7 +22,7 @@ public:
    * Converts data using a lookup table and optional shift table
    */
   static nsresult ConvertByTable(const char * aSrc, int32_t * aSrcLength, 
-                                 PRUnichar * aDest, int32_t * aDestLength,
+                                 char16_t * aDest, int32_t * aDestLength,
                                  uScanClassID aScanClass,
                                  uShiftInTable * aShiftInTable,
                                  uMappingTable  * aMappingTable,
@@ -32,7 +32,7 @@ public:
    * Converts data using a set of lookup tables.
    */
   static nsresult ConvertByMultiTable(const char * aSrc, int32_t * aSrcLength,
-      PRUnichar * aDest, int32_t * aDestLength, int32_t aTableCount, 
+      char16_t * aDest, int32_t * aDestLength, int32_t aTableCount, 
       const uRange * aRangeArray, uScanClassID * aScanClassArray,
       uMappingTable ** aMappingTable, bool aErrorSignal = false);
 
@@ -40,14 +40,14 @@ public:
    * Converts data using a fast lookup table.
    */
   static nsresult ConvertByFastTable(const char * aSrc, int32_t * aSrcLength, 
-      PRUnichar * aDest, int32_t * aDestLength, const PRUnichar * aFastTable, 
+      char16_t * aDest, int32_t * aDestLength, const char16_t * aFastTable, 
       int32_t aTableSize, bool aErrorSignal);
 
   /**
    * Create a cache-like fast lookup table from a normal one.
    */
   static nsresult CreateFastTable(uMappingTable * aMappingTable,
-      PRUnichar * aFastTable,  int32_t aTableSize);
+      char16_t * aFastTable,  int32_t aTableSize);
 };
 
 #endif // nsUnicodeDecodeHelper_h__

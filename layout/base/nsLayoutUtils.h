@@ -837,7 +837,7 @@ public:
    */
   static bool
   BinarySearchForPosition(nsRenderingContext* acx,
-                          const PRUnichar* aText,
+                          const char16_t* aText,
                           int32_t    aBaseWidth,
                           int32_t    aBaseInx,
                           int32_t    aStartInx,
@@ -1170,14 +1170,14 @@ public:
 
   static void DrawString(const nsIFrame*       aFrame,
                          nsRenderingContext*   aContext,
-                         const PRUnichar*      aString,
+                         const char16_t*      aString,
                          int32_t               aLength,
                          nsPoint               aPoint,
                          nsStyleContext*       aStyleContext = nullptr);
 
   static nscoord GetStringWidth(const nsIFrame*      aFrame,
                                 nsRenderingContext* aContext,
-                                const PRUnichar*     aString,
+                                const char16_t*     aString,
                                 int32_t              aLength);
 
   /**

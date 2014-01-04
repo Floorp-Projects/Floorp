@@ -196,18 +196,18 @@ nsPrintSettingsQt::SetOrientation(int32_t aOrientation)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsQt::GetToFileName(PRUnichar** aToFileName)
+nsPrintSettingsQt::GetToFileName(char16_t** aToFileName)
 {
     NS_ENSURE_ARG_POINTER(aToFileName);
     QString filename;
     filename = mQPrinter->outputFileName();
     *aToFileName = ToNewUnicode(
-            nsDependentString((PRUnichar*)filename.data()));
+            nsDependentString((char16_t*)filename.data()));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsQt::SetToFileName(const PRUnichar* aToFileName)
+nsPrintSettingsQt::SetToFileName(const char16_t* aToFileName)
 {
     nsCOMPtr<nsIFile> file;
     nsresult rv = NS_NewLocalFile(nsDependentString(aToFileName), true,
@@ -221,16 +221,16 @@ nsPrintSettingsQt::SetToFileName(const PRUnichar* aToFileName)
 }
 
 NS_IMETHODIMP
-nsPrintSettingsQt::GetPrinterName(PRUnichar** aPrinter)
+nsPrintSettingsQt::GetPrinterName(char16_t** aPrinter)
 {
     NS_ENSURE_ARG_POINTER(aPrinter);
     *aPrinter = ToNewUnicode(nsDependentString(
-                (const PRUnichar*)mQPrinter->printerName().constData()));
+                (const char16_t*)mQPrinter->printerName().constData()));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsQt::SetPrinterName(const PRUnichar* aPrinter)
+nsPrintSettingsQt::SetPrinterName(const char16_t* aPrinter)
 {
     QString printername((const QChar*)aPrinter, NS_strlen(aPrinter));
     mQPrinter->setPrinterName(printername);
@@ -289,7 +289,7 @@ static const QPrinter::PageSize indexToQtPaperEnum[] =
 };
 
 NS_IMETHODIMP
-nsPrintSettingsQt::GetPaperName(PRUnichar** aPaperName)
+nsPrintSettingsQt::GetPaperName(char16_t** aPaperName)
 {
     PR_STATIC_ASSERT(sizeof(indexToPaperName)/
         sizeof(char*) == QPrinter::NPageSize);
@@ -299,12 +299,12 @@ nsPrintSettingsQt::GetPaperName(PRUnichar** aPaperName)
     QPrinter::PaperSize size = mQPrinter->paperSize();
     QString name(indexToPaperName[size]);
     *aPaperName = ToNewUnicode(nsDependentString
-        ((const PRUnichar*)name.constData()));
+        ((const char16_t*)name.constData()));
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrintSettingsQt::SetPaperName(const PRUnichar* aPaperName)
+nsPrintSettingsQt::SetPaperName(const char16_t* aPaperName)
 {
     QString ref((QChar*)aPaperName, NS_strlen(aPaperName));
     for (uint32_t i = 0; i < QPrinter::NPageSize; i++)

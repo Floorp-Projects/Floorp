@@ -132,7 +132,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
               buffer.SetLength(bundleNameLength);
               ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
                                       buffer.Elements());
-              _retval.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), bundleNameLength);
+              _retval.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), bundleNameLength);
               rv = NS_OK;
             }
 
@@ -156,7 +156,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath, nsIFile ** aFile)
+nsresult nsOSHelperAppService::GetFileTokenForPath(const char16_t * aPlatformAppPath, nsIFile ** aFile)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -481,7 +481,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       ::CFStringGetCharacters(cfAppName, CFRangeMake(0, appNameLength),
                               buffer.Elements());
       nsAutoString appName;
-      appName.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), appNameLength);
+      appName.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), appNameLength);
       mimeInfoMac->SetDefaultDescription(appName);
       ::CFRelease(cfAppName);
     }
@@ -516,7 +516,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
         ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),
                                 buffer.Elements());
         nsAutoString typeDesc;
-        typeDesc.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), typeDescLength);
+        typeDesc.Assign(reinterpret_cast<char16_t*>(buffer.Elements()), typeDescLength);
         mimeInfoMac->SetDescription(typeDesc);
       }
       if (cfTypeDesc) {

@@ -271,7 +271,7 @@ ErrorReporter::ReportUnexpected(const char *aMessage,
 
   nsAutoString qparam;
   nsStyleUtil::AppendEscapedCSSIdent(aParam, qparam);
-  const PRUnichar *params[1] = { qparam.get() };
+  const char16_t *params[1] = { qparam.get() };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
@@ -288,7 +288,7 @@ ErrorReporter::ReportUnexpected(const char *aMessage,
 
   nsAutoString tokenString;
   aToken.AppendToString(tokenString);
-  const PRUnichar *params[1] = { tokenString.get() };
+  const char16_t *params[1] = { tokenString.get() };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
@@ -300,14 +300,14 @@ ErrorReporter::ReportUnexpected(const char *aMessage,
 void
 ErrorReporter::ReportUnexpected(const char *aMessage,
                                 const nsCSSToken &aToken,
-                                PRUnichar aChar)
+                                char16_t aChar)
 {
   if (!ShouldReportErrors()) return;
 
   nsAutoString tokenString;
   aToken.AppendToString(tokenString);
-  const PRUnichar charStr[2] = { aChar, 0 };
-  const PRUnichar *params[2] = { tokenString.get(), charStr };
+  const char16_t charStr[2] = { aChar, 0 };
+  const char16_t *params[2] = { tokenString.get(), charStr };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
@@ -324,7 +324,7 @@ ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
   nsAutoString innerStr;
   sStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
                                    getter_Copies(innerStr));
-  const PRUnichar *params[1] = { innerStr.get() };
+  const char16_t *params[1] = { innerStr.get() };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(MOZ_UTF16("PEUnexpEOF2"),
@@ -334,14 +334,14 @@ ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
 }
 
 void
-ErrorReporter::ReportUnexpectedEOF(PRUnichar aExpected)
+ErrorReporter::ReportUnexpectedEOF(char16_t aExpected)
 {
   if (!ShouldReportErrors()) return;
 
-  const PRUnichar expectedStr[] = {
-    PRUnichar('\''), aExpected, PRUnichar('\''), PRUnichar(0)
+  const char16_t expectedStr[] = {
+    char16_t('\''), aExpected, char16_t('\''), char16_t(0)
   };
-  const PRUnichar *params[1] = { expectedStr };
+  const char16_t *params[1] = { expectedStr };
 
   nsAutoString str;
   sStringBundle->FormatStringFromName(MOZ_UTF16("PEUnexpEOF2"),

@@ -71,18 +71,18 @@ const int32_t nsXBLPrototypeHandler::cOSMask = (1<<9);
 const int32_t nsXBLPrototypeHandler::cAllModifiers =
   cShiftMask | cAltMask | cControlMask | cMetaMask | cOSMask;
 
-nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent,
-                                             const PRUnichar* aPhase,
-                                             const PRUnichar* aAction,
-                                             const PRUnichar* aCommand,
-                                             const PRUnichar* aKeyCode,
-                                             const PRUnichar* aCharCode,
-                                             const PRUnichar* aModifiers,
-                                             const PRUnichar* aButton,
-                                             const PRUnichar* aClickCount,
-                                             const PRUnichar* aGroup,
-                                             const PRUnichar* aPreventDefault,
-                                             const PRUnichar* aAllowUntrusted,
+nsXBLPrototypeHandler::nsXBLPrototypeHandler(const char16_t* aEvent,
+                                             const char16_t* aPhase,
+                                             const char16_t* aAction,
+                                             const char16_t* aCommand,
+                                             const char16_t* aKeyCode,
+                                             const char16_t* aCharCode,
+                                             const char16_t* aModifiers,
+                                             const char16_t* aButton,
+                                             const char16_t* aClickCount,
+                                             const char16_t* aGroup,
+                                             const char16_t* aPreventDefault,
+                                             const char16_t* aAllowUntrusted,
                                              nsXBLPrototypeBinding* aBinding,
                                              uint32_t aLineNumber)
   : mHandlerText(nullptr),
@@ -147,7 +147,7 @@ nsXBLPrototypeHandler::AppendHandlerText(const nsAString& aText)
 {
   if (mHandlerText) {
     // Append our text to the existing text.
-    PRUnichar* temp = mHandlerText;
+    char16_t* temp = mHandlerText;
     mHandlerText = ToNewUnicode(nsDependentString(temp) + aText);
     nsMemory::Free(temp);
   }
@@ -626,7 +626,7 @@ nsXBLPrototypeHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent,
       else
         aKeyEvent->GetCharCode(&code);
       if (IS_IN_BMP(code))
-        code = ToLowerCase(PRUnichar(code));
+        code = ToLowerCase(char16_t(code));
     }
     else
       aKeyEvent->GetKeyCode(&code);
@@ -728,18 +728,18 @@ nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 
 void
 nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement, 
-                                          const PRUnichar* aEvent,
-                                          const PRUnichar* aPhase,
-                                          const PRUnichar* aAction,
-                                          const PRUnichar* aCommand,
-                                          const PRUnichar* aKeyCode,
-                                          const PRUnichar* aCharCode,
-                                          const PRUnichar* aModifiers,
-                                          const PRUnichar* aButton,
-                                          const PRUnichar* aClickCount,
-                                          const PRUnichar* aGroup,
-                                          const PRUnichar* aPreventDefault,
-                                          const PRUnichar* aAllowUntrusted)
+                                          const char16_t* aEvent,
+                                          const char16_t* aPhase,
+                                          const char16_t* aAction,
+                                          const char16_t* aCommand,
+                                          const char16_t* aKeyCode,
+                                          const char16_t* aCharCode,
+                                          const char16_t* aModifiers,
+                                          const char16_t* aButton,
+                                          const char16_t* aClickCount,
+                                          const char16_t* aGroup,
+                                          const char16_t* aPreventDefault,
+                                          const char16_t* aAllowUntrusted)
 {
   mType = 0;
 
@@ -845,12 +845,12 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     mDetail = key[0];
     const uint8_t GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
     if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
-        modifiers.First() != PRUnichar(',') &&
+        modifiers.First() != char16_t(',') &&
         (mDetail == 'u' || mDetail == 'U'))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict");
     const uint8_t WinModifiers = cControl | cAlt | cControlMask | cAltMask;
     if ((mKeyMask & WinModifiers) == WinModifiers &&
-        modifiers.First() != PRUnichar(',') &&
+        modifiers.First() != char16_t(',') &&
         (('A' <= mDetail && mDetail <= 'Z') ||
          ('a' <= mDetail && mDetail <= 'z')))
       ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict");
@@ -885,7 +885,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 }
 
 void
-nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aKeyElement, const char *aMessageName)
+nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, nsIContent* aKeyElement, const char *aMessageName)
 {
   nsCOMPtr<nsIDocument> doc;
   if (mPrototypeBinding) {
@@ -897,7 +897,7 @@ nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar*
     doc = aKeyElement->OwnerDoc();
   }
 
-  const PRUnichar* params[] = { aKey, aModifiers };
+  const char16_t* params[] = { aKey, aModifiers };
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("XBL Prototype Handler"), doc,
                                   nsContentUtils::eXBL_PROPERTIES,

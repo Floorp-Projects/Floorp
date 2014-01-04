@@ -16,7 +16,7 @@
 #include "nsError.h"                    // for nsresult
 #include "nsISupports.h"                // for NS_INLINE_DECL_REFCOUNTING
 #include "nsMathUtils.h"                // for NS_round
-#include "nscore.h"                     // for PRUnichar, nsAString
+#include "nscore.h"                     // for char16_t, nsAString
 #include "mozilla/AppUnits.h"           // for AppUnits
 
 class gfxASurface;
@@ -189,7 +189,7 @@ public:
      * @return error status
      */
     nsresult BeginDocument(const nsAString& aTitle,
-                           PRUnichar*       aPrintToFileName,
+                           char16_t*       aPrintToFileName,
                            int32_t          aStartPage,
                            int32_t          aEndPage);
 

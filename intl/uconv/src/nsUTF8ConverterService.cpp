@@ -40,7 +40,7 @@ ToUTF8(const nsACString &aString, const char *aCharset,
   rv = unicodeDecoder->GetMaxLength(inStr.get(), srcLen, &dstLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoArrayPtr<PRUnichar> ustr(new PRUnichar[dstLen]);
+  nsAutoArrayPtr<char16_t> ustr(new char16_t[dstLen]);
   NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
 
   rv = unicodeDecoder->Convert(inStr.get(), &srcLen, ustr, &dstLen);

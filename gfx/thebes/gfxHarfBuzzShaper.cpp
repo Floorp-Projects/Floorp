@@ -646,7 +646,7 @@ HBGetEastAsianWidth(hb_unicode_funcs_t *ufuncs, hb_codepoint_t aCh,
 
 // Hebrew presentation forms with dagesh, for characters 0x05D0..0x05EA;
 // note that some letters do not have a dagesh presForm encoded
-static const PRUnichar sDageshForms[0x05EA - 0x05D0 + 1] = {
+static const char16_t sDageshForms[0x05EA - 0x05D0 + 1] = {
     0xFB30, // ALEF
     0xFB31, // BET
     0xFB32, // GIMEL
@@ -799,7 +799,7 @@ static hb_unicode_funcs_t * sHBUnicodeFuncs = nullptr;
 
 bool
 gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
-                             const PRUnichar *aText,
+                             const char16_t *aText,
                              uint32_t         aOffset,
                              uint32_t         aLength,
                              int32_t          aScript,
@@ -990,7 +990,7 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext      *aContext,
                                     gfxShapedText   *aShapedText,
                                     uint32_t         aOffset,
                                     uint32_t         aLength,
-                                    const PRUnichar *aText,
+                                    const char16_t *aText,
                                     hb_buffer_t     *aBuffer)
 {
     uint32_t numGlyphs;

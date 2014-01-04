@@ -320,7 +320,7 @@ nsXPLookAndFeel::ColorPrefChanged (unsigned int index, const char *prefName)
   }
   if (!colorStr.IsEmpty()) {
     nscolor thecolor;
-    if (colorStr[0] == PRUnichar('#')) {
+    if (colorStr[0] == char16_t('#')) {
       if (NS_HexToRGB(nsDependentString(colorStr, 1), &thecolor)) {
         int32_t id = NS_PTR_TO_INT32(index);
         CACHE_COLOR(id, thecolor);
@@ -372,7 +372,7 @@ nsXPLookAndFeel::InitColorFromPref(int32_t i)
     return;
   }
   nscolor thecolor;
-  if (colorStr[0] == PRUnichar('#')) {
+  if (colorStr[0] == char16_t('#')) {
     nsAutoString hexString;
     colorStr.Right(hexString, colorStr.Length() - 1);
     if (NS_HexToRGB(hexString, &thecolor)) {
@@ -733,7 +733,7 @@ LookAndFeel::GetFont(FontID aID, nsString& aName, gfxFontStyle& aStyle,
 }
 
 // static
-PRUnichar
+char16_t
 LookAndFeel::GetPasswordCharacter()
 {
   return nsLookAndFeel::GetInstance()->GetPasswordCharacterImpl();

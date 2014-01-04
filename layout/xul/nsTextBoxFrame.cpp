@@ -582,7 +582,7 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
          // Calculate all fields of mAccessKeyInfo which
          // are the same for both BiDi and non-BiDi frames.
-         const PRUnichar *titleString = mCroppedTitle.get();
+         const char16_t *titleString = mCroppedTitle.get();
          aRenderingContext.SetTextRunRTL(false);
          mAccessKeyInfo->mAccessWidth =
              aRenderingContext.GetWidth(titleString[mAccessKeyInfo->
@@ -657,7 +657,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int length = mTitle.Length();
             int i;
             for (i = 0; i < length; ++i) {
-                PRUnichar ch = mTitle.CharAt(i);
+                char16_t ch = mTitle.CharAt(i);
                 // still in LTR mode
                 cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
@@ -688,7 +688,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int length = mTitle.Length();
             int i;
             for (i=length-1; i >= 0; --i) {
-                PRUnichar ch = mTitle.CharAt(i);
+                char16_t ch = mTitle.CharAt(i);
                 cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
                     break;
@@ -724,7 +724,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             // determine how much of the string will fit in the max width
             nscoord charWidth = 0;
             nscoord totalWidth = 0;
-            PRUnichar ch;
+            char16_t ch;
             int leftPos, rightPos;
             nsAutoString leftString, rightString;
 
@@ -819,8 +819,8 @@ nsTextBoxFrame::UpdateAccessTitle()
     } else {
         // Try to check with
         // our default ellipsis (for non-localized addons) or ':'
-        const PRUnichar kLastChar = mTitle.Last();
-        if (kLastChar == PRUnichar(0x2026) || kLastChar == PRUnichar(':'))
+        const char16_t kLastChar = mTitle.Last();
+        if (kLastChar == char16_t(0x2026) || kLastChar == char16_t(':'))
             offset--;
     }
 

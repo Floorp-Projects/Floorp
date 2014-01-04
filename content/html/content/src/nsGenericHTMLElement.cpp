@@ -138,7 +138,7 @@ void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
 
 bool GEUS_enum_func(nsHashKey *aKey, void *aData, void *aClosure)
 {
-  const PRUnichar *name_chars = ((nsStringKey *)aKey)->GetString();
+  const char16_t *name_chars = ((nsStringKey *)aKey)->GetString();
   NS_ConvertUTF16toUTF8 name(name_chars);
 
   printf ("%s %d\n", name.get(), aData);
@@ -1838,9 +1838,9 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
   // Value contains relative URIs split on spaces (U+0020)
-  const PRUnichar *start = value.BeginReading();
-  const PRUnichar *end   = value.EndReading();
-  const PRUnichar *iter  = start;
+  const char16_t *start = value.BeginReading();
+  const char16_t *end   = value.EndReading();
+  const char16_t *iter  = start;
   for (;;) {
     if (iter < end && *iter != ' ') {
       ++iter;
@@ -1849,7 +1849,7 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
         ++start;
       if (iter != start) {
         if (!aResult.IsEmpty())
-          aResult.Append(PRUnichar(' '));
+          aResult.Append(char16_t(' '));
         const nsSubstring& uriPart = Substring(start, iter);
         nsCOMPtr<nsIURI> attrURI;
         nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),

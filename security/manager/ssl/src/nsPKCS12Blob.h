@@ -39,7 +39,7 @@ public:
 
   // PKCS#12 Export
 #if 0
-  //nsresult LoadCerts(const PRUnichar **certNames, int numCerts);
+  //nsresult LoadCerts(const char16_t **certNames, int numCerts);
   nsresult LoadCerts(nsIX509Cert **certs, int numCerts);
 #endif
   nsresult ExportToFile(nsIFile *file, nsIX509Cert **certs, int numCerts);
@@ -54,7 +54,7 @@ private:
   nsresult getPKCS12FilePassword(SECItem *);
   nsresult newPKCS12FilePassword(SECItem *);
   nsresult inputToDecoder(SEC_PKCS12DecoderContext *, nsIFile *);
-  void unicodeToItem(const PRUnichar *, SECItem *);
+  void unicodeToItem(const char16_t *, SECItem *);
   void handleError(int myerr = 0);
 
   // RetryReason and ImportMode are used when importing a PKCS12 file.

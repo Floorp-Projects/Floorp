@@ -910,7 +910,7 @@ inline bool
 EnumValueNotFound<true>(JSContext* cx, const jschar* chars, size_t length,
                         const char* type, const char* sourceDescription)
 {
-  NS_LossyConvertUTF16toASCII deflated(static_cast<const PRUnichar*>(chars),
+  NS_LossyConvertUTF16toASCII deflated(static_cast<const char16_t*>(chars),
                                        length);
   return ThrowErrorMessage(cx, MSG_INVALID_ENUM_VALUE, sourceDescription,
                            deflated.get(), type);
