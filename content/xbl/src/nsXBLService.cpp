@@ -89,7 +89,7 @@ IsAncestorBinding(nsIDocument* aDocument,
       nsAutoCString spec;
       aChildBindingURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 bindingURI(spec);
-      const PRUnichar* params[] = { bindingURI.get() };
+      const char16_t* params[] = { bindingURI.get() };
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("XBL"), aDocument,
                                       nsContentUtils::eXBL_PROPERTIES,
@@ -635,7 +635,7 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
 }
 
 NS_IMETHODIMP
-nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aSomeData)
+nsXBLService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aSomeData)
 {
   if (nsCRT::strcmp(aTopic, "memory-pressure") == 0)
     FlushMemory();
@@ -762,7 +762,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
           NS_ConvertUTF8toUTF16 protoSpec(spec);
           baseBindingURI->GetSpec(basespec);
           NS_ConvertUTF8toUTF16 baseSpecUTF16(basespec);
-          const PRUnichar* params[] = { protoSpec.get(), baseSpecUTF16.get() };
+          const char16_t* params[] = { protoSpec.get(), baseSpecUTF16.get() };
           nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                           NS_LITERAL_CSTRING("XBL"), nullptr,
                                           nsContentUtils::eXBL_PROPERTIES,

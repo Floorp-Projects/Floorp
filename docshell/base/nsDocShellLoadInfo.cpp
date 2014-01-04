@@ -128,7 +128,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(PRUnichar** aTarget)
+NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(char16_t** aTarget)
 {
    NS_ENSURE_ARG_POINTER(aTarget);
 
@@ -137,7 +137,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetTarget(PRUnichar** aTarget)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const PRUnichar* aTarget)
+NS_IMETHODIMP nsDocShellLoadInfo::SetTarget(const char16_t* aTarget)
 {
    mTarget.Assign(aTarget);
    return NS_OK;

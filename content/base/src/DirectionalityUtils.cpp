@@ -303,11 +303,11 @@ inline static bool NodeAffectsDirAutoAncestor(nsINode* aTextNode)
  * @return the directionality of the string
  */
 static Directionality
-GetDirectionFromText(const PRUnichar* aText, const uint32_t aLength,
+GetDirectionFromText(const char16_t* aText, const uint32_t aLength,
                      uint32_t* aFirstStrong = nullptr)
 {
-  const PRUnichar* start = aText;
-  const PRUnichar* end = aText + aLength;
+  const char16_t* start = aText;
+  const char16_t* end = aText + aLength;
 
   while (start < end) {
     uint32_t current = start - aText;
@@ -825,7 +825,7 @@ void SetAncestorDirectionIfAuto(nsINode* aTextNode, Directionality aDir,
 
 void
 SetDirectionFromChangedTextNode(nsIContent* aTextNode, uint32_t aOffset,
-                                const PRUnichar* aBuffer, uint32_t aLength,
+                                const char16_t* aBuffer, uint32_t aLength,
                                 bool aNotify)
 {
   if (!NodeAffectsDirAutoAncestor(aTextNode)) {

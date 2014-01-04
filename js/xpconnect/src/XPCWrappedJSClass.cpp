@@ -404,7 +404,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
 
 NS_IMPL_ISUPPORTS1(xpcProperty, nsIProperty)
 
-xpcProperty::xpcProperty(const PRUnichar* aName, uint32_t aNameLen,
+xpcProperty::xpcProperty(const char16_t* aName, uint32_t aNameLen,
                          nsIVariant* aValue)
     : mName(aName, aNameLen), mValue(aValue)
 {
@@ -525,7 +525,7 @@ SameOriginCheckedComponent::CanCreateWrapper(const nsIID * iid,
 
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanCallMethod(const nsIID * iid,
-                                          const PRUnichar *methodName,
+                                          const char16_t *methodName,
                                           char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");
@@ -534,7 +534,7 @@ SameOriginCheckedComponent::CanCallMethod(const nsIID * iid,
 
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanGetProperty(const nsIID * iid,
-                                           const PRUnichar *propertyName,
+                                           const char16_t *propertyName,
                                            char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");
@@ -543,7 +543,7 @@ SameOriginCheckedComponent::CanGetProperty(const nsIID * iid,
 
 NS_IMETHODIMP
 SameOriginCheckedComponent::CanSetProperty(const nsIID * iid,
-                                           const PRUnichar *propertyName,
+                                           const char16_t *propertyName,
                                            char **_retval)
 {
     *_retval = NS_strdup("sameOrigin");

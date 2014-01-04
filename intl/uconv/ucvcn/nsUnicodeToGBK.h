@@ -35,12 +35,12 @@ protected:
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
-  NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
+  NS_IMETHOD ConvertNoBuff(const char16_t * aSrc, 
                             int32_t * aSrcLength, 
                             char * aDest, 
                             int32_t * aDestLength);
 
-  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, int32_t * aSrcLength, 
+  NS_IMETHOD ConvertNoBuffNoErr(const char16_t * aSrc, int32_t * aSrcLength, 
                                 char * aDest, int32_t * aDestLength)
   {
     return NS_OK;
@@ -52,11 +52,11 @@ protected:
   nsCOMPtr<nsIUnicodeEncoder> mExtensionEncoder;
   nsCOMPtr<nsIUnicodeEncoder> m4BytesEncoder;
 protected:
-  PRUnichar mSurrogateHigh;
+  char16_t mSurrogateHigh;
   nsGBKConvUtil mUtil;
-  bool TryExtensionEncoder(PRUnichar aChar, char* aDest, int32_t* aOutLen);
-  bool Try4BytesEncoder(PRUnichar aChar, char* aDest, int32_t* aOutLen);
-  virtual bool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
+  bool TryExtensionEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
+  bool Try4BytesEncoder(char16_t aChar, char* aDest, int32_t* aOutLen);
+  virtual bool EncodeSurrogate(char16_t aSurrogateHigh, char16_t aSurrogateLow, char* aDest);
 };
 
 class nsUnicodeToGB18030: public nsUnicodeToGBK
@@ -67,7 +67,7 @@ public:
 protected:
   virtual void CreateExtensionEncoder();
   virtual void Create4BytesEncoder();
-  virtual bool EncodeSurrogate(PRUnichar aSurrogateHigh, PRUnichar aSurrogateLow, char* aDest);
+  virtual bool EncodeSurrogate(char16_t aSurrogateHigh, char16_t aSurrogateLow, char* aDest);
 };
 
 #endif /* nsUnicodeToGBK_h___ */

@@ -105,7 +105,7 @@ WakeLock::Init(const nsAString& aTopic, ContentParent* aContentParent)
 }
 
 NS_IMETHODIMP
-WakeLock::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* data)
+WakeLock::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* data)
 {
   // If this wake lock was acquired on behalf of another process, unlock it
   // when that process dies.

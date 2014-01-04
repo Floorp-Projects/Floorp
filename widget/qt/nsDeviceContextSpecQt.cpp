@@ -162,7 +162,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetPath(const char** aPath)
 
 NS_IMETHODIMP nsDeviceContextSpecQt::BeginDocument(
         const nsAString& aTitle,
-        PRUnichar* aPrintToFileName,
+        char16_t* aPrintToFileName,
         int32_t aStartPage,
         int32_t aEndPage)
 {
@@ -232,21 +232,21 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::GetPrinterNameList(
     for (int32_t i = 0; i < qprinters.size(); ++i) {
         printers->AppendElement(
                 nsDependentString(
-                    (const PRUnichar*)qprinters[i].printerName().constData()));
+                    (const char16_t*)qprinters[i].printerName().constData()));
     }
 
     return NS_NewAdoptingStringEnumerator(aPrinterNameList, printers);
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorQt::GetDefaultPrinterName(
-        PRUnichar** aDefaultPrinterName)
+        char16_t** aDefaultPrinterName)
 {
     DO_PR_DEBUG_LOG(("nsPrinterEnumeratorQt::GetDefaultPrinterName()\n"));
     NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
 
     QString defprinter = QPrinterInfo::defaultPrinter().printerName();
     *aDefaultPrinterName = ToNewUnicode(nsDependentString(
-        (const PRUnichar*)defprinter.constData()));
+        (const char16_t*)defprinter.constData()));
 
     DO_PR_DEBUG_LOG(("GetDefaultPrinterName(): default printer='%s'.\n",
         NS_ConvertUTF16toUTF8(*aDefaultPrinterName).get()));
@@ -255,7 +255,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::GetDefaultPrinterName(
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(
-        const PRUnichar* aPrinterName,
+        const char16_t* aPrinterName,
         nsIPrintSettings* aPrintSettings)
 {
     DO_PR_DEBUG_LOG(("nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter()"));
@@ -265,7 +265,7 @@ NS_IMETHODIMP nsPrinterEnumeratorQt::InitPrintSettingsFromPrinter(
 }
 
 NS_IMETHODIMP nsPrinterEnumeratorQt::DisplayPropertiesDlg(
-        const PRUnichar* aPrinter,
+        const char16_t* aPrinter,
         nsIPrintSettings* aPrintSettings)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

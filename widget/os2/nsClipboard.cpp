@@ -256,7 +256,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
                               NumOfBytes + 1, 
                               PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
-          PRUnichar* uchtemp = (PRUnichar*)pMozData;
+          char16_t* uchtemp = (char16_t*)pMozData;
           for (uint32_t i=0;i<NumOfChars;i++) {
             switch (uchtemp[i]) {
               case 0x2018:
@@ -275,7 +275,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 
           nsAutoCharBuffer buffer;
           int32_t bufLength;
-          WideCharToMultiByte(0, static_cast<PRUnichar*>(pMozData),
+          WideCharToMultiByte(0, static_cast<char16_t*>(pMozData),
                               NumOfBytes, buffer, bufLength);
           memcpy(pByteMem, buffer.Elements(), NumOfBytes);
           // With Warp4 copying more than 64K to the clipboard works well, but

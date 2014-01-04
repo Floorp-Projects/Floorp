@@ -61,7 +61,7 @@ public:
                     nsIInputStream *aPostStream, 
                     void *aHeadersData, uint32_t aHeadersDataLen) MOZ_OVERRIDE;
   
-  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg) MOZ_OVERRIDE;
+  NS_IMETHOD ShowStatus(const char16_t *aStatusMsg) MOZ_OVERRIDE;
   
   NPError    ShowNativeContextMenu(NPMenu* menu, void* event) MOZ_OVERRIDE;
   

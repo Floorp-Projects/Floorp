@@ -109,7 +109,7 @@ public:
   // It also returns a pointer to the string buffer of the classname
   // in the nsGlobalNameStruct.
   const nsGlobalNameStruct* LookupName(const nsAString& aName,
-                                       const PRUnichar **aClassName = nullptr)
+                                       const char16_t **aClassName = nullptr)
   {
     return LookupNameInternal(aName, aClassName);
   }
@@ -125,7 +125,7 @@ public:
                              bool aPrivileged,
                              bool aXBLAllowed,
                              bool aDisabled,
-                             const PRUnichar **aResult);
+                             const char16_t **aResult);
 
   nsresult RegisterClassProto(const char *aClassName,
                               const nsIID *aConstructorProtoIID,
@@ -172,9 +172,9 @@ private:
   // nsGlobalNameStruct is != eTypeNotInitialized, an entry for aKey
   // already existed.
   nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const nsAString *aKey,
-                                const PRUnichar **aClassName = nullptr);
+                                const char16_t **aClassName = nullptr);
   nsGlobalNameStruct *AddToHash(PLDHashTable *aTable, const char *aKey,
-                                const PRUnichar **aClassName = nullptr)
+                                const char16_t **aClassName = nullptr)
   {
     NS_ConvertASCIItoUTF16 key(aKey);
     return AddToHash(aTable, &key, aClassName);
@@ -220,7 +220,7 @@ private:
                                     bool aRemove);
 
   nsGlobalNameStruct* LookupNameInternal(const nsAString& aName,
-                                         const PRUnichar **aClassName = nullptr);
+                                         const char16_t **aClassName = nullptr);
 
   PLDHashTable mGlobalNames;
   PLDHashTable mNavigatorNames;

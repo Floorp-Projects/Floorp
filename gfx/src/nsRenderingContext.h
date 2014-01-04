@@ -20,7 +20,7 @@
 #include "nsFontMetrics.h"              // for nsFontMetrics
 #include "nsISupports.h"                // for NS_INLINE_DECL_REFCOUNTING, etc
 #include "nsString.h"               // for nsString
-#include "nscore.h"                     // for PRUnichar
+#include "nscore.h"                     // for char16_t
 
 class gfxASurface;
 class nsIntRegion;
@@ -104,19 +104,19 @@ public:
     void SetTextRunRTL(bool aIsRTL);
 
     nscoord GetWidth(char aC);
-    nscoord GetWidth(PRUnichar aC);
+    nscoord GetWidth(char16_t aC);
     nscoord GetWidth(const nsString& aString);
     nscoord GetWidth(const char* aString);
     nscoord GetWidth(const char* aString, uint32_t aLength);
-    nscoord GetWidth(const PRUnichar *aString, uint32_t aLength);
+    nscoord GetWidth(const char16_t *aString, uint32_t aLength);
 
-    nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
+    nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength);
 
     void DrawString(const nsString& aString, nscoord aX, nscoord aY);
     void DrawString(const char *aString, uint32_t aLength,
                     nscoord aX, nscoord aY);
-    void DrawString(const PRUnichar *aString, uint32_t aLength,
+    void DrawString(const char16_t *aString, uint32_t aLength,
                     nscoord aX, nscoord aY);
 
     void AddUserData(UserDataKey *key, void *userData, void (*destroy)(void*)) {

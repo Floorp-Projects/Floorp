@@ -364,7 +364,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsFtpControlConnection *aCo
 NS_IMETHODIMP
 nsFtpProtocolHandler::Observe(nsISupports *aSubject,
                               const char *aTopic,
-                              const PRUnichar *aData)
+                              const char16_t *aData)
 {
     LOG(("FTP:observing [%s]\n", aTopic));
 

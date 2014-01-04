@@ -186,7 +186,7 @@ NS_IMPL_ISUPPORTS1(nsSHistoryObserver, nsIObserver)
 
 NS_IMETHODIMP
 nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
-                            const PRUnichar *aData)
+                            const char16_t *aData)
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsSHistory::UpdatePrefs();
@@ -1467,7 +1467,7 @@ nsSHistory::GetSessionHistory(nsISHistory** aSessionHistory)
 
 
 NS_IMETHODIMP
-nsSHistory::LoadURI(const PRUnichar* aURI,
+nsSHistory::LoadURI(const char16_t* aURI,
                     uint32_t aLoadFlags,
                     nsIURI* aReferringURI,
                     nsIInputStream* aPostStream,

@@ -9,8 +9,8 @@ class nsGBKConvUtil {
 public:
   nsGBKConvUtil() {  }
   ~nsGBKConvUtil() { }
-  PRUnichar GBKCharToUnicode(char aByte1, char aByte2);
-  bool UnicodeToGBKChar(PRUnichar aChar, bool aToGL, 
+  char16_t GBKCharToUnicode(char aByte1, char aByte2);
+  bool UnicodeToGBKChar(char16_t aChar, bool aToGL, 
                            char* aOutByte1, char* aOutByte2);
 };
 #endif /* nsGBKConvUtil_h_ */

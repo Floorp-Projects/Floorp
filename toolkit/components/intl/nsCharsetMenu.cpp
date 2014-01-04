@@ -221,7 +221,7 @@ private:
   nsresult WriteCacheToPrefs(nsTArray<nsMenuEntry*> * aArray, int32_t aCacheStart,
     const char * aKey);
   nsresult UpdateCachePrefs(const char * aCacheKey, const char * aCacheSizeKey,
-    const char * aStaticKey, const PRUnichar * aCharset);
+    const char * aStaticKey, const char16_t * aCharset);
 
   nsresult ClearMenu(nsIRDFContainer * aContainer, nsTArray<nsMenuEntry*> * aArray);
   nsresult RemoveLastMenuItem(nsIRDFContainer * aContainer,
@@ -255,9 +255,9 @@ public:
   //--------------------------------------------------------------------------
   // Interface nsICurrentCharsetListener [declaration]
 
-  NS_IMETHOD SetCurrentCharset(const PRUnichar * aCharset);
-  NS_IMETHOD SetCurrentMailCharset(const PRUnichar * aCharset);
-  NS_IMETHOD SetCurrentComposerCharset(const PRUnichar * aCharset);
+  NS_IMETHOD SetCurrentCharset(const char16_t * aCharset);
+  NS_IMETHOD SetCurrentMailCharset(const char16_t * aCharset);
+  NS_IMETHOD SetCurrentComposerCharset(const char16_t * aCharset);
 
   //--------------------------------------------------------------------------
   // Interface nsIRDFDataSource [declaration]
@@ -369,7 +369,7 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsCharsetMenuObserver, nsIObserver)
 
-NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
   nsresult rv = NS_OK;
  
@@ -1134,7 +1134,7 @@ nsresult nsCharsetMenu::AddMenuItemToContainer(
   res = mRDFService->GetResource(id, getter_AddRefs(node));
   if (NS_FAILED(res)) return res;
 
-  const PRUnichar * title = aItem->mTitle.get();
+  const char16_t * title = aItem->mTitle.get();
 
   // set node's title
   nsCOMPtr<nsIRDFLiteral> titleLiteral;
@@ -1380,7 +1380,7 @@ nsresult nsCharsetMenu::WriteCacheToPrefs(nsTArray<nsMenuEntry*> * aArray,
 nsresult nsCharsetMenu::UpdateCachePrefs(const char * aCacheKey,
                                          const char * aCacheSizeKey,
                                          const char * aStaticKey,
-                                         const PRUnichar * aCharset)
+                                         const char16_t * aCharset)
 {
   nsresult rv = NS_OK;
   nsXPIDLCString cachePrefValue;
@@ -1585,12 +1585,12 @@ nsresult nsCharsetMenu::GetCollation(nsICollation ** aCollation)
 //----------------------------------------------------------------------------
 // Interface nsICurrentCharsetListener [implementation]
 
-NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const PRUnichar * aCharset)
+NS_IMETHODIMP nsCharsetMenu::SetCurrentCharset(const char16_t * aCharset)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
+NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const char16_t * aCharset)
 {
   nsresult res = NS_OK;
 
@@ -1610,7 +1610,7 @@ NS_IMETHODIMP nsCharsetMenu::SetCurrentMailCharset(const PRUnichar * aCharset)
   return res;
 }
 
-NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const PRUnichar * aCharset)
+NS_IMETHODIMP nsCharsetMenu::SetCurrentComposerCharset(const char16_t * aCharset)
 {
   nsresult res = NS_OK;
 

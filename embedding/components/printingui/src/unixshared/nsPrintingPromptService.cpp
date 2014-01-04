@@ -158,7 +158,7 @@ nsPrintingPromptService::ShowPageSetup(nsIDOMWindow *parent, nsIPrintSettings *p
 
 /* void showPrinterProperties (in nsIDOMWindow parent, in wstring printerName, in nsIPrintSettings printSettings); */
 NS_IMETHODIMP 
-nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const PRUnichar *printerName, nsIPrintSettings *printSettings)
+nsPrintingPromptService::ShowPrinterProperties(nsIDOMWindow *parent, const char16_t *printerName, nsIPrintSettings *printSettings)
 {
     /* fixme: We simply ignore the |aPrinter| argument here
      * We should get the supported printer attributes from the printer and 
@@ -288,7 +288,7 @@ nsPrintingPromptService::OnLocationChange(nsIWebProgress *aWebProgress, nsIReque
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP 
-nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+nsPrintingPromptService::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const char16_t *aMessage)
 {
   if (mWebProgressListener) {
     return mWebProgressListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);

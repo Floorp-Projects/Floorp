@@ -12,7 +12,7 @@ NS_IMPL_ISUPPORTS1(nsUnicodeToUTF8, nsIUnicodeEncoder)
 //----------------------------------------------------------------------
 // nsUnicodeToUTF8 class [implementation]
 
-NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const char16_t * aSrc, 
                                               int32_t aSrcLength,
                                               int32_t * aDestLength)
 {
@@ -25,13 +25,13 @@ NS_IMETHODIMP nsUnicodeToUTF8::GetMaxLength(const PRUnichar * aSrc,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc, 
+NS_IMETHODIMP nsUnicodeToUTF8::Convert(const char16_t * aSrc, 
                                 int32_t * aSrcLength, 
                                 char * aDest, 
                                 int32_t * aDestLength)
 {
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   int32_t destLen = *aDestLength;
   uint32_t n;
@@ -47,14 +47,14 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *aDestLength = 0;
       return NS_OK_UENC_MOREOUTPUT;
     }
-    if (*src < (PRUnichar)0xdc00 || *src > (PRUnichar)0xdfff) { //not a pair
+    if (*src < (char16_t)0xdc00 || *src > (char16_t)0xdfff) { //not a pair
       *dest++ = (char)0xef; //replacement character
       *dest++ = (char)0xbf;
       *dest++ = (char)0xbd;
       destLen -= 3;
     } else { 
-      n = ((mHighSurrogate - (PRUnichar)0xd800) << 10) + 
-              (*src - (PRUnichar)0xdc00) + 0x10000;
+      n = ((mHighSurrogate - (char16_t)0xd800) << 10) + 
+              (*src - (char16_t)0xdc00) + 0x10000;
       *dest++ = (char)0xf0 | (n >> 18);
       *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
       *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
@@ -77,8 +77,8 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *dest++ = (char)0xc0 | (*src >> 6);
       *dest++ = (char)0x80 | (*src & 0x003f);
       destLen -= 2;
-    } else if (*src >= (PRUnichar)0xd800 && *src <= (PRUnichar)0xdfff) {
-      if (*src >= (PRUnichar)0xdc00) { //not a pair
+    } else if (*src >= (char16_t)0xd800 && *src <= (char16_t)0xdfff) {
+      if (*src >= (char16_t)0xdc00) { //not a pair
         if (destLen < 3)
           goto error_more_output;
         *dest++ = (char)0xef; //replacement character
@@ -97,13 +97,13 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       //handle surrogate
       if (destLen < 4)
         goto error_more_output;
-      if (*(src+1) < (PRUnichar)0xdc00 || *(src+1) > 0xdfff) { //not a pair
+      if (*(src+1) < (char16_t)0xdc00 || *(src+1) > 0xdfff) { //not a pair
         *dest++ = (char)0xef; //replacement character
         *dest++ = (char)0xbf;
         *dest++ = (char)0xbd;
         destLen -= 3;
       } else {
-        n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (uint32_t)0x10000;
+        n = ((*src - (char16_t)0xd800) << 10) + (*(src+1) - (char16_t)0xdc00) + (uint32_t)0x10000;
         *dest++ = (char)0xf0 | (n >> 18);
         *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
         *dest++ = (char)0x80 | ((n >> 6) & 0x3f);

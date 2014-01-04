@@ -64,7 +64,7 @@ nsHZToUnicode::nsHZToUnicode() : nsBufferDecoderSupport(1)
 NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(
   const char* aSrc, 
   int32_t * aSrcLength, 
-  PRUnichar *aDest, 
+  char16_t *aDest, 
   int32_t * aDestLength)
 {
   int32_t i=0;

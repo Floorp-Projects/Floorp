@@ -102,7 +102,7 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadSetDocumentCharset;
       CopyUTF8toUTF16(aCharset, mCharset);
-      mTypeOrCharsetSource.Assign((PRUnichar)aCharsetSource);
+      mTypeOrCharsetSource.Assign((char16_t)aCharsetSource);
     }
 
     void Perform(nsHtml5TreeOpExecutor* aExecutor);

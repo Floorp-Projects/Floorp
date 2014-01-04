@@ -172,12 +172,12 @@ private:
 class UTF16CharEnumerator
 {
 public:
-  static uint32_t NextChar(const PRUnichar **buffer, const PRUnichar *end,
+  static uint32_t NextChar(const char16_t **buffer, const char16_t *end,
                            bool *err = nullptr)
   {
     NS_ASSERTION(buffer && *buffer, "null buffer!");
 
-    const PRUnichar *p = *buffer;
+    const char16_t *p = *buffer;
 
     if (p >= end)
       {
@@ -188,7 +188,7 @@ public:
         return 0;
       }
 
-    PRUnichar c = *p++;
+    char16_t c = *p++;
 
     if (!IS_SURROGATE(c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
       {
@@ -214,7 +214,7 @@ public:
           }
 
         // D800- DBFF - High Surrogate
-        PRUnichar h = c;
+        char16_t h = c;
 
         c = *p++;
 
@@ -277,7 +277,7 @@ class ConvertUTF8toUTF16
   {
     public:
       typedef char      value_type;
-      typedef PRUnichar buffer_type;
+      typedef char16_t buffer_type;
 
     ConvertUTF8toUTF16( buffer_type* aBuffer )
         : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(false) {}
@@ -437,7 +437,7 @@ class CalculateUTF8Length
 class ConvertUTF16toUTF8
   {
     public:
-      typedef PRUnichar value_type;
+      typedef char16_t value_type;
       typedef char      buffer_type;
 
     // The error handling here is more lenient than that in
@@ -559,7 +559,7 @@ class ConvertUTF16toUTF8
 class CalculateUTF8Size
   {
     public:
-      typedef PRUnichar value_type;
+      typedef char16_t value_type;
 
     CalculateUTF8Size()
       : mSize(0) { }
@@ -633,17 +633,17 @@ class CalculateUTF8Size
 #ifdef MOZILLA_INTERNAL_API
 /**
  * A character sink that performs a |reinterpret_cast|-style conversion
- * from char to PRUnichar.
+ * from char to char16_t.
  */
 class LossyConvertEncoding8to16
   {
     public:
       typedef char      value_type;
       typedef char      input_type;
-      typedef PRUnichar output_type;
+      typedef char16_t output_type;
 
     public:
-      LossyConvertEncoding8to16( PRUnichar* aDestination ) :
+      LossyConvertEncoding8to16( char16_t* aDestination ) :
         mDestination(aDestination) { }
 
       void
@@ -658,7 +658,7 @@ class LossyConvertEncoding8to16
 #endif
           const char* done_writing = aSource + aSourceLength;
           while ( aSource < done_writing )
-            *mDestination++ = (PRUnichar)(unsigned char)(*aSource++);
+            *mDestination++ = (char16_t)(unsigned char)(*aSource++);
         }
 
       void
@@ -667,28 +667,28 @@ class LossyConvertEncoding8to16
       void
       write_terminator()
         {
-          *mDestination = (PRUnichar)(0);
+          *mDestination = (char16_t)(0);
         }
 
     private:
-      PRUnichar* mDestination;
+      char16_t* mDestination;
   };
 
 /**
  * A character sink that performs a |reinterpret_cast|-style conversion
- * from PRUnichar to char.
+ * from char16_t to char.
  */
 class LossyConvertEncoding16to8
   {
     public:
-      typedef PRUnichar value_type;
-      typedef PRUnichar input_type;
+      typedef char16_t value_type;
+      typedef char16_t input_type;
       typedef char      output_type;
 
       LossyConvertEncoding16to8( char* aDestination ) : mDestination(aDestination) { }
 
       void
-      write( const PRUnichar* aSource, uint32_t aSourceLength)
+      write( const char16_t* aSource, uint32_t aSourceLength)
         {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
           if (mozilla::supports_sse2())
@@ -697,14 +697,14 @@ class LossyConvertEncoding16to8
               return;
             }
 #endif
-            const PRUnichar* done_writing = aSource + aSourceLength;
+            const char16_t* done_writing = aSource + aSourceLength;
             while ( aSource < done_writing )
               *mDestination++ = (char)(*aSource++);
         }
 
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
       void
-      write_sse2( const PRUnichar* aSource, uint32_t aSourceLength );
+      write_sse2( const char16_t* aSource, uint32_t aSourceLength );
 #endif
 
       void

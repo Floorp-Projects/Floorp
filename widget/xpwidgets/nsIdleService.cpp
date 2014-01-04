@@ -69,7 +69,7 @@ NS_IMPL_ISUPPORTS2(nsIdleServiceDaily, nsIObserver, nsISupportsWeakReference)
 NS_IMETHODIMP
 nsIdleServiceDaily::Observe(nsISupports *,
                             const char *aTopic,
-                            const PRUnichar *)
+                            const char16_t *)
 {
   PR_LOG(sLog, PR_LOG_DEBUG,
          ("nsIdleServiceDaily: Observe '%s' (%d)",

@@ -177,7 +177,7 @@ NS_IMETHODIMP nsPrintSettings::SetOrientation(int32_t aOrientation)
 }
 
 /* attribute wstring colorspace; */
-NS_IMETHODIMP nsPrintSettings::GetColorspace(PRUnichar * *aColorspace)
+NS_IMETHODIMP nsPrintSettings::GetColorspace(char16_t * *aColorspace)
 {
   NS_ENSURE_ARG_POINTER(aColorspace);
   if (!mColorspace.IsEmpty()) {
@@ -187,7 +187,7 @@ NS_IMETHODIMP nsPrintSettings::GetColorspace(PRUnichar * *aColorspace)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetColorspace(const PRUnichar * aColorspace)
+NS_IMETHODIMP nsPrintSettings::SetColorspace(const char16_t * aColorspace)
 {
   if (aColorspace) {
     mColorspace = aColorspace;
@@ -198,7 +198,7 @@ NS_IMETHODIMP nsPrintSettings::SetColorspace(const PRUnichar * aColorspace)
 }
 
 /* attribute wstring resolutionname; */
-NS_IMETHODIMP nsPrintSettings::GetResolutionName(PRUnichar * *aResolutionName)
+NS_IMETHODIMP nsPrintSettings::GetResolutionName(char16_t * *aResolutionName)
 {
   NS_ENSURE_ARG_POINTER(aResolutionName);
   if (!mResolutionName.IsEmpty()) {
@@ -208,7 +208,7 @@ NS_IMETHODIMP nsPrintSettings::GetResolutionName(PRUnichar * *aResolutionName)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetResolutionName(const PRUnichar * aResolutionName)
+NS_IMETHODIMP nsPrintSettings::SetResolutionName(const char16_t * aResolutionName)
 {
   if (aResolutionName) {
     mResolutionName = aResolutionName;
@@ -258,7 +258,7 @@ NS_IMETHODIMP nsPrintSettings::SetDownloadFonts(bool aDownloadFonts)
 }
 
 /* attribute wstring printer; */
-NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
+NS_IMETHODIMP nsPrintSettings::GetPrinterName(char16_t * *aPrinter)
 {
    NS_ENSURE_ARG_POINTER(aPrinter);
 
@@ -268,7 +268,7 @@ NS_IMETHODIMP nsPrintSettings::GetPrinterName(PRUnichar * *aPrinter)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsPrintSettings::SetPrinterName(const PRUnichar * aPrinter)
+NS_IMETHODIMP nsPrintSettings::SetPrinterName(const char16_t * aPrinter)
 {
   if (!aPrinter || !mPrinter.Equals(aPrinter)) {
     mIsInitedFromPrinter = false;
@@ -293,13 +293,13 @@ NS_IMETHODIMP nsPrintSettings::SetNumCopies(int32_t aNumCopies)
 }
 
 /* attribute wstring printCommand; */
-NS_IMETHODIMP nsPrintSettings::GetPrintCommand(PRUnichar * *aPrintCommand)
+NS_IMETHODIMP nsPrintSettings::GetPrintCommand(char16_t * *aPrintCommand)
 {
   //NS_ENSURE_ARG_POINTER(aPrintCommand);
   *aPrintCommand = ToNewUnicode(mPrintCommand);
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetPrintCommand(const PRUnichar * aPrintCommand)
+NS_IMETHODIMP nsPrintSettings::SetPrintCommand(const char16_t * aPrintCommand)
 {
   if (aPrintCommand) {
     mPrintCommand = aPrintCommand;
@@ -323,13 +323,13 @@ NS_IMETHODIMP nsPrintSettings::SetPrintToFile(bool aPrintToFile)
 }
 
 /* attribute wstring toFileName; */
-NS_IMETHODIMP nsPrintSettings::GetToFileName(PRUnichar * *aToFileName)
+NS_IMETHODIMP nsPrintSettings::GetToFileName(char16_t * *aToFileName)
 {
   //NS_ENSURE_ARG_POINTER(aToFileName);
   *aToFileName = ToNewUnicode(mToFileName);
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetToFileName(const PRUnichar * aToFileName)
+NS_IMETHODIMP nsPrintSettings::SetToFileName(const char16_t * aToFileName)
 {
   if (aToFileName) {
     mToFileName = aToFileName;
@@ -621,7 +621,7 @@ NS_IMETHODIMP nsPrintSettings::SetPrintRange(int16_t aPrintRange)
 }
 
 /* attribute wstring docTitle; */
-NS_IMETHODIMP nsPrintSettings::GetTitle(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetTitle(char16_t * *aTitle)
 {
   NS_ENSURE_ARG_POINTER(aTitle);
   if (!mTitle.IsEmpty()) {
@@ -631,7 +631,7 @@ NS_IMETHODIMP nsPrintSettings::GetTitle(PRUnichar * *aTitle)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetTitle(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetTitle(const char16_t * aTitle)
 {
   if (aTitle) {
     mTitle = aTitle;
@@ -642,7 +642,7 @@ NS_IMETHODIMP nsPrintSettings::SetTitle(const PRUnichar * aTitle)
 }
 
 /* attribute wstring docURL; */
-NS_IMETHODIMP nsPrintSettings::GetDocURL(PRUnichar * *aDocURL)
+NS_IMETHODIMP nsPrintSettings::GetDocURL(char16_t * *aDocURL)
 {
   NS_ENSURE_ARG_POINTER(aDocURL);
   if (!mURL.IsEmpty()) {
@@ -652,7 +652,7 @@ NS_IMETHODIMP nsPrintSettings::GetDocURL(PRUnichar * *aDocURL)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetDocURL(const PRUnichar * aDocURL)
+NS_IMETHODIMP nsPrintSettings::SetDocURL(const char16_t * aDocURL)
 {
   if (aDocURL) {
     mURL = aDocURL;
@@ -702,7 +702,7 @@ nsPrintSettings::GetPrintOptionsBits(int32_t *aBits)
 
 /* attribute wstring docTitle; */
 nsresult 
-nsPrintSettings::GetMarginStrs(PRUnichar * *aTitle, 
+nsPrintSettings::GetMarginStrs(char16_t * *aTitle, 
                               nsHeaderFooterEnum aType, 
                               int16_t aJust)
 {
@@ -725,7 +725,7 @@ nsPrintSettings::GetMarginStrs(PRUnichar * *aTitle,
 }
 
 nsresult
-nsPrintSettings::SetMarginStrs(const PRUnichar * aTitle, 
+nsPrintSettings::SetMarginStrs(const char16_t * aTitle, 
                               nsHeaderFooterEnum aType, 
                               int16_t aJust)
 {
@@ -747,62 +747,62 @@ nsPrintSettings::SetMarginStrs(const PRUnichar * aTitle,
 }
 
 /* attribute wstring Header String Left */
-NS_IMETHODIMP nsPrintSettings::GetHeaderStrLeft(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetHeaderStrLeft(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eHeader, kJustLeft);
 }
-NS_IMETHODIMP nsPrintSettings::SetHeaderStrLeft(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetHeaderStrLeft(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eHeader, kJustLeft);
 }
 
 /* attribute wstring Header String Center */
-NS_IMETHODIMP nsPrintSettings::GetHeaderStrCenter(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetHeaderStrCenter(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eHeader, kJustCenter);
 }
-NS_IMETHODIMP nsPrintSettings::SetHeaderStrCenter(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetHeaderStrCenter(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eHeader, kJustCenter);
 }
 
 /* attribute wstring Header String Right */
-NS_IMETHODIMP nsPrintSettings::GetHeaderStrRight(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetHeaderStrRight(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eHeader, kJustRight);
 }
-NS_IMETHODIMP nsPrintSettings::SetHeaderStrRight(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetHeaderStrRight(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eHeader, kJustRight);
 }
 
 
 /* attribute wstring Footer String Left */
-NS_IMETHODIMP nsPrintSettings::GetFooterStrLeft(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetFooterStrLeft(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eFooter, kJustLeft);
 }
-NS_IMETHODIMP nsPrintSettings::SetFooterStrLeft(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetFooterStrLeft(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eFooter, kJustLeft);
 }
 
 /* attribute wstring Footer String Center */
-NS_IMETHODIMP nsPrintSettings::GetFooterStrCenter(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetFooterStrCenter(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eFooter, kJustCenter);
 }
-NS_IMETHODIMP nsPrintSettings::SetFooterStrCenter(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetFooterStrCenter(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eFooter, kJustCenter);
 }
 
 /* attribute wstring Footer String Right */
-NS_IMETHODIMP nsPrintSettings::GetFooterStrRight(PRUnichar * *aTitle)
+NS_IMETHODIMP nsPrintSettings::GetFooterStrRight(char16_t * *aTitle)
 {
   return GetMarginStrs(aTitle, eFooter, kJustRight);
 }
-NS_IMETHODIMP nsPrintSettings::SetFooterStrRight(const PRUnichar * aTitle)
+NS_IMETHODIMP nsPrintSettings::SetFooterStrRight(const char16_t * aTitle)
 {
   return SetMarginStrs(aTitle, eFooter, kJustRight);
 }
@@ -873,7 +873,7 @@ NS_IMETHODIMP nsPrintSettings::SetShowPrintProgress(bool aShowPrintProgress)
 }
 
 /* attribute wstring paperName; */
-NS_IMETHODIMP nsPrintSettings::GetPaperName(PRUnichar * *aPaperName)
+NS_IMETHODIMP nsPrintSettings::GetPaperName(char16_t * *aPaperName)
 {
   NS_ENSURE_ARG_POINTER(aPaperName);
   if (!mPaperName.IsEmpty()) {
@@ -883,7 +883,7 @@ NS_IMETHODIMP nsPrintSettings::GetPaperName(PRUnichar * *aPaperName)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetPaperName(const PRUnichar * aPaperName)
+NS_IMETHODIMP nsPrintSettings::SetPaperName(const char16_t * aPaperName)
 {
   if (aPaperName) {
     mPaperName = aPaperName;
@@ -894,7 +894,7 @@ NS_IMETHODIMP nsPrintSettings::SetPaperName(const PRUnichar * aPaperName)
 }
 
 /* attribute wstring plexName; */
-NS_IMETHODIMP nsPrintSettings::GetPlexName(PRUnichar * *aPlexName)
+NS_IMETHODIMP nsPrintSettings::GetPlexName(char16_t * *aPlexName)
 {
   NS_ENSURE_ARG_POINTER(aPlexName);
   if (!mPlexName.IsEmpty()) {
@@ -904,7 +904,7 @@ NS_IMETHODIMP nsPrintSettings::GetPlexName(PRUnichar * *aPlexName)
   }
   return NS_OK;
 }
-NS_IMETHODIMP nsPrintSettings::SetPlexName(const PRUnichar * aPlexName)
+NS_IMETHODIMP nsPrintSettings::SetPlexName(const char16_t * aPlexName)
 {
   if (aPlexName) {
     mPlexName = aPlexName;

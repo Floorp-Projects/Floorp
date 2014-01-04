@@ -92,7 +92,7 @@ class nsHtml5ParserThreadTerminator MOZ_FINAL : public nsIObserver
     nsHtml5ParserThreadTerminator(nsIThread* aThread)
       : mThread(aThread)
     {}
-    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const PRUnichar *)
+    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const char16_t *)
     {
       NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), 
                    "Unexpected topic");

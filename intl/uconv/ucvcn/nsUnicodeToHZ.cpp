@@ -29,7 +29,7 @@ nsUnicodeToHZ::nsUnicodeToHZ() : nsEncoderSupport(6)
   mHZState = HZ_STATE_ASCII;	// per HZ spec, default to HZ mode
 }
 NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(
-  const PRUnichar * aSrc, 
+  const char16_t * aSrc, 
   int32_t * aSrcLength, 
   char * aDest, 
   int32_t * aDestLength)
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(
         // other regular ASCII chars convert by normal ways
 	
         // Is this works for both little endian and big endian machines ?
-        *aDest = (char) ( (PRUnichar)(*aSrc) );
+        *aDest = (char) ( (char16_t)(*aSrc) );
         aDest++; // increment 1 byte
         iDestLength +=1;
       }

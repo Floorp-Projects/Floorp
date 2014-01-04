@@ -153,7 +153,7 @@ MediaShutdownManager::Unregister(MediaDecoder* aDecoder)
 NS_IMETHODIMP
 MediaShutdownManager::Observe(nsISupports *aSubjet,
                               const char *aTopic,
-                              const PRUnichar *someData)
+                              const char16_t *someData)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {

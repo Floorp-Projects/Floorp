@@ -853,7 +853,7 @@ nsHTMLEditor::GetBlockNodeParent(nsIDOMNode *aNode)
   return p.forget();
 }
 
-static const PRUnichar nbsp = 160;
+static const char16_t nbsp = 160;
 
 ///////////////////////////////////////////////////////////////////////////////
 // IsNextCharInNodeWhitespace: checks the adjacent content in the same node to
@@ -877,7 +877,7 @@ nsHTMLEditor::IsNextCharInNodeWhitespace(nsIContent* aContent,
 
   if (aContent->IsNodeOfType(nsINode::eTEXT) &&
       (uint32_t)aOffset < aContent->Length()) {
-    PRUnichar ch = aContent->GetText()->CharAt(aOffset);
+    char16_t ch = aContent->GetText()->CharAt(aOffset);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
     *outIsNBSP = (ch == nbsp);
     if (outNode && outOffset) {
@@ -910,7 +910,7 @@ nsHTMLEditor::IsPrevCharInNodeWhitespace(nsIContent* aContent,
   }
 
   if (aContent->IsNodeOfType(nsINode::eTEXT) && aOffset > 0) {
-    PRUnichar ch = aContent->GetText()->CharAt(aOffset - 1);
+    char16_t ch = aContent->GetText()->CharAt(aOffset - 1);
     *outIsSpace = nsCRT::IsAsciiSpace(ch);
     *outIsNBSP = (ch == nbsp);
     if (outNode && outOffset) {
@@ -1291,15 +1291,15 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   NS_ENSURE_TRUE(bodyElement, NS_ERROR_NULL_POINTER);
 
   // Find where the <body> tag starts.
-  nsReadingIterator<PRUnichar> beginbody;
-  nsReadingIterator<PRUnichar> endbody;
+  nsReadingIterator<char16_t> beginbody;
+  nsReadingIterator<char16_t> endbody;
   aSourceString.BeginReading(beginbody);
   aSourceString.EndReading(endbody);
   bool foundbody = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
                                                    beginbody, endbody);
 
-  nsReadingIterator<PRUnichar> beginhead;
-  nsReadingIterator<PRUnichar> endhead;
+  nsReadingIterator<char16_t> beginhead;
+  nsReadingIterator<char16_t> endhead;
   aSourceString.BeginReading(beginhead);
   aSourceString.EndReading(endhead);
   bool foundhead = CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<head"),
@@ -1308,8 +1308,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   if (foundbody && beginhead.get() > beginbody.get())
     foundhead = false;
 
-  nsReadingIterator<PRUnichar> beginclosehead;
-  nsReadingIterator<PRUnichar> endclosehead;
+  nsReadingIterator<char16_t> beginclosehead;
+  nsReadingIterator<char16_t> endclosehead;
   aSourceString.BeginReading(beginclosehead);
   aSourceString.EndReading(endclosehead);
 
@@ -1326,7 +1326,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   // Time to change the document
   nsAutoEditBatch beginBatching(this);
 
-  nsReadingIterator<PRUnichar> endtotal;
+  nsReadingIterator<char16_t> endtotal;
   aSourceString.EndReading(endtotal);
 
   if (foundhead) {
@@ -1340,7 +1340,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
       // so we assume that there is no body
       res = ReplaceHeadContentsWithHTML(Substring(beginhead, endtotal));
   } else {
-    nsReadingIterator<PRUnichar> begintotal;
+    nsReadingIterator<char16_t> begintotal;
     aSourceString.BeginReading(begintotal);
     NS_NAMED_LITERAL_STRING(head, "<head>");
     if (foundclosehead)
@@ -1388,8 +1388,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   //  will never return a body node in the DOM fragment
   
   // We already know where "<body" begins
-  nsReadingIterator<PRUnichar> beginclosebody = beginbody;
-  nsReadingIterator<PRUnichar> endclosebody;
+  nsReadingIterator<char16_t> beginclosebody = beginbody;
+  nsReadingIterator<char16_t> endclosebody;
   aSourceString.EndReading(endclosebody);
   if (!FindInReadable(NS_LITERAL_STRING(">"),beginclosebody,endclosebody))
     return NS_ERROR_FAILURE;
@@ -3371,21 +3371,21 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsAString& aOutputString)
   {
     // Selection always includes <body></body>,
     //  so terminate there
-    nsReadingIterator<PRUnichar> findIter,endFindIter;
+    nsReadingIterator<char16_t> findIter,endFindIter;
     aOutputString.BeginReading(findIter);
     aOutputString.EndReading(endFindIter);
     //counting on our parser to always lower case!!!
     if (CaseInsensitiveFindInReadable(NS_LITERAL_STRING("<body"),
                                       findIter, endFindIter))
     {
-      nsReadingIterator<PRUnichar> beginIter;
+      nsReadingIterator<char16_t> beginIter;
       aOutputString.BeginReading(beginIter);
       int32_t offset = Distance(beginIter, findIter);//get the distance
 
-      nsWritingIterator<PRUnichar> writeIter;
+      nsWritingIterator<char16_t> writeIter;
       aOutputString.BeginWriting(writeIter);
       // Ensure the string ends in a newline
-      PRUnichar newline ('\n');
+      char16_t newline ('\n');
       findIter.advance(-1);
       if (offset ==0 || (offset >0 &&  (*findIter) != newline)) //check for 0
       {

@@ -21,7 +21,7 @@ NS_IMETHODIMP
 nsConverterInputStream::Init(nsIInputStream* aStream,
                              const char *aCharset,
                              int32_t aBufferSize,
-                             PRUnichar aReplacementChar)
+                             char16_t aReplacementChar)
 {
     static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -69,7 +69,7 @@ nsConverterInputStream::Close()
 }
 
 NS_IMETHODIMP
-nsConverterInputStream::Read(PRUnichar* aBuf,
+nsConverterInputStream::Read(char16_t* aBuf,
                              uint32_t aCount,
                              uint32_t *aReadCount)
 {
@@ -87,7 +87,7 @@ nsConverterInputStream::Read(PRUnichar* aBuf,
     readCount = aCount;
   }
   memcpy(aBuf, mUnicharData.Elements() + mUnicharDataOffset,
-         readCount * sizeof(PRUnichar));
+         readCount * sizeof(char16_t));
   mUnicharDataOffset += readCount;
   *aReadCount = readCount;
   return NS_OK;
@@ -153,7 +153,7 @@ nsConverterInputStream::ReadString(uint32_t aCount, nsAString& aString,
   if (readCount > aCount) {
     readCount = aCount;
   }
-  const PRUnichar* buf = mUnicharData.Elements() + mUnicharDataOffset;
+  const char16_t* buf = mUnicharData.Elements() + mUnicharDataOffset;
   aString.Assign(buf, readCount);
   mUnicharDataOffset += readCount;
   *aReadCount = readCount;
@@ -235,7 +235,7 @@ NS_IMETHODIMP
 nsConverterInputStream::ReadLine(nsAString& aLine, bool* aResult)
 {
   if (!mLineBuffer) {
-    mLineBuffer = new nsLineBuffer<PRUnichar>;
+    mLineBuffer = new nsLineBuffer<char16_t>;
   }
   return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }

@@ -230,7 +230,7 @@ NS_IMPL_ADDREF(WebBrowserChrome2Stub)
 NS_IMPL_RELEASE(WebBrowserChrome2Stub)
 
 NS_IMETHODIMP
-WebBrowserChrome2Stub::SetStatus(uint32_t aStatusType, const PRUnichar* aStatus)
+WebBrowserChrome2Stub::SetStatus(uint32_t aStatusType, const char16_t* aStatus)
 {
   return NS_OK;
 }
@@ -845,7 +845,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 
 NS_IMETHODIMP
 nsAppShellService::Observe(nsISupports* aSubject, const char *aTopic,
-                           const PRUnichar *aData)
+                           const char16_t *aData)
 {
   if (!strcmp(aTopic, "xpcom-will-shutdown")) {
     mXPCOMWillShutDown = true;

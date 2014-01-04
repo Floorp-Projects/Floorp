@@ -52,7 +52,7 @@ static nsICharsetConverterManager* gCCM = nullptr;
 //---------------------------------------------------------------------------
 uint8_t CyrillicClass(nsIUnicodeDecoder* decoder, uint8_t byte)
 {
-   PRUnichar ubuf[2];
+   char16_t ubuf[2];
    uint8_t bbuf[2];
 
    int32_t blen = 1;

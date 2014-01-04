@@ -26,21 +26,21 @@
 
 using namespace mozilla;
 
-static const PRUnichar kSpace            = 0x0020;
-static const PRUnichar kZWSP             = 0x200B;
-static const PRUnichar kLineSeparator    = 0x2028;
-static const PRUnichar kObjectSubstitute = 0xFFFC;
-static const PRUnichar kLRE              = 0x202A;
-static const PRUnichar kRLE              = 0x202B;
-static const PRUnichar kLRO              = 0x202D;
-static const PRUnichar kRLO              = 0x202E;
-static const PRUnichar kPDF              = 0x202C;
+static const char16_t kSpace            = 0x0020;
+static const char16_t kZWSP             = 0x200B;
+static const char16_t kLineSeparator    = 0x2028;
+static const char16_t kObjectSubstitute = 0xFFFC;
+static const char16_t kLRE              = 0x202A;
+static const char16_t kRLE              = 0x202B;
+static const char16_t kLRO              = 0x202D;
+static const char16_t kRLO              = 0x202E;
+static const char16_t kPDF              = 0x202C;
 
 #define NS_BIDI_CONTROL_FRAME ((nsIFrame*)0xfffb1d1)
 
 struct BidiParagraphData {
   nsString            mBuffer;
-  nsAutoTArray<PRUnichar, 16> mEmbeddingStack;
+  nsAutoTArray<char16_t, 16> mEmbeddingStack;
   nsTArray<nsIFrame*> mLogicalFrames;
   nsTArray<nsLineBox*> mLinePerFrame;
   nsDataHashtable<nsISupportsHashKey, int32_t> mContentToFrameIndex;
@@ -251,18 +251,18 @@ struct BidiParagraphData {
 
   nsLineBox* GetLineForFrameAt(int32_t aIndex){ return mLinePerFrame[aIndex]; }
 
-  void AppendUnichar(PRUnichar aCh){ mBuffer.Append(aCh); }
+  void AppendUnichar(char16_t aCh){ mBuffer.Append(aCh); }
 
   void AppendString(const nsDependentSubstring& aString){ mBuffer.Append(aString); }
 
-  void AppendControlChar(PRUnichar aCh)
+  void AppendControlChar(char16_t aCh)
   {
     mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
     mLinePerFrame.AppendElement((nsLineBox*)nullptr);
     AppendUnichar(aCh);
   }
 
-  void PushBidiControl(PRUnichar aCh)
+  void PushBidiControl(char16_t aCh)
   {
     AppendControlChar(aCh);
     mEmbeddingStack.AppendElement(aCh);
@@ -588,7 +588,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   // Handle bidi-override being set on the block itself before calling
   // TraverseFrames.
   const nsStyleTextReset* text = aBlockFrame->StyleTextReset();
-  PRUnichar ch = 0;
+  char16_t ch = 0;
   if (text->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_OVERRIDE) {
     const nsStyleVisibility* vis = aBlockFrame->StyleVisibility();
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
@@ -974,7 +974,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
       }
     }
 
-    PRUnichar ch = 0;
+    char16_t ch = 0;
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       if (!(frame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
         nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
@@ -1637,7 +1637,7 @@ nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData *aBpd,
 
 nsresult
 nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
-                                   PRUnichar*       aText,
+                                   char16_t*       aText,
                                    int32_t&         aTextLength,
                                    nsCharType       aCharType,
                                    bool             aIsOddLevel)
@@ -1701,7 +1701,7 @@ nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
 }
 
 void
-nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
+nsBidiPresUtils::StripBidiControlCharacters(char16_t* aText,
                                             int32_t&   aTextLength)
 {
   if ( (nullptr == aText) || (aTextLength < 1) ) {
@@ -1725,7 +1725,7 @@ nsBidiPresUtils::StripBidiControlCharacters(PRUnichar* aText,
  
 #if 0 // XXX: for the future use ???
 void
-RemoveDiacritics(PRUnichar* aText,
+RemoveDiacritics(char16_t* aText,
                  int32_t&   aTextLength)
 {
   if (aText && (aTextLength > 0) ) {
@@ -1746,7 +1746,7 @@ RemoveDiacritics(PRUnichar* aText,
 
 void
 nsBidiPresUtils::CalculateCharType(nsBidi* aBidiEngine,
-                                   const PRUnichar* aText,
+                                   const char16_t* aText,
                                    int32_t& aOffset,
                                    int32_t  aCharTypeLimit,
                                    int32_t& aRunLimit,
@@ -1808,7 +1808,7 @@ nsBidiPresUtils::CalculateCharType(nsBidi* aBidiEngine,
   aOffset = offset;
 }
 
-nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
+nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
                                       int32_t                aLength,
                                       nsBidiLevel            aBaseLevel,
                                       nsPresContext*         aPresContext,
@@ -1968,7 +1968,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
              */
             nscoord subWidth;
             // The position in the text where this run's "left part" begins.
-            const PRUnichar* visualLeftPart, *visualRightSide;
+            const char16_t* visualLeftPart, *visualRightSide;
             if (level & 1) {
               // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
               posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));
@@ -2029,7 +2029,7 @@ public:
     mCtx->SetTextRunRTL(false);
   }
 
-  virtual void SetText(const PRUnichar* aText,
+  virtual void SetText(const char16_t* aText,
                        int32_t          aLength,
                        nsBidiDirection  aDirection)
   {
@@ -2054,11 +2054,11 @@ private:
   nsRenderingContext* mCtx;
   nsRenderingContext* mTextRunConstructionContext;
   nsPoint mPt;
-  const PRUnichar* mText;
+  const char16_t* mText;
   int32_t mLength;
 };
 
-nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       aText,
+nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       aText,
                                                          int32_t                aLength,
                                                          nsBidiLevel            aBaseLevel,
                                                          nsPresContext*         aPresContext,
@@ -2078,16 +2078,16 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
 }
 
 /* static */
-void nsBidiPresUtils::WriteReverse(const PRUnichar* aSrc,
+void nsBidiPresUtils::WriteReverse(const char16_t* aSrc,
                                    uint32_t aSrcLength,
-                                   PRUnichar* aDest)
+                                   char16_t* aDest)
 {
-  PRUnichar* dest = aDest + aSrcLength;
+  char16_t* dest = aDest + aSrcLength;
   mozilla::unicode::ClusterIterator iter(aSrc, aSrcLength);
 
   while (!iter.AtEnd()) {
     iter.Next();
-    for (const PRUnichar *cp = iter; cp > aSrc; ) {
+    for (const char16_t *cp = iter; cp > aSrc; ) {
       // Here we rely on the fact that there are no non-BMP mirrored pairs
       // currently in Unicode, so we don't need to look for surrogates
       *--dest = mozilla::unicode::GetMirroredChar(*--cp);
@@ -2099,13 +2099,13 @@ void nsBidiPresUtils::WriteReverse(const PRUnichar* aSrc,
 }
 
 /* static */
-bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
+bool nsBidiPresUtils::WriteLogicalToVisual(const char16_t* aSrc,
                                            uint32_t aSrcLength,
-                                           PRUnichar* aDest,
+                                           char16_t* aDest,
                                            nsBidiLevel aBaseDirection,
                                            nsBidi* aBidiEngine)
 {
-  const PRUnichar* src = aSrc;
+  const char16_t* src = aSrc;
   nsresult rv = aBidiEngine->SetPara(src, aSrcLength, aBaseDirection, nullptr);
   if (NS_FAILED(rv)) {
     return false;
@@ -2125,7 +2125,7 @@ bool nsBidiPresUtils::WriteLogicalToVisual(const PRUnichar* aSrc,
   }
 
   int32_t runIndex, start, length;
-  PRUnichar* dest = aDest;
+  char16_t* dest = aDest;
 
   for (runIndex = 0; runIndex < runCount; ++runIndex) {
     rv = aBidiEngine->GetVisualRun(runIndex, &start, &length, &dir);

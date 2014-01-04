@@ -79,7 +79,7 @@ nsCounterUseNode::GetText(nsString& aResult)
 
     const nsCSSValue& styleItem = mCounterStyle->Item(mAllCounters ? 2 : 1);
     int32_t style = styleItem.GetIntValue();
-    const PRUnichar* separator;
+    const char16_t* separator;
     if (mAllCounters)
         separator = mCounterStyle->Item(1).GetStringBufferValue();
 

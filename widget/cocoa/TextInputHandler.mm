@@ -221,7 +221,7 @@ GetCharacters(const NSString* aString)
 
   nsAutoString escapedStr;
   for (uint32_t i = 0; i < str.Length(); i++) {
-    PRUnichar ch = str[i];
+    char16_t ch = str[i];
     if (ch < 0x20) {
       nsPrintfCString utf8str("(U+%04X)", ch);
       escapedStr += NS_ConvertUTF8toUTF16(utf8str);
@@ -432,9 +432,9 @@ TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
     return true;
   }
   NS_ENSURE_TRUE(EnsureStringLength(aStr, len), false);
-  NS_ASSERTION(sizeof(PRUnichar) == sizeof(UniChar),
-               "size of PRUnichar and size of UniChar are different");
-  memcpy(aStr.BeginWriting(), chars, len * sizeof(PRUnichar));
+  NS_ASSERTION(sizeof(char16_t) == sizeof(UniChar),
+               "size of char16_t and size of UniChar are different");
+  memcpy(aStr.BeginWriting(), chars, len * sizeof(char16_t));
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
     ("%p TISInputSourceWrapper::TranslateToString, aStr=\"%s\"",
@@ -754,7 +754,7 @@ TISInputSourceWrapper::IsForRTLLanguage()
     nsAutoString str;
     bool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
     NS_ENSURE_TRUE(ret, ret);
-    PRUnichar ch = str.IsEmpty() ? PRUnichar(0) : str.CharAt(0);
+    char16_t ch = str.IsEmpty() ? char16_t(0) : str.CharAt(0);
     mIsRTL = UCS2_CHAR_IS_BIDI(ch) || ch == 0xD802 || ch == 0xD803;
   }
   return mIsRTL != 0;
@@ -864,10 +864,10 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
     // If control key is pressed and the eventChars is a non-printable control
     // character, we should convert it to ASCII alphabet.
     if (aKeyEvent.IsControl() &&
-        !insertString.IsEmpty() && insertString[0] <= PRUnichar(26)) {
+        !insertString.IsEmpty() && insertString[0] <= char16_t(26)) {
       insertString = (aKeyEvent.IsShift() ^ aKeyEvent.IsCapsLocked()) ?
-        static_cast<PRUnichar>(insertString[0] + ('A' - 1)) :
-        static_cast<PRUnichar>(insertString[0] + ('a' - 1));
+        static_cast<char16_t>(insertString[0] + ('A' - 1)) :
+        static_cast<char16_t>(insertString[0] + ('a' - 1));
     }
     // If Meta key is pressed, it may cause to switch the keyboard layout like
     // Arabic, Russian, Hebrew, Greek and Dvorak-QWERTY.
@@ -1052,7 +1052,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 
 void
 TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
-                                         PRUnichar aInsertChar,
+                                         char16_t aInsertChar,
                                          WidgetKeyboardEvent& aKeyEvent,
                                          UInt32 aKbType)
 {
@@ -1066,7 +1066,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
     nsAutoString chars;
     nsCocoaUtils::GetStringForNSString([aNativeKeyEvent characters], chars);
     NS_ConvertUTF16toUTF8 utf8Chars(chars);
-    PRUnichar expectedChar = static_cast<PRUnichar>(aInsertChar);
+    char16_t expectedChar = static_cast<char16_t>(aInsertChar);
     NS_ConvertUTF16toUTF8 utf8ExpectedChar(&expectedChar, 1);
     PR_LOG(gLog, PR_LOG_ALWAYS,
       ("%p TISInputSourceWrapper::InitKeyPressEvent, aNativeKeyEvent=%p, "
@@ -4468,7 +4468,7 @@ TextInputHandlerBase::SetSelection(NSRange& aRange)
 }
 
 /* static */ bool
-TextInputHandlerBase::IsPrintableChar(PRUnichar aChar)
+TextInputHandlerBase::IsPrintableChar(char16_t aChar)
 {
   return (aChar >= 0x20 && aChar <= 0x7E) || aChar >= 0xA0;
 }

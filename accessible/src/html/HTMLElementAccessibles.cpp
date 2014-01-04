@@ -47,7 +47,7 @@ HTMLBRAccessible::NativeState()
 ENameValueFlag
 HTMLBRAccessible::NativeName(nsString& aName)
 {
-  aName = static_cast<PRUnichar>('\n');    // Newline char
+  aName = static_cast<char16_t>('\n');    // Newline char
   return eNameOK;
 }
 

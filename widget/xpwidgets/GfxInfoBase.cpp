@@ -48,7 +48,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Observe(nsISupports *subject, const char *aTopic,
-                     const PRUnichar *aData)
+                     const char16_t *aData)
   {
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 
@@ -512,7 +512,7 @@ BlacklistEntriesToDriverInfo(nsIDOMHTMLCollection* aBlacklistEntries,
 
 NS_IMETHODIMP
 GfxInfoBase::Observe(nsISupports* aSubject, const char* aTopic,
-                     const PRUnichar* aData)
+                     const char16_t* aData)
 {
   if (strcmp(aTopic, "blocklist-data-gfxItems") == 0) {
     nsCOMPtr<nsIDOMElement> gfxItems = do_QueryInterface(aSubject);

@@ -180,7 +180,7 @@ void AsyncLatencyLogger::GetStartTime(TimeStamp &aStart)
 
 nsresult
 AsyncLatencyLogger::Observe(nsISupports* aSubject, const char* aTopic,
-                            const PRUnichar* aData)
+                            const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {

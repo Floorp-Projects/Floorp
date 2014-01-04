@@ -559,7 +559,7 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext*        aPresContext,
 
   for (i = 0; i < aNumSpecs; i++) {
     if (!aNewAttr.IsEmpty())
-      aNewAttr.Append(PRUnichar(','));
+      aNewAttr.Append(char16_t(','));
 
     switch (aSpecs[i].mUnit) {
       case eFramesetUnit_Fixed:
@@ -569,7 +569,7 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsPresContext*        aPresContext,
       case eFramesetUnit_Relative:
         // Add 0.5 to the percentage to make rounding work right.
         aNewAttr.AppendInt(uint32_t((100.0*aValues[i])/aSize + 0.5));
-        aNewAttr.Append(PRUnichar('%'));
+        aNewAttr.Append(char16_t('%'));
         break;
     }
   }
