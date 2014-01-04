@@ -17,6 +17,7 @@
 #include "PannerNode.h"
 #include "WebAudioUtils.h"
 #include "js/TypeDecls.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 
@@ -30,6 +31,8 @@ public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AudioListener)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AudioListener)
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   AudioContext* GetParentObject() const
   {
