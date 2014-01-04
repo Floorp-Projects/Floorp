@@ -46,7 +46,7 @@ CompareVersions(const char *A, const char *B);
 
 #ifdef XP_WIN
 int32_t NS_COM_GLUE
-CompareVersions(const PRUnichar *A, const PRUnichar *B);
+CompareVersions(const char16_t *A, const char16_t *B);
 #endif
 
 struct NS_COM_GLUE Version
@@ -98,12 +98,12 @@ struct NS_COM_GLUE Version
 #ifdef XP_WIN
 struct NS_COM_GLUE VersionW
 {
-  VersionW(const PRUnichar *versionStringW)
+  VersionW(const char16_t *versionStringW)
   {
     versionContentW = wcsdup(versionStringW);
   }
 
-  const PRUnichar* ReadContentW() const
+  const char16_t* ReadContentW() const
   {
     return versionContentW;
   }
@@ -139,7 +139,7 @@ struct NS_COM_GLUE VersionW
   }
 
  private:
-  PRUnichar* versionContentW;
+  char16_t* versionContentW;
 };
 #endif
 

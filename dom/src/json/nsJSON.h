@@ -26,17 +26,17 @@ public:
   virtual ~nsJSONWriter();
   nsresult SetCharset(const char *aCharset);
   nsCOMPtr<nsIOutputStream> mStream;
-  nsresult Write(const PRUnichar *aBuffer, uint32_t aLength);
+  nsresult Write(const char16_t *aBuffer, uint32_t aLength);
   nsString mOutputString;
   bool DidWrite();
   void FlushBuffer();
 
 protected:
-  PRUnichar *mBuffer;
+  char16_t *mBuffer;
   uint32_t mBufferCount;
   bool mDidWrite;
   nsresult WriteToStream(nsIOutputStream *aStream, nsIUnicodeEncoder *encoder,
-                         const PRUnichar *aBuffer, uint32_t aLength);
+                         const char16_t *aBuffer, uint32_t aLength);
 
   nsCOMPtr<nsIUnicodeEncoder> mEncoder;
 };
@@ -82,10 +82,10 @@ protected:
   JS::Value *mRootVal;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
   nsCString mSniffBuffer;
-  nsTArray<PRUnichar> mBufferedChars;
+  nsTArray<char16_t> mBufferedChars;
   nsresult ProcessBytes(const char* aBuffer, uint32_t aByteLength);
   nsresult ConsumeConverted(const char* aBuffer, uint32_t aByteLength);
-  nsresult Consume(const PRUnichar *data, uint32_t len);
+  nsresult Consume(const char16_t *data, uint32_t len);
 };
 
 #endif

@@ -195,7 +195,7 @@ nsAppShell::Init()
 NS_IMETHODIMP
 nsAppShell::Observe(nsISupports* aSubject,
                     const char* aTopic,
-                    const PRUnichar* aData)
+                    const char16_t* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown")) {
         // We need to ensure no observers stick around after XPCOM shuts down
@@ -547,7 +547,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     case AndroidGeckoEvent::PREFERENCES_OBSERVE: {
         const nsTArray<nsString> &prefNames = curEvent->PrefNames();
         size_t count = prefNames.Length();
-        nsAutoArrayPtr<const PRUnichar*> prefNamePtrs(new const PRUnichar*[count]);
+        nsAutoArrayPtr<const char16_t*> prefNamePtrs(new const char16_t*[count]);
         for (size_t i = 0; i < count; ++i) {
             prefNamePtrs[i] = prefNames[i].get();
         }

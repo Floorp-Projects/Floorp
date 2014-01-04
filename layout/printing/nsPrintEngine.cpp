@@ -483,7 +483,7 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
 
   if (mNoMarginBoxes) {
     // Set the footer/header to blank.
-    const PRUnichar* emptyString = EmptyString().get();
+    const char16_t* emptyString = EmptyString().get();
     mPrt->mPrintSettings->SetHeaderStrLeft(emptyString);
     mPrt->mPrintSettings->SetHeaderStrCenter(emptyString);
     mPrt->mPrintSettings->SetHeaderStrRight(emptyString);
@@ -893,7 +893,7 @@ nsPrintEngine::GetPrintPreviewNumPages(int32_t *aPrintPreviewNumPages)
 // Enumerate all the documents for their titles
 NS_IMETHODIMP
 nsPrintEngine::EnumerateDocumentNames(uint32_t* aCount,
-                                      PRUnichar*** aResult)
+                                      char16_t*** aResult)
 {
   NS_ENSURE_ARG(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -902,7 +902,7 @@ nsPrintEngine::EnumerateDocumentNames(uint32_t* aCount,
   *aResult = nullptr;
 
   int32_t     numDocs = mPrt->mPrintDocList.Length();
-  PRUnichar** array   = (PRUnichar**) nsMemory::Alloc(numDocs * sizeof(PRUnichar*));
+  char16_t** array   = (char16_t**) nsMemory::Alloc(numDocs * sizeof(char16_t*));
   if (!array)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1445,8 +1445,8 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*   aPO,
   // First check to see if the PrintSettings has defined an alternate title
   // and use that if it did
   if (mPrt->mPrintSettings) {
-    PRUnichar * docTitleStrPS = nullptr;
-    PRUnichar * docURLStrPS   = nullptr;
+    char16_t * docTitleStrPS = nullptr;
+    char16_t * docURLStrPS   = nullptr;
     mPrt->mPrintSettings->GetTitle(&docTitleStrPS);
     mPrt->mPrintSettings->GetDocURL(&docURLStrPS);
 
@@ -1759,7 +1759,7 @@ nsPrintEngine::SetupToPrintContent()
     mPrt->OnStartPrinting();    
   }
 
-  PRUnichar* fileName = nullptr;
+  char16_t* fileName = nullptr;
   // check to see if we are printing to a file
   bool isPrintToFile = false;
   mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
@@ -1964,7 +1964,7 @@ NS_IMETHODIMP
 nsPrintEngine::OnStatusChange(nsIWebProgress *aWebProgress,
                               nsIRequest *aRequest,
                               nsresult aStatus,
-                              const PRUnichar *aMessage)
+                              const char16_t *aMessage)
 {
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
@@ -3014,7 +3014,7 @@ void nsPrintEngine::SetIsPrintPreview(bool aIsPrintPreview)
 
 //---------------------------------------------------------------------
 void
-nsPrintEngine::CleanupDocTitleArray(PRUnichar**& aArray, int32_t& aCount)
+nsPrintEngine::CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount)
 {
   for (int32_t i = aCount - 1; i >= 0; i--) {
     nsMemory::Free(aArray[i]);
@@ -3573,7 +3573,7 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
 
 /*=============== nsIObserver Interface ======================*/
 NS_IMETHODIMP 
-nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)
 {
   nsresult rv = NS_ERROR_FAILURE;
 

@@ -31,7 +31,7 @@ public:
     virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetEchoPasswordImpl();
     virtual uint32_t GetPasswordMaskDelayImpl();
-    virtual PRUnichar GetPasswordCharacterImpl();
+    virtual char16_t GetPasswordCharacterImpl();
 
 protected:
     virtual nsresult NativeGetColor(ColorID aID, nscolor &aColor);

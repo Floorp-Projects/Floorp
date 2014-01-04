@@ -59,9 +59,9 @@ NS_EXTERN_C
 #endif /* defined(_WIN32) */
 
   NS_EXPORT int32_t test_ansi_len(const char*);
-  NS_EXPORT int32_t test_wide_len(const PRUnichar*);
+  NS_EXPORT int32_t test_wide_len(const char16_t*);
   NS_EXPORT const char* test_ansi_ret();
-  NS_EXPORT const PRUnichar* test_wide_ret();
+  NS_EXPORT const char16_t* test_wide_ret();
   NS_EXPORT char* test_ansi_echo(const char*);
 
   struct ONE_BYTE {

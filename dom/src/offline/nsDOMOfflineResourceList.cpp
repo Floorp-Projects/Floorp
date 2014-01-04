@@ -566,7 +566,7 @@ nsDOMOfflineResourceList::SendEvent(const nsAString &aEventName)
 NS_IMETHODIMP
 nsDOMOfflineResourceList::Observe(nsISupports *aSubject,
                                     const char *aTopic,
-                                    const PRUnichar *aData)
+                                    const char16_t *aData)
 {
   if (!strcmp(aTopic, "offline-cache-update-added")) {
     nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);

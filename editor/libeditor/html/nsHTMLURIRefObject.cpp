@@ -153,7 +153,7 @@ nsHTMLURIRefObject::GetNextURI(nsAString & aURI)
       NS_ENSURE_SUCCESS(rv, rv);
       nsString uri (aURI);
       // href pointing to a named anchor doesn't count
-      if (aURI.First() != PRUnichar('#'))
+      if (aURI.First() != char16_t('#'))
         return NS_OK;
       aURI.Truncate();
       return NS_ERROR_INVALID_ARG;

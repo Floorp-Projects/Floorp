@@ -192,7 +192,7 @@ void
 GetReversedHostname(const nsString& aForward, nsString& aRevHost)
 {
   ReverseString(aForward, aRevHost);
-  aRevHost.Append(PRUnichar('.'));
+  aRevHost.Append(char16_t('.'));
 }
 
 void

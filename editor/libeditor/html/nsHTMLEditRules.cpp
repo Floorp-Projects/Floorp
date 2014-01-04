@@ -1405,7 +1405,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
     NS_ENSURE_STATE(mHTMLEditor);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString tString(*inString);
-    const PRUnichar *unicodeBuf = tString.get();
+    const char16_t *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     int32_t pos = 0;
     NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);

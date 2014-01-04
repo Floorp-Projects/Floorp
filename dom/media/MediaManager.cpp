@@ -1574,7 +1574,7 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
 
 nsresult
 MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
-  const PRUnichar* aData)
+  const char16_t* aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Observer invoked off the main thread");
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();

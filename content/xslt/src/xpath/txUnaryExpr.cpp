@@ -49,7 +49,7 @@ UnaryExpr::toString(nsAString& str)
 {
     if (!expr)
         return;
-    str.Append(PRUnichar('-'));
+    str.Append(char16_t('-'));
     expr->toString(str);
 }
 #endif

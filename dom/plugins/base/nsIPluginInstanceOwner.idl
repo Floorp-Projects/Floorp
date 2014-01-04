@@ -75,7 +75,7 @@ interface nsIPluginInstanceOwner : nsISupports
   void showStatus(in string aStatusMsg);
 
 %{C++
-  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg) = 0;
+  NS_IMETHOD ShowStatus(const char16_t *aStatusMsg) = 0;
 %}
 
   /**

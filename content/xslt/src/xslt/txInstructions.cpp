@@ -101,7 +101,7 @@ txAttribute::execute(txExecutionState& aEs)
     nsresult rv = mName->evaluateToString(aEs.getEvalContext(), name);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    const PRUnichar* colon;
+    const char16_t* colon;
     if (!XMLUtils::isValidQName(name, &colon) ||
         TX_StringEqualsAtom(name, nsGkAtoms::xmlns)) {
         return NS_OK;
@@ -210,7 +210,7 @@ txComment::execute(txExecutionState& aEs)
     while ((pos = handler->mValue.FindChar('-', (uint32_t)pos)) != kNotFound) {
         ++pos;
         if ((uint32_t)pos == length || handler->mValue.CharAt(pos) == '-') {
-            handler->mValue.Insert(PRUnichar(' '), pos++);
+            handler->mValue.Insert(char16_t(' '), pos++);
             ++length;
         }
     }
@@ -590,7 +590,7 @@ txProcessingInstruction::execute(txExecutionState& aEs)
 
     // Check name validity (must be valid NCName and a PITarget)
     // XXX Need to check for NCName and PITarget
-    const PRUnichar* colon;
+    const char16_t* colon;
     if (!XMLUtils::isValidQName(name, &colon)) {
         // XXX ErrorReport: bad PI-target
         return NS_ERROR_FAILURE;
@@ -827,7 +827,7 @@ txStartElement::execute(txExecutionState& aEs)
     nsCOMPtr<nsIAtom> prefix;
     uint32_t lnameStart = 0;
 
-    const PRUnichar* colon;
+    const char16_t* colon;
     if (XMLUtils::isValidQName(name, &colon)) {
         if (colon) {
             prefix = do_GetAtom(Substring(name.get(), colon));

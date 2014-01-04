@@ -443,7 +443,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
       if (NS_SUCCEEDED(rv) && osTarget.Length()) {
         ToLowerCase(s);
         CopyUTF8toUTF16(s, abi);
-        abi.Insert(PRUnichar('_'), 0);
+        abi.Insert(char16_t('_'), 0);
         abi.Insert(osTarget, 0);
       }
     }

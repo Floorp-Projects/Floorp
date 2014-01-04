@@ -589,7 +589,7 @@ public:
   nsIScrollableFrame *GetScrollFrame();
 
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
-                   const PRUnichar* aData);
+                   const char16_t* aData);
 
   // Outer windows only.
   void UnblockScriptedClosing();

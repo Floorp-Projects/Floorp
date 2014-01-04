@@ -206,8 +206,8 @@ private:
 
     if (mDecoder) {
       int32_t unicharLength = srcLength;
-      PRUnichar *unichars =
-        (PRUnichar *)JS_malloc(cx, (srcLength + 1) * sizeof(PRUnichar));
+      char16_t *unichars =
+        (char16_t *)JS_malloc(cx, (srcLength + 1) * sizeof(char16_t));
       if (unichars) {
         rv = mDecoder->Convert(src, &srcLength, unichars, &unicharLength);
         if (NS_SUCCEEDED(rv)) {
@@ -216,9 +216,9 @@ private:
 
           // nsIUnicodeDecoder::Convert may use fewer than srcLength PRUnichars
           if (unicharLength + 1 < srcLength + 1) {
-            PRUnichar *shrunkUnichars =
-              (PRUnichar *)JS_realloc(cx, unichars,
-                                      (unicharLength + 1) * sizeof(PRUnichar));
+            char16_t *shrunkUnichars =
+              (char16_t *)JS_realloc(cx, unichars,
+                                      (unicharLength + 1) * sizeof(char16_t));
             if (shrunkUnichars)
               unichars = shrunkUnichars;
           }

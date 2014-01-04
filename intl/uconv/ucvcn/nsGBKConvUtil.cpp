@@ -11,7 +11,7 @@
 // nsGBKConvUtil
 //--------------------------------------------------------------------
 
-static const PRUnichar gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
+static const char16_t gGBKToUnicodeTable[MAX_GBK_LENGTH] = {
 #include "cp936map.h"
 };
 static const uint16_t gUnicodeToGBKTable[0xA000-0x4e00] = {
@@ -19,7 +19,7 @@ static const uint16_t gUnicodeToGBKTable[0xA000-0x4e00] = {
 };
 
 bool nsGBKConvUtil::UnicodeToGBKChar(
-  PRUnichar aChar, bool aToGL, char* 
+  char16_t aChar, bool aToGL, char* 
   aOutByte1, char* aOutByte2)
 {
   bool found=false;
@@ -74,7 +74,7 @@ bool nsGBKConvUtil::UnicodeToGBKChar(
   }
   return true;
 }
-PRUnichar nsGBKConvUtil::GBKCharToUnicode(char aByte1, char aByte2)
+char16_t nsGBKConvUtil::GBKCharToUnicode(char aByte1, char aByte2)
 {
   NS_ASSERTION(UINT8_IN_RANGE(0x81,aByte1, 0xFE), "first byte out of range");
   NS_ASSERTION(UINT8_IN_RANGE(0x40,aByte2, 0xFE), "second byte out of range");

@@ -17,13 +17,13 @@
 class nsXBLProtoImplProperty: public nsXBLProtoImplMember
 {
 public:
-  nsXBLProtoImplProperty(const PRUnichar* aName,
-                         const PRUnichar* aGetter, 
-                         const PRUnichar* aSetter,
-                         const PRUnichar* aReadOnly,
+  nsXBLProtoImplProperty(const char16_t* aName,
+                         const char16_t* aGetter, 
+                         const char16_t* aSetter,
+                         const char16_t* aReadOnly,
                          uint32_t aLineNumber);
 
-  nsXBLProtoImplProperty(const PRUnichar* aName, const bool aIsReadOnly);
+  nsXBLProtoImplProperty(const char16_t* aName, const bool aIsReadOnly);
  
   virtual ~nsXBLProtoImplProperty();
 

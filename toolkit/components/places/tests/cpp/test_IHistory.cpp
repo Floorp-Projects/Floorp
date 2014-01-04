@@ -73,7 +73,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const PRUnichar* aData)
+                     const char16_t* aData)
   {
     mVisits++;
 
@@ -325,7 +325,7 @@ namespace test_observer_topic_dispatched_helpers {
 
     NS_IMETHOD Observe(nsISupports* aSubject,
                        const char* aTopic,
-                       const PRUnichar* aData)
+                       const char16_t* aData)
     {
       // Make sure we got notified of the right topic.
       do_check_false(strcmp(aTopic, URI_VISITED_RESOLUTION_TOPIC));

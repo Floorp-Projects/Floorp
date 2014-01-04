@@ -166,7 +166,7 @@ NS_IMETHODIMP
 TestApp::OnStatusChange(nsIWebProgress *aWebProgress,
                          nsIRequest *aRequest,
                          nsresult aStatus,
-                         const PRUnichar *aMessage)
+                         const char16_t *aMessage)
 {
   return NS_OK;
 }
@@ -1749,7 +1749,7 @@ TestApp::TestClustering(void)
 {
   // Text for testing
   const uint32_t STRING_LENGTH = 2;
-  PRUnichar string[3];
+  char16_t string[3];
   string[0] = 'e';
   string[1] = 0x0301; // U+0301 'acute accent'
   string[2] = nullptr;
@@ -1950,7 +1950,7 @@ TestApp::TestText(void)
   const uint32_t RUNINFO_SIZE = (0x10);
 
   bool succeeded = true, continueTest;
-  PRUnichar buffer[BUFFER_SIZE];
+  char16_t buffer[BUFFER_SIZE];
   TS_RUNINFO runInfo[RUNINFO_SIZE];
   ULONG bufferRet, runInfoRet;
   LONG acpRet, acpCurrent;
@@ -2320,7 +2320,7 @@ TestApp::TestCompositionSelectionAndText(char* aTestName,
   }
 
   const uint32_t bufferSize = 0x100, runInfoSize = 0x10;
-  PRUnichar buffer[bufferSize];
+  char16_t buffer[bufferSize];
   TS_RUNINFO runInfo[runInfoSize];
   ULONG bufferRet, runInfoRet;
   LONG acpRet, acpCurrent = 0;
