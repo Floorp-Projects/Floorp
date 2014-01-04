@@ -19,6 +19,8 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 #include "js/TypeDecls.h"
+#include "nsIMemoryReporter.h"
+#include "mozilla/MemoryReporting.h"
 
 // X11 has a #define for CurrentTime. Unbelievable :-(.
 // See content/media/DOMMediaStream.h for more fun!
@@ -62,6 +64,7 @@ class WaveShaperNode;
 class PeriodicWave;
 
 class AudioContext MOZ_FINAL : public nsDOMEventTargetHelper,
+                               public nsIMemoryReporter,
                                public EnableWebAudioCheck
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
@@ -75,6 +78,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AudioContext,
                                            nsDOMEventTargetHelper)
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 
   nsPIDOMWindow* GetParentObject() const
   {
@@ -245,6 +249,10 @@ public:
 private:
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
   void ShutdownDecoder();
+
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData);
 
   friend struct ::mozilla::WebAudioDecodeJob;
 

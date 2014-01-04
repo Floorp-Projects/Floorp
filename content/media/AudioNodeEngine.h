@@ -8,6 +8,7 @@
 
 #include "AudioSegment.h"
 #include "mozilla/dom/AudioNode.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
@@ -72,6 +73,11 @@ public:
    * Put this object into an error state where there are no channels.
    */
   void Clear() { mContents.Clear(); }
+
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    return mContents.SizeOfExcludingThis(aMallocSizeOf);
+  }
 
 private:
   AutoFallibleTArray<Storage,2> mContents;

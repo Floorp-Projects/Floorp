@@ -256,5 +256,16 @@ AudioBuffer::MixToMono(JSContext* aJSContext)
   delete[] downmixBuffer;
 }
 
+size_t
+AudioBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = aMallocSizeOf(this);
+  amount += mJSChannels.SizeOfExcludingThis(aMallocSizeOf);
+  if (mSharedChannels) {
+    amount += mSharedChannels->SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return amount;
+}
+
 }
 }
