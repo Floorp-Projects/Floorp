@@ -434,6 +434,7 @@ private:
    */
   nsresult EnsureKeywordsHash();
   nsDataHashtable<nsTrimInt64HashKey, nsString> mBookmarkToKeywordHash;
+  bool mBookmarkToKeywordHashInitialized;
 
   /**
    * This function must be called every time a bookmark is removed.
