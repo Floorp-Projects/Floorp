@@ -53,7 +53,7 @@
      */
     nsIContent** AllocateContentHandle();
     
-    void accumulateCharactersForced(const PRUnichar* aBuf, int32_t aStart, int32_t aLength)
+    void accumulateCharactersForced(const char16_t* aBuf, int32_t aStart, int32_t aLength)
     {
       accumulateCharacters(aBuf, aStart, aLength);
     }

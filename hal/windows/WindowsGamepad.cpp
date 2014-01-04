@@ -611,7 +611,7 @@ WindowsGamepadService::DevicesChanged(DeviceChangeType type) {
 NS_IMETHODIMP
 Observer::Observe(nsISupports* aSubject,
                   const char* aTopic,
-                  const PRUnichar* aData) {
+                  const char16_t* aData) {
   if (strcmp(aTopic, "timer-callback") == 0) {
     mSvc.DevicesChanged(WindowsGamepadService::DeviceChangeStable);
   } else if (strcmp(aTopic, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID) == 0) {

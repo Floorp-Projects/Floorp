@@ -23,7 +23,7 @@
  **	%ld, %lu, %lx, %lX, %lo - 32-bit versions of above
  **	%lld, %llu, %llx, %llX, %llo - 64 bit versions of above
  **	%s - utf8 string
- **	%S - PRUnichar string
+ **	%S - char16_t string
  **	%c - character
  **	%p - pointer (deals with machine dependent pointer size)
  **	%f - float
@@ -48,29 +48,29 @@ class NS_COM_GLUE nsTextFormatter {
      * terminated. Returns the length of the written output, NOT including the
      * null terminator, or (uint32_t)-1 if an error occurs.
      */
-    static uint32_t snprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, ...);
+    static uint32_t snprintf(char16_t *out, uint32_t outlen, const char16_t *fmt, ...);
 
     /*
      * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to 
      * buffer on success, nullptr on failure. 
      */
-    static PRUnichar* smprintf(const PRUnichar *fmt, ...);
+    static char16_t* smprintf(const char16_t *fmt, ...);
 
-    static uint32_t ssprintf(nsAString& out, const PRUnichar* fmt, ...);
+    static uint32_t ssprintf(nsAString& out, const char16_t* fmt, ...);
 
     /*
      * va_list forms of the above.
      */
-    static uint32_t vsnprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, va_list ap);
-    static PRUnichar* vsmprintf(const PRUnichar *fmt, va_list ap);
-    static uint32_t vssprintf(nsAString& out, const PRUnichar *fmt, va_list ap);
+    static uint32_t vsnprintf(char16_t *out, uint32_t outlen, const char16_t *fmt, va_list ap);
+    static char16_t* vsmprintf(const char16_t *fmt, va_list ap);
+    static uint32_t vssprintf(nsAString& out, const char16_t *fmt, va_list ap);
 
     /*
      * Free the memory allocated, for the caller, by smprintf.
      * -- Deprecated --
      * Callers can substitute calling smprintf_free with nsMemory::Free
      */
-    static void smprintf_free(PRUnichar *mem);
+    static void smprintf_free(char16_t *mem);
 
 };
 

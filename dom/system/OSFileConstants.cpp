@@ -182,7 +182,7 @@ class DelayedPathSetter MOZ_FINAL: public nsIObserver
 NS_IMPL_ISUPPORTS1(DelayedPathSetter, nsIObserver)
 
 NS_IMETHODIMP
-DelayedPathSetter::Observe(nsISupports*, const char * aTopic, const PRUnichar*)
+DelayedPathSetter::Observe(nsISupports*, const char * aTopic, const char16_t*)
 {
   if (gPaths == nullptr) {
     // Initialization of gPaths has not taken place, something is wrong,

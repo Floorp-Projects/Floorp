@@ -413,7 +413,7 @@ nsProtocolProxyService::Init()
 NS_IMETHODIMP
 nsProtocolProxyService::Observe(nsISupports     *aSubject,
                                 const char      *aTopic,
-                                const PRUnichar *aData)
+                                const char16_t *aData)
 {
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
         // cleanup

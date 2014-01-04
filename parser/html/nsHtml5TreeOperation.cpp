@@ -117,7 +117,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
 }
 
 nsresult
-nsHtml5TreeOperation::AppendTextToTextNode(const PRUnichar* aBuffer,
+nsHtml5TreeOperation::AppendTextToTextNode(const char16_t* aBuffer,
                                            uint32_t aLength,
                                            nsIContent* aTextNode,
                                            nsHtml5TreeOpExecutor* aBuilder)
@@ -149,7 +149,7 @@ nsHtml5TreeOperation::AppendTextToTextNode(const PRUnichar* aBuffer,
 
 
 nsresult
-nsHtml5TreeOperation::AppendText(const PRUnichar* aBuffer,
+nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
                                  uint32_t aLength,
                                  nsIContent* aParent,
                                  nsHtml5TreeOpExecutor* aBuilder)
@@ -482,7 +482,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAppendText: {
       nsIContent* parent = *mOne.node;
-      PRUnichar* buffer = mTwo.unicharPtr;
+      char16_t* buffer = mTwo.unicharPtr;
       uint32_t length = mFour.integer;
       return AppendText(buffer, length, parent, aBuilder);
     }
@@ -504,7 +504,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpFosterParentText: {
       nsIContent* stackParent = *mOne.node;
-      PRUnichar* buffer = mTwo.unicharPtr;
+      char16_t* buffer = mTwo.unicharPtr;
       uint32_t length = mFour.integer;
       nsIContent* table = *mThree.node;
       nsIContent* foster = table->GetParent();
@@ -541,7 +541,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAppendComment: {
       nsIContent* parent = *mOne.node;
-      PRUnichar* buffer = mTwo.unicharPtr;
+      char16_t* buffer = mTwo.unicharPtr;
       int32_t length = mFour.integer;
       
       nsRefPtr<dom::Comment> comment =
@@ -553,7 +553,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return Append(comment, parent, aBuilder);
     }
     case eTreeOpAppendCommentToDocument: {
-      PRUnichar* buffer = mTwo.unicharPtr;
+      char16_t* buffer = mTwo.unicharPtr;
       int32_t length = mFour.integer;
       
       nsRefPtr<dom::Comment> comment =
@@ -658,7 +658,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return rv;
     }
     case eTreeOpProcessOfflineManifest: {
-      PRUnichar* str = mOne.unicharPtr;
+      char16_t* str = mOne.unicharPtr;
       nsDependentString dependentString(str);
       aBuilder->ProcessOfflineManifest(dependentString);
       return rv;
@@ -716,7 +716,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAddClass: {
       nsIContent* node = *(mOne.node);
-      PRUnichar* str = mTwo.unicharPtr;
+      char16_t* str = mTwo.unicharPtr;
       nsDependentString depStr(str);
       // See viewsource.css for the possible classes
       nsAutoString klass;
@@ -740,7 +740,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpAddViewSourceHref: {
       nsIContent* node = *mOne.node;
-      PRUnichar* buffer = mTwo.unicharPtr;
+      char16_t* buffer = mTwo.unicharPtr;
       int32_t length = mFour.integer;
 
       nsDependentString relative(buffer, length);
@@ -813,13 +813,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
 
       nsXPIDLString message;
       if (otherAtom) {
-        const PRUnichar* params[] = { atom->GetUTF16String(),
+        const char16_t* params[] = { atom->GetUTF16String(),
                                       otherAtom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
           nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
         NS_ENSURE_SUCCESS(rv, rv);
       } else if (atom) {
-        const PRUnichar* params[] = { atom->GetUTF16String() };
+        const char16_t* params[] = { atom->GetUTF16String() };
         rv = nsContentUtils::FormatLocalizedString(
           nsContentUtils::eHTMLPARSER_PROPERTIES, msgId, params, message);
         NS_ENSURE_SUCCESS(rv, rv);

@@ -88,8 +88,8 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
     nsresult setStylesheet(txStylesheet* aStylesheet);
-    void reportError(nsresult aResult, const PRUnichar *aErrorText,
-                     const PRUnichar *aSourceText);
+    void reportError(nsresult aResult, const char16_t *aErrorText,
+                     const char16_t *aSourceText);
 
     nsIDOMNode *GetSourceContentModel()
     {

@@ -24,7 +24,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
+nsXBLProtoImplField::nsXBLProtoImplField(const char16_t* aName, const char16_t* aReadOnly)
   : mNext(nullptr),
     mFieldText(nullptr),
     mFieldTextLength(0),
@@ -70,7 +70,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
   if (mFieldText) {
     nsDependentString fieldTextStr(mFieldText, mFieldTextLength);
     nsAutoString newFieldText = fieldTextStr + aText;
-    PRUnichar* temp = mFieldText;
+    char16_t* temp = mFieldText;
     mFieldText = ToNewUnicode(newFieldText);
     mFieldTextLength = newFieldText.Length();
     nsMemory::Free(temp);

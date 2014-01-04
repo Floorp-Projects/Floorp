@@ -45,9 +45,9 @@ private:
     bool                         mLoaded;
     
 public:
-    static nsresult FormatString(const PRUnichar *formatStr,
-                                 const PRUnichar **aParams, uint32_t aLength,
-                                 PRUnichar **aResult);
+    static nsresult FormatString(const char16_t *formatStr,
+                                 const char16_t **aParams, uint32_t aLength,
+                                 char16_t **aResult);
 };
 
 /**

@@ -166,7 +166,7 @@ NS_IMETHODIMP
 nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken, 
                                      uint32_t      aType,
                                      uint32_t     *_count,
-                                     PRUnichar  ***_certNames)
+                                     char16_t  ***_certNames)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -1169,7 +1169,7 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports     *aToken,
                                      nsIFile          *aFile,
                                      uint32_t          count,
                                      nsIX509Cert     **certs)
-                                     //const PRUnichar **aCertNames)
+                                     //const char16_t **aCertNames)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -1209,12 +1209,12 @@ void
 nsNSSCertificateDB::getCertNames(CERTCertList *certList,
                                  uint32_t      type, 
                                  uint32_t     *_count,
-                                 PRUnichar  ***_certNames,
+                                 char16_t  ***_certNames,
                                  const nsNSSShutDownPreventionLock &/*proofOfLock*/)
 {
   CERTCertListNode *node;
   uint32_t numcerts = 0, i=0;
-  PRUnichar **tmpArray = nullptr;
+  char16_t **tmpArray = nullptr;
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("List of certs %d:\n", type));
   for (node = CERT_LIST_HEAD(certList);
@@ -1226,7 +1226,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
   }
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("num certs: %d\n", numcerts));
   int nc = (numcerts == 0) ? 1 : numcerts;
-  tmpArray = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nc);
+  tmpArray = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nc);
   if (numcerts == 0) goto finish;
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node, certList);
@@ -1249,9 +1249,9 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
         }
       }
       nsAutoString certname = NS_ConvertASCIItoUTF16(namestr ? namestr : "");
-      certstr.Append(PRUnichar(DELIM));
+      certstr.Append(char16_t(DELIM));
       certstr += certname;
-      certstr.Append(PRUnichar(DELIM));
+      certstr.Append(char16_t(DELIM));
       certstr += keystr;
       tmpArray[i++] = ToNewUnicode(certstr);
     }

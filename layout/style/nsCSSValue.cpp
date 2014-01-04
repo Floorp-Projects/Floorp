@@ -723,13 +723,13 @@ nsCSSValue::BufferFromString(const nsString& aValue)
 
   // NOTE: Alloc prouduces a new, already-addref'd (refcnt = 1) buffer.
   // NOTE: String buffer allocation is currently fallible.
-  buffer = nsStringBuffer::Alloc((length + 1) * sizeof(PRUnichar));
+  buffer = nsStringBuffer::Alloc((length + 1) * sizeof(char16_t));
   if (MOZ_UNLIKELY(!buffer)) {
     NS_RUNTIMEABORT("out of memory");
   }
 
-  PRUnichar* data = static_cast<PRUnichar*>(buffer->Data());
-  nsCharTraits<PRUnichar>::copy(data, aValue.get(), length);
+  char16_t* data = static_cast<char16_t*>(buffer->Data());
+  nsCharTraits<char16_t>::copy(data, aValue.get(), length);
   // Null-terminate.
   data[length] = 0;
   return buffer.forget();
@@ -879,20 +879,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
         case eCSSKeyword_scalex:
         case eCSSKeyword_skewx:
         case eCSSKeyword_translatex:
-          ident.Replace(ident.Length() - 1, 1, PRUnichar('X'));
+          ident.Replace(ident.Length() - 1, 1, char16_t('X'));
           break;
 
         case eCSSKeyword_rotatey:
         case eCSSKeyword_scaley:
         case eCSSKeyword_skewy:
         case eCSSKeyword_translatey:
-          ident.Replace(ident.Length() - 1, 1, PRUnichar('Y'));
+          ident.Replace(ident.Length() - 1, 1, char16_t('Y'));
           break;
 
         case eCSSKeyword_rotatez:
         case eCSSKeyword_scalez:
         case eCSSKeyword_translatez:
-          ident.Replace(ident.Length() - 1, 1, PRUnichar('Z'));
+          ident.Replace(ident.Length() - 1, 1, char16_t('Z'));
           break;
 
         default:
@@ -1056,7 +1056,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
           aResult.Append(comma);
           aResult.AppendFloat(nsStyleUtil::ColorComponentToFloat(a));
         }
-        aResult.Append(PRUnichar(')'));
+        aResult.Append(char16_t(')'));
       }
     } else if (eCSSUnit_HexColor == unit) {
       nscolor color = GetColorValue();
@@ -1327,7 +1327,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Steps:
     case eCSSUnit_Counter:
-    case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
+    case eCSSUnit_Counters:     aResult.Append(char16_t(')'));    break;
     case eCSSUnit_Local_Font:   break;
     case eCSSUnit_Font_Format:  break;
     case eCSSUnit_Function:     break;
@@ -1348,7 +1348,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_PercentageRGBAColor:   break;
     case eCSSUnit_HSLColor:              break;
     case eCSSUnit_HSLAColor:             break;
-    case eCSSUnit_Percent:      aResult.Append(PRUnichar('%'));    break;
+    case eCSSUnit_Percent:      aResult.Append(char16_t('%'));    break;
     case eCSSUnit_Number:       break;
     case eCSSUnit_Gradient:     break;
     case eCSSUnit_TokenStream:  break;
@@ -1388,7 +1388,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_Hertz:        aResult.AppendLiteral("Hz");   break;
     case eCSSUnit_Kilohertz:    aResult.AppendLiteral("kHz");  break;
 
-    case eCSSUnit_Seconds:      aResult.Append(PRUnichar('s'));    break;
+    case eCSSUnit_Seconds:      aResult.Append(char16_t('s'));    break;
     case eCSSUnit_Milliseconds: aResult.AppendLiteral("ms");   break;
   }
 }
@@ -1599,8 +1599,8 @@ nsCSSValueList::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
 
     if (nsCSSProps::PropHasFlags(aProperty,
                                  CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-      aResult.Append(PRUnichar(','));
-    aResult.Append(PRUnichar(' '));
+      aResult.Append(char16_t(','));
+    aResult.Append(char16_t(' '));
   }
 }
 
@@ -1730,7 +1730,7 @@ nsCSSRect::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     mBottom.AppendToString(aProperty, aResult, aSerialization);
     aResult.Append(comma);
     mLeft.AppendToString(aProperty, aResult, aSerialization);
-    aResult.Append(PRUnichar(')'));
+    aResult.Append(char16_t(')'));
   }
 }
 
@@ -1773,7 +1773,7 @@ nsCSSValuePair::AppendToString(nsCSSProperty aProperty,
 {
   mXValue.AppendToString(aProperty, aResult, aSerialization);
   if (mYValue.GetUnit() != eCSSUnit_Null) {
-    aResult.Append(PRUnichar(' '));
+    aResult.Append(char16_t(' '));
     mYValue.AppendToString(aProperty, aResult, aSerialization);
   }
 }
@@ -1805,10 +1805,10 @@ nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
 {
     mXValue.AppendToString(aProperty, aResult, aSerialization);
     if (mYValue.GetUnit() != eCSSUnit_Null) {
-        aResult.Append(PRUnichar(' '));
+        aResult.Append(char16_t(' '));
         mYValue.AppendToString(aProperty, aResult, aSerialization);
         if (mZValue.GetUnit() != eCSSUnit_Null) {
-            aResult.Append(PRUnichar(' '));
+            aResult.Append(char16_t(' '));
             mZValue.AppendToString(aProperty, aResult, aSerialization);
         }
     }
@@ -1860,7 +1860,7 @@ nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
         item->mXValue.GetUnit() != eCSSUnit_Initial &&
         item->mXValue.GetUnit() != eCSSUnit_Unset &&
         item->mYValue.GetUnit() != eCSSUnit_Null) {
-      aResult.Append(PRUnichar(' '));
+      aResult.Append(char16_t(' '));
       item->mYValue.AppendToString(aProperty, aResult, aSerialization);
     }
     item = item->mNext;
@@ -1869,8 +1869,8 @@ nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
 
     if (nsCSSProps::PropHasFlags(aProperty,
                                  CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
-      aResult.Append(PRUnichar(','));
-    aResult.Append(PRUnichar(' '));
+      aResult.Append(char16_t(','));
+    aResult.Append(char16_t(' '));
   }
 }
 

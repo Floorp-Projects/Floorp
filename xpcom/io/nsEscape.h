@@ -51,8 +51,8 @@ int32_t nsUnescapeCount (char * str);
 char *
 nsEscapeHTML(const char * string);
 
-PRUnichar *
-nsEscapeHTML2(const PRUnichar *aSourceBuffer,
+char16_t *
+nsEscapeHTML2(const char16_t *aSourceBuffer,
               int32_t aSourceBufferLen = -1);
  /*
   * Escape problem char's for HTML display 

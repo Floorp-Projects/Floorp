@@ -369,8 +369,8 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
         continue;
 
       unsigned int stringLength = [filePath length];
-      unsigned int dataLength = (stringLength + 1) * sizeof(PRUnichar); // in bytes
-      PRUnichar* clipboardDataPtr = (PRUnichar*)malloc(dataLength);
+      unsigned int dataLength = (stringLength + 1) * sizeof(char16_t); // in bytes
+      char16_t* clipboardDataPtr = (char16_t*)malloc(dataLength);
       if (!clipboardDataPtr)
         return NS_ERROR_OUT_OF_MEMORY;
       [filePath getCharacters:reinterpret_cast<unichar*>(clipboardDataPtr)];
@@ -410,11 +410,11 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       dataLength = signedDataLength;
 
       // skip BOM (Byte Order Mark to distinguish little or big endian)      
-      PRUnichar* clipboardDataPtrNoBOM = (PRUnichar*)clipboardDataPtr;
+      char16_t* clipboardDataPtrNoBOM = (char16_t*)clipboardDataPtr;
       if ((dataLength > 2) &&
           ((clipboardDataPtrNoBOM[0] == 0xFEFF) ||
            (clipboardDataPtrNoBOM[0] == 0xFFFE))) {
-        dataLength -= sizeof(PRUnichar);
+        dataLength -= sizeof(char16_t);
         clipboardDataPtrNoBOM += 1;
       }
 

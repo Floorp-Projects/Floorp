@@ -58,7 +58,7 @@ public:
    * unicode character, e.g., '`' returns KEY_NAME_INDEX_DeadGrave.
    * So, you cannot use this method for checking if the char is a dead char.
    */
-  static KeyNameIndex GetDeadKeyNameIndex(PRUnichar aChar);
+  static KeyNameIndex GetDeadKeyNameIndex(char16_t aChar);
 };
 
 } // namespace widget

@@ -17,7 +17,7 @@
 #endif
 
   /**
-   * double-byte (PRUnichar) string types
+   * double-byte (char16_t) string types
    */
 
 class nsAString;

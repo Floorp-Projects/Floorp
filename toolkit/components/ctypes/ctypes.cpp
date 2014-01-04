@@ -27,7 +27,7 @@ static char*
 UnicodeToNative(JSContext *cx, const jschar *source, size_t slen)
 {
   nsAutoCString native;
-  nsDependentString unicode(reinterpret_cast<const PRUnichar*>(source), slen);
+  nsDependentString unicode(reinterpret_cast<const char16_t*>(source), slen);
   nsresult rv = NS_CopyUnicodeToNative(unicode, native);
   if (NS_FAILED(rv)) {
     JS_ReportError(cx, "could not convert string to native charset");

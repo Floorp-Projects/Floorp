@@ -28,7 +28,7 @@ void
 SVGNumberList::GetValueAsString(nsAString& aValue) const
 {
   aValue.Truncate();
-  PRUnichar buf[24];
+  char16_t buf[24];
   uint32_t last = mNumbers.Length() - 1;
   for (uint32_t i = 0; i < mNumbers.Length(); ++i) {
     // Would like to use aValue.AppendPrintf("%f", mNumbers[i]), but it's not

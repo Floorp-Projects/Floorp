@@ -221,13 +221,13 @@ ProxiedAuthCallback(gconstpointer in,
   nsString message;
   if (!realm.IsEmpty())
   {
-    const PRUnichar *strings[] = { realm.get(), dispHost.get() };
+    const char16_t *strings[] = { realm.get(), dispHost.get() };
     bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordForRealm"),
                                  strings, 2, getter_Copies(message));
   }
   else
   {
-    const PRUnichar *strings[] = { dispHost.get() };
+    const char16_t *strings[] = { dispHost.get() };
     bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordFor"),
                                  strings, 1, getter_Copies(message));
   }
@@ -237,7 +237,7 @@ ProxiedAuthCallback(gconstpointer in,
   // Prompt the user...
   nsresult rv;
   bool retval = false;
-  PRUnichar *user = nullptr, *pass = nullptr;
+  char16_t *user = nullptr, *pass = nullptr;
 
   rv = prompt->PromptUsernameAndPassword(nullptr, message.get(),
                                          key.get(),
@@ -939,7 +939,7 @@ nsGnomeVFSProtocolHandler::AllowPort(int32_t aPort,
 NS_IMETHODIMP
 nsGnomeVFSProtocolHandler::Observe(nsISupports *aSubject,
                                    const char *aTopic,
-                                   const PRUnichar *aData)
+                                   const char16_t *aData)
 {
   if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);

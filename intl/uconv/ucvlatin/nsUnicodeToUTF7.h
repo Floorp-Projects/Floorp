@@ -36,17 +36,17 @@ protected:
 
   nsresult ShiftEncoding(int32_t aEncoding, char * aDest, 
       int32_t * aDestLength);
-  nsresult EncodeDirect(const PRUnichar * aSrc, int32_t * aSrcLength, 
+  nsresult EncodeDirect(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength);
-  nsresult EncodeBase64(const PRUnichar * aSrc, int32_t * aSrcLength, 
+  nsresult EncodeBase64(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength);
   char ValueToChar(uint32_t aValue);
-  virtual bool DirectEncodable(PRUnichar aChar);
+  virtual bool DirectEncodable(char16_t aChar);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
 
-  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, int32_t * aSrcLength, 
+  NS_IMETHOD ConvertNoBuffNoErr(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength);
   NS_IMETHOD FinishNoBuff(char * aDest, int32_t * aDestLength);
   NS_IMETHOD Reset();
@@ -72,7 +72,7 @@ public:
 
 protected:
 
-  virtual bool DirectEncodable(PRUnichar aChar);
+  virtual bool DirectEncodable(char16_t aChar);
 };
 
 #endif /* nsUnicodeToUTF7_h___ */

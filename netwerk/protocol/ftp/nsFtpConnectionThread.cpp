@@ -900,8 +900,8 @@ nsFtpState::R_syst() {
             if (NS_FAILED(rv))
                 return FTP_ERROR;
             
-            PRUnichar* ucs2Response = ToNewUnicode(mResponseMsg);
-            const PRUnichar *formatStrings[1] = { ucs2Response };
+            char16_t* ucs2Response = ToNewUnicode(mResponseMsg);
+            const char16_t *formatStrings[1] = { ucs2Response };
             NS_NAMED_LITERAL_STRING(name, "UnsupportedFTPServer");
 
             nsXPIDLString formattedString;

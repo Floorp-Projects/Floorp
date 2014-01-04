@@ -1284,7 +1284,7 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(bool autoCreate,
 }
 
 NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
-                                const PRUnichar *aData)
+                                const char16_t *aData)
 {
   NS_ASSERTION(!strcmp(aTopic,
                        SPELLCHECK_DICTIONARY_UPDATE_NOTIFICATION),

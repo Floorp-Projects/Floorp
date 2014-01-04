@@ -73,7 +73,7 @@ nsresult nsIDNService::Init()
 
 NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
                                     const char *aTopic,
-                                    const PRUnichar *aData)
+                                    const char16_t *aData)
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(aSubject) );
@@ -83,7 +83,7 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
-void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref)
+void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 {
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNTESTBED).Equals(pref)) {
     bool val;
@@ -186,7 +186,7 @@ nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace, boo
   // encode nodes if non ASCII
   while (start != end) {
     len++;
-    if (*start++ == (PRUnichar)'.') {
+    if (*start++ == (char16_t)'.') {
       rv = stringPrepAndACE(Substring(ustr, offset, len - 1), encodedBuf,
                             allowUnassigned, convertAllLabels);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -306,12 +306,12 @@ NS_IMETHODIMP nsIDNService::Normalize(const nsACString & input, nsACString & out
 
   while (start != end) {
     len++;
-    if (*start++ == PRUnichar('.')) {
+    if (*start++ == char16_t('.')) {
       rv = stringPrep(Substring(inUTF16, offset, len - 1), outLabel, true);
       NS_ENSURE_SUCCESS(rv, rv);
    
       outUTF16.Append(outLabel);
-      outUTF16.Append(PRUnichar('.'));
+      outUTF16.Append(char16_t('.'));
       offset += len;
       len = 0;
     }
@@ -413,7 +413,7 @@ static nsresult utf16ToUcs4(const nsAString& in,
   in.EndReading(end); 
 
   while (start != end) {
-    PRUnichar curChar;
+    char16_t curChar;
 
     curChar= *start++;
 
@@ -439,11 +439,11 @@ static void ucs4toUtf16(const uint32_t *in, nsAString& out)
 {
   while (*in) {
     if (!IS_IN_BMP(*in)) {
-      out.Append((PRUnichar) H_SURROGATE(*in));
-      out.Append((PRUnichar) L_SURROGATE(*in));
+      out.Append((char16_t) H_SURROGATE(*in));
+      out.Append((char16_t) L_SURROGATE(*in));
     }
     else
-      out.Append((PRUnichar) *in);
+      out.Append((char16_t) *in);
     in++;
   }
 }
@@ -484,9 +484,9 @@ static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString
   const uint32_t kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;  
 
   // set up a work buffer for RACE encoder
-  PRUnichar temp[kMaxDNSNodeLen + 2];
+  char16_t temp[kMaxDNSNodeLen + 2];
   temp[0] = 0xFFFF;   // set a place holder (to be filled by get_compress_mode)
-  temp[in.Length() + 1] = (PRUnichar)'\0';
+  temp[in.Length() + 1] = (char16_t)'\0';
 
   nsAString::const_iterator start, end;
   in.BeginReading(start); 

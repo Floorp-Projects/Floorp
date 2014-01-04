@@ -184,7 +184,7 @@ nsDOMCameraManager::XpComShutdown()
 }
 
 nsresult
-nsDOMCameraManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+nsDOMCameraManager::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   if (strcmp(aTopic, "xpcom-shutdown") == 0) {
     XpComShutdown();

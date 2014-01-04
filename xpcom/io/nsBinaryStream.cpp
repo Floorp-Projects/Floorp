@@ -172,7 +172,7 @@ nsBinaryOutputStream::WriteStringZ(const char *aString)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
+nsBinaryOutputStream::WriteWStringZ(const char16_t* aString)
 {
     uint32_t length, byteCount;
     nsresult rv;
@@ -183,17 +183,17 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
 
     if (length == 0)
         return NS_OK;
-    byteCount = length * sizeof(PRUnichar);
+    byteCount = length * sizeof(char16_t);
 
 #ifdef IS_BIG_ENDIAN
     rv = WriteBytes(reinterpret_cast<const char*>(aString), byteCount);
 #else
     // XXX use WriteSegments here to avoid copy!
-    PRUnichar *copy, temp[64];
+    char16_t *copy, temp[64];
     if (length <= 64) {
         copy = temp;
     } else {
-        copy = reinterpret_cast<PRUnichar*>(moz_malloc(byteCount));
+        copy = reinterpret_cast<char16_t*>(moz_malloc(byteCount));
         if (!copy)
             return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -208,7 +208,7 @@ nsBinaryOutputStream::WriteWStringZ(const PRUnichar* aString)
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteUtf8Z(const PRUnichar* aString)
+nsBinaryOutputStream::WriteUtf8Z(const char16_t* aString)
 {
     return WriteStringZ(NS_ConvertUTF16toUTF8(aString).get());
 }
@@ -573,9 +573,9 @@ nsBinaryInputStream::ReadCString(nsACString& aString)
 
 
 // sometimes, WriteSegmentToString will be handed an odd-number of
-// bytes, which means we only have half of the last PRUnichar
+// bytes, which means we only have half of the last char16_t
 struct WriteStringClosure {
-    PRUnichar *mWriteCursor;
+    char16_t *mWriteCursor;
     bool mHasCarryoverByte;
     char mCarryoverByte;
 };
@@ -605,10 +605,10 @@ WriteSegmentToString(nsIInputStream* aStream,
                      uint32_t *aWriteCount)
 {
     NS_PRECONDITION(aCount > 0, "Why are we being told to write 0 bytes?");
-    NS_PRECONDITION(sizeof(PRUnichar) == 2, "We can't handle other sizes!");
+    NS_PRECONDITION(sizeof(char16_t) == 2, "We can't handle other sizes!");
 
     WriteStringClosure* closure = static_cast<WriteStringClosure*>(aClosure);
-    PRUnichar *cursor = closure->mWriteCursor;
+    char16_t *cursor = closure->mWriteCursor;
 
     // we're always going to consume the whole buffer no matter what
     // happens, so take care of that right now.. that allows us to
@@ -619,7 +619,7 @@ WriteSegmentToString(nsIInputStream* aStream,
     if (closure->mHasCarryoverByte) {
         // re-create the two-byte sequence we want to work with
         char bytes[2] = { closure->mCarryoverByte, *aFromSegment };
-        *cursor = *(PRUnichar*)bytes;
+        *cursor = *(char16_t*)bytes;
         // Now the little endianness dance
         mozilla::NativeEndian::swapToBigEndianInPlace(cursor, 1);
         ++cursor;
@@ -634,23 +634,23 @@ WriteSegmentToString(nsIInputStream* aStream,
     }
     
     // this array is possibly unaligned... be careful how we access it!
-    const PRUnichar *unicodeSegment =
-        reinterpret_cast<const PRUnichar*>(aFromSegment);
+    const char16_t *unicodeSegment =
+        reinterpret_cast<const char16_t*>(aFromSegment);
 
     // calculate number of full characters in segment (aCount could be odd!)
-    uint32_t segmentLength = aCount / sizeof(PRUnichar);
+    uint32_t segmentLength = aCount / sizeof(char16_t);
 
     // copy all data into our aligned buffer.  byte swap if necessary.
     // cursor may be unaligned, so we cannot use copyAndSwapToBigEndian directly
-    memcpy(cursor, unicodeSegment, segmentLength * sizeof(PRUnichar));
-    PRUnichar *end = cursor + segmentLength;
+    memcpy(cursor, unicodeSegment, segmentLength * sizeof(char16_t));
+    char16_t *end = cursor + segmentLength;
     mozilla::NativeEndian::swapToBigEndianInPlace(cursor, segmentLength);
     closure->mWriteCursor = end;
 
     // remember this is the modifed aCount and aFromSegment,
     // so that will take into account the fact that we might have
     // skipped the first byte in the buffer
-    if (aCount % sizeof(PRUnichar) != 0) {
+    if (aCount % sizeof(char16_t) != 0) {
         // we must have had a carryover byte, that we'll need the next
         // time around
         closure->mCarryoverByte = aFromSegment[aCount - 1];
@@ -687,12 +687,12 @@ nsBinaryInputStream::ReadString(nsAString& aString)
     closure.mHasCarryoverByte = false;
     
     rv = ReadSegments(WriteSegmentToString, &closure,
-                      length*sizeof(PRUnichar), &bytesRead);
+                      length*sizeof(char16_t), &bytesRead);
     if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(!closure.mHasCarryoverByte, "some strange stream corruption!");
     
-    if (bytesRead != length*sizeof(PRUnichar))
+    if (bytesRead != length*sizeof(char16_t))
         return NS_ERROR_FAILURE;
 
     return NS_OK;

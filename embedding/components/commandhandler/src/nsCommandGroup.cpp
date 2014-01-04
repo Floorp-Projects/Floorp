@@ -35,7 +35,7 @@ protected:
 
   nsHashtable&  mHashTable;
   int32_t       mIndex;
-  char **       mGroupNames;        // array of pointers to PRUnichar* in the hash table
+  char **       mGroupNames;        // array of pointers to char16_t* in the hash table
   bool          mInitted;
   
 };
@@ -185,7 +185,7 @@ nsNamedGroupEnumerator::GetNext(nsISupports **_retval)
   if (mIndex >= int32_t(mGroupArray->Length()))
     return NS_ERROR_FAILURE;
     
-  PRUnichar   *thisGroupName = (PRUnichar*)mGroupArray->ElementAt(mIndex);
+  char16_t   *thisGroupName = (char16_t*)mGroupArray->ElementAt(mIndex);
   NS_ASSERTION(thisGroupName, "Bad Element in mGroupArray");
   
   nsresult rv;
@@ -236,7 +236,7 @@ nsControllerCommandGroup::AddCommandToGroup(const char * aCommand, const char *a
     mGroupsHash.Put(&groupKey, (void *)commandList);
   }
   // add the command to the list. Note that we're not checking for duplicates here
-  char* commandString = NS_strdup(aCommand); // we store allocated PRUnichar* in the array
+  char* commandString = NS_strdup(aCommand); // we store allocated char16_t* in the array
   if (!commandString) return NS_ERROR_OUT_OF_MEMORY;
   
 #ifdef DEBUG

@@ -60,7 +60,7 @@ static
 nsresult GetBundleValue(nsIStringBundle * aBundle, 
                         const char * aName, 
                         const nsAFlatString& aProp, 
-                        PRUnichar ** aResult)
+                        char16_t ** aResult)
 {
   nsAutoString key; 
 
@@ -90,7 +90,7 @@ nsresult GetBundleValue(nsIStringBundle * aBundle,
 }
 
 static
-nsresult GetCharsetDataImpl(const char * aCharset, const PRUnichar * aProp,
+nsresult GetCharsetDataImpl(const char * aCharset, const char16_t * aProp,
                             nsAString& aResult)
 {
   NS_ENSURE_ARG_POINTER(aCharset);
@@ -315,7 +315,7 @@ nsCharsetConverterManager::GetCharsetTitle(const char * aCharset,
 
 NS_IMETHODIMP
 nsCharsetConverterManager::GetCharsetData(const char * aCharset, 
-                                          const PRUnichar * aProp,
+                                          const char16_t * aProp,
                                           nsAString& aResult)
 {
   return GetCharsetDataImpl(aCharset, aProp, aResult);

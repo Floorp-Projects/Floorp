@@ -280,12 +280,12 @@ TestAuthPrompt::~TestAuthPrompt()
 }
 
 NS_IMETHODIMP
-TestAuthPrompt::Prompt(const PRUnichar *dialogTitle,
-                       const PRUnichar *text,
-                       const PRUnichar *passwordRealm,
+TestAuthPrompt::Prompt(const char16_t *dialogTitle,
+                       const char16_t *text,
+                       const char16_t *passwordRealm,
                        uint32_t savePassword,
-                       const PRUnichar *defaultText,
-                       PRUnichar **result,
+                       const char16_t *defaultText,
+                       char16_t **result,
                        bool *_retval)
 {
     *_retval = false;
@@ -293,12 +293,12 @@ TestAuthPrompt::Prompt(const PRUnichar *dialogTitle,
 }
 
 NS_IMETHODIMP
-TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
-                                          const PRUnichar *dialogText,
-                                          const PRUnichar *passwordRealm,
+TestAuthPrompt::PromptUsernameAndPassword(const char16_t *dialogTitle,
+                                          const char16_t *dialogText,
+                                          const char16_t *passwordRealm,
                                           uint32_t savePassword,
-                                          PRUnichar **user,
-                                          PRUnichar **pwd,
+                                          char16_t **user,
+                                          char16_t **pwd,
                                           bool *_retval)
 {
     NS_ConvertUTF16toUTF8 text(passwordRealm);
@@ -335,11 +335,11 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
 }
 
 NS_IMETHODIMP
-TestAuthPrompt::PromptPassword(const PRUnichar *dialogTitle,
-                               const PRUnichar *text,
-                               const PRUnichar *passwordRealm,
+TestAuthPrompt::PromptPassword(const char16_t *dialogTitle,
+                               const char16_t *text,
+                               const char16_t *passwordRealm,
                                uint32_t savePassword,
-                               PRUnichar **pwd,
+                               char16_t **pwd,
                                bool *_retval)
 {
     *_retval = false;

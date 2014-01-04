@@ -242,7 +242,7 @@ URL::GetProtocol(nsString& aProtocol) const
   }
 
   CopyASCIItoUTF16(protocol, aProtocol);
-  aProtocol.Append(PRUnichar(':'));
+  aProtocol.Append(char16_t(':'));
 }
 
 void
@@ -482,7 +482,7 @@ URL::GetHash(nsString& aHash) const
   nsresult rv = mURI->GetRef(ref);
   if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
     NS_UnescapeURL(ref); // XXX may result in random non-ASCII bytes!
-    aHash.Assign(PRUnichar('#'));
+    aHash.Assign(char16_t('#'));
     AppendUTF8toUTF16(ref, aHash);
   }
 }

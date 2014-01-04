@@ -60,8 +60,8 @@ using mozilla::services::GetObserverService;
 
 gfxFontCache *gfxFontCache::gGlobalCache = nullptr;
 
-static const PRUnichar kEllipsisChar[] = { 0x2026, 0x0 };
-static const PRUnichar kASCIIPeriodsChar[] = { '.', '.', '.', 0x0 };
+static const char16_t kEllipsisChar[] = { 0x2026, 0x0 };
+static const char16_t kASCIIPeriodsChar[] = { '.', '.', '.', 0x0 };
 
 #ifdef DEBUG_roc
 #define DEBUG_TEXT_RUN_STORAGE_METRICS
@@ -1394,7 +1394,7 @@ NS_IMPL_ISUPPORTS1(gfxFontCache::Observer, nsIObserver)
 NS_IMETHODIMP
 gfxFontCache::Observer::Observe(nsISupports *aSubject,
                                 const char *aTopic,
-                                const PRUnichar *someData)
+                                const char16_t *someData)
 {
     if (!nsCRT::strcmp(aTopic, "memory-pressure")) {
         gfxFontCache *fontCache = gfxFontCache::GetCache();
@@ -3072,13 +3072,13 @@ gfxFont::NotifyGlyphsChanged()
 }
 
 static bool
-IsBoundarySpace(PRUnichar aChar, PRUnichar aNextChar)
+IsBoundarySpace(char16_t aChar, char16_t aNextChar)
 {
     return (aChar == ' ' || aChar == 0x00A0) && !IsClusterExtender(aNextChar);
 }
 
 static inline uint32_t
-HashMix(uint32_t aHash, PRUnichar aCh)
+HashMix(uint32_t aHash, char16_t aCh)
 {
     return (aHash >> 28) ^ (aHash << 4) ^ aCh;
 }
@@ -3184,8 +3184,8 @@ gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
         // so the TEXT_IS_8BIT flag was set and the cached ShapedWord we're
         // comparing with will have 8-bit text.
         const uint8_t   *s1 = sw->Text8Bit();
-        const PRUnichar *s2 = aKey->mText.mDouble;
-        const PRUnichar *s2end = s2 + aKey->mLength;
+        const char16_t *s2 = aKey->mText.mDouble;
+        const char16_t *s2end = s2 + aKey->mLength;
         while (s2 < s2end) {
             if (*s1++ != *s2++) {
                 return false;
@@ -3196,7 +3196,7 @@ gfxFont::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
     NS_ASSERTION((aKey->mFlags & gfxTextRunFactory::TEXT_IS_8BIT) == 0 &&
                  !aKey->mTextIs8Bit, "didn't expect 8-bit text here");
     return (0 == memcmp(sw->TextUnicode(), aKey->mText.mDouble,
-                        aKey->mLength * sizeof(PRUnichar)));
+                        aKey->mLength * sizeof(char16_t)));
 }
 
 bool
@@ -3220,7 +3220,7 @@ gfxFont::ShapeText(gfxContext    *aContext,
 
 bool
 gfxFont::ShapeText(gfxContext      *aContext,
-                   const PRUnichar *aText,
+                   const char16_t *aText,
                    uint32_t         aOffset,
                    uint32_t         aLength,
                    int32_t          aScript,
@@ -3259,7 +3259,7 @@ gfxFont::ShapeText(gfxContext      *aContext,
 
 void
 gfxFont::PostShapingFixup(gfxContext      *aContext,
-                          const PRUnichar *aText,
+                          const char16_t *aText,
                           uint32_t         aOffset,
                           uint32_t         aLength,
                           gfxShapedText   *aShapedText)
@@ -3299,7 +3299,7 @@ gfxFont::ShapeFragmentWithoutWordCache(gfxContext *aContext,
 
             // in the 8-bit case, there are no multi-char clusters,
             // so we don't need to do this check
-            if (sizeof(T) == sizeof(PRUnichar)) {
+            if (sizeof(T) == sizeof(char16_t)) {
                 uint32_t i;
                 for (i = 0; i < BACKTRACK_LIMIT; ++i) {
                     if (aTextRun->IsClusterStart(aOffset + fragLen - i)) {
@@ -3396,7 +3396,7 @@ gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
 #endif
 
 inline static bool IsChar8Bit(uint8_t /*aCh*/) { return true; }
-inline static bool IsChar8Bit(PRUnichar aCh) { return aCh < 0x100; }
+inline static bool IsChar8Bit(char16_t aCh) { return aCh < 0x100; }
 
 template<typename T>
 bool
@@ -3493,7 +3493,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
             // in the 8-bit version of this method, TEXT_IS_8BIT was
             // already set as part of |flags|, so no need for a per-word
             // adjustment here
-            if (sizeof(T) == sizeof(PRUnichar)) {
+            if (sizeof(T) == sizeof(char16_t)) {
                 if (wordIs8Bit) {
                     wordFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
                 }
@@ -4232,7 +4232,7 @@ gfxFontGroup::IsInvalidChar(uint8_t ch)
 }
 
 bool 
-gfxFontGroup::IsInvalidChar(PRUnichar ch)
+gfxFontGroup::IsInvalidChar(char16_t ch)
 {
     // All printable 7-bit ASCII values are OK
     if (ch >= ' ' && ch < 0x7f) {
@@ -4290,9 +4290,9 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
                                   FontCreationCallback fc,
                                   void *closure)
 {
-    const PRUnichar kSingleQuote  = PRUnichar('\'');
-    const PRUnichar kDoubleQuote  = PRUnichar('\"');
-    const PRUnichar kComma        = PRUnichar(',');
+    const char16_t kSingleQuote  = char16_t('\'');
+    const char16_t kDoubleQuote  = char16_t('\"');
+    const char16_t kComma        = char16_t(',');
 
     nsIAtom *groupAtom = nullptr;
     nsAutoCString groupString;
@@ -4311,7 +4311,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
     groupAtom->ToUTF8String(groupString);
 
     nsPromiseFlatString families(aFamilies);
-    const PRUnichar *p, *p_end;
+    const char16_t *p, *p_end;
     families.BeginReading(p);
     families.EndReading(p_end);
     nsAutoString family;
@@ -4326,10 +4326,10 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
         bool generic;
         if (*p == kSingleQuote || *p == kDoubleQuote) {
             // quoted font family
-            PRUnichar quoteMark = *p;
+            char16_t quoteMark = *p;
             if (++p == p_end)
                 return true;
-            const PRUnichar *nameStart = p;
+            const char16_t *nameStart = p;
 
             // XXX What about CSS character escapes?
             while (*p != quoteMark)
@@ -4345,7 +4345,7 @@ gfxFontGroup::ForEachFontInternal(const nsAString& aFamilies,
 
         } else {
             // unquoted font family
-            const PRUnichar *nameStart = p;
+            const char16_t *nameStart = p;
             while (++p != p_end && *p != kComma)
                 /* nothing */ ;
 
@@ -4503,7 +4503,7 @@ gfxFontGroup::MakeHyphenTextRun(gfxContext *aCtx, uint32_t aAppUnitsPerDevUnit)
     // only use U+2010 if it is supported by the first font in the group;
     // it's better to use ASCII '-' from the primary font than to fall back to
     // U+2010 from some other, possibly poorly-matching face
-    static const PRUnichar hyphen = 0x2010;
+    static const char16_t hyphen = 0x2010;
     gfxFont *font = GetFontAt(0);
     if (font && font->HasCharacter(hyphen)) {
         return MakeTextRun(&hyphen, 1, aCtx, aAppUnitsPerDevUnit,
@@ -4561,7 +4561,7 @@ gfxFontGroup::MakeTextRun(const uint8_t *aString, uint32_t aLength,
 }
 
 gfxTextRun *
-gfxFontGroup::MakeTextRun(const PRUnichar *aString, uint32_t aLength,
+gfxFontGroup::MakeTextRun(const char16_t *aString, uint32_t aLength,
                           const Parameters *aParams, uint32_t aFlags)
 {
     if (aLength == 0) {
@@ -4599,7 +4599,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
     // we need to do numeral processing even on 8-bit text,
     // in case we're converting Western to Hindi/Arabic digits
     int32_t numOption = gfxPlatform::GetPlatform()->GetBidiNumeralOption();
-    nsAutoArrayPtr<PRUnichar> transformedString;
+    nsAutoArrayPtr<char16_t> transformedString;
     if (numOption != IBMBIDI_NUMERAL_NOMINAL) {
         // scan the string for numerals that may need to be transformed;
         // if we find any, we'll make a local copy here and use that for
@@ -4607,13 +4607,13 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         bool prevIsArabic =
             (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_INCOMING_ARABICCHAR) != 0;
         for (uint32_t i = 0; i < aLength; ++i) {
-            PRUnichar origCh = aString[i];
-            PRUnichar newCh = HandleNumberInChar(origCh, prevIsArabic, numOption);
+            char16_t origCh = aString[i];
+            char16_t newCh = HandleNumberInChar(origCh, prevIsArabic, numOption);
             if (newCh != origCh) {
                 if (!transformedString) {
-                    transformedString = new PRUnichar[aLength];
-                    if (sizeof(T) == sizeof(PRUnichar)) {
-                        memcpy(transformedString.get(), aString, i * sizeof(PRUnichar));
+                    transformedString = new char16_t[aLength];
+                    if (sizeof(T) == sizeof(char16_t)) {
+                        memcpy(transformedString.get(), aString, i * sizeof(char16_t));
                     } else {
                         for (uint32_t j = 0; j < i; ++j) {
                             transformedString[j] = aString[j];
@@ -4663,13 +4663,13 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         InitScriptRun(aContext, aTextRun, aString,
                       0, aLength, MOZ_SCRIPT_LATIN);
     } else {
-        const PRUnichar *textPtr;
+        const char16_t *textPtr;
         if (transformedString) {
             textPtr = transformedString.get();
         } else {
             // typecast to avoid compilation error for the 8-bit version,
             // even though this is dead code in that case
-            textPtr = reinterpret_cast<const PRUnichar*>(aString);
+            textPtr = reinterpret_cast<const char16_t*>(aString);
         }
 
         // split into script runs so that script can potentially influence
@@ -4707,7 +4707,7 @@ gfxFontGroup::InitTextRun(gfxContext *aContext,
         }
     }
 
-    if (sizeof(T) == sizeof(PRUnichar) && aLength > 0) {
+    if (sizeof(T) == sizeof(char16_t) && aLength > 0) {
         gfxTextRun::CompressedGlyph *glyph = aTextRun->GetCharacterGlyphs();
         if (!glyph->IsSimpleGlyph()) {
             glyph->SetClusterStart(true);
@@ -4795,7 +4795,7 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
 
                 // for 16-bit textruns only, check for surrogate pairs and
                 // special Unicode spaces; omit these checks in 8-bit runs
-                if (sizeof(T) == sizeof(PRUnichar)) {
+                if (sizeof(T) == sizeof(char16_t)) {
                     if (NS_IS_HIGH_SURROGATE(ch) &&
                         index + 1 < aScriptRunEnd &&
                         NS_IS_LOW_SURROGATE(aString[index + 1]))
@@ -5042,7 +5042,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
         uint32_t ch = aString[i];
 
         // in 16-bit case only, check for surrogate pair
-        if (sizeof(T) == sizeof(PRUnichar)) {
+        if (sizeof(T) == sizeof(char16_t)) {
             if ((i + 1 < aLength) && NS_IS_HIGH_SURROGATE(ch) &&
                                  NS_IS_LOW_SURROGATE(aString[i + 1])) {
                 i++;
@@ -5272,7 +5272,7 @@ gfxFontStyle::ParseFontLanguageOverride(const nsString& aLangTag)
   }
   uint32_t index, result = 0;
   for (index = 0; index < aLangTag.Length(); ++index) {
-    PRUnichar ch = aLangTag[index];
+    char16_t ch = aLangTag[index];
     if (!nsCRT::IsAscii(ch)) { // valid tags are pure ASCII
       return NO_FONT_LANGUAGE_OVERRIDE;
     }
@@ -5357,7 +5357,7 @@ gfxFontStyle::ComputeWeight() const
 
 void
 gfxShapedText::SetupClusterBoundaries(uint32_t         aOffset,
-                                      const PRUnichar *aString,
+                                      const char16_t *aString,
                                       uint32_t         aLength)
 {
     CompressedGlyph *glyphs = GetCharacterGlyphs() + aOffset;
@@ -5374,7 +5374,7 @@ gfxShapedText::SetupClusterBoundaries(uint32_t         aOffset,
     }
 
     while (!iter.AtEnd()) {
-        if (*iter == PRUnichar(' ')) {
+        if (*iter == char16_t(' ')) {
             glyphs->SetIsSpace();
         }
         // advance iter to the next cluster-start (or end of text)
@@ -6728,7 +6728,7 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
 
 bool
 gfxTextRun::SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
-                                  uint32_t aCharIndex, PRUnichar aSpaceChar)
+                                  uint32_t aCharIndex, char16_t aSpaceChar)
 {
     uint32_t spaceGlyph = aFont->GetSpaceGlyph();
     if (!spaceGlyph || !CompressedGlyph::IsSimpleGlyphID(spaceGlyph)) {

@@ -4,7 +4,7 @@
 
 #include "nsHtml5OwningUTF16Buffer.h"
 
-nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(PRUnichar* aBuffer)
+nsHtml5OwningUTF16Buffer::nsHtml5OwningUTF16Buffer(char16_t* aBuffer)
   : nsHtml5UTF16Buffer(aBuffer, 0),
     next(nullptr),
     key(nullptr)
@@ -40,7 +40,7 @@ already_AddRefed<nsHtml5OwningUTF16Buffer>
 nsHtml5OwningUTF16Buffer::FalliblyCreate(int32_t aLength)
 {
   const mozilla::fallible_t fallible = mozilla::fallible_t();
-  PRUnichar* newBuf = new (fallible) PRUnichar[aLength];
+  char16_t* newBuf = new (fallible) char16_t[aLength];
   if (!newBuf) {
     return nullptr;
   }
