@@ -49,13 +49,13 @@ class nsXBLPrototypeHandler
 {
 public:
   // This constructor is used by XBL handlers (both the JS and command shorthand variety)
-  nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUnichar* aPhase,
-                        const PRUnichar* aAction, const PRUnichar* aCommand,
-                        const PRUnichar* aKeyCode, const PRUnichar* aCharCode,
-                        const PRUnichar* aModifiers, const PRUnichar* aButton,
-                        const PRUnichar* aClickCount, const PRUnichar* aGroup,
-                        const PRUnichar* aPreventDefault,
-                        const PRUnichar* aAllowUntrusted,
+  nsXBLPrototypeHandler(const char16_t* aEvent, const char16_t* aPhase,
+                        const char16_t* aAction, const char16_t* aCommand,
+                        const char16_t* aKeyCode, const char16_t* aCharCode,
+                        const char16_t* aModifiers, const char16_t* aButton,
+                        const char16_t* aClickCount, const char16_t* aGroup,
+                        const char16_t* aPreventDefault,
+                        const char16_t* aAllowUntrusted,
                         nsXBLPrototypeBinding* aBinding,
                         uint32_t aLineNumber);
 
@@ -152,15 +152,15 @@ protected:
 
   inline int32_t GetMatchingKeyCode(const nsAString& aKeyName);
   void ConstructPrototype(nsIContent* aKeyElement,
-                          const PRUnichar* aEvent=nullptr, const PRUnichar* aPhase=nullptr,
-                          const PRUnichar* aAction=nullptr, const PRUnichar* aCommand=nullptr,
-                          const PRUnichar* aKeyCode=nullptr, const PRUnichar* aCharCode=nullptr,
-                          const PRUnichar* aModifiers=nullptr, const PRUnichar* aButton=nullptr,
-                          const PRUnichar* aClickCount=nullptr, const PRUnichar* aGroup=nullptr,
-                          const PRUnichar* aPreventDefault=nullptr,
-                          const PRUnichar* aAllowUntrusted=nullptr);
+                          const char16_t* aEvent=nullptr, const char16_t* aPhase=nullptr,
+                          const char16_t* aAction=nullptr, const char16_t* aCommand=nullptr,
+                          const char16_t* aKeyCode=nullptr, const char16_t* aCharCode=nullptr,
+                          const char16_t* aModifiers=nullptr, const char16_t* aButton=nullptr,
+                          const char16_t* aClickCount=nullptr, const char16_t* aGroup=nullptr,
+                          const char16_t* aPreventDefault=nullptr,
+                          const char16_t* aAllowUntrusted=nullptr);
 
-  void ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aElement, const char *aMessageName);
+  void ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, nsIContent* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);
   bool ModifiersMatchMask(nsIDOMUIEvent* aEvent,
                             bool aIgnoreShiftKey = false);
@@ -192,7 +192,7 @@ protected:
 protected:
   union {
     nsIWeakReference* mHandlerElement;  // For XUL <key> element handlers. [STRONG]
-    PRUnichar*        mHandlerText;     // For XBL handlers (we don't build an
+    char16_t*        mHandlerText;     // For XBL handlers (we don't build an
                                         // element for the <handler>, and instead
                                         // we cache the JS text or command name
                                         // that we should use.

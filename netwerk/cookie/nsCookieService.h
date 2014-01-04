@@ -303,7 +303,7 @@ class nsCookieService : public nsICookieService
     static void                   FindStaleCookie(nsCookieEntry *aEntry, int64_t aCurrentTime, nsListIter &aIter);
     void                          NotifyRejected(nsIURI *aHostURI);
     void                          NotifyThirdParty(nsIURI *aHostURI, bool aAccepted, nsIChannel *aChannel);
-    void                          NotifyChanged(nsISupports *aSubject, const PRUnichar *aData);
+    void                          NotifyChanged(nsISupports *aSubject, const char16_t *aData);
     void                          NotifyPurged(nsICookie2* aCookie);
     already_AddRefed<nsIArray>    CreatePurgeList(nsICookie2* aCookie);
 

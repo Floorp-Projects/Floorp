@@ -70,7 +70,7 @@ public:
   virtual void UnbindFromTree(bool aDeep = true,
                               bool aNullParent = true) MOZ_OVERRIDE;
 
-  nsresult AppendTextForNormalize(const PRUnichar* aBuffer, uint32_t aLength,
+  nsresult AppendTextForNormalize(const char16_t* aBuffer, uint32_t aLength,
                                   bool aNotify, nsIContent* aNextSibling);
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }

@@ -257,9 +257,9 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
                 if (!len)
                     return false;
 
-                const size_t buffer_size = (len + 1) * sizeof(PRUnichar);
-                PRUnichar* buffer =
-                    static_cast<PRUnichar*>(JS_malloc(cx, buffer_size));
+                const size_t buffer_size = (len + 1) * sizeof(char16_t);
+                char16_t* buffer =
+                    static_cast<char16_t*>(JS_malloc(cx, buffer_size));
                 if (!buffer)
                     return false;
 
@@ -478,10 +478,10 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     }
     case nsXPTType::T_DOMSTRING:
     {
-        static const PRUnichar EMPTY_STRING[] = { '\0' };
-        static const PRUnichar VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
+        static const char16_t EMPTY_STRING[] = { '\0' };
+        static const char16_t VOID_STRING[] = { 'u', 'n', 'd', 'e', 'f', 'i', 'n', 'e', 'd', '\0' };
 
-        const PRUnichar* chars = nullptr;
+        const char16_t* chars = nullptr;
         JSString* str = nullptr;
         bool isNewString = false;
         uint32_t length = 0;
@@ -661,8 +661,8 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         } else {
             rs = *((nsCString**)d);
         }
-        const PRUnichar* start = (const PRUnichar*)chars;
-        const PRUnichar* end = start + length;
+        const char16_t* start = (const char16_t*)chars;
+        const char16_t* end = start + length;
         CopyUTF16toUTF8(nsDependentSubstring(start, end), *rs);
         return true;
     }
@@ -730,7 +730,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
                    JSVAL_IS_STRING(s)) {
             // We're trying to pass a string as an nsIAtom.  Let's atomize!
             JSString* str = JSVAL_TO_STRING(s);
-            const PRUnichar* chars = JS_GetStringCharsZ(cx, str);
+            const char16_t* chars = JS_GetStringCharsZ(cx, str);
             if (!chars) {
                 if (pErr)
                     *pErr = NS_ERROR_XPC_BAD_CONVERT_JS_NULL_REF;
@@ -1305,15 +1305,15 @@ XPCConvert::JSErrorToXPCException(const char* message,
     if (report) {
         nsAutoString bestMessage;
         if (report && report->ucmessage) {
-            bestMessage = static_cast<const PRUnichar*>(report->ucmessage);
+            bestMessage = static_cast<const char16_t*>(report->ucmessage);
         } else if (message) {
             CopyASCIItoUTF16(message, bestMessage);
         } else {
             bestMessage.AssignLiteral("JavaScript Error");
         }
 
-        const PRUnichar* uclinebuf =
-            static_cast<const PRUnichar*>(report->uclinebuf);
+        const char16_t* uclinebuf =
+            static_cast<const char16_t*>(report->uclinebuf);
 
         data = new nsScriptError();
         data->InitWithWindowID(

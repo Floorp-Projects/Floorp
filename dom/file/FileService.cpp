@@ -306,7 +306,7 @@ NS_IMPL_ISUPPORTS1(FileService, nsIObserver)
 
 NS_IMETHODIMP
 FileService::Observe(nsISupports* aSubject, const char*  aTopic,
-                     const PRUnichar* aData)
+                     const char16_t* aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!strcmp(aTopic, "profile-before-change"), "Wrong topic!");

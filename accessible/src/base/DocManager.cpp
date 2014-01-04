@@ -230,7 +230,7 @@ DocManager::OnLocationChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 DocManager::OnStatusChange(nsIWebProgress* aWebProgress,
                            nsIRequest* aRequest, nsresult aStatus,
-                           const PRUnichar* aMessage)
+                           const char16_t* aMessage)
 {
   NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;

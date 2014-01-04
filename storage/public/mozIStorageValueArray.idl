@@ -112,8 +112,8 @@ interface mozIStorageValueArray : nsISupports {
     return str;
   }
 
-  inline const PRUnichar* AsSharedWString(uint32_t idx, uint32_t *len) {
-    const PRUnichar *str = nullptr;
+  inline const char16_t* AsSharedWString(uint32_t idx, uint32_t *len) {
+    const char16_t *str = nullptr;
     *len = 0;
     mozilla::DebugOnly<nsresult> rv = GetSharedString(idx, len, &str);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv) || IsNull(idx),

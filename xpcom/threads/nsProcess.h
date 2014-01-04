@@ -49,7 +49,7 @@ private:
   nsresult CopyArgsAndRunProcess(bool blocking, const char** args,
                                  uint32_t count, nsIObserver* observer,
                                  bool holdWeak);
-  nsresult CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
+  nsresult CopyArgsAndRunProcessw(bool blocking, const char16_t** args,
                                   uint32_t count, nsIObserver* observer,
                                   bool holdWeak);
   // The 'args' array is null-terminated.

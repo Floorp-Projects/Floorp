@@ -36,16 +36,16 @@ protected:
   bool                      mFreshBase64;
 
   nsresult DecodeDirect(const char * aSrc, int32_t * aSrcLength, 
-      PRUnichar * aDest, int32_t * aDestLength);
+      char16_t * aDest, int32_t * aDestLength);
   nsresult DecodeBase64(const char * aSrc, int32_t * aSrcLength, 
-      PRUnichar * aDest, int32_t * aDestLength);
+      char16_t * aDest, int32_t * aDestLength);
   uint32_t CharToValue(char aChar);
 
   //--------------------------------------------------------------------
   // Subclassing of nsBufferDecoderSupport class [declaration]
 
   NS_IMETHOD ConvertNoBuff(const char * aSrc, int32_t * aSrcLength, 
-      PRUnichar * aDest, int32_t * aDestLength);
+      char16_t * aDest, int32_t * aDestLength);
   NS_IMETHOD Reset();
 };
 

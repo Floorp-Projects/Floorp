@@ -6,9 +6,9 @@
 #include "nsUnicodeToUTF16.h"
 #include <string.h>
 
-inline static void SwapBytes(char *aDest, const PRUnichar* aSrc, int32_t aLen);
+inline static void SwapBytes(char *aDest, const char16_t* aSrc, int32_t aLen);
 
-NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const PRUnichar * aSrc, int32_t * aSrcLength, 
+NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const char16_t * aSrc, int32_t * aSrcLength, 
       char * aDest, int32_t * aDestLength)
 {
   int32_t srcInLen = *aSrcLength;
@@ -16,7 +16,7 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Convert(const PRUnichar * aSrc, int32_t * aSrc
   int32_t srcOutLen = 0;
   int32_t destOutLen = 0;
   int32_t copyCharLen;
-  PRUnichar *p = (PRUnichar*)aDest;
+  char16_t *p = (char16_t*)aDest;
  
   // Handle BOM if necessary 
   if(0!=mBOM)
@@ -53,7 +53,7 @@ needmoreoutput:
   return NS_OK_UENC_MOREOUTPUT;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF16BE::GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength, 
+NS_IMETHODIMP nsUnicodeToUTF16BE::GetMaxLength(const char16_t * aSrc, int32_t aSrcLength, 
       int32_t * aDestLength)
 {
   if(0 != mBOM)
@@ -69,7 +69,7 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Finish(char * aDest, int32_t * aDestLength)
   {
      if(*aDestLength >= 2)
      {
-        *((PRUnichar*)aDest)= mBOM;
+        *((char16_t*)aDest)= mBOM;
         mBOM=0;
         *aDestLength = 2;
         return NS_OK;  
@@ -90,12 +90,12 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::Reset()
 }
 
 NS_IMETHODIMP nsUnicodeToUTF16BE::SetOutputErrorBehavior(int32_t aBehavior, 
-      nsIUnicharEncoder * aEncoder, PRUnichar aChar)
+      nsIUnicharEncoder * aEncoder, char16_t aChar)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF16BE::CopyData(char* aDest, const PRUnichar* aSrc, int32_t aLen  )
+NS_IMETHODIMP nsUnicodeToUTF16BE::CopyData(char* aDest, const char16_t* aSrc, int32_t aLen  )
 {
 #ifdef IS_BIG_ENDIAN
   //UnicodeToUTF16SameEndian
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsUnicodeToUTF16BE::CopyData(char* aDest, const PRUnichar* aSrc, i
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUnicodeToUTF16LE::CopyData(char* aDest, const PRUnichar* aSrc, int32_t aLen  )
+NS_IMETHODIMP nsUnicodeToUTF16LE::CopyData(char* aDest, const char16_t* aSrc, int32_t aLen  )
 {
 #ifdef IS_LITTLE_ENDIAN
   //UnicodeToUTF16SameEndian
@@ -123,13 +123,13 @@ NS_IMETHODIMP nsUnicodeToUTF16LE::CopyData(char* aDest, const PRUnichar* aSrc, i
   return NS_OK;
 }
 
-inline void SwapBytes(char *aDest, const PRUnichar* aSrc, int32_t aLen)
+inline void SwapBytes(char *aDest, const char16_t* aSrc, int32_t aLen)
 {
-  PRUnichar *p = (PRUnichar*) aDest;
+  char16_t *p = (char16_t*) aDest;
   // copy the data  by swaping 
   for(int32_t i = 0; i < aLen; i++)
   {
-    PRUnichar aChar = *aSrc++;
+    char16_t aChar = *aSrc++;
     *p++ = (0x00FF & (aChar >> 8)) | (0xFF00 & (aChar << 8));
   }
 }

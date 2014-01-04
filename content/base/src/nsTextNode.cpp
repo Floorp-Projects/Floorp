@@ -122,7 +122,7 @@ nsTextNode::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
 }
 
 nsresult
-nsTextNode::AppendTextForNormalize(const PRUnichar* aBuffer, uint32_t aLength,
+nsTextNode::AppendTextForNormalize(const char16_t* aBuffer, uint32_t aLength,
                                    bool aNotify, nsIContent* aNextSibling)
 {
   CharacterDataChangeInfo::Details details = {

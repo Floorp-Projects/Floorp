@@ -117,7 +117,7 @@ NS_IMPL_ISUPPORTS1(nsStandardURL::nsPrefObserver, nsIObserver)
 NS_IMETHODIMP nsStandardURL::
 nsPrefObserver::Observe(nsISupports *subject,
                         const char *topic,
-                        const PRUnichar *data)
+                        const char16_t *data)
 {
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(subject) );

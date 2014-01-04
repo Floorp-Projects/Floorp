@@ -319,16 +319,16 @@ public:
 
   static uint32_t CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
                                                  uint32_t aSrcOffset,
-                                                 PRUnichar* aDest,
+                                                 char16_t* aDest,
                                                  uint32_t aLength,
                                                  bool& aLastCharCR);
 
-  static uint32_t CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAString& aDest);
+  static uint32_t CopyNewlineNormalizedUnicodeTo(nsReadingIterator<char16_t>& aSrcStart, const nsReadingIterator<char16_t>& aSrcEnd, nsAString& aDest);
 
   static const nsDependentSubstring TrimCharsInSet(const char* aSet,
                                                    const nsAString& aValue);
 
-  template<bool IsWhitespace(PRUnichar)>
+  template<bool IsWhitespace(char16_t)>
   static const nsDependentSubstring TrimWhitespace(const nsAString& aStr,
                                                    bool aTrimTrailing = true);
 
@@ -352,13 +352,13 @@ public:
    *
    * HTML 4.01 also lists U+200B (zero-width space).
    */
-  static bool IsHTMLWhitespace(PRUnichar aChar);
+  static bool IsHTMLWhitespace(char16_t aChar);
 
   /*
    * Returns whether the character is an HTML whitespace (see IsHTMLWhitespace)
    * or a nbsp character (U+00A0).
    */
-  static bool IsHTMLWhitespaceOrNBSP(PRUnichar aChar);
+  static bool IsHTMLWhitespaceOrNBSP(char16_t aChar);
 
   /**
    * Is the HTML local name a block element?
@@ -530,7 +530,7 @@ public:
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
-                             const PRUnichar** aColon = nullptr);
+                             const char16_t** aColon = nullptr);
 
   static nsresult SplitQName(const nsIContent* aNamespaceResolver,
                              const nsAFlatString& aQName,
@@ -542,7 +542,7 @@ public:
                                        uint16_t aNodeType,
                                        nsINodeInfo** aNodeInfo);
 
-  static void SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
+  static void SplitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
                              nsIAtom **aTagName, int32_t *aNameSpaceID);
 
   // Get a permission-manager setting for the given principal and type.
@@ -814,7 +814,7 @@ public:
                                   nsIDocument* aDocument,
                                   PropertiesFile aFile,
                                   const char *aMessageName,
-                                  const PRUnichar **aParams = nullptr,
+                                  const char16_t **aParams = nullptr,
                                   uint32_t aParamsLength = 0,
                                   nsIURI* aURI = nullptr,
                                   const nsAFlatString& aSourceLine
@@ -846,7 +846,7 @@ public:
 private:
   static nsresult FormatLocalizedString(PropertiesFile aFile,
                                         const char* aKey,
-                                        const PRUnichar** aParams,
+                                        const char16_t** aParams,
                                         uint32_t aParamsLength,
                                         nsXPIDLString& aResult);
   
@@ -854,7 +854,7 @@ public:
   template<uint32_t N>
   static nsresult FormatLocalizedString(PropertiesFile aFile,
                                         const char* aKey,
-                                        const PRUnichar* (&aParams)[N],
+                                        const char16_t* (&aParams)[N],
                                         nsXPIDLString& aResult)
   {
     return FormatLocalizedString(aFile, aKey, aParams, N, aResult);

@@ -428,7 +428,7 @@ nsresult os2FrameWindow::HideWindowChrome(bool aShouldHide)
 
 nsresult os2FrameWindow::SetTitle(const nsAString& aTitle)
 {
-  PRUnichar* uchtemp = ToNewUnicode(aTitle);
+  char16_t* uchtemp = ToNewUnicode(aTitle);
   for (uint32_t i = 0; i < aTitle.Length(); i++) {
     switch (uchtemp[i]) {
       case 0x2018:

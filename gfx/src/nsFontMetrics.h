@@ -16,7 +16,7 @@
 #include "nsError.h"                    // for nsresult
 #include "nsFont.h"                     // for nsFont
 #include "nsISupports.h"                // for NS_INLINE_DECL_REFCOUNTING
-#include "nscore.h"                     // for PRUnichar
+#include "nscore.h"                     // for char16_t
 
 class gfxUserFontSet;
 class gfxTextPerfMetrics;
@@ -182,25 +182,25 @@ public:
     // want it in another format.
     nscoord GetWidth(const char* aString, uint32_t aLength,
                      nsRenderingContext *aContext);
-    nscoord GetWidth(const PRUnichar* aString, uint32_t aLength,
+    nscoord GetWidth(const char16_t* aString, uint32_t aLength,
                      nsRenderingContext *aContext);
 
     // Draw a string using this font handle on the surface passed in.
     void DrawString(const char *aString, uint32_t aLength,
                     nscoord aX, nscoord aY,
                     nsRenderingContext *aContext);
-    void DrawString(const PRUnichar* aString, uint32_t aLength,
+    void DrawString(const char16_t* aString, uint32_t aLength,
                     nscoord aX, nscoord aY,
                     nsRenderingContext *aContext,
                     nsRenderingContext *aTextRunConstructionContext);
 
-    nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
+    nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength,
                                          nsRenderingContext *aContext);
 
     // Returns the LOOSE_INK_EXTENTS bounds of the text for determing the
     // overflow area of the string.
-    nsBoundingMetrics GetInkBoundsForVisualOverflow(const PRUnichar *aString,
+    nsBoundingMetrics GetInkBoundsForVisualOverflow(const char16_t *aString,
                                                     uint32_t aLength,
                                                     nsRenderingContext *aContext);
 

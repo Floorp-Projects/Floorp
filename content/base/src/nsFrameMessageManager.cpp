@@ -484,7 +484,7 @@ static bool
 JSONCreator(const jschar* aBuf, uint32_t aLen, void* aData)
 {
   nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(static_cast<const PRUnichar*>(aBuf),
+  result->Append(static_cast<const char16_t*>(aBuf),
                  static_cast<uint32_t>(aLen));
   return true;
 }

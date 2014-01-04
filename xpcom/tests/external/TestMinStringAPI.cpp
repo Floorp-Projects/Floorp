@@ -11,7 +11,7 @@
 
 static const char kAsciiData[] = "Hello World";
 
-static const PRUnichar kUnicodeData[] =
+static const char16_t kUnicodeData[] =
   {'H','e','l','l','o',' ','W','o','r','l','d','\0'};
 
 static bool test_basic_1()
@@ -78,9 +78,9 @@ static bool test_basic_2()
     nsStringContainer s;
     NS_StringContainerInit(s);
 
-    const PRUnichar *ptr;
+    const char16_t *ptr;
     uint32_t len;
-    PRUnichar *clone;
+    char16_t *clone;
 
     NS_StringGetData(s, &ptr);
     if (ptr == nullptr || *ptr != '\0')

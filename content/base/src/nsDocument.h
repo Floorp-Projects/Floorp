@@ -679,8 +679,8 @@ public:
 
   virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
   virtual void FlushExternalResources(mozFlushType aType) MOZ_OVERRIDE;
-  virtual void SetXMLDeclaration(const PRUnichar *aVersion,
-                                 const PRUnichar *aEncoding,
+  virtual void SetXMLDeclaration(const char16_t *aVersion,
+                                 const char16_t *aEncoding,
                                  const int32_t aStandalone) MOZ_OVERRIDE;
   virtual void GetXMLDeclaration(nsAString& aVersion,
                                  nsAString& aEncoding,

@@ -70,7 +70,7 @@ class nsHtml5Portability;
 class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 {
   private:
-    static PRUnichar REPLACEMENT_CHARACTER[];
+    static char16_t REPLACEMENT_CHARACTER[];
     static staticJArray<const char*,int32_t> QUIRKY_PUBLIC_IDS;
     int32_t mode;
     int32_t originalMode;
@@ -94,7 +94,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     nsIContent** headPointer;
     nsIContent** deepTreeSurrogateParent;
   protected:
-    autoJArray<PRUnichar,int32_t> charBuffer;
+    autoJArray<char16_t,int32_t> charBuffer;
     int32_t charBufferLen;
   private:
     bool quirks;
@@ -102,8 +102,8 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     void startTokenization(nsHtml5Tokenizer* self);
     void doctype(nsIAtom* name, nsString* publicIdentifier, nsString* systemIdentifier, bool forceQuirks);
-    void comment(PRUnichar* buf, int32_t start, int32_t length);
-    void characters(const PRUnichar* buf, int32_t start, int32_t length);
+    void comment(char16_t* buf, int32_t start, int32_t length);
+    void characters(const char16_t* buf, int32_t start, int32_t length);
     void zeroOriginatingReplacementCharacter();
     void eof();
     void endTokenization();
@@ -200,7 +200,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendVoidElementToCurrent(nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
     void appendVoidFormToCurrent(nsHtml5HtmlAttributes* attributes);
   protected:
-    void accumulateCharacters(const PRUnichar* buf, int32_t start, int32_t length);
+    void accumulateCharacters(const char16_t* buf, int32_t start, int32_t length);
     void requestSuspension();
     nsIContent** createElement(int32_t ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes);
     nsIContent** createElement(int32_t ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form);
@@ -210,11 +210,11 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     void appendElement(nsIContent** child, nsIContent** newParent);
     void appendChildrenToNewParent(nsIContent** oldParent, nsIContent** newParent);
     void insertFosterParentedChild(nsIContent** child, nsIContent** table, nsIContent** stackParent);
-    void insertFosterParentedCharacters(PRUnichar* buf, int32_t start, int32_t length, nsIContent** table, nsIContent** stackParent);
-    void appendCharacters(nsIContent** parent, PRUnichar* buf, int32_t start, int32_t length);
+    void insertFosterParentedCharacters(char16_t* buf, int32_t start, int32_t length, nsIContent** table, nsIContent** stackParent);
+    void appendCharacters(nsIContent** parent, char16_t* buf, int32_t start, int32_t length);
     void appendIsindexPrompt(nsIContent** parent);
-    void appendComment(nsIContent** parent, PRUnichar* buf, int32_t start, int32_t length);
-    void appendCommentToDocument(PRUnichar* buf, int32_t start, int32_t length);
+    void appendComment(nsIContent** parent, char16_t* buf, int32_t start, int32_t length);
+    void appendCommentToDocument(char16_t* buf, int32_t start, int32_t length);
     void addAttributesToElement(nsIContent** element, nsHtml5HtmlAttributes* attributes);
     void markMalformedIfScript(nsIContent** elt);
     void start(bool fragmentMode);

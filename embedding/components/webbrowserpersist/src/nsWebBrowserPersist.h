@@ -70,11 +70,11 @@ protected:
         nsIDOMDocument *aDocument, nsIURI *aFile, nsIURI *aDataPath);
     nsresult SaveDocuments();
     nsresult GetDocEncoderContentType(
-        nsIDOMDocument *aDocument, const PRUnichar *aContentType,
-        PRUnichar **aRealContentType);
+        nsIDOMDocument *aDocument, const char16_t *aContentType,
+        char16_t **aRealContentType);
     nsresult GetExtensionForContentType(
-        const PRUnichar *aContentType, PRUnichar **aExt);
-    nsresult GetDocumentExtension(nsIDOMDocument *aDocument, PRUnichar **aExt);
+        const char16_t *aContentType, char16_t **aExt);
+    nsresult GetDocumentExtension(nsIDOMDocument *aDocument, char16_t **aExt);
 
 // Private members
 private:
@@ -119,7 +119,7 @@ private:
     {
         return StoreURIAttributeNS(aNode, "", aAttribute, aNeedsPersisting, aData);
     }
-    bool DocumentEncoderExists(const PRUnichar *aContentType);
+    bool DocumentEncoderExists(const char16_t *aContentType);
 
     nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult FixupURI(nsAString &aURI);

@@ -3848,7 +3848,7 @@ nsDocumentViewer::ExitPrintPreview()
 // Enumerate all the documents for their titles
 NS_IMETHODIMP
 nsDocumentViewer::EnumerateDocumentNames(uint32_t* aCount,
-                                           PRUnichar*** aResult)
+                                           char16_t*** aResult)
 {
 #ifdef NS_PRINTING
   NS_ENSURE_ARG(aCount);

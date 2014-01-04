@@ -50,7 +50,7 @@ static void Output(const char *fmt, ... )
   va_start(ap, fmt);
 
 #if defined(XP_WIN) && !MOZ_WINCONSOLE
-  PRUnichar msg[2048];
+  char16_t msg[2048];
   _vsnwprintf(msg, sizeof(msg)/sizeof(msg[0]), NS_ConvertUTF8toUTF16(fmt).get(), ap);
   MessageBoxW(nullptr, msg, L"XULRunner", MB_OK | MB_ICONERROR);
 #else

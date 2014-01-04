@@ -64,17 +64,17 @@ nsresult nsBasicUTF7Encoder::ShiftEncoding(int32_t aEncoding,
 }
 
 nsresult nsBasicUTF7Encoder::EncodeDirect(
-                            const PRUnichar * aSrc, 
+                            const char16_t * aSrc, 
                             int32_t * aSrcLength, 
                             char * aDest, 
                             int32_t * aDestLength)
 {
   nsresult res = NS_OK;
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
-  PRUnichar ch;
+  char16_t ch;
 
   while (src < srcEnd) {
     ch = *src;
@@ -110,17 +110,17 @@ nsresult nsBasicUTF7Encoder::EncodeDirect(
 }
 
 nsresult nsBasicUTF7Encoder::EncodeBase64(
-                             const PRUnichar * aSrc, 
+                             const char16_t * aSrc, 
                              int32_t * aSrcLength, 
                              char * aDest, 
                              int32_t * aDestLength)
 {
   nsresult res = NS_OK;
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
-  PRUnichar ch;
+  char16_t ch;
   uint32_t value;
 
   while (src < srcEnd) {
@@ -195,7 +195,7 @@ char nsBasicUTF7Encoder::ValueToChar(uint32_t aValue) {
     return -1;
 }
 
-bool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
+bool nsBasicUTF7Encoder::DirectEncodable(char16_t aChar) {
   // spec says: printable US-ASCII chars
   if ((aChar >= 0x20) && (aChar <= 0x7e)) return true;
   else return false;
@@ -205,18 +205,18 @@ bool nsBasicUTF7Encoder::DirectEncodable(PRUnichar aChar) {
 // Subclassing of nsEncoderSupport class [implementation]
 
 NS_IMETHODIMP nsBasicUTF7Encoder::ConvertNoBuffNoErr(
-                                  const PRUnichar * aSrc, 
+                                  const char16_t * aSrc, 
                                   int32_t * aSrcLength, 
                                   char * aDest, 
                                   int32_t * aDestLength)
 {
   nsresult res = NS_OK;
-  const PRUnichar * src = aSrc;
-  const PRUnichar * srcEnd = aSrc + *aSrcLength;
+  const char16_t * src = aSrc;
+  const char16_t * srcEnd = aSrc + *aSrcLength;
   char * dest = aDest;
   char * destEnd = aDest + *aDestLength;
   int32_t bcr,bcw;
-  PRUnichar ch;
+  char16_t ch;
   int32_t enc;
 
   while (src < srcEnd) {
@@ -274,7 +274,7 @@ nsUnicodeToUTF7::nsUnicodeToUTF7()
 }
 
 
-bool nsUnicodeToUTF7::DirectEncodable(PRUnichar aChar) {
+bool nsUnicodeToUTF7::DirectEncodable(char16_t aChar) {
   if ((aChar >= 'A') && (aChar <= 'Z')) return true;
   else if ((aChar >= 'a') && (aChar <= 'z')) return true;
   else if ((aChar >= '0') && (aChar <= '9')) return true;

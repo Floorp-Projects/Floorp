@@ -56,7 +56,7 @@ public:
 private:
   int32_t AddEnumerator(nsAppShellWindowEnumerator* inEnumerator);
   int32_t RemoveEnumerator(nsAppShellWindowEnumerator* inEnumerator);
-  nsWindowInfo *MostRecentWindowInfo(const PRUnichar* inType);
+  nsWindowInfo *MostRecentWindowInfo(const char16_t* inType);
 
   nsresult      UnregisterWindow(nsWindowInfo *inInfo);
   nsWindowInfo *GetInfoFor(nsIXULWindow *aWindow);

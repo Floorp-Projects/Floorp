@@ -58,11 +58,11 @@ private:
 
   // call GetTimeFormatW or TimeFormatA
   int nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTime,
-                    const char* format, PRUnichar *timeStr, int cchTime);
+                    const char* format, char16_t *timeStr, int cchTime);
 
   // call GetDateFormatW or GetDateFormatA
   int nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDate,
-                       const char* format, PRUnichar *dateStr, int cchDate);
+                       const char* format, char16_t *dateStr, int cchDate);
 
   nsString    mLocale;
   nsString    mAppLocale;

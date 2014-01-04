@@ -1325,7 +1325,7 @@ public:
     // aShapedText. Parameters aOffset/aLength indicate the range of
     // aShapedText to be updated; aLength is also the length of aText.
     virtual bool ShapeText(gfxContext      *aContext,
-                           const PRUnichar *aText,
+                           const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
@@ -1837,7 +1837,7 @@ protected:
     // Call the appropriate shaper to generate glyphs for aText and store
     // them into aShapedText.
     virtual bool ShapeText(gfxContext      *aContext,
-                           const PRUnichar *aText,
+                           const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
@@ -1848,7 +1848,7 @@ protected:
     // in the shaped text; implementations of ShapeText should call this
     // after glyph shaping has been completed.
     void PostShapingFixup(gfxContext      *aContext,
-                          const PRUnichar *aText,
+                          const char16_t *aText,
                           uint32_t         aOffset, // position within aShapedText
                           uint32_t         aLength,
                           gfxShapedText   *aShapedText);
@@ -1894,7 +1894,7 @@ protected:
     struct CacheHashKey {
         union {
             const uint8_t   *mSingle;
-            const PRUnichar *mDouble;
+            const char16_t *mDouble;
         }                mText;
         uint32_t         mLength;
         uint32_t         mFlags;
@@ -1920,7 +1920,7 @@ protected:
             mText.mSingle = aText;
         }
 
-        CacheHashKey(const PRUnichar *aText, uint32_t aLength,
+        CacheHashKey(const char16_t *aText, uint32_t aLength,
                      uint32_t aStringHash,
                      int32_t aScriptCode, int32_t aAppUnitsPerDevUnit,
                      uint32_t aFlags)
@@ -2345,7 +2345,7 @@ public:
     // based on the Unicode properties of the text in aString.
     // This is also responsible to set the IsSpace flag for space characters.
     void SetupClusterBoundaries(uint32_t         aOffset,
-                                const PRUnichar *aString,
+                                const char16_t *aString,
                                 uint32_t         aLength);
     // In 8-bit text, there won't actually be any clusters, but we still need
     // the space-marking functionality.
@@ -2510,7 +2510,7 @@ protected:
 
     nsAutoPtr<DetailedGlyphStore>   mDetailedGlyphs;
 
-    // Number of PRUnichar characters and CompressedGlyph glyph records
+    // Number of char16_t characters and CompressedGlyph glyph records
     uint32_t                        mLength;
 
     // Shaping flags (direction, ligature-suppression)
@@ -2560,7 +2560,7 @@ public:
                                            aAppUnitsPerDevUnit, aFlags);
     }
 
-    static gfxShapedWord* Create(const PRUnichar *aText, uint32_t aLength,
+    static gfxShapedWord* Create(const char16_t *aText, uint32_t aLength,
                                  int32_t aRunScript,
                                  int32_t aAppUnitsPerDevUnit,
                                  uint32_t aFlags) {
@@ -2580,7 +2580,7 @@ public:
 
         uint32_t size =
             offsetof(gfxShapedWord, mCharGlyphsStorage) +
-            aLength * (sizeof(CompressedGlyph) + sizeof(PRUnichar));
+            aLength * (sizeof(CompressedGlyph) + sizeof(char16_t));
         void *storage = moz_malloc(size);
         if (!storage) {
             return nullptr;
@@ -2605,15 +2605,15 @@ public:
         return reinterpret_cast<const uint8_t*>(mCharGlyphsStorage + GetLength());
     }
 
-    const PRUnichar* TextUnicode() const {
+    const char16_t* TextUnicode() const {
         NS_ASSERTION(!TextIs8Bit(), "invalid use of TextUnicode()");
-        return reinterpret_cast<const PRUnichar*>(mCharGlyphsStorage + GetLength());
+        return reinterpret_cast<const char16_t*>(mCharGlyphsStorage + GetLength());
     }
 
-    PRUnichar GetCharAt(uint32_t aOffset) const {
+    char16_t GetCharAt(uint32_t aOffset) const {
         NS_ASSERTION(aOffset < GetLength(), "aOffset out of range");
         return TextIs8Bit() ?
-            PRUnichar(Text8Bit()[aOffset]) : TextUnicode()[aOffset];
+            char16_t(Text8Bit()[aOffset]) : TextUnicode()[aOffset];
     }
 
     int32_t Script() const {
@@ -2645,7 +2645,7 @@ private:
         memcpy(text, aText, aLength * sizeof(uint8_t));
     }
 
-    gfxShapedWord(const PRUnichar *aText, uint32_t aLength,
+    gfxShapedWord(const char16_t *aText, uint32_t aLength,
                   int32_t aRunScript, int32_t aAppUnitsPerDevUnit,
                   uint32_t aFlags)
         : gfxShapedText(aLength, aFlags, aAppUnitsPerDevUnit)
@@ -2653,8 +2653,8 @@ private:
         , mAgeCounter(0)
     {
         memset(mCharGlyphsStorage, 0, aLength * sizeof(CompressedGlyph));
-        PRUnichar *text = reinterpret_cast<PRUnichar*>(&mCharGlyphsStorage[aLength]);
-        memcpy(text, aText, aLength * sizeof(PRUnichar));
+        char16_t *text = reinterpret_cast<char16_t*>(&mCharGlyphsStorage[aLength]);
+        memcpy(text, aText, aLength * sizeof(char16_t));
         SetupClusterBoundaries(0, aText, aLength);
     }
 
@@ -3130,7 +3130,7 @@ public:
     // if it returns false, the caller needs to fall back to some other
     // means to create the necessary (detailed) glyph data.
     bool SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
-                               uint32_t aCharIndex, PRUnichar aSpaceChar);
+                               uint32_t aCharIndex, char16_t aSpaceChar);
 
     // Record the positions of specific characters that layout may need to
     // detect in the textrun, even though it doesn't have an explicit copy
@@ -3397,7 +3397,7 @@ public:
      * when creating textruns.
      */
     static bool IsInvalidChar(uint8_t ch);
-    static bool IsInvalidChar(PRUnichar ch);
+    static bool IsInvalidChar(char16_t ch);
 
     /**
      * Make a textrun for a given string.
@@ -3405,7 +3405,7 @@ public:
      * textrun will copy it.
      * This calls FetchGlyphExtents on the textrun.
      */
-    virtual gfxTextRun *MakeTextRun(const PRUnichar *aString, uint32_t aLength,
+    virtual gfxTextRun *MakeTextRun(const char16_t *aString, uint32_t aLength,
                                     const Parameters *aParams, uint32_t aFlags);
     /**
      * Make a textrun for a given string.

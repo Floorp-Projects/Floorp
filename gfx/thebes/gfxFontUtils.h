@@ -779,7 +779,7 @@ public:
              bool& aUnicodeFont, bool& aSymbolFont);
 
     static uint32_t
-    MapCharToGlyphFormat4(const uint8_t *aBuf, PRUnichar aCh);
+    MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh);
 
     static uint32_t
     MapCharToGlyphFormat12(const uint8_t *aBuf, uint32_t aCh);
@@ -884,7 +884,7 @@ public:
         kUnicodeRLO = 0x202E
     };
 
-    static inline bool PotentialRTLChar(PRUnichar aCh) {
+    static inline bool PotentialRTLChar(char16_t aCh) {
         if (aCh >= kUnicodeBidiScriptsStart && aCh <= kUnicodeBidiScriptsEnd)
             // bidi scripts Hebrew, Arabic, Syriac, Thaana, N'Ko are all encoded together
             return true;

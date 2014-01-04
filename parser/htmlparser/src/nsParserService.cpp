@@ -40,7 +40,7 @@ nsParserService::HTMLStringTagToId(const nsAString& aTag) const
   return nsHTMLTags::LookupTag(aTag);
 }
 
-const PRUnichar*
+const char16_t*
 nsParserService::HTMLIdToStringTag(int32_t aId) const
 {
   return nsHTMLTags::GetStringValue((nsHTMLTag)aId);

@@ -505,7 +505,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             int32_t len = ::GetWindowsDirectoryW(path, MAX_PATH);
             if (len == 0)
                 break;
-            if (path[1] == PRUnichar(':') && path[2] == PRUnichar('\\'))
+            if (path[1] == char16_t(':') && path[2] == char16_t('\\'))
                 path[3] = 0;
 
             return NS_NewLocalFile(nsDependentString(path),
