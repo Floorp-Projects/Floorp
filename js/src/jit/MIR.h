@@ -59,6 +59,8 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * points.
      */                                                                         \
     _(Unused)                                                                   \
+    _(DOMFunction)   /* Contains or uses a common DOM method function */        \
+                                                                                \
     /* Marks if an instruction has fewer uses than the original code.
      * E.g. UCE can remove code.
      * Every instruction where an use is/was removed from an instruction and
@@ -1804,7 +1806,7 @@ class MCall
   public:
     INSTRUCTION_HEADER(Call)
     static MCall *New(TempAllocator &alloc, JSFunction *target, size_t maxArgc, size_t numActualArgs,
-                      bool construct, bool isDOMCall);
+                      bool construct);
 
     void initFunction(MDefinition *func) {
         return setOperand(FunctionOperandIndex, func);
@@ -1828,6 +1830,10 @@ class MCall
 
     MDefinition *getArg(uint32_t index) const {
         return getOperand(NumNonArgumentOperands + index);
+    }
+
+    void replaceArg(uint32_t index, MDefinition *def) {
+        replaceOperand(NumNonArgumentOperands + index, def);
     }
 
     static size_t IndexOfThis() {
@@ -1865,48 +1871,49 @@ class MCall
     TypePolicy *typePolicy() {
         return this;
     }
+    AliasSet getAliasSet() const {
+        if (isDOMFunction()) {
+            JS_ASSERT(getSingleTarget() && getSingleTarget()->isNative());
+
+            const JSJitInfo* jitInfo = getSingleTarget()->jitInfo();
+            JS_ASSERT(jitInfo);
+
+            JS_ASSERT(jitInfo->aliasSet != JSJitInfo::AliasNone);
+            if (jitInfo->aliasSet == JSJitInfo::AliasDOMSets &&
+                jitInfo->argTypes) {
+                uint32_t argIndex = 0;
+                for (const JSJitInfo::ArgType* argType = jitInfo->argTypes;
+                     *argType != JSJitInfo::ArgTypeListEnd;
+                     ++argType, ++argIndex)
+                {
+                    if (argIndex >= numActualArgs()) {
+                        // Passing through undefined can't have side-effects
+                        continue;
+                    }
+                    // getArg(0) is "this", so skip it
+                    MDefinition *arg = getArg(argIndex+1);
+                    MIRType actualType = arg->type();
+                    // The only way to get side-effects is if we're passing in
+                    // something that might be an object to an argument that
+                    // expects a numeric, string, or boolean value.
+                    if ((actualType == MIRType_Value || actualType == MIRType_Object) &&
+                        (*argType &
+                         (JSJitInfo::Boolean | JSJitInfo::String | JSJitInfo::Numeric)))
+                    {
+                        return AliasSet::Store(AliasSet::Any);
+                    }
+                }
+                // We checked all the args, and they check out.  So we only
+                // alias DOM mutations.
+                return AliasSet::Load(AliasSet::DOMProperty);
+            }
+        }
+        return AliasSet::Store(AliasSet::Any);
+    }
 
     bool possiblyCalls() const {
         return true;
     }
-
-    virtual bool isCallDOMNative() const {
-        return false;
-    }
-
-    // A method that can be called to tell the MCall to figure out whether it's
-    // movable or not.  This can't be done in the constructor, because it
-    // depends on the arguments to the call, and those aren't passed to the
-    // constructor but are set up later via addArg.
-    virtual void computeMovable() {
-    }
-};
-
-class MCallDOMNative : public MCall
-{
-    // A helper class for MCalls for DOM natives.  Note that this is NOT
-    // actually a separate MIR op from MCall, because all sorts of places use
-    // isCall() to check for calls and all we really want is to overload a few
-    // virtual things from MCall.
-  protected:
-    MCallDOMNative(JSFunction *target, uint32_t numActualArgs)
-        : MCall(target, numActualArgs, false)
-    {
-    }
-
-    friend MCall *MCall::New(TempAllocator &alloc, JSFunction *target, size_t maxArgc,
-                             size_t numActualArgs, bool construct, bool isDOMCall);
-
-  public:
-    virtual AliasSet getAliasSet() const MOZ_OVERRIDE;
-
-    virtual bool congruentTo(MDefinition *ins) const MOZ_OVERRIDE;
-
-    virtual bool isCallDOMNative() const MOZ_OVERRIDE {
-        return true;
-    }
-
-    virtual void computeMovable() MOZ_OVERRIDE;
 };
 
 // fun.apply(self, arguments)

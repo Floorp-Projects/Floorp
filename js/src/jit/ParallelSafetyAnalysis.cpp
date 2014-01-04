@@ -697,7 +697,7 @@ bool
 ParallelSafetyVisitor::visitCall(MCall *ins)
 {
     // DOM? Scary.
-    if (ins->isCallDOMNative()) {
+    if (ins->isDOMFunction()) {
         SpewMIR(ins, "call to dom function");
         return markUnsafe();
     }

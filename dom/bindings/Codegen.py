@@ -6391,16 +6391,8 @@ class CGMemberJITInfo(CGThing):
                 # one of them must take arguments.
                 methodInfal = False
                 args = None
-                movable = False
             else:
                 sig = sigs[0]
-                # For pure methods, it's OK to set movable to our notion of
-                # infallible on the C++ side, without considering argument
-                # conversions, since argument conversions that can reliably
-                # throw would be effectful anyway and the jit doesn't move
-                # effectful things.
-                hasInfallibleImpl = "infallible" in self.descriptor.getExtendedAttributes(self.member)
-                movable = methodPure and hasInfallibleImpl
                 # XXXbz can we move the smarts about fallibility due to arg
                 # conversions into the JIT, using our new args stuff?
                 if (len(sig[1]) != 0 or
@@ -6408,19 +6400,19 @@ class CGMemberJITInfo(CGThing):
                     # We have arguments or our return-value boxing can fail
                     methodInfal = False
                 else:
-                    methodInfal = hasInfallibleImpl
+                    methodInfal = "infallible" in self.descriptor.getExtendedAttributes(self.member)
                 # For now, only bother to output args if we're pure
                 if methodPure:
                     args = sig[1]
                 else:
                     args = None
 
-            if args is not None:
+            if args:
                 aliasSet = "AliasDOMSets"
             else:
                 aliasSet = "AliasEverything"
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, movable, aliasSet, False, "0",
+                                        methodInfal, False, aliasSet, False, "0",
                                         [s[0] for s in sigs], args)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
