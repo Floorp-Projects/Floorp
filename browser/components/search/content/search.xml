@@ -42,6 +42,11 @@
                    showcommentcolumn="true"
                    tabscrolling="true"
                    xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
+        <!--
+        Empty <box> to properly position the icon within the autocomplete
+        binding's anonymous children (the autocomplete binding positions <box>
+        children differently)
+        -->
         <xul:box>
           <xul:button class="searchbar-engine-button"
                       type="menu"
