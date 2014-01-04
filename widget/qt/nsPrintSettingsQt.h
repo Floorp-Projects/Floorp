@@ -39,11 +39,11 @@ public:
     NS_IMETHOD GetOrientation(int32_t* aOrientation);
     NS_IMETHOD SetOrientation(int32_t aOrientation);
 
-    NS_IMETHOD GetToFileName(PRUnichar** aToFileName);
-    NS_IMETHOD SetToFileName(const PRUnichar* aToFileName);
+    NS_IMETHOD GetToFileName(char16_t** aToFileName);
+    NS_IMETHOD SetToFileName(const char16_t* aToFileName);
 
-    NS_IMETHOD GetPrinterName(PRUnichar** aPrinter);
-    NS_IMETHOD SetPrinterName(const PRUnichar* aPrinter);
+    NS_IMETHOD GetPrinterName(char16_t** aPrinter);
+    NS_IMETHOD SetPrinterName(const char16_t* aPrinter);
 
     NS_IMETHOD GetNumCopies(int32_t* aNumCopies);
     NS_IMETHOD SetNumCopies(int32_t aNumCopies);
@@ -51,8 +51,8 @@ public:
     NS_IMETHOD GetScaling(double* aScaling);
     NS_IMETHOD SetScaling(double aScaling);
 
-    NS_IMETHOD GetPaperName(PRUnichar** aPaperName);
-    NS_IMETHOD SetPaperName(const PRUnichar* aPaperName);
+    NS_IMETHOD GetPaperName(char16_t** aPaperName);
+    NS_IMETHOD SetPaperName(const char16_t* aPaperName);
 
     NS_IMETHOD SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin);
     NS_IMETHOD SetUnwriteableMarginTop(double aUnwriteableMarginTop);

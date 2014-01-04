@@ -62,7 +62,7 @@ nsEntityConverter::LoadVersionPropertyFile()
         uint32_t len = value.Length();
         if (kVERSION_STRING_LEN < len) return NS_ERROR_UNEXPECTED;
         
-        memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(PRUnichar));
+        memcpy(mVersionList[i].mEntityListName, value.get(), len*sizeof(char16_t));
         mVersionList[i].mEntityListName[len] = 0;
         mVersionList[i].mVersion = (1 << i);
     }
@@ -80,7 +80,7 @@ nsEntityConverter::LoadEntityBundle(uint32_t version)
       do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, nullptr);
   
-  const PRUnichar *versionName = GetVersionName(version);
+  const char16_t *versionName = GetVersionName(version);
   NS_ENSURE_TRUE(versionName, nullptr);
 
   // all property file names are ASCII, like "html40Latin1" so this is safe
@@ -94,7 +94,7 @@ nsEntityConverter::LoadEntityBundle(uint32_t version)
   return bundle.forget();
 }
 
-const PRUnichar*
+const char16_t*
 nsEntityConverter:: GetVersionName(uint32_t versionNumber)
 {
   for (uint32_t i = 0; i < mVersionListLength; i++) {
@@ -142,7 +142,7 @@ NS_IMPL_ISUPPORTS1(nsEntityConverter,nsIEntityConverter)
 // nsIEntityConverter
 //
 NS_IMETHODIMP
-nsEntityConverter::ConvertToEntity(PRUnichar character, uint32_t entityVersion, char **_retval)
+nsEntityConverter::ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval)
 { 
   return ConvertUTF32ToEntity((uint32_t)character, entityVersion, _retval);
 }
@@ -181,7 +181,7 @@ nsEntityConverter::ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersi
 }
 
 NS_IMETHODIMP
-nsEntityConverter::ConvertToEntities(const PRUnichar *inString, uint32_t entityVersion, PRUnichar **_retval)
+nsEntityConverter::ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval)
 {
   NS_ENSURE_ARG_POINTER(inString);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -205,7 +205,7 @@ nsEntityConverter::ConvertToEntities(const PRUnichar *inString, uint32_t entityV
     }
     
     nsXPIDLString value;
-    const PRUnichar *entity = nullptr;
+    const char16_t *entity = nullptr;
 
     for (uint32_t mask = 1, mask2 = 0xFFFFFFFFL; (0!=(entityVersion & mask2)); mask<<=1, mask2<<=1) {
       if (0 == (entityVersion & mask)) 

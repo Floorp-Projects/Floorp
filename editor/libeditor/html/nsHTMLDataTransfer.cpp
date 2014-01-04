@@ -932,7 +932,7 @@ RemoveFragComments(nsCString & aStr)
 }
 
 nsresult
-nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext)
+nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, char16_t **aStuffToPaste, char16_t **aCfcontext)
 {
   // First obtain offsets from cfhtml str.
   int32_t startHTML, endHTML, startFragment, endFragment;
@@ -1675,7 +1675,7 @@ nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
   // Whenever the quotedness changes (or we reach the string's end)
   // we will insert the hunk all at once, quoted or non.
 
-  static const PRUnichar cite('>');
+  static const char16_t cite('>');
   bool curHunkIsQuoted = (aStringToInsert.First() == cite);
 
   nsAString::const_iterator hunkStart, strEnd;
@@ -2121,7 +2121,7 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(const nsAString &aInputString,
   if (!aInfoStr.IsEmpty())
   {
     int32_t sep, num;
-    sep = aInfoStr.FindChar((PRUnichar)',');
+    sep = aInfoStr.FindChar((char16_t)',');
     numstr1 = Substring(aInfoStr, 0, sep);
     numstr2 = Substring(aInfoStr, sep+1, aInfoStr.Length() - (sep+1));
 

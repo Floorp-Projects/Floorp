@@ -30,7 +30,7 @@ using namespace Microsoft::WRL;
 NS_IMPL_ISUPPORTS1(AccessibilityBridge, nsIObserver)
 
 nsresult
-AccessibilityBridge::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
+AccessibilityBridge::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData)
 {
   nsCOMPtr<nsIAccessibleEvent> ev = do_QueryInterface(aSubject);
   if (!ev) {

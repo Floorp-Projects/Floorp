@@ -59,9 +59,9 @@ NS_IMETHODIMP
 nsPopupBoxObject::ShowPopup(nsIDOMElement* aAnchorElement,
                             nsIDOMElement* aPopupElement,
                             int32_t aXPos, int32_t aYPos,
-                            const PRUnichar *aPopupType,
-                            const PRUnichar *aAnchorAlignment,
-                            const PRUnichar *aPopupAlignment)
+                            const char16_t *aPopupType,
+                            const char16_t *aAnchorAlignment,
+                            const char16_t *aPopupAlignment)
 {
   NS_ENSURE_TRUE(aPopupElement, NS_ERROR_INVALID_ARG);
   // srcContent can be null.

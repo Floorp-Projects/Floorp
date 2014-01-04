@@ -216,7 +216,7 @@ ChildDNSService::SetOffline(bool value)
 
 NS_IMETHODIMP
 ChildDNSService::Observe(nsISupports *subject, const char *topic,
-                         const PRUnichar *data)
+                         const char16_t *data)
 {
   // we are only getting called if a preference has changed.
   NS_ASSERTION(strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0,

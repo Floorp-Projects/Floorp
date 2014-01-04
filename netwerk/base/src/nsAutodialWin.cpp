@@ -207,7 +207,7 @@ int nsAutodial::QueryAutodialBehavior()
 // Return values:
 //  NS_OK: dialing was successful and caller should retry
 //  all other values indicate that the caller should not retry
-nsresult nsAutodial::DialDefault(const PRUnichar* hostName)
+nsresult nsAutodial::DialDefault(const char16_t* hostName)
 {
     mDontRetryUntil = 0;
 

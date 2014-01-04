@@ -32,7 +32,7 @@ class gfxASurface;
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
 
-static int32_t FindSafeLength(const PRUnichar *aString, uint32_t aLength,
+static int32_t FindSafeLength(const char16_t *aString, uint32_t aLength,
                               uint32_t aMaxChunkLength)
 {
     if (aLength <= aMaxChunkLength)
@@ -447,7 +447,7 @@ nsRenderingContext::GetWidth(char aC)
 }
 
 nscoord
-nsRenderingContext::GetWidth(PRUnichar aC)
+nsRenderingContext::GetWidth(char16_t aC)
 {
     return GetWidth(&aC, 1);
 }
@@ -479,7 +479,7 @@ nsRenderingContext::GetWidth(const char* aString, uint32_t aLength)
 }
 
 nscoord
-nsRenderingContext::GetWidth(const PRUnichar *aString, uint32_t aLength)
+nsRenderingContext::GetWidth(const char16_t *aString, uint32_t aLength)
 {
     uint32_t maxChunkLength = GetMaxChunkLength();
     nscoord width = 0;
@@ -493,7 +493,7 @@ nsRenderingContext::GetWidth(const PRUnichar *aString, uint32_t aLength)
 }
 
 nsBoundingMetrics
-nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
+nsRenderingContext::GetBoundingMetrics(const char16_t* aString,
                                        uint32_t aLength)
 {
     uint32_t maxChunkLength = GetMaxChunkLength();
@@ -542,7 +542,7 @@ nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY)
 }
 
 void
-nsRenderingContext::DrawString(const PRUnichar *aString, uint32_t aLength,
+nsRenderingContext::DrawString(const char16_t *aString, uint32_t aLength,
                                nscoord aX, nscoord aY)
 {
     uint32_t maxChunkLength = GetMaxChunkLength();

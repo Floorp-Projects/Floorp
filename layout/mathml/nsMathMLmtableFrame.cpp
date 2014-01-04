@@ -67,8 +67,8 @@ ExtractStyleValues(const nsAString& aString, nsIAtom* aAttribute,
 {
   nsTArray<int8_t>* styleArray = nullptr;
 
-  const PRUnichar* start = aString.BeginReading();
-  const PRUnichar* end = aString.EndReading();
+  const char16_t* start = aString.BeginReading();
+  const char16_t* end = aString.EndReading();
 
   int32_t startIndex = 0;
   int32_t count = 0;
@@ -109,12 +109,12 @@ ExtractStyleValues(const nsAString& aString, nsIAtom* aAttribute,
   return styleArray;
 }
 
-static nsresult ReportParseError(nsIFrame* aFrame, const PRUnichar* aAttribute,
-                                 const PRUnichar* aValue)
+static nsresult ReportParseError(nsIFrame* aFrame, const char16_t* aAttribute,
+                                 const char16_t* aValue)
 {
   nsIContent* content = aFrame->GetContent();
 
-  const PRUnichar* params[] =
+  const char16_t* params[] =
     { aValue, aAttribute, content->Tag()->GetUTF16String() };
 
   return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,

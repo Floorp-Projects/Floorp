@@ -625,7 +625,7 @@ nsSiteSecurityService::ShouldIgnoreHeaders(nsISupports* aSecurityInfo,
 NS_IMETHODIMP
 nsSiteSecurityService::Observe(nsISupports *subject,
                                const char *topic,
-                               const PRUnichar *data)
+                               const char16_t *data)
 {
   if (strcmp(topic, "last-pb-context-exited") == 0) {
     mPrivateModeHostTable.Clear();

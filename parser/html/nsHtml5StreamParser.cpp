@@ -392,7 +392,7 @@ nsHtml5StreamParser::SniffBOMlessUTF16BasicLatin(const uint8_t* aFromSegment,
 }
 
 void
-nsHtml5StreamParser::SetEncodingFromExpat(const PRUnichar* aEncoding)
+nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding)
 {
   if (aEncoding) {
     nsDependentString utf16(aEncoding);
@@ -432,7 +432,7 @@ HandleXMLDeclaration(void* aUserData,
 {
   UserData* ud = static_cast<UserData*>(aUserData);
   ud->mStreamParser->SetEncodingFromExpat(
-      reinterpret_cast<const PRUnichar*>(aEncoding));
+      reinterpret_cast<const char16_t*>(aEncoding));
   XML_StopParser(ud->mExpat, false);
 }
 
@@ -487,9 +487,9 @@ nsHtml5StreamParser::FinalizeSniffing(const uint8_t* aFromSegment, // can be nul
         moz_free
       };
 
-    static const PRUnichar kExpatSeparator[] = { 0xFFFF, '\0' };
+    static const char16_t kExpatSeparator[] = { 0xFFFF, '\0' };
 
-    static const PRUnichar kISO88591[] =
+    static const char16_t kISO88591[] =
         { 'I', 'S', 'O', '-', '8', '8', '5', '9', '-', '1', '\0' };
 
     UserData ud;

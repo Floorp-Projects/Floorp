@@ -84,7 +84,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
             break;
         case nsXPTType::T_BOOL   : dp->val.b   = (bool)    *ap;    break;
         case nsXPTType::T_CHAR   : dp->val.c   = (char)      *ap;    break;
-        case nsXPTType::T_WCHAR  : dp->val.wc  = (PRUnichar) *ap;    break;
+        case nsXPTType::T_WCHAR  : dp->val.wc  = (char16_t) *ap;    break;
         default:
             NS_ERROR("bad type");
             break;

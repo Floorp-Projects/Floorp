@@ -233,7 +233,7 @@ private:
 
     uint32_t mDOMKeyCode;
     KeyNameIndex mDOMKeyNameIndex;
-    PRUnichar mDOMPrintableKeyValue;
+    char16_t mDOMPrintableKeyValue;
 
     bool IsKeyPress() const
     {
@@ -245,7 +245,7 @@ private:
     }
 
     uint32_t CharCode() const;
-    PRUnichar PrintableKeyValue() const;
+    char16_t PrintableKeyValue() const;
 
     void DispatchKeyDownEvent();
     void DispatchKeyUpEvent();
@@ -276,7 +276,7 @@ KeyEventDispatcher::CharCode() const
     return (ch >= ' ') ? static_cast<uint32_t>(ch) : 0;
 }
 
-PRUnichar
+char16_t
 KeyEventDispatcher::PrintableKeyValue() const
 {
     if (mDOMKeyNameIndex != KEY_NAME_INDEX_USE_STRING || !mKeyCharMap.get()) {
@@ -284,7 +284,7 @@ KeyEventDispatcher::PrintableKeyValue() const
     }
     char16_t ch = mKeyCharMap->getCharacter(mData.key.keyCode, mData.metaState);
     if (ch >= ' ') {
-        return static_cast<PRUnichar>(ch);
+        return static_cast<char16_t>(ch);
     }
     int32_t unmodifiedMetaState = mData.metaState &
         ~(AMETA_ALT_ON | AMETA_ALT_LEFT_ON | AMETA_ALT_RIGHT_ON |
@@ -294,7 +294,7 @@ KeyEventDispatcher::PrintableKeyValue() const
         return 0;
     }
     ch = mKeyCharMap->getCharacter(mData.key.keyCode, unmodifiedMetaState);
-    return (ch >= ' ') ? static_cast<PRUnichar>(ch) : 0;
+    return (ch >= ' ') ? static_cast<char16_t>(ch) : 0;
 }
 
 nsEventStatus
@@ -848,7 +848,7 @@ nsAppShell::Init()
 NS_IMETHODIMP
 nsAppShell::Observe(nsISupports* aSubject,
                     const char* aTopic,
-                    const PRUnichar* aData)
+                    const char16_t* aData)
 {
     if (strcmp(aTopic, "browser-ui-startup-complete")) {
         return nsBaseAppShell::Observe(aSubject, aTopic, aData);

@@ -23,7 +23,7 @@
 
 using namespace mozilla;
 
-nsXBLProtoImplMethod::nsXBLProtoImplMethod(const PRUnichar* aName) :
+nsXBLProtoImplMethod::nsXBLProtoImplMethod(const char16_t* aName) :
   nsXBLProtoImplMember(aName),
   mMethod()
 {
@@ -176,7 +176,7 @@ nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
 
   // Get the body
   nsDependentString body;
-  PRUnichar *bodyText = uncompiledMethod->mBodyText.GetText();
+  char16_t *bodyText = uncompiledMethod->mBodyText.GetText();
   if (bodyText)
     body.Rebind(bodyText);
 

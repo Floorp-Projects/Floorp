@@ -78,7 +78,7 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsClipboard, nsBaseClipboard, nsIObserver)
 
 NS_IMETHODIMP
 nsClipboard::Observe(nsISupports *aSubject, const char *aTopic,
-                     const PRUnichar *aData)
+                     const char16_t *aData)
 {
   // This will be called on shutdown.
   ::OleFlushClipboard();
@@ -282,7 +282,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, uint32_t * aLe
   if (aHGBL != nullptr) {
     LPSTR lpStr = (LPSTR) GlobalLock(aHGBL);
     DWORD allocSize = GlobalSize(aHGBL);
-    char* data = static_cast<char*>(nsMemory::Alloc(allocSize + sizeof(PRUnichar)));
+    char* data = static_cast<char*>(nsMemory::Alloc(allocSize + sizeof(char16_t)));
     if ( data ) {    
       memcpy ( data, lpStr, allocSize );
       data[allocSize] = data[allocSize + 1] = '\0';     // null terminate for safety
@@ -458,7 +458,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                 // (on 98, these are not the same) so we can't use that.
                 uint32_t allocLen = 0;
                 if ( NS_SUCCEEDED(GetGlobalData(stm.hGlobal, aData, &allocLen)) ) {
-                  *aLen = NS_strlen(reinterpret_cast<PRUnichar*>(*aData)) * 2;
+                  *aLen = NS_strlen(reinterpret_cast<char16_t*>(*aData)) * 2;
                   result = NS_OK;
                 }
               } break;
@@ -498,7 +498,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                   if ( buffer ) {
                     ::DragQueryFileW(dropFiles, aIndex, buffer, fileNameLen + 1);
                     *aData = buffer;
-                    *aLen = fileNameLen * sizeof(PRUnichar);
+                    *aLen = fileNameLen * sizeof(char16_t);
                     result = NS_OK;
                   }
                   else
@@ -540,8 +540,8 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
                       "CFSTR_PREFERREDDROPEFFECT should return a DWORD");
                     *aLen = allocLen;
                   } else {
-                    *aLen = NS_strlen(reinterpret_cast<PRUnichar*>(*aData)) * 
-                            sizeof(PRUnichar);
+                    *aLen = NS_strlen(reinterpret_cast<char16_t*>(*aData)) * 
+                            sizeof(char16_t);
                   }
                   result = NS_OK;
                 }
@@ -635,7 +635,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         nsCOMPtr<nsISupports> genericDataWrapper;
           if ( strcmp(flavorStr, kFileMime) == 0 ) {
             // we have a file path in |data|. Create an nsLocalFile object.
-            nsDependentString filepath(reinterpret_cast<PRUnichar*>(data));
+            nsDependentString filepath(reinterpret_cast<char16_t*>(data));
             nsCOMPtr<nsIFile> file;
             if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, false, getter_AddRefs(file))) )
               genericDataWrapper = do_QueryInterface(file);
@@ -759,7 +759,7 @@ nsClipboard :: FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inInde
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kTextMime), nullptr, outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
     const char* castedText = reinterpret_cast<char*>(*outData);          
-    PRUnichar* convertedText = nullptr;
+    char16_t* convertedText = nullptr;
     int32_t convertedTextLen = 0;
     nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode ( castedText, *outDataLen, 
                                                               &convertedText, &convertedTextLen );
@@ -767,7 +767,7 @@ nsClipboard :: FindUnicodeFromPlainText ( IDataObject* inDataObject, UINT inInde
       // out with the old, in with the new 
       nsMemory::Free(*outData);
       *outData = convertedText;
-      *outDataLen = convertedTextLen * sizeof(PRUnichar);
+      *outDataLen = convertedTextLen * sizeof(char16_t);
       dataFound = true;
     }
   } // if plain text data on clipboard
@@ -793,7 +793,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kFileMime), nullptr, outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
     // we have a file path in |data|. Is it an internet shortcut or a normal file?
-    const nsDependentString filepath(static_cast<PRUnichar*>(*outData));
+    const nsDependentString filepath(static_cast<char16_t*>(*outData));
     nsCOMPtr<nsIFile> file;
     nsresult rv = NS_NewLocalFile(filepath, true, getter_AddRefs(file));
     if (NS_FAILED(rv)) {
@@ -817,7 +817,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
         if (title.IsEmpty())
           title = urlString;
         *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + title);
-        *outDataLen = NS_strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+        *outDataLen = NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
 
         dataFound = true;
       }
@@ -830,7 +830,7 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
       // convert it to unicode and pass it out
       nsMemory::Free(*outData);
       *outData = UTF8ToNewUnicode(urlSpec);
-      *outDataLen = NS_strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+      *outDataLen = NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
       dataFound = true;
     } // else regular file
   }
@@ -855,12 +855,12 @@ nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, v
 
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, ::RegisterClipboardFormat(CFSTR_INETURLW), nullptr, &tempOutData, &tempDataLen);
   if ( NS_SUCCEEDED(loadResult) && tempOutData ) {
-    nsDependentString urlString(static_cast<PRUnichar*>(tempOutData));
+    nsDependentString urlString(static_cast<char16_t*>(tempOutData));
     // the internal mozilla URL format, text/x-moz-url, contains
     // URL\ntitle.  Since we don't actually have a title here,
     // just repeat the URL to fake it.
     *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
-    *outDataLen = NS_strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+    *outDataLen = NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
     nsMemory::Free(tempOutData);
     dataFound = true;
   }
@@ -882,7 +882,7 @@ nsClipboard :: FindURLFromNativeURL ( IDataObject* inDataObject, UINT inIndex, v
       // URL\ntitle.  Since we don't actually have a title here,
       // just repeat the URL to fake it.
       *outData = ToNewUnicode(urlString + NS_LITERAL_STRING("\n") + urlString);
-      *outDataLen = NS_strlen(static_cast<PRUnichar*>(*outData)) * sizeof(PRUnichar);
+      *outDataLen = NS_strlen(static_cast<char16_t*>(*outData)) * sizeof(char16_t);
       nsMemory::Free(tempOutData);
       dataFound = true;
     }

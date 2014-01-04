@@ -356,8 +356,8 @@ Navigator::GetLanguage(nsAString& aLanguage)
 
   // Checks and fixups:
   // replace "_" with "-" to avoid POSIX/Windows "en_US" notation.
-  if (aLanguage.Length() > 2 && aLanguage[2] == PRUnichar('_')) {
-    aLanguage.Replace(2, 1, PRUnichar('-')); // TODO replace all
+  if (aLanguage.Length() > 2 && aLanguage[2] == char16_t('_')) {
+    aLanguage.Replace(2, 1, char16_t('-')); // TODO replace all
   }
 
   // Use uppercase for country part, e.g. "en-US", not "en-us", see BCP47
@@ -1997,7 +1997,7 @@ NS_GetNavigatorAppVersion(nsAString& aAppVersion)
   NS_ENSURE_SUCCESS(rv, rv);
 
   AppendASCIItoUTF16(str, aAppVersion);
-  aAppVersion.Append(PRUnichar(')'));
+  aAppVersion.Append(char16_t(')'));
 
   return rv;
 }

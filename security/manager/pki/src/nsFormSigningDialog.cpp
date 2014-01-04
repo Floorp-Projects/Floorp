@@ -27,8 +27,8 @@ NS_IMETHODIMP
 nsFormSigningDialog::ConfirmSignText(nsIInterfaceRequestor *aContext, 
                                      const nsAString &aHost,
                                      const nsAString &aSignText,
-                                     const PRUnichar **aCertNickList,
-                                     const PRUnichar **aCertDetailsList,
+                                     const char16_t **aCertNickList,
+                                     const char16_t **aCertDetailsList,
                                      uint32_t aCount, int32_t *aSelectedIndex,
                                      nsAString &aPassword, bool *aCanceled) 
 {

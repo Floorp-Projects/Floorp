@@ -4233,7 +4233,7 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
           HWND focusWnd = (HWND)lParam;
           if (IsWindowVisible(focusWnd) &&
               GetClassNameW(focusWnd, szClass,
-                            sizeof(szClass)/sizeof(PRUnichar)) &&
+                            sizeof(szClass)/sizeof(char16_t)) &&
               !wcscmp(szClass, L"Edit") &&
               !WinUtils::IsOurProcessWindow(focusWnd)) {
             break;

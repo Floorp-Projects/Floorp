@@ -65,7 +65,7 @@ extern PRLogModuleInfo* gWindowsLog;
 #endif
 
 static uint32_t gInstanceCount = 0;
-const PRUnichar* kMetroSubclassThisProp = L"MetroSubclassThisProp";
+const char16_t* kMetroSubclassThisProp = L"MetroSubclassThisProp";
 HWND MetroWidget::sICoreHwnd = nullptr;
 
 namespace mozilla {
@@ -1586,7 +1586,7 @@ MetroWidget::HasPendingInputEvent()
 }
 
 NS_IMETHODIMP
-MetroWidget::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
+MetroWidget::Observe(nsISupports *subject, const char *topic, const char16_t *data)
 {
   NS_ENSURE_ARG_POINTER(topic);
   if (!strcmp(topic, "apzc-zoom-to-rect")) {

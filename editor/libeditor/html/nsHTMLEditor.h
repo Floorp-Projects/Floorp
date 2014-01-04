@@ -553,7 +553,7 @@ protected:
                                   int32_t aDestOffset,
                                   bool aDoDeleteSelection);
   bool HavePrivateHTMLFlavor( nsIClipboard *clipboard );
-  nsresult   ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnichar **aCfcontext);
+  nsresult   ParseCFHTML(nsCString & aCfhtml, char16_t **aStuffToPaste, char16_t **aCfcontext);
   nsresult   DoContentFilterCallback(const nsAString &aFlavor,
                                      nsIDOMDocument *aSourceDoc,
                                      bool aWillDeleteSelection,

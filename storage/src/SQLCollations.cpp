@@ -60,12 +60,12 @@ localeCollationHelper8(void *aService,
  *         The number of bytes (not characters) in aStr1.
  * @param  aStr1
  *         The string to be compared against aStr2 as provided by SQLite.  It
- *         must be a non-null-terminated PRUnichar* buffer.
+ *         must be a non-null-terminated char16_t* buffer.
  * @param  aLen2
  *         The number of bytes (not characters) in aStr2.
  * @param  aStr2
  *         The string to be compared against aStr1 as provided by SQLite.  It
- *         must be a non-null-terminated PRUnichar* buffer.
+ *         must be a non-null-terminated char16_t* buffer.
  * @param  aComparisonStrength
  *         The sorting strength, one of the nsICollation constants.
  * @return aStr1 - aStr2.  That is, if aStr1 < aStr2, returns a negative number.
@@ -80,15 +80,15 @@ localeCollationHelper16(void *aService,
                         const void *aStr2,
                         int32_t aComparisonStrength)
 {
-  const PRUnichar *buf1 = static_cast<const PRUnichar *>(aStr1);
-  const PRUnichar *buf2 = static_cast<const PRUnichar *>(aStr2);
+  const char16_t *buf1 = static_cast<const char16_t *>(aStr1);
+  const char16_t *buf2 = static_cast<const char16_t *>(aStr2);
 
   // The second argument to the nsDependentSubstring constructor is exclusive:
-  // It points to the PRUnichar immediately following the last one in the target
-  // substring.  Since aLen1 and aLen2 are in bytes, divide by sizeof(PRUnichar)
+  // It points to the char16_t immediately following the last one in the target
+  // substring.  Since aLen1 and aLen2 are in bytes, divide by sizeof(char16_t)
   // so that the pointer arithmetic is correct.
-  nsDependentSubstring str1(buf1, buf1 + (aLen1 / sizeof(PRUnichar)));
-  nsDependentSubstring str2(buf2, buf2 + (aLen2 / sizeof(PRUnichar)));
+  nsDependentSubstring str1(buf1, buf1 + (aLen1 / sizeof(char16_t)));
+  nsDependentSubstring str2(buf2, buf2 + (aLen2 / sizeof(char16_t)));
   Service *serv = static_cast<Service *>(aService);
   return serv->localeCompareStrings(str1, str2, aComparisonStrength);
 }

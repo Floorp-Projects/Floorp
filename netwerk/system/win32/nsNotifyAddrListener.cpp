@@ -135,7 +135,7 @@ nsNotifyAddrListener::Run()
 NS_IMETHODIMP
 nsNotifyAddrListener::Observe(nsISupports *subject,
                               const char *topic,
-                              const PRUnichar *data)
+                              const char16_t *data)
 {
     if (!strcmp("xpcom-shutdown-threads", topic))
         Shutdown();

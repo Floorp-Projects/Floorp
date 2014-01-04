@@ -29,7 +29,7 @@
  * The function used for whitespace detection is a template argument.
  * By default, it is NS_IsAsciiWhitespace.
  */
-template<bool IsWhitespace(PRUnichar) = NS_IsAsciiWhitespace>
+template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCharSeparatedTokenizerTemplate
 {
 public:
@@ -40,7 +40,7 @@ public:
     };
 
     nsCharSeparatedTokenizerTemplate(const nsSubstring& aSource,
-                                     PRUnichar aSeparatorChar,
+                                     char16_t aSeparatorChar,
                                      uint32_t  aFlags = 0)
         : mIter(aSource.Data(), aSource.Length()),
           mEnd(aSource.Data() + aSource.Length(), aSource.Data(),
@@ -100,7 +100,7 @@ public:
      */
     const nsDependentSubstring nextToken()
     {
-        mozilla::RangedPtr<const PRUnichar> tokenStart = mIter, tokenEnd = mIter;
+        mozilla::RangedPtr<const char16_t> tokenStart = mIter, tokenEnd = mIter;
 
         MOZ_ASSERT(mIter == mEnd || !IsWhitespace(*mIter),
                    "Should be at beginning of token if there is one");
@@ -150,9 +150,9 @@ public:
     }
 
 private:
-    mozilla::RangedPtr<const PRUnichar> mIter;
-    const mozilla::RangedPtr<const PRUnichar> mEnd;
-    PRUnichar mSeparatorChar;
+    mozilla::RangedPtr<const char16_t> mIter;
+    const mozilla::RangedPtr<const char16_t> mEnd;
+    char16_t mSeparatorChar;
     bool mWhitespaceBeforeFirstToken;
     bool mWhitespaceAfterCurrentToken;
     bool mSeparatorAfterCurrentToken;
@@ -163,14 +163,14 @@ class nsCharSeparatedTokenizer: public nsCharSeparatedTokenizerTemplate<>
 {
 public:
     nsCharSeparatedTokenizer(const nsSubstring& aSource,
-                             PRUnichar aSeparatorChar,
+                             char16_t aSeparatorChar,
                              uint32_t  aFlags = 0)
       : nsCharSeparatedTokenizerTemplate<>(aSource, aSeparatorChar, aFlags)
     {
     }
 };
 
-template<bool IsWhitespace(PRUnichar) = NS_IsAsciiWhitespace>
+template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCCharSeparatedTokenizerTemplate
 {
 public:

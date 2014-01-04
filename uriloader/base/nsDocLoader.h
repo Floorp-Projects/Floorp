@@ -146,7 +146,7 @@ protected:
     void FireOnStatusChange(nsIWebProgress *aWebProgress,
                             nsIRequest *aRequest,
                             nsresult aStatus,
-                            const PRUnichar* aMessage);
+                            const char16_t* aMessage);
 
     void FireOnLocationChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest,

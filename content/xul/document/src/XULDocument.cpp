@@ -1307,7 +1307,7 @@ XULDocument::Persist(const nsAString& aID,
     }
     else {
         // Make sure that this QName is going to be valid.
-        const PRUnichar *colon;
+        const char16_t *colon;
         rv = nsContentUtils::CheckQName(PromiseFlatString(aAttr), true, &colon);
 
         if (NS_FAILED(rv)) {
@@ -2292,7 +2292,7 @@ XULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
             continue;
         }
 
-        const PRUnichar* value;
+        const char16_t* value;
         rv = literal->GetValueConst(&value);
         if (NS_FAILED(rv)) return rv;
 
@@ -3081,7 +3081,7 @@ XULDocument::ResumeWalk()
                 if (piProto->mTarget.EqualsLiteral("xml-stylesheet") ||
                     piProto->mTarget.EqualsLiteral("xul-overlay")) {
 
-                    const PRUnichar* params[] = { piProto->mTarget.get() };
+                    const char16_t* params[] = { piProto->mTarget.get() };
 
                     nsContentUtils::ReportToConsole(
                                         nsIScriptError::warningFlag,
@@ -3377,7 +3377,7 @@ XULDocument::ReportMissingOverlay(nsIURI* aURI)
     aURI->GetSpec(spec);
 
     NS_ConvertUTF8toUTF16 utfSpec(spec);
-    const PRUnichar* params[] = { utfSpec.get() };
+    const char16_t* params[] = { utfSpec.get() };
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("XUL Document"), this,
                                     nsContentUtils::eXUL_PROPERTIES,

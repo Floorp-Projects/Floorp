@@ -103,7 +103,7 @@ nsHtml5AttributeName::SAME_LOCAL(nsIAtom* name)
 }
 
 nsHtml5AttributeName* 
-nsHtml5AttributeName::nameByBuffer(PRUnichar* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
+nsHtml5AttributeName::nameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {
   int32_t hash = nsHtml5AttributeName::bufToHash(buf, length);
   int32_t index = nsHtml5AttributeName::ATTRIBUTE_HASHES.binarySearch(hash);
@@ -120,7 +120,7 @@ nsHtml5AttributeName::nameByBuffer(PRUnichar* buf, int32_t offset, int32_t lengt
 }
 
 int32_t 
-nsHtml5AttributeName::bufToHash(PRUnichar* buf, int32_t len)
+nsHtml5AttributeName::bufToHash(char16_t* buf, int32_t len)
 {
   int32_t hash2 = 0;
   int32_t hash = len;

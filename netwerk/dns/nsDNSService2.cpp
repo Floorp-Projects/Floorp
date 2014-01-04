@@ -799,7 +799,7 @@ nsDNSService::GetMyHostName(nsACString &result)
 }
 
 NS_IMETHODIMP
-nsDNSService::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
+nsDNSService::Observe(nsISupports *subject, const char *topic, const char16_t *data)
 {
     // we are only getting called if a preference has changed. 
     NS_ASSERTION(strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0 ||

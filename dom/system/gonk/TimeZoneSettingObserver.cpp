@@ -179,7 +179,7 @@ NS_IMPL_ISUPPORTS1(TimeZoneSettingObserver, nsIObserver)
 NS_IMETHODIMP
 TimeZoneSettingObserver::Observe(nsISupports *aSubject,
                      const char *aTopic,
-                     const PRUnichar *aData)
+                     const char16_t *aData)
 {
   if (strcmp(aTopic, MOZSETTINGS_CHANGED) != 0) {
     return NS_OK;

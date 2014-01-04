@@ -100,8 +100,8 @@ txStylesheetCompiler::startElement(int32_t aNamespaceID, nsIAtom* aLocalName,
 }
 
 nsresult
-txStylesheetCompiler::startElement(const PRUnichar *aName,
-                                   const PRUnichar **aAttrs,
+txStylesheetCompiler::startElement(const char16_t *aName,
+                                   const char16_t **aAttrs,
                                    int32_t aAttrCount, int32_t aIDOffset)
 {
     if (NS_FAILED(mStatus)) {
@@ -388,8 +388,8 @@ txStylesheetCompiler::doneLoading()
 }
 
 void
-txStylesheetCompiler::cancel(nsresult aError, const PRUnichar *aErrorText,
-                             const PRUnichar *aParam)
+txStylesheetCompiler::cancel(nsresult aError, const char16_t *aErrorText,
+                             const char16_t *aParam)
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("Compiler::cancel: %s, module: %d, code %d\n",
@@ -433,8 +433,8 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
 void
 txStylesheetCompiler::onDoneCompiling(txStylesheetCompiler* aCompiler,
                                       nsresult aResult,
-                                      const PRUnichar *aErrorText,
-                                      const PRUnichar *aParam)
+                                      const char16_t *aErrorText,
+                                      const char16_t *aParam)
 {
     if (NS_FAILED(aResult)) {
         cancel(aResult, aErrorText, aParam);

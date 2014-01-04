@@ -23,7 +23,7 @@ nsAppStartupNotifier::~nsAppStartupNotifier()
 {
 }
 
-NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsAppStartupNotifier::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
     NS_ENSURE_ARG(aTopic);
     nsresult rv;

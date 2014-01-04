@@ -179,7 +179,7 @@ SmsParent::ActorDestroy(ActorDestroyReason why)
 
 NS_IMETHODIMP
 SmsParent::Observe(nsISupports* aSubject, const char* aTopic,
-                   const PRUnichar* aData)
+                   const char16_t* aData)
 {
   if (!strcmp(aTopic, kSmsReceivedObserverTopic)) {
     MobileMessageData msgData;

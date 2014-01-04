@@ -102,7 +102,7 @@ private:
     float           mFloat;
     nsDOMCSSRGBColor* mColor;
     nsDOMCSSRect*     mRect;
-    PRUnichar*      mString;
+    char16_t*      mString;
     nsIURI*         mURI;
     nsCSSKeyword    mKeyword;
   } mValue;

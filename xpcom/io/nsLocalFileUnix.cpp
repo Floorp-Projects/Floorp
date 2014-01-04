@@ -1440,10 +1440,10 @@ nsLocalFile::IsExecutable(bool *_retval)
     else
         GetPath(path);
 
-    int32_t dotIdx = path.RFindChar(PRUnichar('.'));
+    int32_t dotIdx = path.RFindChar(char16_t('.'));
     if (dotIdx != kNotFound) {
         // Convert extension to lower case.
-        PRUnichar *p = path.BeginWriting();
+        char16_t *p = path.BeginWriting();
         for(p += dotIdx + 1; *p; p++)
             *p +=  (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0; 
         

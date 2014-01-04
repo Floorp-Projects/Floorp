@@ -94,7 +94,7 @@ public:
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const PRUnichar* aData)
+                     const char16_t* aData)
   {
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
     LOG("Observed XPCOM shutdown.");

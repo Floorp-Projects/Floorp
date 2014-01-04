@@ -78,8 +78,8 @@ nsSAXXMLReader::SetParser(nsParserBase *aParser)
 
 // nsIExtendedExpatSink
 NS_IMETHODIMP
-nsSAXXMLReader::HandleStartElement(const PRUnichar *aName,
-                                   const PRUnichar **aAtts,
+nsSAXXMLReader::HandleStartElement(const char16_t *aName,
+                                   const char16_t **aAtts,
                                    uint32_t aAttsCount,
                                    int32_t aIndex,
                                    uint32_t aLineNumber)
@@ -109,7 +109,7 @@ nsSAXXMLReader::HandleStartElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleEndElement(const PRUnichar *aName)
+nsSAXXMLReader::HandleEndElement(const char16_t *aName)
 {
   if (mContentHandler) {
     nsAutoString uri, localName, qName;
@@ -120,7 +120,7 @@ nsSAXXMLReader::HandleEndElement(const PRUnichar *aName)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleComment(const PRUnichar *aName)
+nsSAXXMLReader::HandleComment(const char16_t *aName)
 {
   NS_ASSERTION(aName, "null passed to handler");
   if (mLexicalHandler)
@@ -130,7 +130,7 @@ nsSAXXMLReader::HandleComment(const PRUnichar *aName)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleCDataSection(const PRUnichar *aData,
+nsSAXXMLReader::HandleCDataSection(const char16_t *aData,
                                    uint32_t aLength)
 {
   nsresult rv;
@@ -153,11 +153,11 @@ nsSAXXMLReader::HandleCDataSection(const PRUnichar *aData,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleStartDTD(const PRUnichar *aName,
-                               const PRUnichar *aSystemId,
-                               const PRUnichar *aPublicId)
+nsSAXXMLReader::HandleStartDTD(const char16_t *aName,
+                               const char16_t *aSystemId,
+                               const char16_t *aPublicId)
 {
-  PRUnichar nullChar = PRUnichar(0);
+  char16_t nullChar = char16_t(0);
   if (!aName)
     aName = &nullChar;
   if (!aSystemId)
@@ -190,7 +190,7 @@ nsSAXXMLReader::HandleDoctypeDecl(const nsAString & aSubset,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleCharacterData(const PRUnichar *aData,
+nsSAXXMLReader::HandleCharacterData(const char16_t *aData,
                                     uint32_t aLength)
 {
   if (mContentHandler)
@@ -200,13 +200,13 @@ nsSAXXMLReader::HandleCharacterData(const PRUnichar *aData,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleStartNamespaceDecl(const PRUnichar *aPrefix,
-                                         const PRUnichar *aUri)
+nsSAXXMLReader::HandleStartNamespaceDecl(const char16_t *aPrefix,
+                                         const char16_t *aUri)
 {
   if (!mContentHandler)
     return NS_OK;
   
-  PRUnichar nullChar = PRUnichar(0);
+  char16_t nullChar = char16_t(0);
   if (!aPrefix)
     aPrefix = &nullChar;
   if (!aUri)
@@ -217,7 +217,7 @@ nsSAXXMLReader::HandleStartNamespaceDecl(const PRUnichar *aPrefix,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleEndNamespaceDecl(const PRUnichar *aPrefix)
+nsSAXXMLReader::HandleEndNamespaceDecl(const char16_t *aPrefix)
 {
   if (!mContentHandler)
     return NS_OK;
@@ -229,8 +229,8 @@ nsSAXXMLReader::HandleEndNamespaceDecl(const PRUnichar *aPrefix)
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleProcessingInstruction(const PRUnichar *aTarget,
-                                            const PRUnichar *aData)
+nsSAXXMLReader::HandleProcessingInstruction(const char16_t *aTarget,
+                                            const char16_t *aData)
 {
   NS_ASSERTION(aTarget && aData, "null passed to handler");
   if (mContentHandler) {
@@ -242,13 +242,13 @@ nsSAXXMLReader::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
-                                   const PRUnichar *aSystemId,
-                                   const PRUnichar *aPublicId)
+nsSAXXMLReader::HandleNotationDecl(const char16_t *aNotationName,
+                                   const char16_t *aSystemId,
+                                   const char16_t *aPublicId)
 {
   NS_ASSERTION(aNotationName, "null passed to handler");
   if (mDTDHandler) {
-    PRUnichar nullChar = PRUnichar(0);
+    char16_t nullChar = char16_t(0);
     if (!aSystemId)
       aSystemId = &nullChar;
     if (!aPublicId)
@@ -263,14 +263,14 @@ nsSAXXMLReader::HandleNotationDecl(const PRUnichar *aNotationName,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
-                                         const PRUnichar *aSystemId,
-                                         const PRUnichar *aPublicId,
-                                         const PRUnichar *aNotationName)
+nsSAXXMLReader::HandleUnparsedEntityDecl(const char16_t *aEntityName,
+                                         const char16_t *aSystemId,
+                                         const char16_t *aPublicId,
+                                         const char16_t *aNotationName)
 {
   NS_ASSERTION(aEntityName && aNotationName, "null passed to handler");
   if (mDTDHandler) {
-    PRUnichar nullChar = PRUnichar(0);
+    char16_t nullChar = char16_t(0);
     if (!aSystemId)
       aSystemId = &nullChar;
     if (!aPublicId)
@@ -286,13 +286,13 @@ nsSAXXMLReader::HandleUnparsedEntityDecl(const PRUnichar *aEntityName,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::HandleXMLDeclaration(const PRUnichar *aVersion,
-                                     const PRUnichar *aEncoding,
+nsSAXXMLReader::HandleXMLDeclaration(const char16_t *aVersion,
+                                     const char16_t *aEncoding,
                                      int32_t aStandalone)
 {
   NS_ASSERTION(aVersion, "null passed to handler");
   if (mDeclarationHandler) {
-    PRUnichar nullChar = PRUnichar(0);
+    char16_t nullChar = char16_t(0);
     if (!aEncoding)
       aEncoding = &nullChar;
     mDeclarationHandler->HandleXMLDeclaration(nsDependentString(aVersion),
@@ -303,8 +303,8 @@ nsSAXXMLReader::HandleXMLDeclaration(const PRUnichar *aVersion,
 }
 
 NS_IMETHODIMP
-nsSAXXMLReader::ReportError(const PRUnichar* aErrorText,
-                            const PRUnichar* aSourceText,
+nsSAXXMLReader::ReportError(const char16_t* aErrorText,
+                            const char16_t* aSourceText,
                             nsIScriptError *aError,
                             bool *_retval)
 {
@@ -667,7 +667,7 @@ nsSAXXMLReader::EnsureBaseURI()
 }
 
 nsresult
-nsSAXXMLReader::SplitExpatName(const PRUnichar *aExpatName,
+nsSAXXMLReader::SplitExpatName(const char16_t *aExpatName,
                                nsString &aURI,
                                nsString &aLocalName,
                                nsString &aQName)
@@ -687,7 +687,7 @@ nsSAXXMLReader::SplitExpatName(const PRUnichar *aExpatName,
   NS_ASSERTION(aExpatName, "null passed to handler");
   nsDependentString expatStr(aExpatName);
   int32_t break1, break2 = kNotFound;
-  break1 = expatStr.FindChar(PRUnichar(0xFFFF));
+  break1 = expatStr.FindChar(char16_t(0xFFFF));
 
   if (break1 == kNotFound) {
     aLocalName = expatStr; // no namespace
@@ -695,7 +695,7 @@ nsSAXXMLReader::SplitExpatName(const PRUnichar *aExpatName,
     aQName = expatStr;
   } else {
     aURI = StringHead(expatStr, break1);
-    break2 = expatStr.FindChar(PRUnichar(0xFFFF), break1 + 1);
+    break2 = expatStr.FindChar(char16_t(0xFFFF), break1 + 1);
     if (break2 == kNotFound) { // namespace, but no prefix
       aLocalName = Substring(expatStr, break1 + 1);
       aQName = aLocalName;

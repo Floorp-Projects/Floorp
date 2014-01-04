@@ -80,16 +80,16 @@ void nsUnicodeToGB18030::Create4BytesEncoder()
 }
 
 bool nsUnicodeToGB18030::EncodeSurrogate(
-  PRUnichar aSurrogateHigh,
-  PRUnichar aSurrogateLow,
+  char16_t aSurrogateHigh,
+  char16_t aSurrogateLow,
   char* aOut)
 {
   if( NS_IS_HIGH_SURROGATE(aSurrogateHigh) && 
       NS_IS_LOW_SURROGATE(aSurrogateLow) )
   {
     // notice that idx does not include the 0x10000 
-    uint32_t idx = ((aSurrogateHigh - (PRUnichar)0xD800) << 10 ) |
-                   (aSurrogateLow - (PRUnichar) 0xDC00);
+    uint32_t idx = ((aSurrogateHigh - (char16_t)0xD800) << 10 ) |
+                   (aSurrogateLow - (char16_t) 0xDC00);
 
     unsigned char *out = (unsigned char*) aOut;
     // notice this is from 0x90 for supplment planes
@@ -123,7 +123,7 @@ void nsUnicodeToGBK::Create4BytesEncoder()
   m4BytesEncoder = nullptr;
 }
 bool nsUnicodeToGBK::TryExtensionEncoder(
-  PRUnichar aChar,
+  char16_t aChar,
   char* aOut,
   int32_t *aOutLen
 )
@@ -148,7 +148,7 @@ bool nsUnicodeToGBK::TryExtensionEncoder(
 }
 
 bool nsUnicodeToGBK::Try4BytesEncoder(
-  PRUnichar aChar,
+  char16_t aChar,
   char* aOut,
   int32_t *aOutLen
 )
@@ -174,22 +174,22 @@ bool nsUnicodeToGBK::Try4BytesEncoder(
   return false;
 }
 bool nsUnicodeToGBK::EncodeSurrogate(
-  PRUnichar aSurrogateHigh,
-  PRUnichar aSurrogateLow,
+  char16_t aSurrogateHigh,
+  char16_t aSurrogateLow,
   char* aOut)
 {
   return false; // GBK cannot encode Surrogate, let the subclass encode it.
 } 
 
 NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
-  const PRUnichar * aSrc, 
+  const char16_t * aSrc, 
   int32_t * aSrcLength, 
   char * aDest, 
   int32_t * aDestLength)
 {
   int32_t iSrcLength = 0;
   int32_t iDestLength = 0;
-  PRUnichar unicode;
+  char16_t unicode;
   nsresult res = NS_OK;
   while (iSrcLength < *aSrcLength )
   {
@@ -294,7 +294,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
         }
       } 
     }
-    iSrcLength++ ; // Each unicode char just count as one in PRUnichar string;  	  
+    iSrcLength++ ; // Each unicode char just count as one in char16_t string;  	  
     mSurrogateHigh = 0;
     aSrc++;
     if ( iDestLength >= (*aDestLength) && (iSrcLength < *aSrcLength) )

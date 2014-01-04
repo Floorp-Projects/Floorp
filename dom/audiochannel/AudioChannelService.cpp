@@ -633,7 +633,7 @@ AudioChannelService::ChannelName(AudioChannelType aType)
 }
 
 NS_IMETHODIMP
-AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     mDisabled = true;

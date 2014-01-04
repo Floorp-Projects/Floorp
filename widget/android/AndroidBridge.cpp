@@ -225,7 +225,7 @@ AndroidBridge::SetMainThread(pthread_t thr)
 }
 
 // Raw JNIEnv variants.
-jstring AndroidBridge::NewJavaString(JNIEnv* env, const PRUnichar* string, uint32_t len) {
+jstring AndroidBridge::NewJavaString(JNIEnv* env, const char16_t* string, uint32_t len) {
    jstring ret = env->NewString(reinterpret_cast<const jchar*>(string), len);
    if (env->ExceptionCheck()) {
        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
@@ -249,7 +249,7 @@ jstring AndroidBridge::NewJavaString(JNIEnv* env, const nsACString& string) {
 }
 
 // AutoLocalJNIFrame variants..
-jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const PRUnichar* string, uint32_t len) {
+jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const char16_t* string, uint32_t len) {
     return NewJavaString(frame->GetEnv(), string, len);
 }
 

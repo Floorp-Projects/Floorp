@@ -10,7 +10,7 @@
 #include "nsDependentSubstring.h"
 #include "nsCRT.h"
 
-template<bool IsWhitespace(PRUnichar) = NS_IsAsciiWhitespace>
+template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsWhitespaceTokenizerTemplate
 {
 public:
@@ -57,11 +57,11 @@ public:
      */
     const nsDependentSubstring nextToken()
     {
-        const mozilla::RangedPtr<const PRUnichar> tokenStart = mIter;
+        const mozilla::RangedPtr<const char16_t> tokenStart = mIter;
         while (mIter < mEnd && !IsWhitespace(*mIter)) {
             ++mIter;
         }
-        const mozilla::RangedPtr<const PRUnichar> tokenEnd = mIter;
+        const mozilla::RangedPtr<const char16_t> tokenEnd = mIter;
         mWhitespaceAfterCurrentToken = false;
         while (mIter < mEnd && IsWhitespace(*mIter)) {
             mWhitespaceAfterCurrentToken = true;
@@ -71,8 +71,8 @@ public:
     }
 
 private:
-    mozilla::RangedPtr<const PRUnichar> mIter;
-    const mozilla::RangedPtr<const PRUnichar> mEnd;
+    mozilla::RangedPtr<const char16_t> mIter;
+    const mozilla::RangedPtr<const char16_t> mEnd;
     bool mWhitespaceBeforeFirstToken;
     bool mWhitespaceAfterCurrentToken;
 };
@@ -86,7 +86,7 @@ public:
     }
 };
 
-template<bool IsWhitespace(PRUnichar) = NS_IsAsciiWhitespace>
+template<bool IsWhitespace(char16_t) = NS_IsAsciiWhitespace>
 class nsCWhitespaceTokenizerTemplate
 {
 public:

@@ -2630,7 +2630,7 @@ int NS_main(int argc, NS_tchar **argv)
         return 1;
       }
 
-      PRUnichar *cmdLine = MakeCommandLine(argc - 1, argv + 1);
+      char16_t *cmdLine = MakeCommandLine(argc - 1, argv + 1);
       if (!cmdLine) {
         CloseHandle(elevatedFileHandle);
         return 1;

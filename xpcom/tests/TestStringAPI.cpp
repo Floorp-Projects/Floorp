@@ -25,14 +25,14 @@ int testAccess() {
   s.Assign(NS_LITERAL_STRING("hello"));
   int res = CHECK(5 == s.Length()) +
             CHECK(s.EqualsLiteral("hello"));
-  const PRUnichar *it, *end;
+  const char16_t *it, *end;
   int len = s.BeginReading(&it, &end);
   res += CHECK(5 == len);
-  res += CHECK(PRUnichar('h') == it[0]) +
-         CHECK(PRUnichar('e') == it[1]) +
-         CHECK(PRUnichar('l') == it[2]) +
-         CHECK(PRUnichar('l') == it[3]) +
-         CHECK(PRUnichar('o') == it[4]) +
+  res += CHECK(char16_t('h') == it[0]) +
+         CHECK(char16_t('e') == it[1]) +
+         CHECK(char16_t('l') == it[2]) +
+         CHECK(char16_t('l') == it[3]) +
+         CHECK(char16_t('o') == it[4]) +
          CHECK(it + len == end);
   res += CHECK(s[0] == s.First());
   for (int i = 0; i < len; ++i) {
@@ -46,7 +46,7 @@ int testAccess() {
 
 int testWrite() {
   nsString s(NS_LITERAL_STRING("xyzz"));
-  PRUnichar *begin, *end;
+  char16_t *begin, *end;
   int res = CHECK(4 == s.Length());
   uint32_t len = s.BeginWriting(&begin, &end, 5);
   res += CHECK(5 == s.Length()) +
@@ -54,7 +54,7 @@ int testWrite() {
          CHECK(end == begin + 5) +
          CHECK(begin == s.BeginWriting()) +
          CHECK(end == s.EndWriting());
-  begin[4] = PRUnichar('y');
+  begin[4] = char16_t('y');
   res += CHECK(s.Equals(NS_LITERAL_STRING("xyzzy")));
   s.SetLength(4);
   res += CHECK(4 == s.Length()) +
@@ -64,12 +64,12 @@ int testWrite() {
   s.Truncate();
   res += CHECK(0 == s.Length()) +
          CHECK(s.IsEmpty());
-  const PRUnichar sample[] = { 's', 'a', 'm', 'p', 'l', 'e', '\0' };
+  const char16_t sample[] = { 's', 'a', 'm', 'p', 'l', 'e', '\0' };
   s.Assign(sample);
   res += CHECK(s.EqualsLiteral("sample"));
   s.Assign(sample, 4);
   res += CHECK(s.EqualsLiteral("samp"));
-  s.Assign(PRUnichar('q'));
+  s.Assign(char16_t('q'));
   res += CHECK(s.EqualsLiteral("q"));
   return res;
 }

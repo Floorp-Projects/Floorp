@@ -230,7 +230,7 @@ nsLocaleService::nsLocaleService(void)
         buffer[size] = 0;
 
         // Convert the locale string to the format that Mozilla expects
-        nsAutoString xpLocale(reinterpret_cast<PRUnichar*>(buffer.Elements()));
+        nsAutoString xpLocale(reinterpret_cast<char16_t*>(buffer.Elements()));
         xpLocale.ReplaceChar('_', '-');
 
         nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));

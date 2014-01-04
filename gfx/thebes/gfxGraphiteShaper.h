@@ -18,7 +18,7 @@ public:
     virtual ~gfxGraphiteShaper();
 
     virtual bool ShapeText(gfxContext      *aContext,
-                           const PRUnichar *aText,
+                           const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
@@ -31,7 +31,7 @@ protected:
                                   gfxShapedText   *aShapedText,
                                   uint32_t         aOffset,
                                   uint32_t         aLength,
-                                  const PRUnichar *aText,
+                                  const char16_t *aText,
                                   gr_segment      *aSegment);
 
     static float GrGetAdvance(const void* appFontHandle, uint16_t glyphid);

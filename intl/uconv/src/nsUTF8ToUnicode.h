@@ -56,7 +56,7 @@ protected:
   // Subclassing of nsBasicDecoderSupport class [declaration]
 
   NS_IMETHOD Convert(const char * aSrc, int32_t * aSrcLength, 
-      PRUnichar * aDest, int32_t * aDestLength);
+      char16_t * aDest, int32_t * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsBasicDecoderSupport class [declaration]

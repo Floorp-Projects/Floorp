@@ -16,8 +16,8 @@ nsSampleWordBreaker::~nsSampleWordBreaker()
 NS_IMPL_ISUPPORTS1(nsSampleWordBreaker, nsIWordBreaker)
 
 bool nsSampleWordBreaker::BreakInBetween(
-  const PRUnichar* aText1 , uint32_t aTextLen1,
-  const PRUnichar* aText2 , uint32_t aTextLen2)
+  const char16_t* aText1 , uint32_t aTextLen1,
+  const char16_t* aText2 , uint32_t aTextLen2)
 {
   NS_PRECONDITION( nullptr != aText1, "null ptr");
   NS_PRECONDITION( nullptr != aText2, "null ptr");
@@ -42,7 +42,7 @@ bool nsSampleWordBreaker::BreakInBetween(
 #define IS_HALFWIDTHKATAKANA(c)         (( 0xFF60 <= (c)) && ((c) <= 0xFF9F))
 #define IS_THAI(c)         (0x0E00 == (0xFF80 & (c) )) // Look at the higest 9 bits
 
-uint8_t nsSampleWordBreaker::GetClass(PRUnichar c)
+uint8_t nsSampleWordBreaker::GetClass(char16_t c)
 {
   // begin of the hack
 
@@ -79,7 +79,7 @@ uint8_t nsSampleWordBreaker::GetClass(PRUnichar c)
 }
 
 nsWordRange nsSampleWordBreaker::FindWord(
-  const PRUnichar* aText , uint32_t aTextLen,
+  const char16_t* aText , uint32_t aTextLen,
   uint32_t aOffset)
 {
   nsWordRange range;
@@ -125,7 +125,7 @@ nsWordRange nsSampleWordBreaker::FindWord(
 }
 
 int32_t nsSampleWordBreaker::NextWord( 
-  const PRUnichar* aText, uint32_t aLen, uint32_t aPos) 
+  const char16_t* aText, uint32_t aLen, uint32_t aPos) 
 {
   int8_t c1, c2;
   uint32_t cur = aPos;

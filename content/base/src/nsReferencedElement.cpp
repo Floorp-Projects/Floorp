@@ -223,7 +223,7 @@ NS_IMPL_ISUPPORTS1(nsReferencedElement::DocumentLoadNotification,
 NS_IMETHODIMP
 nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,
                                                        const char* aTopic,
-                                                       const PRUnichar* aData)
+                                                       const char16_t* aData)
 {
   NS_ASSERTION(PL_strcmp(aTopic, "external-resource-document-created") == 0,
                "Unexpected topic");

@@ -404,8 +404,8 @@ nsContentSink::Decode5987Format(nsAString& aEncoded) {
 
   nsAutoCString asciiValue;
 
-  const PRUnichar* encstart = aEncoded.BeginReading();
-  const PRUnichar* encend = aEncoded.EndReading();
+  const char16_t* encstart = aEncoded.BeginReading();
+  const char16_t* encend = aEncoded.EndReading();
 
   // create a plain ASCII string, aborting if we can't do that
   // converted form is always shorter than input
@@ -452,10 +452,10 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
   // put an extra null at the end
   stringList.Append(kNullCh);
 
-  PRUnichar* start = stringList.BeginWriting();
-  PRUnichar* end   = start;
-  PRUnichar* last  = start;
-  PRUnichar  endCh;
+  char16_t* start = stringList.BeginWriting();
+  char16_t* end   = start;
+  char16_t* last  = start;
+  char16_t  endCh;
 
   while (*start != kNullCh) {
     // skip leading space
@@ -470,19 +470,19 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
     
     // look for semicolon or comma
     while (*end != kNullCh && *end != kSemicolon && *end != kComma) {
-      PRUnichar ch = *end;
+      char16_t ch = *end;
 
       if (ch == kQuote || ch == kLessThan) {
         // quoted string
 
-        PRUnichar quote = ch;
+        char16_t quote = ch;
         if (quote == kLessThan) {
           quote = kGreaterThan;
         }
         
         wasQuotedString = (ch == kQuote);
         
-        PRUnichar* closeQuote = (end + 1);
+        char16_t* closeQuote = (end + 1);
 
         // seek closing quote
         while (*closeQuote != kNullCh && quote != *closeQuote) {
@@ -540,7 +540,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
           href.StripWhitespace();
         }
       } else {
-        PRUnichar* equals = start;
+        char16_t* equals = start;
         seenParameters = true;
 
         while ((*equals != kNullCh) && (*equals != kEqual)) {
@@ -552,7 +552,7 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
           nsAutoString  attr(start);
           attr.StripWhitespace();
 
-          PRUnichar* value = ++equals;
+          char16_t* value = ++equals;
           while (nsCRT::IsAsciiSpace(*value)) {
             value++;
           }
@@ -564,8 +564,8 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 
           if (wasQuotedString) {
             // unescape in-place
-            PRUnichar* unescaped = value;
-            PRUnichar *src = value;
+            char16_t* unescaped = value;
+            char16_t *src = value;
             
             while (*src != kNullCh) {
               if (*src == kBackSlash && *(src + 1) != kNullCh) {

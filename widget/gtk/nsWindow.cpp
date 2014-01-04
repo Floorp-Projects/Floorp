@@ -3054,7 +3054,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
         }
         else {
             WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
-            PRUnichar textString[3];
+            char16_t textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
             textString[2] = 0;

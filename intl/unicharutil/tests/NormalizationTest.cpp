@@ -56,11 +56,11 @@ void showError(const char* description, const char* errorText)
 bool TestInvariants(testcaseLine* testLine)
 {
   nsAutoString c1, c2, c3, c4, c5, normalized;
-  c1 = nsDependentString((PRUnichar*)testLine->c1);
-  c2 = nsDependentString((PRUnichar*)testLine->c2);
-  c3 = nsDependentString((PRUnichar*)testLine->c3);
-  c4 = nsDependentString((PRUnichar*)testLine->c4);
-  c5 = nsDependentString((PRUnichar*)testLine->c5);
+  c1 = nsDependentString((char16_t*)testLine->c1);
+  c2 = nsDependentString((char16_t*)testLine->c2);
+  c3 = nsDependentString((char16_t*)testLine->c3);
+  c4 = nsDependentString((char16_t*)testLine->c4);
+  c5 = nsDependentString((char16_t*)testLine->c5);
   bool rv = true;
  
   /*
@@ -135,7 +135,7 @@ uint32_t UTF32CodepointFromTestcase(testcaseLine* testLine)
 bool TestUnspecifiedCodepoint(uint32_t codepoint)
 {
   bool rv = true;
-  PRUnichar unicharArray[3];
+  char16_t unicharArray[3];
   nsAutoString X, normalized;
   char description[9];
 

@@ -1236,7 +1236,7 @@ DumpReconvertString(RECONVERTSTRING* aReconv)
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("  result str=\"%s\"\n",
      NS_ConvertUTF16toUTF8(
-       nsAutoString((PRUnichar*)((char*)(aReconv) + aReconv->dwStrOffset),
+       nsAutoString((char16_t*)((char*)(aReconv) + aReconv->dwStrOffset),
                     aReconv->dwStrLen)).get()));
 }
 

@@ -137,7 +137,7 @@ public:
     }
 
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
-                        const PRUnichar* aData) {
+                        const char16_t* aData) {
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
       CSFLogDebug(logTag, "Shutting down PeerConnectionCtx");
       sipcc::PeerConnectionCtx::Destroy();

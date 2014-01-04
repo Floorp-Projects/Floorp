@@ -67,7 +67,7 @@ nsNSSCertificateFakeTransport::GetEmailAddress(nsAString &aEmailAddress)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetEmailAddresses(uint32_t *aLength, PRUnichar*** aAddresses)
+nsNSSCertificateFakeTransport::GetEmailAddresses(uint32_t *aLength, char16_t*** aAddresses)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -200,7 +200,7 @@ NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetUsagesArray(bool localOnly,
                                  uint32_t *_verified,
                                  uint32_t *_count,
-                                 PRUnichar ***_usages)
+                                 char16_t ***_usages)
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;

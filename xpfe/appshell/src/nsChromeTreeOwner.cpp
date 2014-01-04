@@ -139,7 +139,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 // nsChromeTreeOwner::nsIDocShellTreeOwner
 //*****************************************************************************   
 
-NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const PRUnichar* aName,
+NS_IMETHODIMP nsChromeTreeOwner::FindItemWithName(const char16_t* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem* aOriginalRequestor,
    nsIDocShellTreeItem** aFoundItem)
 {
@@ -495,13 +495,13 @@ NS_IMETHODIMP nsChromeTreeOwner::SetFocus()
    return mXULWindow->SetFocus();
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::GetTitle(PRUnichar** aTitle)
+NS_IMETHODIMP nsChromeTreeOwner::GetTitle(char16_t** aTitle)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->GetTitle(aTitle);
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
+NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const char16_t* aTitle)
 {
    NS_ENSURE_STATE(mXULWindow);
    return mXULWindow->SetTitle(aTitle);
@@ -563,7 +563,7 @@ NS_IMETHODIMP
 nsChromeTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
                                   nsIRequest* aRequest,
                                   nsresult aStatus,
-                                  const PRUnichar* aMessage)
+                                  const char16_t* aMessage)
 {
     return NS_OK;
 }

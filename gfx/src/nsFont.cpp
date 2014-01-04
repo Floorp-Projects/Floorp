@@ -13,7 +13,7 @@
 #include "nsISupports.h"
 #include "nsMemory.h"                   // for NS_ARRAY_LENGTH
 #include "nsUnicharUtils.h"
-#include "nscore.h"                     // for PRUnichar
+#include "nscore.h"                     // for char16_t
 #include "mozilla/gfx/2D.h"
 
 nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
@@ -181,13 +181,13 @@ static bool IsGenericFontFamily(const nsString& aFamily)
   return generic != kGenericFont_NONE;
 }
 
-const PRUnichar kSingleQuote  = PRUnichar('\'');
-const PRUnichar kDoubleQuote  = PRUnichar('\"');
-const PRUnichar kComma        = PRUnichar(',');
+const char16_t kSingleQuote  = char16_t('\'');
+const char16_t kDoubleQuote  = char16_t('\"');
+const char16_t kComma        = char16_t(',');
 
 bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 {
-  const PRUnichar *p, *p_end;
+  const char16_t *p, *p_end;
   name.BeginReading(p);
   name.EndReading(p_end);
   nsAutoString family;
@@ -200,10 +200,10 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
     bool generic;
     if (*p == kSingleQuote || *p == kDoubleQuote) {
       // quoted font family
-      PRUnichar quoteMark = *p;
+      char16_t quoteMark = *p;
       if (++p == p_end)
         return true;
-      const PRUnichar *nameStart = p;
+      const char16_t *nameStart = p;
 
       // XXX What about CSS character escapes?
       while (*p != quoteMark)
@@ -218,7 +218,7 @@ bool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 
     } else {
       // unquoted font family
-      const PRUnichar *nameStart = p;
+      const char16_t *nameStart = p;
       while (++p != p_end && *p != kComma)
         /* nothing */ ;
 

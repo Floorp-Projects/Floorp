@@ -82,7 +82,7 @@ extern "C" {
 #define XML_UNICODE
 #endif
 
-/* BEGIN MOZILLA CHANGE (typedef XML_Char to PRUnichar) */
+/* BEGIN MOZILLA CHANGE (typedef XML_Char to char16_t) */
 #if 0
 
 #ifdef XML_UNICODE     /* Information is UTF-16 encoded. */

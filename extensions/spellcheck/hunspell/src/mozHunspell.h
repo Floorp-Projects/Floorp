@@ -99,7 +99,7 @@ public:
   void LoadDictionaryList();
 
   // helper method for converting a word to the charset of the dictionary
-  nsresult ConvertCharset(const PRUnichar* aStr, char ** aDst);
+  nsresult ConvertCharset(const char16_t* aStr, char ** aDst);
 
   MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
   MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)

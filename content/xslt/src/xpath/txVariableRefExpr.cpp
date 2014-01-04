@@ -55,12 +55,12 @@ VariableRefExpr::isSensitiveTo(ContextSensitivity aContext)
 void
 VariableRefExpr::toString(nsAString& aDest)
 {
-    aDest.Append(PRUnichar('$'));
+    aDest.Append(char16_t('$'));
     if (mPrefix) {
         nsAutoString prefix;
         mPrefix->ToString(prefix);
         aDest.Append(prefix);
-        aDest.Append(PRUnichar(':'));
+        aDest.Append(char16_t(':'));
     }
     nsAutoString lname;
     mLocalName->ToString(lname);

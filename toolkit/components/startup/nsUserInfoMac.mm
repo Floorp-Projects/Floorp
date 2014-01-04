@@ -16,7 +16,7 @@ NS_IMPL_ISUPPORTS1(nsUserInfo, nsIUserInfo)
 nsUserInfo::nsUserInfo() {}
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(PRUnichar **aFullname)
+nsUserInfo::GetFullname(char16_t **aFullname)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT
   

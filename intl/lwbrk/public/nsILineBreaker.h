@@ -27,10 +27,10 @@ public:
     kWordBreak_KeepAll  = 2  // always keep 
   };
 
-  virtual int32_t Next( const PRUnichar* aText, uint32_t aLen, 
+  virtual int32_t Next( const char16_t* aText, uint32_t aLen, 
                         uint32_t aPos) = 0;
 
-  virtual int32_t Prev( const PRUnichar* aText, uint32_t aLen, 
+  virtual int32_t Prev( const char16_t* aText, uint32_t aLen, 
                         uint32_t aPos) = 0;
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
@@ -39,7 +39,7 @@ public:
   // because we never return a break before the first character.
   // aLength is the length of the aText array and also the length of the aBreakBefore
   // output array.
-  virtual void GetJISx4051Breaks(const PRUnichar* aText, uint32_t aLength,
+  virtual void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
                                  uint8_t aWordBreak,
                                  uint8_t* aBreakBefore) = 0;
   virtual void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
@@ -50,7 +50,7 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
 
 static inline bool
-NS_IsSpace(PRUnichar u)
+NS_IsSpace(char16_t u)
 {
   return u == 0x0020 ||                  // SPACE
          u == 0x0009 ||                  // CHARACTER TABULATION
@@ -65,7 +65,7 @@ NS_IsSpace(PRUnichar u)
 }
 
 static inline bool
-NS_NeedsPlatformNativeHandling(PRUnichar aChar)
+NS_NeedsPlatformNativeHandling(char16_t aChar)
 {
   return (0x0e01 <= aChar && aChar <= 0x0fff) || // Thai, Lao, Tibetan
          (0x1780 <= aChar && aChar <= 0x17ff);   // Khmer

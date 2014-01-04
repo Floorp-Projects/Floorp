@@ -42,7 +42,7 @@ static DWORD ColorStringToRGB(const nsAString& aColor)
   for (uint32_t i = 1; i < aColor.Length(); ++i) {
     result *= 16;
 
-    PRUnichar c = aColor[i];
+    char16_t c = aColor[i];
     if (c >= '0' && c <= '9') {
       result += c - '0';
     } else if (c >= 'a' && c <= 'f') {

@@ -259,13 +259,13 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
     case eCSSToken_URL:
     case eCSSToken_Bad_URL:
       aBuffer.AppendLiteral("url(");
-      if (mSymbol != PRUnichar(0)) {
+      if (mSymbol != char16_t(0)) {
         nsStyleUtil::AppendEscapedCSSString(mIdent, aBuffer, mSymbol);
       } else {
         aBuffer.Append(mIdent);
       }
       if (mType == eCSSToken_URL) {
-        aBuffer.Append(PRUnichar(')'));
+        aBuffer.Append(char16_t(')'));
       }
       break;
 
@@ -279,7 +279,7 @@ nsCSSToken::AppendToString(nsString& aBuffer) const
 
     case eCSSToken_Percentage:
       aBuffer.AppendFloat(mNumber * 100.0f);
-      aBuffer.Append(PRUnichar('%'));
+      aBuffer.Append(char16_t('%'));
       break;
 
     case eCSSToken_Dimension:
@@ -960,7 +960,7 @@ nsCSSScanner::ScanString(nsCSSToken& aToken)
   int32_t aStop = Peek();
   MOZ_ASSERT(aStop == '"' || aStop == '\'', "should not have been called");
   aToken.mType = eCSSToken_String;
-  aToken.mSymbol = PRUnichar(aStop); // Remember how it's quoted.
+  aToken.mSymbol = char16_t(aStop); // Remember how it's quoted.
   Advance();
 
   for (;;) {
@@ -1119,7 +1119,7 @@ nsCSSScanner::AddEOFCharacters(uint32_t aEOFCharacters)
   mEOFCharacters = EOFCharacters(mEOFCharacters | aEOFCharacters);
 }
 
-static const PRUnichar kImpliedEOFCharacters[] = {
+static const char16_t kImpliedEOFCharacters[] = {
   UCS2_REPLACEMENT_CHAR, '*', '/', '"', '\'', ')', 0
 };
 
@@ -1132,7 +1132,7 @@ nsCSSScanner::AppendImpliedEOFCharacters(EOFCharacters aEOFCharacters,
 
   // All of the remaining EOFCharacters bits represent appended characters,
   // and the bits are in the order that they need appending.
-  for (const PRUnichar* p = kImpliedEOFCharacters; *p && c; p++, c >>= 1) {
+  for (const char16_t* p = kImpliedEOFCharacters; *p && c; p++, c >>= 1) {
     if (c & 1) {
       aResult.Append(*p);
     }
@@ -1173,7 +1173,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 
   } else {
     // Otherwise, this is the start of a non-quoted url (which may be empty).
-    aToken.mSymbol = PRUnichar(0);
+    aToken.mSymbol = char16_t(0);
     GatherText(IS_URL_CHAR, aToken.mIdent);
   }
 

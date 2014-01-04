@@ -126,13 +126,13 @@ nsSampleImpl::WriteValue(const char* aPrefix)
 
     // This next part illustrates the nsEmbedString:
     nsEmbedString foopy;
-    foopy.Append(PRUnichar('f'));
-    foopy.Append(PRUnichar('o'));
-    foopy.Append(PRUnichar('o'));
-    foopy.Append(PRUnichar('p'));
-    foopy.Append(PRUnichar('y'));
+    foopy.Append(char16_t('f'));
+    foopy.Append(char16_t('o'));
+    foopy.Append(char16_t('o'));
+    foopy.Append(char16_t('p'));
+    foopy.Append(char16_t('y'));
     
-    const PRUnichar* f = foopy.get();
+    const char16_t* f = foopy.get();
     uint32_t l = foopy.Length();
     printf("%c%c%c%c%c %d\n", char(f[0]), char(f[1]), char(f[2]), char(f[3]), char(f[4]), l);
     

@@ -51,7 +51,7 @@ NS_IMPL_ISUPPORTS1(ObserverToDestroyFeaturesAlreadyReported,
 NS_IMETHODIMP
 ObserverToDestroyFeaturesAlreadyReported::Observe(nsISupports* aSubject,
                                                   const char* aTopic,
-                                                  const PRUnichar* aData)
+                                                  const char16_t* aData)
 {
   if (!strcmp(aTopic, "xpcom-shutdown")) {
     if (gFeaturesAlreadyReported) {

@@ -281,7 +281,7 @@ WriteSecBuf(void *buf, uint16_t length, uint32_t offset)
  * convert the unicode buffer to little-endian on big-endian platforms.
  */
 static void *
-WriteUnicodeLE(void *buf, const PRUnichar *str, uint32_t strLen)
+WriteUnicodeLE(void *buf, const char16_t *str, uint32_t strLen)
 {
   // convert input string from BE to LE
   uint8_t *cursor = (uint8_t *) buf,
@@ -590,7 +590,7 @@ GenerateType3Msg(const nsString &domain,
     ucsDomainBuf = domain;
     domainPtr = ucsDomainBuf.get();
     domainLen = ucsDomainBuf.Length() * 2;
-    WriteUnicodeLE((void *) domainPtr, (const PRUnichar *) domainPtr,
+    WriteUnicodeLE((void *) domainPtr, (const char16_t *) domainPtr,
                    ucsDomainBuf.Length());
 #else
     domainPtr = domain.get();
@@ -613,7 +613,7 @@ GenerateType3Msg(const nsString &domain,
     ucsUserBuf = username;
     userPtr = ucsUserBuf.get();
     userLen = ucsUserBuf.Length() * 2;
-    WriteUnicodeLE((void *) userPtr, (const PRUnichar *) userPtr,
+    WriteUnicodeLE((void *) userPtr, (const char16_t *) userPtr,
                    ucsUserBuf.Length());
 #else
     userPtr = username.get();
@@ -641,7 +641,7 @@ GenerateType3Msg(const nsString &domain,
     hostPtr = ucsHostBuf.get();
     hostLen = ucsHostBuf.Length() * 2;
 #ifdef IS_BIG_ENDIAN
-    WriteUnicodeLE((void *) hostPtr, (const PRUnichar *) hostPtr,
+    WriteUnicodeLE((void *) hostPtr, (const char16_t *) hostPtr,
                    ucsHostBuf.Length());
 #endif
   }
@@ -764,9 +764,9 @@ nsNTLMAuthModule::InitTest()
 NS_IMETHODIMP
 nsNTLMAuthModule::Init(const char      *serviceName,
                        uint32_t         serviceFlags,
-                       const PRUnichar *domain,
-                       const PRUnichar *username,
-                       const PRUnichar *password)
+                       const char16_t *domain,
+                       const char16_t *username,
+                       const char16_t *password)
 {
   NS_ASSERTION((serviceFlags & ~nsIAuthModule::REQ_PROXY_AUTH) == nsIAuthModule::REQ_DEFAULT,
       "unexpected service flags");

@@ -200,7 +200,7 @@ protected:
    *            in PRUnichars
    * @return width of the string that fits within aMaxWidth
    */
-  nscoord MeasureString(const PRUnichar*     aString,
+  nscoord MeasureString(const char16_t*     aString,
                         int32_t              aLength,
                         nscoord              aMaxWidth,
                         uint32_t&            aMaxFit,

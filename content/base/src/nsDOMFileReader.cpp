@@ -296,8 +296,8 @@ ReadFuncBinaryString(nsIInputStream* in,
                      uint32_t count,
                      uint32_t *writeCount)
 {
-  PRUnichar* dest = static_cast<PRUnichar*>(closure) + toOffset;
-  PRUnichar* end = dest + count;
+  char16_t* dest = static_cast<char16_t*>(closure) + toOffset;
+  char16_t* end = dest + count;
   const unsigned char* source = (const unsigned char*)fromRawSegment;
   while (dest != end) {
     *dest = *source;
@@ -324,7 +324,7 @@ nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
     if (uint64_t(oldLen) + aCount > UINT32_MAX)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    PRUnichar *buf = nullptr;
+    char16_t *buf = nullptr;
     mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
     NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 

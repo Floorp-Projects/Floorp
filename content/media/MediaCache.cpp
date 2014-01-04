@@ -354,7 +354,7 @@ protected:
 };
 
 NS_IMETHODIMP
-MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, PRUnichar const *aData)
+MediaCacheFlusher::Observe(nsISupports *aSubject, char const *aTopic, char16_t const *aData)
 {
   if (strcmp(aTopic, "last-pb-context-exited") == 0) {
     MediaCache::Flush();

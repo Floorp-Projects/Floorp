@@ -61,7 +61,7 @@ nsClientAuthRememberService::Init()
 NS_IMETHODIMP
 nsClientAuthRememberService::Observe(nsISupports     *aSubject,
                                const char      *aTopic,
-                               const PRUnichar *aData)
+                               const char16_t *aData)
 {
   // check the topic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {

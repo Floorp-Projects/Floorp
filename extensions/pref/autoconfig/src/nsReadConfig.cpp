@@ -100,7 +100,7 @@ nsReadConfig::~nsReadConfig()
     CentralizedAdminPrefManagerFinish();
 }
 
-NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP nsReadConfig::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
     nsresult rv = NS_OK;
 

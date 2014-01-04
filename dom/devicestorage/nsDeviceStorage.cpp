@@ -293,7 +293,7 @@ DeviceStorageTypeChecker::Check(const nsAString& aType, nsIFile* aFile)
   nsString path;
   aFile->GetPath(path);
 
-  int32_t dotIdx = path.RFindChar(PRUnichar('.'));
+  int32_t dotIdx = path.RFindChar(char16_t('.'));
   if (dotIdx == kNotFound) {
     return false;
   }
@@ -336,7 +336,7 @@ DeviceStorageTypeChecker::GetTypeFromFileName(const nsAString& aFileName,
   aType.AssignLiteral(DEVICESTORAGE_SDCARD);
 
   nsString fileName(aFileName);
-  int32_t dotIdx = fileName.RFindChar(PRUnichar('.'));
+  int32_t dotIdx = fileName.RFindChar(char16_t('.'));
   if (dotIdx == kNotFound) {
     return;
   }
@@ -440,7 +440,7 @@ FileUpdateDispatcher::GetSingleton()
 NS_IMETHODIMP
 FileUpdateDispatcher::Observe(nsISupports *aSubject,
                               const char *aTopic,
-                              const PRUnichar *aData)
+                              const char16_t *aData)
 {
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
 
@@ -880,11 +880,11 @@ DeviceStorageFile::IsSafePath(const nsAString& aPath)
 void
 DeviceStorageFile::NormalizeFilePath() {
 #if defined(XP_WIN)
-  PRUnichar* cur = mPath.BeginWriting();
-  PRUnichar* end = mPath.EndWriting();
+  char16_t* cur = mPath.BeginWriting();
+  char16_t* end = mPath.EndWriting();
   for (; cur < end; ++cur) {
-    if (PRUnichar('\\') == *cur)
-      *cur = PRUnichar('/');
+    if (char16_t('\\') == *cur)
+      *cur = char16_t('/');
   }
 #endif
 }
@@ -900,12 +900,12 @@ DeviceStorageFile::AppendRelativePath(const nsAString& aPath) {
   nsString temp;
   temp.Assign(aPath);
 
-  PRUnichar* cur = temp.BeginWriting();
-  PRUnichar* end = temp.EndWriting();
+  char16_t* cur = temp.BeginWriting();
+  char16_t* end = temp.EndWriting();
 
   for (; cur < end; ++cur) {
-    if (PRUnichar('/') == *cur)
-      *cur = PRUnichar('\\');
+    if (char16_t('/') == *cur)
+      *cur = char16_t('\\');
   }
   mFile->AppendRelativePath(temp);
 #else
@@ -3348,7 +3348,7 @@ nsDOMDeviceStorage::DispatchMountChangeEvent(nsAString& aVolumeStatus)
 NS_IMETHODIMP
 nsDOMDeviceStorage::Observe(nsISupports *aSubject,
                             const char *aTopic,
-                            const PRUnichar *aData)
+                            const char16_t *aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

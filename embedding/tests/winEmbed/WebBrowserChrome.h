@@ -62,13 +62,13 @@ public:
     static void Destroy(nsIWebBrowserChrome* chrome);
     static void Destroyed(nsIWebBrowserChrome* chrome);
     static void SetFocus(nsIWebBrowserChrome *chrome);
-    static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText);
+    static void UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const char16_t* aStatusText);
     static void UpdateCurrentURI(nsIWebBrowserChrome *aChrome);
     static void UpdateBusyState(nsIWebBrowserChrome *aChrome, bool aBusy);
     static void UpdateProgress(nsIWebBrowserChrome *aChrome, int32_t aCurrent, int32_t aMax);
     static void GetResourceStringById(int32_t aID, char ** aReturn);
     static void ShowContextMenu(nsIWebBrowserChrome *aChrome, uint32_t aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
-    static void ShowTooltip(nsIWebBrowserChrome *aChrome, int32_t aXCoords, int32_t aYCoords, const PRUnichar *aTipText);
+    static void ShowTooltip(nsIWebBrowserChrome *aChrome, int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText);
     static void HideTooltip(nsIWebBrowserChrome *aChrome);
     static void ShowWindow(nsIWebBrowserChrome *aChrome, bool aShow);
     static void SizeTo(nsIWebBrowserChrome *aChrome, int32_t aWidth, int32_t aHeight);

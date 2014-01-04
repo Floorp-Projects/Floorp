@@ -165,7 +165,7 @@ nsXRemoteService::HandleCommandsFor(Window aWindowId)
 NS_IMETHODIMP
 nsXRemoteService::Observe(nsISupports* aSubject,
                           const char *aTopic,
-                          const PRUnichar *aData)
+                          const char16_t *aData)
 {
   // This can be xpcom-shutdown or quit-application, but it's the same either
   // way.

@@ -2383,7 +2383,7 @@ nsDownloadManager::OnDeleteVisits(nsIURI *aURI, PRTime aVisitTime,
 NS_IMETHODIMP
 nsDownloadManager::Observe(nsISupports *aSubject,
                            const char *aTopic,
-                           const PRUnichar *aData)
+                           const char16_t *aData)
 {
   // This method in not normally invoked when mUseJSTransfer is enabled, however
   // we provide an extra check in case it is called manually by add-ons.
@@ -2520,10 +2520,10 @@ nsDownloadManager::Observe(nsISupports *aSubject,
 void
 nsDownloadManager::ConfirmCancelDownloads(int32_t aCount,
                                           nsISupportsPRBool *aCancelDownloads,
-                                          const PRUnichar *aTitle,
-                                          const PRUnichar *aCancelMessageMultiple,
-                                          const PRUnichar *aCancelMessageSingle,
-                                          const PRUnichar *aDontCancelButton)
+                                          const char16_t *aTitle,
+                                          const char16_t *aCancelMessageMultiple,
+                                          const char16_t *aCancelMessageSingle,
+                                          const char16_t *aDontCancelButton)
 {
   // If user has already dismissed quit request, then do nothing
   bool quitRequestCancelled = false;
@@ -2537,7 +2537,7 @@ nsDownloadManager::ConfirmCancelDownloads(int32_t aCount,
 
   nsAutoString countString;
   countString.AppendInt(aCount);
-  const PRUnichar *strings[1] = { countString.get() };
+  const char16_t *strings[1] = { countString.get() };
   if (aCount > 1) {
     mBundle->FormatStringFromName(aCancelMessageMultiple, strings, 1,
                                   getter_Copies(message));
@@ -3001,7 +3001,7 @@ nsDownload::OnLocationChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP
 nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest, nsresult aStatus,
-                           const PRUnichar *aMessage)
+                           const char16_t *aMessage)
 {
   if (NS_FAILED(aStatus))
     return FailDownload(aStatus, aMessage);
@@ -3669,7 +3669,7 @@ nsDownload::UpdateDB()
 }
 
 nsresult
-nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
+nsDownload::FailDownload(nsresult aStatus, const char16_t *aMessage)
 {
   // Grab the bundle before potentially losing our member variables
   nsCOMPtr<nsIStringBundle> bundle = mDownloadManager->mBundle;

@@ -48,7 +48,7 @@ FetchObserver::OnProgress(nsIRequest *request, nsISupports *context,
 
 NS_IMETHODIMP
 FetchObserver::OnStatus(nsIRequest *request, nsISupports *context,
-                        nsresult status, const PRUnichar *statusText)
+                        nsresult status, const char16_t *statusText)
 {
   return NS_OK;
 }

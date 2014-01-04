@@ -767,7 +767,7 @@ gfxWindowsPlatform::GetFontList(nsIAtom *aLangGroup,
 static void
 RemoveCharsetFromFontSubstitute(nsAString &aName)
 {
-    int32_t comma = aName.FindChar(PRUnichar(','));
+    int32_t comma = aName.FindChar(char16_t(','));
     if (comma >= 0)
         aName.Truncate(comma);
 }

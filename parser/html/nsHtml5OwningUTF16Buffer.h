@@ -14,7 +14,7 @@ class nsHtml5OwningUTF16Buffer : public nsHtml5UTF16Buffer
     /**
      * Passes a buffer and its length to the superclass constructor.
      */
-    nsHtml5OwningUTF16Buffer(PRUnichar* aBuffer);
+    nsHtml5OwningUTF16Buffer(char16_t* aBuffer);
 
   public:
 

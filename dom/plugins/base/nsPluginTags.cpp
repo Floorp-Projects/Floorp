@@ -409,10 +409,10 @@ nsPluginTag::SetPluginState(PluginState state)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetMimeTypes(uint32_t* aCount, PRUnichar*** aResults)
+nsPluginTag::GetMimeTypes(uint32_t* aCount, char16_t*** aResults)
 {
   uint32_t count = mMimeTypes.Length();
-  *aResults = static_cast<PRUnichar**>
+  *aResults = static_cast<char16_t**>
                          (nsMemory::Alloc(count * sizeof(**aResults)));
   if (!*aResults)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -426,10 +426,10 @@ nsPluginTag::GetMimeTypes(uint32_t* aCount, PRUnichar*** aResults)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetMimeDescriptions(uint32_t* aCount, PRUnichar*** aResults)
+nsPluginTag::GetMimeDescriptions(uint32_t* aCount, char16_t*** aResults)
 {
   uint32_t count = mMimeDescriptions.Length();
-  *aResults = static_cast<PRUnichar**>
+  *aResults = static_cast<char16_t**>
                          (nsMemory::Alloc(count * sizeof(**aResults)));
   if (!*aResults)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -443,10 +443,10 @@ nsPluginTag::GetMimeDescriptions(uint32_t* aCount, PRUnichar*** aResults)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetExtensions(uint32_t* aCount, PRUnichar*** aResults)
+nsPluginTag::GetExtensions(uint32_t* aCount, char16_t*** aResults)
 {
   uint32_t count = mExtensions.Length();
-  *aResults = static_cast<PRUnichar**>
+  *aResults = static_cast<char16_t**>
                          (nsMemory::Alloc(count * sizeof(**aResults)));
   if (!*aResults)
     return NS_ERROR_OUT_OF_MEMORY;

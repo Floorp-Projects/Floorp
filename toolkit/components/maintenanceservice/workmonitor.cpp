@@ -28,7 +28,7 @@
 // Updates usually take less than a minute so this seems like a 
 // significantly large and safe amount of time to wait.
 static const int TIME_TO_WAIT_ON_UPDATER = 15 * 60 * 1000;
-PRUnichar* MakeCommandLine(int argc, PRUnichar **argv);
+char16_t* MakeCommandLine(int argc, char16_t **argv);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,  LPCWSTR siblingFilePath, 
                             LPCWSTR newFileName);

@@ -2359,7 +2359,7 @@ nsCSSKeyframeRule::DoGetKeyText(nsAString& aKeyText) const
   NS_ABORT_IF_FALSE(i_end != 0, "must have some keys");
   for (;;) {
     aKeyText.AppendFloat(mKeys[i] * 100.0f);
-    aKeyText.Append(PRUnichar('%'));
+    aKeyText.Append(char16_t('%'));
     if (++i == i_end) {
       break;
     }

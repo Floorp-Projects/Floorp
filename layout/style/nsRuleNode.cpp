@@ -3296,7 +3296,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     if (aGenericFontID == kGenericFont_NONE) {
       // only bother appending fallback fonts if this isn't a fallback generic font itself
       if (!aFont->mFont.name.IsEmpty())
-        aFont->mFont.name.Append((PRUnichar)',');
+        aFont->mFont.name.Append((char16_t)',');
       // defaultVariableFont.name should always be "serif" or "sans-serif".
       aFont->mFont.name.Append(defaultVariableFont->name);
     }

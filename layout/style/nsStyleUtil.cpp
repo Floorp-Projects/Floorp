@@ -35,7 +35,7 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
     nsAString::const_iterator iter;
     if (selectorLen != attributeLen &&
         *aAttributeValue.BeginReading(iter).advance(selectorLen) !=
-            PRUnichar('-')) {
+            char16_t('-')) {
       // to match, the aAttributeValue must have a dash after the end of
       // the aSelectorValue's text (unless the aSelectorValue and the
       // aAttributeValue have the same text)
@@ -50,14 +50,14 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
 
 void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
                                          nsAString& aReturn,
-                                         PRUnichar quoteChar)
+                                         char16_t quoteChar)
 {
   NS_PRECONDITION(quoteChar == '\'' || quoteChar == '"',
                   "CSS strings must be quoted with ' or \"");
   aReturn.Append(quoteChar);
 
-  const PRUnichar* in = aString.BeginReading();
-  const PRUnichar* const end = aString.EndReading();
+  const char16_t* in = aString.BeginReading();
+  const char16_t* const end = aString.EndReading();
   for (; in != end; in++) {
     if (*in < 0x20 || (*in >= 0x7F && *in < 0xA0)) {
       // Escape U+0000 through U+001F and U+007F through U+009F numerically.
@@ -68,7 +68,7 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
         // It's not technically necessary to escape the quote
         // character that isn't being used to delimit the string,
         // but we do it anyway because that makes testing simpler.
-        aReturn.Append(PRUnichar('\\'));
+        aReturn.Append(char16_t('\\'));
       }
       aReturn.Append(*in);
     }
@@ -89,8 +89,8 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   //   unicode  \\[0-9a-f]{1,6}(\r\n|[ \n\r\t\f])?
   // from http://www.w3.org/TR/CSS21/syndata.html#tokenization
 
-  const PRUnichar* in = aIdent.BeginReading();
-  const PRUnichar* const end = aIdent.EndReading();
+  const char16_t* in = aIdent.BeginReading();
+  const char16_t* const end = aIdent.EndReading();
 
   if (in == end)
     return;
@@ -98,7 +98,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   // A leading dash does not need to be escaped as long as it is not the
   // *only* character in the identifier.
   if (in + 1 != end && *in == '-') {
-    aReturn.Append(PRUnichar('-'));
+    aReturn.Append(char16_t('-'));
     ++in;
   }
 
@@ -110,8 +110,8 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   if (in != end && (*in == '-' ||
                     ('0' <= *in && *in <= '9'))) {
     if (*in == '-') {
-      aReturn.Append(PRUnichar('\\'));
-      aReturn.Append(PRUnichar('-'));
+      aReturn.Append(char16_t('\\'));
+      aReturn.Append(char16_t('-'));
     } else {
       aReturn.AppendPrintf("\\%hX ", *in);
     }
@@ -119,7 +119,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   }
 
   for (; in != end; ++in) {
-    PRUnichar ch = *in;
+    char16_t ch = *in;
     if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
       // Escape U+0000 through U+001F and U+007F through U+009F numerically.
       aReturn.AppendPrintf("\\%hX ", *in);
@@ -131,7 +131,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
           (ch < '0' || '9' < ch) &&
           (ch < 'A' || 'Z' < ch) &&
           (ch < 'a' || 'z' < ch)) {
-        aReturn.Append(PRUnichar('\\'));
+        aReturn.Append(char16_t('\\'));
       }
       aReturn.Append(ch);
     }
@@ -151,7 +151,7 @@ nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
                          aResult);
       aMaskedValue &= ~mask;
       if (aMaskedValue) { // more left
-        aResult.Append(PRUnichar(' '));
+        aResult.Append(char16_t(' '));
       }
     }
   }
@@ -318,14 +318,14 @@ nsStyleUtil::SerializeFunctionalAlternates(
       feature = v.alternate;
       if (!funcName.IsEmpty() && !funcParams.IsEmpty()) {
         if (!aResult.IsEmpty()) {
-          aResult.Append(PRUnichar(' '));
+          aResult.Append(char16_t(' '));
         }
 
         // append the previous functional value
         aResult.Append(funcName);
-        aResult.Append(PRUnichar('('));
+        aResult.Append(char16_t('('));
         aResult.Append(funcParams);
-        aResult.Append(PRUnichar(')'));
+        aResult.Append(char16_t(')'));
       }
 
       // function name
@@ -346,13 +346,13 @@ nsStyleUtil::SerializeFunctionalAlternates(
     // append the previous functional value
   if (!funcName.IsEmpty() && !funcParams.IsEmpty()) {
     if (!aResult.IsEmpty()) {
-      aResult.Append(PRUnichar(' '));
+      aResult.Append(char16_t(' '));
     }
 
     aResult.Append(funcName);
-    aResult.Append(PRUnichar('('));
+    aResult.Append(char16_t('('));
     aResult.Append(funcParams);
-    aResult.Append(PRUnichar(')'));
+    aResult.Append(char16_t(')'));
   }
 }
 

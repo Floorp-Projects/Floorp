@@ -95,10 +95,10 @@ protected:
   // stylesheets are all done loading.
   virtual void MaybeStartLayout(bool aIgnorePendingSheets);
 
-  virtual nsresult AddAttributes(const PRUnichar** aNode, nsIContent* aContent);
-  nsresult AddText(const PRUnichar* aString, int32_t aLength);
+  virtual nsresult AddAttributes(const char16_t** aNode, nsIContent* aContent);
+  nsresult AddText(const char16_t* aString, int32_t aLength);
 
-  virtual bool OnOpenContainer(const PRUnichar **aAtts, 
+  virtual bool OnOpenContainer(const char16_t **aAtts, 
                                  uint32_t aAttsCount, 
                                  int32_t aNameSpaceID, 
                                  nsIAtom* aTagName,
@@ -110,7 +110,7 @@ protected:
                                nsIAtom *aTagName,
                                nsIContent *aContent);
   virtual bool NotifyForDocElement() { return true; }
-  virtual nsresult CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+  virtual nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                                  nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                  nsIContent** aResult, bool* aAppendContent,
                                  mozilla::dom::FromParser aFromParser);
@@ -156,17 +156,17 @@ protected:
   
   bool IsMonolithicContainer(nsINodeInfo* aNodeInfo);
 
-  nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts, 
+  nsresult HandleStartElement(const char16_t *aName, const char16_t **aAtts, 
                               uint32_t aAttsCount, int32_t aIndex, 
                               uint32_t aLineNumber,
                               bool aInterruptable);
-  nsresult HandleEndElement(const PRUnichar *aName, bool aInterruptable);
-  nsresult HandleCharacterData(const PRUnichar *aData, uint32_t aLength,
+  nsresult HandleEndElement(const char16_t *aName, bool aInterruptable);
+  nsresult HandleCharacterData(const char16_t *aData, uint32_t aLength,
                                bool aInterruptable);
 
   nsCOMPtr<nsIContent> mDocElement;
   nsCOMPtr<nsIContent> mCurrentHead;  // When set, we're in an XHTML <haed>
-  PRUnichar*       mText;
+  char16_t*       mText;
 
   XMLContentSinkState mState;
 

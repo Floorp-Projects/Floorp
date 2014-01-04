@@ -1235,7 +1235,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRUnichar *ustr = aString.BeginWriting();
+  char16_t *ustr = aString.BeginWriting();
 
   rv = unicodeDecoder->Convert(reinterpret_cast<const char*>(aData),
                                (int32_t *) &aLength, ustr,

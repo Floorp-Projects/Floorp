@@ -127,7 +127,7 @@ NS_IMETHODIMP nsSupportsStringImpl::GetData(nsAString& aData)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsSupportsStringImpl::ToString(PRUnichar **_retval)
+NS_IMETHODIMP nsSupportsStringImpl::ToString(char16_t **_retval)
 {
     *_retval = ToNewUnicode(mData);
     

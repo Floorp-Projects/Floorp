@@ -202,7 +202,7 @@ static void FreeArray(nsDiscriminatedUnion* data)
         // XXX We ASSUME that "array of nsID" means "array of pointers to nsID".
         CASE__FREE_ARRAY_PTR(VTYPE_ID, nsID)
         CASE__FREE_ARRAY_PTR(VTYPE_CHAR_STR, char)
-        CASE__FREE_ARRAY_PTR(VTYPE_WCHAR_STR, PRUnichar)
+        CASE__FREE_ARRAY_PTR(VTYPE_WCHAR_STR, char16_t)
         CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE, nsISupports)
         CASE__FREE_ARRAY_IFACE(VTYPE_INTERFACE_IS, nsISupports)
 
@@ -290,7 +290,7 @@ static nsresult CloneArray(uint16_t inType, const nsIID* inIID,
             elementSize = sizeof(char);
             break;
         case nsIDataType::VTYPE_WCHAR:
-            elementSize = sizeof(PRUnichar);
+            elementSize = sizeof(char16_t);
             break;
 
         // XXX We ASSUME that "array of nsID" means "array of pointers to nsID".
@@ -404,16 +404,16 @@ static nsresult CloneArray(uint16_t inType, const nsIID* inIID,
 
         case nsIDataType::VTYPE_WCHAR_STR:
         {
-            PRUnichar** inp  = (PRUnichar**) inValue;
-            PRUnichar** outp = (PRUnichar**) *outValue;
+            char16_t** inp  = (char16_t**) inValue;
+            char16_t** outp = (char16_t**) *outValue;
             for(i = inCount; i > 0; i--)
             {
-                PRUnichar* str = *(inp++);
+                char16_t* str = *(inp++);
                 if(str)
                 {
-                    if(nullptr == (*(outp++) = (PRUnichar*)
+                    if(nullptr == (*(outp++) = (char16_t*)
                        nsMemory::Clone(str,
-                        (NS_strlen(str) + 1) * sizeof(PRUnichar))))
+                        (NS_strlen(str) + 1) * sizeof(char16_t))))
                         goto bad;
                 }
                 else
@@ -598,10 +598,10 @@ NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_CHAR, char, Char)
 NUMERIC_CONVERSION_METHOD_END
 
 // XXX toWChar convertions need to be fixed!
-NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_WCHAR, PRUnichar, WChar)
-    CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(PRUnichar)
-    CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(PRUnichar)
-    CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(PRUnichar)
+NUMERIC_CONVERSION_METHOD_BEGIN(VTYPE_WCHAR, char16_t, WChar)
+    CASE__NUMERIC_CONVERSION_INT32_JUST_CAST(char16_t)
+    CASE__NUMERIC_CONVERSION_UINT32_JUST_CAST(char16_t)
+    CASE__NUMERIC_CONVERSION_DOUBLE_JUST_CAST(char16_t)
 NUMERIC_CONVERSION_METHOD_END
 
 #undef NUMERIC_CONVERSION_METHOD_BEGIN
@@ -917,7 +917,7 @@ nsVariant::ConvertToACString(const nsDiscriminatedUnion& data,
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR:
     {
-        const PRUnichar* str = &data.u.mWCharValue;
+        const char16_t* str = &data.u.mWCharValue;
         LossyCopyUTF16toASCII(Substring(str, 1), _retval);
         return NS_OK;
     }
@@ -968,7 +968,7 @@ nsVariant::ConvertToAUTF8String(const nsDiscriminatedUnion& data,
         return NS_OK;
     case nsIDataType::VTYPE_WCHAR:
     {
-        const PRUnichar* str = &data.u.mWCharValue;
+        const char16_t* str = &data.u.mWCharValue;
         CopyUTF16toUTF8(Substring(str, 1), _retval);
         return NS_OK;
     }
@@ -994,7 +994,7 @@ nsVariant::ConvertToString(const nsDiscriminatedUnion& data, char **_retval)
 }
 
 /* static */ nsresult
-nsVariant::ConvertToWString(const nsDiscriminatedUnion& data, PRUnichar **_retval)
+nsVariant::ConvertToWString(const nsDiscriminatedUnion& data, char16_t **_retval)
 {
     uint32_t ignored;
     return nsVariant::ConvertToWStringWithSize(data, &ignored, _retval);
@@ -1080,7 +1080,7 @@ nsVariant::ConvertToStringWithSize(const nsDiscriminatedUnion& data,
 }
 /* static */ nsresult
 nsVariant::ConvertToWStringWithSize(const nsDiscriminatedUnion& data,
-                                    uint32_t *size, PRUnichar **str)
+                                    uint32_t *size, char16_t **str)
 {
     nsAutoString  tempString;
     nsAutoCString tempCString;
@@ -1434,7 +1434,7 @@ nsVariant::SetFromChar(nsDiscriminatedUnion* data, char aValue)
     DATA_SETTER(data, VTYPE_CHAR, mCharValue, aValue)
 }
 /* static */ nsresult
-nsVariant::SetFromWChar(nsDiscriminatedUnion* data, PRUnichar aValue)
+nsVariant::SetFromWChar(nsDiscriminatedUnion* data, char16_t aValue)
 {
     DATA_SETTER(data, VTYPE_WCHAR, mWCharValue, aValue)
 }
@@ -1481,7 +1481,7 @@ nsVariant::SetFromString(nsDiscriminatedUnion* data, const char *aValue)
     return SetFromStringWithSize(data, strlen(aValue), aValue);
 }
 /* static */ nsresult
-nsVariant::SetFromWString(nsDiscriminatedUnion* data, const PRUnichar *aValue)
+nsVariant::SetFromWString(nsDiscriminatedUnion* data, const char16_t *aValue)
 {
     DATA_SETTER_PROLOGUE(data);
     if(!aValue)
@@ -1533,13 +1533,13 @@ nsVariant::SetFromStringWithSize(nsDiscriminatedUnion* data, uint32_t size, cons
     DATA_SETTER_EPILOGUE(data, VTYPE_STRING_SIZE_IS);
 }
 /* static */ nsresult
-nsVariant::SetFromWStringWithSize(nsDiscriminatedUnion* data, uint32_t size, const PRUnichar *aValue)
+nsVariant::SetFromWStringWithSize(nsDiscriminatedUnion* data, uint32_t size, const char16_t *aValue)
 {
     DATA_SETTER_PROLOGUE(data);
     if(!aValue)
         return NS_ERROR_NULL_POINTER;
     if(!(data->u.wstr.mWStringValue =
-         (PRUnichar*) nsMemory::Clone(aValue, (size+1)*sizeof(PRUnichar))))
+         (char16_t*) nsMemory::Clone(aValue, (size+1)*sizeof(char16_t))))
         return NS_ERROR_OUT_OF_MEMORY;
     data->u.wstr.mWStringLength = size;
     DATA_SETTER_EPILOGUE(data, VTYPE_WSTRING_SIZE_IS);
@@ -1804,7 +1804,7 @@ NS_IMETHODIMP nsVariant::GetAsChar(char *_retval)
 }
 
 /* wchar getAsWChar (); */
-NS_IMETHODIMP nsVariant::GetAsWChar(PRUnichar *_retval)
+NS_IMETHODIMP nsVariant::GetAsWChar(char16_t *_retval)
 {
     return nsVariant::ConvertToWChar(mData, _retval);
 }
@@ -1848,7 +1848,7 @@ NS_IMETHODIMP nsVariant::GetAsString(char **_retval)
 }
 
 /* wstring getAsWString (); */
-NS_IMETHODIMP nsVariant::GetAsWString(PRUnichar **_retval)
+NS_IMETHODIMP nsVariant::GetAsWString(char16_t **_retval)
 {
     return nsVariant::ConvertToWString(mData, _retval);
 }
@@ -1885,7 +1885,7 @@ NS_IMETHODIMP nsVariant::GetAsStringWithSize(uint32_t *size, char **str)
 }
 
 /* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
-NS_IMETHODIMP nsVariant::GetAsWStringWithSize(uint32_t *size, PRUnichar **str)
+NS_IMETHODIMP nsVariant::GetAsWStringWithSize(uint32_t *size, char16_t **str)
 {
     return nsVariant::ConvertToWStringWithSize(mData, size, str);
 }
@@ -1996,7 +1996,7 @@ NS_IMETHODIMP nsVariant::SetAsChar(char aValue)
 }
 
 /* void setAsWChar (in wchar aValue); */
-NS_IMETHODIMP nsVariant::SetAsWChar(PRUnichar aValue)
+NS_IMETHODIMP nsVariant::SetAsWChar(char16_t aValue)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetFromWChar(&mData, aValue);
@@ -2049,7 +2049,7 @@ NS_IMETHODIMP nsVariant::SetAsString(const char *aValue)
 }
 
 /* void setAsWString (in wstring aValue); */
-NS_IMETHODIMP nsVariant::SetAsWString(const PRUnichar *aValue)
+NS_IMETHODIMP nsVariant::SetAsWString(const char16_t *aValue)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetFromWString(&mData, aValue);
@@ -2084,7 +2084,7 @@ NS_IMETHODIMP nsVariant::SetAsStringWithSize(uint32_t size, const char *str)
 }
 
 /* void setAsWStringWithSize (in uint32_t size, [size_is (size)] in wstring str); */
-NS_IMETHODIMP nsVariant::SetAsWStringWithSize(uint32_t size, const PRUnichar *str)
+NS_IMETHODIMP nsVariant::SetAsWStringWithSize(uint32_t size, const char16_t *str)
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetFromWStringWithSize(&mData, size, str);

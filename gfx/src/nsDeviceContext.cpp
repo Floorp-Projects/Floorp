@@ -114,7 +114,7 @@ nsFontCache::Destroy()
 }
 
 NS_IMETHODIMP
-nsFontCache::Observe(nsISupports*, const char* aTopic, const PRUnichar*)
+nsFontCache::Observe(nsISupports*, const char* aTopic, const char16_t*)
 {
     if (!nsCRT::strcmp(aTopic, "memory-pressure"))
         Compact();
@@ -494,11 +494,11 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 
 nsresult
 nsDeviceContext::BeginDocument(const nsAString& aTitle,
-                               PRUnichar*       aPrintToFileName,
+                               char16_t*       aPrintToFileName,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
-    static const PRUnichar kEmpty[] = { '\0' };
+    static const char16_t kEmpty[] = { '\0' };
     nsresult rv;
 
     rv = mPrintingSurface->BeginPrinting(aTitle,

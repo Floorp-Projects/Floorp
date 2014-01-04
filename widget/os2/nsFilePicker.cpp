@@ -536,9 +536,9 @@ char * nsFilePicker::ConvertToFileSystemCharset(const nsAString& inString)
 }
 
 //-------------------------------------------------------------------------
-PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
+char16_t * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
 {
-  PRUnichar *outString = nullptr;
+  char16_t *outString = nullptr;
   nsresult rv = NS_OK;
 
   // get file system charset and create a unicode encoder
@@ -559,7 +559,7 @@ PRUnichar * nsFilePicker::ConvertFromFileSystemCharset(const char *inString)
     int32_t outLength;
     rv = mUnicodeDecoder->GetMaxLength(inString, inLength, &outLength);
     if (NS_SUCCEEDED(rv)) {
-      outString = static_cast<PRUnichar*>(nsMemory::Alloc( (outLength+1) * sizeof( PRUnichar ) ));
+      outString = static_cast<char16_t*>(nsMemory::Alloc( (outLength+1) * sizeof( char16_t ) ));
       if (nullptr == outString) {
         return nullptr;
       }

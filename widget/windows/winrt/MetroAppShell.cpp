@@ -67,7 +67,7 @@ MetroAppShell::Init()
   WNDCLASSW wc;
   HINSTANCE module = GetModuleHandle(nullptr);
 
-  const PRUnichar *const kWindowClass = L"nsAppShell:EventWindowClass";
+  const char16_t *const kWindowClass = L"nsAppShell:EventWindowClass";
   if (!GetClassInfoW(module, kWindowClass, &wc)) {
     wc.style         = 0;
     wc.lpfnWndProc   = EventWindowProc;
@@ -434,7 +434,7 @@ PowerSetRequestDyn(HANDLE powerRequest, POWER_REQUEST_TYPE requestType)
 
 NS_IMETHODIMP
 MetroAppShell::Observe(nsISupports *subject, const char *topic,
-                       const PRUnichar *data)
+                       const char16_t *data)
 {
     NS_ENSURE_ARG_POINTER(topic);
     if (!strcmp(topic, "dl-start")) {

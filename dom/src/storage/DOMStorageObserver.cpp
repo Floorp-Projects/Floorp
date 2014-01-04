@@ -121,7 +121,7 @@ DOMStorageObserver::Notify(const char* aTopic, const nsACString& aData)
 NS_IMETHODIMP
 DOMStorageObserver::Observe(nsISupports* aSubject,
                             const char* aTopic,
-                            const PRUnichar* aData)
+                            const char16_t* aData)
 {
   nsresult rv;
 

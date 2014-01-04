@@ -310,7 +310,7 @@ TabChild::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 TabChild::Observe(nsISupports *aSubject,
                   const char *aTopic,
-                  const PRUnichar *aData)
+                  const char16_t *aData)
 {
   if (!strcmp(aTopic, BROWSER_ZOOM_TO_RECT)) {
     nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aSubject));
@@ -452,7 +452,7 @@ NS_IMETHODIMP
 TabChild::OnStatusChange(nsIWebProgress* aWebProgress,
                          nsIRequest* aRequest,
                          nsresult aStatus,
-                         const PRUnichar* aMessage)
+                         const char16_t* aMessage)
 {
   NS_NOTREACHED("not implemented in TabChild");
   return NS_OK;
@@ -740,7 +740,7 @@ NS_IMPL_ADDREF(TabChild)
 NS_IMPL_RELEASE(TabChild)
 
 NS_IMETHODIMP
-TabChild::SetStatus(uint32_t aStatusType, const PRUnichar* aStatus)
+TabChild::SetStatus(uint32_t aStatusType, const char16_t* aStatus)
 {
   return SetStatusWithContext(aStatusType,
       aStatus ? static_cast<const nsString &>(nsDependentString(aStatus))
@@ -882,7 +882,7 @@ TabChild::SetVisibility(bool aVisibility)
 }
 
 NS_IMETHODIMP
-TabChild::GetTitle(PRUnichar** aTitle)
+TabChild::GetTitle(char16_t** aTitle)
 {
   NS_NOTREACHED("TabChild::GetTitle not supported in TabChild");
 
@@ -890,7 +890,7 @@ TabChild::GetTitle(PRUnichar** aTitle)
 }
 
 NS_IMETHODIMP
-TabChild::SetTitle(const PRUnichar* aTitle)
+TabChild::SetTitle(const char16_t* aTitle)
 {
   // JavaScript sends the "DOMTitleChanged" event to the parent
   // via the message manager.

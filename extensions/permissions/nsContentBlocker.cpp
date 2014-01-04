@@ -335,7 +335,7 @@ nsContentBlocker::TestPermission(nsIURI *aCurrentURI,
 NS_IMETHODIMP
 nsContentBlocker::Observe(nsISupports     *aSubject,
                           const char      *aTopic,
-                          const PRUnichar *aData)
+                          const char16_t *aData)
 {
   NS_ASSERTION(!strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic),
                "unexpected topic - we only deal with pref changes!");

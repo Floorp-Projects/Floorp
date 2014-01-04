@@ -12,7 +12,7 @@
 #include "nsTextFragment.h"
 #include <algorithm>
 
-static bool IsDiscardable(PRUnichar ch, uint32_t* aFlags)
+static bool IsDiscardable(char16_t ch, uint32_t* aFlags)
 {
   // Unlike IS_DISCARDABLE, we don't discard \r. \r will be ignored by gfxTextRun
   // and discarding it would force us to copy text in many cases of preformatted
@@ -33,16 +33,16 @@ static bool IsDiscardable(uint8_t ch, uint32_t* aFlags)
   return false;
 }
 
-PRUnichar*
-nsTextFrameUtils::TransformText(const PRUnichar* aText, uint32_t aLength,
-                                PRUnichar* aOutput,
+char16_t*
+nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
+                                char16_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipCharsBuilder* aSkipChars,
                                 uint32_t* aAnalysisFlags)
 {
   uint32_t flags = 0;
-  PRUnichar* outputStart = aOutput;
+  char16_t* outputStart = aOutput;
 
   bool lastCharArabic = false;
 
@@ -51,7 +51,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      PRUnichar ch = *aText++;
+      char16_t ch = *aText++;
       if (IsDiscardable(ch, &flags) ||
           (ch == '\n' && aCompression == DISCARD_NEWLINE)) {
         aSkipChars->SkipChar();
@@ -75,7 +75,7 @@ nsTextFrameUtils::TransformText(const PRUnichar* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      PRUnichar ch = *aText++;
+      char16_t ch = *aText++;
       bool nowInWhitespace;
       if (ch == ' ' &&
           (i + 1 >= aLength ||
@@ -221,7 +221,7 @@ nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
     bool is2b = frag->Is2b();
     union {
       const char *s1b;
-      const PRUnichar *s2b;
+      const char16_t *s2b;
     } u;
     if (is2b) {
       u.s2b = frag->Get2b();
@@ -233,7 +233,7 @@ nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
                         // exactly right
     len = 0;
     for (uint32_t i = 0, i_end = frag->GetLength(); i < i_end; ++i) {
-      PRUnichar c = is2b ? u.s2b[i] : u.s1b[i];
+      char16_t c = is2b ? u.s2b[i] : u.s1b[i];
       if (c == ' ' || c == '\n' || c == '\t' || c == '\r') {
         if (!prevWS) {
           ++len;

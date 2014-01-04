@@ -25,7 +25,7 @@
 #include "nsTextFragment.h"
 #include "nsWSRunObject.h"
 
-const PRUnichar nbsp = 160;
+const char16_t nbsp = 160;
 
 static bool IsBlockNode(nsIDOMNode* node)
 {
@@ -647,7 +647,7 @@ nsWSRunObject::GetWSNodes()
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
         }
-        PRUnichar theChar = textFrag->CharAt(pos);
+        char16_t theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar))
         {
           if (theChar != nbsp)
@@ -715,7 +715,7 @@ nsWSRunObject::GetWSNodes()
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
             }
-            PRUnichar theChar = textFrag->CharAt(pos);
+            char16_t theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar))
             {
               if (theChar != nbsp)
@@ -780,7 +780,7 @@ nsWSRunObject::GetWSNodes()
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
         }
-        PRUnichar theChar = textFrag->CharAt(pos);
+        char16_t theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar))
         {
           if (theChar != nbsp)
@@ -849,7 +849,7 @@ nsWSRunObject::GetWSNodes()
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
             }
-            PRUnichar theChar = textFrag->CharAt(pos);
+            char16_t theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar))
             {
               if (theChar != nbsp)
@@ -1800,7 +1800,7 @@ nsWSRunObject::FindRun(nsIDOMNode *aNode, int32_t aOffset, WSFragment **outRun, 
   }
 }
 
-PRUnichar 
+char16_t 
 nsWSRunObject::GetCharAt(nsIContent *aTextNode, int32_t aOffset)
 {
   // return 0 if we can't get a char, for whatever reason
@@ -1999,7 +1999,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
       NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
       nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
-      nsAutoString spaceStr(PRUnichar(32));
+      nsAutoString spaceStr(char16_t(32));
       res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode, thePoint.mOffset, true);
       NS_ENSURE_SUCCESS(res, res);
   
@@ -2063,7 +2063,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aO
     nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
     NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
-    nsAutoString spaceStr(PRUnichar(32));
+    nsAutoString spaceStr(char16_t(32));
     nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode,
                                                            thePoint.mOffset,
                                                            true);
@@ -2106,7 +2106,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment *aRun, nsIDOMNode *aNode, int32_t aOf
     nsCOMPtr<nsIDOMCharacterData> textNode(do_QueryInterface(thePoint.mTextNode));
     NS_ENSURE_TRUE(textNode, NS_ERROR_NULL_POINTER);
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
-    nsAutoString spaceStr(PRUnichar(32));
+    nsAutoString spaceStr(char16_t(32));
     nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr, textNode,
                                                            thePoint.mOffset,
                                                            true);

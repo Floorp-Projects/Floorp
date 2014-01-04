@@ -40,10 +40,10 @@ using mozilla::Atomic;
 
 // ---------------------------------------------------------------------------
 
-static PRUnichar gNullChar = 0;
+static char16_t gNullChar = 0;
 
 char*      nsCharTraits<char>     ::sEmptyBuffer = (char*) &gNullChar;
-PRUnichar* nsCharTraits<PRUnichar>::sEmptyBuffer =         &gNullChar;
+char16_t* nsCharTraits<char16_t>::sEmptyBuffer =         &gNullChar;
 
 // ---------------------------------------------------------------------------
 
@@ -259,10 +259,10 @@ void
 nsStringBuffer::ToString(uint32_t len, nsAString &str,
                          bool aMoveOwnership)
   {
-    PRUnichar* data = static_cast<PRUnichar*>(Data());
+    char16_t* data = static_cast<char16_t*>(Data());
 
     nsAStringAccessor* accessor = static_cast<nsAStringAccessor*>(&str);
-    NS_ASSERTION(data[len] == PRUnichar(0), "data should be null terminated");
+    NS_ASSERTION(data[len] == char16_t(0), "data should be null terminated");
 
     // preserve class flags
     uint32_t flags = accessor->flags();

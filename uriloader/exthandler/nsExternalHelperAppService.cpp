@@ -282,7 +282,7 @@ static bool GetFilenameAndExtensionFromChannel(nsIChannel* aChannel,
 
       // XXX RFindCharInReadable!!
       nsAutoString fileNameStr(aFileName);
-      int32_t idx = fileNameStr.RFindChar(PRUnichar('.'));
+      int32_t idx = fileNameStr.RFindChar(char16_t('.'));
       if (idx != kNotFound)
         CopyUTF16toUTF8(StringTail(fileNameStr, fileNameStr.Length() - idx - 1), aExtension);
     }
@@ -862,7 +862,7 @@ NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(const nsACSt
   return NS_OK;
 }
 
-nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath,
+nsresult nsExternalHelperAppService::GetFileTokenForPath(const char16_t * aPlatformAppPath,
                                                          nsIFile ** aFile)
 {
   nsDependentString platformAppPath(aPlatformAppPath);
@@ -1180,7 +1180,7 @@ nsExternalHelperAppService::SetProtocolHandlerDefaults(nsIHandlerInfo *aHandlerI
  
 // XPCOM profile change observer
 NS_IMETHODIMP
-nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
+nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData )
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     ExpungeTemporaryFiles();
@@ -1233,7 +1233,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 
   // make sure the extention includes the '.'
   if (!aTempFileExtension.IsEmpty() && aTempFileExtension.First() != '.')
-    mTempFileExtension = PRUnichar('.');
+    mTempFileExtension = char16_t('.');
   AppendUTF8toUTF16(aTempFileExtension, mTempFileExtension);
 
   // replace platform specific path separator and illegal characters to avoid any confusion
@@ -1241,19 +1241,19 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   mTempFileExtension.ReplaceChar(FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS, '_');
 
   // Remove unsafe bidi characters which might have spoofing implications (bug 511521).
-  const PRUnichar unsafeBidiCharacters[] = {
-    PRUnichar(0x061c), // Arabic Letter Mark
-    PRUnichar(0x200e), // Left-to-Right Mark
-    PRUnichar(0x200f), // Right-to-Left Mark
-    PRUnichar(0x202a), // Left-to-Right Embedding
-    PRUnichar(0x202b), // Right-to-Left Embedding
-    PRUnichar(0x202c), // Pop Directional Formatting
-    PRUnichar(0x202d), // Left-to-Right Override
-    PRUnichar(0x202e), // Right-to-Left Override
-    PRUnichar(0x2066), // Left-to-Right Isolate
-    PRUnichar(0x2067), // Right-to-Left Isolate
-    PRUnichar(0x2068), // First Strong Isolate
-    PRUnichar(0x2069)  // Pop Directional Isolate
+  const char16_t unsafeBidiCharacters[] = {
+    char16_t(0x061c), // Arabic Letter Mark
+    char16_t(0x200e), // Left-to-Right Mark
+    char16_t(0x200f), // Right-to-Left Mark
+    char16_t(0x202a), // Left-to-Right Embedding
+    char16_t(0x202b), // Right-to-Left Embedding
+    char16_t(0x202c), // Pop Directional Formatting
+    char16_t(0x202d), // Left-to-Right Override
+    char16_t(0x202e), // Right-to-Left Override
+    char16_t(0x2066), // Left-to-Right Isolate
+    char16_t(0x2067), // Right-to-Left Isolate
+    char16_t(0x2068), // First Strong Isolate
+    char16_t(0x2069)  // Pop Directional Isolate
   };
   for (uint32_t i = 0; i < ArrayLength(unsafeBidiCharacters); ++i) {
     mSuggestedFileName.ReplaceChar(unsafeBidiCharacters[i], '_');
@@ -1827,7 +1827,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         if (NS_SUCCEEDED(stringService->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
         {
             nsXPIDLString msgText;
-            const PRUnichar *strings[] = { path.get() };
+            const char16_t *strings[] = { path.get() };
             if(NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText))))
             {
               if (mDialogProgressListener)
@@ -2717,7 +2717,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACSt
     int32_t len = fileName.Length(); 
     for (int32_t i = len; i >= 0; i--) 
     {
-      if (fileName[i] == PRUnichar('.'))
+      if (fileName[i] == char16_t('.'))
       {
         CopyUTF16toUTF8(fileName.get() + i + 1, fileExt);
         break;

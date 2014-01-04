@@ -1271,7 +1271,7 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::GetWindowByName(const PRUnichar *aTargetName, 
+nsWindowWatcher::GetWindowByName(const char16_t *aTargetName, 
                                  nsIDOMWindow *aCurrentWindow,
                                  nsIDOMWindow **aResult)
 {
@@ -1622,7 +1622,7 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
    necessarily return a failure method value. check aFoundItem.
 */
 NS_IMETHODIMP
-nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
+nsWindowWatcher::FindItemWithName(const char16_t* aName,
                                   nsIDocShellTreeItem* aRequestor,
                                   nsIDocShellTreeItem* aOriginalRequestor,
                                   nsIDocShellTreeItem** aFoundItem)

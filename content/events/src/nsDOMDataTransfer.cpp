@@ -805,7 +805,7 @@ nsDOMDataTransfer::ConvertFromVariant(nsIVariant* aVariant,
     return true;
   }
 
-  PRUnichar* chrs;
+  char16_t* chrs;
   uint32_t len = 0;
   nsresult rv = aVariant->GetAsWStringWithSize(&len, &chrs);
   if (NS_FAILED(rv))

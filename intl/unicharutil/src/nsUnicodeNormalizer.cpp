@@ -340,7 +340,7 @@ mdn_normalize(bool do_composition, bool compat,
 
 	while (start != end) {
 		uint32_t c;
-		PRUnichar curChar;
+		char16_t curChar;
 
 		//assert(wb.cur == wb.last);
 
@@ -547,10 +547,10 @@ flush_before_cur(workbuf_t *wb, nsAString& aToStr)
 
 	for (i = 0; i < wb->cur; i++) {
 		if (!IS_IN_BMP(wb->ucs[i])) {
-			aToStr.Append((PRUnichar)H_SURROGATE(wb->ucs[i]));
-			aToStr.Append((PRUnichar)L_SURROGATE(wb->ucs[i]));
+			aToStr.Append((char16_t)H_SURROGATE(wb->ucs[i]));
+			aToStr.Append((char16_t)L_SURROGATE(wb->ucs[i]));
 		} else {
-			aToStr.Append((PRUnichar)(wb->ucs[i]));
+			aToStr.Append((char16_t)(wb->ucs[i]));
 		}
 	}
 

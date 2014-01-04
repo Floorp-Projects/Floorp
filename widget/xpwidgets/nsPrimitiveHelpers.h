@@ -33,7 +33,7 @@ public:
     // the appropriate platform charset encoding. |inUnicodeLen| is the length of the input
     // string, not the # of bytes in the buffer. |outPlainTextData| is null terminated, 
     // but its length parameter, |outPlainTextLen|, does not reflect that.
-  static nsresult ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, int32_t inUnicodeLen, 
+  static nsresult ConvertUnicodeToPlatformPlainText ( char16_t* inUnicode, int32_t inUnicodeLen, 
                                                     char** outPlainTextData, int32_t* outPlainTextLen ) ;
 
     // Given a char buffer (flavor text/plaikn), this converts it to unicode using
@@ -41,7 +41,7 @@ public:
     // but its length parameter, |outUnicodeLen|, does not reflect that. |outUnicodeLen| is
     // the length of the string in characters, not bytes.
   static nsresult ConvertPlatformPlainTextToUnicode ( const char* inText, int32_t inTextLen, 
-                                                    PRUnichar** outUnicode, int32_t* outUnicodeLen ) ;
+                                                    char16_t** outUnicode, int32_t* outUnicodeLen ) ;
 
 }; // class nsPrimitiveHelpers
 

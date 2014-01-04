@@ -82,7 +82,7 @@ public:
   // Resolution scale factor
   static double ScaleFactor();
 
-  static nsresult FireObserver(const char* aMessage, const PRUnichar* aData = nullptr);
+  static nsresult FireObserver(const char* aMessage, const char16_t* aData = nullptr);
 
   static HRESULT CreateUri(HSTRING aUriStr, Microsoft::WRL::ComPtr<IUriRuntimeClass>& aUriOut);
   static HRESULT CreateUri(HString& aHString, Microsoft::WRL::ComPtr<IUriRuntimeClass>& aUriOut);
@@ -92,5 +92,5 @@ public:
 
 private:
   static nsresult GetBrowserDOMWindow(nsCOMPtr<nsIBrowserDOMWindow> &aBWin);
-  static nsresult GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindow** aWindow);
+  static nsresult GetMostRecentWindow(const char16_t* aType, nsIDOMWindow** aWindow);
 };

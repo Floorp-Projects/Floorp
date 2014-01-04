@@ -18,7 +18,7 @@ public:
   virtual bool GetFontImpl(FontID aID, nsString& aFontName,
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel);
-  virtual PRUnichar GetPasswordCharacterImpl()
+  virtual char16_t GetPasswordCharacterImpl()
   {
     // unicode value for the bullet character, used for password textfields.
     return 0x2022;

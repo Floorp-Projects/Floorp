@@ -104,7 +104,7 @@ void ProcessLengthValue(const nsAString * aInputString, nsAString & aOutputStrin
   aOutputString.Truncate();
   if (aInputString) {
     aOutputString.Append(*aInputString);
-    if (-1 == aOutputString.FindChar(PRUnichar('%'))) {
+    if (-1 == aOutputString.FindChar(char16_t('%'))) {
       aOutputString.AppendLiteral("px");
     }
   }
@@ -675,27 +675,27 @@ nsHTMLCSSUtils::ParseLength(const nsAString & aString, float * aValue, nsIAtom *
   float a = 10.0f , b = 1.0f, value = 0;
   int8_t sign = 1;
   int32_t i = 0, j = aString.Length();
-  PRUnichar c;
+  char16_t c;
   bool floatingPointFound = false;
   c = *iter;
-  if (PRUnichar('-') == c) { sign = -1; iter++; i++; }
-  else if (PRUnichar('+') == c) { iter++; i++; }
+  if (char16_t('-') == c) { sign = -1; iter++; i++; }
+  else if (char16_t('+') == c) { iter++; i++; }
   while (i < j) {
     c = *iter;
-    if ((PRUnichar('0') == c) ||
-        (PRUnichar('1') == c) ||
-        (PRUnichar('2') == c) ||
-        (PRUnichar('3') == c) ||
-        (PRUnichar('4') == c) ||
-        (PRUnichar('5') == c) ||
-        (PRUnichar('6') == c) ||
-        (PRUnichar('7') == c) ||
-        (PRUnichar('8') == c) ||
-        (PRUnichar('9') == c)) {
-      value = (value * a) + (b * (c - PRUnichar('0')));
+    if ((char16_t('0') == c) ||
+        (char16_t('1') == c) ||
+        (char16_t('2') == c) ||
+        (char16_t('3') == c) ||
+        (char16_t('4') == c) ||
+        (char16_t('5') == c) ||
+        (char16_t('6') == c) ||
+        (char16_t('7') == c) ||
+        (char16_t('8') == c) ||
+        (char16_t('9') == c)) {
+      value = (value * a) + (b * (c - char16_t('0')));
       b = b / 10 * a;
     }
-    else if (!floatingPointFound && (PRUnichar('.') == c)) {
+    else if (!floatingPointFound && (char16_t('.') == c)) {
       floatingPointFound = true;
       a = 1.0f; b = 0.1f;
     }
@@ -1039,7 +1039,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
     NS_ENSURE_SUCCESS(res, res);
     // append the value to aValueString (possibly with a leading whitespace)
     if (index) {
-      aValueString.Append(PRUnichar(' '));
+      aValueString.Append(char16_t(' '));
     }
     aValueString.Append(valueString);
   }
@@ -1166,7 +1166,7 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
             tmpStr.AppendInt(NS_GET_B(rgba), 10);
             htmlColor.Append(tmpStr);
 
-            htmlColor.Append(PRUnichar(')'));
+            htmlColor.Append(char16_t(')'));
           }
 
           aIsSet = htmlColor.Equals(valueString,
@@ -1181,8 +1181,8 @@ nsHTMLCSSUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode *aNode,
     } else if (nsEditProperty::font == aHTMLProperty && aHTMLAttribute &&
                aHTMLAttribute->EqualsLiteral("face")) {
       if (!htmlValueString.IsEmpty()) {
-        const PRUnichar commaSpace[] = { PRUnichar(','), PRUnichar(' '), 0 };
-        const PRUnichar comma[] = { PRUnichar(','), 0 };
+        const char16_t commaSpace[] = { char16_t(','), char16_t(' '), 0 };
+        const char16_t comma[] = { char16_t(','), 0 };
         htmlValueString.ReplaceSubstring(commaSpace, comma);
         nsAutoString valueStringNorm(valueString);
         valueStringNorm.ReplaceSubstring(commaSpace, comma);

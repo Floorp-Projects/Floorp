@@ -21,7 +21,7 @@ mozSpellI18NManager::~mozSpellI18NManager()
 }
 
 /* mozISpellI18NUtil GetUtil (in wstring language); */
-NS_IMETHODIMP mozSpellI18NManager::GetUtil(const PRUnichar *aLanguage, mozISpellI18NUtil **_retval)
+NS_IMETHODIMP mozSpellI18NManager::GetUtil(const char16_t *aLanguage, mozISpellI18NUtil **_retval)
 {
  if( nullptr == _retval) {
    return NS_ERROR_NULL_POINTER;

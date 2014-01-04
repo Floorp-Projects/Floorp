@@ -120,7 +120,7 @@ nsCommandLine::FindFlag(const nsAString& aFlag, bool aCaseSensitive, int32_t *aR
   for (uint32_t f = 0; f < mArgs.Length(); f++) {
     const nsString &arg = mArgs[f];
 
-    if (arg.Length() >= 2 && arg.First() == PRUnichar('-')) {
+    if (arg.Length() >= 2 && arg.First() == char16_t('-')) {
       if (aFlag.Equals(Substring(arg, 1), c)) {
         *aResult = f;
         return NS_OK;
@@ -506,11 +506,11 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
 }
 
 static void
-LogConsoleMessage(const PRUnichar* fmt, ...)
+LogConsoleMessage(const char16_t* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  PRUnichar* msg = nsTextFormatter::vsmprintf(fmt, args);
+  char16_t* msg = nsTextFormatter::vsmprintf(fmt, args);
   va_end(args);
 
   nsCOMPtr<nsIConsoleService> cs = do_GetService("@mozilla.org/consoleservice;1");

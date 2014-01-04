@@ -256,7 +256,7 @@ NS_IMETHODIMP
 nsOfflineCachePendingUpdate::OnStatusChange(nsIWebProgress* aWebProgress,
                                             nsIRequest* aRequest,
                                             nsresult aStatus,
-                                            const PRUnichar* aMessage)
+                                            const char16_t* aMessage)
 {
     NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
@@ -635,7 +635,7 @@ NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(nsIURI *aManifestURI,
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::Observe(nsISupports     *aSubject,
                                      const char      *aTopic,
-                                     const PRUnichar *aData)
+                                     const char16_t *aData)
 {
     if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         if (mUpdates.Length() > 0)

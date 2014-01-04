@@ -1306,7 +1306,7 @@ nsTextEditRules::FillBufWithPWChars(nsAString *aOutString, int32_t aLength)
   MOZ_ASSERT(aOutString);
 
   // change the output to the platform password character
-  PRUnichar passwordChar = LookAndFeel::GetPasswordCharacter();
+  char16_t passwordChar = LookAndFeel::GetPasswordCharacter();
 
   int32_t i;
   aOutString->Truncate();

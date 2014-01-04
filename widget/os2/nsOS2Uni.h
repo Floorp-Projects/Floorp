@@ -25,9 +25,9 @@ private:
 
 #define CHAR_BUFFER_SIZE 1024
 typedef nsAutoTArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
-typedef nsAutoTArray<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
+typedef nsAutoTArray<char16_t, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
-nsresult WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
+nsresult WideCharToMultiByte(int aCodePage, const char16_t* aSrc,
                              int32_t aSrcLength, nsAutoCharBuffer& aResult,
                              int32_t& aResultLength);
 nsresult MultiByteToWideChar(int aCodePage, const char* aSrc,

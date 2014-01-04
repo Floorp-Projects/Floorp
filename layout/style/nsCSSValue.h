@@ -154,13 +154,13 @@ enum nsCSSUnit {
   eCSSUnit_DummyInherit = 10,     // (n/a) a fake but specified value, used
                                   //       only in temporary values
 
-  eCSSUnit_String       = 11,     // (PRUnichar*) a string value
-  eCSSUnit_Ident        = 12,     // (PRUnichar*) a string value
-  eCSSUnit_Families     = 13,     // (PRUnichar*) a string value
-  eCSSUnit_Attr         = 14,     // (PRUnichar*) a attr(string) value
-  eCSSUnit_Local_Font   = 15,     // (PRUnichar*) a local font name
-  eCSSUnit_Font_Format  = 16,     // (PRUnichar*) a font format name
-  eCSSUnit_Element      = 17,     // (PRUnichar*) an element id
+  eCSSUnit_String       = 11,     // (char16_t*) a string value
+  eCSSUnit_Ident        = 12,     // (char16_t*) a string value
+  eCSSUnit_Families     = 13,     // (char16_t*) a string value
+  eCSSUnit_Attr         = 14,     // (char16_t*) a attr(string) value
+  eCSSUnit_Local_Font   = 15,     // (char16_t*) a local font name
+  eCSSUnit_Font_Format  = 16,     // (char16_t*) a font format name
+  eCSSUnit_Element      = 17,     // (char16_t*) an element id
 
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
   eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
@@ -437,7 +437,7 @@ public:
     return aBuffer;
   }
 
-  const PRUnichar* GetStringBufferValue() const
+  const char16_t* GetStringBufferValue() const
   {
     NS_ABORT_IF_FALSE(UnitHasStringValue(), "not a string value");
     return GetBufferValue(mValue.mString);
@@ -508,7 +508,7 @@ public:
     return mValue.mImage;
   }
 
-  const PRUnichar* GetOriginalURLValue() const
+  const char16_t* GetOriginalURLValue() const
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_URL || mUnit == eCSSUnit_Image,
                       "not a URL value");
@@ -588,8 +588,8 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-  static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
-    return static_cast<PRUnichar*>(aBuffer->Data());
+  static const char16_t* GetBufferValue(nsStringBuffer* aBuffer) {
+    return static_cast<char16_t*>(aBuffer->Data());
   }
 
 protected:

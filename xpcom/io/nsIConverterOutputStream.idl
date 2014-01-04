@@ -40,5 +40,5 @@ interface nsIConverterOutputStream : nsIUnicharOutputStream
      */
     void init(in nsIOutputStream aOutStream, in string aCharset,
               in unsigned long aBufferSize,
-              in PRUnichar aReplacementCharacter);
+              in char16_t aReplacementCharacter);
 };

@@ -249,7 +249,7 @@ public:
   }
 
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
-                     const PRUnichar* aData)
+                     const char16_t* aData)
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"));

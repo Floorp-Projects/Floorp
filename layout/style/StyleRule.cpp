@@ -117,7 +117,7 @@ nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType)
 }
 
 nsPseudoClassList::nsPseudoClassList(nsCSSPseudoClasses::Type aType,
-                                     const PRUnichar* aString)
+                                     const char16_t* aString)
   : mType(aType),
     mNext(nullptr)
 {
@@ -364,7 +364,7 @@ void nsCSSSelector::Reset(void)
   NS_ASSERTION(!mNegations || !mNegations->mNext,
                "mNegations can't have non-null mNext");
   NS_CSS_DELETE_LIST_MEMBER(nsCSSSelector, this, mNegations);
-  mOperator = PRUnichar(0);
+  mOperator = char16_t(0);
 }
 
 void nsCSSSelector::SetNameSpace(int32_t aNameSpace)
@@ -414,7 +414,7 @@ void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType)
 }
 
 void nsCSSSelector::AddPseudoClass(nsCSSPseudoClasses::Type aType,
-                                   const PRUnichar* aString)
+                                   const char16_t* aString)
 {
   AddPseudoClassInternal(new nsPseudoClassList(aType, aString));
 }
@@ -464,7 +464,7 @@ void nsCSSSelector::AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint
   }
 }
 
-void nsCSSSelector::SetOperator(PRUnichar aOperator)
+void nsCSSSelector::SetOperator(char16_t aOperator)
 {
   mOperator = aOperator;
 }
@@ -548,18 +548,18 @@ nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
     // Append the combinator, if needed.
     if (!stack.IsEmpty()) {
       const nsCSSSelector *next = stack.ElementAt(index - 1);
-      PRUnichar oper = s->mOperator;
+      char16_t oper = s->mOperator;
       if (next->IsPseudoElement()) {
-        NS_ASSERTION(oper == PRUnichar(':'),
+        NS_ASSERTION(oper == char16_t(':'),
                      "improperly chained pseudo element");
       } else {
-        NS_ASSERTION(oper != PRUnichar(0),
+        NS_ASSERTION(oper != char16_t(0),
                      "compound selector without combinator");
 
-        aString.Append(PRUnichar(' '));
-        if (oper != PRUnichar(' ')) {
+        aString.Append(char16_t(' '));
+        if (oper != char16_t(' ')) {
           aString.Append(oper);
-          aString.Append(PRUnichar(' '));
+          aString.Append(char16_t(' '));
         }
       }
     }
@@ -577,7 +577,7 @@ nsCSSSelector::AppendToStringWithoutCombinators
     aString.AppendLiteral(":not(");
     negation->AppendToStringWithoutCombinatorsOrNegations(aString, aSheet,
                                                           true);
-    aString.Append(PRUnichar(')'));
+    aString.Append(char16_t(')'));
   }
 }
 
@@ -605,7 +605,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
                    mNameSpace == kNameSpaceID_None,
                    "How did we get this namespace?");
       if (mNameSpace == kNameSpaceID_None) {
-        aString.Append(PRUnichar('|'));
+        aString.Append(char16_t('|'));
         wroteNamespace = true;
       }
     } else if (sheetNS->FindNameSpaceID(nullptr) == mNameSpace) {
@@ -617,7 +617,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     } else if (mNameSpace == kNameSpaceID_None) {
       NS_ASSERTION(CanBeNamespaced(aIsNegated),
                    "How did we end up with this namespace?");
-      aString.Append(PRUnichar('|'));
+      aString.Append(char16_t('|'));
       wroteNamespace = true;
     } else if (mNameSpace != kNameSpaceID_Unknown) {
       NS_ASSERTION(CanBeNamespaced(aIsNegated),
@@ -627,7 +627,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
                    "without a prefix?");
       nsStyleUtil::AppendEscapedCSSIdent(nsDependentAtomString(prefixAtom),
                                          aString);
-      aString.Append(PRUnichar('|'));
+      aString.Append(char16_t('|'));
       wroteNamespace = true;
     } else {
       // A selector for an element in any namespace, while the default
@@ -649,7 +649,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     if (wroteNamespace ||
         (!mIDList && !mClassList && !mPseudoClassList && !mAttrList &&
          (aIsNegated || !mNegations))) {
-      aString.Append(PRUnichar('*'));
+      aString.Append(char16_t('*'));
     }
   } else {
     // Append the tag name
@@ -659,10 +659,10 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       if (!mNext) {
         // Lone pseudo-element selector -- toss in a wildcard type selector
         // XXXldb Why?
-        aString.Append(PRUnichar('*'));
+        aString.Append(char16_t('*'));
       }
       if (!nsCSSPseudoElements::IsCSS2PseudoElement(mLowercaseTag)) {
-        aString.Append(PRUnichar(':'));
+        aString.Append(char16_t(':'));
       }
       // This should not be escaped since (a) the pseudo-element string
       // has a ":" that can't be escaped and (b) all pseudo-elements at
@@ -679,7 +679,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     nsAtomList* list = mIDList;
     while (list != nullptr) {
       list->mAtom->ToString(temp);
-      aString.Append(PRUnichar('#'));
+      aString.Append(char16_t('#'));
       nsStyleUtil::AppendEscapedCSSIdent(temp, aString);
       list = list->mNext;
     }
@@ -692,13 +692,13 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       NS_ABORT_IF_FALSE(nsCSSAnonBoxes::IsTreePseudoElement(mLowercaseTag),
                         "must be tree pseudo-element");
 
-      aString.Append(PRUnichar('('));
+      aString.Append(char16_t('('));
       for (nsAtomList* list = mClassList; list; list = list->mNext) {
         nsStyleUtil::AppendEscapedCSSIdent(nsDependentAtomString(list->mAtom), aString);
-        aString.Append(PRUnichar(','));
+        aString.Append(char16_t(','));
       }
       // replace the final comma with a close-paren
-      aString.Replace(aString.Length() - 1, 1, PRUnichar(')'));
+      aString.Replace(aString.Length() - 1, 1, char16_t(')'));
 #else
       NS_ERROR("Can't happen");
 #endif
@@ -706,7 +706,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       nsAtomList* list = mClassList;
       while (list != nullptr) {
         list->mAtom->ToString(temp);
-        aString.Append(PRUnichar('.'));
+        aString.Append(char16_t('.'));
         nsStyleUtil::AppendEscapedCSSIdent(temp, aString);
         list = list->mNext;
       }
@@ -717,11 +717,11 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
   if (mAttrList) {
     nsAttrSelector* list = mAttrList;
     while (list != nullptr) {
-      aString.Append(PRUnichar('['));
+      aString.Append(char16_t('['));
       // Append the namespace prefix
       if (list->mNameSpace == kNameSpaceID_Unknown) {
-        aString.Append(PRUnichar('*'));
-        aString.Append(PRUnichar('|'));
+        aString.Append(char16_t('*'));
+        aString.Append(char16_t('|'));
       } else if (list->mNameSpace != kNameSpaceID_None) {
         if (aSheet) {
           nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
@@ -734,7 +734,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
           nsAutoString prefix;
           prefixAtom->ToString(prefix);
           nsStyleUtil::AppendEscapedCSSIdent(prefix, aString);
-          aString.Append(PRUnichar('|'));
+          aString.Append(char16_t('|'));
         }
       }
       // Append the attribute name
@@ -744,23 +744,23 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
       if (list->mFunction != NS_ATTR_FUNC_SET) {
         // Append the function
         if (list->mFunction == NS_ATTR_FUNC_INCLUDES)
-          aString.Append(PRUnichar('~'));
+          aString.Append(char16_t('~'));
         else if (list->mFunction == NS_ATTR_FUNC_DASHMATCH)
-          aString.Append(PRUnichar('|'));
+          aString.Append(char16_t('|'));
         else if (list->mFunction == NS_ATTR_FUNC_BEGINSMATCH)
-          aString.Append(PRUnichar('^'));
+          aString.Append(char16_t('^'));
         else if (list->mFunction == NS_ATTR_FUNC_ENDSMATCH)
-          aString.Append(PRUnichar('$'));
+          aString.Append(char16_t('$'));
         else if (list->mFunction == NS_ATTR_FUNC_CONTAINSMATCH)
-          aString.Append(PRUnichar('*'));
+          aString.Append(char16_t('*'));
 
-        aString.Append(PRUnichar('='));
+        aString.Append(char16_t('='));
       
         // Append the value
         nsStyleUtil::AppendEscapedCSSString(list->mValue, aString);
       }
 
-      aString.Append(PRUnichar(']'));
+      aString.Append(char16_t(']'));
       
       list = list->mNext;
     }
@@ -775,7 +775,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
     // escaping.
     aString.Append(temp);
     if (list->u.mMemory) {
-      aString.Append(PRUnichar('('));
+      aString.Append(char16_t('('));
       if (nsCSSPseudoClasses::HasStringArg(list->mType)) {
         nsStyleUtil::AppendEscapedCSSIdent(
           nsDependentString(list->u.mString), aString);
@@ -785,15 +785,15 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         temp.Truncate();
         if (a != 0) {
           if (a == -1) {
-            temp.Append(PRUnichar('-'));
+            temp.Append(char16_t('-'));
           } else if (a != 1) {
             temp.AppendInt(a);
           }
-          temp.Append(PRUnichar('n'));
+          temp.Append(char16_t('n'));
         }
         if (b != 0 || a == 0) {
           if (b >= 0 && a != 0) // check a != 0 for whether we printed above
-            temp.Append(PRUnichar('+'));
+            temp.Append(char16_t('+'));
           temp.AppendInt(b);
         }
         aString.Append(temp);
@@ -804,7 +804,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         list->u.mSelectors->ToString(tmp, aSheet);
         aString.Append(tmp);
       }
-      aString.Append(PRUnichar(')'));
+      aString.Append(char16_t(')'));
     }
   }
 }
@@ -862,15 +862,15 @@ nsCSSSelectorList::~nsCSSSelectorList()
 }
 
 nsCSSSelector*
-nsCSSSelectorList::AddSelector(PRUnichar aOperator)
+nsCSSSelectorList::AddSelector(char16_t aOperator)
 {
   nsCSSSelector* newSel = new nsCSSSelector();
 
   if (mSelectors) {
-    NS_ASSERTION(aOperator != PRUnichar(0), "chaining without combinator");
+    NS_ASSERTION(aOperator != char16_t(0), "chaining without combinator");
     mSelectors->SetOperator(aOperator);
   } else {
-    NS_ASSERTION(aOperator == PRUnichar(0), "combinator without chaining");
+    NS_ASSERTION(aOperator == char16_t(0), "combinator without chaining");
   }
 
   newSel->mNext = mSelectors;
@@ -1473,18 +1473,18 @@ StyleRule::GetCssText(nsAString& aCssText)
 {
   if (mSelector) {
     mSelector->ToString(aCssText, GetStyleSheet());
-    aCssText.Append(PRUnichar(' '));
+    aCssText.Append(char16_t(' '));
   }
-  aCssText.Append(PRUnichar('{'));
-  aCssText.Append(PRUnichar(' '));
+  aCssText.Append(char16_t('{'));
+  aCssText.Append(char16_t(' '));
   if (mDeclaration)
   {
     nsAutoString   tempString;
     mDeclaration->ToString( tempString );
     aCssText.Append( tempString );
   }
-  aCssText.Append(PRUnichar(' '));
-  aCssText.Append(PRUnichar('}'));
+  aCssText.Append(char16_t(' '));
+  aCssText.Append(char16_t('}'));
 }
 
 void

@@ -456,7 +456,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         }
         case nsIDataType::VTYPE_WCHAR:
         {
-            PRUnichar wc;
+            char16_t wc;
             if (NS_FAILED(variant->GetAsWChar(&wc)))
                 return false;
             return XPCConvert::NativeData2JS(pJSVal, (const void*)&wc, TD_WCHAR, &iid, pErr);
@@ -526,7 +526,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         }
         case nsIDataType::VTYPE_WCHAR_STR:
         {
-            PRUnichar *pwc;
+            char16_t *pwc;
             if (NS_FAILED(variant->GetAsWString(&pwc)))
                 return false;
             bool success = XPCConvert::NativeData2JS(pJSVal, (const void*)&pwc,
@@ -536,7 +536,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
         }
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
         {
-            PRUnichar *pwc;
+            char16_t *pwc;
             uint32_t size;
             if (NS_FAILED(variant->GetAsWStringWithSize(&size, &pwc)))
                 return false;
@@ -748,7 +748,7 @@ NS_IMETHODIMP XPCVariant::GetAsChar(char *_retval)
 }
 
 /* wchar getAsWChar (); */
-NS_IMETHODIMP XPCVariant::GetAsWChar(PRUnichar *_retval)
+NS_IMETHODIMP XPCVariant::GetAsWChar(char16_t *_retval)
 {
     return nsVariant::ConvertToWChar(mData, _retval);
 }
@@ -792,7 +792,7 @@ NS_IMETHODIMP XPCVariant::GetAsString(char **_retval)
 }
 
 /* wstring getAsWString (); */
-NS_IMETHODIMP XPCVariant::GetAsWString(PRUnichar **_retval)
+NS_IMETHODIMP XPCVariant::GetAsWString(char16_t **_retval)
 {
     return nsVariant::ConvertToWString(mData, _retval);
 }
@@ -823,7 +823,7 @@ NS_IMETHODIMP XPCVariant::GetAsStringWithSize(uint32_t *size, char **str)
 }
 
 /* void getAsWStringWithSize (out uint32_t size, [size_is (size), retval] out wstring str); */
-NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t *size, PRUnichar **str)
+NS_IMETHODIMP XPCVariant::GetAsWStringWithSize(uint32_t *size, char16_t **str)
 {
     return nsVariant::ConvertToWStringWithSize(mData, size, str);
 }

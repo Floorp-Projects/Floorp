@@ -21,7 +21,7 @@
 #include "mozilla/gfx/2D.h"
 #include "cutils/properties.h"
 
-static const PRUnichar UNICODE_BULLET = 0x2022;
+static const char16_t UNICODE_BULLET = 0x2022;
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel()
@@ -446,7 +446,7 @@ nsLookAndFeel::GetPasswordMaskDelayImpl()
 }
 
 /* virtual */
-PRUnichar
+char16_t
 nsLookAndFeel::GetPasswordCharacterImpl()
 {
     return UNICODE_BULLET;

@@ -55,7 +55,7 @@ ToLowerCaseASCII_inline(const uint32_t aChar)
 void
 ToLowerCase(nsAString& aString)
 {
-  PRUnichar *buf = aString.BeginWriting();
+  char16_t *buf = aString.BeginWriting();
   ToLowerCase(buf, buf, aString.Length());
 }
 
@@ -63,8 +63,8 @@ void
 ToLowerCase(const nsAString& aSource,
             nsAString& aDest)
 {
-  const PRUnichar *in;
-  PRUnichar *out;
+  const char16_t *in;
+  char16_t *out;
   uint32_t len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
   NS_ASSERTION(out, "Uh...");
@@ -80,7 +80,7 @@ ToLowerCaseASCII(const uint32_t aChar)
 void
 ToUpperCase(nsAString& aString)
 {
-  PRUnichar *buf = aString.BeginWriting();
+  char16_t *buf = aString.BeginWriting();
   ToUpperCase(buf, buf, aString.Length());
 }
 
@@ -88,8 +88,8 @@ void
 ToUpperCase(const nsAString& aSource,
             nsAString& aDest)
 {
-  const PRUnichar *in;
-  PRUnichar *out;
+  const char16_t *in;
+  char16_t *out;
   uint32_t len = NS_StringGetData(aSource, &in);
   NS_StringGetMutableData(aDest, len, &out);
   NS_ASSERTION(out, "Uh...");
@@ -99,8 +99,8 @@ ToUpperCase(const nsAString& aSource,
 #ifdef MOZILLA_INTERNAL_API
 
 int32_t
-nsCaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
-                                              const PRUnichar* rhs,
+nsCaseInsensitiveStringComparator::operator()(const char16_t* lhs,
+                                              const char16_t* rhs,
                                               uint32_t lLength,
                                               uint32_t rLength) const
 {
@@ -118,8 +118,8 @@ nsCaseInsensitiveUTF8StringComparator::operator()(const char* lhs,
 }
 
 int32_t
-nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
-                                                   const PRUnichar* rhs,
+nsASCIICaseInsensitiveStringComparator::operator()(const char16_t* lhs,
+                                                   const char16_t* rhs,
                                                    uint32_t lLength,
                                                    uint32_t rLength) const
 {
@@ -132,8 +132,8 @@ nsASCIICaseInsensitiveStringComparator::operator()(const PRUnichar* lhs,
   while (rLength) {
     // we don't care about surrogates here, because we're only
     // lowercasing the ASCII range
-    PRUnichar l = *lhs++;
-    PRUnichar r = *rhs++;
+    char16_t l = *lhs++;
+    char16_t r = *rhs++;
     if (l != r) {
       l = ToLowerCaseASCII_inline(l);
       r = ToLowerCaseASCII_inline(r);
@@ -158,7 +158,7 @@ ToLowerCase(uint32_t aChar)
 }
 
 void
-ToLowerCase(const PRUnichar *aIn, PRUnichar *aOut, uint32_t aLen)
+ToLowerCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen)
 {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
@@ -188,7 +188,7 @@ ToUpperCase(uint32_t aChar)
 }
 
 void
-ToUpperCase(const PRUnichar *aIn, PRUnichar *aOut, uint32_t aLen)
+ToUpperCase(const char16_t *aIn, char16_t *aOut, uint32_t aLen)
 {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
@@ -215,8 +215,8 @@ ToTitleCase(uint32_t aChar)
 }
 
 int32_t
-CaseInsensitiveCompare(const PRUnichar *a,
-                       const PRUnichar *b,
+CaseInsensitiveCompare(const char16_t *a,
+                       const char16_t *b,
                        uint32_t len)
 {
   NS_ASSERTION(a && b, "Do not pass in invalid pointers!");

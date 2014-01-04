@@ -516,7 +516,7 @@ typedef struct {
 #pragma pack()
 
 uint32_t
-gfxFontUtils::MapCharToGlyphFormat4(const uint8_t *aBuf, PRUnichar aCh)
+gfxFontUtils::MapCharToGlyphFormat4(const uint8_t *aBuf, char16_t aCh)
 {
     const Format4Cmap *cmap4 = reinterpret_cast<const Format4Cmap*>(aBuf);
     uint16_t segCount;
@@ -680,7 +680,7 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
     switch (format) {
     case 4:
         gid = aUnicode < UNICODE_BMP_LIMIT ?
-            MapCharToGlyphFormat4(aCmapBuf + offset, PRUnichar(aUnicode)) : 0;
+            MapCharToGlyphFormat4(aCmapBuf + offset, char16_t(aUnicode)) : 0;
         break;
     case 12:
         gid = MapCharToGlyphFormat12(aCmapBuf + offset, aUnicode);
@@ -706,7 +706,7 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
 
 void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& aFontList)
 {
-    const PRUnichar kComma = PRUnichar(',');
+    const char16_t kComma = char16_t(',');
     
     aFontList.Clear();
     
@@ -718,12 +718,12 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
 
     // append each font name to the list
     nsAutoString fontname;
-    const PRUnichar *p, *p_end;
+    const char16_t *p, *p_end;
     fontlistValue.BeginReading(p);
     fontlistValue.EndReading(p_end);
 
      while (p < p_end) {
-        const PRUnichar *nameStart = p;
+        const char16_t *nameStart = p;
         while (++p != p_end && *p != kComma)
         /* nothing */ ;
 
@@ -860,7 +860,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
     uint16_t nameCount = ArrayLength(neededNameIDs);
 
     // leave room for null-terminator
-    uint16_t nameStrLength = (aName.Length() + 1) * sizeof(PRUnichar); 
+    uint16_t nameStrLength = (aName.Length() + 1) * sizeof(char16_t); 
 
     // round name table size up to 4-byte multiple
     uint32_t nameTableSize = (sizeof(NameHeader) +
@@ -913,7 +913,7 @@ gfxFontUtils::RenameFont(const nsAString& aName, const uint8_t *aFontData,
     }
     
     // -- string data, located after the name records, stored in big-endian form
-    PRUnichar *strData = reinterpret_cast<PRUnichar*>(nameRecord);
+    char16_t *strData = reinterpret_cast<char16_t*>(nameRecord);
 
     mozilla::NativeEndian::copyAndSwapToBigEndian(strData,
                                                   aName.BeginReading(),
@@ -1289,7 +1289,7 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
         CopySwapUTF16(reinterpret_cast<const uint16_t*>(aNameData),
                       reinterpret_cast<uint16_t*>(aName.BeginWriting()), strLen);
 #else
-        aName.Assign(reinterpret_cast<const PRUnichar*>(aNameData), strLen);
+        aName.Assign(reinterpret_cast<const char16_t*>(aNameData), strLen);
 #endif    
         return true;
     }
@@ -1426,7 +1426,7 @@ NS_IMPL_ISUPPORTS1(gfxFontInfoLoader::ShutdownObserver, nsIObserver)
 NS_IMETHODIMP
 gfxFontInfoLoader::ShutdownObserver::Observe(nsISupports *aSubject,
                                              const char *aTopic,
-                                             const PRUnichar *someData)
+                                             const char16_t *someData)
 {
     if (!nsCRT::strcmp(aTopic, "quit-application")) {
         mLoader->CancelLoader();

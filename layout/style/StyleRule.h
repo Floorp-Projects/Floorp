@@ -48,7 +48,7 @@ private:
 struct nsPseudoClassList {
 public:
   nsPseudoClassList(nsCSSPseudoClasses::Type aType);
-  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const PRUnichar *aString);
+  nsPseudoClassList(nsCSSPseudoClasses::Type aType, const char16_t *aString);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType, const int32_t *aIntPair);
   nsPseudoClassList(nsCSSPseudoClasses::Type aType,
                     nsCSSSelectorList *aSelectorList /* takes ownership */);
@@ -70,7 +70,7 @@ public:
     //   d. a selector list, which means mSelectors is non-null
     //      (if nsCSSPseudoClasses::HasSelectorListArg(mType))
     void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
-    PRUnichar*      mString;
+    char16_t*      mString;
     int32_t*        mNumbers;
     nsCSSSelectorList* mSelectors;
   } u;
@@ -133,7 +133,7 @@ public:
   void AddID(const nsString& aID);
   void AddClass(const nsString& aClass);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType);
-  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const PRUnichar* aString);
+  void AddPseudoClass(nsCSSPseudoClasses::Type aType, const char16_t* aString);
   void AddPseudoClass(nsCSSPseudoClasses::Type aType, const int32_t* aIntPair);
   // takes ownership of aSelectorList
   void AddPseudoClass(nsCSSPseudoClasses::Type aType,
@@ -141,7 +141,7 @@ public:
   void AddAttribute(int32_t aNameSpace, const nsString& aAttr);
   void AddAttribute(int32_t aNameSpace, const nsString& aAttr, uint8_t aFunc, 
                     const nsString& aValue, bool aCaseSensitive);
-  void SetOperator(PRUnichar aOperator);
+  void SetOperator(char16_t aOperator);
 
   inline bool HasTagSelector() const {
     return !!mCasedTag;
@@ -203,7 +203,7 @@ public:
   nsCSSSelector*  mNegations;
   nsCSSSelector*  mNext;
   int32_t         mNameSpace;
-  PRUnichar       mOperator;
+  char16_t       mOperator;
 private:
   // int16_t to make sure it packs well with mOperator
   int16_t        mPseudoType;
@@ -228,12 +228,12 @@ struct nsCSSSelectorList {
    * Create a new selector and push it onto the beginning of |mSelectors|,
    * setting its |mNext| to the current value of |mSelectors|.  If there is an
    * earlier selector, set its |mOperator| to |aOperator|; else |aOperator|
-   * must be PRUnichar(0).
+   * must be char16_t(0).
    * Returns the new selector.
    * The list owns the new selector.
    * The caller is responsible for updating |mWeight|.
    */
-  nsCSSSelector* AddSelector(PRUnichar aOperator);
+  nsCSSSelector* AddSelector(char16_t aOperator);
 
   /**
    * Should be used only on the first in the list

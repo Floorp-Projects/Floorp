@@ -20,7 +20,7 @@ class nsIURI;
 class nsXBLProtoImplField
 {
 public:
-  nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly);
+  nsXBLProtoImplField(const char16_t* aName, const char16_t* aReadOnly);
   nsXBLProtoImplField(const bool aIsReadOnly);
   ~nsXBLProtoImplField();
 
@@ -43,7 +43,7 @@ public:
   nsresult Read(nsIObjectInputStream* aStream);
   nsresult Write(nsIObjectOutputStream* aStream);
 
-  const PRUnichar* GetName() const { return mName; }
+  const char16_t* GetName() const { return mName; }
 
   unsigned AccessorAttributes() const {
     return JSPROP_SHARED | JSPROP_GETTER | JSPROP_SETTER |
@@ -54,8 +54,8 @@ public:
 
 protected:
   nsXBLProtoImplField* mNext;
-  PRUnichar* mName;
-  PRUnichar* mFieldText;
+  char16_t* mName;
+  char16_t* mFieldText;
   uint32_t mFieldTextLength;
   uint32_t mLineNumber;
   unsigned mJSAttributes;

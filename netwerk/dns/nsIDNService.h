@@ -52,7 +52,7 @@ private:
   nsresult ACEtoUTF8(const nsACString& input, nsACString& _retval,
                      bool allowUnassigned, bool convertAllLabels);
   bool isInWhitelist(const nsACString &host);
-  void prefsChanged(nsIPrefBranch *prefBranch, const PRUnichar *pref);
+  void prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref);
   bool isLabelSafe(const nsAString &label);
   bool illegalScriptCombo(int32_t script, int32_t& savedScript);
 

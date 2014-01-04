@@ -796,7 +796,7 @@ DocAccessible::ScrollPositionDidChange(nscoord aX, nscoord aY)
 
 NS_IMETHODIMP
 DocAccessible::Observe(nsISupports* aSubject, const char* aTopic,
-                       const PRUnichar* aData)
+                       const char16_t* aData)
 {
   if (!nsCRT::strcmp(aTopic,"obs_documentCreated")) {    
     // State editable will now be set, readonly is now clear

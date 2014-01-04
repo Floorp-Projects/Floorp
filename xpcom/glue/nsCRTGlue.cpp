@@ -67,9 +67,9 @@ NS_strtok(const char *delims, char **str)
 }
 
 uint32_t
-NS_strlen(const PRUnichar *aString)
+NS_strlen(const char16_t *aString)
 {
-  const PRUnichar *end;
+  const char16_t *end;
 
   for (end = aString; *end; ++end) {
     // empty loop
@@ -79,7 +79,7 @@ NS_strlen(const PRUnichar *aString)
 }
 
 int
-NS_strcmp(const PRUnichar *a, const PRUnichar *b)
+NS_strcmp(const char16_t *a, const char16_t *b)
 {
   while (*b) {
     int r = *a - *b;
@@ -93,19 +93,19 @@ NS_strcmp(const PRUnichar *a, const PRUnichar *b)
   return *a != '\0';
 }
 
-PRUnichar*
-NS_strdup(const PRUnichar *aString)
+char16_t*
+NS_strdup(const char16_t *aString)
 {
   uint32_t len = NS_strlen(aString);
   return NS_strndup(aString, len);
 }
 
-PRUnichar*
-NS_strndup(const PRUnichar *aString, uint32_t aLen)
+char16_t*
+NS_strndup(const char16_t *aString, uint32_t aLen)
 {
-  PRUnichar *newBuf = (PRUnichar*) NS_Alloc((aLen + 1) * sizeof(PRUnichar));
+  char16_t *newBuf = (char16_t*) NS_Alloc((aLen + 1) * sizeof(char16_t));
   if (newBuf) {
-    memcpy(newBuf, aString, aLen * sizeof(PRUnichar));
+    memcpy(newBuf, aString, aLen * sizeof(char16_t));
     newBuf[aLen] = '\0';
   }
   return newBuf;
@@ -183,12 +183,12 @@ bool NS_IsLower(char aChar)
   return aChar != (char)nsLowerUpperUtils::kLower2Upper[(unsigned char)aChar];
 }
 
-bool NS_IsAscii(PRUnichar aChar)
+bool NS_IsAscii(char16_t aChar)
 {
   return (0x0080 > aChar);
 }
 
-bool NS_IsAscii(const PRUnichar *aString)
+bool NS_IsAscii(const char16_t *aString)
 {
   while(*aString) {
     if( 0x0080 <= *aString)
@@ -219,13 +219,13 @@ bool NS_IsAscii(const char* aString, uint32_t aLength)
   return true;
 }
 
-bool NS_IsAsciiAlpha(PRUnichar aChar)
+bool NS_IsAsciiAlpha(char16_t aChar)
 {
   return ((aChar >= 'A') && (aChar <= 'Z')) ||
          ((aChar >= 'a') && (aChar <= 'z'));
 }
 
-bool NS_IsAsciiWhitespace(PRUnichar aChar)
+bool NS_IsAsciiWhitespace(char16_t aChar)
 {
   return aChar == ' ' ||
          aChar == '\r' ||
@@ -233,7 +233,7 @@ bool NS_IsAsciiWhitespace(PRUnichar aChar)
          aChar == '\t';
 }
 
-bool NS_IsAsciiDigit(PRUnichar aChar)
+bool NS_IsAsciiDigit(char16_t aChar)
 {
   return aChar >= '0' && aChar <= '9';
 }

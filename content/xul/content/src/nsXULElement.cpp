@@ -2614,7 +2614,7 @@ OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
 }
 
 nsresult
-nsXULPrototypeScript::Compile(const PRUnichar* aText,
+nsXULPrototypeScript::Compile(const char16_t* aText,
                               int32_t aTextLength,
                               nsIURI* aURI,
                               uint32_t aLineNo,

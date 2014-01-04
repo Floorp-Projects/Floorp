@@ -17,7 +17,7 @@ interface nsIConverterInputStream : nsIUnicharInputStream {
     /**
      * Default replacement char value, U+FFFD REPLACEMENT CHARACTER.
      */
-    const PRUnichar DEFAULT_REPLACEMENT_CHARACTER = 0xFFFD;
+    const char16_t DEFAULT_REPLACEMENT_CHARACTER = 0xFFFD;
 
     /**
      * Initialize this stream.
@@ -35,6 +35,6 @@ interface nsIConverterInputStream : nsIUnicharInputStream {
      *        byte sequences are encountered in the stream.
      */
     void init (in nsIInputStream aStream, in string aCharset,
-               in long aBufferSize, in PRUnichar aReplacementChar);
+               in long aBufferSize, in char16_t aReplacementChar);
 };
 

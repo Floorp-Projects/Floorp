@@ -1040,8 +1040,8 @@ txMozillaXSLTProcessor::setStylesheet(txStylesheet* aStylesheet)
 
 void
 txMozillaXSLTProcessor::reportError(nsresult aResult,
-                                    const PRUnichar *aErrorText,
-                                    const PRUnichar *aSourceText)
+                                    const char16_t *aErrorText,
+                                    const char16_t *aSourceText)
 {
     if (!mObserver) {
         return;
@@ -1065,7 +1065,7 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
             sbs->CreateBundle(XSLT_MSGS_URL, getter_AddRefs(bundle));
 
             if (bundle) {
-                const PRUnichar* error[] = { errorText.get() };
+                const char16_t* error[] = { errorText.get() };
                 if (mStylesheet) {
                     bundle->FormatStringFromName(MOZ_UTF16("TransformError"),
                                                  error, 1,

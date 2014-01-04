@@ -90,7 +90,7 @@ const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
 // This isn't defined before Windows XP.
 enum { WM_XP_THEMECHANGED = 0x031A };
 
-PRUnichar gAppMessageWindowName[256] = { 0 };
+char16_t gAppMessageWindowName[256] = { 0 };
 int32_t gAppMessageWindowNameLength = 0;
 
 nsTArray<HWND>* gNeuteredWindows = nullptr;
@@ -300,7 +300,7 @@ ProcessOrDeferMessage(HWND hwnd,
         wchar_t className[256] = { 0 };
         if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
           log.AppendLiteral(" (\"");
-          log.Append(NS_ConvertUTF16toUTF8((PRUnichar*)className));
+          log.Append(NS_ConvertUTF16toUTF8((char16_t*)className));
           log.AppendLiteral("\")");
         }
 
@@ -357,7 +357,7 @@ WindowIsDeferredWindow(HWND hWnd)
     return false;
   }
 
-  PRUnichar buffer[256] = { 0 };
+  char16_t buffer[256] = { 0 };
   int length = GetClassNameW(hWnd, (wchar_t*)buffer, sizeof(buffer) - 1);
   if (length <= 0) {
     NS_WARNING("Failed to get class name!");

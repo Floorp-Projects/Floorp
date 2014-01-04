@@ -196,7 +196,7 @@ nsCString GetGUIDName(const GUID& guid)
   if (FAILED(hr)) {
     return nsDependentCString("GuidUnknown");
   }
-  nsCString name_u8(NS_ConvertUTF16toUTF8(nsDependentString((PRUnichar*)(name))));
+  nsCString name_u8(NS_ConvertUTF16toUTF8(nsDependentString((char16_t*)(name))));
   CoTaskMemFree(name);
   return name_u8;
 }

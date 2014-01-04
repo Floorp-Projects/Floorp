@@ -153,8 +153,8 @@ FileSystemDataSource::Init()
     tmp = mRDFService->GetResource(NS_LITERAL_CSTRING(RDF_NAMESPACE_URI "type"),
                                    getter_AddRefs(mRDF_type));
 
-    static const PRUnichar kTrue[] = {'t','r','u','e','\0'};
-    static const PRUnichar kFalse[] = {'f','a','l','s','e','\0'};
+    static const char16_t kTrue[] = {'t','r','u','e','\0'};
+    static const char16_t kFalse[] = {'f','a','l','s','e','\0'};
 
     tmp = mRDFService->GetLiteral(kTrue, getter_AddRefs(mLiteralTrue));
     if (NS_FAILED(tmp)) {
@@ -332,7 +332,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
             if (isFavorite || !url) rv = NS_RDF_NO_VALUE;
             if (rv == NS_RDF_NO_VALUE)  return(rv);
             
-            const PRUnichar *uni = nullptr;
+            const char16_t *uni = nullptr;
             url->GetValueConst(&uni);
             if (!uni)   return(NS_RDF_NO_VALUE);
             nsAutoString    urlStr;
@@ -854,7 +854,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 
     for (volNum = 0; volNum < 26; volNum++)
     {
-        swprintf( drive, L"%c:\\", volNum + (PRUnichar)'A');
+        swprintf( drive, L"%c:\\", volNum + (char16_t)'A');
 
         driveType = GetDriveTypeW(drive);
         if (driveType != DRIVE_UNKNOWN && driveType != DRIVE_NO_ROOT_DIR)
@@ -939,7 +939,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
                 if (NS_FAILED(rv = GetName(res, getter_AddRefs(nameLiteral))))
                     break;
                 
-                const PRUnichar         *uniName;
+                const char16_t         *uniName;
                 if (NS_FAILED(rv = nameLiteral->GetValueConst(&uniName)))
                     break;
                 nsAutoString            name(uniName);
@@ -1233,7 +1233,7 @@ FileSystemDataSource::GetExtension(nsIRDFResource *source, nsIRDFLiteral **aResu
     if (NS_FAILED(rv))
         return rv;
 
-    const PRUnichar* unicodeLeafName;
+    const char16_t* unicodeLeafName;
     rv = name->GetValueConst(&unicodeLeafName);
     if (NS_FAILED(rv))
         return rv;

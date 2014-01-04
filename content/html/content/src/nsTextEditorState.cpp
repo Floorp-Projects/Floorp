@@ -1841,7 +1841,7 @@ nsTextEditorState::SetValue(const nsAString& aValue, bool aUserInput,
       // Unfortunately aValue is declared const, so we have to copy
       // in order to do this substitution.
       nsString newValue(aValue);
-      if (aValue.FindChar(PRUnichar('\r')) != -1) {
+      if (aValue.FindChar(char16_t('\r')) != -1) {
         nsContentUtils::PlatformToDOMLineBreaks(newValue);
       }
 

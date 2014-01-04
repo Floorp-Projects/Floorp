@@ -25,9 +25,9 @@ GetValueFromString(const nsAString& aString,
                    bool aPercentagesAllowed,
                    float& aValue)
 {
-  RangedPtr<const PRUnichar> iter =
+  RangedPtr<const char16_t> iter =
     SVGContentUtils::GetStartRangedPtr(aString);
-  const RangedPtr<const PRUnichar> end =
+  const RangedPtr<const char16_t> end =
     SVGContentUtils::GetEndRangedPtr(aString);
 
   if (!SVGContentUtils::ParseNumber(iter, end, aValue)) {

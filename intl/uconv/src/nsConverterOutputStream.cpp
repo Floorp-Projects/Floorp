@@ -24,7 +24,7 @@ NS_IMETHODIMP
 nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
                               const char*      aCharset,
                               uint32_t         aBufferSize /* ignored */,
-                              PRUnichar        aReplacementChar)
+                              char16_t        aReplacementChar)
 {
     NS_PRECONDITION(aOutStream, "Null output stream!");
 
@@ -51,7 +51,7 @@ nsConverterOutputStream::Init(nsIOutputStream* aOutStream,
 }
 
 NS_IMETHODIMP
-nsConverterOutputStream::Write(uint32_t aCount, const PRUnichar* aChars,
+nsConverterOutputStream::Write(uint32_t aCount, const char16_t* aChars,
                                bool* aSuccess)
 {
     if (!mOutStream) {
