@@ -9,7 +9,6 @@
 // Keep others in (case-insensitive) order:
 #include "gfxContext.h"
 #include "nsSVGElement.h"
-#include "nsSVGGeometryFrame.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGPaintServerFrame)
 

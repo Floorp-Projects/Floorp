@@ -63,7 +63,7 @@ public:
   virtual void ReflowSVG();
 
   // nsSVGPathGeometryFrame methods:
-  virtual uint16_t GetHitTestFlags();
+  virtual uint16_t GetHitTestFlags() MOZ_OVERRIDE;
 
   // nsIFrame interface:
   NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,

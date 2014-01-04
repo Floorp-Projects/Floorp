@@ -19,7 +19,7 @@
 #include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsSVGEffects.h"
-#include "nsSVGGeometryFrame.h"
+#include "nsSVGPathGeometryFrame.h"
 #include "mozilla/dom/SVGPatternElement.h"
 #include "nsSVGUtils.h"
 #include "nsSVGAnimatedTransformList.h"
@@ -389,7 +389,7 @@ nsSVGPatternFrame::PaintPattern(gfxASurface** surface,
 
   if (aSource->IsFrameOfType(nsIFrame::eSVGGeometry)) {
     // Set the geometrical parent of the pattern we are rendering
-    patternFrame->mSource = static_cast<nsSVGGeometryFrame*>(aSource);
+    patternFrame->mSource = static_cast<nsSVGPathGeometryFrame*>(aSource);
   }
 
   // Delay checking NS_FRAME_DRAWING_AS_PAINTSERVER bit until here so we can

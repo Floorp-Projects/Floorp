@@ -38,7 +38,6 @@
 #include "nsSVGFilterFrame.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "nsSVGGeometryFrame.h"
 #include "gfxSVGGlyphs.h"
 #include "nsSVGInnerSVGFrame.h"
 #include "nsSVGIntegrationUtils.h"
@@ -386,7 +385,7 @@ nsSVGUtils::GetCanvasTM(nsIFrame *aFrame, uint32_t aFor,
     return containerFrame->GetCanvasTM(aFor, aTransformRoot);
   }
 
-  return static_cast<nsSVGGeometryFrame*>(aFrame)->
+  return static_cast<nsSVGPathGeometryFrame*>(aFrame)->
       GetCanvasTM(aFor, aTransformRoot);
 }
 
