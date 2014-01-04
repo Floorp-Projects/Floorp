@@ -6989,6 +6989,9 @@ class MGetElementCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
+
+    bool allowDoubleResult() const;
+
     TypePolicy *typePolicy() {
         if (type() == MIRType_Value)
             return &PolicyV;

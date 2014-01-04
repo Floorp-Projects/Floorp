@@ -2691,6 +2691,15 @@ MStoreTypedArrayElementStatic::base() const
     return typedArray_->viewData();
 }
 
+bool
+MGetElementCache::allowDoubleResult() const
+{
+    if (!resultTypeSet())
+        return true;
+
+    return resultTypeSet()->hasType(types::Type::DoubleType());
+}
+
 size_t
 MStoreTypedArrayElementStatic::length() const
 {
