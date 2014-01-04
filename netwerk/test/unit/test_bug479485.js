@@ -32,7 +32,7 @@ function run_test() {
   test_port(":invalid", true);
   test_port(":-2", true);
   test_port(":-1", true);
-  test_port(":0", true);
+  test_port(":0", false);
   test_port(":185891548721348172817857824356013651809236172635716571865023757816234081723451516780356", true);
   
   // Following 3 tests are all failing, we do not throw, although we parse the whole string and use only 5870 as a portnumber
