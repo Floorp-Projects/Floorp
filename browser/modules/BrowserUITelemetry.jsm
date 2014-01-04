@@ -361,6 +361,10 @@ this.BrowserUITelemetry = {
     let document = aWindow.document;
     let result = {};
 
+    // Determine if the window is in the maximized, normal or
+    // fullscreen state.
+    result.sizemode = document.documentElement.getAttribute("sizemode");
+
     // Determine if the Bookmarks bar is currently visible
     let bookmarksBar = document.getElementById("PersonalToolbar");
     result.bookmarksBarEnabled = bookmarksBar && !bookmarksBar.collapsed;
