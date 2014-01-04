@@ -18,16 +18,11 @@
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
-#include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
-
-using mozilla::ipc::InputStreamParams;
-using mozilla::ipc::StringInputStreamParams;
 
 #if defined(PR_LOGGING)
 //
@@ -318,7 +313,6 @@ nsStorageStream::Seek(int32_t aPosition)
 // There can be many nsStorageInputStreams for a single nsStorageStream
 class nsStorageInputStream MOZ_FINAL : public nsIInputStream
                                      , public nsISeekableStream
-                                     , public nsIIPCSerializableInputStream
 {
 public:
     nsStorageInputStream(nsStorageStream *aStorageStream, uint32_t aSegmentSize)
@@ -333,7 +327,6 @@ public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSISEEKABLESTREAM
-    NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
 private:
     ~nsStorageInputStream()
@@ -359,10 +352,9 @@ private:
     uint32_t SegOffset(uint32_t aPosition) {return aPosition & (mSegmentSize - 1);}
 };
 
-NS_IMPL_ISUPPORTS3(nsStorageInputStream,
+NS_IMPL_ISUPPORTS2(nsStorageInputStream,
                    nsIInputStream,
-                   nsISeekableStream,
-                   nsIIPCSerializableInputStream)
+                   nsISeekableStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(int32_t aStartingOffset, nsIInputStream* *aInputStream)
@@ -529,29 +521,6 @@ nsStorageInputStream::Seek(uint32_t aPosition)
     mSegmentEnd = mReadCursor + XPCOM_MIN(mSegmentSize - mReadCursor, available);
     mLogicalCursor = aPosition;
     return NS_OK;
-}
-
-void
-nsStorageInputStream::Serialize(InputStreamParams& aParams)
-{
-    nsCString combined;
-    int32_t capacity = mStorageStream->mLastSegmentNum;
-    uint32_t offset = mReadCursor;
-    for (int32_t i = mSegmentNum; i <= capacity; i++) {
-        combined.Append(mStorageStream->mSegmentedBuffer->GetSegment(i) + offset);
-        offset = 0;
-    }
-
-    StringInputStreamParams params;
-    params.data() = combined;
-    aParams = params;
-}
-
-bool
-nsStorageInputStream::Deserialize(const InputStreamParams& aParams)
-{
-    NS_NOTREACHED("We should never attempt to deserialize a storage input stream.");
-    return false;
 }
 
 nsresult
