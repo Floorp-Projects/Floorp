@@ -508,17 +508,17 @@ private:
 };
 
 /**
- * hashkey wrapper for const PRUnichar*; at construction, this class duplicates
+ * hashkey wrapper for const char16_t*; at construction, this class duplicates
  * a string pointed to by the pointer so that it doesn't matter whether or not
  * the string lives longer than the hash table.
  */
 class nsUnicharPtrHashKey : public PLDHashEntryHdr
 {
 public:
-  typedef const PRUnichar* KeyType;
-  typedef const PRUnichar* KeyTypePointer;
+  typedef const char16_t* KeyType;
+  typedef const char16_t* KeyTypePointer;
 
-  nsUnicharPtrHashKey(const PRUnichar* aKey) : mKey(NS_strdup(aKey)) { }
+  nsUnicharPtrHashKey(const char16_t* aKey) : mKey(NS_strdup(aKey)) { }
   nsUnicharPtrHashKey(const nsUnicharPtrHashKey& toCopy) : mKey(NS_strdup(toCopy.mKey)) { }
 
   nsUnicharPtrHashKey(nsUnicharPtrHashKey&& other)
@@ -527,9 +527,9 @@ public:
     other.mKey = nullptr;
   }
 
-  ~nsUnicharPtrHashKey() { if (mKey) NS_Free(const_cast<PRUnichar *>(mKey)); }
+  ~nsUnicharPtrHashKey() { if (mKey) NS_Free(const_cast<char16_t *>(mKey)); }
 
-  const PRUnichar* GetKey() const { return mKey; }
+  const char16_t* GetKey() const { return mKey; }
   bool KeyEquals(KeyTypePointer aKey) const
   {
     return !NS_strcmp(mKey, aKey);
@@ -541,7 +541,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
 private:
-  const PRUnichar* mKey;
+  const char16_t* mKey;
 };
 
 /**

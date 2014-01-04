@@ -52,7 +52,7 @@ private:
     
     static bool getPrevInDocumentOrder(txXPathTreeWalker& aWalker);
 
-    static bool isAlphaNumeric(PRUnichar ch);
+    static bool isAlphaNumeric(char16_t ch);
 };
 
 class txFormattedCounter {

@@ -362,11 +362,11 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
   if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedFor", info))) {
     details.Append(info);
-    details.Append(PRUnichar(' '));
+    details.Append(char16_t(' '));
     if (NS_SUCCEEDED(GetSubjectName(temp1)) && !temp1.IsEmpty()) {
       details.Append(temp1);
     }
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   if (NS_SUCCEEDED(GetSerialNumber(temp1)) && !temp1.IsEmpty()) {
@@ -379,9 +379,9 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
     nickWithSerial.AppendLiteral(" [");
     nickWithSerial.Append(temp1);
-    nickWithSerial.Append(PRUnichar(']'));
+    nickWithSerial.Append(char16_t(']'));
 
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   nsCOMPtr<nsIX509CertValidity> validity;
@@ -393,24 +393,24 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(temp1)) && !temp1.IsEmpty()) {
-      details.Append(PRUnichar(' '));
+      details.Append(char16_t(' '));
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoFrom", info))) {
         details.Append(info);
-        details.Append(PRUnichar(' '));
+        details.Append(char16_t(' '));
       }
       details.Append(temp1);
     }
 
     if (NS_SUCCEEDED(validity->GetNotAfterLocalTime(temp1)) && !temp1.IsEmpty()) {
-      details.Append(PRUnichar(' '));
+      details.Append(char16_t(' '));
       if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoTo", info))) {
         details.Append(info);
-        details.Append(PRUnichar(' '));
+        details.Append(char16_t(' '));
       }
       details.Append(temp1);
     }
 
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   if (NS_SUCCEEDED(GetKeyUsagesString(mCert, nssComponent, temp1)) && !temp1.IsEmpty()) {
@@ -420,7 +420,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.AppendLiteral(": ");
     }
     details.Append(temp1);
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   nsAutoString firstEmail;
@@ -462,23 +462,23 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
 
   if (!firstEmail.IsEmpty()) {
     // We got at least one email address, so we want a newline
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
     details.Append(info);
-    details.Append(PRUnichar(' '));
+    details.Append(char16_t(' '));
 
     if (NS_SUCCEEDED(GetIssuerName(temp1)) && !temp1.IsEmpty()) {
       details.Append(temp1);
     }
 
-    details.Append(PRUnichar('\n'));
+    details.Append(char16_t('\n'));
   }
 
   if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoStoredIn", info))) {
     details.Append(info);
-    details.Append(PRUnichar(' '));
+    details.Append(char16_t(' '));
 
     if (NS_SUCCEEDED(GetTokenName(temp1)) && !temp1.IsEmpty()) {
       details.Append(temp1);
@@ -607,7 +607,7 @@ nsNSSCertificate::GetEmailAddress(nsAString &aEmailAddress)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetEmailAddresses(uint32_t *aLength, PRUnichar*** aAddresses)
+nsNSSCertificate::GetEmailAddresses(uint32_t *aLength, char16_t*** aAddresses)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -628,7 +628,7 @@ nsNSSCertificate::GetEmailAddresses(uint32_t *aLength, PRUnichar*** aAddresses)
     ++(*aLength);
   }
 
-  *aAddresses = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * (*aLength));
+  *aAddresses = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * (*aLength));
   if (!*aAddresses)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -912,7 +912,7 @@ done:
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, PRUnichar*** aTokenNames)
+nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, char16_t*** aTokenNames)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -941,7 +941,7 @@ nsNSSCertificate::GetAllTokenNames(uint32_t *aLength, PRUnichar*** aTokenNames)
     ++(*aLength);
   }
 
-  *aTokenNames = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * (*aLength));
+  *aTokenNames = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * (*aLength));
   if (!*aTokenNames) {
     *aLength = 0;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1272,7 +1272,7 @@ NS_IMETHODIMP
 nsNSSCertificate::GetUsagesArray(bool localOnly,
                                  uint32_t *_verified,
                                  uint32_t *_count,
-                                 PRUnichar ***_usages)
+                                 char16_t ***_usages)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
@@ -1280,14 +1280,14 @@ nsNSSCertificate::GetUsagesArray(bool localOnly,
 
   nsresult rv;
   const int max_usages = 13;
-  PRUnichar *tmpUsages[max_usages];
+  char16_t *tmpUsages[max_usages];
   const char *suffix = "";
   uint32_t tmpCount;
   nsUsageArrayHelper uah(mCert);
   rv = uah.GetUsagesArray(suffix, localOnly, max_usages, _verified, &tmpCount, tmpUsages);
   NS_ENSURE_SUCCESS(rv,rv);
   if (tmpCount > 0) {
-    *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * tmpCount);
+    *_usages = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * tmpCount);
     if (!*_usages)
       return NS_ERROR_OUT_OF_MEMORY;
     for (uint32_t i=0; i<tmpCount; i++) {
@@ -1296,7 +1296,7 @@ nsNSSCertificate::GetUsagesArray(bool localOnly,
     *_count = tmpCount;
     return NS_OK;
   }
-  *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *));
+  *_usages = (char16_t **)nsMemory::Alloc(sizeof(char16_t *));
   if (!*_usages)
     return NS_ERROR_OUT_OF_MEMORY;
   *_count = 0;
@@ -1334,7 +1334,7 @@ nsNSSCertificate::GetUsagesString(bool localOnly,
 
   nsresult rv;
   const int max_usages = 13;
-  PRUnichar *tmpUsages[max_usages];
+  char16_t *tmpUsages[max_usages];
   const char *suffix = "_p";
   uint32_t tmpCount;
   nsUsageArrayHelper uah(mCert);

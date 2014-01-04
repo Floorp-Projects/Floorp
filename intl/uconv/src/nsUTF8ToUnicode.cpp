@@ -12,7 +12,7 @@
 
 #define UNICODE_BYTE_ORDER_MARK    0xFEFF
 
-static PRUnichar* EmitSurrogatePair(uint32_t ucs4, PRUnichar* aDest)
+static char16_t* EmitSurrogatePair(uint32_t ucs4, char16_t* aDest)
 {
   NS_ASSERTION(ucs4 > 0xFFFF, "Should be a supplementary character");
   ucs4 -= 0x00010000;
@@ -90,7 +90,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Reset()
 // reading/writing a word at a time for as long as we can
 static inline void
 Convert_ascii_run (const char *&src,
-                   PRUnichar *&dst,
+                   char16_t *&dst,
                    int32_t len)
 {
   const uint32_t *src32;
@@ -107,7 +107,7 @@ Convert_ascii_run (const char *&src,
     {
       if (*src & 0x80U)
         return;
-      *dst++ = (PRUnichar) *src++;
+      *dst++ = (char16_t) *src++;
       len--;
     }
   } else {
@@ -133,11 +133,11 @@ Convert_ascii_run (const char *&src,
   }
 
   src = (const char *) src32;
-  dst = (PRUnichar *) dst32;
+  dst = (char16_t *) dst32;
 
 finish:
   while (len-- > 0 && (*src & 0x80U) == 0) {
-    *dst++ = (PRUnichar) *src++;
+    *dst++ = (char16_t) *src++;
   }
 }
 
@@ -147,7 +147,7 @@ finish:
 namespace mozilla {
 namespace SSE2 {
 
-void Convert_ascii_run(const char *&src, PRUnichar *&dst, int32_t len);
+void Convert_ascii_run(const char *&src, char16_t *&dst, int32_t len);
 
 }
 }
@@ -155,7 +155,7 @@ void Convert_ascii_run(const char *&src, PRUnichar *&dst, int32_t len);
 
 static inline void
 Convert_ascii_run (const char *&src,
-                   PRUnichar *&dst,
+                   char16_t *&dst,
                    int32_t len)
 {
 #ifdef MOZILLA_MAY_SUPPORT_SSE2
@@ -166,7 +166,7 @@ Convert_ascii_run (const char *&src,
 #endif
 
   while (len-- > 0 && (*src & 0x80U) == 0) {
-    *dst++ = (PRUnichar) *src++;
+    *dst++ = (char16_t) *src++;
   }
 }
 
@@ -174,7 +174,7 @@ Convert_ascii_run (const char *&src,
 
 NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
                                        int32_t * aSrcLength,
-                                       PRUnichar * aDest,
+                                       char16_t * aDest,
                                        int32_t * aDestLength)
 {
   uint32_t aSrcLen   = (uint32_t) (*aSrcLength);
@@ -183,7 +183,7 @@ NS_IMETHODIMP nsUTF8ToUnicode::Convert(const char * aSrc,
   const char *in, *inend;
   inend = aSrc + aSrcLen;
 
-  PRUnichar *out, *outend;
+  char16_t *out, *outend;
   outend = aDest + aDestLen;
 
   nsresult res = NS_OK; // conversion result

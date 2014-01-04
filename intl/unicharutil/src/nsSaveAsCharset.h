@@ -40,13 +40,13 @@ public:
 	//
   NS_IMETHOD Init(const char *charset, uint32_t attr, uint32_t entityVersion);
 
-  NS_IMETHOD Convert(const PRUnichar *inString, char **_retval);
+  NS_IMETHOD Convert(const char16_t *inString, char **_retval);
 
   NS_IMETHODIMP GetCharset(char * *aCharset);
 
 protected:
 
-  NS_IMETHOD DoCharsetConversion(const PRUnichar *inString, char **outString);
+  NS_IMETHOD DoCharsetConversion(const char16_t *inString, char **outString);
 
   NS_IMETHOD DoConversionFallBack(uint32_t inUCS4, char *outString, int32_t bufferLength);
 

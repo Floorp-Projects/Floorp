@@ -152,7 +152,7 @@ nsDragService::GetInstance()
 
 NS_IMETHODIMP
 nsDragService::Observe(nsISupports *aSubject, const char *aTopic,
-                       const PRUnichar *aData)
+                       const char16_t *aData)
 {
   if (!nsCRT::strcmp(aTopic, "quit-application")) {
     PR_LOG(sDragLm, PR_LOG_DEBUG,
@@ -526,7 +526,7 @@ static void
 GetTextUriListItem(const char *data,
                    uint32_t datalen,
                    uint32_t aItemIndex,
-                   PRUnichar **convertedText,
+                   char16_t **convertedText,
                    int32_t *convertedTextLen)
 {
     const char *p = data;
@@ -716,7 +716,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                     }
                     if (mTargetDragData) {
                         const char* text = static_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nullptr;
+                        char16_t* convertedText = nullptr;
                         int32_t convertedTextLen = 0;
 
                         GetTextUriListItem(text, mTargetDragDataLen, aItemIndex,
@@ -764,7 +764,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                         PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
                         const char* castedText =
                                     reinterpret_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nullptr;
+                        char16_t* convertedText = nullptr;
                         NS_ConvertUTF8toUTF16 ucs2string(castedText,
                                                          mTargetDragDataLen);
                         convertedText = ToNewUnicode(ucs2string);
@@ -788,7 +788,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                             PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got textplain data\n"));
                             const char* castedText =
                                         reinterpret_cast<char*>(mTargetDragData);
-                            PRUnichar* convertedText = nullptr;
+                            char16_t* convertedText = nullptr;
                             int32_t convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(
                                                 castedText, mTargetDragDataLen,
@@ -821,7 +821,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                ("Got text/uri-list data\n"));
                         const char *data =
                                    reinterpret_cast<char*>(mTargetDragData);
-                        PRUnichar* convertedText = nullptr;
+                        char16_t* convertedText = nullptr;
                         int32_t convertedTextLen = 0;
 
                         GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
@@ -853,7 +853,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                    ("Got _NETSCAPE_URL data\n"));
                             const char* castedText =
                                   reinterpret_cast<char*>(mTargetDragData);
-                            PRUnichar* convertedText = nullptr;
+                            char16_t* convertedText = nullptr;
                             int32_t convertedTextLen = 0;
                             nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText, mTargetDragDataLen, &convertedText, &convertedTextLen);
                             if ( convertedText ) {
@@ -1407,7 +1407,7 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
                                                             &tmpData,
                                                             tmpDataLen);
                 char* plainTextData = nullptr;
-                PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
+                char16_t* castedUnicode = reinterpret_cast<char16_t*>
                                                            (tmpData);
                 int32_t plainTextLen = 0;
                 nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText(
@@ -1513,7 +1513,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             // text and replace the output values with the plain text.
             if (needToDoConversionToPlainText) {
                 char* plainTextData = nullptr;
-                PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>
+                char16_t* castedUnicode = reinterpret_cast<char16_t*>
                                                            (tmpData);
                 int32_t plainTextLen = 0;
                 if (strcmp(mimeFlavor, gTextPlainUTF8Type) == 0) {

@@ -183,9 +183,9 @@ NS_IMPL_ISUPPORTS1(nsAuthSSPI, nsIAuthModule)
 NS_IMETHODIMP
 nsAuthSSPI::Init(const char *serviceName,
                  uint32_t    serviceFlags,
-                 const PRUnichar *domain,
-                 const PRUnichar *username,
-                 const PRUnichar *password)
+                 const char16_t *domain,
+                 const char16_t *username,
+                 const char16_t *password)
 {
     LOG(("  nsAuthSSPI::Init\n"));
 

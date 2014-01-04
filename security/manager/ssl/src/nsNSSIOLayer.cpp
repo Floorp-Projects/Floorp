@@ -1359,7 +1359,7 @@ NS_IMPL_ISUPPORTS1(PrefObserver, nsIObserver)
 
 NS_IMETHODIMP
 PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, 
-                      const PRUnichar *someData)
+                      const char16_t *someData)
 {
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     NS_ConvertUTF16toUTF8 prefName(someData);
@@ -2329,8 +2329,8 @@ if (!hasRemembered)
     /* user selects a cert to present */
     nsIClientAuthDialogs *dialogs = nullptr;
     int32_t selectedIndex = -1;
-    PRUnichar **certNicknameList = nullptr;
-    PRUnichar **certDetailsList = nullptr;
+    char16_t **certNicknameList = nullptr;
+    char16_t **certDetailsList = nullptr;
 
     /* find all user certs that are for SSL */
     /* note that we are allowing expired certs in this list */
@@ -2418,10 +2418,10 @@ if (!hasRemembered)
     NS_ConvertUTF8toUTF16 issuer(cissuer);
     if (cissuer) PORT_Free(cissuer);
 
-    certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+    certNicknameList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
     if (!certNicknameList)
       goto loser;
-    certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+    certDetailsList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
     if (!certDetailsList) {
       nsMemory::Free(certNicknameList);
       goto loser;
@@ -2475,8 +2475,8 @@ if (!hasRemembered)
       else {
         rv = dialogs->ChooseCertificate(mSocketInfo, cn_host_port.get(),
                                         org.get(), issuer.get(), 
-                                        (const PRUnichar**)certNicknameList,
-                                        (const PRUnichar**)certDetailsList,
+                                        (const char16_t**)certNicknameList,
+                                        (const char16_t**)certDetailsList,
                                         CertsToUse, &selectedIndex, &canceled);
       }
     }

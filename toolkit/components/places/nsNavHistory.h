@@ -190,8 +190,8 @@ public:
   nsIStringBundle* GetBundle();
   nsIStringBundle* GetDateFormatBundle();
   nsICollation* GetCollation();
-  void GetStringFromName(const PRUnichar* aName, nsACString& aResult);
-  void GetAgeInDaysString(int32_t aInt, const PRUnichar *aName,
+  void GetStringFromName(const char16_t* aName, nsACString& aResult);
+  void GetAgeInDaysString(int32_t aInt, const char16_t *aName,
                           nsACString& aResult);
   void GetMonthName(int32_t aIndex, nsACString& aResult);
   void GetMonthYear(int32_t aMonth, int32_t aYear, nsACString& aResult);

@@ -22,7 +22,7 @@ NS_IMPL_ISUPPORTS2(
 nsresult
 nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
                             const char* aTopic,
-                            const PRUnichar* aData)
+                            const char16_t* aData)
 {
   if (!strcmp(aTopic, "profile-before-change")) {
     mUserContentSheet = nullptr;

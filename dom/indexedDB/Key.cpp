@@ -268,9 +268,9 @@ Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
   // chars below.
   uint32_t size = aString.Length() + 2;
   
-  const PRUnichar* start = aString.BeginReading();
-  const PRUnichar* end = aString.EndReading();
-  for (const PRUnichar* iter = start; iter < end; ++iter) {
+  const char16_t* start = aString.BeginReading();
+  const char16_t* end = aString.EndReading();
+  for (const char16_t* iter = start; iter < end; ++iter) {
     if (*iter > ONE_BYTE_LIMIT) {
       size += *iter > TWO_BYTE_LIMIT ? 2 : 1;
     }
@@ -288,12 +288,12 @@ Key::EncodeString(const nsAString& aString, uint8_t aTypeOffset)
   *(buffer++) = eString + aTypeOffset;
 
   // Encode string
-  for (const PRUnichar* iter = start; iter < end; ++iter) {
+  for (const char16_t* iter = start; iter < end; ++iter) {
     if (*iter <= ONE_BYTE_LIMIT) {
       *(buffer++) = *iter + ONE_BYTE_ADJUST;
     }
     else if (*iter <= TWO_BYTE_LIMIT) {
-      PRUnichar c = PRUnichar(*iter) + TWO_BYTE_ADJUST + 0x8000;
+      char16_t c = char16_t(*iter) + TWO_BYTE_ADJUST + 0x8000;
       *(buffer++) = (char)(c >> 8);
       *(buffer++) = (char)(c & 0xFF);
     }
@@ -336,7 +336,7 @@ Key::DecodeString(const unsigned char*& aPos, const unsigned char* aEnd,
     aEnd = iter;
   }
 
-  PRUnichar* out;
+  char16_t* out;
   if (size && !aString.GetMutableData(&out, size)) {
     return;
   }
@@ -346,7 +346,7 @@ Key::DecodeString(const unsigned char*& aPos, const unsigned char* aEnd,
       *out = *(iter++) - ONE_BYTE_ADJUST;
     }
     else if (!(*iter & 0x40)) {
-      PRUnichar c = (PRUnichar(*(iter++)) << 8);
+      char16_t c = (char16_t(*(iter++)) << 8);
       if (iter < aEnd) {
         c |= *(iter++);
       }
@@ -360,7 +360,7 @@ Key::DecodeString(const unsigned char*& aPos, const unsigned char* aEnd,
       if (iter < aEnd) {
         c |= *(iter++) >> THREE_BYTE_SHIFT;
       }
-      *out = (PRUnichar)c;
+      *out = (char16_t)c;
     }
     
     ++out;

@@ -54,7 +54,7 @@ SVGTransformListParser::ParseTransforms()
 bool
 SVGTransformListParser::ParseTransform()
 {
-  RangedPtr<const PRUnichar> start(mIter);
+  RangedPtr<const char16_t> start(mIter);
   while (IsAlpha(*mIter)) {
     ++mIter;
     if (mIter == mEnd) {

@@ -912,7 +912,7 @@ MangleTextToValidFilename(nsString & aText)
     nameLen = (uint32_t) strlen(forbiddenNames[n]);
     if (aText.EqualsIgnoreCase(forbiddenNames[n], nameLen)) {
       // invalid name is either the entire string, or a prefix with a period
-      if (aText.Length() == nameLen || aText.CharAt(nameLen) == PRUnichar('.')) {
+      if (aText.Length() == nameLen || aText.CharAt(nameLen) == char16_t('.')) {
         aText.Truncate();
         break;
       }
@@ -984,7 +984,7 @@ CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension,
 #define PAGEINFO_PROPERTIES "chrome://navigator/locale/pageInfo.properties"
 
 static bool
-GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
+GetLocalizedString(const char16_t * aName, nsXPIDLString & aString)
 {
   nsCOMPtr<nsIStringBundleService> stringService =
     mozilla::services::GetStringBundleService();
@@ -1262,14 +1262,14 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   //
   // The transferable gives us data that is null-terminated, but this isn't reflected in
   // the |len| parameter. Windoze apps expect this null to be there so bump our data buffer
-  // by the appropriate size to account for the null (one char for CF_TEXT, one PRUnichar for
+  // by the appropriate size to account for the null (one char for CF_TEXT, one char16_t for
   // CF_UNICODETEXT).
   DWORD allocLen = (DWORD)len;
   if ( aFE.cfFormat == CF_TEXT ) {
     // Someone is asking for text/plain; convert the unicode (assuming it's present)
     // to text with the correct platform encoding.
     char* plainTextData = nullptr;
-    PRUnichar* castedUnicode = reinterpret_cast<PRUnichar*>(data);
+    char16_t* castedUnicode = reinterpret_cast<char16_t*>(data);
     int32_t plainTextLen = 0;
     nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, len / 2, &plainTextData, &plainTextLen );
    
@@ -1288,7 +1288,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   else if ( aFE.cfFormat == nsClipboard::CF_HTML ) {
     // Someone is asking for win32's HTML flavor. Convert our html fragment
     // from unicode to UTF-8 then put it into a format specified by msft.
-    NS_ConvertUTF16toUTF8 converter ( reinterpret_cast<PRUnichar*>(data) );
+    NS_ConvertUTF16toUTF8 converter ( reinterpret_cast<char16_t*>(data) );
     char* utf8HTML = nullptr;
     nsresult rv = BuildPlatformHTML ( converter.get(), &utf8HTML );      // null terminates
     
@@ -1306,7 +1306,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   else {
     // we assume that any data that isn't caught above is unicode. This may
     // be an erroneous assumption, but is true so far.
-    allocLen += sizeof(PRUnichar);
+    allocLen += sizeof(char16_t);
   }
 
   hGlobalMemory = (HGLOBAL)GlobalAlloc(GMEM_MOVEABLE, allocLen);
@@ -1376,10 +1376,10 @@ HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG)
 
   uint32_t allocLen = path.Length() + 2;
   HGLOBAL hGlobalMemory = nullptr;
-  PRUnichar *dest;
+  char16_t *dest;
 
   hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) +
-                                             allocLen * sizeof(PRUnichar));
+                                             allocLen * sizeof(char16_t));
   if (!hGlobalMemory)
     return E_FAIL;
 
@@ -1393,8 +1393,8 @@ HRESULT nsDataObj::DropFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   pDropFile->fWide  = TRUE;
 
   // Copy the filename right after the DROPFILES structure
-  dest = (PRUnichar*)(((char*)pDropFile) + pDropFile->pFiles);
-  memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar));
+  dest = (char16_t*)(((char*)pDropFile) + pDropFile->pFiles);
+  memcpy(dest, path.get(), (allocLen - 1) * sizeof(char16_t));
 
   // Two null characters are needed at the end of the file name.
   // Lookup the CF_HDROP shell clipboard format for more info.
@@ -1519,7 +1519,7 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = nullptr;
 
-  hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(PRUnichar));
+  hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(char16_t));
   if (!hGlobalMemory)
     return E_FAIL;
 
@@ -1533,8 +1533,8 @@ HRESULT nsDataObj::DropImage(FORMATETC& aFE, STGMEDIUM& aSTG)
   pDropFile->fWide  = TRUE;
 
   // Copy the filename right after the DROPFILES structure.
-  PRUnichar* dest = (PRUnichar*)(((char*)pDropFile) + pDropFile->pFiles);
-  memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar)); // Copies the null character in path as well.
+  char16_t* dest = (char16_t*)(((char*)pDropFile) + pDropFile->pFiles);
+  memcpy(dest, path.get(), (allocLen - 1) * sizeof(char16_t)); // Copies the null character in path as well.
 
   // Two null characters are needed at the end of the file name.  
   // Lookup the CF_HDROP shell clipboard format for more info.
@@ -1620,7 +1620,7 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = nullptr;
 
-  hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(PRUnichar));
+  hGlobalMemory = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen * sizeof(char16_t));
   if (!hGlobalMemory)
     return E_FAIL;
 
@@ -1634,8 +1634,8 @@ HRESULT nsDataObj::DropTempFile(FORMATETC& aFE, STGMEDIUM& aSTG)
   pDropFile->fWide  = TRUE;
 
   // Copy the filename right after the DROPFILES structure.
-  PRUnichar* dest = (PRUnichar*)(((char*)pDropFile) + pDropFile->pFiles);
-  memcpy(dest, path.get(), (allocLen - 1) * sizeof(PRUnichar)); // Copies the null character in path as well.
+  char16_t* dest = (char16_t*)(((char*)pDropFile) + pDropFile->pFiles);
+  memcpy(dest, path.get(), (allocLen - 1) * sizeof(char16_t)); // Copies the null character in path as well.
 
   // Two null characters are needed at the end of the file name.  
   // Lookup the CF_HDROP shell clipboard format for more info.
@@ -1964,7 +1964,7 @@ nsDataObj::ExtractUniformResourceLocatorW(FORMATETC& aFE, STGMEDIUM& aSTG )
   if (NS_FAILED(ExtractShortcutURL(url)))
     return E_OUTOFMEMORY;
 
-  const int totalLen = (url.Length() + 1) * sizeof(PRUnichar);
+  const int totalLen = (url.Length() + 1) * sizeof(char16_t);
   HGLOBAL hGlobalMemory = GlobalAlloc(GMEM_ZEROINIT|GMEM_SHARE, totalLen);
   if (!hGlobalMemory)
     return E_OUTOFMEMORY;

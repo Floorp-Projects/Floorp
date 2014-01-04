@@ -1007,7 +1007,7 @@ static bool test_parse_string()
          test_parse_string_helper1("  foo", ' ', "foo");
 }
 
-static bool test_strip_chars_helper(const PRUnichar* str, const PRUnichar* strip, const nsAString& result, uint32_t offset=0)
+static bool test_strip_chars_helper(const char16_t* str, const char16_t* strip, const nsAString& result, uint32_t offset=0)
 {
   nsAutoString tmp(str);
   nsAString& data = tmp;

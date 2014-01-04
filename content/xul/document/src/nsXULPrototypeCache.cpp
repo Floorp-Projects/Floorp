@@ -111,7 +111,7 @@ nsXULPrototypeCache::GetInstance()
 NS_IMETHODIMP
 nsXULPrototypeCache::Observe(nsISupports* aSubject,
                              const char *aTopic,
-                             const PRUnichar *aData)
+                             const char16_t *aData)
 {
     if (!strcmp(aTopic, "chrome-flush-skin-caches")) {
         FlushSkinFiles();

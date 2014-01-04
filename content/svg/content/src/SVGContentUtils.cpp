@@ -139,7 +139,7 @@ SVGContentUtils::GetFontXHeight(nsStyleContext *aStyleContext)
 nsresult
 SVGContentUtils::ReportToConsole(nsIDocument* doc,
                                  const char* aWarning,
-                                 const PRUnichar **aParams,
+                                 const char16_t **aParams,
                                  uint32_t aParamsLength)
 {
   return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -370,8 +370,8 @@ SVGContentUtils::GetViewBoxTransform(float aViewportWidth, float aViewportHeight
 }
 
 static bool
-ParseNumber(RangedPtr<const PRUnichar>& aIter,
-            const RangedPtr<const PRUnichar>& aEnd,
+ParseNumber(RangedPtr<const char16_t>& aIter,
+            const RangedPtr<const char16_t>& aEnd,
             double& aValue)
 {
   int32_t sign;
@@ -425,7 +425,7 @@ ParseNumber(RangedPtr<const PRUnichar>& aIter,
 
   if (aIter != aEnd && (*aIter == 'e' || *aIter == 'E')) {
 
-    RangedPtr<const PRUnichar> expIter(aIter);
+    RangedPtr<const char16_t> expIter(aIter);
 
     ++expIter;
     if (expIter != aEnd) {
@@ -459,11 +459,11 @@ ParseNumber(RangedPtr<const PRUnichar>& aIter,
 
 template<class floatType>
 bool
-SVGContentUtils::ParseNumber(RangedPtr<const PRUnichar>& aIter,
-                             const RangedPtr<const PRUnichar>& aEnd,
+SVGContentUtils::ParseNumber(RangedPtr<const char16_t>& aIter,
+                             const RangedPtr<const char16_t>& aEnd,
                              floatType& aValue)
 {
-  RangedPtr<const PRUnichar> iter(aIter);
+  RangedPtr<const char16_t> iter(aIter);
 
   double value;
   if (!::ParseNumber(iter, aEnd, value)) {
@@ -479,25 +479,25 @@ SVGContentUtils::ParseNumber(RangedPtr<const PRUnichar>& aIter,
 }
 
 template bool
-SVGContentUtils::ParseNumber<float>(RangedPtr<const PRUnichar>& aIter,
-                                    const RangedPtr<const PRUnichar>& aEnd,
+SVGContentUtils::ParseNumber<float>(RangedPtr<const char16_t>& aIter,
+                                    const RangedPtr<const char16_t>& aEnd,
                                     float& aValue);
 
 template bool
-SVGContentUtils::ParseNumber<double>(RangedPtr<const PRUnichar>& aIter,
-                                     const RangedPtr<const PRUnichar>& aEnd,
+SVGContentUtils::ParseNumber<double>(RangedPtr<const char16_t>& aIter,
+                                     const RangedPtr<const char16_t>& aEnd,
                                      double& aValue);
 
-RangedPtr<const PRUnichar>
+RangedPtr<const char16_t>
 SVGContentUtils::GetStartRangedPtr(const nsAString& aString)
 {
-  return RangedPtr<const PRUnichar>(aString.Data(), aString.Length());
+  return RangedPtr<const char16_t>(aString.Data(), aString.Length());
 }
 
-RangedPtr<const PRUnichar>
+RangedPtr<const char16_t>
 SVGContentUtils::GetEndRangedPtr(const nsAString& aString)
 {
-  return RangedPtr<const PRUnichar>(aString.Data() + aString.Length(),
+  return RangedPtr<const char16_t>(aString.Data() + aString.Length(),
                                     aString.Data(), aString.Length());
 }
 
@@ -506,8 +506,8 @@ bool
 SVGContentUtils::ParseNumber(const nsAString& aString, 
                              floatType& aValue)
 {
-  RangedPtr<const PRUnichar> iter = GetStartRangedPtr(aString);
-  const RangedPtr<const PRUnichar> end = GetEndRangedPtr(aString);
+  RangedPtr<const char16_t> iter = GetStartRangedPtr(aString);
+  const RangedPtr<const char16_t> end = GetEndRangedPtr(aString);
 
   return ParseNumber(iter, end, aValue) && iter == end;
 }
@@ -521,11 +521,11 @@ SVGContentUtils::ParseNumber<double>(const nsAString& aString,
 
 /* static */
 bool
-SVGContentUtils::ParseInteger(RangedPtr<const PRUnichar>& aIter,
-                              const RangedPtr<const PRUnichar>& aEnd,
+SVGContentUtils::ParseInteger(RangedPtr<const char16_t>& aIter,
+                              const RangedPtr<const char16_t>& aEnd,
                               int32_t& aValue)
 {
-  RangedPtr<const PRUnichar> iter(aIter);
+  RangedPtr<const char16_t> iter(aIter);
 
   int32_t sign;
   if (!ParseOptionalSign(iter, aEnd, sign)) {
@@ -557,8 +557,8 @@ bool
 SVGContentUtils::ParseInteger(const nsAString& aString,
                               int32_t& aValue)
 {
-  RangedPtr<const PRUnichar> iter = GetStartRangedPtr(aString);
-  const RangedPtr<const PRUnichar> end = GetEndRangedPtr(aString);
+  RangedPtr<const char16_t> iter = GetStartRangedPtr(aString);
+  const RangedPtr<const char16_t> end = GetEndRangedPtr(aString);
 
   return ParseInteger(iter, end, aValue) && iter == end;
 }

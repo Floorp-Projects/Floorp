@@ -170,11 +170,11 @@ nsPrintOptions::GetPrefName(const char * aPrefName,
 // This define controls debug output
 #ifdef DEBUG_rods_X
 static void WriteDebugStr(const char* aArg1, const char* aArg2,
-                          const PRUnichar* aStr)
+                          const char16_t* aStr)
 {
   nsString str(aStr);
-  PRUnichar s = '&';
-  PRUnichar r = '_';
+  char16_t s = '&';
+  char16_t r = '_';
   str.ReplaceChar(s, r);
 
   printf("%s %s = %s \n", aArg1, aArg2, ToNewUTF8String(str));
@@ -586,7 +586,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
     int16_t sizeUnit, sizeType;
     double width, height;
-    PRUnichar *name;
+    char16_t *name;
  
     if (
       NS_SUCCEEDED(aPS->GetPaperSizeUnit(&sizeUnit)) &&
@@ -611,7 +611,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
   }
 
   bool       b;
-  PRUnichar* uStr;
+  char16_t* uStr;
   int32_t    iVal;
   int16_t    iVal16;
   double     dbl;
@@ -826,7 +826,7 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
 }
 
 NS_IMETHODIMP
-nsPrintOptions::DisplayJobProperties(const PRUnichar *aPrinter,
+nsPrintOptions::DisplayJobProperties(const char16_t *aPrinter,
                                      nsIPrintSettings* aPrintSettings,
                                      bool *aDisplayed)
 {
@@ -896,7 +896,7 @@ nsPrintOptions::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+nsPrintOptions::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
 {
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> prtEnum =
@@ -933,7 +933,7 @@ nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 }
 
 NS_IMETHODIMP
-nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
+nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
                                              nsIPrintSettings *aPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPrintSettings);
@@ -979,7 +979,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 
   // Get the Printer Name from the PrintSettings 
   // to use as a prefix for Pref Names
-  PRUnichar* prtName = nullptr;
+  char16_t* prtName = nullptr;
 
   nsresult rv = aPS->GetPrinterName(&prtName);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -993,7 +993,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 
   int32_t x;
   for (x=0; x < (int32_t)strlen(replaceStr); x++) {
-    PRUnichar uChar = replaceStr[x];
+    char16_t uChar = replaceStr[x];
 
     int32_t i = 0;
     while ((i = aPrinterName.FindChar(uChar, i)) != kNotFound) {
@@ -1006,7 +1006,7 @@ GetAdjustedPrinterName(nsIPrintSettings* aPS, bool aUsePNP,
 
 NS_IMETHODIMP
 nsPrintOptions::GetPrinterPrefInt(nsIPrintSettings *aPrintSettings,
-                                  const PRUnichar *aPrefName, int32_t *_retval)
+                                  const char16_t *aPrefName, int32_t *_retval)
 {
   NS_ENSURE_ARG_POINTER(aPrintSettings);
   NS_ENSURE_ARG_POINTER(aPrefName);

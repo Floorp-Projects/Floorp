@@ -68,7 +68,7 @@ nsHtml5ElementName::isCustom()
 }
 
 nsHtml5ElementName* 
-nsHtml5ElementName::elementNameByBuffer(PRUnichar* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
+nsHtml5ElementName::elementNameByBuffer(char16_t* buf, int32_t offset, int32_t length, nsHtml5AtomTable* interner)
 {
   int32_t hash = nsHtml5ElementName::bufToHash(buf, length);
   int32_t index = nsHtml5ElementName::ELEMENT_HASHES.binarySearch(hash);
@@ -85,7 +85,7 @@ nsHtml5ElementName::elementNameByBuffer(PRUnichar* buf, int32_t offset, int32_t 
 }
 
 int32_t 
-nsHtml5ElementName::bufToHash(PRUnichar* buf, int32_t len)
+nsHtml5ElementName::bufToHash(char16_t* buf, int32_t len)
 {
   int32_t hash = len;
   hash <<= 5;

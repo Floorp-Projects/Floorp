@@ -103,7 +103,7 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
         // We want to get rid of this entirely at some point, but first we need real lists of fonts.
         QFont defaultFont;
         QFontInfo fi (defaultFont);
-        familyArray.AppendElement(nsDependentString(static_cast<const PRUnichar *>(fi.family().utf16())));
+        familyArray.AppendElement(nsDependentString(static_cast<const char16_t *>(fi.family().utf16())));
 #elif defined(MOZ_WIDGET_GTK)
         FcResult result;
         FcChar8 *family = nullptr;
@@ -404,7 +404,7 @@ gfxFT2FontGroup::WhichSystemFontSupportsChar(uint32_t aCh, int32_t aRunScript)
 
 bool
 gfxFT2Font::ShapeText(gfxContext      *aContext,
-                      const PRUnichar *aText,
+                      const char16_t *aText,
                       uint32_t         aOffset,
                       uint32_t         aLength,
                       int32_t          aScript,
@@ -446,7 +446,7 @@ gfxFT2Font::ShapeText(gfxContext      *aContext,
 }
 
 void
-gfxFT2Font::AddRange(const PRUnichar *aText, uint32_t aOffset,
+gfxFT2Font::AddRange(const char16_t *aText, uint32_t aOffset,
                      uint32_t aLength, gfxShapedText *aShapedText)
 {
     const uint32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();
@@ -462,7 +462,7 @@ gfxFT2Font::AddRange(const PRUnichar *aText, uint32_t aOffset,
     FT_UInt spaceGlyph = GetSpaceGlyph();
 
     for (uint32_t i = 0; i < aLength; i++, aOffset++) {
-        PRUnichar ch = aText[i];
+        char16_t ch = aText[i];
 
         if (ch == 0) {
             // treat this null byte as a missing glyph, don't create a glyph for it
@@ -487,7 +487,7 @@ gfxFT2Font::AddRange(const PRUnichar *aText, uint32_t aOffset,
         } else {
             // find next character and its glyph -- in case they exist
             // and exist in the current font face -- to compute kerning
-            PRUnichar chNext = 0;
+            char16_t chNext = 0;
             FT_UInt gidNext = 0;
             FT_Pos lsbDeltaNext = 0;
 

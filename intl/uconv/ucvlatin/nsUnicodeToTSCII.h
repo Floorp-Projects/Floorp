@@ -24,19 +24,19 @@ public:
   nsUnicodeToTSCII() { mBuffer = 0; }
   virtual ~nsUnicodeToTSCII() {}
 
-  NS_IMETHOD Convert(const PRUnichar * aSrc, int32_t * aSrcLength,
+  NS_IMETHOD Convert(const char16_t * aSrc, int32_t * aSrcLength,
                      char * aDest, int32_t * aDestLength);
 
   NS_IMETHOD Finish(char * aDest, int32_t * aDestLength);
 
-  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, int32_t aSrcLength,
+  NS_IMETHOD GetMaxLength(const char16_t * aSrc, int32_t aSrcLength,
                           int32_t * aDestLength);
 
   NS_IMETHOD Reset();
 
   NS_IMETHOD SetOutputErrorBehavior(int32_t aBehavior,
                                     nsIUnicharEncoder * aEncoder, 
-                                    PRUnichar aChar);
+                                    char16_t aChar);
 
 private:
   uint32_t mBuffer; // buffer for character(s) to be combined with the following
@@ -57,19 +57,19 @@ public:
   nsUnicodeToTamilTTF() : nsUnicodeToTSCII() {}
   virtual ~nsUnicodeToTamilTTF() {}
 
-  NS_IMETHOD Convert      (const PRUnichar * aSrc, int32_t * aSrcLength,
+  NS_IMETHOD Convert      (const char16_t * aSrc, int32_t * aSrcLength,
                            char * aDest, int32_t * aDestLength);
-  NS_IMETHOD GetMaxLength (const PRUnichar * aSrc, int32_t  aSrcLength,
+  NS_IMETHOD GetMaxLength (const char16_t * aSrc, int32_t  aSrcLength,
                            int32_t * aDestLength);
 
   NS_IMETHOD SetOutputErrorBehavior (int32_t aBehavior, 
                                      nsIUnicharEncoder *aEncoder, 
-                                     PRUnichar aChar);
+                                     char16_t aChar);
 
 private:
   char mStaticBuffer[CHAR_BUFFER_SIZE];
   int32_t mErrBehavior;
-  PRUnichar mErrChar;
+  char16_t mErrChar;
   nsCOMPtr<nsIUnicharEncoder> mErrEncoder;
 };
 

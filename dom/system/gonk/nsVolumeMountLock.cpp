@@ -94,7 +94,7 @@ NS_IMETHODIMP nsVolumeMountLock::Unlock()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsVolumeMountLock::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
+NS_IMETHODIMP nsVolumeMountLock::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
 {
   if (strcmp(aTopic, NS_VOLUME_STATE_CHANGED) != 0) {
     return NS_OK;

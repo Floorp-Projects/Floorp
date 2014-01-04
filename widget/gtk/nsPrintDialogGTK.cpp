@@ -142,7 +142,7 @@ class nsPrintDialogWidgetGTK {
 
     bool useNativeSelection;
 
-    GtkWidget* ConstructHeaderFooterDropdown(const PRUnichar *currentString);
+    GtkWidget* ConstructHeaderFooterDropdown(const char16_t *currentString);
     const char* OptionWidgetToString(GtkWidget *dropdown);
 
     /* Code to copy between GTK and NS print settings structures.
@@ -469,7 +469,7 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
 }
 
 GtkWidget*
-nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentString)
+nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const char16_t *currentString)
 {
 #if (MOZ_WIDGET_GTK == 2)
   GtkWidget* dropdown = gtk_combo_box_new_text();

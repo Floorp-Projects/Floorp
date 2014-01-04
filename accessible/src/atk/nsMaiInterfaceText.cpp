@@ -187,7 +187,7 @@ getCharacterAtOffsetCB(AtkText* aText, gint aOffset)
   if (!text || !text->IsTextRole())
     return 0;
 
-  // PRUnichar is unsigned short in Mozilla, gnuichar is guint32 in glib.
+  // char16_t is unsigned short in Mozilla, gnuichar is guint32 in glib.
   return static_cast<gunichar>(text->CharAt(aOffset));
 }
 
