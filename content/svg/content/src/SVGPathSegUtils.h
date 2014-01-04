@@ -127,30 +127,30 @@ public:
     return type;
   }
 
-  static PRUnichar GetPathSegTypeAsLetter(uint32_t aType) {
+  static char16_t GetPathSegTypeAsLetter(uint32_t aType) {
     NS_ABORT_IF_FALSE(IsValidType(aType), "Seg type not recognized");
 
-    static const PRUnichar table[] = {
-      PRUnichar('x'),  //  0 == PATHSEG_UNKNOWN
-      PRUnichar('z'),  //  1 == PATHSEG_CLOSEPATH
-      PRUnichar('M'),  //  2 == PATHSEG_MOVETO_ABS
-      PRUnichar('m'),  //  3 == PATHSEG_MOVETO_REL
-      PRUnichar('L'),  //  4 == PATHSEG_LINETO_ABS
-      PRUnichar('l'),  //  5 == PATHSEG_LINETO_REL
-      PRUnichar('C'),  //  6 == PATHSEG_CURVETO_CUBIC_ABS
-      PRUnichar('c'),  //  7 == PATHSEG_CURVETO_CUBIC_REL
-      PRUnichar('Q'),  //  8 == PATHSEG_CURVETO_QUADRATIC_ABS
-      PRUnichar('q'),  //  9 == PATHSEG_CURVETO_QUADRATIC_REL
-      PRUnichar('A'),  // 10 == PATHSEG_ARC_ABS
-      PRUnichar('a'),  // 11 == PATHSEG_ARC_REL
-      PRUnichar('H'),  // 12 == PATHSEG_LINETO_HORIZONTAL_ABS
-      PRUnichar('h'),  // 13 == PATHSEG_LINETO_HORIZONTAL_REL
-      PRUnichar('V'),  // 14 == PATHSEG_LINETO_VERTICAL_ABS
-      PRUnichar('v'),  // 15 == PATHSEG_LINETO_VERTICAL_REL
-      PRUnichar('S'),  // 16 == PATHSEG_CURVETO_CUBIC_SMOOTH_ABS
-      PRUnichar('s'),  // 17 == PATHSEG_CURVETO_CUBIC_SMOOTH_REL
-      PRUnichar('T'),  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
-      PRUnichar('t')   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
+    static const char16_t table[] = {
+      char16_t('x'),  //  0 == PATHSEG_UNKNOWN
+      char16_t('z'),  //  1 == PATHSEG_CLOSEPATH
+      char16_t('M'),  //  2 == PATHSEG_MOVETO_ABS
+      char16_t('m'),  //  3 == PATHSEG_MOVETO_REL
+      char16_t('L'),  //  4 == PATHSEG_LINETO_ABS
+      char16_t('l'),  //  5 == PATHSEG_LINETO_REL
+      char16_t('C'),  //  6 == PATHSEG_CURVETO_CUBIC_ABS
+      char16_t('c'),  //  7 == PATHSEG_CURVETO_CUBIC_REL
+      char16_t('Q'),  //  8 == PATHSEG_CURVETO_QUADRATIC_ABS
+      char16_t('q'),  //  9 == PATHSEG_CURVETO_QUADRATIC_REL
+      char16_t('A'),  // 10 == PATHSEG_ARC_ABS
+      char16_t('a'),  // 11 == PATHSEG_ARC_REL
+      char16_t('H'),  // 12 == PATHSEG_LINETO_HORIZONTAL_ABS
+      char16_t('h'),  // 13 == PATHSEG_LINETO_HORIZONTAL_REL
+      char16_t('V'),  // 14 == PATHSEG_LINETO_VERTICAL_ABS
+      char16_t('v'),  // 15 == PATHSEG_LINETO_VERTICAL_REL
+      char16_t('S'),  // 16 == PATHSEG_CURVETO_CUBIC_SMOOTH_ABS
+      char16_t('s'),  // 17 == PATHSEG_CURVETO_CUBIC_SMOOTH_REL
+      char16_t('T'),  // 18 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS
+      char16_t('t')   // 19 == PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL
     };
     static_assert(NS_ARRAY_LENGTH(table) == NS_SVG_PATH_SEG_TYPE_COUNT, "Unexpected table size");
 

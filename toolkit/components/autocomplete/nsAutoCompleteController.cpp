@@ -756,7 +756,7 @@ nsAutoCompleteController::GetColumnProperties(nsITreeColumn* col, nsAString& aPr
 NS_IMETHODIMP
 nsAutoCompleteController::GetImageSrc(int32_t row, nsITreeColumn* col, nsAString& _retval)
 {
-  const PRUnichar* colID;
+  const char16_t* colID;
   col->GetIdConst(&colID);
 
   if (NS_LITERAL_STRING("treecolAutoCompleteValue").Equals(colID))
@@ -782,7 +782,7 @@ nsAutoCompleteController::GetCellValue(int32_t row, nsITreeColumn* col, nsAStrin
 NS_IMETHODIMP
 nsAutoCompleteController::GetCellText(int32_t row, nsITreeColumn* col, nsAString& _retval)
 {
-  const PRUnichar* colID;
+  const char16_t* colID;
   col->GetIdConst(&colID);
 
   if (NS_LITERAL_STRING("treecolAutoCompleteValue").Equals(colID))
@@ -934,19 +934,19 @@ nsAutoCompleteController::Drop(int32_t row, int32_t orientation, nsIDOMDataTrans
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::PerformAction(const PRUnichar *action)
+nsAutoCompleteController::PerformAction(const char16_t *action)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::PerformActionOnRow(const PRUnichar *action, int32_t row)
+nsAutoCompleteController::PerformActionOnRow(const char16_t *action, int32_t row)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAutoCompleteController::PerformActionOnCell(const PRUnichar* action, int32_t row, nsITreeColumn* col)
+nsAutoCompleteController::PerformActionOnCell(const char16_t* action, int32_t row, nsITreeColumn* col)
 {
   return NS_OK;
 }

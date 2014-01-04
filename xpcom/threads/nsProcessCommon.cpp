@@ -363,21 +363,21 @@ nsProcess::CopyArgsAndRunProcess(bool blocking, const char** args,
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::Runw(bool blocking, const PRUnichar **args, uint32_t count)
+nsProcess::Runw(bool blocking, const char16_t **args, uint32_t count)
 {
     return CopyArgsAndRunProcessw(blocking, args, count, nullptr, false);
 }
 
 // XXXldb |args| has the wrong const-ness
 NS_IMETHODIMP  
-nsProcess::RunwAsync(const PRUnichar **args, uint32_t count,
+nsProcess::RunwAsync(const char16_t **args, uint32_t count,
                     nsIObserver* observer, bool holdWeak)
 {
     return CopyArgsAndRunProcessw(false, args, count, observer, holdWeak);
 }
 
 nsresult
-nsProcess::CopyArgsAndRunProcessw(bool blocking, const PRUnichar** args,
+nsProcess::CopyArgsAndRunProcessw(bool blocking, const char16_t** args,
                                   uint32_t count, nsIObserver* observer,
                                   bool holdWeak)
 {
@@ -597,7 +597,7 @@ nsProcess::GetExitValue(int32_t *aExitValue)
 }
 
 NS_IMETHODIMP
-nsProcess::Observe(nsISupports* subject, const char* topic, const PRUnichar* data)
+nsProcess::Observe(nsISupports* subject, const char* topic, const char16_t* data)
 {
     // Shutting down, drop all references
     if (mThread) {

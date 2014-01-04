@@ -86,7 +86,7 @@ void EscapeToStream(std::ostream& stream, const char* str) {
     } else if (ucs4Char == '\\') {
       stream << "\\\\";
     } else if (ucs4Char > 0xFF) {
-      PRUnichar chr[2];
+      char16_t chr[2];
       ConvertUTF8toUTF16 encoder(chr);
       encoder.write(utf8CharStart, uint32_t(str-utf8CharStart));
       char escChar[13];

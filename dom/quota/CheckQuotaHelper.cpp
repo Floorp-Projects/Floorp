@@ -229,7 +229,7 @@ CheckQuotaHelper::GetInterface(const nsIID& aIID,
 NS_IMETHODIMP
 CheckQuotaHelper::Observe(nsISupports* aSubject,
                           const char* aTopic,
-                          const PRUnichar* aData)
+                          const char16_t* aData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 

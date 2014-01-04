@@ -305,7 +305,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
 
     uint32_t formatLen = format.Length();
     uint32_t formatPos = 0;
-    PRUnichar ch = 0;
+    char16_t ch = 0;
 
     // start with header
     while (formatPos < formatLen &&
@@ -424,7 +424,7 @@ txXSLTNumber::getPrevInDocumentOrder(txXPathTreeWalker& aWalker)
 #define TX_MATCH_CHAR(ch, a) if (ch < a) return false; \
     if (ch == a) return true
 
-bool txXSLTNumber::isAlphaNumeric(PRUnichar ch)
+bool txXSLTNumber::isAlphaNumeric(char16_t ch)
 {
     TX_CHAR_RANGE(ch, 0x0030, 0x0039);
     TX_CHAR_RANGE(ch, 0x0041, 0x005A);

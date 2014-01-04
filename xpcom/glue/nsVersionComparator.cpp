@@ -280,7 +280,7 @@ namespace mozilla {
 
 #ifdef XP_WIN
 int32_t
-CompareVersions(const PRUnichar *A, const PRUnichar *B)
+CompareVersions(const char16_t *A, const char16_t *B)
 {
   wchar_t *A2 = wcsdup(char16ptr_t(A));
   if (!A2)

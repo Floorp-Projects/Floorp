@@ -534,7 +534,7 @@ nsMathVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SINGLE_CHAR_MI;
 
   uint32_t length = aTextRun->GetLength();
-  const PRUnichar* str = aTextRun->mString.BeginReading();
+  const char16_t* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
 
   uint8_t mathVar;

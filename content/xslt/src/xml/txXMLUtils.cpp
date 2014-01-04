@@ -21,7 +21,7 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
                      bool aUseDefault)
 {
     const nsAFlatString& qName = PromiseFlatString(aQName);
-    const PRUnichar* colon;
+    const char16_t* colon;
     bool valid = XMLUtils::isValidQName(qName, &colon);
     if (!valid) {
         return NS_ERROR_FAILURE;
@@ -34,7 +34,7 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
             return NS_ERROR_FAILURE;
         mNamespaceID = namespaceID;
 
-        const PRUnichar *end;
+        const char16_t *end;
         qName.EndReading(end);
         mLocalName = do_GetAtom(Substring(colon + 1, end));
     }
@@ -52,7 +52,7 @@ txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
 
 // static
 nsresult
-XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
+XMLUtils::splitExpatName(const char16_t *aExpatName, nsIAtom **aPrefix,
                          nsIAtom **aLocalName, int32_t* aNameSpaceID)
 {
     /**
@@ -62,9 +62,9 @@ XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
      *    namespaceURI<separator>localName<separator>prefix
      */
 
-    const PRUnichar *uriEnd = nullptr;
-    const PRUnichar *nameEnd = nullptr;
-    const PRUnichar *pos;
+    const char16_t *uriEnd = nullptr;
+    const char16_t *nameEnd = nullptr;
+    const char16_t *pos;
     for (pos = aExpatName; *pos; ++pos) {
         if (*pos == kExpatSeparatorChar) {
             if (uriEnd) {
@@ -76,7 +76,7 @@ XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
         }
     }
 
-    const PRUnichar *nameStart;
+    const char16_t *nameStart;
     if (uriEnd) {
         *aNameSpaceID =
             txNamespaceManager::getNamespaceID(nsDependentSubstring(aExpatName,
@@ -87,7 +87,7 @@ XMLUtils::splitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
 
         nameStart = (uriEnd + 1);
         if (nameEnd)  {
-            const PRUnichar *prefixStart = nameEnd + 1;
+            const char16_t *prefixStart = nameEnd + 1;
             *aPrefix = NS_NewAtom(Substring(prefixStart, pos)).get();
             if (!*aPrefix) {
                 return NS_ERROR_OUT_OF_MEMORY;
@@ -115,14 +115,14 @@ XMLUtils::splitQName(const nsAString& aName, nsIAtom** aPrefix,
                      nsIAtom** aLocalName)
 {
     const nsAFlatString& qName = PromiseFlatString(aName);
-    const PRUnichar* colon;
+    const char16_t* colon;
     bool valid = XMLUtils::isValidQName(qName, &colon);
     if (!valid) {
         return NS_ERROR_FAILURE;
     }
 
     if (colon) {
-        const PRUnichar *end;
+        const char16_t *end;
         qName.EndReading(end);
 
         *aPrefix = NS_NewAtom(Substring(qName.get(), colon)).get();
@@ -160,16 +160,16 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
     nsAutoString origValue(piValue);
     uint32_t origLength = origValue.Length();
     uint32_t conversionLoop = 0;
-    PRUnichar prevCh = 0;
+    char16_t prevCh = 0;
     piValue.Truncate();
 
     while (conversionLoop < origLength) {
-        PRUnichar ch = origValue.CharAt(conversionLoop);
+        char16_t ch = origValue.CharAt(conversionLoop);
         switch (ch) {
             case '>':
             {
                 if (prevCh == '?') {
-                    piValue.Append(PRUnichar(' '));
+                    piValue.Append(char16_t(' '));
                 }
                 break;
             }
@@ -186,7 +186,7 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
 
 //static
 bool XMLUtils::isValidQName(const nsAFlatString& aQName,
-                            const PRUnichar** aColon)
+                            const char16_t** aColon)
 {
   return NS_SUCCEEDED(nsContentUtils::CheckQName(aQName, true, aColon));
 }

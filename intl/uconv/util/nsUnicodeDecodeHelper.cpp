@@ -12,7 +12,7 @@
 nsresult nsUnicodeDecodeHelper::ConvertByTable(
                                      const char * aSrc, 
                                      int32_t * aSrcLength, 
-                                     PRUnichar * aDest, 
+                                     char16_t * aDest, 
                                      int32_t * aDestLength, 
                                      uScanClassID aScanClass,
                                      uShiftInTable * aShiftInTable, 
@@ -21,10 +21,10 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
 {
   const char * src = aSrc;
   int32_t srcLen = *aSrcLength;
-  PRUnichar * dest = aDest;
-  PRUnichar * destEnd = aDest + *aDestLength;
+  char16_t * dest = aDest;
+  char16_t * destEnd = aDest + *aDestLength;
 
-  PRUnichar med;
+  char16_t med;
   int32_t bcr; // byte count for read
   nsresult res = NS_OK;
 
@@ -74,7 +74,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByTable(
 nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
                                      const char * aSrc, 
                                      int32_t * aSrcLength, 
-                                     PRUnichar * aDest, 
+                                     char16_t * aDest, 
                                      int32_t * aDestLength, 
                                      int32_t aTableCount, 
                                      const uRange * aRangeArray, 
@@ -84,10 +84,10 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
 {
   uint8_t * src = (uint8_t *)aSrc;
   int32_t srcLen = *aSrcLength;
-  PRUnichar * dest = aDest;
-  PRUnichar * destEnd = aDest + *aDestLength;
+  char16_t * dest = aDest;
+  char16_t * destEnd = aDest + *aDestLength;
 
-  PRUnichar med;
+  char16_t med;
   int32_t bcr; // byte count for read
   nsresult res = NS_OK;
   int32_t i;
@@ -183,15 +183,15 @@ nsresult nsUnicodeDecodeHelper::ConvertByMultiTable(
 nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
                                      const char * aSrc, 
                                      int32_t * aSrcLength, 
-                                     PRUnichar * aDest, 
+                                     char16_t * aDest, 
                                      int32_t * aDestLength, 
-                                     const PRUnichar * aFastTable, 
+                                     const char16_t * aFastTable, 
                                      int32_t aTableSize,
                                      bool aErrorSignal)
 {
   uint8_t * src = (uint8_t *)aSrc;
   uint8_t * srcEnd = src;
-  PRUnichar * dest = aDest;
+  char16_t * dest = aDest;
 
   nsresult res;
   if (*aSrcLength > *aDestLength) {
@@ -219,7 +219,7 @@ nsresult nsUnicodeDecodeHelper::ConvertByFastTable(
 
 nsresult nsUnicodeDecodeHelper::CreateFastTable(
                                      uMappingTable  * aMappingTable,
-                                     PRUnichar * aFastTable, 
+                                     char16_t * aFastTable, 
                                      int32_t aTableSize)
 {
   int32_t tableSize = aTableSize;

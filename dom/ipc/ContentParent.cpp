@@ -1597,7 +1597,7 @@ ContentParent::RecvSetClipboardText(const nsString& text,
         do_QueryInterface(dataWrapper);
     
     rv = trans->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
-                                text.Length() * sizeof(PRUnichar));
+                                text.Length() * sizeof(char16_t));
     NS_ENSURE_SUCCESS(rv, true);
     
     clipboard->SetData(trans, nullptr, whichClipboard);
@@ -1835,7 +1835,7 @@ NS_IMPL_ISUPPORTS3(ContentParent,
 NS_IMETHODIMP
 ContentParent::Observe(nsISupports* aSubject,
                        const char* aTopic,
-                       const PRUnichar* aData)
+                       const char16_t* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
         ShutDownProcess(/* closeWithError */ false);
@@ -3223,7 +3223,7 @@ ContentParent::RecvRemoveIdleObserver(const uint64_t& aObserver, const uint32_t&
 NS_IMPL_ISUPPORTS1(ParentIdleListener, nsIObserver)
 
 NS_IMETHODIMP
-ParentIdleListener::Observe(nsISupports*, const char* aTopic, const PRUnichar* aData) {
+ParentIdleListener::Observe(nsISupports*, const char* aTopic, const char16_t* aData) {
   mozilla::unused << mParent->SendNotifyIdleObserver(mObserver,
                                                      nsDependentCString(aTopic),
                                                      nsDependentString(aData));

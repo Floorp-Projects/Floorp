@@ -9,7 +9,7 @@
 namespace mozilla {
 namespace dom {
 
-static const PRUnichar kReplacementChar = static_cast<PRUnichar>(0xFFFD);
+static const char16_t kReplacementChar = static_cast<char16_t>(0xFFFD);
 
 void
 TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
@@ -63,7 +63,7 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
   // Need a fallible allocator because the caller may be a content
   // and the content can specify the length of the string.
   static const fallible_t fallible = fallible_t();
-  nsAutoArrayPtr<PRUnichar> buf(new (fallible) PRUnichar[outLen + 1]);
+  nsAutoArrayPtr<char16_t> buf(new (fallible) char16_t[outLen + 1]);
   if (!buf) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;

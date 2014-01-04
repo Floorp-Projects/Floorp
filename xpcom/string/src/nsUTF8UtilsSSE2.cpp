@@ -8,7 +8,7 @@
 #include <nsUTF8Utils.h>
 
 void
-LossyConvertEncoding16to8::write_sse2(const PRUnichar* aSource,
+LossyConvertEncoding16to8::write_sse2(const char16_t* aSource,
                                       uint32_t aSourceLength)
 {
   char* dest = mDestination;
@@ -16,7 +16,7 @@ LossyConvertEncoding16to8::write_sse2(const PRUnichar* aSource,
   // Align source to a 16-byte boundary.
   uint32_t i = 0;
   uint32_t alignLen =
-    XPCOM_MIN<uint32_t>(aSourceLength, uint32_t(-NS_PTR_TO_INT32(aSource) & 0xf) / sizeof(PRUnichar));
+    XPCOM_MIN<uint32_t>(aSourceLength, uint32_t(-NS_PTR_TO_INT32(aSource) & 0xf) / sizeof(char16_t));
   for (; i < alignLen; i++) {
     dest[i] = static_cast<unsigned char>(aSource[i]);
   }
@@ -62,7 +62,7 @@ void
 LossyConvertEncoding8to16::write_sse2(const char* aSource,
                                       uint32_t aSourceLength)
 {
-  PRUnichar *dest = mDestination;
+  char16_t *dest = mDestination;
 
   // Align source to a 16-byte boundary.  We choose to align source rather than
   // dest because we'd rather have our loads than our stores be fast. You have

@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-template<PRUnichar delimiter>
+template<char16_t delimiter>
 class CharTokenizer
 {
 public:

@@ -161,7 +161,7 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   // get the number
   bool gotDot = false, gotPercent = false;
   for (; i < stringLength; i++) {
-    PRUnichar c = aString[i];
+    char16_t c = aString[i];
     if (gotDot && c == '.') {
       // error - two dots encountered
       aSign = NS_MATHML_SIGN_INVALID;

@@ -340,9 +340,9 @@ NS_IMPL_ISUPPORTS1(nsAuthGSSAPI, nsIAuthModule)
 NS_IMETHODIMP
 nsAuthGSSAPI::Init(const char *serviceName,
                    uint32_t    serviceFlags,
-                   const PRUnichar *domain,
-                   const PRUnichar *username,
-                   const PRUnichar *password)
+                   const char16_t *domain,
+                   const char16_t *username,
+                   const char16_t *password)
 {
     // we don't expect to be passed any user credentials
     NS_ASSERTION(!domain && !username && !password, "unexpected credentials");

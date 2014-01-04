@@ -85,7 +85,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
   nsCOMPtr<nsISupports> nsisupportsDataWrapper =
     do_QueryInterface(dataWrapper);
   rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
-                                      buffer.Length() * sizeof(PRUnichar));
+                                      buffer.Length() * sizeof(char16_t));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

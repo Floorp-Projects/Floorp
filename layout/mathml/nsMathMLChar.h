@@ -47,10 +47,10 @@ enum {
 // from). The 'font' is a numeric identifier given to the font to which the
 // glyph belongs.
 struct nsGlyphCode {
-  PRUnichar code[2]; 
+  char16_t code[2]; 
   int32_t   font;
 
-  int32_t Length() { return (code[1] == PRUnichar('\0') ? 1 : 2); }
+  int32_t Length() { return (code[1] == char16_t('\0') ? 1 : 2); }
   bool Exists() const
   {
     return (code[0] != 0);
@@ -128,7 +128,7 @@ public:
 
   // Sometimes we only want to pass the data to another routine,
   // this function helps to avoid copying
-  const PRUnichar*
+  const char16_t*
   get() {
     return mData.get();
   }

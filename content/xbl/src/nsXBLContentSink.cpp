@@ -145,10 +145,10 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
 
       bool isWS = true;
       if (mTextLength > 0) {
-        const PRUnichar* cp = mText;
-        const PRUnichar* end = mText + mTextLength;
+        const char16_t* cp = mText;
+        const char16_t* end = mText + mTextLength;
         while (cp < end) {
-          PRUnichar ch = *cp++;
+          char16_t ch = *cp++;
           if (!dom::IsSpaceCharacter(ch)) {
             isWS = false;
             break;
@@ -168,8 +168,8 @@ nsXBLContentSink::FlushText(bool aReleaseTextNode)
 }
 
 NS_IMETHODIMP
-nsXBLContentSink::ReportError(const PRUnichar* aErrorText, 
-                              const PRUnichar* aSourceText,
+nsXBLContentSink::ReportError(const char16_t* aErrorText, 
+                              const char16_t* aSourceText,
                               nsIScriptError *aError,
                               bool *_retval)
 {
@@ -210,7 +210,7 @@ nsXBLContentSink::ReportUnexpectedElement(nsIAtom* aElementName,
   nsAutoString elementName;
   aElementName->ToString(elementName);
 
-  const PRUnichar* params[] = { elementName.get() };
+  const char16_t* params[] = { elementName.get() };
 
   return nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                          NS_LITERAL_CSTRING("XBL Content Sink"),
@@ -248,8 +248,8 @@ nsXBLContentSink::AddField(nsXBLProtoImplField* aField)
 }
 
 NS_IMETHODIMP 
-nsXBLContentSink::HandleStartElement(const PRUnichar *aName, 
-                                     const PRUnichar **aAtts, 
+nsXBLContentSink::HandleStartElement(const char16_t *aName, 
+                                     const char16_t **aAtts, 
                                      uint32_t aAttsCount, 
                                      int32_t aIndex, 
                                      uint32_t aLineNumber)
@@ -271,7 +271,7 @@ nsXBLContentSink::HandleStartElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP 
-nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
+nsXBLContentSink::HandleEndElement(const char16_t *aName)
 {
   FlushText();
 
@@ -357,7 +357,7 @@ nsXBLContentSink::HandleEndElement(const PRUnichar *aName)
 }
 
 NS_IMETHODIMP 
-nsXBLContentSink::HandleCDataSection(const PRUnichar *aData, 
+nsXBLContentSink::HandleCDataSection(const char16_t *aData, 
                                      uint32_t aLength)
 {
   if (mState == eXBL_InHandlers || mState == eXBL_InImplementation)
@@ -371,7 +371,7 @@ nsXBLContentSink::HandleCDataSection(const PRUnichar *aData,
   PR_END_MACRO
 
 bool 
-nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts, 
+nsXBLContentSink::OnOpenContainer(const char16_t **aAtts, 
                                   uint32_t aAttsCount, 
                                   int32_t aNameSpaceID, 
                                   nsIAtom* aTagName,
@@ -581,7 +581,7 @@ nsXBLContentSink::ConstructBinding(uint32_t aLineNumber)
 }
 
 static bool
-FindValue(const PRUnichar **aAtts, nsIAtom *aAtom, const PRUnichar **aResult)
+FindValue(const char16_t **aAtts, nsIAtom *aAtom, const char16_t **aResult)
 {
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -601,20 +601,20 @@ FindValue(const PRUnichar **aAtts, nsIAtom *aAtom, const PRUnichar **aResult)
 }
 
 void
-nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber)
+nsXBLContentSink::ConstructHandler(const char16_t **aAtts, uint32_t aLineNumber)
 {
-  const PRUnichar* event          = nullptr;
-  const PRUnichar* modifiers      = nullptr;
-  const PRUnichar* button         = nullptr;
-  const PRUnichar* clickcount     = nullptr;
-  const PRUnichar* keycode        = nullptr;
-  const PRUnichar* charcode       = nullptr;
-  const PRUnichar* phase          = nullptr;
-  const PRUnichar* command        = nullptr;
-  const PRUnichar* action         = nullptr;
-  const PRUnichar* group          = nullptr;
-  const PRUnichar* preventdefault = nullptr;
-  const PRUnichar* allowuntrusted = nullptr;
+  const char16_t* event          = nullptr;
+  const char16_t* modifiers      = nullptr;
+  const char16_t* button         = nullptr;
+  const char16_t* clickcount     = nullptr;
+  const char16_t* keycode        = nullptr;
+  const char16_t* charcode       = nullptr;
+  const char16_t* phase          = nullptr;
+  const char16_t* command        = nullptr;
+  const char16_t* action         = nullptr;
+  const char16_t* group          = nullptr;
+  const char16_t* preventdefault = nullptr;
+  const char16_t* allowuntrusted = nullptr;
 
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -695,20 +695,20 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, uint32_t aLineNumber
 }
 
 void
-nsXBLContentSink::ConstructResource(const PRUnichar **aAtts,
+nsXBLContentSink::ConstructResource(const char16_t **aAtts,
                                     nsIAtom* aResourceType)
 {
   if (!mBinding)
     return;
 
-  const PRUnichar* src = nullptr;
+  const char16_t* src = nullptr;
   if (FindValue(aAtts, nsGkAtoms::src, &src)) {
     mBinding->AddResource(aResourceType, nsDependentString(src));
   }
 }
 
 void
-nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
+nsXBLContentSink::ConstructImplementation(const char16_t **aAtts)
 {
   mImplementation = nullptr;
   mImplMember = nullptr;
@@ -717,7 +717,7 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
   if (!mBinding)
     return;
 
-  const PRUnichar* name = nullptr;
+  const char16_t* name = nullptr;
 
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -746,10 +746,10 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
 }
 
 void
-nsXBLContentSink::ConstructField(const PRUnichar **aAtts, uint32_t aLineNumber)
+nsXBLContentSink::ConstructField(const char16_t **aAtts, uint32_t aLineNumber)
 {
-  const PRUnichar* name     = nullptr;
-  const PRUnichar* readonly = nullptr;
+  const char16_t* name     = nullptr;
+  const char16_t* readonly = nullptr;
 
   nsCOMPtr<nsIAtom> prefix, localName;
   for (; *aAtts; aAtts += 2) {
@@ -782,12 +782,12 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts, uint32_t aLineNumber)
 }
 
 void
-nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumber)
+nsXBLContentSink::ConstructProperty(const char16_t **aAtts, uint32_t aLineNumber)
 {
-  const PRUnichar* name     = nullptr;
-  const PRUnichar* readonly = nullptr;
-  const PRUnichar* onget    = nullptr;
-  const PRUnichar* onset    = nullptr;
+  const char16_t* name     = nullptr;
+  const char16_t* readonly = nullptr;
+  const char16_t* onget    = nullptr;
+  const char16_t* onset    = nullptr;
   bool exposeToUntrustedContent = false;
 
   nsCOMPtr<nsIAtom> prefix, localName;
@@ -832,12 +832,12 @@ nsXBLContentSink::ConstructProperty(const PRUnichar **aAtts, uint32_t aLineNumbe
 }
 
 void
-nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
+nsXBLContentSink::ConstructMethod(const char16_t **aAtts)
 {
   mMethod = nullptr;
 
-  const PRUnichar* name = nullptr;
-  const PRUnichar* expose = nullptr;
+  const char16_t* name = nullptr;
+  const char16_t* expose = nullptr;
   if (FindValue(aAtts, nsGkAtoms::name, &name)) {
     mMethod = new nsXBLProtoImplMethod(name);
     if (FindValue(aAtts, nsGkAtoms::exposeToUntrustedContent, &expose) &&
@@ -853,19 +853,19 @@ nsXBLContentSink::ConstructMethod(const PRUnichar **aAtts)
 }
 
 void
-nsXBLContentSink::ConstructParameter(const PRUnichar **aAtts)
+nsXBLContentSink::ConstructParameter(const char16_t **aAtts)
 {
   if (!mMethod)
     return;
 
-  const PRUnichar* name = nullptr;
+  const char16_t* name = nullptr;
   if (FindValue(aAtts, nsGkAtoms::name, &name)) {
     mMethod->AddParameter(nsDependentString(name));
   }
 }
 
 nsresult
-nsXBLContentSink::CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                                 nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                 nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
@@ -898,7 +898,7 @@ nsXBLContentSink::CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
 }
 
 nsresult 
-nsXBLContentSink::AddAttributes(const PRUnichar** aAtts,
+nsXBLContentSink::AddAttributes(const char16_t** aAtts,
                                 nsIContent* aContent)
 {
   if (aContent->IsXUL())
@@ -909,7 +909,7 @@ nsXBLContentSink::AddAttributes(const PRUnichar** aAtts,
 
 #ifdef MOZ_XUL
 nsresult
-nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts, 
+nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts, 
                                               uint32_t aAttsCount, 
                                               nsXULPrototypeElement* aElement)
 {

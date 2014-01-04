@@ -150,7 +150,7 @@ NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstance
 // WebBrowserChrome::nsIWebBrowserChrome
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::SetStatus(uint32_t aType, const PRUnichar* aStatus)
+NS_IMETHODIMP WebBrowserChrome::SetStatus(uint32_t aType, const char16_t* aStatus)
 {
     WebBrowserChromeUI::UpdateStatusBarText(this, aStatus);
     return NS_OK;
@@ -298,7 +298,7 @@ NS_IMETHODIMP
 WebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest,
                                  nsresult aStatus,
-                                 const PRUnichar* aMessage)
+                                 const char16_t* aMessage)
 {
     WebBrowserChromeUI::UpdateStatusBarText(this, aMessage);
     return NS_OK;
@@ -500,7 +500,7 @@ NS_IMETHODIMP WebBrowserChrome::Blur()
 }
 
 /* attribute wstring title; */
-NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
+NS_IMETHODIMP WebBrowserChrome::GetTitle(char16_t * *aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
 
@@ -508,7 +508,7 @@ NS_IMETHODIMP WebBrowserChrome::GetTitle(PRUnichar * *aTitle)
    
    return NS_ERROR_NOT_IMPLEMENTED;
 }
-NS_IMETHODIMP WebBrowserChrome::SetTitle(const PRUnichar * aTitle)
+NS_IMETHODIMP WebBrowserChrome::SetTitle(const char16_t * aTitle)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -539,7 +539,7 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void * *aSiteWindow)
 // WebBrowserChrome::nsIObserver
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+NS_IMETHODIMP WebBrowserChrome::Observe(nsISupports *aSubject, const char *aTopic, const char16_t *someData)
 {
     nsresult rv = NS_OK;
     if (strcmp(aTopic, "profile-change-teardown") == 0)
@@ -566,7 +566,7 @@ NS_IMETHODIMP WebBrowserChrome::OnShowContextMenu(uint32_t aContextFlags, nsIDOM
 //*****************************************************************************   
 
 /* void OnShowTooltip (in long aXCoords, in long aYCoords, in wstring aTipText); */
-NS_IMETHODIMP WebBrowserChrome::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const PRUnichar *aTipText)
+NS_IMETHODIMP WebBrowserChrome::OnShowTooltip(int32_t aXCoords, int32_t aYCoords, const char16_t *aTipText)
 {
     WebBrowserChromeUI::ShowTooltip(this, aXCoords, aYCoords, aTipText);
     return NS_OK;

@@ -271,7 +271,7 @@ NS_IMPL_ISUPPORTS5(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
 
 NS_IMETHODIMP
 HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
-                                             const char* aTopic, const PRUnichar* aData)
+                                             const char* aTopic, const char16_t* aData)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
@@ -281,7 +281,7 @@ HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
 }
 
 void HTMLMediaElement::ReportLoadError(const char* aMsg,
-                                       const PRUnichar** aParams,
+                                       const char16_t** aParams,
                                        uint32_t aParamCount)
 {
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
@@ -335,7 +335,7 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
     code.AppendInt(responseStatus);
     nsAutoString src;
     element->GetCurrentSrc(src);
-    const PRUnichar* params[] = { code.get(), src.get() };
+    const char16_t* params[] = { code.get(), src.get() };
     element->ReportLoadError("MediaLoadHttpError", params, ArrayLength(params));
     return NS_BINDING_ABORTED;
   }
@@ -819,7 +819,7 @@ void HTMLMediaElement::SelectResource()
         return;
       }
     } else {
-      const PRUnichar* params[] = { src.get() };
+      const char16_t* params[] = { src.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
     }
     NoSupportedMediaSourceError();
@@ -901,7 +901,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
     if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
         GetCanPlay(type) == CANPLAY_NO) {
       DispatchAsyncSourceError(child);
-      const PRUnichar* params[] = { type.get(), src.get() };
+      const char16_t* params[] = { type.get(), src.get() };
       ReportLoadError("MediaLoadUnsupportedTypeAttribute", params, ArrayLength(params));
       continue;
     }
@@ -913,7 +913,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
       nsIPresShell* presShell = OwnerDoc()->GetShell();
       if (presShell && !mediaList->Matches(presShell->GetPresContext(), nullptr)) {
         DispatchAsyncSourceError(child);
-        const PRUnichar* params[] = { media.get(), src.get() };
+        const char16_t* params[] = { media.get(), src.get() };
         ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
         continue;
       }
@@ -926,7 +926,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
     NewURIFromString(src, getter_AddRefs(uri));
     if (!uri) {
       DispatchAsyncSourceError(child);
-      const PRUnichar* params[] = { src.get() };
+      const char16_t* params[] = { src.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       continue;
     }
@@ -1121,7 +1121,7 @@ nsresult HTMLMediaElement::LoadResource()
       nsCString specUTF8;
       mLoadingSrc->GetSpec(specUTF8);
       NS_ConvertUTF8toUTF16 spec(specUTF8);
-      const PRUnichar* params[] = { spec.get() };
+      const char16_t* params[] = { spec.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
@@ -1136,7 +1136,7 @@ nsresult HTMLMediaElement::LoadResource()
       nsCString specUTF8;
       mLoadingSrc->GetSpec(specUTF8);
       NS_ConvertUTF8toUTF16 spec(specUTF8);
-      const PRUnichar* params[] = { spec.get() };
+      const char16_t* params[] = { spec.get() };
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
@@ -2548,7 +2548,7 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
     nsAutoString src;
     GetCurrentSrc(src);
     NS_ConvertUTF8toUTF16 mimeUTF16(mimeType);
-    const PRUnichar* params[] = { mimeUTF16.get(), src.get() };
+    const char16_t* params[] = { mimeUTF16.get(), src.get() };
     ReportLoadError("MediaLoadUnsupportedMimeType", params, ArrayLength(params));
     return NS_ERROR_FAILURE;
   }
@@ -2921,7 +2921,7 @@ void HTMLMediaElement::DecodeError()
 {
   nsAutoString src;
   GetCurrentSrc(src);
-  const PRUnichar* params[] = { src.get() };
+  const char16_t* params[] = { src.get() };
   ReportLoadError("MediaLoadDecodeError", params, ArrayLength(params));
 
   if (mDecoder) {
@@ -3460,7 +3460,7 @@ void HTMLMediaElement::DoRemoveSelfReference()
 }
 
 nsresult HTMLMediaElement::Observe(nsISupports* aSubject,
-                                   const char* aTopic, const PRUnichar* aData)
+                                   const char* aTopic, const char16_t* aData)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 

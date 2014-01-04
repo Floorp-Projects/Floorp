@@ -28,9 +28,9 @@ NS_IMPL_ISUPPORTS1(nsAuthSASL, nsIAuthModule)
 NS_IMETHODIMP
 nsAuthSASL::Init(const char *serviceName,
                  uint32_t    serviceFlags,
-                 const PRUnichar *domain,
-                 const PRUnichar *username,
-                 const PRUnichar *password)
+                 const char16_t *domain,
+                 const char16_t *username,
+                 const char16_t *password)
 {
     nsresult rv;
     

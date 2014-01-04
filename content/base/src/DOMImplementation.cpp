@@ -105,7 +105,7 @@ DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   nsresult rv;
   if (!aQualifiedName.IsEmpty()) {
     const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
-    const PRUnichar *colon;
+    const char16_t *colon;
     rv = nsContentUtils::CheckQName(qName, true, &colon);
     NS_ENSURE_SUCCESS(rv, rv);
 

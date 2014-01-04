@@ -306,7 +306,7 @@ public:
       NS_ASSERTION(IsCSSValuePairListUnit(mUnit), "unit mismatch");
       return mValue.mCSSValuePairList;
     }
-    const PRUnichar* GetStringBufferValue() const {
+    const char16_t* GetStringBufferValue() const {
       NS_ASSERTION(IsStringUnit(mUnit), "unit mismatch");
       return GetBufferValue(mValue.mString);
     }
@@ -367,8 +367,8 @@ public:
   private:
     void FreeValue();
 
-    static const PRUnichar* GetBufferValue(nsStringBuffer* aBuffer) {
-      return static_cast<PRUnichar*>(aBuffer->Data());
+    static const char16_t* GetBufferValue(nsStringBuffer* aBuffer) {
+      return static_cast<char16_t*>(aBuffer->Data());
     }
 
     static bool IsIntUnit(Unit aUnit) {

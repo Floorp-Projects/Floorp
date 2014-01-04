@@ -12,7 +12,7 @@ template<class T> class nsTArray;
 //
 // Currently all implementations support both interfaces. The
 // constructors below provide the most common interface for the given
-// type (i.e. nsIStringEnumerator for PRUnichar* strings, and so
+// type (i.e. nsIStringEnumerator for char16_t* strings, and so
 // forth) but any resulting enumerators can be queried to the other
 // type. Internally, the enumerators will hold onto the type that was
 // passed in and do conversion if GetNext() for the other type of

@@ -300,7 +300,7 @@ nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JS::Handle<JSObject*> obj) const
 {
   for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
     // Using OBJ_LOOKUP_PROPERTY is a pain, since what we have is a
-    // PRUnichar* for the property name.  Let's just use the public API and
+    // char16_t* for the property name.  Let's just use the public API and
     // all.
     nsDependentString name(f->GetName());
     JS::Rooted<JS::Value> dummy(cx);
@@ -504,7 +504,7 @@ nsXBLProtoImpl::Write(nsIObjectOutputStream* aStream,
 
 nsresult
 NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding, 
-                   const PRUnichar* aClassName, 
+                   const char16_t* aClassName, 
                    nsXBLProtoImpl** aResult)
 {
   nsXBLProtoImpl* impl = new nsXBLProtoImpl();

@@ -451,7 +451,7 @@ nsXMLContentSink::SetParser(nsParserBase* aParser)
 }
 
 nsresult
-nsXMLContentSink::CreateElement(const PRUnichar** aAtts, uint32_t aAttsCount,
+nsXMLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
                                 nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
                                 nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
@@ -934,8 +934,8 @@ nsXMLContentSink::SetDocElement(int32_t aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
-                                     const PRUnichar **aAtts,
+nsXMLContentSink::HandleStartElement(const char16_t *aName,
+                                     const char16_t **aAtts,
                                      uint32_t aAttsCount,
                                      int32_t aIndex,
                                      uint32_t aLineNumber)
@@ -945,8 +945,8 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 }
 
 nsresult
-nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
-                                     const PRUnichar **aAtts,
+nsXMLContentSink::HandleStartElement(const char16_t *aName,
+                                     const char16_t **aAtts,
                                      uint32_t aAttsCount,
                                      int32_t aIndex,
                                      uint32_t aLineNumber,
@@ -1054,13 +1054,13 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleEndElement(const PRUnichar *aName)
+nsXMLContentSink::HandleEndElement(const char16_t *aName)
 {
   return HandleEndElement(aName, true);
 }
 
 nsresult
-nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
+nsXMLContentSink::HandleEndElement(const char16_t *aName,
                                    bool aInterruptable)
 {
   nsresult result = NS_OK;
@@ -1131,7 +1131,7 @@ nsXMLContentSink::HandleEndElement(const PRUnichar *aName,
 }
 
 NS_IMETHODIMP 
-nsXMLContentSink::HandleComment(const PRUnichar *aName)
+nsXMLContentSink::HandleComment(const char16_t *aName)
 {
   FlushText();
 
@@ -1144,7 +1144,7 @@ nsXMLContentSink::HandleComment(const PRUnichar *aName)
 }
 
 NS_IMETHODIMP 
-nsXMLContentSink::HandleCDataSection(const PRUnichar *aData, 
+nsXMLContentSink::HandleCDataSection(const char16_t *aData, 
                                      uint32_t aLength)
 {
   // XSLT doesn't differentiate between text and cdata and wants adjacent
@@ -1217,14 +1217,14 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, 
+nsXMLContentSink::HandleCharacterData(const char16_t *aData, 
                                       uint32_t aLength)
 {
   return HandleCharacterData(aData, aLength, true);
 }
 
 nsresult
-nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, uint32_t aLength,
+nsXMLContentSink::HandleCharacterData(const char16_t *aData, uint32_t aLength,
                                       bool aInterruptable)
 {
   nsresult rv = NS_OK;
@@ -1236,8 +1236,8 @@ nsXMLContentSink::HandleCharacterData(const PRUnichar *aData, uint32_t aLength,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget, 
-                                              const PRUnichar *aData)
+nsXMLContentSink::HandleProcessingInstruction(const char16_t *aTarget, 
+                                              const char16_t *aData)
 {
   FlushText();
 
@@ -1329,8 +1329,8 @@ nsXMLContentSink::ParsePIData(const nsString &aData, nsString &aHref,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
-                                       const PRUnichar *aEncoding,
+nsXMLContentSink::HandleXMLDeclaration(const char16_t *aVersion,
+                                       const char16_t *aEncoding,
                                        int32_t aStandalone)
 {
   mDocument->SetXMLDeclaration(aVersion, aEncoding, aStandalone);
@@ -1339,8 +1339,8 @@ nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
-                              const PRUnichar* aSourceText,
+nsXMLContentSink::ReportError(const char16_t* aErrorText, 
+                              const char16_t* aSourceText,
                               nsIScriptError *aError,
                               bool *_retval)
 {
@@ -1393,13 +1393,13 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
                                    MOZ_UTF16("href=\"chrome://global/locale/intl.css\" type=\"text/css\""));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const PRUnichar* noAtts[] = { 0, 0 };
+  const char16_t* noAtts[] = { 0, 0 };
 
   NS_NAMED_LITERAL_STRING(errorNs,
                           "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
   nsAutoString parsererror(errorNs);
-  parsererror.Append((PRUnichar)0xFFFF);
+  parsererror.Append((char16_t)0xFFFF);
   parsererror.AppendLiteral("parsererror");
   
   rv = HandleStartElement(parsererror.get(), noAtts, 0, -1, (uint32_t)-1,
@@ -1410,7 +1410,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   NS_ENSURE_SUCCESS(rv, rv);  
   
   nsAutoString sourcetext(errorNs);
-  sourcetext.Append((PRUnichar)0xFFFF);
+  sourcetext.Append((char16_t)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
   rv = HandleStartElement(sourcetext.get(), noAtts, 0, -1, (uint32_t)-1,
@@ -1432,7 +1432,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 }
 
 nsresult
-nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
+nsXMLContentSink::AddAttributes(const char16_t** aAtts,
                                 nsIContent* aContent)
 {
   // Add tag attributes to the content attributes
@@ -1454,12 +1454,12 @@ nsXMLContentSink::AddAttributes(const PRUnichar** aAtts,
 #define NS_ACCUMULATION_BUFFER_SIZE 4096
 
 nsresult
-nsXMLContentSink::AddText(const PRUnichar* aText, 
+nsXMLContentSink::AddText(const char16_t* aText, 
                           int32_t aLength)
 {
   // Create buffer when we first need it
   if (0 == mTextSize) {
-    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * NS_ACCUMULATION_BUFFER_SIZE);
+    mText = (char16_t *) PR_MALLOC(sizeof(char16_t) * NS_ACCUMULATION_BUFFER_SIZE);
     if (nullptr == mText) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1482,7 +1482,7 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
       }
       else {
         mTextSize += aLength;
-        mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
+        mText = (char16_t *) PR_REALLOC(mText, sizeof(char16_t) * mTextSize);
         if (nullptr == mText) {
           mTextSize = 0;
 
@@ -1495,7 +1495,7 @@ nsXMLContentSink::AddText(const PRUnichar* aText,
     if (amount > aLength) {
       amount = aLength;
     }
-    memcpy(&mText[mTextLength], &aText[offset], sizeof(PRUnichar) * amount);
+    memcpy(&mText[mTextLength], &aText[offset], sizeof(char16_t) * amount);
     mTextLength += amount;
     offset += amount;
     aLength -= amount;

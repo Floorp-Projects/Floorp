@@ -33,7 +33,7 @@ CaseInsensitiveCompare(const char *a, const char *b,
 class nsAString
 {
 public:
-  typedef PRUnichar  char_type;
+  typedef char16_t  char_type;
   typedef nsAString  self_type;
   typedef uint32_t   size_type;
   typedef uint32_t   index_type;
@@ -1055,7 +1055,7 @@ public:
   }
 
   explicit
-  NS_ConvertUTF16toUTF8(const PRUnichar* aData, uint32_t aLength = UINT32_MAX)
+  NS_ConvertUTF16toUTF8(const char16_t* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),
                       NS_CSTRING_ENCODING_UTF8, *this);
@@ -1077,7 +1077,7 @@ public:
   }
 
   explicit
-  NS_LossyConvertUTF16toASCII(const PRUnichar* aData, uint32_t aLength = UINT32_MAX)
+  NS_LossyConvertUTF16toASCII(const char16_t* aData, uint32_t aLength = UINT32_MAX)
   {
     NS_UTF16ToCString(nsDependentString(aData, aLength),
                       NS_CSTRING_ENCODING_ASCII, *this);
@@ -1099,8 +1099,8 @@ static_assert(char16_t(-1) > char16_t(0), "char16_t must be unsigned");
 #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const nsDependentString n(reinterpret_cast<const nsAString::char_type*>(s), uint32_t((sizeof(s)/2)-1))
 typedef nsDependentString nsLiteralString;
 
-/* Check that PRUnichar is unsigned */
-static_assert(PRUnichar(-1) > PRUnichar(0), "PRUnichar is by definition an unsigned type");
+/* Check that char16_t is unsigned */
+static_assert(char16_t(-1) > char16_t(0), "char16_t is by definition an unsigned type");
 
 #define NS_LITERAL_STRING(s)                      static_cast<const nsString&>(NS_MULTILINE_LITERAL_STRING(MOZ_UTF16(s)))
 #define NS_LITERAL_STRING_INIT(n,s)               NS_MULTILINE_LITERAL_STRING_INIT(n, MOZ_UTF16(s))
@@ -1116,7 +1116,7 @@ typedef nsDependentCString nsLiteralCString;
 /**
  * getter_Copies support
  *
- *    NS_IMETHOD GetBlah(PRUnichar**);
+ *    NS_IMETHOD GetBlah(char16_t**);
  *
  *    void some_function()
  *    {
@@ -1129,7 +1129,7 @@ typedef nsDependentCString nsLiteralCString;
 class nsGetterCopies
 {
 public:
-  typedef PRUnichar char_type;
+  typedef char16_t char_type;
 
   nsGetterCopies(nsString& aStr)
     : mString(aStr), mData(nullptr)
@@ -1276,7 +1276,7 @@ private:
  * Various nsDependentC?Substring constructor functions
  */
 
-// PRUnichar
+// char16_t
 inline const nsDependentSubstring
 Substring( const nsAString& str, uint32_t startPos )
 {
@@ -1290,14 +1290,14 @@ Substring( const nsAString& str, uint32_t startPos, uint32_t length )
 }
 
 inline const nsDependentSubstring
-Substring( const PRUnichar* start, const PRUnichar* end )
+Substring( const char16_t* start, const char16_t* end )
 {
   NS_ABORT_IF_FALSE(uint32_t(end - start) == uintptr_t(end - start), "string too long");
   return nsDependentSubstring(start, uint32_t(end - start));
 }
 
 inline const nsDependentSubstring
-Substring( const PRUnichar* start, uint32_t length )
+Substring( const char16_t* start, uint32_t length )
 {
   return nsDependentSubstring(start, length);
 }
@@ -1425,7 +1425,7 @@ ToNewCString(const nsACString& aStr)
   return NS_CStringCloneData(aStr);
 }
 
-inline PRUnichar*
+inline char16_t*
 ToNewUnicode(const nsAString& aStr)
 {
   return NS_StringCloneData(aStr);

@@ -21,23 +21,23 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICASECONVERSION_IID)
 
   // Convert one Unicode character into upper case
-  NS_IMETHOD ToUpper( PRUnichar aChar, PRUnichar* aReturn) = 0;
+  NS_IMETHOD ToUpper( char16_t aChar, char16_t* aReturn) = 0;
 
   // Convert one Unicode character into lower case
-  NS_IMETHOD ToLower( PRUnichar aChar, PRUnichar* aReturn) = 0;
+  NS_IMETHOD ToLower( char16_t aChar, char16_t* aReturn) = 0;
 
   // Convert one Unicode character into title case
-  NS_IMETHOD ToTitle( PRUnichar aChar, PRUnichar* aReturn) = 0;
+  NS_IMETHOD ToTitle( char16_t aChar, char16_t* aReturn) = 0;
 
   // Convert an array of Unicode characters into upper case
-  NS_IMETHOD ToUpper( const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen) = 0;
+  NS_IMETHOD ToUpper( const char16_t* anArray, char16_t* aReturn, uint32_t aLen) = 0;
 
   // Convert an array of Unicode characters into lower case
-  NS_IMETHOD ToLower( const PRUnichar* anArray, PRUnichar* aReturn, uint32_t aLen) = 0;
+  NS_IMETHOD ToLower( const char16_t* anArray, char16_t* aReturn, uint32_t aLen) = 0;
 
-  // case-insensitive PRUnichar* comparison - aResult returns similar
+  // case-insensitive char16_t* comparison - aResult returns similar
   // to strcasecmp
-  NS_IMETHOD CaseInsensitiveCompare(const PRUnichar* aLeft, const PRUnichar* aRight, uint32_t aLength, int32_t* aResult) = 0;
+  NS_IMETHOD CaseInsensitiveCompare(const char16_t* aLeft, const char16_t* aRight, uint32_t aLength, int32_t* aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICaseConversion, NS_ICASECONVERSION_IID)

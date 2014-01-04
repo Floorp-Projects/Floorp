@@ -606,19 +606,19 @@ inDOMView::Drop(int32_t row, int32_t orientation, nsIDOMDataTransfer* aDataTrans
 }
 
 NS_IMETHODIMP
-inDOMView::PerformAction(const PRUnichar *action)
+inDOMView::PerformAction(const char16_t *action)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::PerformActionOnRow(const PRUnichar *action, int32_t row)
+inDOMView::PerformActionOnRow(const char16_t *action, int32_t row)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDOMView::PerformActionOnCell(const PRUnichar* action, int32_t row, nsITreeColumn* col)
+inDOMView::PerformActionOnCell(const char16_t* action, int32_t row, nsITreeColumn* col)
 {
   return NS_OK;
 }

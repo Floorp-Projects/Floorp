@@ -27,7 +27,7 @@ class nsACString;
 typedef boolean             bool   ;
 typedef octet               uint8_t  ;
 typedef unsigned short      uint16_t ;
-typedef unsigned short      PRUnichar;
+typedef unsigned short      char16_t;
 typedef unsigned long       uint32_t ;
 typedef unsigned long long  uint64_t ;
 typedef long long           PRTime   ;
@@ -44,7 +44,7 @@ typedef unsigned long       size_t;
 
 [ptr]         native voidPtr(void);
 [ptr]         native charPtr(char);
-[ptr]         native unicharPtr(PRUnichar);
+[ptr]         native unicharPtr(char16_t);
 
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);

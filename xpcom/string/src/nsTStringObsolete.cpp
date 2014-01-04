@@ -63,7 +63,7 @@ nsTString_CharT::RFind( const char* aString, bool aIgnoreCase, int32_t aOffset, 
    */
 
 int32_t
-nsTString_CharT::RFindChar( PRUnichar aChar, int32_t aOffset, int32_t aCount) const
+nsTString_CharT::RFindChar( char16_t aChar, int32_t aOffset, int32_t aCount) const
   {
     return nsBufferRoutines<CharT>::rfind_char(mData, mLength, aOffset, aChar, aCount);
   }
@@ -380,7 +380,7 @@ nsTString_CharT::Mid( self_type& aResult, index_type aStartPos, size_type aLengt
    */
 
 bool
-nsTString_CharT::SetCharAt( PRUnichar aChar, uint32_t aIndex )
+nsTString_CharT::SetCharAt( char16_t aChar, uint32_t aIndex )
   {
     if (aIndex >= mLength)
       return false;

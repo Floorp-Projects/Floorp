@@ -356,9 +356,9 @@ GetSlotWithMechanism(uint32_t aMechanism,
 {
     nsNSSShutDownPreventionLock locker;
     PK11SlotList * slotList = nullptr;
-    PRUnichar** tokenNameList = nullptr;
+    char16_t** tokenNameList = nullptr;
     nsITokenDialogs * dialogs;
-    PRUnichar *unicodeTokenChosen;
+    char16_t *unicodeTokenChosen;
     PK11SlotListElement *slotElement, *tmpSlot;
     uint32_t numSlots = 0, i = 0;
     bool canceled;
@@ -386,7 +386,7 @@ GetSlotWithMechanism(uint32_t aMechanism,
         }
 
         // Allocate the slot name buffer //
-        tokenNameList = static_cast<PRUnichar**>(nsMemory::Alloc(sizeof(PRUnichar *) * numSlots));
+        tokenNameList = static_cast<char16_t**>(nsMemory::Alloc(sizeof(char16_t *) * numSlots));
         if (!tokenNameList) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto loser;
@@ -424,7 +424,7 @@ GetSlotWithMechanism(uint32_t aMechanism,
         rv = NS_ERROR_NOT_AVAILABLE;
       }
       else {
-        rv = dialogs->ChooseToken(m_ctx, (const PRUnichar**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
+        rv = dialogs->ChooseToken(m_ctx, (const char16_t**)tokenNameList, numSlots, &unicodeTokenChosen, &canceled);
       }
     }
 		NS_RELEASE(dialogs);

@@ -314,7 +314,7 @@ nsTransformedTextRun *
 nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              nsTransformingTextRunFactory* aFactory,
                              gfxFontGroup* aFontGroup,
-                             const PRUnichar* aString, uint32_t aLength,
+                             const char16_t* aString, uint32_t aLength,
                              const uint32_t aFlags, nsStyleContext** aStyles,
                              bool aOwnsFactory)
 {
@@ -377,7 +377,7 @@ nsTransformedTextRun::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 }
 
 nsTransformedTextRun*
-nsTransformingTextRunFactory::MakeTextRun(const PRUnichar* aString, uint32_t aLength,
+nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
                                           nsStyleContext** aStyles, bool aOwnsFactory)
@@ -514,7 +514,7 @@ nsFontVariantTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
       GetParametersForInner(aTextRun, &flags, aRefContext);
 
   uint32_t length = aTextRun->GetLength();
-  const PRUnichar* str = aTextRun->mString.BeginReading();
+  const char16_t* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
   // Create a textrun so we can check cluster-start properties
   nsAutoPtr<gfxTextRun> inner(fontGroup->MakeTextRun(str, length, &innerParams, flags));
@@ -641,7 +641,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     gfxContext* aRefContext)
 {
   uint32_t length = aTextRun->GetLength();
-  const PRUnichar* str = aTextRun->mString.BeginReading();
+  const char16_t* str = aTextRun->mString.BeginReading();
   nsRefPtr<nsStyleContext>* styles = aTextRun->mStyles.Elements();
 
   nsAutoString convertedString;

@@ -191,7 +191,7 @@ public:
   
   NS_IMETHODIMP Observe(nsISupports *aSubject,
                         const char *aTopic,
-                        const PRUnichar *aData)
+                        const char16_t *aData)
   {
     if (nsCRT::strcmp(aTopic, NS_TIMER_CALLBACK_TOPIC) == 0 &&
         NS_FAILED(RegisterIdleObserver())) {

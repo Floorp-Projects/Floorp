@@ -34,8 +34,8 @@ static OperatorData*   gOperatorArray = nullptr;
 static nsHashtable*    gOperatorTable = nullptr;
 static bool            gGlobalsInitialized   = false;
 
-static const PRUnichar kDashCh  = PRUnichar('#');
-static const PRUnichar kColonCh = PRUnichar(':');
+static const char16_t kDashCh  = char16_t('#');
+static const char16_t kColonCh = char16_t(':');
 
 static void
 SetBooleanProperty(OperatorData* aOperatorData,
@@ -110,16 +110,16 @@ SetOperator(OperatorData*   aOperatorData,
             nsString&        aAttributes)
 
 {
-  static const PRUnichar kNullCh = PRUnichar('\0');
+  static const char16_t kNullCh = char16_t('\0');
 
   // aOperator is in the expanded format \uNNNN\uNNNN ...
   // First compress these Unicode points to the internal nsString format
   int32_t i = 0;
   nsAutoString name, value;
   int32_t len = aOperator.Length();
-  PRUnichar c = aOperator[i++];
+  char16_t c = aOperator[i++];
   uint32_t state  = 0;
-  PRUnichar uchar = 0;
+  char16_t uchar = 0;
   while (i <= len) {
     if (0 == state) {
       if (c != '\\')
@@ -172,8 +172,8 @@ SetOperator(OperatorData*   aOperatorData,
 #endif
   // Loop over the space-delimited list of attributes to get the name:value pairs
   aAttributes.Append(kNullCh);  // put an extra null at the end
-  PRUnichar* start = aAttributes.BeginWriting();
-  PRUnichar* end   = start;
+  char16_t* start = aAttributes.BeginWriting();
+  char16_t* end   = start;
   while ((kNullCh != *start) && (kDashCh != *start)) {
     name.SetLength(0);
     value.SetLength(0);

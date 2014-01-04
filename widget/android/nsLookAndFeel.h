@@ -21,7 +21,7 @@ public:
                              float aDevPixPerCSSPixel);
     virtual bool GetEchoPasswordImpl();
     virtual uint32_t GetPasswordMaskDelayImpl();
-    virtual PRUnichar GetPasswordCharacterImpl();
+    virtual char16_t GetPasswordCharacterImpl();
 
 protected:
     static bool mInitializedSystemColors;

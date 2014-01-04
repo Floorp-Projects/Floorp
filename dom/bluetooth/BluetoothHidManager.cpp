@@ -29,7 +29,7 @@ namespace {
 NS_IMETHODIMP
 BluetoothHidManager::Observe(nsISupports* aSubject,
                              const char* aTopic,
-                             const PRUnichar* aData)
+                             const char16_t* aData)
 {
   MOZ_ASSERT(sBluetoothHidManager);
 
