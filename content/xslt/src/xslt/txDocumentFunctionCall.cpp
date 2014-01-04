@@ -29,7 +29,7 @@ retrieveNode(txExecutionState* aExecutionState, const nsAString& aUri,
     nsAutoString absUrl;
     URIUtils::resolveHref(aUri, aBaseUri, absUrl);
 
-    int32_t hash = absUrl.RFindChar(PRUnichar('#'));
+    int32_t hash = absUrl.RFindChar(char16_t('#'));
     uint32_t urlEnd, fragStart, fragEnd;
     if (hash == kNotFound) {
         urlEnd = absUrl.Length();

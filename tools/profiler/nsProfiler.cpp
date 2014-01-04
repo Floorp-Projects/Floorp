@@ -52,7 +52,7 @@ nsProfiler::Init() {
 NS_IMETHODIMP
 nsProfiler::Observe(nsISupports *aSubject,
                     const char *aTopic,
-                    const PRUnichar *aData)
+                    const char16_t *aData)
 {
   if (strcmp(aTopic, "chrome-document-global-created") == 0) {
     nsCOMPtr<nsIInterfaceRequestor> requestor = do_QueryInterface(aSubject);

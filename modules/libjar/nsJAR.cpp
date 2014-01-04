@@ -1314,7 +1314,7 @@ FindFlushableZip(nsHashKey *aKey, void *aData, void* closure)
 NS_IMETHODIMP
 nsZipReaderCache::Observe(nsISupports *aSubject,
                           const char *aTopic, 
-                          const PRUnichar *aSomeData)
+                          const char16_t *aSomeData)
 {
   if (strcmp(aTopic, "memory-pressure") == 0) {
     MutexAutoLock lock(mLock);

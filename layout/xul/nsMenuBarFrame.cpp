@@ -213,8 +213,8 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
       current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, shortcutKey);
       if (!shortcutKey.IsEmpty()) {
         ToLowerCase(shortcutKey);
-        const PRUnichar* start = shortcutKey.BeginReading();
-        const PRUnichar* end = shortcutKey.EndReading();
+        const char16_t* start = shortcutKey.BeginReading();
+        const char16_t* end = shortcutKey.EndReading();
         uint32_t ch = UTF16CharEnumerator::NextChar(&start, end);
         uint32_t index = accessKeys.IndexOf(ch);
         if (index != accessKeys.NoIndex &&

@@ -117,7 +117,7 @@ public:
     }
 
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
-                        const PRUnichar* aData) {
+                        const char16_t* aData) {
     if (strcmp(aTopic, "profile-change-net-teardown") == 0) {
       LOG(("Shutting down SCTP"));
       if (sctp_initialized) {

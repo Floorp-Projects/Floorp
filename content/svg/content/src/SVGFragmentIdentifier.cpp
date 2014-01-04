@@ -24,7 +24,7 @@ IsMatchingParameter(const nsAString& aString, const nsAString& aParameterName)
 }
 
 inline bool
-IgnoreWhitespace(PRUnichar aChar)
+IgnoreWhitespace(char16_t aChar)
 {
   return false;
 }

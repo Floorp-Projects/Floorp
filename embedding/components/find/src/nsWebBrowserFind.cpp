@@ -235,14 +235,14 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
 
 
 /* attribute wstring searchString; */
-NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
+NS_IMETHODIMP nsWebBrowserFind::GetSearchString(char16_t * *aSearchString)
 {
     NS_ENSURE_ARG_POINTER(aSearchString);
     *aSearchString = ToNewUnicode(mSearchString);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const PRUnichar * aSearchString)
+NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const char16_t * aSearchString)
 {
     mSearchString.Assign(aSearchString);
     return NS_OK;

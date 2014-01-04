@@ -189,14 +189,14 @@ public:
   virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) MOZ_OVERRIDE;
   virtual const nsTextFragment *GetText() MOZ_OVERRIDE;
   virtual uint32_t TextLength() const MOZ_OVERRIDE;
-  virtual nsresult SetText(const PRUnichar* aBuffer, uint32_t aLength,
+  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
                            bool aNotify) MOZ_OVERRIDE;
   // Need to implement this here too to avoid hiding.
   nsresult SetText(const nsAString& aStr, bool aNotify)
   {
     return SetText(aStr.BeginReading(), aStr.Length(), aNotify);
   }
-  virtual nsresult AppendText(const PRUnichar* aBuffer, uint32_t aLength,
+  virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                               bool aNotify) MOZ_OVERRIDE;
   virtual bool TextIsOnlyWhitespace() MOZ_OVERRIDE;
   virtual void AppendTextTo(nsAString& aResult) MOZ_OVERRIDE;

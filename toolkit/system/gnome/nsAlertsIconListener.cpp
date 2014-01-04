@@ -226,7 +226,7 @@ nsAlertsIconListener::SendClosed()
 
 NS_IMETHODIMP
 nsAlertsIconListener::Observe(nsISupports *aSubject, const char *aTopic,
-                              const PRUnichar *aData) {
+                              const char16_t *aData) {
   // We need to close any open notifications upon application exit, otherwise
   // we will leak since libnotify holds a ref for us.
   if (!nsCRT::strcmp(aTopic, "quit-application") && mNotification) {

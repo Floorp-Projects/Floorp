@@ -53,7 +53,7 @@ static HWND hwndForDOMWindow( nsISupports * );
 
 static
 nsresult
-GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindow** aWindow) {
+GetMostRecentWindow(const char16_t* aType, nsIDOMWindow** aWindow) {
     nsresult rv;
     nsCOMPtr<nsIWindowMediator> med( do_GetService( NS_WINDOWMEDIATOR_CONTRACTID, &rv ) );
     if ( NS_FAILED( rv ) )
@@ -91,7 +91,7 @@ activateWindow( nsIDOMWindow *win ) {
 
 // Simple Win32 mutex wrapper.
 struct Mutex {
-    Mutex( const PRUnichar *name )
+    Mutex( const char16_t *name )
         : mName( name ),
           mHandle( 0 ),
           mState( -1 ) {
@@ -319,7 +319,7 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static bool mCanHandleRequests;
-    static PRUnichar mMutexName[];
+    static char16_t mMutexName[];
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -459,7 +459,7 @@ HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 bool nsNativeAppSupportWin::mCanHandleRequests   = false;
 
-PRUnichar nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
+char16_t nsNativeAppSupportWin::mMutexName[ 128 ] = { 0 };
 
 
 // Message window encapsulation.
@@ -644,7 +644,7 @@ nsNativeAppSupportWin::Start( bool *aResult ) {
 
     // Build mutex name from app name.
     ::_snwprintf(reinterpret_cast<wchar_t*>(mMutexName),
-                 sizeof mMutexName / sizeof(PRUnichar), L"%s%s%s",
+                 sizeof mMutexName / sizeof(char16_t), L"%s%s%s",
                  MOZ_MUTEX_NAMESPACE,
                  NS_ConvertUTF8toUTF16(gAppData->name).get(),
                  MOZ_STARTUP_MUTEX_NAME );
@@ -760,7 +760,7 @@ nsNativeAppSupportWin::Stop( bool *aResult ) {
 
 NS_IMETHODIMP
 nsNativeAppSupportWin::Observe(nsISupports* aSubject, const char* aTopic,
-                               const PRUnichar* aData)
+                               const char16_t* aData)
 {
     if (strcmp(aTopic, "quit-application") == 0) {
         Quit();
@@ -891,7 +891,7 @@ static void escapeQuotes( nsAString &aString ) {
            break;
        } else {
            // Insert back-slash ahead of the '"'.
-           aString.Insert( PRUnichar('\\'), offset );
+           aString.Insert( char16_t('\\'), offset );
            // Increment offset because we just inserted a slash
            offset++;
        }

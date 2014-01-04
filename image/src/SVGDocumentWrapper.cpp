@@ -274,7 +274,7 @@ SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
 NS_IMETHODIMP
 SVGDocumentWrapper::Observe(nsISupports* aSubject,
                             const char* aTopic,
-                            const PRUnichar *aData)
+                            const char16_t *aData)
 {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Sever ties from rendering observers to helper-doc's root SVG node

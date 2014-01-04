@@ -459,7 +459,7 @@ nsMemoryPressureWatcher::Init()
  */
 NS_IMETHODIMP
 nsMemoryPressureWatcher::Observe(nsISupports *subject, const char *topic,
-                                 const PRUnichar *data)
+                                 const char16_t *data)
 {
   MOZ_ASSERT(!strcmp(topic, "memory-pressure"), "Unknown topic");
 

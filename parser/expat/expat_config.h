@@ -27,9 +27,9 @@
 #define XMLIMPORT
 
 #define XML_UNICODE
-typedef PRUnichar XML_Char;
+typedef char16_t XML_Char;
 typedef char XML_LChar;
-#define XML_T(x) (PRUnichar)x
+#define XML_T(x) (char16_t)x
 #define XML_L(x) x
 
 #define XML_DTD

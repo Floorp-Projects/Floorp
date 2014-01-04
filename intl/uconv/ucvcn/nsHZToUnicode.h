@@ -33,7 +33,7 @@ protected:
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
   NS_IMETHOD ConvertNoBuff(const char* aSrc, int32_t * aSrcLength, 
-                           PRUnichar *aDest, int32_t * aDestLength); 
+                           char16_t *aDest, int32_t * aDestLength); 
   nsGBKConvUtil mUtil;
 
 private:

@@ -124,10 +124,10 @@ FunctionCall::toString(nsAString& aDest)
                  NS_LITERAL_STRING("("));
     for (uint32_t i = 0; i < mParams.Length(); ++i) {
         if (i != 0) {
-            aDest.Append(PRUnichar(','));
+            aDest.Append(char16_t(','));
         }
         mParams[i]->toString(aDest);
     }
-    aDest.Append(PRUnichar(')'));
+    aDest.Append(char16_t(')'));
 }
 #endif

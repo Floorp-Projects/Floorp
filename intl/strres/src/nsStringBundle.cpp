@@ -154,9 +154,9 @@ nsStringBundle::GetStringFromName(const nsAString& aName,
 
 NS_IMETHODIMP
 nsStringBundle::FormatStringFromID(int32_t aID,
-                                   const PRUnichar **aParams,
+                                   const char16_t **aParams,
                                    uint32_t aLength,
-                                   PRUnichar ** aResult)
+                                   char16_t ** aResult)
 {
   nsAutoString idStr;
   idStr.AppendInt(aID, 10);
@@ -166,10 +166,10 @@ nsStringBundle::FormatStringFromID(int32_t aID,
 
 // this function supports at most 10 parameters.. see below for why
 NS_IMETHODIMP
-nsStringBundle::FormatStringFromName(const PRUnichar *aName,
-                                     const PRUnichar **aParams,
+nsStringBundle::FormatStringFromName(const char16_t *aName,
+                                     const char16_t **aParams,
                                      uint32_t aLength,
-                                     PRUnichar **aResult)
+                                     char16_t **aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ASSERTION(aParams && aLength, "FormatStringFromName() without format parameters: use GetStringFromName() instead");
@@ -191,7 +191,7 @@ NS_IMPL_ISUPPORTS1(nsStringBundle, nsIStringBundle)
 
 /* void GetStringFromID (in long aID, out wstring aResult); */
 NS_IMETHODIMP
-nsStringBundle::GetStringFromID(int32_t aID, PRUnichar **aResult)
+nsStringBundle::GetStringFromID(int32_t aID, char16_t **aResult)
 {
   nsresult rv;
   rv = LoadProperties();
@@ -211,7 +211,7 @@ nsStringBundle::GetStringFromID(int32_t aID, PRUnichar **aResult)
 
 /* void GetStringFromName (in wstring aName, out wstring aResult); */
 NS_IMETHODIMP 
-nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
+nsStringBundle::GetStringFromName(const char16_t *aName, char16_t **aResult)
 {
   NS_ENSURE_ARG_POINTER(aName);
   NS_ENSURE_ARG_POINTER(aResult);
@@ -323,9 +323,9 @@ nsStringBundle::GetSimpleEnumeration(nsISimpleEnumerator** elements)
 }
 
 nsresult
-nsStringBundle::FormatString(const PRUnichar *aFormatStr,
-                             const PRUnichar **aParams, uint32_t aLength,
-                             PRUnichar **aResult)
+nsStringBundle::FormatString(const char16_t *aFormatStr,
+                             const char16_t **aParams, uint32_t aLength,
+                             char16_t **aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG(aLength <= 10); // enforce 10-parameter limit
@@ -336,7 +336,7 @@ nsStringBundle::FormatString(const PRUnichar *aFormatStr,
   // Don't believe me? See:
   //   http://www.eskimo.com/~scs/C-faq/q15.13.html
   // -alecf
-  PRUnichar *text = 
+  char16_t *text = 
     nsTextFormatter::smprintf(aFormatStr,
                               aLength >= 1 ? aParams[0] : nullptr,
                               aLength >= 2 ? aParams[1] : nullptr,
@@ -417,7 +417,7 @@ nsExtensibleStringBundle::~nsExtensibleStringBundle()
 {
 }
 
-nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, PRUnichar ** aResult)
+nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, char16_t ** aResult)
 {
   nsresult rv;
   const uint32_t size = mBundles.Count();
@@ -433,8 +433,8 @@ nsresult nsExtensibleStringBundle::GetStringFromID(int32_t aID, PRUnichar ** aRe
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
-                                                     PRUnichar ** aResult)
+nsresult nsExtensibleStringBundle::GetStringFromName(const char16_t *aName,
+                                                     char16_t ** aResult)
 {
   nsresult rv;
   const uint32_t size = mBundles.Count();
@@ -452,9 +452,9 @@ nsresult nsExtensibleStringBundle::GetStringFromName(const PRUnichar *aName,
 
 NS_IMETHODIMP
 nsExtensibleStringBundle::FormatStringFromID(int32_t aID,
-                                             const PRUnichar ** aParams,
+                                             const char16_t ** aParams,
                                              uint32_t aLength,
-                                             PRUnichar ** aResult)
+                                             char16_t ** aResult)
 {
   nsAutoString idStr;
   idStr.AppendInt(aID, 10);
@@ -462,10 +462,10 @@ nsExtensibleStringBundle::FormatStringFromID(int32_t aID,
 }
 
 NS_IMETHODIMP
-nsExtensibleStringBundle::FormatStringFromName(const PRUnichar *aName,
-                                               const PRUnichar ** aParams,
+nsExtensibleStringBundle::FormatStringFromName(const char16_t *aName,
+                                               const char16_t ** aParams,
                                                uint32_t aLength,
-                                               PRUnichar ** aResult)
+                                               char16_t ** aResult)
 {
   nsXPIDLString formatStr;
   nsresult rv;
@@ -543,7 +543,7 @@ nsStringBundleService::Init()
 NS_IMETHODIMP
 nsStringBundleService::Observe(nsISupports* aSubject,
                                const char* aTopic,
-                               const PRUnichar* aSomeData)
+                               const char16_t* aSomeData)
 {
   if (strcmp("memory-pressure", aTopic) == 0 ||
       strcmp("profile-do-change", aTopic) == 0 ||
@@ -712,8 +712,8 @@ nsStringBundleService::CreateExtensibleBundle(const char* aCategory,
 
 nsresult
 nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
-                                        uint32_t argCount, PRUnichar** argArray,
-                                        PRUnichar* *result)
+                                        uint32_t argCount, char16_t** argArray,
+                                        char16_t* *result)
 {
   nsresult rv;
   nsXPIDLCString key;
@@ -724,14 +724,14 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   // first try looking up the error message with the string key:
   if (NS_SUCCEEDED(rv)) {
     rv = bundle->FormatStringFromName(NS_ConvertASCIItoUTF16(key).get(),
-                                      (const PRUnichar**)argArray, 
+                                      (const char16_t**)argArray, 
                                       argCount, result);
   }
 
   // if the string key fails, try looking up the error message with the int key:
   if (NS_FAILED(rv)) {
     uint16_t code = NS_ERROR_GET_CODE(aStatus);
-    rv = bundle->FormatStringFromID(code, (const PRUnichar**)argArray, argCount, result);
+    rv = bundle->FormatStringFromID(code, (const char16_t**)argArray, argCount, result);
   }
 
   // If the int key fails, try looking up the default error message. E.g. print:
@@ -739,7 +739,7 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   if (NS_FAILED(rv)) {
     nsAutoString statusStr;
     statusStr.AppendInt(static_cast<uint32_t>(aStatus), 16);
-    const PRUnichar* otherArgArray[1];
+    const char16_t* otherArgArray[1];
     otherArgArray[0] = statusStr.get();
     uint16_t code = NS_ERROR_GET_CODE(NS_ERROR_FAILURE);
     rv = bundle->FormatStringFromID(code, otherArgArray, 1, result);
@@ -750,8 +750,8 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
 
 NS_IMETHODIMP
 nsStringBundleService::FormatStatusMessage(nsresult aStatus,
-                                           const PRUnichar* aStatusArg,
-                                           PRUnichar* *result)
+                                           const char16_t* aStatusArg,
+                                           char16_t* *result)
 {
   nsresult rv;
   uint32_t i, argCount = 0;
@@ -771,14 +771,14 @@ nsStringBundleService::FormatStatusMessage(nsresult aStatus,
 
   // format the arguments:
   const nsDependentString args(aStatusArg);
-  argCount = args.CountChar(PRUnichar('\n')) + 1;
+  argCount = args.CountChar(char16_t('\n')) + 1;
   NS_ENSURE_ARG(argCount <= 10); // enforce 10-parameter limit
-  PRUnichar* argArray[10];
+  char16_t* argArray[10];
 
-  // convert the aStatusArg into a PRUnichar array
+  // convert the aStatusArg into a char16_t array
   if (argCount == 1) {
     // avoid construction for the simple case:
-    argArray[0] = (PRUnichar*)aStatusArg;
+    argArray[0] = (char16_t*)aStatusArg;
   }
   else if (argCount > 1) {
     int32_t offset = 0;

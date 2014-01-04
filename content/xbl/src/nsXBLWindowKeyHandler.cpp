@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(nsXBLSpecialDocInfo, nsIObserver)
 NS_IMETHODIMP
 nsXBLSpecialDocInfo::Observe(nsISupports* aSubject,
                              const char* aTopic,
-                             const PRUnichar* aData)
+                             const char16_t* aData)
 {
   MOZ_ASSERT(!strcmp(aTopic, "xpcom-shutdown"), "wrong topic");
 

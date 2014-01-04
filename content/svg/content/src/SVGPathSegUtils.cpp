@@ -29,7 +29,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
                 "Add another case to the switch below.");
 
   uint32_t type = DecodeType(aSeg[0]);
-  PRUnichar typeAsChar = GetPathSegTypeAsLetter(type);
+  char16_t typeAsChar = GetPathSegTypeAsLetter(type);
 
   // Special case arcs:
   if (IsArcType(type)) {
@@ -80,7 +80,7 @@ SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
   // of the output string is one too long. We need to manually remove that '\0'
   // until nsTextFormatter is fixed.
   //
-  if (aValue[aValue.Length() - 1] == PRUnichar('\0')) {
+  if (aValue[aValue.Length() - 1] == char16_t('\0')) {
     aValue.SetLength(aValue.Length() - 1);
   }
 }

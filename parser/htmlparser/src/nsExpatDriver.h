@@ -32,45 +32,45 @@ public:
   nsExpatDriver();
   virtual ~nsExpatDriver();
 
-  int HandleExternalEntityRef(const PRUnichar *aOpenEntityNames,
-                              const PRUnichar *aBase,
-                              const PRUnichar *aSystemId,
-                              const PRUnichar *aPublicId);
-  nsresult HandleStartElement(const PRUnichar *aName, const PRUnichar **aAtts);
-  nsresult HandleEndElement(const PRUnichar *aName);
-  nsresult HandleCharacterData(const PRUnichar *aCData, const uint32_t aLength);
-  nsresult HandleComment(const PRUnichar *aName);
-  nsresult HandleProcessingInstruction(const PRUnichar *aTarget,
-                                       const PRUnichar *aData);
-  nsresult HandleXMLDeclaration(const PRUnichar *aVersion,
-                                const PRUnichar *aEncoding,
+  int HandleExternalEntityRef(const char16_t *aOpenEntityNames,
+                              const char16_t *aBase,
+                              const char16_t *aSystemId,
+                              const char16_t *aPublicId);
+  nsresult HandleStartElement(const char16_t *aName, const char16_t **aAtts);
+  nsresult HandleEndElement(const char16_t *aName);
+  nsresult HandleCharacterData(const char16_t *aCData, const uint32_t aLength);
+  nsresult HandleComment(const char16_t *aName);
+  nsresult HandleProcessingInstruction(const char16_t *aTarget,
+                                       const char16_t *aData);
+  nsresult HandleXMLDeclaration(const char16_t *aVersion,
+                                const char16_t *aEncoding,
                                 int32_t aStandalone);
-  nsresult HandleDefault(const PRUnichar *aData, const uint32_t aLength);
+  nsresult HandleDefault(const char16_t *aData, const uint32_t aLength);
   nsresult HandleStartCdataSection();
   nsresult HandleEndCdataSection();
-  nsresult HandleStartDoctypeDecl(const PRUnichar* aDoctypeName,
-                                  const PRUnichar* aSysid,
-                                  const PRUnichar* aPubid,
+  nsresult HandleStartDoctypeDecl(const char16_t* aDoctypeName,
+                                  const char16_t* aSysid,
+                                  const char16_t* aPubid,
                                   bool aHasInternalSubset);
   nsresult HandleEndDoctypeDecl();
-  nsresult HandleStartNamespaceDecl(const PRUnichar* aPrefix,
-                                    const PRUnichar* aUri);
-  nsresult HandleEndNamespaceDecl(const PRUnichar* aPrefix);
-  nsresult HandleNotationDecl(const PRUnichar* aNotationName,
-                              const PRUnichar* aBase,
-                              const PRUnichar* aSysid,
-                              const PRUnichar* aPubid);
-  nsresult HandleUnparsedEntityDecl(const PRUnichar* aEntityName,
-                                    const PRUnichar* aBase,
-                                    const PRUnichar* aSysid,
-                                    const PRUnichar* aPubid,
-                                    const PRUnichar* aNotationName);
+  nsresult HandleStartNamespaceDecl(const char16_t* aPrefix,
+                                    const char16_t* aUri);
+  nsresult HandleEndNamespaceDecl(const char16_t* aPrefix);
+  nsresult HandleNotationDecl(const char16_t* aNotationName,
+                              const char16_t* aBase,
+                              const char16_t* aSysid,
+                              const char16_t* aPubid);
+  nsresult HandleUnparsedEntityDecl(const char16_t* aEntityName,
+                                    const char16_t* aBase,
+                                    const char16_t* aSysid,
+                                    const char16_t* aPubid,
+                                    const char16_t* aNotationName);
 
 private:
   // Load up an external stream to get external entity information
-  nsresult OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
-                                          const PRUnichar* aURLStr,
-                                          const PRUnichar* aBaseURL,
+  nsresult OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
+                                          const char16_t* aURLStr,
+                                          const char16_t* aBaseURL,
                                           nsIInputStream** aStream,
                                           nsAString& aAbsURL);
 
@@ -82,7 +82,7 @@ private:
    *
    * @param aBuffer the buffer to pass to Expat. May be null.
    * @param aLength the length of the buffer to pass to Expat (in number of
-   *                PRUnichar's). Must be 0 if aBuffer is null and > 0 if
+   *                char16_t's). Must be 0 if aBuffer is null and > 0 if
    *                aBuffer is not null.
    * @param aIsFinal whether there will definitely not be any more new buffers
    *                 passed in to ParseBuffer
@@ -90,7 +90,7 @@ private:
    *                        doesn't include the PRUnichars that Expat stored in
    *                        its buffer but didn't parse yet.
    */
-  void ParseBuffer(const PRUnichar *aBuffer, uint32_t aLength, bool aIsFinal,
+  void ParseBuffer(const char16_t *aBuffer, uint32_t aLength, bool aIsFinal,
                    uint32_t *aConsumed);
   nsresult HandleError();
 

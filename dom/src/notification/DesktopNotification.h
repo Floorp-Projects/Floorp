@@ -159,7 +159,7 @@ class AlertServiceObserver: public nsIObserver
   NS_IMETHODIMP
   Observe(nsISupports *aSubject,
           const char *aTopic,
-          const PRUnichar *aData)
+          const char16_t *aData)
   {
 
     // forward to parent

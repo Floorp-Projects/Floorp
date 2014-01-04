@@ -222,7 +222,7 @@ nsChromeRegistryContent::GetSelectedLocale(const nsACString& aPackage,
   
 NS_IMETHODIMP
 nsChromeRegistryContent::Observe(nsISupports* aSubject, const char* aTopic,
-                                 const PRUnichar* aData)
+                                 const char16_t* aData)
 {
   CONTENT_NOT_IMPLEMENTED();
 }

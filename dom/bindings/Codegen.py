@@ -2760,13 +2760,13 @@ def getHandleDefault(defaultValue):
 
 def handleDefaultStringValue(defaultValue, method):
     """
-    Returns a string which ends up calling 'method' with a (PRUnichar*, length)
+    Returns a string which ends up calling 'method' with a (char16_t*, length)
     pair that sets this string default value.  This string is suitable for
     passing as the second argument of handleDefault; in particular it does not
     end with a ';'
     """
     assert defaultValue.type.isDOMString()
-    return ("static const PRUnichar data[] = { %s };\n"
+    return ("static const char16_t data[] = { %s };\n"
             "%s(data, ArrayLength(data) - 1)" %
             (", ".join(["'" + char + "'" for char in
                         defaultValue.value] + ["0"]),

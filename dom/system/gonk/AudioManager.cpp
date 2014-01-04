@@ -281,7 +281,7 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
 nsresult
 AudioManager::Observe(nsISupports* aSubject,
                       const char* aTopic,
-                      const PRUnichar* aData)
+                      const char16_t* aData)
 {
   if ((strcmp(aTopic, BLUETOOTH_SCO_STATUS_CHANGED_ID) == 0) ||
       (strcmp(aTopic, BLUETOOTH_HFP_STATUS_CHANGED_ID) == 0) ||

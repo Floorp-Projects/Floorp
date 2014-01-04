@@ -145,7 +145,7 @@ NS_WildCardValid(const char *expr)
 }
 
 int
-NS_WildCardValid(const PRUnichar *expr)
+NS_WildCardValid(const char16_t *expr)
 {
     return NS_WildCardValid_(expr);
 }
@@ -432,7 +432,7 @@ NS_WildCardMatch(const char *str, const char *xp,
 }
 
 int
-NS_WildCardMatch(const PRUnichar *str, const PRUnichar *xp,
+NS_WildCardMatch(const char16_t *str, const char16_t *xp,
                  bool case_insensitive)
 {
     return NS_WildCardMatch_(str, xp, case_insensitive);

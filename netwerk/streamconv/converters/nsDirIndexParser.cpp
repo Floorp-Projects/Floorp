@@ -131,7 +131,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   const char* pos = aFormatStr;
   unsigned int num = 0;
   do {
-    while (*pos && nsCRT::IsAsciiSpace(PRUnichar(*pos)))
+    while (*pos && nsCRT::IsAsciiSpace(char16_t(*pos)))
       ++pos;
     
     ++num;
@@ -143,7 +143,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     if (! *pos)
       break;
 
-    while (*pos && !nsCRT::IsAsciiSpace(PRUnichar(*pos)))
+    while (*pos && !nsCRT::IsAsciiSpace(char16_t(*pos)))
       ++pos;
 
   } while (*pos);
@@ -157,7 +157,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   
   int formatNum=0;
   do {
-    while (*aFormatStr && nsCRT::IsAsciiSpace(PRUnichar(*aFormatStr)))
+    while (*aFormatStr && nsCRT::IsAsciiSpace(char16_t(*aFormatStr)))
       ++aFormatStr;
     
     if (! *aFormatStr)
@@ -165,7 +165,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
 
     nsAutoCString name;
     int32_t     len = 0;
-    while (aFormatStr[len] && !nsCRT::IsAsciiSpace(PRUnichar(aFormatStr[len])))
+    while (aFormatStr[len] && !nsCRT::IsAsciiSpace(char16_t(aFormatStr[len])))
       ++len;
     name.SetCapacity(len + 1);
     name.Append(aFormatStr, len);
@@ -246,7 +246,7 @@ nsDirIndexParser::ParseData(nsIDirIndex *aIdx, char* aDataStr) {
       nsAutoString entryuri;
       
       if (gTextToSubURI) {
-        PRUnichar   *result = nullptr;
+        char16_t   *result = nullptr;
         if (NS_SUCCEEDED(rv = gTextToSubURI->UnEscapeAndConvert(mEncoding.get(), filename.get(),
                                                                 &result)) && (result)) {
           if (*result) {
@@ -362,7 +362,7 @@ nsDirIndexParser::ProcessData(nsIRequest *aRequest, nsISupports *aCtxt) {
     
     int32_t             eol = mBuf.FindCharInSet("\n\r", mLineStart);
     if (eol < 0)        break;
-    mBuf.SetCharAt(PRUnichar('\0'), eol);
+    mBuf.SetCharAt(char16_t('\0'), eol);
     
     const char  *line = mBuf.get() + mLineStart;
     

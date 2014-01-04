@@ -577,7 +577,7 @@ public:
 
   // nsIObserver implementation.
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *data)
+  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data)
   {
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA));
 
@@ -1555,7 +1555,7 @@ nsCookieService::~nsCookieService()
 NS_IMETHODIMP
 nsCookieService::Observe(nsISupports     *aSubject,
                          const char      *aTopic,
-                         const PRUnichar *aData)
+                         const char16_t *aData)
 {
   // check the topic
   if (!strcmp(aTopic, "profile-before-change")) {
@@ -1877,7 +1877,7 @@ nsCookieService::NotifyThirdParty(nsIURI *aHostURI, bool aIsAccepted, nsIChannel
 // cookies.
 void
 nsCookieService::NotifyChanged(nsISupports     *aSubject,
-                               const PRUnichar *aData)
+                               const char16_t *aData)
 {
   const char* topic = mDBState == mPrivateDBState ?
       "private-cookie-changed" : "cookie-changed";

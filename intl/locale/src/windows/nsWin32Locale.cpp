@@ -618,7 +618,7 @@ nsWin32Locale::GetPlatformLocale(const nsAString& locale, LCID* winLCID)
   size_t  i, j;
 
   // parse the locale
-  const PRUnichar* data;
+  const char16_t* data;
   j = NS_StringGetData(locale, &data);
   for (i = 0; i < 7 && i < j; i++) {
     locale_string[i] = data[i] == '-' ? '\0' : data[i];
@@ -701,7 +701,7 @@ nsWin32Locale::GetXPLocale(LCID winLCID, nsAString& locale)
       }
       for(j=0;iso_list[i].sublang_list[j].win_code;j++) {
         if (sublang_id == iso_list[i].sublang_list[j].win_code) {
-          locale.Append(PRUnichar('-'));
+          locale.Append(char16_t('-'));
           locale.AppendASCII(iso_list[i].sublang_list[j].iso_code);
           break;
         }

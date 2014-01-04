@@ -71,14 +71,14 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD GetPIPNSSBundleString(const char *name,
                                    nsAString &outString) = 0;
   NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
-                                           const PRUnichar **params,
+                                           const char16_t **params,
                                            uint32_t numParams,
                                            nsAString &outString) = 0;
 
   NS_IMETHOD GetNSSBundleString(const char *name,
                                 nsAString &outString) = 0;
   NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
-                                           const PRUnichar **params,
+                                           const char16_t **params,
                                            uint32_t numParams,
                                            nsAString &outString) = 0;
 
@@ -146,13 +146,13 @@ public:
   NS_IMETHOD GetPIPNSSBundleString(const char *name,
                                    nsAString &outString);
   NS_IMETHOD PIPBundleFormatStringFromName(const char *name,
-                                           const PRUnichar **params,
+                                           const char16_t **params,
                                            uint32_t numParams,
                                            nsAString &outString);
   NS_IMETHOD GetNSSBundleString(const char *name,
                                nsAString &outString);
   NS_IMETHOD NSSBundleFormatStringFromName(const char *name,
-                                           const PRUnichar **params,
+                                           const char16_t **params,
                                            uint32_t numParams,
                                            nsAString &outString);
   NS_IMETHOD SkipOcsp();

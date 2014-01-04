@@ -658,7 +658,7 @@ nsXULTemplateQueryProcessorRDF::CompareResults(nsIXULTemplateResult* aLeft,
         if (l) {
             nsCOMPtr<nsIRDFLiteral> r = do_QueryInterface(rightNode);
             if (r) {
-                const PRUnichar *lstr, *rstr;
+                const char16_t *lstr, *rstr;
                 l->GetValueConst(&lstr);
                 r->GetValueConst(&rstr);
 
@@ -1351,7 +1351,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_SUBJECT);
         return NS_OK;
     }
-    if (subject[0] == PRUnichar('?'))
+    if (subject[0] == char16_t('?'))
         svar = do_GetAtom(subject);
     else
         gRDFService->GetUnicodeResource(subject, getter_AddRefs(sres));
@@ -1361,7 +1361,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::predicate, predicate);
 
     nsCOMPtr<nsIRDFResource> pres;
-    if (predicate.IsEmpty() || predicate[0] == PRUnichar('?')) {
+    if (predicate.IsEmpty() || predicate[0] == char16_t('?')) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_TRIPLE_BAD_PREDICATE);
         return NS_OK;
     }
@@ -1378,7 +1378,7 @@ nsXULTemplateQueryProcessorRDF::CompileTripleCondition(nsRDFQuery* aQuery,
         return NS_OK;
     }
 
-    if (object[0] == PRUnichar('?')) {
+    if (object[0] == char16_t('?')) {
         ovar = do_GetAtom(object);
     }
     else if (object.FindChar(':') != -1) { // XXXwaterson evil.
@@ -1445,7 +1445,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
     nsAutoString container;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::container, container);
 
-    if (!container.IsEmpty() && container[0] != PRUnichar('?')) {
+    if (!container.IsEmpty() && container[0] != char16_t('?')) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_MEMBER_NOCONTAINERVAR);
         return NS_OK;
     }
@@ -1456,7 +1456,7 @@ nsXULTemplateQueryProcessorRDF::CompileMemberCondition(nsRDFQuery* aQuery,
     nsAutoString child;
     aCondition->GetAttr(kNameSpaceID_None, nsGkAtoms::child, child);
 
-    if (!child.IsEmpty() && child[0] != PRUnichar('?')) {
+    if (!child.IsEmpty() && child[0] != char16_t('?')) {
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_MEMBER_NOCHILDVAR);
         return NS_OK;
     }

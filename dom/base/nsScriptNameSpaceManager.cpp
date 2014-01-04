@@ -141,7 +141,7 @@ nsScriptNameSpaceManager::~nsScriptNameSpaceManager()
 
 nsGlobalNameStruct *
 nsScriptNameSpaceManager::AddToHash(PLDHashTable *aTable, const nsAString *aKey,
-                                    const PRUnichar **aClassName)
+                                    const char16_t **aClassName)
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
@@ -429,7 +429,7 @@ nsScriptNameSpaceManager::InitForContext(nsIScriptContext *aContext)
 
 nsGlobalNameStruct*
 nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
-                                             const PRUnichar **aClassName)
+                                             const char16_t **aClassName)
 {
   GlobalNameMapEntry *entry =
     static_cast<GlobalNameMapEntry *>
@@ -472,7 +472,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             bool aPrivileged,
                                             bool aXBLAllowed,
                                             bool aDisabled,
-                                            const PRUnichar **aResult)
+                                            const char16_t **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
     NS_ERROR("Trying to register a non-ASCII class name");
@@ -566,7 +566,7 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
                                             bool aHasClassInterface,
                                             const nsCID *aConstructorCID)
 {
-  const PRUnichar* className;
+  const char16_t* className;
   nsGlobalNameStruct *s = AddToHash(&mGlobalNames, aName, &className);
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
@@ -763,7 +763,7 @@ nsScriptNameSpaceManager::RemoveCategoryEntryFromHash(nsICategoryManager* aCateg
 
 NS_IMETHODIMP
 nsScriptNameSpaceManager::Observe(nsISupports* aSubject, const char* aTopic,
-                                  const PRUnichar* aData)
+                                  const char16_t* aData)
 {
   if (!aData) {
     return NS_OK;

@@ -34,7 +34,7 @@ public:
   virtual ~nsISO2022CNToUnicode() {}
 
   NS_IMETHOD Convert(const char *aSrc, int32_t * aSrcLength,
-     PRUnichar * aDest, int32_t * aDestLength) ;
+     char16_t * aDest, int32_t * aDestLength) ;
 
   NS_IMETHOD GetMaxLength(const char * aSrc, int32_t aSrcLength,
      int32_t * aDestLength)
@@ -100,9 +100,9 @@ private:
   nsCOMPtr<nsIUnicodeDecoder> mEUCTW_Decoder;
 
   NS_IMETHOD GB2312_To_Unicode(unsigned char *aSrc, int32_t aSrcLength,
-     PRUnichar * aDest, int32_t * aDestLength) ;
+     char16_t * aDest, int32_t * aDestLength) ;
 
   NS_IMETHOD EUCTW_To_Unicode(unsigned char *aSrc, int32_t aSrcLength,
-     PRUnichar * aDest, int32_t * aDestLength) ;
+     char16_t * aDest, int32_t * aDestLength) ;
 };
 #endif // nsISO2022CNToUnicode_h__

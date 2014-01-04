@@ -221,7 +221,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   nsAutoTArray<UniChar, 256> stringBuffer;
   if (stringBuffer.SetLength(stringLen + 1)) {
     CFStringGetCharacters(formattedDate, CFRangeMake(0, stringLen), stringBuffer.Elements());
-    stringOut.Assign(reinterpret_cast<PRUnichar*>(stringBuffer.Elements()), stringLen);
+    stringOut.Assign(reinterpret_cast<char16_t*>(stringBuffer.Elements()), stringLen);
   }
   
   CFRelease(formattedDate);

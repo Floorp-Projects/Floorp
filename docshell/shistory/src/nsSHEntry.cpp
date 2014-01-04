@@ -193,7 +193,7 @@ nsSHEntry::GetSticky(bool *aSticky)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetTitle(PRUnichar** aTitle)
+NS_IMETHODIMP nsSHEntry::GetTitle(char16_t** aTitle)
 {
   // Check for empty title...
   if (mTitle.IsEmpty() && mURI) {

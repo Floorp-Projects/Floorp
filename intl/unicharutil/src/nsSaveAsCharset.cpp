@@ -54,7 +54,7 @@ nsSaveAsCharset::Init(const char *charset, uint32_t attr, uint32_t entityVersion
 }
 
 NS_IMETHODIMP
-nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
+nsSaveAsCharset::Convert(const char16_t *inString, char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   NS_ENSURE_ARG_POINTER(inString);
@@ -88,7 +88,7 @@ nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
     if (attr_EntityBeforeCharsetConv == MASK_ENTITY(mAttribute)) {
       NS_ASSERTION(mEntityConverter, "need to call Init() before Convert()");
       NS_ENSURE_TRUE(mEntityConverter, NS_ERROR_FAILURE);
-      PRUnichar *entity = nullptr;
+      char16_t *entity = nullptr;
       // do the entity conversion first
       rv = mEntityConverter->ConvertToEntities(inString, mEntityVersion, &entity);
       if(NS_SUCCEEDED(rv)) {
@@ -163,7 +163,7 @@ nsSaveAsCharset::HandleFallBack(uint32_t character, char **outString, int32_t *b
 }
 
 NS_IMETHODIMP
-nsSaveAsCharset::DoCharsetConversion(const PRUnichar *inString, char **outString)
+nsSaveAsCharset::DoCharsetConversion(const char16_t *inString, char **outString)
 {
   NS_ENSURE_ARG_POINTER(outString);
 

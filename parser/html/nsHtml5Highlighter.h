@@ -155,7 +155,7 @@ class nsHtml5Highlighter
      * @param aClass the class to set (MUST be a static string that does not
      *        need to be released!)
      */
-    void StartSpan(const PRUnichar* aClass);
+    void StartSpan(const char16_t* aClass);
 
     /**
      * End the current <span> or <a> in the highlighter output.
@@ -201,7 +201,7 @@ class nsHtml5Highlighter
      * @param aClass the class to set (MUST be a static string that does not
      *        need to be released!)
      */
-    void AddClass(const PRUnichar* aClass);
+    void AddClass(const char16_t* aClass);
 
     /**
      * Allocates a handle for an element.
@@ -253,7 +253,7 @@ class nsHtml5Highlighter
      * @param aStart the index of the first code unit to copy
      * @param aLength the number of code units to copy
      */
-    void AppendCharacters(const PRUnichar* aBuffer,
+    void AppendCharacters(const char16_t* aBuffer,
                           int32_t aStart,
                           int32_t aLength);
 
@@ -358,47 +358,47 @@ class nsHtml5Highlighter
     /**
      * The string "comment"
      */
-    static PRUnichar sComment[];
+    static char16_t sComment[];
 
     /**
      * The string "cdata"
      */
-    static PRUnichar sCdata[];
+    static char16_t sCdata[];
 
     /**
      * The string "start-tag"
      */
-    static PRUnichar sStartTag[];
+    static char16_t sStartTag[];
 
     /**
      * The string "attribute-name"
      */
-    static PRUnichar sAttributeName[];
+    static char16_t sAttributeName[];
 
     /**
      * The string "attribute-value"
      */
-    static PRUnichar sAttributeValue[];
+    static char16_t sAttributeValue[];
 
     /**
      * The string "end-tag"
      */
-    static PRUnichar sEndTag[];
+    static char16_t sEndTag[];
 
     /**
      * The string "doctype"
      */
-    static PRUnichar sDoctype[];
+    static char16_t sDoctype[];
 
     /**
      * The string "entity"
      */
-    static PRUnichar sEntity[];
+    static char16_t sEntity[];
 
     /**
      * The string "pi"
      */
-    static PRUnichar sPi[];
+    static char16_t sPi[];
 };
 
 #endif // nsHtml5Highlighter_h

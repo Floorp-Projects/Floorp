@@ -65,7 +65,7 @@ int main(int argc, char** argv)
   PRTime start = PR_Now();
   int32_t count = 0;
   for (;;) {
-    PRUnichar buf[1000];
+    char16_t buf[1000];
     uint32_t nb;
     ec = uin->Read(buf, 0, 1000, &nb);
     if (NS_FAILED(ec)) {

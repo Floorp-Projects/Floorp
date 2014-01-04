@@ -249,7 +249,7 @@ NS_IMPL_ISUPPORTS1(nsJSEnvironmentObserver, nsIObserver)
 
 NS_IMETHODIMP
 nsJSEnvironmentObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                 const PRUnichar* aData)
+                                 const char16_t* aData)
 {
   if (sGCOnMemoryPressure && !nsCRT::strcmp(aTopic, "memory-pressure")) {
     if(StringBeginsWith(nsDependentString(aData),
@@ -353,7 +353,7 @@ AsyncErrorReporter::AsyncErrorReporter(JSRuntime* aRuntime,
                                        const char* aFallbackMessage,
                                        bool aIsChromeError,
                                        nsPIDOMWindow* aWindow)
-  : mSourceLine(static_cast<const PRUnichar*>(aErrorReport->uclinebuf))
+  : mSourceLine(static_cast<const char16_t*>(aErrorReport->uclinebuf))
   , mLineNumber(aErrorReport->lineno)
   , mColumn(aErrorReport->uctokenptr - aErrorReport->uclinebuf)
   , mFlags(aErrorReport->flags)
@@ -364,9 +364,9 @@ AsyncErrorReporter::AsyncErrorReporter(JSRuntime* aRuntime,
     mFileName.AssignWithConversion(aErrorReport->filename);
   }
 
-  const PRUnichar* m = static_cast<const PRUnichar*>(aErrorReport->ucmessage);
+  const char16_t* m = static_cast<const char16_t*>(aErrorReport->ucmessage);
   if (m) {
-    const PRUnichar* n = static_cast<const PRUnichar*>
+    const char16_t* n = static_cast<const char16_t*>
       (js::GetErrorTypeName(aRuntime, aErrorReport->exnType));
     if (n) {
       mErrorMsg.Assign(n);
@@ -598,7 +598,7 @@ NS_ScriptErrorReporter(JSContext *cx,
     error.AppendInt(report->lineno, 10);
     error.Append(": ");
     if (report->ucmessage) {
-      AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(report->ucmessage),
+      AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(report->ucmessage),
                         error);
     } else {
       error.Append(message);
@@ -973,10 +973,10 @@ nsJSContext::EvaluateString(const nsAString& aScript,
 bool
 AtomIsEventHandlerName(nsIAtom *aName)
 {
-  const PRUnichar *name = aName->GetUTF16String();
+  const char16_t *name = aName->GetUTF16String();
 
-  const PRUnichar *cp;
-  PRUnichar c;
+  const char16_t *cp;
+  char16_t c;
   for (cp = name; *cp != '\0'; ++cp)
   {
     c = *cp;

@@ -135,7 +135,7 @@ nsScriptableUnicodeConverter::ConvertFromByteArray(const uint8_t* aData,
                               inLength, &outLength);
   if (NS_SUCCEEDED(rv))
   {
-    PRUnichar* buf = (PRUnichar*)moz_malloc((outLength+1)*sizeof(PRUnichar));
+    char16_t* buf = (char16_t*)moz_malloc((outLength+1)*sizeof(char16_t));
     if (!buf)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -261,7 +261,7 @@ nsScriptableUnicodeConverter::InitConverter()
     return rv;
   }
 
-  rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (PRUnichar)'?');
+  rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nullptr, (char16_t)'?');
   if (NS_FAILED(rv)) {
     return rv;
   }

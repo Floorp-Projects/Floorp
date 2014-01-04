@@ -81,7 +81,7 @@ public:
   // is false, alpha will be discarded and the result will be the image
   // composited on black.
   NS_IMETHOD GetInputStream(const char *aMimeType,
-                            const PRUnichar *aEncoderOptions,
+                            const char16_t *aEncoderOptions,
                             nsIInputStream **aStream) = 0;
 
   // If this canvas context can be represented with a simple Thebes surface,

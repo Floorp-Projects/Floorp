@@ -174,7 +174,7 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 
 //------------------------------------------------------------------
 // helper
-static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
+static char16_t * GetDefaultPrinterNameFromGlobalPrinters()
 {
   nsAutoString printerName;
   GlobalPrinters::GetInstance()->GetDefaultPrinterName(printerName);
@@ -276,7 +276,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   rv = filePicker->AppendFilters(nsIFilePicker::filterAll);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar* fileName;
+  char16_t* fileName;
   aPS->GetToFileName(&fileName);
 
   if (fileName) {
@@ -334,7 +334,7 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
 
 //----------------------------------------------------------------------------------
 static nsresult
-CheckForPrintToFile(nsIPrintSettings* aPS, const PRUnichar* aPrinterName, const PRUnichar* aUPrinterName)
+CheckForPrintToFile(nsIPrintSettings* aPS, const char16_t* aPrinterName, const char16_t* aUPrinterName)
 {
   nsresult rv = NS_OK;
 
@@ -375,8 +375,8 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   if (aPrintSettings) {
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
     if (psWin) {
-      PRUnichar* deviceName;
-      PRUnichar* driverName;
+      char16_t* deviceName;
+      char16_t* driverName;
       psWin->GetDeviceName(&deviceName); // creates new memory (makes a copy)
       psWin->GetDriverName(&driverName); // creates new memory (makes a copy)
 
@@ -424,7 +424,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   }
 
   // Get the Print Name to be used
-  PRUnichar * printerName = nullptr;
+  char16_t * printerName = nullptr;
   if (mPrintSettings) {
     mPrintSettings->GetPrinterName(&printerName);
   }
@@ -812,7 +812,7 @@ NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorWin, nsIPrinterEnumerator)
 // Return the Default Printer name
 /* readonly attribute wstring defaultPrinterName; */
 NS_IMETHODIMP 
-nsPrinterEnumeratorWin::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
+nsPrinterEnumeratorWin::GetDefaultPrinterName(char16_t * *aDefaultPrinterName)
 {
   NS_ENSURE_ARG_POINTER(aDefaultPrinterName);
 
@@ -823,7 +823,7 @@ nsPrinterEnumeratorWin::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 
 /* void initPrintSettingsFromPrinter (in wstring aPrinterName, in nsIPrintSettings aPrintSettings); */
 NS_IMETHODIMP 
-nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
+nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPrinterName);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
@@ -886,7 +886,7 @@ nsPrinterEnumeratorWin::GetPrinterNameList(nsIStringEnumerator **aPrinterNameLis
 
 //----------------------------------------------------------------------------------
 // Display the AdvancedDocumentProperties for the selected Printer
-NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const PRUnichar *aPrinterName, nsIPrintSettings* aPrintSettings)
+NS_IMETHODIMP nsPrinterEnumeratorWin::DisplayPropertiesDlg(const char16_t *aPrinterName, nsIPrintSettings* aPrintSettings)
 {
   // Implementation removed because it is unused
   return NS_OK;

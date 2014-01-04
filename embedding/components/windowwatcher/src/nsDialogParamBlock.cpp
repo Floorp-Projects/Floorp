@@ -50,7 +50,7 @@ NS_IMETHODIMP nsDialogParamBlock::SetInt(int32_t inIndex, int32_t inInt)
 }
 
   
-NS_IMETHODIMP nsDialogParamBlock::GetString(int32_t inIndex, PRUnichar **_retval)
+NS_IMETHODIMP nsDialogParamBlock::GetString(int32_t inIndex, char16_t **_retval)
 {
   if (mNumStrings == 0)
     SetNumberStrings(kNumStrings);
@@ -60,7 +60,7 @@ NS_IMETHODIMP nsDialogParamBlock::GetString(int32_t inIndex, PRUnichar **_retval
   return rv;
 }
 
-NS_IMETHODIMP nsDialogParamBlock::SetString(int32_t inIndex, const PRUnichar *inString)
+NS_IMETHODIMP nsDialogParamBlock::SetString(int32_t inIndex, const char16_t *inString)
 {
   if (mNumStrings == 0)
     SetNumberStrings(kNumStrings);

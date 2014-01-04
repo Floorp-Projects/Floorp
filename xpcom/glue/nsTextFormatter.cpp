@@ -48,10 +48,10 @@
 typedef struct SprintfStateStr SprintfState;
 
 struct SprintfStateStr {
-    int (*stuff)(SprintfState *ss, const PRUnichar *sp, uint32_t len);
+    int (*stuff)(SprintfState *ss, const char16_t *sp, uint32_t len);
 
-    PRUnichar *base;
-    PRUnichar *cur;
+    char16_t *base;
+    char16_t *cur;
     uint32_t maxlen;
 
     void *stuffclosure;
@@ -94,10 +94,10 @@ struct NumArgState{
 /*
 ** Fill into the buffer using the data in src
 */
-static int fill2(SprintfState *ss, const PRUnichar *src, int srclen, 
+static int fill2(SprintfState *ss, const char16_t *src, int srclen, 
                  int width, int flags)
 {
-    PRUnichar space = ' ';
+    char16_t space = ' ';
     int rv;
     
     width -= srclen;
@@ -135,7 +135,7 @@ static int fill2(SprintfState *ss, const PRUnichar *src, int srclen,
 /*
 ** Fill a number. The order is: optional-sign zero-filling conversion-digits
 */
-static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen, 
+static int fill_n(SprintfState *ss, const char16_t *src, int srclen, 
                   int width, int prec, int type, int flags)
 {
     int zerowidth   = 0;
@@ -145,9 +145,9 @@ static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen,
     int rightspaces = 0;
     int cvtwidth;
     int rv;
-    PRUnichar sign;
-    PRUnichar space = ' ';
-    PRUnichar zero = '0';
+    char16_t sign;
+    char16_t space = ' ';
+    char16_t zero = '0';
 
     if ((type & 1) == 0) {
 	if (flags & _NEG) {
@@ -231,10 +231,10 @@ static int fill_n(SprintfState *ss, const PRUnichar *src, int srclen,
 ** Convert a long into its printable form
 */
 static int cvt_l(SprintfState *ss, long num, int width, int prec,
-                 int radix, int type, int flags, const PRUnichar *hexp)
+                 int radix, int type, int flags, const char16_t *hexp)
 {
-    PRUnichar cvtbuf[100];
-    PRUnichar *cvt;
+    char16_t cvtbuf[100];
+    char16_t *cvt;
     int digits;
 
     /* according to the man page this needs to happen */
@@ -271,10 +271,10 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec,
 ** Convert a 64-bit integer into its printable form
 */
 static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
-                  int radix, int type, int flags, const PRUnichar *hexp)
+                  int radix, int type, int flags, const char16_t *hexp)
 {
-    PRUnichar cvtbuf[100];
-    PRUnichar *cvt;
+    char16_t cvtbuf[100];
+    char16_t *cvt;
     int digits;
     int64_t rad;
 
@@ -313,7 +313,7 @@ static int cvt_ll(SprintfState *ss, int64_t num, int width, int prec,
 ** form.
 */
 static int cvt_f(SprintfState *ss, double d, int width, int prec, 
-                 const PRUnichar type, int flags)
+                 const char16_t type, int flags)
 {
     int    mode = 2;
     int    decpt;
@@ -480,10 +480,10 @@ static int cvt_f(SprintfState *ss, double d, int width, int prec,
         }
     }
 
-    PRUnichar rbuf[256];
-    PRUnichar *rbufp = rbuf;
+    char16_t rbuf[256];
+    char16_t *rbufp = rbuf;
     bufp = buf;
-    // cast to PRUnichar
+    // cast to char16_t
     while ((*rbufp++ = *bufp++)) { }
     *rbufp = '\0';
 
@@ -495,7 +495,7 @@ static int cvt_f(SprintfState *ss, double d, int width, int prec,
 ** width. "prec" is the maximum number of characters of "s" to output,
 ** where -1 means until NUL.
 */
-static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
+static int cvt_S(SprintfState *ss, const char16_t *s, int width,
                  int prec, int flags)
 {
     int slen;
@@ -537,13 +537,13 @@ static int cvt_s(SprintfState *ss, const char *s, int width,
 ** the number must start from 1, and no gap among them
 */
 
-static struct NumArgState* BuildArgArray(const PRUnichar *fmt, 
+static struct NumArgState* BuildArgArray(const char16_t *fmt, 
                                          va_list ap, int * rv, 
                                          struct NumArgState * nasArray)
 {
     int number = 0, cn = 0, i;
-    const PRUnichar* p;
-    PRUnichar  c;
+    const char16_t* p;
+    char16_t  c;
     struct NumArgState* nas;
 
     /*
@@ -784,7 +784,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 
 	case NumArgState::DOUBLE:    (void)va_arg(ap, double);      break;
 
-	case NumArgState::UNISTRING: (void)va_arg(ap, PRUnichar*);  break;
+	case NumArgState::UNISTRING: (void)va_arg(ap, char16_t*);  break;
 
 	default:
 	    if( nas != nasArray ) {
@@ -801,21 +801,21 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 /*
 ** The workhorse sprintf code.
 */
-static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
+static int dosprintf(SprintfState *ss, const char16_t *fmt, va_list ap)
 {
-    PRUnichar c;
+    char16_t c;
     int flags, width, prec, radix, type;
     union {
-	PRUnichar ch;
+	char16_t ch;
 	int i;
 	long l;
 	int64_t ll;
 	double d;
 	const char *s;
-	const PRUnichar *S;
+	const char16_t *S;
 	int *ip;
     } u;
-    PRUnichar space = ' ';
+    char16_t space = ' ';
 
     nsAutoString hex;
     hex.AssignLiteral("0123456789abcdef");
@@ -823,7 +823,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     nsAutoString HEX;
     HEX.AssignLiteral("0123456789ABCDEF");
 
-    const PRUnichar *hexp;
+    const char16_t *hexp;
     int rv, i;
     struct NumArgState* nas = nullptr;
     struct NumArgState  nasArray[NAS_DEFAULT_NUM];
@@ -1091,7 +1091,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 #endif
 
         case 'S':
-	    u.S = va_arg(ap, const PRUnichar*);
+	    u.S = va_arg(ap, const char16_t*);
 	    rv = cvt_S(ss, u.S, width, prec, flags);
 	    if (rv < 0) {
 		return rv;
@@ -1118,7 +1118,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 #if 0
 	    PR_ASSERT(0);
 #endif
-            PRUnichar perct = '%'; 
+            char16_t perct = '%'; 
 	    rv = (*ss->stuff)(ss, &perct, 1);
 	    if (rv < 0) {
 		return rv;
@@ -1131,7 +1131,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
     }
 
     /* Stuff trailing NUL */
-    PRUnichar null = '\0';
+    char16_t null = '\0';
 
     rv = (*ss->stuff)(ss, &null, 1);
 
@@ -1145,7 +1145,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 /************************************************************************/
 
 static int
-StringStuff(SprintfState* ss, const PRUnichar* sp, uint32_t len)
+StringStuff(SprintfState* ss, const char16_t* sp, uint32_t len)
 {
     if (*sp == '\0')
       return 0;
@@ -1165,10 +1165,10 @@ StringStuff(SprintfState* ss, const PRUnichar* sp, uint32_t len)
 ** Stuff routine that automatically grows the malloc'd output buffer
 ** before it overflows.
 */
-static int GrowStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
+static int GrowStuff(SprintfState *ss, const char16_t *sp, uint32_t len)
 {
     ptrdiff_t off;
-    PRUnichar *newbase;
+    char16_t *newbase;
     uint32_t newlen;
 
     off = ss->cur - ss->base;
@@ -1176,9 +1176,9 @@ static int GrowStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
 	/* Grow the buffer */
 	newlen = ss->maxlen + ((len > 32) ? len : 32);
 	if (ss->base) {
-	    newbase = (PRUnichar*) nsMemory::Realloc(ss->base, newlen*sizeof(PRUnichar));
+	    newbase = (char16_t*) nsMemory::Realloc(ss->base, newlen*sizeof(char16_t));
 	} else {
-	    newbase = (PRUnichar*) nsMemory::Alloc(newlen*sizeof(PRUnichar));
+	    newbase = (char16_t*) nsMemory::Alloc(newlen*sizeof(char16_t));
 	}
 	if (!newbase) {
 	    /* Ran out of memory */
@@ -1201,10 +1201,10 @@ static int GrowStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
 /*
 ** sprintf into a malloc'd buffer
 */
-PRUnichar * nsTextFormatter::smprintf(const PRUnichar *fmt, ...)
+char16_t * nsTextFormatter::smprintf(const char16_t *fmt, ...)
 {
     va_list ap;
-    PRUnichar *rv;
+    char16_t *rv;
 
     va_start(ap, fmt);
     rv = nsTextFormatter::vsmprintf(fmt, ap);
@@ -1212,7 +1212,7 @@ PRUnichar * nsTextFormatter::smprintf(const PRUnichar *fmt, ...)
     return rv;
 }
 
-uint32_t nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
+uint32_t nsTextFormatter::ssprintf(nsAString& out, const char16_t* fmt, ...)
 {
     va_list ap;
     uint32_t rv;
@@ -1223,7 +1223,7 @@ uint32_t nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
     return rv;
 }
 
-uint32_t nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_list ap)
+uint32_t nsTextFormatter::vssprintf(nsAString& out, const char16_t* fmt, va_list ap)
 {
     SprintfState ss;
     ss.stuff = StringStuff;
@@ -1237,7 +1237,7 @@ uint32_t nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_lis
     return n ? n - 1 : n;
 }
 
-PRUnichar * nsTextFormatter::vsmprintf(const PRUnichar *fmt, va_list ap)
+char16_t * nsTextFormatter::vsmprintf(const char16_t *fmt, va_list ap)
 {
     SprintfState ss;
     int rv;
@@ -1259,7 +1259,7 @@ PRUnichar * nsTextFormatter::vsmprintf(const PRUnichar *fmt, va_list ap)
 /*
 ** Stuff routine that discards overflow data
 */
-static int LimitStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
+static int LimitStuff(SprintfState *ss, const char16_t *sp, uint32_t len)
 {
     uint32_t limit = ss->maxlen - (ss->cur - ss->base);
 
@@ -1277,7 +1277,7 @@ static int LimitStuff(SprintfState *ss, const PRUnichar *sp, uint32_t len)
 ** sprintf into a fixed size buffer. Make sure there is a NUL at the end
 ** when finished.
 */
-uint32_t nsTextFormatter::snprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, ...)
+uint32_t nsTextFormatter::snprintf(char16_t *out, uint32_t outlen, const char16_t *fmt, ...)
 {
     va_list ap;
     uint32_t rv;
@@ -1293,7 +1293,7 @@ uint32_t nsTextFormatter::snprintf(PRUnichar *out, uint32_t outlen, const PRUnic
     return rv;
 }
 
-uint32_t nsTextFormatter::vsnprintf(PRUnichar *out, uint32_t outlen,const PRUnichar *fmt,
+uint32_t nsTextFormatter::vsnprintf(char16_t *out, uint32_t outlen,const char16_t *fmt,
                                     va_list ap)
 {
     SprintfState ss;
@@ -1321,7 +1321,7 @@ uint32_t nsTextFormatter::vsnprintf(PRUnichar *out, uint32_t outlen,const PRUnic
 /*
  * Free memory allocated, for the caller, by smprintf
  */
-void nsTextFormatter::smprintf_free(PRUnichar *mem)
+void nsTextFormatter::smprintf_free(char16_t *mem)
 {
     nsMemory::Free(mem);
 }

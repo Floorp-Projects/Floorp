@@ -68,7 +68,7 @@ public:
 
 protected:
   nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
-  void AddToLine(const PRUnichar* aStringToAdd, int32_t aLength);
+  void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);
   void EnsureVerticalSpace(int32_t noOfRows);
   void FlushLine();

@@ -561,7 +561,7 @@ StartupCache::WriteTimeout(nsITimer *aTimer, void *aClosure)
 NS_IMPL_ISUPPORTS1(StartupCacheListener, nsIObserver)
 
 nsresult
-StartupCacheListener::Observe(nsISupports *subject, const char* topic, const PRUnichar* data)
+StartupCacheListener::Observe(nsISupports *subject, const char* topic, const char16_t* data)
 {
   StartupCache* sc = StartupCache::GetSingleton();
   if (!sc)

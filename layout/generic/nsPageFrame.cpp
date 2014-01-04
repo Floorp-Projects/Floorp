@@ -196,7 +196,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   // values
   NS_NAMED_LITERAL_STRING(kPageAndTotal, "&PT");
   if (aStr.Find(kPageAndTotal) != kNotFound) {
-    PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat.get(), mPageNum, mTotNumPages);
+    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumAndTotalsFormat.get(), mPageNum, mTotNumPages);
     aNewStr.ReplaceSubstring(kPageAndTotal.get(), uStr);
     nsMemory::Free(uStr);
   }
@@ -205,7 +205,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   // and replace the page number code with the actual value
   NS_NAMED_LITERAL_STRING(kPage, "&P");
   if (aStr.Find(kPage) != kNotFound) {
-    PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mPageNum);
+    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mPageNum);
     aNewStr.ReplaceSubstring(kPage.get(), uStr);
     nsMemory::Free(uStr);
   }
@@ -222,7 +222,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kPageTotal, "&L");
   if (aStr.Find(kPageTotal) != kNotFound) {
-    PRUnichar * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mTotNumPages);
+    char16_t * uStr = nsTextFormatter::smprintf(mPD->mPageNumFormat.get(), mTotNumPages);
     aNewStr.ReplaceSubstring(kPageTotal.get(), uStr);
     nsMemory::Free(uStr);
   }
@@ -329,7 +329,7 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 
     int32_t indx;
     int32_t textWidth = 0;
-    const PRUnichar* text = str.get();
+    const char16_t* text = str.get();
 
     int32_t len = (int32_t)str.Length();
     if (len == 0) {

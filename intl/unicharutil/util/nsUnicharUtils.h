@@ -26,8 +26,8 @@ uint32_t ToLowerCase(uint32_t);
 uint32_t ToUpperCase(uint32_t);
 uint32_t ToTitleCase(uint32_t);
 
-void ToLowerCase(const PRUnichar*, PRUnichar*, uint32_t);
-void ToUpperCase(const PRUnichar*, PRUnichar*, uint32_t);
+void ToLowerCase(const char16_t*, char16_t*, uint32_t);
+void ToUpperCase(const char16_t*, char16_t*, uint32_t);
 
 inline bool IsUpperCase(uint32_t c) {
   return ToLowerCase(c) != c;
@@ -42,8 +42,8 @@ inline bool IsLowerCase(uint32_t c) {
 class nsCaseInsensitiveStringComparator : public nsStringComparator
 {
 public:
-  virtual int32_t operator() (const PRUnichar*,
-                              const PRUnichar*,
+  virtual int32_t operator() (const char16_t*,
+                              const char16_t*,
                               uint32_t,
                               uint32_t) const;
 };
@@ -70,8 +70,8 @@ class nsASCIICaseInsensitiveStringComparator : public nsStringComparator
 {
 public:
   nsASCIICaseInsensitiveStringComparator() {}
-  virtual int operator() (const PRUnichar*,
-                          const PRUnichar*,
+  virtual int operator() (const char16_t*,
+                          const char16_t*,
                           uint32_t,
                           uint32_t) const;
 };
@@ -98,7 +98,7 @@ CaseInsensitiveFindInReadable(const nsAString& aPattern,
 #endif // MOZILLA_INTERNAL_API
 
 int32_t
-CaseInsensitiveCompare(const PRUnichar *a, const PRUnichar *b, uint32_t len);
+CaseInsensitiveCompare(const char16_t *a, const char16_t *b, uint32_t len);
 
 int32_t
 CaseInsensitiveCompare(const char* aLeft, const char* aRight,

@@ -34,7 +34,7 @@ nsUserInfo::GetUsername(char **aUsername)
 }
 
 NS_IMETHODIMP 
-nsUserInfo::GetFullname(PRUnichar **aFullname)
+nsUserInfo::GetFullname(char16_t **aFullname)
 {
     *aFullname = nullptr;
     return NS_ERROR_NOT_IMPLEMENTED;

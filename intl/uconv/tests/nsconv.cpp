@@ -32,7 +32,7 @@ void usage()
 #define OUTBUFSIZE (1024*16*8)
 char inbuffer[INBUFSIZE];
 char outbuffer[OUTBUFSIZE];
-PRUnichar  medbuffer[MEDBUFSIZE];
+char16_t  medbuffer[MEDBUFSIZE];
 
 int main(int argc, const char** argv)
 {

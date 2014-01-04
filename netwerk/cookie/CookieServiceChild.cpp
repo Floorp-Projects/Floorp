@@ -159,7 +159,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 NS_IMETHODIMP
 CookieServiceChild::Observe(nsISupports     *aSubject,
                             const char      *aTopic,
-                            const PRUnichar *aData)
+                            const char16_t *aData)
 {
   NS_ASSERTION(strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0,
                "not a pref change topic!");

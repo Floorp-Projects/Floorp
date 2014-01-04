@@ -54,14 +54,14 @@
 
 #include "nsHtml5MetaScanner.h"
 
-static PRUnichar const CHARSET_DATA[] = { 'h', 'a', 'r', 's', 'e', 't' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CHARSET = { CHARSET_DATA, MOZ_ARRAY_LENGTH(CHARSET_DATA) };
-static PRUnichar const CONTENT_DATA[] = { 'o', 'n', 't', 'e', 'n', 't' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT = { CONTENT_DATA, MOZ_ARRAY_LENGTH(CONTENT_DATA) };
-static PRUnichar const HTTP_EQUIV_DATA[] = { 't', 't', 'p', '-', 'e', 'q', 'u', 'i', 'v' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DATA, MOZ_ARRAY_LENGTH(HTTP_EQUIV_DATA) };
-static PRUnichar const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't', '-', 't', 'y', 'p', 'e' };
-staticJArray<PRUnichar,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, MOZ_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
+static char16_t const CHARSET_DATA[] = { 'h', 'a', 'r', 's', 'e', 't' };
+staticJArray<char16_t,int32_t> nsHtml5MetaScanner::CHARSET = { CHARSET_DATA, MOZ_ARRAY_LENGTH(CHARSET_DATA) };
+static char16_t const CONTENT_DATA[] = { 'o', 'n', 't', 'e', 'n', 't' };
+staticJArray<char16_t,int32_t> nsHtml5MetaScanner::CONTENT = { CONTENT_DATA, MOZ_ARRAY_LENGTH(CONTENT_DATA) };
+static char16_t const HTTP_EQUIV_DATA[] = { 't', 't', 'p', '-', 'e', 'q', 'u', 'i', 'v' };
+staticJArray<char16_t,int32_t> nsHtml5MetaScanner::HTTP_EQUIV = { HTTP_EQUIV_DATA, MOZ_ARRAY_LENGTH(HTTP_EQUIV_DATA) };
+static char16_t const CONTENT_TYPE_DATA[] = { 'c', 'o', 'n', 't', 'e', 'n', 't', '-', 't', 'y', 'p', 'e' };
+staticJArray<char16_t,int32_t> nsHtml5MetaScanner::CONTENT_TYPE = { CONTENT_TYPE_DATA, MOZ_ARRAY_LENGTH(CONTENT_TYPE_DATA) };
 
 nsHtml5MetaScanner::nsHtml5MetaScanner()
   : readable(nullptr),
@@ -72,7 +72,7 @@ nsHtml5MetaScanner::nsHtml5MetaScanner()
     contentTypeIndex(INT32_MAX),
     stateSave(NS_HTML5META_SCANNER_DATA),
     strBufLen(0),
-    strBuf(jArray<PRUnichar,int32_t>::newJArray(36)),
+    strBuf(jArray<char16_t,int32_t>::newJArray(36)),
     content(nullptr),
     charset(nullptr),
     httpEquivState(NS_HTML5META_SCANNER_HTTP_EQUIV_NOT_SEEN)
@@ -738,11 +738,11 @@ void
 nsHtml5MetaScanner::addToBuffer(int32_t c)
 {
   if (strBufLen == strBuf.length) {
-    jArray<PRUnichar,int32_t> newBuf = jArray<PRUnichar,int32_t>::newJArray(strBuf.length + (strBuf.length << 1));
+    jArray<char16_t,int32_t> newBuf = jArray<char16_t,int32_t>::newJArray(strBuf.length + (strBuf.length << 1));
     nsHtml5ArrayCopy::arraycopy(strBuf, newBuf, strBuf.length);
     strBuf = newBuf;
   }
-  strBuf[strBufLen++] = (PRUnichar) c;
+  strBuf[strBufLen++] = (char16_t) c;
 }
 
 void 

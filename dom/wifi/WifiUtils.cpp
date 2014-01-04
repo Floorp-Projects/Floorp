@@ -44,7 +44,7 @@ void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aO
 {
   JS::UTF8Chars src(aInput, aLength);
 
-  PRUnichar dst[aLength]; // Allocating for worst case.
+  char16_t dst[aLength]; // Allocating for worst case.
 
   // First, count how many jschars need to be in the inflated string.
   // |i| is the index into |src|, and |j| is the the index into |dst|.
@@ -54,7 +54,7 @@ void LossyConvertUTF8toUTF16(const char* aInput, uint32_t aLength, nsAString& aO
     uint32_t v = uint32_t(src[i]);
     if (!(v & 0x80)) {
       // ASCII code unit.  Simple copy.
-      dst[j] = PRUnichar(v);
+      dst[j] = char16_t(v);
     } else {
       // Non-ASCII code unit.  Determine its length in bytes (n).
       uint32_t n = 1;

@@ -82,7 +82,7 @@ void
 nsAString::AssignLiteral(const char *aStr)
 {
   uint32_t len = strlen(aStr);
-  PRUnichar *buf = BeginWriting(len);
+  char16_t *buf = BeginWriting(len);
   if (!buf)
     return;
 
@@ -96,7 +96,7 @@ nsAString::AppendLiteral(const char *aASCIIStr)
   uint32_t appendLen = strlen(aASCIIStr);
 
   uint32_t thisLen = Length();
-  PRUnichar *begin, *end;
+  char16_t *begin, *end;
   BeginWriting(&begin, &end, appendLen + thisLen);
   if (!begin)
     return;
@@ -142,7 +142,7 @@ nsAString::Trim(const char *aSet, bool aLeading, bool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
 
-  const PRUnichar *start, *end;
+  const char16_t *start, *end;
   uint32_t cutLen;
 
   if (aLeading) {
@@ -258,7 +258,7 @@ nsAString::Equals(const self_type &other, ComparatorFunc c) const
 bool
 nsAString::EqualsLiteral(const char *aASCIIString) const
 {
-  const PRUnichar *begin, *end;
+  const char16_t *begin, *end;
   BeginReading(&begin, &end);
 
   for (; begin < end; ++begin, ++aASCIIString) {
@@ -274,7 +274,7 @@ nsAString::EqualsLiteral(const char *aASCIIString) const
 bool
 nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
 {
-  const PRUnichar *begin, *end;
+  const char16_t *begin, *end;
   BeginReading(&begin, &end);
 
   for (; begin < end; ++begin, ++aASCIIString) {
@@ -313,7 +313,7 @@ nsAString::Find(const self_type& aStr, uint32_t aOffset,
   return -1;
 }
 
-static bool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
+static bool ns_strnmatch(const char16_t *aStr, const char* aSubstring,
                            uint32_t aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
@@ -327,7 +327,7 @@ static bool ns_strnmatch(const PRUnichar *aStr, const char* aSubstring,
   return true;
 }
 
-static bool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
+static bool ns_strnimatch(const char16_t *aStr, const char* aSubstring,
                             uint32_t aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
@@ -344,7 +344,7 @@ static bool ns_strnimatch(const PRUnichar *aStr, const char* aSubstring,
 int32_t
 nsAString::Find(const char *aStr, uint32_t aOffset, bool aIgnoreCase) const
 {
-  bool (*match)(const PRUnichar*, const char*, uint32_t) =
+  bool (*match)(const char16_t*, const char*, uint32_t) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
   const char_type *begin, *end;
@@ -396,7 +396,7 @@ nsAString::RFind(const self_type& aStr, int32_t aOffset, ComparatorFunc c) const
 int32_t
 nsAString::RFind(const char *aStr, int32_t aOffset, bool aIgnoreCase) const
 {
-  bool (*match)(const PRUnichar*, const char*, uint32_t) =
+  bool (*match)(const char16_t*, const char*, uint32_t) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
   const char_type *begin, *end;
@@ -440,7 +440,7 @@ nsAString::FindChar(char_type aChar, uint32_t aOffset) const
 int32_t
 nsAString::RFindChar(char_type aChar) const
 {
-  const PRUnichar *start, *end;
+  const char16_t *start, *end;
   BeginReading(&start, &end);
 
   do {
@@ -986,7 +986,7 @@ nsACString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
 nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
                                            uint32_t aStartPos)
 {
-  const PRUnichar* data;
+  const char16_t* data;
   uint32_t len = NS_StringGetData(aStr, &data);
 
   if (aStartPos > len)
@@ -1001,7 +1001,7 @@ nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
                                            uint32_t aStartPos,
                                            uint32_t aLength)
 {
-  const PRUnichar* data;
+  const char16_t* data;
   uint32_t len = NS_StringGetData(aStr, &data);
 
   if (aStartPos > len)
@@ -1060,17 +1060,17 @@ ToNewUTF8String(const nsAString& aSource)
 void
 CompressWhitespace(nsAString& aString)
 {
-  PRUnichar *start;
+  char16_t *start;
   uint32_t len = NS_StringGetMutableData(aString, UINT32_MAX, &start);
-  PRUnichar *end = start + len;
-  PRUnichar *from = start, *to = start;
+  char16_t *end = start + len;
+  char16_t *from = start, *to = start;
 
   // Skip any leading whitespace
   while (from < end && NS_IsAsciiWhitespace(*from))
     from++;
 
   while (from < end) {
-    PRUnichar theChar = *from++;
+    char16_t theChar = *from++;
 
     if (NS_IsAsciiWhitespace(theChar)) {
       // We found a whitespace char, so skip over any more 

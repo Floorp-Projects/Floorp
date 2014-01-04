@@ -30,7 +30,7 @@ interface nsIInputStream;
  */
 typedef NS_CALLBACK(nsWriteUnicharSegmentFun)(nsIUnicharInputStream *aInStream,
                                               void *aClosure,
-                                              const PRUnichar *aFromSegment,
+                                              const char16_t *aFromSegment,
                                               uint32_t aToOffset,
                                               uint32_t aCount,
                                               uint32_t *aWriteCount);
@@ -52,7 +52,7 @@ interface nsIUnicharInputStream : nsISupports {
    *
    * @note To read more than 2^32 characters, call this method multiple times.
    */
-  [noscript] unsigned long read([array, size_is(aCount)] in PRUnichar aBuf,
+  [noscript] unsigned long read([array, size_is(aCount)] in char16_t aBuf,
                                 in unsigned long aCount);
 
   /**

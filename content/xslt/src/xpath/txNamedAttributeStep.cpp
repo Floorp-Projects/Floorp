@@ -50,12 +50,12 @@ txNamedAttributeStep::isSensitiveTo(ContextSensitivity aContext)
 void
 txNamedAttributeStep::toString(nsAString& aDest)
 {
-    aDest.Append(PRUnichar('@'));
+    aDest.Append(char16_t('@'));
     if (mPrefix) {
         nsAutoString prefix;
         mPrefix->ToString(prefix);
         aDest.Append(prefix);
-        aDest.Append(PRUnichar(':'));
+        aDest.Append(char16_t(':'));
     }
     nsAutoString localName;
     mLocalName->ToString(localName);

@@ -377,7 +377,7 @@ MediaPermissionManager::Deinit()
 // nsIObserver method
 NS_IMETHODIMP
 MediaPermissionManager::Observe(nsISupports* aSubject, const char* aTopic,
-  const PRUnichar* aData)
+  const char16_t* aData)
 {
   nsresult rv;
   if (!strcmp(aTopic, "getUserMedia:request")) {

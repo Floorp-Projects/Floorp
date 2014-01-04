@@ -26,14 +26,14 @@ private:
 
 class txAlphaCounter : public txFormattedCounter {
 public:
-    txAlphaCounter(PRUnichar aOffset) : mOffset(aOffset)
+    txAlphaCounter(char16_t aOffset) : mOffset(aOffset)
     {
     }
 
     virtual void appendNumber(int32_t aNumber, nsAString& aDest);
     
 private:
-    PRUnichar mOffset;
+    char16_t mOffset;
 };
 
 class txRomanCounter : public txFormattedCounter {
@@ -60,7 +60,7 @@ txFormattedCounter::getCounterFor(const nsAFlatString& aToken,
     aCounter = 0;
     
     if (length == 1) {
-        PRUnichar ch = aToken.CharAt(0);
+        char16_t ch = aToken.CharAt(0);
         switch (ch) {
 
             case 'i':
@@ -114,7 +114,7 @@ txDecimalCounter::txDecimalCounter(int32_t aMinLength, int32_t aGroupSize,
 void txDecimalCounter::appendNumber(int32_t aNumber, nsAString& aDest)
 {
     const int32_t bufsize = 10; //must be able to fit an int32_t
-    PRUnichar buf[bufsize];
+    char16_t buf[bufsize];
     int32_t pos = bufsize;
     while (aNumber > 0) {
         int32_t ch = aNumber % 10;
@@ -134,7 +134,7 @@ void txDecimalCounter::appendNumber(int32_t aNumber, nsAString& aDest)
     // pos will always be zero 
     int32_t extraPos = mMinLength;
     while (extraPos > bufsize) {
-        aDest.Append(PRUnichar('0'));
+        aDest.Append(char16_t('0'));
         --extraPos;
         if (extraPos % mGroupSize == 0) {
             aDest.Append(mGroupSeparator);
@@ -163,7 +163,7 @@ void txDecimalCounter::appendNumber(int32_t aNumber, nsAString& aDest)
 
 void txAlphaCounter::appendNumber(int32_t aNumber, nsAString& aDest)
 {
-    PRUnichar buf[12];
+    char16_t buf[12];
     buf[11] = 0;
     int32_t pos = 11;
     while (aNumber > 0) {
@@ -194,7 +194,7 @@ void txRomanCounter::appendNumber(int32_t aNumber, nsAString& aDest)
     }
 
     while (aNumber >= 1000) {
-        aDest.Append(!mTableOffset ? PRUnichar('m') : PRUnichar('M'));
+        aDest.Append(!mTableOffset ? char16_t('m') : char16_t('M'));
         aNumber -= 1000;
     }
 

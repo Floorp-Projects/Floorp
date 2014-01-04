@@ -184,7 +184,7 @@ LogMixedContentMessage(MixedContentTypes aClassification,
   aContentLocation->GetSpec(locationSpec);
   NS_ConvertUTF8toUTF16 locationSpecUTF16(locationSpec);
 
-  const PRUnichar* strings[] = { locationSpecUTF16.get() };
+  const char16_t* strings[] = { locationSpecUTF16.get() };
   nsContentUtils::ReportToConsole(severityFlag, messageCategory, aRootDoc,
                                   nsContentUtils::eSECURITY_PROPERTIES,
                                   messageLookupKey.get(), strings, ArrayLength(strings));

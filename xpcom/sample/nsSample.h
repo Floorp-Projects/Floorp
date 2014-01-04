@@ -90,7 +90,7 @@ public:
      * of wstring (wide string), the Unicode type.  If the world were a
      * perfect place, all normal strings in XPCOM interfaces would be unicode.
      * If this type had been specified as wstring, it would appear as
-     * PRUnichar * in C++, which is the NSPR type for unicode characters.
+     * char16_t * in C++, which is the NSPR type for unicode characters.
      */
     /* NS_IMETHOD Poke(const char* aValue); */
 

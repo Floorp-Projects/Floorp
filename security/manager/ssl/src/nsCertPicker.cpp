@@ -31,7 +31,7 @@ nsCertPicker::~nsCertPicker()
 }
 
 NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx, 
-                                        const PRUnichar *selectedNickname, 
+                                        const char16_t *selectedNickname, 
                                         int32_t certUsage, 
                                         bool allowInvalid, 
                                         bool allowDuplicateNicknames, 
@@ -41,8 +41,8 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
   nsNSSShutDownPreventionLock locker;
   int32_t selectedIndex = -1;
   bool selectionFound = false;
-  PRUnichar **certNicknameList = nullptr;
-  PRUnichar **certDetailsList = nullptr;
+  char16_t **certNicknameList = nullptr;
+  char16_t **certDetailsList = nullptr;
   CERTCertListNode* node = nullptr;
   nsresult rv = NS_OK;
 
@@ -70,8 +70,8 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
-  certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+  certNicknameList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
+  certDetailsList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
 
   if (!certNicknameList || !certDetailsList) {
     nsMemory::Free(certNicknameList);
@@ -135,7 +135,7 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
       else {
         /* Throw up the cert picker dialog and get back the index of the selected cert */
         rv = dialogs->PickCertificate(ctx,
-          (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
+          (const char16_t**)certNicknameList, (const char16_t**)certDetailsList,
           CertsToUse, &selectedIndex, canceled);
       }
 

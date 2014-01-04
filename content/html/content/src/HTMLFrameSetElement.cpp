@@ -212,9 +212,9 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
     return NS_OK;
   }
 
-  static const PRUnichar sAster('*');
-  static const PRUnichar sPercent('%');
-  static const PRUnichar sComma(',');
+  static const char16_t sAster('*');
+  static const char16_t sPercent('%');
+  static const char16_t sComma(',');
 
   nsAutoString spec(aValue);
   // remove whitespace (Bug 33699) and quotation marks (bug 224598)
@@ -262,7 +262,7 @@ HTMLFrameSetElement::ParseRowCol(const nsAString & aValue,
     specs[i].mValue = 0;
     if (end > start) {
       int32_t numberEnd = end;
-      PRUnichar ch = spec.CharAt(numberEnd - 1);
+      char16_t ch = spec.CharAt(numberEnd - 1);
       if (sAster == ch) {
         specs[i].mUnit = eFramesetUnit_Relative;
         numberEnd--;

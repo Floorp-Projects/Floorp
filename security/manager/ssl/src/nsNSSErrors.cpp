@@ -81,7 +81,7 @@ nsNSSErrors::getErrorMessageFromCode(PRErrorCode err,
     ToLowerCase(error_id);
     NS_ConvertASCIItoUTF16 idU(error_id);
 
-    const PRUnichar *params[1];
+    const char16_t *params[1];
     params[0] = idU.get();
 
     nsString formattedString;

@@ -1399,7 +1399,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           uint32_t length = aText.Length();
           uint32_t i;
           for (i = 0; i < length; ++i) {
-            PRUnichar ch = aText[i];
+            char16_t ch = aText[i];
             // XXX this is horrible and doesn't handle clusters
             cwidth = aRenderingContext.GetWidth(ch);
             if (twidth + cwidth > width)
@@ -1418,7 +1418,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t length = aText.Length();
           int32_t i;
           for (i=length-1; i >= 0; --i) {
-            PRUnichar ch = aText[i];
+            char16_t ch = aText[i];
             cwidth = aRenderingContext.GetWidth(ch);
             if (twidth + cwidth > width)
               break;
@@ -1440,7 +1440,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int32_t length = aText.Length();
           int32_t rightPos = length - 1;
           for (int32_t leftPos = 0; leftPos < rightPos; ++leftPos) {
-            PRUnichar ch = aText[leftPos];
+            char16_t ch = aText[leftPos];
             cwidth = aRenderingContext.GetWidth(ch);
             twidth += cwidth;
             if (twidth > width)

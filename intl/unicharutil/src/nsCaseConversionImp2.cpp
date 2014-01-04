@@ -18,34 +18,34 @@ NS_IMETHODIMP_(nsrefcnt) nsCaseConversionImp2::Release(void)
 
 NS_IMPL_QUERY_INTERFACE1(nsCaseConversionImp2, nsICaseConversion)
 
-NS_IMETHODIMP nsCaseConversionImp2::ToUpper(PRUnichar aChar, PRUnichar* aReturn)
+NS_IMETHODIMP nsCaseConversionImp2::ToUpper(char16_t aChar, char16_t* aReturn)
 {
   *aReturn = ToUpperCase(aChar);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaseConversionImp2::ToLower(PRUnichar aChar, PRUnichar* aReturn)
+NS_IMETHODIMP nsCaseConversionImp2::ToLower(char16_t aChar, char16_t* aReturn)
 {
   *aReturn = ToLowerCase(aChar);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaseConversionImp2::ToTitle(PRUnichar aChar, PRUnichar* aReturn)
+NS_IMETHODIMP nsCaseConversionImp2::ToTitle(char16_t aChar, char16_t* aReturn)
 {
   *aReturn = ToTitleCase(aChar);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaseConversionImp2::ToUpper(const PRUnichar* anArray,
-                                         PRUnichar* aReturn,
+NS_IMETHODIMP nsCaseConversionImp2::ToUpper(const char16_t* anArray,
+                                         char16_t* aReturn,
                                          uint32_t aLen)
 {
   ToUpperCase(anArray, aReturn, aLen);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaseConversionImp2::ToLower(const PRUnichar* anArray,
-                                         PRUnichar* aReturn,
+NS_IMETHODIMP nsCaseConversionImp2::ToLower(const char16_t* anArray,
+                                         char16_t* aReturn,
                                          uint32_t aLen)
 {
   ToLowerCase(anArray, aReturn, aLen);
@@ -53,8 +53,8 @@ NS_IMETHODIMP nsCaseConversionImp2::ToLower(const PRUnichar* anArray,
 }
 
 NS_IMETHODIMP
-nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
-                                             const PRUnichar *aRight,
+nsCaseConversionImp2::CaseInsensitiveCompare(const char16_t *aLeft,
+                                             const char16_t *aRight,
                                              uint32_t aCount, int32_t* aResult)
 {
   *aResult = ::CaseInsensitiveCompare(aLeft, aRight, aCount);

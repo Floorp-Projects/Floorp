@@ -181,19 +181,19 @@ RelationalExpr::toString(nsAString& str)
             str.AppendLiteral("!=");
             break;
         case LESS_THAN:
-            str.Append(PRUnichar('<'));
+            str.Append(char16_t('<'));
             break;
         case LESS_OR_EQUAL:
             str.AppendLiteral("<=");
             break;
         case GREATER_THAN :
-            str.Append(PRUnichar('>'));
+            str.Append(char16_t('>'));
             break;
         case GREATER_OR_EQUAL:
             str.AppendLiteral(">=");
             break;
         default:
-            str.Append(PRUnichar('='));
+            str.Append(char16_t('='));
             break;
     }
 

@@ -109,7 +109,7 @@ public:
     }
 
     NS_IMETHOD OnStatus(nsIRequest *req, nsISupports *ctx, nsresult status,
-                        const PRUnichar *statusArg)
+                        const char16_t *statusArg)
     {
         LOG(("MyCallbacks::OnStatus [status=%x]\n", status));
         return NS_OK;

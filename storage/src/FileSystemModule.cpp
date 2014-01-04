@@ -204,7 +204,7 @@ int Filter(sqlite3_vtab_cursor* aCursor, int aIdxNum, const char* aIdxStr,
   }
 
   nsDependentString path(
-    reinterpret_cast<const PRUnichar*>(::sqlite3_value_text16(aArgv[0])));
+    reinterpret_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0])));
 
   nsresult rv = cursor->Init(path);
   NS_ENSURE_SUCCESS(rv, SQLITE_ERROR);
@@ -238,7 +238,7 @@ int Column(sqlite3_vtab_cursor* aCursor, sqlite3_context* aContext,
     case 0: {
       const nsString& name = cursor->CurrentFileName();
       sqlite3_result_text16(aContext, name.get(),
-                            name.Length() * sizeof(PRUnichar),
+                            name.Length() * sizeof(char16_t),
                             SQLITE_TRANSIENT);
       break;
     }
@@ -247,7 +247,7 @@ int Column(sqlite3_vtab_cursor* aCursor, sqlite3_context* aContext,
     case 1: {
       const nsString& path = cursor->DirectoryPath();
       sqlite3_result_text16(aContext, path.get(),
-                            path.Length() * sizeof(PRUnichar),
+                            path.Length() * sizeof(char16_t),
                             SQLITE_TRANSIENT);
       break;
     }

@@ -206,9 +206,9 @@ nsAuthSambaNTLM::SpawnNTLMAuthHelper()
 NS_IMETHODIMP
 nsAuthSambaNTLM::Init(const char *serviceName,
                       uint32_t    serviceFlags,
-                      const PRUnichar *domain,
-                      const PRUnichar *username,
-                      const PRUnichar *password)
+                      const char16_t *domain,
+                      const char16_t *username,
+                      const char16_t *password)
 {
     NS_ASSERTION(!username && !domain && !password, "unexpected credentials");
 

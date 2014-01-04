@@ -662,14 +662,14 @@ public:
 
 protected:
     virtual bool ShapeText(gfxContext      *aContext,
-                           const PRUnichar *aText,
+                           const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
                            gfxShapedText   *aShapedText,
                            bool             aPreferPlatformShaping);
 
-    bool InitGlyphRunWithPango(const PRUnichar *aString,
+    bool InitGlyphRunWithPango(const char16_t *aString,
                                uint32_t         aOffset,
                                uint32_t         aLength,
                                int32_t          aScript,
@@ -1631,7 +1631,7 @@ gfxFcFont::~gfxFcFont()
 
 bool
 gfxFcFont::ShapeText(gfxContext      *aContext,
-                     const PRUnichar *aText,
+                     const char16_t *aText,
                      uint32_t         aOffset,
                      uint32_t         aLength,
                      int32_t          aScript,

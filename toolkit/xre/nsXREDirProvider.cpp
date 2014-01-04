@@ -801,7 +801,7 @@ nsXREDirProvider::DoStartup()
       }
     }
 
-    static const PRUnichar kStartup[] = {'s','t','a','r','t','u','p','\0'};
+    static const char16_t kStartup[] = {'s','t','a','r','t','u','p','\0'};
     obsSvc->NotifyObservers(nullptr, "profile-do-change", kStartup);
     // Init the Extension Manager
     nsCOMPtr<nsIObserver> em = do_GetService("@mozilla.org/addons/integration;1");
@@ -822,7 +822,7 @@ nsXREDirProvider::DoStartup()
                                         "profile-after-change");
 
     if (gSafeMode && safeModeNecessary) {
-      static const PRUnichar kCrashed[] = {'c','r','a','s','h','e','d','\0'};
+      static const char16_t kCrashed[] = {'c','r','a','s','h','e','d','\0'};
       obsSvc->NotifyObservers(nullptr, "safemode-forced", kCrashed);
     }
 
@@ -849,7 +849,7 @@ nsXREDirProvider::DoShutdown()
       mozilla::services::GetObserverService();
     NS_ASSERTION(obsSvc, "No observer service?");
     if (obsSvc) {
-      static const PRUnichar kShutdownPersist[] =
+      static const char16_t kShutdownPersist[] =
         {'s','h','u','t','d','o','w','n','-','p','e','r','s','i','s','t','\0'};
       obsSvc->NotifyObservers(nullptr, "profile-change-net-teardown", kShutdownPersist);
       obsSvc->NotifyObservers(nullptr, "profile-change-teardown", kShutdownPersist);

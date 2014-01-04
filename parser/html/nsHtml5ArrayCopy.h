@@ -34,15 +34,15 @@ class nsHtml5ArrayCopy {
   public:
 
     static inline void
-    arraycopy(PRUnichar* source, int32_t sourceOffset, PRUnichar* target, int32_t targetOffset, int32_t length)
+    arraycopy(char16_t* source, int32_t sourceOffset, char16_t* target, int32_t targetOffset, int32_t length)
     {
-      memcpy(&(target[targetOffset]), &(source[sourceOffset]), length * sizeof(PRUnichar));
+      memcpy(&(target[targetOffset]), &(source[sourceOffset]), length * sizeof(char16_t));
     }
 
     static inline void
-    arraycopy(PRUnichar* source, PRUnichar* target, int32_t length)
+    arraycopy(char16_t* source, char16_t* target, int32_t length)
     {
-      memcpy(target, source, length * sizeof(PRUnichar));
+      memcpy(target, source, length * sizeof(char16_t));
     }
 
     static inline void

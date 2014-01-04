@@ -62,7 +62,7 @@ DOMParser::ParseFromString(const nsAString& aStr, SupportedType aType,
 }
 
 NS_IMETHODIMP 
-DOMParser::ParseFromString(const PRUnichar *str, 
+DOMParser::ParseFromString(const char16_t *str, 
                            const char *contentType,
                            nsIDOMDocument **aResult)
 {

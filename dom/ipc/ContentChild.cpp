@@ -287,7 +287,7 @@ void SystemMessageHandledObserver::Init()
 NS_IMETHODIMP
 SystemMessageHandledObserver::Observe(nsISupports* aSubject,
                                       const char* aTopic,
-                                      const PRUnichar* aData)
+                                      const char16_t* aData)
 {
     if (ContentChild::GetSingleton()) {
         ContentChild::GetSingleton()->SendSystemMessageHandled();

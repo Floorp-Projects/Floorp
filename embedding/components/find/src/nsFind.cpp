@@ -32,19 +32,19 @@
 using namespace mozilla;
 
 // Yikes!  Casting a char to unichar can fill with ones!
-#define CHAR_TO_UNICHAR(c) ((PRUnichar)(const unsigned char)c)
+#define CHAR_TO_UNICHAR(c) ((char16_t)(const unsigned char)c)
 
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 
-#define CH_QUOTE ((PRUnichar) 0x22)
-#define CH_APOSTROPHE ((PRUnichar) 0x27)
-#define CH_LEFT_SINGLE_QUOTE ((PRUnichar) 0x2018)
-#define CH_RIGHT_SINGLE_QUOTE ((PRUnichar) 0x2019)
-#define CH_LEFT_DOUBLE_QUOTE ((PRUnichar) 0x201C)
-#define CH_RIGHT_DOUBLE_QUOTE ((PRUnichar) 0x201D)
+#define CH_QUOTE ((char16_t) 0x22)
+#define CH_APOSTROPHE ((char16_t) 0x27)
+#define CH_LEFT_SINGLE_QUOTE ((char16_t) 0x2018)
+#define CH_RIGHT_SINGLE_QUOTE ((char16_t) 0x2019)
+#define CH_LEFT_DOUBLE_QUOTE ((char16_t) 0x201C)
+#define CH_RIGHT_DOUBLE_QUOTE ((char16_t) 0x201D)
 
-#define CH_SHY ((PRUnichar) 0xAD)
+#define CH_SHY ((char16_t) 0xAD)
 
 // nsFind::Find casts CH_SHY to char before calling StripChars
 // This works correctly if and only if CH_SHY <= 255
@@ -866,7 +866,7 @@ void nsFind::ResetAll()
 // until null (NextNode will return 0 at the end of our range).
 //
 NS_IMETHODIMP
-nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
+nsFind::Find(const char16_t *aPatText, nsIDOMRange* aSearchRange,
              nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
              nsIDOMRange** aRangeRet)
 {
@@ -896,7 +896,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   static const char kShy[] = { char(CH_SHY), 0 };
   patAutoStr.StripChars(kShy);
 
-  const PRUnichar* patStr = patAutoStr.get();
+  const char16_t* patStr = patAutoStr.get();
   int32_t patLen = patAutoStr.Length() - 1;
 
   // current offset into the pattern -- reset to beginning/end:
@@ -913,7 +913,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   int32_t fragLen = 0;
 
   // Pointers into the current fragment:
-  const PRUnichar *t2b = nullptr;
+  const char16_t *t2b = nullptr;
   const char      *t1b = nullptr;
 
   // Keep track of when we're in whitespace:
@@ -930,7 +930,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   aEndPoint->GetEndContainer(getter_AddRefs(endNode));
   aEndPoint->GetEndOffset(&endOffset);
 
-  PRUnichar prevChar = 0;
+  char16_t prevChar = 0;
   while (1)
   {
 #ifdef DEBUG_FIND
@@ -1077,8 +1077,8 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     }
 
     // The two characters we'll be comparing:
-    PRUnichar c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
-    PRUnichar patc = patStr[pindex];
+    char16_t c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
+    char16_t patc = patStr[pindex];
 
 #ifdef DEBUG_FIND
     printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",

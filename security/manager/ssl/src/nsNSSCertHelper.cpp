@@ -613,7 +613,7 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
     if (NS_FAILED(rv))
       return rv;
 
-    const PRUnichar *params[1] = {text2.get()};
+    const char16_t *params[1] = {text2.get()};
     rv = nssComponent->PIPBundleFormatStringFromName("CertDumpDefOID",
                                                      params, 1, text);
   }
@@ -646,7 +646,7 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
     bytelen.AppendInt(data->len);
     bitlen.AppendInt(data->len*8);
   
-    const PRUnichar *params[2] = {bytelen.get(), bitlen.get()};
+    const char16_t *params[2] = {bytelen.get(), bitlen.get()};
     nsresult rv = nssComponent->PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
                                                               params, 2, text);
     if (NS_FAILED(rv))
@@ -811,7 +811,7 @@ ProcessBasicConstraints(SECItem  *extData,
       nssComponent->GetPIPNSSBundleString("CertDumpPathLenUnlimited", depth);
     else
       depth.AppendInt(value.pathLenConstraint);
-    const PRUnichar *params[1] = {depth.get()};
+    const char16_t *params[1] = {depth.get()};
     rv2 = nssComponent->PIPBundleFormatStringFromName("CertDumpPathLen",
                                                       params, 1, local);
     if (NS_FAILED(rv2))
@@ -881,7 +881,7 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
   nsString avavalue;
   nsString type;
   nsAutoString temp;
-  const PRUnichar *params[2];
+  const char16_t *params[2];
 
   avas = rdn->avas;
   while ((ava = *avas++) != 0) {
@@ -923,7 +923,7 @@ ProcessRDN(CERTRDN* rdn, nsAString &finalString, nsINSSComponent *nssComponent)
 }
 
 static nsresult
-ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
+ProcessName(CERTName *name, nsINSSComponent *nssComponent, char16_t **value)
 {
   CERTRDN** rdns;
   CERTRDN** rdn;
@@ -1752,7 +1752,7 @@ ProcessSECAlgorithmID(SECAlgorithmID *algID,
 }
 
 static nsresult
-ProcessTime(PRTime dispTime, const PRUnichar *displayName, 
+ProcessTime(PRTime dispTime, const char16_t *displayName, 
             nsIASN1Sequence *parentSequence)
 {
   nsresult rv;
@@ -1831,7 +1831,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
                          false);
          ProcessRawBytes(nssComponent, &key->u.rsa.publicExponent, data2,
                          false);
-         const PRUnichar *params[4] = {length1.get(), data1.get(), 
+         const char16_t *params[4] = {length1.get(), data1.get(), 
                                        length2.get(), data2.get()};
          nssComponent->PIPBundleFormatStringFromName("CertDumpRSATemplate",
                                                      params, 4, text);
@@ -1854,7 +1854,7 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki,
           int i_pv = DER_GetInteger(&ecpk.publicValue);
           s_pv.AppendInt(i_pv);
         }
-        const PRUnichar *params[] = {s_fsl.get(), s_bpol.get(), s_pv.get()};
+        const char16_t *params[] = {s_fsl.get(), s_bpol.get(), s_pv.get()};
         nssComponent->PIPBundleFormatStringFromName("CertDumpECTemplate",
                                                     params, 3, text);
         break;

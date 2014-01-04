@@ -56,7 +56,7 @@ class nsACString;
  *     rv = GetBlah(sc);
  *     if (NS_SUCCEEDED(rv))
  *     {
- *       const PRUnichar *data;
+ *       const char16_t *data;
  *       NS_StringGetData(sc, &data);
  *       //
  *       // |data| now points to the result of the GetBlah function
@@ -81,7 +81,7 @@ class nsACString;
  *     if (NS_FAILED(rv))
  *       return rv;
  *
- *     const PRUnichar kData[] = {'x','y','z','\0'};
+ *     const char16_t kData[] = {'x','y','z','\0'};
  *     rv = NS_StringSetData(sc, kData, sizeof(kData)/2 - 1);
  *     if (NS_SUCCEEDED(rv))
  *       rv = SetBlah(sc);
@@ -165,7 +165,7 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  */
 XPCOM_API(nsresult)
 NS_StringContainerInit2
-  (nsStringContainer &aContainer, const PRUnichar *aData = nullptr,
+  (nsStringContainer &aContainer, const char16_t *aData = nullptr,
    uint32_t aDataLength = UINT32_MAX, uint32_t aFlags = 0);
 
 /**
@@ -197,7 +197,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  */
 XPCOM_API(uint32_t)
 NS_StringGetData
-  (const nsAString &aStr, const PRUnichar **aData,
+  (const nsAString &aStr, const char16_t **aData,
    bool *aTerminated = nullptr);
 
 /**
@@ -229,7 +229,7 @@ NS_StringGetData
  */
 XPCOM_API(uint32_t)
 NS_StringGetMutableData
-  (nsAString &aStr, uint32_t aDataLength, PRUnichar **aData);
+  (nsAString &aStr, uint32_t aDataLength, char16_t **aData);
 
 /**
  * NS_StringCloneData
@@ -241,7 +241,7 @@ NS_StringGetMutableData
  * @return              null-terminated copy of the string's internal buffer
  *                      (it must be free'd using using nsMemory::Free)
  */
-XPCOM_API(PRUnichar *)
+XPCOM_API(char16_t *)
 NS_StringCloneData
   (const nsAString &aStr);
 
@@ -264,7 +264,7 @@ NS_StringCloneData
  */
 XPCOM_API(nsresult)
 NS_StringSetData
-  (nsAString &aStr, const PRUnichar *aData,
+  (nsAString &aStr, const char16_t *aData,
    uint32_t aDataLength = UINT32_MAX);
 
 /**
@@ -296,7 +296,7 @@ NS_StringSetData
 XPCOM_API(nsresult)
 NS_StringSetDataRange
   (nsAString &aStr, uint32_t aCutOffset, uint32_t aCutLength,
-   const PRUnichar *aData, uint32_t aDataLength = UINT32_MAX);
+   const char16_t *aData, uint32_t aDataLength = UINT32_MAX);
 
 /**
  * NS_StringCopy
@@ -334,7 +334,7 @@ NS_StringCopy
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_StringAppendData(nsAString &aStr, const PRUnichar *aData,
+NS_StringAppendData(nsAString &aStr, const char16_t *aData,
                     uint32_t aDataLength = UINT32_MAX)
 {
   return NS_StringSetDataRange(aStr, UINT32_MAX, 0, aData, aDataLength);
@@ -359,7 +359,7 @@ NS_StringAppendData(nsAString &aStr, const PRUnichar *aData,
  * terminated by this function.
  */
 inline NS_HIDDEN_(nsresult)
-NS_StringInsertData(nsAString &aStr, uint32_t aOffset, const PRUnichar *aData,
+NS_StringInsertData(nsAString &aStr, uint32_t aOffset, const char16_t *aData,
                     uint32_t aDataLength = UINT32_MAX)
 {
   return NS_StringSetDataRange(aStr, aOffset, 0, aData, aDataLength);

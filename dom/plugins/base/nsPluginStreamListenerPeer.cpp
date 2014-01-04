@@ -570,7 +570,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIRequest *request,
 NS_IMETHODIMP nsPluginStreamListenerPeer::OnStatus(nsIRequest *request,
                                                    nsISupports* aContext,
                                                    nsresult aStatus,
-                                                   const PRUnichar* aStatusArg)
+                                                   const char16_t* aStatusArg)
 {
   return NS_OK;
 }

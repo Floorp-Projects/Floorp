@@ -591,7 +591,7 @@ protected:
    * of parameters in aParams.
    */
   void ReportLoadError(const char* aMsg,
-                       const PRUnichar** aParams = nullptr,
+                       const char16_t** aParams = nullptr,
                        uint32_t aParamCount = 0);
 
   /**

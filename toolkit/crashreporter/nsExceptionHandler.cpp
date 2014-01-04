@@ -2460,7 +2460,7 @@ CheckForLastRunCrash()
 #ifdef XP_WIN
   // Ugly but effective.
   nsDependentString lastMinidump(
-      reinterpret_cast<const PRUnichar*>(lastMinidump_contents.get()));
+      reinterpret_cast<const char16_t*>(lastMinidump_contents.get()));
 #else
   nsAutoCString lastMinidump = lastMinidump_contents;
 #endif

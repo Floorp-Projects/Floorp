@@ -425,7 +425,7 @@ gfxSVGGlyphsDocument::InsertGlyphId(Element *aGlyphElement)
 
     uint32_t id = 0;
     for (uint32_t i = glyphPrefixLength; i < glyphIdStr.Length(); ++i) {
-      PRUnichar ch = glyphIdStr.CharAt(i);
+      char16_t ch = glyphIdStr.CharAt(i);
       if (ch < '0' || ch > '9') {
         return;
       }

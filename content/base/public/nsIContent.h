@@ -505,7 +505,7 @@ public:
    * the document is notified of the content change.
    * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
    */
-  virtual nsresult SetText(const PRUnichar* aBuffer, uint32_t aLength,
+  virtual nsresult SetText(const char16_t* aBuffer, uint32_t aLength,
                            bool aNotify) = 0;
 
   /**
@@ -513,7 +513,7 @@ public:
    * the document is notified of the content change.
    * NOTE: For elements this always ASSERTS and returns NS_ERROR_FAILURE
    */
-  virtual nsresult AppendText(const PRUnichar* aBuffer, uint32_t aLength,
+  virtual nsresult AppendText(const char16_t* aBuffer, uint32_t aLength,
                               bool aNotify) = 0;
 
   /**

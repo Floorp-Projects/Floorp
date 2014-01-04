@@ -333,7 +333,7 @@ template<class T, uint32_t K>
 NS_IMETHODIMP
 nsExpirationTracker<T, K>::ExpirationTrackerObserver::Observe(nsISupports     *aSubject,
                                                               const char      *aTopic,
-                                                              const PRUnichar *aData)
+                                                              const char16_t *aData)
 {
   if (!strcmp(aTopic, "memory-pressure") && mOwner)
     mOwner->AgeAllGenerations();

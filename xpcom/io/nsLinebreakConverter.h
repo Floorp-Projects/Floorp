@@ -64,7 +64,7 @@ public:
    *              terminated string.
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
-  static PRUnichar* ConvertUnicharLineBreaks(const PRUnichar* aSrc,
+  static char16_t* ConvertUnicharLineBreaks(const char16_t* aSrc,
                 ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
                 int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
   
@@ -114,7 +114,7 @@ public:
    *              terminated string.
    * @param aOutLen: used to return character length of returned buffer, if not null.
    */
-  static nsresult ConvertUnicharLineBreaksInSitu(PRUnichar **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
+  static nsresult ConvertUnicharLineBreaksInSitu(char16_t **ioBuffer, ELinebreakType aSrcBreaks, ELinebreakType aDestBreaks,
                         int32_t aSrcLen = kIgnoreLen, int32_t* aOutLen = nullptr);
     
 };

@@ -359,7 +359,7 @@ VacuumManager::~VacuumManager()
 NS_IMETHODIMP
 VacuumManager::Observe(nsISupports *aSubject,
                        const char *aTopic,
-                       const PRUnichar *aData)
+                       const char16_t *aData)
 {
   if (strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY) == 0) {
     // Try to run vacuum on all registered entries.  Will stop at the first

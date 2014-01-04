@@ -638,7 +638,7 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
         // in non ascii.(see bug 87127) Since it is too risky to make interface change right
         // now, we decide not to do so now.
         // Therefore, the aIn we receive here maybe already in damage form
-        // (e.g. treat every bytes as ISO-8859-1 and cast up to PRUnichar
+        // (e.g. treat every bytes as ISO-8859-1 and cast up to char16_t
         //  while the real data could be in file system charset )
         // we choice the following logic which will work for most of the case.
         // Case will still failed only if it meet ALL the following condiction:
@@ -784,8 +784,8 @@ bool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
     // have proper Unicode code points.
     // This is a temporary fix.  Please refer to 58866, 86948
 
-    nsReadingIterator<PRUnichar> iter;
-    nsReadingIterator<PRUnichar> iterEnd;
+    nsReadingIterator<char16_t> iter;
+    nsReadingIterator<char16_t> iterEnd;
     aIn.BeginReading(iter);
     aIn.EndReading(iterEnd);
     while (iter != iterEnd)
