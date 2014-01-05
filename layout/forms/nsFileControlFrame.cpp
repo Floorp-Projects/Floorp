@@ -285,7 +285,7 @@ nsFileControlFrame::ContentStatesChanged(nsEventStates aStates)
   }
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsFileControlFrame::GetFrameName(nsAString& aResult) const
 {

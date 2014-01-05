@@ -58,7 +58,7 @@ public:
                               nsIAtom*        aAttribute,
                               int32_t         aModType) MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGGradient"), aResult);
@@ -149,7 +149,7 @@ public:
                               nsIAtom*        aAttribute,
                               int32_t         aModType) MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGLinearGradient"), aResult);
@@ -194,7 +194,7 @@ public:
                               nsIAtom*        aAttribute,
                               int32_t         aModType) MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGRadialGradient"), aResult);

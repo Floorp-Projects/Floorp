@@ -75,7 +75,7 @@ public:
   virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) MOZ_OVERRIDE;
   
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const MOZ_OVERRIDE;
 #endif  
 

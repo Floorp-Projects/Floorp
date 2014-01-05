@@ -302,7 +302,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
 //----------------------------------------------------------------------
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::GetFrameName(nsAString& aResult) const
 {

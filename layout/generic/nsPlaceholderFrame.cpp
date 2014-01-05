@@ -229,7 +229,7 @@ nsPlaceholderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 #endif // DEBUG || (MOZ_REFLOW_PERF_DSP && MOZ_REFLOW_PERF)
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsPlaceholderFrame::GetFrameName(nsAString& aResult) const
 {
@@ -247,4 +247,4 @@ nsPlaceholderFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
   }
   fputs("\n", out);
 }
-#endif // DEBUG
+#endif

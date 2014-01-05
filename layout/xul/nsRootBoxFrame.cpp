@@ -93,7 +93,7 @@ public:
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
   
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
@@ -301,7 +301,7 @@ NS_QUERYFRAME_HEAD(nsRootBoxFrame)
   NS_QUERYFRAME_ENTRY(nsIRootBox)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsRootBoxFrame::GetFrameName(nsAString& aResult) const
 {

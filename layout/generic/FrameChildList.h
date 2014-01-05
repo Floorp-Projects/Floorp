@@ -17,7 +17,7 @@ namespace layout {
 
 // enum FrameChildListID lives in nsFrameList.h to solve circular dependencies.
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 extern const char* ChildListName(FrameChildListID aListID);
 #endif
 

@@ -167,7 +167,7 @@ nsLineBox::Cleanup()
   }
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 static void
 ListFloats(FILE* out, int32_t aIndent, const nsFloatCacheList& aFloats)
 {
@@ -188,9 +188,7 @@ ListFloats(FILE* out, int32_t aIndent, const nsFloatCacheList& aFloats)
     fc = fc->Next();
   }
 }
-#endif
 
-#ifdef DEBUG
 const char *
 BreakTypeToString(uint8_t aBreakType)
 {

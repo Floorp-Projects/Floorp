@@ -122,7 +122,7 @@ public:
 
   nsTableRowFrame* GetFirstRow();
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
