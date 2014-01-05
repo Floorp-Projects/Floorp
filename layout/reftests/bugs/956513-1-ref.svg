@@ -1,0 +1,10 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <path id="p" d="M0 100h400"/>
+  <path d="M0 102h400" stroke="blue" stroke-width="1px"/>
+  <circle cx="200" cy="102" r="3" fill="blue"/>
+  <text><textPath font-size="16px" text-anchor="middle" startOffset="50%" xlink:href="#p">Text should be centered on the line.</textPath></text>
+</svg>
