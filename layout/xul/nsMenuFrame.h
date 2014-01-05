@@ -187,7 +187,7 @@ public:
   bool IsOnMenu() { return mMenuParent && mMenuParent->IsMenu(); }
   void SetIsMenu(bool aIsMenu) { mIsMenu = aIsMenu; }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
       return MakeFrameName(NS_LITERAL_STRING("Menu"), aResult);

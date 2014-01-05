@@ -83,7 +83,7 @@ int32_t nsLegendFrame::GetAlign()
   return intValue;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsLegendFrame::GetFrameName(nsAString& aResult) const
 {

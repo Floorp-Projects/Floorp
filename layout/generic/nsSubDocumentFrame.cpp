@@ -511,7 +511,7 @@ nsSubDocumentFrame::GetIntrinsicHeight()
   return nsPresContext::CSSPixelsToAppUnits(150);
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 void
 nsSubDocumentFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
 {

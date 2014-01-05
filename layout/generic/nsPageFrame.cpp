@@ -168,7 +168,7 @@ nsPageFrame::GetType() const
   return nsGkAtoms::pageFrame; 
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsPageFrame::GetFrameName(nsAString& aResult) const
 {
@@ -681,7 +681,7 @@ nsPageBreakFrame::GetType() const
   return nsGkAtoms::pageBreakFrame; 
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsPageBreakFrame::GetFrameName(nsAString& aResult) const
 {

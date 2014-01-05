@@ -25,7 +25,7 @@ public:
   friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell,
                                     nsStyleContext* aContext);
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("Stack"), aResult);

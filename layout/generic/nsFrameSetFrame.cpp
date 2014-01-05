@@ -82,7 +82,7 @@ class nsHTMLFramesetBorderFrame : public nsLeafFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
@@ -136,7 +136,7 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("FramesetBlank"), aResult);
@@ -1148,7 +1148,7 @@ nsHTMLFramesetFrame::GetType() const
   return nsGkAtoms::frameSetFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsHTMLFramesetFrame::GetFrameName(nsAString& aResult) const
 {
@@ -1609,7 +1609,7 @@ nsHTMLFramesetBorderFrame::GetCursor(const nsPoint&    aPoint,
   return NS_OK;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("FramesetBorder"), aResult);

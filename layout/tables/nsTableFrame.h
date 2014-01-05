@@ -350,7 +350,7 @@ public:
     return nsContainerFrame::IsFrameOfType(aFlags);
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   /** @see nsIFrame::GetFrameName */
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif

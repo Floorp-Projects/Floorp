@@ -8399,44 +8399,6 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
   return NS_OK;
 }
 
-#ifdef DEBUG
-// Translate the mapped content into a string that's printable
-void
-nsTextFrame::ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const
-{
-  // Get the frames text content
-  const nsTextFragment* frag = mContent->GetText();
-  if (!frag) {
-    return;
-  }
-
-  // Compute the total length of the text content.
-  *aTotalContentLength = frag->GetLength();
-
-  int32_t contentLength = GetContentLength();
-  // Set current fragment and current fragment offset
-  if (0 == contentLength) {
-    return;
-  }
-  int32_t fragOffset = GetContentOffset();
-  int32_t n = fragOffset + contentLength;
-  while (fragOffset < n) {
-    char16_t ch = frag->CharAt(fragOffset++);
-    if (ch == '\r') {
-      aBuf.AppendLiteral("\\r");
-    } else if (ch == '\n') {
-      aBuf.AppendLiteral("\\n");
-    } else if (ch == '\t') {
-      aBuf.AppendLiteral("\\t");
-    } else if ((ch < ' ') || (ch >= 127)) {
-      aBuf.Append(nsPrintfCString("\\u%04x", ch));
-    } else {
-      aBuf.Append(ch);
-    }
-  }
-}
-#endif
-
 nsIAtom*
 nsTextFrame::GetType() const
 {
@@ -8475,7 +8437,43 @@ nsTextFrame::IsEmpty()
   return isEmpty;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
+// Translate the mapped content into a string that's printable
+void
+nsTextFrame::ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const
+{
+  // Get the frames text content
+  const nsTextFragment* frag = mContent->GetText();
+  if (!frag) {
+    return;
+  }
+
+  // Compute the total length of the text content.
+  *aTotalContentLength = frag->GetLength();
+
+  int32_t contentLength = GetContentLength();
+  // Set current fragment and current fragment offset
+  if (0 == contentLength) {
+    return;
+  }
+  int32_t fragOffset = GetContentOffset();
+  int32_t n = fragOffset + contentLength;
+  while (fragOffset < n) {
+    char16_t ch = frag->CharAt(fragOffset++);
+    if (ch == '\r') {
+      aBuf.AppendLiteral("\\r");
+    } else if (ch == '\n') {
+      aBuf.AppendLiteral("\\n");
+    } else if (ch == '\t') {
+      aBuf.AppendLiteral("\\t");
+    } else if ((ch < ' ') || (ch >= 127)) {
+      aBuf.Append(nsPrintfCString("\\u%04x", ch));
+    } else {
+      aBuf.Append(ch);
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsTextFrame::GetFrameName(nsAString& aResult) const
 {
@@ -8486,14 +8484,6 @@ nsTextFrame::GetFrameName(nsAString& aResult) const
   tmp.SetLength(std::min(tmp.Length(), 50u));
   aResult += NS_LITERAL_STRING("\"") + NS_ConvertASCIItoUTF16(tmp) + NS_LITERAL_STRING("\"");
   return NS_OK;
-}
-
-NS_IMETHODIMP_(nsFrameState)
-nsTextFrame::GetDebugStateBits() const
-{
-  // mask out our emptystate flags; those are just caches
-  return nsFrame::GetDebugStateBits() &
-    ~(TEXT_WHITESPACE_FLAGS | TEXT_REFLOW_FLAGS);
 }
 
 void
@@ -8512,6 +8502,16 @@ nsTextFrame::List(FILE* out, int32_t aIndent, uint32_t aFlags) const
     fprintf(out, " SELECTED");
   }
   fputs("\n", out);
+}
+#endif
+
+#ifdef DEBUG
+NS_IMETHODIMP_(nsFrameState)
+nsTextFrame::GetDebugStateBits() const
+{
+  // mask out our emptystate flags; those are just caches
+  return nsFrame::GetDebugStateBits() &
+    ~(TEXT_WHITESPACE_FLAGS | TEXT_REFLOW_FLAGS);
 }
 #endif
 

@@ -42,7 +42,7 @@ nsGfxButtonControlFrame::GetType() const
   return nsGkAtoms::gfxButtonControlFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsGfxButtonControlFrame::GetFrameName(nsAString& aResult) const
 {

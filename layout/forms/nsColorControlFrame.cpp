@@ -48,7 +48,7 @@ nsColorControlFrame::GetType() const
   return nsGkAtoms::colorControlFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsColorControlFrame::GetFrameName(nsAString& aResult) const
 {

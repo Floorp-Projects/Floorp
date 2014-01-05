@@ -24,7 +24,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("GroupBoxFrame"), aResult);
   }
@@ -54,7 +54,7 @@ public:
       nsBoxFrame(aShell, aContext) {}
 
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("GroupBoxFrameInner", aResult);
   }

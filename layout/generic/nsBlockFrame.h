@@ -171,10 +171,13 @@ public:
   virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
   virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const MOZ_OVERRIDE;
-  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const MOZ_OVERRIDE;
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+#endif
+
+#ifdef DEBUG
+  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const MOZ_OVERRIDE;
 #endif
 
 #ifdef ACCESSIBILITY

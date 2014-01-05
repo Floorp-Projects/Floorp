@@ -1526,7 +1526,7 @@ nsBoxFrame::GetBoxName(nsAutoString& aName)
 }
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsBoxFrame::GetFrameName(nsAString& aResult) const
 {
