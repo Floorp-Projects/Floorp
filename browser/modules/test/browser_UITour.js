@@ -5,6 +5,7 @@
 
 let gTestTab;
 let gContentAPI;
+let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
 
@@ -21,10 +22,10 @@ function loadTestPage(callback, host = "https://example.com/") {
   gTestTab.linkedBrowser.addEventListener("load", function onLoad() {
     gTestTab.linkedBrowser.removeEventListener("load", onLoad);
 
-    let contentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
-    gContentAPI = contentWindow.Mozilla.UITour;
+    gContentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
+    gContentAPI = gContentWindow.Mozilla.UITour;
 
-    waitForFocus(callback, contentWindow);
+    waitForFocus(callback, gContentWindow);
   }, true);
 }
 
@@ -37,6 +38,7 @@ function test() {
 
   registerCleanupFunction(function() {
     delete window.UITour;
+    delete window.gContentWindow;
     delete window.gContentAPI;
     if (gTestTab)
       gBrowser.removeTab(gTestTab);
@@ -240,11 +242,16 @@ let tests = [
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");
     let desc = document.getElementById("UITourTooltipDescription");
+    let icon = document.getElementById("UITourTooltipIcon");
+    let buttons = document.getElementById("UITourTooltipButtons");
+
     popup.addEventListener("popupshown", function onPopupShown() {
       popup.removeEventListener("popupshown", onPopupShown);
       is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
       is(title.textContent, "test title", "Popup should have correct title");
       is(desc.textContent, "test text", "Popup should have correct description text");
+      is(icon.src, "", "Popup should have no icon");
+      is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
       popup.addEventListener("popuphidden", function onPopupHidden() {
         popup.removeEventListener("popuphidden", onPopupHidden);
@@ -266,11 +273,16 @@ let tests = [
     let popup = document.getElementById("UITourTooltip");
     let title = document.getElementById("UITourTooltipTitle");
     let desc = document.getElementById("UITourTooltipDescription");
+    let icon = document.getElementById("UITourTooltipIcon");
+    let buttons = document.getElementById("UITourTooltipButtons");
+
     popup.addEventListener("popupshown", function onPopupShown() {
       popup.removeEventListener("popupshown", onPopupShown);
       is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
       is(title.textContent, "urlbar title", "Popup should have correct title");
       is(desc.textContent, "urlbar text", "Popup should have correct description text");
+      is(icon.src, "", "Popup should have no icon");
+      is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 
       gContentAPI.showInfo("search", "search title", "search text");
       executeSoon(function() {
