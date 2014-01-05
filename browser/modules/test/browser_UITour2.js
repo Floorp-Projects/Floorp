@@ -5,6 +5,7 @@
 
 let gTestTab;
 let gContentAPI;
+let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
 
@@ -21,10 +22,10 @@ function loadTestPage(callback, host = "https://example.com/") {
   gTestTab.linkedBrowser.addEventListener("load", function onLoad() {
     gTestTab.linkedBrowser.removeEventListener("load", onLoad);
 
-    let contentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
-    gContentAPI = contentWindow.Mozilla.UITour;
+    gContentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
+    gContentAPI = gContentWindow.Mozilla.UITour;
 
-    waitForFocus(callback, contentWindow);
+    waitForFocus(callback, gContentWindow);
   }, true);
 }
 
@@ -37,6 +38,7 @@ function test() {
 
   registerCleanupFunction(function() {
     delete window.UITour;
+    delete window.gContentWindow;
     delete window.gContentAPI;
     if (gTestTab)
       gBrowser.removeTab(gTestTab);
