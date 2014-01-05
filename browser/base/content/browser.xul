@@ -202,8 +202,16 @@
            align="start"
            orient="vertical"
            role="alert">
-      <label id="UITourTooltipTitle" flex="1"/>
-      <description id="UITourTooltipDescription" flex="1"/>
+      <hbox>
+        <vbox>
+          <image id="UITourTooltipIcon"/>
+        </vbox>
+        <vbox flex="1">
+          <label id="UITourTooltipTitle" flex="1"/>
+          <description id="UITourTooltipDescription" flex="1"/>
+          <hbox id="UITourTooltipButtons" flex="1" align="end"/>
+        </vbox>
+      </hbox>
     </panel>
     <panel id="UITourHighlightContainer"
            hidden="true"
