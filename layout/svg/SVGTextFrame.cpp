@@ -4326,6 +4326,7 @@ SVGTextFrame::ResolvePositions(nsIContent* aContent,
     // only if they actually have some text content.
     if (HasTextContent(aContent)) {
       mPositions[aIndex].mPosition = gfxPoint();
+      mPositions[aIndex].mStartOfChunk = true;
     }
   } else if (aContent->Tag() != nsGkAtoms::a) {
     // We have a text content element that can have x/y/dx/dy/rotate attributes.
