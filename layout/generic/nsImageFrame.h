@@ -111,7 +111,7 @@ public:
     return ImageFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
   void List(FILE* out, int32_t aIndent, uint32_t aFlags = 0) const;
 #endif

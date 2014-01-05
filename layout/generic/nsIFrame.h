@@ -3235,7 +3235,7 @@ private:
   template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
   static nsIFrame* MergeSort(nsIFrame *aSource);
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 public:
   static void IndentBy(FILE* out, int32_t aIndent) {
     while (--aIndent >= 0) fputs("  ", out);
@@ -3263,6 +3263,10 @@ public:
   virtual void DumpFrameTree();
 
   NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
+#endif
+
+#ifdef DEBUG
+public:
   NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const = 0;
   NS_IMETHOD  DumpRegressionData(nsPresContext* aPresContext,
                                  FILE* out, int32_t aIndent) = 0;

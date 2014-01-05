@@ -43,7 +43,7 @@ NS_QUERYFRAME_HEAD(nsInlineFrame)
   NS_QUERYFRAME_ENTRY(nsInlineFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsInlineFrame::GetFrameName(nsAString& aResult) const
 {
@@ -990,7 +990,7 @@ nsFirstLineFrame::Init(nsIContent* aContent, nsIFrame* aParent,
   }
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsFirstLineFrame::GetFrameName(nsAString& aResult) const
 {

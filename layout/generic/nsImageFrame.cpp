@@ -1745,7 +1745,7 @@ nsImageFrame::GetType() const
   return nsGkAtoms::imageFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsImageFrame::GetFrameName(nsAString& aResult) const
 {

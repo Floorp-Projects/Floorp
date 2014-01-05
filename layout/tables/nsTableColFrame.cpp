@@ -175,7 +175,7 @@ nsTableColFrame::GetType() const
   return nsGkAtoms::tableColFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsTableColFrame::GetFrameName(nsAString& aResult) const
 {

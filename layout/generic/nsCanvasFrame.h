@@ -99,7 +99,7 @@ public:
     return rv;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
   NS_IMETHOD GetContentForEvent(mozilla::WidgetEvent* aEvent,

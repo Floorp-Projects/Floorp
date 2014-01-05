@@ -435,10 +435,6 @@ public:
   // NS_FRAME_IS_DIRTY bit set
   static void VerifyDirtyBitSet(const nsFrameList& aFrameList);
 
-  // Helper function to return the index in parent of the frame's content
-  // object. Returns -1 on error or if the frame doesn't have a content object
-  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
-
   static void XMLQuote(nsString& aString);
 
   /**
@@ -452,8 +448,6 @@ public:
    */
   virtual void DumpBaseRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent);
   
-  nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
-
   // Display Reflow Debugging 
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
@@ -652,13 +646,21 @@ private:
 
   virtual nsILineIterator* GetLineIterator() MOZ_OVERRIDE;
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 public:
   /**
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...
    */
   NS_IMETHOD  GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
+  // Helper function to return the index in parent of the frame's content
+  // object. Returns -1 on error or if the frame doesn't have a content object
+  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
+#endif
+
+#ifdef DEBUG
+public:
   /**
    * Return the state bits that are relevant to regression tests (that
    * is, those bits which indicate a real difference when they differ

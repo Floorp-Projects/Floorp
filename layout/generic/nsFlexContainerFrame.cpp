@@ -1268,13 +1268,13 @@ nsFlexContainerFrame::GetType() const
   return nsGkAtoms::flexContainerFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsFlexContainerFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("FlexContainer"), aResult);
 }
-#endif // DEBUG
+#endif
 
 // Helper for BuildDisplayList, to implement this special-case for flex items
 // from the spec:

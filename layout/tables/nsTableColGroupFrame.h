@@ -136,7 +136,7 @@ public:
                           bool                      aResetSubsequentColIndices,
                           const nsFrameList::Slice& aCols);
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
   void Dump(int32_t aIndent);
 #endif

@@ -92,7 +92,9 @@ public:
 #ifdef DEBUG
   NS_IMETHOD SetInitialChildList(ChildListID    aListID,
                                  nsFrameList&   aChildList);
+#endif
 
+#ifdef DEBUG_FRAME_DUMP
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
   }

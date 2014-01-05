@@ -591,7 +591,7 @@ nsImageBoxFrame::GetType() const
   return nsGkAtoms::imageBoxFrame;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_FRAME_DUMP
 NS_IMETHODIMP
 nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 {
