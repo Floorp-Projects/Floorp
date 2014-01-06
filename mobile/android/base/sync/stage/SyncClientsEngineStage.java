@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
@@ -56,7 +57,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   protected ClientsDatabaseAccessor db;
 
   protected volatile boolean shouldWipe;
-  protected volatile boolean commandsProcessedShouldUpload;
+  protected volatile boolean shouldUploadLocalRecord;     // Set if, e.g., we received commands or need to refresh our version.
   protected final AtomicInteger uploadAttemptsCount = new AtomicInteger();
   protected final List<ClientRecord> toUpload = new ArrayList<ClientRecord>();
 
@@ -183,11 +184,9 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       try {
         r = (ClientRecord) factory.createRecord(record.decrypt());
         if (clientsDelegate.isLocalGUID(r.guid)) {
-          Logger.info(LOG_TAG, "Local client GUID exists on server and was downloaded");
-
+          Logger.info(LOG_TAG, "Local client GUID exists on server and was downloaded.");
           localAccountGUIDDownloaded = true;
-          session.config.persistServerClientRecordTimestamp(r.lastModified);
-          processCommands(r.commands);
+          handleDownloadedLocalRecord(r);
         } else {
           // Only need to store record if it isn't our local one.
           wipeAndStore(r);
@@ -268,7 +267,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       // If we're processing our record, we have a little more cleanup
       // to do.
-      commandsProcessedShouldUpload = false;
+      shouldUploadLocalRecord = false;
       session.config.persistServerClientRecordTimestamp(responseTimestamp);
       session.advance();
     }
@@ -279,7 +278,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
 
       // If upload failed because of `ifUnmodifiedSince` then there are new
       // commands uploaded to our record. We must download and process them first.
-      if (!commandsProcessedShouldUpload ||
+      if (!shouldUploadLocalRecord ||
           statusCode == HttpStatus.SC_PRECONDITION_FAILED ||
           uploadAttemptsCount.incrementAndGet() > MAX_UPLOAD_FAILURE_COUNT) {
 
@@ -293,7 +292,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       }
       Logger.trace(LOG_TAG, "Retrying upload…");
       // Preconditions:
-      // commandsProcessedShouldUpload == true &&
+      // shouldUploadLocalRecord == true &&
       // statusCode != 412 &&
       // uploadAttemptCount < MAX_UPLOAD_FAILURE_COUNT
       checkAndUpload();
@@ -357,12 +356,17 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     return VersionConstants.CLIENTS_ENGINE_VERSION;
   }
 
+  protected String getLocalClientVersion() {
+    return GlobalConstants.MOZ_APP_VERSION;
+  }
+
   protected ClientRecord newLocalClientRecord(ClientsDataDelegate delegate) {
     final String ourGUID = delegate.getAccountGUID();
     final String ourName = delegate.getClientName();
 
     ClientRecord r = new ClientRecord(ourGUID);
     r.name = ourName;
+    r.version = getLocalClientVersion();
     return r;
   }
 
@@ -373,7 +377,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
   }
 
   protected boolean shouldUpload() {
-    if (commandsProcessedShouldUpload) {
+    if (shouldUploadLocalRecord) {
       return true;
     }
 
@@ -390,13 +394,22 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     return age >= CLIENTS_TTL_REFRESH;
   }
 
+  protected void handleDownloadedLocalRecord(ClientRecord r) {
+    session.config.persistServerClientRecordTimestamp(r.lastModified);
+
+    if (!getLocalClientVersion().equals(r.version)) {
+      shouldUploadLocalRecord = true;
+    }
+    processCommands(r.commands);
+  }
+
   protected void processCommands(JSONArray commands) {
     if (commands == null ||
         commands.size() == 0) {
       return;
     }
 
-    commandsProcessedShouldUpload = true;
+    shouldUploadLocalRecord = true;
     CommandProcessor processor = CommandProcessor.getProcessor();
 
     for (Object o : commands) {
