@@ -121,8 +121,6 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineStrCharAt(callInfo);
 
     // RegExp natives.
-    if (native == regexp_exec && CallResultEscapes(pc))
-        return inlineRegExpExec(callInfo);
     if (native == regexp_exec && !CallResultEscapes(pc))
         return inlineRegExpTest(callInfo);
     if (native == regexp_test)
@@ -1107,34 +1105,6 @@ IonBuilder::inlineStrCharAt(CallInfo &callInfo)
     MFromCharCode *string = MFromCharCode::New(alloc(), charCode);
     current->add(string);
     current->push(string);
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
-IonBuilder::inlineRegExpExec(CallInfo &callInfo)
-{
-    if (callInfo.argc() != 1 || callInfo.constructing())
-        return InliningStatus_NotInlined;
-
-    if (callInfo.thisArg()->type() != MIRType_Object)
-        return InliningStatus_NotInlined;
-
-    types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : nullptr;
-    if (clasp != &RegExpObject::class_)
-        return InliningStatus_NotInlined;
-
-    if (callInfo.getArg(0)->type() != MIRType_String)
-        return InliningStatus_NotInlined;
-
-    callInfo.unwrapArgs();
-
-    MInstruction *exec = MRegExpExec::New(alloc(), callInfo.thisArg(), callInfo.getArg(0));
-    current->add(exec);
-    current->push(exec);
-    if (!resumeAfter(exec))
-        return InliningStatus_Error;
-
     return InliningStatus_Inlined;
 }
 

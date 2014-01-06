@@ -98,7 +98,6 @@ namespace jit {
     _(OsrEntry)                                                             \
     _(Nop)                                                                  \
     _(RegExp)                                                               \
-    _(RegExpExec)                                                           \
     _(RegExpTest)                                                           \
     _(Lambda)                                                               \
     _(ImplicitThis)                                                         \
