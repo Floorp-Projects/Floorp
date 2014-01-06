@@ -2147,8 +2147,6 @@ this.CustomizableUI = {
    */
   get SOURCE_EXTERNAL() "external",
 
-  get TYPE_BUTTON() "button",
-
   /**
    * The class used to distinguish items that span the entire menu panel.
    */
@@ -2729,7 +2727,9 @@ this.CustomizableUI = {
     return CustomizableUIInternal.canWidgetMoveToArea(aWidgetId, aArea);
   },
   /**
-   * Whether we're in a default state.
+   * Whether we're in a default state. Note that non-removable non-default
+   * widgets and non-existing widgets are not taken into account in determining
+   * whether we're in the default state.
    *
    * NB: this is a property with a getter. The getter is NOT cheap, because
    * it does smart things with non-removable non-default items, non-existent
