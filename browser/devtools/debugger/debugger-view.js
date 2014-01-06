@@ -162,7 +162,10 @@ let DebuggerView = {
       emptyText: L10N.getStr("emptyVariablesText"),
       onlyEnumVisible: Prefs.variablesOnlyEnumVisible,
       searchEnabled: Prefs.variablesSearchboxVisible,
-      eval: DebuggerController.StackFrames.evaluate,
+      eval: (variable, value) => {
+        let string = variable.evaluationMacro(variable, value);
+        DebuggerController.StackFrames.evaluate(string);
+      },
       lazyEmpty: true
     });
 
