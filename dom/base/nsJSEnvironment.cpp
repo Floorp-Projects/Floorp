@@ -1272,10 +1272,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
           NS_ASSERTION(prim == nullptr,
                        "Don't pass nsISupportsPrimitives - use nsIVariant!");
 #endif
-          nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
           JS::Rooted<JS::Value> v(cx);
-          rv = nsContentUtils::WrapNative(cx, aScope, arg, &v,
-                                          getter_AddRefs(wrapper));
+          rv = nsContentUtils::WrapNative(cx, aScope, arg, &v);
           if (NS_SUCCEEDED(rv)) {
             *thisval = v;
           }
@@ -1470,12 +1468,10 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
 
       AutoFree iidGuard(iid); // Free iid upon destruction.
 
-      nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
       JS::Rooted<JSObject*> global(cx, GetWindowProxy());
       JS::Rooted<JS::Value> v(cx);
       nsresult rv = nsContentUtils::WrapNative(cx, global,
-                                               data, iid, &v,
-                                               getter_AddRefs(wrapper));
+                                               data, iid, &v);
       NS_ENSURE_SUCCESS(rv, rv);
 
       *aArgv = v;
