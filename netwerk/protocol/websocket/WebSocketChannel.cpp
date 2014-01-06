@@ -69,7 +69,7 @@ using namespace mozilla;
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS11(WebSocketChannel,
+NS_IMPL_ISUPPORTS12(WebSocketChannel,
                     nsIWebSocketChannel,
                     nsIHttpUpgradeListener,
                     nsIRequestObserver,
@@ -79,6 +79,7 @@ NS_IMPL_ISUPPORTS11(WebSocketChannel,
                     nsIOutputStreamCallback,
                     nsITimerCallback,
                     nsIDNSListener,
+                    nsIProtocolProxyCallback,
                     nsIInterfaceRequestor,
                     nsIChannelEventSink)
 
@@ -994,7 +995,7 @@ WebSocketChannel::~WebSocketChannel()
     MOZ_ASSERT(mCalledOnStop, "WebSocket was opened but OnStop was not called");
     MOZ_ASSERT(mStopped, "WebSocket was opened but never stopped");
   }
-  MOZ_ASSERT(!mDNSRequest, "DNS Request still alive at destruction");
+  MOZ_ASSERT(!mCancelable, "DNS/Proxy Request still alive at destruction");
   MOZ_ASSERT(!mConnecting, "Should not be connecting in destructor");
 
   moz_free(mBuffer);
@@ -1959,9 +1960,9 @@ WebSocketChannel::StopSession(nsresult reason)
     CleanupConnection();
   }
 
-  if (mDNSRequest) {
-    mDNSRequest->Cancel(NS_ERROR_UNEXPECTED);
-    mDNSRequest = nullptr;
+  if (mCancelable) {
+    mCancelable->Cancel(NS_ERROR_UNEXPECTED);
+    mCancelable = nullptr;
   }
 
   mInflateReader = nullptr;
@@ -2198,16 +2199,9 @@ WebSocketChannel::SetupRequest()
 }
 
 nsresult
-WebSocketChannel::ApplyForAdmission()
+WebSocketChannel::DoAdmissionDNS()
 {
-  LOG(("WebSocketChannel::ApplyForAdmission() %p\n", this));
-
-  // Websockets has a policy of 1 session at a time being allowed in the
-  // CONNECTING state per server IP address (not hostname)
-
   nsresult rv;
-  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString hostName;
   rv = mURI->GetHost(hostName);
@@ -2217,15 +2211,39 @@ WebSocketChannel::ApplyForAdmission()
   NS_ENSURE_SUCCESS(rv, rv);
   if (mPort == -1)
     mPort = (mEncrypted ? kDefaultWSSPort : kDefaultWSPort);
-
-  // expect the callback in ::OnLookupComplete
-  LOG(("WebSocketChannel::ApplyForAdmission: checking for concurrent open\n"));
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
-  dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mDNSRequest));
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(!mCancelable);
+  return dns->AsyncResolve(hostName, 0, this, mainThread, getter_AddRefs(mCancelable));
+}
 
-  return NS_OK;
+nsresult
+WebSocketChannel::ApplyForAdmission()
+{
+  LOG(("WebSocketChannel::ApplyForAdmission() %p\n", this));
+
+  // Websockets has a policy of 1 session at a time being allowed in the
+  // CONNECTING state per server IP address (not hostname)
+
+  // Check to see if a proxy is being used before making DNS call
+  nsCOMPtr<nsIProtocolProxyService> pps =
+    do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
+
+  if (!pps) {
+    // go straight to DNS
+    // expect the callback in ::OnLookupComplete
+    LOG(("WebSocketChannel::ApplyForAdmission: checking for concurrent open\n"));
+    return DoAdmissionDNS();
+  }
+
+  MOZ_ASSERT(!mCancelable);
+
+  return pps->AsyncResolve(mURI,
+                           nsIProtocolProxyService::RESOLVE_PREFER_HTTPS_PROXY |
+                           nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL,
+                           this, getter_AddRefs(mCancelable));
 }
 
 // Called after both OnStartRequest and OnTransportAvailable have
@@ -2300,26 +2318,28 @@ WebSocketChannel::ReportConnectionTelemetry()
 
 NS_IMETHODIMP
 WebSocketChannel::OnLookupComplete(nsICancelable *aRequest,
-                                     nsIDNSRecord *aRecord,
-                                     nsresult aStatus)
+                                   nsIDNSRecord *aRecord,
+                                   nsresult aStatus)
 {
   LOG(("WebSocketChannel::OnLookupComplete() %p [%p %p %x]\n",
        this, aRequest, aRecord, aStatus));
 
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-  NS_ABORT_IF_FALSE(aRequest == mDNSRequest || mStopped,
-                    "wrong dns request");
 
   if (mStopped) {
     LOG(("WebSocketChannel::OnLookupComplete: Request Already Stopped\n"));
+    mCancelable = nullptr;
     return NS_OK;
   }
 
-  mDNSRequest = nullptr;
+  mCancelable = nullptr;
 
   // These failures are not fatal - we just use the hostname as the key
   if (NS_FAILED(aStatus)) {
     LOG(("WebSocketChannel::OnLookupComplete: No DNS Response\n"));
+
+    // set host in case we got here without calling DoAdmissionDNS()
+    mURI->GetHost(mAddress);
   } else {
     nsresult rv = aRecord->GetNextAddrAsString(mAddress);
     if (NS_FAILED(rv))
@@ -2329,6 +2349,35 @@ WebSocketChannel::OnLookupComplete(nsICancelable *aRequest,
   LOG(("WebSocket OnLookupComplete: Proceeding to ConditionallyConnect\n"));
   sWebSocketAdmissions->ConditionallyConnect(this);
 
+  return NS_OK;
+}
+
+// nsIProtocolProxyCallback
+NS_IMETHODIMP
+WebSocketChannel::OnProxyAvailable(nsICancelable *aRequest, nsIURI *aURI,
+                                   nsIProxyInfo *pi, nsresult status)
+{
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnProxyAvailable: [%p] Request Already Stopped\n", this));
+    mCancelable = nullptr;
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(aRequest == mCancelable);
+  mCancelable = nullptr;
+
+  nsAutoCString type;
+  if (NS_SUCCEEDED(status) && pi &&
+      NS_SUCCEEDED(pi->GetType(type)) &&
+      !type.EqualsLiteral("direct")) {
+    LOG(("WebSocket OnProxyAvailable [%p] Proxy found skip DNS lookup\n", this));
+    // call DNS callback directly without DNS resolver
+    OnLookupComplete(nullptr, nullptr, NS_ERROR_FAILURE);
+    return NS_OK;
+  }
+
+  LOG(("WebSocketChannel::OnProxyAvailable[%] checking DNS resolution\n", this));
+  DoAdmissionDNS();
   return NS_OK;
 }
 
