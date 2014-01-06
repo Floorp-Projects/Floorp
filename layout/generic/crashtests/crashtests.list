@@ -514,6 +514,7 @@ needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 load 866547-1.html
 asserts(1-4) load 876074-1.html # bug 876749
 load 885009-1.html
+load 893496-1.html
 load 893523.html
 test-pref(layout.css.sticky.enabled,true) load 914891.html
 test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
