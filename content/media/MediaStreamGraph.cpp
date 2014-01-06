@@ -1484,22 +1484,10 @@ MediaStreamGraphImpl::RunInStableState()
     }
     mStreamUpdates.Clear();
 
-    if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP && mForceShutDown) {
-      // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
-      for (uint32_t i = 0; i < mMessageQueue.Length(); ++i) {
-        MessageBlock& mb = mMessageQueue[i];
-        controlMessagesToRunDuringShutdown.MoveElementsFrom(mb.mMessages);
-      }
-      mMessageQueue.Clear();
-      controlMessagesToRunDuringShutdown.MoveElementsFrom(mCurrentTaskMessageQueue);
-      // Stop MediaStreamGraph threads. Do not clear gGraph since
-      // we have outstanding DOM objects that may need it.
-      mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
-      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this);
-      NS_DispatchToMainThread(event);
-    }
-
-    if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED) {
+    // Don't start the thread for a non-realtime graph until it has been
+    // explicitly started by StartNonRealtimeProcessing.
+    if (mLifecycleState == LIFECYCLE_THREAD_NOT_STARTED &&
+        (mRealtime || mNonRealtimeProcessing)) {
       mLifecycleState = LIFECYCLE_RUNNING;
       // Start the thread now. We couldn't start it earlier because
       // the graph might exit immediately on finding it has no streams. The
@@ -1533,7 +1521,12 @@ MediaStreamGraphImpl::RunInStableState()
         EnsureNextIterationLocked(lock);
       }
 
-      if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
+      // If the MediaStreamGraph has more messages going to it, try to revive
+      // it to process those messages. Don't do this if we're in a forced
+      // shutdown or it's a non-realtime graph that has already terminated
+      // processing.
+      if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP &&
+          mRealtime && !mForceShutDown) {
         mLifecycleState = LIFECYCLE_RUNNING;
         // Revive the MediaStreamGraph since we have more messages going to it.
         // Note that we need to put messages into its queue before reviving it,
@@ -1541,6 +1534,21 @@ MediaStreamGraphImpl::RunInStableState()
         nsCOMPtr<nsIRunnable> event = new MediaStreamGraphThreadRunnable(this);
         mThread->Dispatch(event, 0);
       }
+    }
+
+    if (mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
+      // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
+      for (uint32_t i = 0; i < mMessageQueue.Length(); ++i) {
+        MessageBlock& mb = mMessageQueue[i];
+        controlMessagesToRunDuringShutdown.MoveElementsFrom(mb.mMessages);
+      }
+      mMessageQueue.Clear();
+      controlMessagesToRunDuringShutdown.MoveElementsFrom(mCurrentTaskMessageQueue);
+      // Stop MediaStreamGraph threads. Do not clear gGraph since
+      // we have outstanding DOM objects that may need it.
+      mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
+      nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutDownRunnable(this);
+      NS_DispatchToMainThread(event);
     }
 
     mDetectedNotRunning = mLifecycleState > LIFECYCLE_RUNNING;
@@ -1621,11 +1629,7 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
   }
 
   mCurrentTaskMessageQueue.AppendElement(aMessage);
-  // Do not start running the non-realtime graph unless processing has
-  // explicitly started.
-  if (mRealtime || mNonRealtimeProcessing) {
-    EnsureRunInStableState();
-  }
+  EnsureRunInStableState();
 }
 
 MediaStream::MediaStream(DOMMediaStream* aWrapper)
