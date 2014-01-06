@@ -123,6 +123,17 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
 
     Rooted<JSObject*> obj(cx, &args.thisv().toObject());
 
+    /*
+     * Disallow mutating the [[Prototype]] on ArrayBuffer objects, which
+     * due to their complicated delegate-object shenanigans can't easily
+     * have a mutable [[Prototype]].
+     */
+    if (obj->is<ArrayBufferObject>()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                             "Object", "__proto__ setter", "ArrayBuffer");
+        return false;
+    }
+
     /* Do nothing if __proto__ isn't being set to an object or null. */
     if (args.length() == 0 || !args[0].isObjectOrNull()) {
         args.rval().setUndefined();
@@ -130,6 +141,12 @@ ProtoSetterImpl(JSContext *cx, CallArgs args)
     }
 
     Rooted<JSObject*> newProto(cx, args[0].toObjectOrNull());
+
+    unsigned dummy;
+    RootedId nid(cx, NameToId(cx->names().proto));
+    RootedValue v(cx);
+    if (!CheckAccess(cx, obj, nid, JSAccessMode(JSACC_PROTO | JSACC_WRITE), &v, &dummy))
+        return false;
 
     bool success;
     if (!JSObject::setProto(cx, obj, newProto, &success))
