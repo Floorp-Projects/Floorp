@@ -51,6 +51,7 @@ SOURCES += [
     'HwcComposer2D.cpp',
     'HwcUtils.cpp',
     'nsAppShell.cpp',
+    'nsClipboard.cpp',
     'nsIdleServiceGonk.cpp',
     'nsLookAndFeel.cpp',
     'nsWidgetFactory.cpp',
