@@ -266,7 +266,7 @@ private:
     // pixman needs to distinguish between an empty region and a region
     // with one rect so that it can return a different number of rectangles.
     // Empty rect: data = empty_box
-    //     1 rect: data = NULL
+    //     1 rect: data = null
     //    >1 rect: data = rects
     if (aRect.IsEmpty()) {
       pixman_region32_clear(&mImpl);

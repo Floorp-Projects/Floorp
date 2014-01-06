@@ -1128,6 +1128,30 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
+GetJitCompilerOptions(JSContext *cx, unsigned argc, jsval *vp)
+{
+    RootedObject info(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    if (!info)
+        return false;
+
+    RootedValue value(cx);
+
+#define JIT_COMPILER_MATCH(key, string)                         \
+    opt = JSJITCOMPILER_ ## key;                                \
+    value.setInt32(JS_GetGlobalJitCompilerOption(cx, opt));     \
+    if (!JS_SetProperty(cx, info, string, value))               \
+        return false;
+
+    JSJitCompilerOption opt = JSJITCOMPILER_NOT_AN_OPTION;
+    JIT_COMPILER_OPTIONS(JIT_COMPILER_MATCH);
+#undef JIT_COMPILER_MATCH
+
+    *vp = ObjectValue(*info);
+
+    return true;
+}
+
+static bool
 SetIonCheckGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1545,6 +1569,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "isAsmJSCompilationAvailable",
 "  Returns whether asm.js compilation is currently available or whether it is disabled\n"
 "  (e.g., by the debugger)."),
+
+    JS_FN_HELP("getJitCompilerOptions", GetJitCompilerOptions, 0, 0,
+"getCompilerOptions()",
+"Return an object describing some of the JIT compiler options.\n"),
 
     JS_FN_HELP("isAsmJSModule", IsAsmJSModule, 1, 0,
 "isAsmJSModule(fn)",
