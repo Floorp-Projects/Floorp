@@ -79,10 +79,10 @@ var ADDONS = [
 
 // This is a replacement for the blocklist service
 var BlocklistService = {
-  getAddonBlocklistState: function(aAddon, aAppVersion, aToolkitVersion) {
-    if (aAddon.id == "bug335238_3@tests.mozilla.org")
+  getAddonBlocklistState: function(aId, aVersion, aAppVersion, aToolkitVersion) {
+    if (aId == "bug335238_3@tests.mozilla.org")
       return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
-    if (aAddon.id == "bug335238_4@tests.mozilla.org")
+    if (aId == "bug335238_4@tests.mozilla.org")
       return Ci.nsIBlocklistService.STATE_BLOCKED;
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
@@ -91,8 +91,8 @@ var BlocklistService = {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
-  isAddonBlocklisted: function(aAddon, aAppVersion, aToolkitVersion) {
-    return this.getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) ==
+  isAddonBlocklisted: function(aId, aVersion, aAppVersion, aToolkitVersion) {
+    return this.getAddonBlocklistState(aId, aVersion, aAppVersion, aToolkitVersion) ==
            Ci.nsIBlocklistService.STATE_BLOCKED;
   },
 

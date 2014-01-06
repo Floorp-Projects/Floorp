@@ -550,10 +550,12 @@ function applyBlocklistChanges(aOldAddon, aNewAddon, aOldAppVersion,
   let bs = Cc["@mozilla.org/extensions/blocklist;1"].
            getService(Ci.nsIBlocklistService);
 
-  let oldBlocklistState = bs.getAddonBlocklistState(createWrapper(aOldAddon),
+  let oldBlocklistState = bs.getAddonBlocklistState(aOldAddon.id,
+                                                    aOldAddon.version,
                                                     aOldAppVersion,
                                                     aOldPlatformVersion);
-  let newBlocklistState = bs.getAddonBlocklistState(createWrapper(aNewAddon));
+  let newBlocklistState = bs.getAddonBlocklistState(aNewAddon.id,
+                                                    aNewAddon.version);
 
   // If the blocklist state hasn't changed then the properties don't need to
   // change
@@ -6199,7 +6201,7 @@ AddonInternal.prototype = {
 
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
-    return bs.getAddonBlocklistState(createWrapper(this));
+    return bs.getAddonBlocklistState(this.id, this.version);
   },
 
   get blocklistURL() {
@@ -6211,7 +6213,7 @@ AddonInternal.prototype = {
 
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
-    return bs.getAddonBlocklistURL(createWrapper(this));
+    return bs.getAddonBlocklistURL(this.id, this.version);
   },
 
   applyCompatibilityUpdate: function AddonInternal_applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
@@ -6329,7 +6331,7 @@ function AddonWrapper(aAddon) {
   ["id", "syncGUID", "version", "type", "isCompatible", "isPlatformCompatible",
    "providesUpdatesSecurely", "blocklistState", "blocklistURL", "appDisabled",
    "softDisabled", "skinnable", "size", "foreignInstall", "hasBinaryComponents",
-   "strictCompatibility", "compatibilityOverrides", "updateURL"].forEach(function(aProp) {
+   "strictCompatibility", "compatibilityOverrides"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function AddonWrapper_propertyGetter() aAddon[aProp]);
   }, this);
 
