@@ -86,7 +86,7 @@ void Biquad::process(const float* sourceP, float* destP, size_t framesToProcess)
       // Flush future values to zero (until there is new input).
       y1 = y2 = 0.0;
       // Flush calculated values.
-      for (int i = framesToProcess; i-- && fabs(destP[i]) < FLT_MIN; ) {
+      for (int i = framesToProcess; i-- && fabsf(destP[i]) < FLT_MIN; ) {
         destP[i] = 0.0f;
       }
     }
