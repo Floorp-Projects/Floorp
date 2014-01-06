@@ -1504,14 +1504,18 @@ CERT_UnlockCertTrust(const CERTCertificate *cert);
 
 /*
  * Digest the cert's subject public key using the specified algorithm.
+ * NOTE: this digests the value of the BIT STRING subjectPublicKey (excluding
+ * the tag, length, and number of unused bits) rather than the whole
+ * subjectPublicKeyInfo field.
+ *
  * The necessary storage for the digest data is allocated.  If "fill" is
  * non-null, the data is put there, otherwise a SECItem is allocated.
  * Allocation from "arena" if it is non-null, heap otherwise.  Any problem
  * results in a NULL being returned (and an appropriate error set).
  */ 
 extern SECItem *
-CERT_GetSPKIDigest(PLArenaPool *arena, const CERTCertificate *cert,
-                   SECOidTag digestAlg, SECItem *fill);
+CERT_GetSubjectPublicKeyDigest(PLArenaPool *arena, const CERTCertificate *cert,
+                               SECOidTag digestAlg, SECItem *fill);
 
 /*
  * Digest the cert's subject name using the specified algorithm.

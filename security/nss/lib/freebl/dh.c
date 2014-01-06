@@ -203,7 +203,7 @@ DH_Derive(SECItem *publicValue,
           SECItem *derivedSecret, 
           unsigned int outBytes)
 {
-    mp_int p, Xa, Yb, ZZ;
+    mp_int p, Xa, Yb, ZZ, psub1;
     mp_err err = MP_OKAY;
     int len = 0;
     unsigned int nb;
@@ -217,13 +217,33 @@ DH_Derive(SECItem *publicValue,
     MP_DIGITS(&Xa) = 0;
     MP_DIGITS(&Yb) = 0;
     MP_DIGITS(&ZZ) = 0;
+    MP_DIGITS(&psub1) = 0;
     CHECK_MPI_OK( mp_init(&p)  );
     CHECK_MPI_OK( mp_init(&Xa) );
     CHECK_MPI_OK( mp_init(&Yb) );
     CHECK_MPI_OK( mp_init(&ZZ) );
+    CHECK_MPI_OK( mp_init(&psub1) );
     SECITEM_TO_MPINT(*publicValue,  &Yb);
     SECITEM_TO_MPINT(*privateValue, &Xa);
     SECITEM_TO_MPINT(*prime,        &p);
+    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
+
+    /* We assume that the modulus, p, is a safe prime. That is, p = 2q+1 where
+     * q is also a prime. Thus the orders of the subgroups are factors of 2q:
+     * namely 1, 2, q and 2q.
+     *
+     * We check that the peer's public value isn't zero (which isn't in the
+     * group), one (subgroup of order one) or p-1 (subgroup of order 2). We
+     * also check that the public value is less than p, to avoid being fooled
+     * by values like p+1 or 2*p-1.
+     *
+     * Thus we must be operating in the subgroup of size q or 2q. */
+    if (mp_cmp_d(&Yb, 1) <= 0 ||
+	mp_cmp(&Yb, &psub1) >= 0) {
+	err = MP_BADARG;
+	goto cleanup;
+    }
+
     /* ZZ = (Yb)**Xa mod p */
     CHECK_MPI_OK( mp_exptmod(&Yb, &Xa, &p, &ZZ) );
     /* number of bytes in the derived secret */
@@ -260,6 +280,7 @@ cleanup:
     mp_clear(&Xa);
     mp_clear(&Yb);
     mp_clear(&ZZ);
+    mp_clear(&psub1);
     if (secret) {
 	/* free the buffer allocated for the full secret. */
 	PORT_ZFree(secret, len);
