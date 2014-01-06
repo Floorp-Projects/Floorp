@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
@@ -328,7 +330,7 @@ let TabStateInternal = {
       history = syncHandler.collectSessionHistory(includePrivateData);
     } catch (e) {
       // This may happen if the tab has crashed.
-      Cu.reportError(e);
+      console.error(e);
       return tabData;
     }
 
