@@ -85,9 +85,9 @@ function testHitBreakpoint() {
       // Make sure that we have JavaScript stack frames.
       is(gFrames.itemCount, 1,
         "Should have only one frame.");
-      is(gFrames.getItemAtIndex(0).description.indexOf(".coffee"), -1,
+      is(gFrames.getItemAtIndex(0).attachment.url.indexOf(".coffee"), -1,
         "First frame should not be a coffee source frame.");
-      isnot(gFrames.getItemAtIndex(0).description.indexOf(".js"), -1,
+      isnot(gFrames.getItemAtIndex(0).attachment.url.indexOf(".js"), -1,
         "First frame should be a JS frame.");
 
       deferred.resolve();
@@ -121,9 +121,9 @@ function testToggleOnPause() {
     // Make sure that we have coffee source stack frames.
     is(gFrames.itemCount, 1,
       "Should have only one frame.");
-    is(gFrames.getItemAtIndex(0).description.indexOf(".js"), -1,
+    is(gFrames.getItemAtIndex(0).attachment.url.indexOf(".js"), -1,
       "First frame should not be a JS frame.");
-    isnot(gFrames.getItemAtIndex(0).description.indexOf(".coffee"), -1,
+    isnot(gFrames.getItemAtIndex(0).attachment.url.indexOf(".coffee"), -1,
       "First frame should be a coffee source frame.");
   });
 

@@ -292,23 +292,23 @@ function testIntegrity1() {
 
   is(gWatch.itemCount, 5,
     "There should be 5 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.view.inputNode.value, "document.title",
     "The second textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "aArg",
+  is(gWatch.getItemAtIndex(2).attachment.view.inputNode.value, "aArg",
     "The third textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(2).attachment.currentExpression, "aArg",
     "The third textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.view.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(3).attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(4).attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(4).attachment.view.inputNode.value, "this",
     "The fifth textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(4).attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one.");
@@ -330,23 +330,23 @@ function testIntegrity2() {
 
   is(gWatch.itemCount, 5,
     "There should be 5 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.view.inputNode.value, "document.title",
     "The second textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "aArg = 44",
+  is(gWatch.getItemAtIndex(2).attachment.view.inputNode.value, "aArg = 44",
     "The third textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(2).attachment.currentExpression, "aArg = 44",
     "The third textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(3).attachment.view.inputNode.value, "ermahgerd",
     "The fourth textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(3).attachment.currentExpression, "ermahgerd",
     "The fourth textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(4).attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(4).attachment.view.inputNode.value, "this",
     "The fifth textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(4).attachment.currentExpression, "this",
     "The fifth textbox input value is not the correct one.");
@@ -368,19 +368,19 @@ function testIntegrity3() {
 
   is(gWatch.itemCount, 4,
     "There should be 4 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title = 43",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "document.title = 43",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title = 43",
     "The first textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(1).attachment.view.inputNode.value, "document.title",
     "The second textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(1).attachment.currentExpression, "document.title",
     "The second textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(2).attachment.view.inputNode.value, "ermahgerd",
     "The third textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(2).attachment.currentExpression, "ermahgerd",
     "The third textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(3).attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(3).attachment.view.inputNode.value, "this",
     "The fourth textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(3).attachment.currentExpression, "this",
     "The fourth textbox input value is not the correct one.");
@@ -402,15 +402,15 @@ function testIntegrity4() {
 
   is(gWatch.itemCount, 3,
     "There should be 3 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "document.title",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "document.title",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "document.title",
     "The first textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(1).attachment.view.inputNode.value, "ermahgerd",
     "The second textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(1).attachment.currentExpression, "ermahgerd",
     "The second textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(2).attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(2).attachment.view.inputNode.value, "this",
     "The third textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(2).attachment.currentExpression, "this",
     "The third textbox input value is not the correct one.");
@@ -432,11 +432,11 @@ function testIntegrity5() {
 
   is(gWatch.itemCount, 2,
     "There should be 2 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "ermahgerd",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "ermahgerd",
     "The first textbox input value is not the correct one.");
-  is(gWatch.getItemAtIndex(1).attachment.inputNode.value, "this",
+  is(gWatch.getItemAtIndex(1).attachment.view.inputNode.value, "this",
     "The second textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(1).attachment.currentExpression, "this",
     "The second textbox input value is not the correct one.");
@@ -458,7 +458,7 @@ function testIntegrity6() {
 
   is(gWatch.itemCount, 1,
     "There should be 1 hidden expression input available.");
-  is(gWatch.getItemAtIndex(0).attachment.inputNode.value, "ermahgerd",
+  is(gWatch.getItemAtIndex(0).attachment.view.inputNode.value, "ermahgerd",
     "The first textbox input value is not the correct one.");
   is(gWatch.getItemAtIndex(0).attachment.currentExpression, "ermahgerd",
     "The first textbox input value is not the correct one.");

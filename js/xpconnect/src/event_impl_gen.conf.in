@@ -32,13 +32,8 @@ simple_events = [
     'BluetoothStatusChangedEvent',
 #endif
 #ifdef MOZ_B2G_RIL
-    'CFStateChangeEvent',
-    'DataErrorEvent',
-    'MozEmergencyCbModeEvent',
-    'MozOtaStatusEvent',
     'MozCellBroadcastEvent',
     'MozVoicemailEvent',
-    'USSDReceivedEvent',
 #endif
     'ElementReplaceEvent',
     'MozSmsEvent',

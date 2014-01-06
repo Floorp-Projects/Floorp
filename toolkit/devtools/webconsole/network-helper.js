@@ -426,7 +426,7 @@ let NetworkHelper = {
     // standard "application/xml" and "application/json", we also look for
     // variants like "application/x-bigcorp-xml" by checking for either string
     // after any word boundary.
-    if (/^application\/[a-z-]+\b(xml|json)/.test(aMimeType)) {
+    if (/^application\/(\w+[\.-]?)+\+(xml|json)/.test(aMimeType)) {
       return true;
     }
 
