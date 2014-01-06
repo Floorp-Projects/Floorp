@@ -2350,7 +2350,15 @@ let SyntaxTreeVisitor = {
  *        The thrown exception.
  */
 function log(aStr, aEx) {
-  let msg = "Warning: " + aStr + ", " + aEx + "\n" + aEx.stack;
+  let msg = "Warning: " + aStr + ", " + aEx.message;
+
+  if ("lineNumber" in aEx && "columnNumber" in aEx) {
+    msg += ", line: " + aEx.lineNumber + ", column: " + aEx.columnNumber;
+  }
+  if ("stack" in aEx) {
+    msg += "\n" + aEx.stack;
+  }
+
   Cu.reportError(msg);
   dump(msg + "\n");
 };
