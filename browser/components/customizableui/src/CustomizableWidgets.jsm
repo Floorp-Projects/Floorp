@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
+  "resource:///modules/PlacesUIUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
@@ -132,6 +134,21 @@ const CustomizableWidgets = [{
       while (recentlyClosedWindows.firstChild) {
         recentlyClosedWindows.removeChild(recentlyClosedWindows.firstChild);
       }
+
+#ifdef MOZ_SERVICES_SYNC
+      let tabsFromOtherComputers = doc.getElementById("sync-tabs-menuitem2");
+      if (PlacesUIUtils.shouldShowTabsFromOtherComputersMenuitem()) {
+        tabsFromOtherComputers.removeAttribute("hidden");
+      } else {
+        tabsFromOtherComputers.setAttribute("hidden", true);
+      }
+
+      if (PlacesUIUtils.shouldEnableTabsFromOtherComputersMenuitem()) {
+        tabsFromOtherComputers.removeAttribute("disabled");
+      } else {
+        tabsFromOtherComputers.setAttribute("disabled", true);
+      }
+#endif
 
       let tabsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment(doc.defaultView, "toolbarbutton");
       let separator = doc.getElementById("PanelUI-recentlyClosedTabs-separator");
