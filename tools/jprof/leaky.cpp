@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 
       if (l->outputfd != stderr) {
         fclose(l->outputfd);
-        l->outputfd = NULL;
+        l->outputfd = nullptr;
       }
     }
   }
@@ -115,8 +115,8 @@ htmlify(const char *in)
 
 leaky::leaky()
 {
-  applicationName = NULL;
-  progFile = NULL;
+  applicationName = nullptr;
+  progFile = nullptr;
 
   quiet = true;
   showAddress = false;
@@ -135,7 +135,7 @@ leaky::leaky()
   lowestSymbolAddr = 0;
   highestSymbolAddr = 0;
 
-  loadMap = NULL;
+  loadMap = nullptr;
 
   collect_last  = false;
   collect_start = -1;
@@ -167,14 +167,14 @@ void leaky::usageError()
 }
 
 static struct option longopts[] = {
-    { "threads", 0, NULL, 't' },
-    { "only-thread", 1, NULL, 'T' },
-    { "last", 0, NULL, 'l' },
-    { "start", 1, NULL, 'x' },
-    { "end", 1, NULL, 'n' },
-    { "cleo",0, NULL, 'c' },
-    { "output-dir", 1, NULL, 'd' },
-    { NULL, 0, NULL, 0 },
+    { "threads", 0, nullptr, 't' },
+    { "only-thread", 1, nullptr, 'T' },
+    { "last", 0, nullptr, 'l' },
+    { "start", 1, nullptr, 'x' },
+    { "end", 1, nullptr, 'n' },
+    { "cleo",0, nullptr, 'c' },
+    { "output-dir", 1, nullptr, 'd' },
+    { nullptr, 0, nullptr, 0 },
 };
 
 void leaky::initialize(int argc, char** argv)
@@ -192,7 +192,7 @@ void leaky::initialize(int argc, char** argv)
   int longindex = 0;
 
   onlyThread = 0;
-  output_dir = NULL;
+  output_dir = nullptr;
   cleo = false;
 
   // XXX tons of cruft here left over from tracemalloc
@@ -464,7 +464,7 @@ static int symbolOrder(void const* a, void const* b)
 void leaky::ReadSharedLibrarySymbols()
 {
   LoadMapEntry* lme = loadMap;
-  while (NULL != lme) {
+  while (nullptr != lme) {
     ReadSymbols(lme->name, lme->address);
     lme = lme->next;
   }
@@ -526,7 +526,7 @@ Symbol* leaky::findSymbol(u_long addr)
   int idx = findSymbolIndex(addr);
 
   if(idx<0) {
-    return NULL;
+    return nullptr;
   } else {
     return externalSymbols[idx];
   }

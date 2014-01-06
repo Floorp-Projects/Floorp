@@ -2078,7 +2078,7 @@ class FunctionCompiler
     MDefinition *constantFloat(float f)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
 
         MConstant *constant = MConstant::NewAsmJS(alloc(), DoubleValue(double(f)), MIRType_Float32);
         curBlock_->add(constant);
@@ -3042,7 +3042,7 @@ static bool
 CheckGlobalVariableInitFloat32(ModuleCompiler &m, PropertyName *varName, ParseNode *initNode,
                                bool isConst)
 {
-    ParseNode *arg = NULL;
+    ParseNode *arg = nullptr;
     if (!CheckFloat32Coercion(m, initNode, &arg, "call must be of the form fround(x)"))
         return false;
 
@@ -3305,7 +3305,7 @@ CheckVariable(FunctionCompiler &f, ParseNode *var)
         return f.failName(var, "var '%s' needs explicit type declaration via an initial value", name);
 
     if (initNode->isKind(PNK_CALL)) {
-        ParseNode *coercedVar = NULL;
+        ParseNode *coercedVar = nullptr;
         if (!CheckFloat32Coercion(f.m(), initNode, &coercedVar, "caller in var initializer can only be fround"))
             return false;
 
@@ -3986,7 +3986,7 @@ static bool CheckCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDe
 static bool
 CheckFRoundArg(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type, const char* error)
 {
-    ParseNode *arg = NULL;
+    ParseNode *arg = nullptr;
     if (!CheckFloat32Coercion(f.m(), expr, &arg, error))
         return false;
 

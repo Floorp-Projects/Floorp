@@ -171,7 +171,7 @@ static void DumpAddressMap()
   if (mfd >= 0) {
     malloc_map_entry mme;
     link_map* map = _r_debug.r_map;
-    while (NULL != map) {
+    while (nullptr != map) {
       if (map->l_name && *map->l_name) {
 	mme.nameLen = strlen(map->l_name);
 	mme.address = map->l_addr;
@@ -439,9 +439,9 @@ static void startSignalCounter(unsigned long millisec)
     tvalue.it_value.tv_usec = (millisec%1000)*1000;
 
     if (realTime) {
-	setitimer(ITIMER_REAL, &tvalue, NULL);
+        setitimer(ITIMER_REAL, &tvalue, nullptr);
     } else {
-    	setitimer(ITIMER_PROF, &tvalue, NULL);
+        setitimer(ITIMER_PROF, &tvalue, nullptr);
     }
 }
 
@@ -456,7 +456,7 @@ static int setupRTCSignals(int hz, struct sigaction *sap)
         return 0;
     }
 
-    if (sigaction(SIGIO, sap, NULL) == -1) {
+    if (sigaction(SIGIO, sap, nullptr) == -1) {
         perror("JPROF_RTC setup: sigaction(SIGIO)");
         return 0;
     }
@@ -617,7 +617,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 
 	    char *delay = strstr(tst,"JP_PERIOD=");
 	    if(delay) {
-                double tmp = strtod(delay+strlen("JP_PERIOD="), NULL);
+                double tmp = strtod(delay+strlen("JP_PERIOD="), nullptr);
                 if (tmp>=1e-3) {
 		    timerMilliSec = static_cast<unsigned long>(1000 * tmp);
                 } else {
@@ -708,7 +708,7 @@ NS_EXPORT_(void) setupProfilingStuff(void)
                     // FIX!  probably should block these against each other
                     // Very unlikely.
 		    sigemptyset(&mset);
-		    action.sa_handler = NULL;
+		    action.sa_handler = nullptr;
 		    action.sa_sigaction = StackHook;
 		    action.sa_mask  = mset;
 		    action.sa_flags = SA_RESTART | SA_SIGINFO;
@@ -725,11 +725,11 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 #endif
                     {
                         if (realTime) {
-                            sigaction(SIGALRM, &action, NULL);
+                            sigaction(SIGALRM, &action, nullptr);
                         }
                     }
                     // enable PROF in all cases to simplify JP_DEFER/pause/restart
-                    sigaction(SIGPROF, &action, NULL);
+                    sigaction(SIGPROF, &action, nullptr);
 
 		    // make it so a SIGUSR1 will stop the profiling
 		    // Note:  It currently does not close the logfile.
@@ -740,14 +740,14 @@ NS_EXPORT_(void) setupProfilingStuff(void)
 		    stop_action.sa_handler = EndProfilingHook;
 		    stop_action.sa_mask  = mset;
 		    stop_action.sa_flags = SA_RESTART;
-		    sigaction(SIGUSR1, &stop_action, NULL);
+		    sigaction(SIGUSR1, &stop_action, nullptr);
 
 		    // make it so a SIGUSR2 will clear the circular buffer
 
 		    stop_action.sa_handler = ClearProfilingHook;
 		    stop_action.sa_mask  = mset;
 		    stop_action.sa_flags = SA_RESTART;
-		    sigaction(SIGUSR2, &stop_action, NULL);
+		    sigaction(SIGUSR2, &stop_action, nullptr);
 
                     printf("Jprof: Initialized signal handler and set "
                            "timer for %lu %s, %d s "

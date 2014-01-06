@@ -504,7 +504,7 @@ class nsIWidget : public nsISupports {
     /**
      * Create and initialize a widget. 
      *
-     * All the arguments can be NULL in which case a top level window
+     * All the arguments can be null in which case a top level window
      * with size 0 is created. The event callback function has to be
      * provided only if the caller wants to deal with the events this
      * widget receives.  The event callback is basically a preprocess

@@ -426,7 +426,7 @@ DroidSocketImpl::ReadMsg(int aFd, void *aBuffer, size_t aLength)
 
   // Extract client fd from message header
   for (struct cmsghdr *cmsgptr = CMSG_FIRSTHDR(&msg);
-       cmsgptr != NULL; cmsgptr = CMSG_NXTHDR(&msg, cmsgptr)) {
+       cmsgptr != nullptr; cmsgptr = CMSG_NXTHDR(&msg, cmsgptr)) {
     if (cmsgptr->cmsg_level != SOL_SOCKET) {
       continue;
     }
