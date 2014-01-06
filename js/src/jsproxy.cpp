@@ -3249,12 +3249,15 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject handler(cx, NonNullObject(cx, args[1]));
     if (!handler)
         return false;
+    RootedObject proto(cx);
+    if (!JSObject::getProto(cx, target, &proto))
+        return false;
     RootedValue priv(cx, ObjectValue(*target));
     ProxyOptions options;
     options.setCallable(target->isCallable());
     ProxyObject *proxy =
         ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                         priv, TaggedProto(TaggedProto::LazyProto), cx->global(),
+                         priv, TaggedProto(proto), cx->global(),
                          options);
     if (!proxy)
         return false;
