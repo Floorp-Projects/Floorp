@@ -1781,12 +1781,12 @@ IsRemoteFilePath(LPCWSTR path, bool &remote)
 
 nsresult
 nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
-                            const nsAString &newName, 
-                            bool followSymlinks, bool move,
-                            bool skipNtfsAclReset)
+                            const nsAString &newName, uint32_t options)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     nsAutoString filePath;
+
+    bool move = options & (Move | Rename);
 
     // get the path that we are going to copy to.
     // Since windows does not know how to auto
@@ -1809,7 +1809,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     }
 
 
-    if (followSymlinks)
+    if (options & FollowSymlinks)
     {
         rv = sourceFile->GetTarget(filePath);
         if (filePath.IsEmpty())
@@ -1855,6 +1855,9 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         // as this could be an SMBV2 mapped drive.
         if (!copyOK && GetLastError() == ERROR_NOT_SAME_DEVICE)
         {
+            if (options & Rename) {
+                return NS_ERROR_FILE_ACCESS_DENIED;
+            }
             copyOK = CopyFileExW(filePath.get(), destPath.get(), nullptr,
                                  nullptr, nullptr, dwCopyFlags);
 
@@ -1865,7 +1868,7 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
 
     if (!copyOK)  // CopyFileEx and MoveFileEx return zero at failure.
         rv = ConvertWinError(GetLastError());
-    else if (move && !skipNtfsAclReset)
+    else if (move && !(options & SkipNtfsAclReset))
     {
         // Set security permissions to inherit from parent.
         // Note: propagates to all children: slow for big file trees
@@ -1887,13 +1890,16 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
 }
 
 nsresult
-nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool followSymlinks, bool move)
+nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, uint32_t options)
 {
+    bool move = options & (Move | Rename);
+    bool followSymlinks = options & FollowSymlinks;
+
     nsCOMPtr<nsIFile> newParentDir = aParentDir;
     // check to see if this exists, otherwise return an error.
     // we will check this by resolving.  If the user wants us
     // to follow links, then we are talking about the target,
-    // hence we can use the |followSymlinks| parameter.
+    // hence we can use the |FollowSymlinks| option.
     nsresult rv  = ResolveAndStat();
     if (NS_FAILED(rv))
         return rv;
@@ -1945,7 +1951,7 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
                     if (NS_FAILED(rv))
                         return rv;
 
-                    return CopyMove(realDest, newName, followSymlinks, move);
+                    return CopyMove(realDest, newName, options);
                 }
             }
             else
@@ -1966,8 +1972,10 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
     if (move || !isDir || (isSymlink && !followSymlinks))
     {
         // Copy/Move single file, or move a directory
-        rv = CopySingleFile(this, newParentDir, newName, followSymlinks, move,
-                            !aParentDir);
+        if (!aParentDir) {
+            options |= SkipNtfsAclReset;
+        }
+        rv = CopySingleFile(this, newParentDir, newName, options);
         done = NS_SUCCEEDED(rv);
         // If we are moving a directory and that fails, fallback on directory
         // enumeration.  See bug 231300 for details.
@@ -2135,25 +2143,71 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsAString &newName, bool follow
 NS_IMETHODIMP
 nsLocalFile::CopyTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    return CopyMove(newParentDir, newName, false, false);
+    return CopyMove(newParentDir, newName, 0);
 }
 
 NS_IMETHODIMP
 nsLocalFile::CopyToFollowingLinks(nsIFile *newParentDir, const nsAString &newName)
 {
-    return CopyMove(newParentDir, newName, true, false);
+    return CopyMove(newParentDir, newName, FollowSymlinks);
 }
 
 NS_IMETHODIMP
 nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
-    return CopyMove(newParentDir, newName, false, true);
+    return CopyMove(newParentDir, newName, Move);
 }
 
 NS_IMETHODIMP
 nsLocalFile::RenameTo(nsIFile *newParentDir, const nsAString & newName)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIFile> targetParentDir = newParentDir;
+  // check to see if this exists, otherwise return an error.
+  // we will check this by resolving.  If the user wants us
+  // to follow links, then we are talking about the target,
+  // hence we can use the |followSymlinks| parameter.
+  nsresult rv = ResolveAndStat();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!targetParentDir) {
+    // no parent was specified.  We must rename.
+    if (newName.IsEmpty()) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    rv = GetParent(getter_AddRefs(targetParentDir));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  if (!targetParentDir) {
+    return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+  }
+
+  // make sure it exists and is a directory.  Create it if not there.
+  bool exists;
+  targetParentDir->Exists(&exists);
+  if (!exists) {
+    rv = targetParentDir->Create(DIRECTORY_TYPE, 0644);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  } else {
+    bool isDir;
+    targetParentDir->IsDirectory(&isDir);
+    if (!isDir) {
+      return NS_ERROR_FILE_DESTINATION_NOT_DIR;
+    }
+  }
+
+  uint32_t options = Rename;
+  if (!newParentDir) {
+    options |= SkipNtfsAclReset;
+  }
+  // Move single file, or move a directory
+  return CopySingleFile(this, targetParentDir, newName, options);
 }
 
 NS_IMETHODIMP
