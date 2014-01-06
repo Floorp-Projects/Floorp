@@ -9,7 +9,7 @@ const gXPInstallObserver = {
     if (aDocShell == aSoughtShell)
       return aDocShell;
 
-    var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+    var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeItem);
     for (var i = 0; i < node.childCount; ++i) {
       var docShell = node.getChildAt(i);
       docShell = this._findChildShell(docShell, aSoughtShell);

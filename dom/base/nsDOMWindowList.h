@@ -8,7 +8,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMWindowCollection.h"
 #include <stdint.h>
-#include "nsIDocShellTreeItem.h"
+#include "nsIDocShell.h"
 
 class nsIDocShell;
 class nsIDOMWindow;
@@ -41,7 +41,7 @@ protected:
   // Note: this function may flush and cause mDocShellNode to become null.
   void EnsureFresh();
 
-  nsIDocShellTreeNode* mDocShellNode; //Weak Reference
+  nsIDocShell* mDocShellNode; //Weak Reference
 };
 
 #endif // nsDOMWindowList_h___
