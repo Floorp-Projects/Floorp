@@ -1,3 +1,6 @@
+// Bug 956434 - Disable test due to unpredictable failures on ggc builds
+quit(0);
+
 function testSlice() {
     function test(subBuf, starts, size) {
         var byteLength = size;
