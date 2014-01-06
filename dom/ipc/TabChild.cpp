@@ -1821,7 +1821,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
       return;
     }
 
-    Touch* touch = static_cast<Touch*>(aEvent.touches[0].get());
+    Touch* touch = aEvent.touches[0];
     mGestureDownPoint = LayoutDevicePoint(touch->mRefPoint.x, touch->mRefPoint.y);
     mActivePointerId = touch->mIdentifier;
     if (sClickHoldContextMenusEnabled) {
