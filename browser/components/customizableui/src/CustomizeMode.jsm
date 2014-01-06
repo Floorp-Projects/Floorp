@@ -129,10 +129,13 @@ CustomizeMode.prototype = {
       window.PanelUI.menuButton.open = true;
       window.PanelUI.beginBatchUpdate();
 
+      // Hide the palette before starting the transition for increased perf.
+      this.visiblePalette.hidden = true;
+
       // Move the mainView in the panel to the holder so that we can see it
       // while customizing.
-      let panelHolder = document.getElementById("customization-panelHolder");
       let mainView = window.PanelUI.mainView;
+      let panelHolder = document.getElementById("customization-panelHolder");
       panelHolder.appendChild(mainView);
 
       let customizeButton = document.getElementById("PanelUI-customize");
@@ -191,6 +194,10 @@ CustomizeMode.prototype = {
       window.PanelUI.endBatchUpdate();
       this._customizing = true;
       this._transitioning = false;
+
+      // Show the palette now that the transition has finished.
+      this.visiblePalette.hidden = false;
+
       this.dispatchToolboxEvent("customizationready");
     }.bind(this)).then(null, function(e) {
       ERROR(e);
@@ -214,11 +221,14 @@ CustomizeMode.prototype = {
 
     this._removePanelCustomizationPlaceholders();
 
-    this._transitioning = true;
-
     let window = this.window;
     let document = this.document;
     let documentElement = document.documentElement;
+
+    // Hide the palette before starting the transition for increased perf.
+    this.visiblePalette.hidden = true;
+
+    this._transitioning = true;
 
     Task.spawn(function() {
       yield this.depopulatePalette();
@@ -541,9 +551,9 @@ CustomizeMode.prototype = {
       aNode.removeAttribute("observes");
     }
 
-    if (aNode.checked) {
+    if (aNode.getAttribute("checked") == "true") {
       wrapper.setAttribute("itemchecked", "true");
-      aNode.checked = false;
+      aNode.removeAttribute("checked");
     }
 
     if (aNode.hasAttribute("id")) {

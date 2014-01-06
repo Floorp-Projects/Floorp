@@ -4,14 +4,53 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional CFStateChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Pref="dom.mobileconnection.enabled",
+ Constructor(DOMString type, optional CFStateChangeEventInit eventInitDict)]
 interface CFStateChangeEvent : Event
 {
+  /**
+   * Indicates about errors while setting up the Call forwarding rule.
+   */
   readonly attribute boolean success;
+
+  /**
+   * Indicates what to do with the rule.
+   *
+   * One of the CALL_FORWARD_ACTION_* constants. It will be either disable (0),
+   * enable (1), query status (2), registration (3), or erasure (4).
+   *
+   * @see 3GPP nsIDOMMozMobileCFInfo.CALL_FORWARD_ACTION_* values.
+   * @see 3GPP TS 27.007 7.11 "mode".
+   */
   readonly attribute unsigned short action;
+
+  /**
+   * Indicates the reason the call is being forwarded.
+   *
+   * One of the CALL_FORWARD_REASON_* constants. It will be either
+   * unconditional (0), mobile busy (1), no reply (2), not reachable (3),
+   * all call forwarding (4), or all conditional call forwarding (5).
+   *
+   * @see 3GPP nsIDOMMozMobileCFInfo.CALL_FORWARD_REASON_* values.
+   * @see 3GPP TS 27.007 7.11 "reason".
+   */
   readonly attribute unsigned short reason;
+
+  /**
+   * Phone number of forwarding address.
+   */
   readonly attribute DOMString? number;
+
+  /**
+   * When "no reply" is enabled or queried, this gives the time in
+   * seconds to wait before call is forwarded.
+   */
   readonly attribute unsigned short timeSeconds;
+
+  /**
+   * Service for which the call forward is set up. It should be one of the
+   * nsIDOMMozMobileConnectionInfo.ICC_SERVICE_CLASS_* values.
+   */
   readonly attribute unsigned short serviceClass;
 };
 

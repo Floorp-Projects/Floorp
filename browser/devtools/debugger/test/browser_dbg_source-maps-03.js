@@ -70,9 +70,9 @@ function testHitBreakpoint() {
       // Make sure that we have the right stack frames.
       is(gFrames.itemCount, 9,
         "Should have nine frames.");
-      is(gFrames.getItemAtIndex(0).description.indexOf(".min.js"), -1,
+      is(gFrames.getItemAtIndex(0).attachment.url.indexOf(".min.js"), -1,
         "First frame should not be a minified JS frame.");
-      isnot(gFrames.getItemAtIndex(0).description.indexOf(".js"), -1,
+      isnot(gFrames.getItemAtIndex(0).attachment.url.indexOf(".js"), -1,
         "First frame should be a JS frame.");
 
       deferred.resolve();

@@ -324,9 +324,6 @@
                        tabindex="0"
                        hidden="true"/>
       </hbox>
-      <menulist id="chrome-globals"
-                class="devtools-menulist"
-                sizetopopup="none" hidden="true"/>
       <vbox id="stackframes" flex="1"/>
       <textbox id="searchbox"
                class="devtools-searchinput" type="search"/>
@@ -340,7 +337,7 @@
                      popup="debuggerPrefsContextMenu"
                      tabindex="0"/>
     </toolbar>
-    <scrollbox id="globalsearch" orient="vertical" hidden="true"/>
+    <vbox id="globalsearch" orient="vertical" hidden="true"/>
     <splitter class="devtools-horizontal-splitter" hidden="true"/>
     <hbox id="debugger-widgets" flex="1">
       <tabbox id="sources-pane"

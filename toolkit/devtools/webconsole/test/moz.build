@@ -5,4 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

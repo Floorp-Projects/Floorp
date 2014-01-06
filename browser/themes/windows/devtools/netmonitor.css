@@ -45,7 +45,7 @@
   -moz-appearance: none;
   background: none;
   min-width: 20px;
-  min-height: 32px; /* Remaining 1px comes from border of the toolbar. */
+  min-height: 32px;
   margin: 0;
   border: none;
   padding: 0;
@@ -312,6 +312,10 @@ box.requests-menu-status[code^="5"] {
 
 /* SideMenuWidget */
 
+.side-menu-widget-item-contents {
+  padding: 0px;
+}
+
 .side-menu-widget-container {
   box-shadow: none !important;
 }
@@ -496,7 +500,7 @@ box.requests-menu-status[code^="5"] {
   }
 
   .requests-menu-header-button {
-    min-height: 23px; /* Remaining 1px comes from border of the toolbar. */
+    min-height: 24px;
   }
 
   .requests-menu-footer-button,
