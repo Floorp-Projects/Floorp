@@ -764,6 +764,18 @@ CodeGenerator::visitRegExp(LRegExp *lir)
     return callVM(CloneRegExpObjectInfo, lir);
 }
 
+typedef bool (*RegExpExecRawFn)(JSContext *cx, HandleObject regexp,
+                                HandleString input, Value *vp);
+static const VMFunction RegExpExecRawInfo = FunctionInfo<RegExpExecRawFn>(regexp_exec_raw);
+
+bool
+CodeGenerator::visitRegExpExec(LRegExpExec *lir)
+{
+    pushArg(ToRegister(lir->string()));
+    pushArg(ToRegister(lir->regexp()));
+    return callVM(RegExpExecRawInfo, lir);
+}
+
 typedef bool (*RegExpTestRawFn)(JSContext *cx, HandleObject regexp,
                                 HandleString input, bool *result);
 static const VMFunction RegExpTestRawInfo = FunctionInfo<RegExpTestRawFn>(regexp_test_raw);
