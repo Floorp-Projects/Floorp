@@ -6040,6 +6040,26 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
 #endif
 }
 
+JS_PUBLIC_API(int)
+JS_GetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt)
+{
+#ifdef JS_ION
+    switch (opt) {
+      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
+        return jit::js_JitOptions.baselineUsesBeforeCompile;
+      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
+        return jit::js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+      case JSJITCOMPILER_ION_ENABLE:
+        return JS::ContextOptionsRef(cx).ion();
+      case JSJITCOMPILER_BASELINE_ENABLE:
+        return JS::ContextOptionsRef(cx).baseline();
+      default:
+        break;
+    }
+#endif
+    return 0;
+}
+
 /************************************************************************/
 
 #if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)
