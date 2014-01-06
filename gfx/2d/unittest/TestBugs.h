@@ -13,5 +13,6 @@ public:
   TestBugs();
 
   void CairoClip918671();
+  void PushPopClip950550();
 };
 
