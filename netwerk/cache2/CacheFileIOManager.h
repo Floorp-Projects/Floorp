@@ -8,6 +8,7 @@
 #include "CacheIOThread.h"
 #include "CacheEntriesEnumerator.h"
 #include "nsIEventTarget.h"
+#include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "mozilla/SHA1.h"
 #include "nsTArray.h"
@@ -137,6 +138,7 @@ class OpenFileEvent;
 class CloseFileEvent;
 class ReadEvent;
 class WriteEvent;
+class MetadataWriteScheduleEvent;
 
 #define CACHEFILEIOLISTENER_IID \
 { /* dcaf2ddc-17cf-4242-bca1-8c86936375a5 */       \
@@ -163,10 +165,11 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileIOListener, CACHEFILEIOLISTENER_IID)
 
 
-class CacheFileIOManager : public nsISupports
+class CacheFileIOManager : public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
 
   enum {
     OPEN       = 0U,
@@ -185,6 +188,15 @@ public:
   static already_AddRefed<CacheIOThread> IOThread();
   static bool IsOnIOThreadOrCeased();
   static bool IsShutdown();
+
+  // Make aFile's WriteMetadataIfNeeded be called automatically after
+  // a short interval.
+  static nsresult ScheduleMetadataWrite(CacheFile * aFile);
+  // Remove aFile from the scheduling registry array.
+  // WriteMetadataIfNeeded will not be automatically called.
+  static nsresult UnscheduleMetadataWrite(CacheFile * aFile);
+  // Shuts the scheduling off and flushes all pending metadata writes.
+  static nsresult ShutdownMetadataWriteScheduling();
 
   static nsresult OpenFile(const nsACString &aKey,
                            uint32_t aFlags,
@@ -225,6 +237,7 @@ private:
   friend class DoomFileByKeyEvent;
   friend class ReleaseNSPRHandleEvent;
   friend class TruncateSeekSetEOFEvent;
+  friend class MetadataWriteScheduleEvent;
 
   virtual ~CacheFileIOManager();
 
@@ -254,6 +267,9 @@ private:
   nsresult OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate = false);
   void     NSPRHandleUsed(CacheFileHandle *aHandle);
 
+  nsresult ScheduleMetadataWriteInternal(CacheFile * aFile);
+  nsresult UnscheduleMetadataWriteInternal(CacheFile * aFile);
+  nsresult ShutdownMetadataWriteSchedulingInternal();
 
   static CacheFileIOManager  *gInstance;
   bool                        mShuttingDown;
@@ -262,6 +278,8 @@ private:
   bool                        mTreeCreated;
   CacheFileHandles            mHandles;
   nsTArray<CacheFileHandle *> mHandlesByLastUsed;
+  nsTArray<nsRefPtr<CacheFile> > mScheduledMetadataWrites;
+  nsCOMPtr<nsITimer>          mMetadataWritesTimer;
 };
 
 } // net
