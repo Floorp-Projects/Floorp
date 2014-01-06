@@ -341,7 +341,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
     if (!JSObject::sparsifyDenseElements(cx, obj))
         return false;
 
-    types::MarkTypePropertyConfigured(cx, obj, propid);
+    types::MarkTypePropertyNonData(cx, obj, propid);
 
     WatchpointMap *wpmap = cx->compartment()->watchpointMap;
     if (!wpmap) {
