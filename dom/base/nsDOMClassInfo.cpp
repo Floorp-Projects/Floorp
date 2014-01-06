@@ -621,8 +621,7 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
   return nsDOMClassInfo::XPConnect()->WrapNativeToJSVal(cx, scope, native,
                                                         cache, aIID,
-                                                        aAllowWrapping, vp.address(),
-                                                        nullptr);
+                                                        aAllowWrapping, vp.address());
 }
 
 static inline nsresult

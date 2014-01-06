@@ -355,9 +355,8 @@ interface nsIXPConnect : nsISupports
                in nsIIDRef     aIID);
 
     /**
-     * Same as wrapNative, but also returns the JSObject in aVal. C++ callers
-     * can pass in null for the aHolder argument, but in that case they must
-     * ensure that aVal is rooted.
+     * Same as wrapNative, but it returns the JSObject in aVal. C++ callers
+     * must ensure that aVal is rooted.
      * aIID may be null, it means the same as passing in
      * &NS_GET_IID(nsISupports) but when passing in null certain shortcuts
      * can be taken because we know without comparing IIDs that the caller is
@@ -375,8 +374,7 @@ interface nsIXPConnect : nsISupports
                       in nsWrapperCachePtr aCache,
                       in nsIIDPtr     aIID,
                       in boolean      aAllowWrapper,
-                      out jsval       aVal,
-                      out nsIXPConnectJSObjectHolder aHolder);
+                      out jsval       aVal);
 
     /**
     * wrapJS will yield a new or previously existing xpcom interface pointer
