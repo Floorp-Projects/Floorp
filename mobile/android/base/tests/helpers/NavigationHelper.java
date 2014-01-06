@@ -24,7 +24,7 @@ final public class NavigationHelper {
 
     private static ToolbarComponent sToolbar;
 
-    public static void init(final UITestContext context) {
+    protected static void init(final UITestContext context) {
         sContext = context;
         sSolo = context.getSolo();
 
