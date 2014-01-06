@@ -177,7 +177,7 @@ File(JSContext *cx, unsigned argc, Value *vp)
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, args.rval().address(), nullptr);
+                                true, args.rval().address());
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -212,7 +212,7 @@ Blob(JSContext *cx, unsigned argc, Value *vp)
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, args.rval().address(), nullptr);
+                                true, args.rval().address());
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
