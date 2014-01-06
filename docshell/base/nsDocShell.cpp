@@ -974,7 +974,6 @@ NS_IMPL_RELEASE_INHERITED(nsDocShell, nsDocLoader)
 NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
-    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
     NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
@@ -3607,10 +3606,6 @@ nsDocShell::GetIsInUnload(bool* aIsInUnload)
     *aIsInUnload = mFiredUnloadEvent;
     return NS_OK;
 }
-
-//*****************************************************************************
-// nsDocShell::nsIDocShellTreeNode
-//*****************************************************************************   
 
 NS_IMETHODIMP
 nsDocShell::GetChildCount(int32_t * aChildCount)
