@@ -204,39 +204,6 @@
   color: #8fa1b2; /* Content text grey */
 }
 
-/* ListWidget items */
-
-.list-widget-item {
-  padding: 2px;
-}
-
-.theme-light .list-widget-item:not(.selected):not(.empty):hover {
-  background: linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.85)), Highlight;
-}
-
-.theme-light .list-widget-item.selected.light {
-  background: linear-gradient(rgba(255,255,255,0.85), rgba(255,255,255,0.8)), Highlight;
-  color: #000;
-}
-
-.theme-dark .list-widget-item:not(.selected):not(.empty):hover {
-  background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.05));
-}
-
-.theme-dark .list-widget-item.selected.light {
-  background: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.025));
-}
-
-.list-widget-item.selected {
-  background: Highlight;
-  color: HighlightText;
-}
-
-.list-widget-item.empty {
-  color: GrayText;
-  padding: 2px;
-}
-
 /* Breadcrumbs stack frames view */
 
 .breadcrumbs-widget-item {
@@ -251,7 +218,7 @@
 
 .dbg-classic-stackframe {
   display: block;
-  padding: 4px;
+  padding: 0px 4px;
 }
 
 .dbg-classic-stackframe-title {
@@ -338,7 +305,7 @@
 /* Instruments pane (watch expressions, variables, event listeners...) */
 
 #instruments-pane .side-menu-widget-container,
-#instruments-pane .side-menu-widget-empty-notice-container {
+#instruments-pane .side-menu-widget-empty-text {
   box-shadow: none !important;
 }
 
@@ -356,18 +323,18 @@
 .dbg-expression-arrow {
   width: 16px;
   height: auto;
+  margin: 2px;
   background: -moz-image-rect(url(commandline-icon.png), 0, 32, 16, 16);
 }
 
 .dbg-expression-input {
-  -moz-padding-start: 2px !important;
   color: inherit;
 }
 
 /* Event listeners view */
 
 .dbg-event-listener {
-  padding: 4px 8px;
+  padding: 0px 8px;
 }
 
 .dbg-event-listener-type {
@@ -424,7 +391,6 @@
 
 .results-panel {
   padding: 4px;
-  opacity: 0.9;
 }
 
 .results-panel-item {
@@ -452,19 +418,19 @@
   text-shadow: 0 1px #fff;
 }
 
-.results-panel-item-pre {
+.results-panel-item-label-before {
   -moz-margin-end: 5px !important;
   color: #444;
   cursor: inherit;
 }
 
-.results-panel-item-name {
+.results-panel-item-label {
   color: #111;
   font-weight: 600;
   cursor: inherit;
 }
 
-.results-panel-item-details {
+.results-panel-item-label-below {
   color: #7f7f7f;
   cursor: inherit;
 }
@@ -473,13 +439,9 @@
 
 #globalsearch {
   min-height: 10px;
+  max-height: 125px;
   box-shadow: inset 0 -4px 8px #eee;
   background: url(background-noise-toolbar.png);
-}
-
-#globalsearch > vbox:not(:empty) {
-  min-height: 10px;
-  max-height: 125px;
 }
 
 #globalsearch + .devtools-horizontal-splitter {
@@ -646,7 +608,7 @@
 }
 
 #body[layout=vertical] .side-menu-widget-container,
-#body[layout=vertical] .side-menu-widget-empty-notice-container {
+#body[layout=vertical] .side-menu-widget-empty-text {
   box-shadow: none !important;
 }
 

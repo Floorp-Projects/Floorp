@@ -257,12 +257,12 @@ function verifyContents(aMatches) {
 
   for (let i = 0; i < gSearchView.itemCount; i++) {
     let trimmedLabel = gSourceUtils.trimUrlLength(gSourceUtils.trimUrlQuery(aMatches[i]));
-    let trimmedValue = gSourceUtils.trimUrlLength(EXAMPLE_URL + aMatches[i], 0, "start");
+    let trimmedLocation = gSourceUtils.trimUrlLength(EXAMPLE_URL + aMatches[i], 0, "start");
 
-    isnot(gSearchView.labels.indexOf(trimmedLabel), -1,
-      "The filtered sources view should have the correct labels.");
-    isnot(gSearchView.values.indexOf(trimmedValue), -1,
-      "The filtered sources view should have the correct values.");
+    ok(gSearchView.widget._parent.querySelector(".results-panel-item-label[value=\"" + trimmedLabel + "\"]"),
+      "The filtered sources view should have the correct source labels.");
+    ok(gSearchView.widget._parent.querySelector(".results-panel-item-label-below[value=\"" + trimmedLocation + "\"]"),
+      "The filtered sources view should have the correct source locations.");
   }
 }
 

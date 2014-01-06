@@ -80,7 +80,7 @@ function test() {
 
   function pauseAndCheck() {
     let finished = waitForSourceAndCaretAndScopes(gPanel, "-01.js", 5).then(() => {
-      is(gSources.selectedLabel, "code_script-switching-01.js",
+      is(gSources.selectedValue, EXAMPLE_URL + "code_script-switching-01.js",
         "The currently selected source is incorrect (3).");
       is(gSources.selectedIndex, 0,
         "The currently selected source is incorrect (4).");
@@ -88,7 +88,7 @@ function test() {
         "The editor location is correct after pausing.");
     });
 
-    is(gSources.selectedLabel, "code_script-switching-02.js",
+    is(gSources.selectedValue, EXAMPLE_URL + "code_script-switching-02.js",
       "The currently selected source is incorrect (1).");
     is(gSources.selectedIndex, 1,
       "The currently selected source is incorrect (2).");

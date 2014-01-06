@@ -72,7 +72,7 @@ function test() {
     addAndCheckCustomExpression(3, 0, "bambøøcha");
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).attachment.closeNode,
+      gWatch.getItemAtIndex(0).attachment.view.closeNode,
       gDebugger);
 
     is(gWatch.getAllStrings().length, 2,
@@ -83,7 +83,7 @@ function test() {
       "The expression at index " + 1 + " should be correct (2).");
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).attachment.closeNode,
+      gWatch.getItemAtIndex(0).attachment.view.closeNode,
       gDebugger);
 
     is(gWatch.getAllStrings().length, 1,
@@ -92,7 +92,7 @@ function test() {
       "The expression at index " + 0 + " should be correct (3).");
 
     EventUtils.sendMouseEvent({ type: "click" },
-      gWatch.getItemAtIndex(0).attachment.closeNode,
+      gWatch.getItemAtIndex(0).attachment.view.closeNode,
       gDebugger);
 
     is(gWatch.getAllStrings().length, 0,
@@ -160,11 +160,11 @@ function test() {
     is(element, gWatch.widget.getItemAtIndex(aIndex),
       "The correct watch expression element was accessed (2).");
 
-    is(gWatch.getItemForElement(element).attachment.arrowNode.hidden, false,
+    is(gWatch.getItemForElement(element).attachment.view.arrowNode.hidden, false,
       "The arrow node should be visible.");
-    is(gWatch.getItemForElement(element).attachment.closeNode.hidden, false,
+    is(gWatch.getItemForElement(element).attachment.view.closeNode.hidden, false,
       "The close button should be visible.");
-    is(gWatch.getItemForElement(element).attachment.inputNode.getAttribute("focused"), "true",
+    is(gWatch.getItemForElement(element).attachment.view.inputNode.getAttribute("focused"), "true",
       "The textbox input should be focused.");
 
     is(gVariables.parentNode.scrollTop, 0,

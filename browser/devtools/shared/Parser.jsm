@@ -436,10 +436,26 @@ let ParserHelpers = {
         loc.end.line = loc.start.line;
         loc.end.column = loc.start.column + aNode.name.length;
         return loc;
-    }
+      }
       if (parentType == "MemberExpression") {
         // e.g. "foo.bar"
         // The location is unavailable for the identifier node "bar".
+        let loc = JSON.parse(JSON.stringify(parentLocation));
+        loc.start.line = loc.end.line;
+        loc.start.column = loc.end.column - aNode.name.length;
+        return loc;
+      }
+      if (parentType == "LabeledStatement") {
+        // e.g. label: ...
+        // The location is unavailable for the identifier node "label".
+        let loc = JSON.parse(JSON.stringify(parentLocation));
+        loc.end.line = loc.start.line;
+        loc.end.column = loc.start.column + aNode.name.length;
+        return loc;
+      }
+      if (parentType == "ContinueStatement") {
+        // e.g. continue label
+        // The location is unavailable for the identifier node "label".
         let loc = JSON.parse(JSON.stringify(parentLocation));
         loc.start.line = loc.end.line;
         loc.start.column = loc.end.column - aNode.name.length;
@@ -2334,7 +2350,15 @@ let SyntaxTreeVisitor = {
  *        The thrown exception.
  */
 function log(aStr, aEx) {
-  let msg = "Warning: " + aStr + ", " + aEx + "\n" + aEx.stack;
+  let msg = "Warning: " + aStr + ", " + aEx.message;
+
+  if ("lineNumber" in aEx && "columnNumber" in aEx) {
+    msg += ", line: " + aEx.lineNumber + ", column: " + aEx.columnNumber;
+  }
+  if ("stack" in aEx) {
+    msg += "\n" + aEx.stack;
+  }
+
   Cu.reportError(msg);
   dump(msg + "\n");
 };
