@@ -7,6 +7,11 @@
 #define WEBGLCONTEXT_H_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
+#include "mozilla/EnumeratedArray.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/UniquePtr.h"
+
 #include "GLDefs.h"
 #include "WebGLActiveInfo.h"
 #include "WebGLObjectModel.h"
@@ -26,10 +31,6 @@
 
 #include "GLContextProvider.h"
 
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/LinkedList.h"
-#include "mozilla/CheckedInt.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/gfx/2D.h"
 
 #ifdef XP_MACOSX
@@ -1207,16 +1208,16 @@ protected:
         GLuint GLName() const { return mGLName; }
     };
 
-    ScopedDeletePtr<FakeBlackTexture> mBlackOpaqueTexture2D,
-                                      mBlackOpaqueTextureCubeMap,
-                                      mBlackTransparentTexture2D,
-                                      mBlackTransparentTextureCubeMap;
+    UniquePtr<FakeBlackTexture> mBlackOpaqueTexture2D,
+                                mBlackOpaqueTextureCubeMap,
+                                mBlackTransparentTexture2D,
+                                mBlackTransparentTextureCubeMap;
 
     void BindFakeBlackTexturesHelper(
         GLenum target,
         const nsTArray<WebGLRefPtr<WebGLTexture> >& boundTexturesArray,
-        ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
-        ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr);
+        UniquePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
+        UniquePtr<FakeBlackTexture> & transparentTextureScopedPtr);
 
     GLfloat mVertexAttrib0Vector[4];
     GLfloat mFakeVertexAttrib0BufferObjectVector[4];
