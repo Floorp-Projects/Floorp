@@ -42,7 +42,7 @@ interface nsISimpleEnumerator;
  * be safely passed to javascript via xpconnect.  Therefore, the "native
  * methods" are not scriptable.
  */
-[scriptable, uuid(272a5020-64f5-485c-a8c4-44b2882ae0a2), builtinclass]
+[scriptable, uuid(a99a6a06-f90d-4659-8fce-c2f87feb1167), builtinclass]
 interface nsIFile : nsISupports
 {
     /**
@@ -179,6 +179,16 @@ interface nsIFile : nsISupports
      */
     void moveTo(in nsIFile newParentDir, in AString newName);
     [noscript] void moveToNative(in nsIFile newParentDir, in ACString newName);
+
+    /**
+     *  renameTo
+     *
+     *  This method is identical to moveTo except that if this file or directory
+     *  is moved to a a different volume, it fails and returns an error
+     *  (NS_ERROR_FILE_ACCESS_DENIED).
+     *  This object will still point to the old location after renaming.
+     */
+    void renameTo(in nsIFile newParentDir, in AString newName);
 
     /**
      *  This will try to delete this file.  The 'recursive' flag
