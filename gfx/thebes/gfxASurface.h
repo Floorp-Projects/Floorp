@@ -7,8 +7,9 @@
 #define GFX_ASURFACE_H
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
+
 #include "gfxTypes.h"
-#include "mozilla/Scoped.h"
 #include "nscore.h"
 #include "nsSize.h"
 
@@ -209,7 +210,7 @@ protected:
     virtual ~gfxASurface();
 
     cairo_surface_t *mSurface;
-    mozilla::ScopedDeletePtr<gfxRect> mOpaqueRect;
+    mozilla::UniquePtr<gfxRect> mOpaqueRect;
 
 private:
     static void SurfaceDestroyFunc(void *data);
