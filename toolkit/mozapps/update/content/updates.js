@@ -869,7 +869,7 @@ var gIncompatibleCheckPage = {
     // the add-on will become incompatible.
     let bs = CoC["@mozilla.org/extensions/blocklist;1"].
              getService(CoI.nsIBlocklistService);
-    if (bs.isAddonBlocklisted(addon.id, install.version,
+    if (bs.isAddonBlocklisted(addon,
                               gUpdates.update.appVersion,
                               gUpdates.update.platformVersion))
       return;

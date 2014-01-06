@@ -463,7 +463,7 @@ appUpdater.prototype =
    * See XPIProvider.jsm
    */
   onUpdateAvailable: function(aAddon, aInstall) {
-    if (!Services.blocklist.isAddonBlocklisted(aAddon.id, aInstall.version,
+    if (!Services.blocklist.isAddonBlocklisted(aAddon,
                                                this.update.appVersion,
                                                this.update.platformVersion)) {
       // Compatibility or new version updates mean the same thing here.
