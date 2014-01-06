@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/CharsetMenu.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -660,6 +661,67 @@ function BrowserSetForcedCharacterSet(aCharset)
 {
   gBrowser.docShell.charset = aCharset;
   BrowserCharsetReload();
+}
+
+function MultiplexHandler(event)
+{
+  var node = event.target;
+  var name = node.getAttribute("name");
+
+  if (name == "detectorGroup") {
+    SelectDetector(event);
+    BrowserCharsetReload();
+  } else if (name == "charsetGroup") {
+    var charset = node.getAttribute("id");
+    charset = charset.substring(charset.indexOf("charset.") + "charset.".length);
+    BrowserSetForcedCharacterSet(charset);
+  }
+}
+
+function SelectDetector(event)
+{
+  var uri =  event.target.getAttribute("id");
+  var prefvalue = uri.substring(uri.indexOf("chardet.") + "chardet.".length);
+  if ("off" == prefvalue) { // "off" is special value to turn off the detectors
+    prefvalue = "";
+  }
+
+  try {
+    var str = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
+    str.data = prefvalue;
+    gPrefService.setComplexValue("intl.charset.detector", Ci.nsISupportsString, str);
+  }
+  catch (ex) {
+    dump("Failed to set the intl.charset.detector preference.\n");
+  }
+}
+
+function UpdateCurrentCharset() {
+  var menuitem = document.getElementById("charset." + content.document.characterSet);
+  if (menuitem)
+    menuitem.setAttribute("checked", "true");
+}
+
+function UpdateCharsetDetector() {
+  var prefvalue;
+
+  try {
+    prefvalue = gPrefService.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString).data;
+  }
+  catch (ex) {}
+
+  if (!prefvalue)
+    prefvalue = "off";
+
+  var menuitem = document.getElementById("chardet." + prefvalue);
+  if (menuitem)
+    menuitem.setAttribute("checked", "true");
+}
+
+function UpdateMenus() {
+  UpdateCurrentCharset();
+  UpdateCharsetDetector();
 }
 
 function BrowserForward(aEvent) {
