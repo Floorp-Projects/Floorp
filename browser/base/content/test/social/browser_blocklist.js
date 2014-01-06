@@ -7,7 +7,7 @@
 let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
-let blocklistURL = "http://test:80/browser/browser/base/content/test/social/blocklist.xml";
+let blocklistURL = "http://example.org/browser/browser/base/content/test/social/blocklist.xml";
 
 let manifest = { // normal provider
   name: "provider ok",
