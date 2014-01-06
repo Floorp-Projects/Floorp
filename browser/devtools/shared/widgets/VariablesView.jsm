@@ -1148,7 +1148,7 @@ VariablesView.getterOrSetterDeleteCallback = function(aItem) {
 
   // Make sure the right getter/setter to value override macro is applied
   // to the target object.
-  aItem.ownerView.eval(aItem.evaluationMacro(aItem, ""));
+  aItem.ownerView.eval(aItem, "");
 
   return true; // Don't hide the element.
 };
@@ -2291,11 +2291,41 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   /**
-   * Gets this variable's path to the topmost scope.
+   * Gets this variable's path to the topmost scope in the form of a string
+   * meant for use via eval() or a similar approach.
    * For example, a symbolic name may look like "arguments['0']['foo']['bar']".
    * @return string
    */
   get symbolicName() this._symbolicName,
+
+  /**
+   * Gets this variable's symbolic path to the topmost scope.
+   * @return array
+   * @see Variable._buildSymbolicPath
+   */
+  get symbolicPath() {
+    if (this._symbolicPath) {
+      return this._symbolicPath;
+    }
+    this._symbolicPath = this._buildSymbolicPath();
+    return this._symbolicPath;
+  },
+
+  /**
+   * Build this variable's path to the topmost scope in form of an array of
+   * strings, one for each segment of the path.
+   * For example, a symbolic path may look like ["0", "foo", "bar"].
+   * @return array
+   */
+  _buildSymbolicPath: function(path = []) {
+    if (this.name) {
+      path.unshift(this.name);
+      if (this.ownerView instanceof Variable) {
+        return this.ownerView._buildSymbolicPath(path);
+      }
+    }
+    return path;
+  },
 
   /**
    * Returns this variable's value from the descriptor if available.
@@ -2680,7 +2710,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
         if (!this._variablesView.preventDisableOnChange) {
           this._disable();
         }
-        this.ownerView.eval(this.evaluationMacro(this, aString));
+        this.ownerView.eval(this, aString);
       }
     }, e);
   },
@@ -2771,6 +2801,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   _symbolicName: "",
+  _symbolicPath: null,
   _absoluteName: "",
   _initialDescriptor: null,
   _separatorLabel: null,
