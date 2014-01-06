@@ -587,12 +587,12 @@ this.SocialService = {
   installProvider: function(aDOMDocument, data, installCallback) {
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
-    let id = getAddonIDFromOrigin(installOrigin);
-    let version = data && data.version ? data.version : "0";
-    if (Services.blocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
+    let addon = new AddonWrapper(data);
+    if (addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
       throw new Error("installProvider: provider with origin [" +
                       installOrigin + "] is blocklisted");
 
+    let id = getAddonIDFromOrigin(installOrigin);
     AddonManager.getAddonByID(id, function(aAddon) {
       if (aAddon && aAddon.userDisabled) {
         aAddon.cancelUninstall();
@@ -662,6 +662,10 @@ this.SocialService = {
     }
   },
 
+  createWrapper: function(manifest) {
+    return new AddonWrapper(manifest);
+  },
+
   /**
    * updateProvider is used from the worker to self-update.  Since we do not
    * have knowledge of the currently selected provider here, we will notify
@@ -716,8 +720,8 @@ function SocialProvider(input) {
   if (!input.origin)
     throw new Error("SocialProvider must be passed an origin");
 
-  let id = getAddonIDFromOrigin(input.origin);
-  if (Services.blocklist.getAddonBlocklistState(id, input.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
+  let addon = new AddonWrapper(input);
+  if (addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
     throw new Error("SocialProvider: provider with origin [" +
                     input.origin + "] is blocklisted");
 
@@ -1011,8 +1015,8 @@ var SocialAddonProvider = {
     for (let manifest of SocialServiceInternal.manifests) {
       try {
         if (ActiveProviders.has(manifest.origin)) {
-          let id = getAddonIDFromOrigin(manifest.origin);
-          if (Services.blocklist.getAddonBlocklistState(id, manifest.version || "0") != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+          let addon = new AddonWrapper(manifest);
+          if (addon.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
             SocialService.removeProvider(manifest.origin);
           }
         }
@@ -1100,11 +1104,11 @@ AddonWrapper.prototype = {
   },
 
   get blocklistState() {
-    return Services.blocklist.getAddonBlocklistState(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistState(this);
   },
 
   get blocklistURL() {
-    return Services.blocklist.getAddonBlocklistURL(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistURL(this);
   },
 
   get screenshots() {
