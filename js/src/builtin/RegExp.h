@@ -49,6 +49,9 @@ CreateRegExpMatchResult(JSContext *cx, HandleString input, const jschar *chars, 
                         MatchPairs &matches, MutableHandleValue rval);
 
 extern bool
+regexp_exec_raw(JSContext *cx, HandleObject regexp, HandleString input, Value *vp);
+
+extern bool
 regexp_exec(JSContext *cx, unsigned argc, Value *vp);
 
 bool
