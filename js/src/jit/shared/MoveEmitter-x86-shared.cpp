@@ -256,9 +256,7 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
       case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
-        JS_ASSERT(pushedAtCycle_ == -1);
         masm.Push(toOperand(to));
-        pushedAtCycle_ = masm.framePushed();
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected move type");
@@ -268,8 +266,6 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
 void
 MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
 {
-    JS_ASSERT(pushedAtCycle_ != -1);
-
     // There is some pattern:
     //   (A -> B)
     //   (B -> A)
@@ -278,6 +274,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
     // saved value of B, to A.
     switch (type) {
       case MoveOp::FLOAT32:
+        JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(float));
         if (to.isMemory()) {
             masm.loadFloat32(cycleSlot(), ScratchFloatReg);
@@ -287,6 +284,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         }
         break;
       case MoveOp::DOUBLE:
+        JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(double));
         if (to.isMemory()) {
             masm.loadDouble(cycleSlot(), ScratchFloatReg);
@@ -297,6 +295,7 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         break;
 #ifdef JS_CPU_X64
       case MoveOp::INT32:
+        JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(int32_t));
         // x64 can't pop to a 32-bit destination.
         if (to.isMemory()) {
@@ -311,13 +310,8 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
       case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
-        JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(intptr_t));
-        if (to.isMemory()) {
-            masm.Pop(toPopOperand(to));
-        } else {
-            masm.Pop(to.reg());
-        }
-        pushedAtCycle_ = -1;
+        JS_ASSERT(masm.framePushed() - pushedAtStart_ >= sizeof(intptr_t));
+        masm.Pop(toPopOperand(to));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected move type");
