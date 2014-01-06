@@ -1084,7 +1084,7 @@ MediaStreamGraphImpl::ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
   while (t < aTo) {
     GraphTime next = RoundUpToNextAudioBlock(aSampleRate, t);
     for (uint32_t i = aStreamIndex; i < mStreams.Length(); ++i) {
-      nsRefPtr<ProcessedMediaStream> ps = mStreams[i]->AsProcessedStream();
+      ProcessedMediaStream* ps = mStreams[i]->AsProcessedStream();
       if (ps) {
         ps->ProduceOutput(t, next);
       }
