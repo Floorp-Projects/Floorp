@@ -126,10 +126,6 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
 #ifdef JS_THREADSAFE
     operationCallbackLock(nullptr),
     operationCallbackOwner(nullptr),
-#else
-    operationCallbackLockTaken(false),
-#endif
-#ifdef JS_WORKER_THREADS
     workerThreadState(nullptr),
     exclusiveAccessLock(nullptr),
     exclusiveAccessOwner(nullptr),
@@ -356,9 +352,7 @@ JSRuntime::init(uint32_t maxbytes)
     gcLock = PR_NewLock();
     if (!gcLock)
         return false;
-#endif
 
-#ifdef JS_WORKER_THREADS
     exclusiveAccessLock = PR_NewLock();
     if (!exclusiveAccessLock)
         return false;
@@ -435,7 +429,7 @@ JSRuntime::~JSRuntime()
         CancelOffThreadIonCompile(comp, nullptr);
     WaitForOffThreadParsingToFinish(this);
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     if (workerThreadState)
         workerThreadState->cleanup();
 #endif
@@ -473,7 +467,7 @@ JSRuntime::~JSRuntime()
 
     mainThread.removeFromThreadList();
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     js_delete(workerThreadState);
 
     JS_ASSERT(!exclusiveAccessOwner);
@@ -483,9 +477,7 @@ JSRuntime::~JSRuntime()
     // Avoid bogus asserts during teardown.
     JS_ASSERT(!numExclusiveThreads);
     mainThreadHasExclusiveAccess = true;
-#endif
-
-#ifdef JS_THREADSAFE
+    
     JS_ASSERT(!operationCallbackOwner);
     if (operationCallbackLock)
         PR_DestroyLock(operationCallbackLock);
@@ -884,7 +876,7 @@ AutoThreadSafeAccess::~AutoThreadSafeAccess()
 
 #endif // DEBUG && !XP_WIN
 
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
 
 void
 JSRuntime::setUsedByExclusiveThread(Zone *zone)
@@ -902,10 +894,6 @@ JSRuntime::clearUsedByExclusiveThread(Zone *zone)
     numExclusiveThreads--;
 }
 
-#endif // JS_WORKER_THREADS
-
-#ifdef JS_THREADSAFE
-
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
 {
@@ -922,7 +910,7 @@ js::CurrentThreadCanAccessZone(Zone *zone)
     return !InParallelSection() || InExclusiveParallelSection();
 }
 
-#else
+#else // JS_THREADSAFE
 
 bool
 js::CurrentThreadCanAccessRuntime(JSRuntime *rt)
@@ -943,7 +931,7 @@ js::CurrentThreadCanAccessZone(Zone *zone)
 void
 JSRuntime::assertCanLock(RuntimeLock which)
 {
-#ifdef JS_WORKER_THREADS
+#ifdef JS_THREADSAFE
     // In the switch below, each case falls through to the one below it. None
     // of the runtime locks are reentrant, and when multiple locks are acquired
     // it must be done in the order below.
