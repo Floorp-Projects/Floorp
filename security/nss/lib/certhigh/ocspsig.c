@@ -472,8 +472,8 @@ CERT_CreateEncodedOCSPSuccessResponse(
 	}
 	else {
 	    responderIDTemplate = ocsp_ResponderIDByKeyTemplate;
-	    if (!CERT_GetSPKIDigest(tmpArena, responderCert, SEC_OID_SHA1,
-					&rid->responderIDValue.keyHash))
+	    if (!CERT_GetSubjectPublicKeyDigest(tmpArena, responderCert,
+				SEC_OID_SHA1, &rid->responderIDValue.keyHash))
 		goto done;
 	}
 

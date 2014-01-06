@@ -180,10 +180,11 @@ static void
 errWarn(char * funcString)
 {
     PRErrorCode  perr      = PR_GetError();
+    PRInt32      oserr     = PR_GetOSError();
     const char * errString = SECU_Strerror(perr);
 
-    fprintf(stderr, "strsclnt: %s returned error %d:\n%s\n",
-            funcString, perr, errString);
+    fprintf(stderr, "strsclnt: %s returned error %d, OS error %d: %s\n",
+            funcString, perr, oserr, errString);
 }
 
 static void
@@ -765,11 +766,13 @@ retry:
     prStatus = PR_Connect(tcp_sock, addr, PR_INTERVAL_NO_TIMEOUT);
     if (prStatus != PR_SUCCESS) {
         PRErrorCode err = PR_GetError(); /* save error code */
+        PRInt32 oserr = PR_GetOSError();
         if (ThrottleUp) {
             PRTime now = PR_Now();
             PR_Lock(threadLock);
             lastConnectFailure = PR_MAX(now, lastConnectFailure);
             PR_Unlock(threadLock);
+            PR_SetError(err, oserr); /* restore error code */
         }
         if ((err == PR_CONNECT_REFUSED_ERROR) || 
 	    (err == PR_CONNECT_RESET_ERROR)      ) {
