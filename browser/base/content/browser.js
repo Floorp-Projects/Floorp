@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
-                                  "resource:///modules/CharsetMenu.jsm");
+                                  "resource://gre/modules/CharsetMenu.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
