@@ -49,6 +49,7 @@ class RenderFrameParent : public PRenderFrameParent,
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::layers::TextureFactoryIdentifier TextureFactoryIdentifier;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+  typedef mozilla::layers::ZoomConstraints ZoomConstraints;
   typedef FrameMetrics::ViewID ViewID;
 
 public:
@@ -117,9 +118,7 @@ public:
   void UpdateZoomConstraints(uint32_t aPresShellId,
                              ViewID aViewId,
                              bool aIsRoot,
-                             bool aAllowZoom,
-                             const CSSToScreenScale& aMinZoom,
-                             const CSSToScreenScale& aMaxZoom);
+                             const ZoomConstraints& aConstraints);
 
   bool HitTest(const nsRect& aRect);
 

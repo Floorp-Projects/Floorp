@@ -484,7 +484,7 @@ TEST(AsyncPanZoomController, ShortPress) {
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
-  apzc->UpdateZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0));
+  apzc->UpdateZoomConstraints(ZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0)));
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0)).Times(1);
 
@@ -503,7 +503,7 @@ TEST(AsyncPanZoomController, MediumPress) {
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
-  apzc->UpdateZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0));
+  apzc->UpdateZoomConstraints(ZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0)));
 
   EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0)).Times(1);
 
@@ -522,7 +522,7 @@ TEST(AsyncPanZoomController, LongPress) {
 
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
-  apzc->UpdateZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0));
+  apzc->UpdateZoomConstraints(ZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0)));
 
   int time = 0;
 

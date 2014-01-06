@@ -349,6 +349,45 @@ struct ScrollableLayerGuid {
   }
 };
 
+struct ZoomConstraints {
+  bool mAllowZoom;
+  CSSToScreenScale mMinZoom;
+  CSSToScreenScale mMaxZoom;
+
+  ZoomConstraints()
+    : mAllowZoom(true)
+  {
+    MOZ_COUNT_CTOR(ZoomConstraints);
+  }
+
+  ZoomConstraints(bool aAllowZoom,
+                  const CSSToScreenScale& aMinZoom,
+                  const CSSToScreenScale& aMaxZoom)
+    : mAllowZoom(aAllowZoom)
+    , mMinZoom(aMinZoom)
+    , mMaxZoom(aMaxZoom)
+  {
+    MOZ_COUNT_CTOR(ZoomConstraints);
+  }
+
+  ~ZoomConstraints()
+  {
+    MOZ_COUNT_DTOR(ZoomConstraints);
+  }
+
+  bool operator==(const ZoomConstraints& other) const
+  {
+    return mAllowZoom == other.mAllowZoom
+        && mMinZoom == other.mMinZoom
+        && mMaxZoom == other.mMaxZoom;
+  }
+
+  bool operator!=(const ZoomConstraints& other) const
+  {
+    return !(*this == other);
+  }
+};
+
 }
 }
 
