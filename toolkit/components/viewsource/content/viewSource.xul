@@ -14,6 +14,8 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
+<!ENTITY % charsetDTD SYSTEM "chrome://global/locale/charsetMenu.dtd" >
+%charsetDTD;
 ]>
 
 <window id="viewSource"
@@ -192,6 +194,43 @@
               <menuitem id="menu_textReset" command="cmd_textZoomReset"
                         label="&menu_textReset.label;" accesskey="&menu_textReset.accesskey;"
                         key="key_textZoomReset"/>
+            </menupopup>
+          </menu>
+
+          <!-- Charset Menu -->
+          <menu id="charsetMenu"
+                label="&charsetMenu.label;"
+                accesskey="&charsetMenu.accesskey;"
+                oncommand="MultiplexHandler(event);"
+                onpopupshowing="CharsetMenu.build(event);"
+                onpopupshown="UpdateMenus();">
+            <menupopup>
+              <menu label="&charsetMenuAutodet.label;"
+                    accesskey="&charsetMenuAutodet.accesskey;">
+                <menupopup>
+                  <menuitem type="radio"
+                            name="detectorGroup"
+                            id="chardet.off"
+                            label="&charsetMenuAutodet.off.label;"
+                            accesskey="&charsetMenuAutodet.off.accesskey;"/>
+                  <menuitem type="radio"
+                            name="detectorGroup"
+                            id="chardet.ja_parallel_state_machine"
+                            label="&charsetMenuAutodet.ja.label;"
+                            accesskey="&charsetMenuAutodet.ja.accesskey;"/>
+                  <menuitem type="radio"
+                            name="detectorGroup"
+                            id="chardet.ruprob"
+                            label="&charsetMenuAutodet.ru.label;"
+                            accesskey="&charsetMenuAutodet.ru.accesskey;"/>
+                  <menuitem type="radio"
+                            name="detectorGroup"
+                            id="chardet.ukprob"
+                            label="&charsetMenuAutodet.uk.label;"
+                            accesskey="&charsetMenuAutodet.uk.accesskey;"/>
+                </menupopup>
+              </menu>
+              <menuseparator/>
             </menupopup>
           </menu>
           <menuseparator/>
