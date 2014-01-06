@@ -110,6 +110,14 @@ class MediaRecorder::Session: public nsIObserver
       MOZ_ASSERT(NS_GetCurrentThread() == mSession->mReadThread);
 
       mSession->Extract();
+      if (!mSession->mEncoder->IsShutdown()) {
+        NS_DispatchToCurrentThread(new ExtractRunnable(mSession));
+      } else {
+        // Flush out remainding encoded data.
+        NS_DispatchToMainThread(new PushBlobRunnable(mSession));
+        // Destroy this Session object in main thread.
+        NS_DispatchToMainThread(new DestroyRunnable(already_AddRefed<Session>(mSession)));
+      }
       return NS_OK;
     }
 
@@ -198,6 +206,7 @@ public:
 
     AddRef();
     mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
+    mLastBlobTimeStamp = TimeStamp::Now();
   }
 
   // Only DestroyRunnable is allowed to delete Session object.
@@ -258,36 +267,27 @@ private:
   {
     MOZ_ASSERT(NS_GetCurrentThread() == mReadThread);
 
-    TimeStamp lastBlobTimeStamp = TimeStamp::Now();
     // Whether push encoded data back to onDataAvailable automatically.
     const bool pushBlob = (mTimeSlice > 0) ? true : false;
 
-    do {
-      // Pull encoded media data from MediaEncoder
-      nsTArray<nsTArray<uint8_t> > encodedBuf;
-      nsString mimeType;
-      mEncoder->GetEncodedData(&encodedBuf, mimeType);
+    // Pull encoded media data from MediaEncoder
+    nsTArray<nsTArray<uint8_t> > encodedBuf;
+    nsString mimeType;
+    mEncoder->GetEncodedData(&encodedBuf, mimeType);
 
-      mRecorder->SetMimeType(mimeType);
+    mRecorder->SetMimeType(mimeType);
 
-      // Append pulled data into cache buffer.
-      for (uint32_t i = 0; i < encodedBuf.Length(); i++) {
-        mEncodedBufferCache->AppendBuffer(encodedBuf[i]);
+    // Append pulled data into cache buffer.
+    for (uint32_t i = 0; i < encodedBuf.Length(); i++) {
+      mEncodedBufferCache->AppendBuffer(encodedBuf[i]);
+    }
+
+    if (pushBlob) {
+      if ((TimeStamp::Now() - mLastBlobTimeStamp).ToMilliseconds() > mTimeSlice) {
+        NS_DispatchToMainThread(new PushBlobRunnable(this));
+        mLastBlobTimeStamp = TimeStamp::Now();
       }
-
-      if (pushBlob) {
-        if ((TimeStamp::Now() - lastBlobTimeStamp).ToMilliseconds() > mTimeSlice) {
-          NS_DispatchToMainThread(new PushBlobRunnable(this));
-          lastBlobTimeStamp = TimeStamp::Now();
-        }
-      }
-    } while (!mEncoder->IsShutdown());
-
-    // Flush out remainding encoded data.
-    NS_DispatchToMainThread(new PushBlobRunnable(this));
-
-    // Destroy this session object in main thread.
-    NS_DispatchToMainThread(new DestroyRunnable(already_AddRefed<Session>(this)));
+    }
   }
 
   // Bind media source with MediaEncoder to receive raw media data.
@@ -398,6 +398,8 @@ private:
   nsRefPtr<MediaEncoder> mEncoder;
   // A buffer to cache encoded meda data.
   nsAutoPtr<EncodedBufferCache> mEncodedBufferCache;
+  // Timestamp of the last fired dataavailable event.
+  TimeStamp mLastBlobTimeStamp;
   // The interval of passing encoded data from EncodedBufferCache to onDataAvailable
   // handler. "mTimeSlice < 0" means Session object does not push encoded data to
   // onDataAvailable, instead, it passive wait the client side pull encoded data
