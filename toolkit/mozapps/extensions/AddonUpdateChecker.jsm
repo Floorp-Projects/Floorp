@@ -721,8 +721,7 @@ this.AddonUpdateChecker = {
     for (let update of aUpdates) {
       if (!update.updateURL)
         continue;
-      let state = blocklist.getAddonBlocklistState(update.id, update.version,
-                                                   aAppVersion, aPlatformVersion);
+      let state = blocklist.getAddonBlocklistState(update, aAppVersion, aPlatformVersion);
       if (state != Ci.nsIBlocklistService.STATE_NOT_BLOCKED)
         continue;
       if ((newest == null || (Services.vc.compare(newest.version, update.version) < 0)) &&
