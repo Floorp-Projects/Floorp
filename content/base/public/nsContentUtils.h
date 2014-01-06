@@ -86,7 +86,6 @@ class nsIURI;
 class nsIWidget;
 class nsIWordBreaker;
 class nsIXPConnect;
-class nsIXPConnectJSObjectHolder;
 class nsNodeInfoManager;
 class nsPIDOMWindow;
 class nsPresContext;
@@ -1641,36 +1640,24 @@ public:
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, const nsIID* aIID,
                              JS::MutableHandle<JS::Value> vp,
-                             // If non-null aHolder will keep the Value alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, nullptr, aIID, vp, aHolder,
-                      aAllowWrapping);
+    return WrapNative(cx, scope, native, nullptr, aIID, vp, aAllowWrapping);
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, JS::MutableHandle<JS::Value> vp,
-                             // If non-null aHolder will keep the Value alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, nullptr, nullptr, vp, aHolder,
-                      aAllowWrapping);
+    return WrapNative(cx, scope, native, nullptr, nullptr, vp, aAllowWrapping);
   }
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, nsWrapperCache *cache,
                              JS::MutableHandle<JS::Value> vp,
-                             // If non-null aHolder will keep the Value alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nullptr,
                              bool aAllowWrapping = false)
   {
-    return WrapNative(cx, scope, native, cache, nullptr, vp, aHolder,
-                      aAllowWrapping);
+    return WrapNative(cx, scope, native, cache, nullptr, vp, aAllowWrapping);
   }
 
   /**
@@ -2133,7 +2120,6 @@ private:
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, nsWrapperCache *cache,
                              const nsIID* aIID, JS::MutableHandle<JS::Value> vp,
-                             nsIXPConnectJSObjectHolder** aHolder,
                              bool aAllowWrapping);
 
   static nsresult DispatchEvent(nsIDocument* aDoc,

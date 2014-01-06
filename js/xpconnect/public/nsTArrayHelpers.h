@@ -32,8 +32,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::RootedValue wrappedVal(aCx);
-    rv = nsContentUtils::WrapNative(aCx, global, obj, &wrappedVal,
-                                    nullptr, true);
+    rv = nsContentUtils::WrapNative(aCx, global, obj, &wrappedVal, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!JS_SetElement(aCx, arrayObj, index, &wrappedVal)) {
