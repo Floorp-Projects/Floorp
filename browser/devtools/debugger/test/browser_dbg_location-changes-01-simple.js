@@ -35,19 +35,12 @@ function performTest() {
   is(gSources.itemCount, 1,
     "Found the expected number of entries in the sources widget.");
 
-  isnot(gSources.selectedLabel, null,
-    "There should be a selected source label.");
   isnot(gSources.selectedValue, null,
     "There should be a selected source value.");
   isnot(gEditor.getText().length, 0,
     "The source editor should have some text displayed.");
   isnot(gEditor.getText(), gDebugger.L10N.getStr("loadingText"),
     "The source editor text should not be 'Loading...'");
-
-  is(gSources.widget.getAttribute("label"), "doc_recursion-stack.html",
-    "The sources widget should have a correct label attribute.");
-  is(gSources.widget.getAttribute("tooltiptext"), "http://example.com",
-    "The sources widget should have a correct tooltip text attribute.");
 
   is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 0,
     "The sources widget should not display any notice at this point (1).");
