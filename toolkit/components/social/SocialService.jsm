@@ -585,21 +585,30 @@ this.SocialService = {
   },
 
   installProvider: function(aDOMDocument, data, installCallback) {
+    let manifest;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
-    let id = getAddonIDFromOrigin(installOrigin);
-    let version = data && data.version ? data.version : "0";
-    if (Services.blocklist.getAddonBlocklistState(id, version) == Ci.nsIBlocklistService.STATE_BLOCKED)
-      throw new Error("installProvider: provider with origin [" +
-                      installOrigin + "] is blocklisted");
+    if (data) {
+      let installType = getOriginActivationType(installOrigin);
+      // if we get data, we MUST have a valid manifest generated from the data
+      manifest = this._manifestFromData(installType, data, aDOMDocument.nodePrincipal);
+      if (!manifest)
+        throw new Error("SocialService.installProvider: service configuration is invalid from " + aDOMDocument.location.href);
 
+      let addon = new AddonWrapper(manifest);
+      if (addon && addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
+        throw new Error("installProvider: provider with origin [" +
+                        installOrigin + "] is blocklisted");
+    }
+
+    let id = getAddonIDFromOrigin(installOrigin);
     AddonManager.getAddonByID(id, function(aAddon) {
       if (aAddon && aAddon.userDisabled) {
         aAddon.cancelUninstall();
         aAddon.userDisabled = false;
       }
       schedule(function () {
-        this._installProvider(aDOMDocument, data, aManifest => {
+        this._installProvider(aDOMDocument, manifest, aManifest => {
           this._notifyProviderListeners("provider-installed", aManifest.origin);
           installCallback(aManifest);
         });
@@ -607,18 +616,11 @@ this.SocialService = {
     }.bind(this));
   },
 
-  _installProvider: function(aDOMDocument, data, installCallback) {
+  _installProvider: function(aDOMDocument, manifest, installCallback) {
     let sourceURI = aDOMDocument.location.href;
     let installOrigin = aDOMDocument.nodePrincipal.origin;
 
     let installType = getOriginActivationType(installOrigin);
-    let manifest;
-    if (data) {
-      // if we get data, we MUST have a valid manifest generated from the data
-      manifest = this._manifestFromData(installType, data, aDOMDocument.nodePrincipal);
-      if (!manifest)
-        throw new Error("SocialService.installProvider: service configuration is invalid from " + sourceURI);
-    }
     let installer;
     switch(installType) {
       case "foreign":
@@ -660,6 +662,10 @@ this.SocialService = {
         throw new Error("SocialService.installProvider: Invalid install type "+installType+"\n");
         break;
     }
+  },
+
+  createWrapper: function(manifest) {
+    return new AddonWrapper(manifest);
   },
 
   /**
@@ -716,8 +722,8 @@ function SocialProvider(input) {
   if (!input.origin)
     throw new Error("SocialProvider must be passed an origin");
 
-  let id = getAddonIDFromOrigin(input.origin);
-  if (Services.blocklist.getAddonBlocklistState(id, input.version || "0") == Ci.nsIBlocklistService.STATE_BLOCKED)
+  let addon = new AddonWrapper(input);
+  if (addon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED)
     throw new Error("SocialProvider: provider with origin [" +
                     input.origin + "] is blocklisted");
 
@@ -1011,8 +1017,8 @@ var SocialAddonProvider = {
     for (let manifest of SocialServiceInternal.manifests) {
       try {
         if (ActiveProviders.has(manifest.origin)) {
-          let id = getAddonIDFromOrigin(manifest.origin);
-          if (Services.blocklist.getAddonBlocklistState(id, manifest.version || "0") != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
+          let addon = new AddonWrapper(manifest);
+          if (addon.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
             SocialService.removeProvider(manifest.origin);
           }
         }
@@ -1100,11 +1106,11 @@ AddonWrapper.prototype = {
   },
 
   get blocklistState() {
-    return Services.blocklist.getAddonBlocklistState(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistState(this);
   },
 
   get blocklistURL() {
-    return Services.blocklist.getAddonBlocklistURL(this.id, this.version || "0");
+    return Services.blocklist.getAddonBlocklistURL(this);
   },
 
   get screenshots() {

@@ -2957,7 +2957,7 @@ UpdateService.prototype = {
     // the add-on will become incompatible.
     let bs = Cc["@mozilla.org/extensions/blocklist;1"].
              getService(Ci.nsIBlocklistService);
-    if (bs.isAddonBlocklisted(addon.id, install.version,
+    if (bs.isAddonBlocklisted(addon,
                               gUpdates.update.appVersion,
                               gUpdates.update.platformVersion))
       return;

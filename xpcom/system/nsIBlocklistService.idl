@@ -29,10 +29,8 @@ interface nsIBlocklistService : nsISupports
 
   /**
    * Determine if an item is blocklisted
-   * @param   id
-   *          The ID of the item.
-   * @param   version
-   *          The item's version.
+   * @param   addon
+   *          The addon item to be checked.
    * @param   appVersion
    *          The version of the application we are checking in the blocklist.
    *          If this parameter is null, the version of the running application
@@ -44,16 +42,14 @@ interface nsIBlocklistService : nsISupports
    * @returns true if the item is compatible with this version of the
    *          application or this version of the toolkit, false, otherwise.
    */
-  boolean isAddonBlocklisted(in AString id, in AString version,
+  boolean isAddonBlocklisted(in jsval addon,
                              [optional] in AString appVersion,
                              [optional] in AString toolkitVersion);
 
   /**
    * Determine the blocklist state of an add-on
    * @param   id
-   *          The ID of the item.
-   * @param   version
-   *          The item's version.
+   *          The addon item to be checked.
    * @param   appVersion
    *          The version of the application we are checking in the blocklist.
    *          If this parameter is null, the version of the running application
@@ -64,7 +60,7 @@ interface nsIBlocklistService : nsISupports
    *          is used.
    * @returns The STATE constant.
    */
-  unsigned long getAddonBlocklistState(in AString id, in AString version,
+  unsigned long getAddonBlocklistState(in jsval addon,
                                        [optional] in AString appVersion,
                                        [optional] in AString toolkitVersion);
 
@@ -88,11 +84,11 @@ interface nsIBlocklistService : nsISupports
 
   /**
    * Determine the blocklist web page of an add-on.
-   * @param   id
-   *          The ID of the blocked add-on.
+   * @param   addon
+   *          The addon item whose url is required.
    * @returns The URL of the description page.
    */
-  AString getAddonBlocklistURL(in AString id, in AString version,
+  AString getAddonBlocklistURL(in jsval addon,
                               [optional] in AString appVersion,
                               [optional] in AString toolkitVersion);
 

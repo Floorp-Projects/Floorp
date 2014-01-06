@@ -3,7 +3,10 @@
 <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem id="test_bug393285_2@tests.mozilla.org"/>
-    <emItem id="test_bug393285_3@tests.mozilla.org">
+    <emItem id="test_bug393285_3a@tests.mozilla.org">
+      <versionRange minVersion="1.0" maxVersion="1.0"/>
+    </emItem>
+    <emItem id="test_bug393285_3b@tests.mozilla.org">
       <versionRange minVersion="1.0" maxVersion="1.0"/>
     </emItem>
     <emItem id="test_bug393285_4@tests.mozilla.org">
