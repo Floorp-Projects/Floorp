@@ -153,13 +153,9 @@ public:
 
   /**
    * Updates any zoom constraints contained in the <meta name="viewport"> tag.
-   * We try to obey everything it asks us elsewhere, but here we only handle
-   * minimum-scale, maximum-scale, and user-scalable.
    */
   void UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
-                             bool aAllowZoom,
-                             const CSSToScreenScale& aMinScale,
-                             const CSSToScreenScale& aMaxScale);
+                             const ZoomConstraints& aConstraints);
 
   /**
    * Cancels any currently running animation. Note that all this does is set the
@@ -265,9 +261,7 @@ private:
   nsEventStatus ProcessMouseEvent(const WidgetMouseEvent& mouseEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetMouseEvent* aOutEvent);
   nsEventStatus ProcessEvent(const WidgetInputEvent& inputEvent, ScrollableLayerGuid* aOutTargetGuid, WidgetInputEvent* aOutEvent);
   void UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
-                                        bool aAllowZoom,
-                                        const CSSToScreenScale& aMinScale,
-                                        const CSSToScreenScale& aMaxScale);
+                                        const ZoomConstraints& aConstraints);
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
