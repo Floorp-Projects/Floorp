@@ -164,7 +164,7 @@ AndroidBridge::Init(JNIEnv *jEnv)
 
     mJNIEnv = nullptr;
     mThread = -1;
-    mGLControllerObj = NULL;
+    mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
@@ -269,11 +269,11 @@ extern "C" {
     __attribute__ ((visibility("default")))
     JNIEnv * GetJNIForThread()
     {
-        JNIEnv *jEnv = NULL;
+        JNIEnv *jEnv = nullptr;
         JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
         if (!jVm) {
             __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "Returned a null VM");
-            return NULL;
+            return nullptr;
         }
         jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
 
@@ -283,10 +283,10 @@ extern "C" {
         int status = jVm->GetEnv((void**) &jEnv, JNI_VERSION_1_2);
         if (status) {
 
-            status = jVm->AttachCurrentThread(&jEnv, NULL);
+            status = jVm->AttachCurrentThread(&jEnv, nullptr);
             if (status) {
                 __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread",  "Could not attach");
-                return NULL;
+                return nullptr;
             }
 
             PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
@@ -304,7 +304,7 @@ void AutoGlobalWrappedJavaObject::Dispose() {
     }
 
     GetJNIForThread()->DeleteGlobalRef(wrapped_obj);
-    wrapped_obj = NULL;
+    wrapped_obj = nullptr;
 }
 
 AutoGlobalWrappedJavaObject::~AutoGlobalWrappedJavaObject() {
@@ -694,7 +694,7 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
 void
 AndroidBridge::RegisterCompositor(JNIEnv *env)
 {
-    if (mGLControllerObj != NULL && !mGLControllerObj->isNull()) {
+    if (mGLControllerObj != nullptr && !mGLControllerObj->isNull()) {
         // we already have this set up, no need to do it again
         return;
     }
