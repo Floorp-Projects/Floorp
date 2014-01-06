@@ -4807,43 +4807,6 @@ class MRegExp : public MNullaryInstruction
     }
 };
 
-class MRegExpExec
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<1>, StringPolicy<0> >
-{
-  private:
-
-    MRegExpExec(MDefinition *regexp, MDefinition *string)
-      : MBinaryInstruction(string, regexp)
-    {
-        // May be object or null.
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(RegExpExec)
-
-    static MRegExpExec *New(TempAllocator &alloc, MDefinition *regexp, MDefinition *string) {
-        return new(alloc) MRegExpExec(regexp, string);
-    }
-
-    MDefinition *string() const {
-        return getOperand(0);
-    }
-
-    MDefinition *regexp() const {
-        return getOperand(1);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-
-    bool possiblyCalls() const {
-        return true;
-    }
-};
-
 class MRegExpTest
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<1>, StringPolicy<0> >
