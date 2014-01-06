@@ -35,6 +35,7 @@ let loaderGlobals = {
   btoa: btoa,
   console: console,
   _Iterator: Iterator,
+  ChromeWorker: ChromeWorker,
   loader: {
     lazyGetter: XPCOMUtils.defineLazyGetter.bind(XPCOMUtils),
     lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
