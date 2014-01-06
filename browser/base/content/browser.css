@@ -7,9 +7,9 @@
 
 #main-window:not([chromehidden~="toolbar"]) {
 %ifdef XP_MACOSX
-  min-width: 425px;
+  min-width: 285px;
 %else
-  min-width: 390px;
+  min-width: 250px;
 %endif
 }
 
