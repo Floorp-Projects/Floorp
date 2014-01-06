@@ -11,15 +11,6 @@
   -moz-box-orient: vertical;
 }
 
-#expressions {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-#globalsearch {
-  overflow: auto;
-}
-
 /* Toolbar controls */
 
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {

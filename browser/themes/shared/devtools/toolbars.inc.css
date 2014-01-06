@@ -169,13 +169,22 @@
 /* Close button */
 
 .devtools-closebutton {
-  list-style-image: url("chrome://browser/skin/devtools/close.png");
   -moz-appearance: none;
   border: none;
   margin: 0 4px;
   min-width: 16px;
   width: 16px;
   opacity: 0.6;
+}
+
+.devtools-closebutton > image {
+  width: 16px;
+  height: 16px;
+  -moz-appearance: none;
+  background-size: 16px 16px;
+  background-image: url("chrome://browser/skin/devtools/close@2x.png");
+  background-position: center center;
+  background-repeat: no-repeat;
 }
 
 .devtools-closebutton > .toolbarbutton-icon {
@@ -330,16 +339,25 @@
   display: none;
 }
 
-#toolbox-dock-bottom {
-  list-style-image: url("chrome://browser/skin/devtools/dock-bottom.png");
+#toolbox-dock-buttons > toolbarbutton > image {
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-size: 16px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
 }
 
-#toolbox-dock-side {
-  list-style-image: url("chrome://browser/skin/devtools/dock-side.png");
+#toolbox-dock-bottom > image {
+  background-image: url("chrome://browser/skin/devtools/dock-bottom@2x.png");
 }
 
-#toolbox-dock-window {
-  list-style-image: url("chrome://browser/skin/devtools/undock.png");
+#toolbox-dock-side  > image {
+  background-image: url("chrome://browser/skin/devtools/dock-side@2x.png");
+}
+
+#toolbox-dock-window > image {
+  background-image: url("chrome://browser/skin/devtools/undock@2x.png");
 }
 
 #toolbox-dock-window,
@@ -372,7 +390,8 @@
   border: none;
   padding: 0 8px;
   margin: 0;
-  width: 16px;
+  width: 32px;
+  position: relative;
 }
 
 .command-button:hover {
@@ -382,78 +401,43 @@
   background-color: hsla(206,37%,4%,.4);
 }
 
-#command-button-paintflashing {
-  list-style-image: url("chrome://browser/skin/devtools/command-paintflashing.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+.command-button > image {
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-size: 64px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
 }
-#command-button-paintflashing:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+.command-button:hover > image {
+  background-position: -16px center;
 }
-#command-button-paintflashing:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+.command-button:hover:active > image {
+  background-position: -32px center;
 }
-#command-button-paintflashing[checked=true] {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
-}
-
-#command-button-responsive {
-  list-style-image: url("chrome://browser/skin/devtools/command-responsivemode.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-#command-button-responsive:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-#command-button-responsive:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-#command-button-responsive[checked=true] {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+.command-button[checked=true] > image {
+  background-position: -48px center;
 }
 
-#command-button-tilt {
-  list-style-image: url("chrome://browser/skin/devtools/command-tilt.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-#command-button-tilt:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+#command-button-paintflashing > image {
+  background-image: url("chrome://browser/skin/devtools/command-paintflashing@2x.png");
 }
 
-#command-button-tilt:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+#command-button-responsive > image {
+  background-image: url("chrome://browser/skin/devtools/command-responsivemode@2x.png");
 }
 
-#command-button-tilt[checked=true] {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+#command-button-tilt > image {
+  background-image: url("chrome://browser/skin/devtools/command-tilt@2x.png");
 }
 
-#command-button-scratchpad {
-  list-style-image: url("chrome://browser/skin/devtools/command-scratchpad.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+#command-button-scratchpad > image {
+  background-image: url("chrome://browser/skin/devtools/command-scratchpad@2x.png");
+  background-size: 48px 16px;
 }
 
-#command-button-scratchpad:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-#command-button-scratchpad:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
-#command-button-splitconsole {
-  list-style-image: url("chrome://browser/skin/devtools/command-console.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-#command-button-splitconsole:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-#command-button-splitconsole:hover:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-
-#command-button-splitconsole[checked=true] {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+#command-button-splitconsole > image {
+  background-image: url("chrome://browser/skin/devtools/command-console@2x.png");
 }
 
 /* Tabs */

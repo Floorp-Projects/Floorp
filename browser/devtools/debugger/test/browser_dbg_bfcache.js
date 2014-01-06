@@ -70,16 +70,16 @@ function testForward() {
 function validateFirstPage() {
   is(gSources.itemCount, 2,
     "Found the expected number of sources.");
-  ok(gSources.containsLabel("code_script-switching-01.js"),
+  ok(gSources.getItemForAttachment(e => e.label == "code_script-switching-01.js"),
     "Found the first source label.");
-  ok(gSources.containsLabel("code_script-switching-02.js"),
+  ok(gSources.getItemForAttachment(e => e.label == "code_script-switching-02.js"),
     "Found the second source label.");
 }
 
 function validateSecondPage() {
   is(gSources.itemCount, 1,
     "Found the expected number of sources.");
-  ok(gSources.containsLabel("doc_recursion-stack.html"),
+  ok(gSources.getItemForAttachment(e => e.label == "doc_recursion-stack.html"),
     "Found the single source label.");
 }
 

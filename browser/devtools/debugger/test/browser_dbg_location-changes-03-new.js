@@ -37,8 +37,6 @@ function testLocationChange() {
     is(gSources.itemCount, 1,
       "Found the expected number of entries in the sources widget.");
 
-    is(gSources.selectedLabel, "doc_inline-debugger-statement.html",
-      "There should be a selected source label.");
     is(gSources.selectedValue, EXAMPLE_URL + "doc_inline-debugger-statement.html",
       "There should be a selected source value.");
     isnot(gEditor.getText().length, 0,
@@ -46,17 +44,8 @@ function testLocationChange() {
     is(gEditor.getText(), gDebugger.L10N.getStr("loadingText"),
       "The source editor text should not be 'Loading...'");
 
-    is(gSources.widget.getAttribute("label"), "doc_inline-debugger-statement.html",
-      "The sources widget should have a correct label attribute.");
-    is(gSources.widget.getAttribute("tooltiptext"), "http://example.com",
-      "The sources widget should have a correct tooltip text attribute.");
-
-    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 0,
-      "The sources widget should not display any notice at this point (1).");
-    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice").length, 0,
-      "The sources widget should not display any notice at this point (2).");
-    is(gDebugger.document.querySelector("#sources .side-menu-widget-empty-notice > label"), null,
-      "The sources widget should not display a notice at this point (3).");
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-text").length, 0,
+      "The sources widget should not display any notice at this point.");
 
     closeDebuggerAndFinish(gPanel);
   });
