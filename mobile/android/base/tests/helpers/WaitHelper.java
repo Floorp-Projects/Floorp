@@ -40,7 +40,7 @@ public final class WaitHelper {
 
     private WaitHelper() { /* To disallow instantiation. */ }
 
-    public static void init(final UITestContext context) {
+    protected static void init(final UITestContext context) {
         sContext = context;
         sSolo = context.getSolo();
         sActions = context.getActions();
