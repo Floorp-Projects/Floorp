@@ -24,6 +24,7 @@ using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
+using struct mozilla::layers::ZoomConstraints from "FrameMetrics.h";
 using FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layout::ScrollingBehavior from "mozilla/layout/RenderFrameUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
@@ -301,7 +302,7 @@ parent:
      * have up-to-date zoom constraints.
      */
     UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId, bool aIsRoot,
-                          bool aAllowZoom, CSSToScreenScale aMinZoom, CSSToScreenScale aMaxZoom);
+                          ZoomConstraints aConstraints);
 
     __delete__();
 
