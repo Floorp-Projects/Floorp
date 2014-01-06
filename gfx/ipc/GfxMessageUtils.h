@@ -685,6 +685,26 @@ struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::layers::ZoomConstraints>
+{
+  typedef mozilla::layers::ZoomConstraints paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mAllowZoom);
+    WriteParam(aMsg, aParam.mMinZoom);
+    WriteParam(aMsg, aParam.mMaxZoom);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return (ReadParam(aMsg, aIter, &aResult->mAllowZoom) &&
+            ReadParam(aMsg, aIter, &aResult->mMinZoom) &&
+            ReadParam(aMsg, aIter, &aResult->mMaxZoom));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* __GFXMESSAGEUTILS_H__ */
