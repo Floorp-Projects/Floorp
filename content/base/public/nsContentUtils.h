@@ -1637,6 +1637,7 @@ public:
    */
   static bool CanAccessNativeAnon();
 
+  MOZ_WARN_UNUSED_RESULT
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, const nsIID* aIID,
                              JS::MutableHandle<JS::Value> vp,
@@ -1646,12 +1647,15 @@ public:
   }
 
   // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
+  MOZ_WARN_UNUSED_RESULT
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, JS::MutableHandle<JS::Value> vp,
                              bool aAllowWrapping = false)
   {
     return WrapNative(cx, scope, native, nullptr, nullptr, vp, aAllowWrapping);
   }
+
+  MOZ_WARN_UNUSED_RESULT
   static nsresult WrapNative(JSContext *cx, JS::Handle<JSObject*> scope,
                              nsISupports *native, nsWrapperCache *cache,
                              JS::MutableHandle<JS::Value> vp,
