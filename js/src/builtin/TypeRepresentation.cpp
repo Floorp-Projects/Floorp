@@ -781,7 +781,7 @@ SizedArrayTypeRepresentation::appendStringSizedArray(JSContext *cx, StringBuffer
 
     contents.append(".array(");
     SizedArrayTypeRepresentation *arrayType = this;
-    while (arrayType != NULL) {
+    while (arrayType != nullptr) {
         if (!NumberValueToStringBuffer(cx, NumberValue(length()), contents))
             return false;
 
