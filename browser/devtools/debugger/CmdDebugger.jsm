@@ -41,7 +41,7 @@ function getAllBreakpoints(dbg) {
     for (let { attachment: breakpoint } of source) {
       breakpoints.push({
         url: source.value,
-        label: source.label + ":" + breakpoint.line,
+        label: source.attachment.label + ":" + breakpoint.line,
         lineNumber: breakpoint.line,
         lineText: breakpoint.text,
         truncatedLineText: trim(breakpoint.text, MAX_LINE_TEXT_LENGTH, "end")

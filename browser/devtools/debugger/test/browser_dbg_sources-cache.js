@@ -38,7 +38,7 @@ function test() {
 function initialChecks() {
   ok(gEditor.getText().contains("First source!"),
     "Editor text contents appears to be correct.");
-  is(gSources.selectedLabel, "code_function-search-01.js",
+  is(gSources.selectedItem.attachment.label, "code_function-search-01.js",
     "The currently selected label in the sources container is correct.");
   ok(gSources.selectedValue.contains("code_function-search-01.js"),
     "The currently selected value in the sources container appears to be correct.");
@@ -47,30 +47,30 @@ function initialChecks() {
     "There should be " + TOTAL_SOURCES + " sources present in the sources list.");
   is(gSources.visibleItems.length, TOTAL_SOURCES,
     "There should be " + TOTAL_SOURCES + " sources visible in the sources list.");
-  is(gSources.labels.length, TOTAL_SOURCES,
-    "There should be " + TOTAL_SOURCES + " labels stored in the sources container model.")
+  is(gSources.attachments.length, TOTAL_SOURCES,
+    "There should be " + TOTAL_SOURCES + " attachments stored in the sources container model.")
   is(gSources.values.length, TOTAL_SOURCES,
     "There should be " + TOTAL_SOURCES + " values stored in the sources container model.")
 
-  info("Source labels: " + gSources.labels.toSource());
+  info("Source labels: " + gSources.attachments.toSource());
   info("Source values: " + gSources.values.toSource());
 
-  is(gSources.labels[0], "code_function-search-01.js",
+  is(gSources.attachments[0].label, "code_function-search-01.js",
     "The first source label is correct.");
   ok(gSources.values[0].contains("code_function-search-01.js"),
     "The first source value appears to be correct.");
 
-  is(gSources.labels[1], "code_function-search-02.js",
+  is(gSources.attachments[1].label, "code_function-search-02.js",
     "The second source label is correct.");
   ok(gSources.values[1].contains("code_function-search-02.js"),
     "The second source value appears to be correct.");
 
-  is(gSources.labels[2], "code_function-search-03.js",
+  is(gSources.attachments[2].label, "code_function-search-03.js",
     "The third source label is correct.");
   ok(gSources.values[2].contains("code_function-search-03.js"),
     "The third source value appears to be correct.");
 
-  is(gSources.labels[3], "doc_function-search.html",
+  is(gSources.attachments[3].label, "doc_function-search.html",
     "The third source label is correct.");
   ok(gSources.values[3].contains("doc_function-search.html"),
     "The third source value appears to be correct.");

@@ -48,15 +48,13 @@ function testSourcesDisplay() {
   ok(gSources.containsValue(EXAMPLE_URL + gLabel2 + gParams),
     "Second source url is incorrect.");
 
-  ok(gSources.containsLabel(gLabel1),
+  ok(gSources.getItemForAttachment(e => e.label == gLabel1),
     "First source label is incorrect.");
-  ok(gSources.containsLabel(gLabel2),
+  ok(gSources.getItemForAttachment(e => e.label == gLabel2),
     "Second source label is incorrect.");
 
   ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gSources.selectedLabel, gLabel2,
-    "The selected label is the sources pane is incorrect.");
   is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
     "The selected value is the sources pane is incorrect.");
 
@@ -76,7 +74,7 @@ function testSourcesDisplay() {
       "The debugged line is highlighted appropriately.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
-    gSources.selectedLabel = gLabel1;
+    gSources.selectedItem = e => e.attachment.label == gLabel1;
   });
 
   return deferred.promise;
@@ -87,8 +85,6 @@ function testSwitchPaused1() {
 
   ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gSources.selectedLabel, gLabel1,
-    "The selected label is the sources pane is incorrect.");
   is(gSources.selectedValue, EXAMPLE_URL + gLabel1,
     "The selected value is the sources pane is incorrect.");
 
@@ -108,7 +104,7 @@ function testSwitchPaused1() {
       "The debugged line highlight was removed.");
 
     waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN).then(deferred.resolve);
-    gSources.selectedLabel = gLabel2;
+    gSources.selectedItem = e => e.attachment.label == gLabel2;
   });
 
   return deferred.promise;
@@ -119,8 +115,6 @@ function testSwitchPaused2() {
 
   ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gSources.selectedLabel, gLabel2,
-    "The selected label is the sources pane is incorrect.");
   is(gSources.selectedValue, EXAMPLE_URL + gLabel2 + gParams,
     "The selected value is the sources pane is incorrect.");
 
@@ -157,8 +151,6 @@ function testSwitchRunning() {
 
   ok(gSources.selectedItem,
     "There should be a selected item in the sources pane.");
-  is(gSources.selectedLabel, gLabel1,
-    "The selected label is the sources pane is incorrect.");
   is(gSources.selectedValue, EXAMPLE_URL + gLabel1,
     "The selected value is the sources pane is incorrect.");
 

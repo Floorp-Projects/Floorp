@@ -104,7 +104,7 @@ function combineWithTokenColonSearch() {
 }
 
 function verifySourceAndCaret(aUrl, aLine, aColumn, aSelection) {
-  ok(gSources.selectedItem.label.contains(aUrl),
+  ok(gSources.selectedItem.attachment.label.contains(aUrl),
     "The selected item's label appears to be correct.");
   ok(gSources.selectedItem.value.contains(aUrl),
     "The selected item's value appears to be correct.");
