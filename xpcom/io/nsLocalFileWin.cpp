@@ -2150,6 +2150,11 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
     return CopyMove(newParentDir, newName, false, true);
 }
 
+NS_IMETHODIMP
+nsLocalFile::RenameTo(nsIFile *newParentDir, const nsAString & newName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsLocalFile::Load(PRLibrary * *_retval)

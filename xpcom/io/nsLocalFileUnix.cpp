@@ -2000,6 +2000,13 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
     SET_UCS_2ARGS_2(MoveToNative, newParentDir, newName);
 }
+
+NS_IMETHODIMP
+nsLocalFile::RenameTo(nsIFile *newParentDir, const nsAString &newName)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsLocalFile::GetTarget(nsAString &_retval)
 {   
