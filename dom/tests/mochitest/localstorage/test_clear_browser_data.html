@@ -191,7 +191,7 @@ function browserLoadEvent() {
   setupStorage(gBrowserStorage.localStorage);
   setupStorage(gBrowserStorage.sessionStorage);
 
-  frames[1].postMessage("clear", "http://www.example.com");
+  frames[1].postMessage("clear", "*");
 
   waitForClearBrowserData();
 };
