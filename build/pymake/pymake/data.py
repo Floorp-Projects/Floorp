@@ -1590,13 +1590,8 @@ class _RemakeContext(object):
     def remakecb(self, error, didanything):
         assert error in (True, False)
 
-        if error:
-            if self.required:
-                self.cb(remade=False, error=util.MakeError(
-                    'Error remaking required makefiles'))
-                return
-            else:
-                print 'Error remaking makefiles (ignored)'
+        if error and self.required:
+            print "Error remaking makefiles (ignored)"
 
         if len(self.toremake):
             target, self.required = self.toremake.pop(0)
