@@ -631,6 +631,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineStrCharAt(CallInfo &callInfo);
 
     // RegExp natives.
+    InliningStatus inlineRegExpExec(CallInfo &callInfo);
     InliningStatus inlineRegExpTest(CallInfo &callInfo);
 
     // Array intrinsics.
