@@ -1257,8 +1257,7 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
     scrollOffset.y = scrollableRect.y;
   }
 
-  CSSRect shiftedDisplayPort = displayPort + scrollOffset;
-  return scrollableRect.ClampRect(shiftedDisplayPort) - scrollOffset;
+  return displayPort.ForceInside(scrollableRect - scrollOffset);
 }
 
 void AsyncPanZoomController::ScheduleComposite() {
