@@ -107,7 +107,7 @@ static SECItem *
 ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena, 
                                        CERTOCSPRequest *request,
                                        const char *location,
-				       const char *mechanism,
+				       const char *method,
 				       PRTime time,
                                        PRBool addServiceLocator,
                                        void *pwArg,
@@ -750,14 +750,23 @@ static PRBool
 ocsp_IsCacheItemFresh(OCSPCacheItem *cacheItem)
 {
     PRTime now;
-    PRBool retval;
+    PRBool fresh;
 
-    PR_EnterMonitor(OCSP_Global.monitor);
     now = PR_Now();
-    retval = (cacheItem->nextFetchAttemptTime > now);
-    OCSP_TRACE(("OCSP ocsp_IsCacheItemFresh: %d\n", retval));
-    PR_ExitMonitor(OCSP_Global.monitor);
-    return retval;
+
+    fresh = cacheItem->nextFetchAttemptTime > now;
+
+    /* Work around broken OCSP responders that return unknown responses for
+     * certificates, especially certificates that were just recently issued.
+     */
+    if (fresh && cacheItem->certStatusArena &&
+        cacheItem->certStatus.certStatusType == ocspCertStatus_unknown) {
+        fresh = PR_FALSE;
+    }
+
+    OCSP_TRACE(("OCSP ocsp_IsCacheItemFresh: %d\n", fresh));
+
+    return fresh;
 }
 
 /*
@@ -784,6 +793,19 @@ ocsp_CreateOrUpdateCacheEntry(OCSPCacheData *cache,
     PORT_Assert(OCSP_Global.maxCacheEntries >= 0);
   
     cacheItem = ocsp_FindCacheEntry(cache, certID);
+
+    /* Don't replace an unknown or revoked entry with an error entry, even if
+     * the existing entry is expired. Instead, we'll continue to use the
+     * existing (possibly expired) cache entry until we receive a valid signed
+     * response to replace it.
+     */
+    if (!single && cacheItem && cacheItem->certStatusArena &&
+        (cacheItem->certStatus.certStatusType == ocspCertStatus_revoked ||
+         cacheItem->certStatus.certStatusType == ocspCertStatus_unknown)) {
+        PR_ExitMonitor(OCSP_Global.monitor);
+        return SECSuccess;
+    }
+
     if (!cacheItem) {
         CERTOCSPCertID *myCertID;
         if (certIDWasConsumed) {
@@ -1629,8 +1651,8 @@ loser:
  * results in a NULL being returned (and an appropriate error set).
  */
 SECItem *
-CERT_GetSPKIDigest(PLArenaPool *arena, const CERTCertificate *cert,
-                           SECOidTag digestAlg, SECItem *fill)
+CERT_GetSubjectPublicKeyDigest(PLArenaPool *arena, const CERTCertificate *cert,
+                               SECOidTag digestAlg, SECItem *fill)
 {
     SECItem spk;
 
@@ -1716,19 +1738,19 @@ ocsp_CreateCertID(PLArenaPool *arena, CERTCertificate *cert, PRTime time)
         goto loser;
     }
 
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_SHA1,
-				   &(certID->issuerKeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_SHA1,
+				       &certID->issuerKeyHash) == NULL) {
 	goto loser;
     }
     certID->issuerSHA1KeyHash.data = certID->issuerKeyHash.data;
     certID->issuerSHA1KeyHash.len = certID->issuerKeyHash.len;
     /* cache the other two hash algorithms as well */
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_MD5,
-				   &(certID->issuerMD5KeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_MD5,
+				       &certID->issuerMD5KeyHash) == NULL) {
 	goto loser;
     }
-    if (CERT_GetSPKIDigest(arena, issuerCert, SEC_OID_MD2,
-				   &(certID->issuerMD2KeyHash)) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(arena, issuerCert, SEC_OID_MD2,
+				       &certID->issuerMD2KeyHash) == NULL) {
 	goto loser;
     }
 
@@ -3467,7 +3489,7 @@ loser:
 }
 
 /*
- * FUNCTION: CERT_GetEncodedOCSPResponseByMechanism
+ * FUNCTION: CERT_GetEncodedOCSPResponseByMethod
  *   Creates and sends a request to an OCSP responder, then reads and
  *   returns the (encoded) response.
  * INPUTS:
@@ -3485,10 +3507,10 @@ loser:
  *     sent and whether there are any trusted responders in place.
  *   const char *location
  *     The location of the OCSP responder (a URL).
- *   const char *mechanism
- *     The protocol mechanisms used when retrieving the OCSP response.
+ *   const char *method
+ *     The protocol method used when retrieving the OCSP response.
  *     Currently support: "GET" (http GET) and "POST" (http POST).
- *     Additionals mechanisms for http or other protocols might be added
+ *     Additionals methods for http or other protocols might be added
  *     in the future.
  *   PRTime time
  *     Indicates the time for which the certificate status is to be 
@@ -3518,19 +3540,19 @@ loser:
  *   Other errors are low-level problems (no memory, bad database, etc.).
  */
 SECItem *
-CERT_GetEncodedOCSPResponseByMechanism(PLArenaPool *arena, CERTCertList *certList,
-				       const char *location, const char *mechanism,
-				       PRTime time, PRBool addServiceLocator,
-				       CERTCertificate *signerCert, void *pwArg,
-				       CERTOCSPRequest **pRequest)
+CERT_GetEncodedOCSPResponseByMethod(PLArenaPool *arena, CERTCertList *certList,
+				    const char *location, const char *method,
+				    PRTime time, PRBool addServiceLocator,
+				    CERTCertificate *signerCert, void *pwArg,
+				    CERTOCSPRequest **pRequest)
 {
     CERTOCSPRequest *request;
     request = CERT_CreateOCSPRequest(certList, time, addServiceLocator,
                                      signerCert);
     if (!request)
         return NULL;
-    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location, 
-                                                  mechanism, time, addServiceLocator, 
+    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location,
+                                                  method, time, addServiceLocator,
                                                   pwArg, pRequest);
 }
 
@@ -3540,7 +3562,7 @@ CERT_GetEncodedOCSPResponseByMechanism(PLArenaPool *arena, CERTCertList *certLis
  *   returns the (encoded) response.
  *
  * This is a legacy API that behaves identically to
- * CERT_GetEncodedOCSPResponseByMechanism using the "POST" mechanism.
+ * CERT_GetEncodedOCSPResponseByMethod using the "POST" method.
  */
 SECItem *
 CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
@@ -3549,9 +3571,9 @@ CERT_GetEncodedOCSPResponse(PLArenaPool *arena, CERTCertList *certList,
 			    CERTCertificate *signerCert, void *pwArg,
 			    CERTOCSPRequest **pRequest)
 {
-    return CERT_GetEncodedOCSPResponseByMechanism(arena, certList, location,
-                                                  "POST", time, addServiceLocator,
-						  signerCert, pwArg, pRequest);
+    return CERT_GetEncodedOCSPResponseByMethod(arena, certList, location,
+					       "POST", time, addServiceLocator,
+					       signerCert, pwArg, pRequest);
 }
 
 /* URL encode a buffer that consists of base64-characters, only,
@@ -3624,7 +3646,7 @@ static SECItem *
 ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena,
                                        CERTOCSPRequest *request,
                                        const char *location,
-				       const char *mechanism,
+				       const char *method,
 				       PRTime time,
                                        PRBool addServiceLocator,
                                        void *pwArg,
@@ -3646,10 +3668,10 @@ ocsp_GetEncodedOCSPResponseFromRequest(PLArenaPool *arena,
     if (encodedRequest == NULL)
 	goto loser;
 
-    if (!strcmp(mechanism, "GET")) {
+    if (!strcmp(method, "GET")) {
         encodedResponse = cert_GetOCSPResponse(arena, location, encodedRequest);
     }
-    else if (!strcmp(mechanism, "POST")) {
+    else if (!strcmp(method, "POST")) {
         encodedResponse = CERT_PostOCSPRequest(arena, location, encodedRequest);
     }
     else {
@@ -3673,7 +3695,7 @@ static SECItem *
 cert_FetchOCSPResponse(PLArenaPool *arena,  const char *location, 
                        const SECItem *encodedRequest);
 
-/* using HTTP GET mechanism */
+/* using HTTP GET method */
 static SECItem *
 cert_GetOCSPResponse(PLArenaPool *arena, const char *location, 
                      const SECItem *encodedRequest)
@@ -3683,7 +3705,7 @@ cert_GetOCSPResponse(PLArenaPool *arena, const char *location,
     size_t pathLength;
     PRInt32 urlEncodedBufLength;
     size_t base64size;
-    unsigned char b64ReqBuf[max_get_request_size+1];
+    char b64ReqBuf[max_get_request_size+1];
     size_t slashLengthIfNeeded = 0;
     size_t getURLLength;
     SECItem *item;
@@ -3705,7 +3727,8 @@ cert_GetOCSPResponse(PLArenaPool *arena, const char *location,
 	return NULL;
     }
     memset(b64ReqBuf, 0, sizeof(b64ReqBuf));
-    PL_Base64Encode(encodedRequest->data, encodedRequest->len, b64ReqBuf);
+    PL_Base64Encode((const char*)encodedRequest->data, encodedRequest->len,
+		    b64ReqBuf);
 
     urlEncodedBufLength = ocsp_UrlEncodeBase64Buf(b64ReqBuf, NULL);
     getURLLength = pathLength + urlEncodedBufLength + slashLengthIfNeeded;
@@ -3777,7 +3800,7 @@ ocsp_GetEncodedOCSPResponseForSingleCert(PLArenaPool *arena,
                                          CERTOCSPCertID *certID, 
                                          CERTCertificate *singleCert, 
                                          const char *location,
-					 const char *mechanism,
+					 const char *method,
 					 PRTime time,
                                          PRBool addServiceLocator,
                                          void *pwArg,
@@ -3788,8 +3811,8 @@ ocsp_GetEncodedOCSPResponseForSingleCert(PLArenaPool *arena,
                                                addServiceLocator, NULL);
     if (!request)
         return NULL;
-    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location, 
-                                                  mechanism, time, addServiceLocator, 
+    return ocsp_GetEncodedOCSPResponseFromRequest(arena, request, location,
+                                                  method, time, addServiceLocator,
                                                   pwArg, pRequest);
 }
 
@@ -3880,19 +3903,22 @@ ocsp_matchcert(SECItem *certIndex,CERTCertificate *testCert)
     item.data = buf;
     item.len = SHA1_LENGTH;
 
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_SHA1, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_SHA1,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
 	return PR_TRUE;
     }
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_MD5, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_MD5,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
 	return PR_TRUE;
     }
-    if (CERT_GetSPKIDigest(NULL,testCert,SEC_OID_MD2, &item) == NULL) {
+    if (CERT_GetSubjectPublicKeyDigest(NULL,testCert,SEC_OID_MD2,
+				       &item) == NULL) {
 	return PR_FALSE;
     }
     if  (SECITEM_ItemsAreEqual(certIndex,&item)) {
@@ -4445,7 +4471,7 @@ ocsp_AuthorizedResponderForCertID(CERTCertDBHandle *handle,
 
     hashAlg = SECOID_FindOIDTag(&certID->hashAlgorithm.algorithm);
 
-    keyHash = CERT_GetSPKIDigest(NULL, signerCert, hashAlg, NULL);
+    keyHash = CERT_GetSubjectPublicKeyDigest(NULL, signerCert, hashAlg, NULL);
     if (keyHash != NULL) {
 
         keyHashEQ =
@@ -4492,7 +4518,7 @@ ocsp_AuthorizedResponderForCertID(CERTCertDBHandle *handle,
         return PR_FALSE;
     }
 
-    keyHash = CERT_GetSPKIDigest(NULL, issuerCert, hashAlg, NULL);
+    keyHash = CERT_GetSubjectPublicKeyDigest(NULL, issuerCert, hashAlg, NULL);
     nameHash = CERT_GetSubjectNameDigest(NULL, issuerCert, hashAlg, NULL);
 
     CERT_DestroyCertificate(issuerCert);
@@ -4911,7 +4937,7 @@ ocsp_SingleResponseCertHasGoodStatus(CERTOCSPSingleResponse *single,
     return ocsp_CertHasGoodStatus(single->certStatus, time);
 }
 
-/* Return value SECFailure means: not found or not fresh.
+/* SECFailure means the arguments were invalid.
  * On SECSuccess, the out parameters contain the OCSP status.
  * rvOcsp contains the overall result of the OCSP operation.
  * Depending on input parameter ignoreGlobalOcspFailureSetting,
@@ -4919,34 +4945,39 @@ ocsp_SingleResponseCertHasGoodStatus(CERTOCSPSingleResponse *single,
  * If the cached attempt to obtain OCSP information had resulted
  * in a failure, missingResponseError shows the error code of
  * that failure.
+ * cacheFreshness is ocspMissing if no entry was found,
+ *                   ocspFresh if a fresh entry was found, or
+ *                   ocspStale if a stale entry was found.
  */
 SECStatus
-ocsp_GetCachedOCSPResponseStatusIfFresh(CERTOCSPCertID *certID, 
-                                        PRTime time,
-                                        PRBool ignoreGlobalOcspFailureSetting,
-                                        SECStatus *rvOcsp,
-                                        SECErrorCodes *missingResponseError)
+ocsp_GetCachedOCSPResponseStatus(CERTOCSPCertID *certID,
+                                 PRTime time,
+                                 PRBool ignoreGlobalOcspFailureSetting,
+                                 SECStatus *rvOcsp,
+                                 SECErrorCodes *missingResponseError,
+                                 OCSPFreshness *cacheFreshness)
 {
     OCSPCacheItem *cacheItem = NULL;
-    SECStatus rv = SECFailure;
   
-    if (!certID || !missingResponseError || !rvOcsp) {
+    if (!certID || !missingResponseError || !rvOcsp || !cacheFreshness) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
     *rvOcsp = SECFailure;
     *missingResponseError = 0;
+    *cacheFreshness = ocspMissing;
   
     PR_EnterMonitor(OCSP_Global.monitor);
     cacheItem = ocsp_FindCacheEntry(&OCSP_Global.cache, certID);
-    if (cacheItem && ocsp_IsCacheItemFresh(cacheItem)) {
+    if (cacheItem) {
+        *cacheFreshness = ocsp_IsCacheItemFresh(cacheItem) ? ocspFresh
+                                                           : ocspStale;
         /* having an arena means, we have a cached certStatus */
         if (cacheItem->certStatusArena) {
             *rvOcsp = ocsp_CertHasGoodStatus(&cacheItem->certStatus, time);
             if (*rvOcsp != SECSuccess) {
                 *missingResponseError = PORT_GetError();
             }
-            rv = SECSuccess;
         } else {
             /*
              * No status cached, the previous attempt failed.
@@ -4954,17 +4985,17 @@ ocsp_GetCachedOCSPResponseStatusIfFresh(CERTOCSPCertID *certID,
              * However, if OCSP is optional, a recent OCSP failure is
              * an allowed good state.
              */
-            if (!ignoreGlobalOcspFailureSetting &&
+            if (*cacheFreshness == ocspFresh &&
+                !ignoreGlobalOcspFailureSetting &&
                 OCSP_Global.ocspFailureMode == 
                     ocspMode_FailureIsNotAVerificationFailure) {
-                rv = SECSuccess;
                 *rvOcsp = SECSuccess;
             }
             *missingResponseError = cacheItem->missingResponseError;
         }
     }
     PR_ExitMonitor(OCSP_Global.monitor);
-    return rv;
+    return SECSuccess;
 }
 
 PRBool
@@ -5035,9 +5066,10 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
 {
     CERTOCSPCertID *certID;
     PRBool certIDWasConsumed = PR_FALSE;
-    SECStatus rv = SECFailure;
+    SECStatus rv;
     SECStatus rvOcsp;
-    SECErrorCodes dummy_error_code; /* we ignore this */
+    SECErrorCodes cachedErrorCode;
+    OCSPFreshness cachedResponseFreshness;
   
     OCSP_TRACE_CERT(cert);
     OCSP_TRACE_TIME("## requested validity time:", time);
@@ -5045,21 +5077,41 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     certID = CERT_CreateOCSPCertID(cert, time);
     if (!certID)
         return SECFailure;
-    rv = ocsp_GetCachedOCSPResponseStatusIfFresh(
+    rv = ocsp_GetCachedOCSPResponseStatus(
         certID, time, PR_FALSE, /* ignoreGlobalOcspFailureSetting */
-        &rvOcsp, &dummy_error_code);
-    if (rv == SECSuccess) {
+        &rvOcsp, &cachedErrorCode, &cachedResponseFreshness);
+    if (rv != SECSuccess) {
+        CERT_DestroyOCSPCertID(certID);
+        return SECFailure;
+    }
+    if (cachedResponseFreshness == ocspFresh) {
         CERT_DestroyOCSPCertID(certID);
         return rvOcsp;
     }
-    rv = ocsp_GetOCSPStatusFromNetwork(handle, certID, cert, time, pwArg, 
+
+    rv = ocsp_GetOCSPStatusFromNetwork(handle, certID, cert, time, pwArg,
                                        &certIDWasConsumed, 
                                        &rvOcsp);
     if (rv != SECSuccess) {
-        /* we were unable to obtain ocsp status. Check if we should
-         * return cert status revoked. */
-        rvOcsp = ocsp_FetchingFailureIsVerificationFailure() ?
-            SECFailure : SECSuccess;
+        PRErrorCode err = PORT_GetError();
+        if (ocsp_FetchingFailureIsVerificationFailure()) {
+            PORT_SetError(err);
+            rvOcsp = SECFailure;
+        } else if (cachedResponseFreshness == ocspStale &&
+                   (cachedErrorCode == SEC_ERROR_OCSP_UNKNOWN_CERT ||
+                    cachedErrorCode == SEC_ERROR_REVOKED_CERTIFICATE)) {
+            /* If we couldn't get a response for a certificate that the OCSP
+             * responder previously told us was bad, then assume it is still
+             * bad until we hear otherwise, as it is very unlikely that the
+             * certificate status has changed from "revoked" to "good" and it
+             * is also unlikely that the certificate status has changed from
+             * "unknown" to "good", except for some buggy OCSP responders.
+             */
+            PORT_SetError(cachedErrorCode);
+            rvOcsp = SECFailure;
+        } else {
+            rvOcsp = SECSuccess;
+        }
     }
     if (!certIDWasConsumed) {
         CERT_DestroyOCSPCertID(certID);
@@ -5109,6 +5161,7 @@ CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
     SECErrorCodes dummy_error_code; /* we ignore this */
     CERTOCSPResponse *decodedResponse = NULL;
     CERTOCSPSingleResponse *singleResponse = NULL;
+    OCSPFreshness freshness;
 
     /* The OCSP cache can be in three states regarding this certificate:
      *    + Good (cached, timely, 'good' response, or revoked in the future)
@@ -5156,10 +5209,14 @@ CERT_CacheOCSPResponseFromSideChannel(CERTCertDBHandle *handle,
     certID = CERT_CreateOCSPCertID(cert, time);
     if (!certID)
         return SECFailure;
-    rv = ocsp_GetCachedOCSPResponseStatusIfFresh(
-        certID, time, PR_FALSE, /* ignoreGlobalOcspFailureSetting */
-        &rvOcsp, &dummy_error_code);
-    if (rv == SECSuccess && rvOcsp == SECSuccess) {
+
+    /* We pass PR_TRUE for ignoreGlobalOcspFailureSetting so that a cached
+     * error entry is not interpreted as being a 'Good' entry here.
+     */
+    rv = ocsp_GetCachedOCSPResponseStatus(
+        certID, time, PR_TRUE, /* ignoreGlobalOcspFailureSetting */
+        &rvOcsp, &dummy_error_code, &freshness);
+    if (rv == SECSuccess && rvOcsp == SECSuccess && freshness == ocspFresh) {
         /* The cached value is good. We don't want to waste time validating
          * this OCSP response. This is the first column in the table above. */
         CERT_DestroyOCSPCertID(certID);
@@ -5278,22 +5335,21 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
      */
 
     do {
-	const char *mechanism;
+	const char *method;
 	PRBool validResponseWithAccurateInfo = PR_FALSE;
 	retry = PR_FALSE;
 	*rv_ocsp = SECFailure;
 
 	if (currentStage == stageGET) {
-	    mechanism = "GET";
-	} else if (currentStage == stagePOST) {
-	    mechanism = "POST";
+	    method = "GET";
 	} else {
-	    PORT_Assert(0); /* our code is flawed */
+	    PORT_Assert(currentStage == stagePOST);
+	    method = "POST";
 	}
 
 	encodedResponse = 
 	    ocsp_GetEncodedOCSPResponseForSingleCert(NULL, certID, cert,
-						     location, mechanism,
+						     location, method,
 						     time, locationIsDefault,
 						     pwArg, &request);
 
@@ -5308,6 +5364,8 @@ ocsp_GetOCSPStatusFromNetwork(CERTCertDBHandle *handle,
 		    case ocspCertStatus_good:
 		    case ocspCertStatus_revoked:
 			validResponseWithAccurateInfo = PR_TRUE;
+			break;
+		    default:
 			break;
 		}
 		*rv_ocsp = ocsp_SingleResponseCertHasGoodStatus(singleResponse, time);
