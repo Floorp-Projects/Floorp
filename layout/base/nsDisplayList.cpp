@@ -706,7 +706,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
       ScreenIntRect screenBounds = ScreenIntRect::FromUnknownRect(mozilla::gfx::IntRect(
           bounds.x, bounds.y, bounds.width, bounds.height));
       AdjustForScrollBars(screenBounds, scrollableFrame);
-      metrics.mCompositionBounds = screenBounds.ClampRect(metrics.mCompositionBounds);
+      metrics.mCompositionBounds = metrics.mCompositionBounds.ForceInside(screenBounds);
       useWidgetBounds = true;
     }
   }
