@@ -27,7 +27,7 @@
 JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
                                js::HandleId id, unsigned *attrsp)
 {
-    js::types::MarkTypePropertyConfigured(cx, obj, id);
+    js::types::MarkTypePropertyNonData(cx, obj, id);
     js::GenericAttributesOp op = obj->getOps()->setGenericAttributes;
     return (op ? op : js::baseops::SetAttributes)(cx, obj, id, attrsp);
 }
@@ -45,7 +45,7 @@ JSObject::deleteProperty(JSContext *cx, js::HandleObject obj, js::HandleProperty
                          bool *succeeded)
 {
     JS::RootedId id(cx, js::NameToId(name));
-    js::types::MarkTypePropertyConfigured(cx, obj, id);
+    js::types::MarkTypePropertyNonData(cx, obj, id);
     js::DeletePropertyOp op = obj->getOps()->deleteProperty;
     return (op ? op : js::baseops::DeleteProperty)(cx, obj, name, succeeded);
 }
@@ -56,7 +56,7 @@ JSObject::deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index, boo
     JS::RootedId id(cx);
     if (!js::IndexToId(cx, index, &id))
         return false;
-    js::types::MarkTypePropertyConfigured(cx, obj, id);
+    js::types::MarkTypePropertyNonData(cx, obj, id);
     js::DeleteElementOp op = obj->getOps()->deleteElement;
     return (op ? op : js::baseops::DeleteElement)(cx, obj, index, succeeded);
 }
@@ -66,7 +66,7 @@ JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId
                         bool *succeeded)
 {
     JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-    js::types::MarkTypePropertyConfigured(cx, obj, id);
+    js::types::MarkTypePropertyNonData(cx, obj, id);
     js::DeleteSpecialOp op = obj->getOps()->deleteSpecial;
     return (op ? op : js::baseops::DeleteSpecial)(cx, obj, sid, succeeded);
 }
