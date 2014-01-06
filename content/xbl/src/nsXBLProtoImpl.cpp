@@ -53,12 +53,11 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // class object in the bound document that represents the concrete version of this implementation.
   // This function also has the side effect of building up the prototype implementation if it has
   // not been built already.
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
   JS::Rooted<JSObject*> targetClassObject(cx, nullptr);
   bool targetObjectIsNew = false;
   nsresult rv = InitTargetObjects(aPrototypeBinding,
                                   aBinding->GetBoundElement(),
-                                  getter_AddRefs(holder), &targetClassObject,
+                                  &targetClassObject,
                                   &targetObjectIsNew);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
   MOZ_ASSERT(targetClassObject);
@@ -69,8 +68,6 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
   // If the prototype already existed, we don't need to install anything. return early.
   if (!targetObjectIsNew)
     return NS_OK;
-
-  JS::Rooted<JSObject*> targetScriptObject(cx, holder->GetJSObject());
 
   // We want to define the canonical set of members in a safe place. If we're
   // using a separate XBL scope, we want to define them there first (so that
@@ -147,13 +144,11 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aPrototypeBinding,
 nsresult 
 nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
                                   nsIContent* aBoundElement, 
-                                  nsIXPConnectJSObjectHolder** aScriptObjectHolder, 
                                   JS::MutableHandle<JSObject*> aTargetClassObject,
                                   bool* aTargetIsNew)
 {
   nsresult rv = NS_OK;
-  *aScriptObjectHolder = nullptr;
-  
+
   if (!mClassObject) {
     rv = CompilePrototypeMembers(aBinding); // This is the first time we've ever installed this binding on an element.
                                  // We need to go ahead and compile all methods and properties on a class
@@ -175,7 +170,6 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // class for the concrete implementation in the bound document.
   AutoJSContext cx;
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
   JS::Rooted<JS::Value> v(cx);
 
   {
@@ -186,8 +180,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
     dom::XULElementBinding::GetConstructorObject(cx, global, defineOnGlobal);
   }
 
-  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v,
-                                  getter_AddRefs(wrapper));
+  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v);
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JSObject*> value(cx, &v.toObject());
@@ -203,8 +196,6 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
 
   aBoundElement->PreserveWrapper(aBoundElement);
 
-  wrapper.swap(*aScriptObjectHolder);
-  
   return rv;
 }
 
