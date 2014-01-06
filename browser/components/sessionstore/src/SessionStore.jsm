@@ -102,6 +102,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
   "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
@@ -959,7 +961,7 @@ let SessionStoreInternal = {
           // Let everyone know we're done.
           this._deferredInitialized.resolve();
         }
-      }, Cu.reportError);
+      }, console.error);
     };
 
     aWindow.addEventListener("load", onload);
@@ -3136,7 +3138,7 @@ let SessionStoreInternal = {
                              cookie.value, !!cookie.secure, !!cookie.httponly, true,
                              "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
       }
-      catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
+      catch (ex) { console.error(ex); } // don't let a single cookie stop recovering
     }
   },
 

@@ -12,6 +12,8 @@ const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
@@ -104,7 +106,7 @@ let SessionStorageInternal = {
           storage.setItem(key, value);
         } catch (e) {
           // throws e.g. for URIs that can't have sessionStorage
-          Cu.reportError(e);
+          console.error(e);
         }
       }
     }
