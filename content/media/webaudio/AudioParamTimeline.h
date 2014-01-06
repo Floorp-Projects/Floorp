@@ -50,15 +50,7 @@ public:
   // getting the value of an a-rate AudioParam for each tick inside an
   // AudioNodeEngine implementation.
   template<class TimeType>
-  float GetValueAtTime(TimeType aTime, size_t aCounter = 0)
-  {
-    MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
-    MOZ_ASSERT(!aCounter || !HasSimpleValue());
-
-    // Mix the value of the AudioParam itself with that of the AudioNode inputs.
-    return BaseClass::GetValueAtTime(static_cast<TimeType>(aTime + aCounter)) +
-           (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
-  }
+  float GetValueAtTime(TimeType aTime, size_t aCounter = 0);
 
 private:
   float AudioNodeInputValue(size_t aCounter) const;
@@ -67,6 +59,28 @@ protected:
   // This is created lazily when needed.
   nsRefPtr<MediaStream> mStream;
 };
+
+template<> inline float
+AudioParamTimeline::GetValueAtTime(double aTime, size_t aCounter)
+{
+  MOZ_ASSERT(!aCounter);
+
+  // Getting an AudioParam value on an AudioNode does not consider input from
+  // other AudioNodes, which is managed only on the graph thread.
+  return BaseClass::GetValueAtTime(aTime);
+}
+
+
+template<> inline float
+AudioParamTimeline::GetValueAtTime(int64_t aTime, size_t aCounter)
+{
+  MOZ_ASSERT(aCounter < WEBAUDIO_BLOCK_SIZE);
+  MOZ_ASSERT(!aCounter || !HasSimpleValue());
+
+  // Mix the value of the AudioParam itself with that of the AudioNode inputs.
+  return BaseClass::GetValueAtTime(static_cast<int64_t>(aTime + aCounter)) +
+    (mStream ? AudioNodeInputValue(aCounter) : 0.0f);
+}
 
 }
 }
