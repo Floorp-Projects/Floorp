@@ -65,7 +65,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv * arg0, jcla
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
-        return NULL;
+        return nullptr;
     }
     return f_Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(arg0, arg1, arg2);
 }
@@ -236,7 +236,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(JNIEnv * arg0, jclass arg1, 
     if (!f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
-        return NULL;
+        return nullptr;
     }
     return f_Java_org_mozilla_gecko_GeckoAppShell_getSurfaceBits(arg0, arg1, arg2);
 }
@@ -559,7 +559,7 @@ Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv * arg0, jclass arg1) {
     if (!f_Java_org_mozilla_gecko_ANRReporter_getNativeStack) {
         arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
                        "JNI Function called before it was loaded");
-        return NULL;
+        return nullptr;
     }
     return f_Java_org_mozilla_gecko_ANRReporter_getNativeStack(arg0, arg1);
 }
