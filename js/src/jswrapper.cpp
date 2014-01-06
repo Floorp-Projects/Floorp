@@ -665,7 +665,7 @@ bool
 SecurityWrapper<Base>::setPrototypeOf(JSContext *cx, HandleObject wrapper,
                                       HandleObject proto, bool *bp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
