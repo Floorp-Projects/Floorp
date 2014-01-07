@@ -25,7 +25,8 @@ class nsDOMDataChannel : public nsDOMEventTargetHelper,
                          public mozilla::DataChannelListener
 {
 public:
-  nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel);
+  nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel,
+                   nsPIDOMWindow* aWindow);
   ~nsDOMDataChannel();
 
   nsresult Init(nsPIDOMWindow* aDOMWindow);

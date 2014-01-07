@@ -89,6 +89,7 @@ nsDOMEventTargetHelper::~nsDOMEventTargetHelper()
 void
 nsDOMEventTargetHelper::BindToOwner(nsPIDOMWindow* aOwner)
 {
+  MOZ_ASSERT(!aOwner || aOwner->IsInnerWindow());
   nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOwner);
   BindToOwner(glob);
 }

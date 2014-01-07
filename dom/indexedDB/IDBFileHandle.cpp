@@ -35,6 +35,11 @@ GetFileFor(FileInfo* aFileInfo)
 
 } // anonymous namespace
 
+IDBFileHandle::IDBFileHandle(IDBDatabase* aOwner)
+  : FileHandle(aOwner)
+{
+}
+
 // virtual
 JSObject*
 IDBFileHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
@@ -54,9 +59,7 @@ IDBFileHandle::Create(IDBDatabase* aDatabase,
   nsRefPtr<FileInfo> fileInfo(aFileInfo);
   NS_ASSERTION(fileInfo, "Null pointer!");
 
-  nsRefPtr<IDBFileHandle> newFile = new IDBFileHandle();
-
-  newFile->BindToOwner(aDatabase);
+  nsRefPtr<IDBFileHandle> newFile = new IDBFileHandle(aDatabase);
 
   newFile->mFileStorage = aDatabase;
   newFile->mName = aName;

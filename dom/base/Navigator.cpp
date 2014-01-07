@@ -1084,8 +1084,8 @@ Navigator::GetBattery(ErrorResult& aRv)
     }
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mBatteryManager = new battery::BatteryManager();
-    mBatteryManager->Init(mWindow);
+    mBatteryManager = new battery::BatteryManager(mWindow);
+    mBatteryManager->Init();
   }
 
   return mBatteryManager;
