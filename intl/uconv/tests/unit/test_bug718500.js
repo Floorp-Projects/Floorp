@@ -73,11 +73,6 @@ var encoderList = [
   "x-mac-gujarati",
   "x-mac-hebrew",
 
-  "Adobe-Symbol-Encoding",
-  "x-zapf-dingbats",
-  "x-tscii",
-  "x-tamilttf-0",
-
   "IBM850",
   "IBM852",
   "IBM855",
