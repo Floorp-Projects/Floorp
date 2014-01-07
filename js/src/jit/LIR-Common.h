@@ -3216,6 +3216,29 @@ class LRegExp : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
+class LRegExpExec : public LCallInstructionHelper<BOX_PIECES, 2, 0>
+{
+  public:
+    LIR_HEADER(RegExpExec)
+
+    LRegExpExec(const LAllocation &regexp, const LAllocation &string)
+    {
+        setOperand(0, regexp);
+        setOperand(1, string);
+    }
+
+    const LAllocation *regexp() {
+        return getOperand(0);
+    }
+    const LAllocation *string() {
+        return getOperand(1);
+    }
+
+    const MRegExpExec *mir() const {
+        return mir_->toRegExpExec();
+    }
+};
+
 class LRegExpTest : public LCallInstructionHelper<1, 2, 0>
 {
   public:

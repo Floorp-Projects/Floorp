@@ -43,6 +43,15 @@ public:
     // All objects coming through here are WebIDL objects
     SetIsDOMBinding();
   }
+  nsDOMEventTargetHelper(nsDOMEventTargetHelper* aOther)
+    : mParentObject(nullptr)
+    , mOwnerWindow(nullptr)
+    , mHasOrHasHadOwnerWindow(false)
+  {
+    BindToOwner(aOther);
+    // All objects coming through here are WebIDL objects
+    SetIsDOMBinding();
+  }
 
   virtual ~nsDOMEventTargetHelper();
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

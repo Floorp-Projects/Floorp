@@ -145,6 +145,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitTruncateToInt32(MTruncateToInt32 *truncate);
     bool visitToString(MToString *convert);
     bool visitRegExp(MRegExp *ins);
+    bool visitRegExpExec(MRegExpExec *ins);
     bool visitRegExpTest(MRegExpTest *ins);
     bool visitLambda(MLambda *ins);
     bool visitLambdaPar(MLambdaPar *ins);

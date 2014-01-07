@@ -245,7 +245,7 @@ let NetworkHelper = {
       Ci.nsICachingChannel.LOAD_ONLY_FROM_CACHE |
       Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 
-    NetUtil.asyncFetch(channel, function (aInputStream, aStatusCode, aRequest) {
+    NetUtil.asyncFetch(channel, (aInputStream, aStatusCode, aRequest) => {
       if (!components.isSuccessCode(aStatusCode)) {
         aCallback(null);
         return;

@@ -177,7 +177,7 @@ GeckoAppShell* GeckoAppShell::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     GeckoAppShell* ret = new GeckoAppShell(obj, env);
@@ -205,11 +205,11 @@ void GeckoAppShell::AcknowledgeEvent() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, bool a5) {
@@ -240,11 +240,11 @@ void GeckoAppShell::AddPluginViewWrapper(jobject a0, jfloat a1, jfloat a2, jfloa
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::AlertsProgressListener_OnProgress(const nsAString& a0, int64_t a1, int64_t a2, const nsAString& a3) {
@@ -273,11 +273,11 @@ void GeckoAppShell::AlertsProgressListener_OnProgress(const nsAString& a0, int64
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CancelVibrate() {
@@ -300,11 +300,11 @@ void GeckoAppShell::CancelVibrate() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CheckURIVisited(const nsAString& a0) {
@@ -329,11 +329,11 @@ void GeckoAppShell::CheckURIVisited(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ClearMessageList(int32_t a0) {
@@ -356,11 +356,11 @@ void GeckoAppShell::ClearMessageList(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CloseCamera() {
@@ -383,11 +383,11 @@ void GeckoAppShell::CloseCamera() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CloseNotification(const nsAString& a0) {
@@ -412,11 +412,11 @@ void GeckoAppShell::CloseNotification(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArray a2, int32_t a3, int32_t a4, bool a5, int32_t a6) {
@@ -448,11 +448,11 @@ void GeckoAppShell::CreateMessageListWrapper(int64_t a0, int64_t a1, jobjectArra
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::CreateShortcut(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
@@ -481,11 +481,11 @@ void GeckoAppShell::CreateShortcut(const nsAString& a0, const nsAString& a1, con
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DeleteMessageWrapper(int32_t a0, int32_t a1) {
@@ -508,11 +508,11 @@ void GeckoAppShell::DeleteMessageWrapper(int32_t a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableBatteryNotifications() {
@@ -535,11 +535,11 @@ void GeckoAppShell::DisableBatteryNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableNetworkNotifications() {
@@ -562,11 +562,11 @@ void GeckoAppShell::DisableNetworkNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableScreenOrientationNotifications() {
@@ -589,11 +589,11 @@ void GeckoAppShell::DisableScreenOrientationNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::DisableSensor(int32_t a0) {
@@ -616,11 +616,11 @@ void GeckoAppShell::DisableSensor(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableBatteryNotifications() {
@@ -643,11 +643,11 @@ void GeckoAppShell::EnableBatteryNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableLocation(bool a0) {
@@ -670,11 +670,11 @@ void GeckoAppShell::EnableLocation(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableLocationHighAccuracy(bool a0) {
@@ -697,11 +697,11 @@ void GeckoAppShell::EnableLocationHighAccuracy(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableNetworkNotifications() {
@@ -724,11 +724,11 @@ void GeckoAppShell::EnableNetworkNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableScreenOrientationNotifications() {
@@ -751,11 +751,11 @@ void GeckoAppShell::EnableScreenOrientationNotifications() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::EnableSensor(int32_t a0) {
@@ -778,11 +778,11 @@ void GeckoAppShell::EnableSensor(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoAppShell::GetContext() {
@@ -805,7 +805,7 @@ jobject GeckoAppShell::GetContext() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -833,7 +833,7 @@ jdoubleArray GeckoAppShell::GetCurrentBatteryInformationWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -861,7 +861,7 @@ jdoubleArray GeckoAppShell::GetCurrentNetworkInformationWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -889,11 +889,11 @@ jfloat GeckoAppShell::GetDensity() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0.0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -917,11 +917,11 @@ int32_t GeckoAppShell::GetDpiWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -947,7 +947,7 @@ jstring GeckoAppShell::GetExtensionFromMimeTypeWrapper(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -978,7 +978,7 @@ jobjectArray GeckoAppShell::GetHandlersForMimeTypeWrapper(const nsAString& a0, c
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1009,7 +1009,7 @@ jobjectArray GeckoAppShell::GetHandlersForURLWrapper(const nsAString& a0, const 
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1039,7 +1039,7 @@ jbyteArray GeckoAppShell::GetIconForExtensionWrapper(const nsAString& a0, int32_
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1067,11 +1067,11 @@ void GeckoAppShell::GetMessageWrapper(int32_t a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
@@ -1096,7 +1096,7 @@ jstring GeckoAppShell::GetMimeTypeFromExtensionsWrapper(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1124,11 +1124,11 @@ void GeckoAppShell::GetNextMessageInListWrapper(int32_t a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::GetProxyForURIWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, int32_t a3) {
@@ -1157,7 +1157,7 @@ jstring GeckoAppShell::GetProxyForURIWrapper(const nsAString& a0, const nsAStrin
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1185,11 +1185,11 @@ int32_t GeckoAppShell::GetScreenDepthWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1213,11 +1213,11 @@ int16_t GeckoAppShell::GetScreenOrientationWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1241,11 +1241,11 @@ bool GeckoAppShell::GetShowPasswordSetting() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1269,7 +1269,7 @@ jintArray GeckoAppShell::GetSystemColoursWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1299,7 +1299,7 @@ jstring GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1327,11 +1327,11 @@ void GeckoAppShell::HideProgressDialog() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jintArray GeckoAppShell::InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
@@ -1360,7 +1360,7 @@ jintArray GeckoAppShell::InitCameraWrapper(const nsAString& a0, int32_t a1, int3
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1388,11 +1388,11 @@ bool GeckoAppShell::IsNetworkLinkKnown() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1416,11 +1416,11 @@ bool GeckoAppShell::IsNetworkLinkUp() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1444,11 +1444,11 @@ bool GeckoAppShell::IsTablet() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1472,11 +1472,11 @@ void GeckoAppShell::KillAnyZombies() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jclass GeckoAppShell::LoadPluginClass(const nsAString& a0, const nsAString& a1) {
@@ -1502,7 +1502,7 @@ jclass GeckoAppShell::LoadPluginClass(const nsAString& a0, const nsAString& a1) 
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -1530,11 +1530,11 @@ void GeckoAppShell::LockScreenOrientation(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::MarkURIVisited(const nsAString& a0) {
@@ -1559,11 +1559,11 @@ void GeckoAppShell::MarkURIVisited(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::MoveTaskToBack() {
@@ -1586,11 +1586,11 @@ void GeckoAppShell::MoveTaskToBack() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 int32_t GeckoAppShell::NetworkLinkType() {
@@ -1613,11 +1613,11 @@ int32_t GeckoAppShell::NetworkLinkType() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1641,11 +1641,11 @@ void GeckoAppShell::NotifyDefaultPrevented(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIME(int32_t a0) {
@@ -1668,11 +1668,11 @@ void GeckoAppShell::NotifyIME(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3) {
@@ -1701,11 +1701,11 @@ void GeckoAppShell::NotifyIMEChange(const nsAString& a0, int32_t a1, int32_t a2,
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAString& a2, const nsAString& a3) {
@@ -1734,11 +1734,11 @@ void GeckoAppShell::NotifyIMEContext(int32_t a0, const nsAString& a1, const nsAS
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyWakeLockChanged(const nsAString& a0, const nsAString& a1) {
@@ -1764,11 +1764,11 @@ void GeckoAppShell::NotifyWakeLockChanged(const nsAString& a0, const nsAString& 
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::NotifyXreExit() {
@@ -1791,11 +1791,11 @@ void GeckoAppShell::NotifyXreExit() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::OpenUriExternal(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4, const nsAString& a5) {
@@ -1826,11 +1826,11 @@ bool GeckoAppShell::OpenUriExternal(const nsAString& a0, const nsAString& a1, co
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1854,11 +1854,11 @@ void GeckoAppShell::PerformHapticFeedback(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::PumpMessageLoop() {
@@ -1881,11 +1881,11 @@ bool GeckoAppShell::PumpMessageLoop() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -1909,11 +1909,11 @@ void GeckoAppShell::RegisterSurfaceTextureFrameListener(jobject a0, int32_t a1) 
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::RemovePluginView(jobject a0, bool a1) {
@@ -1936,11 +1936,11 @@ void GeckoAppShell::RemovePluginView(jobject a0, bool a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
@@ -1966,11 +1966,11 @@ void GeckoAppShell::ScanMedia(const nsAString& a0, const nsAString& a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ScheduleRestart() {
@@ -1993,11 +1993,11 @@ void GeckoAppShell::ScheduleRestart() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SendMessageWrapper(const nsAString& a0, const nsAString& a1, int32_t a2) {
@@ -2025,11 +2025,11 @@ void GeckoAppShell::SendMessageWrapper(const nsAString& a0, const nsAString& a1,
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetFullScreen(bool a0) {
@@ -2052,11 +2052,11 @@ void GeckoAppShell::SetFullScreen(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetKeepScreenOn(bool a0) {
@@ -2079,11 +2079,11 @@ void GeckoAppShell::SetKeepScreenOn(bool a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::SetURITitle(const nsAString& a0, const nsAString& a1) {
@@ -2109,11 +2109,11 @@ void GeckoAppShell::SetURITitle(const nsAString& a0, const nsAString& a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4) {
@@ -2143,11 +2143,11 @@ void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAS
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) {
@@ -2172,11 +2172,11 @@ void GeckoAppShell::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) 
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jstring GeckoAppShell::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
@@ -2201,7 +2201,7 @@ jstring GeckoAppShell::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2231,7 +2231,7 @@ jstring GeckoAppShell::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2259,11 +2259,11 @@ void GeckoAppShell::ShowInputMethodPicker() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 bool GeckoAppShell::UnlockProfile() {
@@ -2286,11 +2286,11 @@ bool GeckoAppShell::UnlockProfile() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -2314,11 +2314,11 @@ void GeckoAppShell::UnlockScreenOrientation() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::UnregisterSurfaceTextureFrameListener(jobject a0) {
@@ -2341,11 +2341,11 @@ void GeckoAppShell::UnregisterSurfaceTextureFrameListener(jobject a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::Vibrate1(int64_t a0) {
@@ -2368,11 +2368,11 @@ void GeckoAppShell::Vibrate1(int64_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::VibrateA(jlongArray a0, int32_t a1) {
@@ -2395,11 +2395,11 @@ void GeckoAppShell::VibrateA(jlongArray a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass JavaDomKeyLocation::mDomKeyLocationClass = 0;
 jmethodID JavaDomKeyLocation::jvalueOf = 0;
@@ -2431,7 +2431,7 @@ JavaDomKeyLocation* JavaDomKeyLocation::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     JavaDomKeyLocation* ret = new JavaDomKeyLocation(obj, env);
@@ -2461,7 +2461,7 @@ jobject JavaDomKeyLocation::valueOf(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2489,7 +2489,7 @@ jobjectArray JavaDomKeyLocation::values() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2592,7 +2592,7 @@ GeckoJavaSampler* GeckoJavaSampler::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     GeckoJavaSampler* ret = new GeckoJavaSampler(obj, env);
@@ -2625,7 +2625,7 @@ jstring GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(int32_t a0, int32_t a
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2653,11 +2653,11 @@ jdouble GeckoJavaSampler::GetSampleTimeJavaProfiling(int32_t a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return 0.0;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -2681,7 +2681,7 @@ jstring GeckoJavaSampler::GetThreadNameJavaProfilingWrapper(int32_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -2709,11 +2709,11 @@ void GeckoJavaSampler::PauseJavaProfiling() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::StartJavaProfiling(int32_t a0, int32_t a1) {
@@ -2736,11 +2736,11 @@ void GeckoJavaSampler::StartJavaProfiling(int32_t a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::StopJavaProfiling() {
@@ -2763,11 +2763,11 @@ void GeckoJavaSampler::StopJavaProfiling() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoJavaSampler::UnpauseJavaProfiling() {
@@ -2790,11 +2790,11 @@ void GeckoJavaSampler::UnpauseJavaProfiling() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass SurfaceBits::mSurfaceBitsClass = 0;
 jmethodID SurfaceBits::jSurfaceBits = 0;
@@ -2818,7 +2818,7 @@ SurfaceBits* SurfaceBits::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     SurfaceBits* ret = new SurfaceBits(obj, env);
@@ -2841,7 +2841,7 @@ SurfaceBits::SurfaceBits() {
     }
 
     Init(env->NewObject(mSurfaceBitsClass, jSurfaceBits), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject SurfaceBits::getbuffer() {
@@ -2937,7 +2937,7 @@ ThumbnailHelper* ThumbnailHelper::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     ThumbnailHelper* ret = new ThumbnailHelper(obj, env);
@@ -2970,11 +2970,11 @@ void ThumbnailHelper::SendThumbnail(jobject a0, int32_t a1, bool a2) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass DisplayPortMetrics::mDisplayPortMetricsClass = 0;
 jmethodID DisplayPortMetrics::jDisplayPortMetrics = 0;
@@ -2994,7 +2994,7 @@ DisplayPortMetrics* DisplayPortMetrics::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     DisplayPortMetrics* ret = new DisplayPortMetrics(obj, env);
@@ -3024,7 +3024,7 @@ DisplayPortMetrics::DisplayPortMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a
     args[4].f = a4;
 
     Init(env->NewObjectA(mDisplayPortMetricsClass, jDisplayPortMetrics, args), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject DisplayPortMetrics::getMPosition() {
@@ -3060,7 +3060,7 @@ GLController* GLController::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     GLController* ret = new GLController(obj, env);
@@ -3088,7 +3088,7 @@ jobject GLController::CreateEGLSurfaceForCompositorWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3129,7 +3129,7 @@ GeckoLayerClient* GeckoLayerClient::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     GeckoLayerClient* ret = new GeckoLayerClient(obj, env);
@@ -3157,11 +3157,11 @@ void GeckoLayerClient::ActivateProgram() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoLayerClient::ContentDocumentChanged() {
@@ -3184,11 +3184,11 @@ void GeckoLayerClient::ContentDocumentChanged() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::CreateFrame() {
@@ -3211,7 +3211,7 @@ jobject GeckoLayerClient::CreateFrame() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3239,11 +3239,11 @@ void GeckoLayerClient::DeactivateProgram() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a3) {
@@ -3272,7 +3272,7 @@ jobject GeckoLayerClient::GetDisplayPort(bool a0, bool a1, int32_t a2, jobject a
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3300,11 +3300,11 @@ bool GeckoLayerClient::IsContentDocumentDisplayed() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -3337,7 +3337,7 @@ jobject GeckoLayerClient::ProgressiveUpdateCallback(bool a0, jfloat a1, jfloat a
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3374,11 +3374,11 @@ void GeckoLayerClient::SetFirstPaintViewport(jfloat a0, jfloat a1, jfloat a2, jf
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoLayerClient::SetPageRect(jfloat a0, jfloat a1, jfloat a2, jfloat a3) {
@@ -3407,11 +3407,11 @@ void GeckoLayerClient::SetPageRect(jfloat a0, jfloat a1, jfloat a2, jfloat a3) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jobject GeckoLayerClient::SyncFrameMetrics(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4, jfloat a5, jfloat a6, bool a7, int32_t a8, int32_t a9, int32_t a10, int32_t a11, jfloat a12, bool a13) {
@@ -3450,7 +3450,7 @@ jobject GeckoLayerClient::SyncFrameMetrics(jfloat a0, jfloat a1, jfloat a2, jflo
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3486,7 +3486,7 @@ jobject GeckoLayerClient::SyncViewportInfo(int32_t a0, int32_t a1, int32_t a2, i
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3507,7 +3507,7 @@ ImmutableViewportMetrics* ImmutableViewportMetrics::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     ImmutableViewportMetrics* ret = new ImmutableViewportMetrics(obj, env);
@@ -3545,7 +3545,7 @@ ImmutableViewportMetrics::ImmutableViewportMetrics(jfloat a0, jfloat a1, jfloat 
     args[12].f = a12;
 
     Init(env->NewObjectA(mImmutableViewportMetricsClass, jImmutableViewportMetrics, args), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass LayerView::mLayerViewClass = 0;
 jmethodID LayerView::jRegisterCompositorWrapper = 0;
@@ -3561,7 +3561,7 @@ LayerView* LayerView::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     LayerView* ret = new LayerView(obj, env);
@@ -3589,7 +3589,7 @@ jobject LayerView::RegisterCompositorWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -3612,7 +3612,7 @@ NativePanZoomController* NativePanZoomController::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     NativePanZoomController* ret = new NativePanZoomController(obj, env);
@@ -3640,11 +3640,11 @@ void NativePanZoomController::PostDelayedCallbackWrapper(int64_t a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1, jfloat a2, jfloat a3, jfloat a4) {
@@ -3674,11 +3674,11 @@ void NativePanZoomController::RequestContentRepaintWrapper(jfloat a0, jfloat a1,
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass ProgressiveUpdateData::mProgressiveUpdateDataClass = 0;
 jmethodID ProgressiveUpdateData::jProgressiveUpdateData = 0;
@@ -3708,7 +3708,7 @@ ProgressiveUpdateData* ProgressiveUpdateData::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     ProgressiveUpdateData* ret = new ProgressiveUpdateData(obj, env);
@@ -3731,7 +3731,7 @@ ProgressiveUpdateData::ProgressiveUpdateData() {
     }
 
     Init(env->NewObject(mProgressiveUpdateDataClass, jProgressiveUpdateData), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void ProgressiveUpdateData::setViewport(jobject a0) {
@@ -3754,11 +3754,11 @@ void ProgressiveUpdateData::setViewport(jobject a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 bool ProgressiveUpdateData::getabort() {
@@ -3912,7 +3912,7 @@ ViewTransform* ViewTransform::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     ViewTransform* ret = new ViewTransform(obj, env);
@@ -3940,7 +3940,7 @@ ViewTransform::ViewTransform(jfloat a0, jfloat a1, jfloat a2) {
     args[2].f = a2;
 
     Init(env->NewObjectA(mViewTransformClass, jViewTransform, args), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jfloat ViewTransform::getfixedLayerMarginBottom() {
@@ -4136,7 +4136,7 @@ NativeZip* NativeZip::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     NativeZip* ret = new NativeZip(obj, env);
@@ -4164,7 +4164,7 @@ jobject NativeZip::CreateInputStream(jobject a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -4193,7 +4193,7 @@ MatrixBlobCursor* MatrixBlobCursor::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     MatrixBlobCursor* ret = new MatrixBlobCursor(obj, env);
@@ -4216,7 +4216,7 @@ MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0) {
     }
 
     Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor, a0), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0, int32_t a1) {
@@ -4234,7 +4234,7 @@ MatrixBlobCursor::MatrixBlobCursor(jobjectArray a0, int32_t a1) {
     }
 
     Init(env->NewObject(mMatrixBlobCursorClass, jMatrixBlobCursor0, a0, a1), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void MatrixBlobCursor::AddRow(jobject a0) {
@@ -4257,11 +4257,11 @@ void MatrixBlobCursor::AddRow(jobject a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void MatrixBlobCursor::AddRow(jobject a0, int32_t a1) {
@@ -4284,11 +4284,11 @@ void MatrixBlobCursor::AddRow(jobject a0, int32_t a1) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void MatrixBlobCursor::AddRow(jobjectArray a0) {
@@ -4311,11 +4311,11 @@ void MatrixBlobCursor::AddRow(jobjectArray a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 jclass SQLiteBridgeException::mSQLiteBridgeExceptionClass = 0;
 jmethodID SQLiteBridgeException::jSQLiteBridgeException = 0;
@@ -4335,7 +4335,7 @@ SQLiteBridgeException* SQLiteBridgeException::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     SQLiteBridgeException* ret = new SQLiteBridgeException(obj, env);
@@ -4358,7 +4358,7 @@ SQLiteBridgeException::SQLiteBridgeException() {
     }
 
     Init(env->NewObject(mSQLiteBridgeExceptionClass, jSQLiteBridgeException), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 SQLiteBridgeException::SQLiteBridgeException(const nsAString& a0) {
@@ -4378,7 +4378,7 @@ SQLiteBridgeException::SQLiteBridgeException(const nsAString& a0) {
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
     Init(env->NewObject(mSQLiteBridgeExceptionClass, jSQLiteBridgeException0, j0), env);
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 int64_t SQLiteBridgeException::getserialVersionUID() {
@@ -4410,7 +4410,7 @@ Clipboard* Clipboard::Wrap(jobject obj) {
 
     if (!env) {
         ALOG_BRIDGE("Aborted: No env - %s", __PRETTY_FUNCTION__);
-        return NULL;
+        return nullptr;
     }
 
     Clipboard* ret = new Clipboard(obj, env);
@@ -4438,11 +4438,11 @@ void Clipboard::ClearText() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 jstring Clipboard::GetClipboardTextWrapper() {
@@ -4465,7 +4465,7 @@ jstring Clipboard::GetClipboardTextWrapper() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return nullptr;
     }
 
@@ -4493,11 +4493,11 @@ bool Clipboard::HasText() {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return false;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
     return temp;
 }
 
@@ -4523,11 +4523,11 @@ void Clipboard::SetClipboardText(const nsAString& a0) {
         ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
         env->ExceptionDescribe();
         env->ExceptionClear();
-        env->PopLocalFrame(NULL);
+        env->PopLocalFrame(nullptr);
         return;
     }
 
-    env->PopLocalFrame(NULL);
+    env->PopLocalFrame(nullptr);
 }
 
 void InitStubs(JNIEnv *jEnv) {

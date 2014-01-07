@@ -32,15 +32,6 @@ function testState(aState) {
   }
 }
 
-function notifyPrecise()
-{
-  Services.obs.notifyObservers(null, "metro_precise_input", null);
-}
-
-function notifyImprecise()
-{
-  Services.obs.notifyObservers(null, "metro_imprecise_input", null);
-}
 
 gTests.push({
   desc: "precise/imprecise input switcher",

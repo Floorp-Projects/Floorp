@@ -117,8 +117,8 @@ public:
     // If the offset is 0, 0 that's okay.
   }
 
-   virtual TemporaryRef<DataTextureSource>
-     CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE { return nullptr; } 
+  virtual TemporaryRef<DataTextureSource>
+    CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE;
 private:
   // ensure mSize is up to date with respect to mWidget
   void EnsureSize();
