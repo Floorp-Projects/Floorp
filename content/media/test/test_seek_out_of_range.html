@@ -57,6 +57,7 @@ function playing(e) {
 function initTest(test, token) {
   var type = getMajorMimeType(test.type);
   var v = document.createElement(type);
+  v.preload = "auto";
   v.token = token;
   manager.started(token);
   v.src = test.name;
