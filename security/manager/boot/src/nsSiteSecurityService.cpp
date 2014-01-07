@@ -20,6 +20,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LinkedList.h"
 #include "nsSecurityHeaderParser.h"
+#include "nsXULAppAPI.h"
 
 // A note about the preload list:
 // When a site specifically disables sts by sending a header with
@@ -87,6 +88,11 @@ NS_IMPL_ISUPPORTS2(nsSiteSecurityService,
 nsresult
 nsSiteSecurityService::Init()
 {
+   // Child processes are not allowed direct access to this.
+   if (XRE_GetProcessType() != GeckoProcessType_Default) {
+     MOZ_CRASH("Child process: no direct access to nsSiteSecurityService");
+   }
+
    nsresult rv;
 
    mPermMgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
