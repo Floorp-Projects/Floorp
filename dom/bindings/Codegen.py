@@ -1587,7 +1587,9 @@ class MethodDefiner(PropertyDefiner):
                 selfHostedName = "nullptr";
                 accessor = m.get("nativeName", m["name"])
                 if m.get("methodInfo", True):
-                    jitinfo = ("&%s_methodinfo" % accessor)
+                    # Cast this in case the methodInfo is a
+                    # JSTypedMethodJitInfo.
+                    jitinfo = ("reinterpret_cast<const JSJitInfo*>(&%s_methodinfo)" % accessor)
                     if m.get("allowCrossOriginThis", False):
                         accessor = "genericCrossOriginMethod"
                     else:
@@ -6348,6 +6350,23 @@ class CGMemberJITInfo(CGThing):
         slotStr = toStringBool(hasSlot)
         returnType = reduce(CGMemberJITInfo.getSingleReturnType, returnTypes,
                             "")
+        def jitInfoInitializer(isTypedMethod):
+            typedMethodStr = toStringBool(isTypedMethod)
+            return ("{\n"
+                    " { %s },\n"
+                    "  %s,\n"
+                    "  %s,\n"
+                    "  JSJitInfo::%s,\n"
+                    "  %s,  /* returnType.  Not relevant for setters. */\n"
+                    "  %s,  /* isInfallible. False in setters. */\n"
+                    "  %s,  /* isMovable.  Not relevant for setters. */\n"
+                    "  %s,  /* isInSlot.  Only relevant for getters. */\n"
+                    "  %s,  /* isTypedMethod.  Only relevant for methods. */\n"
+                    "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
+                    "  JSJitInfo::%s  /* aliasSet.  Not relevant for setters. */\n"
+                    "}" % (opName, protoID, depth, opType,
+                           returnType, failstr, movablestr, slotStr,
+                           typedMethodStr, slotIndex, aliasSet))
         if args is not None:
             argTypes = "%s_argTypes" % infoName
             args = [CGMemberJITInfo.getJSArgType(arg.type) for arg in args]
@@ -6355,26 +6374,17 @@ class CGMemberJITInfo(CGThing):
             argTypesDecl = (
                 "static const JSJitInfo::ArgType %s[] = { %s };\n" %
                 (argTypes, ", ".join(args)))
-        else:
-            argTypes = "nullptr"
-            argTypesDecl = ""
+            return ("\n"
+                    "%s"
+                    "static const JSTypedMethodJitInfo %s = {\n"
+                    "  %s,\n"
+                    "  %s\n"
+                    "};\n" % (argTypesDecl, infoName,
+                              jitInfoInitializer(True), argTypes))
+
         return ("\n"
-                "%s"
-                "static const JSJitInfo %s = {\n"
-                "  { %s },\n"
-                "  %s,\n"
-                "  %s,\n"
-                "  JSJitInfo::%s,\n"
-                "  %s,  /* returnType.  Not relevant for setters. */\n"
-                "  %s,  /* isInfallible. False in setters. */\n"
-                "  %s,  /* isMovable.  Not relevant for setters. */\n"
-                "  %s,  /* isInSlot.  Only relevant for getters. */\n"
-                "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
-                "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
-                "  %s   /* argTypes.  Only relevant for methods */\n"
-                "};\n" % (argTypesDecl, infoName, opName, protoID, depth,
-                          opType, returnType, failstr, movablestr, slotStr,
-                          slotIndex, aliasSet, argTypes))
+                "static const JSJitInfo %s = %s;\n"
+                % (infoName, jitInfoInitializer(False)))
 
     def define(self):
         if self.member.isAttr():
