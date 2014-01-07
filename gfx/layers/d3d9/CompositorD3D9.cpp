@@ -98,7 +98,7 @@ CompositorD3D9::CreateRenderTarget(const gfx::IntRect &aRect,
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                        D3DPOOL_DEFAULT, byRef(texture),
-                                       NULL);
+                                       nullptr);
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTarget: Failed to create texture"),
                   hr);
@@ -124,7 +124,7 @@ CompositorD3D9::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   HRESULT hr = device()->CreateTexture(aRect.width, aRect.height, 1,
                                        D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
                                        D3DPOOL_DEFAULT, byRef(texture),
-                                       NULL);
+                                       nullptr);
   if (FAILED(hr)) {
     ReportFailure(NS_LITERAL_CSTRING("CompositorD3D9::CreateRenderTargetFromSource: Failed to create texture"),
                   hr);
@@ -409,7 +409,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       // Restore defaults
       d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
       d3d9Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-      d3d9Device->SetTexture(1, NULL);
+      d3d9Device->SetTexture(1, nullptr);
     }
     return;
   default:
@@ -570,7 +570,7 @@ CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   EnsureSize();
 
-  device()->Clear(0, NULL, D3DCLEAR_TARGET, 0x00000000, 0, 0);
+  device()->Clear(0, nullptr, D3DCLEAR_TARGET, 0x00000000, 0, 0);
   device()->BeginScene();
 
   if (aClipRectOut) {
@@ -687,12 +687,12 @@ CompositorD3D9::PaintToTarget()
 
   device()->CreateOffscreenPlainSurface(desc.Width, desc.Height,
                                         D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM,
-                                        getter_AddRefs(destSurf), NULL);
+                                        getter_AddRefs(destSurf), nullptr);
 
   device()->GetRenderTargetData(backBuff, destSurf);
 
   D3DLOCKED_RECT rect;
-  destSurf->LockRect(&rect, NULL, D3DLOCK_READONLY);
+  destSurf->LockRect(&rect, nullptr, D3DLOCK_READONLY);
   RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)rect.pBits,
                                              rect.Pitch,

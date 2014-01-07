@@ -461,7 +461,7 @@ MainProcessRunnable::OpenFileOnIOThread()
                                     mGroup, mOrigin, path);
   NS_ENSURE_STATE(mQuotaObject);
 
-  int openFlags;
+  int32_t openFlags;
   if (mOpenMode == eOpenForRead) {
     rv = path->GetFileSize(&mFileSize);
     if (NS_FAILED(rv)) {

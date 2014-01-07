@@ -245,7 +245,7 @@ WMFVideoDecoder::CreateBasicVideoFrame(IMFSample* aSample,
     hr = twoDBuffer->Lock2D(&data, &stride);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   } else {
-    hr = buffer->Lock(&data, NULL, NULL);
+    hr = buffer->Lock(&data, nullptr, nullptr);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
     stride = mVideoStride;
   }

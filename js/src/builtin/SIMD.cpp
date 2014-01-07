@@ -78,7 +78,7 @@ struct Int32x4 {
         static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"}; \
         CallArgs args = CallArgsFromVp(argc, vp); \
         if(!args.thisv().isObject() || !IsTypedDatum(args.thisv().toObject())) { \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, \
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4Type::class_.name, laneNames[lane], \
                                  InformalValueTypeName(args.thisv())); \
             return false; \
@@ -86,7 +86,7 @@ struct Int32x4 {
         TypedDatum &datum = AsTypedDatum(args.thisv().toObject()); \
         TypeRepresentation *typeRepr = datum.datumTypeRepresentation(); \
         if (typeRepr->kind() != TypeRepresentation::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, \
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4Type::class_.name, laneNames[lane], \
                                  InformalValueTypeName(args.thisv())); \
             return false; \
@@ -109,7 +109,7 @@ struct Int32x4 {
     bool Type32x4##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
         CallArgs args = CallArgsFromVp(argc, vp); \
         if(!args.thisv().isObject() || !IsTypedDatum(args.thisv().toObject())) { \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, \
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4Type::class_.name, "signMask", \
                                  InformalValueTypeName(args.thisv())); \
             return false; \
@@ -117,7 +117,7 @@ struct Int32x4 {
         TypedDatum &datum = AsTypedDatum(args.thisv().toObject()); \
         TypeRepresentation *typeRepr = datum.datumTypeRepresentation(); \
         if (typeRepr->kind() != TypeRepresentation::X4 || typeRepr->asX4()->type() != Type32x4::type) { \
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO, \
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4Type::class_.name, "signMask", \
                                  InformalValueTypeName(args.thisv())); \
             return false; \

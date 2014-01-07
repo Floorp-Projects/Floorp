@@ -18,7 +18,7 @@ static bfd *try_debug_file(const char *filename, unsigned long crc32)
 {
   int fd = open(filename, O_RDONLY);
   if (fd < 0)
-    return NULL;
+    return nullptr;
 
   unsigned char buf[4*1024];
   unsigned long crc = 0;
@@ -34,12 +34,12 @@ static bfd *try_debug_file(const char *filename, unsigned long crc32)
   close(fd);
 
   if (crc != crc32)
-    return NULL;
+    return nullptr;
 
-  bfd *object = bfd_openr(filename, NULL);
+  bfd *object = bfd_openr(filename, nullptr);
   if (!bfd_check_format(object, bfd_object)) {
     bfd_close(object);
-    return NULL;
+    return nullptr;
   }
 
   return object;
@@ -51,7 +51,7 @@ static bfd *find_debug_file(bfd *lib, const char *aFileName)
   asection *sect = bfd_get_section_by_name(lib, ".gnu_debuglink");
 
   if (!sect)
-    return NULL;
+    return nullptr;
 
   bfd_size_type debuglinkSize = bfd_section_size (objfile->obfd, sect);
 
@@ -125,7 +125,7 @@ Symbol ** leaky::ExtendSymbols(int num)
 void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 {
   int initialSymbols = usefulSymbols;
-  if (NULL == externalSymbols) {
+  if (nullptr == externalSymbols) {
     externalSymbols = (Symbol**) calloc(sizeof(Symbol*),10000);
     Symbol *new_array = new Symbol[10000];
     for (int i = 0; i < 10000; i++) {
@@ -149,8 +149,8 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
     bfd_init ();
   }
 
-  bfd* lib = bfd_openr(aFileName, NULL);
-  if (NULL == lib) {
+  bfd* lib = bfd_openr(aFileName, nullptr);
+  if (nullptr == lib) {
     return;
   }
   if (!bfd_check_format(lib, bfd_object)) {
@@ -199,7 +199,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
 //    if ((syminfo.type == 'T') || (syminfo.type == 't')) {
       const char* nm = bfd_asymbol_name(sym);
       if (nm && nm[0]) {
-        char* dnm = NULL;
+        char* dnm = nullptr;
         if (strncmp("__thunk", nm, 7)) {
           dnm = abi::__cxa_demangle(nm, 0, 0, 0);
         }
