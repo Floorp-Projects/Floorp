@@ -5,3 +5,5 @@
 # See http://lldb.llvm.org/troubleshooting.html for more info.
 settings set target.inline-breakpoint-strategy always
 
+# Deduce the concrete types of objects and pointers when printing them.
+settings set target.prefer-dynamic-value run-target
