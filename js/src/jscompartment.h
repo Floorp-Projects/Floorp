@@ -249,6 +249,7 @@ struct JSCompartment
     void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
 #if defined(DEBUG) && defined(JSGC_GENERATIONAL)
     void checkNewTypeObjectTableAfterMovingGC();
+    void checkInitialShapesTableAfterMovingGC();
 #endif
 
     /*
