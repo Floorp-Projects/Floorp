@@ -151,6 +151,11 @@ TemporaryRef<TextureHost> CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
                                                  ISurfaceAllocator* aDeallocator,
                                                  TextureFlags aFlags);
 
+// implemented in TextureD3D9.cpp
+TemporaryRef<TextureHost> CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
+                                                ISurfaceAllocator* aDeallocator,
+                                                TextureFlags aFlags);
+
 // static
 TemporaryRef<TextureHost>
 TextureHost::Create(const SurfaceDescriptor& aDesc,
@@ -173,7 +178,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case LAYERS_D3D11:
       return CreateTextureHostD3D11(aDesc, aDeallocator, aFlags);
     case LAYERS_D3D9:
-      // XXX - not implemented yet
+      return CreateTextureHostD3D9(aDesc, aDeallocator, aFlags);
 #endif
     default:
       MOZ_CRASH("Couldn't create texture host");
