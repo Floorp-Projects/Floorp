@@ -11,6 +11,11 @@ function test() {
     let src = win.document.querySelector("iframe").getAttribute("src");
     ok(~src.indexOf(".CodeMirror"), "correct iframe is there");
 
+    // getOption/setOption
+    ok(ed.getOption("styleActiveLine"), "getOption works");
+    ed.setOption("styleActiveLine", false);
+    ok(!ed.getOption("styleActiveLine"), "setOption works");
+
     // Language modes
     is(ed.getMode(), Editor.modes.text, "getMode");
     ed.setMode(Editor.modes.js);
