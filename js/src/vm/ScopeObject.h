@@ -233,6 +233,7 @@ class CallObject : public ScopeObject
 
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
+        AutoThreadSafeAccess ts(this);
         JS_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
         JS_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
                      getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
@@ -244,6 +245,7 @@ class CallObject : public ScopeObject
      * only be called if !isForEval.)
      */
     JSFunction &callee() const {
+        AutoThreadSafeAccess ts(this);
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
 
