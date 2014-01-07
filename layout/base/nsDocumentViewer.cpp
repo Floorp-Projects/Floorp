@@ -1025,20 +1025,15 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
     }
   }
 
-  if (!mStopped) {
-    if (mDocument) {
-      mDocument->ScrollToRef();
-    }
-
-    // Now that the document has loaded, we can tell the presshell
-    // to unsuppress painting.
+  // Now that the document has loaded, we can tell the presshell
+  // to unsuppress painting.
+  if (mPresShell && !mStopped) {
+    nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell);
+    mPresShell->UnsuppressPainting();
+    // mPresShell could have been removed now, see bug 378682/421432
     if (mPresShell) {
-      nsCOMPtr<nsIPresShell> shellDeathGrip(mPresShell);
-      mPresShell->UnsuppressPainting();
-      // mPresShell could have been removed now, see bug 378682/421432
-      if (mPresShell) {
-        mPresShell->LoadComplete();
-      }
+      mPresShell->ScrollToAnchor();
+      mPresShell->LoadComplete();
     }
   }
 
