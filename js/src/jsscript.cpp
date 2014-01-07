@@ -848,7 +848,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
         CallNewScriptHook(cx, script, fun);
         if (!fun) {
-            RootedGlobalObject global(cx, script->compileAndGo() ? &script->global() : NULL);
+            RootedGlobalObject global(cx, script->compileAndGo() ? &script->global() : nullptr);
             Debugger::onNewScript(cx, script, global);
         }
     }

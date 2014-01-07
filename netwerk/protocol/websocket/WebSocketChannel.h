@@ -14,6 +14,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
 #include "nsIDNSListener.h"
+#include "nsIProtocolProxyCallback.h"
 #include "nsIChannelEventSink.h"
 #include "nsIHttpChannelInternal.h"
 #include "BaseWebSocketChannel.h"
@@ -61,6 +62,7 @@ class WebSocketChannel : public BaseWebSocketChannel,
                          public nsIOutputStreamCallback,
                          public nsITimerCallback,
                          public nsIDNSListener,
+                         public nsIProtocolProxyCallback,
                          public nsIInterfaceRequestor,
                          public nsIChannelEventSink
 {
@@ -73,6 +75,7 @@ public:
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIDNSLISTENER
+  NS_DECL_NSIPROTOCOLPROXYCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
 
@@ -134,6 +137,7 @@ private:
   nsresult HandleExtensions();
   nsresult SetupRequest();
   nsresult ApplyForAdmission();
+  nsresult DoAdmissionDNS();
   nsresult StartWebsocketData();
   uint16_t ResultToCloseCode(nsresult resultCode);
   void     ReportConnectionTelemetry();
@@ -165,7 +169,7 @@ private:
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
   nsCOMPtr<nsIHttpChannelInternal>         mChannel;
   nsCOMPtr<nsIHttpChannel>                 mHttpChannel;
-  nsCOMPtr<nsICancelable>                  mDNSRequest;
+  nsCOMPtr<nsICancelable>                  mCancelable;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
 

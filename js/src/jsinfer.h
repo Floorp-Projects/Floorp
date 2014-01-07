@@ -325,7 +325,7 @@ public:
 
     /*
      * For constraints attached to an object property's type set, mark the
-     * property as having been configured.
+     * property as having its configuration changed.
      */
     virtual void newPropertyState(JSContext *cx, TypeSet *source) {}
 
@@ -374,10 +374,13 @@ enum MOZ_ENUM_TYPE(uint32_t) {
 
     /*
      * Whether the property has ever been deleted or reconfigured to behave
-     * differently from a normal native property (e.g. made non-writable or
-     * given a scripted getter or setter).
+     * differently from a plain data property, other than making the property
+     * non-writable.
      */
-    TYPE_FLAG_CONFIGURED_PROPERTY = 0x00010000,
+    TYPE_FLAG_NON_DATA_PROPERTY = 0x00004000,
+
+    /* Whether the property has ever been made non-writable. */
+    TYPE_FLAG_NON_WRITABLE_PROPERTY = 0x00008000,
 
     /*
      * Whether the property is definitely in a particular slot on all objects
@@ -388,8 +391,8 @@ enum MOZ_ENUM_TYPE(uint32_t) {
      * If the property is definite, mask and shift storing the slot + 1.
      * Otherwise these bits are clear.
      */
-    TYPE_FLAG_DEFINITE_MASK       = 0xfffe0000,
-    TYPE_FLAG_DEFINITE_SHIFT      = 17
+    TYPE_FLAG_DEFINITE_MASK       = 0xffff0000,
+    TYPE_FLAG_DEFINITE_SHIFT      = 16
 };
 typedef uint32_t TypeFlags;
 
@@ -514,8 +517,11 @@ class TypeSet
         return !!(baseFlags() & flags);
     }
 
-    bool configuredProperty() const {
-        return flags & TYPE_FLAG_CONFIGURED_PROPERTY;
+    bool nonDataProperty() const {
+        return flags & TYPE_FLAG_NON_DATA_PROPERTY;
+    }
+    bool nonWritableProperty() const {
+        return flags & TYPE_FLAG_NON_WRITABLE_PROPERTY;
     }
     bool definiteProperty() const { return flags & TYPE_FLAG_DEFINITE_MASK; }
     unsigned definiteSlot() const {
@@ -547,9 +553,6 @@ class TypeSet
     /* The Class of an object in this set. */
     inline const Class *getObjectClass(unsigned i) const;
 
-    void setConfiguredProperty() {
-        flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
-    }
     bool canSetDefinite(unsigned slot) {
         // Note: the cast is required to work around an MSVC issue.
         return (slot + 1) <= (unsigned(TYPE_FLAG_DEFINITE_MASK) >> TYPE_FLAG_DEFINITE_SHIFT);
@@ -613,9 +616,14 @@ class StackTypeSet : public ConstraintTypeSet
 
 class HeapTypeSet : public ConstraintTypeSet
 {
+    inline void newPropertyState(ExclusiveContext *cx);
+
   public:
-    /* Mark this type set as representing a configured property. */
-    inline void setConfiguredProperty(ExclusiveContext *cx);
+    /* Mark this type set as representing a non-data property. */
+    inline void setNonDataProperty(ExclusiveContext *cx);
+
+    /* Mark this type set as representing a non-writable property. */
+    inline void setNonWritableProperty(ExclusiveContext *cx);
 };
 
 class CompilerConstraintList;
@@ -1123,14 +1131,16 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void addPropertyType(ExclusiveContext *cx, jsid id, const Value &value);
     void addPropertyType(ExclusiveContext *cx, const char *name, Type type);
     void addPropertyType(ExclusiveContext *cx, const char *name, const Value &value);
-    void markPropertyConfigured(ExclusiveContext *cx, jsid id);
+    void markPropertyNonData(ExclusiveContext *cx, jsid id);
+    void markPropertyNonWritable(ExclusiveContext *cx, jsid id);
     void markStateChange(ExclusiveContext *cx);
     void setFlags(ExclusiveContext *cx, TypeObjectFlags flags);
     void markUnknown(ExclusiveContext *cx);
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
     void clearTypedObjectAddendum(ExclusiveContext *cx);
-    bool isPropertyConfigured(jsid id);
+    bool isPropertyNonData(jsid id);
+    bool isPropertyNonWritable(jsid id);
 
     void print();
 
@@ -1409,7 +1419,8 @@ class HeapTypeSetKey
 
     void freeze(CompilerConstraintList *constraints);
     JSValueType knownTypeTag(CompilerConstraintList *constraints);
-    bool configured(CompilerConstraintList *constraints);
+    bool nonData(CompilerConstraintList *constraints);
+    bool nonWritable(CompilerConstraintList *constraints);
     bool isOwnProperty(CompilerConstraintList *constraints);
     bool knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other);
     JSObject *singleton(CompilerConstraintList *constraints);

@@ -876,7 +876,7 @@ gfxASurface::WriteAsPNG_internal(FILE* aFile, bool aBinary)
     return;
   }
 
-  // base 64, result will be NULL terminated
+  // base 64, result will be null-terminated
   nsCString encodedImg;
   rv = Base64Encode(Substring(imgData, imgSize), encodedImg);
   moz_free(imgData);

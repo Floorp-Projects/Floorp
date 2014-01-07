@@ -155,7 +155,7 @@ SwapChainD3D9::Present(const nsIntRect &aRect)
 void
 SwapChainD3D9::Present()
 {
-  mSwapChain->Present(NULL, NULL, 0, 0, 0);
+  mSwapChain->Present(nullptr, nullptr, 0, 0, 0);
 }
 
 void
