@@ -106,17 +106,21 @@ DOMParser::ParseFromString(const nsAString& str,
     return rv;
   }
 
-  NS_ConvertUTF16toUTF8 data(str);
+  nsAutoCString utf8str;
+  // Convert from UTF16 to UTF8 using fallible allocations
+  if (!AppendUTF16toUTF8(str, utf8str, mozilla::fallible_t())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // The new stream holds a reference to the buffer
   nsCOMPtr<nsIInputStream> stream;
   rv = NS_NewByteInputStream(getter_AddRefs(stream),
-                             data.get(), data.Length(),
+                             utf8str.get(), utf8str.Length(),
                              NS_ASSIGNMENT_DEPEND);
   if (NS_FAILED(rv))
     return rv;
 
-  return ParseFromStream(stream, "UTF-8", data.Length(), contentType, aResult);
+  return ParseFromStream(stream, "UTF-8", utf8str.Length(), contentType, aResult);
 }
 
 already_AddRefed<nsIDocument>

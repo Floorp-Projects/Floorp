@@ -49,11 +49,6 @@ if (!('BrowserElementIsPreloaded' in this)) {
     } catch (e) {
     }
   }
-  // Those are produc-specific files that's sometimes unavailable.
-  try {
-    Services.scriptloader.loadSubScript("chrome://browser/content/ErrorPage.js");
-  } catch (e) {
-  }
 
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js");
   ContentPanning.init();

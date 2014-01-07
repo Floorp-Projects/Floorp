@@ -631,6 +631,7 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineStrCharAt(CallInfo &callInfo);
 
     // RegExp natives.
+    InliningStatus inlineRegExpExec(CallInfo &callInfo);
     InliningStatus inlineRegExpTest(CallInfo &callInfo);
 
     // Array intrinsics.
@@ -960,10 +961,10 @@ class CallInfo
     void setFun(MDefinition *fun) {
         fun_ = fun;
     }
-    void setFoldedUnchecked() {
-        thisArg_->setFoldedUnchecked();
+    void setImplicitlyUsedUnchecked() {
+        thisArg_->setImplicitlyUsedUnchecked();
         for (uint32_t i = 0; i < argc(); i++)
-            getArg(i)->setFoldedUnchecked();
+            getArg(i)->setImplicitlyUsedUnchecked();
     }
 };
 

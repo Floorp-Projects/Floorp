@@ -47,6 +47,17 @@ class TempAllocator
         return p;
     }
 
+    template <size_t ElemSize>
+    void *allocateArray(size_t n)
+    {
+        if (n & mozilla::tl::MulOverflowMask<ElemSize>::value)
+            return nullptr;
+        void *p = lifoScope_.alloc().alloc(n * ElemSize);
+        if (!ensureBallast())
+            return nullptr;
+        return p;
+    }
+
     LifoAlloc *lifoAlloc()
     {
         return &lifoScope_.alloc();

@@ -53,7 +53,12 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
-    _(Folded)        /* Has constant folded uses not reflected in SSA */        \
+                                                                                \
+    /* Keep the flagged instruction in resume points and do not substitute this
+     * instruction by an UndefinedValue. This might be used by call inlining
+     * when a function argument is not used by the inlined instructions.
+     */                                                                         \
+    _(ImplicitlyUsed)                                                           \
                                                                                 \
     /* The instruction has been marked dead for lazy removal from resume
      * points.
@@ -4374,6 +4379,14 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     uint32_t capacity_;
 #endif
 
+  protected:
+    MUse *getUseFor(size_t index) {
+        return &inputs_[index];
+    }
+
+  public:
+    INSTRUCTION_HEADER(Phi)
+
     MPhi(TempAllocator &alloc, uint32_t slot, MIRType resultType)
       : inputs_(alloc),
         slot_(slot),
@@ -4390,13 +4403,6 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         setResultType(resultType);
     }
 
-  protected:
-    MUse *getUseFor(size_t index) {
-        return &inputs_[index];
-    }
-
-  public:
-    INSTRUCTION_HEADER(Phi)
     static MPhi *New(TempAllocator &alloc, uint32_t slot, MIRType resultType = MIRType_Value) {
         return new(alloc) MPhi(alloc, slot, resultType);
     }
@@ -4802,6 +4808,43 @@ class MRegExp : public MNullaryInstruction
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
+class MRegExpExec
+  : public MBinaryInstruction,
+    public MixPolicy<ObjectPolicy<1>, StringPolicy<0> >
+{
+  private:
+
+    MRegExpExec(MDefinition *regexp, MDefinition *string)
+      : MBinaryInstruction(string, regexp)
+    {
+        // May be object or null.
+        setResultType(MIRType_Value);
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpExec)
+
+    static MRegExpExec *New(TempAllocator &alloc, MDefinition *regexp, MDefinition *string) {
+        return new(alloc) MRegExpExec(regexp, string);
+    }
+
+    MDefinition *string() const {
+        return getOperand(0);
+    }
+
+    MDefinition *regexp() const {
+        return getOperand(1);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
     bool possiblyCalls() const {
         return true;
     }

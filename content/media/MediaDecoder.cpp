@@ -200,29 +200,20 @@ MediaDecoder::DecodedStreamData::DecodedStreamData(MediaDecoder* aDecoder,
     mHaveBlockedForPlayState(false),
     mHaveBlockedForStateMachineNotPlaying(false)
 {
-  mStream->AddMainThreadListener(this);
-  mListener = new DecodedStreamGraphListener(mStream);
+  mListener = new DecodedStreamGraphListener(mStream, this);
   mStream->AddListener(mListener);
 }
 
 MediaDecoder::DecodedStreamData::~DecodedStreamData()
 {
-  mStream->RemoveMainThreadListener(this);
   mListener->Forget();
   mStream->Destroy();
 }
 
-void
-MediaDecoder::DecodedStreamData::NotifyMainThreadStateChanged()
-{
-  mDecoder->NotifyDecodedStreamMainThreadStateChanged();
-  if (mStream->IsFinished()) {
-    mListener->SetFinishedOnMainThread(true);
-  }
-}
-
-MediaDecoder::DecodedStreamGraphListener::DecodedStreamGraphListener(MediaStream* aStream)
-  : mMutex("MediaDecoder::DecodedStreamData::mMutex"),
+MediaDecoder::DecodedStreamGraphListener::DecodedStreamGraphListener(MediaStream* aStream,
+                                                                     DecodedStreamData* aData)
+  : mData(aData),
+    mMutex("MediaDecoder::DecodedStreamData::mMutex"),
     mStream(aStream),
     mLastOutputTime(aStream->GetCurrentTime()),
     mStreamFinishedOnMainThread(false)
@@ -237,6 +228,29 @@ MediaDecoder::DecodedStreamGraphListener::NotifyOutput(MediaStreamGraph* aGraph,
   if (mStream) {
     mLastOutputTime = mStream->GraphTimeToStreamTime(aCurrentTime);
   }
+}
+
+void
+MediaDecoder::DecodedStreamGraphListener::DoNotifyFinished()
+{
+  if (mData && mData->mDecoder) {
+    if (mData->mDecoder->GetState() == PLAY_STATE_PLAYING) {
+      nsCOMPtr<nsIRunnable> event =
+        NS_NewRunnableMethod(mData->mDecoder, &MediaDecoder::PlaybackEnded);
+      NS_DispatchToCurrentThread(event);
+    }
+  }
+
+  MutexAutoLock lock(mMutex);
+  mStreamFinishedOnMainThread = true;
+}
+
+void
+MediaDecoder::DecodedStreamGraphListener::NotifyFinished(MediaStreamGraph* aGraph)
+{
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
+  aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
 }
 
 void MediaDecoder::DestroyDecodedStream()
@@ -326,19 +340,6 @@ void MediaDecoder::RecreateDecodedStream(int64_t aStartTimeUSecs)
   }
 }
 
-void MediaDecoder::NotifyDecodedStreamMainThreadStateChanged()
-{
-  if (mTriggerPlaybackEndedWhenSourceStreamFinishes && mDecodedStream &&
-      mDecodedStream->mStream->IsFinished()) {
-    mTriggerPlaybackEndedWhenSourceStreamFinishes = false;
-    if (GetState() == PLAY_STATE_PLAYING) {
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(this, &MediaDecoder::PlaybackEnded);
-      NS_DispatchToCurrentThread(event);
-    }
-  }
-}
-
 void MediaDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                    bool aFinishWhenEnded)
 {
@@ -421,7 +422,6 @@ MediaDecoder::MediaDecoder() :
   mCalledResourceLoaded(false),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
-  mTriggerPlaybackEndedWhenSourceStreamFinishes(false),
   mOwner(nullptr),
   mFrameBufferLength(0),
   mPinnedForSeek(false),
@@ -936,12 +936,6 @@ void MediaDecoder::PlaybackEnded()
   {
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
 
-    if (mDecodedStream && !mDecodedStream->mStream->IsFinished()) {
-      // Wait for it to finish before firing PlaybackEnded()
-      mTriggerPlaybackEndedWhenSourceStreamFinishes = true;
-      return;
-    }
-
     for (int32_t i = mOutputStreams.Length() - 1; i >= 0; --i) {
       OutputStreamData& os = mOutputStreams[i];
       if (os.mStream->IsDestroyed()) {
@@ -1289,7 +1283,12 @@ void MediaDecoder::PlaybackPositionChanged()
         // and we don't want to override the seek algorithm and change the
         // current time after the seek has started but before it has
         // completed.
-        mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+        if (GetDecodedStream()) {
+          mCurrentTime = mDecoderStateMachine->GetCurrentTimeViaMediaStreamSync()/
+            static_cast<double>(USECS_PER_S);
+        } else {
+          mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+        }
       }
       mDecoderStateMachine->ClearPositionChangeFlag();
     }
