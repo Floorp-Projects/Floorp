@@ -224,6 +224,22 @@ protected:
     void UnwrapImpl();
 };
 
+struct ScopedScissorRect
+    : public ScopedGLWrapper<ScopedScissorRect>
+{
+    friend struct ScopedGLWrapper<ScopedScissorRect>;
+
+protected:
+    GLint mSavedScissorRect[4];
+
+public:
+    ScopedScissorRect(GLContext* aGL, GLint x, GLint y, GLsizei width, GLsizei height);
+    explicit ScopedScissorRect(GLContext* aGL);
+
+protected:
+    void UnwrapImpl();
+};
+
 } /* namespace gl */
 } /* namespace mozilla */
 
