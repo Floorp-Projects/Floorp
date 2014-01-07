@@ -502,13 +502,6 @@ bool OmxDecoder::IsWaitingMediaResources()
   return false;
 }
 
-static bool isInEmulator()
-{
-  char propQemu[PROPERTY_VALUE_MAX];
-  property_get("ro.kernel.qemu", propQemu, "");
-  return !strncmp(propQemu, "1", 1);
-}
-
 bool OmxDecoder::AllocateMediaResources()
 {
   // OMXClient::connect() always returns OK and abort's fatally if
@@ -533,7 +526,9 @@ bool OmxDecoder::AllocateMediaResources()
     // up.
     int flags = kHardwareCodecsOnly;
 
-    if (isInEmulator()) {
+    char propQemu[PROPERTY_VALUE_MAX];
+    property_get("ro.kernel.qemu", propQemu, "");
+    if (!strncmp(propQemu, "1", 1)) {
       // If we are in emulator, allow to fall back to software.
       flags = 0;
     }
@@ -973,16 +968,6 @@ nsresult OmxDecoder::Play()
 // We need to fix it until it is really happened.
 void OmxDecoder::Pause()
 {
-  /* The implementation of OMXCodec::pause is flawed.
-   * OMXCodec::start will not restore from the paused state and result in
-   * buffer timeout which causes timeouts in mochitests.
-   * Since there is not power consumption problem in emulator, we will just
-   * return when running in emulator to fix timeouts in mochitests.
-   */
-  if (isInEmulator()) {
-    return;
-  }
-
   if (mVideoPaused || mAudioPaused) {
     return;
   }
