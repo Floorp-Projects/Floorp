@@ -1,5 +1,5 @@
 /* -*- Mode: javascript; js-indent-level: 4; -*- */
-// Source.prototype.sourceURL can be a string or null.
+// Source.prototype.displayURL can be a string or null.
 
 let g = newGlobal('new-compartment');
 let dbg = new Debugger;
@@ -15,7 +15,7 @@ g.evaluate("function f(x) { return 2*x; }");
 assertEq(getDisplayURL(), null);
 
 // With a source url
-g.evaluate("function f(x) { return 2*x; }", {sourceURL: 'file:///var/foo.js'});
+g.evaluate("function f(x) { return 2*x; }", {displayURL: 'file:///var/foo.js'});
 assertEq(getDisplayURL(), 'file:///var/foo.js');
 
 // Nested functions
@@ -25,7 +25,7 @@ dbg.onDebuggerStatement = function (frame) {
     assertEq(frame.script.source.displayURL, 'file:///var/bar.js');
 };
 g.evaluate('(function () { (function () { debugger; })(); })();',
-           {sourceURL: 'file:///var/bar.js'});
+           {displayURL: 'file:///var/bar.js'});
 assertEq(fired, true);
 
 // Comment pragmas
@@ -66,6 +66,6 @@ assertEq(getDisplayURL(), 'http://example.com/bar.js');
 // With both a comment and the evaluate option.
 g.evaluate('function f() {}\n' +
            '//# sourceURL=http://example.com/foo.js',
-           {sourceMapURL: 'http://example.com/bar.js'});
+           {displayURL: 'http://example.com/bar.js'});
 assertEq(getDisplayURL(), 'http://example.com/foo.js');
 
