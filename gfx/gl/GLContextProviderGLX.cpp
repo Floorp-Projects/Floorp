@@ -852,11 +852,6 @@ GLContextGLX::~GLContextGLX()
     }
 }
 
-GLContextType
-GLContextGLX::GetContextType() {
-    return ContextTypeGLX;
-}
-
 bool
 GLContextGLX::Init()
 {

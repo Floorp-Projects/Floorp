@@ -38,8 +38,11 @@ public:
 
     ~GLContextEGL();
 
-    GLContextType GetContextType() {
-        return ContextTypeEGL;
+    virtual GLContextType GetContextType() MOZ_OVERRIDE { return ContextTypeEGL; }
+
+    static GLContextEGL* Cast(GLContext* gl) {
+        MOZ_ASSERT(gl->GetContextType() == ContextTypeEGL);
+        return static_cast<GLContextEGL*>(gl);
     }
 
     bool Init();
