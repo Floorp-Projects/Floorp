@@ -338,6 +338,14 @@ CompositorD3D11::Initialize()
   return true;
 }
 
+TemporaryRef<DataTextureSource>
+CompositorD3D11::CreateDataTextureSource(TextureFlags aFlags)
+{
+  RefPtr<DataTextureSource> result = new DataTextureSourceD3D11(gfx::FORMAT_UNKNOWN,
+                                                                this);
+  return result.forget();
+}
+
 TextureFactoryIdentifier
 CompositorD3D11::GetTextureFactoryIdentifier()
 {
@@ -508,6 +516,11 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       static_cast<EffectMask*>(aEffectChain.mSecondaryEffects[EFFECT_MASK].get());
     TextureSourceD3D11* source = maskEffect->mMaskTexture->AsSourceD3D11();
 
+    if (!source) {
+      NS_WARNING("Missing texture source!");
+      return;
+    }
+
     RefPtr<ID3D11ShaderResourceView> view;
     mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
 
@@ -554,6 +567,11 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
       TextureSourceD3D11* source = texturedEffect->mTexture->AsSourceD3D11();
 
+      if (!source) {
+        NS_WARNING("Missing texture source!");
+        return;
+      }
+
       RefPtr<ID3D11ShaderResourceView> view;
       mDevice->CreateShaderResourceView(source->GetD3D11Texture(), nullptr, byRef(view));
 
@@ -576,13 +594,31 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
 
       mVSConstants.textureCoords = ycbcrEffect->mTextureCoords;
 
-      TextureSourceD3D11* source = ycbcrEffect->mTexture->AsSourceD3D11();
-      TextureSourceD3D11::YCbCrTextures textures = source->GetYCbCrTextures();
+      const int Y = 0, Cb = 1, Cr = 2;
+      TextureSource* source = ycbcrEffect->mTexture;
+
+      if (!source) {
+        NS_WARNING("No texture to composite");
+        return;
+      }
+
+      if (!source->GetSubSource(Y) || !source->GetSubSource(Cb) || !source->GetSubSource(Cr)) {
+        // This can happen if we failed to upload the textures, most likely
+        // because of unsupported dimensions (we don't tile YCbCr textures).
+        return;
+      }
+
+      TextureSourceD3D11* sourceY  = source->GetSubSource(Y)->AsSourceD3D11();
+      TextureSourceD3D11* sourceCb = source->GetSubSource(Cb)->AsSourceD3D11();
+      TextureSourceD3D11* sourceCr = source->GetSubSource(Cr)->AsSourceD3D11();
 
       RefPtr<ID3D11ShaderResourceView> views[3];
-      mDevice->CreateShaderResourceView(textures.mY, nullptr, byRef(views[0]));
-      mDevice->CreateShaderResourceView(textures.mCb, nullptr, byRef(views[1]));
-      mDevice->CreateShaderResourceView(textures.mCr, nullptr, byRef(views[2]));
+      mDevice->CreateShaderResourceView(sourceY->GetD3D11Texture(),
+                                        nullptr, byRef(views[0]));
+      mDevice->CreateShaderResourceView(sourceCb->GetD3D11Texture(),
+                                        nullptr, byRef(views[1]));
+      mDevice->CreateShaderResourceView(sourceCr->GetD3D11Texture(),
+                                        nullptr, byRef(views[2]));
 
       ID3D11ShaderResourceView* srViews[3] = { views[0], views[1], views[2] };
       mContext->PSSetShaderResources(0, 3, srViews);
@@ -596,6 +632,12 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
         static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceD3D11* sourceOnWhite = effectComponentAlpha->mOnWhite->AsSourceD3D11();
       TextureSourceD3D11* sourceOnBlack = effectComponentAlpha->mOnBlack->AsSourceD3D11();
+
+      if (!sourceOnWhite || !sourceOnBlack) {
+        NS_WARNING("Missing texture source(s)!");
+        return;
+      }
+
       SetSamplerForFilter(effectComponentAlpha->mFilter);
 
       mVSConstants.textureCoords = effectComponentAlpha->mTextureCoords;
