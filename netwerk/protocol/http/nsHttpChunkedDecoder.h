@@ -10,6 +10,8 @@
 #include "nsString.h"
 #include "nsHttpHeaderArray.h"
 
+namespace mozilla { namespace net {
+
 class nsHttpChunkedDecoder
 {
 public:
@@ -47,5 +49,7 @@ private:
     bool               mReachedEOF;
     bool               mWaitEOF;
 };
+
+}} // namespace mozilla::net
 
 #endif

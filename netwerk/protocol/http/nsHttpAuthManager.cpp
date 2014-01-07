@@ -11,6 +11,9 @@
 #include "nsNetUtil.h"
 #include "nsIPrincipal.h"
 
+namespace mozilla {
+namespace net {
+
 NS_IMPL_ISUPPORTS1(nsHttpAuthManager, nsIHttpAuthManager)
 
 nsHttpAuthManager::nsHttpAuthManager()
@@ -145,3 +148,6 @@ nsHttpAuthManager::ClearAll()
     return rv2;
   return NS_OK;
 }
+
+} // namespace mozilla::net
+} // namespace mozilla

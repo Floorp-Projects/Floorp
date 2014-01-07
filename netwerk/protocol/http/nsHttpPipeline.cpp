@@ -20,6 +20,9 @@
 extern PRThread *gSocketThread;
 #endif
 
+namespace mozilla {
+namespace net {
+
 //-----------------------------------------------------------------------------
 // nsHttpPushBackWriter
 //-----------------------------------------------------------------------------
@@ -901,3 +904,6 @@ nsHttpPipeline::FillSendBuf()
     }
     return NS_OK;
 }
+
+} // namespace mozilla::net
+} // namespace mozilla
