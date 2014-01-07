@@ -16,7 +16,7 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBDatabase;
 
-class IDBFileHandle : public mozilla::dom::file::FileHandle
+class IDBFileHandle : public file::FileHandle
 {
 public:
   virtual JSObject*
@@ -42,15 +42,13 @@ public:
   CreateStream(nsIFile* aFile, bool aReadOnly);
 
   virtual already_AddRefed<nsIDOMFile>
-  CreateFileObject(mozilla::dom::file::LockedFile* aLockedFile,
-                   uint32_t aFileSize);
+  CreateFileObject(file::LockedFile* aLockedFile, uint32_t aFileSize);
 
   IDBDatabase*
   Database();
 
 private:
-  IDBFileHandle()
-  { }
+  IDBFileHandle(IDBDatabase* aOwner);
 
   ~IDBFileHandle()
   { }

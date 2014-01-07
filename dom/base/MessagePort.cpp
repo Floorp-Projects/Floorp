@@ -342,7 +342,6 @@ MessagePort::MessagePort(nsPIDOMWindow* aWindow)
   : MessagePortBase(aWindow)
   , mMessageQueueEnabled(false)
 {
-  SetIsDOMBinding();
 }
 
 MessagePort::~MessagePort()
