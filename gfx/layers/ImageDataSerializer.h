@@ -32,6 +32,7 @@ public:
   bool IsValid() const;
 
   uint8_t* GetData();
+  uint32_t GetStride() const;
   gfx::IntSize GetSize() const;
   gfx::SurfaceFormat GetFormat() const;
   TemporaryRef<gfx::DataSourceSurface> GetAsSurface();
@@ -39,7 +40,6 @@ public:
   TemporaryRef<gfx::DrawTarget> GetAsDrawTarget();
 
 protected:
-  uint32_t GetStride() const;
 
   ImageDataSerializerBase(uint8_t* aData)
   : mData(aData) {}
