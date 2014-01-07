@@ -6371,8 +6371,7 @@ class CGMemberJITInfo(CGThing):
                 "  %s,  /* isInSlot.  Only relevant for getters. */\n"
                 "  %s,  /* Reserved slot index, if we're stored in a slot, else 0. */\n"
                 "  JSJitInfo::%s,  /* aliasSet.  Not relevant for setters. */\n"
-                "  %s,  /* argTypes.  Only relevant for methods */\n"
-                "  nullptr /* parallelNative */\n"
+                "  %s   /* argTypes.  Only relevant for methods */\n"
                 "};\n" % (argTypesDecl, infoName, opName, protoID, depth,
                           opType, returnType, failstr, movablestr, slotStr,
                           slotIndex, aliasSet, argTypes))
