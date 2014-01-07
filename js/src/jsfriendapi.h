@@ -1511,13 +1511,16 @@ struct JSJitInfo {
     // change that, come up with a different way of implementing
     // isDOMJitInfo().
     OpType type;
-    bool isInfallible;      /* Is op fallible? False in setters. */
-    bool isMovable;         /* Is op movable?  To be movable the op must not
-                               AliasEverything, but even that might not be
-                               enough (e.g. in cases when it can throw). */
-    bool isInSlot;          /* True if this is a getter that can get a member
-                               from a slot of the "this" object directly. */
     JSValueType returnType; /* The return type tag.  Might be JSVAL_TYPE_UNKNOWN */
+    uint16_t isInfallible : 1; /* Is op fallible? False in setters. */
+    uint16_t isMovable : 1;    /* Is op movable?  To be movable the op must
+                                  not AliasEverything, but even that might
+                                  not be enough (e.g. in cases when it can
+                                  throw). */
+    uint16_t isInSlot : 1;     /* True if this is a getter that can get a member
+                                  from a slot of the "this" object directly. */
+    uint16_t slotIndex : 13;   /* If isInSlot is true, the index of the slot to
+                                  get the value from.  Otherwise 0. */
 
     AliasSet aliasSet;      /* The alias set for this op.  This is a _minimal_
                                alias set; in particular for a method it does not
@@ -1526,8 +1529,6 @@ struct JSJitInfo {
                                of the actual argument types being passed in. */
     // XXXbz should we have a JSGetterJitInfo subclass or something?
     // XXXbz should we have a JSValueType for the type of the member?
-    uint16_t slotIndex;     /* If isInSlot is true, the index of the slot to get
-                               the value from.  Otherwise 0. */
     const ArgType* const argTypes; /* For a method, a list of sets of types that
                                       the function expects.  This can be used,
                                       for example, to figure out when argument
@@ -1551,7 +1552,7 @@ private:
 };
 
 #define JS_JITINFO_NATIVE_PARALLEL(op)                                         \
-    {{nullptr},0,0,JSJitInfo::OpType_None,false,false,false,JSVAL_TYPE_MISSING,JSJitInfo::AliasEverything,0,nullptr,op}
+    {{nullptr},0,0,JSJitInfo::OpType_None,JSVAL_TYPE_MISSING,false,false,false,0,JSJitInfo::AliasEverything,nullptr,op}
 
 static JS_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
