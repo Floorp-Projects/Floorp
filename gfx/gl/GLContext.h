@@ -2784,7 +2784,6 @@ protected:
 
     void InitExtensions();
 
-    nsTArray<nsIntRect> mViewportStack;
     nsTArray<nsIntRect> mScissorStack;
 
     GLint mMaxTextureSize;
@@ -2850,50 +2849,11 @@ public:
         }
     }
 
-    /*** Viewport functions ***/
-
-private:
-    // only does the glViewport call, no ViewportRect business
-    void raw_fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
         mSymbols.fViewport(x, y, width, height);
         AFTER_GL_CALL;
     }
-
-public:
-    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-        ViewportRect().SetRect(x, y, width, height);
-        raw_fViewport(x, y, width, height);
-    }
-
-    nsIntRect& ViewportRect() {
-        return mViewportStack[mViewportStack.Length()-1];
-    }
-
-    void PushViewportRect() {
-        nsIntRect copy(ViewportRect());
-        mViewportStack.AppendElement(copy);
-    }
-
-    void PushViewportRect(const nsIntRect& aRect) {
-        mViewportStack.AppendElement(aRect);
-        raw_fViewport(aRect.x, aRect.y, aRect.width, aRect.height);
-    }
-
-    void PopViewportRect() {
-        if (mViewportStack.Length() < 2) {
-            NS_WARNING("PopViewportRect with Length < 2!");
-            return;
-        }
-
-        nsIntRect thisRect = ViewportRect();
-        mViewportStack.TruncateLength(mViewportStack.Length() - 1);
-        if (!thisRect.IsEqualInterior(ViewportRect())) {
-            raw_fViewport(ViewportRect().x, ViewportRect().y,
-                          ViewportRect().width, ViewportRect().height);
-        }
-    }
-
 
 #undef ASSERT_SYMBOL_PRESENT
 
