@@ -62,6 +62,7 @@
 #include "GLContextProvider.h"
 #include "GLContextCGL.h"
 #include "GLUploadHelpers.h"
+#include "ScopedGLHelpers.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/BasicCompositor.h"
@@ -2089,6 +2090,10 @@ nsChildView::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
 void
 nsChildView::DrawWindowOverlay(GLManager* aManager, nsIntRect aRect)
 {
+  GLContext* gl = aManager->gl();
+  ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST);
+  ScopedScissorRect scopedScissorRectState(gl);
+
   MaybeDrawTitlebar(aManager, aRect);
   MaybeDrawResizeIndicator(aManager, aRect);
   MaybeDrawRoundedCorners(aManager, aRect);
