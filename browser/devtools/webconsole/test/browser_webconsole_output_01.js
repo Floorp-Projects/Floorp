@@ -22,14 +22,14 @@ let inputTests = [
   // 0
   {
     input: "'hello \\nfrom \\rthe \\\"string world!'",
-    output: "\"hello \\nfrom \\rthe \\\"string world!\"",
+    output: "\"hello \nfrom \rthe \"string world!\"",
   },
 
   // 1
   {
     // unicode test
     input: "'\xFA\u1E47\u0129\xE7\xF6d\xEA \u021B\u0115\u0219\u0165'",
-    output: "\"\\xFA\\u1E47\\u0129\\xE7\\xF6d\\xEA \\u021B\\u0115\\u0219\\u0165\"",
+    output: "\"\xFA\u1E47\u0129\xE7\xF6d\xEA \u021B\u0115\u0219\u0165\"",
   },
 
   // 2
@@ -81,7 +81,7 @@ let inputTests = [
   {
     input: "/foo?b*\\s\"ar/igym",
     output: "/foo?b*\\s\"ar/gimy",
-    printOutput: "/foo?b*\\\\s\\\"ar/gimy",
+    printOutput: "/foo?b*\\s\"ar/gimy",
     inspectable: true,
   },
 
