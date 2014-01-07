@@ -120,7 +120,7 @@
 <!ENTITY pref_font_size_small "Small">
 <!ENTITY pref_font_size_medium "Medium">
 <!ENTITY pref_font_size_large "Large">
-<!ENTITY pref_font_size_xlarge "Extra large">
+<!ENTITY pref_font_size_xlarge "Extra Large">
 <!ENTITY pref_font_size_set "Set">
 <!-- Localization note (pref_font_size_adjust_char): A button with a small version of this character
 (or combination of characters) is used to decrease the preview font size; a larger version of the
@@ -194,47 +194,47 @@ size. -->
 <!ENTITY addons "Add-ons">
 <!ENTITY downloads "Downloads">
 <!ENTITY apps "Apps">
-<!ENTITY char_encoding "Character encoding">
+<!ENTITY char_encoding "Character Encoding">
 
 <!ENTITY share "Share">
 <!ENTITY share_title "Share via">
 <!ENTITY share_image_failed "Unable to share this image">
 <!ENTITY save_as_pdf "Save as PDF">
-<!ENTITY find_in_page "Find in page">
-<!ENTITY desktop_mode "Request desktop site">
+<!ENTITY find_in_page "Find in Page">
+<!ENTITY desktop_mode "Request Desktop Site">
 <!ENTITY tools "Tools">
-<!ENTITY new_tab "New tab">
-<!ENTITY new_private_tab "New private tab">
-<!ENTITY close_all_tabs "Close all tabs">
+<!ENTITY new_tab "New Tab">
+<!ENTITY new_private_tab "New Private Tab">
+<!ENTITY close_all_tabs "Close All Tabs">
 <!ENTITY tabs_normal "Tabs">
 <!ENTITY tabs_private "Private">
 <!ENTITY tabs_synced "Synced">
 <!ENTITY set_image_fail "Unable to set image">
-<!ENTITY set_image_chooser_title "Set image as">
+<!ENTITY set_image_chooser_title "Set Image As">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used
      as alternate text for accessibility. They are not visible in the UI. -->
-<!ENTITY find_text "Find in page">
+<!ENTITY find_text "Find in Page">
 <!ENTITY find_prev "Previous">
 <!ENTITY find_next "Next">
 <!ENTITY find_close "Close">
 
-<!ENTITY contextmenu_open_new_tab "Open in new tab">
-<!ENTITY contextmenu_open_private_tab "Open in private tab">
+<!ENTITY contextmenu_open_new_tab "Open in New Tab">
+<!ENTITY contextmenu_open_private_tab "Open in Private Tab">
 <!ENTITY contextmenu_open_in_reader "Open in Reader">
 <!ENTITY contextmenu_remove "Remove">
-<!ENTITY contextmenu_add_to_launcher "Add to home screen">
+<!ENTITY contextmenu_add_to_launcher "Add to Home Screen">
 <!ENTITY contextmenu_share "Share">
 <!ENTITY contextmenu_pasteandgo "Paste &amp; Go">
 <!ENTITY contextmenu_paste "Paste">
-<!ENTITY contextmenu_copyurl "Copy address">
+<!ENTITY contextmenu_copyurl "Copy Address">
 <!ENTITY contextmenu_edit_bookmark "Edit">
-<!ENTITY contextmenu_subscribe "Subscribe to page">
-<!ENTITY contextmenu_site_settings "Edit site settings">
+<!ENTITY contextmenu_subscribe "Subscribe to Page">
+<!ENTITY contextmenu_site_settings "Edit Site Settings">
 <!ENTITY contextmenu_top_sites_edit "Edit">
-<!ENTITY contextmenu_top_sites_pin "Pin site">
-<!ENTITY contextmenu_top_sites_unpin "Unpin site">
-<!ENTITY contextmenu_add_search_engine "Add a search engine">
+<!ENTITY contextmenu_top_sites_pin "Pin Site">
+<!ENTITY contextmenu_top_sites_unpin "Unpin Site">
+<!ENTITY contextmenu_add_search_engine "Add a Search Engine">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
@@ -244,7 +244,7 @@ size. -->
 
 <!ENTITY history_removed "Page removed">
 
-<!ENTITY bookmark_edit_title "Edit bookmark">
+<!ENTITY bookmark_edit_title "Edit Bookmark">
 <!ENTITY bookmark_edit_name "Name">
 <!ENTITY bookmark_edit_location "Location">
 <!ENTITY bookmark_edit_keyword "Keyword">
@@ -371,8 +371,8 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY updater_apply_select2 "Touch to update">
 
 <!-- Guest mode -->
-<!ENTITY new_guest_session "New guest session">
-<!ENTITY exit_guest_session "Exit guest session">
+<!ENTITY new_guest_session "New Guest Session">
+<!ENTITY exit_guest_session "Exit Guest Session">
 <!ENTITY guest_session_dialog_continue "Continue">
 <!ENTITY guest_session_dialog_cancel "Cancel">
 <!ENTITY new_guest_session_title "&brandShortName; will now restart">
