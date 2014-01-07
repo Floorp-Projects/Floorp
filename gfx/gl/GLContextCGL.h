@@ -34,7 +34,12 @@ public:
 
     ~GLContextCGL();
 
-    GLContextType GetContextType();
+    virtual GLContextType GetContextType() MOZ_OVERRIDE { return ContextTypeCGL; }
+
+    static GLContextCGL* Cast(GLContext* gl) {
+        MOZ_ASSERT(gl->GetContextType() == ContextTypeCGL);
+        return static_cast<GLContextCGL*>(gl);
+    }
 
     bool Init();
 

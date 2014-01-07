@@ -305,11 +305,6 @@ GLContextWGL::~GLContextWGL()
         DestroyWindow(mWnd);
 }
 
-GLContextType
-GLContextWGL::GetContextType() {
-    return ContextTypeWGL;
-}
-
 bool
 GLContextWGL::Init()
 {

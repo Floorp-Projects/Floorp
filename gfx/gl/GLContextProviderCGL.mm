@@ -109,11 +109,6 @@ GLContextCGL::~GLContextCGL()
 
 }
 
-GLContextType
-GLContextCGL::GetContextType() {
-    return ContextTypeCGL;
-}
-
 bool
 GLContextCGL::Init()
 {
