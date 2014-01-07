@@ -1024,6 +1024,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
     if (mInitialized) {
         raw_fGetIntegerv(LOCAL_GL_VIEWPORT, mViewportRect);
+        raw_fGetIntegerv(LOCAL_GL_SCISSOR_BOX, mScissorRect);
         raw_fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &mMaxTextureSize);
         raw_fGetIntegerv(LOCAL_GL_MAX_CUBE_MAP_TEXTURE_SIZE, &mMaxCubeMapTextureSize);
         raw_fGetIntegerv(LOCAL_GL_MAX_RENDERBUFFER_SIZE, &mMaxRenderbufferSize);
