@@ -354,7 +354,7 @@ BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool
     // Disallow sets of protos on proxies with lazy protos, but no hook.
     // This keeps us away from the footgun of having the first proto set opt
     // you out of having dynamic protos altogether.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL);
     return false;
 }
 
