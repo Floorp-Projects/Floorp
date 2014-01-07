@@ -8,6 +8,8 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
+dump("############ ErrorPage.js\n");
+
 let ErrorPageHandler = {
   _reload: function() {
     docShell.QueryInterface(Ci.nsIWebNavigation).reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
@@ -31,12 +33,8 @@ let ErrorPageHandler = {
     }
   },
 
-  domContentLoadedHandler: function(e) {
-    let target = e.originalTarget;
-    let targetDocShell = target.defaultView
-                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsIWebNavigation);
-    if (targetDocShell != docShell) {
+  _bindPageEvent: function(target) {
+    if (!target) {
       return;
     }
 
@@ -52,11 +50,23 @@ let ErrorPageHandler = {
     }
   },
 
+  domContentLoadedHandler: function(e) {
+    let target = e.originalTarget;
+    let targetDocShell = target.defaultView
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation);
+    if (targetDocShell != docShell) {
+      return;
+    }
+    this._bindPageEvent(target);
+  },
+
   init: function() {
     addMessageListener("ErrorPage:ReloadPage", this._reload.bind(this));
     addEventListener('DOMContentLoaded',
                      this.domContentLoadedHandler.bind(this),
                      true);
+    this._bindPageEvent(content.document);
   }
 };
 
