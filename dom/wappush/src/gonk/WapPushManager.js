@@ -111,7 +111,7 @@ this.WapPushManager = {
         let mac = params && params.mac;
         authInfo = CP.Authenticator.check(data.array.subarray(data.offset),
                                           sec, mac, function getNetworkPin() {
-          let imsi = gRIL.getRadioInterface(0).rilContext.imsi;
+          let imsi = gRIL.getRadioInterface(options.serviceId).rilContext.imsi;
           return CP.Authenticator.formatImsi(imsi);
         });
       }
@@ -136,7 +136,8 @@ this.WapPushManager = {
       sender:         sender,
       contentType:    msg.contentType,
       content:        msg.content,
-      authInfo:       authInfo
+      authInfo:       authInfo,
+      serviceId:      options.serviceId
     });
   },
 

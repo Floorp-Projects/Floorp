@@ -3217,20 +3217,6 @@ Tab.prototype = {
     // Adjust the max line box width to be no more than the viewport width, but
     // only if the reflow-on-zoom preference is enabled.
     let isZooming = !fuzzyEquals(aViewport.zoom, this._zoom);
-    if (BrowserApp.selectedTab.reflozPinchSeen &&
-        isZooming && aViewport.zoom < 1.0) {
-      // In this case, we want to restore the max line box width,
-      // because we are pinch-zooming to zoom out.
-      BrowserEventHandler.resetMaxLineBoxWidth();
-      BrowserApp.selectedTab.reflozPinchSeen = false;
-    } else if (BrowserApp.selectedTab.reflozPinchSeen &&
-               isZooming) {
-      // In this case, the user pinch-zoomed in, so we don't want to
-      // preserve position as we would with reflow-on-zoom.
-      BrowserApp.selectedTab.probablyNeedRefloz = false;
-      BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
-      BrowserApp.selectedTab._mReflozPoint = null;
-    }
 
     let docViewer = null;
 
