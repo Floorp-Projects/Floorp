@@ -53,7 +53,12 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
-    _(Folded)        /* Has constant folded uses not reflected in SSA */        \
+                                                                                \
+    /* Keep the flagged instruction in resume points and do not substitute this
+     * instruction by an UndefinedValue. This might be used by call inlining
+     * when a function argument is not used by the inlined instructions.
+     */                                                                         \
+    _(ImplicitlyUsed)                                                           \
                                                                                 \
     /* The instruction has been marked dead for lazy removal from resume
      * points.
