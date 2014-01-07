@@ -70,8 +70,13 @@ public:
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
     } else if (mGain.HasSimpleValue()) {
       // Optimize the case where we only have a single value set as the volume
-      *aOutput = aInput;
-      aOutput->mVolume *= mGain.GetValue();
+      float gain = mGain.GetValue();
+      if (gain == 0.0f) {
+        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      } else {
+        *aOutput = aInput;
+        aOutput->mVolume *= gain;
+      }
     } else {
       // First, compute a vector of gains for each track tick based on the
       // timeline at hand, and then for each channel, multiply the values

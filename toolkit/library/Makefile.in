@@ -448,6 +448,7 @@ COMPONENT_LIBS += \
   gfxtest \
   ssltest \
   xpcom_glue_gtest \
+  media_gtest \
   $(NULL)
 endif
 

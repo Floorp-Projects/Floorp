@@ -123,10 +123,71 @@ function test_endComposition() {
     } else {
       todo(false, 'endComposition changed the input field incorrectly.');
     }
-    inputmethod_cleanup();
+    test_onSelectionChange();
   }, function (e) {
     ok(false, 'endComposition failed: ' + e.name);
     inputmethod_cleanup();
+  });
+}
+
+function test_onSelectionChange() {
+  var sccTimeout = setTimeout(function() {
+    ok(false, 'selectionchange event not fired');
+    cleanup(true);
+  }, 3000);
+
+  function cleanup(failed) {
+    gContext.onselectionchange = null;
+    clearTimeout(sccTimeout);
+    if (failed) {
+      inputmethod_cleanup();
+    }
+    else {
+      test_onSurroundingTextChange();
+    }
+  }
+
+  gContext.onselectionchange = function() {
+    ok(true, 'onselectionchange fired');
+    cleanup();
+  };
+
+  gContext.sendKey(0, 'j'.charCodeAt(0), 0).then(function() {
+    // do nothing and wait for onselectionchange event
+  }, function(e) {
+    ok(false, 'sendKey failed: ' + e.name);
+    cleanup(true);
+  });
+}
+
+function test_onSurroundingTextChange() {
+  var sccTimeout = setTimeout(function() {
+    ok(false, 'surroundingtextchange event not fired');
+    cleanup(true);
+  }, 3000);
+
+  function cleanup(failed) {
+    gContext.onsurroundingtextchange = null;
+    clearTimeout(sccTimeout);
+    if (failed) {
+      inputmethod_cleanup();
+    }
+    else {
+      // in case we want more tests leave this
+      inputmethod_cleanup();
+    }
+  }
+
+  gContext.onsurroundingtextchange = function() {
+    ok(true, 'onsurroundingtextchange fired');
+    cleanup();
+  };
+
+  gContext.sendKey(0, 'j'.charCodeAt(0), 0).then(function() {
+    // do nothing and wait for onselectionchange event
+  }, function(e) {
+    ok(false, 'sendKey failed: ' + e.name);
+    cleanup(true);
   });
 }
 

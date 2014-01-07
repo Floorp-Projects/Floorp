@@ -58,7 +58,10 @@ InterAppMessagePort.prototype = {
 
     let principal = aWindow.document.nodePrincipal;
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
-    this._pageURL = principal.URI.spec;
+    this._pageURL = principal.URI.specIgnoringRef;
+
+    // Remove query string.
+    this._pageURL = this._pageURL.split("?")[0];
 
     this._started = false;
     this._closed = false;

@@ -681,34 +681,34 @@ void MediaDecoderStateMachine::SendStreamData()
       nsAutoTArray<VideoData*,10> video;
       // It's OK to hold references to the VideoData only the decoder thread
       // pops from the queue.
-      mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime + mStartTime, &video);
+      mReader->VideoQueue().GetElementsAfter(stream->mNextVideoTime, &video);
       VideoSegment output;
       for (uint32_t i = 0; i < video.Length(); ++i) {
         VideoData* v = video[i];
-        if (stream->mNextVideoTime + mStartTime < v->mTime) {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lld ms",
+        if (stream->mNextVideoTime < v->mTime) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing last video to MediaStream %p for %lldus",
                                      mDecoder.get(), mediaStream,
-                                     v->mTime - (stream->mNextVideoTime + mStartTime)));
+                                     v->mTime - stream->mNextVideoTime));
           // Write last video frame to catch up. mLastVideoImage can be null here
           // which is fine, it just means there's no video.
           WriteVideoToMediaStream(stream->mLastVideoImage,
-            v->mTime - (stream->mNextVideoTime + mStartTime), stream->mLastVideoImageDisplaySize,
+            v->mTime - stream->mNextVideoTime, stream->mLastVideoImageDisplaySize,
               &output);
-          stream->mNextVideoTime = v->mTime - mStartTime;
+          stream->mNextVideoTime = v->mTime;
         }
-        if (stream->mNextVideoTime + mStartTime < v->GetEndTime()) {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lld to MediaStream %p for %lld ms",
+        if (stream->mNextVideoTime < v->GetEndTime()) {
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder writing video frame %lldus to MediaStream %p for %lldus",
                                      mDecoder.get(), v->mTime, mediaStream,
-                                     v->GetEndTime() - (stream->mNextVideoTime + mStartTime)));
+                                     v->GetEndTime() - stream->mNextVideoTime));
           WriteVideoToMediaStream(v->mImage,
-              v->GetEndTime() - (stream->mNextVideoTime + mStartTime), v->mDisplay,
+              v->GetEndTime() - stream->mNextVideoTime, v->mDisplay,
               &output);
-          stream->mNextVideoTime = v->GetEndTime() - mStartTime;
+          stream->mNextVideoTime = v->GetEndTime();
           stream->mLastVideoImage = v->mImage;
           stream->mLastVideoImageDisplaySize = v->mDisplay;
         } else {
-          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lld to MediaStream",
-                                     mDecoder.get(), v->mTime));
+          DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lldus (end %lldus) to MediaStream",
+                                     mDecoder.get(), v->mTime, v->GetEndTime()));
         }
       }
       if (output.GetDuration() > 0) {
@@ -1313,7 +1313,7 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->NotifyPlaybackStopped();
 
   if (IsPlaying()) {
-    mPlayDuration += DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
+    mPlayDuration = GetClock();
     mPlayStartTime = TimeStamp();
   }
   // Notify the audio thread, so that it notices that we've stopped playing,
@@ -1334,6 +1334,15 @@ void MediaDecoderStateMachine::SetSyncPointForMediaStream()
 
   mSyncPointInMediaStream = stream->GetLastOutputTime();
   mSyncPointInDecodedStream = mStartTime + mPlayDuration;
+}
+
+int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync()
+{
+  AssertCurrentThreadInMonitor();
+  NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
+  DecodedStreamData* stream = mDecoder->GetDecodedStream();
+  StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
+  return mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
 }
 
 void MediaDecoderStateMachine::StartPlayback()
@@ -2369,10 +2378,14 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       }
 
       StopAudioThread();
-      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING) {
+      // When we're decoding to a stream, the stream's main-thread finish signal
+      // will take care of calling MediaDecoder::PlaybackEnded.
+      if (mDecoder->GetState() == MediaDecoder::PLAY_STATE_PLAYING &&
+          !mDecoder->GetDecodedStream()) {
         int64_t videoTime = HasVideo() ? mVideoFrameEndTime : 0;
         int64_t clockTime = std::max(mEndTime, std::max(videoTime, GetAudioClock()));
         UpdatePlaybackPosition(clockTime);
+
         nsCOMPtr<nsIRunnable> event =
           NS_NewRunnableMethod(mDecoder, &MediaDecoder::PlaybackEnded);
         NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
@@ -2409,7 +2422,6 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 int64_t
 MediaDecoderStateMachine::GetAudioClock()
 {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
   // We must hold the decoder monitor while using the audio stream off the
   // audio thread to ensure that it doesn't get destroyed on the audio thread
   // while we're using it.
@@ -2444,8 +2456,8 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
   return mBasePosition + pos * mPlaybackRate + mStartTime;
 }
 
-int64_t MediaDecoderStateMachine::GetClock() {
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
+int64_t MediaDecoderStateMachine::GetClock()
+{
   AssertCurrentThreadInMonitor();
 
   // Determine the clock time. If we've got audio, and we've not reached
@@ -2457,9 +2469,7 @@ int64_t MediaDecoderStateMachine::GetClock() {
   if (!IsPlaying()) {
     clock_time = mPlayDuration + mStartTime;
   } else if (stream) {
-    NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
-    StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
-    clock_time = mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
+    clock_time = GetCurrentTimeViaMediaStreamSync();
   } else {
     int64_t audio_time = GetAudioClock();
     if (HasAudio() && !mAudioCompleted && audio_time != -1) {

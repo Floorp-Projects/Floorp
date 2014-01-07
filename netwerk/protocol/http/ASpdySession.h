@@ -44,6 +44,13 @@ public:
   // reason to throttle with the rwin other than in server push
   // scenarios.
   const static uint32_t kInitialRwin = 256 * 1024 * 1024;
+
+  bool SoftStreamError(nsresult code)
+  {
+    return (code == NS_BASE_STREAM_CLOSED || code == NS_BINDING_FAILED ||
+            code == NS_BINDING_ABORTED || code == NS_BINDING_REDIRECTED ||
+            code == NS_BINDING_RETARGETED);
+  }
 };
 
 // this is essentially a single instantiation as a member of nsHttpHandler.

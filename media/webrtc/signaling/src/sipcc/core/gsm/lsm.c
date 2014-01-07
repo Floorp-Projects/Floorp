@@ -985,7 +985,19 @@ lsm_rx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
                 }
 
                 attrs.rtcp_mux = media->rtcp_mux;
+
+                attrs.is_video = FALSE;
+                attrs.bundle_level = 0;
+                attrs.bundle_stream_correlator = 0;
+                attrs.num_ssrcs = 0;
+                attrs.num_unique_payload_types = 0;
+                /* TODO(bcampen@mozilla.com): Bug 784491: Fill in
+                 * attrs.bundle_stream_correlator, attrs.ssrcs, and
+                 * attrs.unique_payload_types
+                 */
+
                 if ( media->cap_index == CC_VIDEO_1 ) {
+                    attrs.is_video = TRUE;
                     attrs.video.opaque = media->video;
                 } else {
                     attrs.audio.packetization_period = media->packetization_period;
@@ -1224,7 +1236,19 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
             attrs.mute = FALSE;
 
             attrs.rtcp_mux = media->rtcp_mux;
+
+            attrs.is_video = FALSE;
+            attrs.bundle_level = 0;
+            attrs.bundle_stream_correlator = 0;
+            attrs.num_ssrcs = 0;
+            attrs.num_unique_payload_types = 0;
+            /* TODO(bcampen@mozilla.com): Bug 784491: Fill in
+             * attrs.bundle_stream_correlator, attrs.ssrcs, and
+             * attrs.unique_payload_types
+             */
+
             if ( CC_IS_VIDEO(media->cap_index)) {
+                attrs.is_video = TRUE;
                 attrs.video.opaque = media->video;
                 if (lcb->vid_mute) {
                     attrs.mute = TRUE;

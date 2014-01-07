@@ -55,7 +55,8 @@ namespace dom {
 #define DEFAULT_RECONNECTION_TIME_VALUE   5000
 #define MAX_RECONNECTION_TIME_VALUE       PR_IntervalToMilliseconds(DELAY_INTERVAL_LIMIT)
 
-EventSource::EventSource() :
+EventSource::EventSource(nsPIDOMWindow* aOwnerWindow) :
+  nsDOMEventTargetHelper(aOwnerWindow),
   mStatus(PARSE_STATE_OFF),
   mFrozen(false),
   mErrorLoadOnRedirect(false),
@@ -68,7 +69,6 @@ EventSource::EventSource() :
   mScriptLine(0),
   mInnerWindowID(0)
 {
-  SetIsDOMBinding();
 }
 
 EventSource::~EventSource()
@@ -186,10 +186,6 @@ EventSource::Init(nsISupports* aOwner,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ownerWindow = do_QueryInterface(aOwner);
-  NS_ENSURE_STATE(ownerWindow);
-  MOZ_ASSERT(ownerWindow->IsInnerWindow());
-
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aOwner);
   NS_ENSURE_STATE(sgo);
   nsCOMPtr<nsIScriptContext> scriptContext = sgo->GetContext();
@@ -203,7 +199,6 @@ EventSource::Init(nsISupports* aOwner,
 
   mPrincipal = principal;
   mWithCredentials = aWithCredentials;
-  BindToOwner(ownerWindow);
 
   // The conditional here is historical and not necessarily sane.
   if (JSContext *cx = nsContentUtils::GetCurrentJSContext()) {
@@ -286,7 +281,15 @@ EventSource::Constructor(const GlobalObject& aGlobal,
                          const EventSourceInit& aEventSourceInitDict,
                          ErrorResult& aRv)
 {
-  nsRefPtr<EventSource> eventSource = new EventSource();
+  nsCOMPtr<nsPIDOMWindow> ownerWindow =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  if (!ownerWindow) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+  MOZ_ASSERT(ownerWindow->IsInnerWindow());
+
+  nsRefPtr<EventSource> eventSource = new EventSource(ownerWindow);
   aRv = eventSource->Init(aGlobal.GetAsSupports(), aURL,
                           aEventSourceInitDict.mWithCredentials);
   return eventSource.forget();

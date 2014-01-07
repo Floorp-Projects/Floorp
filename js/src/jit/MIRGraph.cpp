@@ -254,11 +254,18 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
         block->stackPosition_ = pred->stackPosition_;
 
         if (block->kind_ == PENDING_LOOP_HEADER) {
-            for (size_t i = 0; i < block->stackPosition_; i++) {
+            size_t nphis = block->stackPosition_;
+
+            TempAllocator &alloc = graph.alloc();
+            MPhi *phis = (MPhi*)alloc.allocateArray<sizeof(MPhi)>(nphis);
+            if (!phis)
+                return nullptr;
+
+            for (size_t i = 0; i < nphis; i++) {
                 MDefinition *predSlot = pred->getSlot(i);
 
                 JS_ASSERT(predSlot->type() != MIRType_Value);
-                MPhi *phi = MPhi::New(graph.alloc(), i, predSlot->type());
+                MPhi *phi = new(phis + i) MPhi(alloc, i, predSlot->type());
 
                 JS_ALWAYS_TRUE(phi->reserveLength(2));
                 phi->addInput(predSlot);

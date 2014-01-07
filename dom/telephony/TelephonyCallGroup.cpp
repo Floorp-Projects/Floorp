@@ -15,10 +15,10 @@
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
 
-TelephonyCallGroup::TelephonyCallGroup()
-: mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN)
+TelephonyCallGroup::TelephonyCallGroup(nsPIDOMWindow* aOwner)
+  : nsDOMEventTargetHelper(aOwner)
+  , mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN)
 {
-  SetIsDOMBinding();
 }
 
 TelephonyCallGroup::~TelephonyCallGroup()
@@ -31,9 +31,8 @@ TelephonyCallGroup::Create(Telephony* aTelephony)
 {
   NS_ASSERTION(aTelephony, "Null telephony!");
 
-  nsRefPtr<TelephonyCallGroup> group = new TelephonyCallGroup();
-
-  group->BindToOwner(aTelephony->GetOwner());
+  nsRefPtr<TelephonyCallGroup> group =
+    new TelephonyCallGroup(aTelephony->GetOwner());
 
   group->mTelephony = aTelephony;
   group->mCallsList = new CallsList(aTelephony, group);

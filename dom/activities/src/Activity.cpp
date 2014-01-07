@@ -32,20 +32,16 @@ Activity::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 nsresult
-Activity::Initialize(nsISupports* aOwner,
+Activity::Initialize(nsPIDOMWindow* aWindow,
                      nsIDOMMozActivityOptions* aOptions)
 {
   MOZ_ASSERT(aOptions);
+  MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aOwner);
-  NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
-
-  Init(window);
-
-  nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> document = aWindow->GetExtantDoc();
 
   bool isActive;
-  window->GetDocShell()->GetIsActive(&isActive);
+  aWindow->GetDocShell()->GetIsActive(&isActive);
 
   if (!isActive &&
       !nsContentUtils::IsChromeDoc(document)) {
@@ -59,7 +55,7 @@ Activity::Initialize(nsISupports* aOwner,
     NS_ENSURE_TRUE(console, NS_OK);
 
     nsString message =
-      NS_LITERAL_STRING("Can start activity from non user input or chrome code");
+      NS_LITERAL_STRING("Can only start activity from user input or chrome code");
     console->LogStringMessage(message.get());
 
     return NS_OK;
@@ -71,7 +67,7 @@ Activity::Initialize(nsISupports* aOwner,
   mProxy = do_CreateInstance("@mozilla.org/dom/activities/proxy;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), aOptions, window);
+  mProxy->StartActivity(static_cast<nsIDOMDOMRequest*>(this), aOptions, aWindow);
   return NS_OK;
 }
 
@@ -82,12 +78,9 @@ Activity::~Activity()
   }
 }
 
-Activity::Activity()
-  : DOMRequest()
+Activity::Activity(nsPIDOMWindow* aWindow)
+  : DOMRequest(aWindow)
 {
-  // Unfortunately we must explicitly declare the default constructor in order
-  // to prevent an implicitly deleted constructor in DOMRequest compile error
-  // in GCC 4.6.
   MOZ_ASSERT(IsDOMBinding());
 }
 

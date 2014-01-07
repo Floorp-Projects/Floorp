@@ -2016,9 +2016,10 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
 
     mLastDataReadEpoch = mLastReadEpoch;
 
-    if (rv == NS_BASE_STREAM_CLOSED) {
+    if (SoftStreamError(rv)) {
       // This will happen when the transaction figures out it is EOF, generally
-      // due to a content-length match being made
+      // due to a content-length match being made. Return OK from this function
+      // otherwise the whole session would be torn down.
       SpdyStream3 *stream = mInputFrameDataStream;
 
       // if we were doing PROCESSING_COMPLETE_HEADERS need to pop the state
@@ -2029,9 +2030,9 @@ SpdySession3::WriteSegments(nsAHttpSegmentWriter *writer,
         ResetDownstreamState();
       LOG3(("SpdySession3::WriteSegments session=%p stream=%p 0x%X "
             "needscleanup=%p. cleanup stream based on "
-            "stream->writeSegments returning BASE_STREAM_CLOSED\n",
+            "stream->writeSegments returning code %X\n",
             this, stream, stream ? stream->StreamID() : 0,
-            mNeedsCleanup));
+            mNeedsCleanup, rv));
       CleanupStream(stream, NS_OK, RST_CANCEL);
       MOZ_ASSERT(!mNeedsCleanup, "double cleanup out of data frame");
       mNeedsCleanup = nullptr;                     /* just in case */

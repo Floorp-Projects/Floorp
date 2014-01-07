@@ -60,7 +60,7 @@ class SpeechRecognition MOZ_FINAL : public nsDOMEventTargetHelper,
                                     public SupportsWeakPtr<SpeechRecognition>
 {
 public:
-  SpeechRecognition();
+  SpeechRecognition(nsPIDOMWindow* aOwnerWindow);
   virtual ~SpeechRecognition() {};
 
   NS_DECL_ISUPPORTS_INHERITED

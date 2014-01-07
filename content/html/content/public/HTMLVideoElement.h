@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace dom {
 
+class WakeLock;
 class VideoPlaybackQuality;
 
 class HTMLVideoElement MOZ_FINAL : public HTMLMediaElement,
@@ -115,7 +116,7 @@ protected:
   virtual void WakeLockRelease();
   void WakeLockUpdate();
 
-  nsCOMPtr<nsIDOMMozWakeLock> mScreenWakeLock;
+  nsRefPtr<WakeLock> mScreenWakeLock;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

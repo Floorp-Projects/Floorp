@@ -64,7 +64,7 @@
 #include "nsIAppsService.h"
 #include "nsIClipboard.h"
 #include "nsIDOMGeoGeolocation.h"
-#include "nsIDOMWakeLock.h"
+#include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIFilePicker.h"
@@ -713,7 +713,7 @@ public:
         listener->ShutDown();
     }
 
-    void Init(nsIDOMMozWakeLock* aWakeLock)
+    void Init(WakeLock* aWakeLock)
     {
         MOZ_ASSERT(!mWakeLock);
         MOZ_ASSERT(!mTimer);
@@ -751,7 +751,8 @@ private:
     {
         nsRefPtr<SystemMessageHandledListener> kungFuDeathGrip = this;
 
-        mWakeLock->Unlock();
+        ErrorResult rv;
+        mWakeLock->Unlock(rv);
 
         if (mTimer) {
             mTimer->Cancel();
@@ -759,7 +760,7 @@ private:
         }
     }
 
-    nsCOMPtr<nsIDOMMozWakeLock> mWakeLock;
+    nsRefPtr<WakeLock> mWakeLock;
     nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -786,7 +787,7 @@ ContentParent::MaybeTakeCPUWakeLock(Element* aFrameElement)
     }
 
     nsRefPtr<PowerManagerService> pms = PowerManagerService::GetInstance();
-    nsCOMPtr<nsIDOMMozWakeLock> lock =
+    nsRefPtr<WakeLock> lock =
         pms->NewWakeLockOnBehalfOfProcess(NS_LITERAL_STRING("cpu"), this);
 
     // This object's Init() function keeps it alive.

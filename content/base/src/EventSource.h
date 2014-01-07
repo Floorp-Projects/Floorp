@@ -25,13 +25,6 @@
 #include "nsDeque.h"
 #include "nsIUnicodeDecoder.h"
 
-#define NS_EVENTSOURCE_CID                          \
- { /* 755e2d2d-a836-4539-83f4-16b51156341f */       \
-  0x755e2d2d, 0xa836, 0x4539,                       \
- {0x83, 0xf4, 0x16, 0xb5, 0x11, 0x56, 0x34, 0x1f} }
-
-#define NS_EVENTSOURCE_CONTRACTID "@mozilla.org/eventsource;1"
-
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -53,7 +46,7 @@ class EventSource : public nsDOMEventTargetHelper
 friend class AsyncVerifyRedirectCallbackFwr;
 
 public:
-  EventSource();
+  EventSource(nsPIDOMWindow* aOwnerWindow);
   virtual ~EventSource();
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(EventSource,

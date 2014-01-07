@@ -97,7 +97,8 @@ public:
 protected:
   Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                NotificationDirection aDir, const nsAString& aLang,
-               const nsAString& aTag, const nsAString& aIconUrl);
+               const nsAString& aTag, const nsAString& aIconUrl,
+	       nsPIDOMWindow* aWindow);
 
   static already_AddRefed<Notification> CreateInternal(nsPIDOMWindow* aWindow,
                                                        const nsAString& aID,

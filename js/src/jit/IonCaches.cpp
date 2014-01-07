@@ -619,7 +619,7 @@ IsCacheableGetPropCallNative(JSObject *obj, JSObject *holder, Shape *shape)
         return false;
 
     // Check for a DOM method; those are OK with both inner and outer objects.
-    if (getter.jitInfo())
+    if (getter.jitInfo() && getter.jitInfo()->isDOMJitInfo())
         return true;
 
     // For non-DOM methods, don't cache if obj has an outerObject hook.

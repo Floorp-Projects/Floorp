@@ -233,6 +233,7 @@ WEBIDL_FILES = [
     'MozNamedAttrMap.webidl',
     'MozPowerManager.webidl',
     'MozTimeManager.webidl',
+    'MozWakeLock.webidl',
     'MutationEvent.webidl',
     'MutationObserver.webidl',
     'NetDashboard.webidl',

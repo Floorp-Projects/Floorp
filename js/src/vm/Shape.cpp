@@ -1575,8 +1575,11 @@ InitialShapeEntry::getLookup() const
 InitialShapeEntry::hash(const Lookup &lookup)
 {
     HashNumber hash = uintptr_t(lookup.clasp) >> 3;
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.proto.toWord()) >> 3);
-    hash = JS_ROTATE_LEFT32(hash, 4) ^ (uintptr_t(lookup.parent) >> 3) ^ (uintptr_t(lookup.metadata) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^
+        (uintptr_t(lookup.hashProto.toWord()) >> 3);
+    hash = JS_ROTATE_LEFT32(hash, 4) ^
+        (uintptr_t(lookup.hashParent) >> 3) ^
+        (uintptr_t(lookup.hashMetadata) >> 3);
     return hash + lookup.nfixed;
 }
 
@@ -1585,12 +1588,110 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
 {
     const Shape *shape = *key.shape.unsafeGet();
     return lookup.clasp == shape->getObjectClass()
-        && lookup.proto.toWord() == key.proto.toWord()
-        && lookup.parent == shape->getObjectParent()
-        && lookup.metadata == shape->getObjectMetadata()
+        && lookup.matchProto.toWord() == key.proto.toWord()
+        && lookup.matchParent == shape->getObjectParent()
+        && lookup.matchMetadata == shape->getObjectMetadata()
         && lookup.nfixed == shape->numFixedSlots()
         && lookup.baseFlags == shape->getObjectFlags();
 }
+
+#ifdef JSGC_GENERATIONAL
+
+/*
+ * This class is used to add a post barrier on the initialShapes set, as the key
+ * is calculated based on several objects which may be moved by generational GC.
+ */
+class InitialShapeSetRef : public BufferableRef
+{
+    InitialShapeSet *set;
+    const Class *clasp;
+    TaggedProto proto;
+    JSObject *parent;
+    JSObject *metadata;
+    size_t nfixed;
+    uint32_t objectFlags;
+
+  public:
+    InitialShapeSetRef(InitialShapeSet *set,
+                       const Class *clasp,
+                       TaggedProto proto,
+                       JSObject *parent,
+                       JSObject *metadata,
+                       size_t nfixed,
+                       uint32_t objectFlags)
+        : set(set),
+          clasp(clasp),
+          proto(proto),
+          parent(parent),
+          metadata(metadata),
+          nfixed(nfixed),
+          objectFlags(objectFlags)
+    {}
+
+    void mark(JSTracer *trc) {
+        TaggedProto priorProto = proto;
+        JSObject *priorParent = parent;
+        JSObject *priorMetadata = metadata;
+        if (proto.isObject())
+            Mark(trc, reinterpret_cast<JSObject**>(&proto), "initialShapes set proto");
+        Mark(trc, &parent, "initialShapes set parent");
+        if (metadata)
+            Mark(trc, &metadata, "initialShapes set metadata");
+        if (proto == priorProto && parent == priorParent && metadata == priorMetadata)
+            return;
+
+        /* Find the original entry, which must still be present. */
+        InitialShapeEntry::Lookup lookup(clasp, priorProto,
+                                         priorParent, parent,
+                                         priorMetadata, metadata,
+                                         nfixed, objectFlags);
+        InitialShapeSet::Ptr p = set->lookup(lookup);
+        JS_ASSERT(p);
+
+        /* Update the entry's possibly-moved proto, and ensure lookup will still match. */
+        InitialShapeEntry &entry = const_cast<InitialShapeEntry&>(*p);
+        entry.proto = proto;
+        lookup.matchProto = proto;
+
+        /* Rekey the entry. */
+        set->rekeyAs(lookup,
+                     InitialShapeEntry::Lookup(clasp, proto, parent, metadata, nfixed, objectFlags),
+                     *p);
+    }
+};
+
+#ifdef DEBUG
+void
+JSCompartment::checkInitialShapesTableAfterMovingGC()
+{
+    /*
+     * Assert that the postbarriers have worked and that nothing is left in
+     * initialShapes that points into the nursery, and that the hash table
+     * entries are discoverable.
+     */
+    JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromMainThread());
+    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+        InitialShapeEntry entry = e.front();
+        TaggedProto proto = entry.proto;
+        Shape *shape = entry.shape.get();
+
+        JS_ASSERT_IF(proto.isObject(), !IsInsideNursery(rt, proto.toObject()));
+        JS_ASSERT(!IsInsideNursery(rt, shape->getObjectParent()));
+        JS_ASSERT(!IsInsideNursery(rt, shape->getObjectMetadata()));
+
+        InitialShapeEntry::Lookup lookup(shape->getObjectClass(),
+                                         proto,
+                                         shape->getObjectParent(),
+                                         shape->getObjectMetadata(),
+                                         shape->numFixedSlots(),
+                                         shape->getObjectFlags());
+        InitialShapeSet::Ptr ptr = initialShapes.lookup(lookup);
+        JS_ASSERT(ptr.found() && &*ptr == &e.front());
+    }
+}
+#endif
+
+#endif
 
 /* static */ Shape *
 EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
@@ -1629,6 +1730,19 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
     Lookup lookup(clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags);
     if (!p.add(cx, table, lookup, InitialShapeEntry(shape, protoRoot)))
         return nullptr;
+
+#ifdef JSGC_GENERATIONAL
+    if (cx->hasNursery()) {
+        if ((protoRoot.isObject() && cx->nursery().isInside(protoRoot.toObject())) ||
+            cx->nursery().isInside(parentRoot.get()) ||
+            cx->nursery().isInside(metadataRoot.get()))
+        {
+            InitialShapeSetRef ref(
+                &table, clasp, protoRoot, parentRoot, metadataRoot, nfixed, objectFlags);
+            cx->asJSContext()->runtime()->gcStoreBuffer.putGeneric(ref);
+        }
+    }
+#endif
 
     return shape;
 }
@@ -1697,30 +1811,6 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
     if (cx->isJSContext()) {
         JSContext *ncx = cx->asJSContext();
         ncx->runtime()->newObjectCache.invalidateEntriesForShape(ncx, shape, proto);
-    }
-}
-
-/*
- * This is called by the minor GC to ensure that any relocated proto objects
- * get updated in the shape table.
- */
-void
-JSCompartment::markAllInitialShapeTableEntries(JSTracer *trc)
-{
-    if (!initialShapes.initialized())
-        return;
-
-    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-        if (!e.front().proto.isObject())
-            continue;
-        JSObject *proto = e.front().proto.toObject();
-        JS_SET_TRACING_LOCATION(trc, (void*)&e.front().proto);
-        MarkObjectRoot(trc, &proto, "InitialShapeSet proto");
-        if (proto != e.front().proto.toObject()) {
-            InitialShapeEntry moved = e.front();
-            moved.proto = TaggedProto(proto);
-            e.rekeyFront(e.front().getLookup(), moved);
-        }
     }
 }
 

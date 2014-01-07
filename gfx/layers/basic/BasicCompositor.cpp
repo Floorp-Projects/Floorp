@@ -44,7 +44,6 @@ public:
   }
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
-                      TextureFlags aFlags,
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE
   {

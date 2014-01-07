@@ -30,7 +30,7 @@ class SpeechSynthesisUtterance MOZ_FINAL : public nsDOMEventTargetHelper,
   friend class nsSynthVoiceRegistry;
 
 public:
-  SpeechSynthesisUtterance(const nsAString& aText);
+  SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow, const nsAString& aText);
   virtual ~SpeechSynthesisUtterance();
 
   NS_DECL_ISUPPORTS_INHERITED

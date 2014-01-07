@@ -154,16 +154,16 @@ class TextureImageTextureSourceOGL : public DataTextureSource
                                    , public TileIterator
 {
 public:
-  TextureImageTextureSourceOGL(gl::GLContext* aGL, bool aAllowBiImage = true)
+  TextureImageTextureSourceOGL(gl::GLContext* aGL,
+                               TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT)
     : mGL(aGL)
-    , mAllowBigImage(aAllowBiImage)
+    , mFlags(aFlags)
     , mIterating(false)
   {}
 
   // DataTextureSource
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
-                      TextureFlags aFlags,
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE;
 
@@ -184,6 +184,8 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
 
   virtual bool IsValid() const MOZ_OVERRIDE { return !!mTexImage; }
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
   virtual GLenum GetWrapMode() const MOZ_OVERRIDE
   {
@@ -220,7 +222,7 @@ public:
 protected:
   nsRefPtr<gl::TextureImage> mTexImage;
   gl::GLContext* mGL;
-  bool mAllowBigImage;
+  TextureFlags mFlags;
   bool mIterating;
 };
 

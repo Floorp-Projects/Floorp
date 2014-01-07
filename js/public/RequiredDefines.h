@@ -28,4 +28,7 @@
 #define __STDC_CONSTANT_MACROS
 #define __STDC_FORMAT_MACROS
 
+/* Also define a char16_t type if not provided by the compiler. */
+#include "mozilla/Char16.h"
+
 #endif /* js_RequiredDefines_h */

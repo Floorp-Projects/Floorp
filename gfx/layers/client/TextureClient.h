@@ -309,6 +309,10 @@ public:
 
   virtual gfx::IntSize GetSize() const { return mSize; }
 
+  virtual bool Lock(OpenMode aMode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
   // TextureClientSurface
 
   virtual TextureClientSurface* AsTextureClientSurface() MOZ_OVERRIDE { return this; }
@@ -347,9 +351,13 @@ public:
   virtual size_t GetBufferSize() const = 0;
 
 protected:
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   CompositableClient* mCompositable;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
+  OpenMode mOpenMode;
+  bool mUsingFallbackDrawTarget;
+  bool mLocked;
 };
 
 /**

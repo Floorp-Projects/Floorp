@@ -10,7 +10,6 @@
 #define POWERMANAGERSERVICE_CONTRACTID "@mozilla.org/power/powermanagerservice;1"
 %}
 
-interface nsIDOMMozWakeLock;
 interface nsIDOMMozWakeLockListener;
 interface nsIDOMWindow;
 
@@ -40,9 +39,9 @@ interface nsIPowerManagerService : nsISupports
   DOMString         getWakeLockState(in DOMString aTopic);
 
   /**
-   * Return a wake lock object of aTopic associated with aWindow.
+   * Return a wake lock (MozWakeLock) object of aTopic associated with aWindow.
    * A wake lock without associated window, e.g. used in chrome, is
    * always considered invisible.
    */
-  nsIDOMMozWakeLock newWakeLock(in DOMString aTopic, [optional] in nsIDOMWindow aWindow);
+  nsISupports newWakeLock(in DOMString aTopic, [optional] in nsIDOMWindow aWindow);
 };
