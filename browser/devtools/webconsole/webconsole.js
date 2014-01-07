@@ -3469,7 +3469,6 @@ JSTerm.prototype = {
   _updateVariablesView: function JST__updateVariablesView(aOptions)
   {
     let view = aOptions.view;
-    view.createHierarchy();
     view.empty();
 
     // We need to avoid pruning the object inspection starting point.

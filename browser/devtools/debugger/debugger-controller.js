@@ -841,7 +841,6 @@ StackFrames.prototype = {
 
     // Start recording any added variables or properties in any scope and
     // clear existing scopes to create each one dynamically.
-    DebuggerView.Variables.createHierarchy();
     DebuggerView.Variables.empty();
 
     // If watch expressions evaluation results are available, create a scope
