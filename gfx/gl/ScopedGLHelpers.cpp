@@ -259,5 +259,30 @@ void ScopedViewportRect::UnwrapImpl()
                  mSavedViewportRect[3]);
 }
 
+/* ScopedScissorRect **********************************************************/
+
+ScopedScissorRect::ScopedScissorRect(GLContext* aGL,
+                                     GLint x, GLint y,
+                                     GLsizei width, GLsizei height)
+  : ScopedGLWrapper<ScopedScissorRect>(aGL)
+{
+  mGL->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, mSavedScissorRect);
+  mGL->fScissor(x, y, width, height);
+}
+
+ScopedScissorRect::ScopedScissorRect(GLContext* aGL)
+  : ScopedGLWrapper<ScopedScissorRect>(aGL)
+{
+  mGL->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, mSavedScissorRect);
+}
+
+void ScopedScissorRect::UnwrapImpl()
+{
+  mGL->fScissor(mSavedScissorRect[0],
+                mSavedScissorRect[1],
+                mSavedScissorRect[2],
+                mSavedScissorRect[3]);
+}
+
 } /* namespace gl */
 } /* namespace mozilla */
