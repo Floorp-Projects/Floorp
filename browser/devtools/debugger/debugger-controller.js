@@ -1539,6 +1539,7 @@ Tracer.prototype = {
       location: location,
       id: this._idCounter++
     };
+
     this._stack.push(item);
     DebuggerView.Tracer.addTrace({
       type: "call",
@@ -1597,7 +1598,7 @@ Tracer.prototype = {
       getOwnPropertyNames: (callback) => {
         callback({
           ownPropertyNames: aObject.ownProperties
-            ?  Object.keys(aObject.ownProperties)
+            ? Object.keys(aObject.ownProperties)
             : []
         });
       },
