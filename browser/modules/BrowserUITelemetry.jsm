@@ -501,6 +501,10 @@ this.BrowserUITelemetry = {
     let document = aWindow.document;
     let result = {};
 
+    // Determine if the window is in the maximized, normal or
+    // fullscreen state.
+    result.sizemode = document.documentElement.getAttribute("sizemode");
+
     // Determine if the add-on bar is currently visible
     let addonBar = document.getElementById("addon-bar");
     result.addonBarEnabled = addonBar && !addonBar.collapsed;
