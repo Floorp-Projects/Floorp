@@ -46,8 +46,6 @@ public:
 
     bool SetupLookupFunction();
 
-    void *GetNativeData(NativeDataType aType);
-
     bool IsDoubleBuffered();
 
     bool SupportsRobustness();

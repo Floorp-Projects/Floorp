@@ -5,7 +5,7 @@
 
 #include "SharedSurfaceANGLE.h"
 
-#include "GLContext.h"
+#include "GLContextEGL.h"
 
 using namespace mozilla::gfx;
 
@@ -275,7 +275,7 @@ SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
     , mConsD3D(d3d)
 {
     mConfig = ChooseConfig(mProdGL, mEGL, mReadCaps);
-    mContext = mProdGL->GetNativeData(GLContext::NativeGLContext);
+    mContext = GLContextEGL::Cast(mProdGL)->GetEGLContext();
     MOZ_ASSERT(mConfig && mContext);
 }
 

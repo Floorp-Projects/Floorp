@@ -118,19 +118,6 @@ GLContextCGL::Init()
     return true;
 }
 
-void*
-GLContextCGL::GetNativeData(NativeDataType aType)
-{
-    switch (aType) {
-    case NativeGLContext:
-        return GetNSOpenGLContext();
-    case NativeCGLContext:
-        return GetCGLContext();
-    default:
-        return nullptr;
-    }
-}
-
 CGLContextObj
 GLContextCGL::GetCGLContext() const
 {

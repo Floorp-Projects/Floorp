@@ -897,21 +897,6 @@ GLContextGLX::SetupLookupFunction()
     return true;
 }
 
-void*
-GLContextGLX::GetNativeData(NativeDataType aType)
-{
-    switch(aType) {
-    case NativeGLContext:
-        return mContext;
-
-    case NativeThebesSurface:
-        return mPixmap;
-
-    default:
-        return nullptr;
-    }
-}
-
 bool
 GLContextGLX::IsDoubleBuffered()
 {
