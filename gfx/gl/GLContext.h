@@ -1103,6 +1103,12 @@ public:
                 }
                 break;
 
+            case LOCAL_GL_SCISSOR_BOX:
+                for (size_t i = 0; i < 4; i++) {
+                    params[i] = mScissorRect[i];
+                }
+                break;
+
             default:
                 raw_fGetIntegerv(pname, params);
                 break;
@@ -1403,6 +1409,17 @@ public:
     }
 
     void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+        if (mScissorRect[0] == x &&
+            mScissorRect[1] == y &&
+            mScissorRect[2] == width &&
+            mScissorRect[3] == height)
+        {
+            return;
+        }
+        mScissorRect[0] = x;
+        mScissorRect[1] = y;
+        mScissorRect[2] = width;
+        mScissorRect[3] = height;
         BEFORE_GL_CALL;
         mSymbols.fScissor(x, y, width, height);
         AFTER_GL_CALL;
@@ -2789,6 +2806,7 @@ protected:
     void InitExtensions();
 
     GLint mViewportRect[4];
+    GLint mScissorRect[4];
 
     GLint mMaxTextureSize;
     GLint mMaxCubeMapTextureSize;
