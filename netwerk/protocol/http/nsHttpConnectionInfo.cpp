@@ -11,7 +11,8 @@
 #include "mozilla/net/DNS.h"
 #include "prnetdb.h"
 
-using namespace mozilla::net;
+namespace mozilla {
+namespace net {
 
 nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &host, int32_t port,
                                            nsProxyInfo* proxyInfo,
@@ -132,3 +133,6 @@ nsHttpConnectionInfo::HostIsLocalIPLiteral() const
     PRNetAddrToNetAddr(&prAddr, &netAddr);
     return IsIPAddrLocal(&netAddr);
 }
+
+} // namespace mozilla::net
+} // namespace mozilla
