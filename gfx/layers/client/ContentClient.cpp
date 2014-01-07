@@ -608,35 +608,29 @@ void
 ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
                                                    const nsIntRegion& aUpdateRegion)
 {
-  DrawTarget* destDT =
-    BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
+  nsRefPtr<gfxContext> destCtx =
+    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
+  destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-  bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
+  bool isClippingCheap = IsClippingCheap(destCtx, aUpdateRegion);
   if (isClippingCheap) {
-    gfxUtils::ClipToRegion(destDT, aUpdateRegion);
+    gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
   }
 
-  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, OP_SOURCE);
-  if (isClippingCheap) {
-    destDT->PopClip();
-  }
-  ReturnDrawTarget(destDT);
+  aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK, 1.0, OP_SOURCE);
 
   if (aSource.HaveBufferOnWhite()) {
     MOZ_ASSERT(HaveBufferOnWhite());
-    DrawTarget* destDT =
-      BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    nsRefPtr<gfxContext> destCtx =
+      GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-    bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
+    bool isClippingCheap = IsClippingCheap(destCtx, aUpdateRegion);
     if (isClippingCheap) {
-      gfxUtils::ClipToRegion(destDT, aUpdateRegion);
+      gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
     }
 
-    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, OP_SOURCE);
-    if (isClippingCheap) {
-      destDT->PopClip();
-    }
-    ReturnDrawTarget(destDT);
+    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE, 1.0, OP_SOURCE);
   }
 }
 
@@ -823,38 +817,32 @@ void
 DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
                                                    const nsIntRegion& aUpdateRegion)
 {
-  DrawTarget* destDT =
-    BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
-  if (!destDT) {
+  nsRefPtr<gfxContext> destCtx =
+    GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_BLACK);
+  if (!destCtx) {
     return;
   }
+  destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-  bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
+  bool isClippingCheap = IsClippingCheap(destCtx, aUpdateRegion);
   if (isClippingCheap) {
-    gfxUtils::ClipToRegion(destDT, aUpdateRegion);
+    gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
   }
 
-  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, OP_SOURCE);
-  if (isClippingCheap) {
-    destDT->PopClip();
-  }
-  ReturnDrawTarget(destDT);
+  aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_BLACK, 1.0, OP_SOURCE);
 
   if (aSource.HaveBufferOnWhite()) {
     MOZ_ASSERT(HaveBufferOnWhite());
-    DrawTarget* destDT =
-      BorrowDrawTargetForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    nsRefPtr<gfxContext> destCtx =
+      GetContextForQuadrantUpdate(aUpdateRegion.GetBounds(), BUFFER_WHITE);
+    destCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
-    bool isClippingCheap = IsClippingCheap(destDT, aUpdateRegion);
+    bool isClippingCheap = IsClippingCheap(destCtx, aUpdateRegion);
     if (isClippingCheap) {
-      gfxUtils::ClipToRegion(destDT, aUpdateRegion);
+      gfxUtils::ClipToRegion(destCtx, aUpdateRegion);
     }
 
-    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, OP_SOURCE);
-    if (isClippingCheap) {
-      destDT->PopClip();
-    }
-    ReturnDrawTarget(destDT);
+    aSource.DrawBufferWithRotation(destCtx->GetDrawTarget(), BUFFER_WHITE, 1.0, OP_SOURCE);
   }
 }
 
@@ -1147,8 +1135,6 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
 
-  MOZ_ASSERT(!mLoanedDrawTarget);
-
   // BeginUpdate is allowed to modify the given region,
   // if it wants more to be repainted than we request.
   if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
@@ -1163,25 +1149,22 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
       MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
       RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize().ToIntSize());
       RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize().ToIntSize());
-      mLoanedDrawTarget = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
+      RefPtr<DrawTarget> dt = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
+      result.mContext = new gfxContext(dt);
     } else {
-      mLoanedDrawTarget = nullptr;
+      result.mContext = nullptr;
     }
   } else {
     nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
     MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize());
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
+    result.mContext = new gfxContext(dt);
   }
-  if (!mLoanedDrawTarget) {
+  if (!result.mContext) {
     NS_WARNING("unable to get context for update");
     return result;
   }
-
-  result.mTarget = mLoanedDrawTarget;
-  mLoanedTransform = mLoanedDrawTarget->GetTransform();
-  mLoanedTransform.Translate(-drawBounds.x, -drawBounds.y);
-  result.mTarget->SetTransform(mLoanedTransform);
-  mLoanedTransform.Translate(drawBounds.x, drawBounds.y);
+  result.mContext->Translate(-gfxPoint(drawBounds.x, drawBounds.y));
 
   // If we do partial updates, we have to clip drawing to the regionToDraw.
   // If we don't clip, background images will be fillrect'd to the region correctly,
@@ -1193,9 +1176,11 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   result.mClip = CLIP_DRAW;
 
   if (mContentType == GFX_CONTENT_COLOR_ALPHA) {
-    gfxUtils::ClipToRegion(result.mTarget, result.mRegionToDraw);
-    nsIntRect bounds = result.mRegionToDraw.GetBounds();
-    result.mTarget->ClearRect(Rect(bounds.x, bounds.y, bounds.width, bounds.height));
+    result.mContext->Save();
+    gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
+    result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
+    result.mContext->Paint();
+    result.mContext->Restore();
   }
 
   return result;

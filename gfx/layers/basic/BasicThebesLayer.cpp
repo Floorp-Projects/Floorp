@@ -27,7 +27,6 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "AutoMaskData.h"
-#include "gfx2DGlue.h"
 
 struct gfxMatrix;
 
@@ -133,9 +132,8 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   if (!IsHidden() && !clipExtents.IsEmpty()) {
-    mContentClient->DrawTo(this, aContext->GetDrawTarget(), opacity,
-                           CompositionOpForOp(GetOperator()),
-                           maskSurface, maskTransform);
+    AutoSetOperator setOperator(aContext, GetOperator());
+    mContentClient->DrawTo(this, aContext, opacity, maskSurface, maskTransform);
   }
 
   for (uint32_t i = 0; i < readbackUpdates.Length(); ++i) {
@@ -147,9 +145,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     if (ctx) {
       NS_ASSERTION(opacity == 1.0, "Should only read back opaque layers");
       ctx->Translate(gfxPoint(offset.x, offset.y));
-      mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
-                             CompositionOpForOp(ctx->CurrentOperator()),
-                             maskSurface, maskTransform);
+      mContentClient->DrawTo(this, ctx, 1.0, maskSurface, maskTransform);
       update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
     }
   }
@@ -192,7 +188,7 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
     mContentClient->BeginPaintBuffer(this, contentType, flags);
   mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
-  if (state.mTarget) {
+  if (state.mContext) {
     // The area that became invalid and is visible needs to be repainted
     // (this could be the whole visible area if our buffer switched
     // from RGB to RGBA, because we might need to repaint with
@@ -200,20 +196,17 @@ BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
     state.mRegionToInvalidate.And(state.mRegionToInvalidate,
                                   GetEffectiveVisibleRegion());
     nsIntRegion extendedDrawRegion = state.mRegionToDraw;
-    SetAntialiasingFlags(this, state.mTarget);
+    SetAntialiasingFlags(this, state.mContext);
 
     RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
 
-    nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(state.mTarget);
-    PaintBuffer(ctx,
+    PaintBuffer(state.mContext,
                 state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
                 state.mDidSelfCopy,
                 state.mClip,
                 aCallback, aCallbackData);
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
     Mutated();
-    ctx = nullptr;
-    mContentClient->ReturnDrawTarget(state.mTarget);
 
     RenderTraceInvalidateEnd(this, "FFFF00");
   } else {

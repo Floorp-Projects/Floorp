@@ -97,7 +97,6 @@ public:
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
                                                             RotatedContentBuffer::ContentType aContentType,
                                                             uint32_t aFlags) = 0;
-  virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) = 0;
 
   // Sync front/back buffers content
   // After executing, the new back buffer has the same (interesting) pixels as
@@ -141,25 +140,16 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   virtual void Clear() { RotatedContentBuffer::Clear(); }
-  virtual PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
-                                      uint32_t aFlags) MOZ_OVERRIDE
+  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
+                              uint32_t aFlags)
   {
     return RotatedContentBuffer::BeginPaint(aLayer, aContentType, aFlags);
   }
-  virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) MOZ_OVERRIDE
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
-  }
 
-  void DrawTo(ThebesLayer* aLayer,
-              gfx::DrawTarget* aTarget,
-              float aOpacity,
-              gfx::CompositionOp aOp,
-              gfxASurface* aMask,
-              const gfxMatrix* aMaskTransform)
+  void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity,
+              gfxASurface* aMask, const gfxMatrix* aMaskTransform)
   {
-    RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aOp,
-                                 aMask, aMaskTransform);
+    RotatedContentBuffer::DrawTo(aLayer, aTarget, aOpacity, aMask, aMaskTransform);
   }
 
   virtual void CreateBuffer(ContentType aType, const nsIntRect& aRect, uint32_t aFlags,
@@ -205,15 +195,10 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   virtual void Clear() { RotatedContentBuffer::Clear(); }
-
-  virtual PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
-                                      uint32_t aFlags) MOZ_OVERRIDE
+  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
+                              uint32_t aFlags)
   {
     return RotatedContentBuffer::BeginPaint(aLayer, aContentType, aFlags);
-  }
-  virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) MOZ_OVERRIDE
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
   }
 
   /**
@@ -310,15 +295,10 @@ public:
   typedef RotatedContentBuffer::ContentType ContentType;
 
   virtual void Clear() { RotatedContentBuffer::Clear(); }
-
-  virtual PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
-                                      uint32_t aFlags) MOZ_OVERRIDE
+  PaintState BeginPaintBuffer(ThebesLayer* aLayer, ContentType aContentType,
+                              uint32_t aFlags)
   {
     return RotatedContentBuffer::BeginPaint(aLayer, aContentType, aFlags);
-  }
-  virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) MOZ_OVERRIDE
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
   }
 
   /**
@@ -516,7 +496,6 @@ protected:
  * new ones each frame.
  */
 class ContentClientIncremental : public ContentClientRemote
-                               , public BorrowDrawTarget
 {
 public:
   ContentClientIncremental(CompositableForwarder* aFwd)
@@ -542,14 +521,9 @@ public:
     mHasBuffer = false;
     mHasBufferOnWhite = false;
   }
-
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(ThebesLayer* aLayer,
                                                             RotatedContentBuffer::ContentType aContentType,
-                                                            uint32_t aFlags) MOZ_OVERRIDE;
-  virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) MOZ_OVERRIDE
-  {
-    BorrowDrawTarget::ReturnDrawTarget(aReturned);
-  }
+                                                            uint32_t aFlags);
 
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,

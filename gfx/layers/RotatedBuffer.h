@@ -8,6 +8,7 @@
 
 #include <stdint.h>                     // for uint32_t
 #include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxContext.h"                 // for gfxContext
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
 #include "mozilla/gfx/2D.h"             // for DrawTarget, etc
@@ -136,27 +137,11 @@ protected:
   bool                  mDidSelfCopy;
 };
 
-// Mixin class for classes which need logic for loaning out a draw target.
-// See comments on BorrowDrawTargetForQuadrantUpdate.
-class BorrowDrawTarget
-{
-protected:
-  void ReturnDrawTarget(gfx::DrawTarget*& aReturned);
-
-  // The draw target loaned by BorrowDrawTargetForQuadrantUpdate. It should not
-  // be used, we just keep a reference to ensure it is kept alive and so we can
-  // correctly restore state when it is returned.
-  RefPtr<gfx::DrawTarget> mLoanedDrawTarget;
-  gfx::Matrix mLoanedTransform;
-};
-
 /**
  * This class encapsulates the buffer used to retain ThebesLayer contents,
  * i.e., the contents of the layer's GetVisibleRegion().
  */
-class RotatedContentBuffer : public RotatedBuffer
-                           , public BorrowDrawTarget
-{
+class RotatedContentBuffer : public RotatedBuffer {
 public:
   typedef gfxContentType ContentType;
 
@@ -202,7 +187,7 @@ public:
   }
 
   /**
-   * This is returned by BeginPaint. The caller should draw into mTarget.
+   * This is returned by BeginPaint. The caller should draw into mContext.
    * mRegionToDraw must be drawn. mRegionToInvalidate has been invalidated
    * by RotatedContentBuffer and must be redrawn on the screen.
    * mRegionToInvalidate is set when the buffer has changed from
@@ -212,15 +197,14 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mTarget(nullptr)
-      , mDidSelfCopy(false)
+      : mDidSelfCopy(false)
     {}
 
-    gfx::DrawTarget* mTarget;
+    nsRefPtr<gfxContext> mContext;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
-    DrawRegionClip mClip;
     bool mDidSelfCopy;
+    DrawRegionClip mClip;
   };
 
   enum {
@@ -231,7 +215,7 @@ public:
    * Start a drawing operation. This returns a PaintState describing what
    * needs to be drawn to bring the buffer up to date in the visible region.
    * This queries aLayer to get the currently valid and visible regions.
-   * The returned mTarget may be null if mRegionToDraw is empty.
+   * The returned mContext may be null if mRegionToDraw is empty.
    * Otherwise it must not be null.
    * mRegionToInvalidate will contain mRegionToDraw.
    * @param aFlags when PAINT_WILL_RESAMPLE is passed, this indicates that
@@ -276,12 +260,8 @@ public:
    * drawn before this is called. The contents of the buffer are drawn
    * to aTarget.
    */
-  void DrawTo(ThebesLayer* aLayer,
-              gfx::DrawTarget* aTarget,
-              float aOpacity,
-              gfx::CompositionOp aOp,
-              gfxASurface* aMask,
-              const gfxMatrix* aMaskTransform);
+  void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity,
+              gfxASurface* aMask, const gfxMatrix* aMaskTransform);
 
 protected:
   TemporaryRef<gfx::DrawTarget>
@@ -365,24 +345,15 @@ protected:
   }
 
   /**
-   * Get a draw target at the specified resolution for updating |aBounds|,
+   * Get a context at the specified resolution for updating |aBounds|,
    * which must be contained within a single quadrant.
    *
-   * The result should only be held temporarily by the caller (it will be kept
-   * alive by this). Once used it should be returned using ReturnDrawTarget.
-   * BorrowDrawTargetForQuadrantUpdate may not be called more than once without
-   * first calling ReturnDrawTarget.
-   *
-   * ReturnDrawTarget will restore the transform on the draw target. But it is
-   * the callers responsibility to restore the clip. The caller should flush the
-   * draw target, if necessary.
+   * Optionally returns the TopLeft coordinate of the quadrant being drawn to.
    */
-  gfx::DrawTarget*
-  BorrowDrawTargetForQuadrantUpdate(const nsIntRect& aBounds,
-                                    ContextSource aSource);
-  void ReturnDrawTarget(gfx::DrawTarget* aReturned);
+  already_AddRefed<gfxContext>
+  GetContextForQuadrantUpdate(const nsIntRect& aBounds, ContextSource aSource, nsIntPoint* aTopLeft = nullptr);
 
-  static bool IsClippingCheap(gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
+  static bool IsClippingCheap(gfxContext* aTarget, const nsIntRegion& aRegion);
 
 protected:
   /**
