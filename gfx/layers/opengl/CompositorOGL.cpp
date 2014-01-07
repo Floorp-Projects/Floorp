@@ -1098,10 +1098,11 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   }
   IntRect intClipRect;
   clipRect.ToIntRect(&intClipRect);
-  mGLContext->PushScissorRect(nsIntRect(intClipRect.x,
-                                        FlipY(intClipRect.y + intClipRect.height),
-                                        intClipRect.width,
-                                        intClipRect.height));
+  ScopedScissorRect autoScissor(mGLContext,
+                                intClipRect.x,
+                                FlipY(intClipRect.y + intClipRect.height),
+                                intClipRect.width,
+                                intClipRect.height);
 
   LayerScope::SendEffectChain(mGLContext, aEffectChain,
                               aRect.width, aRect.height);
@@ -1362,7 +1363,6 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
     break;
   }
 
-  mGLContext->PopScissorRect();
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   // in case rendering has used some other GL context
   MakeCurrent();
