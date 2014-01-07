@@ -260,7 +260,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function() {
     dumpn("Initializing the RequestsMenuView");
 
-    this.widget = new SideMenuWidget($("#requests-menu-contents"), false);
+    this.widget = new SideMenuWidget($("#requests-menu-contents"));
     this._splitter = $('#splitter');
     this._summary = $("#request-menu-network-summary");
 
