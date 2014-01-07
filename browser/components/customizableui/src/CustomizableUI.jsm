@@ -2089,25 +2089,71 @@ let CustomizableUIInternal = {
 Object.freeze(CustomizableUIInternal);
 
 this.CustomizableUI = {
+  /**
+   * Constant reference to the ID of the menu panel.
+   */
   get AREA_PANEL() "PanelUI-contents",
+  /**
+   * Constant reference to the ID of the navigation toolbar.
+   */
   get AREA_NAVBAR() "nav-bar",
+  /**
+   * Constant reference to the ID of the menubar's toolbar.
+   */
   get AREA_MENUBAR() "toolbar-menubar",
+  /**
+   * Constant reference to the ID of the tabstrip toolbar.
+   */
   get AREA_TABSTRIP() "TabsToolbar",
+  /**
+   * Constant reference to the ID of the bookmarks toolbar.
+   */
   get AREA_BOOKMARKS() "PersonalToolbar",
+  /**
+   * Constant reference to the ID of the addon-bar toolbar shim.
+   * Do not use, this will be removed as soon as reasonably possible.
+   * @deprecated
+   */
   get AREA_ADDONBAR() "addon-bar",
-
-  get PROVIDER_XUL() "xul",
-  get PROVIDER_API() "api",
-  get PROVIDER_SPECIAL() "special",
-
-  get SOURCE_BUILTIN() "builtin",
-  get SOURCE_EXTERNAL() "external",
-
-  get TYPE_BUTTON() "button",
+  /**
+   * Constant indicating the area is a menu panel.
+   */
   get TYPE_MENU_PANEL() "menu-panel",
+  /**
+   * Constant indicating the area is a toolbar.
+   */
   get TYPE_TOOLBAR() "toolbar",
 
+  /**
+   * Constant indicating a XUL-type provider.
+   */
+  get PROVIDER_XUL() "xul",
+  /**
+   * Constant indicating an API-type provider.
+   */
+  get PROVIDER_API() "api",
+  /**
+   * Constant indicating dynamic (special) widgets: spring, spacer, and separator.
+   */
+  get PROVIDER_SPECIAL() "special",
+
+  /**
+   * Constant indicating the widget is built-in
+   */
+  get SOURCE_BUILTIN() "builtin",
+  /**
+   * Constant indicating the widget is externally provided
+   * (e.g. by add-ons or other items not part of the builtin widget set).
+   */
+  get SOURCE_EXTERNAL() "external",
+
+  /**
+   * The class used to distinguish items that span the entire menu panel.
+   */
   get WIDE_PANEL_CLASS() "panel-wide-item",
+  /**
+   * The (constant) number of columns in the menu panel.
+   */
   get PANEL_COLUMN_COUNT() 3,
 
   /**
@@ -2681,7 +2727,9 @@ this.CustomizableUI = {
     return CustomizableUIInternal.canWidgetMoveToArea(aWidgetId, aArea);
   },
   /**
-   * Whether we're in a default state.
+   * Whether we're in a default state. Note that non-removable non-default
+   * widgets and non-existing widgets are not taken into account in determining
+   * whether we're in the default state.
    *
    * NB: this is a property with a getter. The getter is NOT cheap, because
    * it does smart things with non-removable non-default items, non-existent

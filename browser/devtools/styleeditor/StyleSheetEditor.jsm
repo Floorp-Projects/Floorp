@@ -19,6 +19,7 @@ const {CssLogic} = require("devtools/styleinspector/css-logic");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 
@@ -359,8 +360,13 @@ StyleSheetEditor.prototype = {
       }.bind(this));
     };
 
-    showFilePicker(file || this._styleSheetFilePath, true, this._window, onFile);
-  },
+    let defaultName;
+    if (this._friendlyName) {
+      defaultName = OS.Path.basename(this._friendlyName);
+    }
+    showFilePicker(file || this._styleSheetFilePath, true, this._window,
+                   onFile, defaultName);
+ },
 
   /**
     * Retrieve custom key bindings objects as expected by Editor.
@@ -394,8 +400,8 @@ StyleSheetEditor.prototype = {
 
 const TAB_CHARS = "\t";
 
-const OS = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-const LINE_SEPARATOR = OS === "WINNT" ? "\r\n" : "\n";
+const CURRENT_OS = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+const LINE_SEPARATOR = CURRENT_OS === "WINNT" ? "\r\n" : "\n";
 
 /**
  * Prettify minified CSS text.
