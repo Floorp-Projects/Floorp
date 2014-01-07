@@ -27,6 +27,7 @@ skip-if(Android||B2G) == 649134-2.html 649134-2-ref.html
 
 == href-attr-change-restyles.html href-attr-change-restyles-ref.html
 == figure.html figure-ref.html
+== pre-1.html pre-1-ref.html
 == table-border-1.html table-border-1-ref.html
 == table-border-2.html table-border-2-ref.html
 != table-border-2.html table-border-2-notref.html
