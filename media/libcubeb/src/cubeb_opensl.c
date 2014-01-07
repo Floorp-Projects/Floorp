@@ -509,11 +509,13 @@ opensl_stream_destroy(cubeb_stream * stm)
 static int
 opensl_stream_start(cubeb_stream * stm)
 {
+  /* To refill the queues before starting playback in order to avoid racing
+  * with refills started by SetPlayState on OpenSLES ndk threads. */
+  bufferqueue_callback(NULL, stm);
   SLresult res = (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PLAYING);
   if (res != SL_RESULT_SUCCESS)
     return CUBEB_ERROR;
   stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_STARTED);
-  bufferqueue_callback(NULL, stm);
   return CUBEB_OK;
 }
 

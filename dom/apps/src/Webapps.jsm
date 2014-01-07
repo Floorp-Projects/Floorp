@@ -155,6 +155,7 @@ this.DOMApplicationRegistry = {
     cpmm.addMessageListener("Activities:Register:OK", this);
 
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+    Services.obs.addObserver(this, "memory-pressure", false);
 
     AppDownloadManager.registerCancelFunction(this.cancelDownload.bind(this));
 
@@ -961,6 +962,9 @@ this.DOMApplicationRegistry = {
       Services.obs.removeObserver(this, "xpcom-shutdown");
       cpmm = null;
       ppmm = null;
+    } else if (aTopic == "memory-pressure") {
+      // Clear the manifest cache on memory pressure.
+      this._manifestCache = {};
     }
   },
 
