@@ -75,10 +75,10 @@
 
 #include "nsCSSParser.h"
 #include "nsIMediaList.h"
-#include "nsIDOMWakeLock.h"
+#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/WakeLock.h"
 
 #include "ImageContainer.h"
-#include "nsIPowerManagerService.h"
 #include "nsRange.h"
 #include <algorithm>
 
@@ -2245,13 +2245,14 @@ void
 HTMLMediaElement::WakeLockCreate()
 {
   if (!mWakeLock) {
-    nsCOMPtr<nsIPowerManagerService> pmService =
-      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    nsRefPtr<power::PowerManagerService> pmService =
+      power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
 
-    pmService->NewWakeLock(NS_LITERAL_STRING("cpu"),
-                           OwnerDoc()->GetWindow(),
-                           getter_AddRefs(mWakeLock));
+    ErrorResult rv;
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("cpu"),
+                                       OwnerDoc()->GetInnerWindow(),
+                                       rv);
   }
 }
 
@@ -2259,7 +2260,9 @@ void
 HTMLMediaElement::WakeLockRelease()
 {
   if (mWakeLock) {
-    mWakeLock->Unlock();
+    ErrorResult rv;
+    mWakeLock->Unlock(rv);
+    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to unlock the wakelock.");
     mWakeLock = nullptr;
   }
 }

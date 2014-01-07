@@ -28,8 +28,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(SpeechSynthesisUtterance, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(SpeechSynthesisUtterance, nsDOMEventTargetHelper)
 
-SpeechSynthesisUtterance::SpeechSynthesisUtterance(const nsAString& text)
-  : mText(text)
+SpeechSynthesisUtterance::SpeechSynthesisUtterance(nsPIDOMWindow* aOwnerWindow,
+                                                   const nsAString& text)
+  : nsDOMEventTargetHelper(aOwnerWindow)
+  , mText(text)
   , mVolume(1)
   , mRate(1)
   , mPitch(1)
@@ -74,8 +76,7 @@ SpeechSynthesisUtterance::Constructor(GlobalObject& aGlobal,
 
   MOZ_ASSERT(win->IsInnerWindow());
   nsRefPtr<SpeechSynthesisUtterance> object =
-    new SpeechSynthesisUtterance(aText);
-  object->BindToOwner(win);
+    new SpeechSynthesisUtterance(win, aText);
   return object.forget();
 }
 

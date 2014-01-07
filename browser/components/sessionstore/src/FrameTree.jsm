@@ -11,7 +11,7 @@ const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
-const EXPORTED_METHODS = ["addObserver", "contains", "map"];
+const EXPORTED_METHODS = ["addObserver", "contains", "map", "forEach"];
 
 /**
  * A FrameTree represents all frames that were reachable when the document
@@ -159,6 +159,34 @@ FrameTreeInternal.prototype = {
     }
 
     return walk(this.content);
+  },
+
+  /**
+   * Applies the given function |cb| to all frames stored in the tree. Use this
+   * method if |map()| doesn't suit your needs and you want more control over
+   * how data is collected.
+   *
+   * @param cb (function)
+   *        This callback receives the current frame as the only argument.
+   */
+  forEach: function (cb) {
+    let frames = this._frames;
+
+    function walk(frame) {
+      cb(frame);
+
+      if (!frames.has(frame)) {
+        return;
+      }
+
+      Array.forEach(frame.frames, subframe => {
+        if (frames.has(subframe)) {
+          cb(subframe);
+        }
+      });
+    }
+
+    walk(this.content);
   },
 
   /**

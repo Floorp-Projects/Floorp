@@ -10049,14 +10049,11 @@ ssl3_AuthCertificateComplete(sslSocket *ss, PRErrorCode error)
 	SSL_TRC(3, ("%d: SSL3[%p]: certificate authentication won the race with"
         	    " peer's finished message", SSL_GETPID(), ss->fd));
 
-	PORT_Assert(!ss->firstHsDone);
-	PORT_Assert(!ss->sec.isServer);
 	PORT_Assert(!ss->ssl3.hs.isResuming);
 	PORT_Assert(ss->ssl3.hs.ws != idle_handshake);
 
 	if (ss->opt.enableFalseStart &&
 	    !ss->firstHsDone &&
-	    !ss->sec.isServer &&
 	    !ss->ssl3.hs.isResuming &&
 	    ssl3_WaitingForStartOfServerSecondRound(ss)) {
 	    /* ssl3_SendClientSecondRound deferred the false start check because

@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
@@ -328,7 +330,7 @@ let TabStateInternal = {
       history = syncHandler.collectSessionHistory(includePrivateData);
     } catch (e) {
       // This may happen if the tab has crashed.
-      Cu.reportError(e);
+      console.error(e);
       return tabData;
     }
 
@@ -364,7 +366,7 @@ let TabStateInternal = {
       if (key != "storage" || includePrivateData) {
         tabData[key] = data[key];
       } else {
-        tabData.storage = {};
+        let storage = {};
         let isPinned = tab.pinned;
 
         // If we're not allowed to include private data, let's filter out hosts
@@ -372,8 +374,12 @@ let TabStateInternal = {
         for (let host of Object.keys(data.storage)) {
           let isHttps = host.startsWith("https:");
           if (PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
-            tabData.storage[host] = data.storage[host];
+            storage[host] = data.storage[host];
           }
+        }
+
+        if (Object.keys(storage).length) {
+          tabData.storage = storage;
         }
       }
     }

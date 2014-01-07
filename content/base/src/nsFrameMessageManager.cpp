@@ -926,8 +926,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
       JS::Rooted<JS::Value> targetv(ctx);
       JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
-      nsContentUtils::WrapNative(ctx, global, aTarget, &targetv,
-                                 nullptr, true);
+      nsresult rv = nsContentUtils::WrapNative(ctx, global, aTarget, &targetv, true);
+      NS_ENSURE_SUCCESS(rv, rv);
 
       JS::Rooted<JSObject*> cpows(ctx);
       if (aCpows) {
@@ -1017,8 +1017,8 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           defaultThisValue = aTarget;
         }
         JS::Rooted<JSObject*> global(ctx, JS_GetGlobalForObject(ctx, object));
-        nsContentUtils::WrapNative(ctx, global, defaultThisValue,
-                                   &thisValue, nullptr, true);
+        nsresult rv = nsContentUtils::WrapNative(ctx, global, defaultThisValue, &thisValue, true);
+        NS_ENSURE_SUCCESS(rv, rv);
       } else {
         // If the listener is a JS object which has receiveMessage function:
         if (!JS_GetProperty(ctx, object, "receiveMessage", &funval) ||

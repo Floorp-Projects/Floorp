@@ -1390,9 +1390,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
 
     JS::Rooted<JSObject*> scope(jscontext, global->GetGlobalJSObject());
     JS::Rooted<JS::Value> v(jscontext);
-    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, &v,
-                                    getter_AddRefs(wrapper));
+    rv = nsContentUtils::WrapNative(jscontext, scope, mRoot, mRoot, &v);
     NS_ENSURE_SUCCESS(rv, rv);
 
     JS::Rooted<JSObject*> jselement(jscontext, JSVAL_TO_OBJECT(v));
@@ -1402,7 +1400,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
         JS::Rooted<JS::Value> jsdatabase(jscontext);
         rv = nsContentUtils::WrapNative(jscontext, scope, mDB,
                                         &NS_GET_IID(nsIRDFCompositeDataSource),
-                                        &jsdatabase, getter_AddRefs(wrapper));
+                                        &jsdatabase);
         NS_ENSURE_SUCCESS(rv, rv);
 
         bool ok;
@@ -1415,11 +1413,10 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     {
         // builder
         JS::Rooted<JS::Value> jsbuilder(jscontext);
-        nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         rv = nsContentUtils::WrapNative(jscontext, jselement,
                                         static_cast<nsIXULTemplateBuilder*>(this),
                                         &NS_GET_IID(nsIXULTemplateBuilder),
-                                        &jsbuilder, getter_AddRefs(wrapper));
+                                        &jsbuilder);
         NS_ENSURE_SUCCESS(rv, rv);
 
         bool ok;

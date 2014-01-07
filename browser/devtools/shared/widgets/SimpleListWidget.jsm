@@ -189,7 +189,7 @@ SimpleListWidget.prototype = {
   },
 
   /**
-   * Sets the text displayed in this container as a when empty.
+   * Sets the text displayed in this container when empty.
    * @param string aValue
    */
   set _textWhenEmpty(aValue) {

@@ -350,12 +350,10 @@ public:
   // replaying after the input as ended. In the latter case, the new source is
   // not connected to streams created by captureStreamUntilEnded.
 
-  struct DecodedStreamData MOZ_FINAL : public MainThreadMediaStreamListener {
+  struct DecodedStreamData {
     DecodedStreamData(MediaDecoder* aDecoder,
                       int64_t aInitialTime, SourceMediaStream* aStream);
     ~DecodedStreamData();
-
-    virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
 
     StreamTime GetLastOutputTime() { return mListener->GetLastOutputTime(); }
     bool IsFinished() { return mListener->IsFinishedOnMainThread(); }
@@ -400,8 +398,11 @@ public:
 
   class DecodedStreamGraphListener : public MediaStreamListener {
   public:
-    DecodedStreamGraphListener(MediaStream* aStream);
+    DecodedStreamGraphListener(MediaStream* aStream, DecodedStreamData* aData);
     virtual void NotifyOutput(MediaStreamGraph* aGraph, GraphTime aCurrentTime) MOZ_OVERRIDE;
+    virtual void NotifyFinished(MediaStreamGraph* aGraph) MOZ_OVERRIDE;
+
+    void DoNotifyFinished();
 
     StreamTime GetLastOutputTime()
     {
@@ -410,13 +411,18 @@ public:
     }
     void Forget()
     {
+      NS_ASSERTION(NS_IsMainThread(), "Main thread only");
+      mData = nullptr;
+
       MutexAutoLock lock(mMutex);
       mStream = nullptr;
     }
-    void SetFinishedOnMainThread(bool aFinished)
+    bool SetFinishedOnMainThread(bool aFinished)
     {
       MutexAutoLock lock(mMutex);
+      bool result = !mStreamFinishedOnMainThread;
       mStreamFinishedOnMainThread = aFinished;
+      return result;
     }
     bool IsFinishedOnMainThread()
     {
@@ -424,6 +430,9 @@ public:
       return mStreamFinishedOnMainThread;
     }
   private:
+    // Main thread only
+    DecodedStreamData* mData;
+
     Mutex mMutex;
     // Protected by mMutex
     nsRefPtr<MediaStream> mStream;
@@ -465,12 +474,6 @@ public:
    * Decoder monitor must be held.
    */
   void UpdateStreamBlockingForStateMachinePlaying();
-  /**
-   * Called when the state of mDecodedStream as visible on the main thread
-   * has changed. In particular we want to know when the stream has finished
-   * so we can call PlaybackEnded.
-   */
-  void NotifyDecodedStreamMainThreadStateChanged();
   nsTArray<OutputStreamData>& OutputStreams()
   {
     GetReentrantMonitor().AssertCurrentThreadIn();
@@ -1133,10 +1136,6 @@ protected:
 
   // True if the stream is infinite (e.g. a webradio).
   bool mInfiniteStream;
-
-  // True if NotifyDecodedStreamMainThreadStateChanged should retrigger
-  // PlaybackEnded when mDecodedStream->mStream finishes.
-  bool mTriggerPlaybackEndedWhenSourceStreamFinishes;
 
   // Start timer to update download progress information.
   nsresult StartProgress();

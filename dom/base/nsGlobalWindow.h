@@ -82,7 +82,6 @@ class nsICSSDeclaration;
 class nsIDocShellTreeOwner;
 class nsIDOMCrypto;
 class nsIDOMOfflineResourceList;
-class nsIDOMMozWakeLock;
 class nsIScrollableFrame;
 class nsIControllers;
 class nsIScriptContext;
@@ -112,6 +111,7 @@ class Gamepad;
 class MediaQueryList;
 class Navigator;
 class SpeechSynthesis;
+class WakeLock;
 namespace indexedDB {
 class IDBFactory;
 } // namespace indexedDB
@@ -972,7 +972,7 @@ protected:
 
   nsCOMPtr <nsIIdleService> mIdleService;
 
-  nsCOMPtr <nsIDOMMozWakeLock> mWakeLock;
+  nsRefPtr<mozilla::dom::WakeLock> mWakeLock;
 
   static bool sIdleObserversAPIFuzzTimeDisabled;
 

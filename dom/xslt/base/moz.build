@@ -4,5 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += ['public', 'src']
-TEST_DIRS += ['tests/buster', 'tests/mochitest']
+UNIFIED_SOURCES += [
+    'txDouble.cpp',
+    'txExpandedNameMap.cpp',
+    'txList.cpp',
+    'txNamespaceMap.cpp',
+    'txURIUtils.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LOCAL_INCLUDES += [
+    '..',
+    '../xml',
+    '../xpath',
+    '../xslt',
+]
+
+FINAL_LIBRARY = 'gklayout'
