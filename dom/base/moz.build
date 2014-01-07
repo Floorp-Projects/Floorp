@@ -84,6 +84,7 @@ UNIFIED_SOURCES += [
     'nsFocusManager.cpp',
     'nsGlobalWindowCommands.cpp',
     'nsHistory.cpp',
+    'nsIGlobalObject.cpp',
     'nsJSTimeoutHandler.cpp',
     'nsJSUtils.cpp',
     'nsLocation.cpp',
