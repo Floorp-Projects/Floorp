@@ -4444,6 +4444,7 @@ var Utils = {
       case "Invalid HSTS Headers":
       case "Insecure Password Field":
       case "SSL":
+      case "CORS":
         return CATEGORY_SECURITY;
 
       default:
