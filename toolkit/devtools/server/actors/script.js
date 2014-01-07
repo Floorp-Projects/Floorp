@@ -489,7 +489,7 @@ ThreadActor.prototype = {
   },
 
   get youngestFrame() {
-    if (!this.state == "paused") {
+    if (this.state != "paused") {
       return null;
     }
     return this.dbg.getNewestFrame();

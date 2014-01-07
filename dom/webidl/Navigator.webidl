@@ -17,8 +17,6 @@
  * and create derivative works of this document.
  */
 
-interface MozWakeLock;
-
 // http://www.whatwg.org/specs/web-apps/current-work/#the-navigator-object
 [HeaderFile="Navigator.h", NeedNewResolve]
 interface Navigator {
@@ -193,7 +191,7 @@ partial interface Navigator {
    * One topic can be locked multiple times; it is considered released only when
    * all locks on the topic have been released.
    *
-   * The returned nsIDOMMozWakeLock object is a token of the lock.  You can
+   * The returned MozWakeLock object is a token of the lock.  You can
    * unlock the lock via the object's |unlock| method.  The lock is released
    * automatically when its associated window is unloaded.
    *

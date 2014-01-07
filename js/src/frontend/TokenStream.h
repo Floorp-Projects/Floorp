@@ -628,12 +628,12 @@ class MOZ_STACK_CLASS TokenStream
         return userbuf.limit();
     }
 
-    bool hasSourceURL() const {
-        return sourceURL_ != nullptr;
+    bool hasDisplayURL() const {
+        return displayURL_ != nullptr;
     }
 
-    jschar *sourceURL() {
-        return sourceURL_;
+    jschar *displayURL() {
+        return displayURL_;
     }
 
     bool hasSourceMapURL() const {
@@ -848,7 +848,7 @@ class MOZ_STACK_CLASS TokenStream
     bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
                       const char *directive, int directiveLength,
                       const char *errorMsgPragma, jschar **destination);
-    bool getSourceURL(bool isMultiline, bool shouldWarnDeprecated);
+    bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
     // |expect| cannot be an EOL char.
@@ -889,7 +889,7 @@ class MOZ_STACK_CLASS TokenStream
     const jschar        *prevLinebase;      // start of previous line;  nullptr if on the first line
     TokenBuf            userbuf;            // user input buffer
     const char          *filename;          // input filename or null
-    jschar              *sourceURL_;        // the user's requested source URL or null
+    jschar              *displayURL_;       // the user's requested source URL or null
     jschar              *sourceMapURL_;     // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
     bool                maybeEOL[256];      // probabilistic EOL lookup table

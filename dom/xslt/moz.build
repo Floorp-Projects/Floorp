@@ -20,3 +20,14 @@ EXPORTS += [
     'nsIDocumentTransformer.h',
 ]
 
+PARALLEL_DIRS += [
+    'base',
+    'xml',
+    'xpath',
+    'xslt',
+]
+
+TEST_DIRS += [
+    'tests/buster',
+    'tests/mochitest',
+]

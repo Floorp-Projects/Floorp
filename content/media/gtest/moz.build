@@ -4,5 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += ['public', 'src']
-TEST_DIRS += ['tests/buster', 'tests/mochitest']
+LIBRARY_NAME = 'media_gtest'
+
+UNIFIED_SOURCES += [
+    'TestTrackEncoder.cpp',
+]
+
+LIBXUL_LIBRARY = True
+
+EXPORT_LIBRARY = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+LOCAL_INCLUDES += [
+    '/content/media/encoder',
+]
+

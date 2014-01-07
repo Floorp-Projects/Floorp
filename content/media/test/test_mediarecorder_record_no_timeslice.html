@@ -24,7 +24,7 @@ function startTest(test, token) {
 
   element.src = test.name;
   element.test = test;
-  element.stream = element.mozCaptureStream();
+  element.stream = element.mozCaptureStreamUntilEnded();
 
   var mediaRecorder = new MediaRecorder(element.stream);
   var onStopFired = false;
@@ -47,6 +47,7 @@ function startTest(test, token) {
 
       // ondataavailable should always fire before onstop
       if (onDataAvailableFired) {
+        ok(true, 'onstop fired after ondataavailable');
         manager.finished(token);
       } else {
         ok(false, 'onstop fired without an ondataavailable event first');
@@ -95,15 +96,7 @@ function startTest(test, token) {
          'Media recorder should be recording');
       is(mediaRecorder.stream, element.stream,
          'Media recorder stream = element stream at the start of recording');
-
-      // When ended fires, stop recording
-      element.onended = function () {
-        mediaRecorder.stop();
-        is(mediaRecorder.state, 'inactive',
-           'Media recorder is inactive afer being stopped');
-        is(mediaRecorder.stream, element.stream,
-           'Media recorder stream = element stream post recording');
-      }
+      // Recording will automatically stop when the stream ends.
     }
   }
 
