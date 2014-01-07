@@ -833,16 +833,6 @@ GLContextProviderEGL::Shutdown()
 {
 }
 
-GLContextEGL* DowncastGLContextEGL(GLContext* context)
-{
-    return static_cast<GLContextEGL*>(context);
-}
-
-void SetEGLSurfaceOverride(GLContextEGL* context, EGLSurface surf)
-{
-    context->SetEGLSurfaceOverride(surf);
-}
-
 } /* namespace gl */
 } /* namespace mozilla */
 
