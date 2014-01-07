@@ -1504,6 +1504,11 @@ struct JSJitInfo {
         return type != ParallelNative;
     }
 
+    bool isTypedMethodJitInfo() const
+    {
+        return isTypedMethod;
+    }
+
     union {
         JSJitGetterOp getter;
         JSJitSetterOp setter;
@@ -1526,7 +1531,9 @@ struct JSJitInfo {
                                   throw). */
     uint16_t isInSlot : 1;     /* True if this is a getter that can get a member
                                   from a slot of the "this" object directly. */
-    uint16_t slotIndex : 13;   /* If isInSlot is true, the index of the slot to
+    uint16_t isTypedMethod : 1; /* True if this is an instance of
+                                   JSTypedMethodJitInfo. */
+    uint16_t slotIndex : 12;   /* If isInSlot is true, the index of the slot to
                                   get the value from.  Otherwise 0. */
 
     AliasSet aliasSet;      /* The alias set for this op.  This is a _minimal_
@@ -1536,12 +1543,6 @@ struct JSJitInfo {
                                of the actual argument types being passed in. */
     // XXXbz should we have a JSGetterJitInfo subclass or something?
     // XXXbz should we have a JSValueType for the type of the member?
-    const ArgType* const argTypes; /* For a method, a list of sets of types that
-                                      the function expects.  This can be used,
-                                      for example, to figure out when argument
-                                      coercions can have side-effects. nullptr
-                                      if we have no type information for
-                                      arguments. */
 
 private:
     static void staticAsserts()
@@ -1553,6 +1554,26 @@ private:
         JS_STATIC_ASSERT(Any & Object);
         JS_STATIC_ASSERT(Any & Null);
     }
+};
+
+struct JSTypedMethodJitInfo
+{
+    // We use C-style inheritance here, rather than C++ style inheritance
+    // because not all compilers support brace-initialization for non-aggregate
+    // classes. Using C++ style inheritance and constructors instead of
+    // brace-initialization would also force the creation of static
+    // constructors (on some compilers) when JSJitInfo and JSTypedMethodJitInfo
+    // structures are declared. Since there can be several thousand of these
+    // structures present and we want to have roughly equivalent performance
+    // across a range of compilers, we do things manually.
+    JSJitInfo base;
+
+    const JSJitInfo::ArgType* const argTypes; /* For a method, a list of sets of
+                                                 types that the function
+                                                 expects.  This can be used,
+                                                 for example, to figure out
+                                                 when argument coercions can
+                                                 have side-effects. */
 };
 
 namespace JS {
@@ -1584,7 +1605,7 @@ inline int CheckIsParallelNative(JSParallelNative parallelNative);
  */
 #define JS_JITINFO_NATIVE_PARALLEL(infoName, parallelOp)                \
     const JSJitInfo infoName =                                          \
-        {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSVAL_TYPE_MISSING,false,false,false,0,JSJitInfo::AliasEverything,nullptr}
+        {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSVAL_TYPE_MISSING,false,false,false,false,0,JSJitInfo::AliasEverything}
 
 #define JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(infoName, wrapperName, serialOp) \
     bool wrapperName##_ParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, \

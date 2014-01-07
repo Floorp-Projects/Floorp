@@ -4838,9 +4838,9 @@ static const JSJitInfo dom_x_getterinfo = {
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
     false,    /* isInSlot */
+    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasNone, /* aliasSet */
-    nullptr   /* argTypes */
+    JSJitInfo::AliasNone /* aliasSet */
 };
 
 static const JSJitInfo dom_x_setterinfo = {
@@ -4852,9 +4852,9 @@ static const JSJitInfo dom_x_setterinfo = {
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
     false,    /* isInSlot */
+    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasEverything, /* aliasSet */
-    nullptr   /* argTypes */
+    JSJitInfo::AliasEverything /* aliasSet */
 };
 
 static const JSJitInfo doFoo_methodinfo = {
@@ -4866,9 +4866,9 @@ static const JSJitInfo doFoo_methodinfo = {
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
     false,    /* isInSlot */
+    false,    /* isTypedMethod */
     0,        /* slotIndex */
-    JSJitInfo::AliasEverything, /* aliasSet */
-    nullptr   /* argTypes */
+    JSJitInfo::AliasEverything /* aliasSet */
 };
 
 static const JSPropertySpec dom_props[] = {
