@@ -16,6 +16,12 @@
 #include "DeviceManagerD3D9.h"
 
 namespace mozilla {
+namespace gfxs {
+class DrawTarget;
+}
+}
+
+namespace mozilla {
 namespace layers {
 
 class CompositorD3D9;
@@ -32,31 +38,14 @@ public:
   {}
   virtual ~TextureSourceD3D9();
 
-  virtual IDirect3DTexture9* GetD3D9Texture() { return mTextures[0]; }
-  virtual bool IsYCbCrSource() const { return false; }
+  virtual IDirect3DTexture9* GetD3D9Texture() { return mTexture; }
 
-  struct YCbCrTextures
-  {
-    IDirect3DTexture9 *mY;
-    IDirect3DTexture9 *mCb;
-    IDirect3DTexture9 *mCr;
-    StereoMode mStereoMode;
-  };
-
-  virtual YCbCrTextures GetYCbCrTextures() {
-    YCbCrTextures textures = { mTextures[0],
-                               mTextures[1],
-                               mTextures[2],
-                               mStereoMode };
-    return textures;
-  }
+  StereoMode GetStereoMode() const { return mStereoMode; };
 
   // Release all texture memory resources held by the texture host.
   virtual void ReleaseTextureResources()
   {
-    for (size_t i = 0; i < 3; ++i) {
-      mTextures[i] = nullptr;
-    }
+    mTexture = nullptr;
   }
 
 protected:
@@ -102,7 +91,298 @@ protected:
   DeviceManagerD3D9* mCreatingDeviceManager;
 
   StereoMode mStereoMode;
-  RefPtr<IDirect3DTexture9> mTextures[3];
+  RefPtr<IDirect3DTexture9> mTexture;
+};
+
+/**
+ * A TextureSource that implements the DataTextureSource interface.
+ * it can be used without a TextureHost and is able to upload texture data
+ * from a gfx::DataSourceSurface.
+ */
+class DataTextureSourceD3D9 : public DataTextureSource
+                            , public TextureSourceD3D9
+                            , public TileIterator
+{
+public:
+  DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                        CompositorD3D9* aCompositor,
+                        TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
+                        StereoMode aStereoMode = STEREO_MODE_MONO);
+
+  DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                        CompositorD3D9* aCompositor,
+                        IDirect3DTexture9* aTexture,
+                        TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+
+  virtual ~DataTextureSourceD3D9();
+
+  // DataTextureSource
+
+  virtual bool Update(gfx::DataSourceSurface* aSurface,
+                      nsIntRegion* aDestRegion = nullptr,
+                      gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE;
+
+  // TextureSource
+
+  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE { return this; }
+
+  virtual IDirect3DTexture9* GetD3D9Texture() MOZ_OVERRIDE;
+
+  virtual DataTextureSource* AsDataTextureSource() MOZ_OVERRIDE { return this; }
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE { mTexture = nullptr; }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  // TileIterator
+
+  virtual TileIterator* AsTileIterator() MOZ_OVERRIDE { return mIsTiled ? this : nullptr; }
+
+  virtual size_t GetTileCount() MOZ_OVERRIDE { return mTileTextures.size(); }
+
+  virtual bool NextTile() MOZ_OVERRIDE { return (++mCurrentTile < mTileTextures.size()); }
+
+  virtual nsIntRect GetTileRect() MOZ_OVERRIDE;
+
+  virtual void EndTileIteration() MOZ_OVERRIDE { mIterating = false; }
+
+  virtual void BeginTileIteration() MOZ_OVERRIDE
+  {
+    mIterating = true;
+    mCurrentTile = 0;
+  }
+
+  // To use with DIBTextureHostD3D9
+
+  bool Update(gfxWindowsSurface* aSurface);
+
+protected:
+  gfx::IntRect GetTileRect(uint32_t aTileIndex) const;
+
+  void Reset();
+
+  std::vector< RefPtr<IDirect3DTexture9> > mTileTextures;
+  RefPtr<CompositorD3D9> mCompositor;
+  gfx::SurfaceFormat mFormat;
+  uint32_t mCurrentTile;
+  TextureFlags mFlags;
+  bool mIsTiled;
+  bool mIterating;
+};
+
+/**
+ * Can only be drawn into through Cairo, and only support opaque surfaces.
+ * The corresponding TextureHost is TextureHostD3D9.
+ */
+class CairoTextureClientD3D9 : public TextureClient
+                             , public TextureClientDrawTarget
+{
+public:
+  CairoTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+
+  virtual ~CairoTextureClientD3D9();
+
+  // TextureClient
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mTexture; }
+
+  virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const { return mSize; }
+
+  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
+
+  // TextureClientDrawTarget
+
+  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+
+  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
+
+private:
+  RefPtr<IDirect3DTexture9> mTexture;
+  nsRefPtr<IDirect3DSurface9> mD3D9Surface;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  nsRefPtr<gfxASurface> mSurface;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  bool mIsLocked;
+};
+
+/**
+ * Can only be drawn into through Cairo.
+ * Supports opaque surfaces. Prefer CairoTextureClientD3D9 when possible.
+ * The coresponding TextureHost is DIBTextureHostD3D9.
+ */
+class DIBTextureClientD3D9 : public TextureClient
+                           , public TextureClientDrawTarget
+{
+public:
+  DIBTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+
+  virtual ~DIBTextureClientD3D9();
+
+  // TextureClient
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mSurface; }
+
+  virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const { return mSize; }
+
+  virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
+
+  // TextureClientDrawTarget
+
+  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+
+  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
+
+protected:
+  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  bool mIsLocked;
+};
+
+/**
+ * Wraps a D3D9 texture, shared with the compositor though DXGI.
+ * At the moment it is only used with D3D11 compositing, and the corresponding
+ * TextureHost is DXGITextureHostD3D11.
+ */
+class SharedTextureClientD3D9 : public TextureClient
+{
+public:
+  SharedTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+
+  virtual ~SharedTextureClientD3D9();
+
+  // TextureClient
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mTexture; }
+
+  virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  void InitWith(IDirect3DTexture9* aTexture, HANDLE aSharedHandle, D3DSURFACE_DESC aDesc)
+  {
+    MOZ_ASSERT(!mTexture);
+    mTexture = aTexture;
+    mHandle = aSharedHandle;
+    mDesc = aDesc;
+  }
+
+  virtual gfx::IntSize GetSize() const
+  {
+    return gfx::IntSize(mDesc.Width, mDesc.Height);
+  }
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
+
+private:
+  RefPtr<IDirect3DTexture9> mTexture;
+  gfx::SurfaceFormat mFormat;
+  HANDLE mHandle;
+  D3DSURFACE_DESC mDesc;
+  bool mIsLocked;
+};
+
+class TextureHostD3D9 : public TextureHost
+{
+public:
+  TextureHostD3D9(TextureFlags aFlags,
+                  const SurfaceDescriptorD3D9& aDescriptor);
+
+  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE;
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE;
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return nullptr;
+  }
+
+protected:
+  TextureHostD3D9(TextureFlags aFlags);
+  IDirect3DDevice9* GetDevice();
+
+  RefPtr<DataTextureSourceD3D9> mTextureSource;
+  RefPtr<IDirect3DTexture9> mTexture;
+  RefPtr<CompositorD3D9> mCompositor;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  bool mIsLocked;
+};
+
+class DIBTextureHostD3D9 : public TextureHost
+{
+public:
+  DIBTextureHostD3D9(TextureFlags aFlags,
+                     const SurfaceDescriptorDIB& aDescriptor);
+
+  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE;
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE;
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual void Updated(const nsIntRegion* aRegion = nullptr);
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return nullptr; // TODO: cf bug 872568
+  }
+
+protected:
+  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<DataTextureSourceD3D9> mTextureSource;
+  RefPtr<CompositorD3D9> mCompositor;
+  gfx::SurfaceFormat mFormat;
+  gfx::IntSize mSize;
+  bool mIsLocked;
 };
 
 class CompositingRenderTargetD3D9 : public CompositingRenderTarget,
@@ -120,7 +400,7 @@ public:
 
   virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mTextures[0],
+    MOZ_ASSERT(mTexture,
                "No texture, can't be indirectly rendered. Is this the screen backbuffer?");
     return this;
   }
@@ -239,11 +519,17 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE { return this; }
-
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
-  virtual bool IsYCbCrSource() const MOZ_OVERRIDE { return true; }
+  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
+  {
+    return mFirstSource->AsSourceD3D9();
+  }
+
+  virtual TextureSource* GetSubSource(int index) MOZ_OVERRIDE
+  {
+    return mFirstSource ? mFirstSource->GetSubSource(index) : nullptr;
+  }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
@@ -252,7 +538,7 @@ public:
 
   virtual const char* Name() MOZ_OVERRIDE
   {
-    return "TextureImageDeprecatedTextureHostD3D11";
+    return "DeprecatedTextureHostYCbCrD3D9";
   }
 
 protected:
@@ -261,6 +547,8 @@ protected:
                           nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 
 private:
+  gfx::IntSize mSize;
+  RefPtr<DataTextureSource> mFirstSource;
   RefPtr<CompositorD3D9> mCompositor;
 };
 

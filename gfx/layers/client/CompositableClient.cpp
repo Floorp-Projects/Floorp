@@ -207,19 +207,18 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
 
 #ifdef XP_WIN
   LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
-  // XXX[nrc] uncomment once we have new texture clients for windows
   if (parentBackend == LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
-    //result = new TextureClientD3D11(GetForwarder(), GetTextureInfo());
+    result = new TextureClientD3D11(aFormat, aTextureFlags);
   }
   if (parentBackend == LAYERS_D3D9 &&
       !GetForwarder()->ForwardsToDifferentProcess() &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
     // non-DIB textures don't work with alpha, see notes in TextureD3D9.
-    if (ContentForFormat(aFormat) == GFX_CONTENT_COLOR_ALPHA) {
-      //result = new TextureClientDIB(GetForwarder(), GetTextureInfo());
+    if (ContentForFormat(aFormat) != GFX_CONTENT_COLOR) {
+      result = new DIBTextureClientD3D9(aFormat, aTextureFlags);
     } else {
-      //result = new TextureClientD3D9(GetForwarder(), GetTextureInfo());
+      result = new CairoTextureClientD3D9(aFormat, aTextureFlags);
     }
   }
 #endif

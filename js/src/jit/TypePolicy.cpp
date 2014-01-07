@@ -704,13 +704,13 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
       case MIRType_Value:
         break;
       case MIRType_Null:
-        value->setFoldedUnchecked();
+        value->setImplicitlyUsedUnchecked();
         value = MConstant::New(alloc, Int32Value(0));
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
       case MIRType_Object:
       case MIRType_Undefined:
-        value->setFoldedUnchecked();
+        value->setImplicitlyUsedUnchecked();
         value = MConstant::New(alloc, DoubleNaNValue());
         ins->block()->insertBefore(ins, value->toInstruction());
         break;

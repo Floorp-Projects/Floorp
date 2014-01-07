@@ -66,6 +66,9 @@
 
 #define CC_KFACTOR_STAT_LEN   (256)
 
+/* Should be enough for any reasonable use-case */
+#define MAX_SSRCS_PER_MEDIA_LINE 16
+#define MAX_PTS_PER_MEDIA_LINE 16
 
 /**
  *  vcm_tones_t
@@ -337,6 +340,17 @@ typedef struct vcm_attrs_t_ {
   cc_boolean         rtcp_mux;
   vcm_audioAttrs_t audio; /**< audio line attribs */
   vcm_videoAttrs_t video; /**< Video Atrribs */
+  uint32_t bundle_level; /**< Where bundle transport info lives, if any */
+  /* Some stuff for assisting in stream correlation for bundle */
+  /** RTP correlator specified here:
+   * http://tools.ietf.org/html/draft-roach-mmusic-unified-plan */
+  cc_uint32_t        bundle_stream_correlator;
+  cc_uint32_t        ssrcs[MAX_SSRCS_PER_MEDIA_LINE];
+  cc_uint8_t         num_ssrcs;
+  /** Payload type ids that appear on this m-line, but no other. Used as a
+   * last-ditch correlator for bundle */
+  cc_uint8_t         unique_payload_types[MAX_PTS_PER_MEDIA_LINE];
+  cc_uint8_t         num_unique_payload_types;
 } vcm_mediaAttrs_t;
 
 //Using C++ for gips. This is required for gips.

@@ -1855,11 +1855,11 @@ MBinaryInstruction::tryUseUnsignedOperands()
         if (newlhs->type() != MIRType_Int32 || newrhs->type() != MIRType_Int32)
             return false;
         if (newlhs != getOperand(0)) {
-            getOperand(0)->setFoldedUnchecked();
+            getOperand(0)->setImplicitlyUsedUnchecked();
             replaceOperand(0, newlhs);
         }
         if (newrhs != getOperand(1)) {
-            getOperand(1)->setFoldedUnchecked();
+            getOperand(1)->setImplicitlyUsedUnchecked();
             replaceOperand(1, newrhs);
         }
         return true;
