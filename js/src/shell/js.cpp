@@ -4834,12 +4834,12 @@ static const JSJitInfo dom_x_getterinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Getter,
+    JSVAL_TYPE_UNKNOWN, /* returnType */
     true,     /* isInfallible. False in setters. */
     true,     /* isMovable */
     false,    /* isInSlot */
-    JSVAL_TYPE_UNKNOWN, /* returnType */
-    JSJitInfo::AliasNone, /* aliasSet */
     0,        /* slotIndex */
+    JSJitInfo::AliasNone, /* aliasSet */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
@@ -4849,12 +4849,12 @@ static const JSJitInfo dom_x_setterinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Setter,
+    JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable. */
     false,    /* isInSlot */
-    JSVAL_TYPE_UNKNOWN, /* returnType */
-    JSJitInfo::AliasEverything, /* aliasSet */
     0,        /* slotIndex */
+    JSJitInfo::AliasEverything, /* aliasSet */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
@@ -4864,12 +4864,12 @@ static const JSJitInfo doFoo_methodinfo = {
     0,        /* protoID */
     0,        /* depth */
     JSJitInfo::Method,
+    JSVAL_TYPE_UNKNOWN, /* returnType */
     false,    /* isInfallible. False in setters. */
     false,    /* isMovable */
     false,    /* isInSlot */
-    JSVAL_TYPE_UNKNOWN, /* returnType */
-    JSJitInfo::AliasEverything, /* aliasSet */
     0,        /* slotIndex */
+    JSJitInfo::AliasEverything, /* aliasSet */
     nullptr,  /* argTypes */
     nullptr   /* parallelNative */
 };
