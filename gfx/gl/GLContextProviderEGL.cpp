@@ -424,18 +424,6 @@ GLContextEGL::SetupLookupFunction()
     return true;
 }
 
-void*
-GLContextEGL::GetNativeData(NativeDataType aType)
-{
-    switch (aType) {
-    case NativeGLContext:
-        return mContext;
-
-    default:
-        return nullptr;
-    }
-}
-
 bool
 GLContextEGL::SwapBuffers()
 {

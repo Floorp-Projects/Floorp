@@ -62,8 +62,6 @@ public:
 
     bool SetupLookupFunction();
 
-    void *GetNativeData(NativeDataType aType);
-
     bool ResizeOffscreen(const gfx::IntSize& aNewSize);
 
     HGLRC Context() { return mContext; }

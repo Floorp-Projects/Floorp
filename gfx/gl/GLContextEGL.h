@@ -83,15 +83,13 @@ public:
 
     bool SetupLookupFunction();
 
-    void *GetNativeData(NativeDataType aType);
-
     bool SwapBuffers();
 
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf);
 
-    EGLContext Context() {
+    EGLContext GetEGLContext() {
         return mContext;
     }
 

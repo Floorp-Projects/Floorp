@@ -60,7 +60,7 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "GLTextureImage.h"
 #include "GLContextProvider.h"
-#include "GLContext.h"
+#include "GLContextCGL.h"
 #include "GLUploadHelpers.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
@@ -353,8 +353,7 @@ public:
 
   NSOpenGLContext* GetNSOpenGLContext()
   {
-    return static_cast<NSOpenGLContext*>(
-      mGLContext->GetNativeData(GLContext::NativeGLContext));
+    return GLContextCGL::Cast(mGLContext)->GetNSOpenGLContext();
   }
 
 protected:
@@ -2057,7 +2056,7 @@ nsChildView::PreRender(LayerManagerComposite* aManager)
   // composition is done, thus keeping the GL context locked forever.
   mViewTearDownLock.Lock();
 
-  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  NSOpenGLContext *glContext = GLContextCGL::Cast(manager->gl())->GetNSOpenGLContext();
 
   if (![(ChildView*)mView preRender:glContext]) {
     mViewTearDownLock.Unlock();
@@ -2073,7 +2072,7 @@ nsChildView::PostRender(LayerManagerComposite* aManager)
   if (!manager) {
     return;
   }
-  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  NSOpenGLContext *glContext = GLContextCGL::Cast(manager->gl())->GetNSOpenGLContext();
   [(ChildView*)mView postRender:glContext];
   mViewTearDownLock.Unlock();
 }

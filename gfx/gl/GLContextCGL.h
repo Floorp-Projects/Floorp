@@ -43,8 +43,6 @@ public:
 
     bool Init();
 
-    void *GetNativeData(NativeDataType aType);
-
     NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
     CGLContextObj GetCGLContext() const;
 

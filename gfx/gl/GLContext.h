@@ -2425,15 +2425,6 @@ public:
         return mSymbols.fUseProgram == nullptr;
     }
 
-    enum NativeDataType {
-      NativeGLContext,
-      NativeImageSurface,
-      NativeThebesSurface,
-      NativeCGLContext,
-      NativeDataTypeMax
-    };
-
-    virtual void *GetNativeData(NativeDataType aType) { return nullptr; }
     GLContext *GetSharedContext() { return mSharedContext; }
 
     /**
