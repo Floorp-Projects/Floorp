@@ -241,7 +241,6 @@ struct JSCompartment
     /* Set of initial shapes in the compartment. */
     js::InitialShapeSet          initialShapes;
     void sweepInitialShapeTable();
-    void markAllInitialShapeTableEntries(JSTracer *trc);
 
     /* Set of default 'new' or lazy types in the compartment. */
     js::types::TypeObjectWithNewScriptSet newTypeObjects;

@@ -1814,30 +1814,6 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
     }
 }
 
-/*
- * This is called by the minor GC to ensure that any relocated proto objects
- * get updated in the shape table.
- */
-void
-JSCompartment::markAllInitialShapeTableEntries(JSTracer *trc)
-{
-    if (!initialShapes.initialized())
-        return;
-
-    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-        if (!e.front().proto.isObject())
-            continue;
-        JSObject *proto = e.front().proto.toObject();
-        JS_SET_TRACING_LOCATION(trc, (void*)&e.front().proto);
-        MarkObjectRoot(trc, &proto, "InitialShapeSet proto");
-        if (proto != e.front().proto.toObject()) {
-            InitialShapeEntry moved = e.front();
-            moved.proto = TaggedProto(proto);
-            e.rekeyFront(e.front().getLookup(), moved);
-        }
-    }
-}
-
 void
 JSCompartment::sweepInitialShapeTable()
 {

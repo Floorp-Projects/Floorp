@@ -632,10 +632,8 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     CheckHashTablesAfterMovingGC(rt);
     MarkRuntime(&trc);
     Debugger::markAll(&trc);
-    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next()) {
+    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
         comp->markAllCrossCompartmentWrappers(&trc);
-        comp->markAllInitialShapeTableEntries(&trc);
-    }
     rt->newObjectCache.clearNurseryObjects(rt);
 
     /*
