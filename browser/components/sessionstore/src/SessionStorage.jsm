@@ -18,8 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "console",
 // Returns the principal for a given |frame| contained in a given |docShell|.
 function getPrincipalForFrame(docShell, frame) {
   let ssm = Services.scriptSecurityManager;
-  let doc = frame && frame.document;
-  let uri = Services.io.newURI(doc.documentURI, null, null);
+  let uri = frame.document.documentURIObject;
   return ssm.getDocShellCodebasePrincipal(uri, docShell);
 }
 
