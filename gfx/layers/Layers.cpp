@@ -1498,40 +1498,45 @@ PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite)
 }
 
 void
+SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
+{
+  if (aTarget->GetFormat() != FORMAT_B8G8R8A8) {
+    aTarget->SetPermitSubpixelAA(permitSubpixelAA);
+    return;
+  }
+
+  const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
+  gfx::Rect transformedBounds = aTarget->GetTransform().TransformBounds(gfx::Rect(Float(bounds.x), Float(bounds.y),
+                                                                                  Float(bounds.width), Float(bounds.height)));
+  transformedBounds.RoundOut();
+  IntRect intTransformedBounds;
+  transformedBounds.ToIntRect(&intTransformedBounds);
+  permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
+                      aTarget->GetOpaqueRect().Contains(intTransformedBounds);
+  aTarget->SetPermitSubpixelAA(permitSubpixelAA);
+}
+
+void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
   bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   if (!aTarget->IsCairo()) {
-    RefPtr<DrawTarget> dt = aTarget->GetDrawTarget();
-
-    if (dt->GetFormat() != FORMAT_B8G8R8A8) {
-      dt->SetPermitSubpixelAA(permitSubpixelAA);
-      return;
-    }
-
-    const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
-    gfx::Rect transformedBounds = dt->GetTransform().TransformBounds(gfx::Rect(Float(bounds.x), Float(bounds.y),
-                                                                     Float(bounds.width), Float(bounds.height)));
-    transformedBounds.RoundOut();
-    IntRect intTransformedBounds;
-    transformedBounds.ToIntRect(&intTransformedBounds);
-    permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
-                        dt->GetOpaqueRect().Contains(intTransformedBounds);
-    dt->SetPermitSubpixelAA(permitSubpixelAA);
-  } else {
-    nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-    if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
-      // Destination doesn't have alpha channel; no need to set any special flags
-      surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
-      return;
-    }
-
-    const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
-    permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
-        surface->GetOpaqueRect().Contains(
-        aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
-    surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
+    SetAntialiasingFlags(aLayer, aTarget->GetDrawTarget());
+    return;
   }
+
+  nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
+  if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
+    // Destination doesn't have alpha channel; no need to set any special flags
+    surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
+    return;
+  }
+
+  const nsIntRect& bounds = aLayer->GetVisibleRegion().GetBounds();
+  permitSubpixelAA &= !(aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) ||
+      surface->GetOpaqueRect().Contains(
+      aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
+  surface->SetSubpixelAntialiasingEnabled(permitSubpixelAA);
 }
 
 PRLogModuleInfo* LayerManager::sLog;
