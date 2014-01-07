@@ -1097,6 +1097,12 @@ public:
                 *params = mMaxRenderbufferSize;
                 break;
 
+            case LOCAL_GL_VIEWPORT:
+                for (size_t i = 0; i < 4; i++) {
+                    params[i] = mViewportRect[i];
+                }
+                break;
+
             default:
                 raw_fGetIntegerv(pname, params);
                 break;
@@ -2786,6 +2792,8 @@ protected:
 
     nsTArray<nsIntRect> mScissorStack;
 
+    GLint mViewportRect[4];
+
     GLint mMaxTextureSize;
     GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
@@ -2850,6 +2858,17 @@ public:
     }
 
     void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+        if (mViewportRect[0] == x &&
+            mViewportRect[1] == y &&
+            mViewportRect[2] == width &&
+            mViewportRect[3] == height)
+        {
+            return;
+        }
+        mViewportRect[0] = x;
+        mViewportRect[1] = y;
+        mViewportRect[2] = width;
+        mViewportRect[3] = height;
         BEFORE_GL_CALL;
         mSymbols.fViewport(x, y, width, height);
         AFTER_GL_CALL;
