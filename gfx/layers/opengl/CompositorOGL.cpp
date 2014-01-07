@@ -1575,21 +1575,6 @@ CompositorOGL::GetMaxTextureSize() const
 }
 
 void
-CompositorOGL::SaveState()
-{
-  mGLContext->PushScissorRect();
-}
-
-void
-CompositorOGL::RestoreState()
-{
-  // Restore state that might be changed by drawBackground/drawForeground in
-  // mobile/android/base/gfx/LayerRenderer.java
-  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
-  mGLContext->PopScissorRect();
-}
-
-void
 CompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
