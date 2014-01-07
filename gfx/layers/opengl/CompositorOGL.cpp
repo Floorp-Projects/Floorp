@@ -250,6 +250,7 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)
   , mDestroyed(false)
+  , mHeight(0)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
   sBackend = LAYERS_OPENGL;
@@ -394,8 +395,6 @@ CompositorOGL::Initialize()
 
   if (!mGLContext)
     return false;
-
-  mGLContext->SetFlipped(true);
 
   MakeCurrent();
 
@@ -633,6 +632,8 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   // Set the viewport correctly.
   mGLContext->fViewport(0, 0, aSize.width, aSize.height);
 
+  mHeight = aSize.height;
+
   // We flip the view matrix around so that everything is right-side up; we're
   // drawing directly into the window's back buffer, so this keeps things
   // looking correct.
@@ -844,12 +845,15 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
   if (!aClipRectIn) {
-    mGLContext->fScissor(0, 0, width, height);
+    mGLContext->fScissor(0, FlipY(height), width, height);
     if (aClipRectOut) {
       aClipRectOut->SetRect(0, 0, width, height);
     }
   } else {
-    mGLContext->fScissor(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height);
+    mGLContext->fScissor(aClipRectIn->x,
+                         FlipY(aClipRectIn->y + aClipRectIn->height),
+                         aClipRectIn->width,
+                         aClipRectIn->height);
   }
 
   // Save the current scissor rect so that SetRenderTarget can pop back to it.
@@ -1102,8 +1106,10 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   }
   IntRect intClipRect;
   clipRect.ToIntRect(&intClipRect);
-  mGLContext->PushScissorRect(nsIntRect(intClipRect.x, intClipRect.y,
-                                        intClipRect.width, intClipRect.height));
+  mGLContext->PushScissorRect(nsIntRect(intClipRect.x,
+                                        FlipY(intClipRect.y + intClipRect.height),
+                                        intClipRect.width,
+                                        intClipRect.height));
 
   LayerScope::SendEffectChain(mGLContext, aEffectChain,
                               aRect.width, aRect.height);
@@ -1667,7 +1673,6 @@ CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
                   aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib),
                   aFlipped, aDrawMode);
 }
-
 
 } /* layers */
 } /* mozilla */

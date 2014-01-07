@@ -264,7 +264,6 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mGLError(LOCAL_GL_NO_ERROR),
 #endif
     mSharedContext(sharedContext),
-    mFlipped(false),
     mCaps(caps),
     mScreen(nullptr),
     mLockedSurface(nullptr),
