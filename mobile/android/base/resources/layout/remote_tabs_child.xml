@@ -22,6 +22,7 @@
               android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               style="@style/TabRowTextAppearance.Url"
-              android:textSize="14sp"/>
+              android:textSize="14sp"
+              android:maxLength="1024"/>
 
 </LinearLayout>
