@@ -18,6 +18,8 @@ Cu.import("resource://services-sync/util.js");
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
 
+const SUPPORTED_PROTOCOL_VERSIONS = ["1.1"];
+
 this.ClientsRec = function ClientsRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
 }
@@ -27,7 +29,7 @@ ClientsRec.prototype = {
   ttl: CLIENTS_TTL
 };
 
-Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands", "version"]);
+Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands", "version", "protocols"]);
 
 
 this.ClientEngine = function ClientEngine(service) {
@@ -387,6 +389,7 @@ ClientStore.prototype = {
       record.type = this.engine.localType;
       record.commands = this.engine.localCommands;
       record.version = Services.appinfo.version;
+      record.protocols = SUPPORTED_PROTOCOL_VERSIONS;
     }
     else
       record.cleartext = this._remoteClients[id];
