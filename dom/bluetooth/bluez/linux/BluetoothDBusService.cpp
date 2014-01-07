@@ -2901,10 +2901,13 @@ BluetoothDBusService::GetServiceChannel(const nsAString& aDeviceAddress,
                                         BluetoothProfileManagerBase* aManager)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  if (!IsReady()) {
+    NS_NAMED_LITERAL_STRING(errorStr, "Bluetooth service is not ready yet!");
+    return NS_OK;
+  }
 
   MOZ_ASSERT(!sAdapterPath.IsEmpty());
   nsString objectPath(GetObjectPathFromAddress(sAdapterPath, aDeviceAddress));
-
 #ifdef MOZ_WIDGET_GONK
   static const int sProtocolDescriptorList = 0x0004;
 
