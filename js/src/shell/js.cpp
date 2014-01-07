@@ -4840,8 +4840,7 @@ static const JSJitInfo dom_x_getterinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSJitInfo::AliasNone, /* aliasSet */
-    nullptr,  /* argTypes */
-    nullptr   /* parallelNative */
+    nullptr   /* argTypes */
 };
 
 static const JSJitInfo dom_x_setterinfo = {
@@ -4855,8 +4854,7 @@ static const JSJitInfo dom_x_setterinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSJitInfo::AliasEverything, /* aliasSet */
-    nullptr,  /* argTypes */
-    nullptr   /* parallelNative */
+    nullptr   /* argTypes */
 };
 
 static const JSJitInfo doFoo_methodinfo = {
@@ -4870,8 +4868,7 @@ static const JSJitInfo doFoo_methodinfo = {
     false,    /* isInSlot */
     0,        /* slotIndex */
     JSJitInfo::AliasEverything, /* aliasSet */
-    nullptr,  /* argTypes */
-    nullptr   /* parallelNative */
+    nullptr   /* argTypes */
 };
 
 static const JSPropertySpec dom_props[] = {
