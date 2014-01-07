@@ -375,7 +375,7 @@ class ScriptSource
     uint32_t length_;
     uint32_t compressedLength_;
     char *filename_;
-    jschar *sourceURL_;
+    jschar *displayURL_;
     jschar *sourceMapURL_;
     JSPrincipals *originPrincipals_;
 
@@ -392,7 +392,7 @@ class ScriptSource
         length_(0),
         compressedLength_(0),
         filename_(nullptr),
-        sourceURL_(nullptr),
+        displayURL_(nullptr),
         sourceMapURL_(nullptr),
         originPrincipals_(originPrincipals),
         sourceRetrievable_(false),
@@ -440,10 +440,10 @@ class ScriptSource
         return filename_;
     }
 
-    // Source URLs
-    bool setSourceURL(ExclusiveContext *cx, const jschar *sourceURL);
-    const jschar *sourceURL();
-    bool hasSourceURL() const { return sourceURL_ != nullptr; }
+    // Display URLs
+    bool setDisplayURL(ExclusiveContext *cx, const jschar *displayURL);
+    const jschar *displayURL();
+    bool hasDisplayURL() const { return displayURL_ != nullptr; }
 
     // Source maps
     bool setSourceMapURL(ExclusiveContext *cx, const jschar *sourceMapURL);
