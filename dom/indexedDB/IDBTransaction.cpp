@@ -105,9 +105,8 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
                 aMode == IDBTransaction::VERSION_CHANGE),
                "Busted logic!");
 
-  nsRefPtr<IDBTransaction> transaction = new IDBTransaction();
+  nsRefPtr<IDBTransaction> transaction = new IDBTransaction(aDatabase);
 
-  transaction->BindToOwner(aDatabase);
   transaction->SetScriptOwner(aDatabase->GetScriptOwner());
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
@@ -157,8 +156,9 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   return transaction.forget();
 }
 
-IDBTransaction::IDBTransaction()
-: mReadyState(IDBTransaction::INITIAL),
+IDBTransaction::IDBTransaction(IDBDatabase* aDatabase)
+: IDBWrapperCache(aDatabase),
+  mReadyState(IDBTransaction::INITIAL),
   mMode(IDBTransaction::READ_ONLY),
   mPendingRequests(0),
   mSavepointCount(0),
@@ -174,8 +174,6 @@ IDBTransaction::IDBTransaction()
 #endif
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  SetIsDOMBinding();
 }
 
 IDBTransaction::~IDBTransaction()

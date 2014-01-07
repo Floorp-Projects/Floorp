@@ -101,36 +101,16 @@
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
-#start-tracing {
-  padding: 4px;
-  margin: 4px;
-}
-
 #clear-tracer {
   /* Make this button as narrow as the text inside it. */
   min-width: 1px;
-}
-
-#tracer-message {
-  /* Prevent the container deck from aquiring the height from this message. */
-  min-height: 1px;
 }
 
 .trace-name {
   -moz-padding-start: 4px !important;
 }
 
-#tracer-traces > scrollbox {
-  overflow: scroll;
-  /* Hack to enable hardware acceleration */
-  transform: translateZ(0);
-}
-
 /* Tracer dark theme */
-
-.theme-dark #tracer-message {
-  color: #f5f7fa; /* Light foreground text */
-}
 
 .theme-dark .trace-item {
   color: #f5f7fa; /* Light foreground text */
@@ -166,10 +146,6 @@
 }
 
 /* Tracer light theme */
-
-.theme-light #tracer-message {
-  color: #292e33; /* Dark foreground text */
-}
 
 .theme-light .trace-item {
   color: #292e33; /* Dark foreground text */

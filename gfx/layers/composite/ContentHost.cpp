@@ -73,6 +73,10 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   RefPtr<TexturedEffect> effect =
     CreateTexturedEffect(source, sourceOnWhite, aFilter);
 
+  if (!effect) {
+    return;
+  }
+
   aEffectChain.mPrimaryEffect = effect;
 
   nsIntRegion tmpRegion;

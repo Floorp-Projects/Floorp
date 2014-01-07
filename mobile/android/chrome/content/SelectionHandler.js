@@ -75,13 +75,7 @@ var SelectionHandler = {
   observe: function sh_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "Gesture:SingleTap": {
-        if (this._activeType == this.TYPE_SELECTION) {
-          let data = JSON.parse(aData);
-          if (this._pointInSelection(data.x, data.y))
-            this.copySelection();
-          else
-            this._closeSelection();
-        } else if (this._activeType == this.TYPE_CURSOR) {
+        if (this._activeType == this.TYPE_CURSOR) {
           // attachCaret() is called in the "Gesture:SingleTap" handler in BrowserEventHandler
           // We're guaranteed to call this first, because this observer was added last
           this._deactivate();
@@ -239,21 +233,14 @@ var SelectionHandler = {
     // Clear any existing selection from the document
     this._contentWindow.getSelection().removeAllRanges();
 
-    if (aOptions.mode == this.SELECT_ALL) {
-      this._getSelectionController().selectAll();
-    } else if (aOptions.mode == this.SELECT_AT_POINT) {
-      if (!this._domWinUtils.selectAtPoint(aOptions.x, aOptions.y, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE)) {
-        this._deactivate();
-        return false;
-      }
-    } else {
-      Services.console.logStringMessage("Invalid selection mode " + aOptions.mode);
+    // Perform the appropriate selection method, if we can't determine method, or it fails, return
+    if (!this._performSelection(aOptions)) {
       this._deactivate();
       return false;
     }
 
+    // Double check results of successful selection operation
     let selection = this._getSelection();
-    // If the range didn't have any text, let's bail
     if (!selection || selection.rangeCount == 0 || selection.getRangeAt(0).collapsed) {
       this._deactivate();
       return false;
@@ -281,6 +268,29 @@ var SelectionHandler = {
     this._positionHandles(positions);
     this._sendMessage("TextSelection:ShowHandles", [this.HANDLE_TYPE_START, this.HANDLE_TYPE_END], aOptions.x, aOptions.y);
     return true;
+  },
+
+  /*
+   * Called to perform a selection operation, given a target element, selection method, starting point etc.
+   */
+  _performSelection: function sh_performSelection(aOptions) {
+    if (aOptions.mode == this.SELECT_ALL) {
+      if (this._targetElement instanceof HTMLPreElement)  {
+        // Use SELECT_PARAGRAPH else we default to entire page including trailing whitespace
+        return this._domWinUtils.selectAtPoint(1, 1, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
+      } else {
+        // Else default to selectALL Document
+        this._getSelectionController().selectAll();
+        return true;
+      }
+    }
+
+    if (aOptions.mode == this.SELECT_AT_POINT) {
+      return this._domWinUtils.selectAtPoint(aOptions.x, aOptions.y, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
+    }
+
+    Services.console.logStringMessage("Invalid selection mode " + aOptions.mode);
+    return false;
   },
 
   /* Return true if the current selection (given by aPositions) is near to where the coordinates passed in */
@@ -517,14 +527,7 @@ var SelectionHandler = {
   },
 
   selectAll: function sh_selectAll(aElement) {
-    if (this._activeType != this.TYPE_SELECTION) {
-      this.startSelection(aElement, { mode : this.SELECT_ALL });
-    } else {
-      let selectionController = this._getSelectionController();
-      selectionController.selectAll();
-      this._updateCacheForSelection();
-      this._positionHandles();
-    }
+    this.startSelection(aElement, { mode : this.SELECT_ALL });
   },
 
   /*

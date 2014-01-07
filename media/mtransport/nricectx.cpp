@@ -307,7 +307,10 @@ int NrIceCtx::ice_completed(void *obj, nr_ice_peer_ctx *pctx) {
   // Get the ICE ctx
   NrIceCtx *ctx = static_cast<NrIceCtx *>(obj);
 
-  ctx->SetConnectionState(ICE_CTX_OPEN);
+  // This is called even on failed contexts.
+  if (ctx->connection_state() != ICE_CTX_FAILED) {
+    ctx->SetConnectionState(ICE_CTX_OPEN);
+  }
 
   return 0;
 }

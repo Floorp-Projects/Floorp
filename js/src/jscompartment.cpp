@@ -197,8 +197,67 @@ WrapForSameCompartment(JSContext *cx, MutableHandleObject obj, const JSWrapObjec
     return true;
 }
 
+#ifdef JSGC_GENERATIONAL
+
+/*
+ * This class is used to add a post barrier on the crossCompartmentWrappers map,
+ * as the key is calculated based on objects which may be moved by generational
+ * GC.
+ */
+class WrapperMapRef : public BufferableRef
+{
+    WrapperMap *map;
+    CrossCompartmentKey key;
+
+  public:
+    WrapperMapRef(WrapperMap *map, const CrossCompartmentKey &key)
+      : map(map), key(key) {}
+
+    void mark(JSTracer *trc) {
+        CrossCompartmentKey prior = key;
+        if (key.debugger)
+            Mark(trc, &key.debugger, "CCW debugger");
+        if (key.kind != CrossCompartmentKey::StringWrapper)
+            Mark(trc, reinterpret_cast<JSObject**>(&key.wrapped), "CCW wrapped object");
+        if (key.debugger == prior.debugger && key.wrapped == prior.wrapped)
+            return;
+
+        /* Look for the original entry, which might have been removed. */
+        WrapperMap::Ptr p = map->lookup(prior);
+        if (!p)
+            return;
+
+        /* Rekey the entry. */
+        map->rekeyAs(prior, key, key);
+    }
+};
+
+#ifdef DEBUG
+void
+JSCompartment::checkWrapperMapAfterMovingGC()
+{
+    /*
+     * Assert that the postbarriers have worked and that nothing is left in
+     * wrapperMap that points into the nursery, and that the hash table entries
+     * are discoverable.
+     */
+    JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromMainThread());
+    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
+        CrossCompartmentKey key = e.front().key();
+        JS_ASSERT(!IsInsideNursery(rt, key.debugger));
+        JS_ASSERT(!IsInsideNursery(rt, key.wrapped));
+        JS_ASSERT(!IsInsideNursery(rt, e.front().value().get().toGCThing()));
+
+        WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(key);
+        JS_ASSERT(ptr.found() && &*ptr == &e.front());
+    }
+}
+#endif
+
+#endif
+
 bool
-JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &wrapper)
+JSCompartment::putWrapper(JSContext *cx, const CrossCompartmentKey &wrapped, const js::Value &wrapper)
 {
     JS_ASSERT(wrapped.wrapped);
     JS_ASSERT(!IsPoisonedPtr(wrapped.wrapped));
@@ -206,7 +265,20 @@ JSCompartment::putWrapper(const CrossCompartmentKey &wrapped, const js::Value &w
     JS_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
     JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
     JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
-    return crossCompartmentWrappers.put(wrapped, wrapper);
+    bool success = crossCompartmentWrappers.put(wrapped, wrapper);
+
+#ifdef JSGC_GENERATIONAL
+    /* There's no point allocating wrappers in the nursery since we will tenure them anyway. */
+    Nursery &nursery = cx->nursery();
+    JS_ASSERT(!nursery.isInside(wrapper.toGCThing()));
+
+    if (success && (nursery.isInside(wrapped.wrapped) || nursery.isInside(wrapped.debugger))) {
+        WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
+        cx->runtime()->gcStoreBuffer.putGeneric(ref);
+    }
+#endif
+
+    return success;
 }
 
 bool
@@ -241,7 +313,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
                                               linear->length());
     if (!copy)
         return false;
-    if (!putWrapper(key, StringValue(copy)))
+    if (!putWrapper(cx, key, StringValue(copy)))
         return false;
 
     if (linear->zone()->isGCMarking()) {
@@ -372,7 +444,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
      */
     JS_ASSERT(Wrapper::wrappedObject(obj) == &key.get().toObject());
 
-    return putWrapper(key, ObjectValue(*obj));
+    return putWrapper(cx, key, ObjectValue(*obj));
 }
 
 bool
@@ -465,26 +537,6 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
             MarkValueRoot(trc, &referent, "cross-compartment wrapper");
             JS_ASSERT(referent == wrapper->private_());
         }
-    }
-}
-
-/*
- * This method marks and keeps live all pointers in the cross compartment
- * wrapper map. It should be called only for minor GCs, since minor GCs cannot,
- * by their nature, apply the weak constraint to safely remove items from the
- * wrapper map.
- */
-void
-JSCompartment::markAllCrossCompartmentWrappers(JSTracer *trc)
-{
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        CrossCompartmentKey key = e.front().key();
-        MarkGCThingRoot(trc, (void **)&key.wrapped, "CrossCompartmentKey::wrapped");
-        if (key.debugger)
-            MarkObjectRoot(trc, &key.debugger, "CrossCompartmentKey::debugger");
-        MarkValueRoot(trc, e.front().value().unsafeGet(), "CrossCompartmentWrapper");
-        if (key.wrapped != e.front().key().wrapped || key.debugger != e.front().key().debugger)
-            e.rekeyFront(key);
     }
 }
 

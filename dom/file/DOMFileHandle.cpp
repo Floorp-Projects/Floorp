@@ -24,9 +24,7 @@ DOMFileHandle::Create(nsPIDOMWindow* aWindow,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<DOMFileHandle> newFile(new DOMFileHandle);
-
-  newFile->BindToOwner(aWindow);
+  nsRefPtr<DOMFileHandle> newFile(new DOMFileHandle(aWindow));
 
   newFile->mFileStorage = aFileStorage;
   nsresult rv = aFile->GetLeafName(newFile->mName);
