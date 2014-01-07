@@ -26,8 +26,8 @@
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
 #include "mozilla/dom/PowerManager.h"
-#include "nsIDOMWakeLock.h"
-#include "nsIPowerManagerService.h"
+#include "mozilla/dom/WakeLock.h"
+#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/Hal.h"
@@ -1131,7 +1131,7 @@ Navigator::GetMozPower(ErrorResult& aRv)
   return mPowerManager;
 }
 
-already_AddRefed<nsIDOMMozWakeLock>
+already_AddRefed<WakeLock>
 Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
 {
   if (!mWindow) {
@@ -1139,15 +1139,14 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsCOMPtr<nsIPowerManagerService> pmService =
-    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  nsRefPtr<power::PowerManagerService> pmService =
+    power::PowerManagerService::GetInstance();
   // Maybe it went away for some reason... Or maybe we're just called
   // from our XPCOM method.
   NS_ENSURE_TRUE(pmService, nullptr);
 
-  nsCOMPtr<nsIDOMMozWakeLock> wakelock;
-  aRv = pmService->NewWakeLock(aTopic, mWindow, getter_AddRefs(wakelock));
-  return wakelock.forget();
+  ErrorResult rv;
+  return pmService->NewWakeLock(aTopic, mWindow, rv);
 }
 
 nsIDOMMozMobileMessageManager*

@@ -8,7 +8,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIDOMWakeLock.idl',
     'nsIDOMWakeLockListener.idl',
     'nsIPowerManagerService.idl',
 ]
@@ -17,6 +16,7 @@ XPIDL_MODULE = 'dom_power'
 
 EXPORTS.mozilla.dom += [
     'PowerManager.h',
+    'WakeLock.h',
 ]
 
 EXPORTS.mozilla.dom.power += [
