@@ -388,23 +388,19 @@ LayerManagerComposite::Render()
   }
 
   // Allow widget to render a custom background.
-  mCompositor->SaveState();
   mCompositor->GetWidget()->DrawWindowUnderlay(this, nsIntRect(actualBounds.x,
                                                                actualBounds.y,
                                                                actualBounds.width,
                                                                actualBounds.height));
-  mCompositor->RestoreState();
 
   // Render our layers.
   RootLayer()->RenderLayer(clipRect);
 
   // Allow widget to render a custom foreground.
-  mCompositor->SaveState();
   mCompositor->GetWidget()->DrawWindowOverlay(this, nsIntRect(actualBounds.x,
                                                               actualBounds.y,
                                                               actualBounds.width,
                                                               actualBounds.height));
-  mCompositor->RestoreState();
 
   // Debugging
   RenderDebugOverlay(actualBounds);
