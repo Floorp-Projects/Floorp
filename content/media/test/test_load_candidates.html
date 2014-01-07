@@ -44,13 +44,14 @@ var extension = {
 
 function startTest(test, token) {
   var v = document.createElement('video');
+  v.preload = "auto";
   v.addEventListener("error", function(){ok(false,"Error events on source children should not bubble");}, false);
   v.token = token;
   manager.started(token);
   v._error = 0;
   v._finished = false;
   v._name = test.name;
-  
+
   var s1 = document.createElement("source");
   s1.type = test.type;
   s1.src = "404." + extension[test.type];
