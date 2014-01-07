@@ -209,6 +209,21 @@ protected:
     void UnwrapImpl();
 };
 
+struct ScopedViewportRect
+    : public ScopedGLWrapper<ScopedViewportRect>
+{
+    friend struct ScopedGLWrapper<ScopedViewportRect>;
+
+protected:
+    GLint mSavedViewportRect[4];
+
+public:
+    ScopedViewportRect(GLContext* aGL, GLint x, GLint y, GLsizei width, GLsizei height);
+
+protected:
+    void UnwrapImpl();
+};
+
 } /* namespace gl */
 } /* namespace mozilla */
 

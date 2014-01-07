@@ -240,5 +240,24 @@ ScopedFramebufferForRenderbuffer::UnwrapImpl()
     mFB = 0;
 }
 
+/* ScopedViewportRect *********************************************************/
+
+ScopedViewportRect::ScopedViewportRect(GLContext* aGL,
+                                       GLint x, GLint y,
+                                       GLsizei width, GLsizei height)
+  : ScopedGLWrapper<ScopedViewportRect>(aGL)
+{
+  mGL->fGetIntegerv(LOCAL_GL_VIEWPORT, mSavedViewportRect);
+  mGL->fViewport(x, y, width, height);
+}
+
+void ScopedViewportRect::UnwrapImpl()
+{
+  mGL->fViewport(mSavedViewportRect[0],
+                 mSavedViewportRect[1],
+                 mSavedViewportRect[2],
+                 mSavedViewportRect[3]);
+}
+
 } /* namespace gl */
 } /* namespace mozilla */
