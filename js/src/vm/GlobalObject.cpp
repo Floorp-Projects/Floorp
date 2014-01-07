@@ -252,6 +252,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         types::TypeObject* protoType = functionProto->getType(cx);
         if (!protoType)
             return nullptr;
+        protoType->interpretedFunction = functionProto;
         script->setFunction(functionProto);
 
         /*

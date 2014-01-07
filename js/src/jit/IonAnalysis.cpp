@@ -1996,7 +1996,7 @@ static bool
 AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
                   MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
                   HandleObject baseobj,
-                  Vector<types::NewScriptAddendum::Initializer> *initializerList,
+                  Vector<types::TypeNewScript::Initializer> *initializerList,
                   Vector<PropertyName *> *accessedProperties,
                   bool *phandled)
 {
@@ -2073,15 +2073,15 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
         for (int i = callerResumePoints.length() - 1; i >= 0; i--) {
             MResumePoint *rp = callerResumePoints[i];
             JSScript *script = rp->block()->info().script();
-            types::NewScriptAddendum::Initializer entry(types::NewScriptAddendum::Initializer::SETPROP_FRAME,
-                                                        script->pcToOffset(rp->pc()));
+            types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP_FRAME,
+                                                    script->pcToOffset(rp->pc()));
             if (!initializerList->append(entry))
                 return false;
         }
 
         JSScript *script = ins->block()->info().script();
-        types::NewScriptAddendum::Initializer entry(types::NewScriptAddendum::Initializer::SETPROP,
-                                                    script->pcToOffset(setprop->resumePoint()->pc()));
+        types::TypeNewScript::Initializer entry(types::TypeNewScript::Initializer::SETPROP,
+                                                script->pcToOffset(setprop->resumePoint()->pc()));
         if (!initializerList->append(entry))
             return false;
 
@@ -2135,7 +2135,7 @@ CmpInstructions(const void *a, const void *b)
 bool
 jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
                                 types::TypeObject *type, HandleObject baseobj,
-                                Vector<types::NewScriptAddendum::Initializer> *initializerList)
+                                Vector<types::TypeNewScript::Initializer> *initializerList)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
 

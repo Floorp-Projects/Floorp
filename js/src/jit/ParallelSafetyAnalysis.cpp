@@ -851,9 +851,11 @@ GetPossibleCallees(JSContext *cx,
             rootedFun = &obj->as<JSFunction>();
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
-            if (!typeObj || !typeObj->hasInterpretedFunction())
+            if (!typeObj)
                 continue;
-            rootedFun = typeObj->interpretedFunction();
+            rootedFun = typeObj->interpretedFunction;
+            if (!rootedFun)
+                continue;
         }
 
         if (!rootedFun->isInterpreted())

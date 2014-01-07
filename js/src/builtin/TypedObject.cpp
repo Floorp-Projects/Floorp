@@ -1452,7 +1452,7 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
         if (typeObj) {
             TypeRepresentation *typeRepr = typeRepresentation(*type);
             if (!typeObj->addTypedObjectAddendum(cx,
-                                                 types::TypedObjectAddendum::Datum,
+                                                 types::TypeTypedObject::Datum,
                                                  typeRepr))
             {
                 return nullptr;
