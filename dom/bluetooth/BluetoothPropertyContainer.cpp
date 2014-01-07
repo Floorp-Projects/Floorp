@@ -15,7 +15,7 @@
 USING_BLUETOOTH_NAMESPACE
 
 already_AddRefed<mozilla::dom::DOMRequest>
-BluetoothPropertyContainer::FirePropertyAlreadySet(nsIDOMWindow* aOwner,
+BluetoothPropertyContainer::FirePropertyAlreadySet(nsPIDOMWindow* aOwner,
                                                    ErrorResult& aRv)
 {
   nsCOMPtr<nsIDOMRequestService> rs =
@@ -32,7 +32,7 @@ BluetoothPropertyContainer::FirePropertyAlreadySet(nsIDOMWindow* aOwner,
 }
 
 already_AddRefed<mozilla::dom::DOMRequest>
-BluetoothPropertyContainer::SetProperty(nsIDOMWindow* aOwner,
+BluetoothPropertyContainer::SetProperty(nsPIDOMWindow* aOwner,
                                         const BluetoothNamedValue& aProperty,
                                         ErrorResult& aRv)
 {

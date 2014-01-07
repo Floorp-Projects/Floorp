@@ -995,7 +995,18 @@ void
 DrawTargetCairo::PopClip()
 {
   // save/restore does not affect the path, so no need to call WillChange()
+
+  // cairo_restore will restore the transform too and we don't want to do that
+  // so we'll save it now and restore it after the cairo_restore
+  cairo_matrix_t mat;
+  cairo_get_matrix(mContext, &mat);
+
   cairo_restore(mContext);
+
+  cairo_set_matrix(mContext, &mat);
+
+  MOZ_ASSERT(GetTransform() == Matrix(mat.xx, mat.yx, mat.xy, mat.yy, mat.x0, mat.y0),
+             "Transforms are out of sync");
 }
 
 TemporaryRef<PathBuilder>

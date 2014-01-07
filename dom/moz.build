@@ -73,9 +73,11 @@ PARALLEL_DIRS += [
     'camera',
     'audiochannel',
     'promise',
+    'smil',
     'telephony',
     'inputmethod',
     'webidl',
+    'xslt',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

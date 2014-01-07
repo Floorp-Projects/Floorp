@@ -767,7 +767,11 @@ this.WidgetMethods = {
    */
   set emptyText(aValue) {
     this._emptyText = aValue;
-    this._widget.setAttribute("emptyText", aValue);
+
+    // Apply the emptyText attribute right now if there are no child items.
+    if (!this._itemsByElement.size) {
+      this._widget.setAttribute("emptyText", aValue);
+    }
   },
 
   /**

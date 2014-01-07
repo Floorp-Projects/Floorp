@@ -31,6 +31,7 @@ class Geolocation;
 class systemMessageCallback;
 class MediaStreamConstraints;
 class MediaStreamConstraintsInternal;
+class WakeLock;
 }
 }
 
@@ -182,8 +183,8 @@ public:
   }
   void AddIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
   void RemoveIdleObserver(MozIdleObserver& aObserver, ErrorResult& aRv);
-  already_AddRefed<nsIDOMMozWakeLock> RequestWakeLock(const nsAString &aTopic,
-                                                      ErrorResult& aRv);
+  already_AddRefed<WakeLock> RequestWakeLock(const nsAString &aTopic,
+                                             ErrorResult& aRv);
   nsDOMDeviceStorage* GetDeviceStorage(const nsAString& aType,
                                        ErrorResult& aRv);
   void GetDeviceStorages(const nsAString& aType,

@@ -149,6 +149,7 @@
     _(OsrReturnValue)               \
     _(OsrArgumentsObject)           \
     _(RegExp)                       \
+    _(RegExpExec)                   \
     _(RegExpTest)                   \
     _(Lambda)                       \
     _(LambdaForSingleton)           \

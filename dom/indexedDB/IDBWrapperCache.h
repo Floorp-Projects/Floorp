@@ -49,8 +49,11 @@ public:
 #endif
 
 protected:
-  IDBWrapperCache()
-  : mScriptOwner(nullptr)
+  IDBWrapperCache(nsDOMEventTargetHelper* aOwner)
+    : nsDOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
+  { }
+  IDBWrapperCache(nsPIDOMWindow* aOwner)
+    : nsDOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
   { }
 
   virtual ~IDBWrapperCache();

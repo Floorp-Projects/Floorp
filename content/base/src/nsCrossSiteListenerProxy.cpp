@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,6 +26,12 @@
 #include "nsHashKeys.h"
 #include "nsStreamUtils.h"
 #include "mozilla/Preferences.h"
+#include "nsIScriptError.h"
+#include "nsILoadGroup.h"
+#include "nsILoadContext.h"
+#include "nsIConsoleService.h"
+#include "nsIDOMWindowUtils.h"
+#include "nsIDOMWindow.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -34,6 +40,75 @@ using namespace mozilla;
 
 static bool gDisableCORS = false;
 static bool gDisableCORSPrivateData = false;
+
+static nsresult
+LogBlockedRequest(nsIRequest* aRequest)
+{
+  nsresult rv = NS_OK;
+
+  // Get the innerWindowID associated with the XMLHTTPRequest
+  PRUint64 innerWindowID = 0;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  aRequest->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup) {
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    if (callbacks) {
+      nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+      if(loadContext) {
+        nsCOMPtr<nsIDOMWindow> window;
+        loadContext->GetAssociatedWindow(getter_AddRefs(window));
+        if (window) {
+          nsCOMPtr<nsIDOMWindowUtils> du = do_GetInterface(window);
+          du->GetCurrentInnerWindowID(&innerWindowID);
+        }
+      }
+    }
+  }
+
+  if (!innerWindowID) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  nsCOMPtr<nsIURI> aUri;
+  channel->GetURI(getter_AddRefs(aUri));
+  nsAutoCString spec;
+  if (aUri) {
+    aUri->GetSpec(spec);
+  }
+
+  // Generate the error message
+  nsXPIDLString blockedMessage;
+  NS_ConvertUTF8toUTF16 specUTF16(spec);
+  const PRUnichar* params[] = { specUTF16.get() };
+  rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
+                                             "CrossSiteRequestBlocked",
+                                             params,
+                                             blockedMessage);
+
+  // Build the error object and log it to the console
+  nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIScriptError> scriptError = do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString msg(blockedMessage.get());
+  rv = scriptError->InitWithWindowID(msg,
+                                     NS_ConvertUTF8toUTF16(spec),
+                                     EmptyString(),
+                                     0,
+                                     0,
+                                     nsIScriptError::warningFlag,
+                                     "CORS",
+                                     innerWindowID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = console->LogMessage(scriptError);
+  return rv;
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Preflight cache
@@ -398,8 +473,11 @@ NS_IMETHODIMP
 nsCORSListenerProxy::OnStartRequest(nsIRequest* aRequest,
                                     nsISupports* aContext)
 {
-  mRequestApproved = NS_SUCCEEDED(CheckRequestApproved(aRequest));
+  nsresult rv = CheckRequestApproved(aRequest);
+  mRequestApproved = NS_SUCCEEDED(rv);
   if (!mRequestApproved) {
+    rv = LogBlockedRequest(aRequest);
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to log blocked cross-site request");
     if (sPreflightCache) {
       nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
       if (channel) {
@@ -622,6 +700,9 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
   if (!NS_IsInternalSameURIRedirect(aOldChannel, aNewChannel, aFlags)) {
     rv = CheckRequestApproved(aOldChannel);
     if (NS_FAILED(rv)) {
+      rv = LogBlockedRequest(aOldChannel);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to log blocked cross-site request");
+
       if (sPreflightCache) {
         nsCOMPtr<nsIURI> oldURI;
         NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldURI));

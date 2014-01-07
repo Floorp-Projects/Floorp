@@ -46,6 +46,25 @@ StreamBuffer::GetEnd() const
   return t;
 }
 
+StreamTime
+StreamBuffer::GetAllTracksEnd() const
+{
+  StreamTime t = 0;
+  for (uint32_t i = 0; i < mTracks.Length(); ++i) {
+    Track* track = mTracks[i];
+    if (!track->IsEnded()) {
+      return STREAM_TIME_MAX;
+    }
+    t = std::max(t, track->GetEndTimeRoundDown());
+  }
+  if (t > mTracksKnownTime) {
+    // It can't be later then mTracksKnownTime, since a track might be added
+    // after that.
+    return STREAM_TIME_MAX;
+  }
+  return t;
+}
+
 StreamBuffer::Track*
 StreamBuffer::FindTrack(TrackID aID)
 {
