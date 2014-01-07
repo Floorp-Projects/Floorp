@@ -717,14 +717,6 @@ CompositorOGL::SetRenderTarget(CompositingRenderTarget *aSurface)
   CompositingRenderTargetOGL* surface
     = static_cast<CompositingRenderTargetOGL*>(aSurface);
   if (mCurrentRenderTarget != surface) {
-    // Restore the scissor rect that was active before we set the current
-    // render target.
-    mGLContext->PopScissorRect();
-
-    // Save the current scissor rect so that we can pop back to it when
-    // changing the render target again.
-    mGLContext->PushScissorRect();
-
     surface->BindRenderTarget();
     mCurrentRenderTarget = surface;
   }
