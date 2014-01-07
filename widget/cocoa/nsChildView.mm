@@ -2732,7 +2732,6 @@ RectTextureImage::Draw(GLManager* aManager,
 GLPresenter::GLPresenter(GLContext* aContext)
  : mGLContext(aContext)
 {
-  mGLContext->SetFlipped(true);
   mGLContext->MakeCurrent();
   mRGBARectProgram = new ShaderProgramOGL(mGLContext,
     ProgramProfileOGL::GetProfileFor(RGBARectLayerProgramType, MaskNone));
