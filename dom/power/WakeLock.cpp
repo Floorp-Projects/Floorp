@@ -5,9 +5,9 @@
 
 #include "WakeLock.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/MozWakeLockBinding.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
-#include "nsDOMClassInfoID.h"
 #include "nsDOMEvent.h"
 #include "nsError.h"
 #include "nsIDocument.h"
@@ -16,37 +16,41 @@
 #include "nsPIDOMWindow.h"
 #include "nsIPropertyBag2.h"
 
-DOMCI_DATA(MozWakeLock, mozilla::dom::power::WakeLock)
-
 using namespace mozilla::hal;
 
 namespace mozilla {
 namespace dom {
-namespace power {
 
-NS_INTERFACE_MAP_BEGIN(WakeLock)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozWakeLock)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMozWakeLock)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WakeLock)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WakeLock)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozWakeLock)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(WakeLock)
-NS_IMPL_RELEASE(WakeLock)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(WakeLock)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(WakeLock)
 
 WakeLock::WakeLock()
   : mLocked(false)
   , mHidden(true)
   , mContentParentID(CONTENT_PROCESS_ID_UNKNOWN)
 {
+  SetIsDOMBinding();
 }
 
 WakeLock::~WakeLock()
 {
   DoUnlock();
   DetachEventListener();
+}
+
+JSObject*
+WakeLock::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return MozWakeLockBinding::Wrap(aCx, aScope, this);
 }
 
 nsresult
@@ -212,27 +216,25 @@ WakeLock::DetachEventListener()
   }
 }
 
-NS_IMETHODIMP
-WakeLock::Unlock()
+void
+WakeLock::Unlock(ErrorResult& aRv)
 {
   /*
    * We throw NS_ERROR_DOM_INVALID_STATE_ERR on double unlock.
    */
   if (!mLocked) {
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
   }
 
   DoUnlock();
   DetachEventListener();
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 WakeLock::GetTopic(nsAString &aTopic)
 {
   aTopic.Assign(mTopic);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -272,6 +274,12 @@ WakeLock::HandleEvent(nsIDOMEvent *aEvent)
   return NS_OK;
 }
 
-} // power
+nsISupports*
+WakeLock::GetParentObject() const
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mWindow);
+  return window;
+}
+
 } // dom
 } // mozilla
