@@ -2415,8 +2415,8 @@ nsHttpChannel::ContinueProcessFallback(nsresult rv)
         return rv;
 
     if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-        mozilla::Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
-                                       true);
+        Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
+                              true);
     }
 
     // close down this channel
@@ -3065,8 +3065,8 @@ nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry *aEntry,
         mCacheEntryIsWriteOnly = aNew;
 
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-            mozilla::Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
-                                           false);
+            Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
+                                  false);
         }
     }
 
@@ -3098,8 +3098,8 @@ nsHttpChannel::OnOfflineCacheEntryAvailable(nsICacheEntry *aEntry,
         mCacheEntryIsWriteOnly = false;
 
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI && !mApplicationCacheForWrite) {
-            mozilla::Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
-                                           true);
+            Telemetry::Accumulate(Telemetry::HTTP_OFFLINE_CACHE_DOCUMENT_LOAD,
+                                  true);
         }
 
         return NS_OK;

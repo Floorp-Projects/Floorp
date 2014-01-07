@@ -64,9 +64,9 @@ struct ParamTraits<mozilla::net::RequestHeaderTuple>
 };
 
 template<>
-struct ParamTraits<nsHttpAtom>
+struct ParamTraits<mozilla::net::nsHttpAtom>
 {
-  typedef nsHttpAtom paramType;
+  typedef mozilla::net::nsHttpAtom paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -82,16 +82,16 @@ struct ParamTraits<nsHttpAtom>
     if (!ReadParam(aMsg, aIter, &value))
       return false;
 
-    *aResult = nsHttp::ResolveAtom(value.get());
+    *aResult = mozilla::net::nsHttp::ResolveAtom(value.get());
     MOZ_ASSERT(aResult->get(), "atom table not initialized");
     return true;
   }
 };
 
 template<>
-struct ParamTraits<nsHttpHeaderArray::nsEntry>
+struct ParamTraits<mozilla::net::nsHttpHeaderArray::nsEntry>
 {
-  typedef nsHttpHeaderArray::nsEntry paramType;
+  typedef mozilla::net::nsHttpHeaderArray::nsEntry paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -111,9 +111,9 @@ struct ParamTraits<nsHttpHeaderArray::nsEntry>
 
 
 template<>
-struct ParamTraits<nsHttpHeaderArray>
+struct ParamTraits<mozilla::net::nsHttpHeaderArray>
 {
-  typedef nsHttpHeaderArray paramType;
+  typedef mozilla::net::nsHttpHeaderArray paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -132,9 +132,9 @@ struct ParamTraits<nsHttpHeaderArray>
 };
 
 template<>
-struct ParamTraits<nsHttpResponseHead>
+struct ParamTraits<mozilla::net::nsHttpResponseHead>
 {
-  typedef nsHttpResponseHead paramType;
+  typedef mozilla::net::nsHttpResponseHead paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
