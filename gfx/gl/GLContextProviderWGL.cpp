@@ -380,20 +380,6 @@ GLContextWGL::SetupLookupFunction()
     return true;
 }
 
-void*
-GLContextWGL::GetNativeData(NativeDataType aType)
-{
-    switch (aType) {
-    case NativeGLContext:
-        return mContext;
-
-    default:
-        return nullptr;
-    }
-}
-
-
-
 static bool
 GetMaxSize(HDC hDC, int format, gfxIntSize& size, LibType aLibToUse)
 {
