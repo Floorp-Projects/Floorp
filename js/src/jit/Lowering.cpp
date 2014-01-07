@@ -1917,6 +1917,17 @@ LIRGenerator::visitRegExp(MRegExp *ins)
 }
 
 bool
+LIRGenerator::visitRegExpExec(MRegExpExec *ins)
+{
+    JS_ASSERT(ins->regexp()->type() == MIRType_Object);
+    JS_ASSERT(ins->string()->type() == MIRType_String);
+
+    LRegExpExec *lir = new(alloc()) LRegExpExec(useRegisterAtStart(ins->regexp()),
+                                                useRegisterAtStart(ins->string()));
+    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
 LIRGenerator::visitRegExpTest(MRegExpTest *ins)
 {
     JS_ASSERT(ins->regexp()->type() == MIRType_Object);

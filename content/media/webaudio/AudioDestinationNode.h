@@ -23,6 +23,7 @@ class AudioDestinationNode : public AudioNode
                            , public nsIDOMEventListener
                            , public nsIAudioChannelAgentCallback
                            , public nsSupportsWeakReference
+                           , public MainThreadMediaStreamListener
 {
 public:
   // This node type knows what MediaStreamGraph to use based on
@@ -66,6 +67,9 @@ public:
   AudioChannel MozAudioChannelType() const;
   void SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv);
 
+  virtual void NotifyMainThreadStateChanged() MOZ_OVERRIDE;
+  void FireOfflineCompletionEvent();
+
 private:
   bool CheckAudioChannelPermissions(AudioChannel aValue);
   void CreateAudioChannelAgent();
@@ -79,6 +83,8 @@ private:
 
   // Audio Channel Type.
   AudioChannel mAudioChannel;
+  bool mIsOffline;
+  bool mHasFinished;
 };
 
 }

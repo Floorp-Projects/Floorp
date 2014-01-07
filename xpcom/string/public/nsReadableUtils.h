@@ -46,6 +46,8 @@ void LossyAppendUTF16toASCII( const char16_t* aSource, nsACString& aDest );
 void AppendASCIItoUTF16( const char* aSource, nsAString& aDest );
 
 void AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest );
+bool AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest,
+                        const mozilla::fallible_t& ) NS_WARN_UNUSED_RESULT;
 void AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest );
 bool AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest,
                         const mozilla::fallible_t& ) NS_WARN_UNUSED_RESULT;

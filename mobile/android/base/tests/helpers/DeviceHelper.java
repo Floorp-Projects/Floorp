@@ -47,7 +47,7 @@ public final class DeviceHelper {
         assertTrue("The device is a tablet", isTablet());
     }
 
-    public static void init(final UITestContext context) {
+    protected static void init(final UITestContext context) {
         sActivity = context.getActivity();
         sSolo = context.getSolo();
 

@@ -7303,6 +7303,25 @@ nsWindow::GetPopupsToRollup(nsIRollupListener* aRollupListener,
 
 // static
 bool
+nsWindow::NeedsToHandleNCActivateDelayed(HWND aWnd)
+{
+  // While popup is open, popup window might be activated by other application.
+  // At this time, we need to take back focus to the previous window but it
+  // causes flickering its nonclient area because WM_NCACTIVATE comes before
+  // WM_ACTIVATE and we cannot know which window will take focus at receiving
+  // WM_NCACTIVATE. Therefore, we need a hack for preventing the flickerling.
+  //
+  // If non-popup window receives WM_NCACTIVATE at deactivating, default
+  // wndproc shouldn't handle it as deactivating. Instead, at receiving
+  // WM_ACTIVIATE after that, WM_NCACTIVATE should be sent again manually.
+  // This returns true if the window needs to handle WM_NCACTIVATE later.
+
+  nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
+  return window && !window->IsPopup();
+}
+
+// static
+bool
 nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
                          WPARAM aWParam, LPARAM aLParam, LRESULT* aResult)
 {
@@ -7323,6 +7342,8 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
     return false;
   }
 
+  static bool sSendingNCACTIVATE = false;
+  static bool sPendingNCACTIVATE = false;
   uint32_t popupsToRollup = UINT32_MAX;
 
   nsWindow* popupWindow = static_cast<nsWindow*>(popup.get());
@@ -7357,10 +7378,56 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       break;
 
     case WM_ACTIVATE:
+      // NOTE: Don't handle WA_INACTIVE for preventing popup taking focus
+      // because we cannot distinguish it's caused by mouse or not.
+      if (LOWORD(aWParam) == WA_ACTIVE && aLParam) {
+        nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
+        if (window && window->IsPopup()) {
+          // Cancel notifying widget listeners of deactivating the previous
+          // active window (see WM_KILLFOCUS case in ProcessMessage()).
+          sJustGotDeactivate = false;
+          // Reactivate the window later.
+          ::PostMessageW(aWnd, MOZ_WM_REACTIVATE, aWParam, aLParam);
+          return true;
+        }
+      } else if (sPendingNCACTIVATE && LOWORD(aWParam) == WA_INACTIVE &&
+                 NeedsToHandleNCActivateDelayed(aWnd)) {
+        // If focus moves to non-popup widget or focusable popup, the window
+        // needs to update its nonclient area.
+        nsWindow* activeWindow =
+          WinUtils::GetNSWindowPtr(reinterpret_cast<HWND>(aLParam));
+        if (!activeWindow || !activeWindow->IsPopup()) {
+          sSendingNCACTIVATE = true;
+          ::SendMessageW(aWnd, WM_NCACTIVATE, false, 0);
+          sSendingNCACTIVATE = false;
+        }
+        sPendingNCACTIVATE = false;
+      }
       // XXX Why do we need to check the message pos?
       if (!EventIsInsideWindow(popupWindow) &&
           GetPopupsToRollup(rollupListener, &popupsToRollup)) {
         break;
+      }
+      return false;
+
+    case MOZ_WM_REACTIVATE:
+      // The previous active window should take back focus.
+      if (::IsWindow(reinterpret_cast<HWND>(aLParam))) {
+        ::SetForegroundWindow(reinterpret_cast<HWND>(aLParam));
+      }
+      return true;
+
+    case WM_NCACTIVATE:
+      if (!aWParam && !sSendingNCACTIVATE &&
+          NeedsToHandleNCActivateDelayed(aWnd)) {
+        // Don't just consume WM_NCACTIVATE. It doesn't handle only the
+        // nonclient area state change.
+        ::DefWindowProcW(aWnd, aMessage, TRUE, aLParam);
+        // Accept the deactivating because it's necessary to receive following
+        // WM_ACTIVATE.
+        *aResult = TRUE;
+        sPendingNCACTIVATE = true;
+        return true;
       }
       return false;
 

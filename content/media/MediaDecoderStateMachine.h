@@ -334,6 +334,7 @@ public:
   // call this while we're not playing (while the MediaStream is blocked). Can
   // be called on any thread with the decoder monitor held.
   void SetSyncPointForMediaStream();
+  int64_t GetCurrentTimeViaMediaStreamSync();
 
   // Called when a "MozAudioAvailable" event listener is added to the media
   // element. Called on the main thread.

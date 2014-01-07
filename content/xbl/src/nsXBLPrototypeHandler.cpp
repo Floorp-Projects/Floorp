@@ -307,7 +307,7 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   // scope if one doesn't already exist, and potentially wraps it cross-
   // compartment into our scope (via aAllowWrapping=true).
   JS::Rooted<JS::Value> targetV(cx, JS::UndefinedValue());
-  rv = nsContentUtils::WrapNative(cx, scopeObject, scriptTarget, &targetV, nullptr,
+  rv = nsContentUtils::WrapNative(cx, scopeObject, scriptTarget, &targetV,
                                   /* aAllowWrapping = */ true);
   NS_ENSURE_SUCCESS(rv, rv);
 

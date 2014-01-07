@@ -7,7 +7,7 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_tracing-01.html";
 
-let gTab, gDebuggee, gPanel, gDebugger, gVariables;
+let gTab, gDebuggee, gPanel, gDebugger;
 
 function test() {
   SpecialPowers.pushPrefEnv({'set': [["devtools.debugger.tracer", true]]}, () => {
@@ -16,7 +16,6 @@ function test() {
       gDebuggee = aDebuggee;
       gPanel = aPanel;
       gDebugger = gPanel.panelWin;
-      gVariables = gDebugger.DebuggerView.Variables;
 
       waitForSourceShown(gPanel, "code_tracing-01.js")
         .then(() => startTracing(gPanel))
@@ -82,5 +81,4 @@ registerCleanupFunction(function() {
   gDebuggee = null;
   gPanel = null;
   gDebugger = null;
-  gVariables = null;
 });

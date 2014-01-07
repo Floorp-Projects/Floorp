@@ -64,6 +64,12 @@ public:
       return;
     }
 
+    if (mWriteIndex >= mLength) {
+      NS_ASSERTION(mWriteIndex == mLength, "Overshot length");
+      // Don't record any more.
+      return;
+    }
+
     // Record our input buffer
     MOZ_ASSERT(mWriteIndex < mLength, "How did this happen?");
     const uint32_t duration = std::min(WEBAUDIO_BLOCK_SIZE, mLength - mWriteIndex);
@@ -96,83 +102,44 @@ public:
     }
     mWriteIndex += duration;
 
-    if (mWriteIndex == mLength) {
-      SendBufferToMainThread(aStream);
+    if (mWriteIndex >= mLength) {
+      NS_ASSERTION(mWriteIndex == mLength, "Overshot length");
+      // Go to finished state. When the graph's current time eventually reaches
+      // the end of the stream, then the main thread will be notified and we'll
+      // shut down the AudioContext.
       *aFinished = true;
     }
   }
 
-  void SendBufferToMainThread(AudioNodeStream* aStream)
+  void FireOfflineCompletionEvent(AudioDestinationNode* aNode)
   {
-    class Command : public nsRunnable
-    {
-    public:
-      Command(AudioNodeStream* aStream,
-              InputChannels& aInputChannels,
-              uint32_t aLength,
-              float aSampleRate)
-        : mStream(aStream)
-        , mLength(aLength)
-        , mSampleRate(aSampleRate)
-      {
-        mInputChannels.SwapElements(aInputChannels);
-      }
+    AudioContext* context = aNode->Context();
+    context->Shutdown();
+    // Shutdown drops self reference, but the context is still referenced by aNode,
+    // which is strongly referenced by the runnable that called
+    // AudioDestinationNode::FireOfflineCompletionEvent.
 
-      NS_IMETHODIMP Run()
-      {
-        // If it's not safe to run scripts right now, schedule this to run later
-        if (!nsContentUtils::IsSafeToRunScript()) {
-          nsContentUtils::AddScriptRunner(this);
-          return NS_OK;
-        }
+    AutoPushJSContext cx(context->GetJSContext());
+    if (!cx) {
+      return;
+    }
+    JSAutoRequest ar(cx);
 
-        nsRefPtr<AudioContext> context;
-        {
-          MutexAutoLock lock(mStream->Engine()->NodeMutex());
-          AudioNode* node = mStream->Engine()->Node();
-          if (node) {
-            context = node->Context();
-            MOZ_ASSERT(context, "node hasn't kept context alive");
-          }
-        }
-        if (!context) {
-          return NS_OK;
-        }
-        context->Shutdown(); // drops self reference
+    // Create the input buffer
+    nsRefPtr<AudioBuffer> renderedBuffer = new AudioBuffer(context,
+                                                           mLength,
+                                                           mSampleRate);
+    if (!renderedBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
+      return;
+    }
+    for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
+      renderedBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
+    }
 
-        AutoPushJSContext cx(context->GetJSContext());
-        if (cx) {
-          JSAutoRequest ar(cx);
-
-          // Create the input buffer
-          nsRefPtr<AudioBuffer> renderedBuffer = new AudioBuffer(context,
-                                                                 mLength,
-                                                                 mSampleRate);
-          if (!renderedBuffer->InitializeBuffers(mInputChannels.Length(), cx)) {
-            return NS_OK;
-          }
-          for (uint32_t i = 0; i < mInputChannels.Length(); ++i) {
-            renderedBuffer->SetRawChannelContents(cx, i, mInputChannels[i]);
-          }
-
-          nsRefPtr<OfflineAudioCompletionEvent> event =
-              new OfflineAudioCompletionEvent(context, nullptr, nullptr);
-          event->InitEvent(renderedBuffer);
-          context->DispatchTrustedEvent(event);
-        }
-
-        return NS_OK;
-      }
-    private:
-      nsRefPtr<AudioNodeStream> mStream;
-      InputChannels mInputChannels;
-      uint32_t mLength;
-      float mSampleRate;
-    };
-
-    // Empty out the source array to make sure we don't attempt to collect
-    // more input data in the future.
-    NS_DispatchToMainThread(new Command(aStream, mInputChannels, mLength, mSampleRate));
+    nsRefPtr<OfflineAudioCompletionEvent> event =
+        new OfflineAudioCompletionEvent(context, nullptr, nullptr);
+    event->InitEvent(renderedBuffer);
+    context->DispatchTrustedEvent(event);
   }
 
 private:
@@ -248,6 +215,8 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
               ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
   , mAudioChannel(AudioChannel::Normal)
+  , mIsOffline(aIsOffline)
+  , mHasFinished(false)
 {
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance() :
@@ -258,6 +227,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                             static_cast<AudioNodeEngine*>(new DestinationNodeEngine(this));
 
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
+  mStream->AddMainThreadListener(this);
 
   if (!aIsOffline && UseAudioChannelService()) {
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
@@ -288,11 +258,34 @@ AudioDestinationNode::DestroyMediaStream()
   if (!mStream)
     return;
 
+  mStream->RemoveMainThreadListener(this);
   MediaStreamGraph* graph = mStream->Graph();
   if (graph->IsNonRealtime()) {
     MediaStreamGraph::DestroyNonRealtimeInstance(graph);
   }
   AudioNode::DestroyMediaStream();
+}
+
+void
+AudioDestinationNode::NotifyMainThreadStateChanged()
+{
+  if (mStream->IsFinished() && !mHasFinished) {
+    mHasFinished = true;
+    if (mIsOffline) {
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethod(this, &AudioDestinationNode::FireOfflineCompletionEvent);
+      NS_DispatchToCurrentThread(runnable);
+    }
+  }
+}
+
+void
+AudioDestinationNode::FireOfflineCompletionEvent()
+{
+  AudioNodeStream* stream = static_cast<AudioNodeStream*>(Stream());
+  OfflineDestinationNodeEngine* engine =
+    static_cast<OfflineDestinationNodeEngine*>(stream->Engine());
+  engine->FireOfflineCompletionEvent(this);
 }
 
 uint32_t
@@ -346,7 +339,7 @@ void
 AudioDestinationNode::StartRendering()
 {
   mOfflineRenderingRef.Take(this);
-  mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
+  mStream->Graph()->StartNonRealtimeProcessing(TrackRate(Context()->SampleRate()), mFramesToProduce);
 }
 
 void

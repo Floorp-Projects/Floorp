@@ -27,9 +27,7 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
   NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
   NS_ASSERTION(aCallIndex >= 1, "Invalid call index!");
 
-  nsRefPtr<TelephonyCall> call = new TelephonyCall();
-
-  call->BindToOwner(aTelephony->GetOwner());
+  nsRefPtr<TelephonyCall> call = new TelephonyCall(aTelephony->GetOwner());
 
   call->mTelephony = aTelephony;
   call->mServiceId = aServiceId;
@@ -44,13 +42,13 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
   return call.forget();
 }
 
-TelephonyCall::TelephonyCall()
-  : mCallIndex(kOutgoingPlaceholderCallIndex),
+TelephonyCall::TelephonyCall(nsPIDOMWindow* aOwner)
+  : nsDOMEventTargetHelper(aOwner),
+    mCallIndex(kOutgoingPlaceholderCallIndex),
     mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN),
     mLive(false),
     mOutgoing(false)
 {
-  SetIsDOMBinding();
 }
 
 TelephonyCall::~TelephonyCall()

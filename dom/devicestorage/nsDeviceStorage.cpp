@@ -1710,7 +1710,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
 
-nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
+nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
                                                    nsIPrincipal* aPrincipal,
                                                    DeviceStorageFile* aFile,
                                                    PRTime aSince)
@@ -2574,11 +2574,11 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, nsDOMEventTargetHelper)
 
-nsDOMDeviceStorage::nsDOMDeviceStorage()
-  : mIsWatchingFile(false)
+nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
+  : nsDOMEventTargetHelper(aWindow)
+  , mIsWatchingFile(false)
   , mAllowedToWatchFile(false)
 {
-  SetIsDOMBinding();
 }
 
 /* virtual */ JSObject*
@@ -2604,8 +2604,6 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
   if (!mStorageName.IsEmpty()) {
     RegisterForSDCardChanges(this);
   }
-
-  BindToOwner(aWindow);
 
   // Grab the principal of the document
   nsCOMPtr<nsIDocument> doc = aWindow->GetDoc();
@@ -2701,7 +2699,7 @@ nsDOMDeviceStorage::CreateDeviceStorageFor(nsPIDOMWindow* aWin,
     GetDefaultStorageName(aType, storageName);
   }
 
-  nsRefPtr<nsDOMDeviceStorage> ds = new nsDOMDeviceStorage();
+  nsRefPtr<nsDOMDeviceStorage> ds = new nsDOMDeviceStorage(aWin);
   if (NS_FAILED(ds->Init(aWin, aType, storageName))) {
     *aStore = nullptr;
     return;
@@ -2719,7 +2717,7 @@ nsDOMDeviceStorage::CreateDeviceStoragesFor(
   nsresult rv;
 
   if (!DeviceStorageTypeChecker::IsVolumeBased(aType)) {
-    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
+    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage(aWin);
     rv = storage->Init(aWin, aType, EmptyString());
     if (NS_SUCCEEDED(rv)) {
       aStores.AppendElement(storage);
@@ -2731,7 +2729,7 @@ nsDOMDeviceStorage::CreateDeviceStoragesFor(
 
   VolumeNameArray::size_type numVolumeNames = volNames.Length();
   for (VolumeNameArray::index_type i = 0; i < numVolumeNames; i++) {
-    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage();
+    nsRefPtr<nsDOMDeviceStorage> storage = new nsDOMDeviceStorage(aWin);
     rv = storage->Init(aWin, aType, volNames[i]);
     if (NS_FAILED(rv)) {
       break;
@@ -2803,7 +2801,7 @@ nsDOMDeviceStorage::GetStorageByName(const nsAString& aStorageName)
   VolumeNameArray::index_type i;
   for (i = 0; i < numVolumes; i++) {
     if (volNames[i].Equals(aStorageName)) {
-      ds = new nsDOMDeviceStorage();
+      ds = new nsDOMDeviceStorage(GetOwner());
       nsresult rv = ds->Init(GetOwner(), mStorageType, aStorageName);
       if (NS_FAILED(rv)) {
         return nullptr;

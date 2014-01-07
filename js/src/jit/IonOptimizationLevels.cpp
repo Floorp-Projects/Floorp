@@ -95,6 +95,15 @@ OptimizationInfos::OptimizationInfos()
 {
     infos_[Optimization_Normal - 1].initNormalOptimizationInfo();
     infos_[Optimization_AsmJS - 1].initAsmjsOptimizationInfo();
+
+#ifdef DEBUG
+    OptimizationLevel level = firstLevel();
+    while (!isLastLevel(level)) {
+        OptimizationLevel next = nextLevel(level);
+        JS_ASSERT(level < next);
+        level = next;
+    }
+#endif
 }
 
 OptimizationLevel

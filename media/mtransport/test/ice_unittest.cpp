@@ -31,6 +31,7 @@
 #include "nriceresolver.h"
 #include "nrinterfaceprioritizer.h"
 #include "mtransport_test_utils.h"
+#include "gtest_ringbuffer_dumper.h"
 #include "rlogringbuffer.h"
 #include "runnable_utils.h"
 #include "stunserver.h"
@@ -1626,6 +1627,11 @@ int main(int argc, char **argv)
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
+  ::testing::TestEventListeners& listeners =
+        ::testing::UnitTest::GetInstance()->listeners();
+  // Adds a listener to the end.  Google Test takes the ownership.
+
+  listeners.Append(new test::RingbufferDumper(test_utils));
   test_utils->sts_target()->Dispatch(
     WrapRunnableNM(&TestStunServer::GetInstance), NS_DISPATCH_SYNC);
 

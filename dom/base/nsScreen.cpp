@@ -49,8 +49,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
     do_QueryInterface(static_cast<nsPIDOMWindow*>(aWindow));
   NS_ENSURE_TRUE(sgo, nullptr);
 
-  nsRefPtr<nsScreen> screen = new nsScreen();
-  screen->BindToOwner(aWindow);
+  nsRefPtr<nsScreen> screen = new nsScreen(aWindow);
 
   hal::RegisterScreenConfigurationObserver(screen);
   hal::ScreenConfiguration config;
@@ -60,10 +59,10 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
   return screen.forget();
 }
 
-nsScreen::nsScreen()
-  : mEventListener(nullptr)
+nsScreen::nsScreen(nsPIDOMWindow* aWindow)
+  : nsDOMEventTargetHelper(aWindow)
+  , mEventListener(nullptr)
 {
-  SetIsDOMBinding();
 }
 
 nsScreen::~nsScreen()

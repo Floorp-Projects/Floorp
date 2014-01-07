@@ -191,7 +191,7 @@ public:
   // DOMCursor
   virtual void Continue(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
 
-  nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
+  nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
                            nsIPrincipal* aPrincipal,
                            DeviceStorageFile* aFile,
                            PRTime aSince);

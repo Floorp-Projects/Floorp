@@ -17,7 +17,8 @@ Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "console",
+  "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionFile",
   "resource:///modules/sessionstore/SessionFile.jsm");
 
@@ -309,7 +310,7 @@ let SessionSaverInternal = {
     return SessionFile.write(data).then(() => {
       this.updateLastSaveTime();
       notify(null, "sessionstore-state-write-complete");
-    }, Cu.reportError);
+    }, console.error);
   },
 
   /**

@@ -25,7 +25,7 @@ public:
   AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
   ~AudioNodeExternalInputStream();
 
-  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo) MOZ_OVERRIDE;
+  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE;
 
 private:
   // For storing pointers and data about input tracks, like the last TrackTick which

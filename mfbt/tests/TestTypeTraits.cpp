@@ -6,15 +6,62 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
+using mozilla::IsArray;
 using mozilla::IsBaseOf;
 using mozilla::IsClass;
 using mozilla::IsConvertible;
 using mozilla::IsEmpty;
+using mozilla::IsLvalueReference;
+using mozilla::IsReference;
+using mozilla::IsRvalueReference;
 using mozilla::IsSame;
 using mozilla::IsSigned;
 using mozilla::IsUnsigned;
 using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
+
+static_assert(!IsArray<bool>::value, "bool not an array");
+static_assert(IsArray<bool[]>::value, "bool[] is an array");
+static_assert(IsArray<bool[5]>::value, "bool[5] is an array");
+
+static_assert(!IsLvalueReference<bool>::value, "bool not an lvalue reference");
+static_assert(!IsLvalueReference<bool*>::value, "bool* not an lvalue reference");
+static_assert(IsLvalueReference<bool&>::value, "bool& is an lvalue reference");
+static_assert(!IsLvalueReference<bool&&>::value, "bool&& not an lvalue reference");
+
+static_assert(!IsLvalueReference<void>::value, "void not an lvalue reference");
+static_assert(!IsLvalueReference<void*>::value, "void* not an lvalue reference");
+
+static_assert(!IsLvalueReference<int>::value, "int not an lvalue reference");
+static_assert(!IsLvalueReference<int*>::value, "int* not an lvalue reference");
+static_assert(IsLvalueReference<int&>::value, "int& is an lvalue reference");
+static_assert(!IsLvalueReference<int&&>::value, "int&& not an lvalue reference");
+
+static_assert(!IsRvalueReference<bool>::value, "bool not an rvalue reference");
+static_assert(!IsRvalueReference<bool*>::value, "bool* not an rvalue reference");
+static_assert(!IsRvalueReference<bool&>::value, "bool& not an rvalue reference");
+static_assert(IsRvalueReference<bool&&>::value, "bool&& is an rvalue reference");
+
+static_assert(!IsRvalueReference<void>::value, "void not an rvalue reference");
+static_assert(!IsRvalueReference<void*>::value, "void* not an rvalue reference");
+
+static_assert(!IsRvalueReference<int>::value, "int not an rvalue reference");
+static_assert(!IsRvalueReference<int*>::value, "int* not an rvalue reference");
+static_assert(!IsRvalueReference<int&>::value, "int& not an rvalue reference");
+static_assert(IsRvalueReference<int&&>::value, "int&& is an rvalue reference");
+
+static_assert(!IsReference<bool>::value, "bool not a reference");
+static_assert(!IsReference<bool*>::value, "bool* not a reference");
+static_assert(IsReference<bool&>::value, "bool& is a reference");
+static_assert(IsReference<bool&&>::value, "bool&& is a reference");
+
+static_assert(!IsReference<void>::value, "void not a reference");
+static_assert(!IsReference<void*>::value, "void* not a reference");
+
+static_assert(!IsReference<int>::value, "int not a reference");
+static_assert(!IsReference<int*>::value, "int* not a reference");
+static_assert(IsReference<int&>::value, "int& is a reference");
+static_assert(IsReference<int&&>::value, "int&& is a reference");
 
 struct S1 {};
 union U1 { int x; };
