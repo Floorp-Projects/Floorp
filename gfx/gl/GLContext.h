@@ -1402,14 +1402,12 @@ public:
         AFTER_GL_CALL;
     }
 
-private:
-    void raw_fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+    void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
         BEFORE_GL_CALL;
         mSymbols.fScissor(x, y, width, height);
         AFTER_GL_CALL;
     }
 
-public:
     void fStencilFunc(GLenum func, GLint ref, GLuint mask) {
         BEFORE_GL_CALL;
         mSymbols.fStencilFunc(func, ref, mask);
@@ -2790,8 +2788,6 @@ protected:
 
     void InitExtensions();
 
-    nsTArray<nsIntRect> mScissorStack;
-
     GLint mViewportRect[4];
 
     GLint mMaxTextureSize;
@@ -2821,41 +2817,7 @@ protected:
     }
 
 
-    /*** Scissor functions ***/
-
 public:
-    void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
-        ScissorRect().SetRect(x, y, width, height);
-        raw_fScissor(x, y, width, height);
-    }
-
-    nsIntRect& ScissorRect() {
-        return mScissorStack[mScissorStack.Length()-1];
-    }
-
-    void PushScissorRect() {
-        nsIntRect copy(ScissorRect());
-        mScissorStack.AppendElement(copy);
-    }
-
-    void PushScissorRect(const nsIntRect& aRect) {
-        mScissorStack.AppendElement(aRect);
-        fScissor(aRect.x, aRect.y, aRect.width, aRect.height);
-    }
-
-    void PopScissorRect() {
-        if (mScissorStack.Length() < 2) {
-            NS_WARNING("PopScissorRect with Length < 2!");
-            return;
-        }
-
-        nsIntRect thisRect = ScissorRect();
-        mScissorStack.TruncateLength(mScissorStack.Length() - 1);
-        if (!thisRect.IsEqualInterior(ScissorRect())) {
-            fScissor(ScissorRect().x, ScissorRect().y,
-                     ScissorRect().width, ScissorRect().height);
-        }
-    }
 
     void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
         if (mViewportRect[0] == x &&
