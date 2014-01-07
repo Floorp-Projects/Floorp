@@ -114,7 +114,6 @@ ManifestEditor.prototype = {
   },
 
   update: function() {
-    this.editor.createHierarchy();
     this.editor.rawObject = this.manifest;
     this.editor.commitHierarchy();
 
