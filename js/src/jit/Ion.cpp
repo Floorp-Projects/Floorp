@@ -1714,7 +1714,6 @@ IonCompile(JSContext *cx, JSScript *script,
     JS_ASSERT(CanIonCompile(builder->script(), executionMode));
 
     RootedScript builderScript(cx, builder->script());
-    IonSpewNewFunction(graph, builderScript);
 
     if (recompile) {
         JS_ASSERT(executionMode == SequentialExecution);
@@ -1724,7 +1723,10 @@ IonCompile(JSContext *cx, JSScript *script,
     // If possible, compile the script off thread.
     if (OffThreadCompilationAvailable(cx)) {
         if (!recompile)
-            SetIonScript(builder->script(), executionMode, ION_COMPILING_SCRIPT);
+            SetIonScript(builderScript, executionMode, ION_COMPILING_SCRIPT);
+
+        IonSpew(IonSpew_Logs, "Can't log script %s:%d. (Compiled on background thread.)",
+                              builderScript->filename(), builderScript->lineno());
 
         if (!StartOffThreadIonCompile(cx, builder)) {
             IonSpew(IonSpew_Abort, "Unable to start off-thread ion compilation.");
@@ -1755,6 +1757,8 @@ IonCompile(JSContext *cx, JSScript *script,
     {
         protect.construct(cx->runtime());
     }
+
+    IonSpewNewFunction(graph, builderScript);
 
     bool succeeded = builder->build();
     builder->clearForBackEnd();

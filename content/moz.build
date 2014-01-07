@@ -11,12 +11,10 @@ PARALLEL_DIRS += [
     'html',
     'mathml/content/src',
     'media',
-    'smil',
     'svg',
     'xml',
     'xul',
     'xbl',
-    'xslt',
 ]
 
 TEST_TOOL_DIRS += ['test']

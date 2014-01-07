@@ -3820,6 +3820,12 @@ else
   fi
 fi
 
+dnl Make sure that the build system can handle non-ASCII characters
+dnl in environment variables to prevent it from breking silently on
+dnl non-English systems.
+NONASCII=$'\241\241'
+AC_SUBST(NONASCII)
+
 dnl ========================================================
 dnl = Disable -fstrict-aliasing with GCC 4.4 and earlier.
 dnl = See bugs 821502 and 832623.

@@ -39,7 +39,7 @@ interface nsIVolume : nsISupports
   readonly attribute long mountGeneration;
 
   // While a volume is mounted, it can be locked, preventing it from being
-  // shared with the PC. To lock a volume, acquire an nsIDOMMozWakeLock
+  // shared with the PC. To lock a volume, acquire an MozWakeLock
   // using the name of this attribute. Note that mountLockName changes
   // every time the mountGeneration changes, so you'll need to reacquire
   // the wakelock every time the volume becomes mounted.

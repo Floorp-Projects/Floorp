@@ -39,7 +39,7 @@ struct SurfaceDescriptorDIB {
 
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
-  bool hasAlpha;
+  SurfaceFormat format;
 };
 
 struct SurfaceDescriptorMacIOSurface {
