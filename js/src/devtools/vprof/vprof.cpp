@@ -53,7 +53,7 @@
 #define UNLOCK(lock) }
 #endif
 
-static entry* entries = NULL;
+static entry* entries = nullptr;
 static bool notInitialized = true;
 static long glock = LOCK_IS_FREE;
 
@@ -82,7 +82,7 @@ static inline entry* reverse (entry* s)
 {
     entry_t e, n, p;
 
-    p = NULL;
+    p = nullptr;
     for (e = s; e; e = n) {
         n = e->next;
         e->next = p;
@@ -158,7 +158,7 @@ static inline entry_t findEntry (char* file, int line)
             return e;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 // Initialize the location pointed to by 'id' to a new value profile entry
@@ -174,14 +174,14 @@ int initValueProfile(void** id, char* file, int line, ...)
             notInitialized = false;
         }
 
-        if (e == NULL) {
+        if (e == nullptr) {
             e = findEntry (file, line);
             if (e) {
                 *id = e;
             }
         }
 
-        if (e == NULL) {
+        if (e == nullptr) {
             va_list va;
             e = (entry_t) malloc (sizeof(entry));
             e->lock = LOCK_IS_FREE;
@@ -196,8 +196,8 @@ int initValueProfile(void** id, char* file, int line, ...)
             va_start (va, line);
             e->func = (void (__cdecl*)(void*)) va_arg (va, void*);
             va_end (va);
-            e->h = NULL;
-            e->genptr = NULL;
+            e->h = nullptr;
+            e->genptr = nullptr;
             VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
             VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
             VMPI_memset (&e->dvar,   0, sizeof(e->dvar));
@@ -247,14 +247,14 @@ int initHistProfile(void** id, char* file, int line, int nbins, ...)
             notInitialized = false;
         }
 
-        if (e == NULL) {
+        if (e == nullptr) {
             e = findEntry (file, line);
             if (e) {
                 *id = e;
             }
         }
 
-        if (e == NULL) {
+        if (e == nullptr) {
             va_list va;
             hist_t h;
             int b, n, s;
@@ -269,7 +269,7 @@ int initHistProfile(void** id, char* file, int line, int nbins, ...)
             e->count = 0;
             e->min = 0;
             e->max = 0;
-            e->func = NULL;
+            e->func = nullptr;
             e->h = h = (hist_t) malloc (sizeof(hist));
             n = 1+MAX(nbins,0);
             h->nbins = n-1;
@@ -288,7 +288,7 @@ int initHistProfile(void** id, char* file, int line, int nbins, ...)
             lb[b] = MAXINT64;
             va_end (va);
 
-            e->genptr = NULL;
+            e->genptr = nullptr;
             VMPI_memset (&e->ivar,   0, sizeof(e->ivar));
             VMPI_memset (&e->i64var, 0, sizeof(e->i64var));
             VMPI_memset (&e->dvar,   0, sizeof(e->dvar));

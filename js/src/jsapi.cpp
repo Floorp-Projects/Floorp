@@ -2430,7 +2430,7 @@ JS_SetPrototype(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<JSObject*> 
         return false;
 
     if (!succeeded) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SETPROTOTYPEOF_FAIL);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SETPROTOTYPEOF_FAIL);
         return false;
     }
 
@@ -6038,6 +6038,26 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
         break;
     }
 #endif
+}
+
+JS_PUBLIC_API(int)
+JS_GetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt)
+{
+#ifdef JS_ION
+    switch (opt) {
+      case JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER:
+        return jit::js_JitOptions.baselineUsesBeforeCompile;
+      case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
+        return jit::js_JitOptions.forcedDefaultIonUsesBeforeCompile;
+      case JSJITCOMPILER_ION_ENABLE:
+        return JS::ContextOptionsRef(cx).ion();
+      case JSJITCOMPILER_BASELINE_ENABLE:
+        return JS::ContextOptionsRef(cx).baseline();
+      default:
+        break;
+    }
+#endif
+    return 0;
 }
 
 /************************************************************************/

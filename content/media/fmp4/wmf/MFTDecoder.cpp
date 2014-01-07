@@ -36,7 +36,7 @@ MFTDecoder::Create(const GUID& aMFTClsID)
   // Create the IMFTransform to do the decoding.
   HRESULT hr;
   hr = CoCreateInstance(aMFTClsID,
-                        NULL,
+                        nullptr,
                         CLSCTX_INPROC_SERVER,
                         IID_IMFTransform,
                         reinterpret_cast<void**>(static_cast<IMFTransform**>(byRef(mDecoder))));

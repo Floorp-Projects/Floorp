@@ -172,8 +172,11 @@ this.wire = function wire(aRoot, aSelectorOrElement, aDescriptor)
  * @param callback
  *        The callback method, which will be called passing in the selected
  *        file or null if the user did not pick one.
+ * @param AString suggestedFilename
+ *        The suggested filename when toSave is true.
  */
-this.showFilePicker = function showFilePicker(path, toSave, parentWindow, callback)
+this.showFilePicker = function showFilePicker(path, toSave, parentWindow,
+                                              callback, suggestedFilename)
 {
   if (typeof(path) == "string") {
     try {
@@ -212,6 +215,10 @@ this.showFilePicker = function showFilePicker(path, toSave, parentWindow, callba
       callback(fp.file);
     }
   };
+
+  if (toSave && suggestedFilename) {
+    fp.defaultString = suggestedFilename;
+  }
 
   fp.init(parentWindow, _(key + ".title"), mode);
   fp.appendFilters(_(key + ".filter"), "*.css");
