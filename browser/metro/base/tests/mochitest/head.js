@@ -556,6 +556,25 @@ function waitForObserver(aObsEvent, aTimeoutMs) {
   }
 }
 
+
+/*=============================================================================
+ * Input mode helpers - these helpers notify observers to metro_precise_input
+ * and metro_imprecise_input respectively, triggering the same behaviour as user touch or mouse input
+ *
+ * Usage: let promise = waitForObservers("metro_imprecise_input");
+ *        notifyImprecise();
+ *        yield promise; // you are now in imprecise mode
+ *===========================================================================*/
+function notifyPrecise()
+{
+  Services.obs.notifyObservers(null, "metro_precise_input", null);
+}
+
+function notifyImprecise()
+{
+  Services.obs.notifyObservers(null, "metro_imprecise_input", null);
+}
+
 /*=============================================================================
  * Native input helpers - these helpers send input directly to the os
  * generating os level input events that get processed by widget and
