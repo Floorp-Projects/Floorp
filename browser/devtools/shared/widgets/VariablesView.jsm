@@ -154,20 +154,21 @@ VariablesView.prototype = {
     if (!this._store.length) {
       return;
     }
+
+    this._store.length = 0;
+    this._itemsByElement.clear();
+    this._prevHierarchy = this._currHierarchy;
+    this._currHierarchy = new Map(); // Don't clear, this is just simple swapping.
+
     // Check if this empty operation may be executed lazily.
     if (this.lazyEmpty && aTimeout > 0) {
       this._emptySoon(aTimeout);
       return;
     }
 
-    let list = this._list;
-
-    while (list.hasChildNodes()) {
-      list.firstChild.remove();
+    while (this._list.hasChildNodes()) {
+      this._list.firstChild.remove();
     }
-
-    this._store.length = 0;
-    this._itemsByElement.clear();
 
     this._appendEmptyNotice();
     this._toggleSearchVisibility(false);
@@ -191,9 +192,6 @@ VariablesView.prototype = {
   _emptySoon: function(aTimeout) {
     let prevList = this._list;
     let currList = this._list = this.document.createElement("scrollbox");
-
-    this._store.length = 0;
-    this._itemsByElement.clear();
 
     this.window.setTimeout(() => {
       prevList.removeEventListener("keypress", this._onViewKeyPress, false);
@@ -2889,7 +2887,7 @@ Property.prototype["@@iterator"] = function*() {
 
 /**
  * Forget everything recorded about added scopes, variables or properties.
- * @see VariablesView.createHierarchy
+ * @see VariablesView.commitHierarchy
  */
 VariablesView.prototype.clearHierarchy = function() {
   this._prevHierarchy.clear();
@@ -2897,17 +2895,13 @@ VariablesView.prototype.clearHierarchy = function() {
 };
 
 /**
- * Start recording a hierarchy of any added scopes, variables or properties.
- * @see VariablesView.commitHierarchy
- */
-VariablesView.prototype.createHierarchy = function() {
-  this._prevHierarchy = this._currHierarchy;
-  this._currHierarchy = new Map(); // Don't clear, this is just simple swapping.
-};
-
-/**
- * Briefly flash the variables that changed between the previous and current
- * scope/variable/property hierarchies and reopen previously expanded nodes.
+ * Perform operations on all the VariablesView Scopes, Variables and Properties
+ * after you've added all the items you wanted.
+ *
+ * Calling this method is optional, and does the following:
+ *   - styles the items overridden by other items in parent scopes
+ *   - reopens the items which were previously expanded
+ *   - flashes the items whose values changed
  */
 VariablesView.prototype.commitHierarchy = function() {
   for (let [, currItem] of this._currHierarchy) {
