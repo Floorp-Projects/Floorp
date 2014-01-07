@@ -25,9 +25,6 @@ function test() {
     ed.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 5 });
     is(ed.getSelection(), "Hello", "setSelection");
 
-    ed.extendSelection({ start: 0, length: 5 });
-    is(ed.getSelection(), ".\nHow", "extendSelection");
-
     ed.dropSelection();
     is(ed.getSelection(), "", "dropSelection");
 
