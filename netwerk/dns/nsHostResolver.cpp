@@ -1013,12 +1013,12 @@ public:
         dnsUUID.Assign(Substring(nsDependentCString(uuid), 1, NSID_LENGTH - 3));
 
         // Create events for A and SRV resolvers
-        events[0] = CreateEvent(NULL, TRUE, FALSE, TEXT("FinishedA"));
+        events[0] = CreateEvent(nullptr, TRUE, FALSE, TEXT("FinishedA"));
         if (!events[0]) {
             goto library_cleanup;
         }
 
-        events[1] = CreateEvent(NULL, TRUE, FALSE, TEXT("FinishedSRV"));
+        events[1] = CreateEvent(nullptr, TRUE, FALSE, TEXT("FinishedSRV"));
         if (!events[1]) {
             goto aevent_cleanup;
         }

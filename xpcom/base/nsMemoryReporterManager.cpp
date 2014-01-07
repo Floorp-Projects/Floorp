@@ -212,7 +212,7 @@ GetKinfoVmentrySelf(int64_t* prss, uint64_t* maxreg)
 {
     int cnt;
     struct kinfo_vmentry *vmmap, *kve;
-    if ((vmmap = kinfo_getvmmap(getpid(), &cnt)) == NULL)
+    if ((vmmap = kinfo_getvmmap(getpid(), &cnt)) == nullptr)
         return NS_ERROR_FAILURE;
 
     if (prss)
@@ -238,7 +238,7 @@ static nsresult
 PrivateDistinguishedAmount(int64_t* aN)
 {
     int64_t priv;
-    nsresult rv = GetKinfoVmentrySelf(&priv, NULL);
+    nsresult rv = GetKinfoVmentrySelf(&priv, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
     *aN = priv * getpagesize();
     return NS_OK;
@@ -249,7 +249,7 @@ static nsresult
 VsizeMaxContiguousDistinguishedAmount(int64_t* aN)
 {
     uint64_t biggestRegion;
-    nsresult rv = GetKinfoVmentrySelf(NULL, &biggestRegion);
+    nsresult rv = GetKinfoVmentrySelf(nullptr, &biggestRegion);
     if (NS_SUCCEEDED(rv))
         *aN = biggestRegion;
 

@@ -42,6 +42,11 @@ MOCHITEST_CHUNK_BY_DIR = 4
 MOCHITEST_TOTAL_CHUNKS = 5
 
 TEST_SUITES = {
+    'cppunittest': {
+        'aliases': ('Cpp', 'cpp'),
+        'mach_command': 'cppunittest',
+        'kwargs': {'test_file': None},
+    },
     'crashtest': {
         'aliases': ('C', 'Rc', 'RC', 'rc'),
         'mach_command': 'crashtest',
@@ -164,3 +169,38 @@ class Test(MachCommandBase):
 
         print(UNKNOWN_TEST % what)
         return 1
+
+@CommandProvider
+class MachCommands(MachCommandBase):
+    @Command('cppunittest', category='testing',
+        description='Run cpp unit tests.')
+    @CommandArgument('test_files', nargs='*', metavar='N',
+        help='Test to run. Can be specified as one or more files or ' \
+            'directories, or omitted. If omitted, the entire test suite is ' \
+            'executed.')
+
+    def run_cppunit_test(self, **params):
+        import runcppunittests as cppunittests
+        import logging
+
+        if len(params['test_files']) == 0:
+            testdir = os.path.join(self.distdir, 'cppunittests')
+            progs = cppunittests.extract_unittests_from_args([testdir], None)
+        else:
+            progs = cppunittests.extract_unittests_from_args(params['test_files'], None)
+
+        # See if we have crash symbols
+        symbols_path = os.path.join(self.distdir, 'crashreporter-symbols')
+        if not os.path.isdir(symbols_path):
+            symbols_path = None
+
+        tester = cppunittests.CPPUnitTests()
+        try:
+            result = tester.run_tests(progs, self.bindir, symbols_path)
+        except Exception, e:
+            self.log(logging.ERROR, 'cppunittests',
+                {'exception': str(e)},
+                'Caught exception running cpp unit tests: {exception}')
+            result = False
+
+        return 0 if result else 1
