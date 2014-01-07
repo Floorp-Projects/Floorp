@@ -602,6 +602,7 @@ CheckHashTablesAfterMovingGC(JSRuntime *rt)
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         c->checkNewTypeObjectTableAfterMovingGC();
         c->checkInitialShapesTableAfterMovingGC();
+        c->checkWrapperMapAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(rt);
     }
@@ -632,8 +633,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     CheckHashTablesAfterMovingGC(rt);
     MarkRuntime(&trc);
     Debugger::markAll(&trc);
-    for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
-        comp->markAllCrossCompartmentWrappers(&trc);
     rt->newObjectCache.clearNurseryObjects(rt);
 
     /*

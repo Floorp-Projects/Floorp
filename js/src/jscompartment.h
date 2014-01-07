@@ -249,6 +249,7 @@ struct JSCompartment
 #if defined(DEBUG) && defined(JSGC_GENERATIONAL)
     void checkNewTypeObjectTableAfterMovingGC();
     void checkInitialShapesTableAfterMovingGC();
+    void checkWrapperMapAfterMovingGC();
 #endif
 
     /*
@@ -296,7 +297,6 @@ struct JSCompartment
 
     /* Mark cross-compartment wrappers. */
     void markCrossCompartmentWrappers(JSTracer *trc);
-    void markAllCrossCompartmentWrappers(JSTracer *trc);
 
     inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
                      JS::HandleObject existing = js::NullPtr());
@@ -311,7 +311,7 @@ struct JSCompartment
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
 
-    bool putWrapper(const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
+    bool putWrapper(JSContext *cx, const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
 
     js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) {
         return crossCompartmentWrappers.lookup(wrapped);
