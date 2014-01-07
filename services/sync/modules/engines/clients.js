@@ -27,7 +27,7 @@ ClientsRec.prototype = {
   ttl: CLIENTS_TTL
 };
 
-Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands"]);
+Utils.deferGetSet(ClientsRec, "cleartext", ["name", "type", "commands", "version"]);
 
 
 this.ClientEngine = function ClientEngine(service) {
@@ -386,6 +386,7 @@ ClientStore.prototype = {
       record.name = this.engine.localName;
       record.type = this.engine.localType;
       record.commands = this.engine.localCommands;
+      record.version = Services.appinfo.version;
     }
     else
       record.cleartext = this._remoteClients[id];
