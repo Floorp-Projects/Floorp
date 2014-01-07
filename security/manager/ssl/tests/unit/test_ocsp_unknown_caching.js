@@ -81,32 +81,6 @@ function run_test() {
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 2); run_next_test(); });
 
-
-  //---------------------------------------------------------------------------
-
-  // Reset state
-  add_test(function() { clearOCSPCache(); gFetchCount = 0; run_next_test(); });
-
-  // A failure to retrieve an OCSP response will result in an error entry being
-  // added to the cache.
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
-                      clearSessionCache);
-  add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
-
-  // The error entry will prevent a fetch from happening for a while.
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
-                      clearSessionCache);
-  add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
-
-  // The error entry must not prevent a stapled OCSP response from being
-  // honored.
-  add_connection_test("ocsp-stapling-revoked.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE),
-                      clearSessionCache);
-  add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
-
-  //---------------------------------------------------------------------------
-
   add_test(function() { ocspResponder.stop(run_next_test); run_next_test(); });
 
   run_next_test();
