@@ -22,13 +22,13 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsError.h"
 #include "nsIIdleService.h"
-#include "nsIPowerManagerService.h"
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
 #include "nsArrayUtils.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsDOMWindowList.h"
-#include "nsIDOMWakeLock.h"
+#include "mozilla/dom/WakeLock.h"
+#include "mozilla/dom/power/PowerManagerService.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
@@ -5698,13 +5698,21 @@ nsGlobalWindow::SetFullScreenInternal(bool aFullScreen, bool aRequireTrust)
   }
 
   if (!mWakeLock && mFullScreen) {
-    nsCOMPtr<nsIPowerManagerService> pmService =
-      do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+    nsRefPtr<power::PowerManagerService> pmService =
+      power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE(pmService, NS_OK);
 
-    pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"), this, getter_AddRefs(mWakeLock));
+    ErrorResult rv;
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("DOM_Fullscreen"),
+                                       this, rv);
+    if (rv.Failed()) {
+      return rv.ErrorCode();
+    }
+
   } else if (mWakeLock && !mFullScreen) {
-    mWakeLock->Unlock();
+    ErrorResult rv;
+    mWakeLock->Unlock(rv);
+    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to unlock the wakelock.");
     mWakeLock = nullptr;
   }
 
