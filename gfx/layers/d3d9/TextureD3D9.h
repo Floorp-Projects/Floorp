@@ -159,6 +159,55 @@ protected:
   bool mIterating;
 };
 
+class SharedTextureClientD3D9 : public TextureClient
+{
+public:
+  SharedTextureClientD3D9(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+  : TextureClient(aFlags)
+  , mFormat(aFormat)
+  {}
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mTexture; }
+
+  virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(IsValid());
+    if (!IsAllocated()) {
+      return false;
+    }
+
+    aOutDescriptor = SurfaceDescriptorD3D10((WindowsHandle)(mHandle), mFormat);
+    return true;
+  }
+
+  void InitWith(IDirect3DTexture9* aTexture, HANDLE aSharedHandle, D3DSURFACE_DESC aDesc)
+  {
+    MOZ_ASSERT(!mTexture);
+    mTexture = aTexture;
+    mHandle = aSharedHandle;
+    mDesc = aDesc;
+  }
+
+  virtual gfx::IntSize GetSize() const
+  {
+    return gfx::IntSize(mDesc.Width, mDesc.Height);
+  }
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE
+  {
+    mTexture = nullptr;
+    MarkInvalid();
+    return nullptr;
+  }
+
+private:
+  nsRefPtr<IDirect3DTexture9> mTexture;
+  gfx::SurfaceFormat mFormat;
+  HANDLE mHandle;
+  D3DSURFACE_DESC mDesc;
+};
+
+
 class CompositingRenderTargetD3D9 : public CompositingRenderTarget,
                                     public TextureSourceD3D9
 {
