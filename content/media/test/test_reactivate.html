@@ -19,8 +19,6 @@ var elements;
 function didPlay(event) {
   ok(true, "Element ended: " + event.target.currentSrc);
 
-  removeNodeAndSource(event.target);
-
   --testsWaiting;
   if (testsWaiting == 0) {
     SimpleTest.finish();
