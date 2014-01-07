@@ -59,6 +59,9 @@ protected:
 public:
     // Use |newState = true| to enable, |false| to disable.
     ScopedGLState(GLContext* aGL, GLenum aCapability, bool aNewState);
+    // variant that doesn't change state; simply records existing state to be
+    // restored by the destructor
+    ScopedGLState(GLContext* aGL, GLenum aCapability);
 
 protected:
     void UnwrapImpl();

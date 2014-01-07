@@ -29,6 +29,13 @@ ScopedGLState::ScopedGLState(GLContext* aGL, GLenum aCapability, bool aNewState)
     }
 }
 
+ScopedGLState::ScopedGLState(GLContext* aGL, GLenum aCapability)
+    : ScopedGLWrapper<ScopedGLState>(aGL)
+    , mCapability(aCapability)
+{
+    mOldState = mGL->fIsEnabled(mCapability);
+}
+
 void
 ScopedGLState::UnwrapImpl()
 {
