@@ -153,12 +153,11 @@ function run_test() {
   do_get_profile();
   add_tls_server_setup("<test-server-name>");
 
-  add_connection_test("<test-name-1>.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_xxx),
-                      function() { ... },
-                      function(aTransportSecurityInfo) { ... });
+  add_connection_test("<test-name-1>.example.com", Cr.<expected result>,
+                      <ocsp stapling enabled>);
   [...]
-  add_connection_test("<test-name-n>.example.com", Cr.NS_OK);
+  add_connection_test("<test-name-n>.example.com", Cr.<expected result>,
+                      <ocsp stapling enabled>);
 
   run_next_test();
 }
@@ -252,10 +251,14 @@ function add_connection_test(aHost, aExpectedResult,
       aBeforeConnect();
     }
     connectTo(aHost).then(function(conn) {
+      dump("hello #0\n");
       do_check_eq(conn.result, aExpectedResult);
+      dump("hello #0.5\n");
       if (aWithSecurityInfo) {
+        dump("hello #1\n");
         aWithSecurityInfo(conn.transport.securityInfo
                               .QueryInterface(Ci.nsITransportSecurityInfo));
+        dump("hello #2\n");
       }
       run_next_test();
     });
