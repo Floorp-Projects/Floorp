@@ -273,7 +273,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     prevLinebase(nullptr),
     userbuf(cx, base - options.column, length + options.column), // See comment below
     filename(options.filename()),
-    sourceURL_(nullptr),
+    displayURL_(nullptr),
     sourceMapURL_(nullptr),
     tokenbuf(cx),
     cx(cx),
@@ -333,7 +333,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
 
 TokenStream::~TokenStream()
 {
-    js_free(sourceURL_);
+    js_free(displayURL_);
     js_free(sourceMapURL_);
 
     JS_ASSERT_IF(originPrincipals, originPrincipals->refcount);
@@ -808,7 +808,7 @@ TokenStream::getDirectives(bool isMultiline, bool shouldWarnDeprecated)
     // comment. To avoid potentially expensive lookahead and backtracking, we
     // only check for this case if we encounter a '#' character.
 
-    if (!getSourceURL(isMultiline, shouldWarnDeprecated))
+    if (!getDisplayURL(isMultiline, shouldWarnDeprecated))
         return false;
     if (!getSourceMappingURL(isMultiline, shouldWarnDeprecated))
         return false;
@@ -864,13 +864,18 @@ TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
 }
 
 bool
-TokenStream::getSourceURL(bool isMultiline, bool shouldWarnDeprecated)
+TokenStream::getDisplayURL(bool isMultiline, bool shouldWarnDeprecated)
 {
     // Match comments of the form "//# sourceURL=<url>" or
     // "/\* //# sourceURL=<url> *\/"
+    //
+    // Note that while these are labeled "sourceURL" in the source text,
+    // internally we refer to it as a "displayURL" to distinguish what the
+    // developer would like to refer to the source as from the source's actual
+    // URL.
 
     return getDirective(isMultiline, shouldWarnDeprecated, " sourceURL=", 11,
-                        "sourceURL", &sourceURL_);
+                        "sourceURL", &displayURL_);
 }
 
 bool

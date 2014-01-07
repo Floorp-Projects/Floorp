@@ -30,7 +30,8 @@
     </content>
 
     <handlers>
-      <handler event="click" clickcount="1" action="this._onClick()"/>
+      <handler event="click" button="0" clickcount="1" action="this._onClick()"/>
+      <handler event="click" button="1" clickcount="1" action="event.stopPropagation(); this._onClose()"/>
       <handler event="dblclick" action="this._onDoubleClick(); event.stopPropagation();"/>
     </handlers>
 

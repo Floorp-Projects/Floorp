@@ -8,6 +8,10 @@ if (typeof(Ci) == 'undefined') {
   var Ci = Components.interfaces;
 }
 
+if (typeof(Cc) == 'undefined') {
+  var Cc = Components.classes;
+}
+
 /**
  * Special Powers Exception - used to throw exceptions nicely
  **/

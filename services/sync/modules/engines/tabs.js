@@ -304,12 +304,14 @@ TabTracker.prototype = {
 
     switch (topic) {
       case "domwindowopened":
-        // Add tab listeners now that a window has opened.
-        subject.addEventListener("load", (event) => {
+        let onLoad = () => {
           subject.removeEventListener("load", onLoad, false);
           // Only register after the window is done loading to avoid unloads.
           this._registerListenersForWindow(subject);
-        }, false);
+        };
+
+        // Add tab listeners now that a window has opened.
+        subject.addEventListener("load", onLoad, false);
         break;
     }
   },

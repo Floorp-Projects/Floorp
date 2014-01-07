@@ -1,5 +1,5 @@
 /* -*- Mode: javascript; js-indent-level: 4; -*- */
-// Source.prototype.sourceURL can be a string or null.
+// Source.prototype.displayURL can be a string or null.
 
 let g = newGlobal('new-compartment');
 let dbg = new Debugger;
