@@ -1452,7 +1452,7 @@ struct JSJitInfo {
         Getter,
         Setter,
         Method,
-        OpType_None
+        ParallelNative
     };
 
     enum ArgType {
@@ -1494,20 +1494,27 @@ struct JSJitInfo {
         AliasEverything
     };
 
+    bool hasParallelNative() const
+    {
+        return type == ParallelNative;
+    }
+
     bool isDOMJitInfo() const
     {
-        return type != OpType_None;
+        return type != ParallelNative;
     }
 
     union {
         JSJitGetterOp getter;
         JSJitSetterOp setter;
         JSJitMethodOp method;
+        /* An alternative native that's safe to call in parallel mode. */
+        JSParallelNative parallelNative;
     };
 
     uint32_t protoID;
     uint32_t depth;
-    // type not being OpType_None means this is a DOM method.  If you
+    // type not being ParallelNative means this is a DOM method.  If you
     // change that, come up with a different way of implementing
     // isDOMJitInfo().
     OpType type;
@@ -1536,9 +1543,6 @@ struct JSJitInfo {
                                       if we have no type information for
                                       arguments. */
 
-    /* An alternative native that's safe to call in parallel mode. */
-    JSParallelNative parallelNative;
-
 private:
     static void staticAsserts()
     {
@@ -1551,8 +1555,44 @@ private:
     }
 };
 
-#define JS_JITINFO_NATIVE_PARALLEL(op)                                         \
-    {{nullptr},0,0,JSJitInfo::OpType_None,JSVAL_TYPE_MISSING,false,false,false,0,JSJitInfo::AliasEverything,nullptr,op}
+namespace JS {
+namespace detail {
+
+/* NEVER DEFINED, DON'T USE.  For use by JS_CAST_PARALLEL_NATIVE_TO only. */
+inline int CheckIsParallelNative(JSParallelNative parallelNative);
+
+} // namespace detail
+} // namespace JS
+
+#define JS_CAST_PARALLEL_NATIVE_TO(v, To) \
+    (static_cast<void>(sizeof(JS::detail::CheckIsParallelNative(v))), \
+     reinterpret_cast<To>(v))
+
+/*
+ * You may ask yourself: why do we define a wrapper around a wrapper here?
+ * The answer is that some compilers don't understand initializing a union
+ * as we do below with a construct like:
+ *
+ * reinterpret_cast<JSJitGetterOp>(JSParallelNativeThreadSafeWrapper<op>)
+ *
+ * (We need the reinterpret_cast because we must initialize the union with
+ * a datum of the type of the union's first member.)
+ *
+ * Presumably this has something to do with template instantiation.
+ * Initializing with a normal function pointer seems to work fine. Hence
+ * the ugliness that you see before you.
+ */
+#define JS_JITINFO_NATIVE_PARALLEL(infoName, parallelOp)                \
+    const JSJitInfo infoName =                                          \
+        {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSVAL_TYPE_MISSING,false,false,false,0,JSJitInfo::AliasEverything,nullptr}
+
+#define JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(infoName, wrapperName, serialOp) \
+    bool wrapperName##_ParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, \
+                                                       JS::Value *vp)   \
+    {                                                                   \
+        return JSParallelNativeThreadSafeWrapper<serialOp>(slice, argc, vp); \
+    }                                                                   \
+    JS_JITINFO_NATIVE_PARALLEL(infoName, wrapperName##_ParallelNativeThreadSafeWrapper)
 
 static JS_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
