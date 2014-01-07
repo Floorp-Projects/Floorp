@@ -130,6 +130,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
 
     let contents = document.createElement("label");
+    contents.className = "plain dbg-source-item";
     contents.setAttribute("value", label);
     contents.setAttribute("crop", "start");
     contents.setAttribute("flex", "1");
@@ -2261,7 +2262,6 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Initializing the EventListenersView");
 
     this.widget = new SideMenuWidget(document.getElementById("event-listeners"), {
-      theme: "light",
       showItemCheckboxes: true,
       showGroupCheckboxes: true
     });
@@ -3065,7 +3065,7 @@ LineResults.prototype = {
     lineNumberNode.setAttribute("value", this.line + 1);
 
     let lineContentsNode = document.createElement("hbox");
-    lineContentsNode.className = "light list-widget-item dbg-results-line-contents";
+    lineContentsNode.className = "dbg-results-line-contents";
     lineContentsNode.classList.add("devtools-monospace");
     lineContentsNode.setAttribute("flex", "1");
 

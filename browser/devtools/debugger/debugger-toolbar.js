@@ -569,9 +569,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function() {
     dumpn("Initializing the StackFramesClassicListView");
 
-    this.widget = new SideMenuWidget(document.getElementById("callstack-list"), {
-      theme: "light"
-    });
+    this.widget = new SideMenuWidget(document.getElementById("callstack-list"));
     this.widget.addEventListener("select", this._onSelect, false);
 
     this.emptyText = L10N.getStr("noStackFramesText");
