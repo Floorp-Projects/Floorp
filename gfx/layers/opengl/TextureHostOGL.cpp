@@ -253,6 +253,8 @@ TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
       mTexImage = CreateTextureImage(mGL,
                                      size,
                                      gfx::ContentForFormat(aSurface->GetFormat()),
+                                     WrapMode(mGL, mFlags & TEXTURE_ALLOW_REPEAT),
+                                     FlagsToGLFlags(mFlags),
                                      SurfaceFormatToImageFormat(aSurface->GetFormat()));
     }
   }
