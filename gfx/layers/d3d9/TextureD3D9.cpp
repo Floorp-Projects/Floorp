@@ -12,6 +12,7 @@
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "gfxWindowsPlatform.h"
 #include "gfx2DGlue.h"
+#include "gfxUtils.h"
 
 using namespace mozilla::gfx;
 
@@ -56,6 +57,31 @@ TextureSourceD3D9::~TextureSourceD3D9()
   }
 }
 
+TemporaryRef<TextureHost>
+CreateTextureHostD3D9(const SurfaceDescriptor& aDesc,
+                      ISurfaceAllocator* aDeallocator,
+                      TextureFlags aFlags)
+{
+  RefPtr<TextureHost> result;
+  switch (aDesc.type()) {
+    case SurfaceDescriptor::TSurfaceDescriptorShmem:
+    case SurfaceDescriptor::TSurfaceDescriptorMemory: {
+      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
+      break;
+    }
+    case SurfaceDescriptor::TSurfaceDescriptorD3D9: {
+      // TODO
+    }
+    case SurfaceDescriptor::TSurfaceDescriptorDIB: {
+      // TODO
+    }
+    default: {
+      NS_WARNING("Unsupported SurfaceDescriptor type");
+    }
+  }
+  return result.forget();
+}
+
 CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTexture,
                                                          SurfaceInitMode aInit,
                                                          const gfx::IntRect& aRect)
@@ -66,8 +92,8 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
   MOZ_COUNT_CTOR(CompositingRenderTargetD3D9);
   MOZ_ASSERT(aTexture);
 
-  mTextures[0] = aTexture;
-  HRESULT hr = mTextures[0]->GetSurfaceLevel(0, getter_AddRefs(mSurface));
+  mTexture = aTexture;
+  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
   NS_ASSERTION(mSurface, "Couldn't create surface for texture");
   TextureSourceD3D9::SetSize(aRect.Size());
 }
@@ -246,7 +272,7 @@ DeprecatedTextureHostD3D9::Reset()
 {
   mSize.width = 0;
   mSize.height = 0;
-  mTextures[0] = nullptr;
+  mTexture = nullptr;
   mIsTiled = false;
 }
 
@@ -294,10 +320,10 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   if (mSize.width <= maxSize && mSize.height <= maxSize) {
-    mTextures[0] = DataToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
-                                 surf->Data(), surf->Stride(),
-                                 mSize, format, bpp);
-    if (!mTextures[0]) {
+    mTexture = DataToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
+                             surf->Data(), surf->Stride(),
+                             mSize, format, bpp);
+    if (!mTexture) {
       NS_WARNING("Could not upload texture");
       Reset();
       return;
@@ -346,12 +372,16 @@ DeprecatedTextureHostD3D9::GetTileRect(uint32_t aID) const
 }
 
 DeprecatedTextureHostYCbCrD3D9::DeprecatedTextureHostYCbCrD3D9()
+  : mCompositor(nullptr)
 {
-  mFormat = gfx::FORMAT_YUV;
+  mFormat = FORMAT_YUV;
+
+  MOZ_COUNT_CTOR(DeprecatedTextureHostYCbCrD3D9);
 }
 
 DeprecatedTextureHostYCbCrD3D9::~DeprecatedTextureHostYCbCrD3D9()
 {
+  MOZ_COUNT_DTOR(DeprecatedTextureHostYCbCrD3D9);
 }
 
 void
@@ -363,7 +393,7 @@ DeprecatedTextureHostYCbCrD3D9::SetCompositor(Compositor* aCompositor)
 IntSize
 DeprecatedTextureHostYCbCrD3D9::GetSize() const
 {
-  return TextureSourceD3D9::GetSize();
+  return mSize;
 }
 
 void
@@ -384,21 +414,50 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   mStereoMode = yuvDeserializer.GetStereoMode();
 
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
-  mTextures[0] = DataToTexture(deviceManager,
-                               yuvDeserializer.GetYData(),
-                               yuvDeserializer.GetYStride(),
-                               mSize,
-                               D3DFMT_A8, 1);
-  mTextures[1] = DataToTexture(deviceManager,
-                               yuvDeserializer.GetCbData(),
-                               yuvDeserializer.GetCbCrStride(),
-                               cbCrSize,
-                               D3DFMT_A8, 1);
-  mTextures[2] = DataToTexture(deviceManager,
-                               yuvDeserializer.GetCrData(),
-                               yuvDeserializer.GetCbCrStride(),
-                               cbCrSize,
-                               D3DFMT_A8, 1);
+  RefPtr<DataTextureSource> srcY;
+  RefPtr<DataTextureSource> srcU;
+  RefPtr<DataTextureSource> srcV;
+  if (!mFirstSource) {
+    srcY = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
+    srcU = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
+    srcV = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
+    mFirstSource = srcY;
+    srcY->SetNextSibling(srcU);
+    srcU->SetNextSibling(srcV);
+  } else {
+    MOZ_ASSERT(mFirstSource->GetNextSibling());
+    MOZ_ASSERT(mFirstSource->GetNextSibling()->GetNextSibling());
+    srcY = mFirstSource;
+    srcU = mFirstSource->GetNextSibling()->AsDataTextureSource();
+    srcV = mFirstSource->GetNextSibling()->GetNextSibling()->AsDataTextureSource();
+  }
+
+  RefPtr<DataSourceSurface> wrapperY =
+    Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
+                                             yuvDeserializer.GetYStride(),
+                                             yuvDeserializer.GetYSize(),
+                                             FORMAT_A8);
+  RefPtr<DataSourceSurface> wrapperCb =
+    Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
+                                             yuvDeserializer.GetCbCrStride(),
+                                             yuvDeserializer.GetCbCrSize(),
+                                             FORMAT_A8);
+  RefPtr<DataSourceSurface> wrapperCr =
+    Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
+                                             yuvDeserializer.GetCbCrStride(),
+                                             yuvDeserializer.GetCbCrSize(),
+                                             FORMAT_A8);
+  // We don't support partial updates for Y U V textures
+  NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
+  if (!srcY->Update(wrapperY,  TEXTURE_FLAGS_DEFAULT) ||
+      !srcU->Update(wrapperCb, TEXTURE_FLAGS_DEFAULT) ||
+      !srcV->Update(wrapperCr, TEXTURE_FLAGS_DEFAULT)) {
+    NS_WARNING("failed to update the DataTextureSource");
+    mSize.width = 0;
+    mSize.height = 0;
+    mFirstSource = nullptr;
+    return;
+  }
 }
 
 TemporaryRef<IDirect3DTexture9>
@@ -479,9 +538,9 @@ DeprecatedTextureHostSystemMemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
   if (mSize.width <= maxSize && mSize.height <= maxSize) {
     mIsTiled = false;
 
-    mTextures[0] = TextureToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
-                                    texture, mSize, format);
-    if (!mTextures[0]) {
+    mTexture = TextureToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
+                                texture, mSize, format);
+    if (!mTexture) {
       NS_WARNING("Could not upload texture");
       Reset();
       return;
@@ -592,9 +651,9 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   if (mSize.width <= maxSize && mSize.height <= maxSize) {
-    mTextures[0] = SurfaceToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
-                                    surf, mSize, format);
-    if (!mTextures[0]) {
+    mTexture = SurfaceToTexture(gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager(),
+                                surf, mSize, format);
+    if (!mTexture) {
       NS_WARNING("Could not upload texture");
       Reset();
       return;
@@ -889,6 +948,135 @@ DeprecatedTextureClientDIB::SetDescriptor(const SurfaceDescriptor& aDescriptor)
   Unlock();
   mSurface = reinterpret_cast<gfxWindowsSurface*>(
                mDescriptor.get_SurfaceDescriptorDIB().surface());
+}
+
+DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                                             CompositorD3D9* aCompositor,
+                                             bool aDisallowBigImage,
+                                             StereoMode aStereoMode)
+  : mFormat(aFormat)
+  , mCompositor(aCompositor)
+  , mCurrentTile(0)
+  , mDisallowBigImage(aDisallowBigImage)
+  , mIsTiled(false)
+  , mIterating(false)
+{
+  mStereoMode = aStereoMode;
+  MOZ_COUNT_CTOR(DataTextureSourceD3D9);
+}
+
+DataTextureSourceD3D9::~DataTextureSourceD3D9()
+{
+  MOZ_COUNT_DTOR(DataTextureSourceD3D9);
+}
+
+bool
+DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
+                              TextureFlags aFlags,
+                              nsIntRegion* aDestRegion,
+                              gfx::IntPoint* aSrcOffset)
+{
+  // Right now we only support null aDestRegion and aSrcOffset (which means
+  // full surface update). Incremental update is only used on Mac so it is
+  // not clear that we ever will need to support it for D3D.
+  MOZ_ASSERT(!aDestRegion && !aSrcOffset);
+
+  if (!mCompositor || !mCompositor->device()) {
+    return false;
+  }
+  mSize = aSurface->GetSize();
+
+  uint32_t bpp = 0;
+
+  _D3DFORMAT format = D3DFMT_A8R8G8B8;
+  mFormat = aSurface->GetFormat();
+  switch (mFormat) {
+  case FORMAT_B8G8R8X8:
+    format = D3DFMT_X8R8G8B8;
+    bpp = 4;
+    break;
+  case FORMAT_B8G8R8A8:
+    format = D3DFMT_A8R8G8B8;
+    bpp = 4;
+    break;
+  case FORMAT_A8:
+    format = D3DFMT_A8;
+    bpp = 1;
+    break;
+  default:
+    NS_WARNING("Bad image format");
+    return false;
+  }
+
+  int32_t maxSize = mCompositor->GetMaxTextureSize();
+  DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
+  if (mSize.width <= maxSize && mSize.height <= maxSize) {
+    mTexture = DataToTexture(deviceManager,
+                             aSurface->GetData(), aSurface->Stride(),
+                             ThebesIntSize(mSize), format, bpp);
+    if (!mTexture) {
+      NS_WARNING("Could not upload texture");
+      Reset();
+      return false;
+    }
+    mIsTiled = false;
+  } else {
+    mIsTiled = true;
+    uint32_t tileCount = GetRequiredTilesD3D9(mSize.width, maxSize) *
+                         GetRequiredTilesD3D9(mSize.height, maxSize);
+    mTileTextures.resize(tileCount);
+
+    for (uint32_t i = 0; i < tileCount; i++) {
+      IntRect tileRect = GetTileRect(i);
+      unsigned char* data = aSurface->GetData() +
+                            tileRect.y * aSurface->Stride() +
+                            tileRect.x * bpp;
+      mTileTextures[i] = DataToTexture(deviceManager,
+                                       data,
+                                       aSurface->Stride(),
+                                       gfxIntSize(tileRect.width, tileRect.height),
+                                       format,
+                                       bpp);
+      if (!mTileTextures[i]) {
+        NS_WARNING("Could not upload texture");
+        Reset();
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+void
+DataTextureSourceD3D9::Reset()
+{
+  mSize.width = 0;
+  mSize.height = 0;
+  mIsTiled = false;
+  mTexture = nullptr;
+}
+
+IntRect
+DataTextureSourceD3D9::GetTileRect(uint32_t aTileIndex) const
+{
+  uint32_t maxSize = mCompositor->GetMaxTextureSize();
+  uint32_t horizontalTiles = GetRequiredTilesD3D9(mSize.width, maxSize);
+  uint32_t verticalTiles = GetRequiredTilesD3D9(mSize.height, maxSize);
+
+  uint32_t verticalTile = aTileIndex / horizontalTiles;
+  uint32_t horizontalTile = aTileIndex % horizontalTiles;
+
+  return IntRect(horizontalTile * maxSize,
+                 verticalTile * maxSize,
+                 horizontalTile < (horizontalTiles - 1) ? maxSize : mSize.width % maxSize,
+                 verticalTile < (verticalTiles - 1) ? maxSize : mSize.height % maxSize);
+}
+
+nsIntRect
+DataTextureSourceD3D9::GetTileRect()
+{
+  return ThebesIntRect(GetTileRect(mCurrentTile));
 }
 
 }

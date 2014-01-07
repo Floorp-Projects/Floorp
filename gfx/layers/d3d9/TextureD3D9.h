@@ -32,31 +32,14 @@ public:
   {}
   virtual ~TextureSourceD3D9();
 
-  virtual IDirect3DTexture9* GetD3D9Texture() { return mTextures[0]; }
-  virtual bool IsYCbCrSource() const { return false; }
+  virtual IDirect3DTexture9* GetD3D9Texture() { return mTexture; }
 
-  struct YCbCrTextures
-  {
-    IDirect3DTexture9 *mY;
-    IDirect3DTexture9 *mCb;
-    IDirect3DTexture9 *mCr;
-    StereoMode mStereoMode;
-  };
-
-  virtual YCbCrTextures GetYCbCrTextures() {
-    YCbCrTextures textures = { mTextures[0],
-                               mTextures[1],
-                               mTextures[2],
-                               mStereoMode };
-    return textures;
-  }
+  StereoMode GetStereoMode() const { return mStereoMode; };
 
   // Release all texture memory resources held by the texture host.
   virtual void ReleaseTextureResources()
   {
-    for (size_t i = 0; i < 3; ++i) {
-      mTextures[i] = nullptr;
-    }
+    mTexture = nullptr;
   }
 
 protected:
@@ -102,7 +85,75 @@ protected:
   DeviceManagerD3D9* mCreatingDeviceManager;
 
   StereoMode mStereoMode;
-  RefPtr<IDirect3DTexture9> mTextures[3];
+  RefPtr<IDirect3DTexture9> mTexture;
+};
+
+/**
+ * A TextureSource that implements the DataTextureSource interface.
+ * it can be used without a TextureHost and is able to upload texture data
+ * from a gfx::DataSourceSurface.
+ */
+class DataTextureSourceD3D9 : public DataTextureSource
+                            , public TextureSourceD3D9
+                            , public TileIterator
+{
+public:
+  DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
+                        CompositorD3D9* aCompositor,
+                        bool aAllowBigImage = true,
+                        StereoMode aStereoMode = STEREO_MODE_MONO);
+
+  virtual ~DataTextureSourceD3D9();
+
+  // DataTextureSource
+
+  virtual bool Update(gfx::DataSourceSurface* aSurface,
+                      TextureFlags aFlags,
+                      nsIntRegion* aDestRegion = nullptr,
+                      gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE;
+
+  // TextureSource
+
+  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE { return this; }
+
+  virtual DataTextureSource* AsDataTextureSource() MOZ_OVERRIDE { return this; }
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE { mTexture = nullptr; }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  // TileIterator
+
+  virtual TileIterator* AsTileIterator() MOZ_OVERRIDE { return mIsTiled ? this : nullptr; }
+
+  virtual size_t GetTileCount() MOZ_OVERRIDE { return mTileTextures.size(); }
+
+  virtual bool NextTile() MOZ_OVERRIDE { return (++mCurrentTile < mTileTextures.size()); }
+
+  virtual nsIntRect GetTileRect() MOZ_OVERRIDE;
+
+  virtual void EndTileIteration() MOZ_OVERRIDE { mIterating = false; }
+
+  virtual void BeginTileIteration() MOZ_OVERRIDE
+  {
+    mIterating = true;
+    mCurrentTile = 0;
+  }
+
+protected:
+  gfx::IntRect GetTileRect(uint32_t aTileIndex) const;
+
+  void Reset();
+
+  std::vector< RefPtr<IDirect3DTexture9> > mTileTextures;
+  RefPtr<CompositorD3D9> mCompositor;
+  gfx::SurfaceFormat mFormat;
+  uint32_t mCurrentTile;
+  bool mDisallowBigImage;
+  bool mIsTiled;
+  bool mIterating;
 };
 
 class CompositingRenderTargetD3D9 : public CompositingRenderTarget,
@@ -120,7 +171,7 @@ public:
 
   virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mTextures[0],
+    MOZ_ASSERT(mTexture,
                "No texture, can't be indirectly rendered. Is this the screen backbuffer?");
     return this;
   }
@@ -239,11 +290,17 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
-  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE { return this; }
-
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
 
-  virtual bool IsYCbCrSource() const MOZ_OVERRIDE { return true; }
+  virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE
+  {
+    return mFirstSource->AsSourceD3D9();
+  }
+
+  virtual TextureSource* GetSubSource(int index) MOZ_OVERRIDE
+  {
+    return mFirstSource ? mFirstSource->GetSubSource(index) : nullptr;
+  }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
   {
@@ -252,7 +309,7 @@ public:
 
   virtual const char* Name() MOZ_OVERRIDE
   {
-    return "TextureImageDeprecatedTextureHostD3D11";
+    return "DeprecatedTextureHostYCbCrD3D9";
   }
 
 protected:
@@ -261,6 +318,8 @@ protected:
                           nsIntPoint* aOffset = nullptr) MOZ_OVERRIDE;
 
 private:
+  gfx::IntSize mSize;
+  RefPtr<DataTextureSource> mFirstSource;
   RefPtr<CompositorD3D9> mCompositor;
 };
 
