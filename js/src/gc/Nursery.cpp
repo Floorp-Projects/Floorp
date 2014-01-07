@@ -601,6 +601,7 @@ CheckHashTablesAfterMovingGC(JSRuntime *rt)
     /* Check that internal hash tables no longer have any pointers into the nursery. */
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         c->checkNewTypeObjectTableAfterMovingGC();
+        c->checkInitialShapesTableAfterMovingGC();
         if (c->debugScopes)
             c->debugScopes->checkHashTablesAfterMovingGC(rt);
     }
