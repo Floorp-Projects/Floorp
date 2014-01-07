@@ -1007,7 +1007,7 @@
                  context="contentAreaContextMenu"
                  disableglobalhistory="true"
                  tooltip="aHTMLTooltip"
-               popupnotificationanchor="social-notification-icon"
+                 popupnotificationanchor="social-sidebar-favico"
                  flex="1"
                  style="min-width: 14em; width: 18em; max-width: 36em;"/>
       </vbox>
