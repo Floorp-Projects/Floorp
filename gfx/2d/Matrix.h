@@ -156,25 +156,6 @@ public:
     return false;
   }
 
-  /**
-   * Returns true if the matrix is anything other than a straight
-   * translation by integers.
-  */
-  bool HasNonIntegerTranslation() const {
-    return HasNonTranslation() ||
-      !FuzzyEqual(_31, floor(_31 + 0.5)) ||
-      !FuzzyEqual(_32, floor(_32 + 0.5));
-  }
-
-  /**
-   * Returns true if the matrix has any transform other
-   * than a straight translation.
-   */
-  bool HasNonTranslation() const {
-    return !FuzzyEqual(_11, 1.0) || !FuzzyEqual(_22, 1.0) ||
-           !FuzzyEqual(_12, 0.0) || !FuzzyEqual(_21, 0.0);
-  }
-
   /* Returns true if the matrix is an identity matrix.
    */
   bool IsIdentity() const
