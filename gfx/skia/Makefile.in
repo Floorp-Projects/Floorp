@@ -3,25 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH += \
-	$(srcdir)/src/core \
-	$(srcdir)/src/gpu \
-	$(srcdir)/src/gpu/effects \
-	$(srcdir)/src/gpu/gl \
-	$(srcdir)/src/image \
-	$(srcdir)/src/images \
-	$(srcdir)/src/lazy \
-	$(srcdir)/src/pipe \
-	$(srcdir)/src/ports \
-	$(srcdir)/src/opts \
-	$(srcdir)/src/effects \
-	$(srcdir)/src/effects/gradients \
-	$(srcdir)/src/utils \
-	$(srcdir)/src/utils/android \
-	$(srcdir)/src/utils/mac \
-	$(srcdir)/src/sfnt \
-	$(NULL)
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),$(findstring $(MOZ_WIDGET_TOOLKIT),android gonk))
 OS_CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(CAIRO_FT_CFLAGS)
 endif
