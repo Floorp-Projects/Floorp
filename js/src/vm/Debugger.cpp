@@ -2321,8 +2321,8 @@ class Debugger::ScriptQuery {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
     ScriptQuery(JSContext *cx, Debugger *dbg):
-        cx(cx), debugger(dbg), compartments(cx->runtime()), url(cx),
-        innermostForCompartment(cx->runtime())
+        cx(cx), debugger(dbg), compartments(cx->runtime()), url(cx), sourceURL(cx),
+        sourceURLChars(nullptr), innermostForCompartment(cx->runtime())
     {}
 
     /*
@@ -2419,6 +2419,16 @@ class Debugger::ScriptQuery {
             }
         }
 
+        /* Check for a 'displayURL' property. */
+        if (!JSObject::getProperty(cx, query, query, cx->names().displayURL, &sourceURL))
+            return false;
+        if (!sourceURL.isUndefined() && !sourceURL.isString()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                 "query object's 'displayURL' property",
+                                 "neither undefined nor a string");
+            return false;
+        }
+
         return true;
     }
 
@@ -2427,6 +2437,7 @@ class Debugger::ScriptQuery {
         url.setUndefined();
         hasLine = false;
         innermost = false;
+        sourceURLChars = nullptr;
         return matchAllDebuggeeGlobals();
     }
 
@@ -2489,6 +2500,14 @@ class Debugger::ScriptQuery {
 
     /* url as a C string. */
     JSAutoByteString urlCString;
+
+    /* If this is a string, matching scripts' sources have sourceURLs equal to
+     * it. */
+    RootedValue sourceURL;
+
+    /* sourceURL as a jschar* */
+    const jschar *sourceURLChars;
+    size_t sourceURLLength;
 
     /* True if the query contained a 'line' property. */
     bool hasLine;
@@ -2553,13 +2572,21 @@ class Debugger::ScriptQuery {
     }
 
     /*
-     * Given that parseQuery or omittedQuery has been called, prepare to
-     * match scripts. Set urlCString as appropriate.
+     * Given that parseQuery or omittedQuery has been called, prepare to match
+     * scripts. Set urlCString and sourceURLChars as appropriate.
      */
     bool prepareQuery() {
-        /* Compute urlCString, if a url was given. */
+        /* Compute urlCString and sourceURLChars, if a url or sourceURL was
+         * given respectively. */
         if (url.isString()) {
             if (!urlCString.encodeLatin1(cx, url.toString()))
+                return false;
+        }
+        if (sourceURL.isString()) {
+            JSString *s = sourceURL.toString();
+            sourceURLChars = s->getChars(cx);
+            sourceURLLength = s->length();
+            if (!sourceURLChars)
                 return false;
         }
 
@@ -2590,6 +2617,15 @@ class Debugger::ScriptQuery {
             if (line < script->lineno() || script->lineno() + js_GetScriptLineExtent(script) < line)
                 return;
         }
+        if (sourceURLChars) {
+            if (!script->scriptSource() || !script->scriptSource()->hasSourceURL())
+                return;
+            const jschar *s = script->scriptSource()->sourceURL();
+            if (CompareChars(s, js_strlen(s), sourceURLChars, sourceURLLength) != 0) {
+                return;
+            }
+        }
+
         if (innermost) {
             /*
              * For 'innermost' queries, we don't place scripts in |vector| right
