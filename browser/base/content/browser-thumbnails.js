@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #endif
 
+Cu.import("resource://gre/modules/NewTabUtils.jsm");
+
 /**
  * Keeps thumbnails of open web pages up-to-date.
  */
@@ -120,6 +122,10 @@ let gBrowserThumbnails = {
   },
 
   _shouldCapture: function Thumbnails_shouldCapture(aBrowser) {
+    // Capture only if it's a top site in about:newtab.
+    if (NewTabUtils.links.getLinks().indexOf(aBrowser.currentURI.spec) < 0)
+      return false;
+
     // Capture only if it's the currently selected tab.
     if (aBrowser != gBrowser.selectedBrowser)
       return false;
