@@ -32,6 +32,7 @@ EXPORTS += [
     'GLBlitTextureImageHelper.h',
     'GLConsts.h',
     'GLContext.h',
+    'GLContextEGL.h',
     'GLContextProvider.h',
     'GLContextProviderImpl.h',
     'GLContextSymbols.h',
