@@ -56,6 +56,8 @@ class MIRGenerator
 
     template <typename T>
     T * allocate(size_t count = 1) {
+        if (count & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+            return nullptr;
         return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
     }
 
