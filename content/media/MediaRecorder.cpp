@@ -414,21 +414,15 @@ MediaRecorder::~MediaRecorder()
   MOZ_ASSERT(mSession == nullptr);
 }
 
-void
-MediaRecorder::Init(nsPIDOMWindow* aOwnerWindow)
-{
-  MOZ_ASSERT(aOwnerWindow);
-  MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
-  BindToOwner(aOwnerWindow);
-}
-
-MediaRecorder::MediaRecorder(DOMMediaStream& aStream)
-  : mState(RecordingState::Inactive),
+MediaRecorder::MediaRecorder(DOMMediaStream& aStream, nsPIDOMWindow* aOwnerWindow)
+  : nsDOMEventTargetHelper(aOwnerWindow),
+    mState(RecordingState::Inactive),
     mSession(nullptr),
     mMutex("Session.Data.Mutex")
 {
+  MOZ_ASSERT(aOwnerWindow);
+  MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
   mStream = &aStream;
-  SetIsDOMBinding();
 }
 
 void
@@ -565,8 +559,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<MediaRecorder> object = new MediaRecorder(aStream);
-  object->Init(ownerWindow);
+  nsRefPtr<MediaRecorder> object = new MediaRecorder(aStream, ownerWindow);
   return object.forget();
 }
 
