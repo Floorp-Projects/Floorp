@@ -1326,7 +1326,7 @@ ScriptSource::destroy()
     JS_ASSERT(ready());
     adjustDataSize(0);
     js_free(filename_);
-    js_free(sourceURL_);
+    js_free(displayURL_);
     js_free(sourceMapURL_);
     if (originPrincipals_)
         JS_DropPrincipals(TlsPerThreadData.get()->runtimeFromMainThread(), originPrincipals_);
@@ -1417,29 +1417,29 @@ ScriptSource::performXDR(XDRState<mode> *xdr)
         sourceMapURL_[sourceMapURLLen] = '\0';
     }
 
-    uint8_t haveSourceURL = hasSourceURL();
-    if (!xdr->codeUint8(&haveSourceURL))
+    uint8_t haveDisplayURL = hasDisplayURL();
+    if (!xdr->codeUint8(&haveDisplayURL))
         return false;
 
-    if (haveSourceURL) {
-        uint32_t sourceURLLen = (mode == XDR_DECODE) ? 0 : js_strlen(sourceURL_);
-        if (!xdr->codeUint32(&sourceURLLen))
+    if (haveDisplayURL) {
+        uint32_t displayURLLen = (mode == XDR_DECODE) ? 0 : js_strlen(displayURL_);
+        if (!xdr->codeUint32(&displayURLLen))
             return false;
 
         if (mode == XDR_DECODE) {
-            size_t byteLen = (sourceURLLen + 1) * sizeof(jschar);
-            sourceURL_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
-            if (!sourceURL_)
+            size_t byteLen = (displayURLLen + 1) * sizeof(jschar);
+            displayURL_ = static_cast<jschar *>(xdr->cx()->malloc_(byteLen));
+            if (!displayURL_)
                 return false;
         }
-        if (!xdr->codeChars(sourceURL_, sourceURLLen)) {
+        if (!xdr->codeChars(displayURL_, displayURLLen)) {
             if (mode == XDR_DECODE) {
-                js_free(sourceURL_);
-                sourceURL_ = nullptr;
+                js_free(displayURL_);
+                displayURL_ = nullptr;
             }
             return false;
         }
-        sourceURL_[sourceURLLen] = '\0';
+        displayURL_[displayURLLen] = '\0';
     }
 
     uint8_t haveFilename = !!filename_;
@@ -1475,10 +1475,10 @@ ScriptSource::setFilename(ExclusiveContext *cx, const char *filename)
 }
 
 bool
-ScriptSource::setSourceURL(ExclusiveContext *cx, const jschar *sourceURL)
+ScriptSource::setDisplayURL(ExclusiveContext *cx, const jschar *displayURL)
 {
-    JS_ASSERT(sourceURL);
-    if (hasSourceURL()) {
+    JS_ASSERT(displayURL);
+    if (hasDisplayURL()) {
         if (cx->isJSContext() &&
             !JS_ReportErrorFlagsAndNumber(cx->asJSContext(), JSREPORT_WARNING,
                                           js_GetErrorMessage, nullptr,
@@ -1488,20 +1488,20 @@ ScriptSource::setSourceURL(ExclusiveContext *cx, const jschar *sourceURL)
             return false;
         }
     }
-    size_t len = js_strlen(sourceURL) + 1;
+    size_t len = js_strlen(displayURL) + 1;
     if (len == 1)
         return true;
-    sourceURL_ = js_strdup(cx, sourceURL);
-    if (!sourceURL_)
+    displayURL_ = js_strdup(cx, displayURL);
+    if (!displayURL_)
         return false;
     return true;
 }
 
 const jschar *
-ScriptSource::sourceURL()
+ScriptSource::displayURL()
 {
-    JS_ASSERT(hasSourceURL());
-    return sourceURL_;
+    JS_ASSERT(hasDisplayURL());
+    return displayURL_;
 }
 
 bool

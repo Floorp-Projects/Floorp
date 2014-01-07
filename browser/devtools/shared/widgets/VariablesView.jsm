@@ -154,20 +154,21 @@ VariablesView.prototype = {
     if (!this._store.length) {
       return;
     }
+
+    this._store.length = 0;
+    this._itemsByElement.clear();
+    this._prevHierarchy = this._currHierarchy;
+    this._currHierarchy = new Map(); // Don't clear, this is just simple swapping.
+
     // Check if this empty operation may be executed lazily.
     if (this.lazyEmpty && aTimeout > 0) {
       this._emptySoon(aTimeout);
       return;
     }
 
-    let list = this._list;
-
-    while (list.hasChildNodes()) {
-      list.firstChild.remove();
+    while (this._list.hasChildNodes()) {
+      this._list.firstChild.remove();
     }
-
-    this._store.length = 0;
-    this._itemsByElement.clear();
 
     this._appendEmptyNotice();
     this._toggleSearchVisibility(false);
@@ -191,9 +192,6 @@ VariablesView.prototype = {
   _emptySoon: function(aTimeout) {
     let prevList = this._list;
     let currList = this._list = this.document.createElement("scrollbox");
-
-    this._store.length = 0;
-    this._itemsByElement.clear();
 
     this.window.setTimeout(() => {
       prevList.removeEventListener("keypress", this._onViewKeyPress, false);
@@ -1173,7 +1171,7 @@ VariablesView.getterOrSetterDeleteCallback = function(aItem) {
 
   // Make sure the right getter/setter to value override macro is applied
   // to the target object.
-  aItem.ownerView.eval(aItem.evaluationMacro(aItem, ""));
+  aItem.ownerView.eval(aItem, "");
 
   return true; // Don't hide the element.
 };
@@ -2291,11 +2289,41 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   /**
-   * Gets this variable's path to the topmost scope.
+   * Gets this variable's path to the topmost scope in the form of a string
+   * meant for use via eval() or a similar approach.
    * For example, a symbolic name may look like "arguments['0']['foo']['bar']".
    * @return string
    */
   get symbolicName() this._symbolicName,
+
+  /**
+   * Gets this variable's symbolic path to the topmost scope.
+   * @return array
+   * @see Variable._buildSymbolicPath
+   */
+  get symbolicPath() {
+    if (this._symbolicPath) {
+      return this._symbolicPath;
+    }
+    this._symbolicPath = this._buildSymbolicPath();
+    return this._symbolicPath;
+  },
+
+  /**
+   * Build this variable's path to the topmost scope in form of an array of
+   * strings, one for each segment of the path.
+   * For example, a symbolic path may look like ["0", "foo", "bar"].
+   * @return array
+   */
+  _buildSymbolicPath: function(path = []) {
+    if (this.name) {
+      path.unshift(this.name);
+      if (this.ownerView instanceof Variable) {
+        return this.ownerView._buildSymbolicPath(path);
+      }
+    }
+    return path;
+  },
 
   /**
    * Returns this variable's value from the descriptor if available.
@@ -2715,7 +2743,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
         if (!this._variablesView.preventDisableOnChange) {
           this._disable();
         }
-        this.ownerView.eval(this.evaluationMacro(this, aString));
+        this.ownerView.eval(this, aString);
       }
     }, e);
   },
@@ -2806,6 +2834,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   },
 
   _symbolicName: "",
+  _symbolicPath: null,
   _absoluteName: "",
   _initialDescriptor: null,
   _separatorLabel: null,
@@ -2858,7 +2887,7 @@ Property.prototype["@@iterator"] = function*() {
 
 /**
  * Forget everything recorded about added scopes, variables or properties.
- * @see VariablesView.createHierarchy
+ * @see VariablesView.commitHierarchy
  */
 VariablesView.prototype.clearHierarchy = function() {
   this._prevHierarchy.clear();
@@ -2866,17 +2895,13 @@ VariablesView.prototype.clearHierarchy = function() {
 };
 
 /**
- * Start recording a hierarchy of any added scopes, variables or properties.
- * @see VariablesView.commitHierarchy
- */
-VariablesView.prototype.createHierarchy = function() {
-  this._prevHierarchy = this._currHierarchy;
-  this._currHierarchy = new Map(); // Don't clear, this is just simple swapping.
-};
-
-/**
- * Briefly flash the variables that changed between the previous and current
- * scope/variable/property hierarchies and reopen previously expanded nodes.
+ * Perform operations on all the VariablesView Scopes, Variables and Properties
+ * after you've added all the items you wanted.
+ *
+ * Calling this method is optional, and does the following:
+ *   - styles the items overridden by other items in parent scopes
+ *   - reopens the items which were previously expanded
+ *   - flashes the items whose values changed
  */
 VariablesView.prototype.commitHierarchy = function() {
   for (let [, currItem] of this._currHierarchy) {

@@ -45,6 +45,7 @@ const FastListWidget = module.exports = function FastListWidget(aNode) {
 
   // Delegate some of the associated node's methods to satisfy the interface
   // required by MenuContainer instances.
+  ViewHelpers.delegateWidgetAttributeMethods(this, aNode);
   ViewHelpers.delegateWidgetEventMethods(this, aNode);
 }
 
@@ -153,18 +154,6 @@ FastListWidget.prototype = {
   },
 
   /**
-   * Returns the value of the named attribute on this container.
-   *
-   * @param string name
-   *        The name of the attribute.
-   * @return string
-   *         The current attribute value.
-   */
-  getAttribute: function(name) {
-    return this._parent.getAttribute(name);
-  },
-
-  /**
    * Adds a new attribute or changes an existing attribute on this container.
    *
    * @param string name
@@ -174,6 +163,10 @@ FastListWidget.prototype = {
    */
   setAttribute: function(name, value) {
     this._parent.setAttribute(name, value);
+
+    if (name == "emptyText") {
+      this._textWhenEmpty = value;
+    }
   },
 
   /**
@@ -184,6 +177,10 @@ FastListWidget.prototype = {
    */
   removeAttribute: function(name) {
     this._parent.removeAttribute(name);
+
+    if (name == "emptyText") {
+      this._removeEmptyText();
+    }
   },
 
   /**
@@ -203,11 +200,51 @@ FastListWidget.prototype = {
     boxObject.scrollBy(-this._list.clientWidth, 0);
   },
 
+  /**
+   * Sets the text displayed in this container when empty.
+   * @param string aValue
+   */
+  set _textWhenEmpty(aValue) {
+    if (this._emptyTextNode) {
+      this._emptyTextNode.setAttribute("value", aValue);
+    }
+    this._emptyTextValue = aValue;
+    this._showEmptyText();
+  },
+
+  /**
+   * Creates and appends a label signaling that this container is empty.
+   */
+  _showEmptyText: function() {
+    if (this._emptyTextNode || !this._emptyTextValue) {
+      return;
+    }
+    let label = this.document.createElement("label");
+    label.className = "plain fast-list-widget-empty-text";
+    label.setAttribute("value", this._emptyTextValue);
+
+    this._parent.insertBefore(label, this._list);
+    this._emptyTextNode = label;
+  },
+
+  /**
+   * Removes the label signaling that this container is empty.
+   */
+  _removeEmptyText: function() {
+    if (!this._emptyTextNode) {
+      return;
+    }
+    this._parent.removeChild(this._emptyTextNode);
+    this._emptyTextNode = null;
+  },
+
   window: null,
   document: null,
   _parent: null,
   _list: null,
   _selectedItem: null,
   _orderedMenuElementsArray: null,
-  _itemsByElement: null
+  _itemsByElement: null,
+  _emptyTextNode: null,
+  _emptyTextValue: ""
 };
