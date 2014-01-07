@@ -8,10 +8,9 @@
 #include "SharedSurfaceGralloc.h"
 
 #include "GLContext.h"
-#include "GLLibraryEGL.h"
 #include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
-#include "mozilla/layers/GrallocTextureClient.h"
+#include "GLLibraryEGL.h"
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "ui/GraphicBuffer.h"
@@ -19,7 +18,6 @@
 #include "ScopedGLHelpers.h"
 
 #include "gfx2DGlue.h"
-#include "gfxPlatform.h"
 
 #define DEBUG_GRALLOC
 #ifdef DEBUG_GRALLOC
@@ -74,23 +72,22 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     if (!HasExtensions(egl, prodGL))
         return nullptr;
 
+    SurfaceDescriptor baseDesc;
+    SurfaceDescriptorGralloc desc;
+
     gfxContentType type = hasAlpha ? GFX_CONTENT_COLOR_ALPHA
-                                   : GFX_CONTENT_COLOR;
+                                                : GFX_CONTENT_COLOR;
+    if (!allocator->AllocSurfaceDescriptorWithCaps(size, type, USING_GL_RENDERING_ONLY, &baseDesc))
+        return false;
 
-    gfxImageFormat format
-      = gfxPlatform::GetPlatform()->OptimalFormatForContent(type);
-
-    GrallocTextureClientOGL* grallocTC =
-      new GrallocTextureClientOGL(
-          allocator,
-          gfx::ImageFormatToSurfaceFormat(format),
-          TEXTURE_FLAGS_DEFAULT);
-
-    if (!grallocTC->AllocateForGLRendering(size)) {
-      return nullptr;
+    if (baseDesc.type() != SurfaceDescriptor::TSurfaceDescriptorGralloc) {
+        allocator->DestroySharedSurface(&baseDesc);
+        return false;
     }
 
-    sp<GraphicBuffer> buffer = grallocTC->GetGraphicBuffer();
+    desc = baseDesc.get_SurfaceDescriptorGralloc();
+
+    sp<GraphicBuffer> buffer = GrallocBufferActor::GetFrom(desc);
 
     EGLDisplay display = egl->Display();
     EGLClientBuffer clientBuffer = buffer->getNativeBuffer();
@@ -102,7 +99,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
                                        LOCAL_EGL_NATIVE_BUFFER_ANDROID,
                                        clientBuffer, attrs);
     if (!image) {
-        grallocTC->DropTextureData()->DeallocateSharedData(allocator);
+        allocator->DestroySharedSurface(&baseDesc);
         return nullptr;
     }
 
@@ -120,7 +117,7 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
 
     egl->fDestroyImage(display, image);
 
-    SharedSurface_Gralloc *surf = new SharedSurface_Gralloc(prodGL, size, hasAlpha, egl, allocator, grallocTC, prodTex);
+    SharedSurface_Gralloc *surf = new SharedSurface_Gralloc(prodGL, size, hasAlpha, egl, allocator, desc, prodTex);
 
     DEBUG_PRINT("SharedSurface_Gralloc::Create: success -- surface %p, GraphicBuffer %p.\n", surf, buffer.get());
 
@@ -142,6 +139,12 @@ SharedSurface_Gralloc::~SharedSurface_Gralloc()
 
     mGL->MakeCurrent();
     mGL->fDeleteTextures(1, (GLuint*)&mProdTex);
+
+    SurfaceDescriptor desc(mDesc);
+
+    if (mAllocator) {
+        mAllocator->DestroySharedSurface(&desc);
+    }
 }
 
 void
