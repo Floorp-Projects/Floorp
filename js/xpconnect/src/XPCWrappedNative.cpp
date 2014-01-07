@@ -1513,14 +1513,17 @@ XPCWrappedNative::FindTearOff(XPCNativeInterface* aInterface,
         to = newChunk->mTearOffs;
     }
 
-    AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
-    rv = InitTearOff(to, aInterface, needJSObject);
-    // During shutdown, we don't sweep tearoffs.  So make sure to unmark
-    // manually in case the auto-marker marked us.  We shouldn't ever be
-    // getting here _during_ our Mark/Sweep cycle, so this should be safe.
-    to->Unmark();
-    if (NS_FAILED(rv))
-        to = nullptr;
+    {
+        // Scope keeps |tearoff| from leaking across the rest of the function.
+        AutoMarkingWrappedNativeTearOffPtr tearoff(cx, to);
+        rv = InitTearOff(to, aInterface, needJSObject);
+        // During shutdown, we don't sweep tearoffs.  So make sure to unmark
+        // manually in case the auto-marker marked us.  We shouldn't ever be
+        // getting here _during_ our Mark/Sweep cycle, so this should be safe.
+        to->Unmark();
+        if (NS_FAILED(rv))
+            to = nullptr;
+    }
 
     if (pError)
         *pError = rv;
