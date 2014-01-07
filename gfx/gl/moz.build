@@ -91,6 +91,7 @@ if gl_provider == 'CGL':
         "TextureImageCGL.mm"
     ]
     EXPORTS += [
+        'GLContextCGL.h',
         'SharedSurfaceIO.h',
     ]
     # SharedSurfaceIO.cpp includes MacIOSurface.h which include Mac headers
