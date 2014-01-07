@@ -94,11 +94,6 @@ const BrowserElementIsPreloaded = true;
   } catch (e) {
   }
 
-  // Those are produc-specific files that's sometimes unavailable.
-  try {
-    Services.scriptloader.loadSubScript("chrome://browser/content/ErrorPage.js", global);
-  } catch (e) {
-  }
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanning.js", global);
   Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementChildPreload.js", global);
 
