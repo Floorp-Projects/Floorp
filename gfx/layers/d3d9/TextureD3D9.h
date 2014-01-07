@@ -100,7 +100,7 @@ class DataTextureSourceD3D9 : public DataTextureSource
 public:
   DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                         CompositorD3D9* aCompositor,
-                        bool aAllowBigImage = true,
+                        TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
                         StereoMode aStereoMode = STEREO_MODE_MONO);
 
   virtual ~DataTextureSourceD3D9();
@@ -108,13 +108,14 @@ public:
   // DataTextureSource
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
-                      TextureFlags aFlags,
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE;
 
   // TextureSource
 
   virtual TextureSourceD3D9* AsSourceD3D9() MOZ_OVERRIDE { return this; }
+
+  virtual IDirect3DTexture9* GetD3D9Texture() MOZ_OVERRIDE;
 
   virtual DataTextureSource* AsDataTextureSource() MOZ_OVERRIDE { return this; }
 
@@ -123,6 +124,8 @@ public:
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
   // TileIterator
 
@@ -151,7 +154,7 @@ protected:
   RefPtr<CompositorD3D9> mCompositor;
   gfx::SurfaceFormat mFormat;
   uint32_t mCurrentTile;
-  bool mDisallowBigImage;
+  TextureFlags mFlags;
   bool mIsTiled;
   bool mIterating;
 };

@@ -36,7 +36,7 @@ CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
   }
 
   result->SetFlags(aTextureFlags);
-  return result.forget();
+  return result;
 }
 
 TextureSourceD3D9::~TextureSourceD3D9()
@@ -264,7 +264,7 @@ TextureSourceD3D9::DataToTexture(DeviceManagerD3D9* aDeviceManager,
 
   FinishTextures(aDeviceManager, texture, surface);
 
-  return texture.forget();
+  return texture;
 }
 
 void
@@ -415,21 +415,24 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
   RefPtr<DataTextureSource> srcY;
-  RefPtr<DataTextureSource> srcU;
-  RefPtr<DataTextureSource> srcV;
+  RefPtr<DataTextureSource> srcCb;
+  RefPtr<DataTextureSource> srcCr;
   if (!mFirstSource) {
-    srcY = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
-    srcU = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
-    srcV = new DataTextureSourceD3D9(FORMAT_A8, mCompositor, false, mStereoMode);
+    srcY  = new DataTextureSourceD3D9(FORMAT_A8, mCompositor,
+                                      TEXTURE_DISALLOW_BIGIMAGE, mStereoMode);
+    srcCb = new DataTextureSourceD3D9(FORMAT_A8, mCompositor,
+                                      TEXTURE_DISALLOW_BIGIMAGE, mStereoMode);
+    srcCr = new DataTextureSourceD3D9(FORMAT_A8, mCompositor,
+                                      TEXTURE_DISALLOW_BIGIMAGE, mStereoMode);
     mFirstSource = srcY;
-    srcY->SetNextSibling(srcU);
-    srcU->SetNextSibling(srcV);
+    srcY->SetNextSibling(srcCb);
+    srcCb->SetNextSibling(srcCr);
   } else {
     MOZ_ASSERT(mFirstSource->GetNextSibling());
     MOZ_ASSERT(mFirstSource->GetNextSibling()->GetNextSibling());
     srcY = mFirstSource;
-    srcU = mFirstSource->GetNextSibling()->AsDataTextureSource();
-    srcV = mFirstSource->GetNextSibling()->GetNextSibling()->AsDataTextureSource();
+    srcCb = mFirstSource->GetNextSibling()->AsDataTextureSource();
+    srcCr = mFirstSource->GetNextSibling()->GetNextSibling()->AsDataTextureSource();
   }
 
   RefPtr<DataSourceSurface> wrapperY =
@@ -447,11 +450,11 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
                                              yuvDeserializer.GetCbCrStride(),
                                              yuvDeserializer.GetCbCrSize(),
                                              FORMAT_A8);
-  // We don't support partial updates for Y U V textures
+  // We don't support partial updates for YCbCr textures
   NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
-  if (!srcY->Update(wrapperY,  TEXTURE_FLAGS_DEFAULT) ||
-      !srcU->Update(wrapperCb, TEXTURE_FLAGS_DEFAULT) ||
-      !srcV->Update(wrapperCr, TEXTURE_FLAGS_DEFAULT)) {
+  if (!srcY->Update(wrapperY) ||
+      !srcCb->Update(wrapperCb) ||
+      !srcCr->Update(wrapperCr)) {
     NS_WARNING("failed to update the DataTextureSource");
     mSize.width = 0;
     mSize.height = 0;
@@ -481,7 +484,7 @@ TextureSourceD3D9::TextureToTexture(DeviceManagerD3D9* aDeviceManager,
     return nullptr;
   }
 
-  return texture.forget();
+  return texture;
 }
 
 void
@@ -605,7 +608,7 @@ TextureSourceD3D9::SurfaceToTexture(DeviceManagerD3D9* aDeviceManager,
 
   FinishTextures(aDeviceManager, texture, surface);
 
-  return texture.forget();
+  return texture;
 }
 
 void
@@ -952,12 +955,12 @@ DeprecatedTextureClientDIB::SetDescriptor(const SurfaceDescriptor& aDescriptor)
 
 DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
-                                             bool aDisallowBigImage,
+                                             TextureFlags aFlags,
                                              StereoMode aStereoMode)
   : mFormat(aFormat)
   , mCompositor(aCompositor)
   , mCurrentTile(0)
-  , mDisallowBigImage(aDisallowBigImage)
+  , mFlags(aFlags)
   , mIsTiled(false)
   , mIterating(false)
 {
@@ -970,9 +973,15 @@ DataTextureSourceD3D9::~DataTextureSourceD3D9()
   MOZ_COUNT_DTOR(DataTextureSourceD3D9);
 }
 
+IDirect3DTexture9*
+DataTextureSourceD3D9::GetD3D9Texture()
+{
+  return mIterating ? mTileTextures[mCurrentTile]
+                    : mTexture;
+}
+
 bool
 DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
-                              TextureFlags aFlags,
                               nsIntRegion* aDestRegion,
                               gfx::IntPoint* aSrcOffset)
 {
@@ -982,6 +991,7 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
   MOZ_ASSERT(!aDestRegion && !aSrcOffset);
 
   if (!mCompositor || !mCompositor->device()) {
+    NS_WARNING("No D3D device to update the texture.");
     return false;
   }
   mSize = aSurface->GetSize();
@@ -1010,7 +1020,8 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
 
   int32_t maxSize = mCompositor->GetMaxTextureSize();
   DeviceManagerD3D9* deviceManager = gfxWindowsPlatform::GetPlatform()->GetD3D9DeviceManager();
-  if (mSize.width <= maxSize && mSize.height <= maxSize) {
+  if ((mSize.width <= maxSize && mSize.height <= maxSize) ||
+      (mFlags & TEXTURE_DISALLOW_BIGIMAGE)) {
     mTexture = DataToTexture(deviceManager,
                              aSurface->GetData(), aSurface->Stride(),
                              ThebesIntSize(mSize), format, bpp);
@@ -1025,6 +1036,7 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
     uint32_t tileCount = GetRequiredTilesD3D9(mSize.width, maxSize) *
                          GetRequiredTilesD3D9(mSize.height, maxSize);
     mTileTextures.resize(tileCount);
+    mTexture = nullptr;
 
     for (uint32_t i = 0; i < tileCount; i++) {
       IntRect tileRect = GetTileRect(i);
@@ -1049,12 +1061,24 @@ DataTextureSourceD3D9::Update(gfx::DataSourceSurface* aSurface,
 }
 
 void
+DataTextureSourceD3D9::SetCompositor(Compositor* aCompositor)
+{
+  CompositorD3D9* d3dCompositor = static_cast<CompositorD3D9*>(aCompositor);
+
+  if (d3dCompositor != mCompositor) {
+    Reset();
+    mCompositor = d3dCompositor;
+  }
+}
+
+void
 DataTextureSourceD3D9::Reset()
 {
   mSize.width = 0;
   mSize.height = 0;
   mIsTiled = false;
   mTexture = nullptr;
+  mTileTextures.clear();
 }
 
 IntRect

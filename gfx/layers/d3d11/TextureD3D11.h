@@ -25,18 +25,44 @@ class CompositorD3D11;
  * A TextureClient to share a D3D10 texture with the compositor thread.
  * The corresponding TextureHost is DXGITextureHostD3D11
  */
-class TextureClientD3D11 : public TextureClient
+class TextureClientD3D11 : public TextureClient,
+                           public TextureClientDrawTarget
 {
 public:
-  virtual bool IsAllocated() const MOZ_OVERRIDE;
+  TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+
+  virtual ~TextureClientD3D11();
+
+  // TextureClient
+
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mTexture; }
 
   virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
 
   virtual void Unlock() MOZ_OVERRIDE;
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual TextureClientData* DropTextureData() MOZ_OVERRIDE { return nullptr; }
+
+  // TextureClientDrawTarget
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual TextureClientDrawTarget* AsTextureClientDrawTarget() MOZ_OVERRIDE { return this; }
+
+  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+
+  virtual bool AllocateForSurface(gfx::IntSize aSize,
+                                  TextureAllocationFlags aFlags = ALLOC_DEFAULT) MOZ_OVERRIDE;
+
 protected:
+  gfx::IntSize mSize;
   RefPtr<ID3D10Texture2D> mTexture;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  gfx::SurfaceFormat mFormat;
   bool mIsLocked;
 };
 
@@ -71,23 +97,23 @@ class DataTextureSourceD3D11 : public DataTextureSource
 public:
   DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor);
 
-  DataTextureSourceD3D11(ID3D11Texture2D* aTexture,
-                         gfx::SurfaceFormat aFormat);
+  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
+                         ID3D11Texture2D* aTexture);
 
   virtual ~DataTextureSourceD3D11();
 
-  void SetCompositor(Compositor* aCompositor);
 
   // DataTextureSource
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
-                      TextureFlags aFlags,
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE;
 
   // TextureSource
 
   virtual TextureSourceD3D11* AsSourceD3D11() MOZ_OVERRIDE { return this; }
+
+  virtual ID3D11Texture2D* GetD3D11Texture() const MOZ_OVERRIDE;
 
   virtual DataTextureSource* AsDataTextureSource() MOZ_OVERRIDE { return this; }
 
@@ -96,6 +122,8 @@ public:
   virtual gfx::IntSize GetSize() const  MOZ_OVERRIDE { return mSize; }
 
   virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
   // TileIterator
 
@@ -117,6 +145,8 @@ public:
 
 protected:
   gfx::IntRect GetTileRect(uint32_t aIndex) const;
+
+  void Reset();
 
   std::vector< RefPtr<ID3D11Texture2D> > mTileTextures;
   RefPtr<CompositorD3D11> mCompositor;
@@ -157,8 +187,10 @@ public:
   }
 
 protected:
+  ID3D11Device* GetDevice();
+
   RefPtr<DataTextureSourceD3D11> mTextureSource;
-  RefPtr<ID3D11Device> mDevice;
+  RefPtr<CompositorD3D11> mCompositor;
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;

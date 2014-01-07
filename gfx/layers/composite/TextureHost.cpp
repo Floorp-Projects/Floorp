@@ -371,7 +371,7 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
   }
   if (GetFlags() & TEXTURE_IMMEDIATE_UPLOAD) {
     DebugOnly<bool> result = MaybeUpload(mPartialUpdate ? &mMaybeUpdatedRegion : nullptr);
-    MOZ_ASSERT(result);
+    NS_WARN_IF_FALSE(result, "Failed to upload a texture");
   }
 }
 
@@ -381,7 +381,11 @@ BufferTextureHost::SetCompositor(Compositor* aCompositor)
   if (mCompositor == aCompositor) {
     return;
   }
-  DeallocateDeviceData();
+  RefPtr<NewTextureSource> it = mFirstSource;
+  while (it) {
+    it->SetCompositor(aCompositor);
+    it = it->GetNextSibling();
+  }
   mCompositor = aCompositor;
 }
 
@@ -475,7 +479,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       if (!mFirstSource) {
         mFirstSource = mCompositor->CreateDataTextureSource(mFlags);
       }
-      mFirstSource->Update(surf, mFlags, aRegion);
+      mFirstSource->Update(surf, aRegion);
       return true;
     }
 
@@ -520,9 +524,9 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
                                                     gfx::FORMAT_A8);
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
-    if (!srcY->Update(tempY, mFlags) ||
-        !srcU->Update(tempCb, mFlags) ||
-        !srcV->Update(tempCr, mFlags)) {
+    if (!srcY->Update(tempY) ||
+        !srcU->Update(tempCb) ||
+        !srcV->Update(tempCr)) {
       NS_WARNING("failed to update the DataTextureSource");
       return false;
     }
@@ -542,7 +546,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       return false;
     }
 
-    if (!mFirstSource->Update(surf.get(), mFlags, aRegion)) {
+    if (!mFirstSource->Update(surf.get(), aRegion)) {
       NS_WARNING("failed to update the DataTextureSource");
       return false;
     }
