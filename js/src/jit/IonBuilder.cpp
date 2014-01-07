@@ -296,12 +296,12 @@ IonBuilder::getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constr
             AutoThreadSafeAccess ts(typeObj);
 
             JS_ASSERT(typeObj);
-            if (!typeObj->hasInterpretedFunction()) {
+            if (!typeObj->interpretedFunction) {
                 targets.clear();
                 return true;
             }
 
-            fun = typeObj->interpretedFunction();
+            fun = typeObj->interpretedFunction;
             *gotLambda = true;
         }
 
@@ -9402,10 +9402,46 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
 
     // The script this aliased var operation is accessing will run only once,
     // so there will be only one call object and the aliased var access can be
-    // compiled in the same manner as a global access. Look for the call
-    // object, which was hopefully installed by TrackCallObjectProperties.
+    // compiled in the same manner as a global access. We still need to find
+    // the call object though.
 
-    *pcall = funType->runOnceCallObject();
+    // Look for the call object on the current script's function's scope chain.
+    // If the current script is inner to the outer script and the function has
+    // singleton type then it should show up here.
+
+    MDefinition *scope = current->getSlot(info().scopeChainSlot());
+    scope->setImplicitlyUsedUnchecked();
+
+    JSObject *environment = script()->function()->environment();
+    while (environment && !environment->is<GlobalObject>()) {
+        if (environment->is<CallObject>() &&
+            !environment->as<CallObject>().isForEval() &&
+            environment->as<CallObject>().callee().nonLazyScript() == outerScript)
+        {
+            JS_ASSERT(environment->hasSingletonType());
+            *pcall = environment;
+            return true;
+        }
+        environment = environment->enclosingScope();
+    }
+
+    // Look for the call object on the current frame, if we are compiling the
+    // outer script itself. Don't do this if we are at entry to the outer
+    // script, as the call object we see will not be the real one --- after
+    // entering the Ion code a different call object will be created.
+
+    if (script() == outerScript && baselineFrame_ && info().osrPc()) {
+        JSObject *singletonScope = baselineFrame_->singletonScopeChain;
+        if (singletonScope &&
+            singletonScope->is<CallObject>() &&
+            singletonScope->as<CallObject>().callee().nonLazyScript() == outerScript)
+        {
+            JS_ASSERT(singletonScope->hasSingletonType());
+            *pcall = singletonScope;
+            return true;
+        }
+    }
+
     return true;
 }
 
@@ -9655,13 +9691,13 @@ IonBuilder::lookupTypeRepresentationSet(MDefinition *typedObj,
 
     types::TemporaryTypeSet *types = typedObj->resultTypeSet();
     return typeSetToTypeRepresentationSet(types, out,
-                                          types::TypedObjectAddendum::Datum);
+                                          types::TypeTypedObject::Datum);
 }
 
 bool
 IonBuilder::typeSetToTypeRepresentationSet(types::TemporaryTypeSet *types,
                                            TypeRepresentationSet *out,
-                                           types::TypedObjectAddendum::Kind kind)
+                                           types::TypeTypedObject::Kind kind)
 {
     // Extract TypeRepresentationSet directly if we can
     if (!types || types->getKnownTypeTag() != JSVAL_TYPE_OBJECT)

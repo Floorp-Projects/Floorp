@@ -1135,23 +1135,15 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
     if (type->singleton() && !type->lazy())
         PushMarkStack(gcmarker, type->singleton());
 
-    if (type->hasAddendum()) {
-        switch (type->addendumKind()) {
-          case types::TypeObject::NewScript:
-            PushMarkStack(gcmarker, type->newScript()->fun);
-            PushMarkStack(gcmarker, type->newScript()->templateObject);
-            break;
-          case types::TypeObject::TypedObject:
-            PushMarkStack(gcmarker, type->typedObject()->typeRepr->ownerObject());
-            break;
-          case types::TypeObject::InterpretedFunction:
-            PushMarkStack(gcmarker, type->interpretedFunction());
-            break;
-          case types::TypeObject::RunOnceCallObject:
-            PushMarkStack(gcmarker, type->runOnceCallObject());
-            break;
-        }
+    if (type->hasNewScript()) {
+        PushMarkStack(gcmarker, type->newScript()->fun);
+        PushMarkStack(gcmarker, type->newScript()->templateObject);
+    } else if (type->hasTypedObject()) {
+        PushMarkStack(gcmarker, type->typedObject()->typeRepr->ownerObject());
     }
+
+    if (type->interpretedFunction)
+        PushMarkStack(gcmarker, type->interpretedFunction);
 }
 
 static void
@@ -1170,27 +1162,15 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
     if (type->singleton() && !type->lazy())
         MarkObject(trc, &type->singletonRaw(), "type_singleton");
 
-    if (type->hasAddendum()) {
-        switch (type->addendumKind()) {
-          case types::TypeObject::NewScript:
-            MarkObject(trc, &type->newScript()->fun, "type_new_function");
-            MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
-            break;
-          case types::TypeObject::TypedObject:
-            type->typedObject()->typeRepr->mark(trc);
-            break;
-          case types::TypeObject::InterpretedFunction: {
-            JSFunction *fun = type->interpretedFunction();
-            MarkObjectUnbarriered(trc, &fun, "type_interpreted_function");
-            break;
-          }
-          case types::TypeObject::RunOnceCallObject: {
-            JSObject *obj = type->runOnceCallObject();
-            MarkObjectUnbarriered(trc, &obj, "type_run_once_call_object");
-            break;
-          }
-        }
+    if (type->hasNewScript()) {
+        MarkObject(trc, &type->newScript()->fun, "type_new_function");
+        MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
+    } else if (type->hasTypedObject()) {
+        type->typedObject()->typeRepr->mark(trc);
     }
+
+    if (type->interpretedFunction)
+        MarkObject(trc, &type->interpretedFunction, "type_function");
 }
 
 static void
