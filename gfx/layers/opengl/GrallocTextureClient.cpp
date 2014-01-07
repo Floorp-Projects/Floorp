@@ -93,7 +93,6 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(GrallocBufferActor* aActor,
                                                  gfx::IntSize aSize,
                                                  TextureFlags aFlags)
 : BufferTextureClient(nullptr, gfx::FORMAT_UNKNOWN, aFlags)
-, mAllocator(nullptr)
 , mGrallocFlags(android::GraphicBuffer::USAGE_SW_READ_OFTEN)
 , mMappedBuffer(nullptr)
 {
@@ -105,18 +104,6 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(CompositableClient* aCompositab
                                                  gfx::SurfaceFormat aFormat,
                                                  TextureFlags aFlags)
 : BufferTextureClient(aCompositable, aFormat, aFlags)
-, mAllocator(nullptr)
-, mGrallocFlags(android::GraphicBuffer::USAGE_SW_READ_OFTEN)
-, mMappedBuffer(nullptr)
-{
-  MOZ_COUNT_CTOR(GrallocTextureClientOGL);
-}
-
-GrallocTextureClientOGL::GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
-                                                 gfx::SurfaceFormat aFormat,
-                                                 TextureFlags aFlags)
-: BufferTextureClient(nullptr, aFormat, aFlags)
-, mAllocator(aAllocator)
 , mGrallocFlags(android::GraphicBuffer::USAGE_SW_READ_OFTEN)
 , mMappedBuffer(nullptr)
 {
@@ -132,17 +119,13 @@ GrallocTextureClientOGL::~GrallocTextureClientOGL()
     if (mBufferLocked) {
       mBufferLocked->Unlock();
     } else {
-      MOZ_ASSERT(mCompositable || mAllocator);
+      MOZ_ASSERT(mCompositable);
       // We just need to wrap the actor in a SurfaceDescriptor because that's what
       // ISurfaceAllocator uses as input, we don't care about the other parameters.
       SurfaceDescriptor sd = SurfaceDescriptorGralloc(nullptr, mGrallocActor,
                                                       IntSize(0, 0),
                                                       false, false);
-
-      ISurfaceAllocator *allocator = mCompositable ?
-                                     mCompositable->GetForwarder() :
-                                     mAllocator;
-      allocator->DestroySharedSurface(&sd);
+      mCompositable->GetForwarder()->DestroySharedSurface(&sd);
     }
   }
 }
@@ -210,6 +193,8 @@ GrallocTextureClientOGL::AllocateForSurface(gfx::IntSize aSize,
                                             TextureAllocationFlags)
 {
   MOZ_ASSERT(IsValid());
+  MOZ_ASSERT(mCompositable);
+  ISurfaceAllocator* allocator = mCompositable->GetForwarder();
 
   uint32_t format;
   uint32_t usage = android::GraphicBuffer::USAGE_SW_READ_OFTEN;
@@ -251,45 +236,13 @@ GrallocTextureClientOGL::AllocateForYCbCr(gfx::IntSize aYSize, gfx::IntSize aCbC
 }
 
 bool
-GrallocTextureClientOGL::AllocateForGLRendering(gfx::IntSize aSize)
-{
-  MOZ_ASSERT(IsValid());
-
-  uint32_t format;
-  uint32_t usage = android::GraphicBuffer::USAGE_HW_RENDER |
-                   android::GraphicBuffer::USAGE_HW_TEXTURE;
-
-  switch (mFormat) {
-  case gfx::FORMAT_R8G8B8A8:
-  case gfx::FORMAT_B8G8R8A8:
-    format = android::PIXEL_FORMAT_RGBA_8888;
-    break;
-  case gfx::FORMAT_R8G8B8X8:
-  case gfx::FORMAT_B8G8R8X8:
-    // there is no android BGRX format?
-    format = android::PIXEL_FORMAT_RGBX_8888;
-    break;
-  case gfx::FORMAT_R5G6B5:
-    format = android::PIXEL_FORMAT_RGB_565;
-    break;
-  case gfx::FORMAT_A8:
-    format = android::PIXEL_FORMAT_A_8;
-    break;
-  default:
-    NS_WARNING("Unsupported surface format");
-    return false;
-  }
-
-  return AllocateGralloc(aSize, format, usage);
-}
-
-bool
 GrallocTextureClientOGL::AllocateGralloc(gfx::IntSize aSize,
                                          uint32_t aAndroidFormat,
                                          uint32_t aUsage)
 {
   MOZ_ASSERT(IsValid());
-  ISurfaceAllocator* allocator = GetAllocator();
+  MOZ_ASSERT(mCompositable);
+  ISurfaceAllocator* allocator = mCompositable->GetForwarder();
 
   MaybeMagicGrallocBufferHandle handle;
   PGrallocBufferChild* actor =
@@ -338,15 +291,6 @@ GrallocTextureClientOGL::GetBufferSize() const
   // see Bug 908196
   MOZ_CRASH("This method should never be called.");
   return 0;
-}
-
-ISurfaceAllocator*
-GrallocTextureClientOGL::GetAllocator()
-{
-  MOZ_ASSERT(mCompositable || mAllocator);
-  return mCompositable ?
-         mCompositable->GetForwarder() :
-         mAllocator;
 }
 
 } // namesapace layers
