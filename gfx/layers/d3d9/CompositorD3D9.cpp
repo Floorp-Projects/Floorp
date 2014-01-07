@@ -333,9 +333,22 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
 
       const int Y = 0, Cb = 1, Cr = 2;
       TextureSource* source = ycbcrEffect->mTexture;
+
+      if (!source) {
+        NS_WARNING("No texture to composite");
+        return;
+      }
+
+      if (!source->GetSubSource(Y) || !source->GetSubSource(Cb) || !source->GetSubSource(Cr)) {
+        // This can happen if we failed to upload the textures, most likely
+        // because of unsupported dimensions (we don't tile YCbCr textures).
+        return;
+      }
+
       TextureSourceD3D9* sourceY  = source->GetSubSource(Y)->AsSourceD3D9();
       TextureSourceD3D9* sourceCb = source->GetSubSource(Cb)->AsSourceD3D9();
       TextureSourceD3D9* sourceCr = source->GetSubSource(Cr)->AsSourceD3D9();
+
 
       MOZ_ASSERT(sourceY->GetD3D9Texture());
       MOZ_ASSERT(sourceCb->GetD3D9Texture());
