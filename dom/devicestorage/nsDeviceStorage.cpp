@@ -1710,7 +1710,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMCursor)
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorageCursor, DOMCursor)
 
-nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsIDOMWindow* aWindow,
+nsDOMDeviceStorageCursor::nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
                                                    nsIPrincipal* aPrincipal,
                                                    DeviceStorageFile* aFile,
                                                    PRTime aSince)
