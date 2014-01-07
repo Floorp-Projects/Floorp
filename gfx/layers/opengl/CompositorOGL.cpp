@@ -836,20 +836,9 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
-  if (!aClipRectIn) {
-    mGLContext->fScissor(0, FlipY(height), width, height);
-    if (aClipRectOut) {
-      aClipRectOut->SetRect(0, 0, width, height);
-    }
-  } else {
-    mGLContext->fScissor(aClipRectIn->x,
-                         FlipY(aClipRectIn->y + aClipRectIn->height),
-                         aClipRectIn->width,
-                         aClipRectIn->height);
+  if (aClipRectOut && !aClipRectIn) {
+    aClipRectOut->SetRect(0, 0, width, height);
   }
-
-  // Save the current scissor rect so that SetRenderTarget can pop back to it.
-  mGLContext->PushScissorRect();
 
   // If the Android compositor is being used, this clear will be done in
   // DrawWindowUnderlay. Make sure the bits used here match up with those used
@@ -1399,9 +1388,6 @@ CompositorOGL::EndFrame()
     mCurrentRenderTarget = nullptr;
     return;
   }
-
-  // Restore the scissor rect that we saved in BeginFrame.
-  mGLContext->PopScissorRect();
 
   mCurrentRenderTarget = nullptr;
 
