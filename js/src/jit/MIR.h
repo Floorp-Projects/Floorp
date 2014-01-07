@@ -4379,6 +4379,14 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
     uint32_t capacity_;
 #endif
 
+  protected:
+    MUse *getUseFor(size_t index) {
+        return &inputs_[index];
+    }
+
+  public:
+    INSTRUCTION_HEADER(Phi)
+
     MPhi(TempAllocator &alloc, uint32_t slot, MIRType resultType)
       : inputs_(alloc),
         slot_(slot),
@@ -4395,13 +4403,6 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         setResultType(resultType);
     }
 
-  protected:
-    MUse *getUseFor(size_t index) {
-        return &inputs_[index];
-    }
-
-  public:
-    INSTRUCTION_HEADER(Phi)
     static MPhi *New(TempAllocator &alloc, uint32_t slot, MIRType resultType = MIRType_Value) {
         return new(alloc) MPhi(alloc, slot, resultType);
     }
