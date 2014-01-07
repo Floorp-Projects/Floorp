@@ -61,44 +61,59 @@ ManifestEditor.prototype = {
     return this.update();
   },
 
-  _onEval: function(evalString) {
-    let manifest = this.manifest;
-    eval("manifest" + evalString);
+  _onEval: function(variable, value) {
+    let parent = this._descend(variable.ownerView.symbolicPath);
+    try {
+      parent[variable.name] = JSON.parse(value);
+    } catch(e) {
+      Cu.reportError(e);
+    }
+
     this.update();
   },
 
   _onSwitch: function(variable, newName) {
-    let manifest = this.manifest;
-    let newSymbolicName = variable.ownerView.symbolicName +
-                          "['" + newName + "']";
-    if (newSymbolicName == variable.symbolicName) {
+    if (variable.name == newName) {
       return;
     }
 
-    let evalString = "manifest" + newSymbolicName + " = " +
-                     "manifest" + variable.symbolicName + ";" +
-                     "delete manifest" + variable.symbolicName;
+    let parent = this._descend(variable.ownerView.symbolicPath);
+    parent[newName] = parent[variable.name];
+    delete parent[variable.name];
 
-    eval(evalString);
     this.update();
   },
 
   _onDelete: function(variable) {
-    let manifest = this.manifest;
-    let evalString = "delete manifest" + variable.symbolicName;
-    eval(evalString);
+    let parent = this._descend(variable.ownerView.symbolicPath);
+    delete parent[variable.name];
   },
 
   _onNew: function(variable, newName, newValue) {
-    let manifest = this.manifest;
-    let symbolicName = variable.symbolicName + "['" + newName + "']";
-    let evalString = "manifest" + symbolicName + " = " + newValue + ";";
-    eval(evalString);
+    let parent = this._descend(variable.symbolicPath);
+    try {
+      parent[newName] = JSON.parse(newValue);
+    } catch(e) {
+      Cu.reportError(e);
+    }
+
     this.update();
   },
 
+  /**
+   * Returns the value located at a given path in the manifest.
+   * @param path array
+   *        A string for each path component: ["developer", "name"]
+   */
+  _descend: function(path) {
+    let parent = this.manifest;
+    while (path.length) {
+      parent = parent[path.shift()];
+    }
+    return parent;
+  },
+
   update: function() {
-    this.editor.createHierarchy();
     this.editor.rawObject = this.manifest;
     this.editor.commitHierarchy();
 

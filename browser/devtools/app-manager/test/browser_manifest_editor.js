@@ -6,7 +6,6 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 
 const MANIFEST_EDITOR_ENABLED = "devtools.appmanager.manifestEditor.enabled";
 
-
 let gManifestWindow, gManifestEditor;
 
 function test() {
@@ -22,7 +21,9 @@ function test() {
     gManifestWindow = getManifestWindow();
     gManifestEditor = getProjectsWindow().UI.manifestEditor;
     yield changeManifestValue("name", "the best app");
+    yield changeManifestValueBad("name", "the worst app");
     yield addNewManifestProperty("developer", "foo", "bar");
+    yield addNewManifestPropertyBad("developer", "blob", "bob");
     gManifestWindow = null;
     gManifestEditor = null;
 
@@ -64,6 +65,33 @@ function changeManifestValue(key, value) {
   });
 }
 
+function changeManifestValueBad(key, value) {
+  return Task.spawn(function() {
+    let propElem = gManifestWindow.document
+                   .querySelector("[id ^= '" + key + "']");
+    is(propElem.querySelector(".name").value, key,
+       "Key doesn't match expected value");
+
+    let valueElem = propElem.querySelector(".value");
+    EventUtils.sendMouseEvent({ type: "mousedown" }, valueElem, gManifestWindow);
+
+    let valueInput = propElem.querySelector(".element-value-input");
+    // Leaving out quotes will result in an error, so no change should be made.
+    valueInput.value = value;
+    EventUtils.sendKey("RETURN", gManifestWindow);
+
+    yield waitForUpdate();
+    // Elements have all been replaced, re-select them
+    propElem = gManifestWindow.document.querySelector("[id ^= '" + key + "']");
+    valueElem = propElem.querySelector(".value");
+    isnot(valueElem.value, '"' + value + '"',
+       "Value was changed, but it should not have been");
+
+    isnot(gManifestEditor.manifest[key], value,
+       "Manifest was changed, but it should not have been");
+  });
+}
+
 function addNewManifestProperty(parent, key, value) {
   return Task.spawn(function() {
     let parentElem = gManifestWindow.document
@@ -101,5 +129,36 @@ function addNewManifestProperty(parent, key, value) {
 
     is(gManifestEditor.manifest[parent][key], value,
        "Manifest doesn't contain expected value");
+  });
+}
+
+function addNewManifestPropertyBad(parent, key, value) {
+  return Task.spawn(function() {
+    let parentElem = gManifestWindow.document
+                     .querySelector("[id ^= '" + parent + "']");
+    ok(parentElem,
+      "Found parent element");
+    let addPropertyElem = parentElem
+                          .querySelector(".variables-view-add-property");
+    ok(addPropertyElem,
+      "Found add-property button");
+
+    EventUtils.sendMouseEvent({ type: "mousedown" }, addPropertyElem, gManifestWindow);
+
+    let nameInput = parentElem.querySelector(".element-name-input");
+    nameInput.value = key;
+    EventUtils.sendKey("TAB", gManifestWindow);
+
+    let valueInput = parentElem.querySelector(".element-value-input");
+    // Leaving out quotes will result in an error, so no change should be made.
+    valueInput.value = value;
+    EventUtils.sendKey("RETURN", gManifestWindow);
+
+    yield waitForUpdate();
+
+    let newElem = gManifestWindow.document.querySelector("[id ^= '" + key + "']");
+    ok(!newElem, "Key was added, but it should not have been");
+    ok(!(key in gManifestEditor.manifest[parent]),
+       "Manifest contains key, but it should not");
   });
 }

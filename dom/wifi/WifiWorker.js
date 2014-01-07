@@ -869,15 +869,12 @@ var WifiManager = (function() {
             manager.state = "UNINITIALIZED";
             return;
           }
+          // This command is mandatory for Nexus 4. But some devices like
+          // Galaxy S2 don't support it. Continue to start wpa_supplicant
+          // even if we fail to set wifi operation mode to station.
           gNetworkService.setWifiOperationMode(manager.ifname,
                                                WIFI_FIRMWARE_STATION,
                                                function (status) {
-            if (status) {
-              callback(status);
-              manager.state = "UNINITIALIZED";
-              return;
-            }
-
             function doStartSupplicant() {
               cancelWaitForDriverReadyTimer();
               wifiCommand.startSupplicant(function (status) {

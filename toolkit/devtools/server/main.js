@@ -1014,8 +1014,12 @@ DebuggerServerConnection.prototype = {
     }
 
     var ret = null;
-    // Dispatch the request to the actor.
-    if (actor.requestTypes && actor.requestTypes[aPacket.type]) {
+
+    // handle "requestTypes" RDP request.
+    if (aPacket.type == "requestTypes") {
+      ret = { from: actor.actorID, requestTypes: Object.keys(actor.requestTypes) };
+    } else if (actor.requestTypes && actor.requestTypes[aPacket.type]) {
+      // Dispatch the request to the actor.
       try {
         this.currentPacket = aPacket;
         ret = actor.requestTypes[aPacket.type].bind(actor)(aPacket, this);

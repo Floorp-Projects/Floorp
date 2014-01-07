@@ -149,6 +149,26 @@ let ErrorPage = {
     }
   },
 
+  _listenError: function(frameLoader) {
+    let self = this;
+    let frameElement = frameLoader.ownerElement;
+    let injectErrorPageScript = function() {
+      let mm = frameLoader.messageManager;
+      try {
+        mm.loadFrameScript(kErrorPageFrameScript, true, true);
+      } catch (e) {
+        dump('Error loading ' + kErrorPageFrameScript + ' as frame script: ' + e + '\n');
+      }
+      mm.addMessageListener('ErrorPage:AddCertException', self._addCertException.bind(self));
+      frameElement.removeEventListener('mozbrowsererror', injectErrorPageScript, true);
+    };
+
+    frameElement.addEventListener('mozbrowsererror',
+                                  injectErrorPageScript,
+                                  true // use capture
+                                 );
+  },
+
   init: function errorPageInit() {
     Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
     Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
@@ -156,17 +176,7 @@ let ErrorPage = {
 
   observe: function errorPageObserve(aSubject, aTopic, aData) {
     let frameLoader = aSubject.QueryInterface(Ci.nsIFrameLoader);
-    let mm = frameLoader.messageManager;
-
-    // This won't happen from dom/ipc/preload.js in non-OOP builds.
-    try {
-      if (Services.prefs.getBoolPref("dom.ipc.tabs.disabled") === true) {
-        mm.loadFrameScript(kErrorPageFrameScript, true, true);
-      }
-    } catch (e) {
-      dump('Error loading ' + kErrorPageFrameScript + ' as frame script: ' + e + '\n');
-    }
-    mm.addMessageListener('ErrorPage:AddCertException', this._addCertException.bind(this));
+    this._listenError(frameLoader);
   }
 };
 
