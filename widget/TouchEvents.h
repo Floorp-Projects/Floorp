@@ -130,6 +130,16 @@ public:
   {
   }
 
+  WidgetTouchEvent(const WidgetTouchEvent& aOther) :
+    WidgetInputEvent(aOther.mFlags.mIsTrusted, aOther.message, aOther.widget,
+                     NS_TOUCH_EVENT)
+  {
+    modifiers = aOther.modifiers;
+    time = aOther.time;
+    touches.AppendElements(aOther.touches);
+    MOZ_COUNT_CTOR(WidgetTouchEvent);
+  }
+
   WidgetTouchEvent(bool aIsTrusted, WidgetTouchEvent* aEvent) :
     WidgetInputEvent(aIsTrusted, aEvent->message, aEvent->widget,
                      NS_TOUCH_EVENT)

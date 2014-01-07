@@ -92,7 +92,7 @@ read_random_phony(void *buf, int count)
 	/* Fill buf[] with random(9) output */
 	for (i = 0; i < count; i+= (int)sizeof(uint32_t)) {
 		randval = random();
-		size = MIN(count - i, sizeof(uint32_t));
+		size = MIN(count - i, (int)sizeof(uint32_t));
 		memcpy(&((char *)buf)[i], &randval, (size_t)size);
 	}
 

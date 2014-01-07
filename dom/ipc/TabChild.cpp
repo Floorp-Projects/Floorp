@@ -521,12 +521,14 @@ TabChild::HandlePossibleViewportChange()
   ViewID viewId;
   if (APZCCallbackHelper::GetScrollIdentifiers(document->GetDocumentElement(),
                                                &presShellId, &viewId)) {
+    ZoomConstraints constraints(
+      viewportInfo.IsZoomAllowed(),
+      viewportInfo.GetMinZoom(),
+      viewportInfo.GetMaxZoom());
     SendUpdateZoomConstraints(presShellId,
                               viewId,
                               /* isRoot = */ true,
-                              viewportInfo.IsZoomAllowed(),
-                              viewportInfo.GetMinZoom(),
-                              viewportInfo.GetMaxZoom());
+                              constraints);
   }
 
 
@@ -1776,7 +1778,7 @@ TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
       return;
     }
 
-    Touch* touch = static_cast<Touch*>(aEvent.touches[0].get());
+    Touch* touch = aEvent.touches[0];
     mGestureDownPoint = LayoutDevicePoint(touch->mRefPoint.x, touch->mRefPoint.y);
     mActivePointerId = touch->mIdentifier;
     if (sClickHoldContextMenusEnabled) {

@@ -192,6 +192,8 @@ int nr_ice_media_stream_get_attributes(nr_ice_media_stream *stream, char ***attr
           if (cand->state == NR_ICE_CAND_STATE_INITIALIZED) {
             assert(index < attrct);
 
+            if (index >= attrct)
+              ABORT(R_INTERNAL);
 
             if(r=nr_ice_format_candidate_attribute(cand, attrs[index],NR_ICE_MAX_ATTRIBUTE_SIZE))
               ABORT(r);

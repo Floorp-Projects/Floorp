@@ -974,10 +974,10 @@ JSObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
               !(attrs & JSPROP_SHARED));
 
     if (mode == ParallelExecution) {
-        if (!types::IsTypePropertyIdMarkedConfigured(obj, shape->propid()))
+        if (!types::IsTypePropertyIdMarkedNonData(obj, shape->propid()))
             return nullptr;
     } else {
-        types::MarkTypePropertyConfigured(cx->asExclusiveContext(), obj, shape->propid());
+        types::MarkTypePropertyNonData(cx->asExclusiveContext(), obj, shape->propid());
     }
 
     if (getter == JS_PropertyStub)
