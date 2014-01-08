@@ -36,7 +36,7 @@ const TOPIC_PREF_CHANGED = "nsPref:changed";
 const TOPIC_DEBUG_START_EXPIRATION = "places-debug-start-expiration";
 const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
 const TOPIC_IDLE_BEGIN = "idle";
-const TOPIC_IDLE_END = "back";
+const TOPIC_IDLE_END = "active";
 const TOPIC_IDLE_DAILY = "idle-daily";
 
 // Branch for all expiration preferences.
