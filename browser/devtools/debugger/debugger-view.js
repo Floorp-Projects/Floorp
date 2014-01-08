@@ -690,6 +690,8 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
       }
       if (!this.widget) {
         this.widget = new SimpleListWidget(this._panel);
+        this.autoFocusOnFirstItem = false;
+        this.autoFocusOnSelection = false;
         this.maintainSelectionVisible = false;
       }
     }
