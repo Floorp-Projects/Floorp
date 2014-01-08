@@ -168,6 +168,10 @@ typedef const char16_t* char16ptr_t;
 
 #endif
 
+/* This is a temporary hack until bug 927728 is fixed. */
+#define __PRUNICHAR__
+typedef char16_t PRUnichar;
+
 /*
  * Macro arguments used in concatenation or stringification won't be expanded.
  * Therefore, in order for |MOZ_UTF16(FOO)| to work as expected (which is to
