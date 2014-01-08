@@ -309,6 +309,7 @@ private:
                        bool aFlipped = false,
                        GLuint aDrawMode = LOCAL_GL_TRIANGLE_STRIP);
   void BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
+                                      const gfx3DMatrix& aTextureTransform,
                                       const gfx::Rect& aTexCoordRect,
                                       TextureSource *aTexture);
 
