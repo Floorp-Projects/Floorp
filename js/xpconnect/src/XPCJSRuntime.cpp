@@ -2483,6 +2483,15 @@ class OrphanReporter : public JS::ObjectPrivateVisitor
     nsTHashtable <nsISupportsHashKey> mAlreadyMeasuredOrphanTrees;
 };
 
+#ifdef DEBUG
+static bool
+StartsWithExplicit(nsACString& s)
+{
+    const char* e = "explicit/";
+    return Substring(s, 0, strlen(e)).Equals(e);
+}
+#endif
+
 class XPCJSRuntimeStats : public JS::RuntimeStats
 {
     WindowPaths *mWindowPaths;
@@ -2530,6 +2539,8 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         }
 
         extras->pathPrefix += nsPrintfCString("zone(0x%p)/", (void *)zone);
+
+        MOZ_ASSERT(StartsWithExplicit(extras->pathPrefix));
 
         zStats->extra = extras;
     }
@@ -2598,6 +2609,9 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
         // "explicit/dom/<something>?!/" otherwise (in which case it shouldn't
         // be used, because non-nsGlobalWindow compartments shouldn't have
         // orphan DOM nodes).
+
+        MOZ_ASSERT(StartsWithExplicit(extras->jsPathPrefix));
+        MOZ_ASSERT(StartsWithExplicit(extras->domPathPrefix));
 
         cstats->extra = extras;
     }
