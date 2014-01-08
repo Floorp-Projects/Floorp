@@ -187,6 +187,8 @@
  "dom/tests/mochitest/geolocation/test_mozsettings.html": "mozSettings is undefined",
  "dom/tests/mochitest/geolocation/test_mozsettingsWatch.html": "mozSettings is undefined",
  "dom/tests/mochitest/geolocation/test_shutdown.html": "TIMED_OUT",
+ "dom/tests/mochitest/geolocation/test_timeoutWatch.html": "TIMED_OUT",
+ "dom/tests/mochitest/geolocation/test_timerRestartWatch.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_windowClose.html": "TIMED_OUT",
  "dom/tests/mochitest/geolocation/test_worseAccuracyDoesNotBlockCallback.html": "TIMED_OUT",
  "dom/tests/mochitest/localstorage/test_bug624047.html": "TIMED_OUT",
