@@ -1,0 +1,93 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=949488
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 949488 - basic support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=949488">Mozilla Bug 949488</a>
+  <div id="content"></div>
+  <script type="application/javascript">
+
+  function selfMessage() {
+    addEventListener('message', receiveMessage);
+    function receiveMessage(evt) {
+      is(evt.data, 1, "Message received");
+      removeEventListener('message', receiveMessage);
+      runTest();
+    }
+
+    postMessage(1, '/');
+  }
+
+  function frameOk() {
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "iframe_postMessage_solidus.html");
+
+    var div = document.getElementById("content");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      addEventListener('message', receiveMessage);
+      function receiveMessage(evt) {
+        is(evt.data, 2, "Message received");
+        removeEventListener('message', receiveMessage);
+        runTest();
+      }
+
+      ifr.contentWindow.postMessage(2, '/');
+    }
+  }
+
+  function frameWrong() {
+    var ifr = document.createElement("iframe");
+    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.setAttribute('src', "http://www.example.com/tests/dom/base/test/iframe_postMessage_solidus.html");
+
+    var div = document.getElementById("content");
+    div.appendChild(ifr);
+
+    function iframeLoaded() {
+      addEventListener('message', receiveMessage);
+      function receiveMessage(evt) {
+        ok(evt.data, 3, "Message received");
+        removeEventListener('message', receiveMessage);
+        runTest();
+      }
+
+      ifr.contentWindow.postMessage(4, '/');
+      SimpleTest.executeSoon(function() {
+        ifr.contentWindow.postMessage(3, '*');
+      });
+    }
+  }
+
+  var tests = [
+    selfMessage,
+    frameOk,
+    frameWrong
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+
+  </script>
+</body>
+</html>
