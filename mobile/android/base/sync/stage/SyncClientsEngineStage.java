@@ -360,6 +360,7 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
     return GlobalConstants.MOZ_APP_VERSION;
   }
 
+  @SuppressWarnings("unchecked")
   protected JSONArray getLocalClientProtocols() {
     final JSONArray protocols = new JSONArray();
     protocols.add(ClientRecord.PROTOCOL_LEGACY_SYNC);
