@@ -23,13 +23,16 @@
 
 //-----------------------------------------------------------------------------
 
-class nsHttpRequestHead;
-class nsHttpResponseHead;
-class nsHttpChunkedDecoder;
 class nsIHttpActivityObserver;
 class nsIEventTarget;
 class nsIInputStream;
 class nsIOutputStream;
+
+namespace mozilla { namespace net {
+
+class nsHttpChunkedDecoder;
+class nsHttpRequestHead;
+class nsHttpResponseHead;
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,
@@ -37,7 +40,7 @@ class nsIOutputStream;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction : public nsAHttpTransaction
-                        , public mozilla::net::ATokenBucketEvent
+                        , public ATokenBucketEvent
                         , public nsIInputStreamCallback
                         , public nsIOutputStreamCallback
 {
@@ -110,8 +113,8 @@ public:
     void PrintDiagnostics(nsCString &log);
 
     // Sets mPendingTime to the current time stamp or to a null time stamp (if now is false)
-    void SetPendingTime(bool now = true) { mPendingTime = now ? mozilla::TimeStamp::Now() : mozilla::TimeStamp(); }
-    const mozilla::TimeStamp GetPendingTime() { return mPendingTime; }
+    void SetPendingTime(bool now = true) { mPendingTime = now ? TimeStamp::Now() : TimeStamp(); }
+    const TimeStamp GetPendingTime() { return mPendingTime; }
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
     // overload of nsAHttpTransaction::LoadGroupConnectionInfo()
@@ -167,7 +170,7 @@ private:
         nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     };
 
-    mozilla::Mutex mCallbacksLock;
+    Mutex mCallbacksLock;
 
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
     nsCOMPtr<nsITransportEventSink> mTransportSink;
@@ -259,7 +262,7 @@ private:
     bool                            mResponseHeadTaken;
 
     // The time when the transaction was submitted to the Connection Manager
-    mozilla::TimeStamp              mPendingTime;
+    TimeStamp                       mPendingTime;
 
     class RestartVerifier
     {
@@ -369,5 +372,7 @@ private:
         SaveNetworkStats(false);
     }
 };
+
+}} // namespace mozilla::net
 
 #endif // nsHttpTransaction_h__

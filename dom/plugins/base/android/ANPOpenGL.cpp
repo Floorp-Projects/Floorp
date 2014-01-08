@@ -10,7 +10,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
 #include "GLContextProvider.h"
-#include "GLContext.h"
+#include "GLContextEGL.h"
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GeckoPlugins" , ## args)
 #define ASSIGN(obj, name)   (obj)->name = anp_opengl_##name
@@ -28,7 +28,7 @@ static ANPEGLContext anp_opengl_acquireContext(NPP instance) {
         return nullptr;
 
     context->MakeCurrent();
-    return context->GetNativeData(GLContext::NativeGLContext);
+    return GLContextEGL::Cast(context)->GetEGLContext();
 }
 
 static ANPTextureInfo anp_opengl_lockTexture(NPP instance) {

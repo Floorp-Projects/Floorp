@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
+#include "jsapi.h"
 
 class nsIPrincipal;
 
@@ -30,6 +31,54 @@ enum OpenMode
   eOpenForRead,
   eOpenForWrite,
   NUM_OPEN_MODES
+};
+
+// Each origin stores a fixed size (kNumEntries) LRU cache of compiled asm.js
+// modules. Each compiled asm.js module is stored in a separate file with one
+// extra metadata file that stores the LRU cache and enough information for a
+// client to pick which cached module's file to open.
+struct Metadata
+{
+  static const unsigned kNumEntries = 16;
+  static const unsigned kLastEntry = kNumEntries - 1;
+
+  struct Entry
+  {
+    uint32_t mFastHash;
+    uint32_t mNumChars;
+    uint32_t mFullHash;
+    uint32_t mModuleIndex;
+  };
+
+  Entry mEntries[kNumEntries];
+};
+
+// Parameters specific to opening a cache entry for writing
+struct WriteParams
+{
+  int64_t mSize;
+  int64_t mFastHash;
+  int64_t mNumChars;
+  int64_t mFullHash;
+
+  WriteParams()
+  : mSize(0),
+    mFastHash(0),
+    mNumChars(0),
+    mFullHash(0)
+  { }
+};
+
+// Parameters specific to opening a cache entry for reading
+struct ReadParams
+{
+  const jschar* mBegin;
+  const jschar* mLimit;
+
+  ReadParams()
+  : mBegin(nullptr),
+    mLimit(nullptr)
+  { }
 };
 
 // Implementation of AsmJSCacheOps, installed for the main JSRuntime by
@@ -68,8 +117,9 @@ CloseEntryForWrite(JS::Handle<JSObject*> aGlobal,
                    size_t aSize,
                    uint8_t* aMemory,
                    intptr_t aHandle);
+
 bool
-GetBuildId(js::Vector<char>* aBuildId);
+GetBuildId(JS::BuildIdCharVector* aBuildId);
 
 // Called from QuotaManager.cpp:
 
@@ -79,7 +129,7 @@ CreateClient();
 // Called from ipc/ContentParent.cpp:
 
 PAsmJSCacheEntryParent*
-AllocEntryParent(OpenMode aOpenMode, uint32_t aSizeToWrite,
+AllocEntryParent(OpenMode aOpenMode, WriteParams aWriteParams,
                  nsIPrincipal* aPrincipal);
 
 void
@@ -102,6 +152,24 @@ struct ParamTraits<mozilla::dom::asmjscache::OpenMode> :
                         mozilla::dom::asmjscache::eOpenForRead,
                         mozilla::dom::asmjscache::NUM_OPEN_MODES>
 { };
+
+template <>
+struct ParamTraits<mozilla::dom::asmjscache::Metadata>
+{
+  typedef mozilla::dom::asmjscache::Metadata paramType;
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
+  static void Log(const paramType& aParam, std::wstring* aLog);
+};
+
+template <>
+struct ParamTraits<mozilla::dom::asmjscache::WriteParams>
+{
+  typedef mozilla::dom::asmjscache::WriteParams paramType;
+  static void Write(Message* aMsg, const paramType& aParam);
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
+  static void Log(const paramType& aParam, std::wstring* aLog);
+};
 
 } // namespace IPC
 

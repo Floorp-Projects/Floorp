@@ -99,8 +99,8 @@ protected:
                           const uint32_t& cacheExpirationTime,
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization,
-                          const mozilla::net::NetAddr& selfAddr,
-                          const mozilla::net::NetAddr& peerAddr);
+                          const NetAddr& selfAddr,
+                          const NetAddr& peerAddr);
   bool RecvOnTransportAndData(const nsresult& status,
                               const uint64_t& progress,
                               const uint64_t& progressMax,
@@ -153,8 +153,8 @@ private:
                       const uint32_t& cacheExpirationTime,
                       const nsCString& cachedCharset,
                       const nsCString& securityInfoSerialization,
-                      const mozilla::net::NetAddr& selfAddr,
-                      const mozilla::net::NetAddr& peerAddr);
+                      const NetAddr& selfAddr,
+                      const NetAddr& peerAddr);
   void OnTransportAndData(const nsresult& status,
                           const uint64_t progress,
                           const uint64_t& progressMax,

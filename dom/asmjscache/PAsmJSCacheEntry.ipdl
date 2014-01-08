@@ -4,6 +4,8 @@
 
 include protocol PContent;
 
+using mozilla::dom::asmjscache::Metadata from "mozilla/dom/asmjscache/AsmJSCache.h";
+
 namespace mozilla {
 namespace dom {
 namespace asmjscache {
@@ -12,8 +14,18 @@ protocol PAsmJSCacheEntry
 {
   manager PContent;
 
+  // When the cache is opened to read, the parent process sends over the
+  // origin's Metadata so the child process can select the cache entry to open
+  // (based on hash) and notify the parent (via SelectCacheFileToRead).
 child:
-  OnOpen(int64_t fileSize, FileDescriptor fileDesc);
+  OnOpenMetadataForRead(Metadata metadata);
+parent:
+  SelectCacheFileToRead(uint32_t moduleIndex);
+
+child:
+  // Once the cache file has been opened, the child is notified and sent an
+  // open file descriptor.
+  OnOpenCacheFile(int64_t fileSize, FileDescriptor fileDesc);
 
 both:
   __delete__();
