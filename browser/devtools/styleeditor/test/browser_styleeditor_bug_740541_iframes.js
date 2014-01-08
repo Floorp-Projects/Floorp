@@ -70,21 +70,9 @@ function test()
   const EXPECTED_STYLE_SHEET_COUNT = 12;
 
   waitForExplicitFinish();
-  let styleSheetCount = 0;
-  addTabAndOpenStyleEditor(function (aPanel) {
-    aPanel.UI.on("editor-added", function () {
-      ++styleSheetCount;
-      info(styleSheetCount+" out of "+
-           EXPECTED_STYLE_SHEET_COUNT+" style sheets loaded");
-      if (styleSheetCount == EXPECTED_STYLE_SHEET_COUNT) {
-        ok(true, "all style sheets loaded");
-        // The right number of events have been received; check that
-        // they actually show up in the style editor UI.
-        is(aPanel.UI.editors.length, EXPECTED_STYLE_SHEET_COUNT,
-           "UI elements present");
-        finish();
-      }
-    });
-  });
+
+  // Wait for events until the right number of editors has been opened.
+  addTabAndOpenStyleEditors(EXPECTED_STYLE_SHEET_COUNT, () => finish());
+
   content.location = TESTCASE_URI;
 }
