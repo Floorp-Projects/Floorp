@@ -15,6 +15,7 @@
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
 #include "nsTArray.h"
+#include "nsJSUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -90,6 +91,25 @@ void DestroyScriptSettings()
   MOZ_ASSERT(ptr);
   sScriptSettingsTLS.set(nullptr);
   delete ptr;
+}
+
+// This mostly gets the entry global, but doesn't entirely match the spec in
+// certain edge cases. It's good enough for some purposes, but not others. If
+// you want to call this function, ping bholley and describe your use-case.
+nsIGlobalObject*
+BrokenGetEntryGlobal()
+{
+  // We need the current JSContext in order to check the JS for
+  // scripted frames that may have appeared since anyone last
+  // manipulated the stack. If it's null, that means that there
+  // must be no entry point on the stack.
+  JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
+  if (!cx) {
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    return nullptr;
+  }
+
+  return nsJSUtils::GetDynamicScriptGlobal(cx);
 }
 
 // Note: When we're ready to expose it, GetEntryGlobal will look similar to

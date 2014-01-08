@@ -586,7 +586,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
                 // We want the icon to be of a specific size. Some do not
                 // follow this rule so we have to resize them.
                 Bitmap bitmap = ((BitmapDrawable) item.icon).getBitmap();
-                d = new BitmapDrawable(Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
+                d = new BitmapDrawable(res, Bitmap.createScaledBitmap(bitmap, mIconSize, mIconSize, true));
             } else if (item.inGroup) {
                 // We don't currently support "indenting" items with icons
                 d = getBlankDrawable(res);

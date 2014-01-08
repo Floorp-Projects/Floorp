@@ -73,11 +73,14 @@ const CM_MAPPING = [
   "setSelection",
   "getSelection",
   "replaceSelection",
+  "extendSelection",
   "undo",
   "redo",
   "clearHistory",
   "openDialog",
-  "refresh"
+  "refresh",
+  "getOption",
+  "setOption"
 ];
 
 const { cssProperties, cssValues, cssColors } = getCSSKeywords();
@@ -288,8 +291,7 @@ Editor.prototype = {
    * See Editor.modes for the list of all suppoert modes.
    */
   getMode: function () {
-    let cm = editors.get(this);
-    return cm.getOption("mode");
+    return this.getOption("mode");
   },
 
   /**
@@ -297,8 +299,7 @@ Editor.prototype = {
    * See Editor.modes for the list of all suppoert modes.
    */
   setMode: function (value) {
-    let cm = editors.get(this);
-    cm.setOption("mode", value);
+    this.setOption("mode", value);
   },
 
   /**
@@ -364,18 +365,6 @@ Editor.prototype = {
       return;
 
     this.setCursor(this.getCursor());
-  },
-
-  /**
-   * Extends the current selection to the position specified
-   * by the provided {line, ch} object.
-   */
-  extendSelection: function (pos) {
-    let cm = editors.get(this);
-    let cursor = cm.indexFromPos(cm.getCursor());
-    let anchor = cm.posFromIndex(cursor + pos.start);
-    let head   = cm.posFromIndex(cursor + pos.start + pos.length);
-    cm.setSelection(anchor, head);
   },
 
   /**
@@ -649,8 +638,7 @@ Editor.prototype = {
    * True if the editor is in the read-only mode, false otherwise.
    */
   isReadOnly: function () {
-    let cm = editors.get(this);
-    return cm.getOption("readOnly");
+    return this.getOption("readOnly");
   },
 
   /**

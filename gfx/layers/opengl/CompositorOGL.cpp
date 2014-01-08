@@ -250,6 +250,7 @@ CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
   , mFrameInProgress(false)
   , mDestroyed(false)
+  , mHeight(0)
 {
   MOZ_COUNT_CTOR(CompositorOGL);
   sBackend = LAYERS_OPENGL;
@@ -394,8 +395,6 @@ CompositorOGL::Initialize()
 
   if (!mGLContext)
     return false;
-
-  mGLContext->SetFlipped(true);
 
   MakeCurrent();
 
@@ -633,6 +632,8 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   // Set the viewport correctly.
   mGLContext->fViewport(0, 0, aSize.width, aSize.height);
 
+  mHeight = aSize.height;
+
   // We flip the view matrix around so that everything is right-side up; we're
   // drawing directly into the window's back buffer, so this keeps things
   // looking correct.
@@ -716,14 +717,6 @@ CompositorOGL::SetRenderTarget(CompositingRenderTarget *aSurface)
   CompositingRenderTargetOGL* surface
     = static_cast<CompositingRenderTargetOGL*>(aSurface);
   if (mCurrentRenderTarget != surface) {
-    // Restore the scissor rect that was active before we set the current
-    // render target.
-    mGLContext->PopScissorRect();
-
-    // Save the current scissor rect so that we can pop back to it when
-    // changing the render target again.
-    mGLContext->PushScissorRect();
-
     surface->BindRenderTarget();
     mCurrentRenderTarget = surface;
   }
@@ -843,17 +836,9 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
-  if (!aClipRectIn) {
-    mGLContext->fScissor(0, 0, width, height);
-    if (aClipRectOut) {
-      aClipRectOut->SetRect(0, 0, width, height);
-    }
-  } else {
-    mGLContext->fScissor(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height);
+  if (aClipRectOut && !aClipRectIn) {
+    aClipRectOut->SetRect(0, 0, width, height);
   }
-
-  // Save the current scissor rect so that SetRenderTarget can pop back to it.
-  mGLContext->PushScissorRect();
 
   // If the Android compositor is being used, this clear will be done in
   // DrawWindowUnderlay. Make sure the bits used here match up with those used
@@ -1102,8 +1087,11 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   }
   IntRect intClipRect;
   clipRect.ToIntRect(&intClipRect);
-  mGLContext->PushScissorRect(nsIntRect(intClipRect.x, intClipRect.y,
-                                        intClipRect.width, intClipRect.height));
+  ScopedScissorRect autoScissor(mGLContext,
+                                intClipRect.x,
+                                FlipY(intClipRect.y + intClipRect.height),
+                                intClipRect.width,
+                                intClipRect.height);
 
   LayerScope::SendEffectChain(mGLContext, aEffectChain,
                               aRect.width, aRect.height);
@@ -1364,7 +1352,6 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
     break;
   }
 
-  mGLContext->PopScissorRect();
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
   // in case rendering has used some other GL context
   MakeCurrent();
@@ -1401,9 +1388,6 @@ CompositorOGL::EndFrame()
     mCurrentRenderTarget = nullptr;
     return;
   }
-
-  // Restore the scissor rect that we saved in BeginFrame.
-  mGLContext->PopScissorRect();
 
   mCurrentRenderTarget = nullptr;
 
@@ -1577,21 +1561,6 @@ CompositorOGL::GetMaxTextureSize() const
 }
 
 void
-CompositorOGL::SaveState()
-{
-  mGLContext->PushScissorRect();
-}
-
-void
-CompositorOGL::RestoreState()
-{
-  // Restore state that might be changed by drawBackground/drawForeground in
-  // mobile/android/base/gfx/LayerRenderer.java
-  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
-  mGLContext->PopScissorRect();
-}
-
-void
 CompositorOGL::MakeCurrent(MakeCurrentFlags aFlags) {
   if (mDestroyed) {
     NS_WARNING("Call on destroyed layer manager");
@@ -1667,7 +1636,6 @@ CompositorOGL::BindAndDrawQuad(ShaderProgramOGL *aProg,
                   aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib),
                   aFlipped, aDrawMode);
 }
-
 
 } /* layers */
 } /* mozilla */

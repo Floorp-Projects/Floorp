@@ -28,8 +28,8 @@
 extern PRThread *gSocketThread;
 #endif
 
-using namespace mozilla;
-using namespace mozilla::net;
+namespace mozilla {
+namespace net {
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection <public>
@@ -1670,3 +1670,6 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
         return callbacks->GetInterface(iid, result);
     return NS_ERROR_NO_INTERFACE;
 }
+
+} // namespace mozilla::net
+} // namespace mozilla
