@@ -176,7 +176,9 @@
 }
 
 .devtools-tooltip[clamped-dimensions] {
+  min-height: 100px;
   max-height: 400px;
+  min-width: 100px;
   max-width: 400px;
 }
 .devtools-tooltip[clamped-dimensions] .panel-arrowcontent {

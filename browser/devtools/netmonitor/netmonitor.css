@@ -8,6 +8,7 @@
 }
 
 #details-pane-toggle[disabled] {
+  /* Don't use display: none; to avoid collapsing #requests-menu-toolbar */
   visibility: hidden;
 }
 

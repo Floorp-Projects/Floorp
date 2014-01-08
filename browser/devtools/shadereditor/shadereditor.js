@@ -222,6 +222,7 @@ let ShadersListView = Heritage.extend(WidgetMethods, {
     // program sources or instances.
     let label = L10N.getFormatStr("shadersList.programLabel", this.itemCount);
     let contents = document.createElement("label");
+    contents.className = "plain program-item";
     contents.setAttribute("value", label);
     contents.setAttribute("crop", "start");
     contents.setAttribute("flex", "1");
