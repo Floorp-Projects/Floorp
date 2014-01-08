@@ -4,7 +4,7 @@
 
 // This verifies that AddonUpdateChecker works correctly
 
-Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
 Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
