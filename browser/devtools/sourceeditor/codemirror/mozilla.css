@@ -73,3 +73,11 @@ selector in floating-scrollbar-light.css across all platforms. */
 .CodeMirror-dialog input {
   font: message-box;
 }
+
+.CodeMirror-code > div > div:first-child {
+  top: 50%;
+}
+
+.CodeMirror-gutter-elt {
+  transform: translate(0,-50%);
+}
