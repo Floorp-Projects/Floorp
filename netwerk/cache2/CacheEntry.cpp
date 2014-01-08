@@ -514,20 +514,23 @@ bool CacheEntry::InvokeCallback(Callback & aCallback)
     // mRecheckAfterWrite flag already set means the callback has already passed
     // the onCacheEntryCheck call. Until the current write is not finished this
     // callback will be bypassed.
-    if (!aCallback.mReadOnly && !aCallback.mRecheckAfterWrite) {
-      if (mState == EMPTY) {
-        // Advance to writing state, we expect to invoke the callback and let
-        // it fill content of this entry.  Must set and check the state here
-        // to prevent more then one
-        mState = WRITING;
-        LOG(("  advancing to WRITING state"));
-      }
+    if (!aCallback.mRecheckAfterWrite) {
 
-      if (!aCallback.mCallback) {
-        // We can be given no callback only in case of recreate, it is ok
-        // to advance to WRITING state since the caller of recreate is expected
-        // to write this entry now.
-        return true;
+      if (!aCallback.mReadOnly) {
+        if (mState == EMPTY) {
+          // Advance to writing state, we expect to invoke the callback and let
+          // it fill content of this entry.  Must set and check the state here
+          // to prevent more then one
+          mState = WRITING;
+          LOG(("  advancing to WRITING state"));
+        }
+
+        if (!aCallback.mCallback) {
+          // We can be given no callback only in case of recreate, it is ok
+          // to advance to WRITING state since the caller of recreate is expected
+          // to write this entry now.
+          return true;
+        }
       }
 
       if (mState == READY) {
