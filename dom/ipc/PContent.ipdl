@@ -355,9 +355,6 @@ parent:
     sync GetRandomValues(uint32_t length)
         returns (uint8_t[] randomValues);
 
-    sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
-        returns (bool isSecureURI);
-
     PHal();
 
     PIndexedDB();
