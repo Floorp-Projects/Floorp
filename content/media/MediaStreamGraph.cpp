@@ -1543,7 +1543,7 @@ MediaStreamGraphImpl::RunInStableState()
         controlMessagesToRunDuringShutdown.MoveElementsFrom(mb.mMessages);
       }
       mMessageQueue.Clear();
-      controlMessagesToRunDuringShutdown.MoveElementsFrom(mCurrentTaskMessageQueue);
+      MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
       // Stop MediaStreamGraph threads. Do not clear gGraph since
       // we have outstanding DOM objects that may need it.
       mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
