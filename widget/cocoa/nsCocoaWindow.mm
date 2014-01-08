@@ -1578,7 +1578,15 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   const nsString& strTitle = PromiseFlatString(aTitle);
   NSString* title = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(strTitle.get())
                                             length:strTitle.Length()];
-  [mWindow setTitle:title];
+
+  if ([mWindow drawsContentsIntoWindowFrame] && ![mWindow wantsTitleDrawn]) {
+    // Don't cause invalidations.
+    [mWindow disableSetNeedsDisplay];
+    [mWindow setTitle:title];
+    [mWindow enableSetNeedsDisplay];
+  } else {
+    [mWindow setTitle:title];
+  }
 
   return NS_OK;
 
@@ -2540,6 +2548,10 @@ GetDPI(NSWindow* aWindow)
 
 static NSMutableSet *gSwizzledFrameViewClasses = nil;
 
+@interface NSWindow(PrivateSetNeedsDisplayInRectMethod)
+ - (void)_setNeedsDisplayInRect:(NSRect)aRect;
+@end
+
 @interface BaseWindow(Private)
 - (void)removeTrackingArea;
 - (void)cursorUpdated:(NSEvent*)aEvent;
@@ -2608,6 +2620,7 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
   mActiveTitlebarColor = nil;
   mInactiveTitlebarColor = nil;
   mScheduledShadowInvalidation = NO;
+  mDisabledNeedsDisplay = NO;
   mDPI = GetDPI(self);
   mTrackingArea = nil;
   mBeingShown = NO;
@@ -2625,6 +2638,16 @@ static NSMutableSet *gSwizzledFrameViewClasses = nil;
 - (BOOL)isVisibleOrBeingShown
 {
   return [super isVisible] || mBeingShown;
+}
+
+- (void)disableSetNeedsDisplay
+{
+  mDisabledNeedsDisplay = YES;
+}
+
+- (void)enableSetNeedsDisplay
+{
+  mDisabledNeedsDisplay = NO;
 }
 
 - (void)dealloc
@@ -2794,6 +2817,17 @@ static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 - (void)cursorUpdated:(NSEvent*)aEvent
 {
   // Nothing to do here, but NSTrackingArea wants us to implement this method.
+}
+
+- (void)_setNeedsDisplayInRect:(NSRect)aRect
+{
+  // Prevent unnecessary invalidations due to moving NSViews (e.g. for plugins)
+  if (!mDisabledNeedsDisplay) {
+    // This method is only called by Cocoa, so when we're here, we know that
+    // it's available and don't need to check whether our superclass responds
+    // to the selector.
+    [super _setNeedsDisplayInRect:aRect];
+  }
 }
 
 - (void)updateContentViewSize
