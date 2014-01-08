@@ -643,6 +643,18 @@ RILContentHelper.prototype = {
    * nsIMobileConnectionProvider
    */
 
+  getLastKnownNetwork: function getLastKnownNetwork(clientId) {
+    return cpmm.sendSyncMessage("RIL:GetLastKnownNetwork", {
+      clientId: clientId
+    })[0];
+  },
+
+  getLastKnownHomeNetwork: function getLastKnownHomeNetwork(clientId) {
+    return cpmm.sendSyncMessage("RIL:GetLastKnownHomeNetwork", {
+      clientId: clientId
+    })[0];
+  },
+
   getVoiceConnectionInfo: function getVoiceConnectionInfo(clientId) {
     let context = this.getRilContext(clientId);
     return context && context.voiceConnectionInfo;
