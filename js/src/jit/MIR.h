@@ -4885,6 +4885,44 @@ class MRegExpTest
     }
 };
 
+class MRegExpReplace
+  : public MTernaryInstruction,
+    public Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >
+{
+  private:
+
+    MRegExpReplace(MDefinition *string, MDefinition *regexp, MDefinition *replacement)
+      : MTernaryInstruction(string, regexp, replacement)
+    {
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpReplace)
+
+    static MRegExpReplace *New(TempAllocator &alloc, MDefinition *string, MDefinition *regexp, MDefinition *replacement) {
+        return new(alloc) MRegExpReplace(string, regexp, replacement);
+    }
+
+    MDefinition *string() const {
+        return getOperand(0);
+    }
+    MDefinition *regexp() const {
+        return getOperand(1);
+    }
+    MDefinition *replacement() const {
+        return getOperand(2);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
 struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in
