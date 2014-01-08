@@ -814,6 +814,9 @@ class ObjectElements
     void setShouldConvertDoubleElements() {
         flags |= CONVERT_DOUBLE_ELEMENTS;
     }
+    void clearShouldConvertDoubleElements() {
+        flags &= ~CONVERT_DOUBLE_ELEMENTS;
+    }
     bool isAsmJSArrayBuffer() const {
         return flags & ASMJS_ARRAY_BUFFER;
     }
