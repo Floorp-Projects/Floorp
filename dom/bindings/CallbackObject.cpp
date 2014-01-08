@@ -70,60 +70,63 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   JSContext* cx = nullptr;
   nsIGlobalObject* globalObject = nullptr;
 
-  if (mIsMainThread) {
-    // Now get the global and JSContext for this callback.
-    nsGlobalWindow* win = xpc::WindowGlobalOrNull(realCallback);
-    if (win) {
-      // Make sure that if this is a window it's the current inner, since the
-      // nsIScriptContext and hence JSContext are associated with the outer
-      // window.  Which means that if someone holds on to a function from a
-      // now-unloaded document we'd have the new document as the script entry
-      // point...
-      MOZ_ASSERT(win->IsInnerWindow());
-      nsPIDOMWindow* outer = win->GetOuterWindow();
-      if (!outer || win != outer->GetCurrentInnerWindow()) {
-        // Just bail out from here
-        return;
+  {
+    JS::AutoAssertNoGC nogc;
+    if (mIsMainThread) {
+      // Now get the global and JSContext for this callback.
+      nsGlobalWindow* win = xpc::WindowGlobalOrNull(realCallback);
+      if (win) {
+        // Make sure that if this is a window it's the current inner, since the
+        // nsIScriptContext and hence JSContext are associated with the outer
+        // window.  Which means that if someone holds on to a function from a
+        // now-unloaded document we'd have the new document as the script entry
+        // point...
+        MOZ_ASSERT(win->IsInnerWindow());
+        nsPIDOMWindow* outer = win->GetOuterWindow();
+        if (!outer || win != outer->GetCurrentInnerWindow()) {
+          // Just bail out from here
+          return;
+        }
+        cx = win->GetContext() ? win->GetContext()->GetNativeContext()
+                               // This happens - Removing it causes
+                               // test_bug293235.xul to go orange.
+                               : nsContentUtils::GetSafeJSContext();
+        globalObject = win;
+      } else {
+        // No DOM Window. Store the global and use the SafeJSContext.
+        JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
+        globalObject = xpc::GetNativeForGlobal(glob);
+        MOZ_ASSERT(globalObject);
+        cx = nsContentUtils::GetSafeJSContext();
       }
-      cx = win->GetContext() ? win->GetContext()->GetNativeContext()
-                             // This happens - Removing it causes
-                             // test_bug293235.xul to go orange.
-                             : nsContentUtils::GetSafeJSContext();
-      globalObject = win;
     } else {
-      // No DOM Window. Store the global and use the SafeJSContext.
-      JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
-      globalObject = xpc::GetNativeForGlobal(glob);
-      MOZ_ASSERT(globalObject);
-      cx = nsContentUtils::GetSafeJSContext();
+      cx = workers::GetCurrentThreadJSContext();
+      globalObject = workers::GetCurrentThreadWorkerPrivate()->GlobalScope();
     }
-  } else {
-    cx = workers::GetCurrentThreadJSContext();
-    globalObject = workers::GetCurrentThreadWorkerPrivate()->GlobalScope();
-  }
 
-  // Bail out if there's no useful global. This seems to happen intermittently
-  // on gaia-ui tests, probably because nsInProcessTabChildGlobal is returning
-  // null in some kind of teardown state.
-  if (!globalObject->GetGlobalJSObject()) {
-    return;
-  }
+    // Bail out if there's no useful global. This seems to happen intermittently
+    // on gaia-ui tests, probably because nsInProcessTabChildGlobal is returning
+    // null in some kind of teardown state.
+    if (!globalObject->GetGlobalJSObject()) {
+      return;
+    }
 
-  mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
-  if (aCallback->IncumbentGlobalOrNull()) {
-    mAutoIncumbentScript.construct(aCallback->IncumbentGlobalOrNull());
-  }
+    mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
+    if (aCallback->IncumbentGlobalOrNull()) {
+      mAutoIncumbentScript.construct(aCallback->IncumbentGlobalOrNull());
+    }
 
-  // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
-  // variant), and stick it in a Rooted before it can go gray again.
-  // Nothing before us in this function can trigger a CC, so it's safe to wait
-  // until here it do the unmark. This allows us to order the following two
-  // operations _after_ the Push() above, which lets us take advantage of the
-  // JSAutoRequest embedded in the pusher.
-  //
-  // We can do this even though we're not in the right compartment yet, because
-  // Rooted<> does not care about compartments.
-  mRootedCallable.construct(cx, aCallback->Callback());
+    // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
+    // variant), and stick it in a Rooted before it can go gray again.
+    // Nothing before us in this function can trigger a CC, so it's safe to wait
+    // until here it do the unmark. This allows us to order the following two
+    // operations _after_ the Push() above, which lets us take advantage of the
+    // JSAutoRequest embedded in the pusher.
+    //
+    // We can do this even though we're not in the right compartment yet, because
+    // Rooted<> does not care about compartments.
+    mRootedCallable.construct(cx, aCallback->Callback());
+  }
 
   if (mIsMainThread) {
     // Check that it's ok to run this callback at all.

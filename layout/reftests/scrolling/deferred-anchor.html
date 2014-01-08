@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="UTF-8" />
+<script>
+var xhr = new XMLHttpRequest();
+xhr.onload = function() {
+  document.body.appendChild(document.importNode(this.responseXML.getElementsByTagName("div")[0], true));
+};
+xhr.open("get", "deferred-anchor-ref.html");
+xhr.responseType = "document";
+xhr.send();
+</script>
+</head>
+<body style="margin: 0;">
+</body>
+</html>
