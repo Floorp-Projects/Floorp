@@ -873,7 +873,7 @@ nsAppShell::Init()
 #ifdef MOZ_OMX_DECODER
         android::MediaResourceManagerService::instantiate();
 #endif
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 18 && (defined(MOZ_OMX_DECODER) || defined(MOZ_B2G_CAMERA))
         android::FakeSurfaceComposer::instantiate();
 #endif
         GonkPermissionService::instantiate();
