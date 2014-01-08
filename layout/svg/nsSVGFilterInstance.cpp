@@ -459,13 +459,15 @@ nsSVGFilterInstance::Render(gfxContext* aContext)
   }
 
   nsIntRect filterRect = mPostFilterDirtyRect.Intersect(mFilterSpaceBounds);
+  gfxMatrix ctm = GetFilterSpaceToDeviceSpaceTransform();
 
-  if (filterRect.IsEmpty()) {
+  if (filterRect.IsEmpty() || ctm.IsSingular()) {
     return NS_OK;
   }
 
+  Matrix oldDTMatrix;
   nsRefPtr<gfxASurface> resultImage;
-  RefPtr<DrawTarget> resultImageDT;
+  RefPtr<DrawTarget> dt;
   if (aContext->IsCairo()) {
     resultImage =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(filterRect.Size(),
@@ -474,20 +476,24 @@ nsSVGFilterInstance::Render(gfxContext* aContext)
       return NS_ERROR_OUT_OF_MEMORY;
 
     // Create a Cairo DrawTarget around resultImage.
-    resultImageDT =
-      gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
-        resultImage, ToIntSize(filterRect.Size()));
+    dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(
+           resultImage, ToIntSize(filterRect.Size()));
   } else {
-    resultImageDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      ToIntSize(filterRect.Size()), FORMAT_B8G8R8A8);
+    // When we have a DrawTarget-backed context, we can call DrawFilter
+    // directly on the target DrawTarget and don't need a temporary DT.
+    dt = aContext->GetDrawTarget();
+    oldDTMatrix = dt->GetTransform();
+    Matrix matrix = ToMatrix(ctm);
+    matrix.Translate(filterRect.x, filterRect.y);
+    dt->SetTransform(matrix * oldDTMatrix);
   }
 
   ComputeNeededBoxes();
 
-  rv = BuildSourceImage(resultImage, resultImageDT);
+  rv = BuildSourceImage(resultImage, dt);
   if (NS_FAILED(rv))
     return rv;
-  rv = BuildSourcePaints(resultImage, resultImageDT);
+  rv = BuildSourcePaints(resultImage, dt);
   if (NS_FAILED(rv))
     return rv;
 
@@ -495,20 +501,22 @@ nsSVGFilterInstance::Render(gfxContext* aContext)
   FilterDescription filter(mPrimitiveDescriptions, filterSpaceBounds);
 
   FilterSupport::RenderFilterDescription(
-    resultImageDT, filter, ToRect(filterRect),
+    dt, filter, ToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
     mInputImages);
 
-  RefPtr<SourceSurface> resultImageSource;
-  if (!resultImage) {
-    resultImageSource = resultImageDT->Snapshot();
+  if (resultImage) {
+    aContext->Save();
+    aContext->Multiply(ctm);
+    aContext->Translate(filterRect.TopLeft());
+    aContext->SetSource(resultImage);
+    aContext->Paint();
+    aContext->Restore();
+  } else {
+    dt->SetTransform(oldDTMatrix);
   }
-
-  gfxMatrix ctm = GetFilterSpaceToDeviceSpaceTransform();
-  nsSVGUtils::CompositeSurfaceMatrix(aContext, resultImage, resultImageSource,
-                                     filterRect.TopLeft(), ctm);
 
   return NS_OK;
 }
