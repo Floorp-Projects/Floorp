@@ -386,7 +386,10 @@ JSStackFrame::GetFilename()
   if (!mFilenameInitialized) {
     JS::FrameDescription& desc = mStackDescription->FrameAt(mIndex);
     if (desc.script()) {
-      AutoJSContext cx;
+      // This cx dance is silly, since JS_GetScriptFilename ignores
+      // its cx argument.
+      JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, desc.script());
       const char* filename = JS_GetScriptFilename(cx, desc.script());
       if (filename) {
@@ -422,7 +425,8 @@ JSStackFrame::GetFunname()
   if (!mFunnameInitialized) {
     JS::FrameDescription& desc = mStackDescription->FrameAt(mIndex);
     if (desc.fun() && desc.script()) {
-      AutoJSContext cx;
+      JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+      JSAutoRequest ar(cx);
       JSAutoCompartment ac(cx, desc.script());
       JS::Rooted<JSFunction*> fun(cx, desc.fun());
       JS::Rooted<JSString*> funid(cx, JS_GetFunctionDisplayId(fun));
