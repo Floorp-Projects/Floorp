@@ -11,9 +11,13 @@
 #social-sidebar-button {
   -moz-appearance: none;
   list-style-image: url(chrome://browser/skin/social/gear_default.png);
-  min-width: 16px;
+  border: none;
   padding: 0;
   margin: 2px;
+}
+#social-sidebar-button > .toolbarbutton-icon {
+  min-height: 16px;
+  min-width: 16px;
 }
 #social-sidebar-button:hover,
 #social-sidebar-button:hover:active {
