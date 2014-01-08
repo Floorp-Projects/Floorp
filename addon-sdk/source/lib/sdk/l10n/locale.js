@@ -75,7 +75,7 @@ exports.getPreferedLocales = function getPreferedLocales() {
  *         If null, uses getPreferedLocales() results
  * @return the best match for the currently selected locale
  *
- * Stolen from http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/XPIProvider.jsm
+ * Stolen from http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/internal/XPIProvider.jsm
  */
 exports.findClosestLocale = function findClosestLocale(aLocales, aMatchLocales) {
 
