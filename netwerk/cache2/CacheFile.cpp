@@ -1035,6 +1035,27 @@ CacheFile::GetLastModified(uint32_t *_retval)
 }
 
 nsresult
+CacheFile::SetFrecency(uint32_t aFrecency)
+{
+  CacheFileAutoLock lock(this);
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  PostWriteTimer();
+  return mMetadata->SetFrecency(aFrecency);
+}
+
+nsresult
+CacheFile::GetFrecency(uint32_t *_retval)
+{
+  CacheFileAutoLock lock(this);
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  return mMetadata->GetFrecency(_retval);
+}
+
+nsresult
 CacheFile::GetLastFetched(uint32_t *_retval)
 {
   CacheFileAutoLock lock(this);
