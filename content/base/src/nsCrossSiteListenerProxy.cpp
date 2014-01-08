@@ -82,7 +82,7 @@ LogBlockedRequest(nsIRequest* aRequest)
   // Generate the error message
   nsXPIDLString blockedMessage;
   NS_ConvertUTF8toUTF16 specUTF16(spec);
-  const PRUnichar* params[] = { specUTF16.get() };
+  const char16_t* params[] = { specUTF16.get() };
   rv = nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
                                              "CrossSiteRequestBlocked",
                                              params,
