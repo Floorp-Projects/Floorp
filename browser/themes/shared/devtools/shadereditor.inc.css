@@ -3,11 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #body {
-  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
-}
-
-#content {
-  background: #fff;
+  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
 }
 
 /* Reload and waiting notices */
@@ -49,6 +45,10 @@
   border-color: transparent;
 }
 
+.program-item {
+  padding: 2px 0px;
+}
+
 .side-menu-widget-item-checkbox {
   -moz-appearance: none;
   opacity: 0;
@@ -66,8 +66,7 @@
 
 .side-menu-widget-item-checkbox .checkbox-check {
   -moz-appearance: none;
-  background: none;
-  background-image: url(itemToggle.png);
+  background: url(itemToggle.png);
   background-repeat: no-repeat;
   background-clip: content-box;
   background-size: 32px 16px;
@@ -82,26 +81,20 @@
 }
 
 .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
-  color: #888;
+  color: rgba(255,255,255,0.4);
 }
 
 /* Shader source editors */
 
-#editors-splitter {
-  border-color: rgb(61,69,76);
-}
-
 .editor-label {
-  background: url(background-noise-toolbar.png), hsl(208,11%,27%);
+  background: url(background-noise-toolbar.png), #343c45; /* Dark toolbars */
   border-top: 1px solid #222426;
   padding: 1px 12px;
   color: #fff;
 }
 
 .editor-label[selected] {
-  background: linear-gradient(hsl(206,61%,40%), hsl(206,61%,31%)) repeat-x top left;
-  box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15),
-              inset 0 -1px 0 hsla(210,40%,83%,.05);
+  background: linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%)) repeat-x top left;
 }
 
 /* Responsive sidebar */
@@ -119,16 +112,7 @@
     background-image: none !important;
   }
 
-  .devtools-side-splitter {
-    border-top-color: transparent !important;
-  }
-
   .editor-label {
     -moz-box-ordinal-group: 0;
-  }
-
-  .editor-label:not([selected]) {
-    border-top: 1px solid hsla(210,8%,5%,.25);
-    box-shadow: inset 0 1px 0 hsla(210,40%,83%,.15);
   }
 }
