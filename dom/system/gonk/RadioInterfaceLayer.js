@@ -118,6 +118,11 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
   "RIL:GetVoicePrivacyMode"
 ];
 
+const RIL_IPC_MOBILENETWORK_MSG_NAMES = [
+  "RIL:GetLastKnownNetwork",
+  "RIL:GetLastKnownHomeNetwork"
+];
+
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
@@ -235,6 +240,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
         ppmm.addMessageListener(msgname, this);
       }
+      for (let msgname of RIL_IPC_MOBILENETWORK_MSG_NAMES) {
+        ppmm.addMessageListener(msgname, this);
+      }
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.addMessageListener(msgName, this);
       }
@@ -249,6 +257,9 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
     _unregisterMessageListeners: function _unregisterMessageListeners() {
       ppmm.removeMessageListener("child-process-shutdown", this);
       for (let msgname of RIL_IPC_MOBILECONNECTION_MSG_NAMES) {
+        ppmm.removeMessageListener(msgname, this);
+      }
+      for (let msgname of RIL_IPC_MOBILENETWORK_MSG_NAMES) {
         ppmm.removeMessageListener(msgname, this);
       }
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
@@ -372,6 +383,14 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
           if (DEBUG) {
             debug("MobileConnection message " + msg.name +
                   " from a content process with no 'mobileconnection' privileges.");
+          }
+          return null;
+        }
+      } else if (RIL_IPC_MOBILENETWORK_MSG_NAMES.indexOf(msg.name) != -1) {
+        if (!msg.target.assertPermission("mobilenetwork")) {
+          if (DEBUG) {
+            debug("MobileNetwork message " + msg.name +
+                  " from a content process with no 'mobilenetwork' privileges.");
           }
           return null;
         }
@@ -1217,6 +1236,12 @@ RadioInterface.prototype = {
       case "RIL:GetRilContext":
         // This message is sync.
         return this.rilContext;
+      case "RIL:GetLastKnownNetwork":
+        // This message is sync.
+        return this._lastKnownNetwork;
+      case "RIL:GetLastKnownHomeNetwork":
+        // This message is sync.
+        return this._lastKnownHomeNetwork;
       case "RIL:GetAvailableNetworks":
         this.workerMessenger.sendWithIPCMessage(msg, "getAvailableNetworks");
         break;
@@ -1824,10 +1849,8 @@ RadioInterface.prototype = {
 
       // Update lastKnownNetwork
       if (message.mcc && message.mnc) {
-        try {
-          Services.prefs.setCharPref("ril.lastKnownNetwork",
-                                     message.mcc + "-" + message.mnc);
-        } catch (e) {}
+        this._lastKnownNetwork = message.mcc + "-" + message.mnc;
+        if (DEBUG) this.debug("_lastKnownNetwork: " + this._lastKnownNetwork);
       }
 
       // If the voice is unregistered, no need to send RIL:VoiceInfoChanged.
@@ -2529,10 +2552,8 @@ RadioInterface.prototype = {
 
     // Update lastKnownHomeNetwork.
     if (message.mcc && message.mnc) {
-      try {
-        Services.prefs.setCharPref("ril.lastKnownHomeNetwork",
-                                   message.mcc + "-" + message.mnc);
-      } catch (e) {}
+      this._lastKnownHomeNetwork = message.mcc + "-" + message.mnc;
+      this.debug("_lastKnownHomeNetwork: " + this._lastKnownHomeNetwork);
     }
 
     // If spn becomes available, we should check roaming again.
@@ -2659,6 +2680,12 @@ RadioInterface.prototype = {
 
   // Cell Broadcast settings values.
   _cellBroadcastSearchListStr: null,
+
+  // Operator's mcc-mnc.
+  _lastKnownNetwork: null,
+
+  // ICC's mcc-mnc.
+  _lastKnownHomeNetwork: null,
 
   handleSettingsChange: function handleSettingsChange(aName, aResult, aMessage) {
     // Don't allow any content processes to modify the setting
