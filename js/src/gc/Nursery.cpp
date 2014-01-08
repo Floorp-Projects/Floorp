@@ -70,14 +70,14 @@ js::Nursery::init()
 
     JSRuntime *rt = runtime();
     rt->gcNurseryStart_ = uintptr_t(heap);
+    currentStart_ = start();
     rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
-    setCurrentChunk(0);
 #ifdef JS_GC_ZEAL
     JS_POISON(heap, FreshNursery, NurserySize);
 #endif
-    for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).trailer.runtime = rt;
+    setCurrentChunk(0);
+    updateDecommittedRegion();
 
 #ifdef PROFILE_NURSERY
     char *env = getenv("JS_MINORGC_TIME");
@@ -117,6 +117,7 @@ js::Nursery::disable()
     JS_ASSERT(isEmpty());
     numActiveChunks_ = 0;
     currentEnd_ = 0;
+    updateDecommittedRegion();
 }
 
 bool
@@ -905,15 +906,14 @@ js::Nursery::sweep(JSRuntime *rt)
         /* Only reset the alloc point when we are close to the end. */
         if (currentChunk_ + 1 == NumNurseryChunks)
             setCurrentChunk(0);
-
-        /* Set current start position for isEmpty checks. */
-        currentStart_ = position();
-
-        return;
-    }
+    } else
 #endif
+    {
+        setCurrentChunk(0);
+    }
 
-    setCurrentChunk(0);
+    /* Set current start position for isEmpty checks. */
+    currentStart_ = position();
 }
 
 void
@@ -926,6 +926,7 @@ void
 js::Nursery::shrinkAllocableSpace()
 {
     numActiveChunks_ = Max(numActiveChunks_ - 1, 1);
+    updateDecommittedRegion();
 }
 
 #endif /* JSGC_GENERATIONAL */
