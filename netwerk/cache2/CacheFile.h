@@ -170,6 +170,7 @@ private:
   nsRefPtr<CacheFileMetadata>  mMetadata;
   nsCOMPtr<CacheFileListener>  mListener;
   nsRefPtr<MetadataWriteTimer> mTimer;
+  nsCOMPtr<CacheFileIOListener>   mDoomAfterOpenListener;
 
   nsRefPtrHashtable<nsUint32HashKey, CacheFileChunk> mChunks;
   nsClassHashtable<nsUint32HashKey, ChunkListeners> mChunkListeners;
