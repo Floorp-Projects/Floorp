@@ -39,7 +39,6 @@ gpointer SendThread(gpointer args);
 gboolean WindowDeleted(GtkWidget* window,
                        GdkEvent* event,
                        gpointer userData);
-gboolean check_escape(GtkWidget* window, GdkEventKey* event, gpointer data);
 void SubmitReportChecked(GtkButton* sender, gpointer userData);
 void IncludeURLClicked(GtkButton* sender, gpointer userData);
 void CloseClicked(GtkButton* button,
