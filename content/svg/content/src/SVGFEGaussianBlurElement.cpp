@@ -68,6 +68,7 @@ static const float kMaxStdDeviation = 500;
 FilterPrimitiveDescription
 SVGFEGaussianBlurElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                   const IntRect& aFilterSubregion,
+                                                  const nsTArray<bool>& aInputsAreTainted,
                                                   nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   float stdX = aInstance->GetPrimitiveNumber(SVGContentUtils::X,

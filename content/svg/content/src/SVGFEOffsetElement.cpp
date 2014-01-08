@@ -72,6 +72,7 @@ SVGFEOffsetElement::GetOffset(const nsSVGFilterInstance& aInstance)
 FilterPrimitiveDescription
 SVGFEOffsetElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                             const IntRect& aFilterSubregion,
+                                            const nsTArray<bool>& aInputsAreTainted,
                                             nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(FilterPrimitiveDescription::eOffset);
