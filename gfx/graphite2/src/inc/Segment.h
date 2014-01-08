@@ -39,6 +39,7 @@ of the License or (at your option) any later version.
 #include "inc/Slot.h"
 #include "inc/Position.h"
 #include "inc/List.h"
+#include "inc/Bidi.h"
 
 #define MAX_SEG_GROWTH_FACTOR  256
 
@@ -116,7 +117,7 @@ public:
     SlotJustify *newJustify();
     void freeJustify(SlotJustify *aJustify);
     Position positionSlots(const Font *font, Slot *first=0, Slot *last=0);
-    void associateChars();
+    void associateChars(int offset, int num);
     void linkClusters(Slot *first, Slot *last);
     uint16 getClassGlyph(uint16 cid, uint16 offset) const { return m_silf->getClassGlyph(cid, offset); }
     uint16 findClassIndex(uint16 cid, uint16 gid) const { return m_silf->findClassIndex(cid, gid); }
@@ -144,13 +145,12 @@ public:
     CLASS_NEW_DELETE
 
 public:       //only used by: GrSegment* makeAndInitialize(const GrFont *font, const GrFace *face, uint32 script, const FeaturesHandle& pFeats/*must not be IsNull*/, encform enc, const void* pStart, size_t nChars, int dir);
-    void read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void*pStart, size_t nChars);
+    bool read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void*pStart, size_t nChars);
     void prepare_pos(const Font *font);
     void finalise(const Font *font);
     float justify(Slot *pSlot, const Font *font, float width, enum justFlags flags, Slot *pFirst, Slot *pLast);
   
 private:
-    Rect            m_bbox;             // ink box of the segment
     Position        m_advance;          // whole segment advance
     SlotRope        m_slots;            // Vector of slot buffers
     AttributeRope   m_userAttrs;        // Vector of userAttrs buffers
@@ -176,10 +176,10 @@ private:
 inline
 void Segment::finalise(const Font *font)
 {
-	if (!m_first) return;
+    if (!m_first) return;
 
     m_advance = positionSlots(font);
-    associateChars();
+    associateChars(0, m_numCharinfo);
     linkClusters(m_first, m_last);
 }
 

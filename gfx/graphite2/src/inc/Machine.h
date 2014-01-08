@@ -147,7 +147,7 @@ public:
     CLASS_NEW_DELETE;
 
     SlotMap   & slotMap() const throw();
-    status_t	status() const throw();
+    status_t    status() const throw();
     operator bool () const throw();
 
 private:
@@ -157,18 +157,18 @@ private:
 
     SlotMap       & _map;
     stack_t         _stack[STACK_MAX + 2*STACK_GUARD];
-    status_t		_status;
+    status_t        _status;
 };
 
 inline Machine::Machine(SlotMap & map) throw()
 : _map(map), _status(finished)
 {
-	// Initialise stack guard +1 entries as the stack pointer points to the
-	//  current top of stack, hence the first push will never write entry 0.
-	// Initialising the guard space like this is unnecessary and is only
-	//  done to keep valgrind happy during fuzz testing.  Hopefully loop
-	//  unrolling will flatten this.
-	for (size_t n = STACK_GUARD + 1; n; --n)  _stack[n-1] = 0;
+    // Initialise stack guard +1 entries as the stack pointer points to the
+    //  current top of stack, hence the first push will never write entry 0.
+    // Initialising the guard space like this is unnecessary and is only
+    //  done to keep valgrind happy during fuzz testing.  Hopefully loop
+    //  unrolling will flatten this.
+    for (size_t n = STACK_GUARD + 1; n; --n)  _stack[n-1] = 0;
 }
 
 inline SlotMap& Machine::slotMap() const throw()
