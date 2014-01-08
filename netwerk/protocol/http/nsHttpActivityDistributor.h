@@ -10,6 +10,7 @@
 #include "nsProxyRelease.h"
 #include "mozilla/Mutex.h"
 
+namespace mozilla { namespace net {
 
 class nsHttpActivityDistributor : public nsIHttpActivityDistributor
 {
@@ -24,7 +25,9 @@ public:
 
 protected:
     ObserverArray mObservers;
-    mozilla::Mutex mLock;
+    Mutex mLock;
 };
+
+}} // namespace mozilla::net
 
 #endif // nsHttpActivityDistributor_h__

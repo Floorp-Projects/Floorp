@@ -2792,7 +2792,15 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
     let line = lineResultsItem.instance.line;
 
     DebuggerView.setEditorLocation(url, line + 1, { noDebug: true });
-    DebuggerView.editor.extendSelection(lineResultsItem.lineData.range);
+
+    let range = lineResultsItem.lineData.range;
+    let cursor = DebuggerView.editor.getOffset({ line: line, ch: 0 });
+    let [ anchor, head ] = DebuggerView.editor.getPosition(
+      cursor + range.start,
+      cursor + range.start + range.length
+    );
+
+    DebuggerView.editor.setSelection(anchor, head);
   },
 
   /**

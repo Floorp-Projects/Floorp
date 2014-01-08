@@ -32,6 +32,7 @@ EXPORTS += [
     'GLBlitTextureImageHelper.h',
     'GLConsts.h',
     'GLContext.h',
+    'GLContextEGL.h',
     'GLContextProvider.h',
     'GLContextProviderImpl.h',
     'GLContextSymbols.h',
@@ -57,11 +58,15 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_X11']:
-    EXPORTS += ['GLXLibrary.h']
+    EXPORTS += [
+        'GLContextGLX.h',
+        'GLXLibrary.h',
+    ]
 
 # Win32 is a special snowflake, for ANGLE
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
+        'GLContextWGL.h',
         'SharedSurfaceANGLE.h',
         'WGLLibrary.h',
     ]
@@ -87,6 +92,7 @@ if gl_provider == 'CGL':
         "TextureImageCGL.mm"
     ]
     EXPORTS += [
+        'GLContextCGL.h',
         'SharedSurfaceIO.h',
     ]
     # SharedSurfaceIO.cpp includes MacIOSurface.h which include Mac headers
