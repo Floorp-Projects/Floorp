@@ -54,6 +54,11 @@ MacIOSurfaceTextureSourceBasic::GetSurface()
   return mSourceSurface;
 }
 
+void
+MacIOSurfaceTextureSourceBasic::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<BasicCompositor*>(aCompositor);
+}
 
 bool
 MacIOSurfaceTextureHostBasic::Lock()
