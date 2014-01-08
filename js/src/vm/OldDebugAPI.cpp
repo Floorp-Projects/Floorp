@@ -934,10 +934,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
     Vector<FrameDescription> frames(cx);
 
     for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
-        FrameDescription desc;
-        desc.script = i.script();
-        desc.lineno = PCToLineNumber(i.script(), i.pc());
-        desc.fun = i.maybeCallee();
+        FrameDescription desc(i.script(), i.maybeCallee(), i.pc());
         if (!frames.append(desc))
             return nullptr;
         if (frames.length() == maxFrames)

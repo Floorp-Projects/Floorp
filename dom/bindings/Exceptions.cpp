@@ -359,16 +359,16 @@ JSStackFrame::CreateStack(JSContext* cx)
   for (size_t i = 0; i < desc->nframes && self; i++) {
     self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
 
-    JSAutoCompartment ac(cx, desc->frames[i].script);
-    const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script);
+    JSAutoCompartment ac(cx, desc->frames[i].script());
+    const char* filename = JS_GetScriptFilename(cx, desc->frames[i].script());
     if (filename) {
       self->mFilename =
         (char*)nsMemory::Clone(filename, sizeof(char)*(strlen(filename)+1));
     }
 
-    self->mLineno = desc->frames[i].lineno;
+    self->mLineno = desc->frames[i].lineno();
 
-    JSFunction* fun = desc->frames[i].fun;
+    JSFunction* fun = desc->frames[i].fun();
     if (fun) {
       JS::Rooted<JSString*> funid(cx, JS_GetFunctionDisplayId(fun));
       if (funid) {
