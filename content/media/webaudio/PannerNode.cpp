@@ -395,7 +395,7 @@ PannerNodeEngine::DistanceAndConeGain(AudioChunk* aChunk, float aGain)
   float* samples = static_cast<float*>(const_cast<void*>(*aChunk->mChannelData.Elements()));
   uint32_t channelCount = aChunk->mChannelData.Length();
 
-  AudioBufferInPlaceScale(samples, channelCount, aGain);
+  AudioBlockInPlaceScale(samples, channelCount, aGain);
 }
 
 // This algorithm is specified in the webaudio spec.

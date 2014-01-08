@@ -49,7 +49,7 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
 
     if (!m_directMode) {
         m_fftKernel = new FFTBlock(fftSize);
-        m_fftKernel->PerformPaddedFFT(impulseResponse + stageOffset, stageLength);
+        m_fftKernel->PadAndMakeScaledDFT(impulseResponse + stageOffset, stageLength);
         m_fftConvolver = new FFTConvolver(fftSize);
     } else {
         m_directKernel.SetLength(fftSize / 2);
