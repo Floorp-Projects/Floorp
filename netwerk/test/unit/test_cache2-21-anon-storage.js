@@ -2,12 +2,12 @@ Components.utils.import('resource://gre/modules/LoadContextInfo.jsm');
 
 function run_test()
 {
+  do_get_profile();
+
   if (!newCacheBackEndUsed()) {
     do_check_true(true, "This test doesn't run when the old cache back end is used since the behavior is different");
     return;
   }
-
-  do_get_profile();
 
   // Create and check an entry anon disk storage
   asyncOpenCacheEntry("http://anon1/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, LoadContextInfo.anonymous,
