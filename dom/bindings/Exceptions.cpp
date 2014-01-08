@@ -203,6 +203,62 @@ GetCurrentJSStack()
 
 namespace exceptions {
 
+class StackDescriptionOwner {
+public:
+  StackDescriptionOwner(JS::StackDescription* aDescription)
+    : mDescription(aDescription)
+  {
+    mozilla::HoldJSObjects(this);
+  }
+
+  ~StackDescriptionOwner()
+  {
+    // Make sure to set mDescription to null before calling DropJSObjects, since
+    // in debug builds DropJSObjects try to trace us and we don't want to trace
+    // a dead StackDescription.
+    if (mDescription) {
+      JS::FreeStackDescription(nullptr, mDescription);
+      mDescription = nullptr;
+    }
+    mozilla::DropJSObjects(this);
+  }
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(StackDescriptionOwner)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(StackDescriptionOwner)
+
+  JS::FrameDescription& FrameAt(size_t aIndex)
+  {
+    MOZ_ASSERT(aIndex < mDescription->nframes);
+    return mDescription->frames[aIndex];
+  }
+
+private:
+  JS::StackDescription* mDescription;
+};
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(StackDescriptionOwner, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(StackDescriptionOwner, Release)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(StackDescriptionOwner)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StackDescriptionOwner)
+  if (tmp->mDescription) {
+    JS::FreeStackDescription(nullptr, tmp->mDescription);
+    tmp->mDescription = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StackDescriptionOwner)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(StackDescriptionOwner)
+  JS::StackDescription* desc = tmp->mDescription;
+  if (tmp->mDescription) {
+    for (size_t i = 0; i < desc->nframes; ++i) {
+      NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDescription->frames[i].script());
+      NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mDescription->frames[i].fun());
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 class JSStackFrame : public nsIStackFrame
 {
 public:
@@ -356,6 +412,8 @@ JSStackFrame::CreateStack(JSContext* cx)
     return nullptr;
   }
 
+  nsRefPtr<StackDescriptionOwner> descOwner = new StackDescriptionOwner(desc);
+
   for (size_t i = 0; i < desc->nframes && self; i++) {
     self->mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
 
@@ -387,8 +445,6 @@ JSStackFrame::CreateStack(JSContext* cx)
     self->mCaller = frame;
     self.swap(frame);
   }
-
-  JS::FreeStackDescription(cx, desc);
 
   return first.forget();
 }

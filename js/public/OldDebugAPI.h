@@ -48,17 +48,17 @@ class FrameDescription
         return lineno_;
     }
 
-    JSScript *script() const {
+    Heap<JSScript*> &script() {
         return script_;
     }
 
-    JSFunction *fun() const {
+    Heap<JSFunction*> &fun() {
         return fun_;
     }
 
   private:
-    JSScript *script_;
-    JSFunction *fun_;
+    Heap<JSScript*> script_;
+    Heap<JSFunction*> fun_;
     jsbytecode *pc_;
     unsigned lineno_;
     bool linenoComputed;
