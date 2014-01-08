@@ -16,8 +16,7 @@ using namespace mozilla::net;
 nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &host, int32_t port,
                                            nsProxyInfo* proxyInfo,
                                            bool usingSSL)
-    : mRef(0)
-    , mProxyInfo(proxyInfo)
+    : mProxyInfo(proxyInfo)
     , mUsingSSL(usingSSL)
     , mUsingConnect(false)
 {
