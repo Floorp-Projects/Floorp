@@ -15,6 +15,7 @@
 
 #include "ds/BitArray.h"
 #include "gc/Heap.h"
+#include "gc/Memory.h"
 #include "js/GCAPI.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
@@ -29,6 +30,7 @@ namespace js {
 
 class ObjectElements;
 class HeapSlot;
+void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 
 namespace gc {
 class Cell;
@@ -123,27 +125,8 @@ class Nursery
     /* Forward a slots/elements pointer stored in an Ion frame. */
     void forwardBufferPointer(HeapSlot **pSlotsElems);
 
-    size_t sizeOfHeap() { return start() ? NurserySize : 0; }
-
-#ifdef JS_GC_ZEAL
-    /*
-     * In debug and zeal builds, these bytes indicate the state of an unused
-     * segment of nursery-allocated memory.
-     */
-    static const uint8_t FreshNursery = 0x2a;
-    static const uint8_t SweptNursery = 0x2b;
-    static const uint8_t AllocatedThing = 0x2c;
-    void enterZealMode() {
-        if (isEnabled())
-            numActiveChunks_ = NumNurseryChunks;
-    }
-    void leaveZealMode() {
-        if (isEnabled()) {
-            JS_ASSERT(isEmpty());
-            setCurrentChunk(0);
-        }
-    }
-#endif
+    size_t sizeOfHeapCommitted() { return numActiveChunks_ * gc::ChunkSize; }
+    size_t sizeOfHeapDecommitted() { return (NumNurseryChunks - numActiveChunks_) * gc::ChunkSize; }
 
   private:
     /*
@@ -156,7 +139,7 @@ class Nursery
     /* Pointer to the first unallocated byte in the nursery. */
     uintptr_t position_;
 
-    /* Pointer to the logic start of the Nursery. */
+    /* Pointer to the logical start of the Nursery. */
     uintptr_t currentStart_;
 
     /* Pointer to the last byte of space in the current chunk. */
@@ -211,8 +194,18 @@ class Nursery
         JS_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
         position_ = chunk(chunkno).start();
-        currentStart_ = chunk(0).start();
         currentEnd_ = chunk(chunkno).end();
+        chunk(chunkno).trailer.runtime = runtime();
+    }
+
+    void updateDecommittedRegion() {
+#ifndef JS_GC_ZEAL
+        if (numActiveChunks_ < NumNurseryChunks) {
+            uintptr_t decommitStart = chunk(numActiveChunks_).start();
+            JS_ASSERT(decommitStart == AlignBytes(decommitStart, 1 << 20));
+            gc::MarkPagesUnused(runtime(), (void *)decommitStart, heapEnd() - decommitStart);
+        }
+#endif
     }
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
@@ -284,11 +277,36 @@ class Nursery
 
     static void MinorGCCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
+#ifdef JS_GC_ZEAL
+    /*
+     * In debug and zeal builds, these bytes indicate the state of an unused
+     * segment of nursery-allocated memory.
+     */
+    static const uint8_t FreshNursery = 0x2a;
+    static const uint8_t SweptNursery = 0x2b;
+    static const uint8_t AllocatedThing = 0x2c;
+    void enterZealMode() {
+        if (isEnabled())
+            numActiveChunks_ = NumNurseryChunks;
+    }
+    void leaveZealMode() {
+        if (isEnabled()) {
+            JS_ASSERT(isEmpty());
+            setCurrentChunk(0);
+            currentStart_ = start();
+        }
+    }
+#else
+    void enterZealMode() {}
+    void leaveZealMode() {}
+#endif
+
     friend class gc::MinorCollectionTracer;
     friend class jit::CodeGenerator;
     friend class jit::MacroAssembler;
     friend class jit::ICStubCompiler;
     friend class jit::BaselineCompiler;
+    friend void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 };
 
 } /* namespace js */

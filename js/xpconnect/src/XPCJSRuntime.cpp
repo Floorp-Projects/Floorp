@@ -2347,9 +2347,9 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         KIND_HEAP, rtStats.runtime.gc.marker,
         "The GC mark stack and gray roots.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery"),
-        KIND_NONHEAP, rtStats.runtime.gc.nursery,
-        "The GC nursery.");
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery-committed"),
+        KIND_NONHEAP, rtStats.runtime.gc.nurseryCommitted,
+        "Memory being used by the GC's nursery.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
         KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
@@ -2391,6 +2391,11 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     REPORT_GC_BYTES(rtPath2 + NS_LITERAL_CSTRING("gc-heap/decommitted-arenas"),
         rtStats.gcHeapDecommittedArenas,
         "GC arenas in non-empty chunks that is decommitted, i.e. it takes up "
+        "address space but no physical memory or swap space.");
+
+    REPORT_GC_BYTES(rtPath2 + NS_LITERAL_CSTRING("runtime/gc/nursery-decommitted"),
+        rtStats.runtime.gc.nurseryDecommitted,
+        "Memory allocated to the GC's nursery this is decommitted, i.e. it takes up "
         "address space but no physical memory or swap space.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),

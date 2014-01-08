@@ -70,14 +70,14 @@ js::Nursery::init()
 
     JSRuntime *rt = runtime();
     rt->gcNurseryStart_ = uintptr_t(heap);
+    currentStart_ = start();
     rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
-    setCurrentChunk(0);
 #ifdef JS_GC_ZEAL
     JS_POISON(heap, FreshNursery, NurserySize);
 #endif
-    for (int i = 0; i < NumNurseryChunks; ++i)
-        chunk(i).trailer.runtime = rt;
+    setCurrentChunk(0);
+    updateDecommittedRegion();
 
 #ifdef PROFILE_NURSERY
     char *env = getenv("JS_MINORGC_TIME");
@@ -103,6 +103,7 @@ js::Nursery::enable()
         return;
     numActiveChunks_ = 1;
     setCurrentChunk(0);
+    currentStart_ = position();
 #ifdef JS_GC_ZEAL
     if (runtime()->gcZeal_ == ZealGenerationalGCValue)
         enterZealMode();
@@ -112,11 +113,12 @@ js::Nursery::enable()
 void
 js::Nursery::disable()
 {
+    JS_ASSERT(isEmpty());
     if (!isEnabled())
         return;
-    JS_ASSERT(isEmpty());
     numActiveChunks_ = 0;
     currentEnd_ = 0;
+    updateDecommittedRegion();
 }
 
 bool
@@ -168,6 +170,7 @@ js::Nursery::allocate(size_t size)
 {
     JS_ASSERT(isEnabled());
     JS_ASSERT(!runtime()->isHeapBusy());
+    JS_ASSERT(position() >= currentStart_);
 
     if (position() + size > currentEnd()) {
         if (currentChunk_ + 1 == numActiveChunks_)
@@ -862,33 +865,35 @@ js::Nursery::sweep(JSRuntime *rt)
         chunk(i).trailer.runtime = runtime();
 
     if (rt->gcZeal_ == ZealGenerationalGCValue) {
-        /* Undo any grow or shrink the collection may have done. */
-        numActiveChunks_ = NumNurseryChunks;
+        MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
 
         /* Only reset the alloc point when we are close to the end. */
         if (currentChunk_ + 1 == NumNurseryChunks)
             setCurrentChunk(0);
-
-        /* Set current start position for isEmpty checks. */
-        currentStart_ = position();
-
-        return;
-    }
+    } else
 #endif
+    {
+        setCurrentChunk(0);
+    }
 
-    setCurrentChunk(0);
+    /* Set current start position for isEmpty checks. */
+    currentStart_ = position();
 }
 
 void
 js::Nursery::growAllocableSpace()
 {
+    MOZ_ASSERT_IF(runtime()->gcZeal_ == ZealGenerationalGCValue, numActiveChunks_ == NumNurseryChunks);
     numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
 }
 
 void
 js::Nursery::shrinkAllocableSpace()
 {
+    if (runtime()->gcZeal_ == ZealGenerationalGCValue)
+        return;
     numActiveChunks_ = Max(numActiveChunks_ - 1, 1);
+    updateDecommittedRegion();
 }
 
 #endif /* JSGC_GENERATIONAL */
