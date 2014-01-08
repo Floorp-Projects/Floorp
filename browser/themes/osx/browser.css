@@ -467,6 +467,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(18px, 630px, 36px, 612px);
   }
 
+  #bookmarks-menu-button[cui-areatype="toolbar"][open] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+    -moz-image-region: rect(36px, 630px, 54px, 612px);
+  }
+
   #history-panelmenu@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 180px, 36px, 162px);
   }
@@ -475,7 +479,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 180px, 54px, 162px);
   }
 
-  #downloads-indicator@toolbarButtonPressed@,
   #downloads-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 198px, 36px, 180px);
   }
@@ -671,6 +674,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 1260px, 72px, 1224px);
   }
 
+  #bookmarks-menu-button[cui-areatype="toolbar"][open] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+    -moz-image-region: rect(72px, 1260px, 108px, 1224px);
+  }
+
   #history-panelmenu[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 360px, 36px, 324px);
   }
@@ -683,12 +690,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(72px, 360px, 108px, 324px);
   }
 
-  #downloads-indicator[cui-areatype="toolbar"],
   #downloads-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 396px, 36px, 360px);
   }
 
-  #downloads-indicator[cui-areatype="toolbar"]:hover:active:not([disabled="true"]),
   #downloads-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 396px, 72px, 360px);
   }
@@ -941,7 +946,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   }
 
   #downloads-button[cui-areatype="menu-panel"],
-  #downloads-indicator[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #downloads-button {
     -moz-image-region: rect(0px, 512px, 64px, 448px);
   }
@@ -1916,6 +1920,11 @@ richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-
 }
 
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  width: 18px;
+  height: 18px;
+}
+
+#bookmarks-menu-button[cui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   width: 16px;
   height: 16px;
 }
