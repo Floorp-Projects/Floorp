@@ -35,7 +35,7 @@ interface nsIMobileConnectionListener : nsISupports
  * XPCOM component (in the content process) that provides the mobile
  * network information.
  */
-[scriptable, uuid(0e027520-dd87-461d-88a6-c3e46369c03c)]
+[scriptable, uuid(55b8d918-8631-4d72-a9d7-f8c9536d6e6f)]
 interface nsIMobileConnectionProvider : nsISupports
 {
   /**
@@ -48,6 +48,15 @@ interface nsIMobileConnectionProvider : nsISupports
   void unregisterMobileConnectionMsg(in unsigned long clientId,
                                      in nsIMobileConnectionListener listener);
 
+  /**
+   * These two fields require the 'mobilenetwork' permission.
+   */
+  DOMString getLastKnownNetwork(in unsigned long clientId);
+  DOMString getLastKnownHomeNetwork(in unsigned long clientId);
+
+  /**
+   * All fields below require the 'mobileconnection' permission.
+   */
   nsIDOMMozMobileConnectionInfo getVoiceConnectionInfo(in unsigned long clientId);
   nsIDOMMozMobileConnectionInfo getDataConnectionInfo(in unsigned long clientId);
   DOMString getIccId(in unsigned long clientId);
