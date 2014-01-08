@@ -136,6 +136,21 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
   return RoundedToInt(region);
 }
 
+void
+nsSVGFilterInstance::GetInputsAreTainted(const nsTArray<int32_t>& aInputIndices,
+                                         nsTArray<bool>& aOutInputsAreTainted)
+{
+  for (uint32_t i = 0; i < aInputIndices.Length(); i++) {
+    int32_t inputIndex = aInputIndices[i];
+    if (inputIndex < 0) {
+      // SourceGraphic, SourceAlpha, FillPaint and StrokePaint are tainted.
+      aOutInputsAreTainted.AppendElement(true);
+    } else {
+      aOutInputsAreTainted.AppendElement(mPrimitiveDescriptions[inputIndex].IsTainted());
+    }
+  }
+}
+
 static nsresult
 GetSourceIndices(nsSVGFE* aFilterElement,
                  int32_t aCurrentIndex,
@@ -194,6 +209,9 @@ nsSVGFilterInstance::BuildPrimitives()
   // Maps source image name to source index.
   nsDataHashtable<nsStringHashKey, int32_t> imageTable(10);
 
+  // The principal that we check principals of any loaded images against.
+  nsCOMPtr<nsIPrincipal> principal = mTargetFrame->GetContent()->NodePrincipal();
+
   for (uint32_t i = 0; i < primitives.Length(); ++i) {
     nsSVGFE* filter = primitives[i];
 
@@ -206,9 +224,13 @@ nsSVGFilterInstance::BuildPrimitives()
     IntRect primitiveSubregion =
       ComputeFilterPrimitiveSubregion(filter, sourceIndices);
 
-    FilterPrimitiveDescription descr =
-      filter->GetPrimitiveDescription(this, primitiveSubregion, mInputImages);
+    nsTArray<bool> sourcesAreTainted;
+    GetInputsAreTainted(sourceIndices, sourcesAreTainted);
 
+    FilterPrimitiveDescription descr =
+      filter->GetPrimitiveDescription(this, primitiveSubregion, sourcesAreTainted, mInputImages);
+
+    descr.SetIsTainted(filter->OutputIsTainted(sourcesAreTainted, principal));
     descr.SetPrimitiveSubregion(primitiveSubregion);
 
     for (uint32_t j = 0; j < sourceIndices.Length(); j++) {
