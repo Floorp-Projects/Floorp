@@ -319,6 +319,23 @@ class ForkJoinSlice : public ThreadSafeContext
     uint32_t maxWorkerId;
 #endif
 
+    // When we run a par operation like mapPar, we create an out pointer
+    // into a specific region of the destination buffer. Even though the
+    // destination buffer is not thread-local, it is permissible to write into
+    // it via the handles provided. These two fields identify the memory
+    // region where writes are allowed so that the write guards can test for
+    // it.
+    //
+    // Note: we only permit writes into the *specific region* that the user
+    // is supposed to write. Normally, they only have access to this region
+    // anyhow. But due to sequential fallback it is possible for handles into
+    // other regions to escape into global variables in the sequential
+    // execution and then get accessed by later parallel sections. Thus we
+    // must be careful and ensure that the write is going through a handle
+    // into the correct *region* of the buffer.
+    uint8_t *targetRegionStart;
+    uint8_t *targetRegionEnd;
+
     ForkJoinSlice(PerThreadData *perThreadData, uint16_t sliceId, uint32_t workerId,
                   Allocator *allocator, ForkJoinShared *shared,
                   ParallelBailoutRecord *bailoutRecord);
@@ -432,6 +449,9 @@ class LockedJSContext
 bool InExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
+
+bool intrinsic_SetForkJoinTargetRegion(JSContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo intrinsic_SetForkJoinTargetRegionInfo;
 
 ///////////////////////////////////////////////////////////////////////////
 // Debug Spew
