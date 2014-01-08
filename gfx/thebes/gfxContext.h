@@ -48,10 +48,19 @@ public:
 
     /**
      * Initialize this context from a DrawTarget.
+     * Strips any transform from aTarget.
+     * aTarget will be flushed in the gfxContext's destructor.
      */
     gfxContext(mozilla::gfx::DrawTarget *aTarget);
 
     ~gfxContext();
+
+    /**
+     * Create a new gfxContext wrapping aTarget and preserving aTarget's
+     * transform. Note that the transform is moved from aTarget to the resulting
+     * gfxContext, aTarget will no longer have its transform.
+     */
+    static already_AddRefed<gfxContext> ContextForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
 
     /**
      * Return the surface that this gfxContext was created with
