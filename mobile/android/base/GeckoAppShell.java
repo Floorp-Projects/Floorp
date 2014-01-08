@@ -19,6 +19,7 @@ import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
@@ -97,7 +98,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Proxy;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -2663,78 +2663,11 @@ public class GeckoAppShell
         return false;
     }
 
-    // Holds mappings from hostnames to URIs.
-    // We only use this for HTTP and HTTPS on default ports (-1), because it's
-    // simpler to do so while addressing most uses.
-    private static LruCache<String, URI> httpURIs = new LruCache<String, URI>(10);
-    private static LruCache<String, URI> httpsURIs = new LruCache<String, URI>(10);
-
-    private static URI getAndCacheURIByParts(String scheme, String host, LruCache<String, URI> cache) {
-        URI uri = cache.get(host);
-        if (uri != null) {
-            return uri;
-        }
-
-        try {
-            uri = new URI(scheme, null, host, -1, null, null, null);
-        } catch (java.net.URISyntaxException uriEx) {
-            Log.d("GeckoProxy", "Failed to create URI from parts.", uriEx);
-            return null;
-        }
-
-        cache.put(host, uri);
-        return uri;
-    }
-
-    private static URI getURIByParts(String scheme, String host, int port) {
-        if (port == -1) {
-            if (scheme.equals("http")) {
-                return getAndCacheURIByParts("http", host, httpURIs);
-            } else if (scheme.equals("https")) {
-                return getAndCacheURIByParts("https", host, httpsURIs);
-            }
-        }
-
-        try {
-            return new URI(scheme, null, host, port, null, null, null);
-        } catch (java.net.URISyntaxException uriEx) {
-            Log.d("GeckoProxy", "Failed to create URI from parts.", uriEx);
-        }
-
-        return null;
-    }
-
     @WrapElementForJNI(stubName = "GetProxyForURIWrapper")
     public static String getProxyForURI(String spec, String scheme, String host, int port) {
-        final ProxySelector ps;
-        try {
-            // This is cheap -- just a SecurityManager check and a static
-            // access inside ProxySelector.
-            ps = ProxySelector.getDefault();
-        } catch (SecurityException ex) {
-            Log.w(LOGTAG, "Not allowed to use default ProxySelector.");
-            return "DIRECT";
-        }
+        final ProxySelector ps = new ProxySelector();
 
-        if (ps == null) {
-            return "DIRECT";
-        }
-
-        // We don't use the whole spec because parsing a URI from a string
-        // is expensive, and the stock Android proxy behavior looks only at
-        // the scheme and host.
-        URI uri = getURIByParts(scheme, host, port);
-
-        if (uri == null) {
-            return "DIRECT";
-        }
-
-        List<Proxy> proxies = ps.select(uri);
-        if (proxies == null || proxies.isEmpty()) {
-            return "DIRECT";
-        }
-
-        Proxy proxy = proxies.get(0);
+        Proxy proxy = ps.select(scheme, host);
         if (Proxy.NO_PROXY.equals(proxy)) {
             return "DIRECT";
         }
