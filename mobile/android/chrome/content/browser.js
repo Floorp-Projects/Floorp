@@ -3772,7 +3772,7 @@ Tab.prototype = {
       }
 
       // true if the page loaded successfully (i.e., no 404s or other errors)
-      let success = false; 
+      let success = false;
       let uri = "";
       try {
         // Remember original URI for UA changes on redirected pages
@@ -3783,7 +3783,11 @@ Tab.prototype = {
       } catch (e) { }
       try {
         success = aRequest.QueryInterface(Components.interfaces.nsIHttpChannel).requestSucceeded;
-      } catch (e) { }
+      } catch (e) {
+        // If the request does not handle the nsIHttpChannel interface, use nsIRequest's success
+        // status. Used for local files. See bug 948849.
+        success = aRequest.status == 0;
+      }
 
       // Check to see if we restoring the content from a previous presentation (session)
       // since there should be no real network activity
