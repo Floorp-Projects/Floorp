@@ -19,10 +19,7 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", testEditorAdded);
-  });
+  addTabAndCheckOnStyleEditorAdded(panel => gUI = panel.UI, testEditorAdded);
 
   content.location = TESTCASE_URI;
 }
@@ -53,7 +50,7 @@ function testImport()
 }
 
 let gAddedCount = 0;
-function testEditorAdded(aEvent, aEditor)
+function testEditorAdded(aEditor)
 {
   if (++gAddedCount == 2) {
     // test import after the 2 initial stylesheets have been loaded
