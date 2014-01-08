@@ -897,8 +897,8 @@ float AsyncPanZoomController::PanDistance() {
   return NS_hypot(mX.PanDistance(), mY.PanDistance());
 }
 
-const gfx::Point AsyncPanZoomController::GetVelocityVector() {
-  return gfx::Point(mX.GetVelocity(), mY.GetVelocity());
+const ScreenPoint AsyncPanZoomController::GetVelocityVector() {
+  return ScreenPoint(mX.GetVelocity(), mY.GetVelocity());
 }
 
 const gfx::Point AsyncPanZoomController::GetAccelerationVector() {
@@ -1156,7 +1156,7 @@ bool AsyncPanZoomController::EnlargeDisplayPortAlongAxis(float aSkateSizeMultipl
 
 const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   const FrameMetrics& aFrameMetrics,
-  const gfx::Point& aVelocity,
+  const ScreenPoint& aVelocity,
   const gfx::Point& aAcceleration,
   double aEstimatedPaintDuration)
 {
@@ -1547,7 +1547,7 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     endZoomToMetrics.mScrollOffset = aRect.TopLeft();
     endZoomToMetrics.mDisplayPort =
       CalculatePendingDisplayPort(endZoomToMetrics,
-                                  gfx::Point(0,0),
+                                  ScreenPoint(0,0),
                                   gfx::Point(0,0),
                                   0);
 
