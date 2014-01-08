@@ -93,7 +93,7 @@ class MachCommands(MachCommandBase):
                 valgrind,
                 '--error-exitcode=1',
                 '--smc-check=all-non-file',
-                '--vex-iropt-register-updates=allregs-at-each-insn',
+                '--vex-iropt-register-updates=allregs-at-mem-access',
                 '--gen-suppressions=all',
                 '--num-callers=20',
                 '--leak-check=full',
