@@ -27,6 +27,11 @@ namespace dom {
 void InitScriptSettings();
 void DestroyScriptSettings();
 
+// This mostly gets the entry global, but doesn't entirely match the spec in
+// certain edge cases. It's good enough for some purposes, but not others. If
+// you want to call this function, ping bholley and describe your use-case.
+nsIGlobalObject* BrokenGetEntryGlobal();
+
 // Note: We don't yet expose GetEntryGlobal, because in order for it to be
 // correct, we first need to replace a bunch of explicit cx pushing in the
 // browser with AutoEntryScript. But GetIncumbentGlobal is simpler, because it
