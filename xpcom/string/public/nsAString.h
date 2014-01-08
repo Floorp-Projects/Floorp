@@ -16,14 +16,6 @@
 #include "nsStringIterator.h"
 #endif
 
-// If some platform(s) can't handle our template that matches literal strings,
-// then we'll disable it on those platforms.
-#ifndef NS_DISABLE_LITERAL_TEMPLATE
-#  if (defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x560)) || (defined(__HP_aCC) && (__HP_aCC <= 012100))
-#    define NS_DISABLE_LITERAL_TEMPLATE
-#  endif
-#endif /* !NS_DISABLE_LITERAL_TEMPLATE */
-
 #include <string.h>
 #include <stdarg.h>
 
