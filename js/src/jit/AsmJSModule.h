@@ -306,7 +306,7 @@ class AsmJSModule
         const uint8_t *deserialize(ExclusiveContext *cx, const uint8_t *cursor);
     };
 
-#if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     // Function information to add to the VTune JIT profiler following linking.
     struct ProfiledFunction
     {
@@ -360,7 +360,7 @@ class AsmJSModule
     typedef Vector<Exit, 0, SystemAllocPolicy> ExitVector;
     typedef Vector<jit::AsmJSHeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
     typedef Vector<jit::IonScriptCounts *, 0, SystemAllocPolicy> FunctionCountsVector;
-#if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     typedef Vector<ProfiledFunction, 0, SystemAllocPolicy> ProfiledFunctionVector;
 #endif
 #if defined(JS_ION_PERF)
@@ -376,7 +376,7 @@ class AsmJSModule
     ExitVector                            exits_;
     ExportedFunctionVector                exports_;
     HeapAccessVector                      heapAccesses_;
-#if defined(MOZ_VTUNE) or defined(JS_ION_PERF)
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     ProfiledFunctionVector                profiledFunctions_;
 #endif
 #if defined(JS_ION_PERF)
