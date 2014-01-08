@@ -1,0 +1,785 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Generic pane helpers */
+
+.generic-toggled-side-pane {
+  -moz-margin-start: 0 !important;
+  /* Unfortunately, transitions don't work properly with locale-aware properties,
+     so both the left and right margins are set via js, while the start margin
+     is always overridden here. */
+}
+
+.generic-toggled-side-pane[animated] {
+  transition: margin 0.25s ease-in-out;
+}
+
+/* BreacrumbsWidget */
+
+.breadcrumbs-widget-container {
+  -moz-margin-end: 3px;
+  /* A fake 1px-shadow is included in the border-images of the
+     breadcrumbs-widget-items, to match toolbar-buttons style.
+     This negative margin compensates the extra row of pixels created
+     by the shadow.*/
+  margin-bottom: -1px;
+}
+
+/* Preloading hack, LTR */
+
+.breadcrumbs-widget-container:-moz-locale-dir(ltr)::after {
+  content: '';
+  display: block;
+  background-image:
+    url(breadcrumbs/ltr-start.png),
+    url(breadcrumbs/ltr-start-selected.png),
+    url(breadcrumbs/ltr-start-pressed.png),
+    url(breadcrumbs/ltr-start-selected-pressed.png),
+    url(breadcrumbs/ltr-middle.png),
+    url(breadcrumbs/ltr-middle-selected.png),
+    url(breadcrumbs/ltr-middle-pressed.png),
+    url(breadcrumbs/ltr-middle-selected-pressed.png),
+    url(breadcrumbs/ltr-end.png),
+    url(breadcrumbs/ltr-end-selected.png),
+    url(breadcrumbs/ltr-end-pressed.png),
+    url(breadcrumbs/ltr-end-selected-pressed.png);
+}
+
+/* Preloading hack, RTL */
+
+.breadcrumbs-widget-container:-moz-locale-dir(rtl)::after {
+  content: '';
+  display: block;
+  background-image:
+    url(breadcrumbs/rtl-start.png),
+    url(breadcrumbs/rtl-start-selected.png),
+    url(breadcrumbs/rtl-start-pressed.png),
+    url(breadcrumbs/rtl-start-selected-pressed.png),
+    url(breadcrumbs/rtl-middle.png),
+    url(breadcrumbs/rtl-middle-selected.png),
+    url(breadcrumbs/rtl-middle-pressed.png),
+    url(breadcrumbs/rtl-middle-selected-pressed.png),
+    url(breadcrumbs/rtl-end.png),
+    url(breadcrumbs/rtl-end-selected.png),
+    url(breadcrumbs/rtl-end-pressed.png),
+    url(breadcrumbs/rtl-end-selected-pressed.png);
+}
+
+.scrollbutton-up,
+.scrollbutton-down {
+  -moz-appearance: none;
+  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
+              0 0 0 1px hsla(210,16%,76%,.15) inset,
+              0 1px 0 hsla(210,16%,76%,.15);
+  border: 1px solid hsla(210,8%,5%,.45);
+  margin: 0 0 1px;
+}
+
+.scrollbutton-up:not([disabled]):active:hover,
+.scrollbutton-down:not([disabled]):active:hover {
+  background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
+  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset,
+              0 1px 3px hsla(210,8%,5%,.25) inset,
+              0 1px 0 hsla(210,16%,76%,.15);
+  border-color: hsla(210,8%,5%,.6);
+}
+
+.scrollbutton-up > .toolbarbutton-icon,
+.scrollbutton-down > .toolbarbutton-icon {
+  -moz-appearance: none;
+  list-style-image: url("breadcrumbs-scrollbutton.png");
+  -moz-image-region: rect(0px,7px,16px,0px);
+  margin: 0 5px;
+}
+
+.scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
+.scrollbutton-down:not([disabled]):active:hover > .toolbarbutton-icon {
+  -moz-image-region: rect(0px,14px,16px,7px);
+}
+
+.scrollbutton-up[disabled] > .toolbarbutton-icon,
+.scrollbutton-down[disabled] > .toolbarbutton-icon {
+  opacity: 0.5;
+}
+
+.scrollbutton-up > .toolbarbutton-icon:-moz-locale-dir(rtl),
+.scrollbutton-down > .toolbarbutton-icon:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.breadcrumbs-widget-item {
+  background-color: transparent;
+  -moz-appearance: none;
+  overflow: hidden;
+  min-width: 85px;
+  max-width: 250px;
+  min-height: 25px;
+  border-style: solid;
+  border-width: 1px 13px 2px 13px;
+  margin: 0 -11px 0 0;
+  padding: 0 9px;
+  outline: none;
+  color: hsl(210,30%,85%);
+}
+
+.breadcrumbs-widget-item:-moz-focusring > label {
+  border-bottom: 1px dotted hsla(210,30%,85%,0.4);
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-tag {
+  color: hsl(208,100%,60%);
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id {
+  color: hsl(205,100%,70%);
+}
+
+.breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-pseudo-classes {
+  color: hsl(20,100%,70%);
+}
+
+.breadcrumbs-widget-item-id,
+.breadcrumbs-widget-item-classes {
+  color: #8d99a6;
+}
+
+.breadcrumbs-widget-item-pseudo-classes {
+  color: hsl(20,100%,85%);
+}
+
+/* Breadcrumbs LTR */
+
+.breadcrumbs-widget-item:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-middle.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:not([checked]):hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-middle-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item[checked]:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-middle-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item[checked]:hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-middle-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-start.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type:not([checked]):hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-start-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type[checked]:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-start-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type[checked]:hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-start-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-end.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type:not([checked]):hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-end-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type[checked]:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-end-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type[checked]:hover:active:-moz-locale-dir(ltr) {
+  border-image: url("breadcrumbs/ltr-end-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:first-of-type:-moz-locale-dir(ltr) {
+  border-left-width: 0;
+}
+
+.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:last-of-type:-moz-locale-dir(ltr) {
+  border-right-width: 0;
+}
+
+/* Breadcrumbs RTL */
+
+.breadcrumbs-widget-item:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-middle.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:not([checked]):hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-middle-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item[checked]:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-middle-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item[checked]:hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-middle-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-start.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type:not([checked]):hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-start-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type[checked]:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-start-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:first-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-start-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-end.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type:not([checked]):hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-end-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type[checked]:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-end-selected.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-item:last-of-type[checked]:hover:active:-moz-locale-dir(rtl) {
+  border-image: url("breadcrumbs/rtl-end-selected-pressed.png") 1 13 2 13 fill stretch;
+}
+
+.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:first-of-type:-moz-locale-dir(rtl) {
+  border-right-width: 0;
+}
+
+.breadcrumbs-widget-container[overflows] > .breadcrumbs-widget-item:last-of-type:-moz-locale-dir(rtl) {
+  border-left-width: 0;
+}
+
+/* SimpleListWidget */
+
+%filter substitution
+%define slw_selectionGradient linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%))
+%define slw_selectionTextColor #fff
+
+.simple-list-widget-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.simple-list-widget-item.selected {
+  background: @slw_selectionGradient@;
+  color: @slw_selectionTextColor@;
+}
+
+.theme-dark .simple-list-widget-item:not(.selected):hover {
+  background-color: #181d20; /* Sidebar background */
+}
+
+.theme-light .simple-list-widget-item:not(.selected):hover {
+  background-color: #f7f7f7; /* Sidebar background */
+}
+
+.simple-list-widget-empty-text,
+.simple-list-widget-perma-text {
+  padding: 4px 8px;
+}
+
+.theme-dark .simple-list-widget-empty-text,
+.theme-dark .simple-list-widget-perma-text {
+  color: #b6babf; /* Light foreground text */
+}
+
+.theme-light .simple-list-widget-empty-text,
+.theme-light .simple-list-widget-perma-text {
+  color: #585959; /* Grey foreground text */
+}
+
+/* FastListWidget */
+
+.fast-list-widget-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.fast-list-widget-empty-text {
+  padding: 4px 8px;
+}
+
+.theme-dark .fast-list-widget-empty-text {
+  color: #b6babf; /* Light foreground text */
+}
+
+.theme-light .fast-list-widget-empty-text {
+  color: #585959; /* Grey foreground text */
+}
+
+/* SideMenuWidget */
+
+%filter substitution
+%define smw_selectionGradient linear-gradient(hsl(206,59%,39%), hsl(206,59%,29%))
+%define smw_selectionTextColor #fff
+%define smw_margin #222426
+%define smw_itemDarkTopBorder rgba(0,0,0,0.2)
+%define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
+%define smw_itemLightTopBorder rgba(128,128,128,0.15)
+%define smw_itemLightBottomBorder transparent
+
+.side-menu-widget-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.theme-dark .side-menu-widget-container,
+.theme-dark .side-menu-widget-empty-text {
+  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+}
+
+/* SideMenuWidget container */
+
+.side-menu-widget-container:-moz-locale-dir(ltr),
+.side-menu-widget-empty-text:-moz-locale-dir(ltr) {
+  box-shadow: inset -1px 0 0 @smw_margin@;
+}
+
+.side-menu-widget-container:-moz-locale-dir(rtl),
+.side-menu-widget-empty-text:-moz-locale-dir(rtl) {
+  box-shadow: inset 1px 0 0 @smw_margin@;
+}
+
+.side-menu-widget-group {
+  /* To allow visibility of the dark margin shadow. */
+  -moz-margin-end: 1px;
+}
+
+.side-menu-widget-container[with-arrows=true] .side-menu-widget-item {
+  /* To compensate for the arrow image's dark margin. */
+  -moz-margin-end: -1px;
+}
+
+/* SideMenuWidget groups */
+
+.side-menu-widget-group-title {
+  padding: 4px;
+}
+
+.theme-dark .side-menu-widget-group-title {
+  background-color: #252c33; /* Tab toolbar */
+  color: #b8c8d9; /* Light content text */
+}
+
+.theme-light .side-menu-widget-group-title {
+  background-color: #ebeced; /* Tab toolbar */
+  color: #667380; /* Dark grey content text */
+}
+
+/* SideMenuWidget items */
+
+.side-menu-widget-item {
+  /* To compensate for the top and bottom borders */
+  margin-top: -1px;
+  margin-bottom: -1px;
+}
+
+.theme-dark .side-menu-widget-item {
+  border-top: 1px solid @smw_itemDarkTopBorder@;
+  border-bottom: 1px solid @smw_itemDarkBottomBorder@;
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-dark .side-menu-widget-item:last-of-type {
+  box-shadow: inset 0 -1px 0 @smw_itemDarkTopBorder@;
+}
+
+.theme-light .side-menu-widget-item {
+  border-top: 1px solid @smw_itemLightTopBorder@;
+  border-bottom: 1px solid @smw_itemLightBottomBorder@;
+  color: #18191a; /* Dark foreground text */
+}
+
+.theme-light .side-menu-widget-item:last-of-type {
+  box-shadow: inset 0 -1px 0 @smw_itemLightTopBorder@;
+}
+
+.side-menu-widget-item.selected {
+  background: @smw_selectionGradient@ repeat-x top left;
+  color: @smw_selectionTextColor@;
+}
+
+.side-menu-widget-item-arrow {
+  -moz-margin-start: -7px;
+  width: 7px; /* The image's width is 7 pixels */
+}
+
+.side-menu-widget-item.selected > .side-menu-widget-item-arrow {
+  background-size: auto, 1px 100%;
+  background-repeat: no-repeat;
+}
+
+.side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
+  background-position: center right, top right;
+}
+
+.side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
+  background-position: center left, top left;
+}
+
+.theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
+  background-image: url(itemArrow-dark-ltr.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+}
+
+.theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
+  background-image: url(itemArrow-dark-rtl.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+}
+
+.theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
+  background-image: url(itemArrow-ltr.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+}
+
+.theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
+  background-image: url(itemArrow-rtl.png), linear-gradient(to right, @smw_margin@, @smw_margin@);
+}
+
+/* SideMenuWidget items contents */
+
+.side-menu-widget-item-contents {
+  padding: 4px;
+  /* To avoid having content overlapping the arrow image. */
+  -moz-padding-end: 8px;
+}
+
+.side-menu-widget-item-other {
+  /* To avoid having content overlapping the arrow image. */
+  -moz-padding-end: 8px;
+  /* To compensate for the .side-menu-widget-item-contents padding. */
+  -moz-margin-start: -4px;
+  -moz-margin-end: -8px;
+}
+
+.side-menu-widget-item-other:first-of-type {
+  margin-top: 4px;
+}
+
+.side-menu-widget-item-other:last-of-type {
+  margin-bottom: -4px;
+}
+
+.theme-dark .side-menu-widget-item-other {
+  background: url(background-noise-toolbar.png), rgba(0,0,0,.1);
+}
+
+.theme-light .side-menu-widget-item-other {
+  background: url(background-noise-toolbar.png), rgba(128,128,128,.1);
+}
+
+.theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other {
+  background-color: rgba(0,0,0,.2); /* Darken the selection by 20% */
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.theme-light .side-menu-widget-item.selected .side-menu-widget-item-other {
+  background-color: rgba(255,255,255,.8); /* Lighten the selection by 20% */
+  color: #18191a; /* Dark foreground text */
+}
+
+.theme-dark .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
+  background-color: transparent;
+  color: @smw_selectionTextColor@;
+}
+
+.theme-light .side-menu-widget-item.selected .side-menu-widget-item-other.selected {
+  background-color: transparent;
+  color: @smw_selectionTextColor@;
+}
+
+/* SideMenuWidget checkboxes */
+
+.side-menu-widget-group-checkbox {
+  margin: 0;
+  -moz-margin-end: 4px;
+}
+
+.side-menu-widget-item-checkbox {
+  margin: 0;
+  -moz-margin-start: 4px;
+}
+
+/* SideMenuWidget misc */
+
+.side-menu-widget-empty-text {
+  padding: 4px 8px;
+}
+
+.theme-dark .side-menu-widget-empty-text {
+  color: #b6babf; /* Light foreground text */
+}
+
+.theme-light .side-menu-widget-empty-text {
+  color: #585959; /* Grey foreground text */
+}
+
+/* VariablesView */
+
+.variables-view-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.variables-view-empty-notice {
+  padding: 2px;
+}
+
+.theme-dark .variables-view-empty-notice {
+  color: #b6babf; /* Light foreground text */
+}
+
+.theme-light .variables-view-empty-notice {
+  color: #585959; /* Grey foreground text */
+}
+
+.variables-view-scope > .title {
+  color: #fff;
+}
+
+/* Generic variables traits */
+
+.variables-view-variable:not(:last-child) {
+  border-bottom: 1px solid rgba(128, 128, 128, .15);
+}
+
+.variables-view-variable > .title > .name {
+  font-weight: 600;
+}
+
+/* Generic variables *and* properties traits */
+
+.variable-or-property:focus > .title > label {
+  color: inherit !important;
+}
+
+.variable-or-property > .title > .value {
+  -moz-box-flex: 1;
+}
+
+.variable-or-property > .title > .arrow {
+  -moz-margin-start: 3px;
+}
+
+.variable-or-property:not([untitled]) > .variables-view-element-details {
+  -moz-margin-start: 7px;
+}
+
+/* Traits applied when variables or properties are changed or overridden */
+
+.variable-or-property:not([overridden]) {
+  transition: background 1s ease-in-out;
+}
+
+.variable-or-property:not([overridden])[changed] {
+  transition-duration: .4s;
+}
+
+.variable-or-property[overridden] {
+  background: rgba(128,128,128,0.05);
+}
+
+.variable-or-property[overridden] .title > label {
+  /* Cross out the title for this variable and all child properties. */
+  font-style: italic;
+  text-decoration: line-through;
+  border-bottom: none !important;
+  color: rgba(128,128,128,0.9);
+  opacity: 0.7;
+}
+
+/* Traits applied when variables or properties are editable */
+
+.variable-or-property[editable] > .title > .value {
+  cursor: text;
+}
+
+.variable-or-property[overridden] .title > .value {
+  /* Disallow editing this variable and all child properties. */
+  pointer-events: none;
+}
+
+/* Custom configurable/enumerable/writable or frozen/sealed/extensible
+ * variables and properties */
+
+.variable-or-property[non-enumerable]:not([self]):not([pseudo-item]) > .title > .name {
+  opacity: 0.6;
+}
+
+.variable-or-property[non-configurable]:not([pseudo-item]) > .title > .name {
+  border-bottom: 1px dashed #99f;
+}
+
+.variable-or-property[non-writable]:not([pseudo-item]) > .title > .name {
+  border-bottom: 1px dashed #f99;
+}
+
+.variable-or-property[safe-getter]:not([pseudo-item]) > .title > .name {
+  border-bottom: 1px dashed #8b0;
+}
+
+.variable-or-property-non-writable-icon {
+  background: url("chrome://browser/skin/identity-icons-https.png") no-repeat;
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+}
+
+@media (min-resolution: 2dppx) {
+  .variable-or-property-non-writable-icon {
+    background-image: url("chrome://browser/skin/identity-icons-https@2x.png");
+    background-size: 32px;
+  }
+}
+
+.variable-or-property-frozen-label,
+.variable-or-property-sealed-label,
+.variable-or-property-non-extensible-label {
+  -moz-padding-end: 4px;
+}
+
+.variable-or-property:not(:focus) > .title > .variable-or-property-frozen-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-sealed-label,
+.variable-or-property:not(:focus) > .title > .variable-or-property-non-extensible-label {
+  color: #666;
+}
+
+/* Aligned values */
+
+.variables-view-container[aligned-values] .title > .separator {
+  -moz-box-flex: 1;
+}
+
+.variables-view-container[aligned-values] .title > .value {
+  -moz-box-flex: 0;
+  width: 70vw;
+}
+
+.variables-view-container[aligned-values] .title > .element-value-input {
+  width: calc(70vw - 10px);
+}
+
+/* Actions first */
+
+.variables-view-container[actions-first] .variables-view-delete,
+.variables-view-container[actions-first] .variables-view-add-property {
+  -moz-box-ordinal-group: 0;
+}
+
+.variables-view-container[actions-first] [invisible] {
+  visibility: hidden;
+}
+
+/* Variables and properties tooltips */
+
+.variable-or-property > tooltip > label {
+  margin: 0 2px 0 2px;
+}
+
+.variable-or-property[non-enumerable] > tooltip > label.enumerable,
+.variable-or-property[non-configurable] > tooltip > label.configurable,
+.variable-or-property[non-writable] > tooltip > label.writable,
+.variable-or-property[non-extensible] > tooltip > label.extensible {
+  color: #800;
+  text-decoration: line-through;
+}
+
+.variable-or-property[overridden] > tooltip > label.overridden {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+}
+
+.variable-or-property[safe-getter] > tooltip > label.WebIDL {
+  -moz-padding-start: 4px;
+  -moz-border-start: 1px dotted #000;
+  color: #080;
+}
+
+/* Variables and properties editing */
+
+.variables-view-delete {
+  list-style-image: url("chrome://browser/skin/devtools/vview-delete.png");
+  -moz-image-region: rect(0,16px,16px,0);
+}
+
+.variables-view-delete:hover {
+  -moz-image-region: rect(0,32px,16px,16px);
+}
+
+.variables-view-delete:active {
+  -moz-image-region: rect(0,48px,16px,32px);
+}
+
+.variables-view-edit {
+  background: url("chrome://browser/skin/devtools/vview-edit.png") center no-repeat;
+  width: 20px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.variables-view-throbber {
+  background: url("chrome://global/skin/icons/loading_16.png") center no-repeat;
+  width: 16px;
+  height: 16px;
+}
+
+.element-value-input {
+  -moz-margin-start: -2px !important;
+  -moz-margin-end: 2px !important;
+}
+
+.element-name-input {
+  -moz-margin-start: -2px !important;
+  -moz-margin-end: 2px !important;
+  font-weight: 600;
+}
+
+.element-value-input,
+.element-name-input {
+  border: 1px solid rgba(128, 128, 128, .5) !important;
+  border-radius: 0;
+  color: inherit;
+}
+
+/* Variables and properties searching */
+
+.variables-view-searchinput {
+  min-height: 24px;
+}
+
+.variable-or-property[unmatched] {
+  border: none;
+  margin: 0;
+}
+
+/* Expand/collapse arrow */
+
+.arrow {
+  -moz-appearance: treetwisty;
+  width: 20px;
+  height: 20px;
+}
+
+.arrow[open] {
+  -moz-appearance: treetwistyopen;
+}
+
+.arrow[invisible] {
+  visibility: hidden;
+}
+
+%include ../../shared/devtools/app-manager/manifest-editor.inc.css

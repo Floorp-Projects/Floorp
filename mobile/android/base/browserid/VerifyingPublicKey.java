@@ -6,16 +6,18 @@ package org.mozilla.gecko.browserid;
 
 import java.security.GeneralSecurityException;
 
+import org.mozilla.gecko.sync.ExtendedJSONObject;
+
 
 public interface VerifyingPublicKey {
   /**
-   * Generate a printable representation of a public key.
+   * Generate a JSON representation of a public key.
    *
    * @param publicKey
    *          to represent.
-   * @return printable representation.
+   * @return JSON representation.
    */
-  public String serialize();
+  public ExtendedJSONObject toJSONObject();
 
   /**
    * Verify a signature.

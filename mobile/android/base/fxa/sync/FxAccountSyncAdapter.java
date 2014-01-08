@@ -113,7 +113,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final CountDownLatch latch = new CountDownLatch(1);
     try {
-      final BrowserIDKeyPair keyPair = RSACryptoImplementation.generateKeypair(1024);
+      final BrowserIDKeyPair keyPair = RSACryptoImplementation.generateKeyPair(1024);
       Logger.info(LOG_TAG, "Generated keypair. ");
 
       final FxAccount fxAccount = FxAccountAuthenticator.fromAndroidAccount(getContext(), account);

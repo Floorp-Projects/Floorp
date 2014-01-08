@@ -4,6 +4,7 @@
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
+Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
@@ -12,6 +13,26 @@ const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
 const LESS_THAN_CLIENTS_TTL_REFRESH = 86400;  // 1 day
 
 let engine = Service.clientsEngine;
+
+/**
+ * Unpack the record with this ID, and verify that it has the same version that
+ * we should be putting into records.
+ */
+function check_record_version(user, id) {
+    let payload = JSON.parse(user.collection("clients").wbo(id).payload);
+
+    let rec = new CryptoWrapper();
+    rec.id = id;
+    rec.collection = "clients";
+    rec.ciphertext = payload.ciphertext;
+    rec.hmac = payload.hmac;
+    rec.IV = payload.IV;
+
+    let cleartext = rec.decrypt(Service.collectionKeys.keyForCollection("clients"));
+
+    _("Payload is " + JSON.stringify(cleartext));
+    do_check_eq(Services.appinfo.version, cleartext.version);
+}
 
 add_test(function test_bad_hmac() {
   _("Ensure that Clients engine deletes corrupt records.");
@@ -69,6 +90,9 @@ add_test(function test_bad_hmac() {
     engine._sync();
     check_clients_count(1);
     do_check_true(engine.lastRecordUpload > 0);
+
+    // Our uploaded record has a version.
+    check_record_version(user, engine.localID);
 
     // Initial setup can wipe the server, so clean up.
     deletedCollections = [];
