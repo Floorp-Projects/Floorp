@@ -1893,13 +1893,7 @@ VariableBubbleView.prototype = {
       });
     }
 
-    // Calculate the x, y coordinates for the variable bubble anchor.
-    let identifierCenter = { line: line - 1, ch: column + length / 2 };
-    let anchor = editor.getCoordsFromPosition(identifierCenter);
-
-    this._tooltip.defaultOffsetX = anchor.left + EDITOR_VARIABLE_POPUP_OFFSET_X;
-    this._tooltip.defaultOffsetY = anchor.top + EDITOR_VARIABLE_POPUP_OFFSET_Y;
-    this._tooltip.show(this._editorContainer);
+    this._tooltip.show(this._markedText.anchor);
   },
 
   /**
