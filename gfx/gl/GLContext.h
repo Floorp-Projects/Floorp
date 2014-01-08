@@ -878,8 +878,6 @@ public:
     }
 
     void fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
-        y = FixYValue(y, height);
-
         if (!IsTextureSizeSafeToPassToDriver(target, width, height)) {
             // pass wrong values to cause the GL to generate GL_INVALID_VALUE.
             // See bug 737182 and the comment in IsTextureSizeSafeToPassToDriver.
@@ -896,8 +894,6 @@ public:
     }
 
     void fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
-        y = FixYValue(y, height);
-
         BeforeGLReadCall();
         raw_fCopyTexSubImage2D(target, level, xoffset, yoffset,
                                x, y, width, height);
@@ -1099,6 +1095,18 @@ public:
             case LOCAL_GL_MAX_RENDERBUFFER_SIZE:
                 MOZ_ASSERT(mMaxRenderbufferSize>0);
                 *params = mMaxRenderbufferSize;
+                break;
+
+            case LOCAL_GL_VIEWPORT:
+                for (size_t i = 0; i < 4; i++) {
+                    params[i] = mViewportRect[i];
+                }
+                break;
+
+            case LOCAL_GL_SCISSOR_BOX:
+                for (size_t i = 0; i < 4; i++) {
+                    params[i] = mScissorRect[i];
+                }
                 break;
 
             default:
@@ -1373,14 +1381,12 @@ public:
 private:
     void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
         BEFORE_GL_CALL;
-        mSymbols.fReadPixels(x, FixYValue(y, height), width, height, format, type, pixels);
+        mSymbols.fReadPixels(x, y, width, height, format, type, pixels);
         AFTER_GL_CALL;
     }
 
 public:
     void fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels) {
-        y = FixYValue(y, height);
-
         BeforeGLReadCall();
 
         bool didReadPixels = false;
@@ -1402,14 +1408,23 @@ public:
         AFTER_GL_CALL;
     }
 
-private:
-    void raw_fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+    void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+        if (mScissorRect[0] == x &&
+            mScissorRect[1] == y &&
+            mScissorRect[2] == width &&
+            mScissorRect[3] == height)
+        {
+            return;
+        }
+        mScissorRect[0] = x;
+        mScissorRect[1] = y;
+        mScissorRect[2] = width;
+        mScissorRect[3] = height;
         BEFORE_GL_CALL;
         mSymbols.fScissor(x, y, width, height);
         AFTER_GL_CALL;
     }
 
-public:
     void fStencilFunc(GLenum func, GLint ref, GLuint mask) {
         BEFORE_GL_CALL;
         mSymbols.fStencilFunc(func, ref, mask);
@@ -2425,15 +2440,6 @@ public:
         return mSymbols.fUseProgram == nullptr;
     }
 
-    enum NativeDataType {
-      NativeGLContext,
-      NativeImageSurface,
-      NativeThebesSurface,
-      NativeCGLContext,
-      NativeDataTypeMax
-    };
-
-    virtual void *GetNativeData(NativeDataType aType) { return nullptr; }
     GLContext *GetSharedContext() { return mSharedContext; }
 
     /**
@@ -2569,8 +2575,6 @@ public:
                                  const char *extension);
 
     GLint GetMaxTextureImageSize() { return mMaxTextureImageSize; }
-    void SetFlipped(bool aFlipped) { mFlipped = aFlipped; }
-
 
 public:
     /**
@@ -2620,7 +2624,6 @@ protected:
     // storage to support DebugMode on an arbitrary thread.
     static unsigned sCurrentGLContextTLS;
 #endif
-    bool mFlipped;
 
     ScopedDeletePtr<GLBlitHelper> mBlitHelper;
     ScopedDeletePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
@@ -2802,8 +2805,8 @@ protected:
 
     void InitExtensions();
 
-    nsTArray<nsIntRect> mViewportStack;
-    nsTArray<nsIntRect> mScissorStack;
+    GLint mViewportRect[4];
+    GLint mScissorRect[4];
 
     GLint mMaxTextureSize;
     GLint mMaxCubeMapTextureSize;
@@ -2832,102 +2835,24 @@ protected:
     }
 
 
-    /*** Scissor functions ***/
-
-protected:
-    GLint FixYValue(GLint y, GLint height)
-    {
-        MOZ_ASSERT( !(mIsOffscreen && mFlipped) );
-        return mFlipped ? ViewportRect().height - (height + y) : y;
-    }
-
 public:
-    void fScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
-        ScissorRect().SetRect(x, y, width, height);
 
-        // GL's coordinate system is flipped compared to the one we use in
-        // OGL Layers (in the Y axis), so we may need to flip our rectangle.
-        y = FixYValue(y, height);
-        raw_fScissor(x, y, width, height);
-    }
-
-    nsIntRect& ScissorRect() {
-        return mScissorStack[mScissorStack.Length()-1];
-    }
-
-    void PushScissorRect() {
-        nsIntRect copy(ScissorRect());
-        mScissorStack.AppendElement(copy);
-    }
-
-    void PushScissorRect(const nsIntRect& aRect) {
-        mScissorStack.AppendElement(aRect);
-        fScissor(aRect.x, aRect.y, aRect.width, aRect.height);
-    }
-
-    void PopScissorRect() {
-        if (mScissorStack.Length() < 2) {
-            NS_WARNING("PopScissorRect with Length < 2!");
+    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+        if (mViewportRect[0] == x &&
+            mViewportRect[1] == y &&
+            mViewportRect[2] == width &&
+            mViewportRect[3] == height)
+        {
             return;
         }
-
-        nsIntRect thisRect = ScissorRect();
-        mScissorStack.TruncateLength(mScissorStack.Length() - 1);
-        if (!thisRect.IsEqualInterior(ScissorRect())) {
-            fScissor(ScissorRect().x, ScissorRect().y,
-                     ScissorRect().width, ScissorRect().height);
-        }
-    }
-
-    /*** Viewport functions ***/
-
-private:
-    // only does the glViewport call, no ViewportRect business
-    void raw_fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+        mViewportRect[0] = x;
+        mViewportRect[1] = y;
+        mViewportRect[2] = width;
+        mViewportRect[3] = height;
         BEFORE_GL_CALL;
-        // XXX: Flipping should really happen using the destination height, but
-        // we use viewport instead and assume viewport size matches the
-        // destination. If we ever try use partial viewports for layers we need
-        // to fix this, and remove the assertion.
-        NS_ASSERTION(!mFlipped || (x == 0 && y == 0), "TODO: Need to flip the viewport rect");
         mSymbols.fViewport(x, y, width, height);
         AFTER_GL_CALL;
     }
-
-public:
-    void fViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-        ViewportRect().SetRect(x, y, width, height);
-        raw_fViewport(x, y, width, height);
-    }
-
-    nsIntRect& ViewportRect() {
-        return mViewportStack[mViewportStack.Length()-1];
-    }
-
-    void PushViewportRect() {
-        nsIntRect copy(ViewportRect());
-        mViewportStack.AppendElement(copy);
-    }
-
-    void PushViewportRect(const nsIntRect& aRect) {
-        mViewportStack.AppendElement(aRect);
-        raw_fViewport(aRect.x, aRect.y, aRect.width, aRect.height);
-    }
-
-    void PopViewportRect() {
-        if (mViewportStack.Length() < 2) {
-            NS_WARNING("PopViewportRect with Length < 2!");
-            return;
-        }
-
-        nsIntRect thisRect = ViewportRect();
-        mViewportStack.TruncateLength(mViewportStack.Length() - 1);
-        if (!thisRect.IsEqualInterior(ViewportRect())) {
-            raw_fViewport(ViewportRect().x, ViewportRect().y,
-                          ViewportRect().width, ViewportRect().height);
-        }
-    }
-
 
 #undef ASSERT_SYMBOL_PRESENT
 

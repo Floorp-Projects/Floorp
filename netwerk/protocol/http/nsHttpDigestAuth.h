@@ -14,6 +14,8 @@
 
 class nsICryptoHash;
 
+namespace mozilla { namespace net {
+
 #define ALGO_SPECIFIED 0x01
 #define ALGO_MD5 0x02
 #define ALGO_MD5_SESS 0x04
@@ -85,5 +87,7 @@ class nsHttpDigestAuth MOZ_FINAL : public nsIHttpAuthenticator
     nsCOMPtr<nsICryptoHash>        mVerifier;
     char                           mHashBuf[DIGEST_LENGTH];
 };
+
+}} // namespace mozilla::net
 
 #endif // nsHttpDigestAuth_h__

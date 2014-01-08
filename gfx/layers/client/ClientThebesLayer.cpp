@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
+#include "gfx2DGlue.h"
 
 using namespace mozilla::gfx;
 
@@ -61,7 +62,7 @@ ClientThebesLayer::PaintThebes()
       mContentClient->BeginPaintBuffer(this, contentType, flags);
     mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
-    if (state.mContext) {
+    if (state.mTarget) {
       // The area that became invalid and is visible needs to be repainted
       // (this could be the whole visible area if our buffer switched
       // from RGB to RGBA, because we might need to repaint with
@@ -69,13 +70,16 @@ ClientThebesLayer::PaintThebes()
       state.mRegionToInvalidate.And(state.mRegionToInvalidate,
                                     GetEffectiveVisibleRegion());
       nsIntRegion extendedDrawRegion = state.mRegionToDraw;
-      SetAntialiasingFlags(this, state.mContext);
+      SetAntialiasingFlags(this, state.mTarget);
 
-      PaintBuffer(state.mContext,
+      nsRefPtr<gfxContext> ctx = gfxContext::ContextForDrawTarget(state.mTarget);
+      PaintBuffer(ctx,
                   state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
                   state.mDidSelfCopy, state.mClip);
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
       Mutated();
+      ctx = nullptr;
+      mContentClient->ReturnDrawTarget(state.mTarget);
     } else {
       // It's possible that state.mRegionToInvalidate is nonempty here,
       // if we are shrinking the valid region to nothing. So use mRegionToDraw
