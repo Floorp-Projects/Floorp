@@ -469,6 +469,10 @@ Tooltip.prototype = {
       vbox.appendChild(innerbox);
 
       var widget = new VariablesView(innerbox, viewOptions);
+
+      // Analyzing state history isn't useful with transient object inspectors.
+      widget.commitHierarchy = () => {};
+
       for (let e in relayEvents) widget.on(e, relayEvents[e]);
       VariablesViewController.attach(widget, controllerOptions);
 
