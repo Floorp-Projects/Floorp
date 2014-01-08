@@ -8,8 +8,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const NETWORKSERVICE_CONTRACTID = "@mozilla.org/network/service;1";
 const NETWORKSERVICE_CID = Components.ID("{c14cabaf-bb8e-470d-a2f1-2cb6de6c5e5c}");
@@ -109,32 +107,18 @@ NetworkService.prototype = {
 
   getNetworkInterfaceStats: function getNetworkInterfaceStats(networkName, callback) {
     if(DEBUG) debug("getNetworkInterfaceStats for " + networkName);
-    let file = new FileUtils.File("/proc/net/dev");
-    NetUtil.asyncFetch(file, function(inputStream, status) {
-      let result = {
-        success: false,
-        rxBytes: -1,
-        txBytes: -1
-      };
-      result.date = new Date();
 
-      if (Components.isSuccessCode(status)) {
-        // Find record for corresponding interface.
-        let statExpr = / +(\S+): +(\d+) +\d+ +\d+ +\d+ +\d+ +\d+ +\d+ +\d+ +(\d+) +\d+ +\d+ +\d+ +\d+ +\d+ +\d+ +\d+/;
-        let data = NetUtil.readInputStreamToString(inputStream,
-                    inputStream.available()).split("\n");
-        for (let i = 2; i < data.length; i++) {
-          let parseResult = statExpr.exec(data[i]);
-          if (parseResult && parseResult[1] === networkName) {
-            result.rxBytes = parseInt(parseResult[2], 10);
-            result.txBytes = parseInt(parseResult[3], 10);
-            result.success = true;
-            break;
-          }
-        }
-      }
+    let params = {
+      cmd: "getNetworkInterfaceStats",
+      ifname: networkName
+    };
 
-      callback.networkStatsAvailable(result.success, result.rxBytes,
+    params.report = true;
+    params.isAsync = true;
+
+    this.controlMessage(params, function(result) {
+      let success = !isError(result.resultCode);
+      callback.networkStatsAvailable(success, result.rxBytes,
                                      result.txBytes, result.date);
     });
   },
