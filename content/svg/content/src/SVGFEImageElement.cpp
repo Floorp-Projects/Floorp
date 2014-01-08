@@ -193,6 +193,7 @@ SVGFEImageElement::Href()
 FilterPrimitiveDescription
 SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                            const IntRect& aFilterSubregion,
+                                           const nsTArray<bool>& aInputsAreTainted,
                                            nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   nsIFrame* frame = GetPrimaryFrame();
@@ -259,6 +260,51 @@ SVGFEImageElement::AttributeAffectsRendering(int32_t aNameSpaceID,
   return SVGFEImageElementBase::AttributeAffectsRendering(aNameSpaceID, aAttribute) ||
          (aNameSpaceID == kNameSpaceID_None &&
           aAttribute == nsGkAtoms::preserveAspectRatio);
+}
+
+bool
+SVGFEImageElement::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                                   nsIPrincipal* aReferencePrincipal)
+{
+  nsresult rv;
+  nsCOMPtr<imgIRequest> currentRequest;
+  GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+             getter_AddRefs(currentRequest));
+
+  if (!currentRequest) {
+    return false;
+  }
+
+  uint32_t status;
+  currentRequest->GetImageStatus(&status);
+  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
+    // The load has not completed yet.
+    return false;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = currentRequest->GetImagePrincipal(getter_AddRefs(principal));
+  if (NS_FAILED(rv) || !principal) {
+    return true;
+  }
+
+  int32_t corsmode;
+  if (NS_SUCCEEDED(currentRequest->GetCORSMode(&corsmode)) &&
+      corsmode != imgIRequest::CORS_NONE) {
+    // If CORS was used to load the image, the page is allowed to read from it.
+    return false;
+  }
+
+  // Ignore document.domain in this check.
+  bool subsumes;
+  rv = aReferencePrincipal->SubsumesIgnoringDomain(principal, &subsumes);
+
+  if (NS_SUCCEEDED(rv) && subsumes) {
+    // The page is allowed to read from the image.
+    return false;
+  }
+
+  return true;
 }
 
 //----------------------------------------------------------------------
