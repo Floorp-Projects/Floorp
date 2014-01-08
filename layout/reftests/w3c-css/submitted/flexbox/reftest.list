@@ -1,3 +1,6 @@
+# Tests for handling anonymous flex items
+== flexbox-anonymous-items-1.html flexbox-anonymous-items-1-ref.html
+
 # Tests for alignment of flex lines (align-content property)
 == flexbox-align-content-horiz-1a.xhtml flexbox-align-content-horiz-1-ref.xhtml
 == flexbox-align-content-horiz-1b.xhtml flexbox-align-content-horiz-1-ref.xhtml
