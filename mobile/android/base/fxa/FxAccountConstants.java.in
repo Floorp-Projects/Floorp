@@ -9,7 +9,7 @@ public class FxAccountConstants {
   public static final String GLOBAL_LOG_TAG = "FxAccounts";
   public static final String ACCOUNT_TYPE = "@MOZ_ANDROID_SHARED_FXACCOUNT_TYPE@";
 
-  public static final String DEFAULT_IDP_ENDPOINT = "https://api-accounts.dev.lcip.org";
+  public static final String DEFAULT_IDP_ENDPOINT = "https://api-accounts-onepw.dev.lcip.org";
   public static final String DEFAULT_AUTH_ENDPOINT = "http://auth.oldsync.dev.lcip.org";
 
   public static final String PREFS_PATH = "fxa.v1";
