@@ -93,7 +93,7 @@ public class JSONWebTokenUtils {
     ExtendedJSONObject principal = new ExtendedJSONObject();
     principal.put("email", email);
     payload.put("principal", principal);
-    payload.put("public-key", new ExtendedJSONObject(publicKeyToSign.serialize()));
+    payload.put("public-key", publicKeyToSign.toJSONObject());
     return payload.toJSONString();
   }
 
