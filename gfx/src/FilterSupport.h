@@ -250,6 +250,7 @@ public:
   AttributeMap& Attributes() { return mAttributes; }
 
   IntRect PrimitiveSubregion() const { return mFilterPrimitiveSubregion; }
+  bool IsTainted() const { return mIsTainted; }
 
   size_t NumberOfInputs() const { return mInputPrimitives.Length(); }
   int32_t InputPrimitiveIndex(size_t aInputIndex) const
@@ -269,6 +270,11 @@ public:
   void SetPrimitiveSubregion(const IntRect& aRect)
   {
     mFilterPrimitiveSubregion = aRect;
+  }
+
+  void SetIsTainted(bool aIsTainted)
+  {
+    mIsTainted = aIsTainted;
   }
 
   void SetInputPrimitive(size_t aInputIndex, int32_t aInputPrimitiveIndex)
@@ -295,6 +301,7 @@ private:
   IntRect mFilterPrimitiveSubregion;
   nsTArray<ColorSpace> mInputColorSpaces;
   ColorSpace mOutputColorSpace;
+  bool mIsTainted;
 };
 
 /**
