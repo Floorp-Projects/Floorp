@@ -15,9 +15,10 @@
 #include "nsIConsoleService.h"
 #include "nsHttpRequestHead.h"
 
-using namespace mozilla;
-using namespace mozilla::net;
 extern PRThread *gSocketThread;
+
+namespace mozilla {
+namespace net {
 
 void
 nsHttpConnectionMgr::PrintDiagnostics()
@@ -247,3 +248,6 @@ nsHttpTransaction::PrintDiagnostics(nsCString &log)
   log.AppendPrintf("     restart count = %u\n", mRestartCount);
   log.AppendPrintf("     classification = 0x%x\n", mClassification);
 }
+
+} // namespace mozilla::net
+} // namespace mozilla

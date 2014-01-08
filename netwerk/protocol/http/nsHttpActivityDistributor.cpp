@@ -10,7 +10,9 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace net {
+
 typedef nsMainThreadPtrHolder<nsIHttpActivityObserver> ObserverHolder;
 typedef nsMainThreadPtrHandle<nsIHttpActivityObserver> ObserverHandle;
 typedef nsTArray<ObserverHandle> ObserverArray;
@@ -128,3 +130,5 @@ nsHttpActivityDistributor::RemoveObserver(nsIHttpActivityObserver *aObserver)
 
     return NS_OK;
 }
+} // namespace mozilla::net
+} // namespace mozilla

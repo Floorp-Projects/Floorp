@@ -529,7 +529,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         mGL->fDisable(LOCAL_GL_BLEND);
         mGL->fDisable(LOCAL_GL_SCISSOR_TEST);
 
-        mGL->PushViewportRect(nsIntRect(0, 0, aSize.width, aSize.height));
+        ScopedViewportRect(mGL, 0, 0, aSize.width, aSize.height);
 
         /* Setup renderbuffer */
         mGL->fGenRenderbuffers(1, &rb);
@@ -632,8 +632,6 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
 
     if (oldTexUnit != LOCAL_GL_TEXTURE0)
         mGL->fActiveTexture(oldTexUnit);
-
-    mGL->PopViewportRect();
 
     return isurf.forget();
 }
