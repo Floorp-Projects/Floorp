@@ -157,7 +157,6 @@ void AudioBlockInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
  * In place gain. aScale == 1.0f should be optimized.
  */
 void AudioBufferInPlaceScale(float* aBlock,
-                             uint32_t aChannelCount,
                              float aScale,
                              uint32_t aSize);
 
