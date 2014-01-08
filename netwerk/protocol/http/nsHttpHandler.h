@@ -21,10 +21,6 @@
 #include "nsISpeculativeConnect.h"
 #include "nsICache.h"
 
-class nsHttpConnection;
-class nsHttpConnectionInfo;
-class nsHttpHeaderArray;
-class nsHttpTransaction;
 class nsIHttpChannel;
 class nsIPrefBranch;
 class nsICancelable;
@@ -40,8 +36,9 @@ namespace net {
 class ATokenBucketEvent;
 class EventTokenBucket;
 class Tickler;
-}
-}
+class nsHttpConnection;
+class nsHttpConnectionInfo;
+class nsHttpTransaction;
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler - protocol handler for HTTP and HTTPS
@@ -269,7 +266,7 @@ public:
 
     PRIntervalTime GetPipelineTimeout()   { return mPipelineReadTimeout; }
 
-    mozilla::net::SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
+    SpdyInformation *SpdyInfo() { return &mSpdyInfo; }
 
     // returns true in between Init and Shutdown states
     bool Active() { return mHandlerActive; }
@@ -283,9 +280,9 @@ public:
 
     // When the disk cache is responding slowly its use is suppressed
     // for 1 minute for most requests. Callable from main thread only.
-    mozilla::TimeStamp GetCacheSkippedUntil() { return mCacheSkippedUntil; }
-    void SetCacheSkippedUntil(mozilla::TimeStamp arg) { mCacheSkippedUntil = arg; }
-    void ClearCacheSkippedUntil() { mCacheSkippedUntil = mozilla::TimeStamp(); }
+    TimeStamp GetCacheSkippedUntil() { return mCacheSkippedUntil; }
+    void SetCacheSkippedUntil(TimeStamp arg) { mCacheSkippedUntil = arg; }
+    void ClearCacheSkippedUntil() { mCacheSkippedUntil = TimeStamp(); }
 
 private:
 
@@ -421,7 +418,7 @@ private:
     bool           mHandlerActive;
 
     // Try to use SPDY features instead of HTTP/1.1 over SSL
-    mozilla::net::SpdyInformation mSpdyInfo;
+    SpdyInformation mSpdyInfo;
     bool           mEnableSpdy;
     bool           mSpdyV3;
     bool           mSpdyV31;
@@ -459,17 +456,17 @@ private:
 
     // When the disk cache is responding slowly its use is suppressed
     // for 1 minute for most requests.
-    mozilla::TimeStamp                mCacheSkippedUntil;
+    TimeStamp      mCacheSkippedUntil;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on
     // socket thread.
     void MakeNewRequestTokenBucket();
-    nsRefPtr<mozilla::net::EventTokenBucket> mRequestTokenBucket;
+    nsRefPtr<EventTokenBucket> mRequestTokenBucket;
 
 public:
     // Socket thread only
-    nsresult SubmitPacedRequest(mozilla::net::ATokenBucketEvent *event,
+    nsresult SubmitPacedRequest(ATokenBucketEvent *event,
                                 nsICancelable **cancel)
     {
         if (!mRequestTokenBucket)
@@ -478,7 +475,7 @@ public:
     }
 
     // Socket thread only
-    void SetRequestTokenBucket(mozilla::net::EventTokenBucket *aTokenBucket)
+    void SetRequestTokenBucket(EventTokenBucket *aTokenBucket)
     {
         mRequestTokenBucket = aTokenBucket;
     }
@@ -492,7 +489,7 @@ private:
     bool     mNetworkTypeKnown;
     bool     mNetworkTypeWasEthernet;
 
-    nsRefPtr<mozilla::net::Tickler> mWifiTickler;
+    nsRefPtr<Tickler> mWifiTickler;
     nsresult GetNetworkEthernetInfo(nsIInterfaceRequestor *cb,
                                     bool *ethernet);
     nsresult GetNetworkEthernetInfoInner(nsIInterfaceRequestor *cb,
@@ -536,5 +533,7 @@ public:
 
     nsresult Init();
 };
+
+}} // namespace mozilla::net
 
 #endif // nsHttpHandler_h__

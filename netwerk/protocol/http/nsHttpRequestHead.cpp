@@ -12,6 +12,9 @@
 // nsHttpRequestHead
 //-----------------------------------------------------------------------------
 
+namespace mozilla {
+namespace net {
+
 void
 nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
 {
@@ -37,3 +40,6 @@ nsHttpRequestHead::Flatten(nsACString &buf, bool pruneProxyHeaders)
 
     mHeaders.Flatten(buf, pruneProxyHeaders);
 }
+
+} // namespace mozilla::net
+} // namespace mozilla

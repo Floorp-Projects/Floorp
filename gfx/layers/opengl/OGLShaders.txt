@@ -121,6 +121,7 @@ $VERTEX_MASK_STUFF<mask>$
   finalPosition = uMatrixProj * finalPosition;
 
   vTexCoord = (uTextureTransform * vec4(aTexCoord.x, aTexCoord.y, 0.0, 1.0)).xy;
+
   gl_Position = finalPosition;
 }
 @end

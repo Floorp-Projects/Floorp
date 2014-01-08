@@ -934,10 +934,7 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
     Vector<FrameDescription> frames(cx);
 
     for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
-        FrameDescription desc;
-        desc.script = i.script();
-        desc.lineno = PCToLineNumber(i.script(), i.pc());
-        desc.fun = i.maybeCallee();
+        FrameDescription desc(i.script(), i.maybeCallee(), i.pc());
         if (!frames.append(desc))
             return nullptr;
         if (frames.length() == maxFrames)
@@ -956,7 +953,9 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 JS_PUBLIC_API(void)
 JS::FreeStackDescription(JSContext *cx, JS::StackDescription *desc)
 {
-    js_delete(desc->frames);
+    for (size_t i = 0; i < desc->nframes; ++i)
+        desc->frames[i].~FrameDescription();
+    js_free(desc->frames);
     js_delete(desc);
 }
 
