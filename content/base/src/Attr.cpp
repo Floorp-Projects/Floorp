@@ -137,7 +137,8 @@ Attr::GetContent() const
 Element*
 Attr::GetElement() const
 {
-  return GetContent()->AsElement();
+  nsIContent* content = GetContent();
+  return content ? content->AsElement() : nullptr;
 }
 
 nsresult
