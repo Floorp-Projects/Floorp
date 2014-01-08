@@ -3262,6 +3262,34 @@ class LRegExpTest : public LCallInstructionHelper<1, 2, 0>
     }
 };
 
+class LRegExpReplace : public LCallInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(RegExpReplace)
+
+    LRegExpReplace(const LAllocation &string, const LAllocation &regexp,
+                   const LAllocation &replacement)
+    {
+        setOperand(0, string);
+        setOperand(1, regexp);
+        setOperand(2, replacement);
+    }
+
+    const LAllocation *string() {
+        return getOperand(0);
+    }
+    const LAllocation *regexp() {
+        return getOperand(1);
+    }
+    const LAllocation *replacement() {
+        return getOperand(2);
+    }
+
+    const MRegExpReplace *mir() const {
+        return mir_->toRegExpReplace();
+    }
+};
+
 class LLambdaForSingleton : public LCallInstructionHelper<1, 1, 0>
 {
   public:

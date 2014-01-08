@@ -51,6 +51,7 @@ SVGFETileElement::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 FilterPrimitiveDescription
 SVGFETileElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                           const IntRect& aFilterSubregion,
+                                          const nsTArray<bool>& aInputsAreTainted,
                                           nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   return FilterPrimitiveDescription(FilterPrimitiveDescription::eTile);

@@ -6708,10 +6708,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       // Remove from ownerElement.
       nsRefPtr<Attr> adoptedAttr = static_cast<Attr*>(adoptedNode);
 
-      nsCOMPtr<Element> ownerElement = adoptedAttr->GetOwnerElement(rv);
-      if (rv.Failed()) {
-        return nullptr;
-      }
+      nsCOMPtr<Element> ownerElement = adoptedAttr->GetElement();
 
       if (ownerElement) {
         nsRefPtr<Attr> newAttr =

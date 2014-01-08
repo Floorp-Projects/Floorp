@@ -63,9 +63,9 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSObject *create(JSContext *cx, uint32_t nbytes, uint8_t *contents = nullptr);
+    static JSObject *create(JSContext *cx, uint32_t nbytes, bool clear = true);
 
-    static JSObject *createSlice(JSContext *cx, ArrayBufferObject &arrayBuffer,
+    static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
 
     static bool createDataViewForThisImpl(JSContext *cx, CallArgs args);
@@ -165,7 +165,7 @@ class ArrayBufferObject : public JSObject
 
     void addView(ArrayBufferViewObject *view);
 
-    bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = nullptr);
+    bool allocateSlots(JSContext *cx, uint32_t size);
 
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 

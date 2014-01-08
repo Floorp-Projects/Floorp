@@ -913,6 +913,19 @@ JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
     return TypedObject::createDerived(cx, type, owner, offset);
 }
 
+JSString *
+regexp_replace(JSContext *cx, HandleString string, HandleObject regexp, HandleString repl)
+{
+    JS_ASSERT(!!string);
+    JS_ASSERT(!!repl);
+
+    RootedValue rval(cx);
+    if (!str_replace_regexp_raw(cx, string, regexp, repl, &rval))
+        return nullptr;
+
+    return rval.toString();
+}
+
 bool
 Recompile(JSContext *cx)
 {

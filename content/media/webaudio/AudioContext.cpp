@@ -623,14 +623,18 @@ void
 AudioContext::Mute() const
 {
   MOZ_ASSERT(!mIsOffline);
-  mDestination->Mute();
+  if (mDestination) {
+    mDestination->Mute();
+  }
 }
 
 void
 AudioContext::Unmute() const
 {
   MOZ_ASSERT(!mIsOffline);
-  mDestination->Unmute();
+  if (mDestination) {
+    mDestination->Unmute();
+  }
 }
 
 AudioChannel
