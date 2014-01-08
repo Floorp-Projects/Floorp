@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 
 public class GeckoActionProvider extends ActionProvider {
+    private static int MAX_HISTORY_SIZE = 2;
 
     /**
      * A listener to know when a target was selected.
@@ -55,8 +56,8 @@ public class GeckoActionProvider extends ActionProvider {
 
         final PackageManager packageManager = mContext.getPackageManager();
         int historySize = dataModel.getDistinctActivityCountInHistory();
-        if (historySize > 2) {
-            historySize = 2;
+        if (historySize > MAX_HISTORY_SIZE) {
+            historySize = MAX_HISTORY_SIZE;
         }
 
         // Historical data is dependent on past selection of activities.
