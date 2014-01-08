@@ -10,16 +10,11 @@ function test()
   waitForExplicitFinish();
 
   let count = 0;
-  addTabAndOpenStyleEditor(function(panel) {
+  addTabAndOpenStyleEditors(2, function(panel) {
+    // we test against first stylesheet after all are ready
     let UI = panel.UI;
-    UI.on("editor-added", function(event, editor) {
-      count++;
-      if (count == 2) {
-        // we test against first stylesheet after all are ready
-        let editor = UI.editors[0];
-        editor.getSourceEditor().then(runTests.bind(this, UI, editor));
-      }
-    })
+    let editor = UI.editors[0];
+    editor.getSourceEditor().then(runTests.bind(this, UI, editor));
   });
 
   content.location = TESTCASE_URI;

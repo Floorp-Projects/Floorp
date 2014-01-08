@@ -15,12 +15,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 Cu.import("resource:///modules/devtools/SplitView.jsm");
 Cu.import("resource:///modules/devtools/StyleSheetEditor.jsm");
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
@@ -429,60 +430,69 @@ StyleEditorUI.prototype = {
           }
         }, false);
 
-        // autofocus if it's a new user-created stylesheet
-        if (editor.isNew) {
-          this._selectEditor(editor);
-        }
+        Task.spawn(function* () {
+          // autofocus if it's a new user-created stylesheet
+          if (editor.isNew) {
+            yield this._selectEditor(editor);
+          }
 
-        if (this._styleSheetToSelect
-            && this._styleSheetToSelect.href == editor.styleSheet.href) {
-          this.switchToSelectedSheet();
-        }
+          if (this._styleSheetToSelect
+              && this._styleSheetToSelect.href == editor.styleSheet.href) {
+            yield this.switchToSelectedSheet();
+          }
 
-        // If this is the first stylesheet and there is no pending request to
-        // select a particular style sheet, select this sheet.
-        if (!this.selectedEditor && !this._styleSheetBoundToSelect
-            && editor.styleSheet.styleSheetIndex == 0) {
-          this._selectEditor(editor);
-        }
+          // If this is the first stylesheet and there is no pending request to
+          // select a particular style sheet, select this sheet.
+          if (!this.selectedEditor && !this._styleSheetBoundToSelect
+              && editor.styleSheet.styleSheetIndex == 0) {
+            yield this._selectEditor(editor);
+          }
 
-        this.emit("editor-added", editor);
+          this.emit("editor-added", editor);
+        }.bind(this)).then(null, Cu.reportError);
       }.bind(this),
 
       onShow: function(summary, details, data) {
         let editor = data.editor;
         this.selectedEditor = editor;
 
-        if (!editor.sourceEditor) {
-          // only initialize source editor when we switch to this view
-          let inputElement = details.querySelector(".stylesheet-editor-input");
-          editor.load(inputElement);
-        }
-        editor.onShow();
+        Task.spawn(function* () {
+          if (!editor.sourceEditor) {
+            // only initialize source editor when we switch to this view
+            let inputElement = details.querySelector(".stylesheet-editor-input");
+            yield editor.load(inputElement);
+          }
 
-        this.emit("editor-selected", editor);
+          editor.onShow();
+
+          this.emit("editor-selected", editor);
+        }.bind(this)).then(null, Cu.reportError);
       }.bind(this)
     });
   },
 
   /**
    * Switch to the editor that has been marked to be selected.
+   *
+   * @return {Promise}
+   *         Promise that will resolve when the editor is selected.
    */
   switchToSelectedSheet: function() {
     let sheet = this._styleSheetToSelect;
 
-    for each (let editor in this.editors) {
+    for (let editor of this.editors) {
       if (editor.styleSheet.href == sheet.href) {
         // The _styleSheetBoundToSelect will always hold the latest pending
         // requested style sheet (with line and column) which is not yet
         // selected by the source editor. Only after we select that particular
         // editor and go the required line and column, it will become null.
         this._styleSheetBoundToSelect = this._styleSheetToSelect;
-        this._selectEditor(editor, sheet.line, sheet.col);
         this._styleSheetToSelect = null;
-        return;
+        return this._selectEditor(editor, sheet.line, sheet.col);
       }
     }
+
+    return promise.resolve();
   },
 
   /**
@@ -494,19 +504,23 @@ StyleEditorUI.prototype = {
    *         Line number to jump to
    * @param  {number} col
    *         Column number to jump to
+   * @return {Promise}
+   *         Promise that will resolve when the editor is selected.
    */
   _selectEditor: function(editor, line, col) {
     line = line || 0;
     col = col || 0;
 
-    editor.getSourceEditor().then(() => {
+    let editorPromise = editor.getSourceEditor().then(() => {
       editor.sourceEditor.setCursor({line: line, ch: col});
       this._styleSheetBoundToSelect = null;
     });
 
-    this.getEditorSummary(editor).then((summary) => {
+    let summaryPromise = this.getEditorSummary(editor).then((summary) => {
       this._view.activeSummary = summary;
-    })
+    });
+
+    return promise.all([editorPromise, summaryPromise]);
   },
 
   getEditorSummary: function(editor) {
