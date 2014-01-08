@@ -67,7 +67,7 @@ public:
   nsresult Init();
   void     Shutdown();
 
-  nsresult GetHandle(const SHA1Sum::Hash *aHash, CacheFileHandle **_retval);
+  nsresult GetHandle(const SHA1Sum::Hash *aHash, bool aReturnDoomed, CacheFileHandle **_retval);
   nsresult NewHandle(const SHA1Sum::Hash *aHash, bool aPriority, CacheFileHandle **_retval);
   void     RemoveHandle(CacheFileHandle *aHandlle);
   void     GetAllHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval);
