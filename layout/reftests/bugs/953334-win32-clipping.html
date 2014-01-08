@@ -1,0 +1,22 @@
+<style type="text/css">
+#descdiv{
+overflow: hidden;
+height: 60px;
+border: 1px solid red;
+}
+#descdiv p{
+height:30px;
+margin:0;
+/* The shadow of the text will be inside the overflow-hidden but the text it self will not.
+   This causes the text to be drawn even when it's outside of the clip*/
+text-shadow: #fff 1px -1px 2px;
+}
+
+</style>
+
+<div id="descdiv">
+<p class="um_desc">&nbsp;</p>
+<p class="um_desc">&nbsp;</p>
+<p class="um_desc">sed diam nonummy nibh</p>
+</div>
+
