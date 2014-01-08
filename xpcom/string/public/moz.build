@@ -23,6 +23,7 @@ EXPORTS += [
     'nsSubstringTuple.h',
     'nsTDependentString.h',
     'nsTDependentSubstring.h',
+    'nsTLiteralString.h',
     'nsTPromiseFlatString.h',
     'nsTString.h',
     'nsTSubstring.h',
