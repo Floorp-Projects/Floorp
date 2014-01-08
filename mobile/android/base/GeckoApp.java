@@ -380,7 +380,7 @@ abstract public class GeckoApp
 
             return mMenuPanel; 
         }
-  
+
         return super.onCreatePanelView(featureId);
     }
 
