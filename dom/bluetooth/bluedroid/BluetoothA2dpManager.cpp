@@ -10,7 +10,9 @@
 
 #include <hardware/bluetooth.h>
 #include <hardware/bt_av.h>
+#if ANDROID_VERSION > 17
 #include <hardware/bt_rc.h>
+#endif
 
 #include "BluetoothCommon.h"
 #include "BluetoothService.h"
@@ -31,7 +33,9 @@ namespace {
   StaticRefPtr<BluetoothA2dpManager> sBluetoothA2dpManager;
   bool sInShutdown = false;
   static const btav_interface_t* sBtA2dpInterface;
+#if ANDROID_VERSION > 17
   static const btrc_interface_t* sBtAvrcpInterface;
+#endif
 } // anonymous namespace
 
 class SinkPropertyChangedHandler : public nsRunnable
@@ -82,6 +86,7 @@ public:
   }
 };
 
+#if ANDROID_VERSION > 17
 class UpdateRegisterNotificationTask : public nsRunnable
 {
 public:
@@ -173,6 +178,7 @@ private:
   uint8_t mNumAttr;
   btrc_media_attr_t* mPlayerAttrs;
 };
+#endif
 
 NS_IMETHODIMP
 BluetoothA2dpManager::Observe(nsISupports* aSubject,
@@ -264,6 +270,7 @@ A2dpAudioStateCallback(btav_audio_state_t aState,
   NS_DispatchToMainThread(new SinkPropertyChangedHandler(signal));
 }
 
+#if ANDROID_VERSION > 17
 /*
  * Avrcp 1.3 callbacks
  */
@@ -369,6 +376,42 @@ AvrcpSetPlayerAppValueCallback(btrc_player_settings_t* aPlayerVals)
 
 // TODO: Support avrcp application setting related functions
 }
+#endif
+
+#if ANDROID_VERSION > 18
+/*
+ * This callback function is to get CT features from Feature Bit Mask.
+ * If Advanced Control Player bit is set, CT supports
+ * volume sync (absolute volume feature). If Browsing bit is set, Avrcp 1.4
+ * Browse feature will be supported
+ */
+static void
+AvrcpRemoteFeaturesCallback(bt_bdaddr_t* aBdAddress,
+                            btrc_remote_features_t aFeatures)
+{
+// TODO: Support avrcp 1.4 absolute volume/browse
+}
+
+/*
+ * This callback function is to get notification that volume changed on the
+ * remote car kit (if it supports Avrcp 1.4), not notification from phone.
+ */
+static void
+AvrcpRemoteVolumeChangedCallback(uint8_t aVolume, uint8_t aCType)
+{
+// TODO: Support avrcp 1.4 absolute volume/browse
+}
+
+/*
+ * This callback function is to get notification that volume changed on the
+ * remote car kit (if it supports Avrcp 1.4), not notification from phone.
+ */
+static void
+AvrcpPassThroughCallback(int id, int key_state)
+{
+// TODO: Support avrcp 1.4 absolute volume/browse
+}
+#endif
 
 static btav_callbacks_t sBtA2dpCallbacks = {
   sizeof(sBtA2dpCallbacks),
@@ -376,8 +419,12 @@ static btav_callbacks_t sBtA2dpCallbacks = {
   A2dpAudioStateCallback
 };
 
+#if ANDROID_VERSION > 17
 static btrc_callbacks_t sBtAvrcpCallbacks = {
   sizeof(sBtAvrcpCallbacks),
+#if ANDROID_VERSION > 18
+  AvrcpRemoteFeaturesCallback,
+#endif
   AvrcpGetPlayStatusCallback,
   AvrcpListPlayerAppAttributeCallback,
   AvrcpListPlayerAppValuesCallback,
@@ -386,8 +433,13 @@ static btrc_callbacks_t sBtAvrcpCallbacks = {
   AvrcpGetPlayerAppValuesTextCallback,
   AvrcpSetPlayerAppValueCallback,
   AvrcpGetElementAttrCallback,
-  AvrcpRegisterNotificationCallback
+  AvrcpRegisterNotificationCallback,
+#if ANDROID_VERSION > 18
+  AvrcpRemoteVolumeChangedCallback,
+  AvrcpPassThroughCallback
+#endif
 };
+#endif
 
 /*
  * This function will be only called when Bluetooth is turning on.
@@ -411,6 +463,7 @@ BluetoothA2dpManager::Init()
     return false;
   }
 
+#if ANDROID_VERSION > 17
   sBtAvrcpInterface = (btrc_interface_t *)btInf->
     get_profile_interface(BT_PROFILE_AV_RC_ID);
   NS_ENSURE_TRUE(sBtAvrcpInterface, false);
@@ -420,6 +473,7 @@ BluetoothA2dpManager::Init()
     BT_LOGR("Warning: failed to init avrcp module");
     return false;
   }
+#endif
 
   return true;
 }
@@ -768,6 +822,7 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
 
   // Send track changed and position changed if track num is not the same.
@@ -802,6 +857,7 @@ BluetoothA2dpManager::UpdateMetaData(const nsAString& aTitle,
   mMediaNumber = aMediaNumber;
   mTotalMediaCount = aTotalMediaCount;
   mDuration = aDuration;
+#endif
 }
 
 /*
@@ -815,6 +871,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
   // when play status changed, send both play status and position
   if (mPlayStatus != aPlayStatus &&
@@ -842,6 +899,7 @@ BluetoothA2dpManager::UpdatePlayStatus(uint32_t aDuration,
   mDuration = aDuration;
   mPosition = aPosition;
   mPlayStatus = aPlayStatus;
+#endif
 }
 
 /*
@@ -856,6 +914,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(int aEventId, int aParam)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#if ANDROID_VERSION > 17
   NS_ENSURE_TRUE_VOID(sBtAvrcpInterface);
 
   btrc_register_notification_t param;
@@ -885,6 +944,7 @@ BluetoothA2dpManager::UpdateRegisterNotification(int aEventId, int aParam)
   sBtAvrcpInterface->register_notification_rsp((btrc_event_id_t)aEventId,
                                                BTRC_NOTIFICATION_TYPE_INTERIM,
                                                &param);
+#endif
 }
 
 void

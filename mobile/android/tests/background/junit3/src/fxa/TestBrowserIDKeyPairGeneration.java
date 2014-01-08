@@ -38,12 +38,12 @@ public class TestBrowserIDKeyPairGeneration extends AndroidSyncTestCase {
   }
 
   public void testEncodeDecodeSuccessRSA() throws Exception {
-    doTestEncodeDecode(RSACryptoImplementation.generateKeypair(1024));
-    doTestEncodeDecode(RSACryptoImplementation.generateKeypair(2048));
+    doTestEncodeDecode(RSACryptoImplementation.generateKeyPair(1024));
+    doTestEncodeDecode(RSACryptoImplementation.generateKeyPair(2048));
   }
 
   public void testEncodeDecodeSuccessDSA() throws Exception {
-    doTestEncodeDecode(DSACryptoImplementation.generateKeypair(512));
-    doTestEncodeDecode(DSACryptoImplementation.generateKeypair(1024));
+    doTestEncodeDecode(DSACryptoImplementation.generateKeyPair(512));
+    doTestEncodeDecode(DSACryptoImplementation.generateKeyPair(1024));
   }
 }

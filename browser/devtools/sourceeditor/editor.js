@@ -550,8 +550,16 @@ Editor.prototype = {
    */
   markText: function(from, to, className = "marked-text") {
     let cm = editors.get(this);
-    let mark = cm.markText(from, to, { className: className });
-    return { clear: () => mark.clear() };
+    let text = cm.getRange(from, to);
+    let span = cm.getWrapperElement().ownerDocument.createElement("span");
+    span.className = className;
+    span.textContent = text;
+
+    let mark = cm.markText(from, to, { replacedWith: span });
+    return {
+      anchor: span,
+      clear: () => mark.clear()
+    };
   },
 
   /**

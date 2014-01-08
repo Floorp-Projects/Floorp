@@ -28,7 +28,7 @@ function SimpleListWidget(aNode) {
 
   // Create an internal list container.
   this._list = this.document.createElement("scrollbox");
-  this._list.className = "simple-list-widget-container";
+  this._list.className = "simple-list-widget-container theme-body";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
   this._parent.appendChild(this._list);

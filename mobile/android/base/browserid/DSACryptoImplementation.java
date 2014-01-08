@@ -20,11 +20,20 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
 import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.NonObjectJSONException;
 import org.mozilla.gecko.sync.Utils;
 
 public class DSACryptoImplementation {
   public static final String SIGNATURE_ALGORITHM = "SHA1withDSA";
   public static final int SIGNATURE_LENGTH_BYTES = 40; // DSA signatures are always 40 bytes long.
+
+  /**
+   * Parameters are serialized as hex strings. Hex-versus-decimal was
+   * reverse-engineered from what the Persona public verifier accepted. We
+   * expect to follow the JOSE/JWT spec as it solidifies, and that will probably
+   * mean unifying this base.
+   */
+  protected static final int SERIALIZATION_BASE = 16;
 
   protected static class DSAVerifyingPublicKey implements VerifyingPublicKey {
     protected final DSAPublicKey publicKey;
@@ -33,16 +42,22 @@ public class DSACryptoImplementation {
       this.publicKey = publicKey;
     }
 
+    /**
+     * Serialize to a JSON object.
+     * <p>
+     * Parameters are serialized as hex strings. Hex-versus-decimal was
+     * reverse-engineered from what the Persona public verifier accepted.
+     */
     @Override
-    public String serialize() {
+    public ExtendedJSONObject toJSONObject() {
       DSAParams params = publicKey.getParams();
       ExtendedJSONObject o = new ExtendedJSONObject();
       o.put("algorithm", "DS");
-      o.put("y", publicKey.getY().toString(16));
-      o.put("g", params.getG().toString(16));
-      o.put("p", params.getP().toString(16));
-      o.put("q", params.getQ().toString(16));
-      return o.toJSONString();
+      o.put("y", publicKey.getY().toString(SERIALIZATION_BASE));
+      o.put("g", params.getG().toString(SERIALIZATION_BASE));
+      o.put("p", params.getP().toString(SERIALIZATION_BASE));
+      o.put("q", params.getQ().toString(SERIALIZATION_BASE));
+      return o;
     }
 
     @Override
@@ -87,16 +102,22 @@ public class DSACryptoImplementation {
       return "DS" + (privateKey.getParams().getP().bitLength() + 7)/8;
     }
 
+    /**
+     * Serialize to a JSON object.
+     * <p>
+     * Parameters are serialized as decimal strings. Hex-versus-decimal was
+     * reverse-engineered from what the Persona public verifier accepted.
+     */
     @Override
-    public String serialize() {
+    public ExtendedJSONObject toJSONObject() {
       DSAParams params = privateKey.getParams();
       ExtendedJSONObject o = new ExtendedJSONObject();
       o.put("algorithm", "DS");
-      o.put("x", privateKey.getX().toString(16));
-      o.put("g", params.getG().toString(16));
-      o.put("p", params.getP().toString(16));
-      o.put("q", params.getQ().toString(16));
-      return o.toJSONString();
+      o.put("x", privateKey.getX().toString(SERIALIZATION_BASE));
+      o.put("g", params.getG().toString(SERIALIZATION_BASE));
+      o.put("p", params.getP().toString(SERIALIZATION_BASE));
+      o.put("q", params.getQ().toString(SERIALIZATION_BASE));
+      return o;
     }
 
     @Override
@@ -121,7 +142,7 @@ public class DSACryptoImplementation {
     }
   }
 
-  public static BrowserIDKeyPair generateKeypair(int keysize)
+  public static BrowserIDKeyPair generateKeyPair(int keysize)
       throws NoSuchAlgorithmException {
     final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("DSA");
     keyPairGenerator.initialize(keysize);
@@ -167,5 +188,57 @@ public class DSACryptoImplementation {
     KeyFactory keyFactory = KeyFactory.getInstance("DSA");
     DSAPublicKey publicKey = (DSAPublicKey) keyFactory.generatePublic(keySpec);
     return new DSAVerifyingPublicKey(publicKey);
+  }
+
+  public static SigningPrivateKey createPrivateKey(ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    String algorithm = o.getString("algorithm");
+    if (!"DS".equals(algorithm)) {
+      throw new InvalidKeySpecException("algorithm must equal DS, was " + algorithm);
+    }
+    try {
+      BigInteger x = new BigInteger(o.getString("x"), SERIALIZATION_BASE);
+      BigInteger p = new BigInteger(o.getString("p"), SERIALIZATION_BASE);
+      BigInteger q = new BigInteger(o.getString("q"), SERIALIZATION_BASE);
+      BigInteger g = new BigInteger(o.getString("g"), SERIALIZATION_BASE);
+      return createPrivateKey(x, p, q, g);
+    } catch (NullPointerException e) {
+      throw new InvalidKeySpecException("x, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    } catch (NumberFormatException e) {
+      throw new InvalidKeySpecException("x, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    }
+  }
+
+  public static VerifyingPublicKey createPublicKey(ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    String algorithm = o.getString("algorithm");
+    if (!"DS".equals(algorithm)) {
+      throw new InvalidKeySpecException("algorithm must equal DS, was " + algorithm);
+    }
+    try {
+      BigInteger y = new BigInteger(o.getString("y"), SERIALIZATION_BASE);
+      BigInteger p = new BigInteger(o.getString("p"), SERIALIZATION_BASE);
+      BigInteger q = new BigInteger(o.getString("q"), SERIALIZATION_BASE);
+      BigInteger g = new BigInteger(o.getString("g"), SERIALIZATION_BASE);
+      return createPublicKey(y, p, q, g);
+    } catch (NullPointerException e) {
+      throw new InvalidKeySpecException("y, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    } catch (NumberFormatException e) {
+      throw new InvalidKeySpecException("y, p, q, and g must be integers encoded as strings, base " + SERIALIZATION_BASE);
+    }
+  }
+
+  public static BrowserIDKeyPair fromJSONObject(ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException {
+    try {
+      ExtendedJSONObject privateKey = o.getObject(BrowserIDKeyPair.JSON_KEY_PRIVATEKEY);
+      ExtendedJSONObject publicKey = o.getObject(BrowserIDKeyPair.JSON_KEY_PUBLICKEY);
+      if (privateKey == null) {
+        throw new InvalidKeySpecException("privateKey must not be null");
+      }
+      if (publicKey == null) {
+        throw new InvalidKeySpecException("publicKey must not be null");
+      }
+      return new BrowserIDKeyPair(createPrivateKey(privateKey), createPublicKey(publicKey));
+    } catch (NonObjectJSONException e) {
+      throw new InvalidKeySpecException("privateKey and publicKey must be JSON objects");
+    }
   }
 }
