@@ -470,140 +470,132 @@ var AddonManagerInternal = {
    * them.
    */
   startup: function AMI_startup() {
+    if (gStarted)
+      return;
+
+    this.recordTimestamp("AMI_startup_begin");
+
+    // clear this for xpcshell test restarts
+    for (let provider in this.telemetryDetails)
+      delete this.telemetryDetails[provider];
+
+    let appChanged = undefined;
+
+    let oldAppVersion = null;
     try {
-      if (gStarted)
-        return;
+      oldAppVersion = Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
+      appChanged = Services.appinfo.version != oldAppVersion;
+    }
+    catch (e) { }
 
-      this.recordTimestamp("AMI_startup_begin");
+    let oldPlatformVersion = null;
+    try {
+      oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION);
+    }
+    catch (e) { }
 
-      // clear this for xpcshell test restarts
-      for (let provider in this.telemetryDetails)
-        delete this.telemetryDetails[provider];
-
-      let appChanged = undefined;
-
-      let oldAppVersion = null;
-      try {
-        oldAppVersion = Services.prefs.getCharPref(PREF_EM_LAST_APP_VERSION);
-        appChanged = Services.appinfo.version != oldAppVersion;
-      }
-      catch (e) { }
-
-      let oldPlatformVersion = null;
-      try {
-        oldPlatformVersion = Services.prefs.getCharPref(PREF_EM_LAST_PLATFORM_VERSION);
-      }
-      catch (e) { }
-
-      if (appChanged !== false) {
-        LOG("Application has been upgraded");
-        Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
-                                   Services.appinfo.version);
-        Services.prefs.setCharPref(PREF_EM_LAST_PLATFORM_VERSION,
-                                   Services.appinfo.platformVersion);
-        Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
-                                  (appChanged === undefined ? 0 : -1));
-      }
+    if (appChanged !== false) {
+      LOG("Application has been upgraded");
+      Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
+                                 Services.appinfo.version);
+      Services.prefs.setCharPref(PREF_EM_LAST_PLATFORM_VERSION,
+                                 Services.appinfo.platformVersion);
+      Services.prefs.setIntPref(PREF_BLOCKLIST_PINGCOUNTVERSION,
+                                (appChanged === undefined ? 0 : -1));
+    }
 
 #ifndef MOZ_COMPATIBILITY_NIGHTLY
-      PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
-                                    Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
+    PREF_EM_CHECK_COMPATIBILITY = PREF_EM_CHECK_COMPATIBILITY_BASE + "." +
+                                  Services.appinfo.version.replace(BRANCH_REGEXP, "$1");
 #endif
 
-      try {
-        gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
+    try {
+      gCheckCompatibility = Services.prefs.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_CHECK_COMPATIBILITY, this, false);
 
-      try {
-        gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this, false);
+    try {
+      gStrictCompatibility = Services.prefs.getBoolPref(PREF_EM_STRICT_COMPATIBILITY);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_STRICT_COMPATIBILITY, this, false);
 
-      try {
-        let defaultBranch = Services.prefs.getDefaultBranch("");
-        gCheckUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
-      } catch(e) {}
+    try {
+      let defaultBranch = Services.prefs.getDefaultBranch("");
+      gCheckUpdateSecurityDefault = defaultBranch.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+    } catch(e) {}
 
-      try {
-        gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
+    try {
+      gCheckUpdateSecurity = Services.prefs.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_CHECK_UPDATE_SECURITY, this, false);
 
-      try {
-        gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this, false);
+    try {
+      gUpdateEnabled = Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_UPDATE_ENABLED, this, false);
 
-      try {
-        gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this, false);
+    try {
+      gAutoUpdateDefault = Services.prefs.getBoolPref(PREF_EM_AUTOUPDATE_DEFAULT);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_AUTOUPDATE_DEFAULT, this, false);
 
-      try {
-        gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
+    try {
+      gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
+    } catch (e) {}
+    Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
 
-      let defaultProvidersEnabled = true;
-      try {
-        defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED);
-      } catch (e) {}
+    let defaultProvidersEnabled = true;
+    try {
+      defaultProvidersEnabled = Services.prefs.getBoolPref(PREF_DEFAULT_PROVIDERS_ENABLED);
+    } catch (e) {}
 
-      // Ensure all default providers have had a chance to register themselves
-      if (defaultProvidersEnabled) {
-        DEFAULT_PROVIDERS.forEach(function(url) {
-          try {
-            Components.utils.import(url, {});
-          }
-          catch (e) {
-            AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
-            ERROR("Exception loading default provider \"" + url + "\"", e);
-          }
-        });
-      }
-
-      // Load any providers registered in the category manager
-      let catman = Cc["@mozilla.org/categorymanager;1"].
-                   getService(Ci.nsICategoryManager);
-      let entries = catman.enumerateCategory(CATEGORY_PROVIDER_MODULE);
-      while (entries.hasMoreElements()) {
-        let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
-        let url = catman.getCategoryEntry(CATEGORY_PROVIDER_MODULE, entry);
-
+    // Ensure all default providers have had a chance to register themselves
+    if (defaultProvidersEnabled) {
+      DEFAULT_PROVIDERS.forEach(function(url) {
         try {
           Components.utils.import(url, {});
         }
         catch (e) {
-          AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
-          ERROR("Exception loading provider " + entry + " from category \"" +
-                url + "\"", e);
+          ERROR("Exception loading default provider \"" + url + "\"", e);
         }
-      }
-
-      // Register our shutdown handler with the AsyncShutdown manager
-      AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down providers",
-                                                   this.shutdown.bind(this));
-
-      // Once we start calling providers we must allow all normal methods to work.
-      gStarted = true;
-
-      this.callProviders("startup", appChanged, oldAppVersion,
-                         oldPlatformVersion);
-
-      // If this is a new profile just pretend that there were no changes
-      if (appChanged === undefined) {
-        for (let type in this.startupChanges)
-          delete this.startupChanges[type];
-      }
-
-      gStartupComplete = true;
-      this.recordTimestamp("AMI_startup_end");
+      });
     }
-    catch (e) {
-      ERROR("startup failed", e);
-      AddonManagerPrivate.recordException("AMI", "startup failed", e);
+
+    // Load any providers registered in the category manager
+    let catman = Cc["@mozilla.org/categorymanager;1"].
+                 getService(Ci.nsICategoryManager);
+    let entries = catman.enumerateCategory(CATEGORY_PROVIDER_MODULE);
+    while (entries.hasMoreElements()) {
+      let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
+      let url = catman.getCategoryEntry(CATEGORY_PROVIDER_MODULE, entry);
+
+      try {
+        Components.utils.import(url, {});
+      }
+      catch (e) {
+        ERROR("Exception loading provider " + entry + " from category \"" +
+              url + "\"", e);
+      }
     }
+
+    // Register our shutdown handler with the AsyncShutdown manager
+    AsyncShutdown.profileBeforeChange.addBlocker("AddonManager: shutting down providers",
+                                                 this.shutdown.bind(this));
+
+    // Once we start calling providers we must allow all normal methods to work.
+    gStarted = true;
+
+    this.callProviders("startup", appChanged, oldAppVersion,
+                       oldPlatformVersion);
+
+    // If this is a new profile just pretend that there were no changes
+    if (appChanged === undefined) {
+      for (let type in this.startupChanges)
+        delete this.startupChanges[type];
+    }
+
+    gStartupComplete = true;
+    this.recordTimestamp("AMI_startup_end");
   },
 
   /**
@@ -1707,7 +1699,7 @@ var AddonManagerInternal = {
       }
     }
     catch (e) {
-      // In the event that the weblistener throws during instantiation or when
+      // In the event that the weblistener throws during instatiation or when
       // calling onWebInstallBlocked or onWebInstallRequested all of the
       // installs should get cancelled.
       WARN("Failure calling web installer", e);
@@ -2222,26 +2214,6 @@ this.AddonManagerPrivate = {
   _simpleMeasures: {},
   recordSimpleMeasure: function AMP_recordSimpleMeasure(name, value) {
     this._simpleMeasures[name] = value;
-  },
-
-  recordException: function AMP_recordException(aModule, aContext, aException) {
-    let report = {
-      module: aModule,
-      context: aContext
-    };
-
-    if (typeof aException == "number") {
-      report.message = Components.Exception("", aException).name;
-    }
-    else {
-      report.message = aException.toString();
-      if (aException.fileName) {
-        report.file = aException.fileName;
-        report.line = aException.lineNumber;
-      }
-    }
-
-    this._simpleMeasures.exception = report;
   },
 
   getSimpleMeasures: function AMP_getSimpleMeasures() {
