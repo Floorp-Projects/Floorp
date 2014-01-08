@@ -52,9 +52,9 @@
           // we cannot size the image when we apply it via listStyleImage, so
           // use the toolbar image
           if (val)
-            this.setAttribute("image", provider.unmarkedIcon || provider.iconURL);
-          else
             this.setAttribute("image", provider.markedIcon || provider.iconURL);
+          else
+            this.setAttribute("image", provider.unmarkedIcon || provider.iconURL);
         </setter>
         <getter>
           return this._isMarked;
