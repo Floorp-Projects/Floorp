@@ -1003,13 +1003,10 @@ nsMenuPopupFrame::SlideOrResize(nscoord& aScreenPoint, nscoord aSize,
 {
   // The popup may be positioned such that either the left/top or bottom/right
   // is outside the screen - but never both.
-  if (aScreenPoint < aScreenBegin) {
-    *aOffset = aScreenBegin - aScreenPoint;
-    aScreenPoint = aScreenBegin;
-  } else if (aScreenPoint + aSize > aScreenEnd) {
-    *aOffset = aScreenPoint + aSize - aScreenEnd;
-    aScreenPoint = std::max(aScreenEnd - aSize, 0);
-  }
+  nscoord newPos =
+    std::max(aScreenBegin, std::min(aScreenEnd - aSize, aScreenPoint));
+  *aOffset = newPos - aScreenPoint;
+  aScreenPoint = newPos;
   return std::min(aSize, aScreenEnd - aScreenPoint);
 }
 
