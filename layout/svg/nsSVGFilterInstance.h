@@ -272,6 +272,13 @@ private:
                                           const nsTArray<int32_t>& aInputIndices);
 
   /**
+   * Takes the input indices of a filter primitive and returns for each input
+   * whether the input's output is tainted.
+   */
+  void GetInputsAreTainted(const nsTArray<int32_t>& aInputIndices,
+                           nsTArray<bool>& aOutInputsAreTainted);
+
+  /**
    * Scales a numeric filter primitive length in the X, Y or "XY" directions
    * into a length in filter space (no offset is applied).
    */
