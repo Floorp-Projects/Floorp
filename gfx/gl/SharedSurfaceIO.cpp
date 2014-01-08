@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SharedSurfaceIO.h"
-#include "GLContext.h"
+#include "GLContextCGL.h"
 #include "gfxImageSurface.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/DebugOnly.h"
@@ -80,7 +80,7 @@ SharedSurface_IOSurface::SharedSurface_IOSurface(MacIOSurface* surface,
                         LOCAL_GL_TEXTURE_WRAP_T,
                         LOCAL_GL_CLAMP_TO_EDGE);
 
-    CGLContextObj ctx = static_cast<CGLContextObj>(mGL->GetNativeData(GLContext::NativeCGLContext));
+    CGLContextObj ctx = GLContextCGL::Cast(mGL)->GetCGLContext();
     MOZ_ASSERT(ctx);
 
     surface->CGLTexImageIOSurface2D(ctx);

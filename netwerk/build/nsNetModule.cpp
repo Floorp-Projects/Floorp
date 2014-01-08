@@ -230,9 +230,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFtpProtocolHandler, Init)
 #include "nsHttpDigestAuth.h"
 #include "nsHttpNTLMAuth.h"
 #include "nsHttpActivityDistributor.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 #undef LOG
 #undef LOG_ENABLED
+namespace mozilla {
+namespace net {
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpNTLMAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpsHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHttpAuthManager, Init)
@@ -240,6 +242,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpChannelAuthProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpActivityDistributor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
+}
+}
 #endif // !NECKO_PROTOCOL_http
 
 #include "mozilla/net/Dashboard.h"
@@ -886,14 +890,14 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_FILEPROTOCOLHANDLER_CID, false, nullptr, nsFileProtocolHandlerConstructor },
 #endif
 #ifdef NECKO_PROTOCOL_http
-    { &kNS_HTTPPROTOCOLHANDLER_CID, false, nullptr, nsHttpHandlerConstructor },
-    { &kNS_HTTPSPROTOCOLHANDLER_CID, false, nullptr, nsHttpsHandlerConstructor },
-    { &kNS_HTTPBASICAUTH_CID, false, nullptr, nsHttpBasicAuthConstructor },
-    { &kNS_HTTPDIGESTAUTH_CID, false, nullptr, nsHttpDigestAuthConstructor },
-    { &kNS_HTTPNTLMAUTH_CID, false, nullptr, nsHttpNTLMAuthConstructor },
-    { &kNS_HTTPAUTHMANAGER_CID, false, nullptr, nsHttpAuthManagerConstructor },
-    { &kNS_HTTPCHANNELAUTHPROVIDER_CID, false, nullptr, nsHttpChannelAuthProviderConstructor },
-    { &kNS_HTTPACTIVITYDISTRIBUTOR_CID, false, nullptr, nsHttpActivityDistributorConstructor },
+    { &kNS_HTTPPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::nsHttpHandlerConstructor },
+    { &kNS_HTTPSPROTOCOLHANDLER_CID, false, nullptr, mozilla::net::nsHttpsHandlerConstructor },
+    { &kNS_HTTPBASICAUTH_CID, false, nullptr, mozilla::net::nsHttpBasicAuthConstructor },
+    { &kNS_HTTPDIGESTAUTH_CID, false, nullptr, mozilla::net::nsHttpDigestAuthConstructor },
+    { &kNS_HTTPNTLMAUTH_CID, false, nullptr, mozilla::net::nsHttpNTLMAuthConstructor },
+    { &kNS_HTTPAUTHMANAGER_CID, false, nullptr, mozilla::net::nsHttpAuthManagerConstructor },
+    { &kNS_HTTPCHANNELAUTHPROVIDER_CID, false, nullptr, mozilla::net::nsHttpChannelAuthProviderConstructor },
+    { &kNS_HTTPACTIVITYDISTRIBUTOR_CID, false, nullptr, mozilla::net::nsHttpActivityDistributorConstructor },
 #endif // !NECKO_PROTOCOL_http
 #ifdef NECKO_PROTOCOL_ftp
     { &kNS_FTPPROTOCOLHANDLER_CID, false, nullptr, nsFtpProtocolHandlerConstructor },
