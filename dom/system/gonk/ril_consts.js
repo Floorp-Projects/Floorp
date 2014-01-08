@@ -424,6 +424,15 @@ this.RIL_PREFERRED_NETWORK_TYPE_TO_GECKO = [
   GECKO_PREFERRED_NETWORK_TYPE_WCDMA_GSM_CDMA_EVDO
 ];
 
+this.GECKO_SUPPORTED_NETWORK_TYPES_DEFAULT = "gsm,wcdma,cdma,evdo";
+this.GECKO_SUPPORTED_NETWORK_TYPES = [
+  "gsm",
+  "wcdma",
+  "cdma",
+  "evdo",
+  "lte"
+];
+
 // Network registration states. See TS 27.007 7.2
 this.NETWORK_CREG_STATE_NOT_SEARCHING = 0;
 this.NETWORK_CREG_STATE_REGISTERED_HOME = 1;
