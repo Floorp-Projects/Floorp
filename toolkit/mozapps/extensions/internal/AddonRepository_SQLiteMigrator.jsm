@@ -27,7 +27,7 @@ const PROP_SINGLE = ["id", "type", "name", "version", "creator", "description",
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
     LogManager.getLogger("addons.repository.sqlmigrator", this);
     return this[aName];

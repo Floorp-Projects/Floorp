@@ -4,7 +4,7 @@
 
 // Tests caching in AddonRepository.jsm
 
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 Components.utils.import("resource://testing-common/httpd.js");
 let gServer;

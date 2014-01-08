@@ -7,7 +7,7 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Cc = Components.classes;
