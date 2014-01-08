@@ -220,7 +220,7 @@ private:
   // is (are) executed immediately.
   void BackgroundOp(uint32_t aOperation, bool aForceAsync = false);
 
-  already_AddRefed<CacheEntry> ReopenTruncated(nsICacheEntryOpenCallback* aCallback);
+  already_AddRefed<CacheEntryHandle> ReopenTruncated(nsICacheEntryOpenCallback* aCallback);
   void TransferCallbacks(CacheEntry & aFromEntry);
 
   mozilla::Mutex mLock;
