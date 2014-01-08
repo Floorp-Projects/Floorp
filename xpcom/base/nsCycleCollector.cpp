@@ -3157,8 +3157,8 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     mBuilder = new GCGraphBuilder(mGraph, mResults, mJSRuntime, mListener, mergeZones);
 
     if (mJSRuntime) {
-        mJSRuntime->BeginCycleCollection(*mBuilder);
-        timeLog.Checkpoint("mJSRuntime->BeginCycleCollection()");
+        mJSRuntime->TraverseRoots(*mBuilder);
+        timeLog.Checkpoint("mJSRuntime->TraverseRoots()");
     }
 
     AutoRestore<bool> ar(mScanInProgress);

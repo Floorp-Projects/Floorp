@@ -23,6 +23,9 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 
+namespace mozilla {
+namespace net {
+
 static void
 GetAppIdAndBrowserStatus(nsIChannel* aChan, uint32_t* aAppId, bool* aInBrowserElem)
 {
@@ -1336,3 +1339,6 @@ nsHttpChannelAuthProvider::GetCurrentPath(nsACString &path)
 
 NS_IMPL_ISUPPORTS3(nsHttpChannelAuthProvider, nsICancelable,
                    nsIHttpChannelAuthProvider, nsIAuthPromptCallback)
+
+} // namespace mozilla::net
+} // namespace mozilla

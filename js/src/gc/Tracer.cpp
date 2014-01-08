@@ -79,6 +79,12 @@ JS_CallHeapScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char
 }
 
 JS_PUBLIC_API(void)
+JS_CallHeapFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name)
+{
+    MarkObjectUnbarriered(trc, funp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
 JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name)
 {
     JSObject *obj = objp->getPtr();

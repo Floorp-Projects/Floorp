@@ -10,16 +10,16 @@
 #include "nsAHttpTransaction.h"
 #include "mozilla/Attributes.h"
 
-class nsAHttpConnection;
-class nsHttpRequestHead;
-class nsHttpConnectionInfo;
-
 // This is the minimal nsAHttpTransaction implementation. A NullHttpTransaction
 // can be used to drive connection level semantics (such as SSL handshakes
 // tunnels) so that a nsHttpConnection becomes fully established in
 // anticipation of a real transaction needing to use it soon.
 
 namespace mozilla { namespace net {
+
+class nsAHttpConnection;
+class nsHttpConnectionInfo;
+class nsHttpRequestHead;
 
 class NullHttpTransaction MOZ_FINAL : public nsAHttpTransaction
 {
