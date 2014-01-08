@@ -45,6 +45,16 @@ CacheEntryHandle::CacheEntryHandle(CacheEntry* aEntry)
 : mEntry(aEntry)
 {
   MOZ_COUNT_CTOR(CacheEntryHandle);
+
+#ifdef DEBUG
+  if (!mEntry->mHandlersCount) {
+    // CacheEntry.mHandlersCount must go from zero to one only under
+    // the service lock. Can access CacheStorageService::Self() w/o a check
+    // since CacheEntry hrefs it.
+    CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
+  }
+#endif
+
   ++mEntry->mHandlersCount;
 
   LOG(("New CacheEntryHandle %p for entry %p", this, aEntry));
@@ -72,6 +82,10 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
 , mNotWanted(false)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
+
+  // The counter may go from zero to non-null only under the service lock
+  // but here we expect it to be already positive.
+  MOZ_ASSERT(mEntry->mHandlersCount);
   ++mEntry->mHandlersCount;
 }
 
@@ -85,6 +99,10 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 , mNotWanted(aThat.mNotWanted)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
+
+  // The counter may go from zero to non-null only under the service lock
+  // but here we expect it to be already positive.
+  MOZ_ASSERT(mEntry->mHandlersCount);
   ++mEntry->mHandlersCount;
 }
 
@@ -99,6 +117,9 @@ void CacheEntry::Callback::ExchangeEntry(CacheEntry* aEntry)
   if (mEntry == aEntry)
     return;
 
+  // The counter may go from zero to non-null only under the service lock
+  // but here we expect it to be already positive.
+  MOZ_ASSERT(aEntry->mHandlersCount);
   ++aEntry->mHandlersCount;
   --mEntry->mHandlersCount;
   mEntry = aEntry;
@@ -368,7 +389,7 @@ NS_IMETHODIMP CacheEntry::OnFileDoomed(nsresult aResult)
   return NS_OK;
 }
 
-already_AddRefed<CacheEntry> CacheEntry::ReopenTruncated(nsICacheEntryOpenCallback* aCallback)
+already_AddRefed<CacheEntryHandle> CacheEntry::ReopenTruncated(nsICacheEntryOpenCallback* aCallback)
 {
   LOG(("CacheEntry::ReopenTruncated [this=%p]", this));
 
@@ -409,7 +430,7 @@ already_AddRefed<CacheEntry> CacheEntry::ReopenTruncated(nsICacheEntryOpenCallba
   newEntry->TransferCallbacks(*this);
   mCallbacks.Clear();
 
-  return newEntry.forget();
+  return handle.forget();
 }
 
 void CacheEntry::TransferCallbacks(CacheEntry & aFromEntry)
@@ -802,10 +823,8 @@ bool CacheEntry::IsReferenced() const
 {
   CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
 
-  // No need to lock, since:
-  // 1. increasing this counter from 0 to non-null happens only under
-  //    the the service lock
-  // 2. this check is made also only under the service lock
+  // Increasing this counter from 0 to non-null and this check both happen only
+  // under the service lock.
   return mHandlersCount > 0;
 }
 
@@ -1187,9 +1206,8 @@ NS_IMETHODIMP CacheEntry::Recreate(nsICacheEntry **_retval)
 
   mozilla::MutexAutoLock lock(mLock);
 
-  nsRefPtr<CacheEntry> newEntry = ReopenTruncated(nullptr);
-  if (newEntry) {
-    nsRefPtr<CacheEntryHandle> handle = newEntry->NewWriteHandle();
+  nsRefPtr<CacheEntryHandle> handle = ReopenTruncated(nullptr);
+  if (handle) {
     handle.forget(_retval);
     return NS_OK;
   }
