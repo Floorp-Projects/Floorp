@@ -1494,7 +1494,6 @@ var Scratchpad = {
       var lines = initialText.split("\n");
 
       this.editor.on("change", this._onChanged);
-      this.editor.on("save", () => this.saveFile());
       this.editor.focus();
       this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
 

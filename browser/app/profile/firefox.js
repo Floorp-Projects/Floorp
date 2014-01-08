@@ -1231,10 +1231,8 @@ pref("devtools.hud.loglimit.console", 200);
 // The developer tools editor configuration:
 // - tabsize: how many spaces to use when a Tab character is displayed.
 // - expandtab: expand Tab characters to spaces.
-// - keymap: which keymap to use (can be 'default', 'emacs' or 'vim')
 pref("devtools.editor.tabsize", 4);
 pref("devtools.editor.expandtab", true);
-pref("devtools.editor.keymap", "default");
 
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
