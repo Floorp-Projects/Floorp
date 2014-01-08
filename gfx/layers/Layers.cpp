@@ -1129,14 +1129,24 @@ void WriteSnapshotToDumpFile_internal(T* aObj, gfxASurface* aSurf)
   }
 }
 
-void WriteSnapshotToDumpFile(Layer* aLayer, gfxASurface* aSurf)
+void WriteSnapshotToDumpFile(Layer* aLayer, DataSourceSurface* aSurf)
 {
-  WriteSnapshotToDumpFile_internal(aLayer, aSurf);
+  nsRefPtr<gfxImageSurface> surf =
+    new gfxImageSurface(aSurf->GetData(),
+                        ThebesIntSize(aSurf->GetSize()),
+                        aSurf->Stride(),
+                        SurfaceFormatToImageFormat(aSurf->GetFormat()));
+  WriteSnapshotToDumpFile_internal(aLayer, surf);
 }
 
-void WriteSnapshotToDumpFile(LayerManager* aManager, gfxASurface* aSurf)
+void WriteSnapshotToDumpFile(LayerManager* aManager, DataSourceSurface* aSurf)
 {
-  WriteSnapshotToDumpFile_internal(aManager, aSurf);
+  nsRefPtr<gfxImageSurface> surf =
+    new gfxImageSurface(aSurf->GetData(),
+                        ThebesIntSize(aSurf->GetSize()),
+                        aSurf->Stride(),
+                        SurfaceFormatToImageFormat(aSurf->GetFormat()));
+  WriteSnapshotToDumpFile_internal(aManager, surf);
 }
 
 void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)

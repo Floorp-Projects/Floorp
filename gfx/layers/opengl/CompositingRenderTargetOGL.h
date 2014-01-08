@@ -29,6 +29,9 @@ namespace mozilla {
 namespace gl {
   class BindableTexture;
 }
+namespace gfx {
+  class DataSourceSurface;
+}
 
 namespace layers {
 
@@ -152,7 +155,7 @@ public:
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfxImageSurface> Dump(Compositor* aCompositor);
+  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor);
 #endif
 
 private:
