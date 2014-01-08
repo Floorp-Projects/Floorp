@@ -201,7 +201,7 @@ public:
 protected:
   bool
   CheckPermissionInternal(const nsAString& aDatabaseName,
-                          const nsDependentCString& aPermission);
+                          const nsACString& aPermission);
 
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
