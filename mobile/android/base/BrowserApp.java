@@ -2344,6 +2344,11 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void openOptionsMenu() {
+        // Disable menu access (for hardware buttons) when the software menu button is inaccessible.
+        if (mBrowserToolbar.isEditing()) {
+            return;
+        }
+
         if (areTabsShown()) {
             mTabsPanel.showMenu();
             return;
