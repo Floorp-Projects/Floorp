@@ -27,9 +27,7 @@ const SEARCH_TOKEN_FLAG = "#";
 const SEARCH_LINE_FLAG = ":";
 const SEARCH_VARIABLE_FLAG = "*";
 const EDITOR_VARIABLE_HOVER_DELAY = 350; // ms
-const EDITOR_VARIABLE_POPUP_OFFSET_X = 5; // px
-const EDITOR_VARIABLE_POPUP_OFFSET_Y = 0; // px
-const EDITOR_VARIABLE_POPUP_POSITION = "before_start";
+const EDITOR_VARIABLE_POPUP_POSITION = "topcenter bottomleft";
 
 /**
  * Object defining the debugger view components.
