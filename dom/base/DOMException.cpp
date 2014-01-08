@@ -350,7 +350,12 @@ NS_IMETHODIMP
 Exception::GetFilename(char** aFilename)
 {
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
-    XPC_STRING_GETTER_BODY(aFilename, mFilename);
+
+  if (mLocation) {
+    return mLocation->GetFilename(aFilename);
+  }
+
+  XPC_STRING_GETTER_BODY(aFilename, mFilename);
 }
 
 /* readonly attribute uint32_t lineNumber; */
@@ -359,6 +364,13 @@ Exception::GetLineNumber(uint32_t *aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aLineNumber);
   NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
+
+  if (mLocation) {
+    int32_t lineno;
+    nsresult rv = mLocation->GetLineNumber(&lineno);
+    *aLineNumber = lineno;
+    return rv;
+  }
 
   *aLineNumber = mLineNumber;
   return NS_OK;
@@ -479,15 +491,6 @@ Exception::Initialize(const char *aMessage, nsresult aResult, const char *aName,
 
   if (aLocation) {
     mLocation = aLocation;
-    // For now, fill in our location details from our stack frame.
-    // Later we may allow other locations?
-    nsresult rc;
-    if (NS_FAILED(rc = aLocation->GetFilename(&mFilename))) {
-      return rc;
-    }
-    if (NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber))) {
-      return rc;
-    }
   } else {
     nsresult rv;
     nsXPConnect* xpc = nsXPConnect::XPConnect();
@@ -558,6 +561,14 @@ Exception::GetFilename(nsString& retval)
 uint32_t
 Exception::LineNumber() const
 {
+  if (mLocation) {
+    int32_t lineno;
+    if (NS_SUCCEEDED(mLocation->GetLineNumber(&lineno))) {
+      return lineno;
+    }
+    return 0;
+  }
+
   return mLineNumber;
 }
 
