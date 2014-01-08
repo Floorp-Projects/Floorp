@@ -96,7 +96,7 @@ var Downloads = {
         text: aMessage,
         ongoing: false,
         cookie: aDownload.guid,
-        when: aDownload.startTime
+        when: (aDownload.startTime / 1000)
     };
 
     if (aOptions && aOptions.icon) {
