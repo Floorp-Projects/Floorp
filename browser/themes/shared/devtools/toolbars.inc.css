@@ -214,6 +214,7 @@
 
 .devtools-sidebar-tabs > tabpanels {
   -moz-appearance: none;
+  background: transparent;
   padding: 0;
   border: 0;
 }

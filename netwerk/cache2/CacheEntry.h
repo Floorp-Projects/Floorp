@@ -44,6 +44,7 @@ class CacheStorageService;
 class CacheStorage;
 class CacheFileOutputStream;
 class CacheOutputCloseListener;
+class CacheEntryHandle;
 
 class CacheEntry : public nsICacheEntry
                  , public nsIRunnable
@@ -59,6 +60,8 @@ public:
 
   void AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags);
 
+  CacheEntryHandle* NewHandle();
+
 public:
   uint32_t GetMetadataMemoryConsumption();
   nsCString const &GetStorageID() const { return mStorageID; }
@@ -66,6 +69,7 @@ public:
   nsIURI* GetURI() const { return mURI; }
   bool UsingDisk() const;
   bool SetUsingDisk(bool aUsingDisk);
+  bool IsReferenced() const;
 
   // Methods for entry management (eviction from memory),
   // called only on the management thread.
@@ -113,26 +117,23 @@ private:
   // We must monitor when a cache entry whose consumer is responsible
   // for writing it the first time gets released.  We must then invoke
   // waiting callbacks to not break the chain.
-  class Handle : public nsICacheEntry
-  {
-  public:
-    Handle(CacheEntry* aEntry);
-    virtual ~Handle();
-
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_FORWARD_NSICACHEENTRY(mEntry->)
-  private:
-    nsRefPtr<CacheEntry> mEntry;
-  };
-
   class Callback
   {
   public:
-    Callback(nsICacheEntryOpenCallback *aCallback,
+    Callback(CacheEntry* aEntry,
+             nsICacheEntryOpenCallback *aCallback,
              bool aReadOnly, bool aCheckOnAnyThread);
     Callback(Callback const &aThat);
     ~Callback();
 
+    // Called when this callback record changes it's owning entry,
+    // mainly during recreation.
+    void ExchangeEntry(CacheEntry* aEntry);
+
+    // We are raising reference count here to take into account the pending
+    // callback (that virtually holds a ref to this entry before it gets
+    // it's pointer).
+    nsRefPtr<CacheEntry> mEntry;
     nsCOMPtr<nsICacheEntryOpenCallback> mCallback;
     nsCOMPtr<nsIThread> mTargetThread;
     bool mReadOnly : 1;
@@ -207,8 +208,8 @@ private:
 
   // When this entry is new and recreated w/o a callback, we need to wrap it
   // with a handle to detect writing consumer is gone.
-  Handle* NewWriteHandle();
-  void OnWriterClosed(Handle const* aHandle);
+  CacheEntryHandle* NewWriteHandle();
+  void OnHandleClosed(CacheEntryHandle const* aHandle);
 
 private:
   friend class CacheOutputCloseListener;
@@ -223,6 +224,10 @@ private:
   void TransferCallbacks(CacheEntry & aFromEntry);
 
   mozilla::Mutex mLock;
+
+  // Reflects the number of existing handles for this entry
+  friend class CacheEntryHandle;
+  ::mozilla::ThreadSafeAutoRefCnt mHandlersCount;
 
   nsTArray<Callback> mCallbacks;
   nsCOMPtr<nsICacheEntryDoomCallback> mDoomCallback;
@@ -289,9 +294,9 @@ private:
   nsCOMPtr<nsIOutputStream> mOutputStream;
 
   // Weak reference to the current writter.  There can be more then one
-  // writer at a time and OnWriterClosed() must be processed only for the
+  // writer at a time and OnHandleClosed() must be processed only for the
   // current one.
-  Handle* mWriter;
+  CacheEntryHandle* mWriter;
 
   // Background thread scheduled operation.  Set (under the lock) one
   // of this flags to tell the background thread what to do.
@@ -318,6 +323,21 @@ private:
 
   nsCOMPtr<nsIThread> mReleaseThread;
 };
+
+
+class CacheEntryHandle : public nsICacheEntry
+{
+public:
+  CacheEntryHandle(CacheEntry* aEntry);
+  virtual ~CacheEntryHandle();
+  CacheEntry* Entry() const { return mEntry; }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_FORWARD_NSICACHEENTRY(mEntry->)
+private:
+  nsRefPtr<CacheEntry> mEntry;
+};
+
 
 class CacheOutputCloseListener : public nsRunnable
 {

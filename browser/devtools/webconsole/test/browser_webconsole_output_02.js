@@ -12,7 +12,7 @@ let inputTests = [
   {
     input: "document.getElementById",
     output: "function getElementById()",
-    printOutput: "function getElementById() {\\n    [native code]\\n}",
+    printOutput: "function getElementById() {\n    [native code]\n}",
     inspectable: true,
     variablesViewLabel: "getElementById()",
   },

@@ -22,7 +22,6 @@ this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
  * @param nsIDOMNode aNode
  *        The element associated with the widget.
  * @param Object aOptions
- *        - theme: "light" or "dark", defaults to dark if falsy.
  *        - showArrows: specifies if items should display horizontal arrows.
  *        - showItemCheckboxes: specifies if items should display checkboxes.
  *        - showGroupCheckboxes: specifies if groups should display checkboxes.
@@ -32,18 +31,16 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions={}) {
   this.window = this.document.defaultView;
   this._parent = aNode;
 
-  let { theme, showArrows, showItemCheckboxes, showGroupCheckboxes } = aOptions;
-  this._theme = theme || "dark";
+  let { showArrows, showItemCheckboxes, showGroupCheckboxes } = aOptions;
   this._showArrows = showArrows || false;
   this._showItemCheckboxes = showItemCheckboxes || false;
   this._showGroupCheckboxes = showGroupCheckboxes || false;
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
-  this._list.className = "side-menu-widget-container";
+  this._list.className = "side-menu-widget-container theme-body";
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
-  this._list.setAttribute("theme", this._theme);
   this._list.setAttribute("with-arrows", this._showArrows);
   this._list.setAttribute("with-item-checkboxes", this._showItemCheckboxes);
   this._list.setAttribute("with-group-checkboxes", this._showGroupCheckboxes);
@@ -141,13 +138,7 @@ SideMenuWidget.prototype = {
    *        The element associated with the displayed item.
    */
   removeChild: function(aChild) {
-    if (aChild.classList.contains("side-menu-widget-item-contents") &&
-       !aChild.classList.contains("side-menu-widget-item")) {
-      // Remove the item itself, not the contents.
-      aChild.parentNode.remove();
-    } else {
-      aChild.remove();
-    }
+    this._getNodeForContents(aChild).remove();
 
     this._orderedMenuElementsArray.splice(
       this._orderedMenuElementsArray.indexOf(aChild), 1);
@@ -198,12 +189,10 @@ SideMenuWidget.prototype = {
     }
     for (let node of menuArray) {
       if (node == aChild) {
-        node.classList.add("selected");
-        node.parentNode.classList.add("selected");
+        this._getNodeForContents(node).classList.add("selected");
         this._selectedItem = node;
       } else {
-        node.classList.remove("selected");
-        node.parentNode.classList.remove("selected");
+        this._getNodeForContents(node).classList.remove("selected");
       }
     }
   },
@@ -316,7 +305,6 @@ SideMenuWidget.prototype = {
     let label = this.document.createElement("label");
     label.className = "plain side-menu-widget-empty-text";
     label.setAttribute("value", this._emptyTextValue);
-    label.setAttribute("theme", this._theme);
 
     this._parent.insertBefore(label, this._list);
     this._emptyTextNode = label;
@@ -350,7 +338,6 @@ SideMenuWidget.prototype = {
     }
 
     let group = new SideMenuGroup(this, aName, {
-      theme: this._theme,
       showCheckbox: this._showGroupCheckboxes
     });
 
@@ -373,15 +360,32 @@ SideMenuWidget.prototype = {
    */
   _getMenuItemForGroup: function(aGroup, aContents, aAttachment) {
     return new SideMenuItem(aGroup, aContents, aAttachment, {
-      theme: this._theme,
       showArrow: this._showArrows,
       showCheckbox: this._showItemCheckboxes
     });
   },
 
+  /**
+   * Returns the .side-menu-widget-item node corresponding to a SideMenuItem.
+   * To optimize the markup, some redundant elemenst are skipped when creating
+   * these child items, in which case we need to be careful on which nodes
+   * .selected class names are added, or which nodes are removed.
+   *
+   * @param nsIDOMNode aChild
+   *        An element which is the target node of a SideMenuItem.
+   * @return nsIDOMNode
+   *         The wrapper node if there is one, or the same child otherwise.
+   */
+  _getNodeForContents: function(aChild) {
+    if (aChild.hasAttribute("merged-item-contents")) {
+      return aChild;
+    } else {
+      return aChild.parentNode;
+    }
+  },
+
   window: null,
   document: null,
-  _theme: "",
   _showArrows: false,
   _showItemCheckboxes: false,
   _showGroupCheckboxes: false,
@@ -406,7 +410,6 @@ SideMenuWidget.prototype = {
  *        The string displayed in the container.
  * @param object aOptions [optional]
  *        An object containing the following properties:
- *          - theme: the theme colors, either "dark" or "light".
  *          - showCheckbox: specifies if a checkbox should be displayed.
  */
 function SideMenuGroup(aWidget, aName, aOptions={}) {
@@ -427,7 +430,6 @@ function SideMenuGroup(aWidget, aName, aOptions={}) {
 
     let title = this._title = this.document.createElement("hbox");
     title.className = "side-menu-widget-group-title";
-    title.setAttribute("theme", aOptions.theme);
 
     let name = this._name = this.document.createElement("label");
     name.className = "plain name";
@@ -449,7 +451,7 @@ function SideMenuGroup(aWidget, aName, aOptions={}) {
   else {
     let target = this._target = this._list = this.document.createElement("vbox");
     target.className = "side-menu-widget-group side-menu-widget-group-list";
-    target.setAttribute("theme", aOptions.theme);
+    target.setAttribute("merged-group-contents", "");
   }
 }
 
@@ -519,7 +521,6 @@ SideMenuGroup.prototype = {
  *        The attachment object.
  * @param object aOptions [optional]
  *        An object containing the following properties:
- *          - theme: the theme colors, either "dark" or "light".
  *          - showArrow: specifies if a horizontal arrow should be displayed.
  *          - showCheckbox: specifies if a checkbox should be displayed.
  */
@@ -531,7 +532,6 @@ function SideMenuItem(aGroup, aContents, aAttachment={}, aOptions={}) {
   if (aOptions.showArrow || aOptions.showCheckbox) {
     let container = this._container = this.document.createElement("hbox");
     container.className = "side-menu-widget-item";
-    container.setAttribute("theme", aOptions.theme);
 
     let target = this._target = this.document.createElement("vbox");
     target.className = "side-menu-widget-item-contents";
@@ -555,7 +555,7 @@ function SideMenuItem(aGroup, aContents, aAttachment={}, aOptions={}) {
   else {
     let target = this._target = this._container = this.document.createElement("hbox");
     target.className = "side-menu-widget-item side-menu-widget-item-contents";
-    target.setAttribute("theme", aOptions.theme);
+    target.setAttribute("merged-item-contents", "");
   }
 
   this._target.setAttribute("flex", "1");

@@ -260,7 +260,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   initialize: function() {
     dumpn("Initializing the RequestsMenuView");
 
-    this.widget = new SideMenuWidget($("#requests-menu-contents"), false);
+    this.widget = new SideMenuWidget($("#requests-menu-contents"));
     this._splitter = $('#splitter');
     this._summary = $("#request-menu-network-summary");
 
@@ -371,9 +371,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   openRequestInTab: function() {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
-
     let selected = this.selectedItem.attachment;
-
     win.openUILinkIn(selected.url, "tab", { relatedToCurrent: true });
   },
 
@@ -382,7 +380,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   copyUrl: function() {
     let selected = this.selectedItem.attachment;
-
     clipboardHelper.copyString(selected.url, document);
   },
 
@@ -1078,12 +1075,34 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       let direction = window.isRTL ? -1 : 1;
 
       for (let x = 0; x < availableWidth; x += scaledStep) {
-        let divisionMS = (x / aScale).toFixed(0);
         let translateX = "translateX(" + ((direction * x) | 0) + "px)";
+        let millisecondTime = x / aScale;
+
+        let normalizedTime = millisecondTime;
+        let divisionScale = "millisecond";
+
+        // If the division is greater than 1 minute.
+        if (normalizedTime > 60000) {
+          normalizedTime /= 60000;
+          divisionScale = "minute";
+        }
+        // If the division is greater than 1 second.
+        else if (normalizedTime > 1000) {
+          normalizedTime /= 1000;
+          divisionScale = "second";
+        }
+
+        // Showing too many decimals is bad UX.
+        if (divisionScale == "millisecond") {
+          normalizedTime |= 0;
+        } else {
+          normalizedTime = L10N.numberWithDecimals(normalizedTime, 2);
+        }
 
         let node = document.createElement("label");
-        let text = L10N.getFormatStr("networkMenu.divisionMS", divisionMS);
+        let text = L10N.getFormatStr("networkMenu." + divisionScale, normalizedTime);
         node.className = "plain requests-menu-timings-division";
+        node.setAttribute("division-scale", divisionScale);
         node.style.transform = translateX;
 
         node.setAttribute("value", text);

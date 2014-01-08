@@ -16,6 +16,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.NonArrayJSONException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.UnexpectedJSONException.BadRequiredFieldJSONException;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
@@ -185,26 +186,11 @@ public class TokenServerClient {
       throw new TokenServerException(errorList);
     }
 
-    // Defensive as possible: verify object has expected keys with non-null string values.
-    for (String k : new String[] { JSON_KEY_ID, JSON_KEY_KEY, JSON_KEY_API_ENDPOINT }) {
-      Object value = result.get(k);
-      if (value == null) {
-        throw new TokenServerMalformedResponseException(null, "Expected key not present in result: " + k);
-      }
-      if (!(value instanceof String)) {
-        throw new TokenServerMalformedResponseException(null, "Value for key not a string in result: " + k);
-      }
-    }
-
-    // Defensive as possible: verify object has expected key(s) with non-null value.
-    for (String k : new String[] { JSON_KEY_UID }) {
-      Object value = result.get(k);
-      if (value == null) {
-        throw new TokenServerMalformedResponseException(null, "Expected key not present in result: " + k);
-      }
-      if (!(value instanceof Long)) {
-        throw new TokenServerMalformedResponseException(null, "Value for key not a string in result: " + k);
-      }
+    try {
+      result.throwIfFieldsMissingOrMisTyped(new String[] { JSON_KEY_ID, JSON_KEY_KEY, JSON_KEY_API_ENDPOINT }, String.class);
+      result.throwIfFieldsMissingOrMisTyped(new String[] { JSON_KEY_UID }, Long.class);
+    } catch (BadRequiredFieldJSONException e ) {
+      throw new TokenServerMalformedResponseException(null, e);
     }
 
     Logger.debug(LOG_TAG, "Successful token response: " + result.getString(JSON_KEY_ID));

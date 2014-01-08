@@ -42,16 +42,11 @@
 
     <splitter class="devtools-side-splitter"/>
 
-    <vbox flex="1">
-      <toolbar class="devtools-toolbar">
-      </toolbar>
-
-      <vbox flex="1" id="profiler-report">
-        <!-- Example:
-        <iframe id="profiler-cleo-1"
-          src="devtools/cleopatra.html" flex="1"></iframe>
-        -->
-      </vbox>
+    <vbox flex="1" id="profiler-report">
+      <!-- Example:
+      <iframe id="profiler-cleo-1"
+        src="devtools/cleopatra.html" flex="1"></iframe>
+      -->
     </vbox>
   </box>
 </window>

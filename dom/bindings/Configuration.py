@@ -494,16 +494,6 @@ class Descriptor(DescriptorProvider):
             any((m.isAttr() or m.isMethod()) and m.isStatic() for m
                 in self.interface.members))
 
-    def needsSpecialGenericOps(self):
-        """
-        Returns true if this descriptor requires generic ops other than
-        GenericBindingMethod/GenericBindingGetter/GenericBindingSetter.
-
-        In practice we need to do this if our this value might be an XPConnect
-        object or if we need to coerce null/undefined to the global.
-        """
-        return self.hasXPConnectImpls or self.interface.isOnGlobalProtoChain()
-
 # Some utility methods
 def getTypesFromDescriptor(descriptor):
     """
