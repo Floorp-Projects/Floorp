@@ -31,7 +31,7 @@ const READY_STATES = [
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
     LogManager.getLogger("addons.weblistener", this);
     return this[aName];

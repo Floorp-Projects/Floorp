@@ -48,7 +48,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/AddonRepository.jsm");
+                                  "resource://gre/modules/addons/AddonRepository.jsm");
 
 this.EXPORTED_SYMBOLS = ["AddonsEngine"];
 
