@@ -42,6 +42,8 @@ public:
     // fftSize must be a power of two
     FFTConvolver(size_t fftSize);
 
+    // |fftKernel| must be pre-scaled for FFTBlock::GetInverseWithoutScaling().
+    //
     // For now, with multiple calls to Process(), framesToProcess MUST add up EXACTLY to fftSize / 2
     //
     // FIXME: Later, we can do more sophisticated buffering to relax this requirement...

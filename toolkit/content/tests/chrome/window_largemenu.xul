@@ -111,7 +111,7 @@ function popupShown()
   else if (gTestIndex == 2) {
     // the popup is too large so ensure that it is on screen
     ok(Math.round(rect.top) + gScreenY >= screen.top, gTests[gTestIndex] + " top");
-    ok(Math.round(rect.bottom) + gScreenY < screen.height, gTests[gTestIndex] + " bottom");
+    ok(Math.round(rect.bottom) + gScreenY <= screen.height, gTests[gTestIndex] + " bottom");
     ok(gOverflowed && !gUnderflowed, gTests[gTestIndex] + " overflow")
 
     sbo.scrollTo(0, 40);
@@ -214,10 +214,8 @@ function contextMenuPopupShown()
       [, gScreenY] = getScreenXY(document.documentElement);
       // compare against the available size as well as the total size, as some
       // platforms allow the menu to overlap os chrome and others do not
-      // the - 3 here is to account for 3 pixels that are subtracted from the
-      // screen size when sizing a popup for the popup shadow
-      var pos = (screen.availTop + screen.availHeight - 3 - rect.height) - gScreenY;
-      var availPos = (screen.top + screen.height - 3 - rect.height) - gScreenY;
+      var pos = (screen.availTop + screen.availHeight - rect.height) - gScreenY;
+      var availPos = (screen.top + screen.height - rect.height) - gScreenY;
       ok(rect.top == pos || rect.top == availPos,
          gTests[gTestIndex] + " top");
       break;
@@ -288,7 +286,7 @@ function testPopupMovement()
   }
   else {
     expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
-                Math.round(rect.height) - 3;
+                Math.round(rect.height);
   }
 
   [screenX, screenY] = getScreenXY(popup);
@@ -302,7 +300,7 @@ function testPopupMovement()
   }
   else {
     expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
-                Math.round(rect.width) - 3;
+                Math.round(rect.width);
   }
 
   [screenX, screenY] = getScreenXY(popup);

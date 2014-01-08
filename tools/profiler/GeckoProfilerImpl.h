@@ -215,6 +215,27 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
   mozilla_sampler_tracing(aCategory, aInfo, aMetaData);
 }
 
+// Uncomment this to turn on systrace or build with
+// ac_add_options --enable-systace
+//#define MOZ_USE_SYSTRACE
+#ifdef MOZ_USE_SYSTRACE
+# define ATRACE_TAG ATRACE_TAG_GRAPHICS
+// We need HAVE_ANDROID_OS to be defined for Trace.h.
+// If its not set we will set it temporary and remove it.
+# ifndef HAVE_ANDROID_OS
+#   define HAVE_ANDROID_OS
+#   define REMOVE_HAVE_ANDROID_OS
+# endif
+# include <utils/Trace.h>
+# define MOZ_PLATFORM_TRACING ATRACE_CALL();
+# ifdef REMOVE_HAVE_ANDROID_OS
+#  undef HAVE_ANDROID_OS
+#  undef REMOVE_HAVE_ANDROID_OS
+# endif
+#else
+# define MOZ_PLATFORM_TRACING
+#endif
+
 // we want the class and function name but can't easily get that using preprocessor macros
 // __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
 
@@ -222,8 +243,8 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
 #define SAMPLER_APPEND_LINE_NUMBER(id) SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
-#define PROFILER_LABEL(name_space, info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
-#define PROFILER_LABEL_PRINTF(name_space, info, ...) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
+#define PROFILER_LABEL(name_space, info) MOZ_PLATFORM_TRACING mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__)
+#define PROFILER_LABEL_PRINTF(name_space, info, ...) MOZ_PLATFORM_TRACING mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, __LINE__, __VA_ARGS__)
 
 #define PROFILER_MARKER(info) mozilla_sampler_add_marker(info)
 #define PROFILER_MARKER_PAYLOAD(info, payload) mozilla_sampler_add_marker(info, payload)

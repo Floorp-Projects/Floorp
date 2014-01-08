@@ -1524,6 +1524,17 @@ MOZ_ARG_ENABLE_BOOL(profiling,
     MOZ_PROFILING=1,
     MOZ_PROFILING= )
 
+dnl ========================================================
+dnl = Turn on systrace for android/b2g.
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(systrace,
+[  --enable-systrace       Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
+    MOZ_USE_SYSTRACE=1,
+    MOZ_USE_SYSTRACE= )
+if test -n "$MOZ_USE_SYSTRACE"; then
+    AC_DEFINE(MOZ_USE_SYSTRACE)
+fi
+
 # For profiling builds keep the symbol information
 if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
     case "$OS_TARGET" in

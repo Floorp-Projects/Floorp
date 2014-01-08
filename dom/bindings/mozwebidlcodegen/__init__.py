@@ -138,6 +138,7 @@ class WebIDLCodegenManager(LoggingMixin):
     GLOBAL_DEFINE_FILES = {
         'RegisterBindings.cpp',
         'UnionTypes.cpp',
+        'PrototypeList.cpp',
     }
 
     def __init__(self, config_path, inputs, exported_header_dir,
