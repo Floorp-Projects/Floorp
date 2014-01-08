@@ -114,6 +114,7 @@ SVGFEMorphologyElement::GetRXY(int32_t *aRX, int32_t *aRY,
 FilterPrimitiveDescription
 SVGFEMorphologyElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                 const IntRect& aFilterSubregion,
+                                                const nsTArray<bool>& aInputsAreTainted,
                                                 nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   int32_t rx, ry;
