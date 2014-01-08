@@ -953,7 +953,9 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
 JS_PUBLIC_API(void)
 JS::FreeStackDescription(JSContext *cx, JS::StackDescription *desc)
 {
-    js_delete(desc->frames);
+    for (size_t i = 0; i < desc->nframes; ++i)
+        desc->frames[i].~FrameDescription();
+    js_free(desc->frames);
     js_delete(desc);
 }
 
