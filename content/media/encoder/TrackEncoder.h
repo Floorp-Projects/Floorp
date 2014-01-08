@@ -148,6 +148,16 @@ public:
                                 uint32_t aTrackEvents,
                                 const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
+  /**
+   * Interleaves the track data and stores the result into aOutput. Might need
+   * to up-mix or down-mix the channel data if the channels number of this chunk
+   * is different from aOutputChannels. The channel data from aChunk might be
+   * modified by up-mixing.
+   */
+  static void InterleaveTrackData(AudioChunk& aChunk, int32_t aDuration,
+                                  uint32_t aOutputChannels,
+                                  AudioDataValue* aOutput);
+
 protected:
   /**
    * Number of samples per channel in a pcm buffer. This is also the value of
@@ -178,15 +188,6 @@ protected:
    * and wakes up mReentrantMonitor if encoder is waiting for more track data.
    */
   virtual void NotifyEndOfStream() MOZ_OVERRIDE;
-
-  /**
-   * Interleaves the track data and stores the result into aOutput. Might need
-   * to up-mix or down-mix the channel data if the channels number of this chunk
-   * is different from mChannels. The channel data from aChunk might be modified
-   * by up-mixing.
-   */
-  void InterleaveTrackData(AudioChunk& aChunk, int32_t aDuration,
-                           uint32_t aOutputChannels, AudioDataValue* aOutput);
 
   /**
    * The number of channels are used for processing PCM data in the audio encoder.
