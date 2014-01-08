@@ -167,7 +167,7 @@ public:
 
     virtual PAsmJSCacheEntryChild* AllocPAsmJSCacheEntryChild(
                                  const asmjscache::OpenMode& aOpenMode,
-                                 const int64_t& aSizeToWrite,
+                                 const asmjscache::WriteParams& aWriteParams,
                                  const IPC::Principal& aPrincipal) MOZ_OVERRIDE;
     virtual bool DeallocPAsmJSCacheEntryChild(
                                     PAsmJSCacheEntryChild* aActor) MOZ_OVERRIDE;

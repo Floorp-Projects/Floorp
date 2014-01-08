@@ -4683,13 +4683,16 @@ typedef void
 (* CloseAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t *memory,
                                    intptr_t handle);
 
+typedef js::Vector<char, 0, js::SystemAllocPolicy> BuildIdCharVector;
+
 // Return the buildId (represented as a sequence of characters) associated with
 // the currently-executing build. If the JS engine is embedded such that a
 // single cache entry can be observed by different compiled versions of the JS
 // engine, it is critical that the buildId shall change for each new build of
 // the JS engine.
+
 typedef bool
-(* BuildIdOp)(js::Vector<char> *buildId);
+(* BuildIdOp)(BuildIdCharVector *buildId);
 
 struct AsmJSCacheOps
 {
