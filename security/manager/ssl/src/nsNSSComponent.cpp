@@ -1001,11 +1001,15 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
 
   bool crlDownloading = Preferences::GetBool("security.CRL_download.enabled",
                                              false);
+
+  // This preference controls whether we do OCSP fetching and does not affect
+  // OCSP stapling.
   // 0 = disabled, 1 = enabled
   int32_t ocspEnabled = Preferences::GetInt("security.OCSP.enabled",
                                             OCSP_ENABLED_DEFAULT);
 
-  bool ocspRequired = Preferences::GetBool("security.OCSP.require", false);
+  bool ocspRequired = ocspEnabled &&
+    Preferences::GetBool("security.OCSP.require", false);
 
   // We measure the setting of the pref at startup only to minimize noise by
   // addons that may muck with the settings, though it probably doesn't matter.
@@ -1019,9 +1023,6 @@ void nsNSSComponent::setValidationOptions(bool isInitialSetting)
 
   bool ocspStaplingEnabled = Preferences::GetBool("security.ssl.enable_ocsp_stapling",
                                                   true);
-  if (!ocspEnabled) {
-    ocspStaplingEnabled = false;
-  }
   PublicSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
   PrivateSSLState()->SetOCSPOptions(ocspEnabled, ocspStaplingEnabled);
 
