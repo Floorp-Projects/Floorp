@@ -184,7 +184,7 @@ private:
   void InstallLoadableRoots();
   void UnloadLoadableRoots();
   void CleanupIdentityInfo();
-  void setValidationOptions();
+  void setValidationOptions(bool isInitialSetting);
   nsresult setEnabledTLSVersions();
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
