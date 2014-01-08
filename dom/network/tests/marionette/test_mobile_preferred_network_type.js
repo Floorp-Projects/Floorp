@@ -9,6 +9,17 @@ let connection = navigator.mozMobileConnections[0];
 ok(connection instanceof MozMobileConnection,
    "connection is instanceof " + connection.constructor);
 
+function testSupportedNetworkTypes() {
+  let supportedNetworkTypes = connection.supportedNetworkTypes;
+
+  ok(Array.isArray(supportedNetworkTypes), "supportedNetworkTypes should be an array");
+  ok(supportedNetworkTypes.indexOf("gsm") >= 0, "Should support 'gsm'");
+  ok(supportedNetworkTypes.indexOf("wcdma") >= 0, "Should support 'wcdma'");
+  ok(supportedNetworkTypes.indexOf("cdma") >= 0, "Should support 'cdma'");
+  ok(supportedNetworkTypes.indexOf("evdo") >= 0, "Should support 'evdo'");
+
+  runNextTest();
+}
 
 function setPreferredNetworkType(type, callback) {
   log("setPreferredNetworkType: " + type);
@@ -119,6 +130,7 @@ let invalidTypes = [
 ];
 
 let tests = [
+  testSupportedNetworkTypes,
   testPreferredNetworkTypes,
   testInvalidNetworkTypes
 ];
