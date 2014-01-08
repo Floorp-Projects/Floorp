@@ -310,6 +310,7 @@ private:
   bool mFilenameInitialized;
   bool mFunnameInitialized;
   bool mLinenoInitialized;
+  bool mCallerInitialized;
 };
 
 JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
@@ -324,6 +325,7 @@ JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
     mFilenameInitialized = false;
     mFunnameInitialized = false;
     mLinenoInitialized = false;
+    mCallerInitialized = false;
     mLanguage = nsIProgrammingLanguage::JAVASCRIPT;
   } else {
     MOZ_ASSERT(!mStackDescription);
@@ -331,6 +333,7 @@ JSStackFrame::JSStackFrame(StackDescriptionOwner* aStackDescription,
     mFilenameInitialized = true;
     mFunnameInitialized = true;
     mLinenoInitialized = true;
+    mCallerInitialized = true;
     mLanguage = nsIProgrammingLanguage::UNKNOWN;
   }
 }
@@ -485,6 +488,10 @@ NS_IMETHODIMP JSStackFrame::GetSourceLine(char** aSourceLine)
 /* readonly attribute nsIStackFrame caller; */
 NS_IMETHODIMP JSStackFrame::GetCaller(nsIStackFrame** aCaller)
 {
+  if (!mCallerInitialized) {
+    mCaller = new JSStackFrame(mStackDescription, mIndex+1);
+    mCallerInitialized = true;
+  }
   NS_IF_ADDREF(*aCaller = mCaller);
   return NS_OK;
 }
@@ -524,23 +531,7 @@ JSStackFrame::CreateStack(JSContext* cx)
 
   nsRefPtr<StackDescriptionOwner> descOwner = new StackDescriptionOwner(desc);
 
-  nsRefPtr<JSStackFrame> first;
-  nsRefPtr<JSStackFrame> last;
-
-  // We create one dummy frame at the end (why?), so go up through
-  // desc->nframes+1
-  for (size_t i = 0; i < desc->nframes+1; i++) {
-    nsRefPtr<JSStackFrame> frame = new JSStackFrame(descOwner, i);
-
-    if (last) {
-      last->mCaller = frame;
-    } else {
-      MOZ_ASSERT(!first, "How can we have a first but not a last?");
-      first = frame;
-    }
-    last.swap(frame);
-  }
-
+  nsRefPtr<JSStackFrame> first = new JSStackFrame(descOwner, 0);
   return first.forget();
 }
 
