@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DecomposeIntoNoRepeatTriangles.h"
+#include "gfxMatrix.h"
 
 namespace mozilla {
 namespace gl {
@@ -14,6 +15,19 @@ RectTriangles::addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                        GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
                        bool flip_y /* = false */)
 {
+    if (vertexCoords.IsEmpty() &&
+        x0 == 0.0f && y0 == 0.0f && x1 == 1.0f && y1 == 1.0f) {
+      mIsSimpleQuad = true;
+      if (flip_y) {
+        mTextureTransform = gfx3DMatrix::From2D(gfxMatrix(tx1 - tx0, 0, 0, ty0 - ty1, tx0, ty1));
+      } else {
+        mTextureTransform = gfx3DMatrix::From2D(gfxMatrix(tx1 - tx0, 0, 0, ty1 - ty0, tx0, ty0));
+      }
+    } else if (mIsSimpleQuad) {
+      mIsSimpleQuad = false;
+      mTextureTransform = gfx3DMatrix();
+    }
+
     vert_coord v;
     v.x = x0; v.y = y0;
     vertexCoords.AppendElement(v);
