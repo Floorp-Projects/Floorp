@@ -60,17 +60,17 @@ public:
 
 class Slot
 {
-	enum Flag
-	{
-		DELETED 	= 1,
-		INSERTED 	= 2,
-		COPIED		= 4,
-		POSITIONED	= 8,
-		ATTACHED 	= 16
-	};
+    enum Flag
+    {
+        DELETED     = 1,
+        INSERTED    = 2,
+        COPIED      = 4,
+        POSITIONED  = 8,
+        ATTACHED    = 16
+    };
 
 public:
-	struct iterator;
+    struct iterator;
 
     unsigned short gid() const { return m_glyphid; }
     Position origin() const { return m_position; }
@@ -82,7 +82,7 @@ public:
     void index(uint32 val) { m_index = val; }
 
     Slot();
-    void set(const Slot & slot, int charOffset, size_t numUserAttr, size_t justLevels);
+    void set(const Slot & slot, int charOffset, size_t numUserAttr, size_t justLevels, size_t numChars);
     Slot *next() const { return m_next; }
     void next(Slot *s) { m_next = s; }
     Slot *prev() const { return m_prev; }
@@ -108,8 +108,8 @@ public:
     bool isInsertBefore() const { return !(m_flags & INSERTED); }
     uint8 getBidiLevel() const { return m_bidiLevel; }
     void setBidiLevel(uint8 level) { m_bidiLevel = level; }
-    uint8 getBidiClass() const { return m_bidiCls; }
-    void setBidiClass(uint8 cls) { m_bidiCls = cls; }
+    int8 getBidiClass() const { return m_bidiCls; }
+    void setBidiClass(int8 cls) { m_bidiCls = cls; }
     int16 *userAttrs() const { return m_userAttr; }
     void userAttrs(int16 *p) { m_userAttr = p; }
     void markInsertBefore(bool state) { if (!state) m_flags |= INSERTED; else m_flags &= ~INSERTED; }
@@ -140,7 +140,7 @@ private:
     Slot *m_prev;
     unsigned short m_glyphid;        // glyph id
     uint16 m_realglyphid;
-    uint32 m_original;	    // charinfo that originated this slot (e.g. for feature values)
+    uint32 m_original;      // charinfo that originated this slot (e.g. for feature values)
     uint32 m_before;        // charinfo index of before association
     uint32 m_after;         // charinfo index of after association
     uint32 m_index;         // slot index given to this slot during finalising
@@ -151,11 +151,11 @@ private:
     Position m_shift;       // .shift slot attribute
     Position m_advance;     // .advance slot attribute
     Position m_attach;      // attachment point on us
-    Position m_with;	    // attachment point position on parent
+    Position m_with;        // attachment point position on parent
     float    m_just;        // Justification inserted space
     uint8    m_flags;       // holds bit flags
     byte     m_attLevel;    // attachment level
-    byte     m_bidiCls;     // bidirectional class
+    int8     m_bidiCls;     // bidirectional class
     byte     m_bidiLevel;   // bidirectional level
     int16   *m_userAttr;    // pointer to user attributes
     SlotJustify *m_justs;   // pointer to justification parameters

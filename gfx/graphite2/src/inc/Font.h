@@ -32,7 +32,7 @@ of the License or (at your option) any later version.
 
 namespace graphite2 {
 
-#define INVALID_ADVANCE -1e38f		// can't be a static const because non-integral
+#define INVALID_ADVANCE -1e38f      // can't be a static const because non-integral
 
 class Font
 {
@@ -69,13 +69,13 @@ float Font::advance(unsigned short glyphid) const
 inline
 float Font::scale() const
 {
-	return m_scale;
+    return m_scale;
 }
 
 inline
 bool Font::isHinted() const
 {
-	return m_hinted;
+    return m_hinted;
 }
 
 inline

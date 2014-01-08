@@ -37,13 +37,13 @@ class Cmap
 {
 public:
 
-	virtual ~Cmap() throw() {}
+    virtual ~Cmap() throw() {}
 
-	virtual uint16 operator [] (const uint32) const throw() { return 0; }
+    virtual uint16 operator [] (const uint32) const throw() { return 0; }
 
-	virtual operator bool () const throw() { return false; }
+    virtual operator bool () const throw() { return false; }
 
-	CLASS_NEW_DELETE;
+    CLASS_NEW_DELETE;
 };
 
 class DirectCmap : public Cmap
@@ -52,9 +52,9 @@ class DirectCmap : public Cmap
     DirectCmap & operator = (const DirectCmap &);
 
 public:
-	DirectCmap(const Face &);
-	virtual uint16 operator [] (const uint32 usv) const throw();
-	virtual operator bool () const throw();
+    DirectCmap(const Face &);
+    virtual uint16 operator [] (const uint32 usv) const throw();
+    virtual operator bool () const throw();
 
     CLASS_NEW_DELETE;
 private:
@@ -69,10 +69,10 @@ class CachedCmap : public Cmap
     CachedCmap & operator = (const CachedCmap &);
 
 public:
-	CachedCmap(const Face &);
-	virtual ~CachedCmap() throw();
-	virtual uint16 operator [] (const uint32 usv) const throw();
-	virtual operator bool () const throw();
+    CachedCmap(const Face &);
+    virtual ~CachedCmap() throw();
+    virtual uint16 operator [] (const uint32 usv) const throw();
+    virtual operator bool () const throw();
     CLASS_NEW_DELETE;
 private:
     bool m_isBmpOnly;

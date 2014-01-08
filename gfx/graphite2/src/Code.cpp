@@ -105,7 +105,7 @@ private:
     opcode      fetch_opcode(const byte * bc);
     void        analyse_opcode(const opcode, const int8 * const dp) throw();
     bool        emit_opcode(opcode opc, const byte * & bc);
-    bool 		validate_opcode(const opcode opc, const byte * const bc);
+    bool        validate_opcode(const opcode opc, const byte * const bc);
     bool        valid_upto(const uint16 limit, const uint16 x) const throw();
     void        failure(const status_t s) const throw() { _code.failure(s); }
     
@@ -215,7 +215,10 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
     _data = static_cast<byte *>(realloc(_data, _data_size*sizeof(byte)));
 
     if (!_code)
+    {
         failure(alloc_failed);
+        return;
+    }
 
     // Make this RET_ZERO, we should never reach this but just in case ...
     _code[_instr_count] = op_to_fn[RET_ZERO].impl[_constraint];
@@ -257,7 +260,7 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
     const opcode opc = opcode(*bc++);
 
     // Do some basic sanity checks based on what we know about the opcode
-    if (!validate_opcode(opc, bc))	return MAX_OPCODE;
+    if (!validate_opcode(opc, bc))  return MAX_OPCODE;
 
     // And check it's arguments as far as possible
     switch (opc)
@@ -322,11 +325,11 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
         case ATTR_ADD :
         case ATTR_SUB :
         case ATTR_SET_SLOT :
-        	valid_upto(gr_slatMax, bc[0]);
+            valid_upto(gr_slatMax, bc[0]);
             break;
         case IATTR_SET_SLOT :
             if (valid_upto(gr_slatMax, bc[0]))
-            	valid_upto(_max.attrid[bc[0]], bc[1]);
+                valid_upto(_max.attrid[bc[0]], bc[1]);
             break;
         case PUSH_SLOT_ATTR :
             valid_upto(gr_slatMax, bc[0]);
@@ -357,8 +360,8 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
         case PUSH_ISLOT_ATTR :
             if (valid_upto(gr_slatMax, bc[0]))
             {
-            	valid_upto(_rule_length, _pre_context + int8(bc[1]));
-            	valid_upto(_max.attrid[bc[0]], bc[2]);
+                valid_upto(_rule_length, _pre_context + int8(bc[1]));
+                valid_upto(_max.attrid[bc[0]], bc[2]);
             }
             break;
         case PUSH_IGLYPH_ATTR :// not implemented
@@ -370,7 +373,7 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
         case IATTR_ADD :
         case IATTR_SUB :
             if (valid_upto(gr_slatMax, bc[0]))
-            	valid_upto(_max.attrid[bc[0]], bc[1]);
+                valid_upto(_max.attrid[bc[0]], bc[1]);
             break;
         case PUSH_PROC_STATE :  // dummy: dp[0] no check necessary
         case PUSH_VERSION :
@@ -544,26 +547,26 @@ void Machine::Code::decoder::apply_analysis(instr * const code, instr * code_end
 inline
 bool Machine::Code::decoder::validate_opcode(const opcode opc, const byte * const bc)
 {
-	if (opc >= MAX_OPCODE)
-	{
-		failure(invalid_opcode);
-		return false;
-	}
-	const opcode_t & op = Machine::getOpcodeTable()[opc];
-	const size_t param_sz = op.param_sz == VARARGS ? bc[0] + 1 : op.param_sz;
-	if (bc + param_sz > _max.bytecode)
-	{
-		failure(arguments_exhausted);
-		return false;
-	}
-	return true;
+    if (opc >= MAX_OPCODE)
+    {
+        failure(invalid_opcode);
+        return false;
+    }
+    const opcode_t & op = Machine::getOpcodeTable()[opc];
+    const size_t param_sz = op.param_sz == VARARGS ? bc[0] + 1 : op.param_sz;
+    if (bc + param_sz > _max.bytecode)
+    {
+        failure(arguments_exhausted);
+        return false;
+    }
+    return true;
 }
 
 
 bool Machine::Code::decoder::valid_upto(const uint16 limit, const uint16 x) const throw()
 {
-	const bool t = x < limit;
-    if (!t)	failure(out_of_range_data);
+    const bool t = x < limit;
+    if (!t) failure(out_of_range_data);
     return t;
 }
 

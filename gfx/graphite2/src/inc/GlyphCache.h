@@ -1,6 +1,6 @@
 /*  GRAPHITE2 LICENSING
 
-    Copyright 2010, SIL International
+    Copyright 2012, SIL International
     All rights reserved.
 
     This library is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ class GlyphCache
 {
     class Loader;
 
-	GlyphCache(const GlyphCache&);
+    GlyphCache(const GlyphCache&);
     GlyphCache& operator=(const GlyphCache&);
 
 public:
@@ -58,11 +58,11 @@ public:
     CLASS_NEW_DELETE;
     
 private:
-    const Loader              * _glyph_loader;
-    const GlyphFace *   *       _glyphs;
-    unsigned short              _num_glyphs,
-                                _num_attrs,
-                                _upem;
+    const Loader        * _glyph_loader;
+    const GlyphFace *   * _glyphs;
+    unsigned short        _num_glyphs,
+                          _num_attrs,
+                          _upem;
 };
 
 inline
