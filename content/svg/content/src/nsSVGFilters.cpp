@@ -86,6 +86,20 @@ nsSVGFE::GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources)
 }
 
 bool
+nsSVGFE::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                         nsIPrincipal* aReferencePrincipal)
+{
+  // This is the default implementation for OutputIsTainted.
+  // Our output is tainted if we have at least one tainted input.
+  for (uint32_t i = 0; i < aInputsAreTainted.Length(); i++) {
+    if (aInputsAreTainted[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
 nsSVGFE::AttributeAffectsRendering(int32_t aNameSpaceID,
                                    nsIAtom* aAttribute) const
 {
