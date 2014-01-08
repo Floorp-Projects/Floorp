@@ -872,7 +872,7 @@ CycleCollectedJSRuntime::ZoneParticipant()
 }
 
 nsresult
-CycleCollectedJSRuntime::BeginCycleCollection(nsCycleCollectionNoteRootCallback &aCb)
+CycleCollectedJSRuntime::TraverseRoots(nsCycleCollectionNoteRootCallback &aCb)
 {
   static bool gcHasRun = false;
   if (!gcHasRun) {
