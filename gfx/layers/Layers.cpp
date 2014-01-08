@@ -1500,6 +1500,7 @@ PrintInfo(nsACString& aTo, LayerComposite* aLayerComposite)
 void
 SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
 {
+  bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   if (aTarget->GetFormat() != FORMAT_B8G8R8A8) {
     aTarget->SetPermitSubpixelAA(permitSubpixelAA);
     return;
@@ -1519,12 +1520,12 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
 void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
-  bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   if (!aTarget->IsCairo()) {
     SetAntialiasingFlags(aLayer, aTarget->GetDrawTarget());
     return;
   }
 
+  bool permitSubpixelAA = !(aLayer->GetContentFlags() & Layer::CONTENT_DISABLE_SUBPIXEL_AA);
   nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
   if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
     // Destination doesn't have alpha channel; no need to set any special flags

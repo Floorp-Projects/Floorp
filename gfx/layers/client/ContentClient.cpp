@@ -1170,7 +1170,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   } else {
     nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
     MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize());
+    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
   }
   if (!mLoanedDrawTarget) {
     NS_WARNING("unable to get context for update");
