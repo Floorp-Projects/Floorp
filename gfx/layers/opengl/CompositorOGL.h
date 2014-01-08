@@ -168,9 +168,6 @@ public:
     return gfx::FORMAT_R8G8B8A8;
   }
 
-  virtual void SaveState() MOZ_OVERRIDE;
-  virtual void RestoreState() MOZ_OVERRIDE;
-
   /**
    * The compositor provides with temporary textures for use with direct
    * textruing like gralloc texture.
@@ -328,6 +325,17 @@ private:
    */
   double AddFrameAndGetFps(const TimeStamp& timestamp);
 
+  /**
+   * Implements the flipping of the y-axis to convert from layers/compositor
+   * coordinates to OpenGL coordinates.
+   *
+   * Indeed, the only coordinate system that OpenGL knows has the y-axis
+   * pointing upwards, but the layers/compositor coordinate system has the
+   * y-axis pointing downwards, for good reason as Web pages are typically
+   * scrolled downwards. So, some flipping has to take place; FlippedY does it.
+   */
+  GLint FlipY(GLint y) const { return mHeight - y; }
+
   bool mDestroyed;
 
   nsAutoPtr<FPSState> mFPS;
@@ -335,6 +343,12 @@ private:
   // The index of the texture in this array must correspond to the texture unit.
   nsTArray<GLuint> mTextures;
   static bool sDrawFPS;
+
+  /**
+   * Height of the OpenGL context's primary framebuffer in pixels. Used by
+   * FlipY for the y-flipping calculation.
+   */
+  GLint mHeight;
 };
 
 }

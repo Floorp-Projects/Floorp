@@ -25,6 +25,9 @@
 #endif
 #include "mozilla/Attributes.h"
 
+namespace mozilla {
+namespace net {
+
 static const char kAllowProxies[] = "network.automatic-ntlm-auth.allow-proxies";
 static const char kAllowNonFqdn[] = "network.automatic-ntlm-auth.allow-non-fqdn";
 static const char kTrustedURIs[]  = "network.automatic-ntlm-auth.trusted-uris";
@@ -480,3 +483,6 @@ nsHttpNTLMAuth::GetAuthFlags(uint32_t *flags)
     *flags = CONNECTION_BASED | IDENTITY_INCLUDES_DOMAIN | IDENTITY_ENCRYPTED;
     return NS_OK;
 }
+
+} // namespace mozilla::net
+} // namespace mozilla

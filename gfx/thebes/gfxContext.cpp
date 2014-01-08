@@ -115,6 +115,15 @@ gfxContext::gfxContext(DrawTarget *aTarget)
   mDT->SetTransform(Matrix());
 }
 
+/* static */ already_AddRefed<gfxContext>
+gfxContext::ContextForDrawTarget(DrawTarget* aTarget)
+{
+  Matrix transform = aTarget->GetTransform();
+  nsRefPtr<gfxContext> result = new gfxContext(aTarget);
+  result->SetMatrix(ThebesMatrix(transform));
+  return result.forget();
+}
+
 gfxContext::~gfxContext()
 {
   if (mCairo) {

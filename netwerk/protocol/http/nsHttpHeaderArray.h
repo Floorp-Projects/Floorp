@@ -13,6 +13,8 @@
 
 class nsIHttpHeaderVisitor;
 
+namespace mozilla { namespace net {
+
 class nsHttpHeaderArray
 {
 public:
@@ -177,5 +179,7 @@ nsHttpHeaderArray::IsSuspectDuplicateHeader(nsHttpAtom header)
 
     return retval;
 }
+
+}} // namespace mozilla::net
 
 #endif
