@@ -11,20 +11,14 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", onEditorAdded);
-  });
+  addTabAndOpenStyleEditors(3, onEditorAdded);
 
   content.location = TESTCASE_URI;
 }
 
-let gAddedCount = 0;
-function onEditorAdded()
+function onEditorAdded(panel)
 {
-  if (++gAddedCount != 3) {
-    return;
-  }
+  gUI = panel.UI;
 
   is(gUI.editors.length, 3,
     "there are 3 stylesheets after loading @imports");
