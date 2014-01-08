@@ -842,37 +842,6 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
 }
 
 void
-nsSVGUtils::CompositeSurfaceMatrix(gfxContext *aContext,
-                                   gfxASurface *aSurface,
-                                   SourceSurface *aSourceSurface,
-                                   const gfxPoint &aSurfaceOffset,
-                                   const gfxMatrix &aCTM)
-{
-  if (aCTM.IsSingular())
-    return;
-
-  if (aSurface) {
-    aContext->Save();
-    aContext->Multiply(aCTM);
-    aContext->Translate(aSurfaceOffset);
-    aContext->SetSource(aSurface);
-    aContext->Paint();
-    aContext->Restore();
-  } else {
-    DrawTarget *destDT = aContext->GetDrawTarget();
-    Matrix oldMat = destDT->GetTransform();
-    destDT->SetTransform(ToMatrix(aCTM) * oldMat);
-
-    IntSize size = aSourceSurface->GetSize();
-    Rect sourceRect(Point(0, 0), Size(size.width, size.height));
-    Rect drawRect = sourceRect + ToPoint(aSurfaceOffset);
-    destDT->DrawSurface(aSourceSurface, drawRect, sourceRect);
-
-    destDT->SetTransform(oldMat);
-  }
-}
-
-void
 nsSVGUtils::SetClipRect(gfxContext *aContext,
                         const gfxMatrix &aCTM,
                         const gfxRect &aRect)
