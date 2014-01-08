@@ -8,7 +8,7 @@ let EXPORTED_SYMBOLS = ["Addon", "STATE_ENABLED", "STATE_DISABLED"];
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
-Cu.import("resource://gre/modules/AddonRepository.jsm");
+Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/addonutils.js");

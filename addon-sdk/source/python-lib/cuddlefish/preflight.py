@@ -16,7 +16,7 @@ def create_jid():
     # and all) or in the form of an email address (crazy @ and all).
     # Firefox will refuse to install an add-on with an id that doesn't
     # match one of these forms. The actual regexp is at:
-    # http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/XPIProvider.jsm#130
+    # http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/internal/XPIProvider.jsm#130
     # So the JID needs an @-suffix, and the only legal punctuation is
     # "-._". So we start with a base64 encoding, and replace the
     # punctuation (+/) with letters (AB), losing a few bits of integrity.

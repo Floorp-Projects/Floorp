@@ -9,5 +9,5 @@ component {7beb3ba8-6ec3-41b4-b67c-da89b8518922} amContentHandler.js
 contract @mozilla.org/uriloader/content-handler;1?type=application/x-xpinstall {7beb3ba8-6ec3-41b4-b67c-da89b8518922}
 component {0f38e086-89a3-40a5-8ffc-9b694de1d04a} amWebInstallListener.js
 contract @mozilla.org/addons/web-install-listener;1 {0f38e086-89a3-40a5-8ffc-9b694de1d04a}
-category addon-provider-module PluginProvider resource://gre/modules/PluginProvider.jsm
+category addon-provider-module PluginProvider resource://gre/modules/addons/PluginProvider.jsm
 #endif

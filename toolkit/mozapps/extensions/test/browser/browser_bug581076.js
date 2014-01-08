@@ -64,7 +64,7 @@ function check_allresultslink(aShouldShow) {
     is_element_visible(link, "All Results link should be visible");
     is(link.value, "See all " + SEARCH_EXPECTED_TOTAL + " results", "All Results link should show the correct message");
     var scope = {};
-    Components.utils.import("resource://gre/modules/AddonRepository.jsm", scope);
+    Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", scope);
     is(link.href, scope.AddonRepository.getSearchURL(SEARCH_QUERY), "All Results link should have the correct href");
   } else {
     is_element_hidden(link, "All Results link should be hidden");
