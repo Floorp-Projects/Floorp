@@ -333,7 +333,7 @@ ContainerRender(ContainerT* aContainer,
     // Unbind the current surface and rebind the previous one.
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPainting) {
-      nsRefPtr<gfxImageSurface> surf = surface->Dump(aManager->GetCompositor());
+      RefPtr<gfx::DataSourceSurface> surf = surface->Dump(aManager->GetCompositor());
       WriteSnapshotToDumpFile(aContainer, surf);
     }
 #endif
