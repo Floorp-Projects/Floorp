@@ -47,9 +47,9 @@ gr_font* gr_make_font(float ppm/*pixels per em*/, const gr_face *face)
 
 gr_font* gr_make_font_with_ops(float ppm/*pixels per em*/, const void* appFontHandle/*non-NULL*/, const gr_font_ops * font_ops, const gr_face * face/*needed for scaling*/)
 {                 //the appFontHandle must stay alive all the time when the gr_font is alive. When finished with the gr_font, call destroy_gr_font    
-	if (face == 0)	return 0;
+    if (face == 0)  return 0;
 
-	Font * const res = new Font(ppm, *face, appFontHandle, font_ops);
+    Font * const res = new Font(ppm, *face, appFontHandle, font_ops);
     return static_cast<gr_font*>(res);
 }
 

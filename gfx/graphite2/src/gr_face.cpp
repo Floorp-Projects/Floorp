@@ -31,8 +31,13 @@ of the License or (at your option) any later version.
 #include "inc/CachedFace.h"
 #include "inc/CmapCache.h"
 #include "inc/Silf.h"
+#include "inc/json.h"
 
 using namespace graphite2;
+
+#if !defined GRAPHITE2_NTRACING
+extern json *global_log;
+#endif
 
 namespace
 {
@@ -49,8 +54,27 @@ namespace
         if (!face.readGlyphs(options))
             return false;
 
-        return silf ? face.readFeatures() && face.readGraphite(silf)
-                    : options & gr_face_dumbRendering;
+        if (silf)
+        {
+            if (!face.readFeatures() || !face.readGraphite(silf))
+            {
+#if !defined GRAPHITE2_NTRACING
+                if (global_log)
+                {
+                    *global_log << json::object
+                        << "type" << "fontload"
+                        << "failure" << face.error()
+                        << "context" << face.error_context()
+                    << json::close;
+                }
+#endif
+                return false;
+            }
+            else
+                return true;
+        }
+        else
+            return options & gr_face_dumbRendering;
     }
 }
 
@@ -59,7 +83,7 @@ extern "C" {
 gr_face* gr_make_face_with_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *ops, unsigned int faceOptions)
                   //the appFaceHandle must stay alive all the time when the gr_face is alive. When finished with the gr_face, call destroy_face    
 {
-	if (ops == 0)	return 0;
+    if (ops == 0)   return 0;
 
     Face *res = new Face(appFaceHandle, *ops);
     if (res && load_face(*res, faceOptions))
@@ -79,7 +103,7 @@ gr_face* gr_make_face(const void* appFaceHandle/*non-NULL*/, gr_get_table_fn tab
 gr_face* gr_make_face_with_seg_cache_and_ops(const void* appFaceHandle/*non-NULL*/, const gr_face_ops *ops, unsigned int cacheSize, unsigned int faceOptions)
                   //the appFaceHandle must stay alive all the time when the GrFace is alive. When finished with the GrFace, call destroy_face
 {
-	if (ops == 0)	return 0;
+    if (ops == 0)   return 0;
 
     CachedFace *res = new CachedFace(appFaceHandle, *ops);
     if (res && load_face(*res, faceOptions)
@@ -120,17 +144,17 @@ void gr_tag_to_str(gr_uint32 tag, char *str)
 inline
 uint32 zeropad(const uint32 x)
 {
-	if (x == 0x20202020) 					return 0;
-	if ((x & 0x00FFFFFF) == 0x00202020)		return x & 0xFF000000;
-	if ((x & 0x0000FFFF) == 0x00002020)		return x & 0xFFFF0000;
-	if ((x & 0x000000FF) == 0x00000020)		return x & 0xFFFFFF00;
-	return x;
+    if (x == 0x20202020)                    return 0;
+    if ((x & 0x00FFFFFF) == 0x00202020)     return x & 0xFF000000;
+    if ((x & 0x0000FFFF) == 0x00002020)     return x & 0xFFFF0000;
+    if ((x & 0x000000FF) == 0x00000020)     return x & 0xFFFFFF00;
+    return x;
 }
 
 gr_feature_val* gr_face_featureval_for_lang(const gr_face* pFace, gr_uint32 langname/*0 means clone default*/) //clones the features. if none for language, clones the default
 {
     assert(pFace);
-    zeropad(langname);
+    langname = zeropad(langname);
     return static_cast<gr_feature_val *>(pFace->theSill().cloneFeatures(langname));
 }
 
@@ -138,7 +162,7 @@ gr_feature_val* gr_face_featureval_for_lang(const gr_face* pFace, gr_uint32 lang
 const gr_feature_ref* gr_face_find_fref(const gr_face* pFace, gr_uint32 featId)  //When finished with the FeatureRef, call destroy_FeatureRef
 {
     assert(pFace);
-    zeropad(featId);
+    featId = zeropad(featId);
     const FeatureRef* pRef = pFace->featureById(featId);
     return static_cast<const gr_feature_ref*>(pRef);
 }

@@ -145,6 +145,12 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
     }
     utf16Length >>= 1; // in utf16 units
     utf16::codeunit_t * utf16Name = gralloc<utf16::codeunit_t>(utf16Length);
+    if (!utf16Name)
+    {
+        languageId = 0;
+        length = 0;
+        return NULL;
+    }
     const uint8* pName = m_nameData + offset;
     for (size_t i = 0; i < utf16Length; i++)
     {
@@ -154,28 +160,46 @@ void* NameTable::getName(uint16& languageId, uint16 nameId, gr_encform enc, uint
     {
     case gr_utf8:
     {
-    	utf8::codeunit_t* uniBuffer = gralloc<utf8::codeunit_t>(3 * utf16Length + 1);
+        utf8::codeunit_t* uniBuffer = gralloc<utf8::codeunit_t>(3 * utf16Length + 1);
+        if (!uniBuffer)
+        {
+            free(utf16Name);
+            languageId = 0;
+            length = 0;
+            return NULL;
+        }
         utf8::iterator d = uniBuffer;
         for (utf16::const_iterator s = utf16Name, e = utf16Name + utf16Length; s != e; ++s, ++d)
-        	*d = *s;
+            *d = *s;
         length = d - uniBuffer;
         uniBuffer[length] = 0;
+        free(utf16Name);
         return uniBuffer;
     }
     case gr_utf16:
-    	length = utf16Length;
-    	return utf16Name;
+        length = utf16Length;
+        return utf16Name;
     case gr_utf32:
     {
-    	utf32::codeunit_t * uniBuffer = gralloc<utf32::codeunit_t>(utf16Length  + 1);
-		utf32::iterator d = uniBuffer;
-		for (utf16::const_iterator s = utf16Name, e = utf16Name + utf16Length; s != e; ++s, ++d)
-			*d = *s;
-		length = d - uniBuffer;
-		uniBuffer[length] = 0;
-		return uniBuffer;
+        utf32::codeunit_t * uniBuffer = gralloc<utf32::codeunit_t>(utf16Length  + 1);
+        if (!uniBuffer)
+        {
+            free(utf16Name);
+            languageId = 0;
+            length = 0;
+            return NULL;
+        }
+        utf32::iterator d = uniBuffer;
+        for (utf16::const_iterator s = utf16Name, e = utf16Name + utf16Length; s != e; ++s, ++d)
+            *d = *s;
+        length = d - uniBuffer;
+        uniBuffer[length] = 0;
+        free(utf16Name);
+        return uniBuffer;
     }
     }
+    free(utf16Name);
+    languageId = 0;
     length = 0;
     return NULL;
 }
