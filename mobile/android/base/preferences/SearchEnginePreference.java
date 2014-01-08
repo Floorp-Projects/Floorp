@@ -193,7 +193,7 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
         // Copy the icon from this object to the prompt we produce. We lazily create the drawable,
         // as the user may not ever actually tap this object.
         if (mPromptIcon == null && mIconBitmap != null) {
-            mPromptIcon = new BitmapDrawable(mFaviconView.getBitmap());
+            mPromptIcon = new BitmapDrawable(getContext().getResources(), mFaviconView.getBitmap());
         }
 
         // Icons are hidden until Bug 926711 is fixed.

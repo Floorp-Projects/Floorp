@@ -975,7 +975,8 @@
         <sidebarheader id="social-sidebar-header" class="sidebar-header" align="center">
           <image id="social-sidebar-favico"/>
           <label id="social-sidebar-title" class="sidebar-title" persist="value" flex="1" crop="end" control="sidebar"/>
-          <button id="social-sidebar-button"
+          <toolbarbutton id="social-sidebar-button"
+                         class="toolbarbutton-1"
                          type="menu">
             <menupopup id="social-statusarea-popup" position="after_end">
               <menuitem class="social-toggle-sidebar-menuitem"
@@ -999,7 +1000,7 @@
                         accesskey="&social.learnMore.accesskey;"
                         oncommand="SocialUI.showLearnMore();"/>
             </menupopup>
-          </button>
+          </toolbarbutton>
         </sidebarheader>
 
         <browser id="social-sidebar-browser"
@@ -1007,7 +1008,7 @@
                  context="contentAreaContextMenu"
                  disableglobalhistory="true"
                  tooltip="aHTMLTooltip"
-               popupnotificationanchor="social-notification-icon"
+                 popupnotificationanchor="social-sidebar-favico"
                  flex="1"
                  style="min-width: 14em; width: 18em; max-width: 36em;"/>
       </vbox>

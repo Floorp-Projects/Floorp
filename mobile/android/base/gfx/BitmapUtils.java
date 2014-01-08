@@ -47,7 +47,7 @@ public final class BitmapUtils {
         }
 
         if (data.startsWith("data")) {
-            BitmapDrawable d = new BitmapDrawable(getBitmapFromDataURI(data));
+            BitmapDrawable d = new BitmapDrawable(context.getResources(), getBitmapFromDataURI(data));
             loader.onBitmapFound(d);
             return;
         }
