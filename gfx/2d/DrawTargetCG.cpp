@@ -247,13 +247,16 @@ class UnboundnessFixer
     {
       if (!IsOperatorBoundByMask(blend)) {
         mClipBounds = CGContextGetClipBoundingBox(baseCg);
+        if (CGRectIsEmpty(mClipBounds)) {
+          return baseCg;
+        }
+
         // TransparencyLayers aren't blended using the blend mode so
         // we are forced to use CGLayers
 
         //XXX: The size here is in default user space units, of the layer relative to the graphics context.
         // is the clip bounds still correct if, for example, we have a scale applied to the context?
         mLayer = CGLayerCreateWithContext(baseCg, mClipBounds.size, nullptr);
-        //XXX: if the size is 0x0 we get a nullptr CGContext back from GetContext
         mCg = CGLayerGetContext(mLayer);
         // CGContext's default to have the origin at the bottom left
         // so flip it to the top left and adjust for the origin
