@@ -26,7 +26,6 @@ AudioBlockCopyChannelWithScale_NEON(const float aInput[WEBAUDIO_BLOCK_SIZE],
 
 void
 AudioBufferInPlaceScale_NEON(float* aBlock,
-                             uint32_t aChannelCount,
                              float aScale,
                              uint32_t aSize);
 

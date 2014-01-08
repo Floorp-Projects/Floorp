@@ -127,7 +127,6 @@ AudioBlockCopyChannelWithScale_NEON(const float aInput[WEBAUDIO_BLOCK_SIZE],
 
 void
 AudioBufferInPlaceScale_NEON(float* aBlock,
-                             uint32_t aChannelCount,
                              float aScale,
                              uint32_t aSize)
 {
@@ -137,11 +136,10 @@ AudioBufferInPlaceScale_NEON(float* aBlock,
   float32x4_t vout0, vout1, vout2, vout3;
   float32x4_t vscale = vmovq_n_f32(aScale);
 
-  uint32_t totalSize = aSize * aChannelCount;
-  uint32_t dif = totalSize % 16;
-  totalSize -= dif;
+  uint32_t dif = aSize % 16;
+  uint32_t vectorSize = aSize - dif;
   uint32_t i = 0;
-  for (; i < totalSize; i+=16) {
+  for (; i < vectorSize; i+=16) {
     vin0 = vld1q_f32(ADDRESS_OF(aBlock, i));
     vin1 = vld1q_f32(ADDRESS_OF(aBlock, i+4));
     vin2 = vld1q_f32(ADDRESS_OF(aBlock, i+8));
