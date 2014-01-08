@@ -10,12 +10,9 @@ function test()
 {
   waitForExplicitFinish();
 
-  addTabAndOpenStyleEditor(function(panel) {
-    gUI = panel.UI;
-    gUI.on("editor-added", function(event, editor) {
-      editor.getSourceEditor().then(function() {
-        testEditor(editor);
-      });
+  addTabAndCheckOnStyleEditorAdded(panel => gUI = panel.UI, editor => {
+    editor.getSourceEditor().then(function() {
+      testEditor(editor);
     });
   });
 
