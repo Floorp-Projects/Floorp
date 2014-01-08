@@ -200,6 +200,20 @@ box.requests-menu-status[code^="5"] {
   transform-origin: right center;
 }
 
+.requests-menu-timings-division[division-scale=millisecond] {
+  -moz-border-start-color: #f5f7fa !important; /* Light foreground text */
+}
+
+.requests-menu-timings-division[division-scale=second] {
+  -moz-border-start-color: #d99b28 !important; /* Light orange highlight color */
+  font-weight: 600;
+}
+
+.requests-menu-timings-division[division-scale=minute] {
+  -moz-border-start-color: #eb5368 !important; /* Red highlight color */
+  font-weight: 600;
+}
+
 /* Network requests table: waterfall items */
 
 .requests-menu-subitem.requests-menu-waterfall {
