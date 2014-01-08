@@ -113,7 +113,7 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
             float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.width) / float(dstSize.width) - 1.0f;
             float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.height) / float(dstSize.height) - 1.0f;
-            mGL->PushViewportRect(nsIntRect(0, 0, dstSize.width, dstSize.height));
+            ScopedViewportRect autoViewportRect(mGL, 0, 0, dstSize.width, dstSize.height);
 
             RectTriangles rects;
 
@@ -160,7 +160,6 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
             mGL->fDisableVertexAttribArray(0);
             mGL->fDisableVertexAttribArray(1);
 
-            mGL->PopViewportRect();
         } while (aSrc->NextTile());
     } while (aDst->NextTile());
 

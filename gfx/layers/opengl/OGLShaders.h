@@ -1,4 +1,4 @@
-/* AUTOMATICALLY GENERATED from LayerManagerOGLShaders.txt */
+/* AUTOMATICALLY GENERATED from OGLShaders.txt */
 /* DO NOT EDIT! */
 
 static const char sLayerVS[] = "/* sLayerVS */\n\
