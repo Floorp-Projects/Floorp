@@ -34,6 +34,7 @@ public:
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
+                            const nsTArray<bool>& aInputsAreTainted,
                             nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
 

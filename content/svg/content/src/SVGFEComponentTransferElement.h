@@ -32,6 +32,7 @@ public:
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
+                            const nsTArray<bool>& aInputsAreTainted,
                             nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) MOZ_OVERRIDE;
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
