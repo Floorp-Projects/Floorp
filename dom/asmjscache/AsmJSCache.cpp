@@ -10,6 +10,7 @@
 
 #include "js/RootingAPI.h"
 #include "jsfriendapi.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryParent.h"
@@ -20,11 +21,13 @@
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
+#include "mozilla/HashFunctions.h"
 #include "mozilla/unused.h"
 #include "nsIAtom.h"
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "nsIRunnable.h"
+#include "nsISimpleEnumerator.h"
 #include "nsIThread.h"
 #include "nsIXULAppInfo.h"
 #include "nsJSPrincipals.h"
@@ -33,7 +36,8 @@
 #include "prio.h"
 #include "private/pprio.h"
 
-#define ASMJSCACHE_FILE_NAME "module"
+#define ASMJSCACHE_METADATA_FILE_NAME "metadata"
+#define ASMJSCACHE_ENTRY_FILE_NAME_BASE "module"
 
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::OriginOrPatternString;
@@ -42,8 +46,12 @@ using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::QuotaObject;
 using mozilla::dom::quota::UsageInfo;
 using mozilla::unused;
+using mozilla::HashString;
 
 namespace mozilla {
+
+MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc, PR_Close);
+
 namespace dom {
 namespace asmjscache {
 
@@ -53,6 +61,81 @@ bool
 IsMainProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
+// Anything smaller should compile fast enough that caching will just add
+// overhead.
+static const size_t sMinCachedModuleLength = 10000;
+
+// The number of characters to hash into the Metadata::Entry::mFastHash.
+static const unsigned sNumFastHashChars = 4096;
+
+nsresult
+WriteMetadataFile(nsIFile* aMetadataFile, const Metadata& aMetadata)
+{
+  int32_t openFlags = PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE;
+
+  JS::BuildIdCharVector buildId;
+  bool ok = GetBuildId(&buildId);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  ScopedPRFileDesc fd;
+  nsresult rv = aMetadataFile->OpenNSPRFileDesc(openFlags, 0644, &fd.rwget());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t length = buildId.length();
+  int32_t bytesWritten = PR_Write(fd, &length, sizeof(length));
+  NS_ENSURE_TRUE(bytesWritten == sizeof(length), NS_ERROR_UNEXPECTED);
+
+  bytesWritten = PR_Write(fd, buildId.begin(), length);
+  NS_ENSURE_TRUE(bytesWritten == int32_t(length), NS_ERROR_UNEXPECTED);
+
+  bytesWritten = PR_Write(fd, &aMetadata, sizeof(aMetadata));
+  NS_ENSURE_TRUE(bytesWritten == sizeof(aMetadata), NS_ERROR_UNEXPECTED);
+
+  return NS_OK;
+}
+
+nsresult
+ReadMetadataFile(nsIFile* aMetadataFile, Metadata& aMetadata)
+{
+  int32_t openFlags = PR_RDONLY;
+
+  ScopedPRFileDesc fd;
+  nsresult rv = aMetadataFile->OpenNSPRFileDesc(openFlags, 0644, &fd.rwget());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Read the buildid and check that it matches the current buildid
+
+  JS::BuildIdCharVector currentBuildId;
+  bool ok = GetBuildId(&currentBuildId);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  uint32_t length;
+  int32_t bytesRead = PR_Read(fd, &length, sizeof(length));
+  NS_ENSURE_TRUE(bytesRead == sizeof(length), NS_ERROR_UNEXPECTED);
+
+  NS_ENSURE_TRUE(currentBuildId.length() == length, NS_ERROR_UNEXPECTED);
+
+  JS::BuildIdCharVector fileBuildId;
+  ok = fileBuildId.resize(length);
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+
+  bytesRead = PR_Read(fd, fileBuildId.begin(), length);
+  NS_ENSURE_TRUE(bytesRead == int32_t(length), NS_ERROR_UNEXPECTED);
+
+  for (uint32_t i = 0; i < length; i++) {
+    if (currentBuildId[i] != fileBuildId[i]) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Read the Metadata struct
+
+  bytesRead = PR_Read(fd, &aMetadata, sizeof(aMetadata));
+  NS_ENSURE_TRUE(bytesRead == sizeof(aMetadata), NS_ERROR_UNEXPECTED);
+
+  return NS_OK;
 }
 
 // FileDescriptorHolder owns a file descriptor and its memory mapping.
@@ -309,10 +392,10 @@ public:
   // the lifetime of the MainProcessRunnable.
   MainProcessRunnable(nsIPrincipal* aPrincipal,
                       OpenMode aOpenMode,
-                      size_t aSizeToWrite)
+                      WriteParams aWriteParams)
   : mPrincipal(aPrincipal),
     mOpenMode(aOpenMode),
-    mSizeToWrite(aSizeToWrite),
+    mWriteParams(aWriteParams),
     mNeedAllowNextSynchronizedOp(false),
     mState(eInitial)
   {
@@ -326,9 +409,22 @@ public:
   }
 
 protected:
-  // This method is be called by the derived class (either on the JS
-  // compilation thread or the main thread) when JS engine is finished
-  // reading/writing the cache entry.
+  // This method is called by the derived class (either on the JS compilation
+  // thread or the main thread) when a cache entry has been selected to open.
+  void
+  OpenForRead(unsigned aModuleIndex)
+  {
+    MOZ_ASSERT(mState == eWaitingToOpenCacheFileForRead);
+    MOZ_ASSERT(mOpenMode == eOpenForRead);
+
+    mModuleIndex = aModuleIndex;
+    mState = eReadyToOpenCacheFileForRead;
+    DispatchToIOThread();
+  }
+
+  // This method is called by the derived class (either on the JS compilation
+  // thread or the main thread) when the JS engine is finished reading/writing
+  // the cache entry.
   void
   Close()
   {
@@ -342,16 +438,22 @@ protected:
   void
   Fail()
   {
-    MOZ_ASSERT(mState == eInitial || mState == eWaitingToOpen ||
-               mState == eReadyToOpen || mState == eNotifying);
+    MOZ_ASSERT(mState != eOpened &&
+               mState != eClosing &&
+               mState != eFailing &&
+               mState != eFinished);
 
     mState = eFailing;
     NS_DispatchToMainThread(this);
   }
 
+  // Called by MainProcessRunnable on the main thread after metadata is open:
+  virtual void
+  OnOpenMetadataForRead(const Metadata& aMetadata) = 0;
+
   // Called by MainProcessRunnable on the main thread after the entry is open:
   virtual void
-  OnOpen() = 0;
+  OnOpenCacheFile() = 0;
 
   // This method may be overridden, but it must be called from the overrider.
   // Called by MainProcessRunnable on the main thread after a call to Fail():
@@ -374,14 +476,37 @@ private:
   InitOnMainThread();
 
   nsresult
-  OpenFileOnIOThread();
+  ReadMetadata();
+
+  nsresult
+  OpenCacheFileForWrite();
+
+  nsresult
+  OpenCacheFileForRead();
 
   void
   FinishOnMainThread();
 
+  void
+  DispatchToIOThread()
+  {
+    // If shutdown just started, the QuotaManager may have been deleted.
+    QuotaManager* qm = QuotaManager::Get();
+    if (!qm) {
+      Fail();
+      return;
+    }
+
+    nsresult rv = qm->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) {
+      Fail();
+      return;
+    }
+  }
+
   nsIPrincipal* const mPrincipal;
   const OpenMode mOpenMode;
-  const size_t mSizeToWrite;
+  const WriteParams mWriteParams;
 
   // State initialized during eInitial:
   bool mNeedAllowNextSynchronizedOp;
@@ -389,12 +514,23 @@ private:
   nsCString mOrigin;
   nsCString mStorageId;
 
+  // State initialized during eReadyToReadMetadata
+  nsCOMPtr<nsIFile> mDirectory;
+  nsCOMPtr<nsIFile> mMetadataFile;
+  Metadata mMetadata;
+
+  // State initialized during eWaitingToOpenCacheFileForRead
+  unsigned mModuleIndex;
+
   enum State {
     eInitial, // Just created, waiting to be dispatched to main thread
-    eWaitingToOpen, // Waiting to be called back from WaitForOpenAllowed
-    eReadyToOpen, // Waiting to be dispatched to the IO thread
-    eNotifying, // Waiting to be dispatched to main thread to notify of success
-    eOpened, // Finished calling OnOpen from main thread, waiting to be closed
+    eWaitingToOpenMetadata, // Waiting to be called back from WaitForOpenAllowed
+    eReadyToReadMetadata, // Waiting to read the metadata file on the IO thread
+    eSendingMetadataForRead, // Waiting to send OnOpenMetadataForRead
+    eWaitingToOpenCacheFileForRead, // Waiting to hear back from child
+    eReadyToOpenCacheFileForRead, // Waiting to open cache file for read
+    eSendingCacheFile, // Waiting to send OnOpenCacheFile on the main thread
+    eOpened, // Finished calling OnOpen, waiting to be closed
     eClosing, // Waiting to be dispatched to main thread again
     eFailing, // Just failed, waiting to be dispatched to the main thread
     eFinished, // Terminal state
@@ -417,70 +553,178 @@ MainProcessRunnable::InitOnMainThread()
 
   QuotaManager::GetStorageId(quota::PERSISTENCE_TYPE_TEMPORARY,
                              mOrigin, quota::Client::ASMJS,
-                             NS_LITERAL_STRING(ASMJSCACHE_FILE_NAME),
+                             NS_LITERAL_STRING("asmjs"),
                              mStorageId);
 
   return NS_OK;
 }
 
 nsresult
-MainProcessRunnable::OpenFileOnIOThread()
+MainProcessRunnable::ReadMetadata()
 {
   AssertIsOnIOThread();
-  MOZ_ASSERT(mState == eReadyToOpen);
+  MOZ_ASSERT(mState == eReadyToReadMetadata);
 
   QuotaManager* qm = QuotaManager::Get();
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
-  nsCOMPtr<nsIFile> path;
   nsresult rv = qm->EnsureOriginIsInitialized(quota::PERSISTENCE_TYPE_TEMPORARY,
                                               mGroup, mOrigin, true,
-                                              getter_AddRefs(path));
+                                              getter_AddRefs(mDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = path->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
+  rv = mDirectory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool exists;
-  rv = path->Exists(&exists);
+  rv = mDirectory->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!exists) {
-    rv = path->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    rv = mDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     DebugOnly<bool> isDirectory;
-    MOZ_ASSERT(NS_SUCCEEDED(path->IsDirectory(&isDirectory)));
+    MOZ_ASSERT(NS_SUCCEEDED(mDirectory->IsDirectory(&isDirectory)));
     MOZ_ASSERT(isDirectory, "Should have caught this earlier!");
   }
 
-  rv = path->Append(NS_LITERAL_STRING(ASMJSCACHE_FILE_NAME));
+  rv = mDirectory->Clone(getter_AddRefs(mMetadataFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY,
-                                    mGroup, mOrigin, path);
-  NS_ENSURE_STATE(mQuotaObject);
+  rv = mMetadataFile->Append(NS_LITERAL_STRING(ASMJSCACHE_METADATA_FILE_NAME));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  int32_t openFlags;
-  if (mOpenMode == eOpenForRead) {
-    rv = path->GetFileSize(&mFileSize);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
+  rv = mMetadataFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    openFlags = PR_RDONLY | nsIFile::OS_READAHEAD;
-  } else {
-    if (!mQuotaObject->MaybeAllocateMoreSpace(0, mSizeToWrite)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    mFileSize = mSizeToWrite;
-
-    MOZ_ASSERT(mOpenMode == eOpenForWrite);
-    openFlags = PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE;
+  if (exists && NS_FAILED(ReadMetadataFile(mMetadataFile, mMetadata))) {
+    exists = false;
   }
 
-  rv = path->OpenNSPRFileDesc(openFlags, 0644, &mFileDesc);
+  if (!exists) {
+    // If we are reading, we can't possibly have a cache hit.
+    if (mOpenMode == eOpenForRead) {
+      return NS_ERROR_FILE_NOT_FOUND;
+    }
+
+    // Initialize Metadata with a valid empty state for the LRU cache.
+    for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
+      Metadata::Entry& entry = mMetadata.mEntries[i];
+      entry.mFastHash = -1;
+      entry.mNumChars = -1;
+      entry.mFullHash = -1;
+      entry.mModuleIndex = i;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+GetCacheFile(nsIFile* aDirectory, unsigned aModuleIndex, nsIFile** aCacheFile)
+{
+  nsCOMPtr<nsIFile> cacheFile;
+  nsresult rv = aDirectory->Clone(getter_AddRefs(cacheFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString cacheFileName = NS_LITERAL_STRING(ASMJSCACHE_ENTRY_FILE_NAME_BASE);
+  cacheFileName.AppendInt(aModuleIndex);
+  rv = cacheFile->Append(cacheFileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cacheFile.forget(aCacheFile);
+  return NS_OK;
+}
+
+nsresult
+MainProcessRunnable::OpenCacheFileForWrite()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == eReadyToReadMetadata);
+  MOZ_ASSERT(mOpenMode == eOpenForWrite);
+
+  mFileSize = mWriteParams.mSize;
+
+  // Kick out the oldest entry in the LRU queue in the metadata.
+  mModuleIndex = mMetadata.mEntries[Metadata::kLastEntry].mModuleIndex;
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetCacheFile(mDirectory, mModuleIndex, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  QuotaManager* qm = QuotaManager::Get();
+  MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
+
+  // Create the QuotaObject before all file IO to get maximum assertion coverage
+  // in QuotaManager against concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY,
+                                    mGroup, mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
+
+  // Let the QuotaManager know we're about to consume more storage. The
+  // QuotaManager may veto this or schedule other storage to get evicted.
+  if (!mQuotaObject->MaybeAllocateMoreSpace(0, mWriteParams.mSize)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t openFlags = PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE;
+  rv = file->OpenNSPRFileDesc(openFlags, 0644, &mFileDesc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Move the mModuleIndex's LRU entry to the recent end of the queue.
+  PodMove(mMetadata.mEntries + 1, mMetadata.mEntries, Metadata::kLastEntry);
+  Metadata::Entry& entry = mMetadata.mEntries[0];
+  entry.mFastHash = mWriteParams.mFastHash;
+  entry.mNumChars = mWriteParams.mNumChars;
+  entry.mFullHash = mWriteParams.mFullHash;
+  entry.mModuleIndex = mModuleIndex;
+
+  rv = WriteMetadataFile(mMetadataFile, mMetadata);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+MainProcessRunnable::OpenCacheFileForRead()
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == eReadyToOpenCacheFileForRead);
+  MOZ_ASSERT(mOpenMode == eOpenForRead);
+
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = GetCacheFile(mDirectory, mModuleIndex, getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  QuotaManager* qm = QuotaManager::Get();
+  MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
+
+  // Create the QuotaObject before all file IO to get maximum assertion coverage
+  // in QuotaManager against concurrent removal, etc.
+  mQuotaObject = qm->GetQuotaObject(quota::PERSISTENCE_TYPE_TEMPORARY,
+                                    mGroup, mOrigin, file);
+  NS_ENSURE_STATE(mQuotaObject);
+
+  rv = file->GetFileSize(&mFileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  int32_t openFlags = PR_RDONLY | nsIFile::OS_READAHEAD;
+  rv = file->OpenNSPRFileDesc(openFlags, 0644, &mFileDesc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Move the mModuleIndex's LRU entry to the recent end of the queue.
+  unsigned lruIndex = 0;
+  while (mMetadata.mEntries[lruIndex].mModuleIndex != mModuleIndex) {
+    if (++lruIndex == Metadata::kNumEntries) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+  Metadata::Entry entry = mMetadata.mEntries[lruIndex];
+  PodMove(mMetadata.mEntries + 1, mMetadata.mEntries, lruIndex);
+  mMetadata.mEntries[0] = entry;
+
+  rv = WriteMetadataFile(mMetadataFile, mMetadata);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -522,7 +766,7 @@ MainProcessRunnable::Run()
         return NS_OK;
       }
 
-      mState = eWaitingToOpen;
+      mState = eWaitingToOpenMetadata;
       rv = QuotaManager::Get()->WaitForOpenAllowed(
                                      OriginOrPatternString::FromOrigin(mOrigin),
                                      Nullable<PersistenceType>(), mStorageId,
@@ -536,45 +780,69 @@ MainProcessRunnable::Run()
       return NS_OK;
     }
 
-    case eWaitingToOpen: {
+    case eWaitingToOpenMetadata: {
       MOZ_ASSERT(NS_IsMainThread());
 
-      mState = eReadyToOpen;
-
-      QuotaManager* qm = QuotaManager::Get();
-      if (!qm) {
-        Fail();
-        return NS_OK;
-      }
-
-      rv = qm->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_FAILED(rv)) {
-        Fail();
-        return NS_OK;
-      }
-
+      mState = eReadyToReadMetadata;
+      DispatchToIOThread();
       return NS_OK;
     }
 
-    case eReadyToOpen: {
+    case eReadyToReadMetadata: {
       AssertIsOnIOThread();
 
-      rv = OpenFileOnIOThread();
+      rv = ReadMetadata();
       if (NS_FAILED(rv)) {
         Fail();
         return NS_OK;
       }
 
-      mState = eNotifying;
+      if (mOpenMode == eOpenForRead) {
+        mState = eSendingMetadataForRead;
+        NS_DispatchToMainThread(this);
+        return NS_OK;
+      }
+
+      rv = OpenCacheFileForWrite();
+      if (NS_FAILED(rv)) {
+        Fail();
+        return NS_OK;
+      }
+
+      mState = eSendingCacheFile;
       NS_DispatchToMainThread(this);
       return NS_OK;
     }
 
-    case eNotifying: {
+    case eSendingMetadataForRead: {
+      MOZ_ASSERT(NS_IsMainThread());
+      MOZ_ASSERT(mOpenMode == eOpenForRead);
+
+      mState = eWaitingToOpenCacheFileForRead;
+      OnOpenMetadataForRead(mMetadata);
+      return NS_OK;
+    }
+
+    case eReadyToOpenCacheFileForRead: {
+      AssertIsOnIOThread();
+      MOZ_ASSERT(mOpenMode == eOpenForRead);
+
+      rv = OpenCacheFileForRead();
+      if (NS_FAILED(rv)) {
+        Fail();
+        return NS_OK;
+      }
+
+      mState = eSendingCacheFile;
+      NS_DispatchToMainThread(this);
+      return NS_OK;
+    }
+
+    case eSendingCacheFile: {
       MOZ_ASSERT(NS_IsMainThread());
 
       mState = eOpened;
-      OnOpen();
+      OnOpenCacheFile();
       return NS_OK;
     }
 
@@ -594,6 +862,7 @@ MainProcessRunnable::Run()
       return NS_OK;
     }
 
+    case eWaitingToOpenCacheFileForRead:
     case eOpened:
     case eFinished: {
       MOZ_ASSUME_UNREACHABLE("Shouldn't Run() in this state");
@@ -602,6 +871,50 @@ MainProcessRunnable::Run()
 
   MOZ_ASSUME_UNREACHABLE("Corrupt state");
   return NS_OK;
+}
+
+bool
+FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
+              uint32_t* aModuleIndex)
+{
+  // Perform a fast hash of the first sNumFastHashChars chars. Each cache entry
+  // also stores an mFastHash of its first sNumFastHashChars so this gives us a
+  // fast way to probabilistically determine whether we have a cache hit. We
+  // still do a full hash of all the chars before returning the cache file to
+  // the engine to avoid penalizing the case where there are multiple cached
+  // asm.js modules where the first sNumFastHashChars are the same. The
+  // mFullHash of each cache entry can have a different mNumChars so the fast
+  // hash allows us to avoid performing up to Metadata::kNumEntries separate
+  // full hashes.
+  uint32_t numChars = aReadParams.mLimit - aReadParams.mBegin;
+  MOZ_ASSERT(numChars > sNumFastHashChars);
+  uint32_t fastHash = HashString(aReadParams.mBegin, sNumFastHashChars);
+
+  for (unsigned i = 0; i < Metadata::kNumEntries ; i++) {
+    // Compare the "fast hash" first to see whether it is worthwhile to
+    // hash all the chars.
+    Metadata::Entry entry = aMetadata.mEntries[i];
+    if (entry.mFastHash != fastHash) {
+      continue;
+    }
+
+    // Assuming we have enough characters, hash all the chars it would take
+    // to match this cache entry and compare to the cache entry. If we get a
+    // hit we'll still do a full source match later (in the JS engine), but
+    // the full hash match means this is probably the cache entry we want.
+    if (numChars < entry.mNumChars) {
+      continue;
+    }
+    uint32_t fullHash = HashString(aReadParams.mBegin, entry.mNumChars);
+    if (entry.mFullHash != fullHash) {
+      continue;
+    }
+
+    *aModuleIndex = entry.mModuleIndex;
+    return true;
+  }
+
+  return false;
 }
 
 // A runnable that executes for a cache access originating in the main process.
@@ -616,8 +929,10 @@ public:
   // the main thread.
   SingleProcessRunnable(nsIPrincipal* aPrincipal,
                         OpenMode aOpenMode,
-                        size_t aSizeToWrite)
-  : MainProcessRunnable(aPrincipal, aOpenMode, aSizeToWrite)
+                        WriteParams aWriteParams,
+                        ReadParams aReadParams)
+  : MainProcessRunnable(aPrincipal, aOpenMode, aWriteParams),
+    mReadParams(aReadParams)
   {
     MOZ_ASSERT(IsMainProcess());
     MOZ_ASSERT(!NS_IsMainThread());
@@ -631,15 +946,27 @@ public:
 
 private:
   void
-  Close() MOZ_OVERRIDE MOZ_FINAL
+  OnOpenMetadataForRead(const Metadata& aMetadata) MOZ_OVERRIDE
   {
-    MainProcessRunnable::Close();
+    uint32_t moduleIndex;
+    if (!FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
+      MainProcessRunnable::Fail();
+      return;
+    }
+
+    MainProcessRunnable::OpenForRead(moduleIndex);
   }
 
   void
-  OnOpen() MOZ_OVERRIDE
+  OnOpenCacheFile() MOZ_OVERRIDE
   {
     File::OnOpen();
+  }
+
+  void
+  Close() MOZ_OVERRIDE MOZ_FINAL
+  {
+    MainProcessRunnable::Close();
   }
 
   void
@@ -662,6 +989,8 @@ private:
   {
     return MainProcessRunnable::Run();
   }
+
+  ReadParams mReadParams;
 };
 
 // A runnable that executes in a parent process for a cache access originating
@@ -676,8 +1005,8 @@ public:
   // are on the main thread (where PContent messages are delivered).
   ParentProcessRunnable(nsIPrincipal* aPrincipal,
                         OpenMode aOpenMode,
-                        size_t aSizeToWrite)
-  : MainProcessRunnable(aPrincipal, aOpenMode, aSizeToWrite),
+                        WriteParams aWriteParams)
+  : MainProcessRunnable(aPrincipal, aOpenMode, aWriteParams),
     mPrincipalHolder(aPrincipal),
     mActorDestroyed(false),
     mOpened(false),
@@ -732,7 +1061,24 @@ private:
   }
 
   void
-  OnOpen() MOZ_OVERRIDE
+  OnOpenMetadataForRead(const Metadata& aMetadata) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!SendOnOpenMetadataForRead(aMetadata)) {
+      unused << Send__delete__(this);
+    }
+  }
+
+  bool
+  RecvSelectCacheFileToRead(const uint32_t& aModuleIndex) MOZ_OVERRIDE
+  {
+    MainProcessRunnable::OpenForRead(aModuleIndex);
+    return true;
+  }
+
+  void
+  OnOpenCacheFile() MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -741,7 +1087,7 @@ private:
 
     FileDescriptor::PlatformHandleType handle =
       FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(mFileDesc));
-    if (!SendOnOpen(mFileSize, handle)) {
+    if (!SendOnOpenCacheFile(mFileSize, handle)) {
       unused << Send__delete__(this);
     }
   }
@@ -788,11 +1134,11 @@ private:
 
 PAsmJSCacheEntryParent*
 AllocEntryParent(OpenMode aOpenMode,
-                 uint32_t aSizeToWrite,
+                 WriteParams aWriteParams,
                  nsIPrincipal* aPrincipal)
 {
   ParentProcessRunnable* runnable =
-    new ParentProcessRunnable(aPrincipal, aOpenMode, aSizeToWrite);
+    new ParentProcessRunnable(aPrincipal, aOpenMode, aWriteParams);
 
   // AddRef to keep the runnable alive until DeallocEntryParent.
   runnable->AddRef();
@@ -825,10 +1171,12 @@ public:
   // the main thread.
   ChildProcessRunnable(nsIPrincipal* aPrincipal,
                        OpenMode aOpenMode,
-                       size_t aSizeToWrite)
+                       WriteParams aWriteParams,
+                       ReadParams aReadParams)
   : mPrincipal(aPrincipal),
     mOpenMode(aOpenMode),
-    mSizeToWrite(aSizeToWrite),
+    mWriteParams(aWriteParams),
+    mReadParams(aReadParams),
     mActorDestroyed(false),
     mState(eInitial)
   {
@@ -846,7 +1194,24 @@ public:
 
 private:
   bool
-  RecvOnOpen(const int64_t& aFileSize, const FileDescriptor& aFileDesc)
+  RecvOnOpenMetadataForRead(const Metadata& aMetadata) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mState == eOpening);
+
+    uint32_t moduleIndex;
+    if (!FindHashMatch(aMetadata, mReadParams, &moduleIndex)) {
+      Fail();
+      Send__delete__(this);
+      return true;
+    }
+
+    return SendSelectCacheFileToRead(moduleIndex);
+  }
+
+  bool
+  RecvOnOpenCacheFile(const int64_t& aFileSize,
+                      const FileDescriptor& aFileDesc) MOZ_OVERRIDE
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mState == eOpening);
@@ -869,8 +1234,7 @@ private:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mState == eOpening);
 
-    mState = eFinished;
-    File::OnFailure();
+    Fail();
     return true;
   }
 
@@ -891,9 +1255,20 @@ private:
   }
 
 private:
+  void
+  Fail()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mState == eInitial || mState == eOpening);
+
+    mState = eFinished;
+    File::OnFailure();
+  }
+
   nsIPrincipal* const mPrincipal;
   const OpenMode mOpenMode;
-  size_t mSizeToWrite;
+  WriteParams mWriteParams;
+  ReadParams mReadParams;
   bool mActorDestroyed;
 
   enum State {
@@ -918,7 +1293,7 @@ ChildProcessRunnable::Run()
       AddRef();
 
       if (!ContentChild::GetSingleton()->SendPAsmJSCacheEntryConstructor(
-        this, mOpenMode, mSizeToWrite, IPC::Principal(mPrincipal)))
+        this, mOpenMode, mWriteParams, IPC::Principal(mPrincipal)))
       {
         // On failure, undo the AddRef (since DeallocEntryChild will not be
         // called) and unblock the parsing thread with a failure. The main
@@ -926,8 +1301,7 @@ ChildProcessRunnable::Run()
         // 'this' alive until returning to the event loop.
         Release();
 
-        mState = eFinished;
-        File::OnFailure();
+        Fail();
         return NS_OK;
       }
 
@@ -976,10 +1350,12 @@ namespace {
 bool
 OpenFile(nsIPrincipal* aPrincipal,
          OpenMode aOpenMode,
-         size_t aSizeToWrite,
+         WriteParams aWriteParams,
+         ReadParams aReadParams,
          File::AutoClose* aFile)
 {
-  MOZ_ASSERT_IF(aOpenMode == eOpenForRead, aSizeToWrite == 0);
+  MOZ_ASSERT_IF(aOpenMode == eOpenForRead, aWriteParams.mSize == 0);
+  MOZ_ASSERT_IF(aOpenMode == eOpenForWrite, aReadParams.mBegin == nullptr);
 
   // There are three reasons we don't attempt caching from the main thread:
   //  1. In the parent process: QuotaManager::WaitForOpenAllowed prevents
@@ -1002,9 +1378,11 @@ OpenFile(nsIPrincipal* aPrincipal,
   // child can then map the file into its address space to perform I/O.
   nsRefPtr<File> file;
   if (IsMainProcess()) {
-    file = new SingleProcessRunnable(aPrincipal, aOpenMode, aSizeToWrite);
+    file = new SingleProcessRunnable(aPrincipal, aOpenMode, aWriteParams,
+                                     aReadParams);
   } else {
-    file = new ChildProcessRunnable(aPrincipal, aOpenMode, aSizeToWrite);
+    file = new ChildProcessRunnable(aPrincipal, aOpenMode, aWriteParams,
+                                    aReadParams);
   }
 
   if (!file->BlockUntilOpen(aFile)) {
@@ -1019,10 +1397,6 @@ OpenFile(nsIPrincipal* aPrincipal,
 typedef uint32_t AsmJSCookieType;
 static const uint32_t sAsmJSCookie = 0x600d600d;
 
-// Anything smaller should compile fast enough that caching will just add
-// overhead.
-static const size_t sMinCachedModuleLength = 10000;
-
 bool
 OpenEntryForRead(nsIPrincipal* aPrincipal,
                  const jschar* aBegin,
@@ -1035,8 +1409,13 @@ OpenEntryForRead(nsIPrincipal* aPrincipal,
     return false;
   }
 
+  ReadParams readParams;
+  readParams.mBegin = aBegin;
+  readParams.mLimit = aLimit;
+
   File::AutoClose file;
-  if (!OpenFile(aPrincipal, eOpenForRead, 0, &file)) {
+  WriteParams notAWrite;
+  if (!OpenFile(aPrincipal, eOpenForRead, notAWrite, readParams, &file)) {
     return false;
   }
 
@@ -1092,8 +1471,17 @@ OpenEntryForWrite(nsIPrincipal* aPrincipal,
   // Add extra space for the AsmJSCookieType (see OpenEntryForRead).
   aSize += sizeof(AsmJSCookieType);
 
+  static_assert(sNumFastHashChars < sMinCachedModuleLength, "HashString safe");
+
+  WriteParams writeParams;
+  writeParams.mSize = aSize;
+  writeParams.mFastHash = HashString(aBegin, sNumFastHashChars);
+  writeParams.mNumChars = aEnd - aBegin;
+  writeParams.mFullHash = HashString(aBegin, writeParams.mNumChars);
+
   File::AutoClose file;
-  if (!OpenFile(aPrincipal, eOpenForWrite, aSize, &file)) {
+  ReadParams notARead;
+  if (!OpenFile(aPrincipal, eOpenForWrite, writeParams, notARead, &file)) {
     return false;
   }
 
@@ -1128,7 +1516,7 @@ CloseEntryForWrite(JS::Handle<JSObject*> global,
 }
 
 bool
-GetBuildId(js::Vector<char>* aBuildID)
+GetBuildId(JS::BuildIdCharVector* aBuildID)
 {
   nsCOMPtr<nsIXULAppInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
   if (!info) {
@@ -1192,19 +1580,24 @@ public:
     rv = directory->Append(NS_LITERAL_STRING(ASMJSCACHE_DIRECTORY_NAME));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    bool exists;
+    DebugOnly<bool> exists;
     MOZ_ASSERT(NS_SUCCEEDED(directory->Exists(&exists)) && exists);
 
-    nsIFile* path = directory;
-    rv = path->Append(NS_LITERAL_STRING(ASMJSCACHE_FILE_NAME));
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = path->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool more;
+    while (NS_SUCCEEDED((rv = entries->HasMoreElements(&more))) && more) {
+      nsCOMPtr<nsISupports> entry;
+      rv = entries->GetNext(getter_AddRefs(entry));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (exists) {
+      nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+      NS_ENSURE_TRUE(file, NS_NOINTERFACE);
+
       int64_t fileSize;
-      rv = path->GetFileSize(&fileSize);
+      rv = file->GetFileSize(&fileSize);
       NS_ENSURE_SUCCESS(rv, rv);
 
       MOZ_ASSERT(fileSize >= 0, "Negative size?!");
@@ -1279,3 +1672,79 @@ CreateClient()
 } // namespace asmjscache
 } // namespace dom
 } // namespace mozilla
+
+namespace IPC {
+
+using mozilla::dom::asmjscache::Metadata;
+using mozilla::dom::asmjscache::WriteParams;
+
+void
+ParamTraits<Metadata>::Write(Message* aMsg, const paramType& aParam)
+{
+  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
+    const Metadata::Entry& entry = aParam.mEntries[i];
+    WriteParam(aMsg, entry.mFastHash);
+    WriteParam(aMsg, entry.mNumChars);
+    WriteParam(aMsg, entry.mFullHash);
+    WriteParam(aMsg, entry.mModuleIndex);
+  }
+}
+
+bool
+ParamTraits<Metadata>::Read(const Message* aMsg, void** aIter,
+                            paramType* aResult)
+{
+  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
+    Metadata::Entry& entry = aResult->mEntries[i];
+    if (!ReadParam(aMsg, aIter, &entry.mFastHash) ||
+        !ReadParam(aMsg, aIter, &entry.mNumChars) ||
+        !ReadParam(aMsg, aIter, &entry.mFullHash) ||
+        !ReadParam(aMsg, aIter, &entry.mModuleIndex))
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void
+ParamTraits<Metadata>::Log(const paramType& aParam, std::wstring* aLog)
+{
+  for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
+    const Metadata::Entry& entry = aParam.mEntries[i];
+    LogParam(entry.mFastHash, aLog);
+    LogParam(entry.mNumChars, aLog);
+    LogParam(entry.mFullHash, aLog);
+    LogParam(entry.mModuleIndex, aLog);
+  }
+}
+
+void
+ParamTraits<WriteParams>::Write(Message* aMsg, const paramType& aParam)
+{
+  WriteParam(aMsg, aParam.mSize);
+  WriteParam(aMsg, aParam.mFastHash);
+  WriteParam(aMsg, aParam.mNumChars);
+  WriteParam(aMsg, aParam.mFullHash);
+}
+
+bool
+ParamTraits<WriteParams>::Read(const Message* aMsg, void** aIter,
+                               paramType* aResult)
+{
+  return ReadParam(aMsg, aIter, &aResult->mSize) &&
+         ReadParam(aMsg, aIter, &aResult->mFastHash) &&
+         ReadParam(aMsg, aIter, &aResult->mNumChars) &&
+         ReadParam(aMsg, aIter, &aResult->mFullHash);
+}
+
+void
+ParamTraits<WriteParams>::Log(const paramType& aParam, std::wstring* aLog)
+{
+  LogParam(aParam.mSize, aLog);
+  LogParam(aParam.mFastHash, aLog);
+  LogParam(aParam.mNumChars, aLog);
+  LogParam(aParam.mFullHash, aLog);
+}
+
+} // namespace IPC
