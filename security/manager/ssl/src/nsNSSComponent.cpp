@@ -11,6 +11,7 @@
 #include "nsNSSComponent.h"
 
 #include "CertVerifier.h"
+#include "mozilla/Telemetry.h"
 #include "nsCertVerificationThread.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
@@ -1007,7 +1008,7 @@ CipherSuiteChangeObserver::Observe(nsISupports *aSubject,
 } // anonymous namespace
 
 // Caller must hold a lock on nsNSSComponent::mutex when calling this function
-void nsNSSComponent::setValidationOptions()
+void nsNSSComponent::setValidationOptions(bool isInitialSetting)
 {
   nsNSSShutDownPreventionLock locker;
 
@@ -1019,6 +1020,14 @@ void nsNSSComponent::setValidationOptions()
 
   bool ocspRequired = Preferences::GetBool("security.OCSP.require",
                                            OCSP_REQUIRED_DEFAULT);
+
+  // We measure the setting of the pref at startup only to minimize noise by
+  // addons that may muck with the settings, though it probably doesn't matter.
+  if (isInitialSetting) {
+    Telemetry::Accumulate(Telemetry::CERT_OCSP_ENABLED, ocspEnabled);
+    Telemetry::Accumulate(Telemetry::CERT_OCSP_REQUIRED, ocspRequired);
+  }
+
   bool anyFreshRequired = Preferences::GetBool("security.fresh_revocation_info.require",
                                                FRESH_REVOCATION_REQUIRED_DEFAULT);
   bool aiaDownloadEnabled = Preferences::GetBool("security.missing_cert_download.enabled",
@@ -1342,7 +1351,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       }
 
       // dynamic options from prefs
-      setValidationOptions();
+      setValidationOptions(true);
 
       mHttpForNSS.initTable();
       mHttpForNSS.registerHttpClient();
@@ -1759,7 +1768,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.OCSP.GET.enabled")
                || prefName.Equals("security.ssl.enable_ocsp_stapling")) {
       MutexAutoLock lock(mutex);
-      setValidationOptions();
+      setValidationOptions(false);
     } else if (prefName.Equals("network.ntlm.send-lm-response")) {
       bool sendLM = Preferences::GetBool("network.ntlm.send-lm-response",
                                          SEND_LM_DEFAULT);
