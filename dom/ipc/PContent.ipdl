@@ -42,6 +42,7 @@ using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::dom::asmjscache::OpenMode from "mozilla/dom/asmjscache/AsmJSCache.h";
+using mozilla::dom::asmjscache::WriteParams from "mozilla/dom/asmjscache/AsmJSCache.h";
 using mozilla::dom::AudioChannelType from "AudioChannelCommon.h";
 using mozilla::dom::AudioChannelState from "AudioChannelCommon.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
@@ -372,8 +373,7 @@ parent:
 
     PFMRadio();
 
-    PAsmJSCacheEntry(OpenMode openMode, int64_t sizeToWrite,
-                     Principal principal);
+    PAsmJSCacheEntry(OpenMode openMode, WriteParams write, Principal principal);
 
     // Services remoting
 
