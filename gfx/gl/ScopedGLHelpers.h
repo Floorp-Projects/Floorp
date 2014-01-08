@@ -59,6 +59,9 @@ protected:
 public:
     // Use |newState = true| to enable, |false| to disable.
     ScopedGLState(GLContext* aGL, GLenum aCapability, bool aNewState);
+    // variant that doesn't change state; simply records existing state to be
+    // restored by the destructor
+    ScopedGLState(GLContext* aGL, GLenum aCapability);
 
 protected:
     void UnwrapImpl();
@@ -204,6 +207,37 @@ public:
     GLuint FB() const {
         return mFB;
     }
+
+protected:
+    void UnwrapImpl();
+};
+
+struct ScopedViewportRect
+    : public ScopedGLWrapper<ScopedViewportRect>
+{
+    friend struct ScopedGLWrapper<ScopedViewportRect>;
+
+protected:
+    GLint mSavedViewportRect[4];
+
+public:
+    ScopedViewportRect(GLContext* aGL, GLint x, GLint y, GLsizei width, GLsizei height);
+
+protected:
+    void UnwrapImpl();
+};
+
+struct ScopedScissorRect
+    : public ScopedGLWrapper<ScopedScissorRect>
+{
+    friend struct ScopedGLWrapper<ScopedScissorRect>;
+
+protected:
+    GLint mSavedScissorRect[4];
+
+public:
+    ScopedScissorRect(GLContext* aGL, GLint x, GLint y, GLsizei width, GLsizei height);
+    explicit ScopedScissorRect(GLContext* aGL);
 
 protected:
     void UnwrapImpl();
