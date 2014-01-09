@@ -93,10 +93,59 @@
                   android:paddingLeft="8dp"
                   android:visibility="gone"/>
 
-    <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
+    <LinearLayout android:id="@+id/url_display_container"
                   style="@style/UrlBar.Button"
                   android:layout_toLeftOf="@id/tabs"
-                  android:layout_marginRight="-24dp"/>
+                  android:layout_marginRight="-24dp"
+                  android:orientation="horizontal">
+
+        <ImageButton android:id="@+id/favicon"
+                     style="@style/UrlBar.ImageButton"
+                     android:layout_width="@dimen/browser_toolbar_favicon_size"
+                     android:layout_height="fill_parent"
+                     android:scaleType="fitCenter"
+                     android:layout_marginLeft="8dip"
+                     android:paddingLeft="4dip"
+                     android:paddingRight="4dip"
+                     android:layout_gravity="center_vertical"/>
+
+        <ImageButton android:id="@+id/site_security"
+                     style="@style/UrlBar.ImageButton"
+                     android:layout_width="@dimen/browser_toolbar_lock_width"
+                     android:scaleType="fitCenter"
+                     android:layout_marginLeft="-4dip"
+                     android:src="@drawable/site_security_level"
+                     android:contentDescription="@string/site_security"
+                     android:visibility="gone"/>
+
+        <org.mozilla.gecko.widget.GeckoTextView android:id="@+id/url_bar_title"
+                                                style="@style/UrlBar.Button"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="fill_parent"
+                                                android:layout_weight="1.0"
+                                                android:singleLine="true"
+                                                android:paddingRight="8dp"
+                                                android:textColor="@color/url_bar_title"
+                                                android:textColorHint="@color/url_bar_title_hint"
+                                                android:gravity="center_vertical|left"
+                                                android:hint="@string/url_bar_default_text"
+                                                android:layout_gravity="center_vertical"
+                                                gecko:autoUpdateTheme="false"/>
+
+        <org.mozilla.gecko.toolbar.PageActionLayout android:id="@+id/page_action_layout"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="match_parent"
+                                                    android:layout_marginRight="12dp"
+                                                    android:visibility="gone"
+                                                    android:orientation="horizontal"/>
+
+        <ImageButton android:id="@+id/stop"
+                     style="@style/UrlBar.ImageButton.Icon"
+                     android:src="@drawable/urlbar_stop"
+                     android:contentDescription="@string/stop"
+                     android:visibility="gone"/>
+
+    </LinearLayout>
 
     <ImageView android:id="@+id/shadow"
                android:layout_width="fill_parent"
