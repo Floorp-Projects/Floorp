@@ -390,6 +390,8 @@ js::RunScript(JSContext *cx, RunState &state)
 
     SPSEntryMarker marker(cx->runtime());
 
+    state.script()->ensureNonLazyCanonicalFunction(cx);
+
 #ifdef JS_ION
     if (jit::IsIonEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnter(cx, state);
@@ -1479,7 +1481,7 @@ Interpret(JSContext *cx, RunState &state)
          * fail if cx->isExceptionPending() is true.
          */
         if (cx->isExceptionPending()) {
-            probes::EnterScript(cx, script, script->function(), REGS.fp());
+            probes::EnterScript(cx, script, script->functionNonDelazifying(), REGS.fp());
             goto error;
         }
     }
@@ -1491,7 +1493,7 @@ Interpret(JSContext *cx, RunState &state)
         if (!activation.entryFrame()->prologue(cx))
             goto error;
     } else {
-        probes::EnterScript(cx, script, script->function(), activation.entryFrame());
+        probes::EnterScript(cx, script, script->functionNonDelazifying(), activation.entryFrame());
     }
     if (JS_UNLIKELY(cx->compartment()->debugMode())) {
         JSTrapStatus status = ScriptDebugPrologue(cx, activation.entryFrame(), REGS.pc);
@@ -1802,7 +1804,8 @@ CASE(JSOP_RETRVAL)
         if (!REGS.fp()->isYielding())
             REGS.fp()->epilogue(cx);
         else
-            probes::ExitScript(cx, script, script->function(), REGS.fp()->hasPushedSPSFrame());
+            probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                               REGS.fp()->hasPushedSPSFrame());
 
 #if defined(JS_ION)
   jit_return_pop_frame:
@@ -3452,7 +3455,8 @@ DEFAULT()
     if (!REGS.fp()->isYielding())
         REGS.fp()->epilogue(cx);
     else
-        probes::ExitScript(cx, script, script->function(), REGS.fp()->hasPushedSPSFrame());
+        probes::ExitScript(cx, script, script->functionNonDelazifying(),
+                           REGS.fp()->hasPushedSPSFrame());
 
     gc::MaybeVerifyBarriers(cx, true);
 
@@ -3608,7 +3612,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
             return false;
     } else {
         JS_ASSERT(script->compileAndGo());
-        JS_ASSERT(!script->function());
+        JS_ASSERT(!script->functionNonDelazifying());
     }
 
     /*
@@ -3875,10 +3879,11 @@ js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
 
     // Force instantiation of the script's function's type to ensure the flag
     // is preserved in type information.
-    if (!script->function()->getType(cx))
+    if (!script->functionNonDelazifying()->getType(cx))
         return false;
 
-    types::MarkTypeObjectFlags(cx, script->function(), types::OBJECT_FLAG_RUNONCE_INVALIDATED);
+    types::MarkTypeObjectFlags(cx, script->functionNonDelazifying(),
+                               types::OBJECT_FLAG_RUNONCE_INVALIDATED);
     return true;
 }
 

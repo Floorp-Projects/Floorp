@@ -113,8 +113,8 @@ BaselineCompiler::compile()
         return Method_Error;
 
     JSObject *templateScope = nullptr;
-    if (script->function()) {
-        RootedFunction fun(cx, script->function());
+    if (script->functionNonDelazifying()) {
+        RootedFunction fun(cx, script->functionNonDelazifying());
         if (fun->isHeavyweight()) {
             templateScope = CallObject::createTemplateObject(cx, script, gc::TenuredHeap);
             if (!templateScope)
