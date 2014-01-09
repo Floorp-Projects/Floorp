@@ -9,7 +9,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-const Services = Cu.import("resource://gre/modules/Services.jsm").Services;
+Cu.import("resource://gre/modules/Geometry.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
@@ -55,8 +56,10 @@ Finder.prototype = {
       linkURL = this._textToSubURIService.unEscapeURIForUI(docCharset, foundLink.href);
     }
 
+    let rect = this._getResultRect();
+
     for (let l of this._listeners) {
-      l.onFindResult(aResult, aFindBackwards, linkURL);
+      l.onFindResult(aResult, aFindBackwards, linkURL, rect);
     }
   },
 
@@ -184,6 +187,48 @@ Finder.prototype = {
 
   _getWindow: function () {
     return this._docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+  },
+
+  /**
+   * Get the bounding selection rect in CSS px relative to the origin of the
+   * top-level content document.
+   */
+  _getResultRect: function () {
+    let topWin = this._getWindow();
+    let win = this._fastFind.currentWindow;
+    if (!win)
+      return null;
+
+    let selection = win.getSelection();
+    if (!selection.rangeCount || selection.isCollapsed) {
+      // The selection can be into an input or a textarea element.
+      let nodes = win.document.querySelectorAll("input, textarea");
+      for (let node of nodes) {
+        if (node instanceof Ci.nsIDOMNSEditableElement && node.editor) {
+          let sc = node.editor.selectionController;
+          selection = sc.getSelection(Ci.nsISelectionController.SELECTION_NORMAL);
+          if (selection.rangeCount && !selection.isCollapsed) {
+            break;
+          }
+        }
+      }
+    }
+
+    let utils = topWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+
+    let scrollX = {}, scrollY = {};
+    utils.getScrollXY(false, scrollX, scrollY);
+
+    for (let frame = win; frame != topWin; frame = frame.parent) {
+      let rect = frame.frameElement.getBoundingClientRect();
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      scrollX.value += rect.left + parseInt(left, 10);
+      scrollY.value += rect.top + parseInt(top, 10);
+    }
+    let rect = Rect.fromRect(selection.getRangeAt(0).getBoundingClientRect());
+    return rect.translate(scrollX.value, scrollY.value);
   },
 
   _outlineLink: function (aDrawOutline) {

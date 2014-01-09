@@ -88,3 +88,45 @@ gTests.push({
     Browser.closeTab(tab);
   }
 });
+
+gTests.push({
+  desc: "Text at bottom of screen is not obscured by findbar",
+  run: function() {
+    let textbox = document.getElementById("findbar-textbox");
+
+    let tab = yield addTab(chromeRoot + "browser_findbar.html");
+    yield waitForCondition(() => BrowserUI.ready);
+    is(Elements.findbar.isShowing, false, "Find bar is hidden by default");
+
+    FindHelperUI.show();
+    yield waitForCondition(() => FindHelperUI.isActive);
+
+    EventUtils.sendString("bottom");
+    let event = yield waitForEvent(window, "MozDeckOffsetChanged");
+    ok(!(event instanceof Error), "MozDeckOffsetChanged received (1)");
+    ok(event.detail > 0, "Browser deck shifted upward");
+
+    textbox.select();
+    EventUtils.sendString("bar");
+    event = yield waitForEvent(window, "MozDeckOffsetChanged");
+    ok(!(event instanceof Error), "MozDeckOffsetChanged received (2)");
+    is(event.detail, 0, "Browser deck shifted back to normal");
+
+    textbox.select();
+    EventUtils.sendString("bottom");
+    event = yield waitForEvent(window, "MozDeckOffsetChanged");
+    ok(!(event instanceof Error), "MozDeckOffsetChanged received (3)");
+    ok(event.detail > 0, "Browser deck shifted upward again");
+
+    let waitForDeckOffset = waitForEvent(window, "MozDeckOffsetChanged");
+    let waitForTransitionEnd = waitForEvent(Elements.findbar, "transitionend");
+    FindHelperUI.hide();
+    event = yield waitForDeckOffset;
+    ok(!(event instanceof Error), "MozDeckOffsetChanged received (4)");
+    is(event.detail, 0, "Browser deck shifted back to normal when findbar hides");
+
+    // Cleanup.
+    yield waitForTransitionEnd;
+    Browser.closeTab(tab);
+  }
+});
