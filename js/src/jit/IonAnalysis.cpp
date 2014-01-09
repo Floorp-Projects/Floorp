@@ -216,7 +216,7 @@ IsPhiObservable(MPhi *phi, Observability observe)
 
     uint32_t slot = phi->slot();
     CompileInfo &info = phi->block()->info();
-    JSFunction *fun = info.fun();
+    JSFunction *fun = info.funMaybeLazy();
 
     // If the Phi is of the |this| value, it must always be observable.
     if (fun && slot == info.thisSlot())

@@ -1131,8 +1131,10 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             return true;
         }
 
-        if (fun != lazy->function()) {
-            script = lazy->function()->getOrCreateScript(cx);
+        if (fun != lazy->functionNonDelazifying()) {
+            if (!lazy->functionDelazifying(cx))
+                return false;
+            script = lazy->functionNonDelazifying()->nonLazyScript();
             if (!script)
                 return false;
 
@@ -1162,7 +1164,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
             clonedScript->setSourceObject(lazy->sourceObject());
 
-            fun->initAtom(script->function()->displayAtom());
+            fun->initAtom(script->functionNonDelazifying()->displayAtom());
             clonedScript->setFunction(fun);
 
             {

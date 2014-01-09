@@ -45,13 +45,41 @@ void
 SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
                         HandleScript script, JSObject *argsobj);
 
+inline JSFunction *
+LazyScript::functionDelazifying(JSContext *cx) const
+{
+    if (function_ && !function_->getOrCreateScript(cx))
+        return nullptr;
+    return function_;
+}
+
 } // namespace js
+
+inline JSFunction *
+JSScript::functionDelazifying() const
+{
+    js::AutoThreadSafeAccess ts(this);
+    JS_ASSERT(js::CurrentThreadCanWriteCompilationData());
+    if (function_ && function_->isInterpretedLazy())
+        function_->setUnlazifiedScript(const_cast<JSScript *>(this));
+    return function_;
+}
 
 inline void
 JSScript::setFunction(JSFunction *fun)
 {
     JS_ASSERT(fun->isTenured());
     function_ = fun;
+}
+
+inline void
+JSScript::ensureNonLazyCanonicalFunction(JSContext *cx)
+{
+    // Infallibly delazify the canonical script.
+    if (function_ && function_->isInterpretedLazy()) {
+        js::AutoLockForCompilation lock(cx);
+        functionDelazifying();
+    }
 }
 
 inline JSFunction *
@@ -74,8 +102,8 @@ JSScript::getCallerFunction()
 inline JSFunction *
 JSScript::functionOrCallerFunction()
 {
-    if (function())
-        return function();
+    if (functionNonDelazifying())
+        return functionNonDelazifying();
     if (savedCallerFun())
         return getCallerFunction();
     return nullptr;

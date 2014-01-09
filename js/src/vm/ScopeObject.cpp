@@ -41,7 +41,7 @@ InnermostStaticScope(JSScript *script, jsbytecode *pc)
     StaticBlockObject *block = script->getBlockScope(pc);
     if (block)
         return block;
-    return script->function();
+    return script->functionNonDelazifying();
 }
 
 Shape *
@@ -2300,14 +2300,14 @@ AnalyzeEntrainedVariablesInScript(JSContext *cx, HandleScript script, HandleScri
 
         buf.printf("Script ");
 
-        if (JSAtom *name = script->function()->displayAtom()) {
+        if (JSAtom *name = script->functionNonDelazifying()->displayAtom()) {
             buf.putString(name);
             buf.printf(" ");
         }
 
         buf.printf("(%s:%d) has variables entrained by ", script->filename(), script->lineno());
 
-        if (JSAtom *name = innerScript->function()->displayAtom()) {
+        if (JSAtom *name = innerScript->functionNonDelazifying()->displayAtom()) {
             buf.putString(name);
             buf.printf(" ");
         }
@@ -2367,7 +2367,7 @@ js::AnalyzeEntrainedVariables(JSContext *cx, HandleScript script)
             if (!innerScript)
                 return false;
 
-            if (script->function() && script->function()->isHeavyweight()) {
+            if (script->functionDelazifying() && script->functionDelazifying()->isHeavyweight()) {
                 if (!AnalyzeEntrainedVariablesInScript(cx, script, innerScript))
                     return false;
             }

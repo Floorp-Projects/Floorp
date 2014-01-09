@@ -4691,7 +4691,8 @@ JS_DecompileScript(JSContext *cx, JSScript *scriptArg, const char *name, unsigne
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     RootedScript script(cx, scriptArg);
-    RootedFunction fun(cx, script->function());
+    script->ensureNonLazyCanonicalFunction(cx);
+    RootedFunction fun(cx, script->functionNonDelazifying());
     if (fun)
         return JS_DecompileFunction(cx, fun, indent);
     bool haveSource = script->scriptSource()->hasSourceData();
