@@ -813,3 +813,9 @@ pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
 
 // This pref requires a restart to take effect.
 pref("browser.snippets.enabled", false);
+
+#ifdef MOZ_ANDROID_SYNTHAPKS
+// The URL of the APK factory from which we obtain APKs for webapps.
+// XXX This currently points to jhugman's prototype server.
+pref("browser.webapps.apkFactoryUrl", "http://107.22.148.17:8080/application.apk");
+#endif
