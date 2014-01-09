@@ -1285,7 +1285,7 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
                 continue;
             }
             RootedScript script(bce->sc->context, ssi.funScript());
-            if (script->function()->atom() == pn->pn_atom)
+            if (script->functionNonDelazifying()->atom() == pn->pn_atom)
                 return false;
             if (ssi.hasDynamicScopeObject()) {
                 uint16_t slot;
@@ -1867,7 +1867,7 @@ BytecodeEmitter::tellDebuggerAboutCompiledScript(ExclusiveContext *cx)
     if (!cx->isJSContext())
         return;
 
-    RootedFunction function(cx, script->function());
+    RootedFunction function(cx, script->functionNonDelazifying());
     CallNewScriptHook(cx->asJSContext(), script, function);
     // Lazy scripts are never top level (despite always being invoked with a
     // nullptr parent), and so the hook should never be fired.
@@ -2795,7 +2795,7 @@ frontend::EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNo
     }
 
     /* Initialize fun->script() so that the debugger has a valid fun->script(). */
-    RootedFunction fun(cx, bce->script->function());
+    RootedFunction fun(cx, bce->script->functionNonDelazifying());
     JS_ASSERT(fun->isInterpreted());
 
     if (fun->isInterpretedLazy()) {

@@ -713,7 +713,8 @@ js::ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
         // Walk over the worklist to check on the status of each entry.
         for (uint32_t i = 0; i < worklist_.length(); i++) {
             script = worklist_[i];
-            fun = script->function();
+            script->ensureNonLazyCanonicalFunction(cx_);
+            fun = script->functionNonDelazifying();
 
             // No baseline script means no type information, hence we
             // will not be able to compile very well.  In such cases,

@@ -2860,7 +2860,7 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &sourceObject_, "sourceObject");
     }
 
-    if (function())
+    if (functionNonDelazifying())
         MarkObject(trc, &function_, "function");
 
     if (enclosingScopeOrOriginalFunction_)
@@ -3024,7 +3024,7 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 /* static */ bool
 JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 {
-    JS_ASSERT(script->function());
+    JS_ASSERT(script->functionNonDelazifying());
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());
 

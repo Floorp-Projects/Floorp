@@ -225,7 +225,8 @@ static inline uint32_t ArgSlot(uint32_t arg) {
     return 1 + arg;
 }
 static inline uint32_t LocalSlot(JSScript *script, uint32_t local) {
-    return 1 + (script->function() ? script->function()->nargs() : 0) + local;
+    return 1 + local +
+           (script->functionNonDelazifying() ? script->functionNonDelazifying()->nargs() : 0);
 }
 static inline uint32_t TotalSlots(JSScript *script) {
     return LocalSlot(script, 0) + script->nfixed();

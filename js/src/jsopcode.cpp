@@ -410,7 +410,8 @@ class BytecodeParser
     }
 
     uint32_t numSlots() {
-        return 1 + (script_->function() ? script_->function()->nargs() : 0) + script_->nfixed();
+        return 1 + script_->nfixed() +
+               (script_->functionNonDelazifying() ? script_->functionNonDelazifying()->nargs() : 0);
     }
 
     uint32_t maximumStackDepth() {
@@ -2038,8 +2039,8 @@ js::GetPCCountScriptSummary(JSContext *cx, size_t index)
     AppendJSONProperty(buf, "line");
     NumberValueToStringBuffer(cx, Int32Value(script->lineno()), buf);
 
-    if (script->function()) {
-        JSAtom *atom = script->function()->displayAtom();
+    if (script->functionNonDelazifying()) {
+        JSAtom *atom = script->functionNonDelazifying()->displayAtom();
         if (atom) {
             AppendJSONProperty(buf, "name");
             if (!(str = StringToSource(cx, atom)))
@@ -2171,7 +2172,7 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
         }
 
         {
-            ExpressionDecompiler ed(cx, script, script->function());
+            ExpressionDecompiler ed(cx, script, script->functionDelazifying());
             if (!ed.init())
                 return false;
             if (!ed.decompilePC(pc))
@@ -2282,7 +2283,7 @@ js::GetPCCountScriptContents(JSContext *cx, size_t index)
 
     StringBuffer buf(cx);
 
-    if (!script->function() && !script->compileAndGo())
+    if (!script->functionNonDelazifying() && !script->compileAndGo())
         return buf.finishString();
 
     {
