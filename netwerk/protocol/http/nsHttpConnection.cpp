@@ -1381,6 +1381,9 @@ nsHttpConnection::OnSocketReadable()
     PRIntervalTime now = PR_IntervalNow();
     PRIntervalTime delta = now - mLastReadTime;
 
+    // Reset mResponseTimeoutEnabled to stop response timeout checks.
+    mResponseTimeoutEnabled = false;
+
     if (mKeepAliveMask && (delta >= mMaxHangTime)) {
         LOG(("max hang time exceeded!\n"));
         // give the handler a chance to create a new persistent connection to

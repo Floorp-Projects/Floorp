@@ -7,6 +7,7 @@
 #include "utils/RefBase.h"
 #include "utils/String16.h"
 #include "utils/String8.h"
+#include "utils/Vector.h"
 
 namespace android {
 MOZ_EXPORT RefBase::RefBase() : mRefs(0)
@@ -54,7 +55,30 @@ MOZ_EXPORT String8::String8()
 {
 }
 
+MOZ_EXPORT String8::String8(const String8 &)
+{
+}
+
 MOZ_EXPORT String8::~String8()
 {
 }
+
+MOZ_EXPORT VectorImpl::VectorImpl(size_t, uint32_t)
+  : mFlags(0), mItemSize(0)
+{
+}
+
+MOZ_EXPORT VectorImpl::VectorImpl(const VectorImpl &)
+  : mFlags(0), mItemSize(0)
+{
+}
+
+MOZ_EXPORT VectorImpl::~VectorImpl()
+{
+}
+
+MOZ_EXPORT void VectorImpl::finish_vector()
+{
+}
+
 }
