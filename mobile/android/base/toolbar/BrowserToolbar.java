@@ -164,7 +164,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private int mFaviconSize;
 
-    private PropertyAnimator mVisibilityAnimator;
     private static final Interpolator sButtonsInterpolator = new AccelerateInterpolator();
 
     private static final int TABS_CONTRACTED = 1;
