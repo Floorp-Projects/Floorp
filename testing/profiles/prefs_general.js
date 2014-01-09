@@ -154,3 +154,7 @@ user_pref("browser.pagethumbnails.capturing_disabled", true);
 // Indicate that the download panel has been shown once so that whichever
 // download test runs first doesn't show the popup inconsistently.
 user_pref("browser.download.panel.shown", true);
+
+// prefs for firefox metro.
+// Disable first-tun tab
+user_pref("browser.firstrun.count", 0);
