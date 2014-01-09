@@ -36,7 +36,7 @@ of the License or (at your option) any later version.
 #include "inc/SegCacheStore.h"
 #include "inc/Segment.h"
 #include "inc/NameTable.h"
-
+#include "inc/Error.h"
 
 using namespace graphite2;
 
@@ -47,6 +47,7 @@ Face::Face(const void* appFaceHandle/*non-NULL*/, const gr_face_ops & ops)
   m_cmap(NULL),
   m_pNames(NULL),
   m_logger(NULL),
+  m_error(0), m_errcntxt(0),
   m_silfs(NULL),
   m_numSilf(0),
   m_ascent(0),
@@ -78,20 +79,24 @@ float Face::default_glyph_advance(const void* font_ptr, gr_uint16 glyphid)
 
 bool Face::readGlyphs(uint32 faceOptions)
 {
+    Error e;
 #ifdef GRAPHITE2_TELEMETRY
     telemetry::category _glyph_cat(tele.glyph);
 #endif
+    error_context(EC_READGLYPHS);
     if (faceOptions & gr_face_cacheCmap)
-    	m_cmap = new CachedCmap(*this);
+        m_cmap = new CachedCmap(*this);
     else
-    	m_cmap = new DirectCmap(*this);
+        m_cmap = new DirectCmap(*this);
 
     m_pGlyphFaceCache = new GlyphCache(*this, faceOptions);
-    if (!m_pGlyphFaceCache
-        || m_pGlyphFaceCache->numGlyphs() == 0
-        || m_pGlyphFaceCache->unitsPerEm() == 0
-    	|| !m_cmap || !*m_cmap)
-    	return false;
+    if (e.test(!m_pGlyphFaceCache, E_OUTOFMEM)
+        || e.test(m_pGlyphFaceCache->numGlyphs() == 0, E_NOGLYPHS)
+        || e.test(m_pGlyphFaceCache->unitsPerEm() == 0, E_BADUPEM)
+        || e.test(!m_cmap, E_OUTOFMEM) || e.test(!*m_cmap, E_BADCMAP))
+    {
+        return error(e);
+    }
 
     if (faceOptions & gr_face_preloadGlyphs)
         nameTable();        // preload the name table along with the glyphs.
@@ -104,24 +109,27 @@ bool Face::readGraphite(const Table & silf)
 #ifdef GRAPHITE2_TELEMETRY
     telemetry::category _silf_cat(tele.silf);
 #endif
+    Error e;
+    error_context(EC_READSILF);
     const byte * p = silf;
-    if (!p) return false;
+    if (e.test(!p, E_NOSILF)) return error(e);
 
     const uint32 version = be::read<uint32>(p);
-    if (version < 0x00020000) return false;
+    if (e.test(version < 0x00020000, E_TOOOLD)) return error(e);
     if (version >= 0x00030000)
-    	be::skip<uint32>(p);		// compilerVersion
+        be::skip<uint32>(p);        // compilerVersion
     m_numSilf = be::read<uint16>(p);
-    be::skip<uint16>(p);			// reserved
+    be::skip<uint16>(p);            // reserved
 
     bool havePasses = false;
     m_silfs = new Silf[m_numSilf];
     for (int i = 0; i < m_numSilf; i++)
     {
+        error_context(EC_ASILF + (i << 8));
         const uint32 offset = be::read<uint32>(p),
-        			 next   = i == m_numSilf - 1 ? silf.size() : be::peek<uint32>(p);
-        if (next > silf.size() || offset >= next)
-            return false;
+                     next   = i == m_numSilf - 1 ? silf.size() : be::peek<uint32>(p);
+        if (e.test(next > silf.size() || offset >= next, E_BADSIZE))
+            return error(e);
 
         if (!m_silfs[i].readGraphite(silf + offset, next - offset, *this, version))
             return false;
@@ -144,33 +152,33 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
     json * dbgout = logger();
     if (dbgout)
     {
-    	*dbgout << json::object
-    				<< "id"			<< objectid(seg)
-    				<< "passes"		<< json::array;
+        *dbgout << json::object
+                    << "id"         << objectid(seg)
+                    << "passes"     << json::array;
     }
 #endif
 
-    bool res = aSilf->runGraphite(seg, 0, aSilf->justificationPass());
+    bool res = aSilf->runGraphite(seg, 0, aSilf->justificationPass(), true);
     if (res)
-        res = aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses());
+        res = aSilf->runGraphite(seg, aSilf->positionPass(), aSilf->numPasses(), false);
 
 #if !defined GRAPHITE2_NTRACING
-	if (dbgout)
+    if (dbgout)
 {
-		*dbgout 			<< json::item
-							<< json::close // Close up the passes array
-				<< "output" << json::array;
-		for(Slot * s = seg->first(); s; s = s->next())
-			*dbgout		<< dslot(seg, s);
-		seg->finalise(0);					// Call this here to fix up charinfo back indexes.
-		*dbgout			<< json::close
-				<< "advance" << seg->advance()
-				<< "chars"	 << json::array;
-		for(size_t i = 0, n = seg->charInfoCount(); i != n; ++i)
-			*dbgout 	<< json::flat << *seg->charinfo(i);
-		*dbgout			<< json::close	// Close up the chars array
-					<< json::close;		// Close up the segment object
-	}
+        *dbgout             << json::item
+                            << json::close // Close up the passes array
+                << "output" << json::array;
+        for(Slot * s = seg->first(); s; s = s->next())
+            *dbgout     << dslot(seg, s);
+        seg->finalise(0);                   // Call this here to fix up charinfo back indexes.
+        *dbgout         << json::close
+                << "advance" << seg->advance()
+                << "chars"   << json::array;
+        for(size_t i = 0, n = seg->charInfoCount(); i != n; ++i)
+            *dbgout     << json::flat << *seg->charinfo(i);
+        *dbgout         << json::close  // Close up the chars array
+                    << json::close;     // Close up the segment object
+    }
 #endif
 
     return res;

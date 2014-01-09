@@ -9,7 +9,8 @@ var supportedProps = [
   "platform",
   "product",
   "taintEnabled",
-  "userAgent"
+  "userAgent",
+  "onLine"
 ];
 
 for (var prop in navigator) {

@@ -12,6 +12,8 @@ SOURCES += [
     'mozStorageModule.cpp',
 ]
 
+FAIL_ON_WARNINGS = True
+
 LIBRARY_NAME = 'storagecomps'
 
 FINAL_LIBRARY = 'xul'

@@ -398,7 +398,7 @@ public abstract class GeckoApp
 
             return mMenuPanel; 
         }
-  
+
         return super.onCreatePanelView(featureId);
     }
 
