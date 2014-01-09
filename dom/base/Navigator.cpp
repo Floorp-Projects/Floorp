@@ -1321,7 +1321,7 @@ Navigator::EnsureMessagesManager()
   // We don't do anything with the return value.
   AutoJSContext cx;
   JS::Rooted<JS::Value> prop_val(cx);
-  rv = gpi->Init(mWindow, prop_val.address());
+  rv = gpi->Init(mWindow, &prop_val);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMessagesManager = messageManager.forget();
@@ -1578,7 +1578,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       return Throw(aCx, NS_ERROR_UNEXPECTED);
     }
 
-    rv = gpi->Init(mWindow, prop_val.address());
+    rv = gpi->Init(mWindow, &prop_val);
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
     }

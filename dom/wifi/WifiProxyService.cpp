@@ -237,14 +237,14 @@ WifiProxyService::Shutdown()
 }
 
 NS_IMETHODIMP
-WifiProxyService::SendCommand(const JS::Value& aOptions, const nsACString& aInterface,
+WifiProxyService::SendCommand(JS::Handle<JS::Value> aOptions,
+                              const nsACString& aInterface,
                               JSContext* aCx)
 {
   MOZ_ASSERT(NS_IsMainThread());
   WifiCommandOptions options;
 
-  if (!options.Init(aCx,
-                    JS::Handle<JS::Value>::fromMarkedLocation(&aOptions))) {
+  if (!options.Init(aCx, aOptions)) {
     NS_WARNING("Bad dictionary passed to WifiProxyService::SendCommand");
     return NS_ERROR_FAILURE;
   }

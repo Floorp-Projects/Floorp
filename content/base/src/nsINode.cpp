@@ -704,8 +704,7 @@ nsINode::SetUserData(JSContext* aCx, const nsAString& aKey,
 {
   nsCOMPtr<nsIVariant> data;
   JS::Rooted<JS::Value> dataVal(aCx, aData);
-  aError = nsContentUtils::XPConnect()->JSValToVariant(aCx, dataVal.address(),
-                                                       getter_AddRefs(data));
+  aError = nsContentUtils::XPConnect()->JSValToVariant(aCx, dataVal, getter_AddRefs(data));
   if (aError.Failed()) {
     return JS::UndefinedValue();
   }
@@ -723,7 +722,7 @@ nsINode::SetUserData(JSContext* aCx, const nsAString& aKey,
   JS::Rooted<JS::Value> result(aCx);
   JSAutoCompartment ac(aCx, GetWrapper());
   aError = nsContentUtils::XPConnect()->VariantToJS(aCx, GetWrapper(), oldData,
-                                                    result.address());
+                                                    &result);
   return result;
 }
 
@@ -750,7 +749,7 @@ nsINode::GetUserData(JSContext* aCx, const nsAString& aKey, ErrorResult& aError)
   JS::Rooted<JS::Value> result(aCx);
   JSAutoCompartment ac(aCx, GetWrapper());
   aError = nsContentUtils::XPConnect()->VariantToJS(aCx, GetWrapper(), data,
-                                                    result.address());
+                                                    &result);
   return result;
 }
 

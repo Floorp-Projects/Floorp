@@ -180,13 +180,14 @@ nsProfiler::GetSharedLibraryInformation(nsAString& aOutString)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx, JS::Value* aResult)
+NS_IMETHODIMP nsProfiler::GetProfileData(JSContext* aCx,
+                                         JS::MutableHandle<JS::Value> aResult)
 {
   JSObject *obj = profiler_get_profile_jsobject(aCx);
   if (!obj)
     return NS_ERROR_FAILURE;
 
-  *aResult = OBJECT_TO_JSVAL(obj);
+  aResult.setObject(*obj);
   return NS_OK;
 }
 
