@@ -366,7 +366,7 @@ AppProtocolHandler::NewChannel(nsIURI* aUri, nsIChannel* *aResult)
 
     mozilla::AutoSafeJSContext cx;
     JS::RootedValue jsInfo(cx);
-    rv = appsService->GetAppInfo(NS_ConvertUTF8toUTF16(host), &jsInfo);
+    rv = appsService->GetAppInfo(NS_ConvertUTF8toUTF16(host), jsInfo.address());
     if (NS_FAILED(rv) || !jsInfo.isObject()) {
       // Return a DummyChannel.
       printf_stderr("!! Creating a dummy channel for %s (no appInfo)\n", host.get());

@@ -152,7 +152,7 @@ SpeechTaskChild::Setup(nsISpeechTaskCallback* aCallback,
 }
 
 NS_IMETHODIMP
-SpeechTaskChild::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLandmarks,
+SpeechTaskChild::SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
                            JSContext* aCx)
 {
   MOZ_CRASH("Should never be called from child");

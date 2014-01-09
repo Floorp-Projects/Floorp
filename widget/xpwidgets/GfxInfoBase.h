@@ -51,7 +51,7 @@ public:
 
   NS_IMETHOD GetFailures(uint32_t *failureCount, char ***failures);
   NS_IMETHOD_(void) LogFailure(const nsACString &failure);
-  NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>);
+  NS_IMETHOD GetInfo(JSContext*, jsval*);
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.

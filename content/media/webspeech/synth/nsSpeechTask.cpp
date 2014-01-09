@@ -156,7 +156,7 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
 }
 
 NS_IMETHODIMP
-nsSpeechTask::SendAudio(JS::Handle<JS::Value> aData, JS::Handle<JS::Value> aLandmarks,
+nsSpeechTask::SendAudio(const JS::Value& aData, const JS::Value& aLandmarks,
                         JSContext* aCx)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);

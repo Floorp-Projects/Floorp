@@ -127,12 +127,12 @@ NS_IMETHODIMP nsScriptableRegion::GetRegion(nsIntRegion* outRgn)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::MutableHandle<JS::Value> aRects)
+NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::Value* aRects)
 {
   uint32_t numRects = mRegion.GetNumRects();
 
   if (!numRects) {
-    aRects.setNull();
+    *aRects = JSVAL_NULL;
     return NS_OK;
   }
 
@@ -141,7 +141,7 @@ NS_IMETHODIMP nsScriptableRegion::GetRects(JSContext* aCx, JS::MutableHandle<JS:
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aRects.setObject(*destArray);
+  *aRects = OBJECT_TO_JSVAL(destArray);
 
   uint32_t n = 0;
   nsIntRegionRectIterator iter(mRegion);

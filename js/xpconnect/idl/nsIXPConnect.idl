@@ -26,6 +26,7 @@ class nsAXPCNativeCallContext;
 [ptr] native JSClassPtr(JSClass);
 [ptr] native JSFreeOpPtr(JSFreeOp);
 [ptr] native JSObjectPtr(JSObject);
+[ptr] native JSValPtr(JS::Value);
 [ptr] native JSValConstPtr(const JS::Value);
       native JSPropertyOp(JSPropertyOp);
       native JSEqualityOp(JSEqualityOp);
@@ -408,7 +409,7 @@ interface nsIXPConnect : nsISupports
      * Wraps the given jsval in a nsIVariant and returns the new variant.
      */
     nsIVariant
-    jSValToVariant(in JSContextPtr cx, in jsval aJSVal);
+    jSValToVariant(in JSContextPtr cx, in JSValPtr aJSVal);
 
     /**
     * This only succeeds if the JSObject is a nsIXPConnectWrappedNative.

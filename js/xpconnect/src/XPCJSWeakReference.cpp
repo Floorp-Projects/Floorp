@@ -53,9 +53,9 @@ nsresult xpcJSWeakReference::Init(JSContext* cx, const JS::Value& object)
 }
 
 NS_IMETHODIMP
-xpcJSWeakReference::Get(JSContext* aCx, MutableHandleValue aRetval)
+xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
 {
-    aRetval.setNull();
+    *aRetval = JSVAL_NULL;
 
     if (!mReferent) {
         return NS_OK;
@@ -71,9 +71,12 @@ xpcJSWeakReference::Get(JSContext* aCx, MutableHandleValue aRetval)
         // We have a generic XPCOM object that supports weak references here.
         // Wrap it and pass it out.
         RootedObject global(aCx, CurrentGlobalOrNull(aCx));
-        return nsContentUtils::WrapNative(aCx, global,
-                                          supports, &NS_GET_IID(nsISupports),
-                                          aRetval);
+        RootedValue rval(aCx);
+        nsresult rv = nsContentUtils::WrapNative(aCx, global,
+                                                 supports, &NS_GET_IID(nsISupports),
+                                                 &rval);
+        *aRetval = rval;
+        return rv;
     }
 
     JS::RootedObject obj(aCx, wrappedObj->GetJSObject());
@@ -90,6 +93,6 @@ xpcJSWeakReference::Get(JSContext* aCx, MutableHandleValue aRetval)
         return NS_ERROR_FAILURE;
     }
 
-    aRetval.setObject(*obj);
+    *aRetval = OBJECT_TO_JSVAL(obj);
     return NS_OK;
 }

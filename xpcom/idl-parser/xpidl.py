@@ -429,10 +429,10 @@ class Native(object):
         return self.modifier == 'ref'
 
     def isPtr(self, calltype):
-        return self.modifier == 'ptr'
+        return self.modifier == 'ptr' or (self.modifier == 'ref' and self.specialtype == 'jsval' and calltype == 'out')
 
     def isRef(self, calltype):
-        return self.modifier == 'ref'
+        return self.modifier == 'ref' and not (self.specialtype == 'jsval' and calltype == 'out')
 
     def nativeType(self, calltype, const=False, shared=False):
         if shared:
@@ -442,11 +442,6 @@ class Native(object):
 
         if self.specialtype is not None and calltype == 'in':
             const = True
-
-        if self.specialtype == 'jsval':
-            if calltype == 'out' or calltype == 'inout':
-                return "JS::MutableHandleValue "
-            return "JS::HandleValue "
 
         if self.isRef(calltype):
             m = '& '

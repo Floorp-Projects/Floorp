@@ -184,12 +184,12 @@ JS::Value
 nsDOMFileReader::GetResult(JSContext* aCx, ErrorResult& aRv)
 {
   JS::Rooted<JS::Value> result(aCx);
-  aRv = GetResult(aCx, &result);
+  aRv = GetResult(aCx, result.address());
   return result;
 }
 
 NS_IMETHODIMP
-nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
+nsDOMFileReader::GetResult(JSContext* aCx, JS::Value* aResult)
 {
   JS::Rooted<JS::Value> result(aCx);
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
@@ -201,14 +201,15 @@ nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
     if (!JS_WrapValue(aCx, &result)) {
       return NS_ERROR_FAILURE;
     }
-    aResult.set(result);
+    *aResult = result;
     return NS_OK;
   }
 
   nsString tmpResult = mResult;
-  if (!xpc::StringToJsval(aCx, tmpResult, aResult)) {
+  if (!xpc::StringToJsval(aCx, tmpResult, &result)) {
     return NS_ERROR_FAILURE;
   }
+  *aResult = result;
   return NS_OK;
 }
 

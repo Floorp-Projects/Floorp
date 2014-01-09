@@ -32,12 +32,8 @@ public:
     uint32_t aKey,
     ParseItemAndAddFunc aParseItemAndAdd
   );
-  nsresult StringListToNewObject(JSContext* aCx,
-                                 JS::MutableHandle<JS::Value> aArray,
-                                 uint32_t aKey);
-  nsresult DimensionListToNewObject(JSContext* aCx,
-                                    JS::MutableHandle<JS::Value> aArray,
-                                    uint32_t aKey);
+  nsresult StringListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey);
+  nsresult DimensionListToNewObject(JSContext* aCx, JS::Value* aArray, uint32_t aKey);
 
 private:
   DOMCameraCapabilities(const DOMCameraCapabilities&) MOZ_DELETE;

@@ -1596,10 +1596,11 @@ nsXPCComponents_ID::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsXPCComponents_ID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                 JSContext *cx, JSObject *obj,
-                                HandleValue val, bool *bp, bool *_retval)
+                                const jsval &val, bool *bp, bool *_retval)
 {
+    RootedValue v(cx, val);
     if (bp)
-        *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIJSID));
+        *bp = JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIJSID));
     return NS_OK;
 }
 
@@ -1961,7 +1962,7 @@ nsXPCComponents_Exception::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsXPCComponents_Exception::HasInstance(nsIXPConnectWrappedNative *wrapper,
                                        JSContext * cx, JSObject * obj,
-                                       HandleValue val, bool *bp,
+                                       const jsval &val, bool *bp,
                                        bool *_retval)
 {
     using namespace mozilla::dom;
@@ -2564,12 +2565,13 @@ nsXPCComponents_Constructor::CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
 /* bool hasInstance (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in jsval val, out bool bp); */
 NS_IMETHODIMP
 nsXPCComponents_Constructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
-                                         JSContext *cx, JSObject *obj,
-                                         HandleValue val, bool *bp,
+                                         JSContext * cx, JSObject * obj,
+                                         const jsval &val, bool *bp,
                                          bool *_retval)
 {
+    RootedValue v(cx, val);
     if (bp)
-        *bp = JSValIsInterfaceOfType(cx, val, NS_GET_IID(nsIXPCConstructor));
+        *bp = JSValIsInterfaceOfType(cx, v, NS_GET_IID(nsIXPCConstructor));
     return NS_OK;
 }
 
@@ -2622,8 +2624,10 @@ nsXPCComponents_Utils::GetSandbox(nsIXPCComponents_utils_Sandbox **aSandbox)
 
 /* void reportError (); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
+nsXPCComponents_Utils::ReportError(const Value &errorArg, JSContext *cx)
 {
+    RootedValue error(cx, errorArg);
+
     // This function shall never fail! Silently eat any failure conditions.
 
     nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -2693,14 +2697,16 @@ nsXPCComponents_Utils::ReportError(HandleValue error, JSContext *cx)
 /* void evalInSandbox(in AString source, in nativeobj sandbox); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
-                                     HandleValue sandboxVal,
-                                     HandleValue version,
-                                     HandleValue filenameVal,
+                                     const Value& sandboxValArg,
+                                     const Value& versionArg,
+                                     const Value& filenameVal,
                                      int32_t lineNumber,
                                      JSContext *cx,
                                      uint8_t optionalArgc,
-                                     MutableHandleValue retval)
+                                     Value *retval)
 {
+    RootedValue sandboxVal(cx, sandboxValArg);
+    RootedValue version(cx, versionArg);
     RootedObject sandbox(cx);
     if (!JS_ValueToObject(cx, sandboxVal, &sandbox) || !sandbox)
         return NS_ERROR_INVALID_ARG;
@@ -2732,7 +2738,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
     nsXPIDLCString filename;
     int32_t lineNo = (optionalArgc >= 3) ? lineNumber : 1;
     if (optionalArgc >= 2) {
-        JSString *filenameStr = ToString(cx, filenameVal);
+        RootedValue value(cx, filenameVal);
+        JSString *filenameStr = ToString(cx, value);
         if (!filenameStr)
             return NS_ERROR_INVALID_ARG;
 
@@ -2754,13 +2761,17 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString& source,
         }
     }
 
-    return xpc::EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
-                              jsVersion, false, retval);
+    RootedValue rval(cx);
+    nsresult rv = xpc::EvalInSandbox(cx, sandbox, source, filename.get(), lineNo,
+                                     jsVersion, false, &rval);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *retval = rval;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetSandboxMetadata(HandleValue sandboxVal,
-                                          JSContext *cx, MutableHandleValue rval)
+nsXPCComponents_Utils::GetSandboxMetadata(const Value &sandboxVal,
+                                          JSContext *cx, Value *rval)
 {
     if (!sandboxVal.isObject())
         return NS_ERROR_INVALID_ARG;
@@ -2770,12 +2781,17 @@ nsXPCComponents_Utils::GetSandboxMetadata(HandleValue sandboxVal,
     if (!sandbox || !xpc::IsSandbox(sandbox))
         return NS_ERROR_INVALID_ARG;
 
-    return xpc::GetSandboxMetadata(cx, sandbox, rval);
+    RootedValue metadata(cx);
+    nsresult rv = xpc::GetSandboxMetadata(cx, sandbox, &metadata);
+    NS_ENSURE_SUCCESS(rv, rv);
+    *rval = metadata;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::SetSandboxMetadata(HandleValue sandboxVal,
-                                          HandleValue metadataVal,
+nsXPCComponents_Utils::SetSandboxMetadata(const Value &sandboxVal,
+                                          const Value &metadataVal,
                                           JSContext *cx)
 {
     if (!sandboxVal.isObject())
@@ -2786,7 +2802,8 @@ nsXPCComponents_Utils::SetSandboxMetadata(HandleValue sandboxVal,
     if (!sandbox || !xpc::IsSandbox(sandbox))
         return NS_ERROR_INVALID_ARG;
 
-    nsresult rv = xpc::SetSandboxMetadata(cx, sandbox, metadataVal);
+    RootedValue metadata(cx, metadataVal);
+    nsresult rv = xpc::SetSandboxMetadata(cx, sandbox, metadata);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
@@ -2797,10 +2814,10 @@ nsXPCComponents_Utils::SetSandboxMetadata(HandleValue sandboxVal,
  */
 NS_IMETHODIMP
 nsXPCComponents_Utils::Import(const nsACString& registryLocation,
-                              HandleValue targetObj,
+                              const Value& targetObj,
                               JSContext* cx,
                               uint8_t optionalArgc,
-                              MutableHandleValue retval)
+                              Value* retval)
 {
     nsCOMPtr<xpcIJSModuleLoader> moduleloader =
         do_GetService(MOZJSCOMPONENTLOADER_CONTRACTID);
@@ -2825,7 +2842,7 @@ nsXPCComponents_Utils::Unload(const nsACString & registryLocation)
  * JSObject importGlobalProperties (in jsval aPropertyList);
  */
 NS_IMETHODIMP
-nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
+nsXPCComponents_Utils::ImportGlobalProperties(const JS::Value& aPropertyList,
                                               JSContext* cx)
 {
     RootedObject global(cx, CurrentGlobalOrNull(cx));
@@ -2845,7 +2862,7 @@ nsXPCComponents_Utils::ImportGlobalProperties(HandleValue aPropertyList,
 
 /* xpcIJSWeakReference getWeakReference (); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetWeakReference(HandleValue object, JSContext *cx,
+nsXPCComponents_Utils::GetWeakReference(const Value &object, JSContext *cx,
                                         xpcIJSWeakReference **_retval)
 {
     nsRefPtr<xpcJSWeakReference> ref = new xpcJSWeakReference();
@@ -2934,41 +2951,41 @@ nsXPCComponents_Utils::SchedulePreciseShrinkingGC(ScheduledGCCallback* aCallback
 
 /* [implicit_jscontext] jsval nondeterministicGetWeakMapKeys(in jsval aMap); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(HandleValue aMap,
+nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(const Value &aMap,
                                                       JSContext *aCx,
-                                                      MutableHandleValue aKeys)
+                                                      Value *aKeys)
 {
     if (!aMap.isObject()) {
-        aKeys.setUndefined();
+        aKeys->setUndefined();
         return NS_OK;
     }
     RootedObject objRet(aCx);
     if (!JS_NondeterministicGetWeakMapKeys(aCx, &aMap.toObject(), objRet.address()))
         return NS_ERROR_OUT_OF_MEMORY;
-     aKeys.set(objRet ? ObjectValue(*objRet) : UndefinedValue());
+    *aKeys = objRet ? ObjectValue(*objRet) : UndefinedValue();
     return NS_OK;
 }
 
 /* void getDebugObject(); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetJSTestingFunctions(JSContext *cx,
-                                             MutableHandleValue retval)
+                                             Value *retval)
 {
     JSObject *obj = js::GetTestingFunctions(cx);
     if (!obj)
         return NS_ERROR_XPC_JAVASCRIPT_ERROR;
-    retval.setObject(*obj);
+    *retval = OBJECT_TO_JSVAL(obj);
     return NS_OK;
 }
 
 /* void getGlobalForObject(); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
+nsXPCComponents_Utils::GetGlobalForObject(const Value& object,
                                           JSContext *cx,
-                                          MutableHandleValue retval)
+                                          Value *retval)
 {
     // First argument must be an object.
-    if (object.isPrimitive())
+    if (JSVAL_IS_PRIMITIVE(object))
         return NS_ERROR_XPC_BAD_CONVERT_JS;
 
     // Wrappers are parented to their the global in their home compartment. But
@@ -2976,7 +2993,7 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
     // a wrapper for the foreign global. So we need to unwrap before getting the
     // parent, enter the compartment for the duration of the call, and wrap the
     // result.
-    Rooted<JSObject*> obj(cx, &object.toObject());
+    Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
     obj = js::UncheckedUnwrap(obj);
     {
         JSAutoCompartment ac(cx, obj);
@@ -2986,11 +3003,12 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
     if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
 
+    *retval = OBJECT_TO_JSVAL(obj);
+
     // Outerize if necessary.
     if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
-      obj = outerize(cx, obj);
+      *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
-    retval.setObject(*obj);
     return NS_OK;
 }
 
@@ -3041,7 +3059,7 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &opti
 
 /* boolean isProxy(in value vobj); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::IsProxy(HandleValue vobj, JSContext *cx, bool *rval)
+nsXPCComponents_Utils::IsProxy(const Value &vobj, JSContext *cx, bool *rval)
 {
     if (!vobj.isObject()) {
         *rval = false;
@@ -3058,33 +3076,40 @@ nsXPCComponents_Utils::IsProxy(HandleValue vobj, JSContext *cx, bool *rval)
 
 /* jsval evalInWindow(in string source, in jsval window); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::EvalInWindow(const nsAString &source, HandleValue window,
-                                    JSContext *cx, MutableHandleValue rval)
+nsXPCComponents_Utils::EvalInWindow(const nsAString &source, const Value &window,
+                                    JSContext *cx, Value *rval)
 {
     if (!window.isObject())
         return NS_ERROR_INVALID_ARG;
 
     RootedObject rwindow(cx, &window.toObject());
-    if (!xpc::EvalInWindow(cx, source, rwindow, rval))
+    RootedValue res(cx);
+    if (!xpc::EvalInWindow(cx, source, rwindow, &res))
         return NS_ERROR_FAILURE;
+
+    *rval = res;
     return NS_OK;
 }
 
 /* jsval exportFunction(in jsval vfunction, in jsval vscope, in jsval vname); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::ExportFunction(HandleValue vfunction, HandleValue vscope,
-                                      HandleValue voptions, JSContext *cx,
-                                      MutableHandleValue rval)
+nsXPCComponents_Utils::ExportFunction(const Value &vfunction, const Value &vscope,
+                                      const Value &voptions, JSContext *cx, Value *rval)
 {
-    if (!xpc::ExportFunction(cx, vfunction, vscope, voptions, rval))
+    RootedValue rfunction(cx, vfunction);
+    RootedValue rscope(cx, vscope);
+    RootedValue roptions(cx, voptions);
+    RootedValue res(cx);
+    if (!xpc::ExportFunction(cx, rfunction, rscope, roptions, &res))
         return NS_ERROR_FAILURE;
+    *rval = res;
     return NS_OK;
 }
 
 /* jsval createObjectIn(in jsval vobj, [optional] in jsval voptions); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateObjectIn(HandleValue vobj, HandleValue voptions,
-                                      JSContext *cx, MutableHandleValue rval)
+nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, const Value &voptions,
+                                      JSContext *cx, Value *rval)
 {
     RootedObject optionsObject(cx, voptions.isObject() ? &voptions.toObject()
                                                        : nullptr);
@@ -3095,15 +3120,18 @@ nsXPCComponents_Utils::CreateObjectIn(HandleValue vobj, HandleValue voptions,
         return NS_ERROR_FAILURE;
     }
 
-    if (!xpc::CreateObjectIn(cx, vobj, options, rval))
+    RootedValue rvobj(cx, vobj);
+    RootedValue res(cx);
+    if (!xpc::CreateObjectIn(cx, rvobj, options, &res))
         return NS_ERROR_FAILURE;
+
+    *rval = res;
     return NS_OK;
 }
 
 /* jsval createObjectIn(in jsval vobj); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateArrayIn(HandleValue vobj, JSContext *cx,
-                                     MutableHandleValue rval)
+nsXPCComponents_Utils::CreateArrayIn(const Value &vobj, JSContext *cx, Value *rval)
 {
     if (!cx)
         return NS_ERROR_FAILURE;
@@ -3124,14 +3152,13 @@ nsXPCComponents_Utils::CreateArrayIn(HandleValue vobj, JSContext *cx,
     if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
 
-    rval.setObject(*obj);
+    *rval = ObjectValue(*obj);
     return NS_OK;
 }
 
 /* jsval createDateIn(in jsval vobj, in long long msec); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateDateIn(HandleValue vobj, int64_t msec, JSContext *cx,
-                                    MutableHandleValue rval)
+nsXPCComponents_Utils::CreateDateIn(const Value &vobj, int64_t msec, JSContext *cx, Value *rval)
 {
     if (!cx)
         return NS_ERROR_FAILURE;
@@ -3152,13 +3179,13 @@ nsXPCComponents_Utils::CreateDateIn(HandleValue vobj, int64_t msec, JSContext *c
     if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
 
-    rval.setObject(*obj);
+    *rval = ObjectValue(*obj);
     return NS_OK;
 }
 
 /* void makeObjectPropsNormal(jsval vobj); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext *cx)
+nsXPCComponents_Utils::MakeObjectPropsNormal(const Value &vobj, JSContext *cx)
 {
     if (!cx)
         return NS_ERROR_FAILURE;
@@ -3198,22 +3225,22 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext *cx)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::IsDeadWrapper(HandleValue obj, bool *out)
+nsXPCComponents_Utils::IsDeadWrapper(const jsval &obj, bool *out)
 {
     *out = false;
-    if (obj.isPrimitive())
+    if (JSVAL_IS_PRIMITIVE(obj))
         return NS_ERROR_INVALID_ARG;
 
     // Make sure to unwrap first. Once a proxy is nuked, it ceases to be a
     // wrapper, meaning that, if passed to another compartment, we'll generate
     // a CCW for it. Make sure that IsDeadWrapper sees through the confusion.
-    *out = JS_IsDeadWrapper(js::CheckedUnwrap(&obj.toObject()));
+    *out = JS_IsDeadWrapper(js::CheckedUnwrap(JSVAL_TO_OBJECT(obj)));
     return NS_OK;
 }
 
 /* void recomputerWrappers(jsval vobj); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext *cx)
+nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
 {
     // Determine the compartment of the given object, if any.
     JSCompartment *c = vobj.isObject()
@@ -3233,7 +3260,7 @@ nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext *cx)
 
 /* jsval setWantXrays(jsval vscope); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext *cx)
+nsXPCComponents_Utils::SetWantXrays(const jsval &vscope, JSContext *cx)
 {
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
@@ -3248,8 +3275,8 @@ nsXPCComponents_Utils::SetWantXrays(HandleValue vscope, JSContext *cx)
 
 /* jsval getComponentsForScope(jsval vscope); */
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetComponentsForScope(HandleValue vscope, JSContext *cx,
-                                             MutableHandleValue rval)
+nsXPCComponents_Utils::GetComponentsForScope(const jsval &vscope, JSContext *cx,
+                                             jsval *rval)
 {
     if (!vscope.isObject())
         return NS_ERROR_INVALID_ARG;
@@ -3260,17 +3287,17 @@ nsXPCComponents_Utils::GetComponentsForScope(HandleValue vscope, JSContext *cx,
         return NS_ERROR_FAILURE;
     if (!JS_WrapObject(cx, &components))
         return NS_ERROR_FAILURE;
-    rval.setObject(*components);
+    *rval = ObjectValue(*components);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
+nsXPCComponents_Utils::Dispatch(const jsval &runnableArg, const jsval &scope,
                                 JSContext *cx)
 {
     // Enter the given compartment, if any, and rewrap runnable.
-    RootedValue runnable(cx, runnableArg);
     Maybe<JSAutoCompartment> ac;
+    RootedValue runnable(cx, runnableArg);
     if (scope.isObject()) {
         JSObject *scopeObj = js::UncheckedUnwrap(&scope.toObject());
         if (!scopeObj)
@@ -3361,7 +3388,7 @@ nsXPCComponents_Utils::SetGCZeal(int32_t aValue, JSContext* cx)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext *cx)
+nsXPCComponents_Utils::NukeSandbox(const Value &obj, JSContext *cx)
 {
     NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
     JSObject *wrapper = &obj.toObject();
@@ -3375,7 +3402,7 @@ nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext *cx)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::BlockScriptForGlobal(HandleValue globalArg,
+nsXPCComponents_Utils::BlockScriptForGlobal(const JS::Value &globalArg,
                                             JSContext *cx)
 {
     NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
@@ -3391,7 +3418,7 @@ nsXPCComponents_Utils::BlockScriptForGlobal(HandleValue globalArg,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::UnblockScriptForGlobal(HandleValue globalArg,
+nsXPCComponents_Utils::UnblockScriptForGlobal(const JS::Value &globalArg,
                                               JSContext *cx)
 {
     NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
@@ -3407,7 +3434,7 @@ nsXPCComponents_Utils::UnblockScriptForGlobal(HandleValue globalArg,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::IsXrayWrapper(HandleValue obj, bool* aRetval)
+nsXPCComponents_Utils::IsXrayWrapper(const Value &obj, bool* aRetval)
 {
     *aRetval =
         obj.isObject() && xpc::WrapperFactory::IsXrayWrapper(&obj.toObject());
@@ -3415,32 +3442,32 @@ nsXPCComponents_Utils::IsXrayWrapper(HandleValue obj, bool* aRetval)
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::WaiveXrays(HandleValue aVal, JSContext *aCx, MutableHandleValue aRetval)
+nsXPCComponents_Utils::WaiveXrays(const Value &aVal, JSContext *aCx, jsval *aRetval)
 {
     RootedValue value(aCx, aVal);
     if (!xpc::WrapperFactory::WaiveXrayAndWrap(aCx, &value))
         return NS_ERROR_FAILURE;
-    aRetval.set(value);
+    *aRetval = value;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::UnwaiveXrays(HandleValue aVal, JSContext *aCx, MutableHandleValue aRetval)
+nsXPCComponents_Utils::UnwaiveXrays(const Value &aVal, JSContext *aCx, jsval *aRetval)
 {
     if (!aVal.isObject()) {
-        aRetval.set(aVal);
+        *aRetval = aVal;
         return NS_OK;
     }
 
     RootedObject obj(aCx, js::UncheckedUnwrap(&aVal.toObject()));
     if (!JS_WrapObject(aCx, &obj))
         return NS_ERROR_FAILURE;
-    aRetval.setObject(*obj);
+    *aRetval = ObjectValue(*obj);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetClassName(HandleValue aObj, bool aUnwrap, JSContext *aCx, char **aRv)
+nsXPCComponents_Utils::GetClassName(const Value &aObj, bool aUnwrap, JSContext *aCx, char **aRv)
 {
     if (!aObj.isObject())
         return NS_ERROR_INVALID_ARG;
@@ -3461,8 +3488,8 @@ nsXPCComponents_Utils::GetDOMClassInfo(const nsAString& aClassName,
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GetIncumbentGlobal(HandleValue aCallback,
-                                          JSContext *aCx, MutableHandleValue aOut)
+nsXPCComponents_Utils::GetIncumbentGlobal(const Value &aCallback,
+                                          JSContext *aCx, Value *aOut)
 {
     nsCOMPtr<nsIGlobalObject> global = mozilla::dom::GetIncumbentGlobal();
     RootedValue globalVal(aCx);
@@ -3483,7 +3510,7 @@ nsXPCComponents_Utils::GetIncumbentGlobal(HandleValue aCallback,
             return NS_ERROR_FAILURE;
     }
 
-    aOut.set(globalVal);
+    *aOut = globalVal;
     return NS_OK;
 }
 
@@ -3508,7 +3535,7 @@ class WrappedJSHolder : public nsISupports
 NS_IMPL_ISUPPORTS0(WrappedJSHolder);
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::GenerateXPCWrappedJS(HandleValue aObj, HandleValue aScope,
+nsXPCComponents_Utils::GenerateXPCWrappedJS(const Value &aObj, const Value &aScope,
                                             JSContext *aCx, nsISupports **aOut)
 {
     if (!aObj.isObject())
@@ -3859,7 +3886,7 @@ nsXPCComponents::AttachComponentsObject(JSContext* aCx,
 }
 
 /* void reportError (); */
-NS_IMETHODIMP nsXPCComponents::ReportError(HandleValue error, JSContext *cx)
+NS_IMETHODIMP nsXPCComponents::ReportError(const Value &error, JSContext *cx)
 {
     NS_WARNING("Components.reportError deprecated, use Components.utils.reportError");
 

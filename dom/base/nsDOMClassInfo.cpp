@@ -617,7 +617,7 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
   return nsDOMClassInfo::XPConnect()->WrapNativeToJSVal(cx, scope, native,
                                                         cache, aIID,
-                                                        aAllowWrapping, vp);
+                                                        aAllowWrapping, vp.address());
 }
 
 static inline nsresult
@@ -1662,7 +1662,7 @@ nsDOMClassInfo::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMClassInfo::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                            JSObject *obj, JS::Handle<JS::Value> val, bool *bp,
+                            JSObject *obj, const jsval &val, bool *bp,
                             bool *_retval)
 {
   NS_WARNING("nsDOMClassInfo::HasInstance Don't call me!");
@@ -3134,7 +3134,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
     nsCOMPtr<nsIDOMGlobalPropertyInitializer> gpi(do_QueryInterface(native));
     if (gpi) {
-      rv = gpi->Init(aWin, &prop_val);
+      rv = gpi->Init(aWin, prop_val.address());
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -4508,7 +4508,7 @@ nsDOMConstructorSH::Construct(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 NS_IMETHODIMP
 nsDOMConstructorSH::HasInstance(nsIXPConnectWrappedNative *wrapper,
-                                JSContext *cx, JSObject *aObj, JS::Handle<JS::Value> val,
+                                JSContext *cx, JSObject *aObj, const jsval &val,
                                 bool *bp, bool *_retval)
 {
   JS::Rooted<JSObject*> obj(cx, aObj);

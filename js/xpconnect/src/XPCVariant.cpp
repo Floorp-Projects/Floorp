@@ -365,9 +365,10 @@ bool XPCVariant::InitializeData(JSContext* cx)
 }
 
 NS_IMETHODIMP
-XPCVariant::GetAsJSVal(MutableHandleValue result)
+XPCVariant::GetAsJSVal(jsval* result)
 {
-  result.set(GetJSVal());
+  NS_PRECONDITION(result, "null result arg.");
+  *result = GetJSVal();
   return NS_OK;
 }
 
@@ -383,7 +384,7 @@ XPCVariant::VariantDataToJS(nsIVariant* variant,
 
     AutoJSContext cx;
     RootedValue realVal(cx);
-    nsresult rv = variant->GetAsJSVal(&realVal);
+    nsresult rv = variant->GetAsJSVal(realVal.address());
 
     if (NS_SUCCEEDED(rv) &&
         (JSVAL_IS_PRIMITIVE(realVal) ||

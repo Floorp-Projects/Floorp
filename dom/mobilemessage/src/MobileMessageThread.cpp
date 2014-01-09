@@ -162,14 +162,14 @@ MobileMessageThread::GetUnreadCount(uint64_t* aUnreadCount)
 
 NS_IMETHODIMP
 MobileMessageThread::GetParticipants(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aParticipants)
+                                     JS::Value* aParticipants)
 {
   JS::Rooted<JSObject*> obj(aCx);
 
   nsresult rv = nsTArrayToJSArray(aCx, mData.participants(), obj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aParticipants.setObject(*obj);
+  aParticipants->setObject(*obj);
   return NS_OK;
 }
 

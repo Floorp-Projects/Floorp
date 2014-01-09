@@ -170,7 +170,7 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::Construct(nsIXPConnectWrappedNative *wrapper, J
 #endif
 
 #ifndef XPC_MAP_WANT_HASINSTANCE
-NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, JS::HandleValue val, bool *bp, bool *_retval)
+NS_IMETHODIMP XPC_MAP_CLASSNAME::HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext * cx, JSObject * obj, const JS::Value &val, bool *bp, bool *_retval)
     {NS_ERROR("never called"); return NS_ERROR_NOT_IMPLEMENTED;}
 #endif
 

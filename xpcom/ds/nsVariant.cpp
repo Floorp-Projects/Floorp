@@ -1860,7 +1860,7 @@ NS_IMETHODIMP nsVariant::GetAsISupports(nsISupports **_retval)
 }
 
 /* jsval getAsJSVal() */
-NS_IMETHODIMP nsVariant::GetAsJSVal(JS::MutableHandleValue)
+NS_IMETHODIMP nsVariant::GetAsJSVal(JS::Value *_retval)
 {
     // Can only get the jsval from an XPCVariant.
     return NS_ERROR_CANNOT_CONVERT_DATA;

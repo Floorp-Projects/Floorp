@@ -471,14 +471,14 @@ MmsMessage::GetDelivery(nsAString& aDelivery)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDeliveryInfo)
+MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::Value* aDeliveryInfo)
 {
   // TODO Bug 850525 It'd be better to depend on the delivery of MmsMessage
   // to return a more correct value. Ex, if .delivery = 'received', we should
   // also make .deliveryInfo = null, since the .deliveryInfo is useless.
   uint32_t length = mDeliveryInfo.Length();
   if (length == 0) {
-    aDeliveryInfo.setNull();
+    *aDeliveryInfo = JSVAL_NULL;
     return NS_OK;
   }
 
@@ -552,7 +552,7 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDelive
     }
   }
 
-  aDeliveryInfo.setObject(*deliveryInfo);
+  aDeliveryInfo->setObject(*deliveryInfo);
   return NS_OK;
 }
 
@@ -564,13 +564,13 @@ MmsMessage::GetSender(nsAString& aSender)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetReceivers(JSContext* aCx, JS::MutableHandle<JS::Value> aReceivers)
+MmsMessage::GetReceivers(JSContext* aCx, JS::Value* aReceivers)
 {
   JS::Rooted<JSObject*> reveiversObj(aCx);
   nsresult rv = nsTArrayToJSArray(aCx, mReceivers, reveiversObj.address());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aReceivers.setObject(*reveiversObj);
+  aReceivers->setObject(*reveiversObj);
   return NS_OK;
 }
 
@@ -610,7 +610,7 @@ MmsMessage::GetSmil(nsAString& aSmil)
 }
 
 NS_IMETHODIMP
-MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachments)
+MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
 {
   uint32_t length = mAttachments.Length();
 
@@ -672,7 +672,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
     }
   }
 
-  aAttachments.setObject(*attachments);
+  aAttachments->setObject(*attachments);
   return NS_OK;
 }
 
