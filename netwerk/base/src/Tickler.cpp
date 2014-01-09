@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace net {
 
-NS_IMPL_ISUPPORTS1(Tickler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS2(Tickler, nsISupportsWeakReference, Tickler)
 
 Tickler::Tickler()
     : mLock("Tickler::mLock")
