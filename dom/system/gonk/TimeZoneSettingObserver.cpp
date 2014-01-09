@@ -52,7 +52,7 @@ public:
 
   TimeZoneSettingCb() {}
 
-  NS_IMETHOD Handle(const nsAString &aName, const JS::Value &aResult) {
+  NS_IMETHOD Handle(const nsAString &aName, JS::Handle<JS::Value> aResult) {
 
     JSContext *cx = nsContentUtils::GetCurrentJSContext();
     NS_ENSURE_TRUE(cx, NS_OK);
@@ -74,7 +74,12 @@ public:
       // Convert it to a JS string.
       NS_ConvertUTF8toUTF16 utf16Str(curTimeZone);
 
-      JSString *jsStr = JS_NewUCStringCopyN(cx, utf16Str.get(), utf16Str.Length());
+      JS::Rooted<JSString*> jsStr(cx, JS_NewUCStringCopyN(cx,
+                                                          utf16Str.get(),
+                                                          utf16Str.Length()));
+      if (!jsStr) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       // Set the settings based on the current system timezone.
       nsCOMPtr<nsISettingsServiceLock> lock;
@@ -85,7 +90,8 @@ public:
         return NS_OK;
       }
       settingsService->CreateLock(getter_AddRefs(lock));
-      lock->Set(TIME_TIMEZONE, STRING_TO_JSVAL(jsStr), nullptr, nullptr);
+      JS::Rooted<JS::Value> value(cx, JS::StringValue(jsStr));
+      lock->Set(TIME_TIMEZONE, value, nullptr, nullptr);
       return NS_OK;
     }
 

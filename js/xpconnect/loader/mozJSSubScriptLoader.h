@@ -40,7 +40,8 @@ private:
 
     nsresult DoLoadSubScriptWithOptions(const nsAString& url,
                                         LoadSubScriptOptions& options,
-                                        JSContext* cx, JS::Value* retval);
+                                        JSContext* cx,
+                                        JS::MutableHandle<JS::Value> retval);
 
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
 };

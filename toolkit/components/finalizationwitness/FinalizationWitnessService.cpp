@@ -189,9 +189,8 @@ NS_IMETHODIMP
 FinalizationWitnessService::Make(const char* aTopic,
                                  const char16_t* aValue,
                                  JSContext* aCx,
-                                 JS::Value *aRetval) {
-  MOZ_ASSERT(aRetval);
-
+                                 JS::MutableHandle<JS::Value> aRetval)
+{
   JS::Rooted<JSObject*> objResult(aCx, JS_NewObject(aCx, &sWitnessClass, nullptr, nullptr));
   if (!objResult) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -206,7 +205,7 @@ FinalizationWitnessService::Make(const char* aTopic,
   JS_SetReservedSlot(objResult, WITNESS_SLOT_EVENT,
                      JS::PrivateValue(event.forget().get()));
 
-  aRetval->setObject(*objResult);
+  aRetval.setObject(*objResult);
   return NS_OK;
 }
 

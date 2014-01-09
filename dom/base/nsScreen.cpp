@@ -238,11 +238,9 @@ nsScreen::GetLockOrientationPermission() const
 }
 
 NS_IMETHODIMP
-nsScreen::MozLockOrientation(const JS::Value& aOrientation_, JSContext* aCx,
+nsScreen::MozLockOrientation(JS::Handle<JS::Value> aOrientation, JSContext* aCx,
                              bool* aReturn)
 {
-  JS::Rooted<JS::Value> aOrientation(aCx, aOrientation_);
-
   if (aOrientation.isObject()) {
     JS::Rooted<JSObject*> seq(aCx, &aOrientation.toObject());
     if (IsArrayLike(aCx, seq)) {

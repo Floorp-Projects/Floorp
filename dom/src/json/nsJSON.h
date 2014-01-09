@@ -59,7 +59,7 @@ protected:
                           nsIInputStream* aStream,
                           int32_t aContentLength,
                           bool aNeedsConverter,
-                          JS::Value* aRetVal);
+                          JS::MutableHandle<JS::Value> aRetVal);
   nsCOMPtr<nsIURI> mURI;
 };
 

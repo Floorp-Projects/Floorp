@@ -130,7 +130,7 @@ public:
     MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, const JS::Value& aResult)
+  NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
   {
     MOZ_ASSERT(NS_IsMainThread());
 

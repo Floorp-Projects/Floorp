@@ -125,7 +125,7 @@ nsHistory::GetState(JSContext* aCx, ErrorResult& aRv) const
 
   if (variant) {
     JS::Rooted<JS::Value> jsData(aCx);
-    aRv = variant->GetAsJSVal(jsData.address());
+    aRv = variant->GetAsJSVal(&jsData);
 
     if (aRv.Failed()) {
       return JS::UndefinedValue();

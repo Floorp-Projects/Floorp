@@ -56,7 +56,7 @@ Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
 
   if (!aMessage.IsEmpty()) {
     nsCOMPtr<nsIJSON> json(new nsJSON());
-    nsresult rv = json->DecodeToJSVal(aMessage, cx, value.address());
+    nsresult rv = json->DecodeToJSVal(aMessage, cx, &value);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
     value = JS::NullValue();
@@ -115,8 +115,8 @@ Icc::GetCardState(nsString& aCardState) const
 }
 
 void
-Icc::SendStkResponse(const JSContext* aCx, const JS::Value& aCommand,
-                     const JS::Value& aResponse, ErrorResult& aRv)
+Icc::SendStkResponse(const JSContext* aCx, JS::Handle<JS::Value> aCommand,
+                     JS::Handle<JS::Value> aResponse, ErrorResult& aRv)
 {
   if (!mProvider) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -149,7 +149,7 @@ Icc::SendStkMenuSelection(uint16_t aItemIdentifier, bool aHelpRequested,
 }
 
 void
-Icc::SendStkTimerExpiration(const JSContext* aCx, const JS::Value& aTimer,
+Icc::SendStkTimerExpiration(const JSContext* aCx, JS::Handle<JS::Value> aTimer,
                             ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -165,7 +165,7 @@ Icc::SendStkTimerExpiration(const JSContext* aCx, const JS::Value& aTimer,
 }
 
 void
-Icc::SendStkEventDownload(const JSContext* aCx, const JS::Value& aEvent,
+Icc::SendStkEventDownload(const JSContext* aCx, JS::Handle<JS::Value> aEvent,
                           ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -199,7 +199,7 @@ Icc::GetCardLock(const nsAString& aLockType, ErrorResult& aRv)
 }
 
 already_AddRefed<nsISupports>
-Icc::UnlockCardLock(const JSContext* aCx, const JS::Value& aInfo,
+Icc::UnlockCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
                     ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -219,7 +219,8 @@ Icc::UnlockCardLock(const JSContext* aCx, const JS::Value& aInfo,
 }
 
 already_AddRefed<nsISupports>
-Icc::SetCardLock(const JSContext* aCx, const JS::Value& aInfo, ErrorResult& aRv)
+Icc::SetCardLock(const JSContext* aCx, JS::Handle<JS::Value> aInfo,
+                 ErrorResult& aRv)
 {
   if (!mProvider) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -279,7 +280,7 @@ Icc::ReadContacts(const nsAString& aContactType, ErrorResult& aRv)
 
 already_AddRefed<nsISupports>
 Icc::UpdateContact(const JSContext* aCx, const nsAString& aContactType,
-                   const JS::Value& aContact, const nsAString& aPin2,
+                   JS::Handle<JS::Value> aContact, const nsAString& aPin2,
                    ErrorResult& aRv)
 {
   if (!mProvider) {
@@ -319,8 +320,8 @@ Icc::IccOpenChannel(const nsAString& aAid, ErrorResult& aRv)
 }
 
 already_AddRefed<nsISupports>
-Icc::IccExchangeAPDU(const JSContext* aCx, int32_t aChannel, const jsval& aApdu,
-                     ErrorResult& aRv)
+Icc::IccExchangeAPDU(const JSContext* aCx, int32_t aChannel,
+                     JS::Handle<JS::Value> aApdu, ErrorResult& aRv)
 {
   if (!mProvider) {
     aRv.Throw(NS_ERROR_FAILURE);
