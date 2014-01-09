@@ -309,3 +309,20 @@ takes a single parameter called *group*. This is the name of the entry
 point group to load and defaults to ``mach.providers``. e.g.::
 
     mach.load_commands_from_entry_point("mach.external.providers")
+
+Adding Global Arguments
+=======================
+
+Arguments to mach commands are usually command-specific. However,
+mach ships with a handful of global arguments that apply to all
+commands.
+
+It is possible to extend the list of global arguments. In your
+*mach driver*, simply call ``add_global_argument()`` on your
+``mach.main.Mach`` instance. e.g.::
+
+   mach = mach.main.Mach(os.getcwd())
+
+   # Will allow --example to be specified on every mach command.
+   mach.add_global_argument('--example', action='store_true',
+       help='Demonstrate an example global argument.')
