@@ -216,6 +216,27 @@ GTEST_API_ AssertionResult EqFailure(const char* expected_expression,
                                      const String& actual_value,
                                      bool ignoring_case);
 
+// Constructs and returns the message for an equality assertion
+// (e.g. ASSERT_NE, EXPECT_NE, etc) failure.
+//
+// The first four parameters are the expressions used in the assertion
+// and their values, as strings.  For example, for ASSERT_NE(foo, bar)
+// where foo is 5 and bar is 6, we have:
+//
+//   expected_expression: "foo"
+//   actual_expression:   "bar"
+//   expected_value:      "5"
+//   actual_value:        "6"
+//
+// The ignoring_case parameter is true iff the assertion is a
+// *_STRCASENE*.  When it's true, the string " (ignoring case)" will
+// be inserted into the message.
+GTEST_API_ AssertionResult NeFailure(const char* expected_expression,
+                                     const char* actual_expression,
+                                     const String& expected_value,
+                                     const String& actual_value,
+                                     bool ignoring_case);
+
 // Constructs a failure message for Boolean assertions such as EXPECT_TRUE.
 GTEST_API_ String GetBoolAssertionFailureMessage(
     const AssertionResult& assertion_result,

@@ -19,6 +19,8 @@ interface WorkerGlobalScope : EventTarget {
   void close();
   attribute OnErrorEventHandler onerror;
 
+  attribute EventHandler onoffline;
+  attribute EventHandler ononline;
   // also has additional members in a partial interface
 };
 

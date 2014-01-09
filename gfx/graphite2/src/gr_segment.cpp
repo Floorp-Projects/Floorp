@@ -42,8 +42,8 @@ namespace
       // if (!font) return NULL;
       Segment* pRes=new Segment(nChars, face, script, dir);
 
-      pRes->read_text(face, pFeats, enc, pStart, nChars);
-      if (!pRes->runGraphite())
+      
+      if (!pRes->read_text(face, pFeats, enc, pStart, nChars) || !pRes->runGraphite())
       {
         delete pRes;
         return NULL;
@@ -64,46 +64,46 @@ namespace
 template <typename utf_iter>
 inline size_t count_unicode_chars(utf_iter first, const utf_iter last, const void **error)
 {
-	size_t n_chars = 0;
-	uint32 usv = 0;
+    size_t n_chars = 0;
+    uint32 usv = 0;
 
-	if (last)
-	{
-		for (;first != last; ++first, ++n_chars)
-			if ((usv = *first) == 0 || first.error()) break;
-	}
-	else
-	{
-		while ((usv = *first) != 0 && !first.error())
-		{
-			++first;
-			++n_chars;
-		}
-	}
+    if (last)
+    {
+        for (;first != last; ++first, ++n_chars)
+            if ((usv = *first) == 0 || first.error()) break;
+    }
+    else
+    {
+        while ((usv = *first) != 0 && !first.error())
+        {
+            ++first;
+            ++n_chars;
+        }
+    }
 
-	if (error)	*error = first.error() ? first : 0;
-	return n_chars;
+    if (error)  *error = first.error() ? first : 0;
+    return n_chars;
 }
 
 extern "C" {
 
 size_t gr_count_unicode_characters(gr_encform enc, const void* buffer_begin, const void* buffer_end/*don't go on or past end, If NULL then ignored*/, const void** pError)   //Also stops on nul. Any nul is not in the count
 {
-	assert(buffer_begin);
+    assert(buffer_begin);
 
-	switch (enc)
-	{
-	case gr_utf8:	return count_unicode_chars<utf8::const_iterator>(buffer_begin, buffer_end, pError); break;
-	case gr_utf16:	return count_unicode_chars<utf16::const_iterator>(buffer_begin, buffer_end, pError); break;
-	case gr_utf32:	return count_unicode_chars<utf32::const_iterator>(buffer_begin, buffer_end, pError); break;
-	default:		return 0;
-	}
+    switch (enc)
+    {
+    case gr_utf8:   return count_unicode_chars<utf8::const_iterator>(buffer_begin, buffer_end, pError); break;
+    case gr_utf16:  return count_unicode_chars<utf16::const_iterator>(buffer_begin, buffer_end, pError); break;
+    case gr_utf32:  return count_unicode_chars<utf32::const_iterator>(buffer_begin, buffer_end, pError); break;
+    default:        return 0;
+    }
 }
 
 
 gr_segment* gr_make_seg(const gr_font *font, const gr_face *face, gr_uint32 script, const gr_feature_val* pFeats, gr_encform enc, const void* pStart, size_t nChars, int dir)
 {
-	const gr_feature_val * tmp_feats = 0;
+    const gr_feature_val * tmp_feats = 0;
     if (pFeats == 0)
         pFeats = tmp_feats = static_cast<const gr_feature_val*>(face->theSill().cloneFeatures(0));
     gr_segment * seg = makeAndInitialize(font, face, script, pFeats, enc, pStart, nChars, dir);
