@@ -212,7 +212,9 @@
           PanelUI.showSubView("PanelUI-socialapi", widget.node,
                               CustomizableUI.AREA_PANEL);
         } else {
-          panel.openPopup(this, "bottomcenter topright", 0, 0, false, false);
+          let anchor = document.getAnonymousElementByAttribute(this, "class", "toolbarbutton-icon");
+          panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+          this.setAttribute("open", "true");
         }
         if (aResetOnClose) {
           let evName = inMenuPanel ? "ViewHiding": "popuphidden";
@@ -331,6 +333,7 @@
       ]]></handler>
       <handler event="popuphidden"><![CDATA[
         this.dispatchPanelEvent("socialFrameHide");
+        this.removeAttribute("open");
       ]]></handler>
       <handler event="command"><![CDATA[
         this.markCurrentPage();
