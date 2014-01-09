@@ -46,16 +46,12 @@
   overflow: auto;
 }
 
-#tabs[input="precise"] > .tabs-scrollbox > .scrollbutton-up {
-  visibility: visible !important;
-}
-#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-up {
+.tabs-scrollbox > .scrollbutton-up[collapsed],
+.tabs-scrollbox > .scrollbutton-down[collapsed],
+#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-up,
+#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-down {
   visibility: hidden !important;
   pointer-events: none;
-}
-
-#tabs[input="imprecise"] > .tabs-scrollbox > .scrollbutton-down {
-  visibility: collapse !important;
 }
 
 #tabs > .tabs-scrollbox > .scrollbutton-up {
