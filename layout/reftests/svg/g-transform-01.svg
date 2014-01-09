@@ -1,0 +1,27 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" class="reftest-wait">
+  <script>
+    document.addEventListener("MozReftestInvalidate", doTest, false);
+    setTimeout(doTest, 4000); // fallback for running outside reftest
+
+    function doTest() {
+      document.getElementById("g").transform.baseVal.getItem(0).setTranslate(20, 20);
+      document.getElementById("r2").transform.baseVal.getItem(0).setTranslate(70, 70);
+      document.getElementById("r1").transform.baseVal.getItem(0).setTranslate(180, 180);
+
+      document.documentElement.removeAttribute("class");
+    }
+  </script>
+  <rect width="100%" height="100%" fill="lime"/>
+  <g transform="translate(20 20)">
+    <rect transform="translate(70 70)" width="40" height="40" fill="red"/>
+    <rect transform="translate(180 180)" width="40" height="40" fill="red"/>
+  </g>
+  <g transform="translate(0 1)" id="g">
+    <rect transform="translate(49 49)" width="42" height="42" id="r2" fill="lime"/>
+    <rect transform="translate(89 89)" width="42" height="42" id="r1" fill="lime"/>
+  </g>
+</svg>
