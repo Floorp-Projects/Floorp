@@ -66,11 +66,21 @@ stack_callback(void *pc, void *sp, void *closure)
 }
 
 #ifdef DEBUG
-#include "nsCocoaFeatures.h"
+#define MAC_OS_X_VERSION_10_7_HEX 0x00001070
+
+static int32_t OSXVersion()
+{
+  static int32_t gOSXVersion = 0x0;
+  if (gOSXVersion == 0x0) {
+    OSErr err = ::Gestalt(gestaltSystemVersion, (SInt32*)&gOSXVersion);
+    MOZ_ASSERT(err == noErr);
+  }
+  return gOSXVersion;
+}
 
 static bool OnLionOrLater()
 {
-  return nsCocoaFeatures::OnLionOrLater();
+  return (OSXVersion() >= MAC_OS_X_VERSION_10_7_HEX);
 }
 #endif
 

@@ -24,6 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=938023
 SimpleTest.waitForExplicitFinish();
 
 var index = -1;
+var todayDate = new Date();
+var baseServeURL = "http://mochi.test:8888/tests/dom/downloads/tests/";
+var baseDownloadPath = "/mnt/sdcard/downloads/";
+var lastKnownCurrentBytes = 0;
 
 function next() {
   index += 1;
@@ -38,14 +42,52 @@ function next() {
   }
 }
 
+function checkConsistentDownloadAttributes(download) {
+  var href = document.getElementById("download1").getAttribute("href");
+  var expectedServeURL = baseServeURL + href;
+  var expectedDownloadPath = baseDownloadPath + "test.bin";
+
+  // bug 945323: Download path isn't honoring download attribute
+  todo(download.path === expectedDownloadPath,
+       "Download path = " + expectedDownloadPath);
+
+  ok(download.startTime >= todayDate,
+     "Download start time should be greater than or equal to today");
+
+  is(download.error, null, "Download does not have an error");
+
+  is(download.url, expectedServeURL,
+     "Download URL = " + expectedServeURL);
+  ok(download.id !== null, "Download id is defined");
+  is(download.contentType, "application/octet-stream",
+     "Download content type is application/octet-stream");
+}
+
 function downloadChange(evt) {
   var download = evt.download;
-  if (download.state == "succeeded") {
-    ok(download.totalBytes == 1024, "Download size is 1024 bytes.");
-    ok(download.contentType == "application/octet-stream",
-       "contentType is application/octet-stream.");
+  checkConsistentDownloadAttributes(download);
+  is(download.totalBytes, 1024, "Download total size is 1024 bytes");
+
+  if (download.state === "succeeded") {
+    is(download.currentBytes, 1024, "Download current size is 1024 bytes");
     SimpleTest.finish();
+  } else if (download.state === "downloading") {
+    ok(download.currentBytes > lastKnownCurrentBytes,
+       "Download current size is larger than last download change event");
+    lastKnownCurrentBytes = download.currentBytes;
+  } else {
+    ok(false, "Unexpected download state = " + download.state);
   }
+}
+
+function downloadStart(evt) {
+  var download = evt.download;
+  checkConsistentDownloadAttributes(download);
+
+  is(download.currentBytes, 0, "Download current size is zero");
+  is(download.state, "downloading", "Download state is downloading");
+
+  download.onstatechange = downloadChange;
 }
 
 var steps = [
@@ -61,11 +103,7 @@ var steps = [
     SpecialPowers.pushPermissions([
       {type: "downloads", allow: true, context: document}
     ], function() {
-      navigator.mozDownloadManager.ondownloadstart =
-        function(evt) {
-          ok(true, "Download started");
-          evt.download.addEventListener("statechange", downloadChange);
-        }
+      navigator.mozDownloadManager.ondownloadstart = downloadStart;
       next();
     });
   },
@@ -82,3 +120,4 @@ next();
 </pre>
 </body>
 </html>
+

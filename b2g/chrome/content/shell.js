@@ -1031,6 +1031,7 @@ let IndexedDBPromptHelper = {
 let RemoteDebugger = {
   _promptDone: false,
   _promptAnswer: false,
+  _running: false,
 
   prompt: function debugger_prompt() {
     this._promptDone = false;
@@ -1051,8 +1052,21 @@ let RemoteDebugger = {
     this._promptDone = true;
   },
 
+  get isDebugging() {
+    if (!this._running) {
+      return false;
+    }
+
+    return DebuggerServer._connections &&
+           Object.keys(DebuggerServer._connections).length > 0;
+  },
+
   // Start the debugger server.
   start: function debugger_start() {
+    if (this._running) {
+      return;
+    }
+
     if (!DebuggerServer.initialized) {
       // Ask for remote connections.
       DebuggerServer.init(this.prompt.bind(this));
@@ -1088,13 +1102,20 @@ let RemoteDebugger = {
                "/data/local/debugger-socket";
     try {
       DebuggerServer.openListener(path);
+      this._running = true;
     } catch (e) {
       dump('Unable to start debugger server: ' + e + '\n');
     }
   },
 
   stop: function debugger_stop() {
+    if (!this._running) {
+      return;
+    }
+
     if (!DebuggerServer.initialized) {
+      // Can this really happen if we are running?
+      this._running = false;
       return;
     }
 
@@ -1103,6 +1124,7 @@ let RemoteDebugger = {
     } catch (e) {
       dump('Unable to stop debugger server: ' + e + '\n');
     }
+    this._running = false;
   }
 }
 
