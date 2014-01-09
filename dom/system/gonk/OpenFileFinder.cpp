@@ -10,6 +10,19 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#define USE_DEBUG 0
+
+#undef LOG
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO,  "OpenFileFinder", ## args)
+#define LOGW(args...) __android_log_print(ANDROID_LOG_WARN,  "OpenFileFinder", ## args)
+#define ERR(args...)  __android_log_print(ANDROID_LOG_ERROR, "OpenFileFinder", ## args)
+
+#if USE_DEBUG
+#define DBG(args...)  __android_log_print(ANDROID_LOG_DEBUG, "OpenFileFinder" , ## args)
+#else
+#define DBG(args...)
+#endif
+
 namespace mozilla {
 namespace system {
 
