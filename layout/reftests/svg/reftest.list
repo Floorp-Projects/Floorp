@@ -173,6 +173,7 @@ skip-if(B2G) == foreignObject-style-change-01.svg pass.svg
 == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01-ref.html
 fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+== g-transform-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 fuzzy-if(Android||B2G,9,980) == gradient-live-01a.svg gradient-live-01-ref.svg
 fuzzy-if(Android||B2G,9,980) == gradient-live-01b.svg gradient-live-01-ref.svg
