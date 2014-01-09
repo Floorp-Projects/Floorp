@@ -54,15 +54,24 @@
         },
         "svgr-metro": {
             "tests": ["tsvgx", "tsvgr_opacity"],
-            "metro_mode": true
+            "metro_mode": true,
+            "talos_options": [
+                "--setPref", "extensions.defaultProviders.enabled=true"
+            ]
         },
         "other-metro": {
             "tests": ["a11yr", "ts_paint"],
-            "metro_mode": true
+            "metro_mode": true,
+            "talos_options": [
+                "--setPref", "extensions.defaultProviders.enabled=true"
+            ]
         },
         "dromaeojs-metro": {
             "tests": ["dromaeo_css", "dromaeo_dom", "kraken", "v8_7"],
-            "metro_mode": true
+            "metro_mode": true,
+            "talos_options": [
+                "--setPref", "extensions.defaultProviders.enabled=true"
+            ]
         },
         "tp5o-metro": {
             "tests": ["tp5o"],
@@ -73,7 +82,10 @@
             "plugins": {
                 "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
+            },
+            "talos_options": [
+                "--setPref", "extensions.defaultProviders.enabled=true"
+            ]
         }
     },
     "mobile-suites": {
