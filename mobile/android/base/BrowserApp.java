@@ -1418,12 +1418,13 @@ abstract public class BrowserApp extends GeckoApp
         int id = Favicons.getFaviconForSize(tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
 
         tab.setFaviconLoadId(id);
-        if (id != Favicons.LOADED &&
-            Tabs.getInstance().isSelectedTab(tab)) {
+
+        final Tabs tabs = Tabs.getInstance();
+        if (id != Favicons.LOADED && tabs.isSelectedTab(tab)) {
             // We're loading the current tab's favicon from somewhere
-            // other than the cache.
-            // Display the globe favicon until then.
-            mBrowserToolbar.showDefaultFavicon();
+            // other than the cache. Display the globe favicon until then.
+            tab.updateFavicon(Favicons.sDefaultFavicon);
+            tabs.notifyListeners(tab, Tabs.TabEvents.FAVICON);
         }
     }
 
