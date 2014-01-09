@@ -1963,153 +1963,165 @@ var XPIProvider = {
       XPIProvider.installLocationsByName[location.name] = location;
     }
 
-    let hasRegistry = ("nsIWindowsRegKey" in Ci);
+    try {
+      let hasRegistry = ("nsIWindowsRegKey" in Ci);
 
-    let enabledScopes = Prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
-                                         AddonManager.SCOPE_ALL);
+      let enabledScopes = Prefs.getIntPref(PREF_EM_ENABLED_SCOPES,
+                                           AddonManager.SCOPE_ALL);
 
-    // These must be in order of priority for processFileChanges etc. to work
-    if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
-      if (hasRegistry) {
-        addRegistryInstallLocation("winreg-app-global",
-                                   Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                   AddonManager.SCOPE_SYSTEM);
-      }
-      addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
-                                  [Services.appinfo.ID],
-                                  AddonManager.SCOPE_SYSTEM, true);
-      addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
-                                  [Services.appinfo.ID],
-                                  AddonManager.SCOPE_SYSTEM, true);
-    }
-
-    if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
-      addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_APPDIR,
-                                  [DIR_EXTENSIONS],
-                                  AddonManager.SCOPE_APPLICATION, true);
-    }
-
-    if (enabledScopes & AddonManager.SCOPE_USER) {
-      if (hasRegistry) {
-        addRegistryInstallLocation("winreg-app-user",
-                                   Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                   AddonManager.SCOPE_USER);
-      }
-      addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
-                                  [Services.appinfo.ID],
-                                  AddonManager.SCOPE_USER, true);
-    }
-
-    // The profile location is always enabled
-    addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
-                                [DIR_EXTENSIONS],
-                                AddonManager.SCOPE_PROFILE, false);
-
-    this.defaultSkin = Prefs.getDefaultCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
-                                                "classic/1.0");
-    this.currentSkin = Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
-                                         this.defaultSkin);
-    this.selectedSkin = this.currentSkin;
-    this.applyThemeChange();
-
-    this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
-                                                     null);
-    this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
-                                                          null);
-    this.enabledAddons = "";
-
-    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
-    Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
-    Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
-
-    let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
-                                           aOldPlatformVersion);
-
-    // Changes to installed extensions may have changed which theme is selected
-    this.applyThemeChange();
-
-    // If the application has been upgraded and there are add-ons outside the
-    // application directory then we may need to synchronize compatibility
-    // information but only if the mismatch UI isn't disabled
-    if (aAppChanged && !this.allAppGlobal &&
-        Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
-      this.showUpgradeUI();
-      flushCaches = true;
-    }
-    else if (aAppChanged === undefined) {
-      // For new profiles we will never need to show the add-on selection UI
-      Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
-    }
-
-    if (flushCaches) {
-      flushStartupCache();
-
-      // UI displayed early in startup (like the compatibility UI) may have
-      // caused us to cache parts of the skin or locale in memory. These must
-      // be flushed to allow extension provided skins and locales to take full
-      // effect
-      Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
-      Services.obs.notifyObservers(null, "chrome-flush-caches", null);
-    }
-
-    this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
-    if ("nsICrashReporter" in Ci &&
-        Services.appinfo instanceof Ci.nsICrashReporter) {
-      // Annotate the crash report with relevant add-on information.
-      try {
-        Services.appinfo.annotateCrashReport("Theme", this.currentSkin);
-      } catch (e) { }
-      try {
-        Services.appinfo.annotateCrashReport("EMCheckCompatibility",
-                                             AddonManager.checkCompatibility);
-      } catch (e) { }
-      this.addAddonsToCrashReporter();
-    }
-
-    AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_begin");
-    for (let id in this.bootstrappedAddons) {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-      file.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
-      let reason = BOOTSTRAP_REASONS.APP_STARTUP;
-      // Eventually set INSTALLED reason when a bootstrap addon
-      // is dropped in profile folder and automatically installed
-      if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
-                      .indexOf(id) !== -1)
-        reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
-      this.callBootstrapMethod(id, this.bootstrappedAddons[id].version,
-                               this.bootstrappedAddons[id].type, file,
-                               "startup", reason);
-    }
-    AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_end");
-
-    // Let these shutdown a little earlier when they still have access to most
-    // of XPCOM
-    Services.obs.addObserver({
-      observe: function shutdownObserver(aSubject, aTopic, aData) {
-        for (let id in XPIProvider.bootstrappedAddons) {
-          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-          file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
-          XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
-                                          XPIProvider.bootstrappedAddons[id].type, file, "shutdown",
-                                          BOOTSTRAP_REASONS.APP_SHUTDOWN);
+      // These must be in order of priority for processFileChanges etc. to work
+      if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
+        if (hasRegistry) {
+          addRegistryInstallLocation("winreg-app-global",
+                                     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                     AddonManager.SCOPE_SYSTEM);
         }
-        Services.obs.removeObserver(this, "quit-application-granted");
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
+                                    [Services.appinfo.ID],
+                                    AddonManager.SCOPE_SYSTEM, true);
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
+                                    [Services.appinfo.ID],
+                                    AddonManager.SCOPE_SYSTEM, true);
       }
-    }, "quit-application-granted", false);
 
-    // Detect final-ui-startup for telemetry reporting
-    Services.obs.addObserver({
-      observe: function uiStartupObserver(aSubject, aTopic, aData) {
-        AddonManagerPrivate.recordTimestamp("XPI_finalUIStartup");
-        XPIProvider.runPhase = XPI_AFTER_UI_STARTUP;
-        Services.obs.removeObserver(this, "final-ui-startup");
+      if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
+        addDirectoryInstallLocation(KEY_APP_GLOBAL, KEY_APPDIR,
+                                    [DIR_EXTENSIONS],
+                                    AddonManager.SCOPE_APPLICATION, true);
       }
-    }, "final-ui-startup", false);
 
-    AddonManagerPrivate.recordTimestamp("XPI_startup_end");
+      if (enabledScopes & AddonManager.SCOPE_USER) {
+        if (hasRegistry) {
+          addRegistryInstallLocation("winreg-app-user",
+                                     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                     AddonManager.SCOPE_USER);
+        }
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
+                                    [Services.appinfo.ID],
+                                    AddonManager.SCOPE_USER, true);
+      }
 
-    this.extensionsActive = true;
-    this.runPhase = XPI_BEFORE_UI_STARTUP;
+      // The profile location is always enabled
+      addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
+                                  [DIR_EXTENSIONS],
+                                  AddonManager.SCOPE_PROFILE, false);
+
+      this.defaultSkin = Prefs.getDefaultCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
+                                                  "classic/1.0");
+      this.currentSkin = Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
+                                           this.defaultSkin);
+      this.selectedSkin = this.currentSkin;
+      this.applyThemeChange();
+
+      this.minCompatibleAppVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_APP_VERSION,
+                                                       null);
+      this.minCompatiblePlatformVersion = Prefs.getCharPref(PREF_EM_MIN_COMPAT_PLATFORM_VERSION,
+                                                            null);
+      this.enabledAddons = "";
+
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_APP_VERSION, this, false);
+      Services.prefs.addObserver(PREF_EM_MIN_COMPAT_PLATFORM_VERSION, this, false);
+      Services.obs.addObserver(this, NOTIFICATION_FLUSH_PERMISSIONS, false);
+
+      let flushCaches = this.checkForChanges(aAppChanged, aOldAppVersion,
+                                             aOldPlatformVersion);
+
+      // Changes to installed extensions may have changed which theme is selected
+      this.applyThemeChange();
+
+      // If the application has been upgraded and there are add-ons outside the
+      // application directory then we may need to synchronize compatibility
+      // information but only if the mismatch UI isn't disabled
+      if (aAppChanged && !this.allAppGlobal &&
+          Prefs.getBoolPref(PREF_EM_SHOW_MISMATCH_UI, true)) {
+        this.showUpgradeUI();
+        flushCaches = true;
+      }
+      else if (aAppChanged === undefined) {
+        // For new profiles we will never need to show the add-on selection UI
+        Services.prefs.setBoolPref(PREF_SHOWN_SELECTION_UI, true);
+      }
+
+      if (flushCaches) {
+        flushStartupCache();
+
+        // UI displayed early in startup (like the compatibility UI) may have
+        // caused us to cache parts of the skin or locale in memory. These must
+        // be flushed to allow extension provided skins and locales to take full
+        // effect
+        Services.obs.notifyObservers(null, "chrome-flush-skin-caches", null);
+        Services.obs.notifyObservers(null, "chrome-flush-caches", null);
+      }
+
+      this.enabledAddons = Prefs.getCharPref(PREF_EM_ENABLED_ADDONS, "");
+      if ("nsICrashReporter" in Ci &&
+          Services.appinfo instanceof Ci.nsICrashReporter) {
+        // Annotate the crash report with relevant add-on information.
+        try {
+          Services.appinfo.annotateCrashReport("Theme", this.currentSkin);
+        } catch (e) { }
+        try {
+          Services.appinfo.annotateCrashReport("EMCheckCompatibility",
+                                               AddonManager.checkCompatibility);
+        } catch (e) { }
+        this.addAddonsToCrashReporter();
+      }
+
+      try {
+        AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_begin");
+        for (let id in this.bootstrappedAddons) {
+          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+          file.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
+          let reason = BOOTSTRAP_REASONS.APP_STARTUP;
+          // Eventually set INSTALLED reason when a bootstrap addon
+          // is dropped in profile folder and automatically installed
+          if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
+                          .indexOf(id) !== -1)
+            reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
+          this.callBootstrapMethod(id, this.bootstrappedAddons[id].version,
+                                   this.bootstrappedAddons[id].type, file,
+                                   "startup", reason);
+        }
+        AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_end");
+      }
+      catch (e) {
+        ERROR("bootstrap startup failed", e);
+        AddonManagerPrivate.recordException("XPI-BOOTSTRAP", "startup failed", e);
+      }
+
+      // Let these shutdown a little earlier when they still have access to most
+      // of XPCOM
+      Services.obs.addObserver({
+        observe: function shutdownObserver(aSubject, aTopic, aData) {
+          for (let id in XPIProvider.bootstrappedAddons) {
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
+            XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
+                                            XPIProvider.bootstrappedAddons[id].type, file, "shutdown",
+                                            BOOTSTRAP_REASONS.APP_SHUTDOWN);
+          }
+          Services.obs.removeObserver(this, "quit-application-granted");
+        }
+      }, "quit-application-granted", false);
+
+      // Detect final-ui-startup for telemetry reporting
+      Services.obs.addObserver({
+        observe: function uiStartupObserver(aSubject, aTopic, aData) {
+          AddonManagerPrivate.recordTimestamp("XPI_finalUIStartup");
+          XPIProvider.runPhase = XPI_AFTER_UI_STARTUP;
+          Services.obs.removeObserver(this, "final-ui-startup");
+        }
+      }, "final-ui-startup", false);
+
+      AddonManagerPrivate.recordTimestamp("XPI_startup_end");
+
+      this.extensionsActive = true;
+      this.runPhase = XPI_BEFORE_UI_STARTUP;
+    }
+    catch (e) {
+      ERROR("startup failed", e);
+      AddonManagerPrivate.recordException("XPI", "startup failed", e);
+    }
   },
 
   /**
