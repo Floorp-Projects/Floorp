@@ -56,7 +56,7 @@ public:
 
     CLASS_NEW_DELETE
 private:
-    friend class FeatureRef;		//so that FeatureRefs can manipulate m_vec directly
+    friend class FeatureRef;        //so that FeatureRefs can manipulate m_vec directly
     const FeatureMap* m_pMap;
 };
 

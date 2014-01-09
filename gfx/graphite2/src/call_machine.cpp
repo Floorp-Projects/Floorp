@@ -50,7 +50,7 @@ of the License or (at your option) any later version.
                             vm::Machine::stack_t * const sb, regbank & reg
 
 // These are required by opcodes.h and should not be changed
-#define STARTOP(name)	    bool name(registers) REGPARM(4);\
+#define STARTOP(name)       bool name(registers) REGPARM(4);\
                             bool name(registers) {
 #define ENDOP                   return (sp - sb)/Machine::STACK_MAX==0; \
                             }
