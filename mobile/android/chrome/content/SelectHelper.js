@@ -37,32 +37,25 @@ var SelectHelper = {
     }
 
     p.show((function(data) {
-      let selected = data.button;
-      if (selected == -1)
-          return;
+      let selected = data.list;
 
       if (aElement instanceof Ci.nsIDOMXULMenuListElement) {
-        if (aElement.selectedIndex != selected) {
-          aElement.selectedIndex = selected;
+        if (aElement.selectedIndex != selected[0]) {
+          aElement.selectedIndex = selected[0];
           this.fireOnCommand(aElement);
         }
       } else if (aElement instanceof HTMLSelectElement) {
         let changed = false;
-        if (!Array.isArray(selected)) {
-          let temp = [];
-          for (let i = 0; i <= list.length; i++) {
-            temp[i] = (i == selected);
-          }
-          selected = temp;
-        }
-
         let i = 0;
         this.forOptions(aElement, function(aNode) {
-          if (aNode.selected != selected[i]) {
+          if (aNode.selected && selected.indexOf(i) == -1) {
             changed = true;
-            aNode.selected = selected[i];
+            aNode.selected = false;
+          } else if (!aNode.selected && selected.indexOf(i) != -1) {
+            changed = true;
+            aNode.selected = true;
           }
-          i++
+          i++;
         });
 
         if (changed)
