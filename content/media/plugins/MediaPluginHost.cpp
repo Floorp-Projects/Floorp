@@ -152,7 +152,13 @@ static const char* GetOmxLibraryName()
     return nullptr;
 
 #if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  if (version == 13 || version == 12 || version == 11) {
+  /*
+  if (version >= 19) {
+  */
+  if (version >= 16) {
+    return "libomxpluginkk.so";
+  }
+  else if (version == 13 || version == 12 || version == 11) {
     return "libomxpluginhc.so";
   }
   else if (version == 10 && release_version >= NS_LITERAL_STRING("2.3.6")) {
@@ -180,7 +186,7 @@ static const char* GetOmxLibraryName()
     return nullptr;
   }
 
-  // Default libomxplugin for non-gingerbread devices
+  // Ice Cream Sandwich and Jellybean
   return "libomxplugin.so";
 
 #elif defined(ANDROID) && defined(MOZ_WIDGET_GONK)

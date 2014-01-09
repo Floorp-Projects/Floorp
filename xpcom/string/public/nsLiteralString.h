@@ -10,46 +10,32 @@
 #include "nscore.h"
 #endif
 
-#ifndef nsDependentString_h___
-#include "nsDependentString.h"
+#ifndef nsString_h___
+#include "nsString.h"
 #endif
+
+  // declare nsLiteralString
+#include "string-template-def-unichar.h"
+#include "nsTLiteralString.h"
+#include "string-template-undef.h"
+
+  // declare nsLiteralCString
+#include "string-template-def-char.h"
+#include "nsTLiteralString.h"
+#include "string-template-undef.h"
 
 #include "mozilla/Char16.h"
 
-namespace mozilla {
-namespace internal {
+#define NS_MULTILINE_LITERAL_STRING(s)            static_cast<const nsLiteralString&>(nsLiteralString(s))
+#define NS_MULTILINE_LITERAL_STRING_INIT(n,s)     n(s)
+#define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)    const nsLiteralString n(s)
 
-// This is the same as sizeof(c) - 1, except it won't compile if c isn't a
-// string literal.  This ensures that NS_LITERAL_CSTRING doesn't compile if you
-// pass it a char* (or something else for that matter).
-template<int n>
-inline uint32_t LiteralStringLength(const char (&c)[n])
-{
-  return n - 1;
-}
+#define NS_LITERAL_STRING(s)                      static_cast<const nsLiteralString&>(nsLiteralString(MOZ_UTF16(s)))
+#define NS_LITERAL_STRING_INIT(n,s)               n(MOZ_UTF16(s))
+#define NS_NAMED_LITERAL_STRING(n,s)              const nsLiteralString n(MOZ_UTF16(s))
 
-template<int n>
-inline uint32_t LiteralWStringLength(const char16_t (&c)[n])
-{
-  return n - 1;
-}
-
-} // namespace internal
-} // namespace mozilla
-
-#define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-#define NS_MULTILINE_LITERAL_STRING_INIT(n,s)   n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-#define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  const nsDependentString n(reinterpret_cast<const nsAString::char_type*>(s), mozilla::internal::LiteralWStringLength(s))
-typedef nsDependentString nsLiteralString;
-
-#define NS_LITERAL_STRING(s)                      static_cast<const nsAFlatString&>(NS_MULTILINE_LITERAL_STRING(MOZ_UTF16(s)))
-#define NS_LITERAL_STRING_INIT(n,s)               NS_MULTILINE_LITERAL_STRING_INIT(n, MOZ_UTF16(s))
-#define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n, MOZ_UTF16(s))
-
-#define NS_LITERAL_CSTRING(s)                     static_cast<const nsDependentCString&>(nsDependentCString(s, mozilla::internal::LiteralStringLength(s)))
-#define NS_LITERAL_CSTRING_INIT(n,s)              n(s, mozilla::internal::LiteralStringLength(s))
-#define NS_NAMED_LITERAL_CSTRING(n,s)             const nsDependentCString n(s, mozilla::internal::LiteralStringLength(s))
-
-typedef nsDependentCString nsLiteralCString;
+#define NS_LITERAL_CSTRING(s)                     static_cast<const nsLiteralCString&>(nsLiteralCString(s))
+#define NS_LITERAL_CSTRING_INIT(n,s)              n(s)
+#define NS_NAMED_LITERAL_CSTRING(n,s)             const nsLiteralCString n(s)
 
 #endif /* !defined(nsLiteralString_h___) */

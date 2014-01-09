@@ -17,7 +17,7 @@
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[scriptable, uuid(9c889946-a73a-4af3-ae9a-ea64f7d4e3ca)]
+[scriptable, uuid(4df07d3a-e759-4256-ba4e-7e2265354ec3)]
 interface nsIThread : nsIEventTarget
 {
   /**
@@ -82,4 +82,10 @@ interface nsIThread : nsIEventTarget
    *   not the current thread.
    */
   boolean processNextEvent(in boolean mayWait);
+
+  /**
+   * true if we're processing runnables or thread observers and if this is the
+   * current thread.
+   */
+  readonly attribute boolean isProcessingEvents;
 };

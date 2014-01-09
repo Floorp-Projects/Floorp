@@ -238,7 +238,9 @@ public:
     static void ClearZoneCache(JS::Zone *zone);
 
 private:
-    static const JSStringFinalizer sDOMStringFinalizer;
+    static const JSStringFinalizer sLiteralFinalizer, sDOMStringFinalizer;
+
+    static void FinalizeLiteral(const JSStringFinalizer *fin, jschar *chars);
 
     static void FinalizeDOMString(const JSStringFinalizer *fin, jschar *chars);
 

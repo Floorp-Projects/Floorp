@@ -229,7 +229,7 @@ public:
    */
   static const CSSRect CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
-    const gfx::Point& aVelocity,
+    const ScreenPoint& aVelocity,
     const gfx::Point& aAcceleration,
     double aEstimatedPaintDuration);
 
@@ -408,7 +408,7 @@ protected:
   /**
    * Gets a vector of the velocities of each axis.
    */
-  const gfx::Point GetVelocityVector();
+  const ScreenPoint GetVelocityVector();
 
   /**
    * Gets a vector of the acceleration factors of each axis.
@@ -438,22 +438,6 @@ protected:
    * Does any panning required due to a new touch event.
    */
   void TrackTouch(const MultiTouchInput& aEvent);
-
-  /**
-   * Attempts to enlarge the displayport along a single axis. Returns whether or
-   * not the displayport was enlarged. This will fail in circumstances where the
-   * velocity along that axis is not high enough to need any changes. The
-   * displayport metrics are expected to be passed into |aDisplayPortOffset| and
-   * |aDisplayPortLength|. If enlarged, these will be updated with the new
-   * metrics.
-   */
-  static bool EnlargeDisplayPortAlongAxis(float aSkateSizeMultiplier,
-                                          double aEstimatedPaintDuration,
-                                          float aCompositionBounds,
-                                          float aVelocity,
-                                          float aAcceleration,
-                                          float* aDisplayPortOffset,
-                                          float* aDisplayPortLength);
 
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint

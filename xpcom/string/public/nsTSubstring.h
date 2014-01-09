@@ -214,9 +214,19 @@ class nsTSubstring_CharT
           return mLength;
         }
 
+      uint32_t Flags() const
+        {
+          return mFlags;
+        }
+
       bool IsEmpty() const
         {
           return mLength == 0;
+        }
+
+      bool IsLiteral() const
+        {
+          return (mFlags & F_LITERAL) != 0;
         }
 
       bool IsVoid() const
@@ -297,24 +307,11 @@ class nsTSubstring_CharT
     // non-constant char array variable. Use EqualsASCII for them.
     // The template trick to acquire the array length at compile time without
     // using a macro is due to Corey Kosak, with much thanks.
-#ifdef NS_DISABLE_LITERAL_TEMPLATE
-      inline bool EqualsLiteral( const char* str ) const
-        {
-          return EqualsASCII(str);
-        }
-#else
       template<int N>
       inline bool EqualsLiteral( const char (&str)[N] ) const
         {
           return EqualsASCII(str, N-1);
         }
-      template<int N>
-      inline bool EqualsLiteral( char (&str)[N] ) const
-        {
-          const char* s = str;
-          return EqualsASCII(s, N-1);
-        }
-#endif
 
     // The LowerCaseEquals methods compare the ASCII-lowercase version of
     // this string (lowercasing only ASCII uppercase characters) to some
@@ -330,24 +327,11 @@ class nsTSubstring_CharT
     // explicit size.  Do not attempt to use it with a regular char*
     // pointer, or with a non-constant char array variable. Use
     // LowerCaseEqualsASCII for them.
-#ifdef NS_DISABLE_LITERAL_TEMPLATE
-      inline bool LowerCaseEqualsLiteral( const char* str ) const
-        {
-          return LowerCaseEqualsASCII(str);
-        }
-#else
       template<int N>
       inline bool LowerCaseEqualsLiteral( const char (&str)[N] ) const
         {
           return LowerCaseEqualsASCII(str, N-1);
         }
-      template<int N>
-      inline bool LowerCaseEqualsLiteral( char (&str)[N] ) const
-        {
-          const char* s = str;
-          return LowerCaseEqualsASCII(s, N-1);
-        }
-#endif
 
         /**
          * assignment
@@ -406,15 +390,12 @@ class nsTSubstring_CharT
     // non-constant char array variable. Use AssignASCII for those.
     // There are not fallible version of these methods because they only really
     // apply to small allocations that we wouldn't want to check anyway.
-#ifdef NS_DISABLE_LITERAL_TEMPLATE
-      void AssignLiteral( const char* str )
-                  { AssignASCII(str); }
-#else
+      template<int N>
+      void AssignLiteral( const char_type (&str)[N] )
+                  { AssignLiteral(str, N - 1); }
+#ifdef CharT_is_PRUnichar
       template<int N>
       void AssignLiteral( const char (&str)[N] )
-                  { AssignASCII(str, N-1); }
-      template<int N>
-      void AssignLiteral( char (&str)[N] )
                   { AssignASCII(str, N-1); }
 #endif
 
@@ -439,6 +420,12 @@ class nsTSubstring_CharT
       void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
 
       void NS_FASTCALL ReplaceASCII( index_type cutStart, size_type cutLength, const char* data, size_type length = size_type(-1) );
+
+    // ReplaceLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use Replace or ReplaceASCII for those.
+      template<int N>
+      void ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type (&str)[N] ) { ReplaceLiteral(cutStart, cutLength, str, N - 1); }
 
       void Append( char_type c )                                                                 { Replace(mLength, 0, c); }
       void Append( const char_type* data, size_type length = size_type(-1) )                     { Replace(mLength, 0, data, length); }
@@ -496,16 +483,12 @@ class nsTSubstring_CharT
 
     // AppendLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
-    // array variable. Use AppendASCII for those.
-#ifdef NS_DISABLE_LITERAL_TEMPLATE
-      void AppendLiteral( const char* str )
-                  { AppendASCII(str); }
-#else
+    // array variable. Use Append or AppendASCII for those.
+      template<int N>
+      void AppendLiteral( const char_type (&str)[N] )                                             { ReplaceLiteral(mLength, 0, str, N - 1); }
+#ifdef CharT_is_PRUnichar
       template<int N>
       void AppendLiteral( const char (&str)[N] )
-                  { AppendASCII(str, N-1); }
-      template<int N>
-      void AppendLiteral( char (&str)[N] )
                   { AppendASCII(str, N-1); }
 #endif
 
@@ -525,6 +508,12 @@ class nsTSubstring_CharT
 #endif
       void Insert( const self_type& str, index_type pos )                                        { Replace(pos, 0, str); }
       void Insert( const substring_tuple_type& tuple, index_type pos )                           { Replace(pos, 0, tuple); }
+
+    // InsertLiteral must ONLY be applied to an actual literal string.
+    // Do not attempt to use it with a regular char* pointer, or with a char
+    // array variable. Use Insert for those.
+      template<int N>
+      void InsertLiteral( const char_type (&str)[N], index_type pos )                            { ReplaceLiteral(pos, 0, str, N - 1); }
 
       void Cut( index_type cutStart, size_type cutLength )                                       { Replace(cutStart, cutLength, char_traits::sEmptyBuffer, 0); }
 
@@ -845,6 +834,9 @@ class nsTSubstring_CharT
           mFlags = dataFlags | (mFlags & 0xFFFF0000);
         }
 
+      void NS_FASTCALL AssignLiteral( const char_type* data, size_type length );
+      void NS_FASTCALL ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type* data, size_type length );
+
       static int AppendFunc( void* arg, const char* s, uint32_t len);
 
     public:
@@ -865,6 +857,7 @@ class nsTSubstring_CharT
           F_SHARED       = 1 << 2,  // mData points to a heap-allocated, shared buffer
           F_OWNED        = 1 << 3,  // mData points to a heap-allocated, raw buffer
           F_FIXED        = 1 << 4,  // mData points to a fixed-size writable, dependent buffer
+          F_LITERAL      = 1 << 5,  // mData points to a string literal; F_TERMINATED will also be set
 
           // class flags are in the upper 16-bits
           F_CLASS_FIXED  = 1 << 16   // indicates that |this| is of type nsTFixedString

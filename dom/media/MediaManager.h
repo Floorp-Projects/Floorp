@@ -241,6 +241,7 @@ typedef enum {
 } MediaOperation;
 
 class MediaManager;
+class GetUserMediaRunnable;
 
 /**
  * Send an error back to content. The error is the form a string.
@@ -524,7 +525,8 @@ private:
 
   // ONLY access from MainThread so we don't need to lock
   WindowTable mActiveWindows;
-  nsRefPtrHashtable<nsStringHashKey, nsRunnable> mActiveCallbacks;
+  nsRefPtrHashtable<nsStringHashKey, GetUserMediaRunnable> mActiveCallbacks;
+  nsClassHashtable<nsUint64HashKey, nsTArray<nsString>> mCallIds;
   // Always exists
   nsCOMPtr<nsIThread> mMediaThread;
 

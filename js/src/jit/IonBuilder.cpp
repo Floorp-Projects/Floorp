@@ -6686,7 +6686,7 @@ IonBuilder::getElemTryScalarElemOfTypedObject(bool *emitted,
                                               TypeRepresentationSet elemTypeReprs,
                                               size_t elemSize)
 {
-    JS_ASSERT(objTypeReprs.kind() == TypeRepresentation::SizedArray);
+    JS_ASSERT(objTypeReprs.allOfArrayKind());
 
     // Must always be loading the same scalar type
     if (!elemTypeReprs.singleton())

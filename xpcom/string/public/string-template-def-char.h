@@ -17,6 +17,7 @@
 #define nsTDefaultStringComparator_CharT    nsDefaultCStringComparator
 #define nsTDependentString_CharT            nsDependentCString
 #define nsTDependentSubstring_CharT         nsDependentCSubstring
+#define nsTLiteralString_CharT              nsLiteralCString
 #define nsTXPIDLString_CharT                nsXPIDLCString
 #define nsTGetterCopies_CharT               nsCGetterCopies
 #define nsTAdoptingString_CharT             nsAdoptingCString

@@ -463,6 +463,17 @@ LazyIdleThread::ProcessNextEvent(bool aMayWait,
 }
 
 NS_IMETHODIMP
+LazyIdleThread::GetIsProcessingEvents(bool* aIsProcessing)
+{
+  if (mThread) {
+    return mThread->GetIsProcessingEvents(aIsProcessing);
+  }
+
+  *aIsProcessing = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::Notify(nsITimer* aTimer)
 {
   ASSERT_OWNING_THREAD();

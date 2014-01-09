@@ -27,6 +27,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIScrollableFrame.h"
 #include "nsIServiceManager.h"
+#include "nsITextControlElement.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
 #include "mozilla/MathAlgorithms.h"
@@ -102,8 +103,19 @@ HyperTextAccessible::NativeState()
 {
   uint64_t states = AccessibleWrap::NativeState();
 
-  nsCOMPtr<nsIEditor> editor = GetEditor();
-  if (editor) {
+  nsCOMPtr<nsITextControlElement> textControl = do_QueryInterface(mContent);
+  bool editable = !!textControl;
+  Accessible* hyperText = this;
+  while (!editable && hyperText) {
+    if (hyperText->IsHyperText())
+      editable = hyperText->GetNode()->IsEditable();
+    if (hyperText->IsDoc())
+      break;
+
+    hyperText = hyperText->Parent();
+  }
+
+  if (editable) {
     states |= states::EDITABLE;
 
   } else if (mContent->Tag() == nsGkAtoms::article) {
