@@ -41,38 +41,38 @@ using namespace graphite2;
 
 namespace
 {
-	static int cmpNameAndFeatures(const void *ap, const void *bp)
-	{
-		const NameAndFeatureRef & a = *static_cast<const NameAndFeatureRef *>(ap),
-								& b = *static_cast<const NameAndFeatureRef *>(bp);
-		return (a < b ? -1 : (b < a ? 1 : 0));
-	}
+    static int cmpNameAndFeatures(const void *ap, const void *bp)
+    {
+        const NameAndFeatureRef & a = *static_cast<const NameAndFeatureRef *>(ap),
+                                & b = *static_cast<const NameAndFeatureRef *>(bp);
+        return (a < b ? -1 : (b < a ? 1 : 0));
+    }
 
-	const size_t 	FEAT_HEADER		= sizeof(uint32) + 2*sizeof(uint16) + sizeof(uint32),
-					FEATURE_SIZE    = sizeof(uint32)
-									+ 2*sizeof(uint16)
-									+ sizeof(uint32)
-									+ 2*sizeof(uint16),
-					FEATURE_SETTING_SIZE = sizeof(int16) + sizeof(uint16);
+    const size_t    FEAT_HEADER     = sizeof(uint32) + 2*sizeof(uint16) + sizeof(uint32),
+                    FEATURE_SIZE    = sizeof(uint32)
+                                    + 2*sizeof(uint16)
+                                    + sizeof(uint32)
+                                    + 2*sizeof(uint16),
+                    FEATURE_SETTING_SIZE = sizeof(int16) + sizeof(uint16);
 
-	uint16 readFeatureSettings(const byte * p, FeatureSetting * s, size_t num_settings)
-	{
-		uint16 max_val = 0;
+    uint16 readFeatureSettings(const byte * p, FeatureSetting * s, size_t num_settings)
+    {
+        uint16 max_val = 0;
         for (FeatureSetting * const end = s + num_settings; s != end; ++s)
         {
-        	const int16 value = be::read<int16>(p);
+            const int16 value = be::read<int16>(p);
             ::new (s) FeatureSetting(value, be::read<uint16>(p));
-            if (uint16(value) > max_val) 	max_val = value;
+            if (uint16(value) > max_val)    max_val = value;
         }
 
         return max_val;
-	}
+    }
 }
 
 FeatureRef::FeatureRef(const Face & face,
-	unsigned short & bits_offset, uint32 max_val,
-	uint32 name, uint16 uiName, uint16 flags,
-	FeatureSetting *settings, uint16 num_set) throw()
+    unsigned short & bits_offset, uint32 max_val,
+    uint32 name, uint16 uiName, uint16 flags,
+    FeatureSetting *settings, uint16 num_set) throw()
 : m_pFace(&face),
   m_nameValues(settings),
   m_mask(mask_over_val(max_val)),
@@ -82,13 +82,13 @@ FeatureRef::FeatureRef(const Face & face,
   m_flags(flags),
   m_numSet(num_set)
 {
-	const uint8 need_bits = bit_set_count(m_mask);
-	m_index = (bits_offset + need_bits) / SIZEOF_CHUNK;
-	if (m_index > bits_offset / SIZEOF_CHUNK)
-		bits_offset = m_index*SIZEOF_CHUNK;
-	m_bits = bits_offset % SIZEOF_CHUNK;
-	bits_offset += need_bits;
-	m_mask <<= m_bits;
+    const uint8 need_bits = bit_set_count(m_mask);
+    m_index = (bits_offset + need_bits) / SIZEOF_CHUNK;
+    if (m_index > bits_offset / SIZEOF_CHUNK)
+        bits_offset = m_index*SIZEOF_CHUNK;
+    m_bits = bits_offset % SIZEOF_CHUNK;
+    bits_offset += need_bits;
+    m_mask <<= m_bits;
 }
 
 FeatureRef::~FeatureRef() throw()
@@ -104,7 +104,7 @@ bool FeatureMap::readFeats(const Face & face)
     if (feat.size() < FEAT_HEADER) return false;
 
     const byte *const feat_start = p,
-    		   *const feat_end = p + feat.size();
+               *const feat_end = p + feat.size();
 
     const uint32 version = be::read<uint32>(p);
     m_numFeats = be::read<uint16>(p);
@@ -112,27 +112,28 @@ bool FeatureMap::readFeats(const Face & face)
     be::skip<uint32>(p);
 
     // Sanity checks
-    if (m_numFeats == 0) 	return true;
+    if (m_numFeats == 0)    return true;
     if (version < 0x00010000 ||
-    	p + m_numFeats*FEATURE_SIZE > feat_end)
+        p + m_numFeats*FEATURE_SIZE > feat_end)
     {   //defensive
-    	m_numFeats = 0;
-    	return false;
+        m_numFeats = 0;
+        return false;
     }
 
     m_feats = new FeatureRef [m_numFeats];
-    uint16 * const	defVals = gralloc<uint16>(m_numFeats);
+    uint16 * const  defVals = gralloc<uint16>(m_numFeats);
+    if (!defVals || !m_feats) return false;
     unsigned short bits = 0;     //to cause overflow on first Feature
 
     for (int i = 0, ie = m_numFeats; i != ie; i++)
     {
-        const uint32 	label   = version < 0x00020000 ? be::read<uint16>(p) : be::read<uint32>(p);
-        const uint16 	num_settings = be::read<uint16>(p);
+        const uint32    label   = version < 0x00020000 ? be::read<uint16>(p) : be::read<uint32>(p);
+        const uint16    num_settings = be::read<uint16>(p);
         if (version >= 0x00020000)
-        	be::skip<uint16>(p);
+            be::skip<uint16>(p);
         const byte * const feat_setts = feat_start + be::read<uint32>(p);
-        const uint16 	flags  = be::read<uint16>(p),
-        				uiName = be::read<uint16>(p);
+        const uint16    flags  = be::read<uint16>(p),
+                        uiName = be::read<uint16>(p);
 
         if (feat_setts + num_settings * FEATURE_SETTING_SIZE > feat_end)
         {
@@ -144,26 +145,36 @@ bool FeatureMap::readFeats(const Face & face)
         uint32 maxVal;
         if (num_settings != 0)
         {
-			uiSet = gralloc<FeatureSetting>(num_settings);
-			maxVal = readFeatureSettings(feat_setts, uiSet, num_settings);
-			defVals[i] = uiSet[0].value();
+            uiSet = gralloc<FeatureSetting>(num_settings);
+            if (!uiSet)
+            {
+                free(defVals);
+                return false;
+            }
+            maxVal = readFeatureSettings(feat_setts, uiSet, num_settings);
+            defVals[i] = uiSet[0].value();
         }
         else
         {
-        	uiSet = 0;
-        	maxVal = 0xffffffff;
-        	defVals[i] = 0;
+            uiSet = 0;
+            maxVal = 0xffffffff;
+            defVals[i] = 0;
         }
 
-		::new (m_feats + i) FeatureRef (face, bits, maxVal,
-									   label, uiName, flags,
-									   uiSet, num_settings);
+        ::new (m_feats + i) FeatureRef (face, bits, maxVal,
+                                       label, uiName, flags,
+                                       uiSet, num_settings);
     }
     m_defaultFeatures = new Features(bits/(sizeof(uint32)*8) + 1, *this);
     m_pNamedFeats = new NameAndFeatureRef[m_numFeats];
+    if (!m_defaultFeatures || !m_pNamedFeats)
+    {
+        free(defVals);
+        return false;
+    }
     for (int i = 0; i < m_numFeats; ++i)
     {
-    	m_feats[i].applyValToFeature(defVals[i], *m_defaultFeatures);
+        m_feats[i].applyValToFeature(defVals[i], *m_defaultFeatures);
         m_pNamedFeats[i] = m_feats+i;
     }
     
@@ -184,7 +195,7 @@ bool SillMap::readFace(const Face & face)
 
 bool SillMap::readSill(const Face & face)
 {
-	const Face::Table sill(face, TtfUtil::Tag::Sill);
+    const Face::Table sill(face, TtfUtil::Tag::Sill);
     const byte *p = sill;
 
     if (!p) return true;
@@ -204,6 +215,7 @@ bool SillMap::readSill(const Face & face)
         uint16 offset = be::read<uint16>(p);
         if (offset + 8U * numSettings > sill.size() && numSettings > 0) return false;
         Features* feats = new Features(*m_FeatureMap.m_defaultFeatures);
+        if (!feats) return false;
         const byte *pLSet = sill + offset;
 
         // Apply langauge specific settings
@@ -213,11 +225,11 @@ bool SillMap::readSill(const Face & face)
             uint16 val = be::read<uint16>(pLSet);
             pLSet += 2;
             const FeatureRef* pRef = m_FeatureMap.findFeatureRef(name);
-            if (pRef) 	pRef->applyValToFeature(val, *feats);
+            if (pRef)   pRef->applyValToFeature(val, *feats);
         }
         // Add the language id feature which is always feature id 1
         const FeatureRef* pRef = m_FeatureMap.findFeatureRef(1);
-        if (pRef)	pRef->applyValToFeature(langid, *feats);
+        if (pRef)   pRef->applyValToFeature(langid, *feats);
 
         m_langFeats[i].m_lang = langid;
         m_langFeats[i].m_pFeatures = feats;

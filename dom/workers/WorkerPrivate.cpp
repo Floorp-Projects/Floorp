@@ -73,6 +73,7 @@
 
 #include "File.h"
 #include "MessagePort.h"
+#include "Navigator.h"
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
@@ -1693,6 +1694,26 @@ public:
   }
 };
 
+class OfflineStatusChangeRunnable : public WorkerRunnable
+{
+public:
+  OfflineStatusChangeRunnable(WorkerPrivate* aWorkerPrivate, bool aIsOffline)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      mIsOffline(aIsOffline)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
+  {
+    aWorkerPrivate->OfflineStatusChangeEventInternal(aCx, mIsOffline);
+    return true;
+  }
+
+private:
+  bool mIsOffline;
+};
+
 class WorkerJSRuntimeStats : public JS::RuntimeStats
 {
   const nsACString& mRtPath;
@@ -3036,6 +3057,56 @@ WorkerPrivateParent<Derived>::CycleCollect(JSContext* aCx, bool aDummy)
 }
 
 template <class Derived>
+void
+WorkerPrivateParent<Derived>::OfflineStatusChangeEvent(JSContext* aCx, bool aIsOffline)
+{
+  AssertIsOnParentThread();
+
+  nsRefPtr<OfflineStatusChangeRunnable> runnable =
+    new OfflineStatusChangeRunnable(ParentAsWorkerPrivate(), aIsOffline);
+  if (!runnable->Dispatch(aCx)) {
+    NS_WARNING("Failed to dispatch offline status change event!");
+    JS_ClearPendingException(aCx);
+  }
+}
+
+void
+WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
+{
+  AssertIsOnWorkerThread();
+
+  for (uint32_t index = 0; index < mChildWorkers.Length(); ++index) {
+    mChildWorkers[index]->OfflineStatusChangeEvent(aCx, aIsOffline);
+  }
+
+  mOnLine = !aIsOffline;
+  WorkerGlobalScope* globalScope = GlobalScope();
+  nsRefPtr<WorkerNavigator> nav = globalScope->GetExistingNavigator();
+  if (nav) {
+    nav->SetOnLine(mOnLine);
+  }
+
+  nsString eventType;
+  if (aIsOffline) {
+    eventType.AssignLiteral("offline");
+  } else {
+    eventType.AssignLiteral("online");
+  }
+
+  nsCOMPtr<nsIDOMEvent> event;
+  nsresult rv =
+    NS_NewDOMEvent(getter_AddRefs(event), globalScope, nullptr, nullptr);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = event->InitEvent(eventType, false, false);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  event->SetTrusted(true);
+
+  globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+}
+
+template <class Derived>
 bool
 WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
                                                    SharedWorker* aSharedWorker)
@@ -3554,10 +3625,12 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
     aParent->GetAllPreferences(mPreferences);
+    mOnLine = aParent->OnLine();
   }
   else {
     AssertIsOnMainThread();
     RuntimeService::GetDefaultPreferences(mPreferences);
+    mOnLine = !NS_IsOffline();
   }
 }
 

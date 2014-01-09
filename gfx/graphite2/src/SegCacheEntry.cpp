@@ -41,12 +41,13 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     m_attr(NULL), m_justs(NULL),
     m_accessCount(0), m_lastAccess(cacheTime)
 {
-    for (uint16 i = 0; i < length; i++)
-    {
-        m_unicode[i] = cmapGlyphs[i];
-    }
+    if (m_unicode)
+        for (uint16 i = 0; i < length; i++)
+            m_unicode[i] = cmapGlyphs[i];
+
     const size_t    glyphCount = seg->slotCount(),
                     sizeof_sjust = SlotJustify::size_of(seg->silf()->numJustLevels());
+    if (!glyphCount) return;
     size_t num_justs = 0,
            justs_pos = 0;
     if (seg->hasJustification())
@@ -61,6 +62,7 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     const Slot * slot = seg->first();
     m_glyph = new Slot[glyphCount];
     m_attr = gralloc<int16>(glyphCount * seg->numAttrs());
+    if (!m_glyph || (!m_attr && seg->numAttrs())) return;
     m_glyphLength = glyphCount;
     Slot * slotCopy = m_glyph;
     m_glyph->prev(NULL);
@@ -70,14 +72,14 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     {
         slotCopy->userAttrs(m_attr + pos * seg->numAttrs());
         slotCopy->m_justs = m_justs ? reinterpret_cast<SlotJustify *>(m_justs + justs_pos++ * sizeof_sjust) : 0;
-        slotCopy->set(*slot, -static_cast<int32>(charOffset), seg->numAttrs(), seg->silf()->numJustLevels());
+        slotCopy->set(*slot, -static_cast<int32>(charOffset), seg->numAttrs(), seg->silf()->numJustLevels(), length);
         slotCopy->index(pos);
         if (slot->firstChild())
-        	slotCopy->m_child = m_glyph + slot->firstChild()->index();
+            slotCopy->m_child = m_glyph + slot->firstChild()->index();
         if (slot->attachedTo())
-        	slotCopy->attachTo(m_glyph + slot->attachedTo()->index());
+            slotCopy->attachTo(m_glyph + slot->attachedTo()->index());
         if (slot->nextSibling())
-        	slotCopy->m_sibling = m_glyph + slot->nextSibling()->index();
+            slotCopy->m_sibling = m_glyph + slot->nextSibling()->index();
         slot = slot->next();
         ++slotCopy;
         ++pos;

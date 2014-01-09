@@ -1,6 +1,6 @@
 /*  GRAPHITE2 LICENSING
 
-    Copyright 2010, SIL International
+    Copyright 2012, SIL International
     All rights reserved.
 
     This library is free software; you can redistribute it and/or modify
@@ -32,40 +32,40 @@ namespace graphite2
 template<typename T>
 inline unsigned int bit_set_count(T v)
 {
-	v = v - ((v >> 1) & T(~T(0)/3));                           // temp
-	v = (v & T(~T(0)/15*3)) + ((v >> 2) & T(~T(0)/15*3));      // temp
-	v = (v + (v >> 4)) & T(~T(0)/255*15);                      // temp
-	return (T)(v * T(~T(0)/255)) >> (sizeof(T)-1)*8;           // count
+    v = v - ((v >> 1) & T(~T(0)/3));                           // temp
+    v = (v & T(~T(0)/15*3)) + ((v >> 2) & T(~T(0)/15*3));      // temp
+    v = (v + (v >> 4)) & T(~T(0)/255*15);                      // temp
+    return (T)(v * T(~T(0)/255)) >> (sizeof(T)-1)*8;           // count
 }
 
 
 template<int S>
 inline unsigned long _mask_over_val(unsigned long v)
 {
-	v = _mask_over_val<S/2>(v);
-	v |= v >> S*4;
-	return v;
+    v = _mask_over_val<S/2>(v);
+    v |= v >> S*4;
+    return v;
 }
 
 template<>
 inline unsigned long _mask_over_val<1>(unsigned long v)
 {
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	return v;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    return v;
 }
 
 template<typename T>
 inline T mask_over_val(T v)
 {
-	return _mask_over_val<sizeof(T)>(v);
+    return _mask_over_val<sizeof(T)>(v);
 }
 
 template<typename T>
 inline unsigned long next_highest_power2(T v)
 {
-	return _mask_over_val<sizeof(T)>(v-1)+1;
+    return _mask_over_val<sizeof(T)>(v-1)+1;
 }
 
 template<typename T>
@@ -77,14 +77,14 @@ inline unsigned int log_binary(T v)
 template<typename T>
 inline T has_zero(const T x)
 {
-	return (x - T(~T(0)/255)) & ~x & T(~T(0)/255*128);
+    return (x - T(~T(0)/255)) & ~x & T(~T(0)/255*128);
 }
 
 template<typename T>
 inline T zero_bytes(const T x, unsigned char n)
 {
-	const T t = T(~T(0)/255*n);
-	return T((has_zero(x^t) >> 7)*n);
+    const T t = T(~T(0)/255*n);
+    return T((has_zero(x^t) >> 7)*n);
 }
 
 }
