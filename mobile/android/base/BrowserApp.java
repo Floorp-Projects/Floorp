@@ -1631,9 +1631,9 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onLocaleReady(final String locale) {
         super.onLocaleReady(locale);
-        if (isHomePagerVisible()) {
-            // Blow it away and rebuild it with the right strings.
-            mHomePager.redisplay(getSupportLoaderManager(), getSupportFragmentManager());
+
+        if (mHomePager != null) {
+            mHomePager.invalidate(getSupportLoaderManager(), getSupportFragmentManager());
         }
 
         if (mMenu != null) {
@@ -1852,7 +1852,7 @@ abstract public class BrowserApp extends GeckoApp
      */
     private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
         info.added = true;
-        
+
         final Menu destination;
         if (info.parent == 0) {
             destination = menu;
@@ -2016,8 +2016,11 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void openOptionsMenu() {
-        if (!hasTabsSideBar() && areTabsShown())
+        // Disable menu access in edge cases only accessible to hardware menu buttons.
+        if ((!hasTabsSideBar() && areTabsShown()) ||
+                mBrowserToolbar.isEditing()) {
             return;
+        }
 
         // Scroll custom menu to the top
         if (mMenuPanel != null)
@@ -2476,7 +2479,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onNewTabs(String[] urls) {
         final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB);
- 
+
         for (String url : urls) {
             if (!maybeSwitchToTab(url, flags)) {
                 openUrlAndStopEditing(url, true);
