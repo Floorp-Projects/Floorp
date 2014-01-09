@@ -87,6 +87,7 @@ if CONFIG['MOZ_OMX_PLUGIN']:
         'media/omx-plugin/froyo',
         'media/omx-plugin/lib/hc/libstagefright',
         'media/omx-plugin/hc',
+        'media/omx-plugin/kk',
     ])
 
 if CONFIG['ENABLE_TESTS']:
