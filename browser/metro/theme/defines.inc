@@ -27,6 +27,8 @@
 %define toolbar_height 69px
 %define labelled_toolbar_height 90px
 %define tabs_height 178px
+%define newtab_button_width 63px
+%define tabs_scrollarrow_width 64px
 %define findbar_height 54px
 
 %define progress_height 5px
