@@ -579,19 +579,15 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
                                nsWrapperCache *aCache,
                                const nsIID * aIID,
                                bool aAllowWrapping,
-                               jsval *aVal)
+                               MutableHandleValue aVal)
 {
     MOZ_ASSERT(aJSContext, "bad param");
     MOZ_ASSERT(aScopeArg, "bad param");
     MOZ_ASSERT(aCOMObj, "bad param");
 
     RootedObject aScope(aJSContext, aScopeArg);
-
-    RootedValue rval(aJSContext);
-    nsresult rv = NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
-                                           aAllowWrapping, &rval, nullptr);
-    *aVal = rval;
-    return rv;
+    return NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
+                                    aAllowWrapping, aVal, nullptr);
 }
 
 /* void wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
@@ -619,13 +615,12 @@ nsXPConnect::WrapJS(JSContext * aJSContext,
 
 NS_IMETHODIMP
 nsXPConnect::JSValToVariant(JSContext *cx,
-                            jsval *aJSVal,
+                            HandleValue aJSVal,
                             nsIVariant ** aResult)
 {
-    NS_PRECONDITION(aJSVal, "bad param");
     NS_PRECONDITION(aResult, "bad param");
 
-    *aResult = XPCVariant::newVariant(cx, *aJSVal);
+    *aResult = XPCVariant::newVariant(cx, aJSVal);
     NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
@@ -897,19 +892,15 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
 NS_IMETHODIMP
 nsXPConnect::EvalInSandboxObject(const nsAString& source, const char *filename,
                                  JSContext *cx, JSObject *sandboxArg,
-                                 bool returnStringOnly, JS::Value *rvalArg)
+                                 bool returnStringOnly, MutableHandleValue rval)
 {
     if (!sandboxArg)
         return NS_ERROR_INVALID_ARG;
 
     RootedObject sandbox(cx, sandboxArg);
-    RootedValue rval(cx);
-    nsresult rv = EvalInSandbox(cx, sandbox, source, filename ? filename :
-                                "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
-                                returnStringOnly, &rval);
-    NS_ENSURE_SUCCESS(rv, rv);
-    *rvalArg = rval;
-    return NS_OK;
+    return EvalInSandbox(cx, sandbox, source, filename ? filename :
+                         "x-bogus://XPConnect/Sandbox", 1, JSVERSION_DEFAULT,
+                         returnStringOnly, rval);
 }
 
 /* nsIXPConnectJSObjectHolder getWrappedNativePrototype (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsIClassInfo aClassInfo); */
@@ -1055,32 +1046,28 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(uint32_t aFrameNumber, const char *aSou
 /* jsval variantToJS (in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value); */
 NS_IMETHODIMP
 nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
-                         jsval* _retval)
+                         MutableHandleValue _retval)
 {
     NS_PRECONDITION(ctx, "bad param");
     NS_PRECONDITION(scopeArg, "bad param");
     NS_PRECONDITION(value, "bad param");
-    NS_PRECONDITION(_retval, "bad param");
 
     RootedObject scope(ctx, scopeArg);
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
     nsresult rv = NS_OK;
-    RootedValue rval(ctx);
-    if (!XPCVariant::VariantDataToJS(value, &rv, &rval)) {
+    if (!XPCVariant::VariantDataToJS(value, &rv, _retval)) {
         if (NS_FAILED(rv))
             return rv;
 
         return NS_ERROR_FAILURE;
     }
-
-    *_retval = rval;
     return NS_OK;
 }
 
 /* nsIVariant JSToVariant (in JSContextPtr ctx, in jsval value); */
 NS_IMETHODIMP
-nsXPConnect::JSToVariant(JSContext* ctx, const jsval &value, nsIVariant** _retval)
+nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval)
 {
     NS_PRECONDITION(ctx, "bad param");
     NS_PRECONDITION(_retval, "bad param");
@@ -1418,7 +1405,7 @@ nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 }
 
 NS_IMETHODIMP
-nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
+nsXPConnect::GetTelemetryValue(JSContext *cx, MutableHandleValue rval)
 {
     RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
     if (!obj)
@@ -1436,7 +1423,7 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
     if (!JS_DefineProperty(cx, obj, "customIter", v, nullptr, nullptr, attrs))
         return NS_ERROR_OUT_OF_MEMORY;
 
-    *rval = OBJECT_TO_JSVAL(obj);
+    rval.setObject(*obj);
     return NS_OK;
 }
 

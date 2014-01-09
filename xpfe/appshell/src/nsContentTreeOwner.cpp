@@ -304,7 +304,8 @@ nsContentTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
 }
 
 NS_IMETHODIMP
-nsContentTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+nsContentTreeOwner::GetContentWindow(JSContext* aCx,
+                                     JS::MutableHandle<JS::Value> aVal)
 {
   NS_ENSURE_STATE(mXULWindow);
   return NS_ERROR_NOT_IMPLEMENTED;

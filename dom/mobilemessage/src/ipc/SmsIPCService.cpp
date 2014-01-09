@@ -315,7 +315,7 @@ SmsIPCService::GetMmsDefaultServiceId(uint32_t* aServiceId)
 
 NS_IMETHODIMP
 SmsIPCService::Send(uint32_t aServiceId,
-                    const JS::Value& aParameters,
+                    JS::Handle<JS::Value> aParameters,
                     nsIMobileMessageCallback *aRequest)
 {
   SendMmsMessageRequest req;
