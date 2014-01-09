@@ -40,6 +40,7 @@ let EXPORTED_SYMBOLS = [
   "Type",
   "HollowStructure",
   "OSError",
+  "Library",
   "declareFFI",
   "declareLazy",
   "declareLazyFFI",
@@ -884,6 +885,92 @@ HollowStructure.prototype = {
   }
 };
 exports.HollowStructure = HollowStructure;
+
+/**
+ * Representation of a native library.
+ *
+ * The native library is opened lazily, during the first call to its
+ * field |library| or whenever accessing one of the methods imported
+ * with declareLazyFFI.
+ *
+ * @param {string} name A human-readable name for the library. Used
+ * for debugging and error reporting.
+ * @param {string...} candidates A list of system libraries that may
+ * represent this library. Used e.g. to try different library names
+ * on distinct operating systems ("libxul", "XUL", etc.).
+ *
+ * @constructor
+ */
+function Library(name, ...candidates) {
+  this.name = name;
+  this._candidates = candidates;
+};
+Library.prototype = Object.freeze({
+  /**
+   * The native library as a js-ctypes object.
+   *
+   * @throws {Error} If none of the candidate libraries could be opened.
+   */
+  get library() {
+    let library;
+    delete this.library;
+    for (let candidate of this._candidates) {
+      try {
+        library = ctypes.open(candidate);
+      } catch (ex) {
+        LOG("Could not open library", candidate, ex);
+      }
+    }
+    this._candidates = null;
+    if (library) {
+      Object.defineProperty(this, "library", {
+        value: library
+      });
+      Object.freeze(this);
+      return library;
+    }
+    let error = new Error("Could not open library " + this.name);
+    Object.defineProperty(this, "library", {
+      get: function() {
+        throw error;
+      }
+    });
+    Object.freeze(this);
+    throw error;
+  },
+
+  /**
+   * Declare a function, lazily.
+   *
+   * @param {object} The object containing the function as a field.
+   * @param {string} The name of the field containing the function.
+   * @param {string} symbol The name of the function, as defined in the
+   * library.
+   * @param {ctypes.abi} abi The abi to use, or |null| for default.
+   * @param {Type} returnType The type of values returned by the function.
+   * @param {...Type} argTypes The type of arguments to the function.
+   */
+  declareLazyFFI: function(object, field, ...args) {
+    let lib = this;
+    Object.defineProperty(object, field, {
+      get: function() {
+        delete this[field];
+        let ffi = declareFFI(lib.library, ...args);
+        if (ffi) {
+          return this[field] = ffi;
+        }
+        return undefined;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  },
+
+  toString: function() {
+    return "[Library " + this.name + "]";
+  }
+});
+exports.Library = Library;
 
 /**
  * Declare a function through js-ctypes
