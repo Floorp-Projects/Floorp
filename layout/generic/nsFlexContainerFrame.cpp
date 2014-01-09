@@ -1359,8 +1359,9 @@ nsFlexContainerFrame::SanityCheckAnonymousFlexItems() const
                "but it isn't");
     if (child->StyleContext()->GetPseudo() ==
         nsCSSAnonBoxes::anonymousFlexItem) {
-      MOZ_ASSERT(!prevChildWasAnonFlexItem,
-                 "two anon flex items in a row (shouldn't happen)");
+      MOZ_ASSERT(!prevChildWasAnonFlexItem || mChildrenHaveBeenReordered,
+                 "two anon flex items in a row (shouldn't happen, unless our "
+                 "children have been reordered with the 'order' property)");
 
       nsIFrame* firstWrappedChild = child->GetFirstPrincipalChild();
       MOZ_ASSERT(firstWrappedChild,

@@ -209,3 +209,8 @@ class WaitUntilTest(MarionetteTestCase):
             self.w.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
 
         self.assertEqual(self.clock.ticks, 2)
+
+    def test_timeout_elapsed_duration(self):
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 2 seconds"):
+            self.w.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
