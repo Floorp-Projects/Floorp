@@ -123,7 +123,7 @@ function test() {
     if(!container) {
       ok(false, "Node not found");
     } else {
-      ok(container.highlighter.classList.contains("theme-bg-contrast"),
+      ok(container.tagState.classList.contains("theme-bg-contrast"),
         "Node is flashing");
     }
   }
