@@ -63,10 +63,10 @@ nsDOMMessageEvent::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 NS_IMETHODIMP
-nsDOMMessageEvent::GetData(JSContext* aCx, JS::Value* aData)
+nsDOMMessageEvent::GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData)
 {
   ErrorResult rv;
-  *aData = GetData(aCx, rv);
+  aData.set(GetData(aCx, rv));
   return rv.ErrorCode();
 }
 
@@ -171,7 +171,7 @@ NS_IMETHODIMP
 nsDOMMessageEvent::InitMessageEvent(const nsAString& aType,
                                     bool aCanBubble,
                                     bool aCancelable,
-                                    const JS::Value& aData,
+                                    JS::Handle<JS::Value> aData,
                                     const nsAString& aOrigin,
                                     const nsAString& aLastEventId,
                                     nsIDOMWindow* aSource)
