@@ -2120,8 +2120,7 @@ void
 nsChildView::DrawWindowOverlay(GLManager* aManager, nsIntRect aRect)
 {
   GLContext* gl = aManager->gl();
-  ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST);
-  ScopedScissorRect scopedScissorRectState(gl);
+  ScopedGLState scopedScissorTestState(gl, LOCAL_GL_SCISSOR_TEST, false);
 
   MaybeDrawTitlebar(aManager, aRect);
   MaybeDrawResizeIndicator(aManager, aRect);
