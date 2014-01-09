@@ -43,6 +43,7 @@ let EXPORTED_SYMBOLS = [
   "declareFFI",
   "declareLazy",
   "declareLazyFFI",
+  "normalizeToPointer",
   "projectValue",
   "isTypedArray",
   "defineLazyGetter",
@@ -1053,6 +1054,51 @@ let offsetBy =
 };
 exports.offsetBy = offsetBy;
 
+/**
+ * Utility function used to normalize a Typed Array or C
+ * pointer into a uint8_t C pointer.
+ *
+ * Future versions might extend this to other data structures.
+ *
+ * @param {Typed array | C pointer} candidate The buffer. If
+ * a C pointer, it must be non-null.
+ * @param {number} bytes The number of bytes that |candidate| should contain.
+ * Used for sanity checking if the size of |candidate| can be determined.
+ *
+ * @return {ptr:{C pointer}, bytes:number} A C pointer of type uint8_t,
+ * corresponding to the start of |candidate|.
+ */
+function normalizeToPointer(candidate, bytes) {
+  if (!candidate) {
+    throw new TypeError("Expecting  a Typed Array or a C pointer");
+  }
+  let ptr;
+  if ("isNull" in candidate) {
+    if (candidate.isNull()) {
+      throw new TypeError("Expecting a non-null pointer");
+    }
+    ptr = Type.uint8_t.out_ptr.cast(candidate);
+    if (bytes == null) {
+      throw new TypeError("C pointer missing bytes indication.");
+    }
+  } else if (isTypedArray(candidate)) {
+    // Typed Array
+    ptr = Type.uint8_t.out_ptr.implementation(candidate.buffer);
+    if (bytes == null) {
+      bytes = candidate.byteLength;
+    } else if (candidate.byteLength < bytes) {
+      throw new TypeError("Buffer is too short. I need at least " +
+                         bytes +
+                         " bytes but I have only " +
+                         candidate.byteLength +
+                          "bytes");
+    }
+  } else {
+    throw new TypeError("Expecting  a Typed Array or a C pointer");
+  }
+  return {ptr: ptr, bytes: bytes};
+};
+exports.normalizeToPointer = normalizeToPointer;
 
 ///////////////////// OS interactions
 
