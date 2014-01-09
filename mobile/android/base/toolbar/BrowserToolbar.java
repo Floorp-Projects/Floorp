@@ -21,8 +21,6 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
-import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -65,7 +63,6 @@ import android.widget.PopupWindow;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 public class BrowserToolbar extends GeckoRelativeLayout
@@ -330,19 +327,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
             }
         });
 
-        mUrlDisplayLayout.setOnStopListener(new OnStopListener() {
-            @Override
-            public Tab onStop() {
-                final Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    tab.doStop();
-                    return tab;
-                }
-
-                return null;
-            }
-        });
-
         mUrlEditLayout.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -488,8 +472,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         if (tabs.isSelectedTab(tab)) {
-            final EnumSet<UpdateFlags> flags = EnumSet.noneOf(UpdateFlags.class);
-
             switch (msg) {
                 case TITLE:
                     updateTitle();
@@ -498,16 +480,17 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case START:
                     updateBackButton(tab);
                     updateForwardButton(tab);
-
-                    flags.add(UpdateFlags.PROGRESS);
+                    if (tab.getState() == Tab.STATE_LOADING) {
+                        setProgressVisibility(true);
+                    }
+                    setSecurityMode(tab.getSecurityMode());
+                    setPageActionVisibility(mUrlDisplayLayout.isShowingProgress());
                     break;
 
                 case STOP:
                     updateBackButton(tab);
                     updateForwardButton(tab);
-
-                    flags.add(UpdateFlags.PROGRESS);
-
+                    setProgressVisibility(false);
                     // Reset the title in case we haven't navigated to a new page yet.
                     updateTitle();
                     break;
@@ -529,16 +512,16 @@ public class BrowserToolbar extends GeckoRelativeLayout
                     break;
 
                 case FAVICON:
-                    flags.add(UpdateFlags.FAVICON);
+                    setFavicon(tab.getFavicon());
                     break;
 
                 case SECURITY_CHANGE:
-                    flags.add(UpdateFlags.SITE_IDENTITY);
+                    setSecurityMode(tab.getSecurityMode());
                     break;
-            }
 
-            if (!flags.isEmpty()) {
-                updateDisplayLayout(tab, flags);
+                case READER_ENABLED:
+                    setPageActionVisibility(mUrlDisplayLayout.isShowingProgress());
+                    break;
             }
         }
 
@@ -646,16 +629,13 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                     mActivity.getString(R.string.one_tab));
     }
 
-    private void updateDisplayLayout(Tab tab, EnumSet<UpdateFlags> flags) {
-        if (mSwitchingTabs) {
-            flags.add(UpdateFlags.DISABLE_ANIMATIONS);
-        }
+    private void setProgressVisibility(boolean visible) {
+        mUrlDisplayLayout.setProgressVisibility(visible);
+    }
 
-        mUrlDisplayLayout.updateFromTab(tab, flags);
-
-        if (flags.contains(UpdateFlags.PROGRESS)) {
-            updateFocusOrder();
-        }
+    private void setPageActionVisibility(boolean isLoading) {
+        mUrlDisplayLayout.setPageActionVisibility(isLoading, !mSwitchingTabs);
+        updateFocusOrder();
     }
 
     private void updateFocusOrder() {
@@ -770,6 +750,19 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         setTitle(title);
+    }
+
+    private void setFavicon(Bitmap image) {
+        Log.d(LOGTAG, "setFavicon(" + image + ")");
+        if (Tabs.getInstance().getSelectedTab().getState() == Tab.STATE_LOADING) {
+            return;
+        }
+
+        mUrlDisplayLayout.setFavicon(image);
+    }
+
+    private void setSecurityMode(SecurityMode mode) {
+        mUrlDisplayLayout.setSecurityMode(mode);
     }
 
     public void prepareTabsAnimation(PropertyAnimator animator, boolean tabsAreShown) {
@@ -1308,10 +1301,10 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private void refreshState() {
         Tab tab = Tabs.getInstance().getSelectedTab();
         if (tab != null) {
-            updateDisplayLayout(tab, EnumSet.of(UpdateFlags.FAVICON,
-                                                UpdateFlags.SITE_IDENTITY,
-                                                UpdateFlags.PROGRESS,
-                                                UpdateFlags.PRIVATE_MODE));
+            setFavicon(tab.getFavicon());
+            setProgressVisibility(tab.getState() == Tab.STATE_LOADING);
+            setSecurityMode(tab.getSecurityMode());
+            setPageActionVisibility(mUrlDisplayLayout.isShowingProgress());
             updateBackButton(tab);
             updateForwardButton(tab);
 
@@ -1320,6 +1313,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
             mTabs.setPrivateMode(isPrivate);
             mMenu.setPrivateMode(isPrivate);
             mMenuIcon.setPrivateMode(isPrivate);
+            mUrlDisplayLayout.setPrivateMode(isPrivate);
             mUrlEditLayout.setPrivateMode(isPrivate);
 
             if (mBack instanceof BackButton)
