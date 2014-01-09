@@ -8,9 +8,7 @@ let Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Prefer
 Cu.import("resource://gre/modules/Promise.jsm");
 
 add_task(function() {
-  let shownPanelPromise = promisePanelShown(window);
-  PanelUI.toggle({type: "command"});
-  yield shownPanelPromise;
+  yield PanelUI.show({type: "command"});
 
   let historyButton = document.getElementById("history-panelmenu");
   let historySubview = document.getElementById("PanelUI-history");
@@ -21,10 +19,9 @@ add_task(function() {
   let tabsFromOtherComputers = document.getElementById("sync-tabs-menuitem2");
   is(tabsFromOtherComputers.hidden, true, "The Tabs From Other Computers menuitem should be hidden when sync isn't enabled.");
 
-  let subviewHiddenPromise = subviewHidden(historySubview);
-  let panelMultiView = document.getElementById("PanelUI-multiView");
-  panelMultiView.showMainView();
-  yield subviewHiddenPromise;
+  let hiddenPanelPromise = promisePanelHidden(window);
+  PanelUI.hide();
+  yield hiddenPanelPromise;
 
   // Part 2 - When Sync is enabled the menuitem should be shown.
   Weave.Service.createAccount("john@doe.com", "mysecretpw",
@@ -34,6 +31,8 @@ add_task(function() {
   Weave.Service.identity.syncKey = Weave.Utils.generatePassphrase();
   Weave.Svc.Prefs.set("firstSync", "newAccount");
   Weave.Service.persistLogin();
+
+  yield PanelUI.show({type: "command"});
 
   subviewShownPromise = subviewShown(historySubview);
   EventUtils.synthesizeMouseAtCenter(historyButton, {});
@@ -45,7 +44,7 @@ add_task(function() {
   syncPrefBranch.resetBranch("");
   Services.logins.removeAllLogins();
 
-  let hiddenPanelPromise = promisePanelHidden(window);
+  hiddenPanelPromise = promisePanelHidden(window);
   PanelUI.toggle({type: "command"});
   yield hiddenPanelPromise;
 });
