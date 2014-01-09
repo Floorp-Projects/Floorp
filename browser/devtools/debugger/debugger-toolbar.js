@@ -31,11 +31,12 @@ ToolbarView.prototype = {
     dumpn("Initializing the ToolbarView");
 
     this._instrumentsPaneToggleButton = document.getElementById("instruments-pane-toggle");
-    this._resumeOrderPanel = document.getElementById("resumption-order-panel");
     this._resumeButton = document.getElementById("resume");
     this._stepOverButton = document.getElementById("step-over");
     this._stepInButton = document.getElementById("step-in");
     this._stepOutButton = document.getElementById("step-out");
+    this._resumeOrderTooltip = new Tooltip(document);
+    this._resumeOrderTooltip.defaultPosition = TOOLBAR_ORDER_POPUP_POSITION;
 
     let resumeKey = ShortcutUtils.prettifyShortcut(document.getElementById("resumeKey"));
     let stepOverKey = ShortcutUtils.prettifyShortcut(document.getElementById("stepOverKey"));
@@ -80,10 +81,8 @@ ToolbarView.prototype = {
    */
   showResumeWarning: function(aPausedUrl) {
     let label = L10N.getFormatStr("resumptionOrderPanelTitle", aPausedUrl);
-    let descriptionNode = document.getElementById("resumption-panel-desc");
-    descriptionNode.setAttribute("value", label);
-
-    this._resumeOrderPanel.openPopup(this._resumeButton);
+    this._resumeOrderTooltip.setTextContent([label]);
+    this._resumeOrderTooltip.show(this._resumeButton);
   },
 
   /**
@@ -163,11 +162,11 @@ ToolbarView.prototype = {
   },
 
   _instrumentsPaneToggleButton: null,
-  _resumeOrderPanel: null,
   _resumeButton: null,
   _stepOverButton: null,
   _stepInButton: null,
   _stepOutButton: null,
+  _resumeOrderTooltip: null,
   _resumeTooltip: "",
   _pauseTooltip: "",
   _stepOverTooltip: "",
