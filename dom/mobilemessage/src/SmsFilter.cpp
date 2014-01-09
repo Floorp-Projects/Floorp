@@ -51,23 +51,23 @@ SmsFilter::NewSmsFilter(nsISupports** aSmsFilter)
 }
 
 NS_IMETHODIMP
-SmsFilter::GetStartDate(JSContext* aCx, JS::Value* aStartDate)
+SmsFilter::GetStartDate(JSContext* aCx, JS::MutableHandle<JS::Value> aStartDate)
 {
   if (mData.startDate() == 0) {
-    *aStartDate = JSVAL_NULL;
+    aStartDate.setNull();
     return NS_OK;
   }
 
-  aStartDate->setObjectOrNull(JS_NewDateObjectMsec(aCx, mData.startDate()));
-  NS_ENSURE_TRUE(aStartDate->isObject(), NS_ERROR_FAILURE);
+  aStartDate.setObjectOrNull(JS_NewDateObjectMsec(aCx, mData.startDate()));
+  NS_ENSURE_TRUE(aStartDate.isObject(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsFilter::SetStartDate(JSContext* aCx, const JS::Value& aStartDate)
+SmsFilter::SetStartDate(JSContext* aCx, JS::Handle<JS::Value> aStartDate)
 {
-  if (aStartDate == JSVAL_NULL) {
+  if (aStartDate.isNull()) {
     mData.startDate() = 0;
     return NS_OK;
   }
@@ -86,23 +86,23 @@ SmsFilter::SetStartDate(JSContext* aCx, const JS::Value& aStartDate)
 }
 
 NS_IMETHODIMP
-SmsFilter::GetEndDate(JSContext* aCx, JS::Value* aEndDate)
+SmsFilter::GetEndDate(JSContext* aCx, JS::MutableHandle<JS::Value> aEndDate)
 {
   if (mData.endDate() == 0) {
-    *aEndDate = JSVAL_NULL;
+    aEndDate.setNull();
     return NS_OK;
   }
 
-  aEndDate->setObjectOrNull(JS_NewDateObjectMsec(aCx, mData.endDate()));
-  NS_ENSURE_TRUE(aEndDate->isObject(), NS_ERROR_FAILURE);
+  aEndDate.setObjectOrNull(JS_NewDateObjectMsec(aCx, mData.endDate()));
+  NS_ENSURE_TRUE(aEndDate.isObject(), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsFilter::SetEndDate(JSContext* aCx, const JS::Value& aEndDate)
+SmsFilter::SetEndDate(JSContext* aCx, JS::Handle<JS::Value> aEndDate)
 {
-  if (aEndDate == JSVAL_NULL) {
+  if (aEndDate.isNull()) {
     mData.endDate() = 0;
     return NS_OK;
   }
@@ -121,12 +121,12 @@ SmsFilter::SetEndDate(JSContext* aCx, const JS::Value& aEndDate)
 }
 
 NS_IMETHODIMP
-SmsFilter::GetNumbers(JSContext* aCx, JS::Value* aNumbers)
+SmsFilter::GetNumbers(JSContext* aCx, JS::MutableHandle<JS::Value> aNumbers)
 {
   uint32_t length = mData.numbers().Length();
 
   if (length == 0) {
-    *aNumbers = JSVAL_NULL;
+    aNumbers.setNull();
     return NS_OK;
   }
 
@@ -150,14 +150,14 @@ SmsFilter::GetNumbers(JSContext* aCx, JS::Value* aNumbers)
     return NS_ERROR_FAILURE;
   }
 
-  aNumbers->setObject(*obj);
+  aNumbers.setObject(*obj);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsFilter::SetNumbers(JSContext* aCx, const JS::Value& aNumbers)
+SmsFilter::SetNumbers(JSContext* aCx, JS::Handle<JS::Value> aNumbers)
 {
-  if (aNumbers == JSVAL_NULL) {
+  if (aNumbers.isNull()) {
     mData.numbers().Clear();
     return NS_OK;
   }
@@ -241,22 +241,21 @@ SmsFilter::SetDelivery(const nsAString& aDelivery)
 }
 
 NS_IMETHODIMP
-SmsFilter::GetRead(JSContext* aCx, JS::Value* aRead)
+SmsFilter::GetRead(JSContext* aCx, JS::MutableHandle<JS::Value> aRead)
 {
   if (mData.read() == eReadState_Unknown) {
-    *aRead = JSVAL_NULL;
+    aRead.setNull();
     return NS_OK;
   }
 
-  aRead->setBoolean(mData.read());
-
+  aRead.setBoolean(mData.read());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsFilter::SetRead(JSContext* aCx, const JS::Value& aRead)
+SmsFilter::SetRead(JSContext* aCx, JS::Handle<JS::Value> aRead)
 {
-  if (aRead == JSVAL_NULL) {
+  if (aRead.isNull()) {
     mData.read() = eReadState_Unknown;
     return NS_OK;
   }
@@ -270,22 +269,21 @@ SmsFilter::SetRead(JSContext* aCx, const JS::Value& aRead)
 }
 
 NS_IMETHODIMP
-SmsFilter::GetThreadId(JSContext* aCx, JS::Value* aThreadId)
+SmsFilter::GetThreadId(JSContext* aCx, JS::MutableHandle<JS::Value> aThreadId)
 {
   if (!mData.threadId()) {
-    *aThreadId = JSVAL_NULL;
+    aThreadId.setNull();
     return NS_OK;
   }
 
-  aThreadId->setNumber(static_cast<double>(mData.threadId()));
-
+  aThreadId.setNumber(static_cast<double>(mData.threadId()));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SmsFilter::SetThreadId(JSContext* aCx, const JS::Value& aThreadId)
+SmsFilter::SetThreadId(JSContext* aCx, JS::Handle<JS::Value> aThreadId)
 {
-  if (aThreadId == JSVAL_NULL) {
+  if (aThreadId.isNull()) {
     mData.threadId() = 0;
     return NS_OK;
   }

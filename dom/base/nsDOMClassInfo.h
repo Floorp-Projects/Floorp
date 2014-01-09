@@ -574,7 +574,7 @@ public:
                        JSObject *obj, const JS::CallArgs &args, bool *_retval) MOZ_OVERRIDE;
 
   NS_IMETHOD HasInstance(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, const JS::Value &val, bool *bp,
+                         JSObject *obj, JS::Handle<JS::Value> val, bool *bp,
                          bool *_retval);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
