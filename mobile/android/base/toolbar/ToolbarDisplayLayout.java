@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.BrowserApp;
@@ -15,7 +14,6 @@ import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.toolbar.BrowserToolbar.ForwardButtonAnimation;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.GeckoLinearLayout;
 import org.mozilla.gecko.widget.GeckoTextView;
 
@@ -26,11 +24,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.SystemClock;
-import android.text.style.ForegroundColorSpan;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -53,7 +46,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
 
     enum UpdateFlags {
-        TITLE,
         FAVICON,
         PROGRESS,
         SITE_IDENTITY,
@@ -70,18 +62,12 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         public Tab onStop();
     }
 
-    interface OnTitleChangeListener {
-        public void onTitleChange(CharSequence title);
-    }
-
     final private BrowserApp mActivity;
 
     private UIMode mUiMode;
 
     private GeckoTextView mTitle;
     private int mTitlePadding;
-    private ToolbarTitlePrefs mTitlePrefs;
-    private OnTitleChangeListener mTitleChangeListener;
 
     private ImageButton mSiteSecurity;
     private boolean mSiteSecurityVisible;
@@ -107,11 +93,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
     private PropertyAnimator mForwardAnim;
 
-    private final ForegroundColorSpan mUrlColor;
-    private final ForegroundColorSpan mBlockedColor;
-    private final ForegroundColorSpan mDomainColor;
-    private final ForegroundColorSpan mPrivateDomainColor;
-
     public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         setOrientation(HORIZONTAL);
@@ -123,12 +104,7 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         mTitle = (GeckoTextView) findViewById(R.id.url_bar_title);
         mTitlePadding = mTitle.getPaddingRight();
 
-        final Resources res = getResources();
-
-        mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
-        mBlockedColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_blockedtext));
-        mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
-        mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
+        Resources res = getResources();
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         if (Build.VERSION.SDK_INT >= 11) {
@@ -153,8 +129,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
     @Override
     public void onAttachedToWindow() {
-        mTitlePrefs = new ToolbarTitlePrefs();
-
         Button.OnClickListener faviconListener = new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -205,11 +179,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
     }
 
     @Override
-    public void onDetachedFromWindow() {
-        mTitlePrefs.close();
-    }
-
-    @Override
     public void onAnimationStart(Animation animation) {
         if (animation.equals(mLockFadeIn)) {
             if (mSiteSecurityVisible)
@@ -246,10 +215,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
     }
 
     void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
-        if (flags.contains(UpdateFlags.TITLE)) {
-            updateTitle(tab);
-        }
-
         if (flags.contains(UpdateFlags.FAVICON)) {
             updateFavicon(tab);
         }
@@ -265,69 +230,6 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
             mTitle.setPrivateMode(tab != null && tab.isPrivate());
         }
-    }
-
-    void setTitle(CharSequence title) {
-        mTitle.setText(title);
-
-        if (mTitleChangeListener != null) {
-            mTitleChangeListener.onTitleChange(title);
-        }
-    }
-
-    private void updateTitle(Tab tab) {
-        // Keep the title unchanged if there's no selected tab,
-        // or if the tab is entering reader mode.
-        if (tab == null || tab.isEnteringReaderMode()) {
-            return;
-        }
-
-        final String url = tab.getURL();
-
-        // Setting a null title will ensure we just see the
-        // "Enter Search or Address" placeholder text.
-        if (AboutPages.isTitlelessAboutPage(url)) {
-            setTitle(null);
-            return;
-        }
-
-        // Show the about:blocked page title in red, regardless of prefs
-        if (tab.getErrorType() == Tab.ErrorType.BLOCKED) {
-            final String title = tab.getDisplayTitle();
-
-            final SpannableStringBuilder builder = new SpannableStringBuilder(title);
-            builder.setSpan(mBlockedColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-
-            setTitle(builder);
-            return;
-        }
-
-        // If the pref to show the URL isn't set, just use the tab's display title.
-        if (!mTitlePrefs.shouldShowUrl() || url == null) {
-            setTitle(tab.getDisplayTitle());
-            return;
-        }
-
-        CharSequence title = url;
-        if (mTitlePrefs.shouldTrimUrls()) {
-            title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
-        }
-
-        final String baseDomain = tab.getBaseDomain();
-        if (!TextUtils.isEmpty(baseDomain)) {
-            final SpannableStringBuilder builder = new SpannableStringBuilder(title);
-
-            int index = title.toString().indexOf(baseDomain);
-            if (index > -1) {
-                builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor,
-                                index, index + baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-
-                title = builder;
-            }
-        }
-
-        setTitle(title);
     }
 
     private void updateFavicon(Tab tab) {
@@ -472,12 +374,12 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         return Arrays.asList(mSiteSecurity, mPageActionLayout, mStop);
     }
 
-    void setOnStopListener(OnStopListener listener) {
-        mStopListener = listener;
+    void setTitle(CharSequence title) {
+        mTitle.setText(title);
     }
 
-    void setOnTitleChangeListener(OnTitleChangeListener listener) {
-        mTitleChangeListener = listener;
+    void setOnStopListener(OnStopListener listener) {
+        mStopListener = listener;
     }
 
     View getDoorHangerAnchor() {
