@@ -1169,7 +1169,12 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_ESCAPE" phase="capturing" action="this.close();" preventdefault="true"/>
+      <!--
+        - We have to guard against `this.close` being |null| due to an unknown
+        - issue, which is tracked in bug 957999.
+        -->
+      <handler event="keypress" keycode="VK_ESCAPE" phase="capturing"
+               action="if (this.close) this.close();" preventdefault="true"/>
     </handlers>
   </binding>
 </bindings>
