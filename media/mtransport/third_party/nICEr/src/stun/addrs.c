@@ -426,7 +426,7 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
       c = strchr(munged_ifname, '.');
       while (c != NULL) {
         *c = '+';
-         c = strchr(munged_ifname, '+');
+         c = strchr(munged_ifname, '.');
       }
 
       r_log(NR_LOG_STUN, LOG_INFO, "Converted ifname: %s", munged_ifname);
