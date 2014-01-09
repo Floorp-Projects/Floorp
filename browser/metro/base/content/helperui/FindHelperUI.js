@@ -171,8 +171,11 @@ var FindHelperUI = {
     this.searchAgain(this._searchString, false);
   },
 
-  onFindResult: function(aResult, aFindBackwards, aLinkURL) {
+  onFindResult: function(aResult, aFindBackwards, aLinkURL, aRect) {
     this._status = aResult;
+    if (aRect) {
+      this._zoom(aRect, Browser.selectedBrowser.contentDocumentHeight);
+    }
     this.updateCommands();
   },
 
