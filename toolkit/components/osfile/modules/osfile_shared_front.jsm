@@ -82,7 +82,7 @@ AbstractFile.prototype = {
    * less than |bytes| if the file did not contain that many bytes left.
    */
   readTo: function readTo(buffer, options = {}) {
-    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
+    let {ptr, bytes} = SharedAll.normalizeToPointer(buffer, options.bytes);
     let pos = 0;
     while (pos < bytes) {
       let chunkSize = this._read(ptr, bytes - pos, options);
@@ -116,7 +116,7 @@ AbstractFile.prototype = {
   write: function write(buffer, options = {}) {
 
     let {ptr, bytes} =
-      AbstractFile.normalizeToPointer(buffer, options.bytes || undefined);
+      SharedAll.normalizeToPointer(buffer, options.bytes || undefined);
 
     let pos = 0;
     while (pos < bytes) {
@@ -184,51 +184,6 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
     }
     throw OS.File.Error.exists("could not find an unused file name.");
   }
-};
-
-/**
- * Utility function used to normalize a Typed Array or C
- * pointer into a uint8_t C pointer.
- *
- * Future versions might extend this to other data structures.
- *
- * @param {Typed array | C pointer} candidate The buffer. If
- * a C pointer, it must be non-null.
- * @param {number} bytes The number of bytes that |candidate| should contain.
- * Used for sanity checking if the size of |candidate| can be determined.
- *
- * @return {ptr:{C pointer}, bytes:number} A C pointer of type uint8_t,
- * corresponding to the start of |candidate|.
- */
-AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes) {
-  if (!candidate) {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
-  }
-  let ptr;
-  if ("isNull" in candidate) {
-    if (candidate.isNull()) {
-      throw new TypeError("Expecting a non-null pointer");
-    }
-    ptr = SharedAll.Type.uint8_t.out_ptr.cast(candidate);
-    if (bytes == null) {
-      throw new TypeError("C pointer missing bytes indication.");
-    }
-  } else if (SharedAll.isTypedArray(candidate)) {
-    // Typed Array
-    ptr = SharedAll.Type.uint8_t.out_ptr.implementation(candidate.buffer);
-    if (bytes == null) {
-      bytes = candidate.byteLength;
-    } else if (candidate.byteLength < bytes) {
-      throw new TypeError("Buffer is too short. I need at least " +
-                         bytes +
-                         " bytes but I have only " +
-                         candidate.byteLength +
-                          "bytes");
-    }
-  } else {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
-  }
-  return {ptr: ptr, bytes: bytes};
 };
 
 /**
