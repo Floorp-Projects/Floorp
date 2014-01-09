@@ -235,6 +235,10 @@ public class Tab {
         return mHasOpenSearch;
     }
 
+    public SecurityMode getSecurityMode() {
+        return mSiteIdentity.getSecurityMode();
+    }
+
     public SiteIdentity getSiteIdentity() {
         return mSiteIdentity;
     }
