@@ -20,12 +20,8 @@ FontInspector.prototype = {
   init: function FI_init() {
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
-    this.onHighlighterLocked = this.onHighlighterLocked.bind(this);
     this.inspector.selection.on("new-node", this.onNewNode);
     this.inspector.sidebar.on("fontinspector-selected", this.onNewNode);
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.on("locked", this.onHighlighterLocked);
-    }
     this.update();
   },
 
@@ -44,9 +40,6 @@ FontInspector.prototype = {
     this.chromeDoc = null;
     this.inspector.sidebar.off("layoutview-selected", this.onNewNode);
     this.inspector.selection.off("new-node", this.onNewNode);
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.off("locked", this.onHighlighterLocked);
-    }
   },
 
   /**
@@ -56,21 +49,12 @@ FontInspector.prototype = {
     if (this.isActive() &&
         this.inspector.selection.isLocal() &&
         this.inspector.selection.isConnected() &&
-        this.inspector.selection.isElementNode() &&
-        this.inspector.selection.reason != "highlighter") {
+        this.inspector.selection.isElementNode()) {
       this.undim();
       this.update();
     } else {
       this.dim();
     }
-  },
-
-  /**
-   * Highlighter 'locked' event handler
-   */
-  onHighlighterLocked: function FI_onHighlighterLocked() {
-    this.undim();
-    this.update();
   },
 
   /**
@@ -210,7 +194,7 @@ FontInspector.prototype = {
         !this.inspector.selection.isElementNode()) {
       return;
     }
-    let node = this.inspector.selection.node;
+    let node = this.inspector.selection.nodeFront;
     let contentDocument = node.ownerDocument;
     let root = contentDocument.documentElement;
     if (contentDocument.body) {
