@@ -227,6 +227,8 @@ this.PermissionsTable =  { geolocation: {
                              certified: ALLOW_ACTION,
                              substitute: [
                                "indexedDB-unlimited",
+                               "offline-app",
+                               "pin-app",
                                "default-persistent-storage"
                              ]
                            },
