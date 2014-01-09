@@ -66,7 +66,7 @@ nsDOMNotifyAudioAvailableEvent::~nsDOMNotifyAudioAvailableEvent()
 }
 
 NS_IMETHODIMP
-nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::Value* aResult)
+nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::MutableHandle<JS::Value> aResult)
 {
   if (!mAllowAudioData) {
     // Media is not same-origin, don't allow the data out.
@@ -74,7 +74,7 @@ nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::Value* aResul
   }
 
   if (mCachedArray) {
-    *aResult = OBJECT_TO_JSVAL(mCachedArray);
+    aResult.setObject(*mCachedArray);
     return NS_OK;
   }
 
@@ -88,7 +88,7 @@ nsDOMNotifyAudioAvailableEvent::GetFrameBuffer(JSContext* aCx, JS::Value* aResul
   }
   memcpy(JS_GetFloat32ArrayData(mCachedArray), mFrameBuffer.get(), mFrameBufferLength * sizeof(float));
 
-  *aResult = OBJECT_TO_JSVAL(mCachedArray);
+  aResult.setObject(*mCachedArray);
   return NS_OK;
 }
 
