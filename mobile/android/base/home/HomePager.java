@@ -47,6 +47,9 @@ public class HomePager extends ViewPager {
 
     private String mInitialPageId;
 
+    // Whether or not we need to restart the loader when we show the HomePager.
+    private boolean mRestartLoader;
+
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
     static final String LIST_TAG_HISTORY = "history";
@@ -154,7 +157,20 @@ public class HomePager extends ViewPager {
         super.addView(child, index, params);
     }
 
-    public void redisplay(LoaderManager lm, FragmentManager fm) {
+    /**
+     * Invalidates the current configuration, redisplaying the HomePager if necessary.
+     */
+    public void invalidate(LoaderManager lm, FragmentManager fm) {
+        // We need to restart the loader to load the new strings.
+        mRestartLoader = true;
+
+        // If the HomePager is currently visible, redisplay it with the new strings.
+        if (isVisible()) {
+            redisplay(lm, fm);
+        }
+    }
+
+    private void redisplay(LoaderManager lm, FragmentManager fm) {
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
 
         // If mInitialPageId is non-null, this means the HomePager hasn't
@@ -193,8 +209,13 @@ public class HomePager extends ViewPager {
         // list of pages in place.
         mTabStrip.setVisibility(View.INVISIBLE);
 
-        // Load list of pages from configuration
-        lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
+        // Load list of pages from configuration. Restart the loader if necessary.
+        if (mRestartLoader) {
+            lm.restartLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
+            mRestartLoader = false;
+        } else {
+            lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
+        }
 
         if (shouldAnimate) {
             animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
