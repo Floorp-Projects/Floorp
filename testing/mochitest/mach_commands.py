@@ -447,6 +447,10 @@ def MochitestCommand(func):
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
 
+    hide_subtests = CommandArgument('--hide-subtests', action='store_true',
+        help='If specified, will only log subtest results on failure or timeout.')
+    func = hide_subtests(func)
+
     debug_on_failure = CommandArgument('--debug-on-failure', action='store_true',
         help='Breaks execution and enters the JS debugger on a test failure. ' \
              'Should be used together with --jsdebugger.')
@@ -534,6 +538,10 @@ def B2GCommand(func):
     this_chunk = CommandArgument('--this-chunk', type=int,
         help='If running tests by chunks, the number of the chunk to run.')
     func = this_chunk(func)
+
+    hide_subtests = CommandArgument('--hide-subtests', action='store_true',
+        help='If specified, will only log subtest results on failure or timeout.')
+    func = hide_subtests(func)
 
     path = CommandArgument('test_file', default=None, nargs='?',
         metavar='TEST',
