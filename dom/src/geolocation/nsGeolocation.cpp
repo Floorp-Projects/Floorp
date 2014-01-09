@@ -80,6 +80,7 @@ class nsGeolocationRequest
   void SendLocation(nsIDOMGeoPosition* location);
   bool WantsHighAccuracy() {return !mShutdown && mOptions && mOptions->mEnableHighAccuracy;}
   void SetTimeoutTimer();
+  void StopTimeoutTimer();
   void NotifyErrorAndShutdown(uint16_t);
   nsIPrincipal* GetPrincipal();
 
@@ -348,6 +349,7 @@ NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLoc
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
+  StopTimeoutTimer();
   NotifyErrorAndShutdown(nsIDOMGeoPositionError::TIMEOUT);
   return NS_OK;
 }
@@ -363,10 +365,6 @@ nsGeolocationRequest::NotifyErrorAndShutdown(uint16_t aErrorCode)
   }
 
   NotifyError(aErrorCode);
-
-  if (!mShutdown) {
-    SetTimeoutTimer();
-  }
 }
 
 NS_IMETHODIMP
@@ -475,10 +473,7 @@ nsGeolocationRequest::Allow()
 void
 nsGeolocationRequest::SetTimeoutTimer()
 {
-  if (mTimeoutTimer) {
-    mTimeoutTimer->Cancel();
-    mTimeoutTimer = nullptr;
-  }
+  StopTimeoutTimer();
 
   int32_t timeout;
   if (mOptions && (timeout = mOptions->mTimeout) != 0) {
@@ -491,6 +486,15 @@ nsGeolocationRequest::SetTimeoutTimer()
 
     mTimeoutTimer = do_CreateInstance("@mozilla.org/timer;1");
     mTimeoutTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
+void
+nsGeolocationRequest::StopTimeoutTimer()
+{
+  if (mTimeoutTimer) {
+    mTimeoutTimer->Cancel();
+    mTimeoutTimer = nullptr;
   }
 }
 
@@ -539,12 +543,9 @@ nsGeolocationRequest::SendLocation(nsIDOMGeoPosition* aPosition)
     callback->HandleEvent(aPosition);
   }
 
-  if (!mShutdown) {
-    // For watch requests, the handler may have called clearWatch
-    MOZ_ASSERT(mIsWatchPositionRequest,
-               "non-shutdown getCurrentPosition request after callback!");
-    SetTimeoutTimer();
-  }
+  StopTimeoutTimer();
+  MOZ_ASSERT(mShutdown || mIsWatchPositionRequest,
+             "non-shutdown getCurrentPosition request after callback!");
 }
 
 nsIPrincipal*
@@ -561,6 +562,16 @@ nsGeolocationRequest::Update(nsIDOMGeoPosition* aPosition)
 {
   nsCOMPtr<nsIRunnable> ev = new RequestSendLocationEvent(aPosition, this);
   NS_DispatchToMainThread(ev);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationRequest::LocationUpdatePending()
+{
+  if (!mTimeoutTimer) {
+    SetTimeoutTimer();
+  }
+
   return NS_OK;
 }
 
@@ -806,6 +817,16 @@ nsGeolocationService::Update(nsIDOMGeoPosition *aSomewhere)
   for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
     mGeolocators[i]->Update(aSomewhere);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGeolocationService::LocationUpdatePending()
+{
+  for (uint32_t i = 0; i< mGeolocators.Length(); i++) {
+    mGeolocators[i]->LocationUpdatePending();
+  }
+
   return NS_OK;
 }
 
@@ -1125,6 +1146,17 @@ Geolocation::Update(nsIDOMGeoPosition *aSomewhere)
   // notify everyone that is watching
   for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
     mWatchingCallbacks[i]->Update(aSomewhere);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Geolocation::LocationUpdatePending()
+{
+  // this event is only really interesting for watch callbacks
+  for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
+    mWatchingCallbacks[i]->LocationUpdatePending();
   }
 
   return NS_OK;

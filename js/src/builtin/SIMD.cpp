@@ -335,6 +335,14 @@ const Class SIMDObject::class_ = {
 JSObject *
 SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 {
+    // SIMD relies on having the TypedObject module initialized.
+    // In particular, the self-hosted code for array() wants
+    // to be able to call GetTypedObjectModule(). It is NOT necessary
+    // to install the TypedObjectModule global, but at the moment
+    // those two things are not separable.
+    if (!global->getOrCreateTypedObjectModule(cx))
+        return nullptr;
+
     // Create SIMD Object.
     RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
     if(!objProto)

@@ -2339,7 +2339,8 @@ TypedObject::createZeroed(JSContext *cx,
         if (!memory)
             return nullptr;
 
-        elementTypeRepr->initInstance(cx->runtime(), memory, length);
+        if (length)
+            elementTypeRepr->initInstance(cx->runtime(), memory, length);
         obj->attach(memory);
         return obj;
       }

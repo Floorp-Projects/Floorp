@@ -210,7 +210,6 @@ nsAppShell::nsAppShell()
 , mTerminated(false)
 , mSkippedNativeCallback(false)
 , mHadMoreEventsCount(0)
-, mRecursionDepth(0)
 , mNativeEventCallbackDepth(0)
 , mNativeEventScheduledDepth(0)
 {
@@ -712,11 +711,14 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
 bool
 nsAppShell::InGeckoMainEventLoop()
 {
-  if ((gXULModalLevel > 0) || (mRecursionDepth > 0))
+  if (gXULModalLevel > 0)
     return false;
   if (mNativeEventCallbackDepth <= 0)
     return false;
-  return true;
+
+  bool isProcessingEvents = false;
+  NS_GetCurrentThread()->GetIsProcessingEvents(&isProcessingEvents);
+  return !isProcessingEvents;
 }
 
 // Run
@@ -818,8 +820,6 @@ nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, bool aMayWait,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  mRecursionDepth = aRecursionDepth;
-
   NS_ASSERTION(mAutoreleasePools,
                "No stack on which to store autorelease pool");
 
@@ -844,8 +844,6 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                   bool aEventWasProcessed)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  mRecursionDepth = aRecursionDepth;
 
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
 

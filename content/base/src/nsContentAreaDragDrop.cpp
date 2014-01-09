@@ -738,7 +738,13 @@ DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
   if (!mUrlString.IsEmpty() && mIsAnchor) {
     nsAutoString dragData(mUrlString);
     dragData.AppendLiteral("\n");
-    dragData += mTitleString;
+    // Remove leading and trailing newlines in the title and replace them with
+    // space in remaining positions - they confuse PlacesUtils::unwrapNodes
+    // that expects url\ntitle formatted data for x-moz-url.
+    nsAutoString title(mTitleString);
+    title.Trim("\r\n");
+    title.ReplaceChar("\r\n", ' ');
+    dragData += title;
 
     AddString(aDataTransfer, NS_LITERAL_STRING(kURLMime), dragData, principal);
     AddString(aDataTransfer, NS_LITERAL_STRING(kURLDataMime), mUrlString, principal);

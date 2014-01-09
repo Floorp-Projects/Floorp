@@ -1892,8 +1892,7 @@ nsLocalFile::Launch()
     if (NS_SUCCEEDED(rv))
         rv = mimeService->GetTypeFromFile(this, type);
 
-    nsDependentCString fileUri = NS_LITERAL_CSTRING("file://");
-    fileUri.Append(mPath);
+    nsAutoCString fileUri = NS_LITERAL_CSTRING("file://") + mPath;
     return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
