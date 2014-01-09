@@ -59,8 +59,8 @@ public class ToolbarComponent extends BaseComponent {
         return (EditText) getToolbarView().findViewById(R.id.url_edit_text);
     }
 
-    private View getUrlDisplayLayout() {
-        return getToolbarView().findViewById(R.id.display_layout);
+    private View getUrlDisplayContainer() {
+        return getToolbarView().findViewById(R.id.url_display_container);
     }
 
     private TextView getUrlTitleText() {
@@ -106,7 +106,7 @@ public class ToolbarComponent extends BaseComponent {
     }
 
     private boolean isEditing() {
-        return getUrlDisplayLayout().getVisibility() != View.VISIBLE &&
+        return getUrlDisplayContainer().getVisibility() != View.VISIBLE &&
                 getUrlEditText().getVisibility() == View.VISIBLE;
     }
 
