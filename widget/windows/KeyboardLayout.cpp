@@ -200,6 +200,11 @@ ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const
                aMouseEvent.eventStructType == NS_SIMPLE_GESTURE_EVENT,
                "called with non-mouse event");
 
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+    // Buttons for immersive mode are handled in MetroInput.
+    return;
+  }
+
   WidgetMouseEventBase& mouseEvent = *aMouseEvent.AsMouseEventBase();
   mouseEvent.buttons = 0;
   if (::GetKeyState(VK_LBUTTON) < 0) {
