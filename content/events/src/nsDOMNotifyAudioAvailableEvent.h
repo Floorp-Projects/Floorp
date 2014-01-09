@@ -51,7 +51,7 @@ public:
   JSObject* GetFrameBuffer(JSContext* aCx, mozilla::ErrorResult& aRv)
   {
     JS::Rooted<JS::Value> dummy(aCx);
-    aRv = GetFrameBuffer(aCx, dummy.address());
+    aRv = GetFrameBuffer(aCx, &dummy);
     return mCachedArray;
   }
 
