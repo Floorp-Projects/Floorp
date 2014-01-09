@@ -137,18 +137,6 @@ public:
 
 NS_IMPL_ISUPPORTS2(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
-NS_IMETHODIMP
-SRGBOverrideObserver::Observe(nsISupports *aSubject,
-                              const char *aTopic,
-                              const char16_t *someData)
-{
-    NS_ASSERTION(NS_strcmp(someData,
-                   MOZ_UTF16("gfx.color_mangement.force_srgb")),
-                 "Restarting CMS on wrong pref!");
-    ShutdownCMS();
-    return NS_OK;
-}
-
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
 
 #define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
@@ -164,10 +152,29 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"
 
+#define GFX_PREF_CMS_RENDERING_INTENT "gfx.color_management.rendering_intent"
+#define GFX_PREF_CMS_DISPLAY_PROFILE "gfx.color_management.display_profile"
+#define GFX_PREF_CMS_ENABLED_OBSOLETE "gfx.color_management.enabled"
+#define GFX_PREF_CMS_FORCE_SRGB "gfx.color_management.force_srgb"
+#define GFX_PREF_CMS_ENABLEV4 "gfx.color_management.enablev4"
+#define GFX_PREF_CMS_MODE "gfx.color_management.mode"
+
+NS_IMETHODIMP
+SRGBOverrideObserver::Observe(nsISupports *aSubject,
+                              const char *aTopic,
+                              const char16_t* someData)
+{
+    NS_ASSERTION(NS_strcmp(someData,
+                           MOZ_UTF16(GFX_PREF_CMS_FORCE_SRGB)) == 0,
+                 "Restarting CMS on wrong pref!");
+    ShutdownCMS();
+    return NS_OK;
+}
+
 static const char* kObservedPrefs[] = {
     "gfx.downloadable_fonts.",
     "gfx.font_rendering.",
-    "bidi.numeral",
+    BIDI_NUMERAL_PREF,
     nullptr
 };
 
@@ -454,7 +461,7 @@ gfxPlatform::Init()
 
     /* Create and register our CMS Override observer. */
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
-    Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver, "gfx.color_management.force_srgb");
+    Preferences::AddWeakObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
 
     gPlatform->mFontPrefsObserver = new FontPrefsObserver();
     Preferences::AddStrongObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
@@ -524,7 +531,7 @@ gfxPlatform::Shutdown()
     if (gPlatform) {
         /* Unregister our CMS Override callback. */
         NS_ASSERTION(gPlatform->mSRGBOverrideObserver, "mSRGBOverrideObserver has alreay gone");
-        Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, "gfx.color_management.force_srgb");
+        Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
         gPlatform->mSRGBOverrideObserver = nullptr;
 
         NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
@@ -1627,13 +1634,13 @@ gfxPlatform::GetCMSMode()
         nsresult rv;
 
         int32_t mode;
-        rv = Preferences::GetInt("gfx.color_management.mode", &mode);
+        rv = Preferences::GetInt(GFX_PREF_CMS_MODE, &mode);
         if (NS_SUCCEEDED(rv) && (mode >= 0) && (mode < eCMSMode_AllCount)) {
             gCMSMode = static_cast<eCMSMode>(mode);
         }
 
         bool enableV4;
-        rv = Preferences::GetBool("gfx.color_management.enablev4", &enableV4);
+        rv = Preferences::GetBool(GFX_PREF_CMS_ENABLEV4, &enableV4);
         if (NS_SUCCEEDED(rv) && enableV4) {
             qcms_enable_iccv4();
         }
@@ -1648,7 +1655,7 @@ gfxPlatform::GetRenderingIntent()
 
         /* Try to query the pref system for a rendering intent. */
         int32_t pIntent;
-        if (NS_SUCCEEDED(Preferences::GetInt("gfx.color_management.rendering_intent", &pIntent))) {
+        if (NS_SUCCEEDED(Preferences::GetInt(GFX_PREF_CMS_RENDERING_INTENT, &pIntent))) {
             /* If the pref is within range, use it as an override. */
             if ((pIntent >= QCMS_INTENT_MIN) && (pIntent <= QCMS_INTENT_MAX)) {
                 gCMSIntent = pIntent;
@@ -1713,12 +1720,12 @@ gfxPlatform::CreateCMSOutputProfile()
            default value of this preference, which means nsIPrefBranch::GetBoolPref
            will typically throw (and leave its out-param untouched).
          */
-        if (Preferences::GetBool("gfx.color_management.force_srgb", false)) {
+        if (Preferences::GetBool(GFX_PREF_CMS_FORCE_SRGB, false)) {
             gCMSOutputProfile = GetCMSsRGBProfile();
         }
 
         if (!gCMSOutputProfile) {
-            nsAdoptingCString fname = Preferences::GetCString("gfx.color_management.display_profile");
+            nsAdoptingCString fname = Preferences::GetCString(GFX_PREF_CMS_DISPLAY_PROFILE);
             if (!fname.IsEmpty()) {
                 gCMSOutputProfile = qcms_profile_from_path(fname);
             }
@@ -1860,11 +1867,11 @@ static void MigratePrefs()
 {
     /* Migrate from the boolean color_management.enabled pref - we now use
        color_management.mode. */
-    if (Preferences::HasUserValue("gfx.color_management.enabled")) {
-        if (Preferences::GetBool("gfx.color_management.enabled", false)) {
-            Preferences::SetInt("gfx.color_management.mode", static_cast<int32_t>(eCMSMode_All));
+    if (Preferences::HasUserValue(GFX_PREF_CMS_ENABLED_OBSOLETE)) {
+        if (Preferences::GetBool(GFX_PREF_CMS_ENABLED_OBSOLETE, false)) {
+            Preferences::SetInt(GFX_PREF_CMS_MODE, static_cast<int32_t>(eCMSMode_All));
         }
-        Preferences::ClearUser("gfx.color_management.enabled");
+        Preferences::ClearUser(GFX_PREF_CMS_ENABLED_OBSOLETE);
     }
 }
 
