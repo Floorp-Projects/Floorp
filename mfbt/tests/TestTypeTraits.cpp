@@ -6,6 +6,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypeTraits.h"
 
+using mozilla::AddLvalueReference;
 using mozilla::IsArray;
 using mozilla::IsBaseOf;
 using mozilla::IsClass;
@@ -241,6 +242,17 @@ TestIsConvertible()
   //static_assert((!IsConvertible<C, A>::value),
   //           "C doesn't convert to A (private inheritance)");
 }
+
+static_assert(IsSame<AddLvalueReference<int>::Type, int&>::value,
+              "not adding & to int correctly");
+static_assert(IsSame<AddLvalueReference<volatile int&>::Type, volatile int&>::value,
+              "not adding & to volatile int& correctly");
+static_assert(IsSame<AddLvalueReference<void*>::Type, void*&>::value,
+              "not adding & to void* correctly");
+static_assert(IsSame<AddLvalueReference<void>::Type, void>::value,
+              "void shouldn't be transformed by AddLvalueReference");
+static_assert(IsSame<AddLvalueReference<struct S1&&>::Type, struct S1&>::value,
+              "not reference-collapsing struct S1&& & to struct S1& correctly");
 
 static_assert(IsSame<MakeSigned<const unsigned char>::Type, const signed char>::value,
               "const unsigned char won't signify correctly");
