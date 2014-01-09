@@ -172,7 +172,7 @@ is enabled."""
 
     @staticmethod
     def check_expiration(name, definition):
-        expiration = definition['expires_in_version']
+        expiration = definition.get('expires_in_version')
 
         if not expiration:
             return
