@@ -408,40 +408,43 @@ MetroInput::OnPointerNonTouch(UI::Input::IPointerPoint* aPoint) {
   aPoint->get_Properties(props.GetAddressOf());
   props->get_PointerUpdateKind(&pointerUpdateKind);
 
-  WidgetMouseEvent* event =
-    new WidgetMouseEvent(true, NS_MOUSE_MOVE, mWidget.Get(),
-                         WidgetMouseEvent::eReal,
-                         WidgetMouseEvent::eNormal);
+  uint32_t message = NS_MOUSE_MOVE;
+  int16_t button = 0;
 
   switch (pointerUpdateKind) {
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonPressed:
-      // We don't bother setting mouseEvent.button because it is already
-      // set to WidgetMouseEvent::buttonType::eLeftButton whose value is 0.
-      event->message = NS_MOUSE_BUTTON_DOWN;
+      button = WidgetMouseEvent::buttonType::eLeftButton;
+      message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonPressed:
-      event->button = WidgetMouseEvent::buttonType::eMiddleButton;
-      event->message = NS_MOUSE_BUTTON_DOWN;
+      button = WidgetMouseEvent::buttonType::eMiddleButton;
+      message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonPressed:
-      event->button = WidgetMouseEvent::buttonType::eRightButton;
-      event->message = NS_MOUSE_BUTTON_DOWN;
+      button = WidgetMouseEvent::buttonType::eRightButton;
+      message = NS_MOUSE_BUTTON_DOWN;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_LeftButtonReleased:
-      // We don't bother setting mouseEvent.button because it is already
-      // set to WidgetMouseEvent::buttonType::eLeftButton whose value is 0.
-      event->message = NS_MOUSE_BUTTON_UP;
+      button = WidgetMouseEvent::buttonType::eLeftButton;
+      message = NS_MOUSE_BUTTON_UP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_MiddleButtonReleased:
-      event->button = WidgetMouseEvent::buttonType::eMiddleButton;
-      event->message = NS_MOUSE_BUTTON_UP;
+      button = WidgetMouseEvent::buttonType::eMiddleButton;
+      message = NS_MOUSE_BUTTON_UP;
       break;
     case UI::Input::PointerUpdateKind::PointerUpdateKind_RightButtonReleased:
-      event->button = WidgetMouseEvent::buttonType::eRightButton;
-      event->message = NS_MOUSE_BUTTON_UP;
+      button = WidgetMouseEvent::buttonType::eRightButton;
+      message = NS_MOUSE_BUTTON_UP;
       break;
   }
+
   UpdateInputLevel(LEVEL_PRECISE);
+
+  WidgetMouseEvent* event =
+    new WidgetMouseEvent(true, message, mWidget.Get(),
+                         WidgetMouseEvent::eReal,
+                         WidgetMouseEvent::eNormal);
+  event->button = button;
   InitGeckoMouseEventFromPointerPoint(event, aPoint);
   DispatchAsyncEventIgnoreStatus(event);
 }
