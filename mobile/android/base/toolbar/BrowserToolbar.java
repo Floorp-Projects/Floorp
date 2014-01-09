@@ -139,9 +139,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     private static final Interpolator sButtonsInterpolator = new AccelerateInterpolator();
 
-    private static final int TABS_CONTRACTED = 1;
-    private static final int TABS_EXPANDED = 2;
-
     private static final int FORWARD_ANIMATION_DURATION = 450;
     private final ForegroundColorSpan mUrlColor;
     private final ForegroundColorSpan mBlockedColor;
