@@ -160,6 +160,37 @@ namespace {
     }
   }
 
+  int16_t
+  ButtonsForPointerPoint(UI::Input::IPointerPoint* aPoint) {
+    WRL::ComPtr<UI::Input::IPointerPointProperties> props;
+    aPoint->get_Properties(props.GetAddressOf());
+
+    int16_t buttons = 0;
+    boolean buttonPressed;
+
+    props->get_IsLeftButtonPressed(&buttonPressed);
+    if (buttonPressed) {
+      buttons |= WidgetMouseEvent::eLeftButtonFlag;
+    }
+    props->get_IsMiddleButtonPressed(&buttonPressed);
+    if (buttonPressed) {
+      buttons |= WidgetMouseEvent::eMiddleButtonFlag;
+    }
+    props->get_IsRightButtonPressed(&buttonPressed);
+    if (buttonPressed) {
+      buttons |= WidgetMouseEvent::eRightButtonFlag;
+    }
+    props->get_IsXButton1Pressed(&buttonPressed);
+    if (buttonPressed) {
+      buttons |= WidgetMouseEvent::e4thButtonFlag;
+    }
+    props->get_IsXButton2Pressed(&buttonPressed);
+    if (buttonPressed) {
+      buttons |= WidgetMouseEvent::e5thButtonFlag;
+    }
+    return buttons;
+  }
+
   /**
    * This function is for use with mTouches.Enumerate.  It will
    * append each element it encounters to the {@link nsTArray}
@@ -749,6 +780,7 @@ MetroInput::InitGeckoMouseEventFromPointerPoint(
     aEvent->clickCount = 2;
   }
   aEvent->pressure = pressure;
+  aEvent->buttons = ButtonsForPointerPoint(aPointerPoint);
 
   MozInputSourceFromDeviceType(deviceType, aEvent->inputSource);
 }
