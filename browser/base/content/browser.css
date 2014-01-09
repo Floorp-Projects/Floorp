@@ -937,9 +937,8 @@ toolbarpaletteitem[dragover] {
 }
 
 toolbarpaletteitem[place="palette"] {
-  width: 10em;
-  height: calc(40px + 2em);
-  margin-bottom: 5px;
+  width: 110px;
+  height: 94px;
   overflow: hidden;
   display: inline-block;
 }
@@ -951,8 +950,8 @@ toolbarpaletteitem[place="palette"][hidden] {
 #customization-palette .toolbarpaletteitem-box {
   -moz-box-pack: center;
   -moz-box-flex: 1;
-  width: 10em;
-  max-width: 10em;
+  width: 110px;
+  max-width: 110px;
 }
 
 /* UI Tour */
