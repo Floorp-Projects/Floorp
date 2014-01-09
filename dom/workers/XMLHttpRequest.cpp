@@ -1159,7 +1159,7 @@ EventRunnable::PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
   else {
     JS::Rooted<JS::Value> response(aCx);
-    mResponseResult = xhr->GetResponse(aCx, &response);
+    mResponseResult = xhr->GetResponse(aCx, response.address());
     if (NS_SUCCEEDED(mResponseResult)) {
       if (JSVAL_IS_UNIVERSAL(response)) {
         mResponse = response;
@@ -1459,7 +1459,8 @@ SendRunnable::MainThreadRun()
 
     JS::Rooted<JS::Value> body(cx);
     if (mBody.read(cx, &body, callbacks, &mClonedObjects)) {
-      if (NS_FAILED(xpc->JSValToVariant(cx, body, getter_AddRefs(variant)))) {
+      if (NS_FAILED(xpc->JSValToVariant(cx, body.address(),
+                                        getter_AddRefs(variant)))) {
         rv = NS_ERROR_DOM_INVALID_STATE_ERR;
       }
     }

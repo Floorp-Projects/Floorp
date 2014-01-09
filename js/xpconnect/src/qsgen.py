@@ -613,8 +613,8 @@ def outParamForm(name, type):
         return '&' + name
     elif type.kind == 'native':
         if getBuiltinOrNativeTypeName(type) == '[jsval]':
-            return '&' + name
-        if type.modifier == 'ref':
+            return name + '.address()'
+        elif type.modifier == 'ref':
             return name
         else:
             return '&' + name

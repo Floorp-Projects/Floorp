@@ -31,9 +31,9 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MetadataParameters)
 
   nsresult
-  Init(JSContext* aCx, JS::Handle<JS::Value> aVal)
+  Init(JSContext* aCx, const JS::Value* aVal)
   {
-    return mConfig.Init(aCx, aVal.address());
+    return mConfig.Init(aCx, aVal);
   }
 
   void

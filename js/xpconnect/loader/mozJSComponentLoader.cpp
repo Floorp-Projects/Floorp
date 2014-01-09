@@ -177,7 +177,7 @@ File(JSContext *cx, unsigned argc, Value *vp)
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, args.rval());
+                                true, args.rval().address());
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -212,7 +212,7 @@ Blob(JSContext *cx, unsigned argc, Value *vp)
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
                                 &NS_GET_IID(nsISupports),
-                                true, args.rval());
+                                true, args.rval().address());
     if (NS_FAILED(rv)) {
         XPCThrower::Throw(rv, cx);
         return false;
@@ -1084,10 +1084,10 @@ mozJSComponentLoader::UnloadModules()
 
 NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString& registryLocation,
-                             HandleValue targetValArg,
-                             JSContext *cx,
+                             const Value& targetValArg,
+                             JSContext* cx,
                              uint8_t optionalArgc,
-                             MutableHandleValue retval)
+                             Value* retval)
 {
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -1133,7 +1133,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
             return NS_ERROR_FAILURE;
         }
 
-        retval.setObject(*global);
+        *retval = ObjectValue(*global);
     }
     return rv;
 }

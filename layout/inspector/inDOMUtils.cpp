@@ -616,7 +616,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
 
 NS_IMETHODIMP
 inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
-                           JS::MutableHandle<JS::Value> aValue)
+                           JS::Value* aValue)
 {
   nscolor color;
   if (!NS_ColorNameToRGB(aColorName, &color)) {
@@ -628,7 +628,8 @@ inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
   triple.mG = NS_GET_G(color);
   triple.mB = NS_GET_B(color);
 
-  if (!triple.ToObject(aCx, JS::NullPtr(), aValue)) {
+  if (!triple.ToObject(aCx, JS::NullPtr(),
+                       JS::MutableHandle<JS::Value>::fromMarkedLocation(aValue))) {
     return NS_ERROR_FAILURE;
   }
 

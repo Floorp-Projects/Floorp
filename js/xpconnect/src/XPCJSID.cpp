@@ -546,15 +546,15 @@ xpc::HasInstance(JSContext *cx, HandleObject objArg, const nsID *iid, bool *bp)
 NS_IMETHODIMP
 nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * /* unused */,
-                     HandleValue val, bool *bp, bool *_retval)
+                     const jsval &val, bool *bp, bool *_retval)
 {
     *bp = false;
 
-    if (val.isPrimitive())
+    if (JSVAL_IS_PRIMITIVE(val))
         return NS_OK;
 
     // we have a JSObject
-    RootedObject obj(cx, &val.toObject());
+    RootedObject obj(cx, JSVAL_TO_OBJECT(val));
 
     const nsIID* iid;
     mInfo->GetIIDShared(&iid);
@@ -721,8 +721,8 @@ GetWrapperObject(MutableHandleObject obj)
 
 /* nsISupports createInstance (); */
 NS_IMETHODIMP
-nsJSCID::CreateInstance(HandleValue iidval, JSContext* cx,
-                        uint8_t optionalArgc, MutableHandleValue retval)
+nsJSCID::CreateInstance(const JS::Value& iidval, JSContext* cx,
+                        uint8_t optionalArgc, JS::Value* retval)
 {
     if (!mDetails.IsValid())
         return NS_ERROR_XPC_BAD_CID;
@@ -757,15 +757,15 @@ nsJSCID::CreateInstance(HandleValue iidval, JSContext* cx,
         return NS_ERROR_XPC_CI_RETURNED_FAILURE;
 
     rv = nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, obj, inst, nullptr, iid, true, retval);
-    if (NS_FAILED(rv) || retval.isPrimitive())
+    if (NS_FAILED(rv) || JSVAL_IS_PRIMITIVE(*retval))
         return NS_ERROR_XPC_CANT_CREATE_WN;
     return NS_OK;
 }
 
 /* nsISupports getService (); */
 NS_IMETHODIMP
-nsJSCID::GetService(HandleValue iidval, JSContext* cx,
-                    uint8_t optionalArgc, MutableHandleValue retval)
+nsJSCID::GetService(const JS::Value& iidval, JSContext* cx,
+                    uint8_t optionalArgc, JS::Value* retval)
 {
     if (!mDetails.IsValid())
         return NS_ERROR_XPC_BAD_CID;
@@ -808,7 +808,7 @@ nsJSCID::GetService(HandleValue iidval, JSContext* cx,
         !(instJSObj = holder->GetJSObject()))
         return NS_ERROR_XPC_CANT_CREATE_WN;
 
-    retval.setObject(*instJSObj);
+    *retval = OBJECT_TO_JSVAL(instJSObj);
     return NS_OK;
 }
 
@@ -836,7 +836,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative *wrapper,
 NS_IMETHODIMP
 nsJSCID::HasInstance(nsIXPConnectWrappedNative *wrapper,
                      JSContext * cx, JSObject * /* unused */,
-                     HandleValue val, bool *bp, bool *_retval)
+                     const jsval &val, bool *bp, bool *_retval)
 {
     *bp = false;
     nsresult rv = NS_OK;

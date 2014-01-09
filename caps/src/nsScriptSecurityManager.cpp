@@ -1487,7 +1487,7 @@ nsScriptSecurityManager::GetSubjectPrincipal(JSContext *cx,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::GetObjectPrincipal(JS::Handle<JS::Value> aObjectVal,
+nsScriptSecurityManager::GetObjectPrincipal(const JS::Value &aObjectVal,
                                             JSContext *aCx,
                                             nsIPrincipal **result)
 {

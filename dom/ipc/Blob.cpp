@@ -1053,17 +1053,16 @@ public:
   }
 
   NS_IMETHOD
-  GetLastModifiedDate(JSContext* cx,
-                      JS::MutableHandle<JS::Value> aLastModifiedDate) MOZ_OVERRIDE
+  GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate) MOZ_OVERRIDE
   {
     if (IsDateUnknown()) {
-      aLastModifiedDate.setNull();
+      aLastModifiedDate->setNull();
     } else {
       JSObject* date = JS_NewDateObjectMsec(cx, mLastModificationDate);
       if (!date) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      aLastModifiedDate.setObject(*date);
+      aLastModifiedDate->setObject(*date);
     }
     return NS_OK;
   }

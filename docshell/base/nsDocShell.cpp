@@ -10449,7 +10449,7 @@ nsDocShell::SetReferrerURI(nsIURI * aURI)
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
+nsDocShell::AddState(const JS::Value &aData, const nsAString& aTitle,
                      const nsAString& aURL, bool aReplace, JSContext* aCx)
 {
     // Implements History.pushState and History.replaceState

@@ -80,9 +80,9 @@ DOMRequest::GetReadyState(nsAString& aReadyState)
 }
 
 NS_IMETHODIMP
-DOMRequest::GetResult(JS::MutableHandle<JS::Value> aResult)
+DOMRequest::GetResult(JS::Value* aResult)
 {
-  aResult.set(Result());
+  *aResult = Result();
   return NS_OK;
 }
 
@@ -202,10 +202,11 @@ DOMRequestService::CreateCursor(nsIDOMWindow* aWindow,
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccess(nsIDOMDOMRequest* aRequest,
-                               JS::Handle<JS::Value> aResult)
+                               const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
-  static_cast<DOMRequest*>(aRequest)->FireSuccess(aResult);
+  static_cast<DOMRequest*>(aRequest)->
+    FireSuccess(JS::Handle<JS::Value>::fromMarkedLocation(&aResult));
 
   return NS_OK;
 }
@@ -315,7 +316,7 @@ private:
 
 NS_IMETHODIMP
 DOMRequestService::FireSuccessAsync(nsIDOMDOMRequest* aRequest,
-                                    JS::Handle<JS::Value> aResult)
+                                    const JS::Value& aResult)
 {
   NS_ENSURE_STATE(aRequest);
   return FireSuccessAsyncTask::Dispatch(static_cast<DOMRequest*>(aRequest), aResult);

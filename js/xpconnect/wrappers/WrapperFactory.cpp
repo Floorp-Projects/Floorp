@@ -282,7 +282,8 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     RootedValue v(cx);
     nsresult rv =
         nsXPConnect::XPConnect()->WrapNativeToJSVal(cx, wrapScope, wn->Native(), nullptr,
-                                                    &NS_GET_IID(nsISupports), false, &v);
+                                                    &NS_GET_IID(nsISupports), false,
+                                                    v.address());
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     obj = JSVAL_TO_OBJECT(v);

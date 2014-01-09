@@ -118,7 +118,7 @@ nsresult EvaluateAdminConfigScript(const char *js_buffer, size_t length,
     nsAutoCString script(js_buffer, length);
     JS::RootedValue v(cx);
     rv = xpc->EvalInSandboxObject(NS_ConvertASCIItoUTF16(script), filename, cx, autoconfigSb,
-                                  /* returnStringOnly = */ false, &v);
+                                  /* returnStringOnly = */ false, v.address());
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

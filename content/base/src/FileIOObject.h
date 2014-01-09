@@ -48,12 +48,12 @@ public:
     return mError;
   }
 
-  NS_METHOD GetOnabort(JSContext* aCx, JS::MutableHandle<JS::Value> aValue);
-  NS_METHOD SetOnabort(JSContext* aCx, JS::Handle<JS::Value> aValue);
-  NS_METHOD GetOnerror(JSContext* aCx, JS::MutableHandle<JS::Value> aValue);
-  NS_METHOD SetOnerror(JSContext* aCx, JS::Handle<JS::Value> aValue);
-  NS_METHOD GetOnprogress(JSContext* aCx, JS::MutableHandle<JS::Value> aValue);
-  NS_METHOD SetOnprogress(JSContext* aCx, JS::Handle<JS::Value> aValue);
+  NS_METHOD GetOnabort(JSContext* aCx, JS::Value* aValue);
+  NS_METHOD SetOnabort(JSContext* aCx, const JS::Value& aValue);
+  NS_METHOD GetOnerror(JSContext* aCx, JS::Value* aValue);
+  NS_METHOD SetOnerror(JSContext* aCx, const JS::Value& aValue);
+  NS_METHOD GetOnprogress(JSContext* aCx, JS::Value* aValue);
+  NS_METHOD SetOnprogress(JSContext* aCx, const JS::Value& aValue);
 
   IMPL_EVENT_HANDLER(abort)
   IMPL_EVENT_HANDLER(error)

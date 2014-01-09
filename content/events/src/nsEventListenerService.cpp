@@ -65,10 +65,10 @@ nsEventListenerInfo::GetInSystemEventGroup(bool* aInSystemEventGroup)
 }
 
 NS_IMETHODIMP
-nsEventListenerInfo::GetListenerObject(JSContext* aCx, JS::MutableHandle<JS::Value> aObject)
+nsEventListenerInfo::GetListenerObject(JSContext* aCx, JS::Value* aObject)
 {
   mozilla::Maybe<JSAutoCompartment> ac;
-  GetJSVal(aCx, ac, aObject.address());
+  GetJSVal(aCx, ac, aObject);
   return NS_OK;
 }
 
