@@ -10,6 +10,8 @@ import unittest
 
 from mach.logging import StructuredHumanFormatter
 
+from mozunit import main
+
 
 class DummyLogger(logging.Logger):
     def __init__(self, cb):
@@ -41,4 +43,5 @@ class TestStructuredHumanFormatter(unittest.TestCase):
             extra={'action': 'action', 'params': {'utf': value}})
 
 
-
+if __name__ == '__main__':
+    main()
