@@ -327,7 +327,7 @@ HTMLCanvasElement::ParseAttribute(int32_t aNamespaceID,
 // HTMLCanvasElement::toDataURL
 
 NS_IMETHODIMP
-HTMLCanvasElement::ToDataURL(const nsAString& aType, JS::Handle<JS::Value> aParams,
+HTMLCanvasElement::ToDataURL(const nsAString& aType, const JS::Value& aParams,
                              JSContext* aCx, nsAString& aDataURL)
 {
   // do a trust check if this is a write-only canvas

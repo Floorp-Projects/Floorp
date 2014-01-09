@@ -271,12 +271,12 @@ public:
   }
 private:
   nsresult SendMessage(const nsAString& aMessageName,
-                       JS::Handle<JS::Value> aJSON,
-                       JS::Handle<JS::Value> aObjects,
+                       const JS::Value& aJSON,
+                       const JS::Value& aObjects,
                        nsIPrincipal* aPrincipal,
                        JSContext* aCx,
                        uint8_t aArgc,
-                       JS::MutableHandle<JS::Value> aRetval,
+                       JS::Value* aRetval,
                        bool aIsSync);
 protected:
   friend class MMListenerRemover;

@@ -39,7 +39,7 @@ nsStructuredCloneContainer::~nsStructuredCloneContainer()
 }
 
 nsresult
-nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData,
+nsStructuredCloneContainer::InitFromJSVal(const JS::Value & aData,
                                           JSContext* aCx)
 {
   NS_ENSURE_STATE(!mData);
@@ -124,7 +124,8 @@ nsStructuredCloneContainer::DeserializeToVariant(JSContext *aCx,
   nsCOMPtr<nsIVariant> varStateObj;
   nsCOMPtr<nsIXPConnect> xpconnect = do_GetService(nsIXPConnect::GetCID());
   NS_ENSURE_STATE(xpconnect);
-  xpconnect->JSValToVariant(aCx, jsStateObj, getter_AddRefs(varStateObj));
+  xpconnect->JSValToVariant(aCx, jsStateObj.address(),
+                            getter_AddRefs(varStateObj));
   NS_ENSURE_STATE(varStateObj);
 
   NS_ADDREF(*aData = varStateObj);

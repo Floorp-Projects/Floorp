@@ -447,7 +447,7 @@ nsFrameMessageManager::RemoveDelayedFrameScript(const nsAString& aURL)
 }
 
 NS_IMETHODIMP
-nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<JS::Value> aList)
+nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::Value* aList)
 {
   // Frame message managers may return an incomplete list because scripts
   // that were loaded after it was connected are not added to the list.
@@ -478,7 +478,8 @@ nsFrameMessageManager::GetDelayedFrameScripts(JSContext* aCx, JS::MutableHandle<
                    NS_ERROR_OUT_OF_MEMORY);
   }
 
-  aList.setObject(*array);
+  *aList = JS::ObjectValue(*array);
+
   return NS_OK;
 }
 
@@ -526,12 +527,12 @@ static bool sSendingSyncMessage = false;
 
 NS_IMETHODIMP
 nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
-                                       JS::Handle<JS::Value> aJSON,
-                                       JS::Handle<JS::Value> aObjects,
+                                       const JS::Value& aJSON,
+                                       const JS::Value& aObjects,
                                        nsIPrincipal* aPrincipal,
                                        JSContext* aCx,
                                        uint8_t aArgc,
-                                       JS::MutableHandle<JS::Value> aRetval)
+                                       JS::Value* aRetval)
 {
   return SendMessage(aMessageName, aJSON, aObjects, aPrincipal, aCx, aArgc,
                      aRetval, true);
@@ -539,12 +540,12 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
 
 NS_IMETHODIMP
 nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
-                                      JS::Handle<JS::Value> aJSON,
-                                      JS::Handle<JS::Value> aObjects,
+                                      const JS::Value& aJSON,
+                                      const JS::Value& aObjects,
                                       nsIPrincipal* aPrincipal,
                                       JSContext* aCx,
                                       uint8_t aArgc,
-                                      JS::MutableHandle<JS::Value> aRetval)
+                                      JS::Value* aRetval)
 {
   return SendMessage(aMessageName, aJSON, aObjects, aPrincipal, aCx, aArgc,
                      aRetval, false);
@@ -552,19 +553,19 @@ nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
 
 nsresult
 nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
-                                   JS::Handle<JS::Value> aJSON,
-                                   JS::Handle<JS::Value> aObjects,
+                                   const JS::Value& aJSON,
+                                   const JS::Value& aObjects,
                                    nsIPrincipal* aPrincipal,
                                    JSContext* aCx,
                                    uint8_t aArgc,
-                                   JS::MutableHandle<JS::Value> aRetval,
+                                   JS::Value* aRetval,
                                    bool aIsSync)
 {
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsWindowLevel(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!mParentManager, "Should not have parent manager in content!");
 
-  aRetval.setUndefined();
+  *aRetval = JSVAL_VOID;
   NS_ENSURE_TRUE(mCallback, NS_ERROR_NOT_INITIALIZED);
 
   if (sSendingSyncMessage && aIsSync) {
@@ -617,7 +618,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
                    NS_ERROR_OUT_OF_MEMORY);
   }
 
-  aRetval.setObject(*dataArray);
+  *aRetval = OBJECT_TO_JSVAL(dataArray);
   return NS_OK;
 }
 
@@ -677,8 +678,8 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
 
 NS_IMETHODIMP
 nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
-                                        JS::Handle<JS::Value> aJSON,
-                                        JS::Handle<JS::Value> aObjects,
+                                        const JS::Value& aJSON,
+                                        const JS::Value& aObjects,
                                         nsIPrincipal* aPrincipal,
                                         JSContext* aCx,
                                         uint8_t aArgc)
@@ -692,8 +693,8 @@ nsFrameMessageManager::SendAsyncMessage(const nsAString& aMessageName,
 
 NS_IMETHODIMP
 nsFrameMessageManager::BroadcastAsyncMessage(const nsAString& aMessageName,
-                                             JS::Handle<JS::Value> aJSON,
-                                             JS::Handle<JS::Value> aObjects,
+                                             const JS::Value& aJSON,
+                                             const JS::Value& aObjects,
                                              JSContext* aCx,
                                              uint8_t aArgc)
 {

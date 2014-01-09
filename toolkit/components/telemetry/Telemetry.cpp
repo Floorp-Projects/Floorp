@@ -290,8 +290,7 @@ private:
 
   bool AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mainThread,
                   bool privateSQL);
-  bool GetSQLStats(JSContext *cx, JS::MutableHandle<JS::Value> ret,
-                   bool includePrivateSql);
+  bool GetSQLStats(JSContext *cx, JS::Value *ret, bool includePrivateSql);
 
   // Like GetHistogramById, but returns the underlying C++ object, not the JS one.
   nsresult GetHistogramByName(const nsACString &name, Histogram **ret);
@@ -681,7 +680,7 @@ JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 nsresult
-WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value> ret)
+WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::Value *ret)
 {
   static const JSClass JSHistogram_class = {
     "JSHistogram",  /* name */
@@ -698,8 +697,8 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value>
         && JS_DefineFunction(cx, obj, "clear", JSHistogram_Clear, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
+  *ret = OBJECT_TO_JSVAL(obj);
   JS_SetPrivate(obj, h);
-  ret.setObject(*obj);
   return NS_OK;
 }
 
@@ -981,7 +980,7 @@ TelemetryImpl::InitMemoryReporter() {
 NS_IMETHODIMP
 TelemetryImpl::NewHistogram(const nsACString &name, const nsACString &expiration, uint32_t min,
                             uint32_t max, uint32_t bucketCount, uint32_t histogramType,
-                            JSContext *cx, JS::MutableHandle<JS::Value> ret)
+                            JSContext *cx, JS::Value *ret)
 {
   Histogram *h;
   nsresult rv = HistogramGet(PromiseFlatCString(name).get(), PromiseFlatCString(expiration).get(),
@@ -1101,7 +1100,7 @@ TelemetryImpl::GetHistogramByName(const nsACString &name, Histogram **ret)
 
 NS_IMETHODIMP
 TelemetryImpl::HistogramFrom(const nsACString &name, const nsACString &existing_name,
-                             JSContext *cx, JS::MutableHandle<JS::Value> ret)
+                             JSContext *cx, JS::Value *ret)
 {
   Telemetry::ID id;
   nsresult rv = GetHistogramEnumId(PromiseFlatCString(existing_name).get(), &id);
@@ -1244,7 +1243,7 @@ TelemetryImpl::RegisterAddonHistogram(const nsACString &id,
 
 NS_IMETHODIMP
 TelemetryImpl::GetAddonHistogram(const nsACString &id, const nsACString &name,
-                                 JSContext *cx, JS::MutableHandle<JS::Value> ret)
+                                 JSContext *cx, JS::Value *ret)
 {
   AddonEntryType *addonEntry = mAddonMap.GetEntry(id);
   // The given id has not been registered.
@@ -1287,12 +1286,12 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::Value *ret)
 {
   JS::Rooted<JSObject*> root_obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!root_obj)
     return NS_ERROR_FAILURE;
-  ret.setObject(*root_obj);
+  *ret = OBJECT_TO_JSVAL(root_obj);
 
   // Ensure that all the HISTOGRAM_FLAG histograms have been created, so
   // that their values are snapshotted.
@@ -1429,8 +1428,9 @@ TelemetryImpl::AddonReflector(AddonEntryType *entry,
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::Value *ret)
 {
+  *ret = JSVAL_VOID;
   JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!obj) {
     return NS_ERROR_FAILURE;
@@ -1439,17 +1439,17 @@ TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::V
   if (!mAddonMap.ReflectIntoJS(AddonReflector, cx, obj)) {
     return NS_ERROR_FAILURE;
   }
-  ret.setObject(*obj);
+  *ret = OBJECT_TO_JSVAL(obj);
   return NS_OK;
 }
 
 bool
-TelemetryImpl::GetSQLStats(JSContext *cx, JS::MutableHandle<JS::Value> ret, bool includePrivateSql)
+TelemetryImpl::GetSQLStats(JSContext *cx, JS::Value *ret, bool includePrivateSql)
 {
   JS::Rooted<JSObject*> root_obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
   if (!root_obj)
     return false;
-  ret.setObject(*root_obj);
+  *ret = OBJECT_TO_JSVAL(root_obj);
 
   MutexAutoLock hashMutex(mHashMutex);
   // Add info about slow SQL queries on the main thread
@@ -1463,7 +1463,7 @@ TelemetryImpl::GetSQLStats(JSContext *cx, JS::MutableHandle<JS::Value> ret, bool
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetSlowSQL(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetSlowSQL(JSContext *cx, JS::Value *ret)
 {
   if (GetSQLStats(cx, ret, false))
     return NS_OK;
@@ -1471,7 +1471,7 @@ TelemetryImpl::GetSlowSQL(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetDebugSlowSQL(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetDebugSlowSQL(JSContext *cx, JS::Value *ret)
 {
   bool revealPrivateSql =
     Preferences::GetBool("toolkit.telemetry.debugSlowSql", false);
@@ -1488,7 +1488,7 @@ TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t *ret)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
 {
   MutexAutoLock hangReportMutex(mHangReportsMutex);
 
@@ -1498,7 +1498,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::MutableHandle<JS::Value> ret)
     return NS_ERROR_FAILURE;
   }
 
-  ret.setObject(*fullReportObj);
+  *ret = OBJECT_TO_JSVAL(fullReportObj);
 
   JS::Rooted<JSObject*> durationArray(cx, JS_NewArrayObject(cx, 0, nullptr));
   if (!durationArray) {
@@ -1855,7 +1855,7 @@ CreateJSThreadHangStats(JSContext* cx, const Telemetry::ThreadHangStats& thread)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::Value* ret)
 {
   JS::RootedObject retObj(cx, JS_NewArrayObject(cx, 0, nullptr));
   if (!retObj) {
@@ -1872,7 +1872,7 @@ TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> re
        histogram; histogram = iter.GetNext()) {
     JS::RootedObject obj(cx,
       CreateJSThreadHangStats(cx, *histogram));
-    JS::RootedValue thread(cx, JS::ObjectValue(*obj));
+    JS::RootedValue thread(cx, OBJECT_TO_JSVAL(obj));
     if (!JS_SetElement(cx, retObj, threadIndex++, &thread)) {
       return NS_ERROR_FAILURE;
     }
@@ -1883,12 +1883,12 @@ TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> re
   for (size_t i = 0; i < mThreadHangStats.length(); i++) {
     JS::RootedObject obj(cx,
       CreateJSThreadHangStats(cx, mThreadHangStats[i]));
-    JS::RootedValue thread(cx, JS::ObjectValue(*obj));
+    JS::RootedValue thread(cx, OBJECT_TO_JSVAL(obj));
     if (!JS_SetElement(cx, retObj, threadIndex++, &thread)) {
       return NS_ERROR_FAILURE;
     }
   }
-  ret.setObject(*retObj);
+  *ret = OBJECT_TO_JSVAL(retObj);
   return NS_OK;
 }
 
@@ -1931,7 +1931,7 @@ TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetLateWrites(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetLateWrites(JSContext *cx, JS::Value *ret)
 {
   // The user must call AsyncReadTelemetryData first. We return an empty list
   // instead of reporting a failure so that the rest of telemetry can uniformly
@@ -1958,7 +1958,7 @@ TelemetryImpl::GetLateWrites(JSContext *cx, JS::MutableHandle<JS::Value> ret)
     return NS_ERROR_FAILURE;
   }
 
-  ret.setObject(*report);
+  *ret = OBJECT_TO_JSVAL(report);
   return NS_OK;
 }
 
@@ -1986,8 +1986,7 @@ TelemetryImpl::RegisteredHistograms(uint32_t *aCount, char*** aHistograms)
 }
 
 NS_IMETHODIMP
-TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx,
-                                JS::MutableHandle<JS::Value> ret)
+TelemetryImpl::GetHistogramById(const nsACString &name, JSContext *cx, JS::Value *ret)
 {
   Histogram *h;
   nsresult rv = GetHistogramByName(name, &h);

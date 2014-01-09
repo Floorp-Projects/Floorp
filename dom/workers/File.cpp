@@ -410,9 +410,12 @@ private:
     nsIDOMFile* file = GetInstancePrivate(aCx, obj, "lastModifiedDate");
     MOZ_ASSERT(file);
 
-    if (NS_FAILED(file->GetLastModifiedDate(aCx, aArgs.rval()))) {
+    JS::Rooted<JS::Value> value(aCx);
+    if (NS_FAILED(file->GetLastModifiedDate(aCx, value.address()))) {
       return false;
     }
+
+    aArgs.rval().set(value);
     return true;
   }
 

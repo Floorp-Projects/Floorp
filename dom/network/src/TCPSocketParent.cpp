@@ -121,7 +121,7 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
 }
 
 NS_IMETHODIMP
-TCPSocketParent::InitJS(JS::Handle<JS::Value> aIntermediary, JSContext* aCx)
+TCPSocketParent::InitJS(const JS::Value& aIntermediary, JSContext* aCx)
 {
   MOZ_ASSERT(aIntermediary.isObject());
   mIntermediaryObj = &aIntermediary.toObject();
@@ -195,7 +195,7 @@ TCPSocketParent::RecvClose()
 }
 
 NS_IMETHODIMP
-TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVal,
+TCPSocketParent::SendEvent(const nsAString& aType, const JS::Value& aDataVal,
                            const nsAString& aReadyState, JSContext* aCx)
 {
   if (!mIPCOpen) {

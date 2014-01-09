@@ -155,7 +155,7 @@ WebVTTListener::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
-WebVTTListener::OnCue(JS::Handle<JS::Value> aCue, JSContext* aCx)
+WebVTTListener::OnCue(const JS::Value &aCue, JSContext* aCx)
 {
   if (!aCue.isObject()) {
     return NS_ERROR_FAILURE;
@@ -173,7 +173,7 @@ WebVTTListener::OnCue(JS::Handle<JS::Value> aCue, JSContext* aCx)
 
 
 NS_IMETHODIMP
-WebVTTListener::OnRegion(JS::Handle<JS::Value> aRegion, JSContext* aCx)
+WebVTTListener::OnRegion(const JS::Value &aRegion, JSContext* aCx)
 {
   if (!aRegion.isObject()) {
     return NS_ERROR_FAILURE;

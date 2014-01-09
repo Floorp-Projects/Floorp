@@ -65,7 +65,7 @@ nsJSInspector::~nsJSInspector()
 }
 
 NS_IMETHODIMP
-nsJSInspector::EnterNestedEventLoop(JS::Handle<JS::Value> requestor, uint32_t *out)
+nsJSInspector::EnterNestedEventLoop(const JS::Value& requestor, uint32_t *out)
 {
   nsresult rv = NS_OK;
 
@@ -118,9 +118,9 @@ nsJSInspector::GetEventLoopNestLevel(uint32_t *out)
 }
 
 NS_IMETHODIMP
-nsJSInspector::GetLastNestRequestor(JS::MutableHandle<JS::Value> out)
+nsJSInspector::GetLastNestRequestor(JS::Value *out)
 {
-  out.set(mLastRequestor);
+  *out = mLastRequestor;
   return NS_OK;
 }
 

@@ -36,7 +36,7 @@ JSDebugger::~JSDebugger()
 }
 
 NS_IMETHODIMP
-JSDebugger::AddClass(JS::Handle<JS::Value> global, JSContext* cx)
+JSDebugger::AddClass(const JS::Value &global, JSContext* cx)
 {
   nsresult rv;
   nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID(), &rv);

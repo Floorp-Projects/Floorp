@@ -921,10 +921,10 @@ nsXMLHttpRequest::SetResponseType(nsXMLHttpRequest::ResponseTypeEnum aResponseTy
 
 /* readonly attribute jsval response; */
 NS_IMETHODIMP
-nsXMLHttpRequest::GetResponse(JSContext *aCx, JS::MutableHandle<JS::Value> aResult)
+nsXMLHttpRequest::GetResponse(JSContext *aCx, JS::Value *aResult)
 {
   ErrorResult rv;
-  aResult.set(GetResponse(aCx, rv));
+  *aResult = GetResponse(aCx, rv);
   return rv.ErrorCode();
 }
 
@@ -2403,7 +2403,7 @@ GetRequestBody(nsIVariant* aBody, nsIInputStream** aResult, uint64_t* aContentLe
     AutoSafeJSContext cx;
     JS::Rooted<JS::Value> realVal(cx);
 
-    nsresult rv = aBody->GetAsJSVal(&realVal);
+    nsresult rv = aBody->GetAsJSVal(realVal.address());
     if (NS_SUCCEEDED(rv) && !JSVAL_IS_PRIMITIVE(realVal)) {
       JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(realVal));
       if (JS_IsArrayBufferObject(obj)) {

@@ -136,13 +136,10 @@ nsDOMFileBase::GetPath(nsAString &aPath)
 }
 
 NS_IMETHODIMP
-nsDOMFileBase::GetLastModifiedDate(JSContext* cx, JS::MutableHandle<JS::Value> aLastModifiedDate)
+nsDOMFileBase::GetLastModifiedDate(JSContext* cx, JS::Value *aLastModifiedDate)
 {
-  JS::Rooted<JSObject*> date(cx, JS_NewDateObjectMsec(cx, JS_Now() / PR_USEC_PER_MSEC));
-  if (!date) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  aLastModifiedDate.setObject(*date);
+  JSObject* date = JS_NewDateObjectMsec(cx, JS_Now() / PR_USEC_PER_MSEC);
+  aLastModifiedDate->setObject(*date);
   return NS_OK;
 }
 
@@ -505,7 +502,7 @@ nsDOMFileFile::GetMozFullPathInternal(nsAString &aFilename)
 }
 
 NS_IMETHODIMP
-nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::MutableHandle<JS::Value> aLastModifiedDate)
+nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::Value* aLastModifiedDate)
 {
   NS_ASSERTION(mIsFile, "Should only be called on files");
 
@@ -520,11 +517,11 @@ nsDOMFileFile::GetLastModifiedDate(JSContext* cx, JS::MutableHandle<JS::Value> a
 
   JSObject* date = JS_NewDateObjectMsec(cx, msecs);
   if (date) {
-    aLastModifiedDate.setObject(*date);
+    aLastModifiedDate->setObject(*date);
   }
   else {
     date = JS_NewDateObjectMsec(cx, JS_Now() / PR_USEC_PER_MSEC);
-    aLastModifiedDate.setObject(*date);
+    aLastModifiedDate->setObject(*date);
   }
 
   return NS_OK;

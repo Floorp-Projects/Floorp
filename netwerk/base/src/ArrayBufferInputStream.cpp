@@ -30,7 +30,7 @@ ArrayBufferInputStream::~ArrayBufferInputStream()
 }
 
 NS_IMETHODIMP
-ArrayBufferInputStream::SetData(JS::Handle<JS::Value> aBuffer,
+ArrayBufferInputStream::SetData(const JS::Value& aBuffer,
                                 uint32_t aByteOffset,
                                 uint32_t aLength,
                                 JSContext* aCx)

@@ -163,13 +163,14 @@ MobileMessageManager::Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
+MobileMessageManager::Send(const JS::Value& aNumber_,
                            const nsAString& aMessage,
-                           JS::Handle<JS::Value> aSendParams,
+                           const JS::Value& aSendParams,
                            JSContext* aCx,
                            uint8_t aArgc,
-                           JS::MutableHandle<JS::Value> aReturn)
+                           JS::Value* aReturn)
 {
+  JS::Rooted<JS::Value> aNumber(aCx, aNumber_);
   if (!aNumber.isString() &&
       !(aNumber.isObject() && JS_IsArrayObject(aCx, &aNumber.toObject()))) {
     return NS_ERROR_INVALID_ARG;
@@ -209,7 +210,7 @@ MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
 
   if (aNumber.isString()) {
     JS::Rooted<JSString*> str(aCx, aNumber.toString());
-    return Send(aCx, global, serviceId, str, aMessage, aReturn.address());
+    return Send(aCx, global, serviceId, str, aMessage, aReturn);
   }
 
   // Must be an array then.
@@ -247,13 +248,13 @@ MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
     return NS_ERROR_FAILURE;
   }
 
-  aReturn.setObject(*obj);
+  aReturn->setObject(*obj);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-MobileMessageManager::SendMMS(JS::Handle<JS::Value> aParams,
-                              JS::Handle<JS::Value> aSendParams,
+MobileMessageManager::SendMMS(const JS::Value& aParams,
+                              const JS::Value& aSendParams,
                               JSContext* aCx,
                               uint8_t aArgc,
                               nsIDOMDOMRequest** aRequest)
@@ -322,7 +323,7 @@ MobileMessageManager::GetMessageId(JSContext* aCx,
 }
 
 NS_IMETHODIMP
-MobileMessageManager::Delete(JS::Handle<JS::Value> aParam, JSContext* aCx,
+MobileMessageManager::Delete(const JS::Value& aParam, JSContext* aCx,
                              nsIDOMDOMRequest** aRequest)
 {
   // We expect Int32, SmsMessage, MmsMessage, Int32[], SmsMessage[], MmsMessage[]
