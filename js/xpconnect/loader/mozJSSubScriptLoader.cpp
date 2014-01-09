@@ -184,10 +184,10 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
 
 NS_IMETHODIMP
 mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
-                                    const Value& targetArg,
+                                    HandleValue target,
                                     const nsAString& charset,
-                                    JSContext* cx,
-                                    Value* retval)
+                                    JSContext *cx,
+                                    MutableHandleValue retval)
 {
     /*
      * Loads a local url and evals it into the current cx
@@ -202,14 +202,16 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
      */
     LoadSubScriptOptions options(cx);
     options.charset = charset;
-    options.target = targetArg.isObject() ? &targetArg.toObject() : nullptr;
+    options.target = target.isObject() ? &target.toObject() : nullptr;
     return DoLoadSubScriptWithOptions(url, options, cx, retval);
 }
 
 
 NS_IMETHODIMP
-mozJSSubScriptLoader::LoadSubScriptWithOptions(const nsAString& url, const Value& optionsVal,
-                                               JSContext* cx, Value* retval)
+mozJSSubScriptLoader::LoadSubScriptWithOptions(const nsAString& url,
+                                               HandleValue optionsVal,
+                                               JSContext *cx,
+                                               MutableHandleValue retval)
 {
     if (!optionsVal.isObject())
         return NS_ERROR_INVALID_ARG;
@@ -222,7 +224,8 @@ mozJSSubScriptLoader::LoadSubScriptWithOptions(const nsAString& url, const Value
 nsresult
 mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
                                                  LoadSubScriptOptions& options,
-                                                 JSContext* cx, Value* retval)
+                                                 JSContext *cx,
+                                                 MutableHandleValue retval)
 {
     nsresult rv = NS_OK;
 
@@ -346,19 +349,18 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
 
     loader->NoteSubScript(script, targetObj);
 
-    RootedValue rval(cx);
+
     bool ok = false;
     if (function) {
-        ok = JS_CallFunction(cx, targetObj, function, 0, nullptr, rval.address());
+        ok = JS_CallFunction(cx, targetObj, function, 0, nullptr, retval.address());
     } else {
-        ok = JS_ExecuteScriptVersion(cx, targetObj, script, rval.address(), version);
+        ok = JS_ExecuteScriptVersion(cx, targetObj, script, retval.address(), version);
     }
 
     if (ok) {
         JSAutoCompartment rac(cx, result_obj);
-        if (!JS_WrapValue(cx, &rval))
+        if (!JS_WrapValue(cx, retval))
             return NS_ERROR_UNEXPECTED;
-        *retval = rval;
     }
 
     if (cache && ok && writeScript) {
