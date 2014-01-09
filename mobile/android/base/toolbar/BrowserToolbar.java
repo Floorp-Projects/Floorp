@@ -20,7 +20,6 @@ import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
-import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
@@ -73,8 +72,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                        GeckoMenu.ActionItemBarPresenter,
                                        GeckoEventListener {
     private static final String LOGTAG = "GeckoToolbar";
-    public static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
-    public static final String PREF_TRIM_URLS = "browser.urlbar.trimURLs";
 
     public interface OnActivateListener {
         public void onActivate();
@@ -137,6 +134,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private int mUrlBarViewOffset;
     private int mDefaultForwardMargin;
 
+    private ToolbarTitlePrefs mTitlePrefs;
+
     private static final Interpolator sButtonsInterpolator = new AccelerateInterpolator();
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
@@ -146,11 +145,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private final ForegroundColorSpan mPrivateDomainColor;
 
     private final LightweightTheme mTheme;
-
-    private boolean mShowUrl;
-    private boolean mTrimURLs;
-
-    private Integer mPrefObserverId;
 
     public BrowserToolbar(Context context) {
         this(context, null);
@@ -168,58 +162,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         Tabs.registerOnTabsChangedListener(this);
         mSwitchingTabs = true;
-
         mAnimatingEntry = false;
-        mShowUrl = false;
-        mTrimURLs = true;
 
-        final String[] prefs = {
-            PREF_TITLEBAR_MODE,
-            PREF_TRIM_URLS
-        };
-        // listen to the title bar pref.
-        mPrefObserverId = PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
-            @Override
-            public void prefValue(String pref, String str) {
-                // Handles PREF_TITLEBAR_MODE, which is always a string.
-                int value = Integer.parseInt(str);
-                boolean shouldShowUrl = (value == 1);
-
-                if (shouldShowUrl == mShowUrl) {
-                    return;
-                }
-                mShowUrl = shouldShowUrl;
-
-                triggerTitleUpdate();
-            }
-
-            @Override
-            public void prefValue(String pref, boolean value) {
-                // Handles PREF_TRIM_URLS, which should usually be a boolean.
-                if (value == mTrimURLs) {
-                    return;
-                }
-                mTrimURLs = value;
-
-                triggerTitleUpdate();
-            }
-
-            @Override
-            public boolean isObserver() {
-                // We want to be notified of changes to be able to switch mode
-                // without restarting.
-                return true;
-            }
-
-            private void triggerTitleUpdate() {
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateTitle();
-                    }
-                });
-            }
-        });
+        mTitlePrefs = new ToolbarTitlePrefs();
 
         Resources res = getResources();
         mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
@@ -715,7 +660,8 @@ public class BrowserToolbar extends GeckoRelativeLayout
         setContentDescription(contentDescription);
     }
 
-    // Sets the toolbar title according to the selected tab, obeying the mShowUrl preference.
+    // Sets the toolbar title according to the selected tab, obeying the
+    // ToolbarTitlePrefs.shouldShowUrl() preference.
     private void updateTitle() {
         final Tab tab = Tabs.getInstance().getSelectedTab();
         // Keep the title unchanged if there's no selected tab, or if the tab is entering reader mode.
@@ -745,13 +691,13 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
 
         // If the pref to show the URL isn't set, just use the tab's display title.
-        if (!mShowUrl || url == null) {
+        if (!mTitlePrefs.shouldShowUrl() || url == null) {
             setTitle(tab.getDisplayTitle());
             return;
         }
 
         CharSequence title = url;
-        if (mTrimURLs) {
+        if (mTitlePrefs.shouldTrimUrls()) {
             title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
         }
 
@@ -1332,10 +1278,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     public void onDestroy() {
-        if (mPrefObserverId != null) {
-             PrefsHelper.removeObserver(mPrefObserverId);
-             mPrefObserverId = null;
-        }
+        mTitlePrefs.close();
         Tabs.unregisterOnTabsChangedListener(this);
 
         unregisterEventListener("Reader:Click");
