@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoAppShell;
@@ -21,12 +20,12 @@ import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.MenuPopup;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
+import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.GeckoImageButton;
 import org.mozilla.gecko.widget.GeckoImageView;
 import org.mozilla.gecko.widget.GeckoRelativeLayout;
@@ -39,10 +38,6 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
-import android.text.style.ForegroundColorSpan;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -134,15 +129,9 @@ public class BrowserToolbar extends GeckoRelativeLayout
     private int mUrlBarViewOffset;
     private int mDefaultForwardMargin;
 
-    private ToolbarTitlePrefs mTitlePrefs;
-
     private static final Interpolator sButtonsInterpolator = new AccelerateInterpolator();
 
     private static final int FORWARD_ANIMATION_DURATION = 450;
-    private final ForegroundColorSpan mUrlColor;
-    private final ForegroundColorSpan mBlockedColor;
-    private final ForegroundColorSpan mDomainColor;
-    private final ForegroundColorSpan mPrivateDomainColor;
 
     private final LightweightTheme mTheme;
 
@@ -164,19 +153,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
         mSwitchingTabs = true;
         mAnimatingEntry = false;
 
-        mTitlePrefs = new ToolbarTitlePrefs();
-
-        Resources res = getResources();
-        mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
-        mBlockedColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_blockedtext));
-        mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
-        mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
-
         registerEventListener("Reader:Click");
         registerEventListener("Reader:LongClick");
 
         mAnimatingEntry = false;
 
+        final Resources res = getResources();
         mUrlBarViewOffset = res.getDimensionPixelSize(R.dimen.url_bar_offset_left);
         mDefaultForwardMargin = res.getDimensionPixelSize(R.dimen.forward_default_offset);
         mUrlDisplayLayout = (ToolbarDisplayLayout) findViewById(R.id.display_layout);
@@ -282,6 +264,22 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
 
                 return null;
+            }
+        });
+
+        mUrlDisplayLayout.setOnTitleChangeListener(new OnTitleChangeListener() {
+            @Override
+            public void onTitleChange(CharSequence title) {
+                final String contentDescription;
+                if (title != null) {
+                    contentDescription = title.toString();
+                } else {
+                    contentDescription = mActivity.getString(R.string.url_bar_default_text);
+                }
+
+                // The title and content description should
+                // always be sync.
+                setContentDescription(contentDescription);
             }
         });
 
@@ -434,7 +432,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
             switch (msg) {
                 case TITLE:
-                    updateTitle();
+                    flags.add(UpdateFlags.TITLE);
                     break;
 
                 case START:
@@ -450,13 +448,14 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
                     flags.add(UpdateFlags.PROGRESS);
 
-                    // Reset the title in case we haven't navigated to a new page yet.
-                    updateTitle();
+                    // Reset the title in case we haven't navigated
+                    // to a new page yet.
+                    flags.add(UpdateFlags.TITLE);
                     break;
 
                 case SELECTED:
                 case LOAD_ERROR:
-                    updateTitle();
+                    flags.add(UpdateFlags.TITLE);
                     // Fall through.
                 case LOCATION_CHANGE:
                     // A successful location change will cause Tab to notify
@@ -595,6 +594,12 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
         mUrlDisplayLayout.updateFromTab(tab, flags);
 
+        if (flags.contains(UpdateFlags.TITLE)) {
+            if (!isEditing()) {
+                mUrlEditLayout.setText(tab.getURL());
+            }
+        }
+
         if (flags.contains(UpdateFlags.PROGRESS)) {
             updateFocusOrder();
         }
@@ -649,70 +654,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
 
     public void setTitle(CharSequence title) {
         mUrlDisplayLayout.setTitle(title);
-
-        final String contentDescription;
-        if (title != null) {
-            contentDescription = title.toString();
-        } else {
-            contentDescription = mActivity.getString(R.string.url_bar_default_text);
-        }
-
-        setContentDescription(contentDescription);
-    }
-
-    // Sets the toolbar title according to the selected tab, obeying the
-    // ToolbarTitlePrefs.shouldShowUrl() preference.
-    private void updateTitle() {
-        final Tab tab = Tabs.getInstance().getSelectedTab();
-        // Keep the title unchanged if there's no selected tab, or if the tab is entering reader mode.
-        if (tab == null || tab.isEnteringReaderMode()) {
-            return;
-        }
-
-        final String url = tab.getURL();
-
-        if (!isEditing()) {
-            mUrlEditLayout.setText(url);
-        }
-
-        // Setting a null title will ensure we just see the "Enter Search or Address" placeholder text.
-        if (AboutPages.isTitlelessAboutPage(url)) {
-            setTitle(null);
-            return;
-        }
-
-        // Show the about:blocked page title in red, regardless of prefs
-        if (tab.getErrorType() == Tab.ErrorType.BLOCKED) {
-            String title = tab.getDisplayTitle();
-            SpannableStringBuilder builder = new SpannableStringBuilder(title);
-            builder.setSpan(mBlockedColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            setTitle(builder);
-            return;
-        }
-
-        // If the pref to show the URL isn't set, just use the tab's display title.
-        if (!mTitlePrefs.shouldShowUrl() || url == null) {
-            setTitle(tab.getDisplayTitle());
-            return;
-        }
-
-        CharSequence title = url;
-        if (mTitlePrefs.shouldTrimUrls()) {
-            title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
-        }
-
-        String baseDomain = tab.getBaseDomain();
-        if (!TextUtils.isEmpty(baseDomain)) {
-            SpannableStringBuilder builder = new SpannableStringBuilder(title);
-            int index = title.toString().indexOf(baseDomain);
-            if (index > -1) {
-                builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor, index, index+baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-                title = builder;
-            }
-        }
-
-        setTitle(title);
     }
 
     public void prepareTabsAnimation(PropertyAnimator animator, boolean tabsAreShown) {
@@ -1278,7 +1219,6 @@ public class BrowserToolbar extends GeckoRelativeLayout
     }
 
     public void onDestroy() {
-        mTitlePrefs.close();
         Tabs.unregisterOnTabsChangedListener(this);
 
         unregisterEventListener("Reader:Click");
