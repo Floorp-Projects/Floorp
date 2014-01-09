@@ -410,7 +410,8 @@ INNER_MAKE_GECKOVIEW_LIBRARY=echo 'GeckoView library packaging is only enabled o
 endif
 
 ifdef MOZ_OMX_PLUGIN
-DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so libomxpluginhc.so libomxpluginfroyo.so
+DIST_FILES += libomxplugin.so libomxplugingb.so libomxplugingb235.so \
+              libomxpluginhc.so libomxpluginfroyo.so libomxpluginkk.so
 endif
 
 SO_LIBRARIES := $(filter %.so,$(DIST_FILES))
