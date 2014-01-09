@@ -32,6 +32,7 @@ SurfaceFormatToDXGIFormat(gfx::SurfaceFormat aFormat)
       return DXGI_FORMAT_A8_UNORM;
     default:
       MOZ_ASSERT(false, "unsupported format");
+      return DXGI_FORMAT_UNKNOWN;
   }
 }
 
