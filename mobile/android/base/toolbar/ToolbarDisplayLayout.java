@@ -37,7 +37,6 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout.LayoutParams;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 
 public class ToolbarDisplayLayout extends GeckoLinearLayout
@@ -45,32 +44,14 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
 
     private static final String LOGTAG = "GeckoToolbarDisplayLayout";
 
-    enum UpdateFlags {
-        FAVICON,
-        PROGRESS,
-        SITE_IDENTITY,
-        PRIVATE_MODE,
-        DISABLE_ANIMATIONS
-    }
-
-    private enum UIMode {
-        PROGRESS,
-        DISPLAY
-    }
-
-    interface OnStopListener {
-        public Tab onStop();
-    }
-
     final private BrowserApp mActivity;
-
-    private UIMode mUiMode;
 
     private GeckoTextView mTitle;
     private int mTitlePadding;
 
     private ImageButton mSiteSecurity;
     private boolean mSiteSecurityVisible;
+    private boolean mShowSiteSecurity;
 
     // To de-bounce sets.
     private Bitmap mLastFavicon;
@@ -78,18 +59,16 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
     private int mFaviconSize;
 
     private ImageButton mStop;
-    private OnStopListener mStopListener;
-
     private PageActionLayout mPageActionLayout;
 
     private Animation mProgressSpinner;
+    private boolean mSpinnerVisible;
 
     private AlphaAnimation mLockFadeIn;
     private TranslateAnimation mTitleSlideLeft;
     private TranslateAnimation mTitleSlideRight;
 
     private SiteIdentityPopup mSiteIdentityPopup;
-    private SecurityMode mSecurityMode;
 
     private PropertyAnimator mForwardAnim;
 
@@ -115,6 +94,8 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         }
         mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
 
+        mShowSiteSecurity = false;
+
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
 
@@ -132,10 +113,18 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         Button.OnClickListener faviconListener = new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mSiteSecurity.getVisibility() != View.VISIBLE) {
+                if (mSiteSecurity.getVisibility() != View.VISIBLE)
+                    return;
+
+                final Tab tab = Tabs.getInstance().getSelectedTab();
+
+                final SiteIdentity siteIdentity = tab.getSiteIdentity();
+                if (siteIdentity.getSecurityMode() == SecurityMode.UNKNOWN) {
+                    Log.e(LOGTAG, "Selected tab has no identity data");
                     return;
                 }
 
+                mSiteIdentityPopup.updateIdentity(siteIdentity);
                 mSiteIdentityPopup.show();
             }
         };
@@ -146,14 +135,10 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         mStop.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mStopListener != null) {
-                    // Force toolbar to switch to Display mode
-                    // immediately based on the stopped tab.
-                    final Tab tab = mStopListener.onStop();
-                    if (tab != null) {
-                        updateUiMode(tab, UIMode.DISPLAY, EnumSet.noneOf(UpdateFlags.class));
-                    }
-                }
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null)
+                    tab.doStop();
+                setProgressVisibility(false);
             }
         });
 
@@ -176,6 +161,12 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         mLockFadeIn.setDuration(lockAnimDuration);
         mTitleSlideLeft.setDuration(lockAnimDuration);
         mTitleSlideRight.setDuration(lockAnimDuration);
+    }
+
+    @Override
+    public void setPrivateMode(boolean isPrivate) {
+        super.setPrivateMode(isPrivate);
+        mTitle.setPrivateMode(isPrivate);
     }
 
     @Override
@@ -214,137 +205,73 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         mPageActionLayout.setNextFocusDownId(nextId);
     }
 
-    void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
-        if (flags.contains(UpdateFlags.FAVICON)) {
-            updateFavicon(tab);
-        }
+    void updateFromTab(Tab tab) {
+    }
 
-        if (flags.contains(UpdateFlags.SITE_IDENTITY)) {
-            updateSiteIdentity(tab, flags);
-        }
+    List<View> getFocusOrder() {
+        return Arrays.asList(mSiteSecurity, mPageActionLayout, mStop);
+    }
 
-        if (flags.contains(UpdateFlags.PROGRESS)) {
-            updateProgress(tab, flags);
-        }
+    void setTitle(CharSequence title) {
+        mTitle.setText(title);
+    }
 
-        if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
-            mTitle.setPrivateMode(tab != null && tab.isPrivate());
+    void setProgressVisibility(boolean visible) {
+        Log.d(LOGTAG, "setProgressVisibility: " + visible);
+
+        // The "Throbber start" and "Throbber stop" log messages in this method
+        // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
+        // See discussion in Bug 804457. Bug 805124 tracks paring these down.
+        if (visible) {
+            mFavicon.setImageResource(R.drawable.progress_spinner);
+            mLastFavicon = null;
+
+            //To stop the glitch caused by mutiple start() calls.
+            if (!mSpinnerVisible) {
+                setPageActionVisibility(true);
+                mFavicon.setAnimation(mProgressSpinner);
+                mProgressSpinner.start();
+                mSpinnerVisible = true;
+            }
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
+        } else {
+            Tab selectedTab = Tabs.getInstance().getSelectedTab();
+            if (selectedTab != null)
+                setFavicon(selectedTab.getFavicon());
+
+            if (mSpinnerVisible) {
+                setPageActionVisibility(false);
+                mFavicon.setAnimation(null);
+                mProgressSpinner.cancel();
+                mSpinnerVisible = false;
+            }
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
         }
     }
 
-    private void updateFavicon(Tab tab) {
-        if (tab == null) {
-            mFavicon.setImageDrawable(null);
-            return;
-        }
-
-        if (tab.getState() == Tab.STATE_LOADING) {
-            return;
-        }
-
-        Bitmap image = tab.getFavicon();
+    void setFavicon(Bitmap image) {
         if (image == mLastFavicon) {
-            Log.d(LOGTAG, "Ignoring favicon: new image is identical to previous one.");
+            Log.d(LOGTAG, "Ignoring favicon set: new favicon is identical to previous favicon.");
             return;
         }
 
-        // Cache the original so we can debounce without scaling
-        mLastFavicon = image;
-
-        Log.d(LOGTAG, "updateFavicon(" + image + ")");
+        mLastFavicon = image;     // Cache the original so we can debounce without scaling.
 
         if (image != null) {
             image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
             mFavicon.setImageBitmap(image);
         } else {
-            mFavicon.setImageDrawable(null);            
+            mFavicon.setImageDrawable(null);
         }
     }
 
-    private void updateSiteIdentity(Tab tab, EnumSet<UpdateFlags> flags) {
-        final SiteIdentity siteIdentity;
-        if (tab == null) {
-            siteIdentity = null;
-        } else {
-            siteIdentity = tab.getSiteIdentity();
-        }
-
-        mSiteIdentityPopup.setSiteIdentity(siteIdentity);
-
-        final SecurityMode securityMode;
-        if (siteIdentity == null) {
-            securityMode = SecurityMode.UNKNOWN;
-        } else {
-            securityMode = siteIdentity.getSecurityMode();
-        }
-
-        if (mSecurityMode != securityMode) {
-            mSecurityMode = securityMode;
-            mSiteSecurity.setImageLevel(mSecurityMode.ordinal());
-            updatePageActions(flags);
-        }
-    }
-
-    private void updateProgress(Tab tab, EnumSet<UpdateFlags> flags) {
-        final boolean shouldShowThrobber = (tab != null &&
-                                            tab.getState() == Tab.STATE_LOADING);
-
-        updateUiMode(tab, shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY, flags);
-    }
-
-    private void updateUiMode(Tab tab, UIMode uiMode, EnumSet<UpdateFlags> flags) {
-        if (mUiMode == uiMode) {
+    private void setSiteSecurityVisibility(final boolean visible, boolean animate) {
+        if (visible == mSiteSecurityVisible)
             return;
-        }
-
-        mUiMode = uiMode;
-
-        // The "Throbber start" and "Throbber stop" log messages in this method
-        // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
-        // See discussion in Bug 804457. Bug 805124 tracks paring these down.
-        if (mUiMode == UIMode.PROGRESS) {
-            mLastFavicon = null;
-            mFavicon.setImageResource(R.drawable.progress_spinner);
-            mFavicon.setAnimation(mProgressSpinner);
-            mProgressSpinner.start();
-
-            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
-        } else {
-            updateFavicon(tab);
-            mFavicon.setAnimation(null);
-            mProgressSpinner.cancel();
-
-            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
-        }
-
-        updatePageActions(flags);
-    }
-
-    private void updatePageActions(EnumSet<UpdateFlags> flags) {
-        final boolean isShowingProgress = (mUiMode == UIMode.PROGRESS);
-
-        mStop.setVisibility(isShowingProgress ? View.VISIBLE : View.GONE);
-        mPageActionLayout.setVisibility(!isShowingProgress ? View.VISIBLE : View.GONE);
-
-        boolean shouldShowSiteSecurity = (!isShowingProgress &&
-                                          mSecurityMode != SecurityMode.UNKNOWN);
-
-        setSiteSecurityVisibility(shouldShowSiteSecurity, flags);
-
-        // We want title to fill the whole space available for it when there are icons
-        // being shown on the right side of the toolbar as the icons already have some
-        // padding in them. This is just to avoid wasting space when icons are shown.
-        mTitle.setPadding(0, 0, (!isShowingProgress ? mTitlePadding : 0), 0);
-    }
-
-    private void setSiteSecurityVisibility(boolean visible, EnumSet<UpdateFlags> flags) {
-        if (visible == mSiteSecurityVisible) {
-            return;
-        }
 
         mSiteSecurityVisible = visible;
 
-        if (flags.contains(UpdateFlags.DISABLE_ANIMATIONS)) {
+        if (animate) {
             mSiteSecurity.setVisibility(visible ? View.VISIBLE : View.GONE);
             return;
         }
@@ -370,16 +297,33 @@ public class ToolbarDisplayLayout extends GeckoLinearLayout
         mTitle.startAnimation(visible ? mTitleSlideRight : mTitleSlideLeft);
     }
 
-    List<View> getFocusOrder() {
-        return Arrays.asList(mSiteSecurity, mPageActionLayout, mStop);
+    void setPageActionVisibility(boolean isLoading) {
+        setPageActionVisibility(isLoading, true);
     }
 
-    void setTitle(CharSequence title) {
-        mTitle.setText(title);
+    void setPageActionVisibility(boolean isLoading, boolean animate) {
+        // Handle the loading mode page actions
+        mStop.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+
+        // Handle the viewing mode page actions
+        setSiteSecurityVisibility(mShowSiteSecurity && !isLoading, animate);
+        mPageActionLayout.setVisibility(!isLoading ? View.VISIBLE : View.GONE);
+
+        // We want title to fill the whole space available for it when there are icons
+        // being shown on the right side of the toolbar as the icons already have some
+        // padding in them. This is just to avoid wasting space when icons are shown.
+        mTitle.setPadding(0, 0, (!isLoading ? mTitlePadding : 0), 0);
     }
 
-    void setOnStopListener(OnStopListener listener) {
-        mStopListener = listener;
+    void setSecurityMode(SecurityMode mode) {
+        mSiteSecurity.setImageLevel(mode.ordinal());
+        mShowSiteSecurity = (mode != SecurityMode.UNKNOWN);
+
+        setPageActionVisibility(mStop.getVisibility() == View.VISIBLE);
+    }
+
+    boolean isShowingProgress() {
+        return mSpinnerVisible;
     }
 
     View getDoorHangerAnchor() {
