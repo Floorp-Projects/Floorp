@@ -1216,10 +1216,19 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
     length_ = length;
     argumentsNotIncluded_ = argumentsNotIncluded;
 
-    // Don't use background compression if there is only one core since this
-    // will contend with JS execution (which affects benchmarketting). Also,
-    // since this thread is about to perform a blocking wait, require that there
-    // are at least 2 worker threads:
+    // There are several cases where source compression is not a good idea:
+    //  - If the script is enormous, then decompression can take seconds. With
+    //    lazy parsing, decompression is not uncommon, so this can significantly
+    //    increase latency.
+    //  - If there is only one core, then compression will contend with JS
+    //    execution (which hurts benchmarketing).
+    //  - If the source contains a giant string, then parsing will finish much
+    //    faster than compression which increases latency (this case is handled
+    //    in Parser::stringLiteral).
+    //
+    // Lastly, since the parsing thread will eventually perform a blocking wait
+    // on the compresion task's worker thread, require that there are at least 2
+    // worker threads:
     //  - If we are on a worker thread, there must be another worker thread to
     //    execute our compression task.
     //  - If we are on the main thread, there must be at least two worker
@@ -1227,7 +1236,11 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
     //    thread (see WorkerThreadState::canStartParseTask) which would cause a
     //    deadlock if there wasn't a second worker thread that could make
     //    progress on our compression task.
-    if (task && cx->cpuCount() > 1 && cx->workerThreadCount() >= 2) {
+    const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
+    if (length < HUGE_SCRIPT &&
+        cx->cpuCount() > 1 &&
+        cx->workerThreadCount() >= 2)
+    {
         task->ss = this;
         task->chars = src;
         ready_ = false;
