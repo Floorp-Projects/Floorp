@@ -2686,6 +2686,15 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
             exceptionCode,
             isCallbackReturnValue)
 
+class CGCallbackTempRoot(CGGeneric):
+    def __init__(self, name):
+        define = """{ // Scope for tempRoot
+  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());
+  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());
+}
+""" % name
+        CGGeneric.__init__(self, define=define)
+
 class JSToNativeConversionInfo():
     """
     An object representing information about a JS-to-native conversion.
@@ -3402,11 +3411,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 declType = CGGeneric("nsRefPtr<%s>" % name);
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
-            conversion = (
-                "{ // Scope for tempRoot\n"
-                "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
-                "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
-                "}" % name)
+            conversion = CGIndenter(CGCallbackTempRoot(name)).define()
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
@@ -3738,11 +3743,7 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = CGGeneric("nsRefPtr<%s>" % name);
         else:
             declType = CGGeneric("OwningNonNull<%s>" % name)
-        conversion = (
-            "{ // Scope for tempRoot\n"
-            "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
-            "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
-            "}\n" % name)
+        conversion = CGIndenter(CGCallbackTempRoot(name)).define()
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -11934,3 +11935,4 @@ class CGEventRoot(CGThing):
 
     def define(self):
         return self.root.define()
+
