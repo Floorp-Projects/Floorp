@@ -10,7 +10,6 @@ function runTests() {
   let path = PageThumbs.getThumbnailPath(URL);
   yield testIfExists(path, false, "Thumbnail file does not exist");
 
-  yield addVisitsAndRepopulateNewTabLinks(URL, next);
   yield createThumbnail(URL);
 
   path = PageThumbs.getThumbnailPath(URL);
