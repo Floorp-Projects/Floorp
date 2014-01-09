@@ -251,7 +251,7 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aS
 }
 
 NS_IMETHODIMP
-nsChromeTreeOwner::GetContentWindow(JSContext* aCx, JS::Value* aVal)
+nsChromeTreeOwner::GetContentWindow(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 {
   NS_ENSURE_STATE(mXULWindow);
 

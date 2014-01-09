@@ -220,7 +220,7 @@ Variant_base::GetAsWStringWithSize(uint32_t *,
 
 inline
 NS_IMETHODIMP
-Variant_base::GetAsJSVal(JS::Value *)
+Variant_base::GetAsJSVal(JS::MutableHandle<JS::Value>)
 {
   return NS_ERROR_CANNOT_CONVERT_DATA;
 }

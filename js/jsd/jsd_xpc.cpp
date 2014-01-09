@@ -2364,16 +2364,14 @@ jsdValue::Refresh()
 }
 
 NS_IMETHODIMP
-jsdValue::GetWrappedValue(JSContext* aCx, JS::Value* aRetval)
+jsdValue::GetWrappedValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval)
 {
     ASSERT_VALID_EPHEMERAL;
 
-    JS::RootedValue value(aCx, JSD_GetValueWrappedJSVal(mCx, mValue));
-    if (!JS_WrapValue(aCx, &value)) {
+    aRetval.set(JSD_GetValueWrappedJSVal(mCx, mValue));
+    if (!JS_WrapValue(aCx, aRetval))
         return NS_ERROR_FAILURE;
-    }
 
-    *aRetval = value;
     return NS_OK;
 }
 
@@ -2987,7 +2985,7 @@ jsdService::ClearAllBreakpoints (void)
 }
 
 NS_IMETHODIMP
-jsdService::WrapValue(const JS::Value &value, jsdIValue **_rval)
+jsdService::WrapValue(JS::Handle<JS::Value> value, jsdIValue **_rval)
 {
     ASSERT_VALID_CONTEXT;
     JSDValue *jsdv = JSD_NewValue(mCx, value);
