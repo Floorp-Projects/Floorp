@@ -591,7 +591,7 @@ JS_Init(void)
         return false;
 #endif
 
-    if (!ForkJoinSlice::InitializeTLS())
+    if (!ForkJoinSlice::initialize())
         return false;
 
 #if EXPOSE_INTL_API

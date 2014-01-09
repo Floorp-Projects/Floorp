@@ -30,7 +30,7 @@
 
 #define GR2_VERSION_MAJOR   1
 #define GR2_VERSION_MINOR   2
-#define GR2_VERSION_BUGFIX  3
+#define GR2_VERSION_BUGFIX  4
 
 #ifdef __cplusplus
 extern "C"
@@ -296,7 +296,7 @@ typedef struct gr_font_ops  gr_font_ops;
   * @param appFontHandle font specific information that must stay alive as long
   *        as the font does
   * @param font_ops pointer font specific callback structure for hinted metrics.
-  *        Must stay alive for the duration of the call.
+  *        Need only stay alive for the duration of the call.
   * @param face the face this font corresponds to. Must stay alive as long as
   *        the font does.
   */
@@ -310,7 +310,6 @@ GR2_API gr_font* gr_make_font_with_ops(float ppm, const void* appFontHandle, con
   * @param appFontHandle font specific information that must stay alive as long
   *        as the font does
   * @param getAdvance callback function reference that returns horizontal advance in pixels for a glyph.
-  *        Must stay alive for the duration of the call.
   * @param face the face this font corresponds to. Must stay alive as long as
   *        the font does.
   */

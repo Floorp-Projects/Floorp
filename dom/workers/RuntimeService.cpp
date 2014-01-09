@@ -1223,7 +1223,7 @@ bool RuntimeService::sDefaultPreferences[WORKERPREF_COUNT] = { false };
 
 RuntimeService::RuntimeService()
 : mMutex("RuntimeService::mMutex"), mObserved(false),
-  mShuttingDown(false), mNavigatorStringsLoaded(false)
+  mShuttingDown(false), mNavigatorPropertiesLoaded(false)
 {
   AssertIsOnMainThread();
   NS_ASSERTION(!gRuntimeService, "More than one service!");
@@ -1352,17 +1352,17 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
   else {
-    if (!mNavigatorStringsLoaded) {
-      NS_GetNavigatorAppName(mNavigatorStrings.mAppName);
-      if (NS_FAILED(NS_GetNavigatorAppVersion(mNavigatorStrings.mAppVersion)) ||
-          NS_FAILED(NS_GetNavigatorPlatform(mNavigatorStrings.mPlatform)) ||
-          NS_FAILED(NS_GetNavigatorUserAgent(mNavigatorStrings.mUserAgent))) {
+    if (!mNavigatorPropertiesLoaded) {
+      NS_GetNavigatorAppName(mNavigatorProperties.mAppName);
+      if (NS_FAILED(NS_GetNavigatorAppVersion(mNavigatorProperties.mAppVersion)) ||
+          NS_FAILED(NS_GetNavigatorPlatform(mNavigatorProperties.mPlatform)) ||
+          NS_FAILED(NS_GetNavigatorUserAgent(mNavigatorProperties.mUserAgent))) {
         JS_ReportError(aCx, "Failed to load navigator strings!");
         UnregisterWorker(aCx, aWorkerPrivate);
         return false;
       }
 
-      mNavigatorStringsLoaded = true;
+      mNavigatorPropertiesLoaded = true;
     }
 
     nsPIDOMWindow* window = aWorkerPrivate->GetWindow();
@@ -1660,6 +1660,10 @@ RuntimeService::Init()
     NS_WARNING("Failed to register for memory pressure notifications!");
   }
 
+  if (NS_FAILED(obs->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, false))) {
+    NS_WARNING("Failed to register for offline notification event!");
+  }
+
   NS_ASSERTION(!gRuntimeServiceDuringInit, "This should be null!");
   gRuntimeServiceDuringInit = this;
 
@@ -1911,6 +1915,10 @@ RuntimeService::Cleanup()
         NS_WARNING("Failed to unregister for memory pressure notifications!");
       }
 
+      if (NS_FAILED(obs->RemoveObserver(this,
+                                        NS_IOSERVICE_OFFLINE_STATUS_TOPIC))) {
+        NS_WARNING("Failed to unregister for offline notification event!");
+      }
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID);
       obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       mObserved = false;
@@ -2288,6 +2296,12 @@ RuntimeService::CycleCollectAllWorkers()
   BROADCAST_ALL_WORKERS(CycleCollect, /* dummy = */ false);
 }
 
+void
+RuntimeService::SendOfflineStatusChangeEventToAllWorkers(bool aIsOffline)
+{
+  BROADCAST_ALL_WORKERS(OfflineStatusChangeEvent, aIsOffline);
+}
+
 // nsISupports
 NS_IMPL_ISUPPORTS1(RuntimeService, nsIObserver)
 
@@ -2317,6 +2331,10 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
   if (!strcmp(aTopic, MEMORY_PRESSURE_OBSERVER_TOPIC)) {
     GarbageCollectAllWorkers(/* shrinking = */ true);
     CycleCollectAllWorkers();
+    return NS_OK;
+  }
+  if (!strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC)) {
+    SendOfflineStatusChangeEventToAllWorkers(NS_IsOffline());
     return NS_OK;
   }
 
