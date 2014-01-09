@@ -2677,7 +2677,7 @@ History::RemoveAllDownloads()
 //// mozIAsyncHistory
 
 NS_IMETHODIMP
-History::GetPlacesInfo(const JS::Value& aPlaceIdentifiers,
+History::GetPlacesInfo(JS::Handle<JS::Value> aPlaceIdentifiers,
                        mozIVisitInfoCallback* aCallback,
                        JSContext* aCtx) {
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
@@ -2745,7 +2745,7 @@ History::GetPlacesInfo(const JS::Value& aPlaceIdentifiers,
 }
 
 NS_IMETHODIMP
-History::UpdatePlaces(const JS::Value& aPlaceInfos,
+History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
                       mozIVisitInfoCallback* aCallback,
                       JSContext* aCtx)
 {
