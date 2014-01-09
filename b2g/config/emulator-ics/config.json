@@ -13,11 +13,11 @@
         "{workdir}/sources.xml"
     ],
     "upload_platform": "emulator-ics",
-    "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
+    "gecko_l10n_root": "http://hg.mozilla.org/releases/l10n/mozilla-aurora",
     "gaia": {
         "l10n": {
             "vcs": "hgtool",
-            "root": "http://hg.mozilla.org/gaia-l10n"
+            "root": "http://hg.mozilla.org/releases/gaia-l10n/v1_3/"
         }
     },
     "b2g_manifest": "emulator.xml",
