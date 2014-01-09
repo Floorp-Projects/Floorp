@@ -126,8 +126,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
   -moz-box-orient: vertical;
   min-width: 7em;
   max-width: 7em;
-  height: calc(40px + 2.4em);
-  max-height: calc(40px + 2.4em);
+  height: 6em;
+  max-height: 6em;
 }
 
 .panel-customization-placeholder[expand],
@@ -155,7 +155,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-wi
 }
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"] > iframe {
-  margin: 4px auto;
+  margin: calc(5em / 12) auto;
 }
 
 toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-item) > .toolbarbutton-text {
@@ -169,9 +169,9 @@ toolbaritem[cui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > #bookmarks-menu-button > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon {
-  min-width: 32px;
-  min-height: 32px;
-  margin: 4px;
+  min-width: calc(8em / 3);
+  min-height: calc(8em / 3);
+  margin: calc(5em / 12);
 }
 
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
