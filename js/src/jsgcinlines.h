@@ -420,15 +420,15 @@ NewGCThing(ThreadSafeContext *cx, AllocKind kind, size_t thingSize, InitialHeap 
 
     if (cx->isJSContext()) {
         JSContext *ncx = cx->asJSContext();
-#ifdef JS_GC_ZEAL
+#if defined(JS_GC_ZEAL) || defined(DEBUG)
         JSRuntime *rt = ncx->runtime();
-#endif
         JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                      kind == FINALIZE_STRING ||
                      kind == FINALIZE_SHORT_STRING ||
                      kind == FINALIZE_JITCODE);
         JS_ASSERT(!rt->isHeapBusy());
         JS_ASSERT(!rt->noGCOrAllocationCheck);
+#endif
 
         /* For testing out of memory conditions */
         JS_OOM_POSSIBLY_FAIL_REPORT(ncx);

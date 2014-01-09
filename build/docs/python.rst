@@ -119,6 +119,21 @@ the build system.
 
   There are various proposals for fixing this. See bug 795995.
 
+Installing Python Manually
+==========================
+
+We highly recommend you use your system's package manager or a
+well-supported 3rd party package manager to install Python for you. If
+these are not available to you, we recommend the following tools for
+installing Python:
+
+* `buildout.python <https://github.com/collective/buildout.python>`_
+* `pyenv <https://github.com/yyuu/pyenv>`_
+* An official installer from http://www.python.org.
+
+If all else fails, consider compiling Python from source manually. But this
+should be viewed as the least desirable option.
+
 Common Issues with Python
 =========================
 

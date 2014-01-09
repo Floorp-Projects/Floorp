@@ -168,7 +168,7 @@ inline bool Machine::Code::deletes() const throw()
 
 inline size_t Machine::Code::maxRef() const throw()
 {
-	return _max_ref;
+    return _max_ref;
 }
 
 } // namespace vm

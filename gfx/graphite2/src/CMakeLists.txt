@@ -104,15 +104,25 @@ set_target_properties(graphite2 PROPERTIES  PUBLIC_HEADER "${GRAPHITE_HEADERS}"
                                             LT_VERSION_REVISION ${GRAPHITE_API_REVISION}
                                             LT_VERSION_AGE ${GRAPHITE_API_AGE})
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "ClangASN")
+    set(GRAPHITE_LINK_FLAGS "-fsanitize=address")
+else (${CMAKE_BUILD_TYPE} STREQUAL "ClangASN")
+    set(GRAPHITE_LINK_FLAGS "")
+endif (${CMAKE_BUILD_TYPE} STREQUAL "ClangASN")
+
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     set_target_properties(graphite2 PROPERTIES 
         COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wctor-dtor-privacy -Wnon-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector"
-        LINK_FLAGS      "-nodefaultlibs" 
+        LINK_FLAGS      "-nodefaultlibs ${GRAPHITE_LINK_FLAGS}" 
         LINKER_LANGUAGE C)
     if (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
         target_link_libraries(graphite2 kernel32 msvcr90 mingw32 gcc user32)
     else (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
-        target_link_libraries(graphite2 c gcc)
+        if (GRAPHITE2_ASAN)
+            target_link_libraries(graphite2 c gcc_s)
+        else (GRAPHITE2_ASAN)
+            target_link_libraries(graphite2 c gcc)
+        endif (GRAPHITE2_ASAN)
         include(Graphite)
         nolib_test(stdc++ $<TARGET_SONAME_FILE:graphite2>)
     endif (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
