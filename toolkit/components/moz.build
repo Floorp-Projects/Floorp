@@ -45,6 +45,7 @@ PARALLEL_DIRS += [
     'viewconfig',
     'viewsource',
     'workerloader',
+    'workerlz4',
 ]
 
 if CONFIG['MOZ_SOCIAL']:
