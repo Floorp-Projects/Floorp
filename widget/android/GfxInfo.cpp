@@ -67,31 +67,41 @@ public:
   }
 
   void EnsureInitialized() {
-    if (!mReady) {
-      nsRefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateOffscreen(
-        gfxIntSize(1, 1),
-        gfx::SurfaceCaps::ForRGB());
-
-      gl->MakeCurrent();
-
-      const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_GL_VENDOR");
-      if (spoofedVendor)
-          mVendor.Assign(spoofedVendor);
-      else
-          mVendor.Assign((const char*)gl->fGetString(LOCAL_GL_VENDOR));
-      const char *spoofedRenderer = PR_GetEnv("MOZ_GFX_SPOOF_GL_RENDERER");
-      if (spoofedRenderer)
-          mRenderer.Assign(spoofedRenderer);
-      else
-          mRenderer.Assign((const char*)gl->fGetString(LOCAL_GL_RENDERER));
-      const char *spoofedVersion = PR_GetEnv("MOZ_GFX_SPOOF_GL_VERSION");
-      if (spoofedVersion)
-          mVersion.Assign(spoofedVersion);
-      else
-          mVersion.Assign((const char*)gl->fGetString(LOCAL_GL_VERSION));
-
-      mReady = true;
+    if (mReady) {
+      return;
     }
+
+    nsRefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateOffscreen(
+      gfxIntSize(16, 16),
+      gfx::SurfaceCaps::ForRGB());
+
+    if (!gl) {
+      // Setting mReady to true here means that we won't retry. Everything will
+      // remain blacklisted forever. Ideally, we would like to update that once
+      // any GLContext is successfully created, like the compositor's GLContext.
+      mReady = true;
+      return;
+    }
+
+    gl->MakeCurrent();
+
+    const char *spoofedVendor = PR_GetEnv("MOZ_GFX_SPOOF_GL_VENDOR");
+    if (spoofedVendor)
+        mVendor.Assign(spoofedVendor);
+    else
+        mVendor.Assign((const char*)gl->fGetString(LOCAL_GL_VENDOR));
+    const char *spoofedRenderer = PR_GetEnv("MOZ_GFX_SPOOF_GL_RENDERER");
+    if (spoofedRenderer)
+        mRenderer.Assign(spoofedRenderer);
+    else
+        mRenderer.Assign((const char*)gl->fGetString(LOCAL_GL_RENDERER));
+    const char *spoofedVersion = PR_GetEnv("MOZ_GFX_SPOOF_GL_VERSION");
+    if (spoofedVersion)
+        mVersion.Assign(spoofedVersion);
+    else
+        mVersion.Assign((const char*)gl->fGetString(LOCAL_GL_VERSION));
+
+    mReady = true;
   }
 };
 
@@ -372,6 +382,11 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   }
 
   EnsureInitialized();
+
+  if (mGLStrings->Vendor().IsEmpty() || mGLStrings->Renderer().IsEmpty()) {
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+    return NS_OK;
+  }
 
   // Don't evaluate special cases when evaluating the downloaded blocklist.
   if (aDriverInfo.IsEmpty()) {
