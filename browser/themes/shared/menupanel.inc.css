@@ -25,7 +25,6 @@ toolbarpaletteitem[place="palette"] > #history-panelmenu {
 }
 
 #downloads-button[cui-areatype="menu-panel"],
-#downloads-indicator[cui-areatype="menu-panel"],
 toolbarpaletteitem[place="palette"] > #downloads-button {
   -moz-image-region: rect(0px, 256px, 32px, 224px);
 }
