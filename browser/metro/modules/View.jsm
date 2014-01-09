@@ -53,14 +53,17 @@ View.prototype = {
       case "snapped":
         grid.setAttribute("nocontext", true);
         grid.selectNone();
+        grid.disableCrossSlide();
         break;
       case "portrait":
         grid.removeAttribute("nocontext");
         grid.setAttribute("vertical", true);
+        grid.enableCrossSlide();
         break;
       default:
         grid.removeAttribute("nocontext");
         grid.removeAttribute("vertical");
+        grid.enableCrossSlide();
     }
     if ("arrangeItems" in grid) {
       grid.arrangeItems();

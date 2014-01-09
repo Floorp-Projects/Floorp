@@ -637,37 +637,49 @@
               count < slotCount; count++) {
             this.appendChild( this._createItemElement() );
           }
-
           if (this.controller && this.controller.gridBoundCallback != undefined)
             this.controller.gridBoundCallback();
-
-          // set up cross-slide gesture handling for multiple-selection grids
-          if ("undefined" !== typeof CrossSlide && !this.noContext) {
-            this._xslideHandler = new CrossSlide.Handler(this, {
-                  REARRANGESTART: this.crossSlideBoundary
-            });
-          }
-
           // XXX This event was never actually implemented (bug 223411).
           let event = document.createEvent("Events");
           event.initEvent("contentgenerated", true, true);
           this.dispatchEvent(event);
         ]]>
       </constructor>
+
       <destructor>
         <![CDATA[
-          if (this._xslideHandler) {
-            this.removeEventListener("touchstart", this._xslideHandler);
-            this.removeEventListener("touchmove", this._xslideHandler);
-            this.removeEventListener("touchend", this._xslideHandler);
-            this._xslideHandler = null;
-          }
+          this.disableCrossSlide();
         ]]>
       </destructor>
+      <method name="enableCrossSlide">
+        <body>
+          <![CDATA[
+            // set up cross-slide gesture handling for multiple-selection grids
+            if (!this._xslideHandler &&
+                "undefined" !== typeof CrossSlide && !this.noContext) {
+              this._xslideHandler = new CrossSlide.Handler(this, {
+                    REARRANGESTART: this.crossSlideBoundary
+              });
+            }
+          ]]>
+        </body>
+      </method>
+
+      <method name="disableCrossSlide">
+        <body>
+          <![CDATA[
+            if (this._xslideHandler) {
+              this.removeEventListener("touchstart", this._xslideHandler);
+              this.removeEventListener("touchmove", this._xslideHandler);
+              this.removeEventListener("touchend", this._xslideHandler);
+              this._xslideHandler = null;
+            }
+          ]]>
+        </body>
+      </method>
 
       <property name="tileWidth" readonly="true" onget="return this._itemSize.width"/>
       <property name="tileHeight" readonly="true" onget="return this._itemSize.height"/>
-
       <field name="_tileStyleSheetName">"tiles.css"</field>
       <method name="_getTileSizes">
         <body>
