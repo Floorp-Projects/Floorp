@@ -220,7 +220,7 @@ function isRootedPointerTypeName(name)
     if (name.startsWith('MaybeRooted<'))
         return /\(js::AllowGC\)1u>::RootType/.test(name);
 
-    return name.startsWith('Rooted');
+    return name.startsWith('Rooted') || name.startsWith('PersistentRooted');
 }
 
 function isSuppressConstructor(name)
