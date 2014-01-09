@@ -1315,6 +1315,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   max-height: 16px;
 }
 
+
+toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
+  width: auto;
+  height: auto;
+  max-width: 32px;
+  max-height: 24px;
+}
+
 /* fixup corners for share panel */
 .social-panel > .social-panel-frame {
   border-radius: inherit;
