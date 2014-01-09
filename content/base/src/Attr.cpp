@@ -131,7 +131,10 @@ Attr::SetMap(nsDOMAttributeMap *aMap)
 Element*
 Attr::GetElement() const
 {
-  nsIContent* content = mAttrMap ? mAttrMap->GetContent() : nullptr;
+  if (!mAttrMap) {
+    return nullptr;
+  }
+  nsIContent* content = mAttrMap->GetContent();
   return content ? content->AsElement() : nullptr;
 }
 
