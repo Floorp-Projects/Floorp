@@ -587,7 +587,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    public void updateTabCountAndAnimate(int count) {
+    private void updateTabCountAndAnimate(int count) {
         // Don't animate if the toolbar is hidden.
         if (!isVisible()) {
             updateTabCount(count);
@@ -607,7 +607,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    public void updateTabCount(int count) {
+    private void updateTabCount(int count) {
         // If toolbar is in edit mode on a phone, this means the entry is expanded
         // and the tabs button is translated offscreen. Don't trigger tabs counter
         // updates until the tabs button is back on screen.
@@ -629,11 +629,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
                                     mActivity.getString(R.string.one_tab));
     }
 
-    public void setProgressVisibility(boolean visible) {
+    private void setProgressVisibility(boolean visible) {
         mUrlDisplayLayout.setProgressVisibility(visible);
     }
 
-    public void setPageActionVisibility(boolean isLoading) {
+    private void setPageActionVisibility(boolean isLoading) {
         mUrlDisplayLayout.setPageActionVisibility(isLoading, !mSwitchingTabs);
         updateFocusOrder();
     }
@@ -936,7 +936,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
         }
     }
 
-    public void setIsEditing(boolean isEditing) {
+    private void setIsEditing(boolean isEditing) {
         mIsEditing = isEditing;
         mUrlEditLayout.setEnabled(isEditing);
     }
@@ -1374,11 +1374,11 @@ public class BrowserToolbar extends GeckoRelativeLayout
         return true;
     }
 
-    protected void registerEventListener(String event) {
+    private void registerEventListener(String event) {
         GeckoAppShell.getEventDispatcher().registerEventListener(event, this);
     }
 
-    protected void unregisterEventListener(String event) {
+    private void unregisterEventListener(String event) {
         GeckoAppShell.getEventDispatcher().unregisterEventListener(event, this);
     }
 
