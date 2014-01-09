@@ -652,9 +652,14 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
             return NS_NOINTERFACE;
 
         RootedObject selfObj(ccx, self->GetJSObject());
-        nsCOMPtr<nsIPrincipal> objPrin = GetObjectPrincipal(selfObj);
+        nsCOMPtr<nsIPrincipal> objPrin;
+        nsresult rv = secMan->GetObjectPrincipal(ccx, selfObj,
+                                                 getter_AddRefs(objPrin));
+        if (NS_FAILED(rv))
+            return rv;
+
         bool isSystem;
-        nsresult rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
+        rv = secMan->IsSystemPrincipal(objPrin, &isSystem);
         if ((NS_FAILED(rv) || !isSystem) && !IS_WN_REFLECTOR(selfObj)) {
             // A content object.
             nsRefPtr<SameOriginCheckedComponent> checked =
