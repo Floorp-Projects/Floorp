@@ -10,27 +10,6 @@ ifndef GNU_CC
 OS_CPPFLAGS += -EHsc
 endif
 
-# The below is a rough translation of build_angle.gypi,
-# copied from src/Makefile.in.
-
-# Target: 'preprocessor'
-# src/compiler/preprocessor:
-VPATH += $(srcdir)/../compiler/preprocessor
-
-# Target: 'translator_common'
-#   Requires: 'preprocessor'
-VPATH += $(srcdir)/renderer
-VPATH += $(srcdir)/..
-VPATH += $(srcdir)/../compiler
-VPATH += $(srcdir)/../compiler/depgraph
-VPATH += $(srcdir)/../compiler/timing
-VPATH += $(srcdir)/../third_party/compiler
-VPATH += $(srcdir)/../third_party/murmurhash
-
-# Above should match the relevant targets from angle/Makefile.in.
-
-VPATH += $(srcdir)/../common
-# src/common:
 DEFFILE = $(srcdir)/libGLESv2.def
 RCFILE  = $(srcdir)/libGLESv2.rc
 

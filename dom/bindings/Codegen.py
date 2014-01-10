@@ -2686,6 +2686,15 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
             exceptionCode,
             isCallbackReturnValue)
 
+class CGCallbackTempRoot(CGGeneric):
+    def __init__(self, name):
+        define = """{ // Scope for tempRoot
+  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());
+  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());
+}
+""" % name
+        CGGeneric.__init__(self, define=define)
+
 class JSToNativeConversionInfo():
     """
     An object representing information about a JS-to-native conversion.
@@ -3402,11 +3411,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 declType = CGGeneric("nsRefPtr<%s>" % name);
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
-            conversion = (
-                "{ // Scope for tempRoot\n"
-                "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
-                "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
-                "}" % name)
+            conversion = CGIndenter(CGCallbackTempRoot(name)).define()
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr",
@@ -3738,11 +3743,7 @@ for (uint32_t i = 0; i < length; ++i) {
             declType = CGGeneric("nsRefPtr<%s>" % name);
         else:
             declType = CGGeneric("OwningNonNull<%s>" % name)
-        conversion = (
-            "{ // Scope for tempRoot\n"
-            "  JS::Rooted<JSObject*> tempRoot(cx, &${val}.toObject());\n"
-            "  ${declName} = new %s(tempRoot, mozilla::dom::GetIncumbentGlobal());\n"
-            "}\n" % name)
+        conversion = CGIndenter(CGCallbackTempRoot(name)).define()
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
             haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
@@ -4092,8 +4093,7 @@ class CGArgumentConverter(CGThing):
     """
     def __init__(self, argument, index, descriptorProvider,
                  argDescription,
-                 invalidEnumValueFatal=True, lenientFloatCode=None,
-                 allowTreatNonCallableAsNull=False):
+                 invalidEnumValueFatal=True, lenientFloatCode=None):
         CGThing.__init__(self)
         self.argument = argument
         self.argDescription = argDescription
@@ -4122,7 +4122,6 @@ class CGArgumentConverter(CGThing):
             self.argcAndIndex = None
         self.invalidEnumValueFatal = invalidEnumValueFatal
         self.lenientFloatCode = lenientFloatCode
-        self.allowTreatNonCallableAsNull = allowTreatNonCallableAsNull
 
     def define(self):
         typeConversion = getJSToNativeConversionInfo(
@@ -4137,7 +4136,7 @@ class CGArgumentConverter(CGThing):
             isClamp=self.argument.clamp,
             lenientFloatCode=self.lenientFloatCode,
             isMember="Variadic" if self.argument.variadic else False,
-            allowTreatNonCallableAsNull=self.allowTreatNonCallableAsNull,
+            allowTreatNonCallableAsNull=self.argument.allowTreatNonCallableAsNull(),
             sourceDescription=self.argDescription)
 
         if not self.argument.variadic:
@@ -5106,7 +5105,6 @@ if (global.Failed()) {
         cgThings.extend([CGArgumentConverter(arguments[i], i, self.descriptor,
                                              argDescription % { "index": i + 1 },
                                              invalidEnumValueFatal=not setter,
-                                             allowTreatNonCallableAsNull=setter,
                                              lenientFloatCode=lenientFloatCode) for
                          i in range(argConversionStartsAt, self.argCount)])
 
@@ -5687,11 +5685,12 @@ class FakeArgument():
     A class that quacks like an IDLArgument.  This is used to make
     setters look like method calls or for special operations.
     """
-    def __init__(self, type, interfaceMember, name="arg"):
+    def __init__(self, type, interfaceMember, name="arg", allowTreatNonCallableAsNull=False):
         self.type = type
         self.optional = False
         self.variadic = False
         self.defaultValue = None
+        self._allowTreatNonCallableAsNull = allowTreatNonCallableAsNull
         self.treatNullAs = interfaceMember.treatNullAs
         if isinstance(interfaceMember, IDLAttribute):
             self.enforceRange = interfaceMember.enforceRange
@@ -5704,13 +5703,16 @@ class FakeArgument():
                 self.name = name
         self.identifier = FakeIdentifier()
 
+    def allowTreatNonCallableAsNull(self):
+        return self._allowTreatNonCallableAsNull
+
 class CGSetterCall(CGPerSignatureCall):
     """
     A class to generate a native object setter call for a particular IDL
     setter.
     """
     def __init__(self, argType, nativeMethodName, descriptor, attr):
-        CGPerSignatureCall.__init__(self, None, [FakeArgument(argType, attr)],
+        CGPerSignatureCall.__init__(self, None, [FakeArgument(argType, attr, allowTreatNonCallableAsNull=True)],
                                     nativeMethodName, attr.isStatic(),
                                     descriptor, attr, setter=True)
     def wrap_return_value(self):
@@ -11933,3 +11935,4 @@ class CGEventRoot(CGThing):
 
     def define(self):
         return self.root.define()
+

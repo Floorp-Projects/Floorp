@@ -2,22 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# The below is a rough translation of build_angle.gypi:
-# Target: 'preprocessor'
-# src/compiler/preprocessor:
-VPATH += $(srcdir)/src/compiler/preprocessor
-
-# Target: 'translator_common'
-#   Requires: 'preprocessor'
-VPATH += $(srcdir)/src/compiler
-VPATH += $(srcdir)/src/compiler/depgraph
-VPATH += $(srcdir)/src/compiler/timing
-VPATH += $(srcdir)/src/third_party/compiler
-VPATH += $(srcdir)/src/third_party/murmurhash
-
-# Target: 'translator_glsl'
-#   Requires: 'translator_common'
-# src/compiler:
 ifdef MOZ_ANGLE_RENDERER
 
 libs::

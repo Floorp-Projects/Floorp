@@ -17,23 +17,16 @@ CreateTextureHostBasic(const SurfaceDescriptor& aDesc,
                        ISurfaceAllocator* aDeallocator,
                        TextureFlags aFlags)
 {
-  RefPtr<TextureHost> result;
-  switch (aDesc.type()) {
 #ifdef XP_MACOSX
-    case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
-      const SurfaceDescriptorMacIOSurface& desc =
-        aDesc.get_SurfaceDescriptorMacIOSurface();
-      result = new MacIOSurfaceTextureHostBasic(aFlags, desc);
-      break;
-    }
-#endif
-    default: {
-      result = CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
-      break;
-    }
+  if (aDesc.type() == SurfaceDescriptor::TSurfaceDescriptorMacIOSurface) {
+    const SurfaceDescriptorMacIOSurface& desc =
+      aDesc.get_SurfaceDescriptorMacIOSurface();
+    RefPtr<TextureHost> result = new MacIOSurfaceTextureHostBasic(aFlags, desc);
+    return result;
   }
+#endif
 
-  return result;
+  return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
 }
 
 } // namespace layers

@@ -141,12 +141,12 @@ GrallocTextureSourceOGL::gl() const
 }
 
 void
-GrallocTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
+GrallocTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
   if (mCompositor && !aCompositor) {
     DeallocateDeviceData();
   }
-  mCompositor = aCompositor;
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
 

@@ -249,7 +249,7 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
 }
 
 bool
-ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes)
+ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, bool clear)
 {
     /*
      * ArrayBufferObjects delegate added properties to another JSObject, so
@@ -267,6 +267,8 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes)
         elements = header->elements();
     } else {
         setFixedElements();
+        if (clear)
+            memset(dataPointer(), 0, bytes);
     }
 
     initElementsHeader(getElementsHeader(), bytes);
@@ -631,11 +633,8 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true *
      * The beginning stores an ObjectElements header structure holding the
      * length. The rest of it is a flat data store for the array buffer.
      */
-    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes))
+    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, clear))
         return nullptr;
-
-    if (clear)
-        memset(obj->as<ArrayBufferObject>().dataPointer(), 0, nbytes);
 
     return obj;
 }
