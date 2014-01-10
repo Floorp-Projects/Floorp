@@ -520,7 +520,8 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "ATI",
                 "Qualcomm",
                 "Imagination",
-                "nouveau"
+                "nouveau",
+                "Vivante"
         };
 
         mVendor = GLVendor::Other;
@@ -600,6 +601,11 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         // Disable extensions with partial or incorrect support.
         if (WorkAroundDriverBugs()) {
             if (Renderer() == GLRenderer::AdrenoTM320) {
+                MarkUnsupported(GLFeature::standard_derivatives);
+            }
+
+            if (Vendor() == GLVendor::Vivante) {
+                // bug 958256
                 MarkUnsupported(GLFeature::standard_derivatives);
             }
 
