@@ -46,7 +46,7 @@ if CONFIG['MOZ_XUL']:
 
 LOCAL_INCLUDES += [
     '../../../../content/base/src',
-    '../../../../content/events/src',
+    '../../../../dom/events',
     '../../base',
     '../../generic',
     '../../html',
