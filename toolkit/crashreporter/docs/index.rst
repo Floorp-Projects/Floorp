@@ -32,8 +32,8 @@ Crash Reporter Client
    to handle dump files. This application optionally submits crashes to
    Mozilla (or the configured server).
 
-How Crash Handling Works
-========================
+How Main-Process Crash Handling Works
+=====================================
 
 The crash handler is hooked up very early in the Gecko process lifetime.
 It all starts in ``XREMain::XRE_mainInit()`` from ``nsAppRunner.cpp``.
@@ -99,17 +99,65 @@ removed from the *pending* directory and a file containing the
 crash ID from the remote server for the submitted dump is created in the
 *submitted* directory.
 
+If the user chooses not to submit a dump in the crash reporter UI, the dump
+files are deleted.
+
 And that's pretty much what happens when a crash/dump is written!
 
 Plugin and Child Process Crashes
---------------------------------
+================================
 
 Crashes in plugin and child processes are also managed by the crash
 reporting subsystem.
 
 Child process crashes are handled by the ``mozilla::dom::CrashReporterParent``
-class defined in ``dom/ipc``. Their submission is handled in process by the
-``CrashSubmit.jsm`` file in ``toolkit/crashreporter``.
+class defined in ``dom/ipc``. When a child process crashes, the toplevel IPDL
+actor should check for it by calling TakeMinidump in its ``ActorDestroy``
+Method: see ``mozilla::plugins::PluginModuleParent::ActorDestroy`` and
+``mozilla::plugins::PluginModuleParent::ProcessFirstMinidump``. That method
+is responsible for calling
+``mozilla::dom::CrashReporterParent::GenerateCrashReportForMinidump`` with
+appropriate crash annotations specific to the crash. All child-process
+crashes are annotated with a ``ProcessType`` annotation, such as "content" or
+"plugin".
+
+Submission of child process crashes is handled by application code. This
+code prompts the user to submit crashes in context-appropriate UI and then
+submits the crashes using ``CrashSubmit.jsm``.
+
+Flash Process Crashes
+=====================
+
+On Windows Vista+, the Adobe Flash plugin creates two extra processes in its
+Firefox plugin to implement OS-level sandboxing. In order to catch crashes in
+these processes, Firefox injects a crash report handler into the process using the code at ``InjectCrashReporter.cpp``. When these crashes occur, the
+ProcessType=plugin annotation is present, and an additional annotation
+FlashProcessDump has the value "Sandbox" or "Broker".
+
+Plugin Hangs
+============
+
+Plugin hangs are handled as crash reports. If a plugin doesn't respond to an
+IPC message after 60 seconds, the plugin IPC code will take minidumps of all
+of the processes involved and then kill the plugin.
+
+In this case, there will be only one .ini file with the crash report metadata,
+but there will be multiple dump files: at least one for the browser process and
+one for the plugin process, and perhaps also additional dumps for the Flash
+sandbox and broker processes. All of these files are submitted together as a
+unit. Before submission, the filenames of the files are linked:
+
+- **uuid.ini** - *annotations, includes an additional_minidumps field*
+- **uuid.dmp** - *plugin process dump file*
+- **uuid-<other>.dmp** - *other process dump file as listed in additional_minidumps*
+
+Browser Hangs
+=============
+
+There is a feature of Firefox that will crash Firefox if it stops processing
+messages after a certain period of time. This feature doesn't work well and is
+disabled by default. See ``xpcom/threads/HangMonitor.cpp``. Hang crashes
+are annotated with ``Hang=1``.
 
 about:crashes
 =============
