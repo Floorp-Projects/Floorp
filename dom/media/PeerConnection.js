@@ -120,8 +120,10 @@ GlobalPCList.prototype = {
 
   getStatsForEachPC: function(callback, errorCallback) {
     function getStatsFromPC(pcref) {
-      if (pcref.get()) {
+      try {
         pcref.get().getStatsInternal(null, callback, errorCallback);
+      } catch (e) {
+        errorCallback("Some error getting stats from PC: " + e.toString());
       }
     }
 
@@ -135,6 +137,8 @@ GlobalPCList.prototype = {
     }
   },
 
+  // TODO(bcampen@mozilla.com): Handle this with a global object in c++
+  // (Bug 958221)
   getLoggingFromFirstPC: function(pattern, callback, errorCallback) {
     for (let winId in this._list) {
       this.removeNullRefs(winId);
@@ -158,6 +162,8 @@ WebrtcGlobalInformation.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 
   getAllStats: function(successCallback, failureCallback) {
+    // TODO(bcampen@mozilla.com): Move the work of fanout into c++, and
+    // only callback once. (Bug 958221)
     if (_globalPCList) {
       _globalPCList.getStatsForEachPC(successCallback, failureCallback);
     } else {
