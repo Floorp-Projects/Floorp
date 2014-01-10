@@ -68,7 +68,7 @@ private:
   nsresult GetCertificateHash(nsAString& aFingerprint, SECOidTag aHashAlg);
 
   enum {
-    ev_status_unknown = -1, ev_status_invalid = 0, ev_status_valid = 1
+    ev_status_invalid = 0, ev_status_valid = 1, ev_status_unknown = 2
   } mCachedEVStatus;
   SECOidTag mCachedEVOidTag;
   nsresult hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
