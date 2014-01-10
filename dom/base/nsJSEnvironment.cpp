@@ -1944,7 +1944,10 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   JS::PrepareForFullGC(sRuntime);
   if (aIncremental == IncrementalGC) {
+    MOZ_ASSERT(aShrinking == NonShrinkingGC);
     JS::IncrementalGC(sRuntime, aReason, aSliceMillis);
+  } else if (aShrinking == ShrinkingGC) {
+    JS::ShrinkingGC(sRuntime, aReason);
   } else {
     JS::GCForReason(sRuntime, aReason);
   }
