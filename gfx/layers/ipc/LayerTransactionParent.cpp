@@ -200,6 +200,9 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     return true;
   }
 
+  // Clear ReleaseFence handles used in previous transaction.
+  ClearPrevReleaseFenceHandles();
+
   EditReplyVector replyv;
 
   layer_manager()->BeginTransactionWithDrawTarget(nullptr);

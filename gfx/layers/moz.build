@@ -26,6 +26,7 @@ EXPORTS += [
     'ImageTypes.h',
     'ipc/CompositorChild.h',
     'ipc/CompositorParent.h',
+    'ipc/FenceUtils.h',
     'ipc/ShadowLayersManager.h',
     'Layers.h',
     'LayerScope.h',
@@ -94,6 +95,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
 
 EXPORTS.gfxipc += [
+    'ipc/FenceUtils.h',
     'ipc/ShadowLayerUtils.h',
 ]
 
@@ -193,6 +195,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     SOURCES += [
         'ipc/ShadowLayerUtilsGralloc.cpp',
     ]
+
+    if CONFIG['ANDROID_VERSION'] in ('18'):
+        EXPORTS.mozilla.layers += [
+            'ipc/FenceUtilsGonk.h',
+        ]
+        SOURCES += [
+            'ipc/FenceUtilsGonk.cpp',
+        ]
 
 UNIFIED_SOURCES += [
     'basic/BasicCanvasLayer.cpp',

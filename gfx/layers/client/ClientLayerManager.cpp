@@ -379,7 +379,17 @@ ClientLayerManager::ForwardTransaction()
         compositable->OnReplyTextureRemoved(rep.textureId());
         break;
       }
-
+      case EditReply::TReturnReleaseFence: {
+        const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
+        FenceHandle fence = rep.fence();
+        if (!fence.IsValid()) {
+          break;
+        }
+        CompositableClient* compositable
+          = static_cast<CompositableChild*>(rep.compositableChild())->GetCompositableClient();
+        compositable->SetReleaseFence(fence);
+        break;
+      }
       default:
         NS_RUNTIMEABORT("not reached");
       }

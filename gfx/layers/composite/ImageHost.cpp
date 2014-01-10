@@ -39,6 +39,7 @@ void
 ImageHost::UseTextureHost(TextureHost* aTexture)
 {
   mFrontBuffer = aTexture;
+  mFrontBuffer->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 }
 
 void
