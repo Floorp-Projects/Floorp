@@ -8,6 +8,9 @@
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
+#include "mozilla/Move.h"
 #include "nsDebug.h"
 #include "nsTraceRefcnt.h"
 
@@ -40,6 +43,148 @@ const int32_t MessageChannel::kNoTimeout = INT32_MIN;
 
 // static
 bool MessageChannel::sIsPumpingMessages = false;
+
+enum Direction
+{
+    IN_MESSAGE,
+    OUT_MESSAGE
+};
+
+
+class MessageChannel::InterruptFrame
+{
+private:
+    enum Semantics
+    {
+        INTR_SEMS,
+        SYNC_SEMS,
+        ASYNC_SEMS
+    };
+
+public:
+    InterruptFrame(Direction direction, const Message* msg)
+      : mMessageName(strdup(msg->name())),
+        mMessageRoutingId(msg->routing_id()),
+        mMesageSemantics(msg->is_interrupt() ? INTR_SEMS :
+                          msg->is_sync() ? SYNC_SEMS :
+                          ASYNC_SEMS),
+        mDirection(direction),
+        mMoved(false)
+    {
+        MOZ_ASSERT(mMessageName);
+    }
+
+    InterruptFrame(InterruptFrame&& aOther)
+    {
+        MOZ_ASSERT(aOther.mMessageName);
+        mMessageName = aOther.mMessageName;
+        aOther.mMessageName = nullptr;
+        aOther.mMoved = true;
+
+        mMessageRoutingId = aOther.mMessageRoutingId;
+        mMesageSemantics = aOther.mMesageSemantics;
+        mDirection = aOther.mDirection;
+    }
+
+    ~InterruptFrame()
+    {
+        MOZ_ASSERT_IF(!mMessageName, mMoved);
+
+        if (mMessageName)
+            free(const_cast<char*>(mMessageName));
+    }
+
+    InterruptFrame& operator=(InterruptFrame&& aOther)
+    {
+        MOZ_ASSERT(&aOther != this);
+        this->~InterruptFrame();
+        new (this) InterruptFrame(mozilla::Move(aOther));
+        return *this;
+    }
+
+    bool IsInterruptIncall() const
+    {
+        return INTR_SEMS == mMesageSemantics && IN_MESSAGE == mDirection;
+    }
+
+    bool IsInterruptOutcall() const
+    {
+        return INTR_SEMS == mMesageSemantics && OUT_MESSAGE == mDirection;
+    }
+
+    void Describe(int32_t* id, const char** dir, const char** sems,
+                  const char** name) const
+    {
+        *id = mMessageRoutingId;
+        *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
+        *sems = (INTR_SEMS == mMesageSemantics) ? "intr" :
+                (SYNC_SEMS == mMesageSemantics) ? "sync" :
+                "async";
+        *name = mMessageName;
+    }
+
+private:
+    const char* mMessageName;
+    int32_t mMessageRoutingId;
+    Semantics mMesageSemantics;
+    Direction mDirection;
+    DebugOnly<bool> mMoved;
+
+    // Disable harmful methods.
+    InterruptFrame(const InterruptFrame& aOther) MOZ_DELETE;
+    InterruptFrame& operator=(const InterruptFrame&) MOZ_DELETE;
+};
+
+class MOZ_STACK_CLASS MessageChannel::CxxStackFrame
+{
+public:
+    CxxStackFrame(MessageChannel& that, Direction direction, const Message* msg)
+      : mThat(that)
+    {
+        mThat.AssertWorkerThread();
+
+        if (mThat.mCxxStackFrames.empty())
+            mThat.EnteredCxxStack();
+
+        mThat.mCxxStackFrames.append(InterruptFrame(direction, msg));
+
+        const InterruptFrame& frame = mThat.mCxxStackFrames.back();
+
+        if (frame.IsInterruptIncall())
+            mThat.EnteredCall();
+
+        mThat.mSawInterruptOutMsg |= frame.IsInterruptOutcall();
+    }
+
+    ~CxxStackFrame() {
+        mThat.AssertWorkerThread();
+
+        MOZ_ASSERT(!mThat.mCxxStackFrames.empty());
+
+        bool exitingCall = mThat.mCxxStackFrames.back().IsInterruptIncall();
+        mThat.mCxxStackFrames.shrinkBy(1);
+
+        bool exitingStack = mThat.mCxxStackFrames.empty();
+
+        // mListener could have gone away if Close() was called while
+        // MessageChannel code was still on the stack
+        if (!mThat.mListener)
+            return;
+
+        if (exitingCall)
+            mThat.ExitedCall();
+
+        if (exitingStack)
+            mThat.ExitedCxxStack();
+    }
+private:
+    MessageChannel& mThat;
+
+    // Disable harmful methods.
+    CxxStackFrame() MOZ_DELETE;
+    CxxStackFrame(const CxxStackFrame&) MOZ_DELETE;
+    CxxStackFrame& operator=(const CxxStackFrame&) MOZ_DELETE;
+};
 
 MessageChannel::MessageChannel(MessageListener *aListener)
   : mListener(aListener->asWeakPtr()),
