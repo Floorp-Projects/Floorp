@@ -80,7 +80,7 @@ SourceSurfaceCairo::GetDataSurface()
   }
 
   // We also need to make sure that the returned surface has
-  // surface->GetType() == SURFACE_DATA.
+  // surface->GetType() == SurfaceType::DATA.
   dataSurf = new DataSourceSurfaceWrapper(dataSurf);
 
   return dataSurf;

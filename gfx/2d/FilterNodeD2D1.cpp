@@ -133,14 +133,14 @@ TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface
   }
   RefPtr<ID2D1Image> image;
   switch (aSurface->GetType()) {
-  case SURFACE_D2D1_1_IMAGE:
+  case SurfaceType::D2D1_1_IMAGE:
     image = static_cast<SourceSurfaceD2D1*>(aSurface)->GetImage();
     static_cast<SourceSurfaceD2D1*>(aSurface)->EnsureIndependent();
     break;
-  case SURFACE_D2D1_BITMAP:
+  case SurfaceType::D2D1_BITMAP:
    image = static_cast<SourceSurfaceD2D*>(aSurface)->GetBitmap();
     break;
-  case SURFACE_D2D1_DRAWTARGET: {
+  case SurfaceType::D2D1_DRAWTARGET: {
       SourceSurfaceD2DTarget *surf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
       image = surf->GetBitmap(static_cast<DrawTargetD2D*>(aDT)->GetRT());
     }

@@ -14,7 +14,7 @@ class DualSurface
 public:
   inline DualSurface(SourceSurface *aSurface)
   {
-    if (aSurface->GetType() != SURFACE_DUAL_DT) {
+    if (aSurface->GetType() != SurfaceType::DUAL_DT) {
       mA = mB = aSurface;
       return;
     }
@@ -47,7 +47,7 @@ public:
     const SurfacePattern *surfPat =
       static_cast<const SurfacePattern*>(&aPattern);
 
-    if (surfPat->mSurface->GetType() != SURFACE_DUAL_DT) {
+    if (surfPat->mSurface->GetType() != SurfaceType::DUAL_DT) {
       mA = mB = &aPattern;
       return;
     }

@@ -202,13 +202,13 @@ ReleaseData(void* aData)
 cairo_surface_t*
 GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = false)
 {
-  if (aSurface->GetType() == SURFACE_CAIRO) {
+  if (aSurface->GetType() == SurfaceType::CAIRO) {
     cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
     return surf;
   }
 
-  if (aSurface->GetType() == SURFACE_CAIRO_IMAGE) {
+  if (aSurface->GetType() == SurfaceType::CAIRO_IMAGE) {
     cairo_surface_t* surf =
       static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
@@ -575,7 +575,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                        Float aSigma,
                                        CompositionOp aOperator)
 {
-  if (aSurface->GetType() != SURFACE_CAIRO) {
+  if (aSurface->GetType() != SurfaceType::CAIRO) {
     return;
   }
   

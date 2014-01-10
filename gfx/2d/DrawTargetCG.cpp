@@ -215,12 +215,12 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
 static CGImageRef
 GetRetainedImageFromSourceSurface(SourceSurface *aSurface)
 {
-  if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE)
+  if (aSurface->GetType() == SurfaceType::COREGRAPHICS_IMAGE)
     return CGImageRetain(static_cast<SourceSurfaceCG*>(aSurface)->GetImage());
-  else if (aSurface->GetType() == SURFACE_COREGRAPHICS_CGCONTEXT)
+  else if (aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT)
     return CGImageRetain(static_cast<SourceSurfaceCGContext*>(aSurface)->GetImage());
 
-  if (aSurface->GetType() == SURFACE_DATA) {
+  if (aSurface->GetType() == SurfaceType::DATA) {
     DataSourceSurface* dataSource = static_cast<DataSourceSurface*>(aSurface);
     return CreateCGImage(nullptr, dataSource->GetData(), dataSource->GetSize(),
                          dataSource->Stride(), dataSource->GetFormat());
@@ -1193,8 +1193,8 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
 {
   MarkChanged();
 
-  if (aSurface->GetType() == SURFACE_COREGRAPHICS_IMAGE ||
-      aSurface->GetType() == SURFACE_COREGRAPHICS_CGCONTEXT) {
+  if (aSurface->GetType() == SurfaceType::COREGRAPHICS_IMAGE ||
+      aSurface->GetType() == SurfaceType::COREGRAPHICS_CGCONTEXT) {
     CGImageRef image = GetRetainedImageFromSourceSurface(aSurface);
 
     /* we have two options here:

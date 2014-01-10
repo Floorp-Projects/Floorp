@@ -12,7 +12,7 @@ namespace mozilla {
 namespace gfx {
 
 // Wraps a DataSourceSurface and forwards all methods except for GetType(),
-// from which it always returns SURFACE_DATA.
+// from which it always returns SurfaceType::DATA.
 class DataSourceSurfaceWrapper : public DataSourceSurface
 {
 public:
@@ -20,7 +20,7 @@ public:
    : mSurface(aSurface)
   {}
 
-  virtual SurfaceType GetType() const MOZ_OVERRIDE { return SURFACE_DATA; }
+  virtual SurfaceType GetType() const MOZ_OVERRIDE { return SurfaceType::DATA; }
 
   virtual uint8_t *GetData() MOZ_OVERRIDE { return mSurface->GetData(); }
   virtual int32_t Stride() MOZ_OVERRIDE { return mSurface->Stride(); }

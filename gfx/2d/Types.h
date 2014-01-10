@@ -7,6 +7,7 @@
 #define MOZILLA_GFX_TYPES_H_
 
 #include "mozilla/NullPtr.h"
+#include "mozilla/TypedEnum.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -16,20 +17,19 @@ namespace gfx {
 
 typedef float Float;
 
-enum SurfaceType
-{
-  SURFACE_DATA, /* Data surface - bitmap in memory */
-  SURFACE_D2D1_BITMAP, /* Surface wrapping a ID2D1Bitmap */
-  SURFACE_D2D1_DRAWTARGET, /* Surface made from a D2D draw target */
-  SURFACE_CAIRO, /* Surface wrapping a cairo surface */
-  SURFACE_CAIRO_IMAGE, /* Data surface wrapping a cairo image surface */
-  SURFACE_COREGRAPHICS_IMAGE, /* Surface wrapping a CoreGraphics Image */
-  SURFACE_COREGRAPHICS_CGCONTEXT, /* Surface wrapping a CG context */
-  SURFACE_SKIA, /* Surface wrapping a Skia bitmap */
-  SURFACE_DUAL_DT, /* Snapshot of a dual drawtarget */
-  SURFACE_D2D1_1_IMAGE, /* A D2D 1.1 ID2D1Image SourceSurface */
-  SURFACE_RECORDING /* Surface used for recording */
-};
+MOZ_BEGIN_ENUM_CLASS(SurfaceType)
+  DATA, /* Data surface - bitmap in memory */
+  D2D1_BITMAP, /* Surface wrapping a ID2D1Bitmap */
+  D2D1_DRAWTARGET, /* Surface made from a D2D draw target */
+  CAIRO, /* Surface wrapping a cairo surface */
+  CAIRO_IMAGE, /* Data surface wrapping a cairo image surface */
+  COREGRAPHICS_IMAGE, /* Surface wrapping a CoreGraphics Image */
+  COREGRAPHICS_CGCONTEXT, /* Surface wrapping a CG context */
+  SKIA, /* Surface wrapping a Skia bitmap */
+  DUAL_DT, /* Snapshot of a dual drawtarget */
+  D2D1_1_IMAGE, /* A D2D 1.1 ID2D1Image SourceSurface */
+  RECORDING /* Surface used for recording */
+MOZ_END_ENUM_CLASS(SurfaceType)
 
 enum SurfaceFormat
 {
