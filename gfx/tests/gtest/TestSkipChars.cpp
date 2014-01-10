@@ -21,26 +21,26 @@ TestConstructor()
 static bool
 TestLength()
 {
-  gfxSkipChars skipChars;
+  gfxSkipCharsBuilder builder;
 
-  skipChars.KeepChars(100);
+  builder.KeepChars(100);
 
-  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 100) <<
+  EXPECT_TRUE(builder.GetCharCount() == 100) <<
     "[1] Check length after keeping chars";
 
-  skipChars.SkipChars(50);
+  builder.SkipChars(50);
 
-  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 150) <<
+  EXPECT_TRUE(builder.GetCharCount() == 150) <<
     "[2] Check length after skipping chars";
 
-  skipChars.SkipChars(50);
+  builder.SkipChars(50);
 
-  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 200) <<
+  EXPECT_TRUE(builder.GetCharCount() == 200) <<
     "[3] Check length after skipping more chars";
 
-  skipChars.KeepChar();
+  builder.KeepChar();
 
-  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 201) <<
+  EXPECT_TRUE(builder.GetCharCount() == 201) <<
     "[4] Check length after keeping a final char";
 
   return true;
@@ -50,22 +50,25 @@ static bool
 TestIterator()
 {
   // Test a gfxSkipChars that starts with kept chars
-  gfxSkipChars skipChars1;
+  gfxSkipCharsBuilder builder1;
 
-  skipChars1.KeepChars(9);
-  skipChars1.SkipChar();
-  skipChars1.KeepChars(9);
-  skipChars1.SkipChar();
-  skipChars1.KeepChars(9);
+  builder1.KeepChars(9);
+  builder1.SkipChar();
+  builder1.KeepChars(9);
+  builder1.SkipChar();
+  builder1.KeepChars(9);
 
-  EXPECT_TRUE(skipChars1.GetOriginalCharCount() == 29) <<
+  gfxSkipChars skipChars;
+  skipChars.TakeFrom(&builder1);
+
+  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 29) <<
     "[1] Check length";
 
-  gfxSkipCharsIterator iter1(skipChars1);
+  gfxSkipCharsIterator iter(skipChars);
 
-  EXPECT_TRUE(iter1.GetOriginalOffset() == 0) <<
+  EXPECT_TRUE(iter.GetOriginalOffset() == 0) <<
     "[2] Check initial original offset";
-  EXPECT_TRUE(iter1.GetSkippedOffset() == 0) <<
+  EXPECT_TRUE(iter.GetSkippedOffset() == 0) <<
     "[3] Check initial skipped offset";
 
   uint32_t expectSkipped1[] =
@@ -74,7 +77,7 @@ TestIterator()
     18, 19, 20, 21, 22, 23, 24, 25, 26, 27 };
 
   for (uint32_t i = 0; i < mozilla::ArrayLength(expectSkipped1); i++) {
-    EXPECT_TRUE(iter1.ConvertOriginalToSkipped(i) == expectSkipped1[i]) <<
+    EXPECT_TRUE(iter.ConvertOriginalToSkipped(i) == expectSkipped1[i]) <<
       "[4] Check mapping of original to skipped for " << i;
   }
 
@@ -84,23 +87,25 @@ TestIterator()
     20, 21, 22, 23, 24, 25, 26, 27, 28 };
 
   for (uint32_t i = 0; i < mozilla::ArrayLength(expectOriginal1); i++) {
-    EXPECT_TRUE(iter1.ConvertSkippedToOriginal(i) == expectOriginal1[i]) <<
+    EXPECT_TRUE(iter.ConvertSkippedToOriginal(i) == expectOriginal1[i]) <<
       "[5] Check mapping of skipped to original for " << i;
   }
 
   // Test a gfxSkipChars that starts with skipped chars
-  gfxSkipChars skipChars2;
+  gfxSkipCharsBuilder builder2;
 
-  skipChars2.SkipChars(9);
-  skipChars2.KeepChar();
-  skipChars2.SkipChars(9);
-  skipChars2.KeepChar();
-  skipChars2.SkipChars(9);
+  builder2.SkipChars(9);
+  builder2.KeepChar();
+  builder2.SkipChars(9);
+  builder2.KeepChar();
+  builder2.SkipChars(9);
 
-  EXPECT_TRUE(skipChars2.GetOriginalCharCount() == 29) <<
+  skipChars.TakeFrom(&builder2);
+
+  EXPECT_TRUE(skipChars.GetOriginalCharCount() == 29) <<
     "[6] Check length";
 
-  gfxSkipCharsIterator iter2(skipChars2);
+  gfxSkipCharsIterator iter2(skipChars);
 
   EXPECT_TRUE(iter2.GetOriginalOffset() == 0) <<
     "[7] Check initial original offset";
