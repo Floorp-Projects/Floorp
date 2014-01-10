@@ -198,7 +198,7 @@ class MochitestRunner(MozbuildObject):
         chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
         debug_on_failure=False, start_at=None, end_at=None, e10s=False,
         dmd=False, dump_output_directory=None, dump_about_memory_after_test=False,
-        dump_dmd_after_test=False, install_extension=None):
+        dump_dmd_after_test=False, install_extension=None, **kwargs):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -314,6 +314,9 @@ class MochitestRunner(MozbuildObject):
         options.failureFile = failure_file_path
         if install_extension != None:
             options.extensionsToInstall = [os.path.join(self.topsrcdir,install_extension)]
+
+        for k, v in kwargs.iteritems():
+            setattr(options, k, v)
 
         if test_path:
             test_root = runner.getTestRoot(options)
