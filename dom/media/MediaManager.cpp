@@ -1986,7 +1986,7 @@ MediaManager::MediaCaptureWindowStateInternal(nsIDOMWindow* aWindow, bool* aVide
       for (i = 0; i < count; ++i) {
         nsCOMPtr<nsIDocShellTreeItem> item;
         docShell->GetChildAt(i, getter_AddRefs(item));
-        nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(item);
+        nsCOMPtr<nsPIDOMWindow> win = item ? item->GetWindow() : nullptr;
 
         MediaCaptureWindowStateInternal(win, aVideo, aAudio);
         if (*aAudio && *aVideo) {

@@ -662,8 +662,7 @@ nsFocusManager::WindowRaised(nsIDOMWindow* aWindow)
   if (mActiveWindow)
     WindowLowered(mActiveWindow);
 
-  nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(aWindow));
-  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webnav));
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem = window->GetDocShell();
   // If there's no docShellAsItem, this window must have been closed,
   // in that case there is no tree owner.
   NS_ENSURE_TRUE(docShellAsItem, NS_OK);
@@ -805,10 +804,12 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
       // so that no element is focused.
       nsIDocument* subdoc = aDocument->GetSubDocumentFor(content);
       if (subdoc) {
-        nsCOMPtr<nsISupports> container = subdoc->GetContainer();
-        nsCOMPtr<nsPIDOMWindow> childWindow = do_GetInterface(container);
-        if (childWindow && IsSameOrAncestor(childWindow, mFocusedWindow)) {
-          ClearFocus(mActiveWindow);
+        nsCOMPtr<nsIDocShell> docShell = subdoc->GetDocShell();
+        if (docShell) {
+          nsCOMPtr<nsPIDOMWindow> childWindow = docShell->GetWindow();
+          if (childWindow && IsSameOrAncestor(childWindow, mFocusedWindow)) {
+            ClearFocus(mActiveWindow);
+          }
         }
       }
     }
@@ -968,14 +969,16 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   // ensures that the focused window isn't in a chain of frames that doesn't
   // exist any more.
   if (window != mFocusedWindow) {
-    nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(mFocusedWindow));
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
+    nsCOMPtr<nsIDocShellTreeItem> dsti =
+      mFocusedWindow ? mFocusedWindow->GetDocShell() : nullptr;
     if (dsti) {
       nsCOMPtr<nsIDocShellTreeItem> parentDsti;
       dsti->GetParent(getter_AddRefs(parentDsti));
-      nsCOMPtr<nsPIDOMWindow> parentWindow = do_GetInterface(parentDsti);
-      if (parentWindow)
-        parentWindow->SetFocusedNode(nullptr);
+      if (parentDsti) {
+        nsCOMPtr<nsPIDOMWindow> parentWindow = parentDsti->GetWindow();
+        if (parentWindow)
+          parentWindow->SetFocusedNode(nullptr);
+      }
     }
 
     SetFocusedWindowInternal(window);
@@ -1144,13 +1147,12 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
   // new root docshell for the new element with the active window's docshell.
   bool isElementInActiveWindow = false;
 
-  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(newWindow);
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
+  nsCOMPtr<nsIDocShellTreeItem> dsti = newWindow->GetDocShell();
   nsCOMPtr<nsPIDOMWindow> newRootWindow;
   if (dsti) {
     nsCOMPtr<nsIDocShellTreeItem> root;
     dsti->GetRootTreeItem(getter_AddRefs(root));
-    newRootWindow = do_GetInterface(root);
+    newRootWindow = root ? root->GetWindow() : nullptr;
 
     isElementInActiveWindow = (mActiveWindow && newRootWindow == mActiveWindow);
   }
@@ -1276,11 +1278,12 @@ bool
 nsFocusManager::IsSameOrAncestor(nsPIDOMWindow* aPossibleAncestor,
                                  nsPIDOMWindow* aWindow)
 {
-  nsCOMPtr<nsIWebNavigation> awebnav(do_GetInterface(aPossibleAncestor));
-  nsCOMPtr<nsIDocShellTreeItem> ancestordsti = do_QueryInterface(awebnav);
+  if (!aWindow || !aPossibleAncestor) {
+    return false;
+  }
 
-  nsCOMPtr<nsIWebNavigation> fwebnav(do_GetInterface(aWindow));
-  nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(fwebnav);
+  nsCOMPtr<nsIDocShellTreeItem> ancestordsti = aPossibleAncestor->GetDocShell();
+  nsCOMPtr<nsIDocShellTreeItem> dsti = aWindow->GetDocShell();
   while (dsti) {
     if (dsti == ancestordsti)
       return true;
@@ -1296,12 +1299,12 @@ already_AddRefed<nsPIDOMWindow>
 nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
                                   nsPIDOMWindow* aWindow2)
 {
-  nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(aWindow1));
-  nsCOMPtr<nsIDocShellTreeItem> dsti1 = do_QueryInterface(webnav);
+  NS_ENSURE_TRUE(aWindow1 && aWindow2, nullptr);
+
+  nsCOMPtr<nsIDocShellTreeItem> dsti1 = aWindow1->GetDocShell();
   NS_ENSURE_TRUE(dsti1, nullptr);
 
-  webnav = do_GetInterface(aWindow2);
-  nsCOMPtr<nsIDocShellTreeItem> dsti2 = do_QueryInterface(webnav);
+  nsCOMPtr<nsIDocShellTreeItem> dsti2 = aWindow2->GetDocShell();
   NS_ENSURE_TRUE(dsti2, nullptr);
 
   nsAutoTArray<nsIDocShellTreeItem*, 30> parents1, parents2;
@@ -1331,7 +1334,7 @@ nsFocusManager::GetCommonAncestor(nsPIDOMWindow* aWindow1,
     parent = child1;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(parent);
+  nsCOMPtr<nsPIDOMWindow> window = parent ? parent->GetWindow() : nullptr;
   return window.forget();
 }
 
@@ -1348,14 +1351,16 @@ nsFocusManager::AdjustWindowFocus(nsPIDOMWindow* aWindow,
     nsCOMPtr<nsIContent> frameContent =
       do_QueryInterface(window->GetFrameElementInternal());
 
-    nsCOMPtr<nsIWebNavigation> webnav(do_GetInterface(window));
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(webnav);
+    nsCOMPtr<nsIDocShellTreeItem> dsti = window->GetDocShell();
     if (!dsti) 
       return;
     nsCOMPtr<nsIDocShellTreeItem> parentDsti;
     dsti->GetParent(getter_AddRefs(parentDsti));
+    if (!parentDsti) {
+      return;
+    }
 
-    window = do_GetInterface(parentDsti);
+    window = parentDsti->GetWindow();
     if (window) {
       // if the parent window is visible but aWindow was not, then we have
       // likely moved up and out from a hidden tab to the browser window, or a
@@ -2005,8 +2010,8 @@ nsFocusManager::RaiseWindow(nsPIDOMWindow* aWindow)
       widget->SetFocus(true);
   }
 #else
-  nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(aWindow);
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin = do_QueryInterface(webnav);
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin =
+    do_QueryInterface(aWindow->GetDocShell());
   if (treeOwnerAsWin) {
     nsCOMPtr<nsIWidget> widget;
     treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
@@ -2581,14 +2586,14 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       // move up to the parent shell and try again from there.
 
       // first, get the frame element this window is inside.
-      nsCOMPtr<nsPIDOMWindow> piWindow = do_GetInterface(docShell);
+      nsCOMPtr<nsPIDOMWindow> piWindow = docShell->GetWindow();
       NS_ENSURE_TRUE(piWindow, NS_ERROR_FAILURE);
 
       // Next, retrieve the parent docshell, document and presshell.
       docShell = do_QueryInterface(docShellParent);
       NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsPIDOMWindow> piParentWindow = do_GetInterface(docShellParent);
+      nsCOMPtr<nsPIDOMWindow> piParentWindow = docShellParent->GetWindow();
       NS_ENSURE_TRUE(piParentWindow, NS_ERROR_FAILURE);
       doc = piParentWindow->GetExtantDoc();
       NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -2632,7 +2637,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       docShell->TabToTreeOwner(forward, &tookFocus);
       // if the tree owner, took the focus, blur the current content
       if (tookFocus) {
-        nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(docShell);
+        nsCOMPtr<nsPIDOMWindow> window = docShell->GetWindow();
         if (window->GetFocusedNode() == mFocusedContent)
           Blur(mFocusedWindow, nullptr, true, true);
         else
@@ -3184,14 +3189,9 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
   else if (mFocusedWindow) {
     startDocShell = mFocusedWindow->GetDocShell();
     doc = mFocusedWindow->GetExtantDoc();
-  }
-  else {
-    nsCOMPtr<nsIWebNavigation> webnav = do_GetInterface(mActiveWindow);
-    startDocShell = do_QueryInterface(webnav);
-
-    if (mActiveWindow) {
-      doc = mActiveWindow->GetExtantDoc();
-    }
+  } else if (mActiveWindow) {
+    startDocShell = mActiveWindow->GetDocShell();
+    doc = mActiveWindow->GetExtantDoc();
   }
 
   if (!startDocShell)
@@ -3251,7 +3251,7 @@ nsFocusManager::GetNextTabbableDocument(nsIContent* aStartContent, bool aForward
       }
 
       curItem = nextItem;
-      nextFrame = do_GetInterface(nextItem);
+      nextFrame = nextItem ? nextItem->GetWindow() : nullptr;
     }
 
     if (!nextFrame)
