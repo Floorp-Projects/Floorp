@@ -6,9 +6,12 @@
 module.metadata = {
   'stability': 'experimental',
   'engines': {
-    'Firefox': '> 24'
+    'Firefox': '> 28'
   }
 };
 
-exports.Button = require('./ui/button').Button;
+exports.ActionButton = require('./ui/button/action').ActionButton;
+exports.ToggleButton = require('./ui/button/toggle').ToggleButton;
 exports.Sidebar = require('./ui/sidebar').Sidebar;
+exports.Frame = require('./ui/frame').Frame;
+exports.Toolbar = require('./ui/toolbar').Toolbar;
