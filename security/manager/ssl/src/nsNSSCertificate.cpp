@@ -1773,15 +1773,19 @@ nsNSSCertListEnumerator::GetNext(nsISupports** _retval)
   return NS_OK;
 }
 
+// NB: This serialization must match that of nsNSSCertificateFakeTransport.
 NS_IMETHODIMP
 nsNSSCertificate::Write(nsIObjectOutputStream* aStream)
 {
   NS_ENSURE_STATE(mCert);
-  nsresult rv = aStream->Write32(mCert->derCert.len);
+  nsresult rv = aStream->Write32(static_cast<uint32_t>(mCachedEVStatus));
   if (NS_FAILED(rv)) {
     return rv;
   }
-
+  rv = aStream->Write32(mCert->derCert.len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   return aStream->WriteByteArray(mCert->derCert.data, mCert->derCert.len);
 }
 
@@ -1790,8 +1794,23 @@ nsNSSCertificate::Read(nsIObjectInputStream* aStream)
 {
   NS_ENSURE_STATE(!mCert);
 
+  uint32_t cachedEVStatus;
+  nsresult rv = aStream->Read32(&cachedEVStatus);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (cachedEVStatus == static_cast<uint32_t>(ev_status_unknown)) {
+    mCachedEVStatus = ev_status_unknown;
+  } else if (cachedEVStatus == static_cast<uint32_t>(ev_status_valid)) {
+    mCachedEVStatus = ev_status_valid;
+  } else if (cachedEVStatus == static_cast<uint32_t>(ev_status_invalid)) {
+    mCachedEVStatus = ev_status_invalid;
+  } else {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   uint32_t len;
-  nsresult rv = aStream->Read32(&len);
+  rv = aStream->Read32(&len);
   if (NS_FAILED(rv)) {
     return rv;
   }
