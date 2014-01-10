@@ -394,5 +394,19 @@ function run_test_pt13() {
 
 function check_test_pt13() {
   do_check_eq(getResult(gRequestURL), "?extra=param&force=1");
+  run_test_pt14();
+}
+
+function run_test_pt14() {
+  Services.prefs.setCharPref("app.update.custom", "custom");
+  gCheckFunc = check_test_pt14;
+  var url = URL_PREFIX + "?custom=%CUSTOM%";
+  logTestInfo("testing url constructed with %CUSTOM% - " + url);
+  setUpdateURLOverride(url);
+  gUpdateChecker.checkForUpdates(updateCheckListener, true);
+}
+
+function check_test_pt14() {
+  do_check_eq(getResult(gRequestURL), "?custom=custom&force=1");
   do_test_finished();
 }

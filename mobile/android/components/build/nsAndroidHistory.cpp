@@ -114,6 +114,30 @@ nsAndroidHistory::IsRecentlyVisitedURI(nsIURI* aURI) {
   return equals;
 }
 
+void
+nsAndroidHistory::AppendToEmbedURIs(nsIURI* aURI) {
+  if (mEmbedURIs.Length() < EMBED_URI_SIZE) {
+    // Append a new element while the array is not full.
+    mEmbedURIs.AppendElement(aURI);
+  } else {
+    // Otherwise, replace the oldest member.
+    mEmbedURIsNextIndex %= EMBED_URI_SIZE;
+    mEmbedURIs.ElementAt(mEmbedURIsNextIndex) = aURI;
+    mEmbedURIsNextIndex++;
+  }
+}
+
+inline bool
+nsAndroidHistory::IsEmbedURI(nsIURI* aURI) {
+  bool equals = false;
+  EmbedArray::index_type i;
+  EmbedArray::size_type length = mEmbedURIs.Length();
+  for (i = 0; i < length && !equals; ++i) {
+    aURI->Equals(mEmbedURIs.ElementAt(i), &equals);
+  }
+  return equals;
+}
+
 NS_IMETHODIMP
 nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlags)
 {
@@ -138,8 +162,10 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
     }
   }
 
-  if (!(aFlags & VisitFlags::TOP_LEVEL))
+  if (!(aFlags & VisitFlags::TOP_LEVEL)) {
+    AppendToEmbedURIs(aURI);
     return NS_OK;
+  }
 
   if (aFlags & VisitFlags::REDIRECT_SOURCE)
     return NS_OK;
@@ -173,6 +199,10 @@ nsAndroidHistory::SetURITitle(nsIURI *aURI, const nsAString& aTitle)
   nsresult rv = CanAddURI(aURI, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {
+    return NS_OK;
+  }
+
+  if (IsEmbedURI(aURI)) {
     return NS_OK;
   }
 
