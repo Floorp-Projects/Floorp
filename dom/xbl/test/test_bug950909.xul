@@ -32,5 +32,5 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=950909
 
   ]]>
   </script>
-  <iframe src="http://example.com/tests/content/xbl/test/file_bug950909.html"/>
+  <iframe src="http://example.com/tests/dom/xbl/test/file_bug950909.html"/>
 </window>

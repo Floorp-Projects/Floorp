@@ -9,7 +9,7 @@ function handleRequest(request, response)
   response.setHeader("Content-Type", "text/css", false);
   css = "#" + query.id + " { -moz-binding: url(\"";
   if (query.server) {
-    css += "http://" + query.server + "/tests/content/xbl/test/";
+    css += "http://" + query.server + "/tests/dom/xbl/test/";
   }
   css += "file_bug481558.xbl#test\"); }";
 
