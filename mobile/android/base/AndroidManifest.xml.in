@@ -156,6 +156,25 @@
             </intent-filter>
         </activity>
 
+#ifdef MOZ_ANDROID_SYNTHAPKS
+        <activity android:name="org.mozilla.gecko.webapp.WebAppDispatcher"
+            android:noHistory="true" >
+            <intent-filter>
+                <!-- catch links from synthetic apks -->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/webapp" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name="org.mozilla.gecko.webapp.UninstallListener" >
+          <intent-filter>
+             <action android:name="android.intent.action.PACKAGE_REMOVED" />
+             <data android:scheme="package" />
+          </intent-filter>
+        </receiver>
+#endif
+
         <activity android:name=".WebApp"
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
@@ -178,7 +197,7 @@
              this number in sync with the total number of web apps handled in
              WebAppAllocator. -->
 
-#define FRAGMENT WebAppManifestFragment.xml.frag
+#define FRAGMENT WebAppManifestFragment.xml.frag.in
 #include WebAppFragmentRepeater.inc
 
         <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->

@@ -258,15 +258,8 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString& url,
     if (!targetObj)
         return NS_ERROR_FAILURE;
 
-    if (targetObj != result_obj) {
-        nsCOMPtr<nsIScriptSecurityManager> secman =
-            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-        if (!secman)
-            return NS_ERROR_FAILURE;
-
-        rv = secman->GetObjectPrincipal(cx, targetObj, getter_AddRefs(principal));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    if (targetObj != result_obj)
+        principal = GetObjectPrincipal(targetObj);
 
     JSAutoCompartment ac(cx, targetObj);
 
