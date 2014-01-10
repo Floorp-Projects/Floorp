@@ -42,6 +42,8 @@ class CompositableHost;
 class CompositableBackendSpecificData;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
+class TextureHost;
+class TextureHostOGL;
 class TextureSourceOGL;
 class TextureSourceD3D9;
 class TextureSourceD3D11;
@@ -67,6 +69,35 @@ public:
   virtual bool NextTile() = 0;
 };
 
+
+/**
+ * TextureHostCommon is a base class for TextureHost and DeprecatedTextureHost.
+ * They need to be handled in a unified way.
+ * See Bug 925444.
+ * XXX - remove this class when deprecated texture classes are completely removed.
+ */
+class TextureHostCommon : public RefCounted<TextureHostCommon>
+{
+public:
+  TextureHostCommon()
+  {
+    MOZ_COUNT_CTOR(TextureHostCommon);
+  }
+  virtual ~TextureHostCommon()
+  {
+    MOZ_COUNT_DTOR(TextureHostCommon);
+  }
+
+  /**
+   * Cast to a TextureHost
+   */
+  virtual TextureHost* AsHost() { return nullptr; }
+  /**
+   * Cast to a TextureHost for each backend.
+   */
+  virtual TextureHostOGL* AsHostOGL() { return nullptr; }
+};
+
 /**
  * TextureSource is the interface for texture objects that can be composited
  * by a given compositor backend. Since the drawing APIs are different
@@ -76,7 +107,7 @@ public:
  *
  * This class is used on the compositor side.
  */
-class TextureSource : public RefCounted<TextureSource>
+class TextureSource : public TextureHostCommon
 {
 public:
   TextureSource();
@@ -257,13 +288,15 @@ private:
  * The Lock/Unlock mecanism here mirrors Lock/Unlock in TextureClient.
  *
  */
-class TextureHost : public RefCounted<TextureHost>
+class TextureHost : public TextureHostCommon
 {
 public:
   TextureHost(uint64_t aID,
               TextureFlags aFlags);
 
   virtual ~TextureHost();
+
+  virtual TextureHost* AsHost() { return this; }
 
   /**
    * Factory method.

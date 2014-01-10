@@ -11,6 +11,7 @@
 #include "GLContextTypes.h"             // for GLContext (ptr only), etc
 #include "GLTextureImage.h"             // for TextureImage
 #include "ImageTypes.h"                 // for StereoMode
+#include "gfxipc/FenceUtils.h"             // for FenceHandle
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
@@ -123,6 +124,7 @@ public:
 class TextureClientData {
 public:
   virtual void DeallocateSharedData(ISurfaceAllocator* allocator) = 0;
+  virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) {}
   virtual ~TextureClientData() {}
 };
 
@@ -252,6 +254,8 @@ public:
   // If a texture client holds a reference to shmem, it should override this
   // method to forget about the shmem _without_ releasing it.
   virtual void OnActorDestroy() {}
+
+  virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) {}
 
 protected:
   void AddFlags(TextureFlags  aFlags)

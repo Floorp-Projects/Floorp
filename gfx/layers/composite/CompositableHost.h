@@ -20,6 +20,7 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "mozilla/layers/PCompositableParent.h"
+#include "mozilla/layers/TextureHost.h" // for TextureHostCommon
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRegion.h"                   // for nsIntRegion
@@ -70,7 +71,45 @@ public:
     MOZ_COUNT_DTOR(CompositableBackendSpecificData);
   }
   virtual void SetCompositor(Compositor* aCompositor) {}
-  virtual void ClearData() {}
+  virtual void ClearData()
+  {
+    mCurrentReleaseFenceTexture = nullptr;
+    ClearPendingReleaseFenceTextureList();
+  }
+
+  /**
+   * Store a texture currently used for Composition.
+   * This function is called when the texutre might receive ReleaseFence
+   * as a result of Composition.
+   */
+  void SetCurrentReleaseFenceTexture(TextureHostCommon* aTexture)
+  {
+    if (mCurrentReleaseFenceTexture) {
+      mPendingReleaseFenceTextures.push_back(mCurrentReleaseFenceTexture);
+    }
+    mCurrentReleaseFenceTexture = aTexture;
+  }
+
+  virtual std::vector< RefPtr<TextureHostCommon> >& GetPendingReleaseFenceTextureList()
+  {
+    return mPendingReleaseFenceTextures;
+  }
+
+  virtual void ClearPendingReleaseFenceTextureList()
+  {
+    return mPendingReleaseFenceTextures.clear();
+  }
+protected:
+  /**
+   * Store a TextureHost currently used for Composition
+   * and it might receive ReleaseFence for the texutre.
+   */
+  RefPtr<TextureHostCommon> mCurrentReleaseFenceTexture;
+  /**
+   * Store TextureHosts that might have ReleaseFence to be delivered
+   * to TextureClient by CompositableHost.
+   */
+  std::vector< RefPtr<TextureHostCommon> > mPendingReleaseFenceTextures;
 };
 
 /**
