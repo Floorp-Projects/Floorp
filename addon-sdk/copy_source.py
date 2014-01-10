@@ -5,15 +5,14 @@
 import os
 import sys
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 4:
     print >> sys.stderr, "Usage: copy_source.py " \
-                         "<topsrcdir> <source directory> <target directory> <isb2g>"
+                         "<topsrcdir> <source directory> <target directory>"
     sys.exit(1)
 
 topsrcdir = sys.argv[1]
 source_dir = sys.argv[2]
 target_dir = sys.argv[3]
-isB2G = sys.argv[4]
 
 print """
 DEPTH     = ..
@@ -36,22 +35,6 @@ for dirpath, dirnames, filenames in os.walk(real_source):
         continue
     dirpath = dirpath.replace(os.sep, '/')
     relative = dirpath[len(source_dir):]
-    if isB2G and relative in [
-        '/method/test',
-        '/sdk/ui',
-        '/sdk/ui/button',
-        '/sdk/ui/sidebar',
-        '/sdk/places',
-        '/sdk/places/host',
-        '/sdk/tabs',
-        '/sdk/panel',
-        '/sdk/frame',
-        '/sdk/test',
-        '/sdk/window',
-        '/sdk/windows',
-        '/sdk/deprecated',
-        ]:
-        continue
     varname = "COMMONJS%s" % relative.replace('/', '_')
     print "%s_FILES = \\" % varname
     for name in filenames:
