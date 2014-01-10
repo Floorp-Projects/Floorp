@@ -4798,15 +4798,20 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
   bool isOK = true;
   effectProperties.GetClipPathFrame(&isOK);
   effectProperties.GetMaskFrame(&isOK);
-  effectProperties.GetFilterFrame(&isOK);
+  bool hasFilter = effectProperties.GetFilterFrame(&isOK) != nullptr;
 
   if (!isOK) {
     return nullptr;
   }
 
+  ContainerLayerParameters newContainerParameters = aContainerParameters;
+  if (hasFilter) {
+    newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
+  }
+
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
-                           aContainerParameters, nullptr);
+                           newContainerParameters, nullptr);
 
   return container.forget();
 }
