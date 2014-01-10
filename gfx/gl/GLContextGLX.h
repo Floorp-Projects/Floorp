@@ -13,8 +13,6 @@
 namespace mozilla {
 namespace gl {
 
-typedef GLXLibrary::LibraryType LibType;
-
 class GLContextGLX : public GLContext
 {
 public:
@@ -26,7 +24,6 @@ public:
                     GLXDrawable drawable,
                     GLXFBConfig cfg,
                     bool deleteDrawable,
-                    LibType libType = GLXLibrary::OPENGL_LIB,
                     gfxXlibSurface* pixmap = nullptr);
 
     ~GLContextGLX();
@@ -63,8 +60,7 @@ private:
                  GLXContext aContext,
                  bool aDeleteDrawable,
                  bool aDoubleBuffered,
-                 gfxXlibSurface *aPixmap,
-                 LibType libType);
+                 gfxXlibSurface *aPixmap);
 
     GLXContext mContext;
     Display *mDisplay;
