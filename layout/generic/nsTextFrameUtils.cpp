@@ -38,7 +38,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
                                 char16_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
-                                gfxSkipCharsBuilder* aSkipChars,
+                                gfxSkipChars* aSkipChars,
                                 uint32_t* aAnalysisFlags)
 {
   uint32_t flags = 0;
@@ -140,7 +140,7 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
                                 uint8_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
-                                gfxSkipCharsBuilder* aSkipChars,
+                                gfxSkipChars* aSkipChars,
                                 uint32_t* aAnalysisFlags)
 {
   uint32_t flags = 0;
