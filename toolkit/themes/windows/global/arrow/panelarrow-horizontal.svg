@@ -7,7 +7,7 @@
      width="10"
      height="20">
   <path d="M 10,0 L 0,10 10,20 z"
-        fill="ThreeDShadow"/>
+        fill="hsla(210,4%,10%,.2)"/>
   <path d="M 10,1 L 1,10 10,19 z"
-        fill="-moz-Dialog"/>
+        fill="-moz-field"/>
 </svg>
