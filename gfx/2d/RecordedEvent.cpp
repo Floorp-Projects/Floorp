@@ -17,9 +17,9 @@ using namespace std;
 static std::string NameFromBackend(BackendType aType)
 {
   switch (aType) {
-  case BACKEND_NONE:
+  case BackendType::NONE:
     return "None";
-  case BACKEND_DIRECT2D:
+  case BackendType::DIRECT2D:
     return "Direct2D";
   default:
     return "Unknown";

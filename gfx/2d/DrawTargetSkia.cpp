@@ -69,7 +69,7 @@ public:
     }
   }
 
-  BackendType GetBackendType() const { return BACKEND_SKIA; }
+  BackendType GetBackendType() const { return BackendType::SKIA; }
 
   std::vector<SkColor> mColors;
   std::vector<SkScalar> mPositions;
@@ -495,7 +495,7 @@ DrawTargetSkia::Stroke(const Path *aPath,
 {
   MarkChanged();
   MOZ_ASSERT(aPath, "Null path");
-  if (aPath->GetBackendType() != BACKEND_SKIA) {
+  if (aPath->GetBackendType() != BackendType::SKIA) {
     return;
   }
 
@@ -549,7 +549,7 @@ DrawTargetSkia::Fill(const Path *aPath,
                     const DrawOptions &aOptions)
 {
   MarkChanged();
-  if (aPath->GetBackendType() != BACKEND_SKIA) {
+  if (aPath->GetBackendType() != BackendType::SKIA) {
     return;
   }
 
@@ -866,7 +866,7 @@ DrawTargetSkia::ClearRect(const Rect &aRect)
 void
 DrawTargetSkia::PushClip(const Path *aPath)
 {
-  if (aPath->GetBackendType() != BACKEND_SKIA) {
+  if (aPath->GetBackendType() != BackendType::SKIA) {
     return;
   }
 

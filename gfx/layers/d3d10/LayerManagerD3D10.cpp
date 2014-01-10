@@ -501,7 +501,7 @@ LayerManagerD3D10::CreateDrawTarget(const IntSize &aSize,
 {
   if ((aFormat != SurfaceFormat::B8G8R8A8 &&
        aFormat != SurfaceFormat::B8G8R8X8) ||
-       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() != BACKEND_DIRECT2D) {
+       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend() != BackendType::DIRECT2D) {
     return LayerManager::CreateDrawTarget(aSize, aFormat);
   }
 

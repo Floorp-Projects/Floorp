@@ -52,7 +52,7 @@ public:
     mPath.swap(aPath);
   }
   
-  virtual BackendType GetBackendType() const { return BACKEND_SKIA; }
+  virtual BackendType GetBackendType() const { return BackendType::SKIA; }
 
   virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,

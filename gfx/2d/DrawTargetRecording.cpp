@@ -49,7 +49,7 @@ public:
     mRecorder->RecordEvent(RecordedGradientStopsDestruction(this));
   }
 
-  virtual BackendType GetBackendType() const { return BACKEND_RECORDING; }
+  virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
 
   RefPtr<GradientStops> mFinalGradientStops;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
@@ -68,7 +68,7 @@ GetSourceSurface(SourceSurface *aSurface)
 static GradientStops *
 GetGradientStops(GradientStops *aStops)
 {
-  if (aStops->GetBackendType() != BACKEND_RECORDING) {
+  if (aStops->GetBackendType() != BackendType::RECORDING) {
     return aStops;
   }
 
@@ -265,7 +265,7 @@ DrawTargetRecording::StrokeLine(const Point &aBegin,
 Path*
 DrawTargetRecording::GetPathForPathRecording(const Path *aPath) const
 {
-  if (aPath->GetBackendType() != BACKEND_RECORDING) {
+  if (aPath->GetBackendType() != BackendType::RECORDING) {
     return nullptr;
   }
 
@@ -574,7 +574,7 @@ void
 DrawTargetRecording::EnsureStored(const Path *aPath)
 {
   if (!mRecorder->HasStoredPath(aPath)) {
-    if (aPath->GetBackendType() != BACKEND_RECORDING) {
+    if (aPath->GetBackendType() != BackendType::RECORDING) {
       gfxWarning() << "Cannot record this fill path properly!";
     } else {
       PathRecording *recPath = const_cast<PathRecording*>(static_cast<const PathRecording*>(aPath));

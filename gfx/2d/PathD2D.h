@@ -68,7 +68,7 @@ public:
     , mFillRule(aFillRule)
   {}
   
-  virtual BackendType GetBackendType() const { return BACKEND_DIRECT2D; }
+  virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
 
   virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
