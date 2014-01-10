@@ -389,7 +389,7 @@ BluetoothHfpManager::Reset()
   mCMER = false;
   mConnectScoRequest = false;
   mSlcConnected = false;
-  mHspConnected = false;
+  mIsHsp = false;
   mReceiveVgsFlag = false;
 
 #ifdef MOZ_B2G_RIL
@@ -1638,13 +1638,14 @@ BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
    */
   if (aSocket == mHandsfreeSocket) {
     MOZ_ASSERT(!mSocket);
+    mIsHsp = false;
     mHandsfreeSocket.swap(mSocket);
 
     mHeadsetSocket->Disconnect();
     mHeadsetSocket = nullptr;
   } else if (aSocket == mHeadsetSocket) {
     MOZ_ASSERT(!mSocket);
-    mHspConnected = true;
+    mIsHsp = true;
     mHeadsetSocket.swap(mSocket);
 
     mHandsfreeSocket->Disconnect();
@@ -1739,6 +1740,8 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
     } else if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress,
                                                hspUuid, this))) {
       OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    } else {
+      mIsHsp = true;
     }
 
     return;
@@ -1825,7 +1828,7 @@ BluetoothHfpManager::ConnectSco(BluetoothReplyRunnable* aRunnable)
 
   // If we are not using HSP, we have to make sure Service Level Connection
   // established before we start to set up SCO (synchronous connection).
-  if (!mSlcConnected && !mHspConnected) {
+  if (!mSlcConnected && !mIsHsp) {
     mConnectScoRequest = true;
     BT_WARNING("ConnectSco called before Service Level Connection established");
     return false;
