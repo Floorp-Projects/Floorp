@@ -17,7 +17,6 @@ Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
 
 const IGNORE_HISTOGRAM = "test::ignore_me";
 const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
@@ -39,6 +38,7 @@ const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 var gNumberOfThreadsLaunched = 0;
 
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
 
 var httpserver = new HttpServer();
 var serverStarted = false;
