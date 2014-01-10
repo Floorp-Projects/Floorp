@@ -120,6 +120,28 @@ MOZ_BEGIN_ENUM_CLASS(ContextProfile, uint8_t)
     OpenGLES
 MOZ_END_ENUM_CLASS(ContextProfile)
 
+MOZ_BEGIN_ENUM_CLASS(GLVendor)
+    Intel,
+    NVIDIA,
+    ATI,
+    Qualcomm,
+    Imagination,
+    Nouveau,
+    Other
+MOZ_END_ENUM_CLASS(GLVendor)
+
+MOZ_BEGIN_ENUM_CLASS(GLRenderer)
+    Adreno200,
+    Adreno205,
+    AdrenoTM205,
+    AdrenoTM320,
+    SGX530,
+    SGX540,
+    Tegra,
+    AndroidEmulator,
+    Other
+MOZ_END_ENUM_CLASS(GLRenderer)
+
 class GLContext
     : public GLLibraryLoader
     , public GenericAtomicRefCounted
@@ -127,29 +149,6 @@ class GLContext
 // -----------------------------------------------------------------------------
 // basic enums
 public:
-
-    enum {
-        VendorIntel,
-        VendorNVIDIA,
-        VendorATI,
-        VendorQualcomm,
-        VendorImagination,
-        VendorNouveau,
-        VendorOther
-    };
-
-    enum {
-        RendererAdreno200,
-        RendererAdreno205,
-        RendererAdrenoTM205,
-        RendererAdrenoTM320,
-        RendererSGX530,
-        RendererSGX540,
-        RendererTegra,
-        RendererAndroidEmulator,
-        RendererOther
-    };
-
 
 // -----------------------------------------------------------------------------
 // basic getters
@@ -255,11 +254,11 @@ public:
         return mVersionString.get();
     }
 
-    int Vendor() const {
+    GLVendor Vendor() const {
         return mVendor;
     }
 
-    int Renderer() const {
+    GLRenderer Renderer() const {
         return mRenderer;
     }
 
@@ -305,8 +304,8 @@ protected:
     nsCString mVersionString;
     ContextProfile mProfile;
 
-    int32_t mVendor;
-    int32_t mRenderer;
+    GLVendor mVendor;
+    GLRenderer mRenderer;
 
     inline void SetProfileVersion(ContextProfile profile, unsigned int version) {
         MOZ_ASSERT(!mInitialized, "SetProfileVersion can only be called before initialization!");
@@ -814,7 +813,7 @@ public:
         // bug 744888
         if (WorkAroundDriverBugs() &&
             !data &&
-            Vendor() == VendorNVIDIA)
+            Vendor() == GLVendor::NVIDIA)
         {
             char c = 0;
             fBufferSubData(target, size-1, 1, &c);

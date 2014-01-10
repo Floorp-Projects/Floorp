@@ -257,8 +257,8 @@ GLContext::GLContext(const SurfaceCaps& caps,
     mContextLost(false),
     mVersion(0),
     mProfile(ContextProfile::Unknown),
-    mVendor(-1),
-    mRenderer(-1),
+    mVendor(GLVendor::Other),
+    mRenderer(GLRenderer::Other),
     mHasRobustness(false),
 #ifdef DEBUG
     mGLError(LOCAL_GL_NO_ERROR),
@@ -514,7 +514,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (!glVendorString)
             mInitialized = false;
 
-        const char *vendorMatchStrings[VendorOther] = {
+        const char *vendorMatchStrings[size_t(GLVendor::Other)] = {
                 "Intel",
                 "NVIDIA",
                 "ATI",
@@ -523,10 +523,10 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "nouveau"
         };
 
-        mVendor = VendorOther;
-        for (int i = 0; i < VendorOther; ++i) {
+        mVendor = GLVendor::Other;
+        for (size_t i = 0; i < size_t(GLVendor::Other); ++i) {
             if (DoesStringMatch(glVendorString, vendorMatchStrings[i])) {
-                mVendor = i;
+                mVendor = GLVendor(i);
                 break;
             }
         }
@@ -537,7 +537,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
         if (!glRendererString)
             mInitialized = false;
 
-        const char *rendererMatchStrings[RendererOther] = {
+        const char *rendererMatchStrings[size_t(GLRenderer::Other)] = {
                 "Adreno 200",
                 "Adreno 205",
                 "Adreno (TM) 205",
@@ -548,10 +548,10 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 "Android Emulator"
         };
 
-        mRenderer = RendererOther;
-        for (int i = 0; i < RendererOther; ++i) {
+        mRenderer = GLRenderer::Other;
+        for (size_t i = 0; i < size_t(GLRenderer::Other); ++i) {
             if (DoesStringMatch(glRendererString, rendererMatchStrings[i])) {
-                mRenderer = i;
+                mRenderer = GLRenderer(i);
                 break;
             }
         }
@@ -576,7 +576,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #ifdef DEBUG
         static bool firstRun = true;
         if (firstRun && DebugMode()) {
-            const char *vendors[VendorOther] = {
+            const char *vendors[size_t(GLVendor::Other)] = {
                 "Intel",
                 "NVIDIA",
                 "ATI",
@@ -584,9 +584,9 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             };
 
             MOZ_ASSERT(glVendorString);
-            if (mVendor < VendorOther) {
+            if (mVendor < GLVendor::Other) {
                 printf_stderr("OpenGL vendor ('%s') recognized as: %s\n",
-                              glVendorString, vendors[mVendor]);
+                              glVendorString, vendors[size_t(mVendor)]);
             } else {
                 printf_stderr("OpenGL vendor ('%s') unrecognized\n", glVendorString);
             }
@@ -599,7 +599,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
         // Disable extensions with partial or incorrect support.
         if (WorkAroundDriverBugs()) {
-            if (Renderer() == RendererAdrenoTM320) {
+            if (Renderer() == GLRenderer::AdrenoTM320) {
                 MarkUnsupported(GLFeature::standard_derivatives);
             }
 
@@ -607,7 +607,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             // The Mac Nvidia driver, for versions up to and including 10.8, don't seem
             // to properly support this.  See 814839
             // this has been fixed in Mac OS X 10.9. See 907946
-            if (Vendor() == gl::GLContext::VendorNVIDIA &&
+            if (Vendor() == gl::GLVendor::NVIDIA &&
                 !nsCocoaFeatures::OnMavericksOrLater())
             {
                 MarkUnsupported(GLFeature::depth_texture);
@@ -1031,14 +1031,14 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
 #ifdef XP_MACOSX
         if (mWorkAroundDriverBugs) {
-            if (mVendor == VendorIntel) {
+            if (mVendor == GLVendor::Intel) {
                 // see bug 737182 for 2D textures, bug 684882 for cube map textures.
                 mMaxTextureSize        = std::min(mMaxTextureSize,        4096);
                 mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 512);
                 // for good measure, we align renderbuffers on what we do for 2D textures
                 mMaxRenderbufferSize   = std::min(mMaxRenderbufferSize,   4096);
                 mNeedsTextureSizeChecks = true;
-            } else if (mVendor == VendorNVIDIA) {
+            } else if (mVendor == GLVendor::NVIDIA) {
                 if (nsCocoaFeatures::OnMountainLionOrLater()) {
                     // See bug 879656.  8192 fails, 8191 works.
                     mMaxTextureSize = std::min(mMaxTextureSize, 8191);
@@ -1057,7 +1057,7 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 #endif
 #ifdef MOZ_X11
         if (mWorkAroundDriverBugs &&
-            mVendor == VendorNouveau) {
+            mVendor == GLVendor::Nouveau) {
             // see bug 814716. Clamp MaxCubeMapTextureSize at 2K for Nouveau.
             mMaxCubeMapTextureSize = std::min(mMaxCubeMapTextureSize, 2048);
             mNeedsTextureSizeChecks = true;
@@ -1116,14 +1116,14 @@ GLContext::InitExtensions()
     InitializeExtensionsBitSet(mAvailableExtensions, extensions, sExtensionNames, firstRun && DebugMode());
 
     if (WorkAroundDriverBugs() &&
-        Vendor() == VendorQualcomm) {
+        Vendor() == GLVendor::Qualcomm) {
 
         // Some Adreno drivers do not report GL_OES_EGL_sync, but they really do support it.
         MarkExtensionSupported(OES_EGL_sync);
     }
 
     if (WorkAroundDriverBugs() &&
-        Renderer() == RendererAndroidEmulator) {
+        Renderer() == GLRenderer::AndroidEmulator) {
         // the Android emulator, which we use to run B2G reftests on,
         // doesn't expose the OES_rgb8_rgba8 extension, but it seems to
         // support it (tautologically, as it only runs on desktop GL).
