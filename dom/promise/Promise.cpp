@@ -561,12 +561,16 @@ Promise::MaybeReportRejected()
   }
 
   // Now post an event to do the real reporting async
-  NS_DispatchToMainThread(
+  // Since Promises preserve their wrapper, it is essential to nsRefPtr<> the
+  // AsyncErrorReporter, otherwise if the call to DispatchToMainThread fails, it
+  // will leak. See Bug 958684.
+  nsRefPtr<AsyncErrorReporter> r =
     new AsyncErrorReporter(JS_GetObjectRuntime(&mResult.toObject()),
                            report,
                            nullptr,
                            isChromeError,
-                           win));
+                           win);
+  NS_DispatchToMainThread(r);
 }
 
 void
