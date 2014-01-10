@@ -37,12 +37,6 @@ public:
     aName.AssignLiteral("OPP");
   }
 
-  /*
-   * Channel of reserved services are fixed values, please check
-   * function add_reserved_service_records() in
-   * external/bluetooth/bluez/src/adapter.c for more information.
-   */
-  static const int DEFAULT_OPP_CHANNEL = 10;
   static const int MAX_PACKET_LENGTH = 0xFFFE;
 
   virtual ~BluetoothOppManager();

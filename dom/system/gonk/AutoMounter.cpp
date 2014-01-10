@@ -21,6 +21,7 @@
 #include "nsVolumeService.h"
 #include "AutoMounterSetting.h"
 #include "base/message_loop.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPtr.h"
@@ -331,20 +332,6 @@ AutoMounterResponseCallback::ResponseReceived(const VolumeCommand* aCommand)
   }
 }
 
-class AutoBool {
-public:
-    explicit AutoBool(bool &aBool) : mBool(aBool) {
-      mBool = true;
-    }
-
-    ~AutoBool() {
-      mBool = false;
-    }
-
-private:
-    bool &mBool;
-};
-
 /***************************************************************************/
 
 void
@@ -360,7 +347,8 @@ AutoMounter::UpdateState()
     // things up.
     return;
   }
-  AutoBool inUpdateStateDetector(inUpdateState);
+  AutoRestore<bool> inUpdateStateDetector(inUpdateState);
+  inUpdateState = true;
 
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 

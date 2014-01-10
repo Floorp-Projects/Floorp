@@ -1,0 +1,4 @@
+{
+  "name" : "test-custom-main",
+  "main" : "lib/custom-entry"
+}

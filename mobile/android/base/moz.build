@@ -216,7 +216,7 @@ gbjar.sources += [
     'home/HomeBanner.java',
     'home/HomeConfig.java',
     'home/HomeConfigLoader.java',
-    'home/HomeConfigMemBackend.java',
+    'home/HomeConfigPrefsBackend.java',
     'home/HomeFragment.java',
     'home/HomeListView.java',
     'home/HomePager.java',
