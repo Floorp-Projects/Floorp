@@ -36,6 +36,7 @@ void
 TextTrackCue::SetDefaultCueSettings()
 {
   mPosition = 50;
+  mPositionAlign = AlignSetting::Middle;
   mSize = 100;
   mPauseOnExit = false;
   mSnapToLines = true;

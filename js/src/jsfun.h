@@ -279,6 +279,7 @@ class JSFunction : public JSObject
     static inline size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
     static bool createScriptForLazilyInterpretedFunction(JSContext *cx, js::HandleFunction fun);
+    void relazify(JSTracer *trc);
 
     // Function Scripts
     //
@@ -308,11 +309,9 @@ class JSFunction : public JSObject
             JS::RootedFunction self(cx, this);
             if (!createScriptForLazilyInterpretedFunction(cx, self))
                 return nullptr;
-            JS_ASSERT(self->hasScript());
-            return self->u.i.s.script_;
+            return self->nonLazyScript();
         }
-        JS_ASSERT(hasScript());
-        return u.i.s.script_;
+        return nonLazyScript();
     }
 
     JSScript *existingScript() {
@@ -329,14 +328,14 @@ class JSFunction : public JSObject
             flags_ |= INTERPRETED;
             initScript(script);
         }
-        JS_ASSERT(hasScript());
-        return u.i.s.script_;
+        return nonLazyScript();
     }
 
     JSScript *nonLazyScript() const {
         js::AutoThreadSafeAccess ts(this);
-        JS_ASSERT(hasScript());
         JS_ASSERT(js::CurrentThreadCanReadCompilationData());
+        JS_ASSERT(hasScript());
+        JS_ASSERT(u.i.s.script_);
         return u.i.s.script_;
     }
 
@@ -391,6 +390,8 @@ class JSFunction : public JSObject
         // lazy script before it is overwritten here.
         JS_ASSERT(js::CurrentThreadCanWriteCompilationData());
         JS_ASSERT(isInterpretedLazy());
+        if (!lazyScript()->maybeScript())
+            lazyScript()->initScript(script);
         flags_ &= ~INTERPRETED_LAZY;
         flags_ |= INTERPRETED;
         initScript(script);

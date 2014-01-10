@@ -133,7 +133,7 @@ namespace layers {
  * accidentally processing taps as touch moves, and from very short/accidental
  * touches moving the screen.
  */
-static float gTouchStartTolerance = 1.0f/16.0f;
+static float gTouchStartTolerance = 1.0f/2.0f;
 
 /**
  * Angle from axis within which we stay axis-locked

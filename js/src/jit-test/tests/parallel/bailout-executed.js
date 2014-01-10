@@ -3,7 +3,7 @@ load(libdir + "parallelarray-helpers.js");
 function makeObject(e, i, c) {
   var v = {element: e, index: i, collection: c};
 
-  if (e == 512) // note: happens once
+  if (e == 0) // note: happens once
     delete v.index;
 
   return v;

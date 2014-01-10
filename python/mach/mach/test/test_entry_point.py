@@ -11,6 +11,9 @@ from mach.base import MachError
 from mach.test.common import TestBase
 from mock import patch
 
+from mozunit import main
+
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 class Entry():
@@ -50,3 +53,8 @@ class TestEntryPoints(TestBase):
         result, stdout, stderr = self._run_mach()
         self.assertIsNone(result)
         self.assertIn('cmd_foo', stdout)
+
+
+# Not enabled in automation because tests are failing.
+#if __name__ == '__main__':
+#    main()
