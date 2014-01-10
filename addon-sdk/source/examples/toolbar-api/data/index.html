@@ -1,0 +1,21 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+  <body>
+    <button id=post>post!</button>
+  </body>
+  <script>
+    window.addEventListener("message", event => {
+      console.log("Document message", event, event.data, event.source !== window && event.source === window.parent);
+    });
+    window.addEventListener("click", event => {
+      if (event.target.id === "post") {
+          console.log("click!")
+          window.parent.postMessage("ping!", "*");
+      }
+    });
+    console.log(window.parent === window)
+  </script>
+</html>

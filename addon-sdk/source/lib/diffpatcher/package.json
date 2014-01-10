@@ -1,0 +1,54 @@
+{
+  "name": "diffpatcher",
+  "id": "diffpatcher",
+  "version": "1.2.0",
+  "description": "Utilities for diff-ing & patch-ing hashes",
+  "keywords": [
+    "diff", "patch", "rebase", "hash", "changes", "versions"
+  ],
+  "author": "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com)",
+  "homepage": "https://github.com/Gozala/diffpatcher",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gozala/diffpatcher.git",
+    "web": "https://github.com/Gozala/diffpatcher"
+  },
+  "bugs": {
+    "url": "http://github.com/Gozala/diffpatcher/issues/"
+  },
+  "dependencies": {
+    "method": "~2.0.0"
+  },
+  "devDependencies": {
+    "test": "~0.x.0",
+    "phantomify": "~0.x.0",
+    "retape": "~0.x.0",
+    "tape": "~0.1.5"
+  },
+  "main": "./index.js",
+  "scripts": {
+    "test": "npm run test-node && npm run test-browser",
+    "test-browser": "node ./node_modules/phantomify/bin/cmd.js ./test/common.js",
+    "test-node": "node ./test/common.js",
+    "test-tap": "node ./test/tap.js"
+  },
+  "testling": {
+    "files": "test/tap.js",
+    "browsers": [
+      "ie/9..latest",
+      "chrome/25..latest",
+      "firefox/20..latest",
+      "safari/6..latest",
+      "opera/11.0..latest",
+      "iphone/6..latest",
+      "ipad/6..latest",
+      "android-browser/4.2..latest"
+    ]
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/Gozala/diffpatcher/License.md"
+    }
+  ]
+}
