@@ -43,6 +43,8 @@ public:
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
+  friend class nsNSSCertificateFakeTransport;
+
   nsNSSCertificate(CERTCertificate* cert, SECOidTag* evOidPolicy = nullptr);
   nsNSSCertificate();
   virtual ~nsNSSCertificate();
@@ -66,7 +68,7 @@ private:
   bool InitFromDER(char* certDER, int derLen);  // return false on failure
 
   enum {
-    ev_status_unknown = -1, ev_status_invalid = 0, ev_status_valid = 1
+    ev_status_invalid = 0, ev_status_valid = 1, ev_status_unknown = 2
   } mCachedEVStatus;
   SECOidTag mCachedEVOidTag;
   nsresult hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
