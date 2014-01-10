@@ -27,13 +27,13 @@ MOZ_BEGIN_ENUM_CLASS(SharedTextureBufferType)
     IOSurface
 MOZ_END_ENUM_CLASS(SharedTextureBufferType)
 
-enum GLContextType {
-    ContextTypeUnknown,
-    ContextTypeWGL,
-    ContextTypeCGL,
-    ContextTypeGLX,
-    ContextTypeEGL
-};
+MOZ_BEGIN_ENUM_CLASS(GLContextType)
+    Unknown,
+    WGL,
+    CGL,
+    GLX,
+    EGL
+MOZ_END_ENUM_CLASS(GLContextType)
 
 struct GLFormats
 {

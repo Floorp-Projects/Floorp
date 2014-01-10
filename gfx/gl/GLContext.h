@@ -274,7 +274,7 @@ public:
     }
 
     virtual GLContextType GetContextType() {
-        return ContextTypeUnknown;
+        return GLContextType::Unknown;
     }
 
     virtual bool IsCurrent() = 0;
