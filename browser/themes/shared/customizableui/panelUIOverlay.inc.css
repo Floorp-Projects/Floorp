@@ -216,11 +216,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-footer {
   display: flex;
+  flex-direction: column;
   background-color: rgba(0, 0, 0, 0.05);
   box-shadow: 0 -1px 0 rgba(0,0,0,.15);
   padding: 0;
   margin: 0;
-  min-height: 4em;
+}
+
+#PanelUI-footer-inner {
+  display: flex;
+  box-shadow: 0 -1px 0 rgba(0,0,0,.15);
 }
 
 #PanelUI-footer > toolbarseparator {
@@ -234,10 +239,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-help,
+#PanelUI-fxa-status,
 #PanelUI-customize,
 #PanelUI-quit {
   margin: 0;
   padding: 10px 0;
+  min-height: 2em;
   -moz-appearance: none;
   box-shadow: none;
   background-image: none;
@@ -248,11 +255,21 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-orient: horizontal;
 }
 
+#PanelUI-fxa-status {
+  width: calc(@menuPanelWidth@ + 20px);
+  border-bottom-style: solid;
+}
+
+#PanelUI-fxa-status[signedin] {
+  font-weight: bold;
+}
+
 #PanelUI-help,
 #PanelUI-quit {
   min-width: 46px;
 }
 
+#PanelUI-fxa-status > .toolbarbutton-text,
 #PanelUI-customize > .toolbarbutton-text {
   text-align: start;
 }
@@ -267,6 +284,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-margin-end: 0;
 }
 
+#PanelUI-fxa-status,
 #PanelUI-customize {
   flex: 1;
   -moz-padding-start: 15px;
@@ -283,6 +301,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   list-style-image: url(chrome://browser/skin/menuPanel-exit.png);
 }
 
+#PanelUI-fxa-status,
 #PanelUI-customize,
 #PanelUI-help,
 #PanelUI-quit {
@@ -312,6 +331,12 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   outline: 1px solid rgba(0,0,0,0.1);
   background-color: rgba(0,0,0,0.1);
   box-shadow: none;
+}
+
+#PanelUI-fxa-status:not([disabled]):hover {
+  background-color: rgba(0,0,0,0.1);
+  border-bottom-color: rgba(0,0,0,0.1);
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.2);
 }
 
 #PanelUI-quit:not([disabled]):hover {
