@@ -37,6 +37,8 @@ public class SiteIdentityPopup extends ArrowPopup {
     private static final String MIXED_CONTENT_SUPPORT_URL =
         "https://support.mozilla.org/kb/how-does-content-isnt-secure-affect-my-safety";
 
+    private SiteIdentity mSiteIdentity;
+
     private Resources mResources;
 
     private LinearLayout mIdentity;
@@ -72,27 +74,31 @@ public class SiteIdentityPopup extends ArrowPopup {
         mVerifier = (TextView) mIdentity.findViewById(R.id.verifier);
     }
 
-    private void setIdentity(SiteIdentity siteIdentity) {
-        if (siteIdentity.getSecurityMode() == SecurityMode.MIXED_CONTENT_LOADED) {
+    private void updateUi() {
+        if (!mInflated) {
+            init();
+        }
+
+        if (mSiteIdentity.getSecurityMode() == SecurityMode.MIXED_CONTENT_LOADED) {
             // Hide the identity data if there isn't valid site identity data.
             // Set some top padding on the popup content to create a of light blue
             // between the popup arrow and the mixed content notification.
             mContent.setPadding(0, (int) mResources.getDimension(R.dimen.identity_padding_top), 0, 0);
             mIdentity.setVisibility(View.GONE);
         } else {
-            mHost.setText(siteIdentity.getHost());
+            mHost.setText(mSiteIdentity.getHost());
 
-            String owner = siteIdentity.getOwner();
+            String owner = mSiteIdentity.getOwner();
 
             // Supplemental data is optional.
-            final String supplemental = siteIdentity.getSupplemental();
+            final String supplemental = mSiteIdentity.getSupplemental();
             if (!TextUtils.isEmpty(supplemental)) {
                 owner += "\n" + supplemental;
             }
             mOwner.setText(owner);
 
-            final String verifier = siteIdentity.getVerifier();
-            final String encrypted = siteIdentity.getEncrypted();
+            final String verifier = mSiteIdentity.getVerifier();
+            final String encrypted = mSiteIdentity.getEncrypted();
             mVerifier.setText(verifier + "\n" + encrypted);
 
             mContent.setPadding(0, 0, 0, 0);
@@ -140,22 +146,31 @@ public class SiteIdentityPopup extends ArrowPopup {
     /*
      * @param identityData A JSONObject that holds the current tab's identity data.
      */
-    void updateIdentity(SiteIdentity siteIdentity) {
-        final SecurityMode mode = siteIdentity.getSecurityMode();
+    void setSiteIdentity(SiteIdentity siteIdentity) {
+        mSiteIdentity = siteIdentity;
+    }
+
+    @Override
+    public void show() {
+        if (mSiteIdentity == null) {
+            Log.e(LOGTAG, "Can't show site identity popup for undefined state");
+            return;
+        }
+
+        final SecurityMode mode = mSiteIdentity.getSecurityMode();
         if (mode == SecurityMode.UNKNOWN) {
             Log.e(LOGTAG, "Can't show site identity popup in non-identified state");
             return;
         }
 
-        if (!mInflated)
-            init();
-
-        setIdentity(siteIdentity);
+        updateUi();
 
         if (mode == SecurityMode.MIXED_CONTENT_LOADED ||
             mode == SecurityMode.MIXED_CONTENT_BLOCKED) {
             addMixedContentNotification(mode == SecurityMode.MIXED_CONTENT_BLOCKED);
         }
+
+        super.show();
     }
 
     @Override

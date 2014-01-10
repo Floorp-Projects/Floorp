@@ -87,6 +87,10 @@
         this._addedObserver = true;
 
         this.searchService.init((function search_init_cb(aStatus) {
+          // Bail out if the binding's been destroyed
+          if (this._destroyed)
+            return;
+
           if (Components.isSuccessCode(aStatus)) {
             // Refresh the display (updating icon, etc)
             this.updateDisplay();
@@ -97,6 +101,8 @@
       ]]></constructor>
 
       <destructor><![CDATA[
+        this._destroyed = true;
+
         if (this._addedObserver) {
           var os = Components.classes["@mozilla.org/observer-service;1"]
                              .getService(Components.interfaces.nsIObserverService);

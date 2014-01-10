@@ -63,7 +63,6 @@ var Browser = {
       messageManager.loadFrameScript("chrome://browser/content/library/SelectionPrototype.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/SelectionHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ContextMenuHandler.js", true);
-      messageManager.loadFrameScript("chrome://browser/content/contenthandlers/FindHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ConsoleAPIObserver.js", true);
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
@@ -1017,7 +1016,7 @@ nsBrowserAccess.prototype = {
   _getOpenAction: function _getOpenAction(aURI, aOpener, aWhere, aContext) {
     let where = aWhere;
     /*
-     * aWhere: 
+     * aWhere:
      * OPEN_DEFAULTWINDOW: default action
      * OPEN_CURRENTWINDOW: current window/tab
      * OPEN_NEWWINDOW: not allowed, converted to newtab below
