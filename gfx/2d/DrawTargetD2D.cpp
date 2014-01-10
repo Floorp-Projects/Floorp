@@ -273,13 +273,13 @@ DrawTargetD2D::GetBitmapForSurface(SourceSurface *aSurface,
 
   switch (aSurface->GetType()) {
 
-  case SURFACE_D2D1_BITMAP:
+  case SurfaceType::D2D1_BITMAP:
     {
       SourceSurfaceD2D *srcSurf = static_cast<SourceSurfaceD2D*>(aSurface);
       bitmap = srcSurf->GetBitmap();
     }
     break;
-  case SURFACE_D2D1_DRAWTARGET:
+  case SurfaceType::D2D1_DRAWTARGET:
     {
       SourceSurfaceD2DTarget *srcSurf = static_cast<SourceSurfaceD2DTarget*>(aSurface);
       bitmap = srcSurf->GetBitmap(mRT);
@@ -427,7 +427,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                      CompositionOp aOperator)
 {
   RefPtr<ID3D10ShaderResourceView> srView = nullptr;
-  if (aSurface->GetType() != SURFACE_D2D1_DRAWTARGET) {
+  if (aSurface->GetType() != SurfaceType::D2D1_DRAWTARGET) {
     return;
   }
 
@@ -2322,7 +2322,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     Matrix mat = pat->mMatrix;
     
     switch (pat->mSurface->GetType()) {
-    case SURFACE_D2D1_BITMAP:
+    case SurfaceType::D2D1_BITMAP:
       {
         SourceSurfaceD2D *surf = static_cast<SourceSurfaceD2D*>(pat->mSurface.get());
 
@@ -2333,7 +2333,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
         }
       }
       break;
-    case SURFACE_D2D1_DRAWTARGET:
+    case SurfaceType::D2D1_DRAWTARGET:
       {
         SourceSurfaceD2DTarget *surf =
           static_cast<SourceSurfaceD2DTarget*>(pat->mSurface.get());

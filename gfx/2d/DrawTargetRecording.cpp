@@ -27,7 +27,7 @@ public:
     mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(this));
   }
 
-  virtual SurfaceType GetType() const { return SURFACE_RECORDING; }
+  virtual SurfaceType GetType() const { return SurfaceType::RECORDING; }
   virtual IntSize GetSize() const { return mFinalSurface->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mFinalSurface->GetFormat(); }
   virtual TemporaryRef<DataSourceSurface> GetDataSurface() { return mFinalSurface->GetDataSurface(); }
@@ -58,7 +58,7 @@ public:
 static SourceSurface *
 GetSourceSurface(SourceSurface *aSurface)
 {
-  if (aSurface->GetType() != SURFACE_RECORDING) {
+  if (aSurface->GetType() != SurfaceType::RECORDING) {
     return aSurface;
   }
 
