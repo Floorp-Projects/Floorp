@@ -304,17 +304,6 @@ void CleanupOSFileConstants()
   { #name, INT_TO_JSVAL(name) }
 
 /**
- * Define a simple read-only property holding an unsigned integer.
- *
- * @param name The name of the constant. Used both as the JS name for the
- * constant and to access its value. Must be defined.
- *
- * Produces a |ConstantSpec|.
- */
-#define UINT_CONSTANT(name)      \
-  { #name, UINT_TO_JSVAL((name)) }
-
-/**
  * End marker for ConstantSpec
  */
 #define PROP_END { nullptr, JS::UndefinedValue() }
@@ -660,7 +649,7 @@ static const dom::ConstantSpec gWinProperties[] =
   INT_CONSTANT(FILE_END),
 
   // SetFilePointer error constant
-  UINT_CONSTANT(INVALID_SET_FILE_POINTER),
+  INT_CONSTANT(INVALID_SET_FILE_POINTER),
 
   // File attributes
   INT_CONSTANT(FILE_ATTRIBUTE_DIRECTORY),
