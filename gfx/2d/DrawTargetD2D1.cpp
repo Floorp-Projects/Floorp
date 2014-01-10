@@ -894,7 +894,7 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
   RefPtr<ID2D1Image> image;
 
   switch (aSurface->GetType()) {
-  case SURFACE_D2D1_1_IMAGE:
+  case SurfaceType::D2D1_1_IMAGE:
     {
       SourceSurfaceD2D1 *surf = static_cast<SourceSurfaceD2D1*>(aSurface);
       image = surf->GetImage();

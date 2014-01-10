@@ -22,7 +22,7 @@ public:
   SourceSurfaceSkia();
   ~SourceSurfaceSkia();
 
-  virtual SurfaceType GetType() const { return SURFACE_SKIA; }
+  virtual SurfaceType GetType() const { return SurfaceType::SKIA; }
   virtual IntSize GetSize() const;
   virtual SurfaceFormat GetFormat() const;
 

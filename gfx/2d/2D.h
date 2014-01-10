@@ -337,7 +337,7 @@ public:
 class DataSourceSurface : public SourceSurface
 {
 public:
-  virtual SurfaceType GetType() const { return SURFACE_DATA; }
+  virtual SurfaceType GetType() const { return SurfaceType::DATA; }
   /*
    * Get the raw bitmap data of the surface.
    * Can return null if there was OOM allocating surface data.
@@ -359,7 +359,7 @@ public:
 
   /*
    * Returns a DataSourceSurface with the same data as this one, but
-   * guaranteed to have surface->GetType() == SURFACE_DATA.
+   * guaranteed to have surface->GetType() == SurfaceType::DATA.
    */
   virtual TemporaryRef<DataSourceSurface> GetDataSurface();
 };

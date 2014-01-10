@@ -22,7 +22,7 @@ public:
     , mB(aDTB->Snapshot())
   { }
 
-  virtual SurfaceType GetType() const { return SURFACE_DUAL_DT; }
+  virtual SurfaceType GetType() const { return SurfaceType::DUAL_DT; }
   virtual IntSize GetSize() const { return mA->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mA->GetFormat(); }
 

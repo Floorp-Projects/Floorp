@@ -155,9 +155,9 @@ static SkBitmap
 GetBitmapForSurface(SourceSurface *aSurface)
 {
   switch (aSurface->GetType()) {
-  case SURFACE_SKIA:
+  case SurfaceType::SKIA:
     return static_cast<SourceSurfaceSkia*>(aSurface)->GetBitmap();
-  case SURFACE_DATA:
+  case SurfaceType::DATA:
     {
       DataSourceSurface* surf = static_cast<DataSourceSurface*>(aSurface);
       SkBitmap tmp;
@@ -352,7 +352,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
-  if (!(aSurface->GetType() == SURFACE_SKIA || aSurface->GetType() == SURFACE_DATA)) {
+  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA)) {
     return;
   }
 
@@ -691,11 +691,11 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 TemporaryRef<SourceSurface>
 DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 {
-  if (aSurface->GetType() == SURFACE_SKIA) {
+  if (aSurface->GetType() == SurfaceType::SKIA) {
     return aSurface;
   }
 
-  if (aSurface->GetType() != SURFACE_DATA) {
+  if (aSurface->GetType() != SurfaceType::DATA) {
     return nullptr;
   }
 
@@ -720,7 +720,7 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
 {
   //TODO: We could just use writePixels() here if the sourceRect is the entire source
 
-  if (aSurface->GetType() != SURFACE_SKIA) {
+  if (aSurface->GetType() != SurfaceType::SKIA) {
     return;
   }
 
