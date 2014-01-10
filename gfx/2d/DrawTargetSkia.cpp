@@ -567,9 +567,9 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
                            const DrawOptions &aOptions,
                            const GlyphRenderingOptions *aRenderingOptions)
 {
-  if (aFont->GetType() != FONT_MAC &&
-      aFont->GetType() != FONT_SKIA &&
-      aFont->GetType() != FONT_GDI) {
+  if (aFont->GetType() != FontType::MAC &&
+      aFont->GetType() != FontType::SKIA &&
+      aFont->GetType() != FontType::GDI) {
     return;
   }
 
@@ -582,18 +582,18 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
-  if (aRenderingOptions && aRenderingOptions->GetType() == FONT_CAIRO) {
+  if (aRenderingOptions && aRenderingOptions->GetType() == FontType::CAIRO) {
     switch (static_cast<const GlyphRenderingOptionsCairo*>(aRenderingOptions)->GetHinting()) {
-      case FONT_HINTING_NONE:
+      case FontHinting::NONE:
         paint.mPaint.setHinting(SkPaint::kNo_Hinting);
         break;
-      case FONT_HINTING_LIGHT:
+      case FontHinting::LIGHT:
         paint.mPaint.setHinting(SkPaint::kSlight_Hinting);
         break;
-      case FONT_HINTING_NORMAL:
+      case FontHinting::NORMAL:
         paint.mPaint.setHinting(SkPaint::kNormal_Hinting);
         break;
-      case FONT_HINTING_FULL:
+      case FontHinting::FULL:
         paint.mPaint.setHinting(SkPaint::kFull_Hinting);
         break;
     }

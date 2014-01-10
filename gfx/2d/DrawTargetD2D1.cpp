@@ -328,7 +328,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
                            const DrawOptions &aOptions,
                            const GlyphRenderingOptions *aRenderingOptions)
 {
-  if (aFont->GetType() != FONT_DWRITE) {
+  if (aFont->GetType() != FontType::DWRITE) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible font.";
     return;
   }
@@ -337,7 +337,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
 
   IDWriteRenderingParams *params = nullptr;
   if (aRenderingOptions) {
-    if (aRenderingOptions->GetType() != FONT_DWRITE) {
+    if (aRenderingOptions->GetType() != FontType::DWRITE) {
       gfxDebug() << *this << ": Ignoring incompatible GlyphRenderingOptions.";
       // This should never happen.
       MOZ_ASSERT(false);

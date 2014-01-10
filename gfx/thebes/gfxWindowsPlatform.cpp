@@ -692,7 +692,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
         gfxDWriteFont *font = static_cast<gfxDWriteFont*>(aFont);
 
         NativeFont nativeFont;
-        nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+        nativeFont.mType = NativeFontType::DWRITE_FONT_FACE;
         nativeFont.mFont = font->GetFontFace();
 
         if (aTarget->GetType() == BackendType::CAIRO) {
@@ -709,7 +709,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
         "Fonts on windows should be GDI or DWrite!");
 
     NativeFont nativeFont;
-    nativeFont.mType = NATIVE_FONT_GDI_FONT_FACE;
+    nativeFont.mType = NativeFontType::GDI_FONT_FACE;
     LOGFONT lf;
     GetObject(static_cast<gfxGDIFont*>(aFont)->GetHFONT(), sizeof(LOGFONT), &lf);
     nativeFont.mFont = &lf;
