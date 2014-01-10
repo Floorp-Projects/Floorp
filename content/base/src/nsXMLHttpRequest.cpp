@@ -1899,7 +1899,11 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
       mProgressTimerIsActive = false;
       mProgressNotifier->Cancel();
     }
-    MaybeDispatchProgressEvents(true);
+    if (mUploadTransferred < mUploadTotal) {
+      mUploadTransferred = mUploadTotal;
+      mProgressSinceLastProgressEvent = true;
+      MaybeDispatchProgressEvents(true);
+    }
     mUploadComplete = true;
     DispatchProgressEvent(mUpload, NS_LITERAL_STRING(LOAD_STR),
                           true, mUploadTotal, mUploadTotal);
@@ -3410,9 +3414,6 @@ nsXMLHttpRequest::MaybeDispatchProgressEvents(bool aFinalProgress)
   // We're uploading if our state is XML_HTTP_REQUEST_OPENED or
   // XML_HTTP_REQUEST_SENT
   if ((XML_HTTP_REQUEST_OPENED | XML_HTTP_REQUEST_SENT) & mState) {
-    if (aFinalProgress) {
-      mUploadTotal = mUploadTransferred;
-    }
     if (mUpload && !mUploadComplete) {
       DispatchProgressEvent(mUpload, NS_LITERAL_STRING(PROGRESS_STR),
                             mUploadLengthComputable, mUploadTransferred,

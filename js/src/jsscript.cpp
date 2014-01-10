@@ -2860,11 +2860,14 @@ JSScript::markChildren(JSTracer *trc)
         MarkObject(trc, &sourceObject_, "sourceObject");
     }
 
-    if (function())
+    if (functionNonDelazifying())
         MarkObject(trc, &function_, "function");
 
     if (enclosingScopeOrOriginalFunction_)
         MarkObject(trc, &enclosingScopeOrOriginalFunction_, "enclosing");
+
+    if (maybeLazyScript())
+        MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
 
     if (IS_GC_MARKING_TRACER(trc)) {
         compartment()->mark();
@@ -3024,7 +3027,7 @@ js::SetFrameArgumentsObject(JSContext *cx, AbstractFramePtr frame,
 /* static */ bool
 JSScript::argumentsOptimizationFailed(JSContext *cx, HandleScript script)
 {
-    JS_ASSERT(script->function());
+    JS_ASSERT(script->functionNonDelazifying());
     JS_ASSERT(script->analyzedArgsUsage());
     JS_ASSERT(script->argumentsHasVarBinding());
 
@@ -3152,6 +3155,13 @@ LazyScript::initScript(JSScript *script)
 {
     JS_ASSERT(script && !script_);
     script_ = script;
+}
+
+void
+LazyScript::resetScript()
+{
+    JS_ASSERT(script_);
+    script_ = nullptr;
 }
 
 void

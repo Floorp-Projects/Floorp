@@ -39,6 +39,7 @@ namespace jit {
 
 class BreakpointSite;
 class BindingIter;
+class LazyScript;
 class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
@@ -624,6 +625,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     /* Information attached by Ion for parallel mode execution */
     js::jit::IonScript *parallelIon;
 
+    /* Information used to re-lazify a lazily-parsed interpreted function. */
+    js::LazyScript *lazyScript;
+
+#if JS_BITS_PER_WORD == 32
+    uint32_t padding0;
+#endif
+
     /*
      * Pointer to either baseline->method()->raw() or ion->method()->raw(), or
      * nullptr if there's no Baseline or Ion script.
@@ -1183,15 +1191,37 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
         return offsetof(JSScript, baselineOrIonSkipArgCheck);
     }
 
+    bool isRelazifiable() const {
+        return (selfHosted() || lazyScript) &&
+               !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
+    }
+    void setLazyScript(js::LazyScript *lazy) {
+        lazyScript = lazy;
+    }
+    js::LazyScript *maybeLazyScript() {
+        return lazyScript;
+    }
+
     /*
      * Original compiled function for the script, if it has a function.
      * nullptr for global and eval scripts.
+     * The delazifying variant ensures that the function isn't lazy, but can
+     * only be used under a compilation lock. The non-delazifying variant
+     * can be used off-thread and without the lock, but must only be used
+     * after earlier code has called ensureNonLazyCanonicalFunction and
+     * while the function can't have been relazified.
      */
-    JSFunction *function() const {
+    inline JSFunction *functionDelazifying() const;
+    JSFunction *functionNonDelazifying() const {
         js::AutoThreadSafeAccess ts(this);
         return function_;
     }
     inline void setFunction(JSFunction *fun);
+    /*
+     * Takes a compilation lock and de-lazifies the canonical function. Must
+     * be called before entering code that expects the function to be non-lazy.
+     */
+    inline void ensureNonLazyCanonicalFunction(JSContext *cx);
 
     JSFunction *originalFunction() const;
     void setIsCallsiteClone(JSObject *fun);
@@ -1615,11 +1645,13 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
                               JSVersion version, uint32_t begin, uint32_t end,
                               uint32_t lineno, uint32_t column);
 
-    JSFunction *function() const {
+    inline JSFunction *functionDelazifying(JSContext *cx) const;
+    JSFunction *functionNonDelazifying() const {
         return function_;
     }
 
     void initScript(JSScript *script);
+    void resetScript();
     JSScript *maybeScript() {
         return script_;
     }

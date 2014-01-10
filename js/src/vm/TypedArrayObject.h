@@ -56,10 +56,13 @@ class ArrayBufferObject : public JSObject
 
     static const Class protoClass;
     static const JSFunctionSpec jsfuncs[];
+    static const JSFunctionSpec jsstaticfuncs[];
 
     static bool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
 
     static bool fun_slice(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool fun_isView(JSContext *cx, unsigned argc, Value *vp);
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 

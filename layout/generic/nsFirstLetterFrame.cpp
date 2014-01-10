@@ -319,7 +319,7 @@ nsFirstLetterFrame::CreateContinuationForFloatingParent(nsPresContext* aPresCont
   nsIFrame* continuation = presShell->FrameConstructor()->
     CreateContinuingFrame(aPresContext, aChild, parent, aIsFluid);
 
-  // The continuation will have gotten the first letter style from it's
+  // The continuation will have gotten the first letter style from its
   // prev continuation, so we need to repair the style context so it
   // doesn't have the first letter styling.
   nsStyleContext* parentSC = this->StyleContext()->GetParent();

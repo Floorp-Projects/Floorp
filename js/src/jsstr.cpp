@@ -1422,7 +1422,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/* ES6 20120927 draft 15.5.4.22. */
+/* ES6 20131108 draft 21.1.3.18. */
 static bool
 str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1433,12 +1433,19 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    // Steps 4 and 5
+    // Step 4
+    if (args.get(0).isObject() && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                             "first", "", "Regular Expression");
+        return false;
+    }
+
+    // Steps 5 and 6
     Rooted<JSLinearString*> searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Steps 6 and 7
+    // Steps 7 and 8
     uint32_t pos = 0;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -1452,31 +1459,31 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    // Step 8
+    // Step 9
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
     if (!textChars)
         return false;
 
-    // Step 9
+    // Step 10
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Step 10
+    // Step 11
     uint32_t searchLen = searchStr->length();
     const jschar *searchChars = searchStr->chars();
 
-    // Step 11
+    // Step 12
     if (searchLen + start < searchLen || searchLen + start > textLen) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Steps 12 and 13
+    // Steps 13 and 14
     args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
     return true;
 }
 
-/* ES6 20120708 draft 15.5.4.23. */
+/* ES6 20131108 draft 21.1.3.7. */
 static bool
 str_endsWith(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1487,15 +1494,25 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    // Steps 4 and 5
+    // Step 4
+    if (args.get(0).isObject() && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                             "first", "", "Regular Expression");
+        return false;
+    }
+
+    // Steps 5 and 6
     Rooted<JSLinearString *> searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Step 6
+    // Step 7
     uint32_t textLen = str->length();
+    const jschar *textChars = str->getChars(cx);
+    if (!textChars)
+        return false;
 
-    // Steps 7 and 8
+    // Steps 8 and 9
     uint32_t pos = textLen;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -1509,28 +1526,23 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    // Step 6
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
-
-    // Step 9
+    // Step 10
     uint32_t end = Min(Max(pos, 0U), textLen);
 
-    // Step 10
+    // Step 11
     uint32_t searchLen = searchStr->length();
     const jschar *searchChars = searchStr->chars();
 
-    // Step 12
+    // Step 13 (reordered)
     if (searchLen > end) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Step 11
+    // Step 12
     uint32_t start = end - searchLen;
 
-    // Steps 13 and 14
+    // Steps 14 and 15
     args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
     return true;
 }

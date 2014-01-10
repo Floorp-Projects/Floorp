@@ -341,7 +341,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
         unsigned arg = unsigned(JSID_TO_INT(id));
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
             argsobj.setElement(cx, arg, vp);
-            if (arg < script->function()->nargs())
+            if (arg < script->functionNonDelazifying()->nargs())
                 types::TypeScript::SetArgument(cx, script, arg, vp);
             return true;
         }

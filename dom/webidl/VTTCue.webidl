@@ -42,6 +42,8 @@ interface VTTCue : EventTarget {
   [SetterThrows]
   attribute long position;
   [SetterThrows]
+  attribute AlignSetting positionAlign;
+  [SetterThrows]
   attribute long size;
   attribute AlignSetting align;
   attribute DOMString text;
@@ -50,4 +52,12 @@ interface VTTCue : EventTarget {
   attribute EventHandler onenter;
 
   attribute EventHandler onexit;
+};
+
+// Mozilla extensions.
+partial interface VTTCue {
+  [ChromeOnly]
+  attribute HTMLDivElement? displayState;
+  [ChromeOnly]
+  readonly attribute boolean hasBeenReset;
 };

@@ -1,3 +1,4 @@
+HTTP == deferred-anchor.xhtml#d deferred-anchor-ref.xhtml#d
 HTTP == fixed-1.html fixed-1.html?ref
 HTTP == fixed-opacity-1.html fixed-opacity-1.html?ref
 skip-if(B2G) HTTP == fixed-opacity-2.html fixed-opacity-2.html?ref

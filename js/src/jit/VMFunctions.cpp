@@ -516,13 +516,13 @@ NewStringObject(JSContext *cx, HandleString str)
 bool
 SPSEnter(JSContext *cx, HandleScript script)
 {
-    return cx->runtime()->spsProfiler.enter(cx, script, script->function());
+    return cx->runtime()->spsProfiler.enter(cx, script, script->functionNonDelazifying());
 }
 
 bool
 SPSExit(JSContext *cx, HandleScript script)
 {
-    cx->runtime()->spsProfiler.exit(cx, script, script->function());
+    cx->runtime()->spsProfiler.exit(cx, script, script->functionNonDelazifying());
     return true;
 }
 

@@ -19,6 +19,12 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 
 namespace mozilla {
+namespace gfx {
+class SharedSurface;
+}
+}
+
+namespace mozilla {
 namespace layers {
 
 class ClientCanvasLayer;
@@ -85,6 +91,29 @@ public:
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
                             TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT) MOZ_OVERRIDE;
+
+  virtual void OnDetach() MOZ_OVERRIDE
+  {
+    mBuffer = nullptr;
+  }
+
+private:
+  RefPtr<TextureClient> mBuffer;
+};
+
+// Used for GL canvases where we don't need to do any readback, i.e., with a
+// GL backend.
+class CanvasClientSurfaceStream : public CanvasClient
+{
+public:
+  CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder, TextureFlags aFlags);
+
+  TextureInfo GetTextureInfo() const
+  {
+    return TextureInfo(COMPOSITABLE_IMAGE);
+  }
+
+  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
 
   virtual void OnDetach() MOZ_OVERRIDE
   {
