@@ -10,13 +10,14 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/TelemetryTimestamps.jsm");
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
 
 const Telemetry = Services.telemetry;
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutTelemetry.properties");
 const brandBundle = Services.strings.createBundle(
   "chrome://branding/locale/brand.properties");
+const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].
+  getService(Ci.nsITelemetryPing);
 
 // Maximum height of a histogram bar (in em for html, in chars for text)
 const MAX_BAR_HEIGHT = 18;
