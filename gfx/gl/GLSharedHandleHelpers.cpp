@@ -153,7 +153,7 @@ SharedTextureHandle CreateSharedHandle(GLContext* gl,
                                        SharedTextureBufferType bufferType)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return 0;
 
     // Both EGLImage and SurfaceTexture only support same-process currently, but
@@ -196,7 +196,7 @@ void ReleaseSharedHandle(GLContext* gl,
                          SharedTextureHandle sharedHandle)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return;
 
     if (shareType != SharedTextureShareType::SameProcess) {
@@ -233,7 +233,7 @@ bool GetSharedHandleDetails(GLContext* gl,
                             SharedHandleDetails& details)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return false;
 
     if (shareType != SharedTextureShareType::SameProcess)
@@ -271,7 +271,7 @@ bool AttachSharedHandle(GLContext* gl,
                         SharedTextureHandle sharedHandle)
 {
     // unimplemented outside of EGL
-    if (gl->GetContextType() != ContextTypeEGL)
+    if (gl->GetContextType() != GLContextType::EGL)
         return false;
 
     if (shareType != SharedTextureShareType::SameProcess)
