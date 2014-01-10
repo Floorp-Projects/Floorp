@@ -10,8 +10,11 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 public class WebAppAllocator {
     private final String LOGTAG = "GeckoWebAppAllocator";

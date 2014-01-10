@@ -132,7 +132,7 @@ let UI = {
       }
     }
     if (!icon)
-      return null;
+      return "chrome://browser/skin/devtools/app-manager/default-app-icon.png";
     if (project.type == "hosted") {
       let manifestURL = Services.io.newURI(project.location, null, null);
       let origin = Services.io.newURI(manifestURL.prePath, null, null);

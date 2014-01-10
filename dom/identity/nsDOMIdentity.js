@@ -129,7 +129,7 @@ nsDOMIdentity.prototype = {
     this._identityInternal._mm.sendAsyncMessage("Identity:RP:Watch", message);
   },
 
-  request: function nsDOMIdentity_request(aOptions) {
+  request: function nsDOMIdentity_request(aOptions = {}) {
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 

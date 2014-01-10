@@ -355,9 +355,9 @@ SharedTextureSourceOGL::DetachSharedHandle()
 }
 
 void
-SharedTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
+SharedTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
-  mCompositor = aCompositor;
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
 bool
