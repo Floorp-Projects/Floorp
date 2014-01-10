@@ -10,7 +10,6 @@ import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnChangeListener;
 import org.mozilla.gecko.home.HomeConfig.PageEntry;
 import org.mozilla.gecko.home.HomeConfig.PageType;
-import org.mozilla.gecko.home.ListManager.ListInfo;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
