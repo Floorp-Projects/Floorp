@@ -131,6 +131,10 @@
    * these are already integer types so there is nothing more to do.
    */
 #  define MOZ_ENUM_CLASS_ENUM_TYPE(Name) Name
+  /*
+   * See the comment below about MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE.
+   */
+#  define MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(Name) Name
 #else
    /**
     * We need Name to both name a type, and scope the provided enumerator
@@ -253,6 +257,37 @@
    * In the present case, the integer type is the Enum nested type.
    */
 #  define MOZ_ENUM_CLASS_ENUM_TYPE(Name) Name::Enum
+  /*
+   * MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE is a variant of MOZ_ENUM_CLASS_ENUM_TYPE
+   * to be used when the enum class at hand depends on template parameters.
+   *
+   * Indeed, if T depends on template parameters, in order to name a nested type
+   * in T, C++ does not allow to just write "T::NestedType". Instead, we have
+   * to write "typename T::NestedType". The role of this macro is to add
+   * this "typename" keywords where needed.
+   *
+   * Example:
+   *
+   *    template<typename T, MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(T) Value>
+   *    struct S {};
+   *
+   *    MOZ_BEGIN_ENUM_CLASS(E)
+   *      Foo,
+   *      Bar
+   *    MOZ_END_ENUM_CLASS(E)
+   *
+   *    S<E, E::Bar> s;
+   *
+   * In this example, the second template parameter to S is meant to be of type T,
+   * but on non-C++11 compilers, type T is a class type, not an integer type, so
+   * it is not accepted as the type of a constant template parameter. One would
+   * then want to use MOZ_ENUM_CLASS_ENUM_TYPE(T), but that doesn't work either
+   * as T depends on template parameters (more specifically here, T _is_ a template
+   * parameter) so as MOZ_ENUM_CLASS_ENUM_TYPE(T) expands to T::Enum, we are missing
+   * the required "typename" keyword. So here, MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE
+   * is needed.
+   */
+#  define MOZ_TEMPLATE_ENUM_CLASS_ENUM_TYPE(Name) typename Name::Enum
 #endif
 
    /*
