@@ -733,6 +733,20 @@ void WebGLContext::Draw_cleanup()
             }
         }
     }
+
+    // Let's check the viewport
+    const WebGLRectangleObject* rect = FramebufferRectangleObject();
+    if (rect) {
+        if (mViewportWidth > rect->Width() ||
+            mViewportHeight > rect->Height())
+        {
+            if (!mAlreadyWarnedAboutViewportLargerThanDest) {
+                GenerateWarning("Drawing to a destination rect smaller than the viewport rect. "
+                                "(This warning will only be given once)");
+                mAlreadyWarnedAboutViewportLargerThanDest = true;
+            }
+        }
+    }
 }
 
 /*
