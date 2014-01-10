@@ -244,9 +244,9 @@ if CONFIG['OS_TEST'] in ('macppc', 'bebox', 'ofppc', 'prep', 'amigappc'):
 
 if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'powerpc':
     SOURCES += [
-        'xptcinvoke_asm_ppc_openbsd.S',
+        'xptcinvoke_asm_ppc_openbsd.s',
         'xptcinvoke_ppc_openbsd.cpp',
-        'xptcstubs_asm_ppc_openbsd.S',
+        'xptcstubs_asm_ppc_openbsd.s',
         'xptcstubs_ppc_openbsd.cpp',
     ]
 
