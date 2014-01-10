@@ -1,0 +1,74 @@
+﻿﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record with media.ogg.enabled = false</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var element = document.createElement('audio');
+
+  element.src = 'detodos.opus';
+  element.stream = element.mozCaptureStream();
+  // the expect sequence should be
+  // 1. onerror
+  // 2. ondataavailable
+  // 3. onstop
+  var callbackStep = 0;
+  var mediaRecorder = new MediaRecorder(element.stream);
+
+  mediaRecorder.onerror = function (e) {
+    is(callbackStep, 0, 'should fired onstop callback');
+    is(e.name, 'GenericError', 'error name should be GenericError');
+    is(mediaRecorder.mimeType, '', 'mimetype should be empty');
+    is(mediaRecorder.state, 'recording', 'state is recording');
+    info('onerror callback fired');
+    SpecialPowers.setBoolPref('media.ogg.enabled', true);
+    callbackStep = 1;
+  };
+
+  mediaRecorder.onwarning = function () {
+    ok(false, 'Unexpected onwarning callback fired');
+  };
+
+  mediaRecorder.onstop = function () {
+    info('onstop callback fired');
+    is(mediaRecorder.state, 'inactive', 'state should be inactive');
+    is(callbackStep, 2, 'should fired onstop callback');
+    SimpleTest.finish();
+  };
+
+  // This handler fires every 250ms to generate a blob.
+  mediaRecorder.ondataavailable = function (evt) {
+    info('ondataavailable callback fired');
+    is(callbackStep, 1, 'should fired ondataavailable callback');
+    is(evt.data.size, 0, 'data size should be zero');
+    ok(evt instanceof BlobEvent,
+       'Events fired from ondataavailable should be BlobEvent');
+    is(evt.data.type, '', 'encoder start fail, blob miemType should be empty');
+    callbackStep = 2;
+  };
+
+  // Start recording once canplaythrough fires
+  element.oncanplaythrough = function() {
+    SpecialPowers.setBoolPref("media.ogg.enabled", false);
+    mediaRecorder.start(250);
+    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mediaRecorder.stream, element.stream,
+       'Media recorder stream = element stream at the start of recording');
+  };
+
+  element.play();
+}
+
+startTest();
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

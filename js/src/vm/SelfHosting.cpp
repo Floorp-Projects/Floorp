@@ -225,7 +225,9 @@ intrinsic_SetScriptHints(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[1].isObject());
 
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
-    RootedScript funScript(cx, fun->nonLazyScript());
+    RootedScript funScript(cx, fun->getOrCreateScript(cx));
+    if (!funScript)
+        return false;
     RootedObject flags(cx, &args[1].toObject());
 
     RootedId id(cx);
@@ -302,14 +304,14 @@ intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /*
- * ForkJoinSlices(): Returns the number of parallel slices that will
- * be created by ForkJoin().
+ * ForkJoinWorkerNumWorkers(): Returns the number of workers in the fork join
+ * thread pool, including the main thread.
  */
 static bool
-intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
+intrinsic_ForkJoinNumWorkers(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(ForkJoinSlices(cx));
+    args.rval().setInt32(cx->runtime()->threadPool.numWorkers() + 1);
     return true;
 }
 
@@ -620,7 +622,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsStringIterator",        intrinsic_IsStringIterator,        1,0),
 
     JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
-    JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
+    JS_FN("ForkJoinNumWorkers",      intrinsic_ForkJoinNumWorkers,      0,0),
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
@@ -726,6 +728,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
     if (receivesDefaultObject)
         js::SetDefaultObjectForContext(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
+    selfHostingGlobal_->compartment()->isSelfHosting = true;
+    selfHostingGlobal_->compartment()->isSystem = true;
     /*
      * During initialization of standard classes for the self-hosting global,
      * all self-hosted functions are ignored. Thus, we don't create cyclic
@@ -880,7 +884,15 @@ CloneObject(JSContext *cx, HandleObject srcObj, CloneMemory &clonedObjects)
                 return nullptr;
         } else {
             RootedFunction fun(cx, &srcObj->as<JSFunction>());
-            clone = CloneFunctionObject(cx, fun, cx->global(), fun->getAllocKind(), TenuredObject);
+            bool hasName = fun->atom() != nullptr;
+            js::gc::AllocKind kind = hasName
+                                     ? JSFunction::ExtendedFinalizeKind
+                                     : fun->getAllocKind();
+            clone = CloneFunctionObject(cx, fun, cx->global(), kind, TenuredObject);
+            // To be able to re-lazify the cloned function, its name in the
+            // self-hosting compartment has to be stored on the clone.
+            if (hasName)
+                clone->as<JSFunction>().setExtendedSlot(0, StringValue(fun->atom()));
         }
     } else if (srcObj->is<RegExpObject>()) {
         RegExpObject &reobj = srcObj->as<RegExpObject>();
@@ -958,7 +970,9 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     // JSFunction::generatorKind can't handle lazy self-hosted functions, so we make sure there
     // aren't any.
     JS_ASSERT(!sourceFun->isGenerator());
-    RootedScript sourceScript(cx, sourceFun->nonLazyScript());
+    RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
+    if (!sourceScript)
+        return false;
     JS_ASSERT(!sourceScript->enclosingStaticScope());
     JSScript *cscript = CloneScript(cx, NullPtr(), targetFun, sourceScript);
     if (!cscript)
@@ -966,8 +980,11 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, Handle<PropertyName*> na
     cscript->setFunction(targetFun);
 
     JS_ASSERT(sourceFun->nargs() == targetFun->nargs());
-    targetFun->setFlags(sourceFun->flags() | JSFunction::EXTENDED);
+    // The target function might have been relazified after it's flags changed.
+    targetFun->setFlags((targetFun->flags() & ~JSFunction::INTERPRETED_LAZY) |
+                        sourceFun->flags() | JSFunction::EXTENDED);
     targetFun->setScript(cscript);
+    JS_ASSERT(targetFun->isExtended());
     return true;
 }
 

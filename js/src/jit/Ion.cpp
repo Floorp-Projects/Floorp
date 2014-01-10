@@ -1622,7 +1622,9 @@ TrackPropertiesForSingletonScopes(JSContext *cx, JSScript *script, BaselineFrame
     // could access are tracked. These are generally accessed through
     // ALIASEDVAR operations in baseline and will not be tracked even if they
     // have been accessed in baseline code.
-    JSObject *environment = script->function() ? script->function()->environment() : nullptr;
+    JSObject *environment = script->functionNonDelazifying()
+                            ? script->functionNonDelazifying()->environment()
+                            : nullptr;
 
     while (environment && !environment->is<GlobalObject>()) {
         if (environment->is<CallObject>() && environment->hasSingletonType())
@@ -1651,6 +1653,10 @@ IonCompile(JSContext *cx, JSScript *script,
 #endif
     JS_ASSERT(optimizationLevel > Optimization_DontCompile);
 
+    // Make sure the script's canonical function isn't lazy. We can't de-lazify
+    // it in a worker thread.
+    script->ensureNonLazyCanonicalFunction(cx);
+
     TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
 
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
@@ -1677,8 +1683,9 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!graph)
         return AbortReason_Alloc;
 
-    CompileInfo *info = alloc->new_<CompileInfo>(script, script->function(), osrPc, constructing,
-                                                 executionMode, script->needsArgsObj());
+    CompileInfo *info = alloc->new_<CompileInfo>(script, script->functionNonDelazifying(), osrPc,
+                                                 constructing, executionMode,
+                                                 script->needsArgsObj());
     if (!info)
         return AbortReason_Alloc;
 
@@ -2218,7 +2225,7 @@ jit::CanEnterUsingFastInvoke(JSContext *cx, HandleScript script, uint32_t numAct
 
     // Don't handle arguments underflow, to make this work we would have to pad
     // missing arguments with |undefined|.
-    if (numActualArgs < script->function()->nargs())
+    if (numActualArgs < script->functionNonDelazifying()->nargs())
         return Method_Skipped;
 
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
@@ -2279,7 +2286,7 @@ jit::SetEnterJitData(JSContext *cx, EnterJitData &data, RunState &state, AutoVal
 
     if (state.isInvoke()) {
         CallArgs &args = state.asInvoke()->args();
-        unsigned numFormals = state.script()->function()->nargs();
+        unsigned numFormals = state.script()->functionNonDelazifying()->nargs();
         data.constructing = state.asInvoke()->constructing();
         data.numActualArgs = args.length();
         data.maxArgc = Max(args.length(), numFormals) + 1;

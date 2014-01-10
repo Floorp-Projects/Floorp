@@ -264,7 +264,7 @@ StackFrame::prologue(JSContext *cx)
         functionThis() = ObjectValue(*obj);
     }
 
-    probes::EnterScript(cx, script, script->function(), this);
+    probes::EnterScript(cx, script, script->functionNonDelazifying(), this);
     return true;
 }
 
@@ -274,7 +274,7 @@ StackFrame::epilogue(JSContext *cx)
     JS_ASSERT(!isYielding());
 
     RootedScript script(cx, this->script());
-    probes::ExitScript(cx, script, script->function(), hasPushedSPSFrame());
+    probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedSPSFrame());
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
@@ -800,7 +800,7 @@ ScriptFrameIter::isGlobalFrame() const
         if (data_.ionFrames_.isBaselineJS())
             return data_.ionFrames_.baselineFrame()->isGlobalFrame();
         JS_ASSERT(!script()->isForEval());
-        return !script()->function();
+        return !script()->functionNonDelazifying();
 #else
         break;
 #endif
