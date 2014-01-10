@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
 });
 #endif
 
+XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
+
 // Once Bug 731746 - Allow chrome JS object to implement nsIDOMEventTarget
 // is resolved this helper could be removed.
 var SettingsListener = {
@@ -521,6 +525,14 @@ SettingsListener.observe('privacy.donottrackheader.enabled', false, function(val
 
 SettingsListener.observe('privacy.donottrackheader.value', 1, function(value) {
   Services.prefs.setIntPref('privacy.donottrackheader.value', value);
+  // If the user specifically disallows tracking, we set the value of
+  // app.update.custom (update tracking ID) to an empty string.
+  if (value == 1) {
+    Services.prefs.setCharPref('app.update.custom', '');
+    return;
+  }
+  // Otherwise, we assure that the update tracking ID exists.
+  setUpdateTrackingId();
 });
 
 // =================== Crash Reporting ====================
@@ -537,6 +549,39 @@ SettingsListener.observe('app.reportCrashes', 'ask', function(value) {
 });
 
 // ================ Updates ================
+/**
+ * For tracking purposes some partners require us to add an UUID to the
+ * update URL. The update tracking ID will be an empty string if the
+ * do-not-track feature specifically disallows tracking and it is reseted
+ * to a different ID if the do-not-track value changes from disallow to allow.
+ */
+function setUpdateTrackingId() {
+  try {
+    let dntEnabled = Services.prefs.getBoolPref('privacy.donottrackheader.enabled');
+    let dntValue =  Services.prefs.getIntPref('privacy.donottrackheader.value');
+    // If the user specifically decides to disallow tracking (1), we just bail out.
+    if (dntEnabled && (dntValue == 1)) {
+      return;
+    }
+
+    let trackingId =
+      Services.prefs.getPrefType('app.update.custom') ==
+      Ci.nsIPrefBranch.PREF_STRING &&
+      Services.prefs.getCharPref('app.update.custom');
+
+    // If there is no previous registered tracking ID, we generate a new one.
+    // This should only happen on first usage or after changing the
+    // do-not-track value from disallow to allow.
+    if (!trackingId) {
+      trackingId = uuidgen.generateUUID().toString().replace(/[{}]/g, "");
+      Services.prefs.setCharPref('app.update.custom', trackingId);
+    }
+  } catch(e) {
+    dump('Error getting tracking ID ' + e + '\n');
+  }
+}
+setUpdateTrackingId();
+
 SettingsListener.observe('app.update.interval', 86400, function(value) {
   Services.prefs.setIntPref('app.update.interval', value);
 });
