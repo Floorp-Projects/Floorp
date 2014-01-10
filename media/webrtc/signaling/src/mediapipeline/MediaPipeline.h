@@ -71,12 +71,14 @@ class MediaPipeline : public sigslot::has_slots<> {
                 nsCOMPtr<nsIEventTarget> sts_thread,
                 MediaStream *stream,
                 TrackID track_id,
+                int level,
                 RefPtr<MediaSessionConduit> conduit,
                 RefPtr<TransportFlow> rtp_transport,
                 RefPtr<TransportFlow> rtcp_transport)
       : direction_(direction),
         stream_(stream),
         track_id_(track_id),
+        level_(level),
         conduit_(conduit),
         rtp_transport_(rtp_transport),
         rtp_state_(MP_CONNECTING),
@@ -126,6 +128,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   virtual Direction direction() const { return direction_; }
   virtual TrackID trackid() const { return track_id_; }
+  virtual int level() const { return level_; }
 
   bool IsDoingRtcpMux() const {
     return (rtp_transport_ == rtcp_transport_);
@@ -194,6 +197,7 @@ class MediaPipeline : public sigslot::has_slots<> {
                                 // Used on STS and MediaStreamGraph threads.
   TrackID track_id_;            // The track on the stream.
                                 // Written and used as the stream_;
+  int level_; // The m-line index (starting at 1, to match convention)
   RefPtr<MediaSessionConduit> conduit_;  // Our conduit. Written on the main
                                          // thread. Read on STS thread.
 
@@ -315,12 +319,13 @@ class MediaPipelineTransmit : public MediaPipeline {
                         nsCOMPtr<nsIEventTarget> sts_thread,
                         DOMMediaStream *domstream,
                         TrackID track_id,
+                        int level,
                         RefPtr<MediaSessionConduit> conduit,
                         RefPtr<TransportFlow> rtp_transport,
                         RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(pc, TRANSMIT, main_thread, sts_thread,
-                    domstream->GetStream(), track_id, conduit, rtp_transport,
-                    rtcp_transport),
+                    domstream->GetStream(), track_id, level,
+                    conduit, rtp_transport, rtcp_transport),
       listener_(new PipelineListener(conduit)),
       domstream_(domstream)
   {}
@@ -437,11 +442,12 @@ class MediaPipelineReceive : public MediaPipeline {
                        nsCOMPtr<nsIEventTarget> sts_thread,
                        MediaStream *stream,
                        TrackID track_id,
+                       int level,
                        RefPtr<MediaSessionConduit> conduit,
                        RefPtr<TransportFlow> rtp_transport,
                        RefPtr<TransportFlow> rtcp_transport) :
       MediaPipeline(pc, RECEIVE, main_thread, sts_thread,
-                    stream, track_id, conduit, rtp_transport,
+                    stream, track_id, level, conduit, rtp_transport,
                     rtcp_transport),
       segments_added_(0) {
   }
@@ -464,11 +470,12 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             MediaStream *stream,
                             TrackID track_id,
+                            int level,
                             RefPtr<AudioSessionConduit> conduit,
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
-                           stream, track_id, conduit, rtp_transport,
+                           stream, track_id, level, conduit, rtp_transport,
                            rtcp_transport),
       listener_(new PipelineListener(stream->AsSourceStream(),
                                      track_id, conduit)) {
@@ -526,11 +533,12 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> sts_thread,
                             MediaStream *stream,
                             TrackID track_id,
+                            int level,
                             RefPtr<VideoSessionConduit> conduit,
                             RefPtr<TransportFlow> rtp_transport,
                             RefPtr<TransportFlow> rtcp_transport) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
-                           stream, track_id, conduit, rtp_transport,
+                           stream, track_id, level, conduit, rtp_transport,
                            rtcp_transport),
       renderer_(new PipelineRenderer(MOZ_THIS_IN_INITIALIZER_LIST())),
       listener_(new PipelineListener(stream->AsSourceStream(), track_id)) {
