@@ -8,8 +8,13 @@
 <!ENTITY crashprompt.detailsLink     "What's in a crash report?">
 <!ENTITY crashprompt.detailedMessage.firstParagraph "A crash report contains some details about the crash, your machine, as well as a snapshot of the state of your browser when it crashed.">
 <!ENTITY crashprompt.detailedMessage.secondParagraph "This may include things like open pages, text typed into forms and the content of open messages, recent browsing history, or geolocation shared with a site.">
-<!ENTITY crashprompt.detailedMessage.thirdParagraph "We use crash reports to try to fix problems and improve our products. We handle your information as we describe in our ">
+<!-- LOCALIZATION NOTE (crashprompt.detailedMessage.thirdParagraphBeforeLink, crashprompt.privacyPolicyLink, crashprompt.detailedMessage.thirdParagraphAfterLink):
+     These three entities form a single sentence. crashprompt.detailedMessage.thirdParagraphBeforeLink is the start of the sentence,
+     crashprompt.privacyPolicyLink is a clickable link the middle and crashprompt.detailedMessage.thirdParagraphAfterLink is the end of the sentence.
+     -->
+<!ENTITY crashprompt.detailedMessage.thirdParagraphBeforeLink "We use crash reports to try to fix problems and improve our products. We handle your information as we describe in our ">
 <!ENTITY crashprompt.privacyPolicyLink "&brandShortName; privacy policy">
+<!ENTITY crashprompt.detailedMessage.thirdParagraphAfterLink ".">
 <!ENTITY crashprompt.includeURLLabel "Include the address of the page I was on">
 <!ENTITY crashprompt.acceptbutton    "Send reports">
 <!ENTITY crashprompt.refusebutton    "Don't send">

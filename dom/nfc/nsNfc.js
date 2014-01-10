@@ -110,7 +110,7 @@ MozNFCPeer.prototype = {
 
   initialize: function(aWindow, aSessionToken) {
     this._window = aWindow;
-    this.session = aSessionToken;
+    this.setSessionToken(aSessionToken);
   },
 
   // ChromeOnly interface
@@ -125,6 +125,15 @@ MozNFCPeer.prototype = {
   sendNDEF: function sendNDEF(records) {
     // Just forward sendNDEF to writeNDEF
     return this._nfcContentHelper.writeNDEF(this._window, records, this.session);
+  },
+
+  sendFile: function sendFile(blob) {
+    let data = {
+      "blob": blob.slice()
+    };
+    return this._nfcContentHelper.sendFile(this._window,
+                                           ObjectWrapper.wrap(data, this._window),
+                                           this.session);
   },
 
   classID: Components.ID("{c1b2bcf0-35eb-11e3-aa6e-0800200c9a66}"),

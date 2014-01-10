@@ -583,25 +583,6 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
-
-          // Temporary case for Australis whatsnew
-          case OVERRIDE_NEW_BUILD_ID:
-            let locale = "en-US";
-            try {
-              locale = Services.prefs.getCharPref("general.useragent.locale");
-            } catch (e) {}
-
-            let showedAustralisWhatsNew = false;
-            try {
-              showedAustralisWhatsNew = Services.prefs.getBoolPref("browser.showedAustralisWhatsNew");
-            } catch(e) {}
-
-            // Show the Australis whatsnew page for en-US if we haven't yet shown it
-            if (!showedAustralisWhatsNew && locale == "en-US") {
-              Services.prefs.setBoolPref("browser.showedAustralisWhatsNew", true);
-              overridePage = "https://www.mozilla.org/en-US/firefox/29.0a1/whatsnew/";
-            }
-            break;
         }
       }
     } catch (ex) {}

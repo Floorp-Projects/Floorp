@@ -1106,6 +1106,10 @@ CustomizeMode.prototype = {
         }
 
         CustomizableUI.removeWidgetFromArea(aDraggedItemId);
+        // Special widgets are removed outright, we can return here:
+        if (CustomizableUI.isSpecialWidget(aDraggedItemId)) {
+          return;
+        }
       }
       draggedItem = draggedItem.parentNode;
 

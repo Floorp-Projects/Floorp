@@ -75,10 +75,6 @@
       <toolbar id="inspector-toolbar"
         class="devtools-toolbar"
         nowindowdrag="true">
-        <toolbarbutton id="inspector-inspect-toolbutton"
-          tooltiptext="&inspector.selectButton.tooltip;"
-          class="devtools-toolbarbutton"
-          oncommand="inspector.highlighter.toggleLockState()"/>
         <arrowscrollbox id="inspector-breadcrumbs"
           class="breadcrumbs-widget-container"
           flex="1" orient="horizontal"
