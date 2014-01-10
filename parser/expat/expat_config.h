@@ -27,10 +27,19 @@
 #define XMLIMPORT
 
 #define XML_UNICODE
-typedef char16_t XML_Char;
 typedef char XML_LChar;
+/*
+ * The char16_t type is only usable in C++ code, so we need this ugly hack to
+ * select a binary compatible C type for the expat C code to use.
+ */
+#ifdef __cplusplus
+typedef char16_t XML_Char;
 #define XML_T(x) (char16_t)x
-#define XML_L(x) x
+#else
+#include <stdint.h>
+typedef uint16_t XML_Char;
+#define XML_T(x) (uint16_t)x
+#endif
 
 #define XML_DTD
 #define XML_NS
