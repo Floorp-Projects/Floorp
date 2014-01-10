@@ -11,16 +11,18 @@
 #include "base/basictypes.h"
 #include "base/message_loop.h"
 
-#include "mozilla/WeakPtr.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Move.h"
+#include "mozilla/Vector.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
 #include "nsAutoPtr.h"
-#include "mozilla/DebugOnly.h"
 
 #include <deque>
 #include <stack>
-#include <vector>
 #include <math.h>
 
 namespace mozilla {
@@ -276,28 +278,78 @@ class MessageChannel : HasResultCodes
 
     enum Direction { IN_MESSAGE, OUT_MESSAGE };
     struct InterruptFrame {
-        InterruptFrame(Direction direction, const Message* msg)
-          : mDirection(direction), mMsg(msg)
-        { }
+        enum Semantics { INTR_SEMS, SYNC_SEMS, ASYNC_SEMS };
 
-        bool IsInterruptIncall() const {
-            return mMsg->is_interrupt() && IN_MESSAGE == mDirection;
+        InterruptFrame(Direction direction, const Message* msg)
+          : mMessageName(strdup(msg->name())),
+            mMessageRoutingId(msg->routing_id()),
+            mMesageSemantics(msg->is_interrupt() ? INTR_SEMS :
+                             msg->is_sync() ? SYNC_SEMS :
+                             ASYNC_SEMS),
+            mDirection(direction),
+            mMoved(false)
+        {
+            MOZ_ASSERT(mMessageName);
         }
-        bool IsInterruptOutcall() const {
-            return mMsg->is_interrupt() && OUT_MESSAGE == mDirection;
+
+        InterruptFrame(InterruptFrame&& aOther)
+        {
+            MOZ_ASSERT(aOther.mMessageName);
+            mMessageName = aOther.mMessageName;
+            aOther.mMessageName = nullptr;
+            aOther.mMoved = true;
+
+            mMessageRoutingId = aOther.mMessageRoutingId;
+            mMesageSemantics = aOther.mMesageSemantics;
+            mDirection = aOther.mDirection;
+        }
+
+        ~InterruptFrame()
+        {
+            MOZ_ASSERT_IF(!mMessageName, mMoved);
+
+            if (mMessageName)
+                free(const_cast<char*>(mMessageName));
+        }
+
+        InterruptFrame& operator=(InterruptFrame&& aOther)
+        {
+            MOZ_ASSERT(&aOther != this);
+            this->~InterruptFrame();
+            new (this) InterruptFrame(mozilla::Move(aOther));
+            return *this;
+        }
+
+        bool IsInterruptIncall() const
+        {
+            return INTR_SEMS == mMesageSemantics && IN_MESSAGE == mDirection;
+        }
+
+        bool IsInterruptOutcall() const
+        {
+            return INTR_SEMS == mMesageSemantics && OUT_MESSAGE == mDirection;
         }
 
         void Describe(int32_t* id, const char** dir, const char** sems,
                       const char** name) const
         {
-            *id = mMsg->routing_id();
+            *id = mMessageRoutingId;
             *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
-            *sems = mMsg->is_interrupt() ? "intr" : mMsg->is_sync() ? "sync" : "async";
-            *name = mMsg->name();
+            *sems = (INTR_SEMS == mMesageSemantics) ? "intr" :
+                    (SYNC_SEMS == mMesageSemantics) ? "sync" :
+                    "async";
+            *name = mMessageName;
         }
 
+        const char* mMessageName;
+        int32_t mMessageRoutingId;
+        Semantics mMesageSemantics;
         Direction mDirection;
-        const Message* mMsg;
+        DebugOnly<bool> mMoved;
+
+    private:
+        InterruptFrame(const InterruptFrame& aOther) MOZ_DELETE;
+        InterruptFrame& operator=(const InterruptFrame&) MOZ_DELETE;
     };
 
     class MOZ_STACK_CLASS CxxStackFrame
@@ -311,7 +363,8 @@ class MessageChannel : HasResultCodes
             if (mThat.mCxxStackFrames.empty())
                 mThat.EnteredCxxStack();
 
-            mThat.mCxxStackFrames.push_back(InterruptFrame(direction, msg));
+            mThat.mCxxStackFrames.append(InterruptFrame(direction, msg));
+
             const InterruptFrame& frame = mThat.mCxxStackFrames.back();
 
             if (frame.IsInterruptIncall())
@@ -321,8 +374,13 @@ class MessageChannel : HasResultCodes
         }
 
         ~CxxStackFrame() {
+            mThat.AssertWorkerThread();
+
+            MOZ_ASSERT(!mThat.mCxxStackFrames.empty());
+
             bool exitingCall = mThat.mCxxStackFrames.back().IsInterruptIncall();
-            mThat.mCxxStackFrames.pop_back();
+            mThat.mCxxStackFrames.shrinkBy(1);
+
             bool exitingStack = mThat.mCxxStackFrames.empty();
 
             // mListener could have gone away if Close() was called while
@@ -330,7 +388,6 @@ class MessageChannel : HasResultCodes
             if (!mThat.mListener)
                 return;
 
-            mThat.AssertWorkerThread();
             if (exitingCall)
                 mThat.ExitedCall();
 
@@ -341,9 +398,9 @@ class MessageChannel : HasResultCodes
         MessageChannel& mThat;
 
         // disable harmful methods
-        CxxStackFrame();
-        CxxStackFrame(const CxxStackFrame&);
-        CxxStackFrame& operator=(const CxxStackFrame&);
+        CxxStackFrame() MOZ_DELETE;
+        CxxStackFrame(const CxxStackFrame&) MOZ_DELETE;
+        CxxStackFrame& operator=(const CxxStackFrame&) MOZ_DELETE;
     };
 
     void DebugAbort(const char* file, int line, const char* cond,
@@ -673,7 +730,7 @@ class MessageChannel : HasResultCodes
     // This member is only accessed on the worker thread, and so is not
     // protected by mMonitor.  It is managed exclusively by the helper
     // |class CxxStackFrame|.
-    std::vector<InterruptFrame> mCxxStackFrames;
+    mozilla::Vector<InterruptFrame> mCxxStackFrames;
 
     // Did we process an Interrupt out-call during this stack?  Only meaningful in
     // ExitedCxxStack(), from which this variable is reset.
