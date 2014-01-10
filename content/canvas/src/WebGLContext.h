@@ -1136,6 +1136,12 @@ protected:
     GLint mStencilClearValue;
     GLfloat mDepthClearValue;
 
+    GLint mViewportX;
+    GLint mViewportY;
+    GLsizei mViewportWidth;
+    GLsizei mViewportHeight;
+    bool mAlreadyWarnedAboutViewportLargerThanDest;
+
     nsCOMPtr<nsITimer> mContextRestorer;
     bool mAllowRestore;
     bool mContextLossTimerRunning;
