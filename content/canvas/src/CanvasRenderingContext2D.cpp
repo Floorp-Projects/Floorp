@@ -1790,23 +1790,6 @@ bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aEleme
     nsCOMPtr<nsIDOMElement> focusedElement;
     fm->GetFocusedElement(getter_AddRefs(focusedElement));
     if (SameCOMIdentity(aElement.AsDOMNode(), focusedElement)) {
-      // get the bounds of the current path
-      mgfx::Rect bounds;
-      bounds = mPath->GetBounds(mTarget->GetTransform());
-
-      // and set them as the accessible area
-      nsRect rect(canvas->ClientLeft() + bounds.x, canvas->ClientTop() + bounds.y,
-               bounds.width, bounds.height);
-      rect.x *= AppUnitsPerCSSPixel();
-      rect.y *= AppUnitsPerCSSPixel();
-      rect.width *= AppUnitsPerCSSPixel();
-      rect.height *= AppUnitsPerCSSPixel();
-
-      nsIFrame* frame = aElement.GetPrimaryFrame();
-      if(frame) {
-        frame->SetRect(rect);
-      }
-
       return true;
     }
   }
