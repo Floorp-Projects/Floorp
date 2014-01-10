@@ -1009,7 +1009,7 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
 
     int stackIndex = 0;
     for (NonBuiltinScriptFrameIter iter(cx); !iter.done(); ++iter) {
-        if (iter.isFunctionFrame()) {
+        if (iter.isFunctionFrame() && iter.compartment() == cx->compartment()) {
             if (!JS_DefinePropertyById(cx, stack, INT_TO_JSID(stackIndex), ObjectValue(*iter.callee()),
                                        JS_PropertyStub, JS_StrictPropertyStub, 0))
             {

@@ -428,8 +428,10 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
     srcBox.back = 0;
 
     const IntSize& srcSize = sourceD3D11->GetSize();
-    if (srcBox.right <= srcSize.width &&
-        srcBox.bottom <= srcSize.height) {
+    MOZ_ASSERT(srcSize.width >= 0 && srcSize.height >= 0,
+               "render targets should have nonnegative sizes");
+    if (srcBox.right <= static_cast<uint32_t>(srcSize.width) &&
+        srcBox.bottom <= static_cast<uint32_t>(srcSize.height)) {
       mContext->CopySubresourceRegion(texture, 0,
                                       0, 0, 0,
                                       sourceD3D11->GetD3D11Texture(), 0,

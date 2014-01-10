@@ -56,7 +56,7 @@ function ContentSecurityPolicy() {
   this._weakDocRequest = { get : function() { return null; } };
   CSPdebug("CSP object initialized, no policies to enforce yet");
 
-  this._cache = { };
+  this._cache = new Map();
 }
 
 /*
@@ -372,7 +372,7 @@ ContentSecurityPolicy.prototype = {
     newpolicy._specCompliant = !!aSpecCompliant;
     newpolicy._isInitialized = true;
     this._policies.push(newpolicy);
-    this._cache = {}; // reset cache since effective policy changes
+    this._cache.clear(); // reset cache since effective policy changes
   },
 
   /**
@@ -385,7 +385,7 @@ ContentSecurityPolicy.prototype = {
       return;
     }
     this._policies.splice(index, 1);
-    this._cache = {}; // reset cache since effective policy changes
+    this._cache.clear(); // reset cache since effective policy changes
   },
 
   /**
@@ -659,8 +659,8 @@ ContentSecurityPolicy.prototype = {
                           aMimeTypeGuess,
                           aOriginalUri) {
     let key = this._createCacheKey(aContentLocation, aContentType);
-    if (key && this._cache[key]) {
-      return this._cache[key];
+    if (key && this._cache.has(key)) {
+      return this._cache.get(key);
     }
 
 #ifndef MOZ_B2G
@@ -764,7 +764,7 @@ ContentSecurityPolicy.prototype = {
 
     // Do not cache the result if this is a nonce-source preload
     if (key && !possiblePreloadNonceConflict) {
-      this._cache[key] = ret;
+      this._cache.set(key, ret);
     }
     return ret;
   },

@@ -18,7 +18,7 @@ function test() {
     let principal = document.getElementById("content").contentDocument.defaultView.document.nodePrincipal;
     is(DOMApplicationRegistry.getAppLocalIdByManifestURL(app.manifestURL), principal.appId, "Principal app ID correct");
 
-    let perms = [ "indexedDB-unlimited", "offline-app", "pin-app", "geolocation",
+    let perms = [ "indexedDB-unlimited", "geolocation",
                   "camera", "alarms", "tcp-socket", "network-events",
                   "webapps-manage", "desktop-notification" ];
 

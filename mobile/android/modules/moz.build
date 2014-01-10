@@ -17,3 +17,9 @@ EXTRA_JS_MODULES += [
     'SharedPreferences.jsm',
     'SimpleServiceDiscovery.jsm',
 ]
+
+if CONFIG['MOZ_ANDROID_SYNTHAPKS']:
+    EXTRA_JS_MODULES += [
+        'WebappManager.jsm',
+        'WebappManagerWorker.js',
+    ]

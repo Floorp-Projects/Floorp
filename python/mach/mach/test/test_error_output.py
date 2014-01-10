@@ -29,7 +29,7 @@ class TestErrorOutput(TestBase):
 
         self.assertEqual(result, 1)
 
-        self.assertIn(mach.main.COMMAND_ERROR, stdout)
+        self.assertIn(COMMAND_ERROR, stdout)
 
     def test_invoked_error(self):
         result, stdout, stderr = self._run_mach(['throw_deep', '--message',
@@ -37,4 +37,4 @@ class TestErrorOutput(TestBase):
 
         self.assertEqual(result, 1)
 
-        self.assertIn(mach.main.MODULE_ERROR, stdout)
+        self.assertIn(MODULE_ERROR, stdout)
