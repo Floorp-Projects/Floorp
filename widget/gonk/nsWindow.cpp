@@ -301,11 +301,13 @@ nsWindow::Create(nsIWidget *aParent,
 NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
+    mOnDestroyCalled = true;
     sTopWindows.RemoveElement(this);
     if (this == gWindowToRedraw)
         gWindowToRedraw = nullptr;
     if (this == gFocusedWindow)
         gFocusedWindow = nullptr;
+    nsBaseWidget::OnDestroy();
     return NS_OK;
 }
 
