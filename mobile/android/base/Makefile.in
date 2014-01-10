@@ -93,7 +93,7 @@ else
 endif
 
 proguard-jars: $(ALL_JARS)
-	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar @$(topsrcdir)/mobile/android/config/proguard.cfg -optimizationpasses $(PROGUARD_PASSES) -injars $(subst ::,:,$(subst $(NULL) ,:,$(ALL_JARS))) -outjars jars-proguarded -libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
+	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar @$(topsrcdir)/mobile/android/config/proguard.cfg -optimizationpasses $(PROGUARD_PASSES) -injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) -outjars jars-proguarded -libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \

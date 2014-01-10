@@ -843,7 +843,7 @@ public:
   virtual ~CompositingRenderTarget() {}
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfxImageSurface> Dump(Compositor* aCompositor) { return nullptr; }
+  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor) { return nullptr; }
 #endif
 
   const gfx::IntPoint& GetOrigin() { return mOrigin; }

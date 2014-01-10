@@ -82,3 +82,8 @@ if CONFIG['OS_TARGET'] == 'Android':
     # Older versions of the Android NDK don't pre-define anything to indicate
     # the OS they're on, so do it for them.
     DEFINES['__linux__'] = True
+
+    if not CONFIG['MOZ_WEBRTC']:
+        SOURCES += [
+            '%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
+        ]

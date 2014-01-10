@@ -75,7 +75,7 @@ jit::NewBaselineFrameInspector(TempAllocator *temp, BaselineFrame *frame)
 
     JSScript *script = frame->script();
 
-    if (script->function()) {
+    if (script->functionNonDelazifying()) {
         if (!inspector->argTypes.reserve(frame->numFormalArgs()))
             return nullptr;
         for (size_t i = 0; i < frame->numFormalArgs(); i++) {
@@ -349,10 +349,10 @@ IonBuilder::canInlineTarget(JSFunction *target, CallInfo &callInfo)
     // Allow constructing lazy scripts when performing the definite properties
     // analysis, as baseline has not been used to warm the caller up yet.
     if (target->isInterpreted() && info().executionMode() == DefinitePropertiesAnalysis) {
-        if (!target->getOrCreateScript(analysisContext))
+        RootedScript script(analysisContext, target->getOrCreateScript(analysisContext));
+        if (!script)
             return InliningDecision_Error;
 
-        RootedScript script(analysisContext, target->nonLazyScript());
         if (!script->hasBaselineScript() && script->canBaselineCompile()) {
             MethodStatus status = BaselineCompile(analysisContext, script);
             if (status == Method_Error)
@@ -687,7 +687,7 @@ IonBuilder::build()
         return false;
 
     // Prevent |this| from being DCE'd: necessary for constructors.
-    if (info().fun())
+    if (info().funMaybeLazy())
         current->getSlot(info().thisSlot())->setGuard();
 
     // The type analysis phase attempts to insert unbox operations near
@@ -919,7 +919,7 @@ IonBuilder::rewriteParameters()
 {
     JS_ASSERT(info().scopeChainSlot() == 0);
 
-    if (!info().fun())
+    if (!info().funMaybeLazy())
         return;
 
     for (uint32_t i = info().startArgSlot(); i < info().endArgSlot(); i++) {
@@ -931,7 +931,7 @@ IonBuilder::rewriteParameters()
 bool
 IonBuilder::initParameters()
 {
-    if (!info().fun())
+    if (!info().funMaybeLazy())
         return true;
 
     // If we are doing OSR on a frame which initially executed in the
@@ -990,7 +990,7 @@ IonBuilder::initScopeChain(MDefinition *callee)
 
     lock();
 
-    if (JSFunction *fun = info().fun()) {
+    if (JSFunction *fun = info().funMaybeLazy()) {
         if (!callee) {
             MCallee *calleeIns = MCallee::New(alloc());
             current->add(calleeIns);
@@ -3830,7 +3830,7 @@ class AutoAccumulateReturns
 bool
 IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
 {
-    JS_ASSERT(target->isInterpreted());
+    JS_ASSERT(target->hasScript());
     JS_ASSERT(IsIonInlinablePC(pc));
 
     callInfo.setImplicitlyUsedUnchecked();
@@ -5298,7 +5298,7 @@ IonBuilder::jsop_eval(uint32_t argc)
         if (argc != 1)
             return abort("Direct eval with more than one argument");
 
-        if (!info().fun())
+        if (!info().funMaybeLazy())
             return abort("Direct eval in global code");
 
         // The 'this' value for the outer and eval scripts must be the
@@ -5720,7 +5720,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
         osrBlock->initSlot(info().argsObjSlot(), argsObj);
     }
 
-    if (info().fun()) {
+    if (info().funMaybeLazy()) {
         // Initialize |this| parameter.
         MParameter *thisv = MParameter::New(alloc(), MParameter::THIS_SLOT, nullptr);
         osrBlock->add(thisv);
@@ -5825,7 +5825,7 @@ IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 
     // Wrap |this| with a guaranteed use, to prevent instruction elimination.
     // Prevent |this| from being DCE'd: necessary for constructors.
-    if (info().fun())
+    if (info().funMaybeLazy())
         preheader->getSlot(info().thisSlot())->setGuard();
 
     return preheader;
@@ -5865,7 +5865,7 @@ IonBuilder::newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool 
             types::Type existingType = types::Type::UndefinedType();
             uint32_t arg = i - info().firstArgSlot();
             uint32_t var = i - info().firstLocalSlot();
-            if (info().fun() && i == info().thisSlot())
+            if (info().funMaybeLazy() && i == info().thisSlot())
                 existingType = baselineFrame_->thisType;
             else if (arg < info().nargs())
                 existingType = baselineFrame_->argTypes[arg];
@@ -9240,10 +9240,10 @@ IonBuilder::jsop_deffun(uint32_t index)
 bool
 IonBuilder::jsop_this()
 {
-    if (!info().fun())
+    if (!info().funMaybeLazy())
         return abort("JSOP_THIS outside of a JSFunction.");
 
-    if (script()->strict() || info().fun()->isSelfHostedBuiltin()) {
+    if (script()->strict() || info().funMaybeLazy()->isSelfHostedBuiltin()) {
         // No need to wrap primitive |this| in strict mode or self-hosted code.
         current->pushSlot(info().thisSlot());
         return true;
@@ -9399,7 +9399,8 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
     if (!outerScript || !outerScript->treatAsRunOnce())
         return false;
 
-    types::TypeObjectKey *funType = types::TypeObjectKey::get(outerScript->function());
+    types::TypeObjectKey *funType =
+            types::TypeObjectKey::get(outerScript->functionNonDelazifying());
     if (funType->hasFlags(constraints(), types::OBJECT_FLAG_RUNONCE_INVALIDATED))
         return false;
 
@@ -9415,7 +9416,7 @@ IonBuilder::hasStaticScopeObject(ScopeCoordinate sc, JSObject **pcall)
     MDefinition *scope = current->getSlot(info().scopeChainSlot());
     scope->setImplicitlyUsedUnchecked();
 
-    JSObject *environment = script()->function()->environment();
+    JSObject *environment = script()->functionNonDelazifying()->environment();
     while (environment && !environment->is<GlobalObject>()) {
         if (environment->is<CallObject>() &&
             !environment->as<CallObject>().isForEval() &&

@@ -288,6 +288,8 @@ InterpreterStack::pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs
     JS_ASSERT(regs.sp == args.end());
     JS_ASSERT(callee->nonLazyScript() == script);
 
+    script->ensureNonLazyCanonicalFunction(cx);
+
     StackFrame *prev = regs.fp();
     jsbytecode *prevpc = regs.pc;
     Value *prevsp = regs.sp;

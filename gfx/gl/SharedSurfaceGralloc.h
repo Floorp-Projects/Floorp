@@ -7,13 +7,13 @@
 #define SHARED_SURFACE_GRALLOC_H_
 
 #include "SharedSurfaceGL.h"
-#include "mozilla/layers/LayersSurfaces.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 namespace layers {
 class ISurfaceAllocator;
-class SurfaceDescriptorGralloc;
 }
 
 namespace gl {
@@ -39,16 +39,7 @@ public:
 protected:
     GLLibraryEGL* const mEGL;
     RefPtr<layers::ISurfaceAllocator> mAllocator;
-    // We keep the SurfaceDescriptor around, because we'll end up
-    // using it often and it's handy to do so.  The actual
-    // GraphicBuffer is kept alive by the sp<GraphicBuffer> in
-    // GrallocBufferActor; the actor will stay alive until we
-    // explicitly destroy this descriptor (and thus deallocate the
-    // actor) it in the destructor of this class.  This is okay to do
-    // on the client, but is very bad to do on the server (because on
-    // the client, the actor has no chance of going away unless the
-    // whole app died).
-    layers::SurfaceDescriptorGralloc mDesc;
+    RefPtr<layers::TextureClient> mTextureClient;
     const GLuint mProdTex;
 
     SharedSurface_Gralloc(GLContext* prodGL,
@@ -56,7 +47,7 @@ protected:
                           bool hasAlpha,
                           GLLibraryEGL* egl,
                           layers::ISurfaceAllocator* allocator,
-                          layers::SurfaceDescriptorGralloc& desc,
+                          layers::TextureClient* textureClient,
                           GLuint prodTex)
         : SharedSurface_GL(SharedSurfaceType::Gralloc,
                            AttachmentType::GLTexture,
@@ -65,7 +56,7 @@ protected:
                            hasAlpha)
         , mEGL(egl)
         , mAllocator(allocator)
-        , mDesc(desc)
+        , mTextureClient(textureClient)
         , mProdTex(prodTex)
     {}
 
@@ -84,8 +75,8 @@ public:
         return mProdTex;
     }
 
-    layers::SurfaceDescriptorGralloc& GetDescriptor() {
-        return mDesc;
+    layers::TextureClient* GetTextureClient() {
+        return mTextureClient;
     }
 };
 

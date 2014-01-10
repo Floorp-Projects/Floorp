@@ -324,7 +324,7 @@ class SPSInstrumentation
         if (!enabled())
             return true;
         const char *string = profiler_->profileString(cx, script,
-                                                      script->function());
+                                                      script->functionNonDelazifying());
         if (string == nullptr)
             return false;
         masm.spsPushFrame(profiler_, string, script, scratch);

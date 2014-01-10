@@ -42,6 +42,8 @@ interface VTTCue : EventTarget {
   [SetterThrows]
   attribute long position;
   [SetterThrows]
+  attribute AlignSetting positionAlign;
+  [SetterThrows]
   attribute long size;
   attribute AlignSetting align;
   attribute DOMString text;
