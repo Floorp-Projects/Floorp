@@ -3727,8 +3727,13 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& elem,
 
   PBrowserParent *child = frameloader->GetRemoteBrowser();
   if (!child) {
-    nsCOMPtr<nsIDOMWindow> window =
-      do_GetInterface(frameloader->GetExistingDocShell());
+    nsIDocShell* docShell = frameLoader->GetExistingDocShell();
+    if (!docShell) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    nsCOMPtr<nsIDOMWindow> window = docShell->GetWindow();
     if (!window) {
       error.Throw(NS_ERROR_FAILURE);
       return;

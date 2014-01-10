@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/TimeEvent.h"
 #include "mozilla/BasicEvents.h"
+#include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsPresContext.h"
 
@@ -34,12 +35,9 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
   mEvent->mFlags.mCancelable = false;
 
   if (mPresContext) {
-    nsISupports* container = mPresContext->GetContainerWeak();
-    if (container) {
-      nsCOMPtr<nsIDOMWindow> window = do_GetInterface(container);
-      if (window) {
-        mView = do_QueryInterface(window);
-      }
+    nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell();
+    if (docShell) {
+      mView = docShell->GetWindow();
     }
   }
 }
