@@ -89,7 +89,7 @@ public:
 
   ~PathRecording();
 
-  virtual BackendType GetBackendType() const { return BACKEND_RECORDING; }
+  virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
   virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
                                                              FillRule aFillRule = FILL_WINDING) const;

@@ -4856,7 +4856,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (wantImageSurface) {
     IntSize size(imgWidth, imgHeight);
     RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
-    RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
+    RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                                              output->GetData(),
                                                              size,
                                                              output->Stride(),

@@ -41,7 +41,7 @@ class GradientStopsCairo : public GradientStops
       return mExtendMode;
     }
 
-    virtual BackendType GetBackendType() const { return BACKEND_CAIRO; }
+    virtual BackendType GetBackendType() const { return BackendType::CAIRO; }
 
   private:
     std::vector<GradientStop> mStops;
@@ -56,7 +56,7 @@ public:
   DrawTargetCairo();
   virtual ~DrawTargetCairo();
 
-  virtual BackendType GetType() const { return BACKEND_CAIRO; }
+  virtual BackendType GetType() const { return BackendType::CAIRO; }
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize();
 

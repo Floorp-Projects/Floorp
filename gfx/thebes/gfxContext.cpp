@@ -154,9 +154,9 @@ gfxContext::OriginalSurface()
         return mSurface;
     }
 
-    if (mOriginalDT && mOriginalDT->GetType() == BACKEND_CAIRO) {
+    if (mOriginalDT && mOriginalDT->GetType() == BackendType::CAIRO) {
         cairo_surface_t *s =
-            (cairo_surface_t*)mOriginalDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE);
+            (cairo_surface_t*)mOriginalDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
         if (s) {
             mSurface = gfxASurface::Wrap(s);
             return mSurface;
@@ -181,9 +181,9 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
         cairo_surface_get_device_offset(s, dx, dy);
     return gfxASurface::Wrap(s);
   } else {
-    if (mDT->GetType() == BACKEND_CAIRO) {
+    if (mDT->GetType() == BackendType::CAIRO) {
         cairo_surface_t *s =
-            (cairo_surface_t*)mDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE);
+            (cairo_surface_t*)mDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
         if (s) {
             if (dx && dy) {
                 *dx = -CurrentState().deviceOffset.x;
@@ -208,9 +208,9 @@ gfxContext::GetCairo()
     return mCairo;
   }
 
-  if (mDT->GetType() == BACKEND_CAIRO) {
+  if (mDT->GetType() == BackendType::CAIRO) {
     cairo_t *ctx =
-      (cairo_t*)mDT->GetNativeSurface(NATIVE_SURFACE_CAIRO_CONTEXT);
+      (cairo_t*)mDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT);
     if (ctx) {
       return ctx;
     }

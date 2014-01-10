@@ -20,7 +20,7 @@ public:
     : mStopCollection(aStopCollection)
   {}
 
-  virtual BackendType GetBackendType() const { return BACKEND_DIRECT2D; }
+  virtual BackendType GetBackendType() const { return BackendType::DIRECT2D; }
 
 private:
   friend class DrawTargetD2D;

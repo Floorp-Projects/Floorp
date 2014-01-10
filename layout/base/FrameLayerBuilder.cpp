@@ -3518,7 +3518,7 @@ static bool ShouldDrawRectsSeparately(gfxContext* aContext, DrawRegionClip aClip
   }
 
   DrawTarget *dt = aContext->GetDrawTarget();
-  return dt->GetType() == BACKEND_DIRECT2D;
+  return dt->GetType() == BackendType::DIRECT2D;
 }
 
 static void DrawForcedBackgroundColor(gfxContext* aContext, Layer* aLayer, nscolor aBackgroundColor)

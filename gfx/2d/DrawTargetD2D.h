@@ -46,7 +46,7 @@ public:
   DrawTargetD2D();
   virtual ~DrawTargetD2D();
 
-  virtual BackendType GetType() const { return BACKEND_DIRECT2D; }
+  virtual BackendType GetType() const { return BackendType::DIRECT2D; }
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize() { return mSize; }
 

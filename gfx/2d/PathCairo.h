@@ -52,7 +52,7 @@ public:
   PathCairo(cairo_t *aContext);
   ~PathCairo();
 
-  virtual BackendType GetBackendType() const { return BACKEND_CAIRO; }
+  virtual BackendType GetBackendType() const { return BackendType::CAIRO; }
 
   virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,

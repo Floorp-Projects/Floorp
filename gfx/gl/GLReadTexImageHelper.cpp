@@ -411,7 +411,7 @@ static TemporaryRef<DataSourceSurface> YInvertImageSurface(DataSourceSurface* aS
                                                aSurf->GetFormat(),
                                                aSurf->Stride());
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BACKEND_CAIRO,
+    Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                      temp->GetData(),
                                      temp->GetSize(),
                                      temp->Stride(),
