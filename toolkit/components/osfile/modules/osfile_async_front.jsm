@@ -763,18 +763,21 @@ File.makeDir = function makeDir(path, options) {
  *
  * @param {string} path The path to the file.
  * @param {number=} bytes Optionally, an upper bound to the number of bytes
- * to read.
+ * to read. DEPRECATED - please use options.bytes instead.
  * @param {JSON} options Additional options.
  * - {boolean} sequential A flag that triggers a population of the page cache
  * with data from a file so that subsequent reads from that file would not
  * block on disk I/O. If |true| or unspecified, inform the system that the
  * contents of the file will be read in order. Otherwise, make no such
  * assumption. |true| by default.
+ * - {number} bytes An upper bound to the number of bytes to read.
+ * - {string} compression If "lz4" and if the file is compressed using the lz4
+ * compression algorithm, decompress the file contents on the fly.
  *
  * @resolves {Uint8Array} A buffer holding the bytes
  * read from the file.
  */
-File.read = function read(path, bytes, options) {
+File.read = function read(path, bytes, options = {}) {
   let promise = Scheduler.post("read",
     [Type.path.toMsg(path), bytes, options], path);
   return promise.then(
