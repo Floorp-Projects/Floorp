@@ -2151,7 +2151,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         // Bug 750527
         if (gl->WorkAroundDriverBugs() &&
             updateInfoSucceeded &&
-            gl->Vendor() == gl::GLContext::VendorNVIDIA)
+            gl->Vendor() == gl::GLVendor::NVIDIA)
         {
             if (program == mCurrentProgram)
                 gl->fUseProgram(progname);
@@ -3118,7 +3118,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 
         if (gl->WorkAroundDriverBugs()) {
 #ifdef XP_MACOSX
-            if (gl->Vendor() == gl::GLContext::VendorNVIDIA) {
+            if (gl->Vendor() == gl::GLVendor::NVIDIA) {
                 // Work around bug 890432
                 resources.MaxExpressionComplexity = 1000;
             }
@@ -3222,12 +3222,12 @@ WebGLContext::CompileShader(WebGLShader *shader)
 #ifdef XP_MACOSX
             if (gl->WorkAroundDriverBugs()) {
                 // Work around bug 665578 and bug 769810
-                if (gl->Vendor() == gl::GLContext::VendorATI) {
+                if (gl->Vendor() == gl::GLVendor::ATI) {
                     compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
                 }
 
                 // Work around bug 735560
-                if (gl->Vendor() == gl::GLContext::VendorIntel) {
+                if (gl->Vendor() == gl::GLVendor::Intel) {
                     compileOptions |= SH_EMULATE_BUILT_IN_FUNCTIONS;
                 }
             }
