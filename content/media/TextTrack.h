@@ -83,7 +83,6 @@ public:
   }
 
   TextTrackCueList* GetActiveCues();
-  void GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
   TextTrackRegionList* GetRegions() const
   {
@@ -99,6 +98,9 @@ public:
   void AddRegion(TextTrackRegion& aRegion);
   void RemoveRegion(const TextTrackRegion& aRegion, ErrorResult& aRv);
 
+  // Time is in seconds.
+  void Update(double aTime);
+
   void AddCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void CueChanged(TextTrackCue& aCue);
@@ -107,8 +109,6 @@ public:
   IMPL_EVENT_HANDLER(cuechange)
 
 private:
-  void UpdateActiveCueList();
-
   nsCOMPtr<nsISupports> mParent;
   nsRefPtr<HTMLMediaElement> mMediaElement;
 

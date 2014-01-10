@@ -11,16 +11,11 @@
 #include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackList.h"
 #include "mozilla/dom/TextTrackCueList.h"
-#include "mozilla/StaticPtr.h"
-
-class nsIWebVTTParserWrapper;
 
 namespace mozilla {
 namespace dom {
 
 class HTMLMediaElement;
-class TextTrack;
-class TextTrackCue;
 
 class TextTrackManager
 {
@@ -42,35 +37,9 @@ public:
   void AddCue(TextTrackCue& aCue);
   void AddCues(TextTrack* aTextTrack);
 
-  /**
-   * Overview of WebVTT cuetext and anonymous content setup.
-   *
-   * WebVTT nodes are the parsed version of WebVTT cuetext. WebVTT cuetext is
-   * the portion of a WebVTT cue that specifies what the caption will actually
-   * show up as on screen.
-   *
-   * WebVTT cuetext can contain markup that loosely relates to HTML markup. It
-   * can contain tags like <b>, <u>, <i>, <c>, <v>, <ruby>, <rt>, <lang>,
-   * including timestamp tags.
-   *
-   * When the caption is ready to be displayed the WebVTT nodes are converted
-   * over to anonymous DOM content. <i>, <u>, <b>, <ruby>, and <rt> all become
-   * HTMLElements of their corresponding HTML markup tags. <c> and <v> are
-   * converted to <span> tags. Timestamp tags are converted to XML processing
-   * instructions. Additionally, all cuetext tags support specifying of classes.
-   * This takes the form of <foo.class.subclass>. These classes are then parsed
-   * and set as the anonymous content's class attribute.
-   *
-   * Rules on constructing DOM objects from WebVTT nodes can be found here
-   * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules.
-   * Current rules are taken from revision on April 15, 2013.
-   */
-
-  /**
-   * Converts the TextTrackCue's cuetext into a tree of DOM objects and attaches
-   * it to a div on it's owning TrackElement's MediaElement's caption overlay.
-   */
-  void UpdateCueDisplay();
+  // Update the display of cues on the video as per the current play back time
+  // of aTime.
+  void Update(double aTime);
 
   void PopulatePendingList();
 
@@ -86,8 +55,6 @@ private:
   nsRefPtr<TextTrackList> mPendingTextTracks;
   // List of newly introduced Text Track cues.
   nsRefPtr<TextTrackCueList> mNewCues;
-
-  static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 };
 
 } // namespace dom

@@ -38,8 +38,8 @@ public:
     return mTextTracks.Length();
   }
 
-  // Get all the current active cues.
-  void GetAllActiveCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
+  // Time is in seconds.
+  void Update(double aTime);
 
   TextTrack* IndexedGetter(uint32_t aIndex, bool& aFound);
 
