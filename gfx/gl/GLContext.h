@@ -127,6 +127,7 @@ MOZ_BEGIN_ENUM_CLASS(GLVendor)
     Qualcomm,
     Imagination,
     Nouveau,
+    Vivante,
     Other
 MOZ_END_ENUM_CLASS(GLVendor)
 
