@@ -1505,7 +1505,10 @@ ForkJoinShared::check(ForkJoinSlice &slice)
     if (abort_)
         return false;
 
-    if (slice.isMainThread()) {
+    // Note: We must check if the main thread has exited successfully here, as
+    // without a main thread the worker threads which are tripping on the
+    // interrupt flag would never exit.
+    if (slice.isMainThread() || !threadPool_->isMainThreadActive()) {
         JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
         if (cx_->runtime()->interrupt) {

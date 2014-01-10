@@ -132,6 +132,9 @@ class ThreadPool : public Monitor
     // Returns whether or not the scheduler should perform work stealing.
     bool workStealing() const;
 
+    // Returns whether or not the main thread is working.
+    bool isMainThreadActive() const;
+
 #ifdef DEBUG
     // Return the number of stolen slices in the last parallel job.
     uint16_t stolenSlices() { return stolenSlices_; }
