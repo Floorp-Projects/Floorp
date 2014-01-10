@@ -1148,14 +1148,13 @@ nsFormFillController::StopControllingInput()
 nsIDocShell *
 nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aInput);
-  element->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  NS_ENSURE_TRUE(doc, nullptr);
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(doc->GetWindow());
-  nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
-  return docShell;
+  nsCOMPtr<nsINode> node = do_QueryInterface(aInput);
+  NS_ENSURE_TRUE(node, nullptr);
+
+  nsCOMPtr<nsPIDOMWindow> win = node->OwnerDoc()->GetWindow();
+  NS_ENSURE_TRUE(win, nullptr);
+
+  return win->GetDocShell();
 }
 
 nsIDOMWindow *

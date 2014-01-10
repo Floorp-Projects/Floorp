@@ -1642,7 +1642,11 @@ nsPresContext::IsTopLevelWindowInactive()
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
-  nsCOMPtr<nsPIDOMWindow> domWindow(do_GetInterface(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> domWindow = rootItem->GetWindow();
 
   return domWindow && !domWindow->IsActive();
 }

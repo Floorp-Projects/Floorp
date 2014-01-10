@@ -1125,8 +1125,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
         tabChild->
           GetMessageManager(getter_AddRefs(mm));
       } else {
-        nsCOMPtr<nsPIDOMWindow> win =
-          do_GetInterface(static_cast<nsIDocShell*>(this));
+        nsCOMPtr<nsPIDOMWindow> win = GetWindow();
         if (win) {
           mm = do_QueryInterface(win->GetParentTarget());
         }
@@ -1748,12 +1747,14 @@ nsDocShell::ValidateOrigin(nsIDocShellTreeItem* aOriginTreeItem,
         return true;
     }
 
+    MOZ_ASSERT(aOriginTreeItem && aTargetTreeItem, "need two docshells");
+
     // Get origin document principal
-    nsCOMPtr<nsIDocument> originDocument(do_GetInterface(aOriginTreeItem));
+    nsCOMPtr<nsIDocument> originDocument = aOriginTreeItem->GetDocument();
     NS_ENSURE_TRUE(originDocument, false);
 
     // Get target principal
-    nsCOMPtr<nsIDocument> targetDocument(do_GetInterface(aTargetTreeItem));
+    nsCOMPtr<nsIDocument> targetDocument = aTargetTreeItem->GetDocument();
     NS_ENSURE_TRUE(targetDocument, false);
 
     bool equal;
@@ -2093,7 +2094,7 @@ nsDocShell::GetChannelIsUnsafe(bool *aUnsafe)
 NS_IMETHODIMP
 nsDocShell::GetHasMixedActiveContentLoaded(bool* aHasMixedActiveContentLoaded)
 {
-    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+    nsCOMPtr<nsIDocument> doc(GetDocument());
     *aHasMixedActiveContentLoaded = doc && doc->GetHasMixedActiveContentLoaded();
     return NS_OK;
 }
@@ -2101,7 +2102,7 @@ nsDocShell::GetHasMixedActiveContentLoaded(bool* aHasMixedActiveContentLoaded)
 NS_IMETHODIMP
 nsDocShell::GetHasMixedActiveContentBlocked(bool* aHasMixedActiveContentBlocked)
 {
-    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+    nsCOMPtr<nsIDocument> doc(GetDocument());
     *aHasMixedActiveContentBlocked = doc && doc->GetHasMixedActiveContentBlocked();
     return NS_OK;
 }
@@ -2109,7 +2110,7 @@ nsDocShell::GetHasMixedActiveContentBlocked(bool* aHasMixedActiveContentBlocked)
 NS_IMETHODIMP
 nsDocShell::GetHasMixedDisplayContentLoaded(bool* aHasMixedDisplayContentLoaded)
 {
-    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+    nsCOMPtr<nsIDocument> doc(GetDocument());
     *aHasMixedDisplayContentLoaded = doc && doc->GetHasMixedDisplayContentLoaded();
     return NS_OK;
 }
@@ -2117,7 +2118,7 @@ nsDocShell::GetHasMixedDisplayContentLoaded(bool* aHasMixedDisplayContentLoaded)
 NS_IMETHODIMP
 nsDocShell::GetHasMixedDisplayContentBlocked(bool* aHasMixedDisplayContentBlocked)
 {
-    nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+    nsCOMPtr<nsIDocument> doc(GetDocument());
     *aHasMixedDisplayContentBlocked = doc && doc->GetHasMixedDisplayContentBlocked();
     return NS_OK;
 }
@@ -2451,7 +2452,7 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     // has the allowfullscreen attribute set to true. If any ancestor
     // iframe does not have mozallowfullscreen=true, then fullscreen is
     // prohibited.
-    nsCOMPtr<nsPIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsPIDOMWindow> win = GetWindow();
     if (!win) {
         return NS_OK;
     }
@@ -2466,11 +2467,8 @@ nsDocShell::GetFullscreenAllowed(bool* aFullscreenAllowed)
     // If we have no parent then we're the root docshell; no ancestor of the
     // original docshell doesn't have a allowfullscreen attribute, so
     // report fullscreen as allowed.
-    nsCOMPtr<nsIDocShellTreeItem> dsti = do_GetInterface(GetAsSupports(this));
-    NS_ENSURE_TRUE(dsti, NS_OK);
-
     nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-    dsti->GetParent(getter_AddRefs(parentTreeItem));
+    GetParent(getter_AddRefs(parentTreeItem));
     if (!parentTreeItem) {
         *aFullscreenAllowed = true;
         return NS_OK;
@@ -3248,7 +3246,7 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
         return false;
     }
 
-    nsCOMPtr<nsIDOMWindow> targetWindow = do_GetInterface(aTargetItem);
+    nsCOMPtr<nsIDOMWindow> targetWindow = aTargetItem->GetWindow();
     if (!targetWindow) {
         NS_ERROR("This should not happen, really");
         return false;
@@ -3269,7 +3267,7 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
 static bool
 ItemIsActive(nsIDocShellTreeItem *aItem)
 {
-    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(aItem));
+    nsCOMPtr<nsIDOMWindow> window = aItem->GetWindow();
 
     if (window) {
         bool isClosed;
@@ -4126,6 +4124,20 @@ nsDocShell::GetScriptGlobalObject()
     return mScriptGlobal;
 }
 
+nsIDocument*
+nsDocShell::GetDocument()
+{
+  NS_ENSURE_SUCCESS(EnsureContentViewer(), nullptr);
+  return mContentViewer->GetDocument();
+}
+
+nsPIDOMWindow*
+nsDocShell::GetWindow()
+{
+  NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), nullptr);
+  return mScriptGlobal;
+}
+
 NS_IMETHODIMP
 nsDocShell::SetDeviceSizeIsPageSize(bool aValue)
 {
@@ -4925,7 +4937,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
         rv = LoadHistoryEntry(mLSHE, loadType);
     }
     else {
-        nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+        nsCOMPtr<nsIDocument> doc(GetDocument());
 
         // Do not inherit owner from document
         uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
@@ -5769,7 +5781,7 @@ nsDocShell::GetAllowMixedContentAndConnectionData(bool* aRootHasSecureConnection
   *aIsRootDocShell = sameTypeRoot.get() == static_cast<nsIDocShellTreeItem *>(this);
 
   // now get the document from sameTypeRoot
-  nsCOMPtr<nsIDocument> rootDoc = do_GetInterface(sameTypeRoot);
+  nsCOMPtr<nsIDocument> rootDoc = sameTypeRoot->GetDocument();
   if (rootDoc) {
     nsCOMPtr<nsIPrincipal> rootPrincipal = rootDoc->NodePrincipal();
 
@@ -7215,7 +7227,7 @@ nsDocShell::EnsureContentViewer()
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
     GetSameTypeParent(getter_AddRefs(parentItem));
     if (parentItem) {
-        nsCOMPtr<nsPIDOMWindow> domWin = do_GetInterface(GetAsSupports(this));
+        nsCOMPtr<nsPIDOMWindow> domWin = GetWindow();
         if (domWin) {
             nsCOMPtr<nsIContent> parentContent =
                 do_QueryInterface(domWin->GetFrameElementInternal());
@@ -7228,7 +7240,7 @@ nsDocShell::EnsureContentViewer()
     nsresult rv = CreateAboutBlankContentViewer(principal, baseURI);
 
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIDocument> doc(do_GetInterface(GetAsSupports(this)));
+        nsCOMPtr<nsIDocument> doc(GetDocument());
         NS_ASSERTION(doc,
                      "Should have doc if CreateAboutBlankContentViewer "
                      "succeeded!");
@@ -7618,7 +7630,7 @@ nsDocShell::FinishRestore()
       ReattachEditorToWindow(mOSHE);
     }
 
-    nsCOMPtr<nsIDocument> doc = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsIDocument> doc = GetDocument();
     if (doc) {
         // Finally, we remove the request from the loadgroup.  This will
         // cause onStateChange(STATE_STOP) to fire, which will fire the
@@ -7981,8 +7993,9 @@ nsDocShell::RestoreFromHistory()
     if (document) {
         nsCOMPtr<nsIDocShellTreeItem> parent;
         GetParent(getter_AddRefs(parent));
-        nsCOMPtr<nsIDocument> d = do_GetInterface(parent);
-        if (d) {
+        if (parent) {
+          nsCOMPtr<nsIDocument> d = parent->GetDocument();
+          if (d) {
             if (d->EventHandlingSuppressed()) {
                 document->SuppressEventHandling(nsIDocument::eEvents,
                                                 d->EventHandlingSuppressed());
@@ -7996,8 +8009,9 @@ nsDocShell::RestoreFromHistory()
 
             nsCOMPtr<nsPIDOMWindow> parentWindow = d->GetWindow();
             if (parentWindow) {
-                parentSuspendCount = parentWindow->TimeoutSuspendCount();
+              parentSuspendCount = parentWindow->TimeoutSuspendCount();
             }
+          }
         }
 
         // Use the uri from the mLSHE we had when we entered this function
@@ -8013,8 +8027,7 @@ nsDocShell::RestoreFromHistory()
     // This is the end of our CreateContentViewer() replacement.
     // Now we simulate a load.  First, we restore the state of the javascript
     // window object.
-    nsCOMPtr<nsPIDOMWindow> privWin =
-        do_GetInterface(static_cast<nsIInterfaceRequestor*>(this));
+    nsCOMPtr<nsPIDOMWindow> privWin = GetWindow();
     NS_ASSERTION(privWin, "could not get nsPIDOMWindow interface");
 
     rv = privWin->RestoreWindowState(windowState);
@@ -8604,7 +8617,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 nsresult
 nsDocShell::SetDocCurrentStateObj(nsISHEntry *shEntry)
 {
-    nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsIDocument> document = GetDocument();
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIStructuredCloneContainer> scContainer;
@@ -8650,7 +8663,7 @@ nsDocShell::CheckLoadingPermissions()
     // or any of its ancestors.
     nsCOMPtr<nsIDocShellTreeItem> item(this);
     do {
-        nsCOMPtr<nsIScriptGlobalObject> sgo(do_GetInterface(item));
+        nsCOMPtr<nsIScriptGlobalObject> sgo = do_GetInterface(item);
         nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(sgo));
 
         nsIPrincipal *p;
@@ -9037,8 +9050,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 }
             }
 
-            nsCOMPtr<nsPIDOMWindow> win =
-                do_GetInterface(GetAsSupports(this));
+            nsCOMPtr<nsPIDOMWindow> win = GetWindow();
             NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
             nsDependentString name(aWindowTarget);
@@ -9099,8 +9111,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                     // So, the best we can do, is to tear down the new window
                     // that was just created!
                     //
-                    nsCOMPtr<nsIDOMWindow> domWin =
-                        do_GetInterface(targetDocShell);
+                    nsCOMPtr<nsIDOMWindow> domWin = targetDocShell->GetWindow();
                     if (domWin) {
                         domWin->Close();
                     }
@@ -9411,8 +9422,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             }
 
             // Set the doc's URI according to the new history entry's URI.
-            nsCOMPtr<nsIDocument> doc =
-              do_GetInterface(GetAsSupports(this));
+            nsCOMPtr<nsIDocument> doc = GetDocument();
             NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
             doc->SetDocumentURI(aURI);
 
@@ -9623,7 +9633,7 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         GetSameTypeParent(getter_AddRefs(parentItem));
         if (parentItem) {
-            document = do_GetInterface(parentItem);
+            document = parentItem->GetDocument();
         }
     }
 
@@ -9710,15 +9720,17 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         nsCOMPtr<nsIContentSecurityPolicy> csp;
         nsCOMPtr<nsIDocShellTreeItem> parentItem;
         GetSameTypeParent(getter_AddRefs(parentItem));
-        nsCOMPtr<nsIDocument> doc = do_GetInterface(parentItem);
-        if (doc) {
+        if (parentItem) {
+          nsCOMPtr<nsIDocument> doc = parentItem->GetDocument();
+          if (doc) {
             rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
             NS_ENSURE_SUCCESS(rv, rv);
             if (csp) {
-                channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-                channelPolicy->SetContentSecurityPolicy(csp);
-                channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SUBDOCUMENT);
+              channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+              channelPolicy->SetContentSecurityPolicy(csp);
+              channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SUBDOCUMENT);
             }
+          }
         }
 
         // Only allow view-source scheme in top-level docshells. view-source is
@@ -10631,7 +10643,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
         aReplace = true;
     }
 
-    nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsIDocument> document = GetDocument();
     NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
     // Step 1: Serialize aData using structured clone.
@@ -10642,8 +10654,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     // 634834)  To protect against this, we abort if our principal changes due
     // to the InitFromJSVal() call.
     {
-        nsCOMPtr<nsIDocument> origDocument =
-            do_GetInterface(GetAsSupports(this));
+        nsCOMPtr<nsIDocument> origDocument = GetDocument();
         if (!origDocument)
             return NS_ERROR_DOM_SECURITY_ERR;
         nsCOMPtr<nsIPrincipal> origPrincipal = origDocument->NodePrincipal();
@@ -10664,8 +10675,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
         }
         NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIDocument> newDocument =
-            do_GetInterface(GetAsSupports(this));
+        nsCOMPtr<nsIDocument> newDocument = GetDocument();
         if (!newDocument)
             return NS_ERROR_DOM_SECURITY_ERR;
         nsCOMPtr<nsIPrincipal> newPrincipal = newDocument->NodePrincipal();
@@ -12216,7 +12226,7 @@ nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
 NS_IMETHODIMP
 nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
 {
-    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsIDOMWindow> win = GetWindow();
     if (win) {
         win->GetTop(aWindow);
     }
@@ -12227,7 +12237,7 @@ NS_IMETHODIMP
 nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
 {
     *aElement = nullptr;
-    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(GetAsSupports(this));
+    nsCOMPtr<nsIDOMWindow> win = GetWindow();
     if (!win) {
         return NS_OK;
     }
@@ -12345,9 +12355,7 @@ nsDocShell::EnsureCommandHandler()
       do_CreateInstance("@mozilla.org/embedcomp/command-manager;1");
     if (!commandUpdater) return NS_ERROR_OUT_OF_MEMORY;
     
-    nsCOMPtr<nsIDOMWindow> domWindow =
-      do_GetInterface(static_cast<nsIInterfaceRequestor *>(this));
-
+    nsCOMPtr<nsIDOMWindow> domWindow = GetWindow();
     nsresult rv = commandUpdater->Init(domWindow);
     if (NS_SUCCEEDED(rv))
       mCommandManager = do_QueryInterface(commandUpdater);

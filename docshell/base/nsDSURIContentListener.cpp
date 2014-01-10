@@ -134,7 +134,8 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     }
 
     if (loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI) {
-        nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
+        nsCOMPtr<nsIDOMWindow> domWindow = mDocShell ? mDocShell->GetWindow()
+          : nullptr;
         NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
         domWindow->Focus();
     }
@@ -286,7 +287,7 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel *httpChan
     // window, if we're not the top.  X-F-O: SAMEORIGIN requires that the
     // document must be same-origin with top window.  X-F-O: DENY requires that
     // the document must never be framed.
-    nsCOMPtr<nsIDOMWindow> thisWindow = do_GetInterface(static_cast<nsIDocShell*>(mDocShell));
+    nsCOMPtr<nsIDOMWindow> thisWindow = mDocShell->GetWindow();
     // If we don't have DOMWindow there is no risk of clickjacking
     if (!thisWindow)
         return true;
@@ -328,7 +329,7 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel *httpChan
         }
 
         bool system = false;
-        topDoc = do_GetInterface(parentDocShellItem);
+        topDoc = parentDocShellItem->GetDocument();
         if (topDoc) {
             if (NS_SUCCEEDED(ssm->IsSystemPrincipal(topDoc->NodePrincipal(),
                                                     &system)) && system) {
@@ -355,7 +356,7 @@ bool nsDSURIContentListener::CheckOneFrameOptionsPolicy(nsIHttpChannel *httpChan
         return false;
     }
 
-    topDoc = do_GetInterface(curDocShellItem);
+    topDoc = curDocShellItem->GetDocument();
     nsCOMPtr<nsIURI> topUri;
     topDoc->NodePrincipal()->GetURI(getter_AddRefs(topUri));
 
@@ -452,9 +453,9 @@ nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem
                                            nsIURI* aThisURI,
                                            XFOHeader aHeader)
 {
-    nsresult rv = NS_OK;
+  MOZ_ASSERT(aTopDocShellItem, "Need a top docshell");
 
-    nsCOMPtr<nsPIDOMWindow> topOuterWindow = do_GetInterface(aTopDocShellItem);
+    nsCOMPtr<nsPIDOMWindow> topOuterWindow = aTopDocShellItem->GetWindow();
     if (!topOuterWindow)
         return;
 
@@ -465,10 +466,8 @@ nsDSURIContentListener::ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem
 
     nsCOMPtr<nsIURI> topURI;
 
-    nsCOMPtr<nsIDocument> document;
-
-    document = do_GetInterface(aTopDocShellItem);
-    rv = document->NodePrincipal()->GetURI(getter_AddRefs(topURI));
+    nsCOMPtr<nsIDocument> document = aTopDocShellItem->GetDocument();
+    nsresult rv = document->NodePrincipal()->GetURI(getter_AddRefs(topURI));
     if (NS_FAILED(rv))
         return;
 

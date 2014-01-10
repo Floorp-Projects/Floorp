@@ -4572,10 +4572,10 @@ nsDocument::GetWindowInternal() const
   // the docshell, the outer window might be still obtainable from the it.
   nsCOMPtr<nsPIDOMWindow> win;
   if (mRemovedFromDocShell) {
-    nsCOMPtr<nsIInterfaceRequestor> requestor(mDocumentContainer);
-    if (requestor) {
-      // The docshell returns the outer window we are done.
-      win = do_GetInterface(requestor);
+    // The docshell returns the outer window we are done.
+    nsCOMPtr<nsIDocShell> kungfuDeathGrip(mDocumentContainer);
+    if (mDocumentContainer) {
+      win = mDocumentContainer->GetWindow();
     }
   } else {
     win = do_QueryInterface(mScriptGlobalObject);
@@ -10986,7 +10986,7 @@ IsInActiveTab(nsIDocument* aDoc)
   if (!rootItem) {
     return false;
   }
-  nsCOMPtr<nsIDOMWindow> rootWin = do_GetInterface(rootItem);
+  nsCOMPtr<nsIDOMWindow> rootWin = rootItem->GetWindow();
   if (!rootWin) {
     return false;
   }

@@ -546,7 +546,7 @@ public:
     return static_cast<nsGlobalWindow *>(top.get());
   }
 
-  already_AddRefed<nsIDOMWindow> GetChildWindow(const nsAString& aName);
+  nsPIDOMWindow* GetChildWindow(const nsAString& aName);
 
   // These return true if we've reached the state in this top level window
   // where we ask the user if further dialogs should be blocked.
