@@ -2042,6 +2042,8 @@ abstract public class BrowserApp extends GeckoApp
                     if (isDynamicToolbarEnabled()) {
                         mLayerView.getLayerMarginsAnimator().hideMargins(true);
                         mLayerView.getLayerMarginsAnimator().setMaxMargins(0, 0, 0, 0);
+                    } else {
+                        setToolbarMargin(0);
                     }
                 } else {
                     mViewFlipper.setVisibility(View.VISIBLE);
