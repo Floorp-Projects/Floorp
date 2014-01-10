@@ -4,16 +4,39 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+XPIDL_SOURCES += [
+    'nsIEventListenerService.idl',
+]
+
+XPIDL_MODULE = 'content_events'
+
 EXPORTS += [
+    'nsAsyncDOMEvent.h',
     'nsDOMEvent.h',
     'nsDOMEventTargetHelper.h',
+    'nsDOMKeyNameList.h',
     'nsDOMTouchEvent.h',
     'nsDOMUIEvent.h',
+    'nsEventDispatcher.h',
     'nsEventListenerManager.h',
+    'nsEventNameList.h',
     'nsEventStateManager.h',
+    'nsEventStates.h',
+    'nsIJSEventListener.h',
+    'nsIPrivateTextEvent.h',
+    'nsIPrivateTextRange.h',
+    'nsVKList.h',
+]
+
+EXPORTS.mozilla += [
+    'MutationEvent.h',
 ]
 
 EXPORTS.mozilla.dom += [
+    'EventTarget.h',
     'PointerEvent.h',
     'Touch.h',
 ]
@@ -56,6 +79,7 @@ UNIFIED_SOURCES += [
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
     'nsIMEStateManager.cpp',
+    'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
     'PointerEvent.cpp',
