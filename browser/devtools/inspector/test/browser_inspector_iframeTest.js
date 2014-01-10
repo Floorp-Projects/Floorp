@@ -9,9 +9,9 @@ let div1;
 let div2;
 let iframe1;
 let iframe2;
+let inspector;
 
-function createDocument()
-{
+function createDocument() {
   doc.title = "Inspector iframe Tests";
 
   iframe1 = doc.createElement('iframe');
@@ -32,7 +32,11 @@ function createDocument()
       div2.textContent = 'nested div';
       iframe2.contentDocument.body.appendChild(div2);
 
-      openInspector(runIframeTests);
+      // Open the inspector, start the picker mode, and start the tests
+      openInspector(aInspector => {
+        inspector = aInspector;
+        inspector.toolbox.startPicker().then(runTests);
+      });
     }, false);
 
     iframe2.src = 'data:text/html,nested iframe';
@@ -43,58 +47,56 @@ function createDocument()
   doc.body.appendChild(iframe1);
 }
 
-function moveMouseOver(aElement)
-{
+function moveMouseOver(aElement, cb) {
   EventUtils.synthesizeMouse(aElement, 2, 2, {type: "mousemove"},
     aElement.ownerDocument.defaultView);
-}
-
-function runIframeTests()
-{
-  getActiveInspector().highlighter.unlock();
-  getActiveInspector().selection.once("new-node", performTestComparisons1);
-  moveMouseOver(div1)
-}
-
-function performTestComparisons1()
-{
-  let i = getActiveInspector();
-  is(i.selection.node, div1, "selection matches div1 node");
-  is(getHighlitNode(), div1, "highlighter matches selection");
-
-  i.selection.once("new-node", performTestComparisons2);
-  executeSoon(function() {
-    moveMouseOver(div2);
+  inspector.toolbox.once("picker-node-hovered", () => {
+    executeSoon(cb);
   });
 }
 
-function performTestComparisons2()
-{
-  let i = getActiveInspector();
-
-  is(i.selection.node, div2, "selection matches div2 node");
-  is(getHighlitNode(), div2, "highlighter matches selection");
-
-  selectRoot();
+function runTests() {
+  testDiv1Highlighter();
 }
 
-function selectRoot()
-{
+function testDiv1Highlighter() {
+  moveMouseOver(div1, () => {
+    getHighlighterOutline().setAttribute("disable-transitions", "true");
+    is(getHighlitNode(), div1, "highlighter matches selection");
+    testDiv2Highlighter();
+  });
+}
+
+function testDiv2Highlighter() {
+  moveMouseOver(div2, () => {
+    is(getHighlitNode(), div2, "highlighter matches selection");
+    selectRoot();
+  });
+}
+
+function selectRoot() {
   // Select the root document element to clear the breadcrumbs.
-  let i = getActiveInspector();
-  i.selection.setNode(doc.documentElement);
-  i.once("inspector-updated", selectIframe);
+  inspector.selection.setNode(doc.documentElement);
+  inspector.once("inspector-updated", selectIframe);
 }
 
-function selectIframe()
-{
+function selectIframe() {
   // Directly select an element in an iframe (without navigating to it
   // with mousemoves).
-  let i = getActiveInspector();
-  i.selection.setNode(div2);
-  i.once("inspector-updated", () => {
-    let breadcrumbs = i.breadcrumbs;
+  inspector.selection.setNode(div2);
+  inspector.once("inspector-updated", () => {
+    let breadcrumbs = inspector.breadcrumbs;
     is(breadcrumbs.nodeHierarchy.length, 9, "Should have 9 items");
+    finishUp();
+  });
+}
+
+function finishUp() {
+  inspector.toolbox.stopPicker().then(() => {
+    doc = div1 = div2 = iframe1 = iframe2 = inspector = null;
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    gDevTools.closeToolbox(target);
+    gBrowser.removeCurrentTab();
     finish();
   });
 }
@@ -111,11 +113,4 @@ function test() {
   }, true);
 
   content.location = "data:text/html,iframe tests for inspector";
-
-  registerCleanupFunction(function () {
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-    gBrowser.removeCurrentTab();
-  });
 }
-

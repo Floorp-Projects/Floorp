@@ -44,6 +44,7 @@ function test() {
     inspector.once("inspector-updated", () => {
       is(inspector.selection.node, p, "Node re-selected.");
       toolbox.destroy();
+      toolbox = inspector = null;
       gBrowser.removeCurrentTab();
       finish();
     });

@@ -176,7 +176,10 @@ RootActor.prototype = {
       testConnectionPrefix: this.conn.prefix,
       traits: {
         sources: true,
-        editOuterHTML: true
+        editOuterHTML: true,
+        // Wether the server-side highlighter actor exists and can be used to
+        // remotely highlight nodes (see server/actors/highlighter.js)
+        highlightable: true
       }
     };
   },

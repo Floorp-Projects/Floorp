@@ -1384,7 +1384,7 @@ CssRuleView.prototype = {
     let elementStyle = this._elementStyle;
     return this._elementStyle.populate().then(() => {
       if (this._elementStyle != elementStyle) {
-        return promise.reject("element changed");
+        return;
       }
       this._createEditors();
 

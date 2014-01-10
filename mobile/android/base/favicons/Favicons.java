@@ -65,7 +65,7 @@ public class Favicons {
     // doing so is not necessary.
     private static final NonEvictingLruCache<String, String> sPageURLMappings = new NonEvictingLruCache<String, String>(NUM_PAGE_URL_MAPPINGS_TO_STORE);
 
-    public static String getFaviconURLForPageURLFromCache(String pageURL) {
+    public static String getFaviconUrlForPageUrlFromCache(String pageURL) {
         return sPageURLMappings.get(pageURL);
     }
 
@@ -73,7 +73,7 @@ public class Favicons {
      * Insert the given pageUrl->faviconUrl mapping into the memory cache of such mappings.
      * Useful for short-circuiting local database access.
      */
-    public static void putFaviconURLForPageURLInCache(String pageURL, String faviconURL) {
+    public static void putFaviconUrlForPageUrlInCache(String pageURL, String faviconURL) {
         sPageURLMappings.put(pageURL, faviconURL);
     }
 
@@ -111,7 +111,7 @@ public class Favicons {
      *
      * Returns null otherwise.
      */
-    public static Bitmap getCachedFaviconForSize(final String pageURL, int targetSize) {
+    public static Bitmap getSizedFaviconForPageFromCache(final String pageURL, int targetSize) {
         final String faviconURL = sPageURLMappings.get(pageURL);
         if (faviconURL == null) {
             return null;
@@ -134,7 +134,7 @@ public class Favicons {
      * @return The id of the asynchronous task created, NOT_LOADING if none is created, or
      *         LOADED if the value could be dispatched on the current thread.
      */
-    public static int getFaviconForSize(String pageURL, String faviconURL, int targetSize, int flags, OnFaviconLoadedListener listener) {
+    public static int getSizedFavicon(String pageURL, String faviconURL, int targetSize, int flags, OnFaviconLoadedListener listener) {
         // Do we know the favicon URL for this page already?
         String cacheURL = faviconURL;
         if (cacheURL == null) {
@@ -143,7 +143,7 @@ public class Favicons {
 
         // If there's no favicon URL given, try and hit the cache with the default one.
         if (cacheURL == null)  {
-            cacheURL = guessDefaultFaviconURL(pageURL);
+            cacheURL = guessDefaultFaviconUrl(pageURL);
         }
 
         // If it's something we can't even figure out a default URL for, just give up.
@@ -222,6 +222,7 @@ public class Favicons {
     public static int getSizedFaviconForPageFromLocal(final String pageURL, final OnFaviconLoadedListener callback) {
         return getSizedFaviconForPageFromLocal(pageURL, sDefaultFaviconSize, callback);
     }
+
     /**
      * Helper method to determine the URL of the Favicon image for a given page URL by querying the
      * history database. Should only be called from the background thread - does database access.
@@ -245,7 +246,7 @@ public class Favicons {
         targetURL = BrowserDB.getFaviconUrlForHistoryUrl(sContext.getContentResolver(), pageURL);
         if (targetURL == null) {
             // Nothing in the history database. Fall back to the default URL and hope for the best.
-            targetURL = guessDefaultFaviconURL(pageURL);
+            targetURL = guessDefaultFaviconUrl(pageURL);
         }
         return targetURL;
     }
@@ -406,7 +407,7 @@ public class Favicons {
      * @param pageURL Page URL for which a default Favicon URL is requested
      * @return The default Favicon URL.
      */
-    public static String guessDefaultFaviconURL(String pageURL) {
+    public static String guessDefaultFaviconUrl(String pageURL) {
         // Special-casing for about: pages. The favicon for about:pages which don't provide a link tag
         // is bundled in the database, keyed only by page URL, hence the need to return the page URL
         // here. If the database ever migrates to stop being silly in this way, this can plausibly

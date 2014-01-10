@@ -262,7 +262,7 @@
 
   /* Need to constrain the glass fog to avoid overlapping layers, see bug 886281. */
   #main-window:not([customizing]) #navigator-toolbox:not(:-moz-lwtheme) {
-    overflow-y: hidden;
+    overflow: -moz-hidden-unscrollable;
   }
 
   #main-window[sizemode=normal] .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
