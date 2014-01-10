@@ -39,8 +39,8 @@ public class PanelManager implements GeckoEventListener {
     public PanelManager(Context context) {
         mContext = context;
 
-        // Add a listener to handle any new lists that are added after the lists have been loaded.
-        GeckoAppShell.getEventDispatcher().registerEventListener("HomeLists:Added", this);
+        // Add a listener to handle any new panels that are added after the panels have been loaded.
+        GeckoAppShell.getEventDispatcher().registerEventListener("HomePanels:Added", this);
     }
 
     /**
@@ -71,7 +71,7 @@ public class PanelManager implements GeckoEventListener {
     }
 
     /**
-     * Listens for "HomeLists:Added"
+     * Listens for "HomePanels:Added"
      */
     @Override
     public void handleMessage(String event, JSONObject message) {
