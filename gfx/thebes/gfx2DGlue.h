@@ -208,13 +208,13 @@ inline JoinStyle ToJoinStyle(gfxContext::GraphicsLineJoin aStyle)
 inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_B8G8R8A8:
+  case SurfaceFormat::B8G8R8A8:
     return gfxImageFormatARGB32;
-  case FORMAT_B8G8R8X8:
+  case SurfaceFormat::B8G8R8X8:
     return gfxImageFormatRGB24;
-  case FORMAT_R5G6B5:
+  case SurfaceFormat::R5G6B5:
     return gfxImageFormatRGB16_565;
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return gfxImageFormatA8;
   default:
     return gfxImageFormatUnknown;
@@ -225,30 +225,30 @@ inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {
   case gfxImageFormatARGB32:
-    return FORMAT_B8G8R8A8;
+    return SurfaceFormat::B8G8R8A8;
   case gfxImageFormatRGB24:
-    return FORMAT_B8G8R8X8;
+    return SurfaceFormat::B8G8R8X8;
   case gfxImageFormatRGB16_565:
-    return FORMAT_R5G6B5;
+    return SurfaceFormat::R5G6B5;
   case gfxImageFormatA8:
-    return FORMAT_A8;
+    return SurfaceFormat::A8;
   default:
   case gfxImageFormatUnknown:
-    return FORMAT_B8G8R8A8;
+    return SurfaceFormat::B8G8R8A8;
   }
 }
 
 inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
 {
   switch (aFormat) {
-  case FORMAT_R5G6B5:
-  case FORMAT_B8G8R8X8:
-  case FORMAT_R8G8B8X8:
+  case SurfaceFormat::R5G6B5:
+  case SurfaceFormat::B8G8R8X8:
+  case SurfaceFormat::R8G8B8X8:
     return GFX_CONTENT_COLOR;
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return GFX_CONTENT_ALPHA;
-  case FORMAT_B8G8R8A8:
-  case FORMAT_R8G8B8A8:
+  case SurfaceFormat::B8G8R8A8:
+  case SurfaceFormat::R8G8B8A8:
   default:
     return GFX_CONTENT_COLOR_ALPHA;
   }

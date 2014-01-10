@@ -28,7 +28,7 @@ DumpAsPNG(SourceSurface* aSurface)
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(dataSource->GetData(), gfxIntSize(size.width, size.height),
                         dataSource->Stride(),
-                        aSurface->GetFormat() == FORMAT_A8 ? gfxImageFormatA8 : gfxImageFormatARGB32);
+                        aSurface->GetFormat() == SurfaceFormat::A8 ? gfxImageFormatA8 : gfxImageFormatARGB32);
   imageSurface->PrintAsDataURL();
 }
 } // namespace gfx
@@ -430,7 +430,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   IntRect intersect = sourceRect.Intersect(aDestRect);
   IntRect intersectInSourceSpace = intersect - sourceRect.TopLeft();
   IntRect intersectInDestSpace = intersect - aDestRect.TopLeft();
-  SurfaceFormat format = aSurface ? aSurface->GetFormat() : FORMAT_B8G8R8A8;
+  SurfaceFormat format = aSurface ? aSurface->GetFormat() : SurfaceFormat(SurfaceFormat::B8G8R8A8);
 
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aDestRect.Size(), format);
@@ -642,10 +642,10 @@ SurfaceFormat
 FilterNodeSoftware::DesiredFormat(SurfaceFormat aCurrentFormat,
                                   FormatHint aFormatHint)
 {
-  if (aCurrentFormat == FORMAT_A8 && aFormatHint == CAN_HANDLE_A8) {
-    return FORMAT_A8;
+  if (aCurrentFormat == SurfaceFormat::A8 && aFormatHint == CAN_HANDLE_A8) {
+    return SurfaceFormat::A8;
   }
-  return FORMAT_B8G8R8A8;
+  return SurfaceFormat::B8G8R8A8;
 }
 
 TemporaryRef<DataSourceSurface>
@@ -697,7 +697,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
     MOZ_ASSERT(!surface || surfaceRect.Size() == surface->GetSize());
   }
 
-  if (surface && surface->GetFormat() == FORMAT_UNKNOWN) {
+  if (surface && surface->GetFormat() == SurfaceFormat::UNKNOWN) {
 #ifdef DEBUG_DUMP_SURFACES
     printf("wrong input format</section>\n\n");
 #endif
@@ -734,8 +734,8 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
   }
 
   SurfaceFormat currentFormat = result->GetFormat();
-  if (DesiredFormat(currentFormat, aFormatHint) == FORMAT_B8G8R8A8 &&
-      currentFormat != FORMAT_B8G8R8A8) {
+  if (DesiredFormat(currentFormat, aFormatHint) == SurfaceFormat::B8G8R8A8 &&
+      currentFormat != SurfaceFormat::B8G8R8A8) {
     result = FilterProcessing::ConvertToB8G8R8A8(result);
   }
 
@@ -1071,7 +1071,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
   if (rx == 0) {
     tmp = aInput;
   } else {
-    tmp = Factory::CreateDataSourceSurface(tmpRect.Size(), FORMAT_B8G8R8A8);
+    tmp = Factory::CreateDataSourceSurface(tmpRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!tmp) {
       return nullptr;
     }
@@ -1092,7 +1092,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
   if (ry == 0) {
     dest = tmp;
   } else {
-    dest = Factory::CreateDataSourceSurface(destRect.Size(), FORMAT_B8G8R8A8);
+    dest = Factory::CreateDataSourceSurface(destRect.Size(), SurfaceFormat::B8G8R8A8);
     if (!dest) {
       return nullptr;
     }
@@ -1185,13 +1185,13 @@ FilterNodeColorMatrixSoftware::SetAttribute(uint32_t aIndex,
 static TemporaryRef<DataSourceSurface>
 Premultiply(DataSourceSurface* aSurface)
 {
-  if (aSurface->GetFormat() == FORMAT_A8) {
+  if (aSurface->GetFormat() == SurfaceFormat::A8) {
     return aSurface;
   }
 
   IntSize size = aSurface->GetSize();
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
   }
@@ -1210,13 +1210,13 @@ Premultiply(DataSourceSurface* aSurface)
 static TemporaryRef<DataSourceSurface>
 Unpremultiply(DataSourceSurface* aSurface)
 {
-  if (aSurface->GetFormat() == FORMAT_A8) {
+  if (aSurface->GetFormat() == SurfaceFormat::A8) {
     return aSurface;
   }
 
   IntSize size = aSurface->GetSize();
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
   }
@@ -1293,9 +1293,9 @@ static SurfaceFormat
 FormatForColor(Color aColor)
 {
   if (aColor.r == 0 && aColor.g == 0 && aColor.b == 0) {
-    return FORMAT_A8;
+    return SurfaceFormat::A8;
   }
-  return FORMAT_B8G8R8A8;
+  return SurfaceFormat::B8G8R8A8;
 }
 
 TemporaryRef<DataSourceSurface>
@@ -1311,7 +1311,7 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
   uint8_t* targetData = target->GetData();
   uint32_t stride = target->Stride();
 
-  if (format == FORMAT_B8G8R8A8) {
+  if (format == SurfaceFormat::B8G8R8A8) {
     uint32_t color = ColorToBGRA(mColor);
     for (int32_t y = 0; y < aRect.height; y++) {
       for (int32_t x = 0; x < aRect.width; x++) {
@@ -1319,7 +1319,7 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
       }
       targetData += stride;
     }
-  } else if (format == FORMAT_A8) {
+  } else if (format == SurfaceFormat::A8) {
     uint8_t alpha = NS_lround(mColor.a * 255.0f);
     for (int32_t y = 0; y < aRect.height; y++) {
       for (int32_t x = 0; x < aRect.width; x++) {
@@ -1572,7 +1572,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  if (input->GetFormat() == FORMAT_B8G8R8A8 && !needColorChannels) {
+  if (input->GetFormat() == SurfaceFormat::B8G8R8A8 && !needColorChannels) {
     bool colorChannelsBecomeBlack =
       IsAllZero(lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_R]) &&
       IsAllZero(lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_G]) &&
@@ -1584,7 +1584,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
   }
 
   SurfaceFormat format = input->GetFormat();
-  if (format == FORMAT_A8 && mDisableA) {
+  if (format == SurfaceFormat::A8 && mDisableA) {
     return input;
   }
 
@@ -1594,7 +1594,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  if (format == FORMAT_A8) {
+  if (format == SurfaceFormat::A8) {
     TransferComponents<1>(input, target, &lookupTables[B8G8R8A8_COMPONENT_BYTEOFFSET_A]);
   } else {
     TransferComponents<4>(input, target, lookupTables);
@@ -2206,14 +2206,14 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
       mKernelMatrix.size() != uint32_t(mKernelSize.width * mKernelSize.height) ||
       !IntRect(IntPoint(0, 0), mKernelSize).Contains(mTarget) ||
       mDivisor == 0) {
-    return Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
+    return Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
   }
 
   IntRect srcRect = InflatedSourceRect(aRect);
   RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_CONVOLVE_MATRIX_IN, srcRect, NEED_COLOR_CHANNELS, mEdgeMode, &mSourceRect);
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!input || !target) {
     return nullptr;
   }
@@ -2361,7 +2361,7 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
   RefPtr<DataSourceSurface> map =
     GetInputDataSourceSurface(IN_DISPLACEMENT_MAP_IN2, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!input || !map || !target) {
     return nullptr;
   }
@@ -2620,7 +2620,7 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
   RefPtr<DataSourceSurface> start =
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
-    Factory::CreateDataSourceSurface(aRect.Size(), FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!dest) {
     return nullptr;
   }
@@ -2712,8 +2712,8 @@ FilterNodeBlurXYSoftware::Render(const IntRect& aRect)
   RefPtr<DataSourceSurface> target;
   Rect r(0, 0, srcRect.width, srcRect.height);
 
-  if (input->GetFormat() == FORMAT_A8) {
-    target = Factory::CreateDataSourceSurface(srcRect.Size(), FORMAT_A8);
+  if (input->GetFormat() == SurfaceFormat::A8) {
+    target = Factory::CreateDataSourceSurface(srcRect.Size(), SurfaceFormat::A8);
     CopyRect(input, target, IntRect(IntPoint(), input->GetSize()), IntPoint());
     AlphaBoxBlur blur(r, target->Stride(), sigmaXY.width, sigmaXY.height);
     blur.Blur(target->GetData());
@@ -3211,12 +3211,12 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     return nullptr;
   }
 
-  if (input->GetFormat() != FORMAT_A8) {
+  if (input->GetFormat() != SurfaceFormat::A8) {
     input = FilterProcessing::ExtractAlpha(input);
   }
 
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (!target) {
     return nullptr;
   }

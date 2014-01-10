@@ -1158,8 +1158,8 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mSize = aSize;
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
-  if (mFormat == FORMAT_B8G8R8A8 ||
-      mFormat == FORMAT_R8G8B8A8) {
+  if (mFormat == SurfaceFormat::B8G8R8A8 ||
+      mFormat == SurfaceFormat::R8G8B8A8) {
     SetPermitSubpixelAA(false);
   } else {
     SetPermitSubpixelAA(true);

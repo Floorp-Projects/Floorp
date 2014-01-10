@@ -31,7 +31,7 @@ MacIOSurfaceTextureSourceBasic::GetSize() const
 gfx::SurfaceFormat
 MacIOSurfaceTextureSourceBasic::GetFormat() const
 {
-  return mSurface->HasAlpha() ? gfx::FORMAT_R8G8B8A8 : gfx::FORMAT_B8G8R8X8;
+  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
 }
 
 MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
@@ -85,7 +85,7 @@ MacIOSurfaceTextureHostBasic::SetCompositor(Compositor* aCompositor)
 
 gfx::SurfaceFormat
 MacIOSurfaceTextureHostBasic::GetFormat() const {
-  return mSurface->HasAlpha() ? gfx::FORMAT_R8G8B8A8 : gfx::FORMAT_B8G8R8X8;
+  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
 }
 
 gfx::IntSize

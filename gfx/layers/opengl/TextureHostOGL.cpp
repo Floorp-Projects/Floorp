@@ -499,8 +499,8 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
       mTextureHandle = glTexSurf->Texture();
       mTextureTarget = glTexSurf->TextureTarget();
       MOZ_ASSERT(mTextureHandle);
-      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                       : FORMAT_R8G8B8X8;
+      mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                       : SurfaceFormat::R8G8B8X8;
       break;
     }
     case SharedSurfaceType::EGLImageShare: {
@@ -513,8 +513,8 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
         toUpload = eglImageSurf->GetPixels();
         MOZ_ASSERT(toUpload);
       } else {
-        mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                         : FORMAT_R8G8B8X8;
+        mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                         : SurfaceFormat::R8G8B8X8;
       }
       break;
     }
@@ -524,8 +524,8 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
       mTextureHandle = glTexSurf->Texture();
       mTextureTarget = glTexSurf->TextureTarget();
       MOZ_ASSERT(mTextureHandle);
-      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                       : FORMAT_R8G8B8X8;
+      mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                       : SurfaceFormat::R8G8B8X8;
       break;
     }
 #endif
@@ -943,7 +943,7 @@ void
 SurfaceStreamHostOGL::Unlock()
 {
   // We don't know what this is unless we're locked
-  mFormat = gfx::FORMAT_UNKNOWN;
+  mFormat = gfx::SurfaceFormat::UNKNOWN;
 }
 
 bool
@@ -971,8 +971,8 @@ SurfaceStreamHostOGL::Lock()
       mTextureHandle = glTexSurf->Texture();
       mTextureTarget = glTexSurf->TextureTarget();
       MOZ_ASSERT(mTextureHandle);
-      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                       : FORMAT_R8G8B8X8;
+      mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                       : SurfaceFormat::R8G8B8X8;
       break;
     }
     case SharedSurfaceType::EGLImageShare: {
@@ -985,8 +985,8 @@ SurfaceStreamHostOGL::Lock()
         toUpload = eglImageSurf->GetPixels();
         MOZ_ASSERT(toUpload);
       } else {
-        mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                         : FORMAT_R8G8B8X8;
+        mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                         : SurfaceFormat::R8G8B8X8;
       }
       break;
     }
@@ -996,8 +996,8 @@ SurfaceStreamHostOGL::Lock()
       mTextureHandle = glTexSurf->Texture();
       mTextureTarget = glTexSurf->TextureTarget();
       MOZ_ASSERT(mTextureHandle);
-      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
-                                       : FORMAT_R8G8B8X8;
+      mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                       : SurfaceFormat::R8G8B8X8;
       break;
     }
 #endif
@@ -1226,9 +1226,9 @@ TiledDeprecatedTextureHostOGL::Update(gfxReusableSurfaceWrapper* aReusableSurfac
                                         TILEDLAYERBUFFER_TILE_SIZE);
 
   if (mGLFormat == LOCAL_GL_RGB) {
-    mFormat = FORMAT_R8G8B8X8;
+    mFormat = SurfaceFormat::R8G8B8X8;
   } else {
-    mFormat = FORMAT_B8G8R8A8;
+    mFormat = SurfaceFormat::B8G8R8A8;
   }
 }
 
@@ -1255,26 +1255,26 @@ Deprecated_SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
 {
   switch (aFormat) {
   case android::PIXEL_FORMAT_BGRA_8888:
-    return swapRB ? FORMAT_R8G8B8A8 : FORMAT_B8G8R8A8;
+    return swapRB ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::B8G8R8A8;
   case android::PIXEL_FORMAT_RGBA_8888:
-    return swapRB ? FORMAT_B8G8R8A8 : FORMAT_R8G8B8A8;
+    return swapRB ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::R8G8B8A8;
   case android::PIXEL_FORMAT_RGBX_8888:
-    return swapRB ? FORMAT_B8G8R8X8 : FORMAT_R8G8B8X8;
+    return swapRB ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
-    return FORMAT_R5G6B5;
+    return SurfaceFormat::R5G6B5;
   case android::PIXEL_FORMAT_A_8:
-    return FORMAT_A8;
+    return SurfaceFormat::A8;
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED:
   case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
   case HAL_PIXEL_FORMAT_YV12:
-    return FORMAT_B8G8R8A8; // yup, use FORMAT_B8G8R8A8 even though it's a YUV texture. This is an external texture.
+    return SurfaceFormat::B8G8R8A8; // yup, use SurfaceFormat::B8G8R8A8 even though it's a YUV texture. This is an external texture.
   default:
     if (aFormat >= 0x100 && aFormat <= 0x1FF) {
       // Reserved range for HAL specific formats.
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     } else {
       // This is not super-unreachable, there's a bunch of hypothetical pixel
       // formats we don't deal with.
@@ -1282,7 +1282,7 @@ Deprecated_SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
       // we'll take down the compositor process and thus the phone. This seems
       // like undesirable behaviour. We'd rather have a subtle artifact.
       MOZ_ASSERT(false, "Unknown Android pixel format.");
-      return FORMAT_UNKNOWN;
+      return SurfaceFormat::UNKNOWN;
     }
   }
 }
@@ -1340,9 +1340,9 @@ gfx::SurfaceFormat
 GrallocDeprecatedTextureHostOGL::GetFormat() const
 {
   switch (mTextureTarget) {
-  case LOCAL_GL_TEXTURE_EXTERNAL: return gfx::FORMAT_R8G8B8A8;
+  case LOCAL_GL_TEXTURE_EXTERNAL: return gfx::SurfaceFormat::R8G8B8A8;
   case LOCAL_GL_TEXTURE_2D: return mFormat;
-  default: return gfx::FORMAT_UNKNOWN;
+  default: return gfx::SurfaceFormat::UNKNOWN;
   }
 }
 

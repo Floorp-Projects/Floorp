@@ -49,7 +49,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
          if (backingSize.IsEmpty())
             return nullptr;
 
-          mDrawTarget = Factory::CreateDrawTarget(BACKEND_COREGRAPHICS, backingSize, FORMAT_B8G8R8A8);
+          mDrawTarget = Factory::CreateDrawTarget(BACKEND_COREGRAPHICS, backingSize, SurfaceFormat::B8G8R8A8);
 
           Matrix transform;
           transform.Scale(mBackingScale, mBackingScale);

@@ -72,9 +72,9 @@ static inline int
 BytesPerPixel(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return 1;
-  case FORMAT_R5G6B5:
+  case SurfaceFormat::R5G6B5:
     return 2;
   default:
     return 4;

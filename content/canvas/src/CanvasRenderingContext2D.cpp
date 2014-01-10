@@ -332,7 +332,7 @@ public:
 
     mTarget =
       mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
-                                            FORMAT_B8G8R8A8, mSigma);
+                                            SurfaceFormat::B8G8R8A8, mSigma);
 
     if (!mTarget) {
       // XXX - Deal with the situation where our temp size is too big to
@@ -1130,7 +1130,7 @@ CanvasRenderingContext2D::GetInputStream(const char *aMimeType,
 SurfaceFormat
 CanvasRenderingContext2D::GetSurfaceFormat() const
 {
-  return mOpaque ? FORMAT_B8G8R8X8 : FORMAT_B8G8R8A8;
+  return mOpaque ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
 }
 
 //
@@ -3394,7 +3394,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
   } else if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
     drawDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(ceil(sw), ceil(sh)),
-                                                                   FORMAT_B8G8R8A8);
+                                                                   SurfaceFormat::B8G8R8A8);
     if (!drawDT) {
       error.Throw(NS_ERROR_FAILURE);
       return;
@@ -3434,7 +3434,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
         mTarget->CreateSourceSurfaceFromData(img->Data(),
                                              IntSize(size.width, size.height),
                                              img->Stride(),
-                                             FORMAT_B8G8R8A8);
+                                             SurfaceFormat::B8G8R8A8);
     } else {
       RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
       RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
@@ -3733,7 +3733,7 @@ CanvasRenderingContext2D::EnsureErrorTarget()
     return;
   }
 
-  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
+  RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
   MOZ_ASSERT(errorTarget, "Failed to allocate the error target!");
 
   sErrorTarget = errorTarget;
@@ -3879,7 +3879,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
   }
 
   RefPtr<SourceSurface> sourceSurface =
-    mTarget->CreateSourceSurfaceFromData(imgsurf->Data(), IntSize(w, h), imgsurf->Stride(), FORMAT_B8G8R8A8);
+    mTarget->CreateSourceSurfaceFromData(imgsurf->Data(), IntSize(w, h), imgsurf->Stride(), SurfaceFormat::B8G8R8A8);
 
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed

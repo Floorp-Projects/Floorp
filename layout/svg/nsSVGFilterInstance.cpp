@@ -309,7 +309,7 @@ nsSVGFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     ctx = new gfxContext(offscreenSurface);
   } else {
     offscreenDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      ToIntSize(neededRect.Size()), FORMAT_B8G8R8A8);
+      ToIntSize(neededRect.Size()), SurfaceFormat::B8G8R8A8);
     if (!offscreenDT) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -396,7 +396,7 @@ nsSVGFilterInstance::BuildSourceImage(gfxASurface* aTargetSurface,
     ctx = new gfxContext(offscreenSurface);
   } else {
     offscreenDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      ToIntSize(neededRect.Size()), FORMAT_B8G8R8A8);
+      ToIntSize(neededRect.Size()), SurfaceFormat::B8G8R8A8);
     if (!offscreenDT) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

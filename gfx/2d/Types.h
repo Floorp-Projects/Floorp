@@ -31,17 +31,16 @@ MOZ_BEGIN_ENUM_CLASS(SurfaceType)
   RECORDING /* Surface used for recording */
 MOZ_END_ENUM_CLASS(SurfaceType)
 
-enum SurfaceFormat
-{
-  FORMAT_B8G8R8A8,
-  FORMAT_B8G8R8X8,
-  FORMAT_R8G8B8A8,
-  FORMAT_R8G8B8X8,
-  FORMAT_R5G6B5,
-  FORMAT_A8,
-  FORMAT_YUV,
-  FORMAT_UNKNOWN
-};
+MOZ_BEGIN_ENUM_CLASS(SurfaceFormat)
+  B8G8R8A8,
+  B8G8R8X8,
+  R8G8B8A8,
+  R8G8B8X8,
+  R5G6B5,
+  A8,
+  YUV,
+  UNKNOWN
+MOZ_END_ENUM_CLASS(SurfaceFormat)
 
 enum FilterType
 {

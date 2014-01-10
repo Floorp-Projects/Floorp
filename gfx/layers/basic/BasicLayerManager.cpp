@@ -730,7 +730,7 @@ PixmanTransform(const gfxImageSurface* aDest,
                                                   aDest->Stride());
 
   IntSize srcSize = aSrc->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(aSrc->GetFormat() == FORMAT_B8G8R8A8 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+  pixman_image_t* src = pixman_image_create_bits(aSrc->GetFormat() == SurfaceFormat::B8G8R8A8 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                  srcSize.width,
                                                  srcSize.height,
                                                  (uint32_t*)aSrc->GetData(),
@@ -955,7 +955,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     const nsIntRect& bounds = visibleRegion.GetBounds();
     RefPtr<DrawTarget> untransformedDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),
-                                                                   FORMAT_B8G8R8A8);
+                                                                   SurfaceFormat::B8G8R8A8);
     if (!untransformedDT) {
       return;
     }
