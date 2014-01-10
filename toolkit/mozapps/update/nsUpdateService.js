@@ -31,6 +31,7 @@ const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
 const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
+const PREF_APP_UPDATE_CUSTOM              = "app.update.custom";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_METRO_ENABLED       = "app.update.metro.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
@@ -40,12 +41,12 @@ const PREF_APP_UPDATE_LASTUPDATETIME      = "app.update.lastUpdateTime.backgroun
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_POSTUPDATE          = "app.update.postupdate";
 const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_SILENT              = "app.update.silent";
 const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
-const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
@@ -1980,7 +1981,7 @@ const UpdateServiceFactory = {
 function UpdateService() {
   LOG("Creating UpdateService");
   Services.obs.addObserver(this, "xpcom-shutdown", false);
-  Services.prefs.addObserver("app.update.log", this, false);
+  Services.prefs.addObserver(PREF_APP_UPDATE_LOG, this, false);
 #ifdef MOZ_WIDGET_GONK
   // PowerManagerService::SyncProfile (which is called for Reboot, PowerOff
   // and Restart) sends the profile-change-net-teardown event. We can then
@@ -2050,7 +2051,7 @@ UpdateService.prototype = {
 #endif
     case "xpcom-shutdown":
       Services.obs.removeObserver(this, topic);
-      Services.prefs.removeObserver("app.update.log", this);
+      Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
 
       if (this._retryTimer) {
         this._retryTimer.cancel();
@@ -3595,6 +3596,7 @@ Checker.prototype = {
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION));
     url = url.replace(/%DISTRIBUTION_VERSION%/g,
                       getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
+    url = url.replace(/%CUSTOM%/g, getPref("getCharPref", PREF_APP_UPDATE_CUSTOM, ""));
     url = url.replace(/\+/g, "%2B");
 
 #ifdef MOZ_WIDGET_GONK
