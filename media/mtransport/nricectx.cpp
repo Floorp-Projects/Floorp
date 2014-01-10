@@ -48,6 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
+#include "plbase64.h"
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
@@ -718,23 +719,14 @@ void NrIceCtx::SetGatheringState(GatheringState state) {
 
 }  // close namespace
 
-
-extern "C" {
-int nr_bin2hex(UCHAR *in,int len,UCHAR *out);
-}
-
 // Reimplement nr_ice_compute_codeword to avoid copyright issues
 void nr_ice_compute_codeword(char *buf, int len,char *codeword) {
     UINT4 c;
-    UCHAR cc[2];
 
     r_crc32(buf,len,&c);
-    c %= 2048;
 
-    cc[0] = (c >> 8) & 0xff;
-    cc[1] = c & 0xff;
-
-    nr_bin2hex(cc, 2, reinterpret_cast<UCHAR *>(codeword));
+    PL_Base64Encode(reinterpret_cast<char*>(&c), 3, codeword);
+    codeword[4] = 0;
 
     return;
 }
