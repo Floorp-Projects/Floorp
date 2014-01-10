@@ -38,11 +38,11 @@ struct BaseMargin {
 
   T& Side(SideT aSide) {
     // This is ugly!
-    return *(&top + aSide);
+    return *(&top + T(aSide));
   }
   T Side(SideT aSide) const {
     // This is ugly!
-    return *(&top + aSide);
+    return *(&top + T(aSide));
   }
 
   // Overloaded operators. Note that '=' isn't defined so we'll get the

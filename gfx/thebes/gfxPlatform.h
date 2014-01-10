@@ -54,7 +54,7 @@ class DrawEventRecorder;
 inline uint32_t
 BackendTypeBit(BackendType b)
 {
-  return 1 << int(b);
+  return 1 << uint8_t(b);
 }
 }
 }

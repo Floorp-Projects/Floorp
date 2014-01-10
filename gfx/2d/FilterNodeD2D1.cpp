@@ -33,11 +33,11 @@ D2D1_COLORMATRIX_ALPHA_MODE D2DAlphaMode(uint32_t aMode)
 D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE D2DAffineTransformInterpolationMode(uint32_t aFilter)
 {
   switch (aFilter) {
-  case FILTER_GOOD:
+  case Filter::GOOD:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
-  case FILTER_LINEAR:
+  case Filter::LINEAR:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_LINEAR;
-  case FILTER_POINT:
+  case Filter::POINT:
     return D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE_NEAREST_NEIGHBOR;
   default:
     MOZ_CRASH("Unknown enum value!");
@@ -129,7 +129,7 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode)
 TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
 {
   if (aDT->GetType() == BackendType::DIRECT2D1_1) {
-    return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, EXTEND_CLAMP);
+    return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, ExtendMode::CLAMP);
   }
   RefPtr<ID2D1Image> image;
   switch (aSurface->GetType()) {

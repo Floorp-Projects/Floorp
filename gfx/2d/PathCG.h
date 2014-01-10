@@ -73,9 +73,9 @@ public:
   // are compatible with BackendType::COREGRAPHICS_ACCELERATED backend.
   virtual BackendType GetBackendType() const { return BackendType::COREGRAPHICS; }
 
-  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
-                                                             FillRule aFillRule = FILL_WINDING) const;
+                                                             FillRule aFillRule = FillRule::FILL_WINDING) const;
 
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const;
   virtual bool StrokeContainsPoint(const StrokeOptions &aStrokeOptions,

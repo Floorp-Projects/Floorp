@@ -60,7 +60,7 @@ public:
       }
 
       mPattern = new (mSurfacePattern.addr())
-        SurfacePattern(state.sourceSurface, EXTEND_CLAMP, transform);
+        SurfacePattern(state.sourceSurface, ExtendMode::CLAMP, transform);
       return *mPattern;
     } else {
       mPattern = new (mColorPattern.addr())
@@ -930,9 +930,9 @@ gfxContext::SetAntialiasMode(AntialiasMode mode)
     }
   } else {
     if (mode == MODE_ALIASED) {
-      CurrentState().aaMode = AA_NONE;
+      CurrentState().aaMode = gfx::AntialiasMode::NONE;
     } else if (mode == MODE_COVERAGE) {
-      CurrentState().aaMode = AA_SUBPIXEL;
+      CurrentState().aaMode = gfx::AntialiasMode::SUBPIXEL;
     }
   }
 }
@@ -946,7 +946,7 @@ gfxContext::CurrentAntialiasMode() const
         return MODE_ALIASED;
     return MODE_COVERAGE;
   } else {
-    if (CurrentState().aaMode == AA_NONE) {
+    if (CurrentState().aaMode == gfx::AntialiasMode::NONE) {
       return MODE_ALIASED;
     }
     return MODE_COVERAGE;
@@ -1153,7 +1153,7 @@ gfxContext::SetFillRule(FillRule rule)
   if (mCairo) {
     cairo_set_fill_rule(mCairo, (cairo_fill_rule_t)rule);
   } else {
-    CurrentState().fillRule = rule == FILL_RULE_WINDING ? FILL_WINDING : FILL_EVEN_ODD;
+    CurrentState().fillRule = rule == FILL_RULE_WINDING ? gfx::FillRule::FILL_WINDING : gfx::FillRule::FILL_EVEN_ODD;
   }
 }
 
@@ -2071,7 +2071,7 @@ gfxContext::FillAzure(Float aOpacity)
 
     if (state.opIsClear) {
       mDT->ClearRect(mRect);
-    } else if (op == OP_SOURCE) {
+    } else if (op == CompositionOp::OP_SOURCE) {
       // Emulate cairo operator source which is bound by mask!
       mDT->ClearRect(mRect);
       mDT->FillRect(mRect, GeneralPattern(this), DrawOptions(aOpacity));
@@ -2120,28 +2120,28 @@ gfxContext::PushClipsToDT(DrawTarget *aDT)
 CompositionOp
 gfxContext::GetOp()
 {
-  if (CurrentState().op != OP_SOURCE) {
+  if (CurrentState().op != CompositionOp::OP_SOURCE) {
     return CurrentState().op;
   }
 
   AzureState &state = CurrentState();
   if (state.pattern) {
     if (state.pattern->IsOpaque()) {
-      return OP_OVER;
+      return CompositionOp::OP_OVER;
     } else {
-      return OP_SOURCE;
+      return CompositionOp::OP_SOURCE;
     }
   } else if (state.sourceSurface) {
     if (state.sourceSurface->GetFormat() == SurfaceFormat::B8G8R8X8) {
-      return OP_OVER;
+      return CompositionOp::OP_OVER;
     } else {
-      return OP_SOURCE;
+      return CompositionOp::OP_SOURCE;
     }
   } else {
     if (state.color.a > 0.999) {
-      return OP_OVER;
+      return CompositionOp::OP_OVER;
     } else {
-      return OP_SOURCE;
+      return CompositionOp::OP_SOURCE;
     }
   }
 }

@@ -193,9 +193,9 @@ AppendToString(nsACString& s, const Filter filter,
   s += pfx;
 
   switch (filter) {
-    case FILTER_GOOD: s += "FILTER_GOOD"; break;
-    case FILTER_LINEAR: s += "FILTER_LINEAR"; break;
-    case FILTER_POINT: s += "FILTER_POINT"; break;
+    case Filter::GOOD: s += "Filter::GOOD"; break;
+    case Filter::LINEAR: s += "Filter::LINEAR"; break;
+    case Filter::POINT: s += "Filter::POINT"; break;
   }
   return s += sfx;
 }

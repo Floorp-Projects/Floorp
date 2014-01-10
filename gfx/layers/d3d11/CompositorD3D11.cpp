@@ -592,7 +592,7 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
       EffectYCbCr* ycbcrEffect =
         static_cast<EffectYCbCr*>(aEffectChain.mPrimaryEffect.get());
 
-      SetSamplerForFilter(FILTER_LINEAR);
+      SetSamplerForFilter(Filter::LINEAR);
 
       mVSConstants.textureCoords = ycbcrEffect->mTextureCoords;
 
@@ -919,10 +919,10 @@ CompositorD3D11::SetSamplerForFilter(Filter aFilter)
   ID3D11SamplerState *sampler;
   switch (aFilter) {
   default:
-  case FILTER_LINEAR:
+  case Filter::LINEAR:
     sampler = mAttachments->mLinearSamplerState;
     break;
-  case FILTER_POINT:
+  case Filter::POINT:
     sampler = mAttachments->mPointSamplerState;
     break;
   }

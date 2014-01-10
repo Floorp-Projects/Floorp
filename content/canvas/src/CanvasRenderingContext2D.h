@@ -693,7 +693,7 @@ protected:
   {
     if (NeedToDrawShadow()) {
       // In this case the shadow rendering will use the operator.
-      return mozilla::gfx::OP_OVER;
+      return mozilla::gfx::CompositionOp::OP_OVER;
     }
 
     return CurrentState().op;
@@ -759,10 +759,10 @@ protected:
                      globalAlpha(1.0f),
                      shadowBlur(0.0),
                      dashOffset(0.0f),
-                     op(mozilla::gfx::OP_OVER),
-                     fillRule(mozilla::gfx::FILL_WINDING),
-                     lineCap(mozilla::gfx::CAP_BUTT),
-                     lineJoin(mozilla::gfx::JOIN_MITER_OR_BEVEL),
+                     op(mozilla::gfx::CompositionOp::OP_OVER),
+                     fillRule(mozilla::gfx::FillRule::FILL_WINDING),
+                     lineCap(mozilla::gfx::CapStyle::BUTT),
+                     lineJoin(mozilla::gfx::JoinStyle::MITER_OR_BEVEL),
                      imageSmoothingEnabled(true)
     { }
 

@@ -320,7 +320,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       EffectYCbCr* ycbcrEffect =
         static_cast<EffectYCbCr*>(aEffectChain.mPrimaryEffect.get());
 
-      SetSamplerForFilter(FILTER_LINEAR);
+      SetSamplerForFilter(Filter::LINEAR);
 
       Rect textureCoords = ycbcrEffect->mTextureCoords;
       d3d9Device->SetVertexShaderConstantF(CBvTextureCoords,
@@ -684,11 +684,11 @@ void
 CompositorD3D9::SetSamplerForFilter(Filter aFilter)
 {
   switch (aFilter) {
-  case FILTER_LINEAR:
+  case Filter::LINEAR:
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     return;
-  case FILTER_POINT:
+  case Filter::POINT:
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
     device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
     return;

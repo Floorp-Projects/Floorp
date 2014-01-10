@@ -618,7 +618,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
     gfxUtils::ClipToRegion(destDT, aUpdateRegion);
   }
 
-  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, OP_SOURCE);
+  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
   if (isClippingCheap) {
     destDT->PopClip();
   }
@@ -634,7 +634,7 @@ ContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer& aSource,
       gfxUtils::ClipToRegion(destDT, aUpdateRegion);
     }
 
-    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, OP_SOURCE);
+    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
     if (isClippingCheap) {
       destDT->PopClip();
     }
@@ -839,7 +839,7 @@ DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer
     gfxUtils::ClipToRegion(destDT, aUpdateRegion);
   }
 
-  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, OP_SOURCE);
+  aSource.DrawBufferWithRotation(destDT, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
   if (isClippingCheap) {
     destDT->PopClip();
   }
@@ -855,7 +855,7 @@ DeprecatedContentClientDoubleBuffered::UpdateDestinationFrom(const RotatedBuffer
       gfxUtils::ClipToRegion(destDT, aUpdateRegion);
     }
 
-    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, OP_SOURCE);
+    aSource.DrawBufferWithRotation(destDT, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
     if (isClippingCheap) {
       destDT->PopClip();
     }
