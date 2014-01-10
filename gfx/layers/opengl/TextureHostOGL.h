@@ -682,7 +682,7 @@ public:
     , mTextureHandle(0)
     , mWrapMode(LOCAL_GL_CLAMP_TO_EDGE)
     , mSharedHandle(0)
-    , mShareType(gl::SameProcess)
+    , mShareType(gl::SharedTextureShareType::SameProcess)
   {}
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
