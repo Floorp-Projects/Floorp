@@ -1505,7 +1505,7 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfxMatrix& aTransform)
   Matrix oldMatrix = aTarget->GetTransform();
   aTarget->SetTransform(glToCairoTransform);
   Rect floatRect = Rect(rect.x, rect.y, rect.width, rect.height);
-  aTarget->DrawSurface(source, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, OP_SOURCE));
+  aTarget->DrawSurface(source, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   aTarget->SetTransform(oldMatrix);
   aTarget->Flush();
 }

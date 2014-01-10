@@ -21,7 +21,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix
 #include "mozilla/gfx/Point.h"          // for Point, IntPoint
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
-#include "mozilla/gfx/Types.h"          // for ExtendMode::EXTEND_CLAMP, etc
+#include "mozilla/gfx/Types.h"          // for ExtendMode::ExtendMode::CLAMP, etc
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient
 #include "nsSize.h"                     // for nsIntSize
@@ -95,14 +95,14 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
 
   gfx::Point quadrantTranslation(quadrantRect.x, quadrantRect.y);
 
-  MOZ_ASSERT(aOperator == OP_OVER || aOperator == OP_SOURCE);
+  MOZ_ASSERT(aOperator == CompositionOp::OP_OVER || aOperator == CompositionOp::OP_SOURCE);
   // direct2d is much slower when using OP_SOURCE so use OP_OVER and
   // (maybe) a clear instead. Normally we need to draw in a single operation
   // (to avoid flickering) but direct2d is ok since it defers rendering.
   // We should try abstract this logic in a helper when we have other use
   // cases.
-  if (aTarget->GetType() == BackendType::DIRECT2D && aOperator == OP_SOURCE) {
-    aOperator = OP_OVER;
+  if (aTarget->GetType() == BackendType::DIRECT2D && aOperator == CompositionOp::OP_SOURCE) {
+    aOperator = CompositionOp::OP_OVER;
     if (mDTBuffer->GetFormat() == SurfaceFormat::B8G8R8A8) {
       aTarget->ClearRect(ToRect(fillRect));
     }
@@ -116,7 +116,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     snapshot = mDTBufferOnWhite->Snapshot();
   }
 
-  if (aOperator == OP_SOURCE) {
+  if (aOperator == CompositionOp::OP_SOURCE) {
     // OP_SOURCE is unbounded in Azure, and we really don't want that behaviour here.
     // We also can't do a ClearRect+FillRect since we need the drawing to happen
     // as an atomic operation (to prevent flickering).
@@ -130,9 +130,9 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     transform.Translate(quadrantTranslation.x, quadrantTranslation.y);
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    SurfacePattern source(snapshot, EXTEND_CLAMP, transform, FILTER_POINT);
+    SurfacePattern source(snapshot, ExtendMode::CLAMP, transform, Filter::POINT);
 #else
-    SurfacePattern source(snapshot, EXTEND_CLAMP, transform);
+    SurfacePattern source(snapshot, ExtendMode::CLAMP, transform);
 #endif
 
     Matrix oldTransform = aTarget->GetTransform();
@@ -141,7 +141,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     aTarget->SetTransform(oldTransform);
   } else {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    DrawSurfaceOptions options(FILTER_POINT);
+    DrawSurfaceOptions options(Filter::POINT);
 #else
     DrawSurfaceOptions options;
 #endif
@@ -151,7 +151,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
                          DrawOptions(aOpacity, aOperator));
   }
 
-  if (aOperator == OP_SOURCE) {
+  if (aOperator == CompositionOp::OP_SOURCE) {
     aTarget->PopClip();
   }
 }
@@ -631,7 +631,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         return result;
       }
        MOZ_ASSERT(mDTBuffer, "Have we got a Thebes buffer for some reason?");
-      DrawBufferWithRotation(destDTBuffer, BUFFER_BLACK, 1.0, OP_SOURCE);
+      DrawBufferWithRotation(destDTBuffer, BUFFER_BLACK, 1.0, CompositionOp::OP_SOURCE);
       destDTBuffer->SetTransform(Matrix());
 
       if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
@@ -641,7 +641,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           return result;
         }
         MOZ_ASSERT(mDTBufferOnWhite, "Have we got a Thebes buffer for some reason?");
-        DrawBufferWithRotation(destDTBufferOnWhite, BUFFER_WHITE, 1.0, OP_SOURCE);
+        DrawBufferWithRotation(destDTBufferOnWhite, BUFFER_WHITE, 1.0, CompositionOp::OP_SOURCE);
         destDTBufferOnWhite->SetTransform(Matrix());
       }
     }

@@ -200,12 +200,12 @@ DrawTargetSkia::Snapshot()
 void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
 {
   switch (aPattern.GetType()) {
-    case PATTERN_COLOR: {
+    case PatternType::COLOR: {
       Color color = static_cast<const ColorPattern&>(aPattern).mColor;
       aPaint.setColor(ColorToSkColor(color, aAlpha));
       break;
     }
-    case PATTERN_LINEAR_GRADIENT: {
+    case PatternType::LINEAR_GRADIENT: {
       const LinearGradientPattern& pat = static_cast<const LinearGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
       SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode);
@@ -233,7 +233,7 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
       }
       break;
     }
-    case PATTERN_RADIAL_GRADIENT: {
+    case PatternType::RADIAL_GRADIENT: {
       const RadialGradientPattern& pat = static_cast<const RadialGradientPattern&>(aPattern);
       GradientStopsSkia *stops = static_cast<GradientStopsSkia*>(pat.mStops.get());
       SkShader::TileMode mode = ExtendModeToTileMode(stops->mExtendMode);
@@ -263,7 +263,7 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
       }
       break;
     }
-    case PATTERN_SURFACE: {
+    case PatternType::SURFACE: {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
       const SkBitmap& bitmap = GetBitmapForSurface(pat.mSurface);
 
@@ -273,7 +273,7 @@ void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.
       GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
       shader->setLocalMatrix(mat);
       SkSafeUnref(aPaint.setShader(shader));
-      if (pat.mFilter == FILTER_POINT) {
+      if (pat.mFilter == Filter::POINT) {
         aPaint.setFilterBitmap(false);
       }
       break;
@@ -308,7 +308,7 @@ struct AutoPaintSetup {
     mCanvas = aCanvas;
 
     //TODO: Can we set greyscale somehow?
-    if (aOptions.mAntialiasMode != AA_NONE) {
+    if (aOptions.mAntialiasMode != AntialiasMode::NONE) {
       mPaint.setAntiAlias(true);
     } else {
       mPaint.setAntiAlias(false);
@@ -377,7 +377,7 @@ DrawTargetSkia::DrawSurface(SourceSurface *aSurface,
   const SkBitmap& bitmap = GetBitmapForSurface(aSurface);
  
   AutoPaintSetup paint(mCanvas.get(), aOptions);
-  if (aSurfOptions.mFilter == FILTER_POINT) {
+  if (aSurfOptions.mFilter == Filter::POINT) {
     paint.mPaint.setFilterBitmap(false);
   }
 
@@ -647,7 +647,7 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
   AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
 
   SkPaint maskPaint;
-  SetPaintPattern(maskPaint, SurfacePattern(aMask, EXTEND_CLAMP));
+  SetPaintPattern(maskPaint, SurfacePattern(aMask, ExtendMode::CLAMP));
 
   SkMatrix transform = maskPaint.getShader()->getLocalMatrix();
   transform.postTranslate(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));

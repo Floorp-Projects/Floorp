@@ -924,7 +924,7 @@ FilterNodeBlendSoftware::GetOutputRectInRect(const IntRect& aRect)
 }
 
 FilterNodeTransformSoftware::FilterNodeTransformSoftware()
- : mFilter(FILTER_GOOD)
+ : mFilter(Filter::GOOD)
 {}
 
 int32_t

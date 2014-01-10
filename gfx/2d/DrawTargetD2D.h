@@ -37,7 +37,7 @@ struct PrivateD3D10DataD2D
   RefPtr<ID3D10Effect> mEffect;
   RefPtr<ID3D10InputLayout> mInputLayout;
   RefPtr<ID3D10Buffer> mVB;
-  RefPtr<ID3D10BlendState> mBlendStates[OP_COUNT];
+  RefPtr<ID3D10BlendState> mBlendStates[CompositionOp::OP_COUNT];
 };
 
 class DrawTargetD2D : public DrawTarget
@@ -120,12 +120,12 @@ public:
   virtual TemporaryRef<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
 
   virtual TemporaryRef<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
-                        ExtendMode aExtendMode = EXTEND_CLAMP) const;
+                        ExtendMode aExtendMode = ExtendMode::CLAMP) const;
 
   virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
 

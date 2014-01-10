@@ -54,9 +54,9 @@ public:
   
   virtual BackendType GetBackendType() const { return BackendType::SKIA; }
 
-  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CopyToBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
   virtual TemporaryRef<PathBuilder> TransformedCopyToBuilder(const Matrix &aTransform,
-                                                             FillRule aFillRule = FILL_WINDING) const;
+                                                             FillRule aFillRule = FillRule::FILL_WINDING) const;
 
   virtual bool ContainsPoint(const Point &aPoint, const Matrix &aTransform) const;
   

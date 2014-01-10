@@ -250,9 +250,9 @@ public:
 
       ExtendMode mode;
       if (state.patternStyles[aStyle]->mRepeat == CanvasPattern::NOREPEAT) {
-        mode = EXTEND_CLAMP;
+        mode = ExtendMode::CLAMP;
       } else {
-        mode = EXTEND_REPEAT;
+        mode = ExtendMode::REPEAT;
       }
       mPattern = new (mSurfacePattern.addr())
         SurfacePattern(state.patternStyles[aStyle]->mSurface, mode);
@@ -1381,9 +1381,9 @@ CanvasRenderingContext2D::SetFillRule(const nsAString& aString)
   FillRule rule;
 
   if (aString.EqualsLiteral("evenodd"))
-    rule = FILL_EVEN_ODD;
+    rule = FillRule::FILL_EVEN_ODD;
   else if (aString.EqualsLiteral("nonzero"))
-    rule = FILL_WINDING;
+    rule = FillRule::FILL_WINDING;
   else
     return;
 
@@ -1394,9 +1394,9 @@ void
 CanvasRenderingContext2D::GetFillRule(nsAString& aString)
 {
   switch (CurrentState().fillRule) {
-  case FILL_WINDING:
+  case FillRule::FILL_WINDING:
     aString.AssignLiteral("nonzero"); break;
-  case FILL_EVEN_ODD:
+  case FillRule::FILL_EVEN_ODD:
     aString.AssignLiteral("evenodd"); break;
   }
 }
@@ -1620,9 +1620,9 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   }
 
   if (!h) {
-    CapStyle cap = CAP_BUTT;
-    if (state.lineJoin == JOIN_ROUND) {
-      cap = CAP_ROUND;
+    CapStyle cap = CapStyle::BUTT;
+    if (state.lineJoin == JoinStyle::ROUND) {
+      cap = CapStyle::ROUND;
     }
     AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
       StrokeLine(Point(x, y), Point(x + w, y),
@@ -1637,9 +1637,9 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   }
 
   if (!w) {
-    CapStyle cap = CAP_BUTT;
-    if (state.lineJoin == JOIN_ROUND) {
-      cap = CAP_ROUND;
+    CapStyle cap = CapStyle::BUTT;
+    if (state.lineJoin == JoinStyle::ROUND) {
+      cap = CapStyle::ROUND;
     }
     AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
       StrokeLine(Point(x, y), Point(x, y + h),
@@ -1747,10 +1747,10 @@ void CanvasRenderingContext2D::DrawSystemFocusRing(mozilla::dom::Element& aEleme
     state.shadowBlur = 0;
     state.shadowOffset.x = 0;
     state.shadowOffset.y = 0;
-    state.op = mozilla::gfx::OP_OVER;
+    state.op = mozilla::gfx::CompositionOp::OP_OVER;
 
-    state.lineCap = CAP_BUTT;
-    state.lineJoin = mozilla::gfx::JOIN_MITER_OR_BEVEL;
+    state.lineCap = CapStyle::BUTT;
+    state.lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
     state.lineWidth = 1;
     CurrentState().dash.Clear();
 
@@ -1963,7 +1963,7 @@ CanvasRenderingContext2D::EnsureUserSpacePath(const CanvasWindingRule& winding)
 {
   FillRule fillRule = CurrentState().fillRule;
   if(winding == CanvasWindingRule::Evenodd)
-    fillRule = FILL_EVEN_ODD;
+    fillRule = FillRule::FILL_EVEN_ODD;
 
   if (!mPath && !mPathBuilder && !mDSPathBuilder) {
     EnsureTarget();
@@ -2840,11 +2840,11 @@ CanvasRenderingContext2D::SetLineCap(const nsAString& capstyle)
   CapStyle cap;
 
   if (capstyle.EqualsLiteral("butt")) {
-    cap = CAP_BUTT;
+    cap = CapStyle::BUTT;
   } else if (capstyle.EqualsLiteral("round")) {
-    cap = CAP_ROUND;
+    cap = CapStyle::ROUND;
   } else if (capstyle.EqualsLiteral("square")) {
-    cap = CAP_SQUARE;
+    cap = CapStyle::SQUARE;
   } else {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return;
@@ -2857,13 +2857,13 @@ void
 CanvasRenderingContext2D::GetLineCap(nsAString& capstyle)
 {
   switch (CurrentState().lineCap) {
-  case CAP_BUTT:
+  case CapStyle::BUTT:
     capstyle.AssignLiteral("butt");
     break;
-  case CAP_ROUND:
+  case CapStyle::ROUND:
     capstyle.AssignLiteral("round");
     break;
-  case CAP_SQUARE:
+  case CapStyle::SQUARE:
     capstyle.AssignLiteral("square");
     break;
   }
@@ -2875,11 +2875,11 @@ CanvasRenderingContext2D::SetLineJoin(const nsAString& joinstyle)
   JoinStyle j;
 
   if (joinstyle.EqualsLiteral("round")) {
-    j = JOIN_ROUND;
+    j = JoinStyle::ROUND;
   } else if (joinstyle.EqualsLiteral("bevel")) {
-    j = JOIN_BEVEL;
+    j = JoinStyle::BEVEL;
   } else if (joinstyle.EqualsLiteral("miter")) {
-    j = JOIN_MITER_OR_BEVEL;
+    j = JoinStyle::MITER_OR_BEVEL;
   } else {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return;
@@ -2892,13 +2892,13 @@ void
 CanvasRenderingContext2D::GetLineJoin(nsAString& joinstyle, ErrorResult& error)
 {
   switch (CurrentState().lineJoin) {
-  case JOIN_ROUND:
+  case JoinStyle::ROUND:
     joinstyle.AssignLiteral("round");
     break;
-  case JOIN_BEVEL:
+  case JoinStyle::BEVEL:
     joinstyle.AssignLiteral("bevel");
     break;
-  case JOIN_MITER_OR_BEVEL:
+  case JoinStyle::MITER_OR_BEVEL:
     joinstyle.AssignLiteral("miter");
     break;
   default:
@@ -3167,9 +3167,9 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
   Filter filter;
 
   if (CurrentState().imageSmoothingEnabled)
-    filter = mgfx::FILTER_LINEAR;
+    filter = mgfx::Filter::LINEAR;
   else
-    filter = mgfx::FILTER_POINT;
+    filter = mgfx::Filter::POINT;
 
   mgfx::Rect bounds;
 
@@ -3192,17 +3192,17 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 static bool
 IsStandardCompositeOp(CompositionOp op)
 {
-    return (op == OP_SOURCE ||
-            op == OP_ATOP ||
-            op == OP_IN ||
-            op == OP_OUT ||
-            op == OP_OVER ||
-            op == OP_DEST_IN ||
-            op == OP_DEST_OUT ||
-            op == OP_DEST_OVER ||
-            op == OP_DEST_ATOP ||
-            op == OP_ADD ||
-            op == OP_XOR);
+    return (op == CompositionOp::OP_SOURCE ||
+            op == CompositionOp::OP_ATOP ||
+            op == CompositionOp::OP_IN ||
+            op == CompositionOp::OP_OUT ||
+            op == CompositionOp::OP_OVER ||
+            op == CompositionOp::OP_DEST_IN ||
+            op == CompositionOp::OP_DEST_OUT ||
+            op == CompositionOp::OP_DEST_OVER ||
+            op == CompositionOp::OP_DEST_ATOP ||
+            op == CompositionOp::OP_ADD ||
+            op == CompositionOp::OP_XOR);
 }
 #endif
 
@@ -3214,7 +3214,7 @@ CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
 
 #define CANVAS_OP_TO_GFX_OP(cvsop, op2d) \
   if (op.EqualsLiteral(cvsop))   \
-    comp_op = OP_##op2d;
+    comp_op = CompositionOp::OP_##op2d;
 
   CANVAS_OP_TO_GFX_OP("copy", SOURCE)
   else CANVAS_OP_TO_GFX_OP("source-atop", ATOP)
@@ -3262,7 +3262,7 @@ CanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op,
   CompositionOp comp_op = CurrentState().op;
 
 #define CANVAS_OP_TO_GFX_OP(cvsop, op2d) \
-  if (comp_op == OP_##op2d) \
+  if (comp_op == CompositionOp::OP_##op2d) \
     op.AssignLiteral(cvsop);
 
   CANVAS_OP_TO_GFX_OP("copy", SOURCE)
@@ -3454,8 +3454,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     mgfx::Rect destRect(0, 0, w, h);
     mgfx::Rect sourceRect(0, 0, sw, sh);
     mTarget->DrawSurface(source, destRect, sourceRect,
-                         DrawSurfaceOptions(mgfx::FILTER_POINT),
-                         DrawOptions(1.0f, OP_SOURCE, AA_NONE));
+                         DrawSurfaceOptions(mgfx::Filter::POINT),
+                         DrawOptions(1.0f, CompositionOp::OP_SOURCE, AntialiasMode::NONE));
     mTarget->Flush();
   } else {
     mTarget->SetTransform(matrix);

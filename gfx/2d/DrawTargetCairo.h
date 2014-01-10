@@ -130,7 +130,7 @@ public:
   virtual void PushClipRect(const Rect &aRect);
   virtual void PopClip();
 
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
 
   virtual TemporaryRef<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
@@ -148,7 +148,7 @@ public:
   virtual TemporaryRef<GradientStops>
     CreateGradientStops(GradientStop *aStops,
                         uint32_t aNumStops,
-                        ExtendMode aExtendMode = EXTEND_CLAMP) const;
+                        ExtendMode aExtendMode = ExtendMode::CLAMP) const;
 
   virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
 

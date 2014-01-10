@@ -2284,7 +2284,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
       if (drawTarget) {
           drawTarget->FillRect(Rect(0, 0, aBoundsRect.width, aBoundsRect.height),
                                *aPattern->GetPattern(drawTarget),
-                               DrawOptions(1.0, OP_SOURCE));
+                               DrawOptions(1.0, CompositionOp::OP_SOURCE));
       }
       UpdateTranslucentWindowAlphaInternal(aBoundsRect, imageBuffer, stride);
   } else {

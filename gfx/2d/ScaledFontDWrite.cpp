@@ -409,23 +409,23 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
 AntialiasMode
 ScaledFontDWrite::GetDefaultAAMode()
 {
-  AntialiasMode defaultMode = AA_SUBPIXEL;
+  AntialiasMode defaultMode = AntialiasMode::SUBPIXEL;
 
   switch (GetSystemTextQuality()) {
   case CLEARTYPE_QUALITY:
-    defaultMode = AA_SUBPIXEL;
+    defaultMode = AntialiasMode::SUBPIXEL;
     break;
   case ANTIALIASED_QUALITY:
-    defaultMode = AA_GRAY;
+    defaultMode = AntialiasMode::GRAY;
     break;
   case DEFAULT_QUALITY:
-    defaultMode = AA_NONE;
+    defaultMode = AntialiasMode::NONE;
     break;
   }
 
-  if (defaultMode == AA_GRAY) {
+  if (defaultMode == AntialiasMode::GRAY) {
     if (!DoGrayscale(mFontFace, mSize)) {
-      defaultMode = AA_NONE;
+      defaultMode = AntialiasMode::NONE;
     }
   }
   return defaultMode;

@@ -121,8 +121,8 @@ gfxPattern::CacheColorStops(mozilla::gfx::DrawTarget *aDT)
     mStops = gfxGradientCache::GetOrCreateGradientStops(aDT,
                                                         stops,
                                                         (cairo_pattern_get_extend(mPattern) == CAIRO_EXTEND_REPEAT)
-                                                        ? mozilla::gfx::EXTEND_REPEAT
-                                                        : mozilla::gfx::EXTEND_CLAMP);
+                                                        ? mozilla::gfx::ExtendMode::REPEAT
+                                                        : mozilla::gfx::ExtendMode::CLAMP);
   }
 }
 

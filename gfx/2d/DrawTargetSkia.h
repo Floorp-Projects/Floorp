@@ -95,8 +95,8 @@ public:
     CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const;
   virtual TemporaryRef<DrawTarget>
     CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const;
-  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FILL_WINDING) const;
-  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode = EXTEND_CLAMP) const;
+  virtual TemporaryRef<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const;
+  virtual TemporaryRef<GradientStops> CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode = ExtendMode::CLAMP) const;
   virtual TemporaryRef<FilterNode> CreateFilter(FilterType aType);
   virtual void SetTransform(const Matrix &aTransform);
 
