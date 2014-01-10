@@ -245,8 +245,7 @@ MessageChannel::Echo(Message* aMsg)
 bool
 MessageChannel::Send(Message* aMsg)
 {
-    Message copy = *aMsg;
-    CxxStackFrame frame(*this, OUT_MESSAGE, &copy);
+    CxxStackFrame frame(*this, OUT_MESSAGE, aMsg);
 
     nsAutoPtr<Message> msg(aMsg);
     AssertWorkerThread();
@@ -410,8 +409,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
     SyncStackFrame frame(this, false);
 #endif
 
-    Message copy = *aMsg;
-    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
+    CxxStackFrame f(*this, OUT_MESSAGE, aMsg);
 
     MonitorAutoLock lock(*mMonitor);
 
@@ -439,8 +437,7 @@ MessageChannel::UrgentCall(Message* aMsg, Message* aReply)
     SyncStackFrame frame(this, false);
 #endif
 
-    Message copy = *aMsg;
-    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
+    CxxStackFrame f(*this, OUT_MESSAGE, aMsg);
 
     MonitorAutoLock lock(*mMonitor);
 
@@ -469,8 +466,7 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
     SyncStackFrame frame(this, false);
 #endif
 
-    Message copy = *aMsg;
-    CxxStackFrame f(*this, OUT_MESSAGE, &copy);
+    CxxStackFrame f(*this, OUT_MESSAGE, aMsg);
 
     MonitorAutoLock lock(*mMonitor);
 
@@ -569,8 +565,7 @@ MessageChannel::InterruptCall(Message* aMsg, Message* aReply)
 
     // This must come before MonitorAutoLock, as its destructor acquires the
     // monitor lock.
-    Message copy = *aMsg;
-    CxxStackFrame cxxframe(*this, OUT_MESSAGE, &copy);
+    CxxStackFrame cxxframe(*this, OUT_MESSAGE, aMsg);
 
     MonitorAutoLock lock(*mMonitor);
     if (!Connected()) {
@@ -1572,7 +1567,7 @@ MessageChannel::DumpInterruptStack(const char* const pfx) const
     printf_stderr("%sMessageChannel 'backtrace':\n", pfx);
 
     // print a python-style backtrace, first frame to last
-    for (uint32_t i = 0; i < mCxxStackFrames.size(); ++i) {
+    for (uint32_t i = 0; i < mCxxStackFrames.length(); ++i) {
         int32_t id;
         const char* dir, *sems, *name;
         mCxxStackFrames[i].Describe(&id, &dir, &sems, &name);
