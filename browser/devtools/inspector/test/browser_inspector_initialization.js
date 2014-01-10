@@ -35,13 +35,11 @@ function startInspectorTests(toolbox)
   ok(inspector, "Inspector instance is accessible");
   ok(inspector.isReady, "Inspector instance is ready");
   is(inspector.target.tab, gBrowser.selectedTab, "Valid target");
-  ok(inspector.highlighter, "Highlighter is up");
 
   let p = doc.querySelector("p");
 
   inspector.selection.setNode(p);
   inspector.once("inspector-updated", () => {
-    testHighlighter(p);
     testMarkupView(p);
     testBreadcrumbs(p);
 
@@ -50,7 +48,6 @@ function startInspectorTests(toolbox)
 
     inspector.selection.setNode(span);
     inspector.once("inspector-updated", () => {
-      testHighlighter(span);
       testMarkupView(span);
       testBreadcrumbs(span);
 
@@ -63,13 +60,6 @@ function startInspectorTests(toolbox)
       toolbox.destroy();
     });
   });
-}
-
-
-function testHighlighter(node)
-{
-  ok(isHighlighting(), "Highlighter is highlighting");
-  is(getHighlitNode(), node, "Right node is highlighted");
 }
 
 let callNo = 0;
@@ -112,7 +102,6 @@ function runContextMenuTest()
 }
 
 function testInitialNodeIsSelected() {
-  testHighlighter(salutation);
   testMarkupView(salutation);
   testBreadcrumbs(salutation);
   inspectNodesFromContextTestWhileOpen();
@@ -124,10 +113,9 @@ function inspectNodesFromContextTestWhileOpen()
   getActiveInspector().selection.once("new-node", function() {
     ok(true, "Get selection's 'new-node' selection");
     executeSoon(function() {
-      testHighlighter(closing);
       testMarkupView(closing);
       testBreadcrumbs(closing);
-      finishInspectorTests();
+      getActiveInspector().once("inspector-updated", finishInspectorTests)
     }
   )});
   _clickOnInspectMenuItem(closing);

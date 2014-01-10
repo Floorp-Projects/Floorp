@@ -433,9 +433,9 @@ HashStore::BeginUpdate()
 template<class T>
 static nsresult
 Merge(ChunkSet* aStoreChunks,
-      nsTArray<T>* aStorePrefixes,
+      FallibleTArray<T>* aStorePrefixes,
       ChunkSet& aUpdateChunks,
-      nsTArray<T>& aUpdatePrefixes,
+      FallibleTArray<T>& aUpdatePrefixes,
       bool aAllowMerging = false)
 {
   EntrySort(aUpdatePrefixes);
@@ -538,7 +538,7 @@ HashStore::ClearCompletes()
 
 template<class T>
 static void
-ExpireEntries(nsTArray<T>* aEntries, ChunkSet& aExpirations)
+ExpireEntries(FallibleTArray<T>* aEntries, ChunkSet& aExpirations)
 {
   T* addIter = aEntries->Elements();
   T* end = aEntries->Elements() + aEntries->Length();
@@ -575,8 +575,10 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
 {
   uLongf insize = aIn.Length() * sizeof(T);
   uLongf outsize = compressBound(insize);
-  nsTArray<char> outBuff;
-  outBuff.SetLength(outsize);
+  FallibleTArray<char> outBuff;
+  if (!outBuff.SetLength(outsize)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   int zerr = compress(reinterpret_cast<Bytef*>(outBuff.Elements()),
                       &outsize,
@@ -716,7 +718,9 @@ HashStore::ReadAddPrefixes()
   nsresult rv = ByteSliceRead(mInputStream, &chunks, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mAddPrefixes.SetCapacity(count);
+  if (!mAddPrefixes.SetCapacity(count)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   for (uint32_t i = 0; i < count; i++) {
     AddPrefix *add = mAddPrefixes.AppendElement();
     add->prefix.FromUint32(0);
@@ -743,7 +747,9 @@ HashStore::ReadSubPrefixes()
   rv = ByteSliceRead(mInputStream, &prefixes, count);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mSubPrefixes.SetCapacity(count);
+  if (!mSubPrefixes.SetCapacity(count)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   for (uint32_t i = 0; i < count; i++) {
     SubPrefix *sub = mSubPrefixes.AppendElement();
     sub->addChunk = addchunks[i];
@@ -852,7 +858,7 @@ HashStore::WriteFile()
 
 template <class T>
 static void
-Erase(nsTArray<T>* array, T* iterStart, T* iterEnd)
+Erase(FallibleTArray<T>* array, T* iterStart, T* iterEnd)
 {
   uint32_t start = iterStart - array->Elements();
   uint32_t count = iterEnd - iterStart;
@@ -872,7 +878,7 @@ Erase(nsTArray<T>* array, T* iterStart, T* iterEnd)
 // tightest compare appropriate (see calls in SBProcessSubs).
 template<class TSub, class TAdd>
 static void
-KnockoutSubs(nsTArray<TSub>* aSubs, nsTArray<TAdd>* aAdds)
+KnockoutSubs(FallibleTArray<TSub>* aSubs, FallibleTArray<TAdd>* aAdds)
 {
   // Keep a pair of output iterators for writing kept items.  Due to
   // deletions, these may lag the main iterators.  Using erase() on
@@ -915,7 +921,7 @@ KnockoutSubs(nsTArray<TSub>* aSubs, nsTArray<TAdd>* aAdds)
 // |removes| should be ordered by SBAddPrefix component.
 template <class T>
 static void
-RemoveMatchingPrefixes(const SubPrefixArray& aSubs, nsTArray<T>* aFullHashes)
+RemoveMatchingPrefixes(const SubPrefixArray& aSubs, FallibleTArray<T>* aFullHashes)
 {
   // Where to store kept items.
   T* out = aFullHashes->Elements();
@@ -969,7 +975,7 @@ RemoveDeadSubPrefixes(SubPrefixArray& aSubs, ChunkSet& aAddChunks)
 
 #ifdef DEBUG
 template <class T>
-static void EnsureSorted(nsTArray<T>* aArray)
+static void EnsureSorted(FallibleTArray<T>* aArray)
 {
   T* start = aArray->Elements();
   T* end = aArray->Elements() + aArray->Length();

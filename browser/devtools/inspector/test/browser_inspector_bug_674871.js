@@ -7,6 +7,7 @@ function test()
 
   let doc;
   let iframeNode, iframeBodyNode;
+  let inspector;
 
   let iframeSrc = "<style>" +
                   "body {" +
@@ -45,57 +46,63 @@ function test()
     iframeBodyNode = iframeNode.contentDocument.querySelector("body");
     ok(iframeNode, "we have the iframe node");
     ok(iframeBodyNode, "we have the body node");
-    openInspector(runTests);
-  }
-
-  function runTests(inspector)
-  {
-    inspector.highlighter.unlock();
-    executeSoon(function() {
-      inspector.highlighter.once("highlighting", isTheIframeSelected);
-      moveMouseOver(iframeNode, 1, 1);
+    openInspector(aInspector => {
+      inspector = aInspector;
+      // Make sure the highlighter is shown so we can disable transitions
+      inspector.toolbox.highlighter.showBoxModel(getNodeFront(doc.body)).then(() => {
+        getHighlighterOutline().setAttribute("disable-transitions", "true");
+        runTests();
+      });
     });
   }
 
-  function isTheIframeSelected()
+  function runTests()
   {
-    let inspector = getActiveInspector();
+    inspector.toolbox.startPicker().then(() => {
+      moveMouseOver(iframeNode, 1, 1, isTheIframeHighlighted);
+    });
+  }
 
-    is(inspector.selection.node, iframeNode, "selection matches node");
+  function isTheIframeHighlighted()
+  {
+    let outlineRect = getHighlighterOutlineRect();
+    let iframeRect = iframeNode.getBoundingClientRect();
+    for (let dim of ["width", "height", "top", "left"]) {
+      is(Math.floor(outlineRect[dim]), Math.floor(iframeRect[dim]), "Outline dimension is correct");
+    }
+
     iframeNode.style.marginBottom = doc.defaultView.innerHeight + "px";
     doc.defaultView.scrollBy(0, 40);
 
-    executeSoon(function() {
-      inspector.selection.once("new-node", isTheIframeContentSelected);
-      moveMouseOver(iframeNode, 40, 40);
+    moveMouseOver(iframeNode, 40, 40, isTheIframeContentHighlighted);
+  }
+
+  function isTheIframeContentHighlighted()
+  {
+    is(getHighlitNode(), iframeBodyNode, "highlighter shows the right node");
+
+    // 184 == 200 + 11(border) + 13(padding) - 40(scroll)
+    let outlineRect = getHighlighterOutlineRect();
+    is(outlineRect.height, 184, "highlighter height");
+
+    inspector.toolbox.stopPicker().then(() => {
+      let target = TargetFactory.forTab(gBrowser.selectedTab);
+      gDevTools.closeToolbox(target);
+      finishUp();
     });
   }
 
-  function isTheIframeContentSelected()
+  function finishUp()
   {
-    let inspector = getActiveInspector();
-    is(inspector.selection.node, iframeBodyNode, "selection matches node");
-    // 184 == 200 + 11(border) + 13(padding) - 40(scroll)
-    is(inspector.highlighter._highlightRect.height, 184,
-      "highlighter height");
-
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-    finishUp();
-  }
-
-  function finishUp() {
-    doc = iframeNode = iframeBodyNode = null;
+    doc = inspector = iframeNode = iframeBodyNode = null;
     gBrowser.removeCurrentTab();
     finish();
   }
 
-
-  function moveMouseOver(aElement, x, y)
+  function moveMouseOver(aElement, x, y, cb)
   {
     EventUtils.synthesizeMouse(aElement, x, y, {type: "mousemove"},
                                aElement.ownerDocument.defaultView);
+    inspector.toolbox.once("picker-node-hovered", cb);
   }
-
 }
-

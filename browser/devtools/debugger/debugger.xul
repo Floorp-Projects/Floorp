@@ -513,15 +513,4 @@
     </vbox>
   </panel>
 
-  <panel id="resumption-order-panel"
-         type="arrow"
-         position="before_start"
-         noautofocus="true"
-         consumeoutsideclicks="false">
-    <hbox align="start">
-      <image class="alert-icon"/>
-      <label id="resumption-panel-desc" class="description"/>
-    </hbox>
-  </panel>
-
 </window>

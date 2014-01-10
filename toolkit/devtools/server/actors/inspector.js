@@ -58,17 +58,13 @@ const {LongStringActor, ShortLongString} = require("devtools/server/actors/strin
 const promise = require("sdk/core/promise");
 const object = require("sdk/util/object");
 const events = require("sdk/event/core");
-const {setTimeout, clearTimeout} = require('sdk/timers');
-const { Unknown } = require("sdk/platform/xpcom");
-const { Class } = require("sdk/core/heritage");
+const {Unknown} = require("sdk/platform/xpcom");
+const {Class} = require("sdk/core/heritage");
 const {PageStyleActor} = require("devtools/server/actors/styles");
+const {HighlighterActor} = require("devtools/server/actors/highlighter");
 
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
-
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
-
-const HIGHLIGHTED_PSEUDO_CLASS = ":-moz-devtools-highlighted";
-const HIGHLIGHTED_TIMEOUT = 2000;
 
 let HELPER_SHEET = ".__fx-devtools-hide-shortcut__ { visibility: hidden !important } ";
 HELPER_SHEET += ":-moz-devtools-highlighted { outline: 2px dashed #F06!important; outline-offset: -2px!important } ";
@@ -77,7 +73,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 
 loader.lazyGetter(this, "DOMParser", function() {
- return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
+  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 
 exports.register = function(handle) {
@@ -137,7 +133,7 @@ exports.setValueSummaryLength = function(val) {
 /**
  * Server side of the node actor.
  */
-var NodeActor = protocol.ActorClass({
+var NodeActor = exports.NodeActor = protocol.ActorClass({
   typeName: "domnode",
 
   initialize: function(walker, node) {
@@ -387,8 +383,8 @@ let NodeFront = protocol.FrontClass(NodeActor, {
   destroy: function() {
     // If an observer was added on this node, shut it down.
     if (this.observer) {
-      this._observer.disconnect();
-      this._observer = null;
+      this.observer.disconnect();
+      this.observer = null;
     }
 
     protocol.Front.prototype.destroy.call(this);
@@ -849,6 +845,14 @@ var WalkerActor = protocol.ActorClass({
   events: {
     "new-mutations" : {
       type: "newMutations"
+    },
+    "picker-node-picked" : {
+      type: "pickerNodePicked",
+      node: Arg(0, "disconnectedNode")
+    },
+    "picker-node-hovered" : {
+      type: "pickerNodeHovered",
+      node: Arg(0, "disconnectedNode")
     }
   },
 
@@ -859,6 +863,7 @@ var WalkerActor = protocol.ActorClass({
    */
   initialize: function(conn, tabActor, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
+    this.tabActor = tabActor;
     this.rootWin = tabActor.window;
     this.rootDoc = this.rootWin.document;
     this._refMap = new Map();
@@ -904,6 +909,7 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
+    this._hoveredNode = null;
     this.clearPseudoClassLocks();
     this._activePseudoClassLocks = null;
     this.progressListener.destroy();
@@ -943,91 +949,35 @@ var WalkerActor = protocol.ActorClass({
   },
 
   /**
-   * Pick a node on click.
+   * This is kept for backward-compatibility reasons with older remote targets.
+   * Targets prior to bug 916443.
+   *
+   * pick/cancelPick are used to pick a node on click on the content
+   * document. But in their implementation prior to bug 916443, they don't allow
+   * highlighting on hover.
+   * The client-side now uses the highlighter actor's pick and cancelPick
+   * methods instead. The client-side uses the the highlightable trait found in
+   * the root actor to determine which version of pick to use.
+   *
+   * As for highlight, the new highlighter actor is used instead of the walker's
+   * highlight method. Same here though, the client-side uses the highlightable
+   * trait to dertermine which to use.
+   *
+   * Keeping these actor methods for now allows newer client-side debuggers to
+   * inspect fxos 1.2 remote targets or older firefox desktop remote targets.
    */
-  _pickDeferred: null,
-  pick: method(function() {
-    if (this._pickDeferred) {
-      return this._pickDeferred.promise;
-    }
+  pick: method(function() {}, {request: {}, response: RetVal("disconnectedNode")}),
+  cancelPick: method(function() {}),
+  highlight: method(function(node) {}, {request: {node: Arg(0, "nullable:domnode")}}),
 
-    this._pickDeferred = promise.defer();
-
-    let window = this.rootDoc.defaultView;
-    let isTouch = 'ontouchstart' in window;
-    let event = isTouch ? 'touchstart' : 'click';
-
-    this._onPick = function(e) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      window.removeEventListener(event, this._onPick, true);
-      let u = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-
-      let x, y;
-      if (isTouch) {
-        x = e.touches[0].clientX;
-        y = e.touches[0].clientY;
-      } else {
-        x = e.clientX;
-        y = e.clientY;
-      }
-
-      let node = u.elementFromPoint(x, y, false, false);
-      node = this._ref(node);
-      let newParents = this.ensurePathToRoot(node);
-
-      this._pickDeferred.resolve({
-        node: node,
-        newParents: [parent for (parent of newParents)]
-      });
-      this._pickDeferred = null;
-
-    }.bind(this);
-
-    window.addEventListener(event, this._onPick, true);
-
-    return this._pickDeferred.promise;
-  }, { request: { }, response: RetVal("disconnectedNode") }),
-
-  cancelPick: method(function() {
-    if (this._pickDeferred) {
-      let window = this.rootDoc.defaultView;
-      let isTouch = 'ontouchstart' in window;
-      let event = isTouch ? 'touchstart' : 'click';
-      window.removeEventListener(event, this._onPick, true);
-      this._pickDeferred.resolve(null);
-      this._pickDeferred = null;
-    }
-  }),
-
-  /**
-   * Simple highlight mechanism.
-   */
-  _unhighlight: function() {
-    clearTimeout(this._highlightTimeout);
-    if (!this.rootDoc) {
-      return;
-    }
-    let nodes = this.rootDoc.querySelectorAll(HIGHLIGHTED_PSEUDO_CLASS);
-    for (let node of nodes) {
-      DOMUtils.removePseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
-    }
+  attachElement: function(node) {
+    node = this._ref(node);
+    let newParents = this.ensurePathToRoot(node);
+    return {
+      node: node,
+      newParents: [parent for (parent of newParents)]
+    };
   },
-
-  highlight: method(function(node) {
-    this._unhighlight();
-
-    if (!node ||
-        !node.rawNode ||
-         node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
-      return;
-    }
-
-    this._installHelperSheet(node);
-    DOMUtils.addPseudoClassLock(node.rawNode, HIGHLIGHTED_PSEUDO_CLASS);
-    this._highlightTimeout = setTimeout(this._unhighlight.bind(this), HIGHLIGHTED_TIMEOUT);
-
-  }, { request: { node: Arg(0, "nullable:domnode") }}),
 
   /**
    * Watch the given document node for mutations using the DOM observer
@@ -1424,12 +1374,7 @@ var WalkerActor = protocol.ActorClass({
       return {}
     };
 
-    let node = this._ref(node);
-    let newParents = this.ensurePathToRoot(node);
-    return {
-      node: node,
-      newParents: [parent for (parent of newParents)]
-    }
+    return this.attachElement(node);
   }, {
     request: {
       node: Arg(0, "domnode"),
@@ -1989,13 +1934,15 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
   // Set to true if cleanup should be requested after every mutation list.
   autoCleanup: true,
 
+  /**
+   * This is kept for backward-compatibility reasons with older remote target.
+   * Targets previous to bug 916443
+   */
   pick: protocol.custom(function() {
     return this._pick().then(response => {
       return response.node;
     });
-  }, {
-    impl: "_pick"
-  }),
+  }, {impl: "_pick"}),
 
   initialize: function(client, form) {
     this._createRootNodePromise();
@@ -2390,7 +2337,25 @@ var InspectorActor = protocol.ActorClass({
     return this._pageStylePromise;
   }, {
     request: {},
-    response: { pageStyle: RetVal("pagestyle") }
+    response: {
+      pageStyle: RetVal("pagestyle")
+    }
+  }),
+
+  getHighlighter: method(function () {
+    if (this._highlighterPromise) {
+      return this._highlighterPromise;
+    }
+
+    this._highlighterPromise = this.getWalker().then(walker => {
+      return HighlighterActor(this);
+    });
+    return this._highlighterPromise;
+  }, {
+    request: {},
+    response: {
+      highligter: RetVal("highlighter")
+    }
   })
 });
 

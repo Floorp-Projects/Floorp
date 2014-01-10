@@ -32,7 +32,7 @@ function test() {
   function runInspectorTests(aInspector)
   {
     inspector = aInspector;
-    inspector.sidebar.once("computedview-ready", function() {
+    inspector.sidebar.once("computedview-ready", () => {
       info("Computed View ready");
       inspector.sidebar.select("computedview");
 
@@ -41,8 +41,9 @@ function test() {
       testDiv.style.fontSize = "10px";
 
       // Start up the style inspector panel...
-      inspector.once("computed-view-refreshed", computedStylePanelTests);
-
+      inspector.once("computed-view-refreshed", () => {
+        executeSoon(computedStylePanelTests);
+      });
       inspector.selection.setNode(testDiv);
     });
   }
@@ -59,7 +60,9 @@ function test() {
 
     // Wait until layout-change fires from mutation to skip earlier refresh event
     inspector.once("layout-change", () => {
-      inspector.once("computed-view-refreshed", computedStylePanelAfterChange);
+      inspector.once("computed-view-refreshed", () => {
+        executeSoon(computedStylePanelAfterChange);
+      });
     });
   }
 
@@ -79,12 +82,11 @@ function test() {
     // Tests changes made while the style panel is not active.
     inspector.sidebar.select("ruleview");
 
-    testDiv.style.fontSize = "20px";
-    testDiv.style.color = "blue";
-    testDiv.style.textAlign = "center";
+    testDiv.style.cssText = "font-size: 20px; color: blue; text-align: center";
 
-    inspector.once("computed-view-refreshed", computedStylePanelAfterSwitch);
-    inspector.sidebar.select("computedview");
+    inspector.once("computed-view-refreshed", () => {
+      executeSoon(computedStylePanelAfterSwitch);
+    });
   }
 
   function computedStylePanelAfterSwitch()
@@ -110,13 +112,11 @@ function test() {
     let propView = getInspectorRuleProp("text-align");
     is(propView.value, "center", "Style inspector should be showing the new text align.");
 
-    testDiv.style.textAlign = "right";
-    testDiv.style.color = "lightgoldenrodyellow";
-    testDiv.style.fontSize = "3em";
-    testDiv.style.textTransform = "uppercase";
+    testDiv.style.cssText = "font-size: 3em; color: lightgoldenrodyellow; text-align: right; text-transform: uppercase";
 
-
-    inspector.once("rule-view-refreshed", rulePanelAfterChange);
+    inspector.once("rule-view-refreshed", () => {
+      executeSoon(rulePanelAfterChange);
+    });
   }
 
   function rulePanelAfterChange()

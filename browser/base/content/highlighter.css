@@ -1,13 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 .highlighter-container {
   pointer-events: none;
-}
-
-.highlighter-controls {
-  position: relative;
 }
 
 .highlighter-outline-container {
@@ -34,20 +30,23 @@
 /*
  * Node Infobar
  */
-
 .highlighter-nodeinfobar-container {
+  position: relative;
+}
+
+.highlighter-nodeinfobar-positioner {
   position: absolute;
   max-width: 95%;
 }
 
-.highlighter-nodeinfobar-container[hidden] {
+.highlighter-nodeinfobar-positioner[hidden] {
   opacity: 0;
   pointer-events: none;
   display: -moz-box;
 }
 
-.highlighter-nodeinfobar-container:not([disable-transitions]),
-.highlighter-nodeinfobar-container[disable-transitions][force-transitions] {
+.highlighter-nodeinfobar-positioner:not([disable-transitions]),
+.highlighter-nodeinfobar-positioner[disable-transitions][force-transitions] {
   transition-property: transform, opacity, top, left;
   transition-duration: 0.1s;
   transition-timing-function: linear;
@@ -58,19 +57,6 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   direction: ltr;
-}
-
-.highlighter-nodeinfobar-button > .toolbarbutton-text {
-  display: none;
-}
-
-.highlighter-nodeinfobar-container:not([locked]):not(:hover) > .highlighter-nodeinfobar > .highlighter-nodeinfobar-button {
-  visibility: hidden;
-}
-
-.highlighter-nodeinfobar-container[locked] > .highlighter-nodeinfobar,
-.highlighter-nodeinfobar-container:not([locked]):hover > .highlighter-nodeinfobar {
-  pointer-events: auto;
 }
 
 html|*.highlighter-nodeinfobar-id,
@@ -86,15 +72,15 @@ html|*.highlighter-nodeinfobar-tagname {
   display: none;
 }
 
-.highlighter-nodeinfobar-container[position="top"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-bottom {
+.highlighter-nodeinfobar-positioner[position="top"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-bottom {
   display: block;
 }
 
-.highlighter-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-top {
+.highlighter-nodeinfobar-positioner[position="bottom"]:not([hide-arrow]) > .highlighter-nodeinfobar-arrow-top {
   display: block;
 }
 
-.highlighter-nodeinfobar-container[disabled] {
+.highlighter-nodeinfobar-positioner[disabled] {
   visibility: hidden;
 }
 

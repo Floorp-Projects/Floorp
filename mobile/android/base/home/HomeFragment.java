@@ -42,7 +42,7 @@ abstract class HomeFragment extends Fragment {
     private static final String LOGTAG="GeckoHomeFragment";
 
     // Share MIME type.
-    private static final String SHARE_MIME_TYPE = "text/plain";
+    protected static final String SHARE_MIME_TYPE = "text/plain";
 
     // Default value for "can load" hint
     static final boolean DEFAULT_CAN_LOAD_HINT = false;
@@ -123,9 +123,11 @@ abstract class HomeFragment extends Fragment {
         if (itemId == R.id.home_share) {
             if (info.url == null) {
                 Log.e(LOGTAG, "Can't share because URL is null");
+                return false;
             } else {
                 GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
                                               Intent.ACTION_SEND, info.getDisplayTitle());
+                return true;
             }
         }
 

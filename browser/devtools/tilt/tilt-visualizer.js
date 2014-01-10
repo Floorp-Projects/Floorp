@@ -272,10 +272,11 @@ TiltVisualizer.prototype = {
     }
     let nodeIndex = this.presenter._currentSelection;
     if (nodeIndex < 0) {
-      this.inspector.selection.setNode(null, "tilt");
+      this.inspector.selection.setNodeFront(null, "tilt");
     }
     let node = this.presenter._traverseData.nodes[nodeIndex];
-    this.inspector.selection.setNode(node, "tilt");
+    node = this.inspector.walker.frontForRawNode(node);
+    this.inspector.selection.setNodeFront(node, "tilt");
   },
 };
 

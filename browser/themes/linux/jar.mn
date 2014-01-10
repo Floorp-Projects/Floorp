@@ -157,6 +157,7 @@ browser.jar:
   skin/classic/browser/devtools/command-responsivemode@2x.png (../shared/devtools/images/command-responsivemode@2x.png)
   skin/classic/browser/devtools/command-scratchpad@2x.png   (../shared/devtools/images/command-scratchpad@2x.png)
   skin/classic/browser/devtools/command-tilt@2x.png         (../shared/devtools/images/command-tilt@2x.png)
+  skin/classic/browser/devtools/command-pick@2x.png            (../shared/devtools/images/command-pick@2x.png)
   skin/classic/browser/devtools/command-console@2x.png      (../shared/devtools/images/command-console@2x.png)
   skin/classic/browser/devtools/alerticon-warning.png (devtools/alerticon-warning.png)
   skin/classic/browser/devtools/ruleview.css          (devtools/ruleview.css)
@@ -269,6 +270,7 @@ browser.jar:
   skin/classic/browser/devtools/app-manager/index-icons.svg           (../shared/devtools/app-manager/images/index-icons.svg)
   skin/classic/browser/devtools/app-manager/rocket.svg                (../shared/devtools/app-manager/images/rocket.svg)
   skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
+  skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
