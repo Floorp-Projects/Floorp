@@ -10,11 +10,12 @@ NO_PKG_FILES = \
 	regxpcom* \
 	$(NULL)
 
-# We want xpcshell and run-mozilla in the SDK but not in the binary package.
+# We want xpcshell, run-mozilla and install_app.py in the SDK but not in the binary package.
 ifndef STAGE_SDK
 NO_PKG_FILES += \
 	xpcshell* \
 	run-mozilla* \
+	install_app.py \
 	$(NULL)
 endif
 
