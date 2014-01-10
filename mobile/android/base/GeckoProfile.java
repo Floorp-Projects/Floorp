@@ -547,11 +547,16 @@ public final class GeckoProfile {
         // If this is the first time its created, we also add a General section
         // look for the first profile number that isn't taken yet
         int profileNum = 0;
-        while (parser.getSection("Profile" + profileNum) != null) {
+        boolean isDefaultSet = false;
+        INISection profileSection;
+        while ((profileSection = parser.getSection("Profile" + profileNum)) != null) {
             profileNum++;
+            if (profileSection.getProperty("Default") != null) {
+                isDefaultSet = true;
+            }
         }
 
-        INISection profileSection = new INISection("Profile" + profileNum);
+        profileSection = new INISection("Profile" + profileNum);
         profileSection.setProperty("Name", mName);
         profileSection.setProperty("IsRelative", 1);
         profileSection.setProperty("Path", saltedName);
@@ -560,8 +565,11 @@ public final class GeckoProfile {
             INISection generalSection = new INISection("General");
             generalSection.setProperty("StartWithLastProfile", 1);
             parser.addSection(generalSection);
+        }
 
-            // only set as default if this is the first profile we're creating
+        if (!isDefaultSet && !mName.startsWith("webapp")) {
+            // only set as default if this is the first non-webapp
+            // profile we're creating
             profileSection.setProperty("Default", 1);
         }
 

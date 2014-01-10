@@ -81,6 +81,12 @@ MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
+void
+MacIOSurfaceTextureSourceOGL::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
+}
+
 gl::GLContext*
 MacIOSurfaceTextureSourceOGL::gl() const
 {

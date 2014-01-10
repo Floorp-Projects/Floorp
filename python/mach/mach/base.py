@@ -8,11 +8,14 @@ from __future__ import unicode_literals
 class CommandContext(object):
     """Holds run-time state so it can easily be passed to command providers."""
     def __init__(self, cwd=None, settings=None, log_manager=None,
-        commands=None):
+        commands=None, **kwargs):
         self.cwd = cwd
         self.settings = settings
         self.log_manager = log_manager
         self.commands = commands
+
+        for k,v in kwargs.items():
+            setattr(self, k, v)
 
 
 class MachError(Exception):

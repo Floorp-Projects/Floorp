@@ -14,7 +14,6 @@
 
 #include "nsAppRunner.h"
 #include "nsIFile.h"
-#include "nsIXULAppInstall.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsCRTGlue.h"
@@ -138,8 +137,6 @@ static void Usage(const char *argv0)
            "  -h, --help                 show this message\n"
            "  -v, --version              show version\n"
            "  --gre-version              print the GRE version string on stdout\n"
-           "  --install-app <application> [<destination> [<directoryname>]]\n"
-           "                             Install a XUL application.\n"
            "\n"
            "APP-FILE\n"
            "  Application initialization file.\n"
@@ -161,73 +158,6 @@ static const nsDynamicFunctionLoad kXULFuncs[] = {
     { "XRE_main", (NSFuncPtr*) &XRE_main },
     { nullptr, nullptr }
 };
-
-static nsresult
-GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> appFile;
-  rv = BinaryPath::GetFile(argv0, getter_AddRefs(appFile));
-  if (NS_FAILED(rv)) {
-    Output(true, "Could not find XULRunner application path.\n");
-    return rv;
-  }
-
-  rv = appFile->GetParent(aResult);
-  if (NS_FAILED(rv)) {
-    Output(true, "Could not find XULRunner installation dir.\n");
-  }
-  return rv;
-}
-
-static int
-InstallXULApp(nsIFile* aXULRunnerDir,
-              const char *aAppLocation,
-              const char *aInstallTo,
-              const char *aLeafName)
-{
-  nsCOMPtr<nsIFile> appLocation;
-  nsCOMPtr<nsIFile> installTo;
-  nsString leafName;
-
-  nsresult rv = XRE_GetFileFromPath(aAppLocation, getter_AddRefs(appLocation));
-  if (NS_FAILED(rv))
-    return 2;
-
-  if (aInstallTo) {
-    rv = XRE_GetFileFromPath(aInstallTo, getter_AddRefs(installTo));
-    if (NS_FAILED(rv))
-      return 2;
-  }
-
-  if (aLeafName)
-    NS_CStringToUTF16(nsDependentCString(aLeafName),
-                      NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, leafName);
-
-  rv = NS_InitXPCOM2(nullptr, aXULRunnerDir, nullptr);
-  if (NS_FAILED(rv))
-    return 3;
-
-  {
-    // Scope our COMPtr to avoid holding XPCOM refs beyond xpcom shutdown
-    nsCOMPtr<nsIXULAppInstall> install
-      (do_GetService("@mozilla.org/xulrunner/app-install-service;1"));
-    if (!install) {
-      rv = NS_ERROR_FAILURE;
-    }
-    else {
-      rv = install->InstallApplication(appLocation, installTo, leafName);
-    }
-  }
-
-  NS_ShutdownXPCOM(nullptr);
-
-  if (NS_FAILED(rv))
-    return 3;
-
-  return 0;
-}
 
 class AutoAppData
 {
@@ -311,33 +241,8 @@ int main(int argc, char* argv[])
     }
 
     if (IsArg(argv[1], "install-app")) {
-      if (argc < 3 || argc > 5) {
-        Usage(argv[0]);
-        return 1;
-      }
-
-      char *appLocation = argv[2];
-
-      char *installTo = nullptr;
-      if (argc > 3) {
-        installTo = argv[3];
-        if (!*installTo) // left blank?
-          installTo = nullptr;
-      }
-
-      char *leafName = nullptr;
-      if (argc > 4) {
-        leafName = argv[4];
-        if (!*leafName)
-          leafName = nullptr;
-      }
-
-      nsCOMPtr<nsIFile> regDir;
-      rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
-      if (NS_FAILED(rv))
-        return 2;
-
-      return InstallXULApp(regDir, appLocation, installTo, leafName);
+      Output(true, "--install-app support has been removed.  Use 'python install-app.py' instead.\n");
+      return 1;
     }
   }
 
