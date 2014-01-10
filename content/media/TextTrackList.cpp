@@ -7,7 +7,6 @@
 #include "mozilla/dom/TextTrackListBinding.h"
 #include "mozilla/dom/TrackEvent.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/TextTrackCue.h"
 
 namespace mozilla {
 namespace dom {
@@ -28,14 +27,11 @@ TextTrackList::TextTrackList(nsISupports* aGlobal) : mGlobal(aGlobal)
 }
 
 void
-TextTrackList::GetAllActiveCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
+TextTrackList::Update(double aTime)
 {
-  nsTArray< nsRefPtr<TextTrackCue> > cues;
-  for (uint32_t i = 0; i < Length(); i++) {
-    if (mTextTracks[i]->Mode() != TextTrackMode::Disabled) {
-      mTextTracks[i]->GetActiveCueArray(cues);
-      aCues.AppendElements(cues);
-    }
+  uint32_t length = Length(), i;
+  for (i = 0; i < length; i++) {
+    mTextTracks[i]->Update(aTime);
   }
 }
 

@@ -72,6 +72,14 @@ TextTrack::SetDefaultSettings()
   mReadyState = HTMLTrackElement::NONE;
 }
 
+void
+TextTrack::Update(double aTime)
+{
+  if (mCueList) {
+    mCueList->Update(aTime);
+  }
+}
+
 JSObject*
 TextTrack::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
@@ -134,11 +142,11 @@ TextTrack::RemoveRegion(const TextTrackRegion& aRegion, ErrorResult& aRv)
   mRegionList->RemoveTextTrackRegion(aRegion);
 }
 
-void
-TextTrack::UpdateActiveCueList()
+TextTrackCueList*
+TextTrack::GetActiveCues()
 {
   if (mMode == TextTrackMode::Disabled || !mMediaElement) {
-    return;
+    return nullptr;
   }
 
   // If we are dirty, i.e. an event happened that may cause the sorted mCueList
@@ -168,19 +176,7 @@ TextTrack::UpdateActiveCueList()
       mActiveCueList->AddCue(*(*mCueList)[mCuePos]);
     }
   }
-}
-
-TextTrackCueList*
-TextTrack::GetActiveCues() {
-  UpdateActiveCueList();
   return mActiveCueList;
-}
-
-void
-TextTrack::GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
-{
-  UpdateActiveCueList();
-  mActiveCueList->GetArray(aCues);
 }
 
 uint16_t
