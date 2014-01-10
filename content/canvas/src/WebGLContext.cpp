@@ -553,8 +553,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 
     // try the default provider, whatever that is
     if (!gl && useOpenGL) {
-        gl::ContextFlags flag = gl::ContextFlagsNone;
-        gl = gl::GLContextProvider::CreateOffscreen(size, caps, flag);
+        gl = gl::GLContextProvider::CreateOffscreen(size, caps);
         if (gl && !InitAndValidateGL()) {
             GenerateWarning("Error during OpenGL initialization");
             return NS_ERROR_FAILURE;

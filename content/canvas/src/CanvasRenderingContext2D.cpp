@@ -873,7 +873,7 @@ CanvasRenderingContext2D::EnsureTarget()
         if (!mForceSoftware && CheckSizeForSkiaGL(size))
         {
           glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
-                                                         caps, gl::ContextFlagsNone);
+                                                         caps);
         }
 
         if (glContext) {
