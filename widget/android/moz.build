@@ -47,8 +47,8 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/content/events/src',
     '/docshell/base',
+    '/dom/events',
     '/dom/system/android',
     '/netwerk/cache',
     '/widget/android/android',

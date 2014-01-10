@@ -7,7 +7,6 @@ include ../../accessible/tests/crashtests/crashtests.list
 
 include ../../content/base/crashtests/crashtests.list
 include ../../content/canvas/crashtests/crashtests.list
-include ../../content/events/crashtests/crashtests.list
 include ../../content/html/document/crashtests/crashtests.list
 include ../../content/html/content/crashtests/crashtests.list
 include ../../content/svg/content/src/crashtests/crashtests.list
@@ -25,6 +24,7 @@ include ../../docshell/base/crashtests/crashtests.list
 
 include ../../dom/base/crashtests/crashtests.list
 include ../../dom/bindings/crashtests/crashtests.list
+include ../../dom/events/crashtests/crashtests.list
 include ../../dom/indexedDB/crashtests/crashtests.list
 include ../../dom/smil/crashtests/crashtests.list
 include ../../dom/xbl/crashtests/crashtests.list

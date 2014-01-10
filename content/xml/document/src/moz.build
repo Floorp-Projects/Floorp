@@ -22,10 +22,10 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '/caps/include',
     '/content/base/src',
-    '/content/events/src',
     '/content/html/document/src',
     '/content/xul/content/src',
     '/dom/base',
+    '/dom/events',
     '/layout/style',
     '/xpcom/ds',
     ]
