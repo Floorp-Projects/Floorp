@@ -541,6 +541,14 @@
 @BINPATH@/components/Push.js
 @BINPATH@/components/Push.manifest
 @BINPATH@/components/PushServiceLauncher.js
+
+#ifndef RELEASE_BUILD
+@BINPATH@/components/InterAppComm.manifest
+@BINPATH@/components/InterAppCommService.js
+@BINPATH@/components/InterAppConnection.js
+@BINPATH@/components/InterAppMessagePort.js
+#endif
+
 @BINPATH@/components/TCPSocket.js
 @BINPATH@/components/TCPServerSocket.js
 @BINPATH@/components/TCPSocketParentIntermediary.js

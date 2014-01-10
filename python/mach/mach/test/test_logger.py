@@ -8,7 +8,7 @@ import logging
 import time
 import unittest
 
-from mach.logger import StructuredHumanFormatter
+from mach.logging import StructuredHumanFormatter
 
 
 class DummyLogger(logging.Logger):
@@ -29,7 +29,7 @@ class TestStructuredHumanFormatter(unittest.TestCase):
 
         def on_record(record):
             result = formatter.format(record)
-            relevant = result[5:]
+            relevant = result[9:]
 
             self.assertEqual(relevant, 'Test: s\xe9curit\xe9')
 

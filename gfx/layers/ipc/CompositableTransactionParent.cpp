@@ -235,8 +235,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     }
     case CompositableOperation::TOpUpdateTexture: {
       const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
-      CompositableHost* compositable = AsCompositable(op);
-      MOZ_ASSERT(compositable);
       RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
       MOZ_ASSERT(texture);
 

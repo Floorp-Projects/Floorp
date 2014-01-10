@@ -76,6 +76,34 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       cue.pauseOnExit = true;
       is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
 
+      // Check that cue line align works properly
+      is(cue.lineAlign, "start", "Cue's default line alignment should be start.");
+
+      var exceptionHappened = false;
+      try {
+        cue.lineAlign = "left";
+      } catch(e) {
+        exceptionHappened = true;
+        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
+      }
+      ok(exceptionHappened, "Exception should have happened.");
+
+      exceptionHappened = false;
+      try {
+        cue.lineAlign = "right";
+      } catch(e) {
+        exceptionHappened = true;
+        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
+      }
+      ok(exceptionHappened, "Exception should have happened.");
+
+      cue.lineAlign = "middle";
+      is(cue.lineAlign, "middle", "Cue's line align should be middle.");
+      cue.lineAlign = "START";
+      is(cue.lineAlign, "middle", "Cue's line align should be middle.");
+      cue.lineAlign = "end";
+      is(cue.lineAlign, "end", "Cue's line align should be end.");
+
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
       trackElement.track.addCue(vttCue);
@@ -95,7 +123,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       trackElement.track.removeCue(cue);
       is(cueList.length, 6, "Cue list length should be 6.");
 
-      var exceptionHappened = false;
+      exceptionHappened = false;
       try {
         // We should not be able to remove a cue that is not in the list.
         cue = new VTTCue(1, 2, "foo");
