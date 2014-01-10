@@ -46,7 +46,8 @@ using mozilla::ThreadLocal;
 // altogether.
 
 static bool
-ExecuteSequentially(JSContext *cx_, HandleValue funVal, bool *complete, uint16_t numSlices);
+ExecuteSequentially(JSContext *cx_, HandleValue funVal, bool *complete,
+                    uint16_t sliceStart, uint16_t numSlices);
 
 #if !defined(JS_THREADSAFE) || !defined(JS_ION)
 bool
@@ -150,10 +151,11 @@ js::ParallelTestsShouldPass(JSContext *cx)
 // Some code that is shared between degenerate and parallel configurations.
 
 static bool
-ExecuteSequentially(JSContext *cx, HandleValue funVal, bool *complete, uint16_t numSlices)
+ExecuteSequentially(JSContext *cx, HandleValue funVal, bool *complete,
+                    uint16_t sliceStart, uint16_t numSlices)
 {
     bool allComplete = true;
-    for (uint16_t i = 0; i < numSlices; i++) {
+    for (uint16_t i = sliceStart; i < numSlices; i++) {
         FastInvokeGuard fig(cx, funVal);
         InvokeArgs &args = fig.args();
         if (!args.init(2))
@@ -283,6 +285,7 @@ class ForkJoinOperation
     AutoScriptVector worklist_;
     Vector<WorklistData, 16> worklistData_;
     ForkJoinMode mode_;
+    uint16_t warmupSlice_;
     uint16_t numSlices_;
 
     TrafficLight enqueueInitialScript(ExecutionStatus *status);
@@ -548,6 +551,7 @@ js::ForkJoinOperation::ForkJoinOperation(JSContext *cx, HandleObject fun, ForkJo
     worklist_(cx),
     worklistData_(cx),
     mode_(mode),
+    warmupSlice_(0),
     numSlices_(numSlices)
 { }
 
@@ -973,7 +977,7 @@ js::ForkJoinOperation::sequentialExecution(bool disqualified)
 
     bool complete = false;
     RootedValue funVal(cx_, ObjectValue(*fun_));
-    if (!ExecuteSequentially(cx_, funVal, &complete, numSlices_))
+    if (!ExecuteSequentially(cx_, funVal, &complete, 0, numSlices_))
         return ExecutionFatal;
 
     // When invoked without the warmup flag set to true, the kernel
@@ -1131,20 +1135,35 @@ js::ForkJoinOperation::warmupExecution(bool stopIfComplete, ExecutionStatus *sta
     // GreenLight: warmup succeeded, still more work to do
     // RedLight: fatal error or warmup completed all work (check status)
 
-    Spew(SpewOps, "Executing warmup.");
+    Spew(SpewOps, "Executing warmup of slice %u.", warmupSlice_);
 
     AutoEnterWarmup warmup(cx_->runtime());
     RootedValue funVal(cx_, ObjectValue(*fun_));
     bool complete;
-    if (!ExecuteSequentially(cx_, funVal, &complete, numSlices_)) {
+    uint32_t warmupTo = Min<uint16_t>(warmupSlice_ + 1, numSlices_);
+    if (!ExecuteSequentially(cx_, funVal, &complete, warmupSlice_, warmupTo)) {
         *status = ExecutionFatal;
         return RedLight;
     }
 
-    if (complete && stopIfComplete) {
-        Spew(SpewOps, "Warmup execution finished all the work.");
-        *status = ExecutionWarmup;
-        return RedLight;
+    if (complete) {
+        warmupSlice_ = warmupTo;
+        if (warmupSlice_ == numSlices_) {
+            if (stopIfComplete) {
+                Spew(SpewOps, "Warmup execution finished all the work.");
+                *status = ExecutionWarmup;
+                return RedLight;
+            }
+
+            // If we finished all slices in warmup, be sure check the
+            // interrupt flag. This is because we won't be running more JS
+            // code, and thus no more automatic checking of the interrupt
+            // flag.
+            if (!js_HandleExecutionInterrupt(cx_)) {
+                *status = ExecutionFatal;
+                return RedLight;
+            }
+        }
     }
 
     return GreenLight;
