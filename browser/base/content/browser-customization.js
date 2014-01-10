@@ -21,8 +21,7 @@ let CustomizationHandler = {
   },
 
   isCustomizing: function() {
-    return document.documentElement.hasAttribute("customizing") ||
-           document.documentElement.hasAttribute("customize-exiting");
+    return document.documentElement.hasAttribute("customizing");
   },
 
   _customizationStarting: function() {
