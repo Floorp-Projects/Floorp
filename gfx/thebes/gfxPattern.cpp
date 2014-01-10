@@ -179,8 +179,11 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
   }
 
   if (!mPattern) {
+    Matrix adjustedMatrix = mTransform;
+    if (aPatternTransform)
+      AdjustTransformForPattern(adjustedMatrix, aTarget->GetTransform(), aPatternTransform);
     mGfxPattern = new (mSurfacePattern.addr())
-      SurfacePattern(mSourceSurface, ToExtendMode(mExtend), mTransform, mFilter);
+      SurfacePattern(mSourceSurface, ToExtendMode(mExtend), adjustedMatrix, mFilter);
     return mGfxPattern;
   }
 
