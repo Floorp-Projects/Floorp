@@ -1217,7 +1217,7 @@ RecordedFilterNodeCreation::RecordedFilterNodeCreation(istream &aStream)
 void
 RecordedFilterNodeCreation::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
-  aStringStream << "[" << mRefPtr << "] FilterNode created (Type: " << mType << ")";
+  aStringStream << "[" << mRefPtr << "] FilterNode created (Type: " << int(mType) << ")";
 }
 
 void

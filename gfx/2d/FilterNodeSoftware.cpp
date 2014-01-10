@@ -470,82 +470,82 @@ FilterNodeSoftware::Create(FilterType aType)
 {
   RefPtr<FilterNodeSoftware> filter;
   switch (aType) {
-    case FILTER_BLEND:
+    case FilterType::BLEND:
       filter = new FilterNodeBlendSoftware();
       break;
-    case FILTER_TRANSFORM:
+    case FilterType::TRANSFORM:
       filter = new FilterNodeTransformSoftware();
       break;
-    case FILTER_MORPHOLOGY:
+    case FilterType::MORPHOLOGY:
       filter = new FilterNodeMorphologySoftware();
       break;
-    case FILTER_COLOR_MATRIX:
+    case FilterType::COLOR_MATRIX:
       filter = new FilterNodeColorMatrixSoftware();
       break;
-    case FILTER_FLOOD:
+    case FilterType::FLOOD:
       filter = new FilterNodeFloodSoftware();
       break;
-    case FILTER_TILE:
+    case FilterType::TILE:
       filter = new FilterNodeTileSoftware();
       break;
-    case FILTER_TABLE_TRANSFER:
+    case FilterType::TABLE_TRANSFER:
       filter = new FilterNodeTableTransferSoftware();
       break;
-    case FILTER_DISCRETE_TRANSFER:
+    case FilterType::DISCRETE_TRANSFER:
       filter = new FilterNodeDiscreteTransferSoftware();
       break;
-    case FILTER_LINEAR_TRANSFER:
+    case FilterType::LINEAR_TRANSFER:
       filter = new FilterNodeLinearTransferSoftware();
       break;
-    case FILTER_GAMMA_TRANSFER:
+    case FilterType::GAMMA_TRANSFER:
       filter = new FilterNodeGammaTransferSoftware();
       break;
-    case FILTER_CONVOLVE_MATRIX:
+    case FilterType::CONVOLVE_MATRIX:
       filter = new FilterNodeConvolveMatrixSoftware();
       break;
-    case FILTER_DISPLACEMENT_MAP:
+    case FilterType::DISPLACEMENT_MAP:
       filter = new FilterNodeDisplacementMapSoftware();
       break;
-    case FILTER_TURBULENCE:
+    case FilterType::TURBULENCE:
       filter = new FilterNodeTurbulenceSoftware();
       break;
-    case FILTER_ARITHMETIC_COMBINE:
+    case FilterType::ARITHMETIC_COMBINE:
       filter = new FilterNodeArithmeticCombineSoftware();
       break;
-    case FILTER_COMPOSITE:
+    case FilterType::COMPOSITE:
       filter = new FilterNodeCompositeSoftware();
       break;
-    case FILTER_GAUSSIAN_BLUR:
+    case FilterType::GAUSSIAN_BLUR:
       filter = new FilterNodeGaussianBlurSoftware();
       break;
-    case FILTER_DIRECTIONAL_BLUR:
+    case FilterType::DIRECTIONAL_BLUR:
       filter = new FilterNodeDirectionalBlurSoftware();
       break;
-    case FILTER_CROP:
+    case FilterType::CROP:
       filter = new FilterNodeCropSoftware();
       break;
-    case FILTER_PREMULTIPLY:
+    case FilterType::PREMULTIPLY:
       filter = new FilterNodePremultiplySoftware();
       break;
-    case FILTER_UNPREMULTIPLY:
+    case FilterType::UNPREMULTIPLY:
       filter = new FilterNodeUnpremultiplySoftware();
       break;
-    case FILTER_POINT_DIFFUSE:
+    case FilterType::POINT_DIFFUSE:
       filter = new FilterNodeLightingSoftware<PointLightSoftware, DiffuseLightingSoftware>();
       break;
-    case FILTER_POINT_SPECULAR:
+    case FilterType::POINT_SPECULAR:
       filter = new FilterNodeLightingSoftware<PointLightSoftware, SpecularLightingSoftware>();
       break;
-    case FILTER_SPOT_DIFFUSE:
+    case FilterType::SPOT_DIFFUSE:
       filter = new FilterNodeLightingSoftware<SpotLightSoftware, DiffuseLightingSoftware>();
       break;
-    case FILTER_SPOT_SPECULAR:
+    case FilterType::SPOT_SPECULAR:
       filter = new FilterNodeLightingSoftware<SpotLightSoftware, SpecularLightingSoftware>();
       break;
-    case FILTER_DISTANT_DIFFUSE:
+    case FilterType::DISTANT_DIFFUSE:
       filter = new FilterNodeLightingSoftware<DistantLightSoftware, DiffuseLightingSoftware>();
       break;
-    case FILTER_DISTANT_SPECULAR:
+    case FilterType::DISTANT_SPECULAR:
       filter = new FilterNodeLightingSoftware<DistantLightSoftware, SpecularLightingSoftware>();
       break;
   }
