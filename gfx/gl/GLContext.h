@@ -81,42 +81,36 @@ namespace mozilla {
 namespace mozilla {
 namespace gl {
 
-/** GLFeature::Enum
- * We don't use typed enum to keep the implicit integer conversion.
- * This enum should be sorted by name.
- */
-namespace GLFeature {
-    enum Enum {
-        bind_buffer_offset,
-        blend_minmax,
-        depth_texture,
-        draw_buffers,
-        draw_instanced,
-        element_index_uint,
-        ES2_compatibility,
-        ES3_compatibility,
-        framebuffer_blit,
-        framebuffer_multisample,
-        framebuffer_object,
-        get_query_object_iv,
-        instanced_arrays,
-        instanced_non_arrays,
-        occlusion_query,
-        occlusion_query_boolean,
-        occlusion_query2,
-        packed_depth_stencil,
-        query_objects,
-        robustness,
-        sRGB,
-        standard_derivatives,
-        texture_float,
-        texture_float_linear,
-        texture_non_power_of_two,
-        transform_feedback,
-        vertex_array_object,
-        EnumMax
-    };
-}
+MOZ_BEGIN_ENUM_CLASS(GLFeature)
+    bind_buffer_offset,
+    blend_minmax,
+    depth_texture,
+    draw_buffers,
+    draw_instanced,
+    element_index_uint,
+    ES2_compatibility,
+    ES3_compatibility,
+    framebuffer_blit,
+    framebuffer_multisample,
+    framebuffer_object,
+    get_query_object_iv,
+    instanced_arrays,
+    instanced_non_arrays,
+    occlusion_query,
+    occlusion_query_boolean,
+    occlusion_query2,
+    packed_depth_stencil,
+    query_objects,
+    robustness,
+    sRGB,
+    standard_derivatives,
+    texture_float,
+    texture_float_linear,
+    texture_non_power_of_two,
+    transform_feedback,
+    vertex_array_object,
+    EnumMax
+MOZ_END_ENUM_CLASS(GLFeature)
 
 MOZ_BEGIN_ENUM_CLASS(ContextProfile, uint8_t)
     Unknown = 0,
@@ -473,15 +467,15 @@ protected:
  * by the context version/profile
  */
 public:
-    bool IsSupported(GLFeature::Enum feature) const {
-        return mAvailableFeatures[feature];
+    bool IsSupported(GLFeature feature) const {
+        return mAvailableFeatures[size_t(feature)];
     }
 
-    static const char* GetFeatureName(GLFeature::Enum feature);
+    static const char* GetFeatureName(GLFeature feature);
 
 
 private:
-    std::bitset<GLFeature::EnumMax> mAvailableFeatures;
+    std::bitset<size_t(GLFeature::EnumMax)> mAvailableFeatures;
 
     /**
      * Init features regarding OpenGL extension and context version and profile
@@ -491,7 +485,7 @@ private:
     /**
      * Mark the feature and associated extensions as unsupported
      */
-    void MarkUnsupported(GLFeature::Enum feature);
+    void MarkUnsupported(GLFeature feature);
 
 // -----------------------------------------------------------------------------
 // Robustness handling
