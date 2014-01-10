@@ -110,7 +110,6 @@ function checkPalette(id, method) {
 }
 
 let otherWin;
-Services.prefs.setBoolPref("browser.uiCustomization.skipSourceNodeCheck", true);
 
 // Moving widgets in two windows, one with customize mode and one without, should work.
 add_task(function MoveWidgetsInTwoWindows() {
@@ -139,6 +138,5 @@ add_task(function MoveWidgetsInTwoWindows() {
 });
 
 add_task(function asyncCleanup() {
-  Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 });
