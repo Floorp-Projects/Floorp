@@ -1349,7 +1349,7 @@ PeerConnectionImpl::GetStats(MediaStreamTrack *aSelector, bool internalStats) {
 
 NS_IMETHODIMP
 PeerConnectionImpl::GetLogging(const nsAString& aPattern) {
-  PC_AUTO_ENTER_API_CALL(true);
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
 #ifdef MOZILLA_INTERNAL_API
   std::string pattern(NS_ConvertUTF16toUTF8(aPattern).get());
