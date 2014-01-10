@@ -38,6 +38,17 @@ TextTrackCueList::TextTrackCueList(nsISupports* aParent) : mParent(aParent)
   SetIsDOMBinding();
 }
 
+void
+TextTrackCueList::Update(double aTime)
+{
+  const uint32_t length = mList.Length();
+  for (uint32_t i = 0; i < length; i++) {
+    if (aTime > mList[i]->StartTime() && aTime < mList[i]->EndTime()) {
+      mList[i]->RenderCue();
+    }
+  }
+}
+
 JSObject*
 TextTrackCueList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
@@ -104,13 +115,6 @@ TextTrackCueList::RemoveAll()
 {
   mList.Clear();
 }
-
-void
-TextTrackCueList::GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
-{
-  aCues = nsTArray<nsRefPtr<TextTrackCue> >(mList);
-}
-
 
 } // namespace dom
 } // namespace mozilla

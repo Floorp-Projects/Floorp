@@ -53,11 +53,3 @@ interface VTTCue : EventTarget {
 
   attribute EventHandler onexit;
 };
-
-// Mozilla extensions.
-partial interface VTTCue {
-  [ChromeOnly]
-  attribute HTMLDivElement? displayState;
-  [ChromeOnly]
-  readonly attribute boolean hasBeenReset;
-};
