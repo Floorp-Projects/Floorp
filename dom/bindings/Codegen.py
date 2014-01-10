@@ -1649,7 +1649,7 @@ class AttrDefiner(PropertyDefiner):
                 else:
                     accessor = "genericGetter"
                 jitinfo = "&%s_getterinfo" % attr.identifier.name
-            return "{ JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s }" % \
+            return "{ { JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s } }" % \
                    (accessor, jitinfo)
 
         def setter(attr):
@@ -1668,7 +1668,7 @@ class AttrDefiner(PropertyDefiner):
                 else:
                     accessor = "genericSetter"
                 jitinfo = "&%s_setterinfo" % attr.identifier.name
-            return "{ JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s }" % \
+            return "{ { JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s } }" % \
                    (accessor, jitinfo)
 
         def specData(attr):
