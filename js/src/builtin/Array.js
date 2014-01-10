@@ -608,6 +608,22 @@ function ComputeNumChunks(length) {
   return chunks + 1;
 }
 
+#define SLICES_PER_WORKER 8
+
+/**
+ * Compute the number of slices given an array length and the number of
+ * chunks. Used in tandem with the workstealing scheduler.
+ */
+function ComputeNumSlices(workers, length, chunks) {
+  if (length !== 0) {
+    var slices = workers * SLICES_PER_WORKER;
+    if (chunks < slices)
+      return workers;
+    return slices;
+  }
+  return workers;
+}
+
 /**
  * Computes the bounds for slice |sliceIndex| of |numItems| items,
  * assuming |numSlices| total slices. If numItems is not evenly
@@ -676,9 +692,10 @@ function ArrayMapPar(func, mode) {
       break parallel;
 
     var chunks = ComputeNumChunks(length);
-    var numSlices = ForkJoinSlices();
+    var numWorkers = ForkJoinNumWorkers();
+    var numSlices = ComputeNumSlices(numWorkers, length, chunks);
     var info = ComputeAllSliceBounds(chunks, numSlices);
-    ForkJoin(mapSlice, ForkJoinMode(mode));
+    ForkJoin(mapSlice, ForkJoinMode(mode), numSlices);
     return buffer;
   }
 
@@ -691,7 +708,7 @@ function ArrayMapPar(func, mode) {
   }
   return buffer;
 
-  function mapSlice(sliceId, numSlices, warmup) {
+  function mapSlice(sliceId, warmup) {
     var chunkPos = info[SLICE_POS(sliceId)];
     var chunkEnd = info[SLICE_END(sliceId)];
 
@@ -735,13 +752,14 @@ function ArrayReducePar(func, mode) {
       break parallel;
 
     var chunks = ComputeNumChunks(length);
-    var numSlices = ForkJoinSlices();
-    if (chunks < numSlices)
+    var numWorkers = ForkJoinNumWorkers();
+    if (chunks < numWorkers)
       break parallel;
 
+    var numSlices = ComputeNumSlices(numWorkers, length, chunks);
     var info = ComputeAllSliceBounds(chunks, numSlices);
     var subreductions = NewDenseArray(numSlices);
-    ForkJoin(reduceSlice, ForkJoinMode(mode));
+    ForkJoin(reduceSlice, ForkJoinMode(mode), numSlices);
     var accumulator = subreductions[0];
     for (var i = 1; i < numSlices; i++)
       accumulator = func(accumulator, subreductions[i]);
@@ -755,7 +773,7 @@ function ArrayReducePar(func, mode) {
     accumulator = func(accumulator, self[i]);
   return accumulator;
 
-  function reduceSlice(sliceId, numSlices, warmup) {
+  function reduceSlice(sliceId, warmup) {
     var chunkStart = info[SLICE_START(sliceId)];
     var chunkPos = info[SLICE_POS(sliceId)];
     var chunkEnd = info[SLICE_END(sliceId)];
@@ -824,13 +842,15 @@ function ArrayScanPar(func, mode) {
       break parallel;
 
     var chunks = ComputeNumChunks(length);
-    var numSlices = ForkJoinSlices();
-    if (chunks < numSlices)
+    var numWorkers = ForkJoinNumWorkers();
+    if (chunks < numWorkers)
       break parallel;
+
+    var numSlices = ComputeNumSlices(numWorkers, length, chunks);
     var info = ComputeAllSliceBounds(chunks, numSlices);
 
     // Scan slices individually (see comment on phase1()).
-    ForkJoin(phase1, ForkJoinMode(mode));
+    ForkJoin(phase1, ForkJoinMode(mode), numSlices);
 
     // Compute intermediates array (see comment on phase2()).
     var intermediates = [];
@@ -850,7 +870,7 @@ function ArrayScanPar(func, mode) {
     info[SLICE_END(numSlices - 1)] = std_Math_min(info[SLICE_END(numSlices - 1)], length);
 
     // Complete each slice using intermediates array (see comment on phase2()).
-    ForkJoin(phase2, ForkJoinMode(mode));
+    ForkJoin(phase2, ForkJoinMode(mode), numSlices);
     return buffer;
   }
 
@@ -884,7 +904,7 @@ function ArrayScanPar(func, mode) {
    *
    * Read on in phase2 to see what we do next!
    */
-  function phase1(sliceId, numSlices, warmup) {
+  function phase1(sliceId, warmup) {
     var chunkStart = info[SLICE_START(sliceId)];
     var chunkPos = info[SLICE_POS(sliceId)];
     var chunkEnd = info[SLICE_END(sliceId)];
@@ -967,7 +987,7 @@ function ArrayScanPar(func, mode) {
    * index granularity, although this requires two memory writes per
    * index.
    */
-  function phase2(sliceId, numSlices, warmup) {
+  function phase2(sliceId, warmup) {
     if (sliceId === 0)
       return true; // No work to do for the 0th slice.
 
@@ -1102,7 +1122,7 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
 
   function parDivideOutputRange() {
     var chunks = ComputeNumChunks(targetsLength);
-    var numSlices = ForkJoinSlices();
+    var numSlices = ComputeNumSlices(ForkJoinNumWorkers(), length, chunks);
     var checkpoints = NewDenseArray(numSlices);
     for (var i = 0; i < numSlices; i++)
       UnsafePutElements(checkpoints, i, 0);
@@ -1115,10 +1135,10 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
       UnsafePutElements(conflicts, i, false);
     }
 
-    ForkJoin(fill, ForkJoinMode(mode));
+    ForkJoin(fill, ForkJoinMode(mode), numSlices);
     return buffer;
 
-    function fill(sliceId, numSlices, warmup) {
+    function fill(sliceId, warmup) {
       var indexPos = checkpoints[sliceId];
       var indexEnd = targetsLength;
       if (warmup)
@@ -1149,7 +1169,7 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
     // target array for fear of inducing a conflict where none existed
     // before. Therefore, we must proceed not by chunks but rather by
     // individual indices.
-    var numSlices = ForkJoinSlices();
+    var numSlices = ComputeNumSlices(ForkJoinNumWorkers(), length, ComputeNumChunks(length));
     var info = ComputeAllSliceBounds(targetsLength, numSlices);
 
     // FIXME(bug 844890): Use typed arrays here.
@@ -1172,11 +1192,11 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
     for (var i = 0; i < length; i++)
       UnsafePutElements(outputBuffer, i, defaultValue);
 
-    ForkJoin(fill, ForkJoinMode(mode));
+    ForkJoin(fill, ForkJoinMode(mode), numSlices);
     mergeBuffers();
     return outputBuffer;
 
-    function fill(sliceId, numSlices, warmup) {
+    function fill(sliceId, warmup) {
       var indexPos = info[SLICE_POS(sliceId)];
       var indexEnd = info[SLICE_END(sliceId)];
       if (warmup)
@@ -1275,10 +1295,11 @@ function ArrayFilterPar(func, mode) {
       break parallel;
 
     var chunks = ComputeNumChunks(length);
-    var numSlices = ForkJoinSlices();
-    if (chunks < numSlices * 2)
+    var numWorkers = ForkJoinNumWorkers();
+    if (chunks < numWorkers * 2)
       break parallel;
 
+    var numSlices = ComputeNumSlices(numWorkers, length, chunks);
     var info = ComputeAllSliceBounds(chunks, numSlices);
 
     // Step 1. Compute which items from each slice of the result
@@ -1293,7 +1314,7 @@ function ArrayFilterPar(func, mode) {
     for (var i = 0; i < numSlices; i++)
       UnsafePutElements(counts, i, 0);
     var survivors = NewDenseArray(chunks);
-    ForkJoin(findSurvivorsInSlice, ForkJoinMode(mode));
+    ForkJoin(findSurvivorsInSlice, ForkJoinMode(mode), numSlices);
 
     // Step 2. Compress the slices into one contiguous set.
     var count = 0;
@@ -1301,7 +1322,7 @@ function ArrayFilterPar(func, mode) {
       count += counts[i];
     var buffer = NewDenseArray(count);
     if (count > 0)
-      ForkJoin(copySurvivorsInSlice, ForkJoinMode(mode));
+      ForkJoin(copySurvivorsInSlice, ForkJoinMode(mode), numSlices);
 
     return buffer;
   }
@@ -1322,7 +1343,7 @@ function ArrayFilterPar(func, mode) {
    * time. When we finish a chunk, we record our current count and
    * the next chunk sliceId, lest we should bail.
    */
-  function findSurvivorsInSlice(sliceId, numSlices, warmup) {
+  function findSurvivorsInSlice(sliceId, warmup) {
     var chunkPos = info[SLICE_POS(sliceId)];
     var chunkEnd = info[SLICE_END(sliceId)];
 
@@ -1349,7 +1370,7 @@ function ArrayFilterPar(func, mode) {
     return chunkEnd === info[SLICE_END(sliceId)];
   }
 
-  function copySurvivorsInSlice(sliceId, numSlices, warmup) {
+  function copySurvivorsInSlice(sliceId, warmup) {
     // Copies the survivors from this slice into the correct position.
     // Note that this is an idempotent operation that does not invoke
     // user code. Therefore, we don't expect bailouts and make an
@@ -1432,9 +1453,10 @@ function ArrayStaticBuildPar(length, func, mode) {
       break parallel;
 
     var chunks = ComputeNumChunks(length);
-    var numSlices = ForkJoinSlices();
+    var numWorkers = ForkJoinNumWorkers();
+    var numSlices = ComputeNumSlices(numWorkers, length, chunks);
     var info = ComputeAllSliceBounds(chunks, numSlices);
-    ForkJoin(constructSlice, ForkJoinMode(mode));
+    ForkJoin(constructSlice, ForkJoinMode(mode), numSlices);
     return buffer;
   }
 
@@ -1443,7 +1465,7 @@ function ArrayStaticBuildPar(length, func, mode) {
   fill(0, length);
   return buffer;
 
-  function constructSlice(sliceId, numSlices, warmup) {
+  function constructSlice(sliceId, warmup) {
     var chunkPos = info[SLICE_POS(sliceId)];
     var chunkEnd = info[SLICE_END(sliceId)];
 

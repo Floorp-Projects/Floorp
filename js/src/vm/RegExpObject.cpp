@@ -414,6 +414,7 @@ RegExpShared::reportYarrError(ExclusiveContext *cx, TokenStream *ts, ErrorCode e
       COMPILE_EMSG(CharacterClassOutOfOrder, JSMSG_BAD_CLASS_RANGE);
       COMPILE_EMSG(QuantifierTooLarge, JSMSG_BAD_QUANTIFIER);
       COMPILE_EMSG(EscapeUnterminated, JSMSG_TRAILING_SLASH);
+      COMPILE_EMSG(RuntimeError, JSMSG_REGEXP_RUNTIME_ERROR);
 #undef COMPILE_EMSG
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown Yarr error code");
@@ -558,6 +559,11 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
     result = JSC::Yarr::interpret(cx, bytecode, chars, length, start, outputBuf);
 #endif
 
+    if (result == JSC::Yarr::offsetError) {
+        reportYarrError(cx, nullptr, JSC::Yarr::RuntimeError);
+        return RegExpRunStatus_Error;
+    }
+
     if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;
 
@@ -616,6 +622,11 @@ RegExpShared::executeMatchOnly(JSContext *cx, const jschar *chars, size_t length
 
     unsigned result =
         JSC::Yarr::interpret(cx, bytecode, chars, length, start, matches.rawBuf());
+
+    if (result == JSC::Yarr::offsetError) {
+        reportYarrError(cx, nullptr, JSC::Yarr::RuntimeError);
+        return RegExpRunStatus_Error;
+    }
 
     if (result == JSC::Yarr::offsetNoMatch)
         return RegExpRunStatus_Success_NotFound;

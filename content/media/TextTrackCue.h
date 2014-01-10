@@ -14,6 +14,7 @@
 #include "nsIWebVTTParserWrapper.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDocument.h"
+#include "mozilla/dom/HTMLDivElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -220,6 +221,26 @@ public:
     CueChanged();
   }
 
+  AlignSetting PositionAlign() const
+  {
+    return mPositionAlign;
+  }
+
+  void SetPositionAlign(AlignSetting aPositionAlign, ErrorResult& aRv)
+  {
+    if (mPositionAlign == aPositionAlign)
+      return;
+
+    if (aPositionAlign == AlignSetting::Left ||
+        aPositionAlign == AlignSetting::Right) {
+      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
+    mReset = true;
+    mPositionAlign = aPositionAlign;
+    CueChanged();
+  }
+
   int32_t Size() const
   {
     return mSize;
@@ -276,6 +297,21 @@ public:
   IMPL_EVENT_HANDLER(enter)
   IMPL_EVENT_HANDLER(exit)
 
+  HTMLDivElement* GetDisplayState()
+  {
+    return static_cast<HTMLDivElement*>(mDisplayState.get());
+  }
+
+  void SetDisplayState(HTMLDivElement* aDisplayState)
+  {
+    mDisplayState = aDisplayState;
+  }
+
+  bool HasBeenReset()
+  {
+    return mReset;
+  }
+
   // Helper functions for implementation.
   bool
   operator==(const TextTrackCue& rhs) const
@@ -287,36 +323,6 @@ public:
   {
     return mId;
   }
-
-  /**
-   * Overview of WebVTT cuetext and anonymous content setup.
-   *
-   * WebVTT nodes are the parsed version of WebVTT cuetext. WebVTT cuetext is
-   * the portion of a WebVTT cue that specifies what the caption will actually
-   * show up as on screen.
-   *
-   * WebVTT cuetext can contain markup that loosely relates to HTML markup. It
-   * can contain tags like <b>, <u>, <i>, <c>, <v>, <ruby>, <rt>, <lang>,
-   * including timestamp tags.
-   *
-   * When the caption is ready to be displayed the WebVTT nodes are converted
-   * over to anonymous DOM content. <i>, <u>, <b>, <ruby>, and <rt> all become
-   * HTMLElements of their corresponding HTML markup tags. <c> and <v> are
-   * converted to <span> tags. Timestamp tags are converted to XML processing
-   * instructions. Additionally, all cuetext tags support specifying of classes.
-   * This takes the form of <foo.class.subclass>. These classes are then parsed
-   * and set as the anonymous content's class attribute.
-   *
-   * Rules on constructing DOM objects from WebVTT nodes can be found here
-   * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules.
-   * Current rules are taken from revision on April 15, 2013.
-   */
-
-  /**
-   * Converts the TextTrackCue's cuetext into a tree of DOM objects and attaches
-   * it to a div on it's owning TrackElement's MediaElement's caption overlay.
-   */
-  void RenderCue();
 
   /**
    * Produces a tree of anonymous content based on the tree of the processed
@@ -332,7 +338,6 @@ public:
 private:
   void CueChanged();
   void SetDefaultCueSettings();
-  void CreateCueOverlay();
   nsresult StashDocument(nsISupports* aGlobal);
 
   nsRefPtr<nsIDocument> mDocument;
@@ -344,6 +349,7 @@ private:
   nsRefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
   int32_t mPosition;
+  AlignSetting mPositionAlign;
   int32_t mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
@@ -355,7 +361,7 @@ private:
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state
-  nsCOMPtr<nsIContent> mDisplayState;
+  nsRefPtr<nsGenericHTMLElement> mDisplayState;
   // Tells whether or not we need to recompute mDisplayState. This is set
   // anytime a property that relates to the display of the TextTrackCue is
   // changed.

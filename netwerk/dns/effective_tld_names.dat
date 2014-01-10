@@ -188,6 +188,7 @@ tur.ar
 
 // arpa : http://en.wikipedia.org/wiki/.arpa
 // Confirmed by registry <iana-questions@icann.org> 2008-06-18
+arpa
 e164.arpa
 in-addr.arpa
 ip6.arpa
@@ -212,6 +213,7 @@ or.at
 
 // au : http://en.wikipedia.org/wiki/.au
 // http://www.auda.org.au/
+au
 // 2LDs
 com.au
 net.au
@@ -490,6 +492,7 @@ org.bt
 
 // bv : No registrations at this time.
 // Submitted by registry <jarle@uninett.no> 2006-06-16
+bv
 
 // bw : http://en.wikipedia.org/wiki/.bw
 // http://www.gobin.info/domainname/bw.doc
@@ -868,6 +871,7 @@ ga
 
 // gb : This registry is effectively dormant
 // Submitted by registry <Damien.Shaw@ja.net> 2008-06-12
+gb
 
 // gd : http://en.wikipedia.org/wiki/.gd
 gd
@@ -921,6 +925,7 @@ gm
 
 // gn : http://psg.com/dns/gn/gn.txt
 // Submitted by registry <randy@psg.com> 2008-06-17
+gn
 ac.gn
 com.gn
 edu.gn
@@ -3301,6 +3306,7 @@ edu.kn
 gov.kn
 
 // kp : http://www.kcce.kp/en_index.php
+kp
 com.kp
 edu.kp
 gov.kp
@@ -3378,6 +3384,7 @@ org.la
 
 // lb : http://en.wikipedia.org/wiki/.lb
 // Submitted by registry <randy@psg.com> 2008-06-17
+lb
 com.lb
 edu.lb
 gov.lb
@@ -3416,6 +3423,7 @@ hotel.lk
 
 // lr : http://psg.com/dns/lr/lr.txt
 // Submitted by registry <randy@psg.com> 2008-06-17
+lr
 com.lr
 edu.lr
 gov.lr
@@ -5693,6 +5701,7 @@ si
 
 // sj : No registrations at this time.
 // Submitted by registry <jarle@uninett.no> 2008-06-16
+sj
 
 // sk : http://en.wikipedia.org/wiki/.sk
 // list of 2nd level domains ?
@@ -5875,6 +5884,10 @@ org.to
 edu.to
 mil.to
 
+// tp : No registrations at this time.
+// Submitted by Ryan Sleevi <ryan.sleevi@gmail.com> 2014-01-03
+tp
+
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
 !nic.tr
@@ -5928,6 +5941,7 @@ club.tw
 
 // tz : http://www.tznic.or.tz/index.php/domains
 // Confirmed by registry <manager@tznic.or.tz> 2013-01-22
+tz
 ac.tz
 co.tz
 go.tz
@@ -6470,6 +6484,9 @@ yt
 // xn--3e0b707e ("Republic of Korea" Hangul) : KR
 한국
 
+// xn--80ao21a ("Kaz" Kazakh) : KZ
+қаз
+
 // xn--fzc2c9e2c ("Lanka" Sinhalese-Sinhala) : LK
 // http://nic.lk
 ලංකා
@@ -6480,6 +6497,12 @@ yt
 
 // xn--mgbc0a9azcg ("Morocco / al-Maghrib" Arabic) : MA
 المغرب
+
+// xn--l1acc ("mon" Mongolian) : MN
+мон
+
+// xn--mgbx4cd0ab ("Malaysia" Malay) : MY
+مليسيا
 
 // xn--mgb9awbf ("Oman" Arabic) : OM
 عمان
@@ -6741,36 +6764,6 @@ career
 otsuka
 
 // xn--fiQ64b : 2013-10-14 CITIC Group Corporation
-中信
-
-// wed : 2013-10-02 Atgron, Inc. 
-wed
-
-// pink : 2013-10-02 Afilias Limited 
-pink
-
-// ruhr : 2013-10-02 regiodot GmbH & Co. KG 
-ruhr
-
-// buzz : 2013-10-03 DOTSTRATEGY CO. 
-buzz
-
-// careers : 2013-10-03 Wild Corner, LLC 
-careers
-
-// shoes : 2013-10-03 Binky Galley, LLC 
-shoes
-
-// xn--4gbrim : 2013-10-07 Suhub Electronic Establishment 
-موقع
-
-// career : 2013-10-09 dotCareer, LLC 
-career
-
-// otsuka : 2013-10-11 Otsuka Holdings Co. Ltd. 
-otsuka
-
-// xn--fiQ64b : 2013-10-14 CITIC Group Corporation 
 中信
 
 // gift : 2013-10-18 Uniregistry Corp. 

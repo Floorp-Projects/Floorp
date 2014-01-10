@@ -104,6 +104,32 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       cue.lineAlign = "end";
       is(cue.lineAlign, "end", "Cue's line align should be end.");
 
+      // Check that cue position align works properly
+      is(cue.positionAlign, "middle", "Cue's default position alignment should be middle.");
+
+      var exceptionHappened = false;
+      try {
+        cue.positionAlign = "left";
+      } catch(e) {
+        exceptionHappened = true;
+        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
+      }
+      ok(exceptionHappened, "Exception should have happened.");
+
+      exceptionHappened = false;
+      try {
+        cue.positionAlign = "right";
+      } catch(e) {
+        exceptionHappened = true;
+        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
+      }
+      ok(exceptionHappened, "Exception should have happened.");
+
+      cue.positionAlign = "start";
+      is(cue.positionAlign, "start", "Cue's position align should be start.");
+      cue.positionAlign = "end";
+      is(cue.positionAlign, "end", "Cue's position align should be end.");
+
       // Check that we can create and add new VTTCues
       var vttCue = new VTTCue(3.999, 4, "foo");
       trackElement.track.addCue(vttCue);

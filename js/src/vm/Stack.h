@@ -1564,7 +1564,7 @@ class ScriptFrameIter
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;
-    unsigned    numFormalArgs() const { return script()->function()->nargs(); }
+    unsigned    numFormalArgs() const { return script()->functionNonDelazifying()->nargs(); }
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
 
     JSObject   *scopeChain() const;
