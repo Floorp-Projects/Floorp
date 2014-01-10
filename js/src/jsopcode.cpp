@@ -1512,6 +1512,8 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_CALLGNAME:
       case JSOP_NAME:
       case JSOP_CALLNAME:
+      case JSOP_GETINTRINSIC:
+      case JSOP_CALLINTRINSIC:
         return write(loadAtom(pc));
       case JSOP_GETARG:
       case JSOP_CALLARG: {
