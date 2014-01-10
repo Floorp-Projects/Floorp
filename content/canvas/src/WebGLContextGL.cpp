@@ -1425,6 +1425,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                         JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
                         JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
                 }
+                break;
+
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_RENDERBUFFER));
 
@@ -1432,11 +1434,10 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             {
                 return WebGLObjectAsJSValue(cx, fba.Renderbuffer(), rv);
             }
-
-            default:
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-                return JS::NullValue();
         }
+
+        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
+        return JS::NullValue();
     } else if (fba.Texture()) {
         switch (pname) {
              case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
@@ -1448,6 +1449,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                         JS::NumberValue(uint32_t(LOCAL_GL_SRGB_EXT)) :
                         JS::NumberValue(uint32_t(LOCAL_GL_LINEAR));
                 }
+                break;
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
                 return JS::NumberValue(uint32_t(LOCAL_GL_TEXTURE));
@@ -1467,11 +1469,10 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                     face = 0;
                 return JS::Int32Value(face);
             }
-
-            default:
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
-                return JS::NullValue();
         }
+
+        ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
+        return JS::NullValue();
     } else {
         switch (pname) {
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
