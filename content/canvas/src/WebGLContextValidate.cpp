@@ -980,7 +980,7 @@ WebGLContext::InitAndValidateGL()
 
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
-        gl->Vendor() == gl::GLContext::VendorATI) {
+        gl->Vendor() == gl::GLVendor::ATI) {
         // The Mac ATI driver, in all known OSX version up to and including 10.8,
         // renders points sprites upside-down. Apple bug 11778921
         gl->fPointParameterf(LOCAL_GL_POINT_SPRITE_COORD_ORIGIN, LOCAL_GL_LOWER_LEFT);

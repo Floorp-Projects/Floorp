@@ -106,16 +106,16 @@ CanUploadSubTextures(GLContext* gl)
 
     // There are certain GPUs that we don't want to use glTexSubImage2D on
     // because that function can be very slow and/or buggy
-    if (gl->Renderer() == GLContext::RendererAdreno200 ||
-        gl->Renderer() == GLContext::RendererAdreno205)
+    if (gl->Renderer() == GLRenderer::Adreno200 ||
+        gl->Renderer() == GLRenderer::Adreno205)
     {
         return false;
     }
 
     // On PowerVR glTexSubImage does a readback, so it will be slower
     // than just doing a glTexImage2D() directly. i.e. 26ms vs 10ms
-    if (gl->Renderer() == GLContext::RendererSGX540 ||
-        gl->Renderer() == GLContext::RendererSGX530)
+    if (gl->Renderer() == GLRenderer::SGX540 ||
+        gl->Renderer() == GLRenderer::SGX530)
     {
         return false;
     }
@@ -594,8 +594,8 @@ CanUploadNonPowerOfTwo(GLContext* gl)
         return true;
 
     // Some GPUs driver crash when uploading non power of two 565 textures.
-    return gl->Renderer() != GLContext::RendererAdreno200 &&
-           gl->Renderer() != GLContext::RendererAdreno205;
+    return gl->Renderer() != GLRenderer::Adreno200 &&
+           gl->Renderer() != GLRenderer::Adreno205;
 }
 
 }
