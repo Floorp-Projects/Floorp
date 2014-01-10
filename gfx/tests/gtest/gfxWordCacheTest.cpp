@@ -92,7 +92,7 @@ TEST(Gfx, WordCache) {
 
    nsRefPtr<gfxContext> ctx = MakeContext();
    {
-       gfxFontStyle style (mozilla::gfx::FONT_STYLE_NORMAL,
+       gfxFontStyle style (mozilla::gfx::FontStyle::NORMAL,
                            139,
                            10.0,
                            0,

@@ -665,9 +665,9 @@ gfxFT2Font::GetGlyphRenderingOptions()
   mozilla::gfx::FontHinting hinting;
 
   if (gfxPlatform::GetPlatform()->FontHintingEnabled()) {
-    hinting = mozilla::gfx::FONT_HINTING_NORMAL;
+    hinting = mozilla::gfx::FontHinting::NORMAL;
   } else {
-    hinting = mozilla::gfx::FONT_HINTING_NONE;
+    hinting = mozilla::gfx::FontHinting::NONE;
   }
 
   // We don't want to force the use of the autohinter over the font's built in hints

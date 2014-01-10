@@ -327,25 +327,25 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 {
   switch (aNativeFont.mType) {
 #ifdef WIN32
-  case NATIVE_FONT_DWRITE_FONT_FACE:
+  case NativeFontType::DWRITE_FONT_FACE:
     {
       return new ScaledFontDWrite(static_cast<IDWriteFontFace*>(aNativeFont.mFont), aSize);
     }
 #if defined(USE_CAIRO) || defined(USE_SKIA)
-  case NATIVE_FONT_GDI_FONT_FACE:
+  case NativeFontType::GDI_FONT_FACE:
     {
       return new ScaledFontWin(static_cast<LOGFONT*>(aNativeFont.mFont), aSize);
     }
 #endif
 #endif
 #ifdef XP_MACOSX
-  case NATIVE_FONT_MAC_FONT_FACE:
+  case NativeFontType::MAC_FONT_FACE:
     {
       return new ScaledFontMac(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
     }
 #endif
 #if defined(USE_CAIRO) || defined(USE_SKIA_FREETYPE)
-  case NATIVE_FONT_CAIRO_FONT_FACE:
+  case NativeFontType::CAIRO_FONT_FACE:
     {
       return new ScaledFontCairo(static_cast<cairo_scaled_font_t*>(aNativeFont.mFont), aSize);
     }
@@ -363,7 +363,7 @@ Factory::CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize,
 {
   switch (aType) {
 #ifdef WIN32
-  case FONT_DWRITE:
+  case FontType::DWRITE:
     {
       return new ScaledFontDWrite(aData, aSize, aFaceIndex, aGlyphSize);
     }
