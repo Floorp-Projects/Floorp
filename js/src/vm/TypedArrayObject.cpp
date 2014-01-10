@@ -185,6 +185,18 @@ ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /*
+ * ArrayBuffer.isView(obj); ES6 (Dec 2013 draft) 24.1.3.1
+ */
+bool
+ArrayBufferObject::fun_isView(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(args.get(0).isObject() &&
+                           JS_IsArrayBufferViewObject(&args.get(0).toObject()));
+    return true;
+}
+
+/*
  * new ArrayBuffer(byteLength)
  */
 bool
@@ -3472,6 +3484,11 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
     JS_FS_END
 };
 
+const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
+    JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
+    JS_FS_END
+};
+
 /*
  * TypedArrayObject boilerplate
  */
@@ -3761,6 +3778,9 @@ InitArrayBufferClass(JSContext *cx)
     RootedValue value(cx, UndefinedValue());
     if (!DefineNativeProperty(cx, arrayBufferProto, byteLengthId, value,
                               JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, flags, 0, 0))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, ctor, ArrayBufferObject::jsstaticfuncs))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))

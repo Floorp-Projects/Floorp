@@ -1285,6 +1285,9 @@ MessageChannel::ReportMessageRouteError(const char* channelName) const
 void
 MessageChannel::ReportConnectionError(const char* aChannelName) const
 {
+    AssertWorkerThread();
+    mMonitor->AssertCurrentThreadOwns();
+
     const char* errorMsg = nullptr;
     switch (mChannelState) {
       case ChannelClosed:
@@ -1308,6 +1311,8 @@ MessageChannel::ReportConnectionError(const char* aChannelName) const
     }
 
     PrintErrorMessage(mSide, aChannelName, errorMsg);
+
+    MonitorAutoUnlock unlock(*mMonitor);
     mListener->OnProcessingError(MsgDropped);
 }
 

@@ -455,7 +455,9 @@ js::CloneFunctionAndScript(JSContext *cx, HandleObject enclosingScope, HandleFun
     if (!clone)
         return nullptr;
 
-    RootedScript srcScript(cx, srcFun->nonLazyScript());
+    RootedScript srcScript(cx, srcFun->getOrCreateScript(cx));
+    if (!srcScript)
+        return nullptr;
     RootedScript clonedScript(cx, CloneScript(cx, enclosingScope, clone, srcScript));
     if (!clonedScript)
         return nullptr;
@@ -522,11 +524,30 @@ JSFunction::trace(JSTracer *trc)
     if (isInterpreted()) {
         // Functions can be be marked as interpreted despite having no script
         // yet at some points when parsing, and can be lazy with no lazy script
-        // for self hosted code.
-        if (hasScript() && u.i.s.script_)
-            MarkScriptUnbarriered(trc, &u.i.s.script_, "script");
-        else if (isInterpretedLazy() && u.i.s.lazy_)
+        // for self-hosted code.
+        if (hasScript() && u.i.s.script_) {
+            // Functions can be relazified under the following conditions:
+            // - their compartment isn't currently executing scripts or being
+            //   debugged
+            // - they are not in the self-hosting compartment
+            // - they aren't generators
+            // - they don't have JIT code attached
+            // - they don't have child functions
+            // - they have information for un-lazifying them again later
+            // This information can either be a LazyScript, or the name of a
+            // self-hosted function which can be cloned over again. The latter
+            // is stored in the first extended slot.
+            if (IS_GC_MARKING_TRACER(trc) && !compartment()->hasBeenEntered() &&
+                !compartment()->debugMode() && !compartment()->isSelfHosting &&
+                u.i.s.script_->isRelazifiable() && (!isSelfHostedBuiltin() || isExtended()))
+            {
+                relazify(trc);
+            } else {
+                MarkScriptUnbarriered(trc, &u.i.s.script_, "script");
+            }
+        } else if (isInterpretedLazy() && u.i.s.lazy_) {
             MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
+        }
         if (u.i.env_)
             MarkObjectUnbarriered(trc, &u.i.env_, "fun_callscope");
     }
@@ -1126,11 +1147,18 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         if (script) {
             AutoLockForCompilation lock(cx);
             fun->setUnlazifiedScript(script);
+            // Remember the lazy script on the compiled script, so it can be
+            // stored on the function again in case of re-lazification.
+            // Only functions without inner functions are re-lazified.
+            if (!lazy->numInnerFunctions())
+                script->setLazyScript(lazy);
             return true;
         }
 
-        if (fun != lazy->function()) {
-            script = lazy->function()->getOrCreateScript(cx);
+        if (fun != lazy->functionNonDelazifying()) {
+            if (!lazy->functionDelazifying(cx))
+                return false;
+            script = lazy->functionNonDelazifying()->nonLazyScript();
             if (!script)
                 return false;
 
@@ -1160,7 +1188,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
             clonedScript->setSourceObject(lazy->sourceObject());
 
-            fun->initAtom(script->function()->displayAtom());
+            fun->initAtom(script->functionNonDelazifying()->displayAtom());
             clonedScript->setFunction(fun);
 
             {
@@ -1170,7 +1198,8 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
             CallNewScriptHook(cx, clonedScript, fun);
 
-            lazy->initScript(clonedScript);
+            if (!lazy->maybeScript())
+                lazy->initScript(clonedScript);
             return true;
         }
 
@@ -1190,6 +1219,11 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
         script = fun->nonLazyScript();
 
+        // Remember the compiled script on the lazy script itself, in case
+        // there are clones of the function still pointing to the lazy script.
+        if (!lazy->maybeScript())
+            lazy->initScript(script);
+
         // Try to insert the newly compiled script into the lazy script cache.
         if (!lazy->numInnerFunctions()) {
             // A script's starting column isn't set by the bytecode emitter, so
@@ -1199,20 +1233,61 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
 
             LazyScriptCache::Lookup lookup(cx, lazy);
             cx->runtime()->lazyScriptCache.insert(lookup, script);
-        }
 
-        // Remember the compiled script on the lazy script itself, in case
-        // there are clones of the function still pointing to the lazy script.
-        lazy->initScript(script);
+            // Remember the lazy script on the compiled script, so it can be
+            // stored on the function again in case of re-lazification.
+            // Only functions without inner functions are re-lazified.
+            script->setLazyScript(lazy);
+        }
         return true;
     }
 
-    /* Lazily cloned self hosted script. */
+    /* Lazily cloned self-hosted script. */
+    JS_ASSERT(fun->isSelfHostedBuiltin());
     RootedAtom funAtom(cx, &fun->getExtendedSlot(0).toString()->asAtom());
     if (!funAtom)
         return false;
     Rooted<PropertyName *> funName(cx, funAtom->asPropertyName());
     return cx->runtime()->cloneSelfHostedFunctionScript(cx, funName, fun);
+}
+
+void
+JSFunction::relazify(JSTracer *trc)
+{
+    JSScript *script = nonLazyScript();
+    JS_ASSERT(script->isRelazifiable());
+    JS_ASSERT(!compartment()->hasBeenEntered());
+    JS_ASSERT(!compartment()->debugMode());
+
+    // If the script's canonical function isn't lazy, we have to mark the
+    // script. Otherwise, the following scenario would leave it unmarked
+    // and cause it to be swept while a function is still expecting it to be
+    // valid:
+    // 1. an incremental GC slice causes the canonical function to relazify
+    // 2. a clone is used and delazifies the canonical function
+    // 3. another GC slice causes the clone to relazify
+    // The result is that no function marks the script, but the canonical
+    // function expects it to be valid.
+    if (script->functionNonDelazifying()->hasScript())
+        MarkScriptUnbarriered(trc, &u.i.s.script_, "script");
+
+    flags_ &= ~INTERPRETED;
+    flags_ |= INTERPRETED_LAZY;
+    LazyScript *lazy = script->maybeLazyScript();
+    u.i.s.lazy_ = lazy;
+    if (lazy) {
+        JS_ASSERT(!isSelfHostedBuiltin());
+        // If this is the script stored in the lazy script to be cloned
+        // for un-lazifying other functions, reset it so the script can
+        // be freed.
+        if (lazy->maybeScript() == script)
+            lazy->resetScript();
+        MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
+    } else {
+        JS_ASSERT(isSelfHostedBuiltin());
+        JS_ASSERT(isExtended());
+        JS_ASSERT(getExtendedSlot(0).toString()->isAtom());
+    }
 }
 
 /* ES5 15.3.4.5.1 and 15.3.4.5.2. */

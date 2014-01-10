@@ -23,6 +23,7 @@ var xhr = null;
 var upload = null;
 var currentEvents = null;
 var expectedResponseText = null;
+var uploadTotal = 0;
 
 function logEvent(evt) {
   var i = 0;
@@ -31,6 +32,13 @@ function logEvent(evt) {
          ((currentEvents[i].type != evt.type) ||
           !(evt.target instanceof currentEvents[i].target))) {
     ++i;
+  }
+  if (evt.target instanceof XMLHttpRequestUpload) {
+    if (evt.type == "loadstart") {
+      uploadTotal = evt.total
+    } else {
+      is(evt.total, uploadTotal, "event(" + evt.type +  ").total should not change during upload.");
+    }
   }
   ok(i != currentEvents.length, "Extra or wrong event?");
   is(evt.type, currentEvents[i].type, "Wrong event!")

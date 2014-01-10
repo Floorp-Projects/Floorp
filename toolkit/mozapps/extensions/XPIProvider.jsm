@@ -4303,7 +4303,7 @@ var XPIProvider = {
       }
     }
     finally {
-      if (aMethod == "shutdown") {
+      if (aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         LOG("Removing manifest for " + aFile.path);
         Components.manager.removeBootstrappedManifestLocation(aFile);
       }
