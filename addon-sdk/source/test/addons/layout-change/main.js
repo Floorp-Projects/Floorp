@@ -111,11 +111,6 @@ exports["test compatibility"] = function(assert) {
   assert.equal(require("match-pattern"),
                require("sdk/util/match-pattern"), "sdk/util/match-pattern -> match-pattern");
 
-  if (app.is("Firefox")) {
-    assert.equal(require("tab-browser"),
-                 require("sdk/deprecated/tab-browser"), "sdk/deprecated/tab-browser -> tab-browser");
-  }
-
   assert.equal(require("file"),
                require("sdk/io/file"), "sdk/io/file -> file");
 

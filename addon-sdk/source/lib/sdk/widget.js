@@ -443,11 +443,30 @@ const WidgetViewTrait = LightTrait.compose(EventEmitterTrait, LightTrait({
 
     // Special case for click events: if the widget doesn't have a click
     // handler, but it does have a panel, display the panel.
-    if ("click" == type && !this._listeners("click").length && this.panel)
+    if ("click" == type && !this._listeners("click").length && this.panel) {
+      // In Australis, widgets may be positioned in an overflow panel or the
+      // menu panel.
+      // In such cases clicking this widget will hide the overflow/menu panel,
+      // and the widget's panel will show instead.
+
+      let anchor = domNode;
+      let { CustomizableUI, window } = domNode.ownerDocument.defaultView;
+
+      if (CustomizableUI) {
+        ({anchor}) = CustomizableUI.getWidget(domNode.id).forWindow(window);
+
+        // if `anchor` is not the `domNode` itself, it means the widget is
+        // positioned in a panel, therefore we have to hide it before show
+        // the widget's panel in the same anchor
+        if (anchor !== domNode)
+          CustomizableUI.hidePanelForNode(domNode);
+      }
+
       // This kind of ugly workaround, instead we should implement
       // `getNodeView` for the `Widget` class itself, but that's kind of
       // hard without cleaning things up.
-      this.panel.show(null, getNodeView.implement({}, function() domNode));
+      this.panel.show(null, getNodeView.implement({}, () => anchor));
+    }
   },
 
   _isInWindow: function WidgetView__isInWindow(window) {
