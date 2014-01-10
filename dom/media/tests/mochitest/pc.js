@@ -323,6 +323,75 @@ MediaElementChecker.prototype = {
   }
 };
 
+/**
+ * Query function for determining if any IP address is available for
+ * generating SDP.
+ *
+ * @return false if required additional network setup.
+ */
+function isNetworkReady() {
+  // for gonk platform
+  if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
+    var listService = SpecialPowers.Cc["@mozilla.org/network/interface-list-service;1"]
+                        .getService(SpecialPowers.Ci.nsINetworkInterfaceListService);
+    var itfList = listService.getDataInterfaceList(
+          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_MMS_INTERFACES |
+          SpecialPowers.Ci.nsINetworkInterfaceListService.LIST_NOT_INCLUDE_SUPL_INTERFACES);
+    var num = itfList.getNumberOfInterface();
+    for (var i = 0; i < num; i++) {
+      if (itfList.getInterface(i).ip) {
+        info("Network interface is ready with address: " + itfList.getInterface(i).ip);
+        return true;
+      }
+    }
+    // ip address is not available
+    info("Network interface is not ready, required additional network setup");
+    return false;
+  }
+  info("Network setup is not required");
+  return true;
+}
+
+/**
+ * Network setup utils for Gonk
+ *
+ * @return {object} providing functions for setup/teardown data connection
+ */
+function getNetworkUtils() {
+  var url = SimpleTest.getTestFileURL("NetworkPreparationChromeScript.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  var utils = {
+    /**
+     * Utility for setting up data connection.
+     *
+     * @param aCallback callback after data connection is ready.
+     */
+    prepareNetwork: function(aCallback) {
+      script.addMessageListener('network-ready', function (message) {
+        info("Network interface is ready");
+        aCallback();
+      });
+      info("Setup network interface");
+      script.sendAsyncMessage("prepare-network", true);
+    },
+    /**
+     * Utility for tearing down data connection.
+     *
+     * @param aCallback callback after data connection is closed.
+     */
+    tearDownNetwork: function(aCallback) {
+      script.addMessageListener('network-disabled', function (message) {
+        ok(true, 'network-disabled');
+        script.destroy();
+        aCallback();
+      });
+      script.sendAsyncMessage("network-cleanup", true);
+    }
+  };
+
+  return utils;
+}
 
 /**
  * This class handles tests for peer connections.
@@ -349,6 +418,27 @@ function PeerConnectionTest(options) {
   options.is_local = "is_local" in options ? options.is_local : true;
   options.is_remote = "is_remote" in options ? options.is_remote : true;
 
+  var netTeardownCommand = null;
+  if (!isNetworkReady()) {
+    var utils = getNetworkUtils();
+    // Trigger network setup to obtain IP address before creating any PeerConnection.
+    utils.prepareNetwork(function() {
+      ok(isNetworkReady(),'setup network connection successfully');
+    });
+
+    netTeardownCommand = [
+      [
+        'TEARDOWN_NETWORK',
+        function(test) {
+          utils.tearDownNetwork(function() {
+            info('teardown network connection');
+            test.next();
+          });
+        }
+      ]
+    ];
+  }
+
   if (options.is_local)
     this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_pc1);
   else
@@ -368,6 +458,11 @@ function PeerConnectionTest(options) {
   }
   if (!options.is_remote) {
     this.chain.filterOut(/^PC_REMOTE/);
+  }
+
+  // Insert network teardown after testcase execution.
+  if (netTeardownCommand) {
+    this.chain.append(netTeardownCommand);
   }
 
   var self = this;
