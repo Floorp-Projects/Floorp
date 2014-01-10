@@ -922,9 +922,9 @@ GLContextGLX::GLContextGLX(
 
 
 static GLContextGLX *
-GetGlobalContextGLX(const ContextFlags aFlags = ContextFlagsNone)
+GetGlobalContextGLX()
 {
-    return static_cast<GLContextGLX*>(GLContextProviderGLX::GetGlobalContext(aFlags));
+    return static_cast<GLContextGLX*>(GLContextProviderGLX::GetGlobalContext());
 }
 
 static bool
@@ -1144,10 +1144,9 @@ DONE_CREATING_PIXMAP:
     if (!error && // earlier recorded error
         !serverError)
     {
-        ContextFlags flag = ContextFlagsNone;
         // We might have an alpha channel, but it doesn't matter.
         SurfaceCaps dummyCaps = SurfaceCaps::Any();
-        GLContextGLX* shareContext = GetGlobalContextGLX(flag);
+        GLContextGLX* shareContext = GetGlobalContextGLX();
 
         glContext = GLContextGLX::CreateGLContext(dummyCaps,
                                                   shareContext,
@@ -1164,8 +1163,7 @@ DONE_CREATING_PIXMAP:
 
 already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps,
-                                      ContextFlags flags)
+                                      const SurfaceCaps& caps)
 {
     gfxIntSize dummySize = gfxIntSize(16, 16);
     nsRefPtr<GLContextGLX> glContext =
@@ -1185,7 +1183,7 @@ static nsRefPtr<GLContext> gGlobalContext;
 static bool gUseContextSharing = getenv("MOZ_DISABLE_CONTEXT_SHARING_GLX") == 0;
 
 GLContext*
-GLContextProviderGLX::GetGlobalContext(const ContextFlags aFlag)
+GLContextProviderGLX::GetGlobalContext()
 {
     // TODO: get GLX context sharing to work well with multiple threads
     if (!gUseContextSharing) {
