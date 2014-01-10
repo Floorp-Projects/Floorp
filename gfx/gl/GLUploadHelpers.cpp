@@ -30,13 +30,13 @@ static gfxImageFormat
 ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
 {
     switch (aFormat) {
-        case gfx::FORMAT_B8G8R8A8:
+        case gfx::SurfaceFormat::B8G8R8A8:
             return gfxImageFormatARGB32;
-        case gfx::FORMAT_B8G8R8X8:
+        case gfx::SurfaceFormat::B8G8R8X8:
             return gfxImageFormatRGB24;
-        case gfx::FORMAT_R5G6B5:
+        case gfx::SurfaceFormat::R5G6B5:
             return gfxImageFormatRGB16_565;
-        case gfx::FORMAT_A8:
+        case gfx::SurfaceFormat::A8:
             return gfxImageFormatA8;
         default:
             return gfxImageFormatUnknown;
@@ -420,11 +420,11 @@ UploadImageDataToTexture(GLContext* gl,
         case gfxImageFormatARGB32:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::FORMAT_R8G8B8A8;
+              surfaceFormat = gfx::SurfaceFormat::R8G8B8A8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::FORMAT_B8G8R8A8;
+              surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
@@ -434,11 +434,11 @@ UploadImageDataToTexture(GLContext* gl,
             // format used.
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::FORMAT_R8G8B8X8;
+              surfaceFormat = gfx::SurfaceFormat::R8G8B8X8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::FORMAT_B8G8R8X8;
+              surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
@@ -446,19 +446,19 @@ UploadImageDataToTexture(GLContext* gl,
         case gfxImageFormatRGB16_565:
             internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = gfx::FORMAT_R5G6B5;
+            surfaceFormat = gfx::SurfaceFormat::R5G6B5;
             break;
         case gfxImageFormatA8:
             internalFormat = format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
             // We don't have a specific luminance shader
-            surfaceFormat = gfx::FORMAT_A8;
+            surfaceFormat = gfx::SurfaceFormat::A8;
             break;
         default:
             NS_ASSERTION(false, "Unhandled image surface format!");
             format = 0;
             type = 0;
-            surfaceFormat = gfx::FORMAT_UNKNOWN;
+            surfaceFormat = gfx::SurfaceFormat::UNKNOWN;
     }
 
     nsIntRegionRectIterator iter(paintRegion);

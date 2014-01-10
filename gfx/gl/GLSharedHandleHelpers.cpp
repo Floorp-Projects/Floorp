@@ -247,7 +247,7 @@ bool GetSharedHandleDetails(GLContext* gl,
         SurfaceTextureWrapper* surfaceWrapper = reinterpret_cast<SurfaceTextureWrapper*>(wrapper);
 
         details.mTarget = LOCAL_GL_TEXTURE_EXTERNAL;
-        details.mTextureFormat = gfx::FORMAT_R8G8B8A8;
+        details.mTextureFormat = gfx::SurfaceFormat::R8G8B8A8;
         surfaceWrapper->SurfaceTexture()->GetTransformMatrix(details.mTextureTransform);
         break;
     }
@@ -255,7 +255,7 @@ bool GetSharedHandleDetails(GLContext* gl,
 
     case SharedHandleType_Image:
         details.mTarget = LOCAL_GL_TEXTURE_2D;
-        details.mTextureFormat = gfx::FORMAT_R8G8B8A8;
+        details.mTextureFormat = gfx::SurfaceFormat::R8G8B8A8;
         break;
 
     default:

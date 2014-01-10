@@ -578,7 +578,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
   
     SurfaceFormat moz2DFormat =
         cairo_surface_get_content(tempXlibSurface) == CAIRO_CONTENT_COLOR ?
-            FORMAT_B8G8R8A8 : FORMAT_B8G8R8X8;
+            SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
     if (method != eAlphaExtraction) {
         if (drawTarget) {
             // It doesn't matter if moz2DFormat doesn't exactly match the format

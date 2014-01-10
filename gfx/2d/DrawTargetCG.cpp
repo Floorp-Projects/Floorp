@@ -1217,7 +1217,7 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
 
     // Quartz seems to copy A8 surfaces incorrectly if we don't initialize them
     // to transparent first.
-    if (mFormat == FORMAT_A8) {
+    if (mFormat == SurfaceFormat::A8) {
       CGContextClearRect(mCg, flippedRect);
     }
     CGContextDrawImage(mCg, flippedRect, subimage);
@@ -1297,21 +1297,21 @@ DrawTargetCG::Init(BackendType aType,
     // and we will fallback to software below
   }
 
-  mFormat = FORMAT_B8G8R8A8;
+  mFormat = SurfaceFormat::B8G8R8A8;
 
   if (!mCg || aType == BACKEND_COREGRAPHICS) {
     int bitsPerComponent = 8;
 
     CGBitmapInfo bitinfo;
-    if (aFormat == FORMAT_A8) {
+    if (aFormat == SurfaceFormat::A8) {
       if (mColorSpace)
         CGColorSpaceRelease(mColorSpace);
       mColorSpace = nullptr;
       bitinfo = kCGImageAlphaOnly;
-      mFormat = FORMAT_A8;
+      mFormat = SurfaceFormat::A8;
     } else {
       bitinfo = kCGBitmapByteOrder32Host;
-      if (aFormat == FORMAT_B8G8R8X8) {
+      if (aFormat == SurfaceFormat::B8G8R8X8) {
         bitinfo |= kCGImageAlphaNoneSkipFirst;
         mFormat = aFormat;
       } else {
@@ -1394,15 +1394,15 @@ DrawTargetCG::Init(CGContextRef cgContext, const IntSize &aSize)
   // CGContextTranslateCTM(mCg, 0, mSize.height);
   // CGContextScaleCTM(mCg, 1, -1);
 
-  mFormat = FORMAT_B8G8R8A8;
+  mFormat = SurfaceFormat::B8G8R8A8;
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) {
     CGColorSpaceRef colorspace;
     CGBitmapInfo bitinfo = CGBitmapContextGetBitmapInfo(mCg);
     colorspace = CGBitmapContextGetColorSpace (mCg);
     if (CGColorSpaceGetNumberOfComponents(colorspace) == 1) {
-      mFormat = FORMAT_A8;
+      mFormat = SurfaceFormat::A8;
     } else if ((bitinfo & kCGBitmapAlphaInfoMask) == kCGImageAlphaNoneSkipFirst) {
-      mFormat = FORMAT_B8G8R8X8;
+      mFormat = SurfaceFormat::B8G8R8X8;
     }
   }
 

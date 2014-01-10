@@ -1637,11 +1637,11 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
     }
   } else {
     IntRect clipExtents;
-    if (mDT->GetFormat() != FORMAT_B8G8R8X8) {
+    if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
       gfxRect clipRect = GetRoundOutDeviceClipExtents(this);
       clipExtents = IntRect(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
     }
-    if ((mDT->GetFormat() == FORMAT_B8G8R8X8 ||
+    if ((mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
          mDT->GetOpaqueRect().Contains(clipExtents)) &&
         !mDT->GetUserData(&sDontUseAsSourceKey)) {
       DrawTarget *oldDT = mDT;
@@ -2132,7 +2132,7 @@ gfxContext::GetOp()
       return OP_SOURCE;
     }
   } else if (state.sourceSurface) {
-    if (state.sourceSurface->GetFormat() == FORMAT_B8G8R8X8) {
+    if (state.sourceSurface->GetFormat() == SurfaceFormat::B8G8R8X8) {
       return OP_OVER;
     } else {
       return OP_SOURCE;

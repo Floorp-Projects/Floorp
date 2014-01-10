@@ -375,7 +375,7 @@ gfxPattern::IsOpaque()
     }
   }
 
-  if (mSourceSurface->GetFormat() == FORMAT_B8G8R8X8) {
+  if (mSourceSurface->GetFormat() == SurfaceFormat::B8G8R8X8) {
     return true;
   }
   return false;

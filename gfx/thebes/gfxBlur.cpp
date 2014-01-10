@@ -65,7 +65,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     mozilla::RefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateDrawTargetForData(mData, size,
                                                             mBlur->GetStride(),
-                                                            FORMAT_A8);
+                                                            SurfaceFormat::A8);
     if (!dt) {
         nsRefPtr<gfxImageSurface> image =
             new gfxImageSurface(mData,
@@ -107,7 +107,7 @@ gfxAlphaBoxBlur::Paint(gfxContext* aDestinationCtx)
       = dest->CreateSourceSurfaceFromData(mData,
                                           mBlur->GetSize(),
                                           mBlur->GetStride(),
-                                          FORMAT_A8);
+                                          SurfaceFormat::A8);
     if (!mask) {
       NS_ERROR("Failed to create mask!");
       return;

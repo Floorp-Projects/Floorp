@@ -134,15 +134,15 @@ static inline SurfaceFormat ToPixelFormat(const D2D1_PIXEL_FORMAT &aFormat)
 {
   switch(aFormat.format) {
   case DXGI_FORMAT_A8_UNORM:
-    return FORMAT_A8;
+    return SurfaceFormat::A8;
   case DXGI_FORMAT_B8G8R8A8_UNORM:
     if (aFormat.alphaMode == D2D1_ALPHA_MODE_IGNORE) {
-      return FORMAT_B8G8R8X8;
+      return SurfaceFormat::B8G8R8X8;
     } else {
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     }
   default:
-    return FORMAT_B8G8R8A8;
+    return SurfaceFormat::B8G8R8A8;
   }
 }
 
@@ -166,11 +166,11 @@ static inline Point ToPoint(const D2D1_POINT_2F &aPoint)
 static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_B8G8R8A8:
+  case SurfaceFormat::B8G8R8A8:
     return DXGI_FORMAT_B8G8R8A8_UNORM;
-  case FORMAT_B8G8R8X8:
+  case SurfaceFormat::B8G8R8X8:
     return DXGI_FORMAT_B8G8R8A8_UNORM;
-  case FORMAT_A8:
+  case SurfaceFormat::A8:
     return DXGI_FORMAT_A8_UNORM;
   default:
     return DXGI_FORMAT_UNKNOWN;
@@ -180,7 +180,7 @@ static inline DXGI_FORMAT DXGIFormat(SurfaceFormat aFormat)
 static inline D2D1_ALPHA_MODE D2DAlphaModeForFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
-  case FORMAT_B8G8R8X8:
+  case SurfaceFormat::B8G8R8X8:
     return D2D1_ALPHA_MODE_IGNORE;
   default:
     return D2D1_ALPHA_MODE_PREMULTIPLIED;

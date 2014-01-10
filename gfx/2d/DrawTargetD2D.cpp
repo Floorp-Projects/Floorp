@@ -821,7 +821,7 @@ DrawTargetD2D::CopySurface(SourceSurface *aSurface,
     return;
   }
 
-  if (aSurface->GetFormat() == FORMAT_A8) {
+  if (aSurface->GetFormat() == SurfaceFormat::A8) {
     RefPtr<ID2D1SolidColorBrush> brush;
     mRT->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White),
                                D2D1::BrushProperties(), byRef(brush));
@@ -995,7 +995,7 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
     aaMode = aOptions.mAntialiasMode;
   }
 
-  if (mFormat == FORMAT_B8G8R8A8 && mPermitSubpixelAA &&
+  if (mFormat == SurfaceFormat::B8G8R8A8 && mPermitSubpixelAA &&
       aOptions.mCompositionOp == OP_OVER && aPattern.GetType() == PATTERN_COLOR &&
       aaMode == AA_SUBPIXEL) {
     if (FillGlyphsManual(font, aBuffer,
@@ -1026,7 +1026,7 @@ DrawTargetD2D::FillGlyphs(ScaledFont *aFont,
   }
 
   if (d2dAAMode == D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE &&
-      mFormat != FORMAT_B8G8R8X8) {
+      mFormat != SurfaceFormat::B8G8R8X8) {
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
   }
 
@@ -1487,7 +1487,7 @@ DrawTargetD2D::InitD2DRenderTarget()
 
   mRT->BeginDraw();
 
-  if (mFormat == FORMAT_B8G8R8X8) {
+  if (mFormat == SurfaceFormat::B8G8R8X8) {
     mRT->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
   }
 
@@ -1639,7 +1639,7 @@ DrawTargetD2D::GetRTForOperation(CompositionOp aOperator, const Pattern &aPatter
     return mRT;
   }
 
-  mTempRT = CreateRTForTexture(mTempTexture, FORMAT_B8G8R8A8);
+  mTempRT = CreateRTForTexture(mTempTexture, SurfaceFormat::B8G8R8A8);
 
   if (!mTempRT) {
     return mRT;
@@ -1932,7 +1932,7 @@ DrawTargetD2D::CreateRTForTexture(ID3D10Texture2D *aTexture, SurfaceFormat aForm
 
   D2D1_ALPHA_MODE alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
 
-  if (aFormat == FORMAT_B8G8R8X8 && aTexture == mTexture) {
+  if (aFormat == SurfaceFormat::B8G8R8X8 && aTexture == mTexture) {
     alphaMode = D2D1_ALPHA_MODE_IGNORE;
   }
 
@@ -2043,7 +2043,7 @@ DrawTargetD2D::EnsureClipMaskTexture(IntRect *aBounds)
     return;
   }
 
-  RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(mCurrentClipMaskTexture, FORMAT_A8);
+  RefPtr<ID2D1RenderTarget> rt = CreateRTForTexture(mCurrentClipMaskTexture, SurfaceFormat::A8);
 
   if (!rt) {
     gfxWarning() << "Failed to create RT for ClipMask!";
