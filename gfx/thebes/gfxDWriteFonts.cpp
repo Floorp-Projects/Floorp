@@ -699,7 +699,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
   }
 
   NativeFont nativeFont;
-  nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
+  nativeFont.mType = NativeFontType::DWRITE_FONT_FACE;
   nativeFont.mFont = GetFontFace();
 
   if (wantCairo) {

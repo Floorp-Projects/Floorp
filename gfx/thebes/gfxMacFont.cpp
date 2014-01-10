@@ -410,7 +410,7 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
 {
   if (!mAzureScaledFont) {
     NativeFont nativeFont;
-    nativeFont.mType = NATIVE_FONT_MAC_FONT_FACE;
+    nativeFont.mType = NativeFontType::MAC_FONT_FACE;
     nativeFont.mFont = GetCGFontRef();
     mAzureScaledFont = mozilla::gfx::Factory::CreateScaledFontWithCairo(nativeFont, GetAdjustedSize(), mScaledFont);
   }
