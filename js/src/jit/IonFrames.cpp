@@ -1105,8 +1105,10 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 static void
 MarkRectifierFrame(JSTracer *trc, const IonFrameIterator &frame)
 {
-    // Mark thisv. Baseline JIT code generated as part of the ICCall_Fallback
-    // stub may read it if a constructor returns a primitive value.
+    // Mark thisv.
+    //
+    // Baseline JIT code generated as part of the ICCall_Fallback stub may use
+    // it if we're calling a constructor that returns a primitive value.
     IonRectifierFrameLayout *layout = (IonRectifierFrameLayout *)frame.fp();
     gc::MarkValueRoot(trc, &layout->argv()[0], "ion-thisv");
 }
