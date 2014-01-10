@@ -169,12 +169,12 @@ PatternIsCompatible(const Pattern& aPattern)
 {
   switch (aPattern.GetType())
   {
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
     {
       const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
       return pattern.mStops->GetBackendType() == BackendType::CAIRO;
     }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
     {
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
       return pattern.mStops->GetBackendType() == BackendType::CAIRO;
@@ -261,7 +261,7 @@ public:
   AutoClearDeviceOffset(const Pattern& aPattern)
     : mSurface(nullptr)
   {
-    if (aPattern.GetType() == PATTERN_SURFACE) {
+    if (aPattern.GetType() == PatternType::SURFACE) {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
       Init(pattern.mSurface);
     }
@@ -311,14 +311,14 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
   switch (aPattern.GetType())
   {
-    case PATTERN_COLOR:
+    case PatternType::COLOR:
     {
       Color color = static_cast<const ColorPattern&>(aPattern).mColor;
       pat = cairo_pattern_create_rgba(color.r, color.g, color.b, color.a * aAlpha);
       break;
     }
 
-    case PATTERN_SURFACE:
+    case PatternType::SURFACE:
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
       cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
@@ -334,7 +334,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       break;
     }
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
     {
       const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
 
@@ -357,7 +357,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       break;
     }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
     {
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
 
@@ -405,7 +405,7 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 {
   // We pre-multiply colours' alpha by the global alpha, so we don't need to
   // use an intermediate surface for them.
-  if (aPattern.GetType() == PATTERN_COLOR)
+  if (aPattern.GetType() == PatternType::COLOR)
     return false;
 
   if (aOptions.mAlpha == 1.0)
@@ -1010,7 +1010,7 @@ DrawTargetCairo::PopClip()
 }
 
 TemporaryRef<PathBuilder>
-DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) const
+DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FillRule::FILL_WINDING */) const
 {
   RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
@@ -1020,7 +1020,7 @@ DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) cons
 void
 DrawTargetCairo::ClearSurfaceForUnboundedSource(const CompositionOp &aOperator)
 {
-  if (aOperator != OP_SOURCE)
+  if (aOperator != CompositionOp::OP_SOURCE)
     return;
   cairo_set_operator(mContext, CAIRO_OPERATOR_CLEAR);
   // It doesn't really matter what the source is here, since Paint

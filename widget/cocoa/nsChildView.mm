@@ -2406,7 +2406,7 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
     RefPtr<gfx::Path> path = builder->Finish();
     drawTarget->Fill(path,
                      gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)),
-                     gfx::DrawOptions(1.0f, gfx::OP_SOURCE));
+                     gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
   });
 
   // Use operator destination in: multiply all 4 channels with source alpha.
@@ -2708,7 +2708,7 @@ RectTextureImage::UpdateFromCGContext(const nsIntSize& aNewSize,
                                       gfx::SurfaceFormat::B8G8R8A8);
     dt->DrawSurface(sourceSurface, rect, rect,
                     gfx::DrawSurfaceOptions(),
-                    gfx::DrawOptions(1.0, gfx::OP_SOURCE));
+                    gfx::DrawOptions(1.0, gfx::CompositionOp::OP_SOURCE));
     dt->PopClip();
     EndUpdate();
   }
@@ -2729,7 +2729,7 @@ RectTextureImage::UpdateFromDrawTarget(const nsIntSize& aNewSize,
       gfxUtils::ClipToRegion(drawTarget, GetUpdateRegion());
       drawTarget->DrawSurface(source, rect, rect,
                               gfx::DrawSurfaceOptions(),
-                              gfx::DrawOptions(1.0, gfx::OP_SOURCE));
+                              gfx::DrawOptions(1.0, gfx::CompositionOp::OP_SOURCE));
       drawTarget->PopClip();
     }
     EndUpdate();

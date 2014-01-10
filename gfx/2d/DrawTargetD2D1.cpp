@@ -69,7 +69,7 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, EXTEND_CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, ExtendMode::CLAMP);
 
   if (!image) {
     gfxWarning() << *this << ": Unable to get D2D image for surface.";
@@ -80,7 +80,7 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
 
   D2D1_RECT_F samplingBounds;
 
-  if (aSurfOptions.mSamplingBounds == SAMPLING_BOUNDED) {
+  if (aSurfOptions.mSamplingBounds == SamplingBounds::BOUNDED) {
     samplingBounds = D2DRect(aSource);
   } else {
     samplingBounds = D2D1::RectF(0, 0, Float(aSurface->GetSize().width), Float(aSurface->GetSize().height));
@@ -134,7 +134,7 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
   mTransformDirty = true;
 
   Matrix mat;
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, EXTEND_CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
 
   if (!mat.IsIdentity()) {
     gfxDebug() << *this << ": At this point complex partial uploads are not supported for Shadow surfaces.";
@@ -185,7 +185,7 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
 {
   RefPtr<ID2D1Bitmap> bitmap;
 
-  RefPtr<ID2D1Image> image = GetImageForSurface(aMask, EXTEND_CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aMask, ExtendMode::CLAMP);
 
   PrepareForDrawing(aOptions.mCompositionOp, aSource);
 
@@ -220,7 +220,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   mTransformDirty = true;
 
   Matrix mat;
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, EXTEND_CLAMP);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP);
 
   if (!mat.IsIdentity()) {
     gfxDebug() << *this << ": At this point complex partial uploads are not supported for CopySurface.";
@@ -348,7 +348,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
 
   AntialiasMode aaMode = font->GetDefaultAAMode();
 
-  if (aOptions.mAntialiasMode != AA_DEFAULT) {
+  if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
     aaMode = aOptions.mAntialiasMode;
   }
 
@@ -356,7 +356,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
 
   bool forceClearType = false;
   if (mFormat == SurfaceFormat::B8G8R8A8 && mPermitSubpixelAA &&
-      aOptions.mCompositionOp == OP_OVER && aaMode == AA_SUBPIXEL) {
+      aOptions.mCompositionOp == CompositionOp::OP_OVER && aaMode == AntialiasMode::SUBPIXEL) {
     forceClearType = true;    
   }
 
@@ -364,13 +364,13 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   D2D1_TEXT_ANTIALIAS_MODE d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_DEFAULT;
 
   switch (aaMode) {
-  case AA_NONE:
+  case AntialiasMode::NONE:
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_ALIASED;
     break;
-  case AA_GRAY:
+  case AntialiasMode::GRAY:
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
     break;
-  case AA_SUBPIXEL:
+  case AntialiasMode::SUBPIXEL:
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE;
     break;
   default:
@@ -553,7 +553,7 @@ DrawTargetD2D1::CreatePathBuilder(FillRule aFillRule) const
     return nullptr;
   }
 
-  if (aFillRule == FILL_WINDING) {
+  if (aFillRule == FillRule::FILL_WINDING) {
     sink->SetFillMode(D2D1_FILL_MODE_WINDING);
   }
 
@@ -695,7 +695,7 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   FlushTransformToDC();
 
-  if (aOp == OP_OVER && IsPatternSupportedByD2D(aPattern)) {
+  if (aOp == CompositionOp::OP_OVER && IsPatternSupportedByD2D(aPattern)) {
     return;
   }
 
@@ -708,7 +708,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 {
   bool patternSupported = IsPatternSupportedByD2D(aPattern);
 
-  if (aOp == OP_OVER && patternSupported) {
+  if (aOp == CompositionOp::OP_OVER && patternSupported) {
     return;
   }
 
@@ -799,7 +799,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     return colBrush;
   }
 
-  if (aPattern.GetType() == PATTERN_COLOR) {
+  if (aPattern.GetType() == PatternType::COLOR) {
     RefPtr<ID2D1SolidColorBrush> colBrush;
     Color color = static_cast<const ColorPattern*>(&aPattern)->mColor;
     mDC->CreateSolidColorBrush(D2D1::ColorF(color.r, color.g,
@@ -807,7 +807,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                D2D1::BrushProperties(aAlpha),
                                byRef(colBrush));
     return colBrush;
-  } else if (aPattern.GetType() == PATTERN_LINEAR_GRADIENT) {
+  } else if (aPattern.GetType() == PatternType::LINEAR_GRADIENT) {
     RefPtr<ID2D1LinearGradientBrush> gradBrush;
     const LinearGradientPattern *pat =
       static_cast<const LinearGradientPattern*>(&aPattern);
@@ -836,7 +836,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                    stops->mStopCollection,
                                    byRef(gradBrush));
     return gradBrush;
-  } else if (aPattern.GetType() == PATTERN_RADIAL_GRADIENT) {
+  } else if (aPattern.GetType() == PatternType::RADIAL_GRADIENT) {
     RefPtr<ID2D1RadialGradientBrush> gradBrush;
     const RadialGradientPattern *pat =
       static_cast<const RadialGradientPattern*>(&aPattern);
@@ -858,7 +858,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       byRef(gradBrush));
 
     return gradBrush;
-  } else if (aPattern.GetType() == PATTERN_SURFACE) {
+  } else if (aPattern.GetType() == PatternType::SURFACE) {
     const SurfacePattern *pat =
       static_cast<const SurfacePattern*>(&aPattern);
 

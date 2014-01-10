@@ -95,7 +95,7 @@ struct EffectMask : public Effect
 struct EffectRenderTarget : public TexturedEffect
 {
   EffectRenderTarget(CompositingRenderTarget *aRenderTarget)
-    : TexturedEffect(EFFECT_RENDER_TARGET, aRenderTarget, true, gfx::FILTER_LINEAR)
+    : TexturedEffect(EFFECT_RENDER_TARGET, aRenderTarget, true, gfx::Filter::LINEAR)
     , mRenderTarget(aRenderTarget)
   {}
 

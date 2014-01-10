@@ -19,11 +19,11 @@ namespace gfx {
 static inline bool
 IsOperatorBoundByMask(CompositionOp aOp) {
   switch (aOp) {
-  case OP_IN:
-  case OP_OUT:
-  case OP_DEST_IN:
-  case OP_DEST_ATOP:
-  case OP_SOURCE:
+  case CompositionOp::OP_IN:
+  case CompositionOp::OP_OUT:
+  case CompositionOp::OP_DEST_IN:
+  case CompositionOp::OP_DEST_ATOP:
+  case CompositionOp::OP_SOURCE:
     return false;
   default:
     return true;

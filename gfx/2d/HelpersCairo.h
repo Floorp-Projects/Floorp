@@ -18,59 +18,59 @@ GfxOpToCairoOp(CompositionOp op)
 {
   switch (op)
   {
-    case OP_OVER:
+    case CompositionOp::OP_OVER:
       return CAIRO_OPERATOR_OVER;
-    case OP_ADD:
+    case CompositionOp::OP_ADD:
       return CAIRO_OPERATOR_ADD;
-    case OP_ATOP:
+    case CompositionOp::OP_ATOP:
       return CAIRO_OPERATOR_ATOP;
-    case OP_OUT:
+    case CompositionOp::OP_OUT:
       return CAIRO_OPERATOR_OUT;
-    case OP_IN:
+    case CompositionOp::OP_IN:
       return CAIRO_OPERATOR_IN;
-    case OP_SOURCE:
+    case CompositionOp::OP_SOURCE:
       return CAIRO_OPERATOR_SOURCE;
-    case OP_DEST_IN:
+    case CompositionOp::OP_DEST_IN:
       return CAIRO_OPERATOR_DEST_IN;
-    case OP_DEST_OUT:
+    case CompositionOp::OP_DEST_OUT:
       return CAIRO_OPERATOR_DEST_OUT;
-    case OP_DEST_OVER:
+    case CompositionOp::OP_DEST_OVER:
       return CAIRO_OPERATOR_DEST_OVER;
-    case OP_DEST_ATOP:
+    case CompositionOp::OP_DEST_ATOP:
       return CAIRO_OPERATOR_DEST_ATOP;
-    case OP_XOR:
+    case CompositionOp::OP_XOR:
       return CAIRO_OPERATOR_XOR;
-    case OP_MULTIPLY:
+    case CompositionOp::OP_MULTIPLY:
       return CAIRO_OPERATOR_MULTIPLY;
-    case OP_SCREEN:
+    case CompositionOp::OP_SCREEN:
       return CAIRO_OPERATOR_SCREEN;
-    case OP_OVERLAY:
+    case CompositionOp::OP_OVERLAY:
       return CAIRO_OPERATOR_OVERLAY;
-    case OP_DARKEN:
+    case CompositionOp::OP_DARKEN:
       return CAIRO_OPERATOR_DARKEN;
-    case OP_LIGHTEN:
+    case CompositionOp::OP_LIGHTEN:
       return CAIRO_OPERATOR_LIGHTEN;
-    case OP_COLOR_DODGE:
+    case CompositionOp::OP_COLOR_DODGE:
       return CAIRO_OPERATOR_COLOR_DODGE;
-    case OP_COLOR_BURN:
+    case CompositionOp::OP_COLOR_BURN:
       return CAIRO_OPERATOR_COLOR_BURN;
-    case OP_HARD_LIGHT:
+    case CompositionOp::OP_HARD_LIGHT:
       return CAIRO_OPERATOR_HARD_LIGHT;
-    case OP_SOFT_LIGHT:
+    case CompositionOp::OP_SOFT_LIGHT:
       return CAIRO_OPERATOR_SOFT_LIGHT;
-    case OP_DIFFERENCE:
+    case CompositionOp::OP_DIFFERENCE:
       return CAIRO_OPERATOR_DIFFERENCE;
-    case OP_EXCLUSION:
+    case CompositionOp::OP_EXCLUSION:
       return CAIRO_OPERATOR_EXCLUSION;
-    case OP_HUE:
+    case CompositionOp::OP_HUE:
       return CAIRO_OPERATOR_HSL_HUE;
-    case OP_SATURATION:
+    case CompositionOp::OP_SATURATION:
       return CAIRO_OPERATOR_HSL_SATURATION;
-    case OP_COLOR:
+    case CompositionOp::OP_COLOR:
       return CAIRO_OPERATOR_HSL_COLOR;
-    case OP_LUMINOSITY:
+    case CompositionOp::OP_LUMINOSITY:
       return CAIRO_OPERATOR_HSL_LUMINOSITY;
-    case OP_COUNT:
+    case CompositionOp::OP_COUNT:
       break;
   }
 
@@ -82,13 +82,13 @@ GfxAntialiasToCairoAntialias(AntialiasMode antialias)
 {
   switch (antialias)
   {
-    case AA_NONE:
+    case AntialiasMode::NONE:
       return CAIRO_ANTIALIAS_NONE;
-    case AA_GRAY:
+    case AntialiasMode::GRAY:
       return CAIRO_ANTIALIAS_GRAY;
-    case AA_SUBPIXEL:
+    case AntialiasMode::SUBPIXEL:
       return CAIRO_ANTIALIAS_SUBPIXEL;
-    case AA_DEFAULT:
+    case AntialiasMode::DEFAULT:
       return CAIRO_ANTIALIAS_DEFAULT;
   }
   return CAIRO_ANTIALIAS_DEFAULT;
@@ -99,11 +99,11 @@ GfxFilterToCairoFilter(Filter filter)
 {
   switch (filter)
   {
-    case FILTER_GOOD:
+    case Filter::GOOD:
       return CAIRO_FILTER_GOOD;
-    case FILTER_LINEAR:
+    case Filter::LINEAR:
       return CAIRO_FILTER_BILINEAR;
-    case FILTER_POINT:
+    case Filter::POINT:
       return CAIRO_FILTER_NEAREST;
   }
 
@@ -115,11 +115,11 @@ GfxExtendToCairoExtend(ExtendMode extend)
 {
   switch (extend)
   {
-    case EXTEND_CLAMP:
+    case ExtendMode::CLAMP:
       return CAIRO_EXTEND_PAD;
-    case EXTEND_REPEAT:
+    case ExtendMode::REPEAT:
       return CAIRO_EXTEND_REPEAT;
-    case EXTEND_REFLECT:
+    case ExtendMode::REFLECT:
       return CAIRO_EXTEND_REFLECT;
   }
 
@@ -168,13 +168,13 @@ GfxLineJoinToCairoLineJoin(JoinStyle style)
 {
   switch (style)
   {
-    case JOIN_BEVEL:
+    case JoinStyle::BEVEL:
       return CAIRO_LINE_JOIN_BEVEL;
-    case JOIN_ROUND:
+    case JoinStyle::ROUND:
       return CAIRO_LINE_JOIN_ROUND;
-    case JOIN_MITER:
+    case JoinStyle::MITER:
       return CAIRO_LINE_JOIN_MITER;
-    case JOIN_MITER_OR_BEVEL:
+    case JoinStyle::MITER_OR_BEVEL:
       return CAIRO_LINE_JOIN_MITER;
   }
 
@@ -186,11 +186,11 @@ GfxLineCapToCairoLineCap(CapStyle style)
 {
   switch (style)
   {
-    case CAP_BUTT:
+    case CapStyle::BUTT:
       return CAIRO_LINE_CAP_BUTT;
-    case CAP_ROUND:
+    case CapStyle::ROUND:
       return CAIRO_LINE_CAP_ROUND;
-    case CAP_SQUARE:
+    case CapStyle::SQUARE:
       return CAIRO_LINE_CAP_SQUARE;
   }
 
@@ -247,9 +247,9 @@ GfxFillRuleToCairoFillRule(FillRule rule)
 {
   switch (rule)
   {
-    case FILL_WINDING:
+    case FillRule::FILL_WINDING:
       return CAIRO_FILL_RULE_WINDING;
-    case FILL_EVEN_ODD:
+    case FillRule::FILL_EVEN_ODD:
       return CAIRO_FILL_RULE_EVEN_ODD;
   }
 

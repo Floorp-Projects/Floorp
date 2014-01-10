@@ -39,7 +39,7 @@ public:
   inline DualPattern(const Pattern &aPattern)
     : mPatternsInitialized(false)
   {
-    if (aPattern.GetType() != PATTERN_SURFACE) {
+    if (aPattern.GetType() != PatternType::SURFACE) {
       mA = mB = &aPattern;
       return;
     }

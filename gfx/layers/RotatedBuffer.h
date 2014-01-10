@@ -79,7 +79,7 @@ public:
   // this method.
   void DrawBufferWithRotation(gfx::DrawTarget* aTarget, ContextSource aSource,
                               float aOpacity = 1.0,
-                              gfx::CompositionOp aOperator = gfx::OP_OVER,
+                              gfx::CompositionOp aOperator = gfx::CompositionOp::OP_OVER,
                               gfx::SourceSurface* aMask = nullptr,
                               const gfx::Matrix* aMaskTransform = nullptr) const;
 

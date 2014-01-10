@@ -169,9 +169,9 @@ struct AdjustedPattern
   operator Pattern*()
   {
     switch(mOrigPattern->GetType()) {
-    case PATTERN_COLOR:
+    case PatternType::COLOR:
       return mOrigPattern;
-    case PATTERN_SURFACE:
+    case PatternType::SURFACE:
       {
         SurfacePattern *surfPat = static_cast<SurfacePattern*>(mOrigPattern);
         mPattern =
@@ -180,7 +180,7 @@ struct AdjustedPattern
                                         surfPat->mFilter);
         return mPattern;
       }
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
       {
         LinearGradientPattern *linGradPat = static_cast<LinearGradientPattern*>(mOrigPattern);
         mPattern =
@@ -189,7 +189,7 @@ struct AdjustedPattern
                                                   linGradPat->mMatrix);
         return mPattern;
       }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
       {
         RadialGradientPattern *radGradPat = static_cast<RadialGradientPattern*>(mOrigPattern);
         mPattern =

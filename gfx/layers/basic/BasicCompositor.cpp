@@ -307,13 +307,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
     Matrix dtTransform = aDest->GetTransform();
     aDest->SetTransform(aMaskTransform);
     Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
-    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_REPEAT, patternMatrix),
+    aDest->MaskSurface(SurfacePattern(aSource, ExtendMode::REPEAT, patternMatrix),
                        aMask, Point(), DrawOptions(aOpacity));
     aDest->SetTransform(dtTransform);
     aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
-                    SurfacePattern(aSource, EXTEND_REPEAT, matrix),
+                    SurfacePattern(aSource, ExtendMode::REPEAT, matrix),
                     DrawOptions(aOpacity));
   }
 }
