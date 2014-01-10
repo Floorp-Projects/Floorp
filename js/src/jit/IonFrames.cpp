@@ -1103,6 +1103,15 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 }
 
 static void
+MarkRectifierFrame(JSTracer *trc, const IonFrameIterator &frame)
+{
+    // Mark thisv. Baseline JIT code generated as part of the ICCall_Fallback
+    // stub may read it if a constructor returns a primitive value.
+    IonRectifierFrameLayout *layout = (IonRectifierFrameLayout *)frame.fp();
+    gc::MarkValueRoot(trc, &layout->argv()[0], "ion-thisv");
+}
+
+static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1132,6 +1141,8 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
           case IonFrame_Unwound_OptimizedJS:
             MOZ_ASSUME_UNREACHABLE("invalid");
           case IonFrame_Rectifier:
+            MarkRectifierFrame(trc, frames);
+            break;
           case IonFrame_Unwound_Rectifier:
             break;
           case IonFrame_Osr:
