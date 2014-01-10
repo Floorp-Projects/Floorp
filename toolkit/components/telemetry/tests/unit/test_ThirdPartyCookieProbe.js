@@ -9,7 +9,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ThirdPartyCookieProbe.jsm");
 Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js");
-Cu.import("resource://gre/modules/TelemetryPing.jsm");
 
 let TOPIC_ACCEPTED = "third-party-cookie-accepted";
 let TOPIC_REJECTED = "third-party-cookie-rejected";
@@ -19,6 +18,8 @@ let FLUSH_MILLISECONDS = 1000 * 60 * 60 * 24 / 2; /*Half a day, for testing purp
 const NUMBER_OF_REJECTS = 30;
 const NUMBER_OF_ACCEPTS = 17;
 const NUMBER_OF_REPEATS = 5;
+
+const TelemetryPing = Cc["@mozilla.org/base/telemetry-ping;1"].getService(Ci.nsITelemetryPing);
 
 let gCookieService;
 let gThirdPartyCookieProbe;
