@@ -39,6 +39,9 @@ public:
   GrallocTextureClientOGL(CompositableClient* aCompositable,
                           gfx::SurfaceFormat aFormat,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+  GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
+                          gfx::SurfaceFormat aFormat,
+                          TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
 
   ~GrallocTextureClientOGL();
 
@@ -55,6 +58,8 @@ public:
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
 
   void InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize);
+
+  void SetTextureFlags(TextureFlags aFlags) { AddFlags(aFlags); }
 
   gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
 
@@ -87,6 +92,8 @@ public:
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) MOZ_OVERRIDE;
 
+  bool AllocateForGLRendering(gfx::IntSize aSize);
+
   bool AllocateGralloc(gfx::IntSize aYSize, uint32_t aAndroidFormat, uint32_t aUsage);
 
   virtual bool Allocate(uint32_t aSize) MOZ_OVERRIDE;
@@ -96,6 +103,7 @@ public:
   void SetGraphicBufferLocked(GraphicBufferLocked* aBufferLocked);
 
 protected:
+  ISurfaceAllocator* GetAllocator();
 
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.
@@ -105,6 +113,8 @@ protected:
   RefPtr<GraphicBufferLocked> mBufferLocked;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
+
+  RefPtr<ISurfaceAllocator> mAllocator;
 
   /**
    * Flags that are used when locking the gralloc buffer
