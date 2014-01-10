@@ -9,10 +9,12 @@
 #include <stdint.h>                     // for uint64_t
 #include <vector>                       // for vector
 #include <map>                          // for map
+#include "ipc/FenceUtils.h"
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"
+#include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
@@ -22,14 +24,11 @@ namespace mozilla {
 namespace layers {
 
 class CompositableClient;
-class DeprecatedTextureClient;
-class TextureClient;
 class BufferTextureClient;
 class ImageBridgeChild;
 class CompositableForwarder;
 class CompositableChild;
 class SurfaceDescriptor;
-class TextureClientData;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
@@ -138,6 +137,12 @@ public:
    */
   virtual void RemoveTextureClient(TextureClient* aClient);
 
+  // XXX: this function is only needed until Bug 897452 is fixed.
+  virtual TemporaryRef<TextureClient> GetAddedTextureClient(uint64_t aTextureID);
+
+  // XXX: this function is only needed until Bug 897452 is fixed.
+  virtual TextureClientData* GetRemovingTextureClientData(uint64_t aTextureID);
+
   /**
    * A hook for the Compositable to execute whatever it held off for next transaction.
    */
@@ -173,6 +178,14 @@ public:
    */
   virtual void OnActorDestroy() = 0;
 
+  /**
+   * If a fence is valid, wait until the fence is completed.
+   * After the wait, clear it.
+   */
+  virtual void WaitAndResetReleaseFence() {}
+
+  virtual void SetReleaseFence(FenceHandle aReleaseFenceHandle) {}
+
 protected:
   // return the next texture ID
   uint64_t NextTextureID();
@@ -183,6 +196,9 @@ protected:
     uint64_t mID;
     TextureFlags mFlags;
   };
+
+  // XXX map is necessary on the code that Bug 897452 is not fixed.
+  std::map<uint64_t, RefPtr<TextureClient>> mAddedTextures;
   // The textures to destroy in the next transaction;
   nsTArray<TextureIDAndFlags> mTexturesToRemove;
   std::map<uint64_t, TextureClientData*> mTexturesToRemoveCallbacks;

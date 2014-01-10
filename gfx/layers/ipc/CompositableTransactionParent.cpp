@@ -8,6 +8,7 @@
 #include "CompositableTransactionParent.h"
 #include "CompositableHost.h"           // for CompositableParent, etc
 #include "CompositorParent.h"           // for CompositorParent
+#include "GLContext.h"                  // for GLContext
 #include "Layers.h"                     // for Layer
 #include "RenderTrace.h"                // for RenderTraceInvalidateEnd, etc
 #include "TiledLayerBuffer.h"           // for TiledLayerComposer
@@ -19,6 +20,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/ThebesLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
@@ -153,6 +155,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         RenderTraceInvalidateEnd(layer, "FF00FF");
       }
 
+      ReturnReleaseFenceIfNecessary(compositable, replyv, op.compositableParent());
       break;
     }
     case CompositableOperation::TOpPaintTextureRegion: {
@@ -178,6 +181,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         OpContentBufferSwap(compositableParent, nullptr, frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
+      ReturnReleaseFenceIfNecessary(compositable, replyv, op.compositableParent());
       break;
     }
     case CompositableOperation::TOpPaintTextureIncremental: {
@@ -231,10 +235,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       MOZ_ASSERT(tex.get());
       compositable->UseTextureHost(tex);
-
       if (IsAsync()) {
         ScheduleComposition(op);
       }
+      ReturnReleaseFenceIfNecessary(compositable, replyv, op.compositableParent());
       break;
     }
     case CompositableOperation::TOpAddTexture: {
@@ -305,7 +309,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
 
       compositable->UseTextureHost(texture);
-
+      ReturnReleaseFenceIfNecessary(compositable, replyv, op.compositableParent());
       break;
     }
 
@@ -315,6 +319,55 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
   }
 
   return true;
+}
+
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+void
+CompositableParentManager::ReturnReleaseFenceIfNecessary(CompositableHost* aCompositable,
+                                                         EditReplyVector& replyv,
+                                                         PCompositableParent* aParent)
+{
+  if (!aCompositable || !aCompositable->GetCompositableBackendSpecificData()) {
+    return;
+  }
+
+  const std::vector< RefPtr<TextureHostCommon> > textureList =
+        aCompositable->GetCompositableBackendSpecificData()->GetPendingReleaseFenceTextureList();
+  // Return pending Texture data
+  for (size_t i = 0; i < textureList.size(); i++) {
+    TextureHostOGL* hostOGL = textureList[i]->AsHostOGL();
+    if (!hostOGL) {
+      continue;
+    }
+    android::sp<android::Fence> fence = hostOGL->GetAndResetReleaseFence();
+    if (fence.get() && fence->isValid()) {
+      TextureHost* host = textureList[i]->AsHost();
+      uint64_t id = host ? host->GetID() : 0;
+      FenceHandle handle = FenceHandle(fence);
+      replyv.push_back(ReturnReleaseFence(aParent, nullptr, id, handle));
+      // Hold ReleaseFence handle to prevent fence's file descriptor is closed before IPC happens.
+      mPrevReleaseFenceHandles.push_back(handle);
+    }
+  }
+  aCompositable->GetCompositableBackendSpecificData()->ClearPendingReleaseFenceTextureList();
+}
+#else
+void
+CompositableParentManager::ReturnReleaseFenceIfNecessary(CompositableHost* aCompositable,
+                                                         EditReplyVector& replyv,
+                                                         PCompositableParent* aParent)
+{
+  if (!aCompositable || !aCompositable->GetCompositableBackendSpecificData()) {
+    return;
+  }
+  aCompositable->GetCompositableBackendSpecificData()->ClearPendingReleaseFenceTextureList();
+}
+#endif
+
+void
+CompositableParentManager::ClearPrevReleaseFenceHandles()
+{
+  mPrevReleaseFenceHandles.clear();
 }
 
 } // namespace

@@ -27,6 +27,10 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray
 
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#include <ui/Fence.h>
+#endif
+
 class gfxContext;
 struct gfxMatrix;
 class gfxASurface;
@@ -316,6 +320,12 @@ public:
   virtual void BeginPaint() MOZ_OVERRIDE;
   virtual void EndPaint() MOZ_OVERRIDE;
 
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+  virtual void WaitAndResetReleaseFence()  MOZ_OVERRIDE;
+
+  virtual void SetReleaseFence(FenceHandle aReleaseFenceHandle)  MOZ_OVERRIDE;
+#endif
+
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,
                        bool aDidSelfCopy);
@@ -375,6 +385,10 @@ protected:
   bool mFrontAndBackBufferDiffer;
   gfx::IntSize mSize;
   ContentType mContentType;
+
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+  android::sp<android::Fence> mReleaseFence;
+#endif
 };
 
 /**

@@ -535,6 +535,28 @@ ImageBridgeChild::EndTransaction()
       compositable->OnReplyTextureRemoved(rep.textureId());
       break;
     }
+    case EditReply::TReturnReleaseFence: {
+      const ReturnReleaseFence& rep = reply.get_ReturnReleaseFence();
+      FenceHandle fence = rep.fence();
+      if (!fence.IsValid()) {
+        break;
+      }
+      CompositableClient* compositable
+        = static_cast<CompositableChild*>(rep.compositableChild())->GetCompositableClient();
+      RefPtr<TextureClient> texture = compositable->GetAddedTextureClient(rep.textureId());
+      if (texture) {
+        texture->SetReleaseFenceHandle(fence);
+        break;
+      }
+      // This happens when the TextureClient was destroyed but the TextureClientData is
+      // still alive.
+      TextureClientData* data = compositable->GetRemovingTextureClientData(rep.textureId());
+      if (data) {
+        data->SetReleaseFenceHandle(fence);
+        break;
+      }
+      break;
+    }
     default:
       NS_RUNTIMEABORT("not reached");
     }

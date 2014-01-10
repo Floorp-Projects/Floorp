@@ -15,6 +15,9 @@
 #include <stagefright/OMXClient.h>
 #include <stagefright/OMXCodec.h>
 #include <OMX.h>
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#include <ui/Fence.h>
+#endif
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
@@ -189,7 +192,7 @@ VideoGraphicBuffer::Unlock()
     // The message is delivered to OmxDecoder on ALooper thread.
     // MediaBuffer::release() could take a very long time.
     // PostReleaseVideoBuffer() prevents long time locking.
-    omxDecoder->PostReleaseVideoBuffer(mMediaBuffer);
+    omxDecoder->PostReleaseVideoBuffer(mMediaBuffer, mReleaseFenceHandle);
   } else {
     NS_WARNING("OmxDecoder is not present");
     if (mMediaBuffer) {
@@ -810,6 +813,11 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       aFrame->mKeyFrame = keyFrame;
       aFrame->Y.mWidth = mVideoWidth;
       aFrame->Y.mHeight = mVideoHeight;
+      // MediaBuffer's reference count is already incremented by VideoGraphicBuffer's constructor.
+      // By calling ReleaseVideoBuffer(), MediaBuffer's ref count is changed from 2 to 1.
+      // It is necessary to ensure to return MediaBuffer to OMXCodec
+      // in OmxDecoder::ReleaseAllPendingVideoBuffersLocked().
+      ReleaseVideoBuffer();
     } else if (mVideoBuffer->range_length() > 0) {
       char *data = static_cast<char *>(mVideoBuffer->data()) + mVideoBuffer->range_offset();
       size_t length = mVideoBuffer->range_length();
@@ -981,11 +989,11 @@ void OmxDecoder::onMessageReceived(const sp<AMessage> &msg)
   }
 }
 
-void OmxDecoder::PostReleaseVideoBuffer(MediaBuffer *aBuffer)
+void OmxDecoder::PostReleaseVideoBuffer(MediaBuffer *aBuffer, const FenceHandle& aReleaseFenceHandle)
 {
   {
     Mutex::Autolock autoLock(mPendingVideoBuffersLock);
-    mPendingVideoBuffers.push(aBuffer);
+    mPendingVideoBuffers.push(BufferItem(aBuffer, aReleaseFenceHandle));
   }
 
   sp<AMessage> notify =
@@ -996,14 +1004,13 @@ void OmxDecoder::PostReleaseVideoBuffer(MediaBuffer *aBuffer)
 
 void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
 {
-  Vector<MediaBuffer *> releasingVideoBuffers;
+  Vector<BufferItem> releasingVideoBuffers;
   {
     Mutex::Autolock autoLock(mPendingVideoBuffersLock);
 
     int size = mPendingVideoBuffers.size();
     for (int i = 0; i < size; i++) {
-      MediaBuffer *buffer = mPendingVideoBuffers[i];
-      releasingVideoBuffers.push(buffer);
+      releasingVideoBuffers.push(mPendingVideoBuffers[i]);
     }
     mPendingVideoBuffers.clear();
   }
@@ -1011,7 +1018,28 @@ void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
   int size = releasingVideoBuffers.size();
   for (int i = 0; i < size; i++) {
     MediaBuffer *buffer;
-    buffer = releasingVideoBuffers[i];
+    buffer = releasingVideoBuffers[i].mMediaBuffer;
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+    android::sp<Fence> fence;
+    int fenceFd = -1;
+    fence = releasingVideoBuffers[i].mReleaseFenceHandle.mFence;
+    if (fence.get() && fence->isValid()) {
+      fenceFd = fence->dup();
+    }
+    MOZ_ASSERT(buffer->refcount() == 1);
+    // This code expect MediaBuffer's ref count is 1.
+    // Return gralloc buffer to ANativeWindow
+    ANativeWindow* window = static_cast<ANativeWindow*>(mNativeWindowClient.get());
+    window->cancelBuffer(window,
+                         buffer->graphicBuffer().get(),
+                         fenceFd);
+    // Mark MediaBuffer as rendered.
+    // When gralloc buffer is directly returned to ANativeWindow,
+    // this mark is necesary.
+    sp<MetaData> metaData = buffer->meta_data();
+    metaData->setInt32(kKeyRendered, 1);
+#endif
+    // Return MediaBuffer to OMXCodec.
     buffer->release();
   }
   releasingVideoBuffers.clear();

@@ -267,6 +267,7 @@ bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
   aClient->SetID(NextTextureID());
+  mAddedTextures[aClient->GetID()] = aClient;
   return mForwarder->AddTexture(this, aClient);
 }
 
@@ -282,8 +283,37 @@ CompositableClient::RemoveTextureClient(TextureClient* aClient)
       mTexturesToRemoveCallbacks[aClient->GetID()] = data;
     }
   }
+  {
+    std::map<uint64_t, RefPtr<TextureClient>>::iterator it
+      = mAddedTextures.find(aClient->GetID());
+    if (it != mAddedTextures.end()) {
+      mAddedTextures.erase(it);
+    }
+  }
   aClient->ClearID();
   aClient->MarkInvalid();
+}
+
+TemporaryRef<TextureClient>
+CompositableClient::GetAddedTextureClient(uint64_t aTextureID)
+{
+  std::map<uint64_t, RefPtr<TextureClient>>::iterator it
+    = mAddedTextures.find(aTextureID);
+  if (it != mAddedTextures.end()) {
+    return mAddedTextures[aTextureID];
+  }
+  return nullptr;
+}
+
+TextureClientData*
+CompositableClient::GetRemovingTextureClientData(uint64_t aTextureID)
+{
+  std::map<uint64_t,TextureClientData*>::iterator it
+    = mTexturesToRemoveCallbacks.find(aTextureID);
+  if (it != mTexturesToRemoveCallbacks.end()) {
+    return mTexturesToRemoveCallbacks[aTextureID];
+  }
+  return nullptr;
 }
 
 void
