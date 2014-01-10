@@ -158,7 +158,7 @@ SharedTextureHandle CreateSharedHandle(GLContext* gl,
 
     // Both EGLImage and SurfaceTexture only support same-process currently, but
     // it's possible to make SurfaceTexture work across processes. We should do that.
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return 0;
 
     switch (bufferType) {
@@ -199,7 +199,7 @@ void ReleaseSharedHandle(GLContext* gl,
     if (gl->GetContextType() != ContextTypeEGL)
         return;
 
-    if (shareType != SameProcess) {
+    if (shareType != SharedTextureShareType::SameProcess) {
         NS_ERROR("Implementation not available for this sharing type");
         return;
     }
@@ -236,7 +236,7 @@ bool GetSharedHandleDetails(GLContext* gl,
     if (gl->GetContextType() != ContextTypeEGL)
         return false;
 
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return false;
 
     SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
@@ -274,7 +274,7 @@ bool AttachSharedHandle(GLContext* gl,
     if (gl->GetContextType() != ContextTypeEGL)
         return false;
 
-    if (shareType != SameProcess)
+    if (shareType != SharedTextureShareType::SameProcess)
         return false;
 
     SharedTextureHandleWrapper* wrapper = reinterpret_cast<SharedTextureHandleWrapper*>(sharedHandle);
