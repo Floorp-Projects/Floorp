@@ -16,10 +16,13 @@ function triggerSave(aWindow, aCallback) {
   var fileName;
   let testBrowser = aWindow.gBrowser.selectedBrowser;
   // This page sets a cookie if and only if a cookie does not exist yet
-  testBrowser.loadURI("http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html");
+  let testURI = "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517-2.html";
+  testBrowser.loadURI(testURI);
   testBrowser.addEventListener("pageshow", function pageShown(event) {
-    if (event.target.location == "about:blank")
+    if (event.target.location != testURI) {
+      testBrowser.loadURI(testURI);
       return;
+    }
     testBrowser.removeEventListener("pageshow", pageShown, false);
 
     executeSoon(function () {
