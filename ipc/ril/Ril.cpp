@@ -251,7 +251,7 @@ RilConnector::CreateAddr(bool aIsServer,
     case AF_INET:
         aAddr.in.sin_family = af;
         aAddr.in.sin_port = htons(RIL_TEST_PORT + mClientId);
-        aAddr.in.sin_addr.s_addr = htons(INADDR_LOOPBACK);
+        aAddr.in.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
         aAddrSize = sizeof(sockaddr_in);
         break;
     default:
