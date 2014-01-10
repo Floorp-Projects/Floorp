@@ -338,8 +338,8 @@ MacIOSurface::GetAsSurface() {
 
   Unlock();
 
-  SurfaceFormat format = HasAlpha() ? mozilla::gfx::FORMAT_B8G8R8A8 :
-                                      mozilla::gfx::FORMAT_B8G8R8X8;
+  SurfaceFormat format = HasAlpha() ? mozilla::gfx::SurfaceFormat::B8G8R8A8 :
+                                      mozilla::gfx::SurfaceFormat::B8G8R8X8;
 
   RefPtr<SourceSurfaceRawData> surf = new SourceSurfaceRawData();
   surf->InitWrappingData(dataCpy, IntSize(ioWidth, ioHeight), bytesPerRow, format, true);

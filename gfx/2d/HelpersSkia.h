@@ -24,14 +24,14 @@ GfxFormatToSkiaConfig(SurfaceFormat format)
 {
   switch (format)
   {
-    case FORMAT_B8G8R8A8:
+    case SurfaceFormat::B8G8R8A8:
       return SkBitmap::kARGB_8888_Config;
-    case FORMAT_B8G8R8X8:
+    case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return SkBitmap::kARGB_8888_Config;
-    case FORMAT_R5G6B5:
+    case SurfaceFormat::R5G6B5:
       return SkBitmap::kRGB_565_Config;
-    case FORMAT_A8:
+    case SurfaceFormat::A8:
       return SkBitmap::kA8_Config;
     default:
       return SkBitmap::kARGB_8888_Config;
@@ -44,13 +44,13 @@ SkiaConfigToGfxFormat(SkBitmap::Config config)
   switch (config)
   {
     case SkBitmap::kARGB_8888_Config:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     case SkBitmap::kRGB_565_Config:
-      return FORMAT_R5G6B5;
+      return SurfaceFormat::R5G6B5;
     case SkBitmap::kA8_Config:
-      return FORMAT_A8;
+      return SurfaceFormat::A8;
     default:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
   }
 }
 
@@ -60,14 +60,14 @@ GfxFormatToGrConfig(SurfaceFormat format)
 {
   switch (format)
   {
-    case FORMAT_B8G8R8A8:
+    case SurfaceFormat::B8G8R8A8:
       return kBGRA_8888_GrPixelConfig;
-    case FORMAT_B8G8R8X8:
+    case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return kBGRA_8888_GrPixelConfig;
-    case FORMAT_R5G6B5:
+    case SurfaceFormat::R5G6B5:
       return kRGB_565_GrPixelConfig;
-    case FORMAT_A8:
+    case SurfaceFormat::A8:
       return kAlpha_8_GrPixelConfig;
     default:
       return kRGBA_8888_GrPixelConfig;

@@ -103,7 +103,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   // cases.
   if (aTarget->GetType() == BACKEND_DIRECT2D && aOperator == OP_SOURCE) {
     aOperator = OP_OVER;
-    if (mDTBuffer->GetFormat() == FORMAT_B8G8R8A8) {
+    if (mDTBuffer->GetFormat() == SurfaceFormat::B8G8R8A8) {
       aTarget->ClearRect(ToRect(fillRect));
     }
   }

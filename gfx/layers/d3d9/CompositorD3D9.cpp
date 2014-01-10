@@ -89,7 +89,7 @@ CompositorD3D9::GetMaxTextureSize() const
 TemporaryRef<DataTextureSource>
 CompositorD3D9::CreateDataTextureSource(TextureFlags aFlags)
 {
-  return new DataTextureSourceD3D9(FORMAT_UNKNOWN, this,
+  return new DataTextureSourceD3D9(SurfaceFormat::UNKNOWN, this,
                                    !(aFlags & TEXTURE_DISALLOW_BIGIMAGE));
 }
 
@@ -724,7 +724,7 @@ CompositorD3D9::PaintToTarget()
     Factory::CreateWrappingDataSourceSurface((uint8_t*)rect.pBits,
                                              rect.Pitch,
                                              IntSize(desc.Width, desc.Height),
-                                             FORMAT_B8G8R8A8);
+                                             SurfaceFormat::B8G8R8A8);
   mTarget->CopySurface(sourceSurface,
                        IntRect(0, 0, desc.Width, desc.Height),
                        IntPoint());

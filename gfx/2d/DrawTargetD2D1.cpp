@@ -355,7 +355,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
   bool forceClearType = false;
-  if (mFormat == FORMAT_B8G8R8A8 && mPermitSubpixelAA &&
+  if (mFormat == SurfaceFormat::B8G8R8A8 && mPermitSubpixelAA &&
       aOptions.mCompositionOp == OP_OVER && aaMode == AA_SUBPIXEL) {
     forceClearType = true;    
   }
@@ -378,7 +378,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   }
 
   if (d2dAAMode == D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE &&
-      mFormat != FORMAT_B8G8R8X8 && !forceClearType) {
+      mFormat != SurfaceFormat::B8G8R8X8 && !forceClearType) {
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
   }
 

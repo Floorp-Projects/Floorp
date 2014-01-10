@@ -753,7 +753,7 @@ DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 {
   SkAutoTUnref<SkDevice> device(new SkDevice(GfxFormatToSkiaConfig(aFormat),
                                              aSize.width, aSize.height,
-                                             aFormat == FORMAT_B8G8R8X8));
+                                             aFormat == SurfaceFormat::B8G8R8X8));
 
   SkBitmap bitmap = device->accessBitmap(true);
   if (!bitmap.allocPixels()) {
@@ -817,7 +817,7 @@ void
 DrawTargetSkia::Init(unsigned char* aData, const IntSize &aSize, int32_t aStride, SurfaceFormat aFormat)
 {
   bool isOpaque = false;
-  if (aFormat == FORMAT_B8G8R8X8) {
+  if (aFormat == SurfaceFormat::B8G8R8X8) {
     // We have to manually set the A channel to be 255 as Skia doesn't understand BGRX
     ConvertBGRXToBGRA(aData, aSize, aStride);
     isOpaque = true;

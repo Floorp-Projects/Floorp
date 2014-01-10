@@ -4855,12 +4855,12 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   nsRefPtr<gfxASurface> gfxsurf = framesurf;
   if (wantImageSurface) {
     IntSize size(imgWidth, imgHeight);
-    RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, FORMAT_B8G8R8A8);
+    RefPtr<DataSourceSurface> output = Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
     RefPtr<DrawTarget> dt = Factory::CreateDrawTargetForData(BACKEND_CAIRO,
                                                              output->GetData(),
                                                              size,
                                                              output->Stride(),
-                                                             FORMAT_B8G8R8A8);
+                                                             SurfaceFormat::B8G8R8A8);
     RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, gfxsurf);
 
     dt->CopySurface(source, IntRect(0, 0, imgWidth, imgHeight), IntPoint());
@@ -4916,10 +4916,10 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
     RefPtr<DrawTarget> dt;
     if (premultAlpha) {
       if (aTarget) {
-        dt = aTarget->CreateSimilarDrawTarget(IntSize(size.width, size.height), FORMAT_B8G8R8A8);
+        dt = aTarget->CreateSimilarDrawTarget(IntSize(size.width, size.height), SurfaceFormat::B8G8R8A8);
       } else {
         dt = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(size.width, size.height),
-                                                                          FORMAT_B8G8R8A8);
+                                                                          SurfaceFormat::B8G8R8A8);
       }
       if (!dt) {
         return result;
@@ -4929,7 +4929,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
       // TODO: RenderContextsExternal expects to get a gfxImageFormat
       // so that it can un-premultiply.
       RefPtr<DataSourceSurface> data = Factory::CreateDataSourceSurface(IntSize(size.width, size.height),
-                                                                        FORMAT_B8G8R8A8);
+                                                                        SurfaceFormat::B8G8R8A8);
       memset(data->GetData(), 0, data->Stride() * size.height);
       result.mSourceSurface = data;
       nsRefPtr<gfxImageSurface> image = new gfxImageSurface(data->GetData(),

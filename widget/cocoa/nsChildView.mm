@@ -2635,7 +2635,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
     gfx::IntSize size(neededBufferSize.width, neededBufferSize.height);
     mUpdateDrawTarget =
       gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS, size,
-                                     gfx::FORMAT_B8G8R8A8);
+                                     gfx::SurfaceFormat::B8G8R8A8);
     mBufferSize = neededBufferSize;
   }
 
@@ -2705,7 +2705,7 @@ RectTextureImage::UpdateFromCGContext(const nsIntSize& aNewSize,
       dt->CreateSourceSurfaceFromData(static_cast<uint8_t *>(CGBitmapContextGetData(aCGContext)),
                                       size,
                                       CGBitmapContextGetBytesPerRow(aCGContext),
-                                      gfx::FORMAT_B8G8R8A8);
+                                      gfx::SurfaceFormat::B8G8R8A8);
     dt->DrawSurface(sourceSurface, rect, rect,
                     gfx::DrawSurfaceOptions(),
                     gfx::DrawOptions(1.0, gfx::OP_SOURCE));

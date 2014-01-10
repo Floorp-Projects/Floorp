@@ -2689,16 +2689,16 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     // texture sources in the first place.
 
     switch (data->GetFormat()) {
-        case FORMAT_B8G8R8A8:
+        case SurfaceFormat::B8G8R8A8:
             *format = WebGLTexelFormat::BGRA8; // careful, our ARGB means BGRA
             break;
-        case FORMAT_B8G8R8X8:
+        case SurfaceFormat::B8G8R8X8:
             *format = WebGLTexelFormat::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
             break;
-        case FORMAT_A8:
+        case SurfaceFormat::A8:
             *format = WebGLTexelFormat::A8;
             break;
-        case FORMAT_R5G6B5:
+        case SurfaceFormat::R5G6B5:
             *format = WebGLTexelFormat::RGB565;
             break;
         default:

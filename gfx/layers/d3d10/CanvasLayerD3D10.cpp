@@ -172,7 +172,7 @@ CanvasLayerD3D10::UpdateSurface()
                                                                       (uint8_t*)map.pData,
                                                                       shareSurf->Size(),
                                                                       map.RowPitch,
-                                                                      FORMAT_B8G8R8A8);
+                                                                      SurfaceFormat::B8G8R8A8);
 
           nsRefPtr<gfxImageSurface> thebesFrameData =
               new gfxImageSurface(frameData->GetData(),

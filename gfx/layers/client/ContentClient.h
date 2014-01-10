@@ -198,7 +198,7 @@ public:
     , RotatedContentBuffer(ContainsVisibleBounds)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
-    , mSurfaceFormat(gfx::FORMAT_B8G8R8A8)
+    , mSurfaceFormat(gfx::SurfaceFormat::B8G8R8A8)
   {}
 
   typedef RotatedContentBuffer::PaintState PaintState;

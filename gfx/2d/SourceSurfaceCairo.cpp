@@ -19,13 +19,13 @@ CairoFormatToSurfaceFormat(cairo_format_t format)
   switch (format)
   {
     case CAIRO_FORMAT_ARGB32:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
     case CAIRO_FORMAT_RGB24:
-      return FORMAT_B8G8R8X8;
+      return SurfaceFormat::B8G8R8X8;
     case CAIRO_FORMAT_A8:
-      return FORMAT_A8;
+      return SurfaceFormat::A8;
     default:
-      return FORMAT_B8G8R8A8;
+      return SurfaceFormat::B8G8R8A8;
   }
 }
 

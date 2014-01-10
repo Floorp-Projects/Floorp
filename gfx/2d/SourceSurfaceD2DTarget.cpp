@@ -142,7 +142,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
   hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
-    // This seems to happen for FORMAT_A8 sometimes...
+    // This seems to happen for SurfaceFormat::A8 sometimes...
     aRT->CreateBitmap(D2D1::SizeU(desc.Width, desc.Height),
                       D2D1::BitmapProperties(D2DPixelFormat(mFormat)),
                       byRef(mBitmap));

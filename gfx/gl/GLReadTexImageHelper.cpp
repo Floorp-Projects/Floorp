@@ -289,14 +289,14 @@ ReadPixelsIntoImageSurface(GLContext* gl, gfxImageSurface* dest) {
         switch (readFormat) {
             case LOCAL_GL_RGBA:
             case LOCAL_GL_BGRA: {
-                readFormatGFX = hasAlpha ? FORMAT_B8G8R8A8
-                                         : FORMAT_B8G8R8X8;
+                readFormatGFX = hasAlpha ? SurfaceFormat::B8G8R8A8
+                                         : SurfaceFormat::B8G8R8X8;
                 break;
             }
             case LOCAL_GL_RGB: {
                 MOZ_ASSERT(readPixelSize == 2);
                 MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_SHORT_5_6_5_REV);
-                readFormatGFX = FORMAT_R5G6B5;
+                readFormatGFX = SurfaceFormat::R5G6B5;
                 break;
             }
             default: {
@@ -444,8 +444,8 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
     gl->fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_HEIGHT, &size.height);
 
     RefPtr<DataSourceSurface> surf =
-      Factory::CreateDataSourceSurfaceWithStride(size, FORMAT_B8G8R8A8,
-                                                 GetAlignedStride<4>(size.width * BytesPerPixel(FORMAT_B8G8R8A8)));
+      Factory::CreateDataSourceSurfaceWithStride(size, SurfaceFormat::B8G8R8A8,
+                                                 GetAlignedStride<4>(size.width * BytesPerPixel(SurfaceFormat::B8G8R8A8)));
 
     if (!surf) {
         return nullptr;
@@ -461,7 +461,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
         gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, currentPackAlignment);
     }
 
-    if (aFormat == FORMAT_R8G8B8A8 || aFormat == FORMAT_R8G8B8X8) {
+    if (aFormat == SurfaceFormat::R8G8B8A8 || aFormat == SurfaceFormat::R8G8B8X8) {
       SwapRAndBComponents(surf);
     }
 
