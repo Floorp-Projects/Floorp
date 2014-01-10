@@ -767,6 +767,50 @@ var loadTextFileAsync = function(url, callback) {
   }
 };
 
+// Add your prefix here.
+var browserPrefixes = [
+  "",
+  "MOZ_",
+  "OP_",
+  "WEBKIT_"
+];
+
+/**
+ * Given an extension name like WEBGL_compressed_texture_s3tc
+ * returns the name of the supported version extension, like
+ * WEBKIT_WEBGL_compressed_teture_s3tc
+ * @param {string} name Name of extension to look for
+ * @return {string} name of extension found or undefined if not
+ *     found.
+ */
+var getSupportedExtensionWithKnownPrefixes = function(gl, name) {
+  var supported = gl.getSupportedExtensions();
+  for (var ii = 0; ii < browserPrefixes.length; ++ii) {
+    var prefixedName = browserPrefixes[ii] + name;
+    if (supported.indexOf(prefixedName) >= 0) {
+      return prefixedName;
+    }
+  }
+};
+
+/**
+ * Given an extension name like WEBGL_compressed_texture_s3tc
+ * returns the supported version extension, like
+ * WEBKIT_WEBGL_compressed_teture_s3tc
+ * @param {string} name Name of extension to look for
+ * @return {WebGLExtension} The extension or undefined if not
+ *     found.
+ */
+var getExtensionWithKnownPrefixes = function(gl, name) {
+  for (var ii = 0; ii < browserPrefixes.length; ++ii) {
+    var prefixedName = browserPrefixes[ii] + name;
+    var ext = gl.getExtension(prefixedName);
+    if (ext) {
+      return ext;
+    }
+  }
+};
+
 /**
  * Recursively loads a file as a list. Each line is parsed for a relative
  * path. If the file ends in .txt the contents of that file is inserted in
@@ -1277,9 +1321,11 @@ return {
   createColoredTexture: createColoredTexture,
   drawQuad: drawQuad,
   endsWith: endsWith,
+  getExtensionWithKnownPrefixes: getExtensionWithKnownPrefixes,
   getFileListAsync: getFileListAsync,
   getLastError: getLastError,
   getScript: getScript,
+  getSupportedExtensionWithKnownPrefixes: getSupportedExtensionWithKnownPrefixes,
   getUrlArguments: getUrlArguments,
   glEnumToString: glEnumToString,
   glErrorShouldBe: glErrorShouldBe,
