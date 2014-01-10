@@ -101,7 +101,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   // (to avoid flickering) but direct2d is ok since it defers rendering.
   // We should try abstract this logic in a helper when we have other use
   // cases.
-  if (aTarget->GetType() == BACKEND_DIRECT2D && aOperator == OP_SOURCE) {
+  if (aTarget->GetType() == BackendType::DIRECT2D && aOperator == OP_SOURCE) {
     aOperator = OP_OVER;
     if (mDTBuffer->GetFormat() == SurfaceFormat::B8G8R8A8) {
       aTarget->ClearRect(ToRect(fillRect));

@@ -19,10 +19,10 @@ TestBugs::TestBugs()
 void
 TestBugs::CairoClip918671()
 {
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BACKEND_CAIRO,
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                     IntSize(100, 100),
                                                     SurfaceFormat::B8G8R8A8);
-  RefPtr<DrawTarget> ref = Factory::CreateDrawTarget(BACKEND_CAIRO,
+  RefPtr<DrawTarget> ref = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                      IntSize(100, 100),
                                                      SurfaceFormat::B8G8R8A8);
   // Create a path that extends around the center rect but doesn't intersect it.
@@ -71,7 +71,7 @@ TestBugs::CairoClip918671()
 void
 TestBugs::PushPopClip950550()
 {
-  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BACKEND_CAIRO,
+  RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(BackendType::CAIRO,
                                                     IntSize(500, 500),
                                                     SurfaceFormat::B8G8R8A8);
   dt->PushClipRect(Rect(0, 0, 100, 100));

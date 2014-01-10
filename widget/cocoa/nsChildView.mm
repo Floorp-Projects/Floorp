@@ -2634,7 +2634,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
   if (!mUpdateDrawTarget || mBufferSize != neededBufferSize) {
     gfx::IntSize size(neededBufferSize.width, neededBufferSize.height);
     mUpdateDrawTarget =
-      gfx::Factory::CreateDrawTarget(gfx::BACKEND_COREGRAPHICS, size,
+      gfx::Factory::CreateDrawTarget(gfx::BackendType::COREGRAPHICS, size,
                                      gfx::SurfaceFormat::B8G8R8A8);
     mBufferSize = neededBufferSize;
   }
@@ -3525,14 +3525,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
   targetSurface->SetAllowUseAsSource(false);
 
   nsRefPtr<gfxContext> targetContext;
-  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BACKEND_CAIRO)) {
+  if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::CAIRO)) {
     RefPtr<gfx::DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
                                                              gfx::IntSize(backingSize.width,
                                                                           backingSize.height));
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
     targetContext = new gfxContext(dt);
-  } else if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BACKEND_COREGRAPHICS)) {
+  } else if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::COREGRAPHICS)) {
     RefPtr<gfx::DrawTarget> dt =
       gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
                                                       gfx::IntSize(backingSize.width,

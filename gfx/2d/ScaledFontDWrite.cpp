@@ -309,7 +309,7 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
 TemporaryRef<Path>
 ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
 {
-  if (aTarget->GetType() != BACKEND_DIRECT2D) {
+  if (aTarget->GetType() != BackendType::DIRECT2D) {
     return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
   }
 
@@ -326,7 +326,7 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 void
 ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)
 {
-  if (aBackendType != BACKEND_DIRECT2D) {
+  if (aBackendType != BackendType::DIRECT2D) {
     ScaledFontBase::CopyGlyphsToBuilder(aBuffer, aBuilder, aBackendType, aTransformHint);
     return;
   }

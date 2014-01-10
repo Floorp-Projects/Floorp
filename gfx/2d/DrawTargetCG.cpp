@@ -161,9 +161,9 @@ DrawTargetCG::GetType() const
   // It may be worth spliting Bitmap and IOSurface DrawTarget
   // into seperate classes.
   if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
-    return BACKEND_COREGRAPHICS_ACCELERATED;
+    return BackendType::COREGRAPHICS_ACCELERATED;
   } else {
-    return BACKEND_COREGRAPHICS;
+    return BackendType::COREGRAPHICS;
   }
 }
 
@@ -390,9 +390,9 @@ class GradientStopsCG : public GradientStops
     if (mGradient)
         CGGradientRelease(mGradient);
   }
-  // Will always report BACKEND_COREGRAPHICS, but it is compatible
-  // with BACKEND_COREGRAPHICS_ACCELERATED
-  BackendType GetBackendType() const { return BACKEND_COREGRAPHICS; }
+  // Will always report BackendType::COREGRAPHICS, but it is compatible
+  // with BackendType::COREGRAPHICS_ACCELERATED
+  BackendType GetBackendType() const { return BackendType::COREGRAPHICS; }
   // XXX this should be a union
   CGGradientRef mGradient;
   std::vector<GradientStop> mStops;
@@ -992,7 +992,7 @@ DrawTargetCG::Stroke(const Path *aPath, const Pattern &aPattern, const StrokeOpt
 
   CGContextBeginPath(cg);
 
-  assert(aPath->GetBackendType() == BACKEND_COREGRAPHICS);
+  assert(aPath->GetBackendType() == BackendType::COREGRAPHICS);
   const PathCG *cgPath = static_cast<const PathCG*>(aPath);
   CGContextAddPath(cg, cgPath->GetPath());
 
@@ -1020,7 +1020,7 @@ DrawTargetCG::Fill(const Path *aPath, const Pattern &aPattern, const DrawOptions
 {
   MarkChanged();
 
-  assert(aPath->GetBackendType() == BACKEND_COREGRAPHICS);
+  assert(aPath->GetBackendType() == BackendType::COREGRAPHICS);
 
   CGContextSaveGState(mCg);
 
@@ -1281,7 +1281,7 @@ DrawTargetCG::Init(BackendType aType,
   //XXX: we'd be better off reusing the Colorspace across draw targets
   mColorSpace = CGColorSpaceCreateDeviceRGB();
 
-  if (aData == nullptr && aType != BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aData == nullptr && aType != BackendType::COREGRAPHICS_ACCELERATED) {
     // XXX: Currently, Init implicitly clears, that can often be a waste of time
     mData.Realloc(aStride * aSize.height);
     aData = static_cast<unsigned char*>(mData);
@@ -1290,7 +1290,7 @@ DrawTargetCG::Init(BackendType aType,
 
   mSize = aSize;
 
-  if (aType == BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aType == BackendType::COREGRAPHICS_ACCELERATED) {
     RefPtr<MacIOSurface> ioSurface = MacIOSurface::CreateIOSurface(aSize.width, aSize.height);
     mCg = ioSurface->CreateIOSurfaceContext();
     // If we don't have the symbol for 'CreateIOSurfaceContext' mCg will be null
@@ -1299,7 +1299,7 @@ DrawTargetCG::Init(BackendType aType,
 
   mFormat = SurfaceFormat::B8G8R8A8;
 
-  if (!mCg || aType == BACKEND_COREGRAPHICS) {
+  if (!mCg || aType == BackendType::COREGRAPHICS) {
     int bitsPerComponent = 8;
 
     CGBitmapInfo bitinfo;
@@ -1344,7 +1344,7 @@ DrawTargetCG::Init(BackendType aType,
   CGContextSetShouldSmoothFonts(mCg, GetPermitSubpixelAA());
 
 
-  if (aType == BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aType == BackendType::COREGRAPHICS_ACCELERATED) {
     // The bitmap backend uses callac to clear, we can't do that without
     // reading back the surface. This should trigger something equivilent
     // to glClear.
@@ -1428,8 +1428,8 @@ DrawTargetCG::CreatePathBuilder(FillRule aFillRule) const
 void*
 DrawTargetCG::GetNativeSurface(NativeSurfaceType aType)
 {
-  if ((aType == NATIVE_SURFACE_CGCONTEXT && GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) ||
-      (aType == NATIVE_SURFACE_CGCONTEXT_ACCELERATED && GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE)) {
+  if ((aType == NativeSurfaceType::CGCONTEXT && GetContextType(mCg) == CG_CONTEXT_TYPE_BITMAP) ||
+      (aType == NativeSurfaceType::CGCONTEXT_ACCELERATED && GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE)) {
     return mCg;
   } else {
     return nullptr;
@@ -1490,7 +1490,7 @@ DrawTargetCG::PushClip(const Path *aPath)
   CGContextSaveGState(mCg);
 
   CGContextBeginPath(mCg);
-  assert(aPath->GetBackendType() == BACKEND_COREGRAPHICS);
+  assert(aPath->GetBackendType() == BackendType::COREGRAPHICS);
 
   const PathCG *cgPath = static_cast<const PathCG*>(aPath);
 
@@ -1544,7 +1544,7 @@ DrawTargetCG::SetPermitSubpixelAA(bool aPermitSubpixelAA) {
 CGContextRef
 BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 {
-  if (aDT->GetType() == BACKEND_COREGRAPHICS || aDT->GetType() == BACKEND_COREGRAPHICS_ACCELERATED) {
+  if (aDT->GetType() == BackendType::COREGRAPHICS || aDT->GetType() == BackendType::COREGRAPHICS_ACCELERATED) {
     DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
     cgDT->MarkChanged();
 

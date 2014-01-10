@@ -128,7 +128,7 @@ D2D1_CHANNEL_SELECTOR D2DChannelSelector(uint32_t aMode)
 
 TemporaryRef<ID2D1Image> GetImageForSourceSurface(DrawTarget *aDT, SourceSurface *aSurface)
 {
-  if (aDT->GetType() == BACKEND_DIRECT2D1_1) {
+  if (aDT->GetType() == BackendType::DIRECT2D1_1) {
     return static_cast<DrawTargetD2D1*>(aDT)->GetImageForSurface(aSurface, EXTEND_CLAMP);
   }
   RefPtr<ID2D1Image> image;

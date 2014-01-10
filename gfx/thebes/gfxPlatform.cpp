@@ -315,10 +315,10 @@ gfxPlatform::gfxPlatform()
                                  "layers.draw-bigimage-borders",
                                  false);
 
-    uint32_t canvasMask = (1 << BACKEND_CAIRO) | (1 << BACKEND_SKIA);
-    uint32_t contentMask = 1 << BACKEND_CAIRO;
-    InitBackendPrefs(canvasMask, BACKEND_CAIRO,
-                     contentMask, BACKEND_CAIRO);
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
+    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
+    InitBackendPrefs(canvasMask, BackendType::CAIRO,
+                     contentMask, BackendType::CAIRO);
 }
 
 gfxPlatform*
@@ -762,7 +762,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       format != SurfaceFormat::A8) {
     NativeSurface surf;
     surf.mFormat = format;
-    surf.mType = NATIVE_SURFACE_D3D10_TEXTURE;
+    surf.mType = NativeSurfaceType::D3D10_TEXTURE;
     surf.mSurface = static_cast<gfxD2DSurface*>(aSurface)->GetTexture();
     mozilla::gfx::DrawTarget *dt = static_cast<mozilla::gfx::DrawTarget*>(aSurface->GetData(&kDrawTarget));
     if (dt) {
@@ -771,12 +771,12 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
   } else
 #endif
-  if (aSurface->CairoSurface() && aTarget->GetType() == BACKEND_CAIRO) {
+  if (aSurface->CairoSurface() && aTarget->GetType() == BackendType::CAIRO) {
     // If this is an xlib cairo surface we don't want to fetch it into memory
     // because this is a major slow down.
     NativeSurface surf;
     surf.mFormat = format;
-    surf.mType = NATIVE_SURFACE_CAIRO_SURFACE;
+    surf.mType = NativeSurfaceType::CAIRO_SURFACE;
     surf.mSurface = aSurface->CairoSurface();
     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
 
@@ -901,7 +901,7 @@ bool
 gfxPlatform::UseAcceleratedSkiaCanvas()
 {
   return Preferences::GetBool("gfx.canvas.azure.accelerated", false) &&
-         mPreferredCanvasBackend == BACKEND_SKIA;
+         mPreferredCanvasBackend == BackendType::SKIA;
 }
 
 void
@@ -940,9 +940,9 @@ gfxPlatform::InitializeSkiaCaches()
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BACKEND_CAIRO) {
+  if (aTarget->GetType() == BackendType::CAIRO) {
     cairo_surface_t* csurf =
-      static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NATIVE_SURFACE_CAIRO_SURFACE));
+      static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE));
     if (csurf) {
       return gfxASurface::Wrap(csurf);
     }
@@ -987,7 +987,7 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
   // now, but this might need to change in the future (using
   // CreateOffscreenSurface() and CreateDrawTargetForSurface() for all
   // backends).
-  if (aBackend == BACKEND_CAIRO) {
+  if (aBackend == BackendType::CAIRO) {
     nsRefPtr<gfxASurface> surf = CreateOffscreenSurface(ThebesIntSize(aSize),
                                                         ContentForFormat(aFormat));
     if (!surf || surf->CairoStatus()) {
@@ -1003,10 +1003,10 @@ gfxPlatform::CreateDrawTargetForBackend(BackendType aBackend, const IntSize& aSi
 RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
-  NS_ASSERTION(mPreferredCanvasBackend, "No backend.");
+  NS_ASSERTION(mPreferredCanvasBackend != BackendType::NONE, "No backend.");
   RefPtr<DrawTarget> target = CreateDrawTargetForBackend(mPreferredCanvasBackend, aSize, aFormat);
   if (target ||
-      mFallbackCanvasBackend == BACKEND_NONE) {
+      mFallbackCanvasBackend == BackendType::NONE) {
     return target;
   }
 
@@ -1016,15 +1016,15 @@ gfxPlatform::CreateOffscreenCanvasDrawTarget(const IntSize& aSize, SurfaceFormat
 RefPtr<DrawTarget>
 gfxPlatform::CreateOffscreenContentDrawTarget(const IntSize& aSize, SurfaceFormat aFormat)
 {
-  NS_ASSERTION(mContentBackend, "No backend.");
+  NS_ASSERTION(mPreferredCanvasBackend != BackendType::NONE, "No backend.");
   return CreateDrawTargetForBackend(mContentBackend, aSize, aFormat);
 }
 
 RefPtr<DrawTarget>
 gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat)
 {
-  NS_ASSERTION(mContentBackend, "No backend.");
-  if (mContentBackend == BACKEND_CAIRO) {
+  NS_ASSERTION(mPreferredCanvasBackend != BackendType::NONE, "No backend.");
+  if (mContentBackend == BackendType::CAIRO) {
     nsRefPtr<gfxImageSurface> image = new gfxImageSurface(aData, gfxIntSize(aSize.width, aSize.height), aStride, SurfaceFormatToImageFormat(aFormat)); 
     return Factory::CreateDrawTargetForCairoSurface(image->CairoSurface(), aSize);
   }
@@ -1035,14 +1035,14 @@ gfxPlatform::CreateDrawTargetForData(unsigned char* aData, const IntSize& aSize,
 gfxPlatform::BackendTypeForName(const nsCString& aName)
 {
   if (aName.EqualsLiteral("cairo"))
-    return BACKEND_CAIRO;
+    return BackendType::CAIRO;
   if (aName.EqualsLiteral("skia"))
-    return BACKEND_SKIA;
+    return BackendType::SKIA;
   if (aName.EqualsLiteral("direct2d"))
-    return BACKEND_DIRECT2D;
+    return BackendType::DIRECT2D;
   if (aName.EqualsLiteral("cg"))
-    return BACKEND_COREGRAPHICS;
-  return BACKEND_NONE;
+    return BackendType::COREGRAPHICS;
+  return BackendType::NONE;
 }
 
 nsresult
@@ -1518,15 +1518,15 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
                               uint32_t aContentBitmask, BackendType aContentDefault)
 {
     mPreferredCanvasBackend = GetCanvasBackendPref(aCanvasBitmask);
-    if (!mPreferredCanvasBackend) {
+    if (mPreferredCanvasBackend == BackendType::NONE) {
         mPreferredCanvasBackend = aCanvasDefault;
     }
     mFallbackCanvasBackend =
-        GetCanvasBackendPref(aCanvasBitmask & ~(1 << mPreferredCanvasBackend));
+        GetCanvasBackendPref(aCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
 
     mContentBackendBitmask = aContentBitmask;
     mContentBackend = GetContentBackendPref(mContentBackendBitmask);
-    if (!mContentBackend) {
+    if (mContentBackend == BackendType::NONE) {
         mContentBackend = aContentDefault;
     }
 }
@@ -1553,12 +1553,12 @@ gfxPlatform::GetBackendPref(const char* aBackendPrefName, uint32_t &aBackendBitm
     }
 
     uint32_t allowedBackends = 0;
-    BackendType result = BACKEND_NONE;
+    BackendType result = BackendType::NONE;
     for (uint32_t i = 0; i < backendList.Length(); ++i) {
         BackendType type = BackendTypeForName(backendList[i]);
-        if ((1 << type) & aBackendBitmask) {
-            allowedBackends |= (1 << type);
-            if (result == BACKEND_NONE) {
+        if (BackendTypeBit(type) & aBackendBitmask) {
+            allowedBackends |= BackendTypeBit(type);
+            if (result == BackendType::NONE) {
                 result = type;
             }
         }

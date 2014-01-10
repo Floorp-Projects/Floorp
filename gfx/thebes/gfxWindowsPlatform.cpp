@@ -493,15 +493,15 @@ gfxWindowsPlatform::UpdateRenderMode()
     }
 #endif
 
-    uint32_t canvasMask = 1 << BACKEND_CAIRO;
-    uint32_t contentMask = 1 << BACKEND_CAIRO;
-    BackendType defaultBackend = BACKEND_CAIRO;
+    uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
+    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
+    BackendType defaultBackend = BackendType::CAIRO;
     if (mRenderMode == RENDER_DIRECT2D) {
-      canvasMask |= 1 << BACKEND_DIRECT2D;
-      contentMask |= 1 << BACKEND_DIRECT2D;
-      defaultBackend = BACKEND_DIRECT2D;
+      canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
+      contentMask |= BackendTypeBit(BackendType::DIRECT2D);
+      defaultBackend = BackendType::DIRECT2D;
     } else {
-      canvasMask |= 1 << BACKEND_SKIA;
+      canvasMask |= BackendTypeBit(BackendType::SKIA);
     }
     InitBackendPrefs(canvasMask, defaultBackend,
                      contentMask, defaultBackend);
@@ -695,7 +695,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
         nativeFont.mType = NATIVE_FONT_DWRITE_FONT_FACE;
         nativeFont.mFont = font->GetFontFace();
 
-        if (aTarget->GetType() == BACKEND_CAIRO) {
+        if (aTarget->GetType() == BackendType::CAIRO) {
           return Factory::CreateScaledFontWithCairo(nativeFont,
                                                     font->GetAdjustedSize(),
                                                     font->GetCairoScaledFont());
@@ -714,7 +714,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     GetObject(static_cast<gfxGDIFont*>(aFont)->GetHFONT(), sizeof(LOGFONT), &lf);
     nativeFont.mFont = &lf;
 
-    if (aTarget->GetType() == BACKEND_CAIRO) {
+    if (aTarget->GetType() == BackendType::CAIRO) {
       return Factory::CreateScaledFontWithCairo(nativeFont,
                                                 aFont->GetAdjustedSize(),
                                                 aFont->GetCairoScaledFont());
@@ -727,14 +727,14 @@ already_AddRefed<gfxASurface>
 gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
 #ifdef XP_WIN
-  if (aTarget->GetType() == BACKEND_DIRECT2D) {
+  if (aTarget->GetType() == BackendType::DIRECT2D) {
     if (!GetD2DDevice()) {
       // We no longer have a D2D device, can't do this.
       return nullptr;
     }
 
     RefPtr<ID3D10Texture2D> texture =
-      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NATIVE_SURFACE_D3D10_TEXTURE));
+      static_cast<ID3D10Texture2D*>(aTarget->GetNativeSurface(NativeSurfaceType::D3D10_TEXTURE));
 
     if (!texture) {
       return gfxPlatform::GetThebesSurfaceForDrawTarget(aTarget);

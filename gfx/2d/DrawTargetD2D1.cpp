@@ -285,7 +285,7 @@ DrawTargetD2D1::Stroke(const Path *aPath,
                        const StrokeOptions &aStrokeOptions,
                        const DrawOptions &aOptions)
 {
-  if (aPath->GetBackendType() != BACKEND_DIRECT2D) {
+  if (aPath->GetBackendType() != BackendType::DIRECT2D) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
   }
@@ -306,7 +306,7 @@ DrawTargetD2D1::Fill(const Path *aPath,
                      const Pattern &aPattern,
                      const DrawOptions &aOptions)
 {
-  if (aPath->GetBackendType() != BACKEND_DIRECT2D) {
+  if (aPath->GetBackendType() != BackendType::DIRECT2D) {
     gfxDebug() << *this << ": Ignoring drawing call for incompatible path.";
     return;
   }
@@ -430,7 +430,7 @@ DrawTargetD2D1::Mask(const Pattern &aSource,
 void
 DrawTargetD2D1::PushClip(const Path *aPath)
 {
-  if (aPath->GetBackendType() != BACKEND_DIRECT2D) {
+  if (aPath->GetBackendType() != BackendType::DIRECT2D) {
     gfxDebug() << *this << ": Ignoring clipping call for incompatible path.";
     return;
   }
