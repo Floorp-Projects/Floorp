@@ -1589,6 +1589,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         pc.impl()->GetSTSThread(),
         stream->GetMediaStream()->GetStream(),
         pc_track_id,
+        level,
         conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -1640,6 +1641,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream()->GetStream(),
             pc_track_id,
+            level,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -2241,6 +2243,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream(),
             pc_track_id,
+            level,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
@@ -2291,6 +2294,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
             pc.impl()->GetSTSThread(),
             stream->GetMediaStream(),
             pc_track_id,
+            level,
             conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
