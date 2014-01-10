@@ -456,15 +456,10 @@ exports.Type = Type;
  */
 
 let projectLargeInt = function projectLargeInt(x) {
-  let str = x.toString();
-  let rv = parseInt(str, 10);
-  if (rv.toString() !== str) {
-    throw new TypeError("Number " + str + " cannot be projected to a double");
-  }
-  return rv;
+  return parseInt(x.toString(), 10);
 };
 let projectLargeUInt = function projectLargeUInt(x) {
-  return projectLargeInt(x);
+  return parseInt(x.toString(), 10);
 };
 let projectValue = function projectValue(x) {
   if (!(x instanceof ctypes.CData)) {
