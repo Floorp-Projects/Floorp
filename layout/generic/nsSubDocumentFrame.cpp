@@ -252,6 +252,24 @@ nsSubDocumentFrame::PassPointerEventsToChildren()
   return false;
 }
 
+static void
+WrapBackgroundColorInOwnLayer(nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aFrame,
+                              nsDisplayList* aList)
+{
+  nsDisplayList tempItems;
+  nsDisplayItem* item;
+  while ((item = aList->RemoveBottom()) != nullptr) {
+    if (item->GetType() == nsDisplayItem::TYPE_BACKGROUND_COLOR) {
+      nsDisplayList tmpList;
+      tmpList.AppendToTop(item);
+      item = new (aBuilder) nsDisplayOwnLayer(aBuilder, aFrame, &tmpList);
+    }
+    tempItems.AppendToTop(item);
+  }
+  aList->AppendToTop(&tempItems);
+}
+
 void
 nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
@@ -260,10 +278,25 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (!IsVisibleForPainting(aBuilder))
     return;
 
+  nsFrameLoader* frameLoader = FrameLoader();
+  RenderFrameParent* rfp = nullptr;
+  if (frameLoader) {
+    rfp = frameLoader->GetCurrentRemoteFrame();
+  }
+
   // If we are pointer-events:none then we don't need to HitTest background
   bool pointerEventsNone = StyleVisibility()->mPointerEvents == NS_STYLE_POINTER_EVENTS_NONE;
   if (!aBuilder->IsForEventDelivery() || !pointerEventsNone) {
-    DisplayBorderBackgroundOutline(aBuilder, aLists);
+    nsDisplayListCollection decorations;
+    DisplayBorderBackgroundOutline(aBuilder, decorations);
+    if (rfp) {
+      // Wrap background colors of <iframe>s with remote subdocuments in their
+      // own layer so we generate a ColorLayer. This is helpful for optimizing
+      // compositing; we can skip compositing the ColorLayer when the
+      // remote content is opaque.
+      WrapBackgroundColorInOwnLayer(aBuilder, this, decorations.BorderBackground());
+    }
+    decorations.MoveTo(aLists);
   }
 
   bool passPointerEventsToChildren = false;
@@ -284,13 +317,9 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  nsFrameLoader* frameLoader = FrameLoader();
-  if (frameLoader) {
-    RenderFrameParent* rfp = frameLoader->GetCurrentRemoteFrame();
-    if (rfp) {
-      rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
-      return;
-    }
+  if (rfp) {
+    rfp->BuildDisplayList(aBuilder, this, aDirtyRect, aLists);
+    return;
   }
 
   nsView* subdocView = mInnerView->GetFirstChild();
