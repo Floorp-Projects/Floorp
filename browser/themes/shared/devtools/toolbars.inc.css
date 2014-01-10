@@ -437,6 +437,10 @@
   background-size: 48px 16px;
 }
 
+#command-button-pick > image {
+  background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
+}
+
 #command-button-splitconsole > image {
   background-image: url("chrome://browser/skin/devtools/command-console@2x.png");
 }

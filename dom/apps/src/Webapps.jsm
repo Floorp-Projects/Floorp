@@ -1119,9 +1119,14 @@ this.DOMApplicationRegistry = {
     msg.mm = mm;
 
     switch (aMessage.name) {
-      case "Webapps:Install":
+      case "Webapps:Install": {
+#ifdef MOZ_ANDROID_SYNTHAPKS
+        Services.obs.notifyObservers(null, "webapps-download-apk", JSON.stringify(msg));
+#else
         this.doInstall(msg, mm);
+#endif
         break;
+      }
       case "Webapps:GetSelf":
         this.getSelf(msg, mm);
         break;
@@ -1143,9 +1148,14 @@ this.DOMApplicationRegistry = {
       case "Webapps:GetAll":
         this.doGetAll(msg, mm);
         break;
-      case "Webapps:InstallPackage":
+      case "Webapps:InstallPackage": {
+#ifdef MOZ_ANDROID_SYNTHAPKS
+        Services.obs.notifyObservers(null, "webapps-download-apk", JSON.stringify(msg));
+#else
         this.doInstallPackage(msg, mm);
+#endif
         break;
+      }
       case "Webapps:RegisterForMessages":
         this.addMessageListener(msg.messages, msg.app, mm);
         break;
@@ -2012,6 +2022,65 @@ this.DOMApplicationRegistry = {
       return manifestStatus === "web";
     }
 
+    let checkManifest = (function() {
+      if (!app.manifest) {
+        sendError("MANIFEST_PARSE_ERROR");
+        return false;
+      }
+
+      // Disallow multiple hosted apps installations from the same origin for now.
+      // We will remove this code after multiple apps per origin are supported (bug 778277).
+      // This will also disallow reinstalls from the same origin for now.
+      for (let id in this.webapps) {
+        if (this.webapps[id].origin == app.origin &&
+            !this.webapps[id].packageHash &&
+            this._isLaunchable(this.webapps[id])) {
+          sendError("MULTIPLE_APPS_PER_ORIGIN_FORBIDDEN");
+          return false;
+        }
+      }
+
+      if (!AppsUtils.checkManifest(app.manifest, app)) {
+        sendError("INVALID_MANIFEST");
+        return false;
+      }
+
+      if (!AppsUtils.checkInstallAllowed(app.manifest, app.installOrigin)) {
+        sendError("INSTALL_FROM_DENIED");
+        return false;
+      }
+
+      if (!checkAppStatus(app.manifest)) {
+        sendError("INVALID_SECURITY_LEVEL");
+        return false;
+      }
+
+      return true;
+    }).bind(this);
+
+    let installApp = (function() {
+      app.manifestHash = this.computeManifestHash(app.manifest);
+      // We allow bypassing the install confirmation process to facilitate
+      // automation.
+      let prefName = "dom.mozApps.auto_confirm_install";
+      if (Services.prefs.prefHasUserValue(prefName) &&
+          Services.prefs.getBoolPref(prefName)) {
+        this.confirmInstall(aData);
+      } else {
+        Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                     JSON.stringify(aData));
+      }
+    }).bind(this);
+
+    // We may already have the manifest (e.g. AutoInstall),
+    // in which case we don't need to load it.
+    if (app.manifest) {
+      if (checkManifest()) {
+        installApp();
+      }
+      return;
+    }
+
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
@@ -2029,42 +2098,9 @@ this.DOMApplicationRegistry = {
         }
 
         app.manifest = xhr.response;
-        if (!app.manifest) {
-          sendError("MANIFEST_PARSE_ERROR");
-          return;
-        }
-
-        // Disallow multiple hosted apps installations from the same origin for now.
-        // We will remove this code after multiple apps per origin are supported (bug 778277).
-        // This will also disallow reinstalls from the same origin for now.
-        for (let id in this.webapps) {
-          if (this.webapps[id].origin == app.origin &&
-              !this.webapps[id].packageHash &&
-              this._isLaunchable(this.webapps[id])) {
-            sendError("MULTIPLE_APPS_PER_ORIGIN_FORBIDDEN");
-            return;
-          }
-        }
-
-        if (!AppsUtils.checkManifest(app.manifest, app)) {
-          sendError("INVALID_MANIFEST");
-        } else if (!AppsUtils.checkInstallAllowed(app.manifest, app.installOrigin)) {
-          sendError("INSTALL_FROM_DENIED");
-        } else if (!checkAppStatus(app.manifest)) {
-          sendError("INVALID_SECURITY_LEVEL");
-        } else {
+        if (checkManifest()) {
           app.etag = xhr.getResponseHeader("Etag");
-          app.manifestHash = this.computeManifestHash(app.manifest);
-          // We allow bypassing the install confirmation process to facilitate
-          // automation.
-          let prefName = "dom.mozApps.auto_confirm_install";
-          if (Services.prefs.prefHasUserValue(prefName) &&
-              Services.prefs.getBoolPref(prefName)) {
-            this.confirmInstall(aData);
-          } else {
-            Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                         JSON.stringify(aData));
-          }
+          installApp();
         }
       } else {
         sendError("MANIFEST_URL_ERROR");
@@ -2088,6 +2124,53 @@ this.DOMApplicationRegistry = {
                      app.installOrigin + ": " + aError);
     }.bind(this);
 
+    let checkUpdateManifest = (function() {
+      let manifest = app.updateManifest;
+
+      // Disallow reinstalls from the same manifest URL for now.
+      let id = this._appIdForManifestURL(app.manifestURL);
+      if (id !== null && this._isLaunchable(this.webapps[id])) {
+        sendError("REINSTALL_FORBIDDEN");
+        return false;
+      }
+
+      if (!(AppsUtils.checkManifest(manifest, app) && manifest.package_path)) {
+        sendError("INVALID_MANIFEST");
+        return false;
+      }
+
+      if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
+        sendError("INSTALL_FROM_DENIED");
+        return false;
+      }
+
+      return true;
+    }).bind(this);
+
+    let installApp = (function() {
+      app.manifestHash = this.computeManifestHash(app.updateManifest);
+
+      // We allow bypassing the install confirmation process to facilitate
+      // automation.
+      let prefName = "dom.mozApps.auto_confirm_install";
+      if (Services.prefs.prefHasUserValue(prefName) &&
+          Services.prefs.getBoolPref(prefName)) {
+        this.confirmInstall(aData);
+      } else {
+        Services.obs.notifyObservers(aMm, "webapps-ask-install",
+                                     JSON.stringify(aData));
+      }
+    }).bind(this);
+
+    // We may already have the manifest (e.g. AutoInstall),
+    // in which case we don't need to load it.
+    if (app.updateManifest) {
+      if (checkUpdateManifest()) {
+        installApp();
+      }
+      return;
+    }
+
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
@@ -2104,38 +2187,15 @@ this.DOMApplicationRegistry = {
           return;
         }
 
-        let manifest = app.updateManifest = xhr.response;
-        if (!manifest) {
+        app.updateManifest = xhr.response;
+        if (!app.updateManifest) {
           sendError("MANIFEST_PARSE_ERROR");
           return;
         }
-
-        // Disallow reinstalls from the same manifest URL for now.
-        let id = this._appIdForManifestURL(app.manifestURL);
-        if (id !== null && this._isLaunchable(this.webapps[id])) {
-          sendError("REINSTALL_FORBIDDEN");
-          return;
-        }
-
-        if (!(AppsUtils.checkManifest(manifest, app) &&
-              manifest.package_path)) {
-          sendError("INVALID_MANIFEST");
-        } else if (!AppsUtils.checkInstallAllowed(manifest, app.installOrigin)) {
-          sendError("INSTALL_FROM_DENIED");
-        } else {
+        if (checkUpdateManifest()) {
           app.etag = xhr.getResponseHeader("Etag");
-          app.manifestHash = this.computeManifestHash(manifest);
           debug("at install package got app etag=" + app.etag);
-          // We allow bypassing the install confirmation process to facilitate
-          // automation.
-          let prefName = "dom.mozApps.auto_confirm_install";
-          if (Services.prefs.prefHasUserValue(prefName) &&
-              Services.prefs.getBoolPref(prefName)) {
-            this.confirmInstall(aData);
-          } else {
-            Services.obs.notifyObservers(aMm, "webapps-ask-install",
-                                         JSON.stringify(aData));
-          }
+          installApp();
         }
       }
       else {
@@ -2346,7 +2406,17 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
     // saved in the registry.
     this._saveApps((function() {
       this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
-      this.broadcastMessage("Webapps:Install:Return:OK", aData);
+      if (aData.isPackage && aData.autoInstall) {
+        // Skip directly to onInstallSuccessAck, since there isn't
+        // a WebappsRegistry to receive Webapps:Install:Return:OK and respond
+        // Webapps:Install:Return:Ack when an app is being auto-installed.
+        this.onInstallSuccessAck(app.manifestURL);
+      } else {
+        // Broadcast Webapps:Install:Return:OK so the WebappsRegistry can notify
+        // the installing page about the successful install, after which it'll
+        // respond Webapps:Install:Return:Ack, which calls onInstallSuccessAck.
+        this.broadcastMessage("Webapps:Install:Return:OK", aData);
+      }
       Services.obs.notifyObservers(null, "webapps-installed",
         JSON.stringify({ manifestURL: app.manifestURL }));
     }).bind(this));
@@ -2361,11 +2431,17 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
     if (manifest.package_path) {
       // If it is a local app then it must been installed from a local file
       // instead of web.
-      let origPath = jsonManifest.package_path;
+#ifdef MOZ_ANDROID_SYNTHAPKS
+      // In that case, we would already have the manifest, not just the update
+      // manifest.
+      dontNeedNetwork = !!aData.app.manifest;
+#else
       if (aData.app.localInstallPath) {
         dontNeedNetwork = true;
         jsonManifest.package_path = "file://" + aData.app.localInstallPath;
       }
+#endif
+
       // origin for install apps is meaningless here, since it's app:// and this
       // can't be used to resolve package paths.
       manifest = new ManifestHelper(jsonManifest, app.manifestURL);
@@ -2548,7 +2624,7 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
       let fullPackagePath = aManifest.fullPackagePath();
 
       // Check if it's a local file install (we've downloaded/sideloaded the
-      // package already or it did exist on the build).
+      // package already, it existed on the build, or it came with an APK).
       // Note that this variable also controls whether files signed with expired
       // certificates are accepted or not. If isLocalFileInstall is true and the
       // device date is earlier than the build generation date, then the signature

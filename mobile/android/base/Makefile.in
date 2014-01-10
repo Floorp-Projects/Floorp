@@ -42,6 +42,7 @@ DEFINES += \
 
 GARBAGE += \
   AndroidManifest.xml  \
+  WebAppManifestFragment.xml.frag \
   classes.dex  \
   gecko.ap_  \
   res/values/strings.xml \
@@ -131,6 +132,7 @@ PP_JAVAFILES := $(filter-out $(gecko_package_dir)/R.java,$(gecko-mozglue_PP_JAVA
 
 manifest := \
   AndroidManifest.xml.in \
+  WebAppManifestFragment.xml.frag.in \
   $(NULL)
 
 PP_TARGETS += manifest
@@ -182,6 +184,7 @@ res/values/strings.xml: FORCE
 
 all_resources = \
   $(CURDIR)/AndroidManifest.xml \
+  $(CURDIR)/WebAppManifestFragment.xml.frag \
   $(android_res_files) \
   $(ANDROID_GENERATED_RESFILES) \
   $(NULL)

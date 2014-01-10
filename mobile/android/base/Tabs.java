@@ -766,7 +766,7 @@ public class Tabs implements GeckoEventListener {
      */
     private Bitmap getAboutPageFavicon(final String url) {
         int faviconSize = Math.round(mAppContext.getResources().getDimension(R.dimen.browser_toolbar_favicon_size));
-        return Favicons.getCachedFaviconForSize(url, faviconSize);
+        return Favicons.getSizedFaviconForPageFromCache(url, faviconSize);
     }
 
     /**

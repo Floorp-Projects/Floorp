@@ -1041,8 +1041,6 @@ CheckDefinitePropertiesTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTyp
     // contents of |frozen| though with new speculative types, and these need
     // to be reflected in |actual| for AddClearDefiniteFunctionUsesInScript
     // to work.
-    JS_ASSERT(actual->isSubset(frozen));
-
     if (!frozen->isSubset(actual)) {
         TypeSet::TypeList list;
         frozen->enumerateTypes(&list);
@@ -1055,16 +1053,40 @@ CheckDefinitePropertiesTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTyp
 void
 types::FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *constraints)
 {
+#ifdef DEBUG
+    // Assert no new types have been added to the StackTypeSets. Do this before
+    // calling CheckDefinitePropertiesTypeSet, as it may add new types to the
+    // StackTypeSets and break these invariants if a script is inlined more
+    // than once. See also CheckDefinitePropertiesTypeSet.
     for (size_t i = 0; i < constraints->numFrozenScripts(); i++) {
         const CompilerConstraintList::FrozenScript &entry = constraints->frozenScript(i);
-        JS_ASSERT(entry.script->types);
+        JSScript *script = entry.script;
+        JS_ASSERT(script->types);
 
-        CheckDefinitePropertiesTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script));
-        unsigned nargs = entry.script->function() ? entry.script->function()->nargs() : 0;
-        for (size_t i = 0; i < nargs; i++)
-            CheckDefinitePropertiesTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i));
-        for (size_t i = 0; i < entry.script->nTypeSets(); i++)
-            CheckDefinitePropertiesTypeSet(cx, &entry.bytecodeTypes[i], &entry.script->types->typeArray()[i]);
+        JS_ASSERT(TypeScript::ThisTypes(script)->isSubset(entry.thisTypes));
+
+        unsigned nargs = script->function() ? script->function()->nargs() : 0;
+        for (size_t j = 0; j < nargs; j++)
+            JS_ASSERT(TypeScript::ArgTypes(script, j)->isSubset(&entry.argTypes[j]));
+
+        for (size_t j = 0; j < script->nTypeSets(); j++)
+            JS_ASSERT(script->types->typeArray()[j].isSubset(&entry.bytecodeTypes[j]));
+    }
+#endif
+
+    for (size_t i = 0; i < constraints->numFrozenScripts(); i++) {
+        const CompilerConstraintList::FrozenScript &entry = constraints->frozenScript(i);
+        JSScript *script = entry.script;
+        JS_ASSERT(script->types);
+
+        CheckDefinitePropertiesTypeSet(cx, entry.thisTypes, TypeScript::ThisTypes(script));
+
+        unsigned nargs = script->function() ? script->function()->nargs() : 0;
+        for (size_t j = 0; j < nargs; j++)
+            CheckDefinitePropertiesTypeSet(cx, &entry.argTypes[j], TypeScript::ArgTypes(script, j));
+
+        for (size_t j = 0; j < script->nTypeSets(); j++)
+            CheckDefinitePropertiesTypeSet(cx, &entry.bytecodeTypes[j], &script->types->typeArray()[j]);
     }
 }
 

@@ -176,7 +176,7 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
 
   float opacity = 1.0;
   EffectChain effects;
-  effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0.2,0,0,1));
+  effects.mPrimaryEffect = new EffectSolidColor(gfx::Color(0.2f,0,0,1));
   compositor->DrawQuad(graphRect,
                        clipRect,
                        effects,
