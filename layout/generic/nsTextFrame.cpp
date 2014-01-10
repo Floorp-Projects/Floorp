@@ -1888,7 +1888,7 @@ static const nsTextFrameUtils::CompressionMode CSSWhitespaceToCompressionMode[] 
 gfxTextRun*
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
-  gfxSkipChars skipChars;
+  gfxSkipCharsBuilder builder;
 
   const void* textPtr = aTextBuffer;
   bool anySmallcapsStyle = false;
@@ -1987,7 +1987,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 
     TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
     newFlow->mStartFrame = mappedFlow->mStartFrame;
-    newFlow->mDOMOffsetToBeforeTransformOffset = skipChars.GetOriginalCharCount() -
+    newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
       mappedFlow->mStartFrame->GetContentOffset();
     newFlow->mContentLength = contentLength;
 
@@ -2003,7 +2003,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       char16_t* bufStart = static_cast<char16_t*>(aTextBuffer);
       char16_t* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
-          compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+          compression, &mNextRunContextInfo, &builder, &analysisFlags);
       aTextBuffer = bufEnd;
       currentTransformedTextOffset = bufEnd - static_cast<const char16_t*>(textPtr);
     } else {
@@ -2018,7 +2018,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         }
         uint8_t* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const uint8_t*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         aTextBuffer = ExpandBuffer(static_cast<char16_t*>(aTextBuffer),
                                    tempBuf.Elements(), end - tempBuf.Elements());
         currentTransformedTextOffset =
@@ -2027,12 +2027,18 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
         uint8_t* bufStart = static_cast<uint8_t*>(aTextBuffer);
         uint8_t* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const uint8_t*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         aTextBuffer = end;
         currentTransformedTextOffset = end - static_cast<const uint8_t*>(textPtr);
       }
     }
     textFlags |= analysisFlags;
+  }
+
+  // Check for out-of-memory in gfxSkipCharsBuilder
+  if (!builder.IsOK()) {
+    DestroyUserData(userDataToDestroy);
+    return nullptr;
   }
 
   void* finalUserData;
@@ -2087,6 +2093,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX;
   }
 
+  gfxSkipChars skipChars;
+  skipChars.TakeFrom(&builder);
   // Convert linebreak coordinates to transformed string offsets
   NS_ASSERTION(nextBreakIndex == mLineBreakBeforeFrames.Length(),
                "Didn't find all the frames to break-before...");
@@ -2227,7 +2235,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
     return false;
   }
 
-  gfxSkipChars skipChars;
+  gfxSkipCharsBuilder builder;
 
   nsAutoTArray<int32_t,50> textBreakPoints;
   TextRunUserData dummyData;
@@ -2272,7 +2280,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
 
     TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
     newFlow->mStartFrame = mappedFlow->mStartFrame;
-    newFlow->mDOMOffsetToBeforeTransformOffset = skipChars.GetOriginalCharCount() -
+    newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
       mappedFlow->mStartFrame->GetContentOffset();
     newFlow->mContentLength = contentLength;
 
@@ -2288,7 +2296,7 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
       char16_t* bufStart = static_cast<char16_t*>(textPtr);
       char16_t* bufEnd = nsTextFrameUtils::TransformText(
           frag->Get2b() + contentStart, contentLength, bufStart,
-          compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+          compression, &mNextRunContextInfo, &builder, &analysisFlags);
       textPtr = bufEnd;
     } else {
       if (mDoubleByteText) {
@@ -2302,14 +2310,14 @@ BuildTextRunsScanner::SetupLineBreakerContext(gfxTextRun *aTextRun)
         }
         uint8_t* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const uint8_t*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         textPtr = ExpandBuffer(static_cast<char16_t*>(textPtr),
                                tempBuf.Elements(), end - tempBuf.Elements());
       } else {
         uint8_t* bufStart = static_cast<uint8_t*>(textPtr);
         uint8_t* end = nsTextFrameUtils::TransformText(
             reinterpret_cast<const uint8_t*>(frag->Get1b()) + contentStart, contentLength,
-            bufStart, compression, &mNextRunContextInfo, &skipChars, &analysisFlags);
+            bufStart, compression, &mNextRunContextInfo, &builder, &analysisFlags);
         textPtr = end;
       }
     }
@@ -8323,7 +8331,7 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
                                       uint32_t aSkippedMaxLength)
 {
   // The handling of aSkippedStartOffset and aSkippedMaxLength could be more efficient...
-  gfxSkipChars skipChars;
+  gfxSkipCharsBuilder skipCharsBuilder;
   nsTextFrame* textFrame;
   const nsTextFragment* textFrag = mContent->GetText();
   uint32_t keptCharsLength = 0;
@@ -8352,7 +8360,7 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
     TrimmedOffsets trimmedContentOffsets = textFrame->GetTrimmedOffsets(textFrag, false);
     int32_t startOfLineSkipChars = trimmedContentOffsets.mStart - textFrame->mContentOffset;
     if (startOfLineSkipChars > 0) {
-      skipChars.SkipChars(startOfLineSkipChars);
+      skipCharsBuilder.SkipChars(startOfLineSkipChars);
       iter.SetOriginalOffset(trimmedContentOffsets.mStart);
     }
 
@@ -8362,10 +8370,10 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
            keptCharsLength < aSkippedMaxLength) {
       // For each original char from content text
       if (iter.IsOriginalCharSkipped() || ++validCharsLength <= aSkippedStartOffset) {
-        skipChars.SkipChar();
+        skipCharsBuilder.SkipChar();
       } else {
         ++keptCharsLength;
-        skipChars.KeepChar();
+        skipCharsBuilder.KeepChar();
         if (aAppendToString) {
           aAppendToString->Append(
               TransformChar(textStyle, textFrame->mTextRun, iter.GetSkippedOffset(),
@@ -8380,10 +8388,10 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
   }
   
   if (aSkipChars) {
-    aSkipChars->TakeFrom(&skipChars); // Copy skipChars into aSkipChars
+    aSkipChars->TakeFrom(&skipCharsBuilder); // Copy skipChars into aSkipChars
     if (aSkipIter) {
       // Caller must provide both pointers in order to retrieve a gfxSkipCharsIterator,
-      // because the gfxSkipCharsIterator holds a weak pointer to the gfxSkipChars.
+      // because the gfxSkipCharsIterator holds a weak pointer to the gfxSkipCars.
       *aSkipIter = gfxSkipCharsIterator(*aSkipChars, GetContentLength());
     }
   }
