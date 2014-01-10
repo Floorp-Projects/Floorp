@@ -223,9 +223,6 @@ public:
   // Handle system to allow weak references to be passed through C code
   virtual const std::string& GetHandle();
 
-  // Name suitable for exposing to content
-  virtual const std::string& GetName();
-
   // ICE events
   void IceConnectionStateChange(NrIceCtx* ctx,
                                 NrIceCtx::ConnectionState state);
@@ -543,51 +540,32 @@ private:
 
 
 #ifdef MOZILLA_INTERNAL_API
-  // TODO(bcampen@mozilla.com): Once the dust settles on this stuff, it
-  // probably makes sense to make these static in PeerConnectionImpl.cpp
-  // (ie; stop exporting them)
-
   // Fills in an RTCStatsReportInternal. Must be run on STS.
-  static void GetStats_s(
-      const std::string& pcHandle,
-      const std::string& pcName,
-      nsCOMPtr<nsIThread> callbackThread,
+  void GetStats_s(
+      mozilla::TrackID trackId,
       bool internalStats,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      const mozilla::RefPtr<NrIceCtx> &iceCtx,
-      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
+      nsAutoPtr<std::vector<mozilla::RefPtr<mozilla::MediaPipeline>>> pipelines,
       DOMHighResTimeStamp now);
 
-  static nsresult GetStatsImpl_s(
+  nsresult GetStatsImpl_s(
+      mozilla::TrackID trackId,
       bool internalStats,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      const mozilla::RefPtr<NrIceCtx> &iceCtx,
-      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
+      nsAutoPtr<std::vector<mozilla::RefPtr<mozilla::MediaPipeline>>> pipelines,
       DOMHighResTimeStamp now,
       mozilla::dom::RTCStatsReportInternal *report);
 
-  static void FillStatsReport_s(
-      NrIceMediaStream& stream,
-      bool internalStats,
-      DOMHighResTimeStamp now,
-      mozilla::dom::RTCStatsReportInternal* stats);
-
   // Sends an RTCStatsReport to JS. Must run on main thread.
-  static void OnStatsReport_m(
-      const std::string& pcHandle,
+  void OnStatsReport_m(
       nsresult result,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
+      nsAutoPtr<std::vector<mozilla::RefPtr<mozilla::MediaPipeline>>> pipelines,
       nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
 
   // Fetches logs matching pattern from RLogRingBuffer. Must be run on STS.
-  static void GetLogging_s(const std::string& pcHandle,
-                           nsCOMPtr<nsIThread> callbackThread,
-                           const std::string& pattern);
+  void GetLogging_s(const std::string& pattern);
 
   // Sends logging to JS. Must run on main thread.
-  static void OnGetLogging_m(const std::string& pcHandle,
-                             const std::string& pattern,
-                             nsAutoPtr<std::deque<std::string>> logging);
+  void OnGetLogging_m(const std::string& pattern,
+                      const std::deque<std::string>& logging);
 #endif
 
   // Timecard used to measure processing time. This should be the first class
@@ -626,9 +604,6 @@ private:
 
   // A handle to refer to this PC with
   std::string mHandle;
-
-  // A name for this PC that we are willing to expose to content.
-  std::string mName;
 
   // The target to run stuff on
   nsCOMPtr<nsIEventTarget> mSTSThread;
