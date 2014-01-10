@@ -30,7 +30,7 @@ function runTest() {
   isnot(res.widths[0], res.widths[1], "binding was rendered");
   is(res.anonChildCount, 2, "correct number of anon children");
 
-  iframe.src = "http://noxul.example.com/tests/content/xbl/test/file_bug591198_inner.html";
+  iframe.src = "http://noxul.example.com/tests/dom/xbl/test/file_bug591198_inner.html";
   let res = (yield);
   is(res.widths[0], res.widths[1], "binding was not rendered");
   isnot(res.widths[0], res.widths[2], "binding was not rendered");

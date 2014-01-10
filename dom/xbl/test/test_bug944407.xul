@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=944407
     // Disable javascript, and load the frame.
     function loadFrame() {
       ok(!Services.prefs.getBoolPref('javascript.enabled'), "Javascript should be disabled");
-      $('ifr').setAttribute('src', 'http://mochi.test:8888/tests/content/xbl/test/file_bug944407.html');
+      $('ifr').setAttribute('src', 'http://mochi.test:8888/tests/dom/xbl/test/file_bug944407.html');
     }
     SpecialPowers.pushPrefEnv({ set: [['javascript.enabled', false]] }, loadFrame);
   }
