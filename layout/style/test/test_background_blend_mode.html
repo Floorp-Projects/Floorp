@@ -19,7 +19,7 @@
 var frame_container = document.getElementById("display");
 var noframe_container = document.getElementById("content");
 
-(function test_bug_841601() {
+function test_bug_841601() {
   // Test handling of background-blend-mode
   var p = document.createElement("p");
   var cs = getComputedStyle(p, "");
@@ -44,7 +44,14 @@ var noframe_container = document.getElementById("content");
      "set all blendmodes");
 
   p.parentNode.removeChild(p);
-})();
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.background-blend-mode.enabled", true]] },
+                          test_bug_841601);
+
 </script>
 </pre>
 </body>
