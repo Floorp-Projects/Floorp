@@ -35,10 +35,10 @@ public:
 
     ~GLContextWGL();
 
-    virtual GLContextType GetContextType() MOZ_OVERRIDE { return ContextTypeWGL; }
+    virtual GLContextType GetContextType() MOZ_OVERRIDE { return GLContextType::WGL; }
 
     static GLContextWGL* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == ContextTypeWGL);
+        MOZ_ASSERT(gl->GetContextType() == GLContextType::WGL);
         return static_cast<GLContextWGL*>(gl);
     }
 
