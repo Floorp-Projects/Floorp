@@ -336,6 +336,108 @@ protected:
 };
 
 /**
+ * A texture source meant for use with StreamTextureHostOGL.
+ *
+ * It does not own any texture, we get texture from SurfaceStream.
+ */
+class StreamTextureSourceOGL : public NewTextureSource
+                             , public TextureSourceOGL
+{
+public:
+  StreamTextureSourceOGL(CompositorOGL* aCompositor,
+                         gfx::SurfaceStream* aStream)
+    : mCompositor(aCompositor)
+    , mStream(aStream)
+    , mTextureHandle(0)
+    , mTextureTarget(LOCAL_GL_TEXTURE_2D)
+    , mUploadTexture(0)
+    , mFormat(gfx::FORMAT_UNKNOWN)
+  {
+    MOZ_COUNT_CTOR(StreamTextureSourceOGL);
+  }
+
+  ~StreamTextureSourceOGL()
+  {
+    MOZ_COUNT_DTOR(StreamTextureSourceOGL);
+  }
+
+  virtual TextureSourceOGL* AsSourceOGL() { return this; }
+
+  virtual void BindTexture(GLenum activetex) MOZ_OVERRIDE;
+
+  virtual bool IsValid() const MOZ_OVERRIDE { return !!gl(); }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE { return mFormat; }
+
+  virtual GLenum GetTextureTarget() const { return mTextureTarget; }
+
+  virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
+
+  virtual void DeallocateDeviceData();
+
+  bool RetrieveTextureFromStream();
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+protected:
+  gl::GLContext* gl() const;
+
+  CompositorOGL* mCompositor;
+  gfx::SurfaceStream* mStream;
+  GLuint mTextureHandle;
+  GLenum mTextureTarget;
+  GLuint mUploadTexture;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+};
+
+/**
+ * A TextureHost for shared SurfaceStream
+ */
+class StreamTextureHostOGL : public TextureHost
+{
+public:
+  StreamTextureHostOGL(TextureFlags aFlags,
+                       const SurfaceStreamDescriptor& aDesc);
+
+  virtual ~StreamTextureHostOGL();
+
+  // SharedTextureHostOGL doesn't own any GL texture
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+
+  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  {
+    return mTextureSource;
+  }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return nullptr; // XXX - implement this (for MOZ_DUMP_PAINTING)
+  }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "StreamTextureHostOGL"; }
+#endif
+
+protected:
+  CompositorOGL* mCompositor;
+  gfx::SurfaceStream* mStream;
+  RefPtr<StreamTextureSourceOGL> mTextureSource;
+};
+
+/**
  * DeprecatedTextureHost implementation using a TextureImage as the underlying texture.
  */
 class TextureImageDeprecatedTextureHostOGL : public DeprecatedTextureHost
