@@ -2506,7 +2506,7 @@ this.CustomizableUI = {
    *                  Firefox or add-on-provided;
    * - disabled:      for API-provided widgets, whether the widget is currently
    *                  disabled. NB: this property is writable, and will toggle
-   *                  all the widgets' disabled state;
+   *                  all the widgets' nodes' disabled states;
    * - label:         for API-provied widgets, the label of the widget;
    * - tooltiptext:   for API-provided widgets, the tooltip of the widget;
    * - showInPrivateBrowsing: for API-provided widgets, whether the widget is
@@ -2720,7 +2720,7 @@ this.CustomizableUI = {
    *
    * @param aWidgetId the widget ID or DOM node you want to move somewhere
    * @param aArea     the area ID you want to move it to.
-   * @return true if this is possible, false if it is not. Same caveats as
+   * @return true if this is possible, false if it is not. The same caveats as
    *              for isWidgetRemovable apply, however, if no windows are open.
    */
   canWidgetMoveToArea: function(aWidgetId, aArea) {
@@ -2778,13 +2778,15 @@ this.CustomizableUI = {
    * Check if a widget is a "special" widget: a spring, spacer or separator.
    *
    * @param aWidgetId the widget ID to check.
+   * @return true if the widget is 'special', false otherwise.
    */
   isSpecialWidget: function(aWidgetId) {
     return CustomizableUIInternal.isSpecialWidget(aWidgetId);
   },
   /**
-   * Add listeners to a panel that will close it. For use from PanelUI and
-   * the overflowable toolbars, unlikely to be useful for consumers.
+   * Add listeners to a panel that will close it. For use from the menu panel
+   * and overflowable toolbar implementations, unlikely to be useful for
+   * consumers.
    *
    * @param aPanel the panel to which listeners should be attached.
    */
@@ -2793,8 +2795,8 @@ this.CustomizableUI = {
   },
   /**
    * Remove close listeners that have been added to a panel with
-   * addPanelCloseListeners. For use from PanelUI and the overflowable
-   * toolbars, unlikely to be useful for consumers.
+   * addPanelCloseListeners. For use from the menu panel and overflowable
+   * toolbar implementations, unlikely to be useful for consumers.
    *
    * @param aPanel the panel from which listeners should be removed.
    */
