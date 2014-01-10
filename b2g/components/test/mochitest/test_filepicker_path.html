@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=949944
+-->
+<head>
+<meta charset="utf-8">
+<title>Permission Prompt Test</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body onload="processTestCase()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=949944"> [B2G][Helix][Browser][Wallpaper] use new File([blob], filename) to return a blob with filename when picking</a>
+<script type="application/javascript">
+
+'use strict';
+
+var testCases = [
+  // case 1: returns blob with name
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new Blob(['1234567890'],
+                                             { type: 'text/plain' }),
+                              name: 'test1.txt'
+                            }
+                },
+    fileName: 'test1.txt' },
+  // case 2: returns blob without name
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new Blob(['1234567890'],
+                                             { type: 'text/plain' })
+                            }
+                },
+    fileName: 'blob.txt' },
+  // case 3: returns blob with full path name
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new Blob(['1234567890'],
+                                             { type: 'text/plain' }),
+                              name: '/full/path/test3.txt'
+                            }
+                },
+    fileName: 'test3.txt' },
+  // case 4: returns blob relative path name
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new Blob(['1234567890'],
+                                             { type: 'text/plain' }),
+                              name: 'relative/path/test4.txt'
+                            }
+                },
+    fileName: 'test4.txt' },
+  // case 5: returns file with name
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new File(['1234567890'],
+                                             'useless-name.txt',
+                                             { type: 'text/plain' }),
+                              name: 'test5.txt'
+                            }
+                },
+    fileName: 'test5.txt'},
+  // case 6: returns file without name. This case may fail because we
+  //         need to make sure the DOMFile can be sent through
+  //         sendAsyncMessage API.
+  { pickedResult: { success: true,
+                    result: {
+                              type: 'text/plain',
+                              blob: new File(['1234567890'],
+                                             'test6.txt',
+                                             { type: 'text/plain' })
+                            }
+                },
+    todo: true,
+    fileName: 'test6.txt'}
+];
+
+var chromeJS = SimpleTest.getTestFileURL('filepicker_path_handler_chrome.js');
+var chromeScript = SpecialPowers.loadChromeScript(chromeJS);
+var activeTestCase;
+
+chromeScript.addMessageListener('pick-result-updated', handleMessage);
+chromeScript.addMessageListener('file-picked-posted', handleMessage);
+
+// handle messages returned from chromeScript
+function handleMessage(data) {
+  var fileInput = document.getElementById('fileInput');
+  switch (data.type) {
+    case 'pick-result-updated':
+      fileInput.click();
+      break;
+    case 'file-picked-posted':
+      if (activeTestCase.todo) {
+        todo_is(fileInput.value, activeTestCase.fileName,
+                'DOMFile should be able to send through message.');
+      } else {
+        is(fileInput.value, activeTestCase.fileName);
+      }
+      processTestCase();
+      break;
+  }
+}
+
+function processTestCase() {
+  if (!testCases.length) {
+    SimpleTest.finish();
+    return;
+  }
+  activeTestCase = testCases.shift();
+  var expectedResult = activeTestCase.pickedResult;
+  if (navigator.userAgent.indexOf('Windows') > -1 &&
+      expectedResult.result.name) {
+    // If we run at a window box, we need to translate the path from '/' to '\\'
+    var name = expectedResult.result.name;
+    name = name.replace('/', '\\');
+    // If the name is an absolute path, we need to prepend drive letter.
+    if (name.startsWith('\\')) {
+      name = 'C:' + name;
+    }
+    // update the expected name.
+    expectedResult.result.name = name
+  }
+  chromeScript.sendAsyncMessage('update-pick-result', expectedResult);
+}
+
+</script>
+<input type="file" id="fileInput">
+</body>
+</html>

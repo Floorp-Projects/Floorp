@@ -240,10 +240,10 @@ struct SubComplete {
   }
 };
 
-typedef nsTArray<AddPrefix>   AddPrefixArray;
-typedef nsTArray<AddComplete> AddCompleteArray;
-typedef nsTArray<SubPrefix>   SubPrefixArray;
-typedef nsTArray<SubComplete> SubCompleteArray;
+typedef FallibleTArray<AddPrefix>   AddPrefixArray;
+typedef FallibleTArray<AddComplete> AddCompleteArray;
+typedef FallibleTArray<SubPrefix>   SubPrefixArray;
+typedef FallibleTArray<SubComplete> SubCompleteArray;
 
 /**
  * Compares chunks by their add chunk, then their prefix.
@@ -264,17 +264,17 @@ public:
  * to sort, this does a single Compare so it's a bit quicker over the
  * large sorts we do.
  */
-template<class T>
+template<class T, class Alloc>
 void
-EntrySort(nsTArray<T>& aArray)
+EntrySort(nsTArray_Impl<T, Alloc>& aArray)
 {
   qsort(aArray.Elements(), aArray.Length(), sizeof(T),
         EntryCompare<T>::Compare);
 }
 
-template<class T>
+template<class T, class Alloc>
 nsresult
-ReadTArray(nsIInputStream* aStream, nsTArray<T>* aArray, uint32_t aNumElements)
+ReadTArray(nsIInputStream* aStream, nsTArray_Impl<T, Alloc>* aArray, uint32_t aNumElements)
 {
   if (!aArray->SetLength(aNumElements))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -286,9 +286,9 @@ ReadTArray(nsIInputStream* aStream, nsTArray<T>* aArray, uint32_t aNumElements)
   return NS_OK;
 }
 
-template<class T>
+template<class T, class Alloc>
 nsresult
-WriteTArray(nsIOutputStream* aStream, nsTArray<T>& aArray)
+WriteTArray(nsIOutputStream* aStream, nsTArray_Impl<T, Alloc>& aArray)
 {
   uint32_t written;
   return aStream->Write(reinterpret_cast<char*>(aArray.Elements()),

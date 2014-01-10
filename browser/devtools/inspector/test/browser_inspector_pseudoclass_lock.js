@@ -67,22 +67,24 @@ function performTests()
   // Wait for the "pseudoclass" event so we know the
   // inspector has been told of the pseudoclass lock change.
   inspector.selection.once("pseudoclass", () => {
-    // Give the rule view time to update.
     inspector.once("rule-view-refreshed", () => {
-      testAdded();
-      // Change the pseudo class and give the rule view time to update.
-      inspector.togglePseudoClass(pseudo);
-      inspector.selection.once("pseudoclass", () => {
-        inspector.once("rule-view-refreshed", () => {
-          testRemoved();
-          testRemovedFromUI();
-
-          // toggle it back on
-          inspector.togglePseudoClass(pseudo);
-          inspector.selection.once("pseudoclass", () => {
-            testNavigate(() => {
-              // close the inspector
-              finishUp();
+      testAdded(() => {
+        // Change the pseudo class and give the rule view time to update.
+        inspector.togglePseudoClass(pseudo);
+        inspector.selection.once("pseudoclass", () => {
+          inspector.once("rule-view-refreshed", () => {
+            testRemoved();
+            testRemovedFromUI(() => {
+              // toggle it back on
+              inspector.togglePseudoClass(pseudo);
+              inspector.selection.once("pseudoclass", () => {
+                inspector.once("rule-view-refreshed", () => {
+                  testNavigate(() => {
+                    // close the inspector
+                    finishUp();
+                  });
+                });
+              });
             });
           });
         });
@@ -98,46 +100,52 @@ function testNavigate(callback)
 
     // make sure it's still on after naving to parent
     is(DOMUtils.hasPseudoClassLock(div, pseudo), true,
-         "pseudo-class lock is still applied after inspecting ancestor");
+      "pseudo-class lock is still applied after inspecting ancestor");
 
     inspector.selection.setNode(div2);
     inspector.selection.once("pseudoclass", () => {
       // make sure it's removed after naving to a non-hierarchy node
       is(DOMUtils.hasPseudoClassLock(div, pseudo), false,
-           "pseudo-class lock is removed after inspecting sibling node");
+        "pseudo-class lock is removed after inspecting sibling node");
 
       // toggle it back on
       inspector.selection.setNode(div);
       inspector.once("inspector-updated", () => {
         inspector.togglePseudoClass(pseudo);
-        inspector.selection.once("pseudoclass", () => {
-          callback();
-        });
+        inspector.once("computed-view-refreshed", callback);
       });
     });
   });
 }
 
-function testAdded()
+function showPickerOn(node, cb)
+{
+  let highlighter = inspector.toolbox.highlighter;
+  highlighter.showBoxModel(getNodeFront(node)).then(cb);
+}
+
+function testAdded(cb)
 {
   // lock is applied to it and ancestors
   let node = div;
   do {
     is(DOMUtils.hasPseudoClassLock(node, pseudo), true,
-       "pseudo-class lock has been applied");
+      "pseudo-class lock has been applied");
     node = node.parentNode;
   } while (node.parentNode)
 
-  // infobar selector contains pseudo-class
-  let pseudoClassesBox = getActiveInspector().highlighter.nodeInfo.pseudoClassesBox;
-  is(pseudoClassesBox.textContent, pseudo, "pseudo-class in infobar selector");
-
   // ruleview contains pseudo-class rule
-  is(ruleview.element.children.length, 3,
-     "rule view is showing 3 rules for pseudo-class locked div");
+  let rules = ruleview.element.querySelectorAll(".ruleview-rule.theme-separator");
+  is(rules.length, 3, "rule view is showing 3 rules for pseudo-class locked div");
+  is(rules[1]._ruleEditor.rule.selectorText, "div:hover", "rule view is showing " + pseudo + " rule");
 
-  is(ruleview.element.children[1]._ruleEditor.rule.selectorText,
-     "div:hover", "rule view is showing " + pseudo + " rule");
+  // Show the highlighter by starting the pick mode and hovering over the div
+  showPickerOn(div, () => {
+    // infobar selector contains pseudo-class
+    let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
+    is(pseudoClassesBox.textContent, pseudo, "pseudo-class in infobar selector");
+    cb();
+  });
 }
 
 function testRemoved()
@@ -151,15 +159,17 @@ function testRemoved()
   } while (node.parentNode)
 }
 
-function testRemovedFromUI()
+function testRemovedFromUI(cb)
 {
-  // infobar selector doesn't contain pseudo-class
-  let pseudoClassesBox = getActiveInspector().highlighter.nodeInfo.pseudoClassesBox;
-  is(pseudoClassesBox.textContent, "", "pseudo-class removed from infobar selector");
-
   // ruleview no longer contains pseudo-class rule
-  is(ruleview.element.children.length, 2,
-     "rule view is showing 2 rules after removing lock");
+  let rules = ruleview.element.querySelectorAll(".ruleview-rule.theme-separator");
+  is(rules.length, 2, "rule view is showing 2 rules after removing lock");
+
+  showPickerOn(div, () => {
+    let pseudoClassesBox = getHighlighter().querySelector(".highlighter-nodeinfobar-pseudo-classes");
+    is(pseudoClassesBox.textContent, "", "pseudo-class removed from infobar selector");
+    cb();
+  });
 }
 
 function finishUp()

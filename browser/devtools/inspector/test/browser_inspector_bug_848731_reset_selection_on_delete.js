@@ -139,8 +139,5 @@ function test() {
     let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
     is(breadcrumbs.querySelector("button[checked=true]").textContent, crumbLabel,
       "The right breadcrumb is selected");
-
-    // Highlighter is shown?
-    ok(!inspector.highlighter.isHidden(), "The highlighter is shown");
   }
 }

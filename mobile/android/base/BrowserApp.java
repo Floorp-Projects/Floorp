@@ -786,11 +786,11 @@ abstract public class BrowserApp extends GeckoApp
             }
 
             final OnFaviconLoadedListener listener = new GeckoAppShell.CreateShortcutFaviconLoadedListener(url, title);
-            Favicons.getFaviconForSize(url,
-                                       tab.getFaviconURL(),
-                                       Integer.MAX_VALUE,
-                                       LoadFaviconTask.FLAG_PERSIST,
-                                       listener);
+            Favicons.getSizedFavicon(url,
+                                     tab.getFaviconURL(),
+                                     Integer.MAX_VALUE,
+                                     LoadFaviconTask.FLAG_PERSIST,
+                                     listener);
             return true;
         }
 
@@ -1382,8 +1382,6 @@ abstract public class BrowserApp extends GeckoApp
     }
 
     private void openUrlAndStopEditing(String url, String searchEngine, boolean newTab) {
-        mBrowserToolbar.setProgressVisibility(true);
-
         int flags = Tabs.LOADURL_NONE;
         if (newTab) {
             flags |= Tabs.LOADURL_NEW_TAB;
@@ -1415,15 +1413,16 @@ abstract public class BrowserApp extends GeckoApp
         final int tabFaviconSize = getResources().getDimensionPixelSize(R.dimen.browser_toolbar_favicon_size);
 
         int flags = (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST;
-        int id = Favicons.getFaviconForSize(tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
+        int id = Favicons.getSizedFavicon(tab.getURL(), tab.getFaviconURL(), tabFaviconSize, flags, sFaviconLoadedListener);
 
         tab.setFaviconLoadId(id);
-        if (id != Favicons.LOADED &&
-            Tabs.getInstance().isSelectedTab(tab)) {
+
+        final Tabs tabs = Tabs.getInstance();
+        if (id != Favicons.LOADED && tabs.isSelectedTab(tab)) {
             // We're loading the current tab's favicon from somewhere
-            // other than the cache.
-            // Display the globe favicon until then.
-            mBrowserToolbar.showDefaultFavicon();
+            // other than the cache. Display the globe favicon until then.
+            tab.updateFavicon(Favicons.sDefaultFavicon);
+            tabs.notifyListeners(tab, Tabs.TabEvents.FAVICON);
         }
     }
 

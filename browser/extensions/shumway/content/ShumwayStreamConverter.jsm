@@ -188,6 +188,16 @@ function isShumwayEnabledFor(actions) {
   return true;
 }
 
+function fallbackToNativePlugin(window, userAction, activateCTP) {
+  var obj = window.frameElement;
+  var doc = obj.ownerDocument;
+  var e = doc.createEvent("CustomEvent");
+  e.initCustomEvent("MozPlayPlugin", true, true, activateCTP);
+  obj.dispatchEvent(e);
+
+  ShumwayTelemetry.onFallback(userAction);
+}
+
 // All the priviledged actions.
 function ChromeActions(url, window, document) {
   this.url = url;
@@ -356,13 +366,8 @@ ChromeActions.prototype = {
     });
   },
   fallback: function(automatic) {
-    var obj = this.window.frameElement;
-    var doc = obj.ownerDocument;
-    var e = doc.createEvent("CustomEvent");
-    e.initCustomEvent("MozPlayPlugin", true, true, null);
-    obj.dispatchEvent(e);
-
-    ShumwayTelemetry.onFallback(!automatic);
+    automatic = !!automatic; // cast to boolean
+    fallbackToNativePlugin(this.window, !automatic, automatic);
   },
   setClipboard: function (data) {
     if (typeof data !== 'string' ||
@@ -902,7 +907,7 @@ ShumwayStreamConverterBase.prototype = {
                                                     converter.getUrlHint(originalURI));
 
         if (!isShumwayEnabledFor(actions)) {
-          actions.fallback(true);
+          fallbackToNativePlugin(domWindow, false, true);
           return;
         }
 

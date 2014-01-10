@@ -30,9 +30,8 @@ function test() {
   }
 
   function endTests() {
-    inspector.destroy().then(() =>
-      toolbox.destroy()
-    ).then(() => {
+    inspector.destroy();
+    toolbox.destroy().then(() => {
       toolbox = inspector = page1 = page2 = null;
       gBrowser.removeCurrentTab();
       finish();
@@ -40,7 +39,7 @@ function test() {
   }
 
   function loadPageAnd(page, callback) {
-    inspector.once("markuploaded", () => {
+    inspector.once("new-root", () => {
       callback();
     });
 

@@ -1289,6 +1289,17 @@
          ]]></setter>
       </property>
 
+      <field name="_remoteFinder">null</field>
+      <property name="finder" readonly="true">
+        <getter><![CDATA[
+          if (!this._remoteFinder) {
+            let jsm = "resource://gre/modules/RemoteFinder.jsm";
+            let RemoteFinder = Cu.import(jsm, {}).RemoteFinder;
+            this._remoteFinder = new RemoteFinder(this);
+          }
+          return this._remoteFinder;
+        ]]></getter>
+      </property>
     </implementation>
 
   </binding>

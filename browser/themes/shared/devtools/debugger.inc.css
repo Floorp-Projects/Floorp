@@ -511,14 +511,6 @@
   padding: 0 !important;
 }
 
-#resumption-panel-desc {
-  width: 200px;
-}
-
-#resumption-order-panel {
-  -moz-margin-start: -8px;
-}
-
 #resume {
   list-style-image: url(debugger-pause.png);
   -moz-image-region: rect(0px,16px,16px,0px);
