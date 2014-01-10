@@ -189,9 +189,17 @@ To see more help for a specific command, run:
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
 
+        self.log_manager.register_structured_logger(self.logger)
+        self.global_arguments = []
         self.populate_context_handler = None
 
-        self.log_manager.register_structured_logger(self.logger)
+    def add_global_argument(self, *args, **kwargs):
+        """Register a global argument with the argument parser.
+
+        Arguments are proxied to ArgumentParser.add_argument()
+        """
+
+        self.global_arguments.append((args, kwargs))
 
     def load_commands_from_directory(self, path):
         """Scan for mach commands from modules in a directory.
@@ -559,6 +567,9 @@ To see more help for a specific command, run:
             action='store_true', default=False,
             help='Do not prefix log lines with times. By default, mach will '
                 'prefix each output line with the time since command start.')
+
+        for args, kwargs in self.global_arguments:
+            global_group.add_argument(*args, **kwargs)
 
         # We need to be last because CommandAction swallows all remaining
         # arguments and argparse parses arguments in the order they were added.

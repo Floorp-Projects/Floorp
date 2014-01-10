@@ -2,11 +2,16 @@
                   android:label="@string/webapp_generic_name"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize"
                   android:windowSoftInputMode="stateUnspecified|adjustResize"
+                  android:process=":@ANDROID_PACKAGE_NAME@.WebApp@APPNUM@"
+                  android:theme="@style/Gecko.App"
+#ifdef MOZ_ANDROID_SYNTHAPKS
+                  android:launchMode="singleTop"
+                  android:exported="true"
+        />
+#else
                   android:launchMode="singleTask"
                   android:taskAffinity="org.mozilla.gecko.WEBAPP@APPNUM@"
-                  android:process=":@ANDROID_PACKAGE_NAME@.WebApp@APPNUM@"
-                  android:excludeFromRecents="true"
-                  android:theme="@style/Gecko.App">
+                  android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="org.mozilla.gecko.WEBAPP@APPNUM@" />
             </intent-filter>
@@ -14,4 +19,4 @@
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
             </intent-filter>
         </activity>
-
+#endif
