@@ -2691,3 +2691,18 @@ nsFrameLoader::GetTabParent(nsITabParent** aTabParent)
   tp.forget(aTabParent);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFrameLoader::GetLoadContext(nsILoadContext** aLoadContext)
+{
+  nsCOMPtr<nsILoadContext> loadContext;
+  if (mRemoteBrowser) {
+    loadContext = mRemoteBrowser->GetLoadContext();
+  } else {
+    nsCOMPtr<nsIDocShell> docShell;
+    GetDocShell(getter_AddRefs(docShell));
+    loadContext = do_GetInterface(docShell);
+  }
+  loadContext.forget(aLoadContext);
+  return NS_OK;
+}
