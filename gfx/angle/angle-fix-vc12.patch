@@ -1,0 +1,137 @@
+# HG changeset patch
+# Parent 4947d86b1f7b860e9c958a8a5eae03075c539f78
+# User Xavier Fung <xavier114fch@gmail.com>
+Fix Angle to build on Visual Studio 2013. r=?
+
+diff --git a/gfx/angle/src/compiler/Types.h b/gfx/angle/src/compiler/Types.h
+--- a/gfx/angle/src/compiler/Types.h
++++ b/gfx/angle/src/compiler/Types.h
+@@ -8,16 +8,18 @@
+ #define _TYPES_INCLUDED
+ 
+ #include "common/angleutils.h"
+ 
+ #include "compiler/BaseTypes.h"
+ #include "compiler/Common.h"
+ #include "compiler/compiler_debug.h"
+ 
++#include <algorithm>
++
+ struct TPublicType;
+ class TType;
+ 
+ class TField
+ {
+ public:
+     POOL_ALLOCATOR_NEW_DELETE();
+     TField(TType* type, TString* name) : mType(type), mName(name) {}
+diff --git a/gfx/angle/src/libEGL/Surface.cpp b/gfx/angle/src/libEGL/Surface.cpp
+--- a/gfx/angle/src/libEGL/Surface.cpp
++++ b/gfx/angle/src/libEGL/Surface.cpp
+@@ -15,16 +15,18 @@
+ #include "common/debug.h"
+ #include "libGLESv2/Texture.h"
+ #include "libGLESv2/renderer/SwapChain.h"
+ #include "libGLESv2/main.h"
+ 
+ #include "libEGL/main.h"
+ #include "libEGL/Display.h"
+ 
++#include <algorithm>
++
+ namespace egl
+ {
+ 
+ Surface::Surface(Display *display, const Config *config, HWND window, EGLint postSubBufferSupported) 
+     : mDisplay(display), mConfig(config), mWindow(window), mPostSubBufferSupported(postSubBufferSupported)
+ {
+     mRenderer = mDisplay->getRenderer();
+     mSwapChain = NULL;
+diff --git a/gfx/angle/src/libGLESv2/Program.cpp b/gfx/angle/src/libGLESv2/Program.cpp
+--- a/gfx/angle/src/libGLESv2/Program.cpp
++++ b/gfx/angle/src/libGLESv2/Program.cpp
+@@ -7,16 +7,18 @@
+ 
+ // Program.cpp: Implements the gl::Program class. Implements GL program objects
+ // and related functionality. [OpenGL ES 2.0.24] section 2.10.3 page 28.
+ 
+ #include "libGLESv2/Program.h"
+ #include "libGLESv2/ProgramBinary.h"
+ #include "libGLESv2/ResourceManager.h"
+ 
++#include <algorithm>
++
+ namespace gl
+ {
+ const char * const g_fakepath = "C:\\fakepath";
+ 
+ AttributeBindings::AttributeBindings()
+ {
+ }
+ 
+diff --git a/gfx/angle/src/libGLESv2/ProgramBinary.cpp b/gfx/angle/src/libGLESv2/ProgramBinary.cpp
+--- a/gfx/angle/src/libGLESv2/ProgramBinary.cpp
++++ b/gfx/angle/src/libGLESv2/ProgramBinary.cpp
+@@ -17,16 +17,18 @@
+ #include "utilities.h"
+ 
+ #include "libGLESv2/main.h"
+ #include "libGLESv2/Shader.h"
+ #include "libGLESv2/Program.h"
+ #include "libGLESv2/renderer/Renderer.h"
+ #include "libGLESv2/renderer/VertexDataManager.h"
+ 
++#include <algorithm>
++
+ #undef near
+ #undef far
+ 
+ namespace gl
+ {
+ std::string str(int i)
+ {
+     char buffer[20];
+diff --git a/gfx/angle/src/libGLESv2/Shader.cpp b/gfx/angle/src/libGLESv2/Shader.cpp
+--- a/gfx/angle/src/libGLESv2/Shader.cpp
++++ b/gfx/angle/src/libGLESv2/Shader.cpp
+@@ -6,16 +6,18 @@
+ //
+ 
+ // Shader.cpp: Implements the gl::Shader class and its  derived classes
+ // VertexShader and FragmentShader. Implements GL shader objects and related
+ // functionality. [OpenGL ES 2.0.24] section 2.10 page 24 and section 3.8 page 84.
+ 
+ #include "libGLESv2/Shader.h"
+ 
++#include <algorithm>
++
+ #include "GLSLANG/ShaderLang.h"
+ #include "libGLESv2/utilities.h"
+ #include "libGLESv2/renderer/Renderer.h"
+ #include "libGLESv2/Constants.h"
+ #include "libGLESv2/ResourceManager.h"
+ 
+ namespace gl
+ {
+diff --git a/gfx/angle/src/libGLESv2/libGLESv2.cpp b/gfx/angle/src/libGLESv2/libGLESv2.cpp
+--- a/gfx/angle/src/libGLESv2/libGLESv2.cpp
++++ b/gfx/angle/src/libGLESv2/libGLESv2.cpp
+@@ -4,16 +4,18 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ //
+ 
+ // libGLESv2.cpp: Implements the exported OpenGL ES 2.0 functions.
+ 
+ #include "common/version.h"
+ 
++#include <algorithm>
++
+ #include "libGLESv2/main.h"
+ #include "libGLESv2/utilities.h"
+ #include "libGLESv2/Buffer.h"
+ #include "libGLESv2/Fence.h"
+ #include "libGLESv2/Framebuffer.h"
+ #include "libGLESv2/Renderbuffer.h"
+ #include "libGLESv2/Program.h"
+ #include "libGLESv2/ProgramBinary.h"
