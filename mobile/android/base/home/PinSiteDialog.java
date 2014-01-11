@@ -111,7 +111,7 @@ class PinSiteDialog extends DialogFragment {
                 // If the user manually entered a search term or URL, wrap the value in
                 // a special URI until we can get a valid URL for this bookmark.
                 final String text = mSearch.getText().toString();
-                final String url = TopSitesPage.encodeUserEnteredUrl(text);
+                final String url = TopSitesPanel.encodeUserEnteredUrl(text);
                 mOnSiteSelectedListener.onSiteSelected(url, text);
 
                 dismiss();
