@@ -62,9 +62,9 @@ import java.util.Map;
 /**
  * Fragment that displays frecency search results in a ListView.
  */
-public class TopSitesPage extends HomeFragment {
+public class TopSitesPanel extends HomeFragment {
     // Logging tag name
-    private static final String LOGTAG = "GeckoTopSitesPage";
+    private static final String LOGTAG = "GeckoTopSitesPanel";
 
     // Cursor loader ID for the top sites
     private static final int LOADER_ID_TOP_SITES = 0;
@@ -114,11 +114,11 @@ public class TopSitesPage extends HomeFragment {
     // Time in ms until the Gecko thread is reset to normal priority.
     private static final long PRIORITY_RESET_TIMEOUT = 10000;
 
-    public static TopSitesPage newInstance() {
-        return new TopSitesPage();
+    public static TopSitesPanel newInstance() {
+        return new TopSitesPanel();
     }
 
-    public TopSitesPage() {
+    public TopSitesPanel() {
         mUrlOpenListener = null;
     }
 
@@ -160,7 +160,7 @@ public class TopSitesPage extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.home_top_sites_page, container, false);
+        final View view = inflater.inflate(R.layout.home_top_sites_panel, container, false);
 
         mList = (HomeListView) view.findViewById(R.id.list);
 
@@ -212,7 +212,7 @@ public class TopSitesPage extends HomeFragment {
         mList.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                TopSitesPage.this.handleListTouchEvent(event);
+                TopSitesPanel.this.handleListTouchEvent(event);
                 return false;
             }
         });

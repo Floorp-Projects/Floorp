@@ -193,7 +193,7 @@ public class TopSitesGridItemView extends RelativeLayout {
 
         // The dirty state forces the state update to return true
         // so that the adapter loads favicons once the thumbnails
-        // are loaded in TopSitesPage/TopSitesGridAdapter.
+        // are loaded in TopSitesPanel/TopSitesGridAdapter.
         changed = (changed || mIsDirty);
         mIsDirty = false;
 
