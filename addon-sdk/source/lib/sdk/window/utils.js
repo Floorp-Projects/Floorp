@@ -21,6 +21,8 @@ const WM = Cc['@mozilla.org/appshell/window-mediator;1'].
 const io = Cc['@mozilla.org/network/io-service;1'].
            getService(Ci.nsIIOService);
 
+const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+
 const BROWSER = 'navigator:browser',
       URI_BROWSER = 'chrome://browser/content/browser.xul',
       NAME = '_blank',
@@ -85,6 +87,15 @@ function getOuterId(window) {
 exports.getOuterId = getOuterId;
 
 /**
+ * Returns window by the outer window id.
+ */
+const getByOuterId = WM.getOuterWindowWithId;
+exports.getByOuterId = getByOuterId;
+
+const getByInnerId = WM.getCurrentInnerWindowWithId;
+exports.getByInnerId = getByInnerId;
+
+/**
  * Returns `nsIXULWindow` for the given `nsIDOMWindow`.
  */
 function getXULWindow(window) {
@@ -137,6 +148,9 @@ function getWindowLoadingContext(window) {
 }
 exports.getWindowLoadingContext = getWindowLoadingContext;
 
+const isTopLevel = window => window && getToplevelWindow(window) === window;
+exports.isTopLevel = isTopLevel;
+
 /**
  * Removes given window from the application's window registry. Unless
  * `options.close` is `false` window is automatically closed on application
@@ -187,7 +201,7 @@ function serializeFeatures(options) {
  */
 function open(uri, options) {
   uri = uri || URI_BROWSER;
-  options = options || {}
+  options = options || {};
 
   if (['chrome', 'resource', 'data'].indexOf(io.newURI(uri, null, null).scheme) < 0)
     throw new Error('only chrome, resource and data uris are allowed');
@@ -196,7 +210,7 @@ function open(uri, options) {
     openWindow(options.parent || null,
                uri,
                options.name || null,
-               serializeFeatures(options.features || {}),
+               options.features ? serializeFeatures(options.features) : null,
                options.args || null);
 
   return newWindow;
@@ -310,9 +324,17 @@ exports.windows = windows;
  * i.e. if its "DOMContentLoaded" event has already been fired.
  * @params {nsIDOMWindow} window
  */
-function isInteractive(window)
-  window.document.readyState === "interactive" || isDocumentLoaded(window)
+const isInteractive = window =>
+  window.document.readyState === "interactive" ||
+  isDocumentLoaded(window) ||
+  // XUL documents stays '"uninitialized"' until it's `readyState` becomes
+  // `"complete"`.
+  isXULDocumentWindow(window) && window.document.readyState === "interactive";
 exports.isInteractive = isInteractive;
+
+const isXULDocumentWindow = ({document}) =>
+  document.documentElement &&
+  document.documentElement.namespaceURI === XUL_NS;
 
 /**
  * Check if the given window is completely loaded.
@@ -366,8 +388,8 @@ exports.getFocusedElement = getFocusedElement;
 
 function getFrames(window) {
   return Array.slice(window.frames).reduce(function(frames, frame) {
-    return frames.concat(frame, getFrames(frame))
-  }, [])
+    return frames.concat(frame, getFrames(frame));
+  }, []);
 }
 exports.getFrames = getFrames;
 
@@ -381,17 +403,9 @@ function getOwnerBrowserWindow(node) {
   /**
   Takes DOM node and returns browser window that contains it.
   **/
-
-  let window = node.ownerDocument.defaultView.top;
+  let window = getToplevelWindow(node.ownerDocument.defaultView);
   // If anchored window is browser then it's target browser window.
-  if (isBrowser(window)) return window;
-  // Otherwise iterate over each browser window and find a one that
-  // contains browser for the anchored window document.
-  let document = window.document;
-  let browsers = windows("navigator:browser", { includePrivate: true });
-  return array.find(browsers, function isTargetBrowser(window) {
-    return !!window.gBrowser.getBrowserForDocument(document);
-  });
+  return isBrowser(window) ? window : null;
 }
 exports.getOwnerBrowserWindow = getOwnerBrowserWindow;
 
@@ -407,3 +421,27 @@ function getParentWindow(window) {
   return null;
 }
 exports.getParentWindow = getParentWindow;
+
+
+function getParentFrame(window) {
+  try {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebNavigation)
+      .QueryInterface(Ci.nsIDocShellTreeItem).parent
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindow);
+  }
+  catch (e) {}
+  return null;
+}
+exports.getParentWindow = getParentWindow;
+
+// The element in which the window is embedded, or `null`
+// if the window is top-level. Similar to `window.frameElement`
+// but can cross chrome-content boundries.
+const getFrameElement = target =>
+  (target instanceof Ci.nsIDOMDocument ? target.defaultView : target).
+  QueryInterface(Ci.nsIInterfaceRequestor).
+  getInterface(Ci.nsIDOMWindowUtils).
+  containerElement;
+exports.getFrameElement = getFrameElement;

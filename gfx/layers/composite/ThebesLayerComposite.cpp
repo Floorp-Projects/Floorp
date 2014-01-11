@@ -111,14 +111,8 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpPainting) {
-    RefPtr<gfx::DataSourceSurface> dSurf = mBuffer->GetAsSurface();
-    if (dSurf) {
-      gfxPlatform *platform = gfxPlatform::GetPlatform();
-      RefPtr<gfx::DrawTarget> dt = platform->CreateDrawTargetForData(dSurf->GetData(),
-                                                                     dSurf->GetSize(),
-                                                                     dSurf->Stride(),
-                                                                     dSurf->GetFormat());
-      nsRefPtr<gfxASurface> surf = platform->GetThebesSurfaceForDrawTarget(dt);
+    RefPtr<gfx::DataSourceSurface> surf = mBuffer->GetAsSurface();
+    if (surf) {
       WriteSnapshotToDumpFile(this, surf);
     }
   }

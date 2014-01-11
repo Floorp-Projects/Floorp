@@ -557,6 +557,9 @@ CompositorOGL::Initialize()
   return true;
 }
 
+// |aTextureTransform| is the texture transform that will be set on
+// aProg, possibly multiplied with another texture transform of our
+// own.
 // |aTexCoordRect| is the rectangle from the texture that we want to
 // draw using the given program.  The program already has a necessary
 // offset and scale, so the geometry that needs to be drawn is a unit
@@ -566,6 +569,7 @@ CompositorOGL::Initialize()
 // larger than the rectangle given by |aTexCoordRect|.
 void
 CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
+                                              const gfx3DMatrix& aTextureTransform,
                                               const Rect& aTexCoordRect,
                                               TextureSource *aTexture)
 {
@@ -622,7 +626,14 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
                                    rects, flipped);
   }
 
-  DrawQuads(mGLContext, mVBOs, aProg, rects);
+  gfx3DMatrix textureTransform;
+  if (rects.IsSimpleQuad(textureTransform)) {
+    aProg->SetTextureTransform(aTextureTransform * textureTransform);
+    BindAndDrawQuad(aProg, false);
+  } else {
+    aProg->SetTextureTransform(aTextureTransform);
+    DrawQuads(mGLContext, mVBOs, aProg, rects);
+  }
 }
 
 void
@@ -833,8 +844,6 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
-
-  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
   if (aClipRectOut && !aClipRectIn) {
     aClipRectOut->SetRect(0, 0, width, height);
@@ -1087,6 +1096,8 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
   }
   IntRect intClipRect;
   clipRect.ToIntRect(&intClipRect);
+
+  ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
   ScopedScissorRect autoScissor(mGLContext,
                                 intClipRect.x,
                                 FlipY(intClipRect.y + intClipRect.height),
@@ -1191,12 +1202,11 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
 
       AutoBindTexture bindSource(mGLContext, source->AsSourceOGL(), LOCAL_GL_TEXTURE0);
 
-      gfx3DMatrix textureTransform = source->AsSourceOGL()->GetTextureTransform();
-      program->SetTextureTransform(textureTransform);
-
       GraphicsFilter filter = ThebesFilter(texturedEffect->mFilter);
-      gfxMatrix textureTransform2D;
+      gfx3DMatrix textureTransform = source->AsSourceOGL()->GetTextureTransform();
+
 #ifdef MOZ_WIDGET_ANDROID
+      gfxMatrix textureTransform2D;
       if (filter != GraphicsFilter::FILTER_NEAREST &&
           aTransform.Is2DIntegerTranslation() &&
           textureTransform.Is2D(&textureTransform2D) &&
@@ -1218,7 +1228,8 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE1, maskQuadTransform);
       }
 
-      BindAndDrawQuadWithTextureRect(program, texturedEffect->mTextureCoords, source);
+      BindAndDrawQuadWithTextureRect(program, textureTransform,
+                                     texturedEffect->mTextureCoords, source);
 
       if (!texturedEffect->mPremultiplied) {
         mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
@@ -1251,13 +1262,15 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
       program->SetLayerOpacity(aOpacity);
-      program->SetTextureTransform(gfx3DMatrix());
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE3);
       if (maskType != MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE3, maskQuadTransform);
       }
-      BindAndDrawQuadWithTextureRect(program, effectYCbCr->mTextureCoords, sourceYCbCr->GetSubSource(Y));
+      BindAndDrawQuadWithTextureRect(program,
+                                     gfx3DMatrix(),
+                                     effectYCbCr->mTextureCoords,
+                                     sourceYCbCr->GetSubSource(Y));
     }
     break;
   case EFFECT_RENDER_TARGET: {
@@ -1332,7 +1345,6 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         program->SetWhiteTextureUnit(1);
         program->SetLayerOpacity(aOpacity);
         program->SetLayerTransform(aTransform);
-        program->SetTextureTransform(gfx3DMatrix());
         program->SetRenderOffset(offset.x, offset.y);
         program->SetLayerQuadRect(aRect);
         AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE2);
@@ -1340,7 +1352,10 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
           BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2, maskQuadTransform);
         }
 
-        BindAndDrawQuadWithTextureRect(program, effectComponentAlpha->mTextureCoords, effectComponentAlpha->mOnBlack);
+        BindAndDrawQuadWithTextureRect(program,
+                                       gfx3DMatrix(),
+                                       effectComponentAlpha->mTextureCoords,
+                                       effectComponentAlpha->mOnBlack);
 
         mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                                        LOCAL_GL_ONE, LOCAL_GL_ONE);

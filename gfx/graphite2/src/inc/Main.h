@@ -44,7 +44,7 @@ typedef gr_int16        int16;
 typedef gr_int32        int32;
 typedef size_t          uintptr;
 
-#if GRAPHITE2_TELEMETRY
+#ifdef GRAPHITE2_TELEMETRY
 struct telemetry
 {
     class category;
@@ -82,7 +82,7 @@ struct telemetry  {};
 
 template <typename T> T * gralloc(size_t n)
 {
-#if GRAPHITE2_TELEMETRY
+#ifdef GRAPHITE2_TELEMETRY
     telemetry::count_bytes(sizeof(T) * n);
 #endif
     return reinterpret_cast<T*>(malloc(sizeof(T) * n));
@@ -90,7 +90,7 @@ template <typename T> T * gralloc(size_t n)
 
 template <typename T> T * grzeroalloc(size_t n)
 {
-#if GRAPHITE2_TELEMETRY
+#ifdef GRAPHITE2_TELEMETRY
     telemetry::count_bytes(sizeof(T) * n);
 #endif
     return reinterpret_cast<T*>(calloc(n, sizeof(T)));

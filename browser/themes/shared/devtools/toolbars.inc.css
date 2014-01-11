@@ -214,6 +214,7 @@
 
 .devtools-sidebar-tabs > tabpanels {
   -moz-appearance: none;
+  background: transparent;
   padding: 0;
   border: 0;
 }
@@ -434,6 +435,10 @@
 #command-button-scratchpad > image {
   background-image: url("chrome://browser/skin/devtools/command-scratchpad@2x.png");
   background-size: 48px 16px;
+}
+
+#command-button-pick > image {
+  background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
 }
 
 #command-button-splitconsole > image {

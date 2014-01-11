@@ -287,8 +287,8 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 
     if (!chunk.IsNull()) {
       // Append the interleaved data to the end of pcm buffer.
-      InterleaveTrackData(chunk, frameToCopy, mChannels,
-                          pcm.Elements() + frameCopied * mChannels);
+      AudioTrackEncoder::InterleaveTrackData(chunk, frameToCopy, mChannels,
+        pcm.Elements() + frameCopied * mChannels);
     } else {
       memset(pcm.Elements() + frameCopied * mChannels, 0,
              frameToCopy * mChannels * sizeof(AudioDataValue));

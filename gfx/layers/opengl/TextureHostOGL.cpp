@@ -108,6 +108,11 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                                         desc.inverted());
       break;
     }
+    case SurfaceDescriptor::TSurfaceStreamDescriptor: {
+      const SurfaceStreamDescriptor& desc = aDesc.get_SurfaceStreamDescriptor();
+      result = new StreamTextureHostOGL(aFlags, desc);
+      break;
+    }
 #ifdef XP_MACOSX
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const SurfaceDescriptorMacIOSurface& desc =
@@ -355,9 +360,9 @@ SharedTextureSourceOGL::DetachSharedHandle()
 }
 
 void
-SharedTextureSourceOGL::SetCompositor(CompositorOGL* aCompositor)
+SharedTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
-  mCompositor = aCompositor;
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
 bool
@@ -461,6 +466,184 @@ SharedTextureHostOGL::GetFormat() const
 {
   MOZ_ASSERT(mTextureSource);
   return mTextureSource->GetFormat();
+}
+
+void
+StreamTextureSourceOGL::BindTexture(GLenum activetex)
+{
+  MOZ_ASSERT(gl());
+  gl()->fActiveTexture(activetex);
+  gl()->fBindTexture(mTextureTarget, mTextureHandle);
+}
+
+bool
+StreamTextureSourceOGL::RetrieveTextureFromStream()
+{
+  gl()->MakeCurrent();
+
+  SharedSurface* sharedSurf = mStream->SwapConsumer();
+  if (!sharedSurf) {
+    // We don't have a valid surf to show yet.
+    return false;
+  }
+
+  gl()->MakeCurrent();
+
+  mSize = IntSize(sharedSurf->Size().width, sharedSurf->Size().height);
+
+  DataSourceSurface* toUpload = nullptr;
+  switch (sharedSurf->Type()) {
+    case SharedSurfaceType::GLTextureShare: {
+      SharedSurface_GLTexture* glTexSurf = SharedSurface_GLTexture::Cast(sharedSurf);
+      glTexSurf->SetConsumerGL(gl());
+      mTextureHandle = glTexSurf->Texture();
+      mTextureTarget = glTexSurf->TextureTarget();
+      MOZ_ASSERT(mTextureHandle);
+      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
+                                       : FORMAT_R8G8B8X8;
+      break;
+    }
+    case SharedSurfaceType::EGLImageShare: {
+      SharedSurface_EGLImage* eglImageSurf =
+          SharedSurface_EGLImage::Cast(sharedSurf);
+
+      mTextureHandle = eglImageSurf->AcquireConsumerTexture(gl());
+      mTextureTarget = eglImageSurf->TextureTarget();
+      if (!mTextureHandle) {
+        toUpload = eglImageSurf->GetPixels();
+        MOZ_ASSERT(toUpload);
+      } else {
+        mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
+                                         : FORMAT_R8G8B8X8;
+      }
+      break;
+    }
+#ifdef XP_MACOSX
+    case SharedSurfaceType::IOSurface: {
+      SharedSurface_IOSurface* glTexSurf = SharedSurface_IOSurface::Cast(sharedSurf);
+      mTextureHandle = glTexSurf->Texture();
+      mTextureTarget = glTexSurf->TextureTarget();
+      MOZ_ASSERT(mTextureHandle);
+      mFormat = sharedSurf->HasAlpha() ? FORMAT_R8G8B8A8
+                                       : FORMAT_R8G8B8X8;
+      break;
+    }
+#endif
+    case SharedSurfaceType::Basic: {
+      toUpload = SharedSurface_Basic::Cast(sharedSurf)->GetData();
+      MOZ_ASSERT(toUpload);
+      break;
+    }
+    default:
+      MOZ_CRASH("Invalid SharedSurface type.");
+  }
+
+  if (toUpload) {
+    // mBounds seems to end up as (0,0,0,0) a lot, so don't use it?
+    nsIntSize size(ThebesIntSize(toUpload->GetSize()));
+    nsIntRect rect(nsIntPoint(0,0), size);
+    nsIntRegion bounds(rect);
+    mFormat = UploadSurfaceToTexture(gl(),
+                                     toUpload,
+                                     bounds,
+                                     mUploadTexture,
+                                     true);
+    mTextureHandle = mUploadTexture;
+    mTextureTarget = LOCAL_GL_TEXTURE_2D;
+  }
+
+  MOZ_ASSERT(mTextureHandle);
+  gl()->fBindTexture(mTextureTarget, mTextureHandle);
+  gl()->fTexParameteri(mTextureTarget,
+                      LOCAL_GL_TEXTURE_WRAP_S,
+                      LOCAL_GL_CLAMP_TO_EDGE);
+  gl()->fTexParameteri(mTextureTarget,
+                      LOCAL_GL_TEXTURE_WRAP_T,
+                      LOCAL_GL_CLAMP_TO_EDGE);
+
+  return true;
+}
+
+void
+StreamTextureSourceOGL::DeallocateDeviceData()
+{
+  if (mUploadTexture) {
+    MOZ_ASSERT(gl());
+    gl()->MakeCurrent();
+    gl()->fDeleteTextures(1, &mUploadTexture);
+    mUploadTexture = 0;
+    mTextureHandle = 0;
+  }
+}
+
+gl::GLContext*
+StreamTextureSourceOGL::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+void
+StreamTextureSourceOGL::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
+}
+
+StreamTextureHostOGL::StreamTextureHostOGL(TextureFlags aFlags,
+                                           const SurfaceStreamDescriptor& aDesc)
+  : TextureHost(aFlags)
+{
+  mStream = SurfaceStream::FromHandle(aDesc.handle());
+  MOZ_ASSERT(mStream);
+}
+
+StreamTextureHostOGL::~StreamTextureHostOGL()
+{
+  // If need to deallocate textures, call DeallocateSharedData() before
+  // the destructor
+}
+
+bool
+StreamTextureHostOGL::Lock()
+{
+  if (!mCompositor) {
+    return false;
+  }
+
+  if (!mTextureSource) {
+    mTextureSource = new StreamTextureSourceOGL(mCompositor,
+                                                mStream);
+  }
+
+  return mTextureSource->RetrieveTextureFromStream();
+}
+
+void
+StreamTextureHostOGL::Unlock()
+{
+}
+
+void
+StreamTextureHostOGL::SetCompositor(Compositor* aCompositor)
+{
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  mCompositor = glCompositor;
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(glCompositor);
+  }
+}
+
+gfx::SurfaceFormat
+StreamTextureHostOGL::GetFormat() const
+{
+  MOZ_ASSERT(mTextureSource);
+  return mTextureSource->GetFormat();
+}
+
+gfx::IntSize
+StreamTextureHostOGL::GetSize() const
+{
+  MOZ_ASSERT(mTextureSource);
+  return mTextureSource->GetSize();
 }
 
 TextureImageDeprecatedTextureHostOGL::~TextureImageDeprecatedTextureHostOGL()

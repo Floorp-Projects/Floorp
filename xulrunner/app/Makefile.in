@@ -147,3 +147,5 @@ README_FILE = $(srcdir)/../README.xulrunner
 libs::
 	$(INSTALL) $(IFLAGS1) $(README_FILE) $(DIST)/bin
 	$(INSTALL) $(IFLAGS1) $(topsrcdir)/LICENSE	$(DIST)/bin
+	$(INSTALL) $(IFLAGS1) $(srcdir)/install_app.py $(DIST)/bin
+

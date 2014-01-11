@@ -53,7 +53,7 @@ using namespace mozilla::gfx;
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
 static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
 
-inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
+const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
     return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
                              : static_cast<const WebGLRectangleObject*>(this);
 }
@@ -3067,6 +3067,11 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);
+
+    mViewportX = x;
+    mViewportY = y;
+    mViewportWidth = width;
+    mViewportHeight = height;
 }
 
 void

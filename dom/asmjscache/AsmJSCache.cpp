@@ -1029,12 +1029,15 @@ private:
   bool
   Recv__delete__() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(mOpened);
-
     MOZ_ASSERT(!mFinished);
     mFinished = true;
 
-    MainProcessRunnable::Close();
+    if (mOpened) {
+      MainProcessRunnable::Close();
+    } else {
+      MainProcessRunnable::Fail();
+    }
+
     return true;
   }
 

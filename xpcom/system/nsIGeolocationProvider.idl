@@ -17,7 +17,7 @@ interface nsIGeolocationPrompt;
  * Interface provides a way for a geolocation provider to
  * notify the system that a new location is available.
  */
-[scriptable, uuid(f00ff730-acff-4e8c-9991-0d4c84ba0e10)]
+[scriptable, uuid(643dc5e9-b911-4b2c-8d44-603162696baf)]
 interface nsIGeolocationUpdate : nsISupports {
 
   /**
@@ -26,6 +26,13 @@ interface nsIGeolocationUpdate : nsISupports {
    * This must be called on the main thread
    */
   void update(in nsIDOMGeoPosition position);
+
+  /**
+   * Notify the geolocation service that the location has
+   * potentially changed, and thus a new position is in the
+   * process of being acquired.
+   */
+  void locationUpdatePending();
 
   /**
    * Notify the geolocation service of an error.

@@ -24,8 +24,4 @@ interface Attr : Node {
 
 partial interface Attr {
   readonly attribute boolean specified;
-
-
-           [GetterThrows]
-  readonly attribute Element? ownerElement;
 };

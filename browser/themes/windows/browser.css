@@ -24,6 +24,12 @@
   -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
+/* Hides the titlebar-placeholder underneath the window caption buttons when we
+   are not autohiding the menubar. */
+#toolbar-menubar:not([autohide="true"]) + #TabsToolbar > .titlebar-placeholder[type="caption-buttons"] {
+  display: none;
+}
+
 /* We want a 4px gap between the TabsToolbar and the toolbar-menubar when the
    toolbar-menu is displayed, and a 16px gap when it is not. 1px is taken care
    of by the (light) outer shadow of the tab, the remaining 3/15 are these margins. */
@@ -1307,6 +1313,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   width: 16px;
   min-height: 16px;
   max-height: 16px;
+}
+
+
+toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
+  width: auto;
+  height: auto;
+  max-width: 32px;
+  max-height: 24px;
 }
 
 /* fixup corners for share panel */

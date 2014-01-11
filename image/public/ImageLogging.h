@@ -29,111 +29,98 @@ extern PRLogModuleInfo *GetImgLog();
 
 class LogScope {
 public:
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const char *fn) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {ENTER}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get()));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc));
   }
 
   /* const char * constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
-           const nsDependentCString &paramName, const char *paramValue) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const char *fn,
+           const char *paramName, const char *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\") {ENTER}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get(),
-                                   paramName.get(),
-                                   paramValue));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc,
+                                   paramName, paramValue));
   }
 
   /* void ptr constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
-           const nsDependentCString &paramName, const void *paramValue) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const char *fn,
+           const char *paramName, const void *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=%p) {ENTER}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get(),
-                                   paramName.get(),
-                                   paramValue));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc,
+                                   paramName, paramValue));
   }
 
   /* int32_t constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
-           const nsDependentCString &paramName, int32_t paramValue) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const char *fn,
+           const char *paramName, int32_t paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get(),
-                                   paramName.get(),
-                                   paramValue));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc,
+                                   paramName, paramValue));
   }
 
   /* uint32_t constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
-           const nsDependentCString &paramName, uint32_t paramValue) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const char *fn,
+           const char *paramName, uint32_t paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\") {ENTER}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get(),
-                                   paramName.get(),
-                                   paramValue));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc,
+                                   paramName, paramValue));
   }
 
 
   ~LogScope() {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {EXIT}\n",
-                                   GIVE_ME_MS_NOW(),
-                                   mFrom, mFunc.get()));
+                                   GIVE_ME_MS_NOW(), mFrom, mFunc));
   }
 
 private:
   PRLogModuleInfo *mLog;
   void *mFrom;
-  nsAutoCString mFunc;
+  const char *mFunc;
 };
 
 
 class LogFunc {
 public:
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const char *fn)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s\n",
-                                GIVE_ME_MS_NOW(), from,
-                                fn.get()));
+                                GIVE_ME_MS_NOW(), from, fn));
   }
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
-          const nsDependentCString &paramName, const char *paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const char *fn,
+          const char *paramName, const char *paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%s\")\n",
-                                GIVE_ME_MS_NOW(), from,
-                                fn.get(),
-                                paramName.get(), paramValue));
+                                GIVE_ME_MS_NOW(), from, fn,
+                                paramName, paramValue));
   }
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
-          const nsDependentCString &paramName, const void *paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const char *fn,
+          const char *paramName, const void *paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%p\")\n",
-                                GIVE_ME_MS_NOW(), from,
-                                fn.get(),
-                                paramName.get(), paramValue));
+                                GIVE_ME_MS_NOW(), from, fn,
+                                paramName, paramValue));
   }
 
 
-  LogFunc(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
-          const nsDependentCString &paramName, uint32_t paramValue)
+  LogFunc(PRLogModuleInfo *aLog, void *from, const char *fn,
+          const char *paramName, uint32_t paramValue)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s (%s=\"%d\")\n",
                                 GIVE_ME_MS_NOW(), from,
-                                fn.get(),
-                                paramName.get(), paramValue));
+                                fn,
+                                paramName, paramValue));
   }
 
 };
@@ -141,13 +128,11 @@ public:
 
 class LogMessage {
 public:
-  LogMessage(PRLogModuleInfo *aLog, void *from, const nsDependentCString &fn,
-             const nsDependentCString &msg)
+  LogMessage(PRLogModuleInfo *aLog, void *from, const char *fn,
+             const char *msg)
   {
     PR_LOG(aLog, PR_LOG_DEBUG, ("%d [this=%p] %s -- %s\n",
-                                GIVE_ME_MS_NOW(), from,
-                                fn.get(),
-                                msg.get()));
+                                GIVE_ME_MS_NOW(), from, fn, msg));
   }
 };
 
@@ -156,45 +141,22 @@ public:
 #define LOG_SCOPE_APPEND_LINE_NUMBER(id) LOG_SCOPE_APPEND_LINE_NUMBER_EXPAND(id, __LINE__)
 
 #define LOG_SCOPE(l, s) \
-  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l,                            \
-                                                            static_cast<void *>(this),    \
-                                                            NS_LITERAL_CSTRING(s))
+  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l, this, s)
 
 #define LOG_SCOPE_WITH_PARAM(l, s, pn, pv) \
-  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l,                            \
-                                                            static_cast<void *>(this),    \
-                                                            NS_LITERAL_CSTRING(s),        \
-                                                            NS_LITERAL_CSTRING(pn), pv)
+  LogScope LOG_SCOPE_APPEND_LINE_NUMBER(LOG_SCOPE_TMP_VAR) (l, this, s, pn, pv)
 
-#define LOG_FUNC(l, s)                  \
-  LogFunc(l,                            \
-          static_cast<void *>(this),    \
-          NS_LITERAL_CSTRING(s))
+#define LOG_FUNC(l, s) LogFunc(l, this, s)
 
-#define LOG_FUNC_WITH_PARAM(l, s, pn, pv) \
-  LogFunc(l,                              \
-          static_cast<void *>(this),      \
-          NS_LITERAL_CSTRING(s),          \
-          NS_LITERAL_CSTRING(pn), pv)
+#define LOG_FUNC_WITH_PARAM(l, s, pn, pv) LogFunc(l, this, s, pn, pv)
 
-#define LOG_STATIC_FUNC(l, s)           \
-  LogFunc(l,                            \
-          nullptr,                       \
-          NS_LITERAL_CSTRING(s))
+#define LOG_STATIC_FUNC(l, s) LogFunc(l, nullptr, s)
 
-#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) \
-  LogFunc(l,                             \
-          nullptr,                        \
-          NS_LITERAL_CSTRING(s),         \
-          NS_LITERAL_CSTRING(pn), pv)
+#define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) LogFunc(l, nullptr, s, pn, pv)
 
 
 
-#define LOG_MSG(l, s, m)                   \
-  LogMessage(l,                            \
-             static_cast<void *>(this),    \
-             NS_LITERAL_CSTRING(s),        \
-             NS_LITERAL_CSTRING(m))
+#define LOG_MSG(l, s, m) LogMessage(l, this, s, m)
 
 #else
 

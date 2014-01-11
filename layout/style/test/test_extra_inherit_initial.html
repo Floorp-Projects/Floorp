@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940229
+-->
+<head>
+  <title>Test handling extra inherit/initial/unset in CSS declarations (Bug 940229)</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940229">Mozilla Bug 940229</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<div id="testnode"></div>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/*
+ * Inspired by mistake in quotes noticed while reviewing bug 189519.
+ */
+
+var gPropsNeedComma = {
+  "font": true,
+  "font-family": true,
+  "voice-family": true,
+};
+
+var gElement = document.getElementById("testnode");
+var gDeclaration = gElement.style;
+
+function test_property(property)
+{
+  var info = gCSSProperties[property];
+
+  var delim = (property in gPropsNeedComma) ? ", " : " ";
+
+  function test_value_pair(relation, val1, val2, extraval) {
+    var decl = property + ": " + val1 + delim + val2;
+    gElement.setAttribute("style", decl);
+    if ("subproperties" in info) {
+      for (idx in info.subproperties) {
+        var subprop = info.subproperties[idx];
+        is(gDeclaration.getPropertyValue(subprop), "",
+           ["expected", extraval, "ignored", relation, "value in",
+            "'" + decl + "'", "when looking at subproperty",
+            "'" + subprop + "'"].join(" "));
+      }
+    } else {
+      is(gDeclaration.getPropertyValue(property), "",
+         ["expected", extraval, "ignored", relation, "value in",
+          "'" + decl + "'"].join(" "));
+    }
+  }
+
+  function test_value(value) {
+    test_value_pair("after", value, "inherit", "inherit");
+    test_value_pair("after", value, "initial", "initial");
+    test_value_pair("after", value, "unset", "unset");
+    test_value_pair("before", "inherit", value, "inherit");
+    test_value_pair("before", "initial", value, "initial");
+    test_value_pair("before", "unset", value, "unset");
+  }
+
+  var idx;
+  for (idx in info.initial_values)
+    test_value(info.initial_values[idx]);
+  for (idx in info.other_values)
+    test_value(info.other_values[idx]);
+}
+
+// To avoid triggering the slow script dialog, we have to test one
+// property at a time.
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+var props = [];
+for (var prop in gCSSProperties)
+  props.push(prop);
+props = props.reverse();
+function do_one() {
+  if (props.length == 0) {
+    SimpleTest.finish();
+    return;
+  }
+  test_property(props.pop());
+  SimpleTest.executeSoon(do_one);
+}
+SimpleTest.executeSoon(do_one);
+
+</script>
+</pre>
+</body>
+</html>

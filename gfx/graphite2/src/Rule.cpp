@@ -1,6 +1,6 @@
 /*  GRAPHITE2 LICENSING
 
-    Copyright 2010, SIL International
+    Copyright 2011, SIL International
     All rights reserved.
 
     This library is free software; you can redistribute it and/or modify

@@ -1,0 +1,25 @@
+{
+  "./index.js": {
+    "./dir/a": "./dir/a.js",
+    "./dir/b": "./dir/b.js",
+    "./dir/c": "./dir/c.js",
+    "./dir/dummy": "./dir/dummy.js",
+    "./dir/test.jsm": "./dir/test.jsm",
+    "./utils": "./utils/index.js",
+    "./newmodule": "./newmodule/lib/file.js",
+    "test-math": "./node_modules/test-math/index.js",
+    "test-custom-main": "./node_modules/test-custom-main/lib/custom-entry.js",
+    "test-custom-main-relative": "./node_modules/test-custom-main-relative/lib/custom-entry.js",
+    "test-default-main": "./node_modules/test-default-main/index.js"
+  },
+  "./dir/b.js": {
+    "test-math": "./node_modules/test-math/index.js"
+  },
+  "./dir/c.js": {
+    "../package.json": "./package.json"
+  },
+  "./node_modules/test-math/index.js": {
+    "test-add": "./node_modules/test-math/node_modules/test-add/index.js",
+    "test-subtract": "./node_modules/test-math/node_modules/test-subtract/index.js"
+  }
+}

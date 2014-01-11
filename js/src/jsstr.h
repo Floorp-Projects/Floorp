@@ -366,6 +366,10 @@ bool
 str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
             MutableHandleObject objp);
 
+bool
+str_replace_regexp_raw(JSContext *cx, HandleString string, HandleObject regexp,
+                       HandleString replacement, MutableHandleValue rval);
+
 } /* namespace js */
 
 extern bool

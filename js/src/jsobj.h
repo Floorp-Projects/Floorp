@@ -416,7 +416,8 @@ class JSObject : public js::ObjectImpl
             elements[i].js::HeapSlot::~HeapSlot();
     }
 
-    bool rollbackProperties(js::ExclusiveContext *cx, uint32_t slotSpan);
+    static bool rollbackProperties(js::ExclusiveContext *cx, js::HandleObject obj,
+                                   uint32_t slotSpan);
 
     void nativeSetSlot(uint32_t slot, const js::Value &value) {
         JS_ASSERT(isNative());
@@ -760,6 +761,7 @@ class JSObject : public js::ObjectImpl
     }
 
     inline void setShouldConvertDoubleElements();
+    inline void clearShouldConvertDoubleElements();
 
     /* Packed information for this object's elements. */
     inline bool writeToIndexWouldMarkNotPacked(uint32_t index);

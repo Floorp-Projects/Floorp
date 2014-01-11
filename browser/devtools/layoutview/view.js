@@ -34,12 +34,8 @@ LayoutView.prototype = {
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onNewSelection = this.onNewSelection.bind(this);
-    this.onHighlighterLocked = this.onHighlighterLocked.bind(this);
     this.inspector.selection.on("new-node-front", this.onNewSelection);
     this.inspector.sidebar.on("layoutview-selected", this.onNewNode);
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.on("locked", this.onHighlighterLocked);
-    }
 
     // Store for the different dimensions of the node.
     // 'selector' refers to the element that holds the value in view.xhtml;
@@ -106,9 +102,6 @@ LayoutView.prototype = {
     if (this.browser) {
       this.browser.removeEventListener("MozAfterPaint", this.update, true);
     }
-    if (this.inspector.highlighter) {
-      this.inspector.highlighter.off("locked", this.onHighlighterLocked);
-    }
     this.sizeHeadingLabel = null;
     this.sizeLabel = null;
     this.inspector = null;
@@ -126,21 +119,12 @@ LayoutView.prototype = {
   onNewNode: function LV_onNewNode() {
     if (this.isActive() &&
         this.inspector.selection.isConnected() &&
-        this.inspector.selection.isElementNode() &&
-        this.inspector.selection.reason != "highlighter") {
+        this.inspector.selection.isElementNode()) {
       this.undim();
     } else {
       this.dim();
     }
     return this.update();
-  },
-
-  /**
-   * Highlighter 'locked' event handler
-   */
-  onHighlighterLocked: function LV_onHighlighterLocked() {
-    this.undim();
-    this.update();
   },
 
   /**

@@ -31,13 +31,13 @@ function test() {
         "There should be at least 3 tick labels in the network requests header.");
 
       is(document.querySelectorAll(".requests-menu-timings-division")[0]
-        .getAttribute("value"), L10N.getFormatStr("networkMenu.divisionMS", 0),
+        .getAttribute("value"), L10N.getFormatStr("networkMenu.millisecond", 0),
         "The first tick label has an incorrect value");
       is(document.querySelectorAll(".requests-menu-timings-division")[1]
-        .getAttribute("value"), L10N.getFormatStr("networkMenu.divisionMS", 80),
+        .getAttribute("value"), L10N.getFormatStr("networkMenu.millisecond", 80),
         "The second tick label has an incorrect value");
       is(document.querySelectorAll(".requests-menu-timings-division")[2]
-        .getAttribute("value"), L10N.getFormatStr("networkMenu.divisionMS", 160),
+        .getAttribute("value"), L10N.getFormatStr("networkMenu.millisecond", 160),
         "The third tick label has an incorrect value");
 
       is(document.querySelectorAll(".requests-menu-timings-division")[0]

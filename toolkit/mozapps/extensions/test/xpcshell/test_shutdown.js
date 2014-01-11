@@ -16,7 +16,7 @@ const IGNORE_PRIVATE = ["AddonAuthor", "AddonCompatibilityOverride",
                         "registerProvider", "unregisterProvider",
                         "addStartupChange", "removeStartupChange",
                         "recordTimestamp", "recordSimpleMeasure",
-                        "getSimpleMeasures", "simpleTimer",
+                        "recordException", "getSimpleMeasures", "simpleTimer",
                         "setTelemetryDetails", "getTelemetryDetails"];
 
 function test_functions() {

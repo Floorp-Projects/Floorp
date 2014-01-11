@@ -33,6 +33,11 @@ class Monitor
     PRLock *lock_;
     PRCondVar *condVar_;
 
+
+    void assertIsHoldingLock() const {
+        PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(lock_);
+    }
+
   public:
     Monitor()
       : lock_(nullptr),

@@ -70,6 +70,9 @@ this.AppsUtils = {
       csp: aApp.csp,
       installOrigin: aApp.installOrigin,
       origin: aApp.origin,
+#ifdef MOZ_ANDROID_SYNTHAPKS
+      packageName: aApp.packageName,
+#endif
       receipts: aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null,
       installTime: aApp.installTime,
       manifestURL: aApp.manifestURL,
