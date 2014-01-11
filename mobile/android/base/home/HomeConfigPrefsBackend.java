@@ -8,8 +8,8 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnChangeListener;
-import org.mozilla.gecko.home.HomeConfig.PageEntry;
-import org.mozilla.gecko.home.HomeConfig.PageType;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -53,129 +53,129 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         return PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
-    private List<PageEntry> loadDefaultConfig() {
-        final ArrayList<PageEntry> pageEntries = new ArrayList<PageEntry>();
+    private List<PanelConfig> loadDefaultConfig() {
+        final ArrayList<PanelConfig> panelConfigs = new ArrayList<PanelConfig>();
 
-        pageEntries.add(new PageEntry(PageType.TOP_SITES,
+        panelConfigs.add(new PanelConfig(PanelType.TOP_SITES,
                                       mContext.getString(R.string.home_top_sites_title),
-                                      EnumSet.of(PageEntry.Flags.DEFAULT_PAGE)));
+                                      EnumSet.of(PanelConfig.Flags.DEFAULT_PANEL)));
 
-        pageEntries.add(new PageEntry(PageType.BOOKMARKS,
+        panelConfigs.add(new PanelConfig(PanelType.BOOKMARKS,
                                       mContext.getString(R.string.bookmarks_title)));
 
         // We disable reader mode support on low memory devices. Hence the
-        // reading list page should not show up on such devices.
+        // reading list panel should not show up on such devices.
         if (!HardwareUtils.isLowMemoryPlatform()) {
-            pageEntries.add(new PageEntry(PageType.READING_LIST,
+            panelConfigs.add(new PanelConfig(PanelType.READING_LIST,
                                           mContext.getString(R.string.reading_list_title)));
         }
 
-        final PageEntry historyEntry = new PageEntry(PageType.HISTORY,
+        final PanelConfig historyEntry = new PanelConfig(PanelType.HISTORY,
                                                      mContext.getString(R.string.home_history_title));
 
-        // On tablets, the history page is the last.
-        // On phones, the history page is the first one.
+        // On tablets, the history panel is the last.
+        // On phones, the history panel is the first one.
         if (HardwareUtils.isTablet()) {
-            pageEntries.add(historyEntry);
+            panelConfigs.add(historyEntry);
         } else {
-            pageEntries.add(0, historyEntry);
+            panelConfigs.add(0, historyEntry);
         }
 
-        return pageEntries;
+        return panelConfigs;
     }
 
-    private List<PageEntry> loadConfigFromString(String jsonString) {
-        final JSONArray jsonPageEntries;
+    private List<PanelConfig> loadConfigFromString(String jsonString) {
+        final JSONArray jsonPanelConfigs;
         try {
-            jsonPageEntries = new JSONArray(jsonString);
+            jsonPanelConfigs = new JSONArray(jsonString);
         } catch (JSONException e) {
-            Log.e(LOGTAG, "Error loading the list of home pages from JSON prefs", e);
+            Log.e(LOGTAG, "Error loading the list of home panels from JSON prefs", e);
 
             // Fallback to default config
             return loadDefaultConfig();
         }
 
-        final ArrayList<PageEntry> pageEntries = new ArrayList<PageEntry>();
+        final ArrayList<PanelConfig> panelConfigs = new ArrayList<PanelConfig>();
 
-        final int count = jsonPageEntries.length();
+        final int count = jsonPanelConfigs.length();
         for (int i = 0; i < count; i++) {
             try {
-                final JSONObject jsonPageEntry = jsonPageEntries.getJSONObject(i);
+                final JSONObject jsonPanelConfig = jsonPanelConfigs.getJSONObject(i);
 
-                final PageEntry pageEntry = loadPageEntryFromJSON(jsonPageEntry);
-                pageEntries.add(pageEntry);
+                final PanelConfig panelConfig = loadPanelConfigFromJSON(jsonPanelConfig);
+                panelConfigs.add(panelConfig);
             } catch (Exception e) {
-                Log.e(LOGTAG, "Exception loading page entry from JSON", e);
+                Log.e(LOGTAG, "Exception loading PanelConfig from JSON", e);
             }
         }
 
-        return pageEntries;
+        return panelConfigs;
     }
 
-    private PageEntry loadPageEntryFromJSON(JSONObject jsonPageEntry)
+    private PanelConfig loadPanelConfigFromJSON(JSONObject jsonPanelConfig)
             throws JSONException, IllegalArgumentException {
-        final PageType type = PageType.fromId(jsonPageEntry.getString(JSON_KEY_TYPE));
-        final String title = jsonPageEntry.getString(JSON_KEY_TITLE);
-        final String id = jsonPageEntry.getString(JSON_KEY_ID);
+        final PanelType type = PanelType.fromId(jsonPanelConfig.getString(JSON_KEY_TYPE));
+        final String title = jsonPanelConfig.getString(JSON_KEY_TITLE);
+        final String id = jsonPanelConfig.getString(JSON_KEY_ID);
 
-        final EnumSet<PageEntry.Flags> flags = EnumSet.noneOf(PageEntry.Flags.class);
-        final boolean isDefault = (jsonPageEntry.optInt(JSON_KEY_DEFAULT, -1) == IS_DEFAULT);
+        final EnumSet<PanelConfig.Flags> flags = EnumSet.noneOf(PanelConfig.Flags.class);
+        final boolean isDefault = (jsonPanelConfig.optInt(JSON_KEY_DEFAULT, -1) == IS_DEFAULT);
         if (isDefault) {
-            flags.add(PageEntry.Flags.DEFAULT_PAGE);
+            flags.add(PanelConfig.Flags.DEFAULT_PANEL);
         }
 
-        return new PageEntry(type, title, id, flags);
+        return new PanelConfig(type, title, id, flags);
     }
 
     @Override
-    public List<PageEntry> load() {
+    public List<PanelConfig> load() {
         final SharedPreferences prefs = getSharedPreferences();
         final String jsonString = prefs.getString(PREFS_KEY, null);
 
-        final List<PageEntry> pageEntries;
+        final List<PanelConfig> panelConfigs;
         if (TextUtils.isEmpty(jsonString)) {
-            pageEntries = loadDefaultConfig();
+            panelConfigs = loadDefaultConfig();
         } else {
-            pageEntries = loadConfigFromString(jsonString);
+            panelConfigs = loadConfigFromString(jsonString);
         }
 
-        return Collections.unmodifiableList(pageEntries);
+        return Collections.unmodifiableList(panelConfigs);
     }
 
-    private JSONObject convertPageEntryToJSON(PageEntry pageEntry) throws JSONException {
-        final JSONObject jsonPageEntry = new JSONObject();
+    private JSONObject convertPanelConfigToJSON(PanelConfig PanelConfig) throws JSONException {
+        final JSONObject jsonPanelConfig = new JSONObject();
 
-        jsonPageEntry.put(JSON_KEY_TYPE, pageEntry.getType().toString());
-        jsonPageEntry.put(JSON_KEY_TITLE, pageEntry.getTitle());
-        jsonPageEntry.put(JSON_KEY_ID, pageEntry.getId());
+        jsonPanelConfig.put(JSON_KEY_TYPE, PanelConfig.getType().toString());
+        jsonPanelConfig.put(JSON_KEY_TITLE, PanelConfig.getTitle());
+        jsonPanelConfig.put(JSON_KEY_ID, PanelConfig.getId());
 
-        if (pageEntry.isDefault()) {
-            jsonPageEntry.put(JSON_KEY_DEFAULT, IS_DEFAULT);
+        if (PanelConfig.isDefault()) {
+            jsonPanelConfig.put(JSON_KEY_DEFAULT, IS_DEFAULT);
         }
 
-        return jsonPageEntry;
+        return jsonPanelConfig;
     }
 
     @Override
-    public void save(List<PageEntry> pageEntries) {
-        final JSONArray jsonPageEntries = new JSONArray();
+    public void save(List<PanelConfig> panelConfigs) {
+        final JSONArray jsonPanelConfigs = new JSONArray();
 
-        final int count = pageEntries.size();
+        final int count = panelConfigs.size();
         for (int i = 0; i < count; i++) {
             try {
-                final PageEntry pageEntry = pageEntries.get(i);
+                final PanelConfig PanelConfig = panelConfigs.get(i);
 
-                final JSONObject jsonPageEntry = convertPageEntryToJSON(pageEntry);
-                jsonPageEntries.put(jsonPageEntry);
+                final JSONObject jsonPanelConfig = convertPanelConfigToJSON(PanelConfig);
+                jsonPanelConfigs.put(jsonPanelConfig);
             } catch (Exception e) {
-                Log.e(LOGTAG, "Exception loading page entry from JSON", e);
+                Log.e(LOGTAG, "Exception converting PanelConfig to JSON", e);
             }
         }
 
         final SharedPreferences prefs = getSharedPreferences();
         final SharedPreferences.Editor editor = prefs.edit();
 
-        final String jsonString = jsonPageEntries.toString();
+        final String jsonString = jsonPanelConfigs.toString();
         editor.putString(PREFS_KEY, jsonString);
         editor.commit();
     }

@@ -2,7 +2,7 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
-import org.mozilla.gecko.tests.components.AboutHomeComponent.PageType;
+import org.mozilla.gecko.tests.components.AboutHomeComponent.PanelType;
 import org.mozilla.gecko.tests.helpers.*;
 
 /**
@@ -16,13 +16,13 @@ public class testAboutHomePageNavigation extends UITest {
         GeckoHelper.blockForReady();
 
         mAboutHome.assertVisible()
-                  .assertCurrentPage(PageType.TOP_SITES);
+                  .assertCurrentPage(PanelType.TOP_SITES);
 
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.BOOKMARKS);
+        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
 
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.READING_LIST);
+        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
 
         // Ideally these helpers would just be their own tests. However, by keeping this within
         // one method, we're saving test setUp and tearDown resources.
@@ -35,46 +35,46 @@ public class testAboutHomePageNavigation extends UITest {
 
     private void helperTestTablet() {
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.HISTORY);
+        mAboutHome.assertCurrentPage(PanelType.HISTORY);
 
         // Edge case.
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.HISTORY);
+        mAboutHome.assertCurrentPage(PanelType.HISTORY);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.READING_LIST);
+        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.BOOKMARKS);
+        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.TOP_SITES);
+        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
 
         // Edge case.
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.TOP_SITES);
+        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
     }
 
     private void helperTestPhone() {
         // Edge case.
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.READING_LIST);
+        mAboutHome.assertCurrentPage(PanelType.READING_LIST);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.BOOKMARKS);
+        mAboutHome.assertCurrentPage(PanelType.BOOKMARKS);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.TOP_SITES);
+        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
 
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.HISTORY);
+        mAboutHome.assertCurrentPage(PanelType.HISTORY);
 
         // Edge case.
         mAboutHome.swipeToPageOnLeft();
-        mAboutHome.assertCurrentPage(PageType.HISTORY);
+        mAboutHome.assertCurrentPage(PanelType.HISTORY);
 
         mAboutHome.swipeToPageOnRight();
-        mAboutHome.assertCurrentPage(PageType.TOP_SITES);
+        mAboutHome.assertCurrentPage(PanelType.TOP_SITES);
     }
 
     // TODO: bug 943706 - reimplement this old test code.
