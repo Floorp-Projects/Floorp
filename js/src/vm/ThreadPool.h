@@ -108,8 +108,8 @@ class ThreadPool : public Monitor
     bool lazyStartWorkers(JSContext *cx);
     void terminateWorkers();
     void terminateWorkersAndReportOOM(JSContext *cx);
-    void join(AutoLockMonitor &lock);
-    void waitForWorkers(AutoLockMonitor &lock);
+    void join();
+    void waitForWorkers();
 
   public:
     ThreadPool(JSRuntime *rt);
