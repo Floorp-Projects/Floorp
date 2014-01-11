@@ -14,6 +14,7 @@ interface nsIMessageSender;
 interface nsIVariant;
 interface nsIDOMElement;
 interface nsITabParent;
+interface nsILoadContext;
 
 typedef unsigned long long nsContentViewId;
 
@@ -111,7 +112,7 @@ interface nsIContentViewManager : nsISupports
   readonly attribute nsIContentView rootContentView;
 };
 
-[scriptable, builtinclass, uuid(5b9949dc-56f1-47b6-b6d2-3785bb90ed6d)]
+[scriptable, builtinclass, uuid(4c9f91c0-7a5d-11e3-981f-0800200c9a66)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -124,6 +125,13 @@ interface nsIFrameLoader : nsISupports
    * returns null.
    */
   readonly attribute nsITabParent tabParent;
+
+  /**
+   * Get an nsILoadContext for the top-level docshell. For remote
+   * frames, a shim is returned that contains private browsing and app
+   * information.
+   */
+  readonly attribute nsILoadContext loadContext;
 
   /**
    * Start loading the frame. This method figures out what to load

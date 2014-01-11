@@ -517,8 +517,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
         if (nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement())) {
-            nsRefPtr<TabParent> tp(new TabParent(cp, aContext));
-            tp->SetOwnerElement(aFrameElement);
             uint32_t chromeFlags = 0;
 
             // Propagate the private-browsing status of the element's parent
@@ -537,6 +535,9 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             if (affectLifetime) {
                 chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
             }
+
+            nsRefPtr<TabParent> tp(new TabParent(cp, aContext, chromeFlags));
+            tp->SetOwnerElement(aFrameElement);
 
             PBrowserParent* browser = cp->SendPBrowserConstructor(
                 tp.forget().get(), // DeallocPBrowserParent() releases this ref.
@@ -600,12 +601,14 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         sAppContentParents->Put(manifestURL, p);
     }
 
-    nsRefPtr<TabParent> tp = new TabParent(p, aContext);
+    uint32_t chromeFlags = 0;
+
+    nsRefPtr<TabParent> tp = new TabParent(p, aContext, chromeFlags);
     tp->SetOwnerElement(aFrameElement);
     PBrowserParent* browser = p->SendPBrowserConstructor(
         nsRefPtr<TabParent>(tp).forget().get(), // DeallocPBrowserParent() releases this ref.
         aContext.AsIPCTabContext(),
-        /* chromeFlags */ 0);
+        chromeFlags);
 
     p->MaybeTakeCPUWakeLock(aFrameElement);
 
@@ -2037,7 +2040,7 @@ ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
         return nullptr;
     }
 
-    TabParent* parent = new TabParent(this, tc.GetTabContext());
+    TabParent* parent = new TabParent(this, tc.GetTabContext(), aChromeFlags);
 
     // We release this ref in DeallocPBrowserParent()
     NS_ADDREF(parent);

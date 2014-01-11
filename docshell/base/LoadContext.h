@@ -54,6 +54,21 @@ public:
 #endif
   {}
 
+  LoadContext(dom::Element* aTopFrameElement,
+              uint32_t aAppId,
+              bool aIsContent,
+              bool aUsePrivateBrowsing,
+              bool aIsInBrowserElement)
+    : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
+    , mAppId(aAppId)
+    , mIsContent(aIsContent)
+    , mUsePrivateBrowsing(aUsePrivateBrowsing)
+    , mIsInBrowserElement(aIsInBrowserElement)
+#ifdef DEBUG
+    , mIsNotNull(true)
+#endif
+  {}
+
   // Constructor taking reserved appId for the safebrowsing cookie.
   LoadContext(uint32_t aAppId)
     : mTopFrameElement(nullptr)
