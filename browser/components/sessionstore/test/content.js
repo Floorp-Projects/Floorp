@@ -39,6 +39,13 @@ addMessageListener("ss-test:modifySessionStorage2", function (msg) {
   }
 });
 
+addMessageListener("ss-test:modifyFormData", function (msg) {
+  for (let id of Object.keys(msg.data)) {
+    content.document.getElementById(id).value = msg.data[id];
+  }
+  sendSyncMessage("ss-test:modifyFormData:done");
+});
+
 addMessageListener("ss-test:purgeDomainData", function ({data: domain}) {
   Services.obs.notifyObservers(null, "browser:purge-domain-data", domain);
   content.setTimeout(() => sendAsyncMessage("ss-test:purgeDomainData"));

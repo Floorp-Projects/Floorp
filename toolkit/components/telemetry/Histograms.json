@@ -3351,6 +3351,126 @@
     "n_values": 101,
     "description": "Session restore: Number of times the tab state cache has been cleared during a session divided by number of total accesses during the session (percentage)"
   },
+  "FX_SESSION_RESTORE_EXTRACTING_STATISTICS_DURATION_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "3000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Duration of the off main thread statistics extraction mechanism (ms)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_OPEN_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "Session restore: The subset of sessionrestore.js representing open windows (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_CLOSED_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "Session restore: The subset of sessionrestore.js representing closed windows (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_CLOSED_TABS_IN_OPEN_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "Sessionrestore: The subset of sesionstore.js representing closed tabs in open windows (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_COOKIES_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with cookies (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_DOM_STORAGE_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with DOM storage (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_FORMDATA_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing form data (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_HISTORY_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing history (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_TOTAL_POSTDATA_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing POST data (total size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_OPEN_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "Session restore: The subset of sessionrestore.js representing open windows (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_CLOSED_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "Session restore: The subset of sessionrestore.js representing closed windows (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_CLOSED_TABS_IN_OPEN_WINDOWS_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "Sessionrestore: The subset of sesionstore.js representing closed tabs in open windows (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_COOKIES_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "50000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with cookies (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_DOM_STORAGE_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with DOM storage (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_FORMDATA_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing form data (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_HISTORY_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing history (item size, in bytes)"
+  },
+  "FX_SESSION_RESTORE_INDIVIDUAL_POSTDATA_SIZE_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000000",
+    "n_buckets": 30,
+    "description": "The subset of sessionstore.js dealing with storing history POST data (item size, in bytes)"
+  },
   "INNERWINDOWS_WITH_MUTATION_LISTENERS": {
     "expires_in_version": "never",
     "kind": "boolean",
