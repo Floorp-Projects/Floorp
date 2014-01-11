@@ -68,6 +68,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIFilePicker.h"
+#include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
@@ -3183,6 +3184,21 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
     } else {
         NS_WARNING("Could not get the Observer service for ContentParent::RecvRecordingDeviceEvents.");
     }
+    return true;
+}
+
+bool
+ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
+                                            int32_t* aStatus,
+                                            bool* aSuccess)
+{
+    nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+    if (!gfxInfo) {
+        *aSuccess = false;
+        return true;
+    }
+
+    *aSuccess = NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, aStatus));
     return true;
 }
 
