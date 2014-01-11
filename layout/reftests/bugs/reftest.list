@@ -1794,3 +1794,4 @@ fuzzy-if(OSX==10.6,2,30) == 933264-1.html 933264-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
+== 957770-1.svg 957770-1-ref.svg
