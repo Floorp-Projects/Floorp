@@ -46,7 +46,8 @@ FFTBlock* FFTBlock::CreateInterpolatedBlock(const FFTBlock& block0, const FFTBlo
     int fftSize = newBlock->FFTSize();
     nsTArray<float> buffer;
     buffer.SetLength(fftSize);
-    newBlock->PerformInverseFFT(buffer.Elements());
+    newBlock->GetInverseWithoutScaling(buffer.Elements());
+    AudioBufferInPlaceScale(buffer.Elements(), 1.0f / fftSize, fftSize / 2);
     PodZero(buffer.Elements() + fftSize / 2, fftSize / 2);
 
     // Put back into frequency domain.

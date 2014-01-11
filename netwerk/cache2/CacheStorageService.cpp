@@ -910,8 +910,8 @@ RemoveExactEntry(CacheEntryTable* aEntries,
   return true;
 }
 
-void
-CacheStorageService::RemoveEntry(CacheEntry* aEntry)
+bool
+CacheStorageService::RemoveEntry(CacheEntry* aEntry, bool aOnlyUnreferenced)
 {
   LOG(("CacheStorageService::RemoveEntry [entry=%p]", aEntry));
 
@@ -919,14 +919,19 @@ CacheStorageService::RemoveEntry(CacheEntry* aEntry)
   nsresult rv = aEntry->HashingKey(entryKey);
   if (NS_FAILED(rv)) {
     NS_ERROR("aEntry->HashingKey() failed?");
-    return;
+    return false;
   }
 
   mozilla::MutexAutoLock lock(mLock);
 
   if (mShutdown) {
     LOG(("  after shutdown"));
-    return;
+    return false;
+  }
+
+  if (aOnlyUnreferenced && aEntry->IsReferenced()) {
+    LOG(("  still referenced, not removing"));
+    return false;
   }
 
   CacheEntryTable* entries;
@@ -938,6 +943,8 @@ CacheStorageService::RemoveEntry(CacheEntry* aEntry)
 
   if (sGlobalEntryTables->Get(memoryStorageID, &entries))
     RemoveExactEntry(entries, entryKey, aEntry, false /* don't overwrite */);
+
+  return true;
 }
 
 void
@@ -1152,7 +1159,7 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
                                      const nsACString & aIdExtension,
                                      bool aCreateIfNotExist,
                                      bool aReplace,
-                                     CacheEntry** aResult)
+                                     CacheEntryHandle** aResult)
 {
   NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
 
@@ -1173,7 +1180,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
                                      bool aWriteToDisk,
                                      bool aCreateIfNotExist,
                                      bool aReplace,
-                                     CacheEntry** aResult)
+                                     CacheEntryHandle** aResult)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -1187,6 +1194,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
     entryKey.get(), aContextKey.BeginReading()));
 
   nsRefPtr<CacheEntry> entry;
+  nsRefPtr<CacheEntryHandle> handle;
 
   {
     mozilla::MutexAutoLock lock(mLock);
@@ -1245,9 +1253,15 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
       entries->Put(entryKey, entry);
       LOG(("  new entry %p for %s", entry.get(), entryKey.get()));
     }
+
+    if (entry) {
+      // Here, if this entry was not for a long time referenced by any consumer,
+      // gets again first 'handlers count' reference.
+      handle = entry->NewHandle();
+    }
   }
 
-  entry.forget(aResult);
+  handle.forget(aResult);
   return NS_OK;
 }
 

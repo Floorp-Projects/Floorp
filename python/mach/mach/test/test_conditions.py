@@ -5,13 +5,13 @@
 from __future__ import unicode_literals
 
 import os
-import unittest
-
-from StringIO import StringIO
 
 from mach.base import MachError
 from mach.main import Mach
 from mach.test.common import TestBase
+
+from mozunit import main
+
 
 def _populate_context(context):
     context.foo = True
@@ -71,3 +71,7 @@ class TestConditions(TestBase):
         self.assertIn('cmd_foo_ctx', stdout)
         self.assertNotIn('cmd_bar_ctx', stdout)
         self.assertNotIn('cmd_foobar_ctx', stdout)
+
+
+if __name__ == '__main__':
+    main()

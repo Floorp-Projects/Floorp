@@ -112,6 +112,7 @@ SVGFECompositeElement::SetK(float k1, float k2, float k3, float k4)
 FilterPrimitiveDescription
 SVGFECompositeElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                const IntRect& aFilterSubregion,
+                                               const nsTArray<bool>& aInputsAreTainted,
                                                nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   FilterPrimitiveDescription descr(FilterPrimitiveDescription::eComposite);

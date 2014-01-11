@@ -34,7 +34,6 @@
   "traceback": "sdk/console/traceback",
   "xhr": "sdk/net/xhr",
   "match-pattern": "sdk/util/match-pattern",
-  "tab-browser": "sdk/deprecated/tab-browser",
   "file": "sdk/io/file",
   "runtime": "sdk/system/runtime",
   "xpcom": "sdk/platform/xpcom",

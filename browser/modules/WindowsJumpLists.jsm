@@ -573,7 +573,7 @@ this.WinTaskbarJumpList =
         }
       break;
 
-      case "back":
+      case "active":
         this._updateTimer();
       break;
     }

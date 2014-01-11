@@ -32,7 +32,7 @@ const AUDIO_FILTERS = ['audio/basic', 'audio/L24', 'audio/mp4',
                        'audio/webm'];
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, 'cpmm',
                                    '@mozilla.org/childprocessmessagemanager;1',
@@ -191,10 +191,8 @@ FilePicker.prototype = {
 
     // Let's try to remove the full path and take just the filename.
     if (name) {
-      let file = new FileUtils.File(data.result.blob.name);
-      if (file && file.leafName) {
-        name = file.leafName;
-      }
+      let names = OS.Path.split(name);
+      name = names.components[names.components.length - 1];
     }
 
     // the fallback is a filename composed by 'blob' + extension.

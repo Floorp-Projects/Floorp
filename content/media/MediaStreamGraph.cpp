@@ -1543,7 +1543,7 @@ MediaStreamGraphImpl::RunInStableState()
         controlMessagesToRunDuringShutdown.MoveElementsFrom(mb.mMessages);
       }
       mMessageQueue.Clear();
-      controlMessagesToRunDuringShutdown.MoveElementsFrom(mCurrentTaskMessageQueue);
+      MOZ_ASSERT(mCurrentTaskMessageQueue.IsEmpty());
       // Stop MediaStreamGraph threads. Do not clear gGraph since
       // we have outstanding DOM objects that may need it.
       mLifecycleState = LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
@@ -1619,11 +1619,6 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
         gGraph = nullptr;
       }
       delete this;
-    } else if (!mRealtime) {
-      // Make sure to mark the graph as not doing non-realtime processing,
-      // because otherwise AppendMessage will try to ensure that the graph
-      // is running, and we will never manage to release our resources.
-      mNonRealtimeProcessing = false;
     }
     return;
   }

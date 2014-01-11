@@ -352,6 +352,15 @@ nsTSubstring_CharT::AssignASCII( const char* data, size_type length, const falli
   }
 
 void
+nsTSubstring_CharT::AssignLiteral( const char_type* data, size_type length )
+  {
+    ::ReleaseData(mData, mFlags);
+    mData = const_cast<char_type*>(data);
+    mLength = length;
+    SetDataFlags(F_TERMINATED | F_LITERAL);
+  }
+
+void
 nsTSubstring_CharT::Assign( const self_type& str )
 {
   if (!Assign(str, fallible_t()))
@@ -389,6 +398,13 @@ nsTSubstring_CharT::Assign( const self_type& str, const fallible_t& )
 
         // get an owning reference to the mData
         nsStringBuffer::FromData(mData)->AddRef();
+        return true;
+      }
+    else if (str.mFlags & F_LITERAL)
+      {
+        NS_ABORT_IF_FALSE(str.mFlags & F_TERMINATED, "Unterminated literal");
+
+        AssignLiteral(str.mData, str.mLength);
         return true;
       }
 
@@ -534,6 +550,17 @@ nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, const sub
 
     if (ReplacePrep(cutStart, cutLength, length) && length > 0)
       tuple.WriteTo(mData + cutStart, length);
+  }
+
+void
+nsTSubstring_CharT::ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type* data, size_type length )
+  {
+    cutStart = XPCOM_MIN(cutStart, Length());
+
+    if (!cutStart && cutLength == Length())
+      AssignLiteral(data, length);
+    else if (ReplacePrep(cutStart, cutLength, length) && length > 0)
+      char_traits::copy(mData + cutStart, data, length);
   }
 
 void

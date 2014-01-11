@@ -598,6 +598,8 @@ ContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
                             mFrontBufferRect,
                             mFrontBufferRotation);
   UpdateDestinationFrom(frontBuffer, updateRegion);
+  // We need to flush our buffers before we unlock our front textures
+  FlushBuffers();
   mFrontClient->Unlock();
   if (mFrontClientOnWhite) {
     mFrontClientOnWhite->Unlock();
@@ -815,6 +817,9 @@ DeprecatedContentClientDoubleBuffered::SyncFrontBufferToBackBuffer()
                             mFrontBufferRect,
                             mFrontBufferRotation);
   UpdateDestinationFrom(frontBuffer, updateRegion);
+
+  // We need to flush our buffers before we unlock our front textures
+  FlushBuffers();
 
   mFrontAndBackBufferDiffer = false;
 }

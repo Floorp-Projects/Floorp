@@ -133,8 +133,7 @@ MobileConnection::GetLastKnownNetwork(nsAString& aNetwork)
     return NS_OK;
   }
 
-  aNetwork = mozilla::Preferences::GetString("ril.lastKnownNetwork");
-  return NS_OK;
+  return mProvider->GetLastKnownNetwork(mClientId, aNetwork);
 }
 
 NS_IMETHODIMP
@@ -146,8 +145,7 @@ MobileConnection::GetLastKnownHomeNetwork(nsAString& aNetwork)
     return NS_OK;
   }
 
-  aNetwork = mozilla::Preferences::GetString("ril.lastKnownHomeNetwork");
-  return NS_OK;
+  return mProvider->GetLastKnownHomeNetwork(mClientId, aNetwork);
 }
 
 // All fields below require the "mobileconnection" permission.

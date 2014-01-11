@@ -10,14 +10,16 @@ module.metadata = {
 };
 
 const widgets = require("sdk/widget");
-const { Cc, Ci } = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
 const { Loader } = require('sdk/test/loader');
 const url = require("sdk/url");
 const timer = require("sdk/timers");
 const self = require("sdk/self");
 const windowUtils = require("sdk/deprecated/window-utils");
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
-const { close } = require("sdk/window/helpers");
+const { close, open, focus } = require("sdk/window/helpers");
+const tabs = require("sdk/tabs/utils");
+const { merge } = require("sdk/util/object");
 const unload = require("sdk/system/unload");
 const fixtures = require("./fixtures");
 
@@ -27,6 +29,21 @@ try {
 } catch(e) {}
 
 const australis = !!require("sdk/window/utils").getMostRecentBrowserWindow().CustomizableUI;
+
+function openNewWindowTab(url, options) {
+  return open('chrome://browser/content/browser.xul', {
+    features: {
+      chrome: true,
+      toolbar: true
+    }
+  }).then(focus).then(function(window) {
+    if (options.onLoad) {
+      options.onLoad({ target: { defaultView: window } })
+    }
+
+    return newTab;
+  });
+}
 
 exports.testConstructor = function(assert, done) {
   let browserWindow = windowUtils.activeBrowserWindow;
@@ -513,10 +530,10 @@ exports.testConstructor = function(assert, done) {
 
   // test multiple windows
   tests.push(function testMultipleWindows() {
-    const tabBrowser = require("sdk/deprecated/tab-browser");
-
-    tabBrowser.addTab("about:blank", { inNewWindow: true, onLoad: function(e) {
+    console.log('executing test multiple windows');
+    openNewWindowTab("about:blank", { inNewWindow: true, onLoad: function(e) {
       let browserWindow = e.target.defaultView;
+      assert.ok(browserWindow, 'window was opened');
       let doc = browserWindow.document;
       function container() australis ? doc.getElementById("nav-bar") : doc.getElementById("addon-bar");
       function widgetCount2() container() ? container().querySelectorAll('[id^="widget\:"]').length : 0;
@@ -598,15 +615,13 @@ exports.testConstructor = function(assert, done) {
 
   if (false) {
     tests.push(function testAddonBarHide() {
-      const tabBrowser = require("sdk/deprecated/tab-browser");
-
       // Hide the addon-bar
       browserWindow.setToolbarVisibility(container(), false);
       assert.ok(container().collapsed,
                 "1st window starts with an hidden addon-bar");
 
       // Then open a browser window and verify that the addon-bar remains hidden
-      tabBrowser.addTab("about:blank", { inNewWindow: true, onLoad: function(e) {
+      openNewWindowTab("about:blank", { inNewWindow: true, onLoad: function(e) {
         let browserWindow2 = e.target.defaultView;
         let doc2 = browserWindow2.document;
         function container2() doc2.getElementById("addon-bar");
@@ -696,7 +711,7 @@ exports.testWidgetWithValidPanel = function(assert, done) {
   const widgets = require("sdk/widget");
 
   let widget1 = widgets.Widget({
-    id: "panel1",
+    id: "testWidgetWithValidPanel",
     label: "panel widget 1",
     content: "<div id='me'>foo</div>",
     contentScript: "var evt = new MouseEvent('click', {button: 0});" +
@@ -759,6 +774,67 @@ exports.testPanelWidget3 = function testPanelWidget3(assert, done) {
       }
     })
   });
+};
+
+exports.testWidgetWithPanelInMenuPanel = function(assert, done) {
+  let CustomizableUI;
+
+  try {
+    ({CustomizableUI}) = Cu.import("resource:///modules/CustomizableUI.jsm", {});
+  }
+  catch (e) {
+    assert.pass("Test skipped: no CustomizableUI object found.");
+    done();
+    return;
+  }
+
+  const widgets = require("sdk/widget");
+
+  let widget1 = widgets.Widget({
+    id: "panel1",
+    label: "panel widget 1",
+    content: "<div id='me'>foo</div>",
+    contentScript: "new " + function() {
+      self.port.on('click', () => {
+        let evt = new MouseEvent('click', {button: 0});
+        document.body.dispatchEvent(evt);
+      });
+    },
+    contentScriptWhen: "end",
+    panel: require("sdk/panel").Panel({
+      contentURL: "data:text/html;charset=utf-8,<body>Look ma, a panel!</body>",
+      onShow: function() {
+        let { document } = getMostRecentBrowserWindow();
+        let { anchorNode } = document.getElementById('mainPopupSet').lastChild;
+        let panelButtonNode = document.getElementById("PanelUI-menu-button");
+
+        assert.strictEqual(anchorNode, panelButtonNode,
+          'the panel is anchored to the panel menu button instead of widget');
+
+        widget1.destroy();
+        done();
+      }
+    })
+  });
+
+  let widgetId = "widget:" + jetpackID + "-" + widget1.id;
+
+  CustomizableUI.addListener({
+    onWidgetAdded: function(id) {
+      if (id !== widgetId) return;
+
+      let { document, PanelUI } = getMostRecentBrowserWindow();
+
+      PanelUI.panel.addEventListener('popupshowing', function onshow({type}) {
+        this.removeEventListener(type, onshow);
+        widget1.port.emit('click');
+      });
+
+      document.getElementById("PanelUI-menu-button").click()
+    }
+  });
+
+  CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_PANEL);
 };
 
 exports.testWidgetMessaging = function testWidgetMessaging(assert, done) {
@@ -1075,8 +1151,7 @@ exports.testReinsertion = function(assert, done) {
     container.ownerDocument.persist(container.id, "currentset");
   }
 
-  const tabBrowser = require("sdk/deprecated/tab-browser");
-  tabBrowser.addTab("about:blank", { inNewWindow: true, onLoad: function(e) {
+  openNewWindowTab("about:blank", { inNewWindow: true, onLoad: function(e) {
     assert.equal(e.target.defaultView.document.getElementById(realWidgetId), null);
     close(e.target.defaultView).then(done);
   }});

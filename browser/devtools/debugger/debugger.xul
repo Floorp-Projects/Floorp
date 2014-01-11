@@ -300,7 +300,10 @@
          command="removeAllWatchExpressionsCommand"/>
   </keyset>
 
-  <vbox id="body" layout="horizontal" flex="1" class="theme-body">
+  <vbox id="body"
+        class="theme-body"
+        layout="horizontal"
+        flex="1">
     <toolbar id="debugger-toolbar"
              class="devtools-toolbar">
       <hbox id="debugger-controls">
@@ -396,19 +399,23 @@
       </tabbox>
       <splitter id="sources-and-editor-splitter"
                 class="devtools-side-splitter"/>
-      <deck id="editor-deck" flex="4">
+      <deck id="editor-deck" flex="1">
         <vbox id="editor"/>
-        <vbox id="black-boxed-message" align="center" pack="center">
-          <label id="black-boxed-message-label">
+        <vbox id="black-boxed-message"
+              align="center"
+              pack="center">
+          <description id="black-boxed-message-label">
             &debuggerUI.blackBoxMessage.label;
-          </label>
+          </description>
           <button id="black-boxed-message-button"
                   class="devtools-toolbarbutton"
                   label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
                   image="chrome://browser/skin/devtools/debugger-blackboxMessageEye.png"
                   command="unBlackBoxCommand"/>
         </vbox>
-        <vbox id="source-progress-container" align="center" pack="center">
+        <vbox id="source-progress-container"
+              align="center"
+              pack="center">
           <progressmeter id="source-progress"
                          mode="undetermined"/>
         </vbox>
@@ -423,12 +430,12 @@
           <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
         </tabs>
         <tabpanels flex="1">
-          <tabpanel id="variables-tabpanel" class="theme-body">
+          <tabpanel id="variables-tabpanel">
             <vbox id="expressions"/>
             <splitter class="devtools-horizontal-splitter"/>
             <vbox id="variables" flex="1"/>
           </tabpanel>
-          <tabpanel id="events-tabpanel" class="theme-body">
+          <tabpanel id="events-tabpanel">
             <vbox id="event-listeners" flex="1"/>
           </tabpanel>
         </tabpanels>
@@ -504,17 +511,6 @@
              value="&debuggerUI.condBreakPanelTitle;"/>
       <textbox id="conditional-breakpoint-panel-textbox"/>
     </vbox>
-  </panel>
-
-  <panel id="resumption-order-panel"
-         type="arrow"
-         position="before_start"
-         noautofocus="true"
-         consumeoutsideclicks="false">
-    <hbox align="start">
-      <image class="alert-icon"/>
-      <label id="resumption-panel-desc" class="description"/>
-    </hbox>
   </panel>
 
 </window>

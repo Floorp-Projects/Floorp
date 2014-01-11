@@ -1,6 +1,6 @@
 #    GRAPHITE2 LICENSING
 #
-#    Copyright 2010, SIL International
+#    Copyright 2011, SIL International
 #    All rights reserved.
 #
 #    This library is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@ $(_NS)_SOURCES = \
     $($(_NS)_BASE)/src/gr_face.cpp \
     $($(_NS)_BASE)/src/gr_features.cpp \
     $($(_NS)_BASE)/src/gr_font.cpp \
-	$($(_NS)_BASE)/src/gr_logging.cpp \
+    $($(_NS)_BASE)/src/gr_logging.cpp \
     $($(_NS)_BASE)/src/gr_segment.cpp \
     $($(_NS)_BASE)/src/gr_slot.cpp \
     $($(_NS)_BASE)/src/json.cpp \
@@ -79,6 +79,7 @@ $(_NS)_PRIVATE_HEADERS = \
     $($(_NS)_BASE)/src/inc/CmapCache.h \
     $($(_NS)_BASE)/src/inc/Code.h \
     $($(_NS)_BASE)/src/inc/Endian.h \
+    $($(_NS)_BASE)/src/inc/Error.h \
     $($(_NS)_BASE)/src/inc/Face.h \
     $($(_NS)_BASE)/src/inc/FeatureMap.h \
     $($(_NS)_BASE)/src/inc/FeatureVal.h \

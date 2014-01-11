@@ -34,7 +34,7 @@ class CharInfo
 {
 
 public:
-    CharInfo() : m_char(0), m_before(-1), m_after(0), m_base(0), m_featureid(0), m_break(0), m_flags(0) {}
+    CharInfo() : m_char(0), m_before(-1), m_after(-1), m_base(0), m_featureid(0), m_break(0), m_flags(0) {}
     void init(int cid) { m_char = cid; }
     unsigned int unicodeChar() const { return m_char; }
     void feats(int offset) { m_featureid = offset; }
@@ -56,8 +56,8 @@ private:
     int m_before;   // slot index before us, comes before
     int m_after;    // slot index after us, comes after
     size_t  m_base; // offset into input string corresponding to this charinfo
-    uint8 m_featureid;	// index into features list in the segment
-    int8 m_break;	// breakweight coming from lb table
+    uint8 m_featureid;  // index into features list in the segment
+    int8 m_break;   // breakweight coming from lb table
     uint8 m_flags;  // 0,1 segment split.
 };
 

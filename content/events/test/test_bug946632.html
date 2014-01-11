@@ -1,0 +1,139 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946632
+-->
+<head>
+  <title>Test for bug 946632 - propagate mouse-wheel vertical scroll events to container</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    .scrollable {
+      overflow: scroll;
+      height: 200px;
+      width: 200px;
+    }
+    input {
+      font-size: 72px;
+      height: 20px;
+      width: 20px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946632">Mozilla Bug 946632</a>
+<p id="display"></p>
+<div id="container" class="scrollable">
+ <input value="value">
+ x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>x<br>
+ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+</div>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests, window);
+
+var input = document.querySelector("input");
+var container = document.querySelector("#container");
+
+function prepare(check)
+{
+  container.scrollTop = 0;
+  container.scrollLeft = 0;
+  input.scrollTop = 0;
+  input.scrollLeft = 0;
+  container.style.display='none';
+  container.getBoundingClientRect();
+  container.style.display='';
+  container.getBoundingClientRect();
+  scrollHandler = function(event) {
+    window.removeEventListener("scroll", arguments.callee, true);
+    event.stopPropagation();
+    check(event)
+    setTimeout(nextTest,0);
+  };
+  window.addEventListener("scroll", scrollHandler, true);
+}
+
+var tests = [
+  { 
+    check: function(event) {
+      is(event.target, container, "<input> vertical line scroll targets container");
+      ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
+      is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
+      is(input.scrollLeft, 0, "<input> horizontal line scroll input.scrollLeft");
+    },
+    test: function() {
+      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                                     deltaY: 1.0, lineOrPageDeltaY: 1 });
+    }
+  },
+ { 
+    check: function(event) {
+      is(event.target, input, "<input> horizontal line scroll targets <input>");
+      is(input.scrollTop, 0, "<input> horizontal line scroll input.scrollTop");
+      ok(input.scrollLeft > 0, "<input> horizontal line scroll input.scrollLeft");
+      is(container.scrollTop, 0, "<input> horizontal line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> horizontal line scroll container.scrollLeft");
+    },
+    test: function() {
+      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_LINE,
+                                     deltaX: 1.0, lineOrPageDeltaX: 1 });
+    }
+  },
+ { 
+    check: function(event) {
+      is(event.target, container, "<input> vertical page scroll targets container");
+      ok(container.scrollTop > 0, "<input> vertical line scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> vertical line scroll container.scrollLeft");
+      is(input.scrollTop, 0, "<input> vertical page scroll input.scrollTop");
+      is(input.scrollLeft, 0, "<input> vertical page scroll input.scrollLeft");
+    },
+    test: function() {
+      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                                     deltaY: 1.0, lineOrPageDeltaY: 1 });
+    }
+  },
+ { 
+    check: function(event) {
+      is(event.target, input, "<input> horizontal page scroll targets <input>");
+      is(input.scrollTop, 0, "<input> horizontal page scroll input.scrollTop");
+      ok(input.scrollLeft > 0, "<input> horizontal page scroll input.scrollLeft");
+      is(container.scrollTop, 0, "<input> horizontal page scroll container.scrollTop");
+      is(container.scrollLeft, 0, "<input> horizontal page scroll container.scrollLeft");
+    },
+    test: function() {
+      synthesizeWheel(input, 5, 5, { deltaMode: WheelEvent.DOM_DELTA_PAGE,
+                                     deltaX: 1.0, lineOrPageDeltaX: 1 });
+    }
+  },
+];
+
+var i = 0;
+function nextTest()
+{
+  if (i == tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+  var test = tests[i];
+  ++i;
+  prepare(test.check);
+  test.test();
+}
+
+function runTests()
+{
+  nextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

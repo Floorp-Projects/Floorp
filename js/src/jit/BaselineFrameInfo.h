@@ -182,7 +182,7 @@ class FrameInfo
         return script->nfixed();
     }
     uint32_t nargs() const {
-        return script->function()->nargs();
+        return script->functionNonDelazifying()->nargs();
     }
 
   private:

@@ -288,8 +288,8 @@ AnalyserNode::AppendChunk(const AudioChunk& aChunk)
                                   mBuffer.Elements() + mWriteIndex);
   }
   if (channelCount > 1) {
-    AudioBufferInPlaceScale(mBuffer.Elements() + mWriteIndex, 1,
-                            1.0f / aChunk.mChannelData.Length());
+    AudioBlockInPlaceScale(mBuffer.Elements() + mWriteIndex, 1,
+                           1.0f / aChunk.mChannelData.Length());
   }
   mWriteIndex += chunkDuration;
   MOZ_ASSERT(mWriteIndex <= bufferSize);

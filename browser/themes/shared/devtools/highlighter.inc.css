@@ -12,22 +12,22 @@
   outline-offset: -1px;
 }
 
-.highlighter-outline[locked]  {
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
-  outline-color: rgba(255,255,255,0.7);
-}
-
 /* Highlighter - Node Infobar */
 
 .highlighter-nodeinfobar {
   color: hsl(216,33%,97%);
   border-radius: 3px;
   background: hsl(214,13%,24%) no-repeat padding-box;
+  padding: 5px;
+  /* Avoid cases where the infobar is smaller than the arrow, when the text is
+  short */
+  min-width: 75px;
 }
 
 /* Highlighter - Node Infobar - text */
 
 .highlighter-nodeinfobar-text {
+  text-align: center;
   /* 100% - size of the buttons and margins */
   max-width: calc(100% - 2 * (26px + 6px));
   padding-bottom: 1px;
@@ -44,43 +44,6 @@ html|*.highlighter-nodeinfobar-id {
 html|*.highlighter-nodeinfobar-classes,
 html|*.highlighter-nodeinfobar-pseudo-classes {
   color: hsl(200,74%,57%);
-}
-
-/* Highlighter - Node Infobar - buttons */
-
-.highlighter-nodeinfobar-button {
-  -moz-appearance: none;
-  border-width: 0;
-  padding: 0;
-  width: 26px;
-  min-height: 26px;
-%if !defined(MOZ_WIDGET_GTK) && !defined(MOZ_WIDGET_QT)
-  background-color: transparent;
-%endif
-}
-
-.highlighter-nodeinfobar-inspectbutton {
-  -moz-border-end: 1px solid #5a6169;
-  -moz-margin-end: 12px;
-  list-style-image: url("chrome://browser/skin/devtools/inspect-button.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-.highlighter-nodeinfobar-inspectbutton:active:hover,
-.highlighter-nodeinfobar-container:not([locked]) >  .highlighter-nodeinfobar >  .highlighter-nodeinfobar-inspectbutton {
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-.highlighter-nodeinfobar-menu {
-  -moz-border-start: 1px solid #5a6169;
-  -moz-margin-start: 12px;
-}
-
-.highlighter-nodeinfobar-menu > .toolbarbutton-menu-dropmarker {
-  -moz-appearance: none !important;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
-  -moz-box-align: center;
-  -moz-margin-start: -1px;
 }
 
 /* Highlighter - Node Infobar - box & arrow */

@@ -198,6 +198,6 @@ final class HomeConfig {
     }
 
     public static HomeConfig getDefault(Context context) {
-        return new HomeConfig(new HomeConfigMemBackend(context));
+        return new HomeConfig(new HomeConfigPrefsBackend(context));
     }
 }

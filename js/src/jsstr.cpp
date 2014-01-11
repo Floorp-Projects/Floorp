@@ -1422,7 +1422,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-/* ES6 20120927 draft 15.5.4.22. */
+/* ES6 20131108 draft 21.1.3.18. */
 static bool
 str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1433,12 +1433,19 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    // Steps 4 and 5
+    // Step 4
+    if (args.get(0).isObject() && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                             "first", "", "Regular Expression");
+        return false;
+    }
+
+    // Steps 5 and 6
     Rooted<JSLinearString*> searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Steps 6 and 7
+    // Steps 7 and 8
     uint32_t pos = 0;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -1452,31 +1459,31 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    // Step 8
+    // Step 9
     uint32_t textLen = str->length();
     const jschar *textChars = str->getChars(cx);
     if (!textChars)
         return false;
 
-    // Step 9
+    // Step 10
     uint32_t start = Min(Max(pos, 0U), textLen);
 
-    // Step 10
+    // Step 11
     uint32_t searchLen = searchStr->length();
     const jschar *searchChars = searchStr->chars();
 
-    // Step 11
+    // Step 12
     if (searchLen + start < searchLen || searchLen + start > textLen) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Steps 12 and 13
+    // Steps 13 and 14
     args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
     return true;
 }
 
-/* ES6 20120708 draft 15.5.4.23. */
+/* ES6 20131108 draft 21.1.3.7. */
 static bool
 str_endsWith(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -1487,15 +1494,25 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    // Steps 4 and 5
+    // Step 4
+    if (args.get(0).isObject() && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_ARG_TYPE,
+                             "first", "", "Regular Expression");
+        return false;
+    }
+
+    // Steps 5 and 6
     Rooted<JSLinearString *> searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
-    // Step 6
+    // Step 7
     uint32_t textLen = str->length();
+    const jschar *textChars = str->getChars(cx);
+    if (!textChars)
+        return false;
 
-    // Steps 7 and 8
+    // Steps 8 and 9
     uint32_t pos = textLen;
     if (args.hasDefined(1)) {
         if (args[1].isInt32()) {
@@ -1509,28 +1526,23 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
         }
     }
 
-    // Step 6
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
-
-    // Step 9
+    // Step 10
     uint32_t end = Min(Max(pos, 0U), textLen);
 
-    // Step 10
+    // Step 11
     uint32_t searchLen = searchStr->length();
     const jschar *searchChars = searchStr->chars();
 
-    // Step 12
+    // Step 13 (reordered)
     if (searchLen > end) {
         args.rval().setBoolean(false);
         return true;
     }
 
-    // Step 11
+    // Step 12
     uint32_t start = end - searchLen;
 
-    // Steps 13 and 14
+    // Steps 14 and 15
     args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
     return true;
 }
@@ -1690,24 +1702,32 @@ class MOZ_STACK_CLASS StringRegExpGuard
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool init(JSContext *cx, CallArgs args, bool convertVoid = false)
     {
-        if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
-            obj_ = &args[0].toObject();
-            if (!RegExpToShared(cx, obj_, &re_))
-                return false;
-        } else {
-            if (convertVoid && !args.hasDefined(0)) {
-                fm.patstr = cx->runtime()->emptyString;
-                return true;
-            }
+        if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx))
+            return init(cx, &args[0].toObject());
 
-            JSString *arg = ArgToRootedString(cx, args, 0);
-            if (!arg)
-                return false;
-
-            fm.patstr = AtomizeString(cx, arg);
-            if (!fm.patstr)
-                return false;
+        if (convertVoid && !args.hasDefined(0)) {
+            fm.patstr = cx->runtime()->emptyString;
+            return true;
         }
+
+        JSString *arg = ArgToRootedString(cx, args, 0);
+        if (!arg)
+            return false;
+
+        fm.patstr = AtomizeString(cx, arg);
+        if (!fm.patstr)
+            return false;
+
+        return true;
+    }
+
+    bool init(JSContext *cx, JSObject *regexp) {
+        obj_ = regexp;
+
+        JS_ASSERT(ObjectClassIs(obj_, ESClass_RegExp, cx));
+
+        if (!RegExpToShared(cx, obj_, &re_))
+            return false;
         return true;
     }
 
@@ -2093,6 +2113,25 @@ struct ReplaceData
         dollarRoot(cx, &dollar), dollarEndRoot(cx, &dollarEnd),
         fig(cx, NullValue()), sb(cx)
     {}
+
+    inline void setReplacementString(JSLinearString *string) {
+        JS_ASSERT(string);
+        lambda = nullptr;
+        elembase = nullptr;
+        repstr = string;
+
+        /* We're about to store pointers into the middle of our string. */
+        dollarEnd = repstr->chars() + repstr->length();
+        dollar = js_strchr_limit(repstr->chars(), '$', dollarEnd);
+    }
+
+    inline void setReplacementFunction(JSObject *func) {
+        JS_ASSERT(func);
+        lambda = func;
+        elembase = nullptr;
+        repstr = nullptr;
+        dollar = dollarEnd = nullptr;
+    }
 
     RootedString       str;            /* 'this' parameter object as a string */
     StringRegExpGuard  g;              /* regexp parameter object and private data */
@@ -2653,7 +2692,7 @@ AppendSubstrings(JSContext *cx, Handle<JSStableString*> stableStr,
 }
 
 static bool
-str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExpShared &re)
+StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, MutableHandleValue rval)
 {
     Rooted<JSStableString*> stableStr(cx, str->ensureStable(cx));
     if (!stableStr)
@@ -2701,7 +2740,7 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
     if (!lastIndex) {
         if (startIndex > 0)
             cx->global()->getRegExpStatics()->updateLazily(cx, stableStr, &re, lazyIndex);
-        args.rval().setString(str);
+        rval.setString(str);
         return true;
     }
 
@@ -2716,7 +2755,7 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
 
     /* Handle the empty string before calling .begin(). */
     if (ranges.empty()) {
-        args.rval().setString(cx->runtime()->emptyString);
+        rval.setString(cx->runtime()->emptyString);
         return true;
     }
 
@@ -2724,16 +2763,13 @@ str_replace_regexp_remove(JSContext *cx, CallArgs args, HandleString str, RegExp
     if (!result)
         return false;
 
-    args.rval().setString(result);
+    rval.setString(result);
     return true;
 }
 
 static inline bool
-str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
+StrReplaceRegExp(JSContext *cx, ReplaceData &rdata, MutableHandleValue rval)
 {
-    if (!rdata.g.normalizeRegExp(cx, true, 2, args))
-        return false;
-
     rdata.leftIndex = 0;
     rdata.calledBack = false;
 
@@ -2752,7 +2788,7 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
     /* Optimize removal. */
     if (rdata.repstr && rdata.repstr->length() == 0) {
         JS_ASSERT(!rdata.lambda && !rdata.elembase && !rdata.dollar);
-        return str_replace_regexp_remove(cx, args, rdata.str, re);
+        return StrReplaceRegexpRemove(cx, rdata.str, re, rval);
     }
 
     Rooted<JSLinearString*> linearStr(cx, rdata.str->ensureLinear(cx));
@@ -2769,7 +2805,7 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
 
     if (!rdata.calledBack) {
         /* Didn't match, so the string is unmodified. */
-        args.rval().setString(rdata.str);
+        rval.setString(rdata.str);
         return true;
     }
 
@@ -2782,8 +2818,46 @@ str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
     if (!retstr)
         return false;
 
-    args.rval().setString(retstr);
+    rval.setString(retstr);
     return true;
+}
+
+static inline bool
+str_replace_regexp(JSContext *cx, CallArgs args, ReplaceData &rdata)
+{
+    if (!rdata.g.normalizeRegExp(cx, true, 2, args))
+        return false;
+
+    return StrReplaceRegExp(cx, rdata, args.rval());
+}
+
+bool
+js::str_replace_regexp_raw(JSContext *cx, HandleString string, HandleObject regexp,
+                       HandleString replacement, MutableHandleValue rval)
+{
+    /* Optimize removal, so we don't have to create ReplaceData */
+    if (replacement->length() == 0) {
+        StringRegExpGuard guard(cx);
+        if (!guard.init(cx, regexp))
+            return false;
+
+        RegExpShared &re = guard.regExp();
+        return StrReplaceRegexpRemove(cx, string, re, rval);
+    }
+
+    ReplaceData rdata(cx);
+    rdata.str = string;
+
+    JSLinearString *repl = replacement->ensureLinear(cx);
+    if (!repl)
+        return false;
+
+    rdata.setReplacementString(repl);
+
+    if (!rdata.g.init(cx, regexp))
+        return false;
+
+    return StrReplaceRegExp(cx, rdata, rval);
 }
 
 static inline bool
@@ -2918,24 +2992,16 @@ js::str_replace(JSContext *cx, unsigned argc, Value *vp)
 
     /* Extract replacement string/function. */
     if (args.length() >= ReplaceOptArg && js_IsCallable(args[1])) {
-        rdata.lambda = &args[1].toObject();
-        rdata.elembase = nullptr;
-        rdata.repstr = nullptr;
-        rdata.dollar = rdata.dollarEnd = nullptr;
+        rdata.setReplacementFunction(&args[1].toObject());
 
         if (!LambdaIsGetElem(cx, *rdata.lambda, &rdata.elembase))
             return false;
     } else {
-        rdata.lambda = nullptr;
-        rdata.elembase = nullptr;
-        rdata.repstr = ArgToRootedString(cx, args, 1);
-        if (!rdata.repstr)
+        JSLinearString *string = ArgToRootedString(cx, args, 1);
+        if (!string)
             return false;
 
-        /* We're about to store pointers into the middle of our string. */
-        JSLinearString *linear = rdata.repstr;
-        rdata.dollarEnd = linear->chars() + linear->length();
-        rdata.dollar = js_strchr_limit(linear->chars(), '$', rdata.dollarEnd);
+        rdata.setReplacementString(string);
     }
 
     rdata.fig.initFunction(ObjectOrNullValue(rdata.lambda));

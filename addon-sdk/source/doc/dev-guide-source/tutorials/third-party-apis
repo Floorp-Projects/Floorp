@@ -1,5 +1,0 @@
-# Creating Event Emitters #
-
-The [guide to event-driven programming with the SDK](dev-guide/guides/events.html) describes
-how to consume events: that is, how to listen to events generated
-by event-emitting objects.

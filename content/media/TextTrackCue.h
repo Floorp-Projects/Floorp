@@ -82,8 +82,9 @@ public:
 
   void SetStartTime(double aStartTime)
   {
-    if (mStartTime == aStartTime)
+    if (mStartTime == aStartTime) {
       return;
+    }
 
     mStartTime = aStartTime;
     CueChanged();
@@ -96,8 +97,9 @@ public:
 
   void SetEndTime(double aEndTime)
   {
-    if (mEndTime == aEndTime)
+    if (mEndTime == aEndTime) {
       return;
+    }
 
     mEndTime = aEndTime;
     CueChanged();
@@ -110,8 +112,9 @@ public:
 
   void SetPauseOnExit(bool aPauseOnExit)
   {
-    if (mPauseOnExit == aPauseOnExit)
+    if (mPauseOnExit == aPauseOnExit) {
       return;
+    }
 
     mPauseOnExit = aPauseOnExit;
     CueChanged();
@@ -139,8 +142,9 @@ public:
 
   void SetVertical(const DirectionSetting& aVertical)
   {
-    if (mVertical == aVertical)
+    if (mVertical == aVertical) {
       return;
+    }
 
     mReset = true;
     mVertical = aVertical;
@@ -154,8 +158,9 @@ public:
 
   void SetSnapToLines(bool aSnapToLines)
   {
-    if (mSnapToLines == aSnapToLines)
+    if (mSnapToLines == aSnapToLines) {
       return;
+    }
 
     mReset = true;
     mSnapToLines = aSnapToLines;
@@ -174,6 +179,26 @@ public:
     mLine = aLine;
   }
 
+  AlignSetting LineAlign() const
+  {
+    return mLineAlign;
+  }
+
+  void SetLineAlign(AlignSetting& aLineAlign, ErrorResult& aRv)
+  {
+    if (mLineAlign == aLineAlign)
+      return;
+
+    if (aLineAlign == AlignSetting::Left ||
+        aLineAlign == AlignSetting::Right) {
+      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
+    mReset = true;
+    mLineAlign = aLineAlign;
+    CueChanged();
+  }
+
   int32_t Position() const
   {
     return mPosition;
@@ -181,9 +206,9 @@ public:
 
   void SetPosition(int32_t aPosition, ErrorResult& aRv)
   {
-    // XXXhumph: validate? bug 868519.
-    if (mPosition == aPosition)
+    if (mPosition == aPosition) {
       return;
+    }
 
     if (aPosition > 100 || aPosition < 0){
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
@@ -192,6 +217,26 @@ public:
 
     mReset = true;
     mPosition = aPosition;
+    CueChanged();
+  }
+
+  AlignSetting PositionAlign() const
+  {
+    return mPositionAlign;
+  }
+
+  void SetPositionAlign(AlignSetting aPositionAlign, ErrorResult& aRv)
+  {
+    if (mPositionAlign == aPositionAlign)
+      return;
+
+    if (aPositionAlign == AlignSetting::Left ||
+        aPositionAlign == AlignSetting::Right) {
+      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
+    mReset = true;
+    mPositionAlign = aPositionAlign;
     CueChanged();
   }
 
@@ -223,8 +268,9 @@ public:
 
   void SetAlign(AlignSetting& aAlign)
   {
-    if (mAlign == aAlign)
+    if (mAlign == aAlign) {
       return;
+    }
 
     mReset = true;
     mAlign = aAlign;
@@ -238,8 +284,9 @@ public:
 
   void SetText(const nsAString& aText)
   {
-    if (mText == aText)
+    if (mText == aText) {
       return;
+    }
 
     mReset = true;
     mText = aText;
@@ -317,6 +364,7 @@ private:
   nsRefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
   int32_t mPosition;
+  AlignSetting mPositionAlign;
   int32_t mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
@@ -324,6 +372,7 @@ private:
   DirectionSetting mVertical;
   int mLine;
   AlignSetting mAlign;
+  AlignSetting mLineAlign;
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state

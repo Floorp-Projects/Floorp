@@ -1,0 +1,32 @@
+[
+{
+"size": 55073212,
+"digest": "10560463c0804186fc59a84ecab4d5ccd1ffdf298336d3b91065c38888698f4cfab4bad743d6170e73f9bc0538f47a96baf5f1381e8b4ab484d8721301bea31e",
+"algorithm": "sha512",
+"filename": "backup-hamachi.tar.xz"
+},
+{
+"size": 1570553,
+"digest": "ea03de74df73b05e939c314cd15c54aac7b5488a407b7cc4f5f263f3049a1f69642c567dd35c43d0bc3f0d599d0385a26ab2dd947a6b18f9044e4918b382eea7",
+"algorithm": "sha512",
+"filename": "Adreno200-AU_LINUX_ANDROID_ICS_CHOCO_CS.04.00.03.06.001.zip"
+},
+{
+"size": 4632576,
+"digest": "27d149a804d6cfaf387d7cced7078b5fe5227681d407f9258cf07ac61fcb35ee17a414b3c108eee6720293bd3e1d9e9c911eaf57059ad7d2361f9b93e9ee815b",
+"algorithm": "sha512",
+"filename": "boot.2knand.img"
+},
+{
+"size": 9452,
+"digest": "d4b919947dfb3f90d6645df31c92d795d6cf68e67f3679bbd80f8bb1920310dd69c8f6d3c0dcd697000b4691cbfddd17d60667a5a9ef933ba78d9a54a86503f0",
+"algorithm": "sha512",
+"filename": "patches.tgz"
+},
+{
+"size": 302,
+"digest": "d6a969fad4e53b617a21026062767f4b89d301464c38e9c9d04ba7dc7dcad72f1b337c284243a81e74de713171af5dd9a13aaaa7efd10109a0847ed23bf6e539",
+"algorithm": "sha512",
+"filename": "tt_setup.sh"
+}
+]

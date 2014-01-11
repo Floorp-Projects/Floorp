@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=941887
+-->
+<head>
+  <title>Test for Bug 941887</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    iframe {
+      width: 500px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=941887">Mozilla Bug 941887</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="f1"></iframe>
+<iframe id="f2"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 941887 **/
+SimpleTest.waitForExplicitFinish();
+
+var f = [document.getElementById("f1"), document.getElementById("f2")];
+
+var testList = [
+  ["file_taintedfilters_feDisplacementMap-untainted-1.svg", "file_taintedfilters_feDisplacementMap-untainted-ref.svg"],
+
+  // Disabled until CORS for feImage is implemented.
+  // ["file_taintedfilters_feDisplacementMap-untainted-2.svg", "file_taintedfilters_feDisplacementMap-untainted-ref.svg"],
+
+  ["file_taintedfilters_feDisplacementMap-tainted-1.svg", "file_taintedfilters_feDisplacementMap-tainted-ref.svg"],
+  ["file_taintedfilters_feDisplacementMap-tainted-2.svg", "file_taintedfilters_feDisplacementMap-tainted-ref.svg"],
+  ["file_taintedfilters_feDisplacementMap-tainted-3.svg", "file_taintedfilters_feDisplacementMap-tainted-ref.svg"],
+];
+
+var currentTestIndex = 0;
+var currentTest = testList[0];
+var loaded = [false, false];
+
+function didLoadIframe(iframe, index) {
+  if (iframe.contentWindow.location.href == iframe.src) {
+    loaded[index] = true;
+    if (loaded[0] && loaded[1]) {
+      checkCurrentTest();
+    }
+  }
+}
+
+f[0].onload = function (e) { didLoadIframe(e.target, 0); }
+f[1].onload = function (e) { didLoadIframe(e.target, 1); }
+
+function loadCurrentTest() {
+  currentTest = testList[currentTestIndex];
+  f[0].contentWindow.stop();
+  f[0].src = currentTest[0];
+  f[1].contentWindow.stop();
+  f[1].src = currentTest[1];
+  loaded = [false, false];
+}
+
+function okEqualSnapshots(c1, c2, msg) {
+  var [correct, c1url, c2url] = compareSnapshots(c1, c2, true);
+  if (correct) {
+    ok(true, msg);
+  } else {
+    ok(false, msg + "\nTEST: " + c1url + "\nREFERENCE: " + c1url);
+  }
+}
+
+function checkCurrentTest() {
+  okEqualSnapshots(snapshotWindow(f[0].contentWindow),
+                   snapshotWindow(f[1].contentWindow),
+                   currentTest[0] + " and " + currentTest[1] + " should match.");
+
+  currentTestIndex++;
+
+  if (currentTestIndex < testList.length)
+    loadCurrentTest();
+  else
+    SimpleTest.finish();
+}
+
+loadCurrentTest();
+
+</script>
+</pre>
+</body>
+</html>

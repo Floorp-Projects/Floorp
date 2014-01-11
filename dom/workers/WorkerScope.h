@@ -60,8 +60,13 @@ public:
 
   already_AddRefed<WorkerLocation>
   Location();
+
   already_AddRefed<WorkerNavigator>
   Navigator();
+
+  already_AddRefed<WorkerNavigator>
+  GetExistingNavigator() const;
+
   void
   Close(JSContext* aCx);
 
@@ -97,6 +102,8 @@ public:
   void
   Btoa(const nsAString& aBtoa, nsAString& aOutput, ErrorResult& aRv) const;
 
+  IMPL_EVENT_HANDLER(online)
+  IMPL_EVENT_HANDLER(offline)
   IMPL_EVENT_HANDLER(close)
 
   void

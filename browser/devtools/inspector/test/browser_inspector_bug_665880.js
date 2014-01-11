@@ -1,9 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-
-function test()
-{
+function test() {
   waitForExplicitFinish();
   ignoreAllUncaughtExceptions();
 
@@ -19,22 +17,18 @@ function test()
 
   content.location = "data:text/html,<object style='padding: 100px'><p>foobar</p></object>";
 
-  function setupObjectInspectionTest()
-  {
+  function setupObjectInspectionTest() {
     objectNode = doc.querySelector("object");
     ok(objectNode, "we have the object node");
     openInspector(runObjectInspectionTest);
   }
 
-  function runObjectInspectionTest(inspector)
-  {
-    inspector.highlighter.once("locked", performTestComparison);
-    inspector.highlighter.unlock();
+  function runObjectInspectionTest(inspector) {
+    inspector.once("inspector-updated", performTestComparison);
     inspector.selection.setNode(objectNode, "");
   }
 
-  function performTestComparison()
-  {
+  function performTestComparison() {
     is(getActiveInspector().selection.node, objectNode, "selection matches node");
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     executeSoon(function() {
@@ -42,7 +36,6 @@ function test()
       finishUp();
     });
   }
-
 
   function finishUp() {
     doc = objectNode = null;

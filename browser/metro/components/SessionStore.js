@@ -42,6 +42,7 @@ SessionStore.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   _windows: {},
+  _tabsFromOtherGroups: [],
   _selectedWindow: 1,
   _orderedWindows: [],
   _lastSaveTime: 0,
@@ -538,27 +539,30 @@ SessionStore.prototype = {
     aBrowser.__SS_data = tabData;
   },
 
+  _getTabData: function(aWindow) {
+    return aWindow.Browser.tabs.map(tab => {
+      let browser = tab.browser;
+      if (browser.__SS_data) {
+        let tabData = browser.__SS_data;
+        if (browser.__SS_extdata)
+          tabData.extData = browser.__SS_extdata;
+        return tabData;
+      }
+    });
+  },
+
   _collectWindowData: function ss__collectWindowData(aWindow) {
     // Ignore windows not tracked by SessionStore
     if (!aWindow.__SSID || !this._windows[aWindow.__SSID])
       return;
 
     let winData = this._windows[aWindow.__SSID];
-    winData.tabs = [];
 
     let index = aWindow.Elements.browsers.selectedIndex;
     winData.selected = parseInt(index) + 1; // 1-based
 
-    let tabs = aWindow.Browser.tabs;
-    for (let i = 0; i < tabs.length; i++) {
-      let browser = tabs[i].browser;
-      if (browser.__SS_data) {
-        let tabData = browser.__SS_data;
-        if (browser.__SS_extdata)
-          tabData.extData = browser.__SS_extdata;
-        winData.tabs.push(tabData);
-      }
-    }
+    let tabData = this._getTabData(aWindow);
+    winData.tabs = tabData.concat(this._tabsFromOtherGroups);
   },
 
   _forEachBrowserWindow: function ss_forEachBrowserWindow(aFunc) {
@@ -774,6 +778,11 @@ SessionStore.prototype = {
         let tabs = data.windows[windowIndex].tabs;
         let selected = data.windows[windowIndex].selected;
 
+        let currentGroupId;
+        try {
+          currentGroupId = JSON.parse(data.windows[windowIndex].extData["tabview-groups"]).activeGroupId;
+        } catch (ex) { /* currentGroupId is undefined if user has no tab groups */ }
+
         // Move all window data from sessionstore.js to this._windows.
         for (let i = 0; i < data.windows.length; i++) {
           let SSID;
@@ -782,8 +791,9 @@ SessionStore.prototype = {
             this._windows[SSID] = data.windows[i];
           } else {
             SSID = window.__SSID;
+            this._windows[SSID].extData = data.windows[i].extData;
             this._windows[SSID]._closedTabs =
-              this._windows[SSID]._closedTabs.concat(data.windows[windowIndex]._closedTabs);
+              this._windows[SSID]._closedTabs.concat(data.windows[i]._closedTabs);
           }
           this._orderedWindows.push(SSID);
         }
@@ -793,6 +803,13 @@ SessionStore.prototype = {
 
         for (let i=0; i<tabs.length; i++) {
           let tabData = tabs[i];
+          let tabGroupId = (typeof currentGroupId == "number") ?
+            JSON.parse(tabData.extData["tabview-tab"]).groupID : null;
+
+          if (tabGroupId && tabGroupId != currentGroupId) {
+            this._tabsFromOtherGroups.push(tabData);
+            continue;
+          }
 
           // We must have selected tabs as soon as possible, so we let all tabs be selected
           // until we get the real selected tab. Then we stop selecting tabs. The end result
