@@ -469,6 +469,10 @@ Tooltip.prototype = {
       vbox.appendChild(innerbox);
 
       var widget = new VariablesView(innerbox, viewOptions);
+
+      // Analyzing state history isn't useful with transient object inspectors.
+      widget.commitHierarchy = () => {};
+
       for (let e in relayEvents) widget.on(e, relayEvents[e]);
       VariablesViewController.attach(widget, controllerOptions);
 
@@ -525,7 +529,6 @@ Tooltip.prototype = {
     if (options.naturalWidth && options.naturalHeight) {
       label.textContent = this._getImageDimensionLabel(options.naturalWidth,
         options.naturalHeight);
-      this.setSize(vbox.width, vbox.height);
     } else {
       // If no dimensions were provided, load the image to get them
       label.textContent = l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
@@ -535,7 +538,6 @@ Tooltip.prototype = {
         imgObj.onload = null;
         label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
           imgObj.naturalHeight);
-        this.setSize(vbox.width, vbox.height);
       }
     }
     vbox.appendChild(label);
@@ -634,11 +636,8 @@ Tooltip.prototype = {
         let previewer = new CSSTransformPreviewer(root);
         this.content = root;
         if (!previewer.preview(transform, origin, width, height)) {
-          // If the preview didn't work, reject the promise
           def.reject();
         } else {
-          // Else, make sure the tooltip has the right size and resolve
-          this.setSize(previewer.canvas.width, previewer.canvas.height);
           def.resolve();
         }
       });

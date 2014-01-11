@@ -55,6 +55,9 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
     if (type->shouldPreTenure())
         heap = gc::TenuredHeap;
 
+    if (cx->runtime()->upcomingZealousGC())
+        return nullptr;
+
     JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind, heap);
     if (obj) {
         copyCachedToObject(obj, templateObj, entry->kind);

@@ -304,6 +304,7 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   , mThread(nullptr)
   , mRunningEvent(0)
   , mStackSize(aStackSize)
+  , mProcessingEvent(0)
   , mShutdownContext(nullptr)
   , mShutdownRequired(false)
   , mEventsAreDoomed(false)
@@ -596,6 +597,8 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
     }
   }
 
+  ++mProcessingEvent;
+
   bool notifyMainThreadObserver =
     (MAIN_THREAD == mIsMainThread) && sMainThreadObserver;
   if (notifyMainThreadObserver) 
@@ -650,7 +653,20 @@ nsThread::ProcessNextEvent(bool mayWait, bool *result)
   if (notifyMainThreadObserver && sMainThreadObserver)
     sMainThreadObserver->AfterProcessNextEvent(this, mRunningEvent, *result);
 
+  --mProcessingEvent;
+
   return rv;
+}
+
+NS_IMETHODIMP
+nsThread::GetIsProcessingEvents(bool* aIsProcessing)
+{
+  if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
+    return NS_ERROR_NOT_SAME_THREAD;
+  }
+
+  *aIsProcessing = mProcessingEvent != 0;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

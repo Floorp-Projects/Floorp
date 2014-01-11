@@ -130,6 +130,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let group = SourceUtils.getSourceGroup(url.split(" -> ").pop());
 
     let contents = document.createElement("label");
+    contents.className = "plain dbg-source-item";
     contents.setAttribute("value", label);
     contents.setAttribute("crop", "start");
     contents.setAttribute("flex", "1");
@@ -1892,13 +1893,7 @@ VariableBubbleView.prototype = {
       });
     }
 
-    // Calculate the x, y coordinates for the variable bubble anchor.
-    let identifierCenter = { line: line - 1, ch: column + length / 2 };
-    let anchor = editor.getCoordsFromPosition(identifierCenter);
-
-    this._tooltip.defaultOffsetX = anchor.left + EDITOR_VARIABLE_POPUP_OFFSET_X;
-    this._tooltip.defaultOffsetY = anchor.top + EDITOR_VARIABLE_POPUP_OFFSET_Y;
-    this._tooltip.show(this._editorContainer);
+    this._tooltip.show(this._markedText.anchor);
   },
 
   /**
@@ -2261,7 +2256,6 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Initializing the EventListenersView");
 
     this.widget = new SideMenuWidget(document.getElementById("event-listeners"), {
-      theme: "light",
       showItemCheckboxes: true,
       showGroupCheckboxes: true
     });
@@ -3065,7 +3059,7 @@ LineResults.prototype = {
     lineNumberNode.setAttribute("value", this.line + 1);
 
     let lineContentsNode = document.createElement("hbox");
-    lineContentsNode.className = "light list-widget-item dbg-results-line-contents";
+    lineContentsNode.className = "dbg-results-line-contents";
     lineContentsNode.classList.add("devtools-monospace");
     lineContentsNode.setAttribute("flex", "1");
 

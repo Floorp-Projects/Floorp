@@ -380,17 +380,16 @@
         var position = this.alignmentPosition;
         var offset = this.alignmentOffset;
         // if this panel has a "sliding" arrow, we may have previously set margins...
-        arrowbox.style.removeProperty("margin");
+        arrowbox.style.removeProperty("transform");
         if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
           container.orient = "";
           arrowbox.orient = "vertical";
           if (position.indexOf("_after") > 0) {
             arrowbox.pack = "end";
-            arrowbox.style.marginBottom = offset + "px";
           } else {
             arrowbox.pack = "start";
-            arrowbox.style.marginTop = offset + "px";
           }
+          arrowbox.style.transform = "translate(0, " + -offset + "px)";
 
           // The assigned side stays the same regardless of direction.
           var isRTL = (window.getComputedStyle(this).direction == "rtl");
@@ -409,11 +408,10 @@
           arrowbox.orient = "";
           if (position.indexOf("_end") > 0) {
             arrowbox.pack = "end";
-            arrowbox.style.marginRight = this.alignmentOffset + "px";
           } else {
             arrowbox.pack = "start";
-            arrowbox.style.marginLeft = this.alignmentOffset + "px";
           }
+          arrowbox.style.transform = "translate(" + -offset + "px, 0)";
 
           if (position.indexOf("before_") == 0) {
             container.dir = "reverse";

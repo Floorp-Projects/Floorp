@@ -413,17 +413,6 @@ public:
   GetClipRectForFrame(nsIFrame *aFrame,
                       float aX, float aY, float aWidth, float aHeight);
 
-  /**
-   * Composites a surface into a context with a given surface offset and an
-   * additional transform. Supports both Thebes and DrawTarget drawing.
-   * If aSurface is null, aSourceSurface will be used instead.
-   */
-  static void CompositeSurfaceMatrix(gfxContext *aContext,
-                                     gfxASurface *aSurface,
-                                     mozilla::gfx::SourceSurface *aSourceSurface,
-                                     const gfxPoint &aSurfaceOffset,
-                                     const gfxMatrix &aCTM);
-
   static void SetClipRect(gfxContext *aContext,
                           const gfxMatrix &aCTM,
                           const gfxRect &aRect);

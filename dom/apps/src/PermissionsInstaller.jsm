@@ -40,6 +40,8 @@ for (let permName in PermissionsTable) {
     expandedPermNames = expandPermissions(permName);
   }
   AllPossiblePermissions = AllPossiblePermissions.concat(expandedPermNames);
+  AllPossiblePermissions =
+    AllPossiblePermissions.concat(["offline-app", "pin-app"]);
 }
 
 this.PermissionsInstaller = {
@@ -73,6 +75,11 @@ this.PermissionsInstaller = {
               expandPermissions(permName,
                                 newManifest.permissions[permName].access);
             newPermNames = newPermNames.concat(expandedPermNames);
+          }
+
+          // Add the appcache related permissions.
+          if (newManifest.appcache_path) {
+            newPermNames = newPermNames.concat(["offline-app", "pin-app"]);
           }
 
           for (let idx in AllPossiblePermissions) {
@@ -116,6 +123,13 @@ this.PermissionsInstaller = {
         throw new Error("PermissionsInstaller.jsm: " +
                         "Cannot determine the app's status. Install cancelled.");
         break;
+      }
+
+      // Add the appcache related permissions. We allow it for all kinds of
+      // apps.
+      if (newManifest.appcache_path) {
+        this._setPermission("offline-app", "allow", aApp);
+        this._setPermission("pin-app", "allow", aApp);
       }
 
       for (let permName in newManifest.permissions) {

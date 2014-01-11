@@ -16,17 +16,14 @@ class Wait(object):
     This will repeatedly evaluate a condition in anticipation for a
     truthy return value, or its timeout to expire, or its waiting
     predicate to become true.
-
-    A Wait instance defines the maximum amount of time to wait for a
+    A `Wait` instance defines the maximum amount of time to wait for a
     condition, as well as the frequency with which to check the
     condition.  Furthermore, the user may configure the wait to ignore
     specific types of exceptions whilst waiting, such as
-    errors.NoSuchElementException when searching for an element on the
-    page.
-
+    `errors.NoSuchElementException` when searching for an element on
+    the page.
     """
-
-    def __init__(self, marionette, timeout=DEFAULT_TIMEOUT,
+    def __init__(self, marionette, timeout=None,
                  interval=DEFAULT_INTERVAL, ignored_exceptions=None,
                  clock=None):
         """Configure the Wait instance to have a custom timeout, interval, and
@@ -40,32 +37,29 @@ class Wait(object):
             # every 5 seconds.
             wait = Wait(marionette, timeout=30, interval=5,
                         ignored_exceptions=errors.NoSuchWindowException)
-            window = wait.until(lambda marionette: marionette.switch_to_window(42))
+            window = wait.until(lambda m: m.switch_to_window(42))
 
         :param marionette: The input value to be provided to
             conditions, usually a Marionette instance.
-
         :param timeout: How long to wait for the evaluated condition
-            to become true.  The default time is wait.DEFAULT_TIMEOUT.
-
+            to become true.  The default timeout is the `timeout`
+            property on the `Marionette` object if set, or
+            `wait.DEFAULT_TIMEOUT`.
         :param interval: How often the condition should be evaluated.
             In reality the interval may be greater as the cost of
             evaluating the condition function is not factored in.  The
-            default polling interval is wait.DEFAULT_INTERVAL.
-
+            default polling interval is `wait.DEFAULT_INTERVAL`.
         :param ignored_exceptions: Ignore specific types of exceptions
             whilst waiting for the condition.  Any exceptions not
             whitelisted will be allowed to propagate, terminating the
             wait.
-
         :param clock: Allows overriding the use of the runtime's
-            default time library.  See wait.SystemClock for
+            default time library.  See `wait.SystemClock` for
             implementation details.
-
         """
-
         self.marionette = marionette
-        self.timeout = timeout
+        self.timeout = timeout or (self.marionette.timeout and
+                                   self.marionette.timeout / 1000.0) or DEFAULT_TIMEOUT
         self.clock = clock or SystemClock()
         self.end = self.clock.now + self.timeout
         self.interval = interval
@@ -78,7 +72,6 @@ class Wait(object):
                 exceptions.append(ignored_exceptions)
         self.exceptions = tuple(set(exceptions))
 
-
     def until(self, condition, is_true=None):
         """Repeatedly runs condition until its return value evaluates to true,
         or its timeout expires or the predicate evaluates to true.
@@ -87,14 +80,12 @@ class Wait(object):
         is reached, or the predicate or conditions returns true.  A
         condition that returns null or does not evaluate to true will
         fully elapse its timeout before raising an
-        errors.TimeoutException.
-
+        `errors.TimeoutException`.
         If an exception is raised in the condition function and it's
         not ignored, this function will raise immediately.  If the
         exception is ignored, it will continue polling for the
-        condition until it returns successfully or a TimeoutException
-        is raised.
-
+        condition until it returns successfully or a
+        `TimeoutException` is raised.
         :param condition: A callable function whose return value will
             be returned by this function if it evaluates to true.
 
@@ -109,6 +100,7 @@ class Wait(object):
         rv = None
         last_exc = None
         until = is_true or until_pred
+        start = self.clock.now
 
         while not until(self.clock, self.end):
             try:
@@ -130,7 +122,8 @@ class Wait(object):
         if last_exc is not None:
             raise last_exc
 
-        raise errors.TimeoutException
+        raise errors.TimeoutException(
+            "Timed out after %s seconds" % (self.clock.now - start))
 
 def until_pred(clock, end):
     return clock.now >= end

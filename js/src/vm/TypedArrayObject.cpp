@@ -151,10 +151,10 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
 {
     JS_ASSERT(IsArrayBuffer(args.thisv()));
 
-    Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+    Rooted<ArrayBufferObject*> thisObj(cx, &args.thisv().toObject().as<ArrayBufferObject>());
 
     // these are the default values
-    uint32_t length = thisObj->as<ArrayBufferObject>().byteLength();
+    uint32_t length = thisObj->byteLength();
     uint32_t begin = 0, end = length;
 
     if (args.length() > 0) {
@@ -170,7 +170,7 @@ ArrayBufferObject::fun_slice_impl(JSContext *cx, CallArgs args)
     if (begin > end)
         begin = end;
 
-    JSObject *nobj = createSlice(cx, thisObj->as<ArrayBufferObject>(), begin, end);
+    JSObject *nobj = createSlice(cx, thisObj, begin, end);
     if (!nobj)
         return false;
     args.rval().setObject(*nobj);
@@ -182,6 +182,18 @@ ArrayBufferObject::fun_slice(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsArrayBuffer, fun_slice_impl>(cx, args);
+}
+
+/*
+ * ArrayBuffer.isView(obj); ES6 (Dec 2013 draft) 24.1.3.1
+ */
+bool
+ArrayBufferObject::fun_isView(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(args.get(0).isObject() &&
+                           JS_IsArrayBufferViewObject(&args.get(0).toObject()));
+    return true;
 }
 
 /*
@@ -219,7 +231,7 @@ ArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *vp)
  * then realloc.
  */
 static ObjectElements *
-AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *initdata, void *oldptr = nullptr)
+AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = nullptr)
 {
     uint32_t size = nbytes + sizeof(ObjectElements);
     ObjectElements *newheader;
@@ -242,9 +254,6 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *initda
         return nullptr;
     }
 
-    if (initdata)
-        memcpy(newheader->elements(), initdata, nbytes);
-
     // we rely on this being correct
     ArrayBufferObject::updateElementsHeader(newheader, nbytes);
 
@@ -252,7 +261,7 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, uint8_t *initda
 }
 
 bool
-ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *contents)
+ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, bool clear)
 {
     /*
      * ArrayBufferObjects delegate added properties to another JSObject, so
@@ -264,16 +273,14 @@ ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, uint8_t *co
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
     if (bytes > sizeof(Value) * usableSlots) {
-        ObjectElements *header = AllocateArrayBufferContents(maybecx, bytes, contents);
+        ObjectElements *header = AllocateArrayBufferContents(maybecx, bytes);
         if (!header)
             return false;
         elements = header->elements();
     } else {
-        elements = fixedElements();
-        if (contents)
-            memcpy(elements, contents, bytes);
-        else
-            memset(elements, 0, bytes);
+        setFixedElements();
+        if (clear)
+            memset(dataPointer(), 0, bytes);
     }
 
     initElementsHeader(getElementsHeader(), bytes);
@@ -425,10 +432,11 @@ ArrayBufferObject::neuter(JSContext *cx)
 bool
 ArrayBufferObject::copyData(JSContext *maybecx)
 {
-    ObjectElements *newHeader = AllocateArrayBufferContents(maybecx, byteLength(), dataPointer());
+    ObjectElements *newHeader = AllocateArrayBufferContents(maybecx, byteLength());
     if (!newHeader)
         return false;
 
+    memcpy(reinterpret_cast<void*>(newHeader->elements()), dataPointer(), byteLength());
     changeContents(maybecx, newHeader);
     return true;
 }
@@ -454,11 +462,12 @@ ArrayBufferObject::getTransferableContents(JSContext *maybecx, bool *callerOwns)
     }
 
     uint32_t byteLen = byteLength();
-    ObjectElements *newheader = AllocateArrayBufferContents(maybecx, byteLen, dataPointer());
+    ObjectElements *newheader = AllocateArrayBufferContents(maybecx, byteLen);
     if (!newheader)
         return nullptr;
 
     initElementsHeader(newheader, byteLen);
+    memcpy(reinterpret_cast<void*>(newheader->elements()), dataPointer(), byteLen);
     *callerOwns = true;
     return newheader;
 }
@@ -617,10 +626,8 @@ ArrayBufferObject::addView(ArrayBufferViewObject *view)
 }
 
 JSObject *
-ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
+ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */)
 {
-    SkipRoot skip(cx, &contents);
-
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
     if (!obj)
         return nullptr;
@@ -638,25 +645,29 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, uint8_t *contents)
      * The beginning stores an ObjectElements header structure holding the
      * length. The rest of it is a flat data store for the array buffer.
      */
-    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, contents))
+    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, clear))
         return nullptr;
 
     return obj;
 }
 
 JSObject *
-ArrayBufferObject::createSlice(JSContext *cx, ArrayBufferObject &arrayBuffer,
+ArrayBufferObject::createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                uint32_t begin, uint32_t end)
 {
-    JS_ASSERT(begin <= arrayBuffer.byteLength());
-    JS_ASSERT(end <= arrayBuffer.byteLength());
+    JS_ASSERT(begin <= arrayBuffer->byteLength());
+    JS_ASSERT(end <= arrayBuffer->byteLength());
     JS_ASSERT(begin <= end);
     uint32_t length = end - begin;
 
-    if (arrayBuffer.hasData())
-        return create(cx, length, arrayBuffer.dataPointer() + begin);
+    if (!arrayBuffer->hasData())
+        return create(cx, 0);
 
-    return create(cx, 0);
+    JSObject *slice = create(cx, length, false);
+    if (!slice)
+        return nullptr;
+    memcpy(slice->as<ArrayBufferObject>().dataPointer(), arrayBuffer->dataPointer() + begin, length);
+    return slice;
 }
 
 bool
@@ -3473,6 +3484,11 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
     JS_FS_END
 };
 
+const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
+    JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
+    JS_FS_END
+};
+
 /*
  * TypedArrayObject boilerplate
  */
@@ -3762,6 +3778,9 @@ InitArrayBufferClass(JSContext *cx)
     RootedValue value(cx, UndefinedValue());
     if (!DefineNativeProperty(cx, arrayBufferProto, byteLengthId, value,
                               JS_DATA_TO_FUNC_PTR(PropertyOp, getter), nullptr, flags, 0, 0))
+        return nullptr;
+
+    if (!JS_DefineFunctions(cx, ctor, ArrayBufferObject::jsstaticfuncs))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, arrayBufferProto, ArrayBufferObject::jsfuncs))
@@ -4061,7 +4080,7 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 JS_PUBLIC_API(bool)
 JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, nullptr);
+    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
     if (!header)
         return false;
 
@@ -4075,7 +4094,7 @@ JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, 
 JS_PUBLIC_API(bool)
 JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, nullptr, *contents);
+    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, *contents);
     if (!header)
         return false;
 

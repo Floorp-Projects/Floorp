@@ -37,23 +37,29 @@ Slot::Slot() :
     m_next(NULL), m_prev(NULL),
     m_glyphid(0), m_realglyphid(0), m_original(0), m_before(0), m_after(0),
     m_index(0), m_parent(NULL), m_child(NULL), m_sibling(NULL),
-    m_position(0, 0), m_shift(0, 0), m_advance(-1, -1),
+    m_position(0, 0), m_shift(0, 0), m_advance(0, 0),
     m_attach(0, 0), m_with(0, 0), m_just(0.),
-    m_flags(0), m_attLevel(0), m_bidiCls(0), m_bidiLevel(0), m_justs(NULL)
+    m_flags(0), m_attLevel(0), m_bidiCls(-1), m_bidiLevel(0), m_justs(NULL)
     // Do not set m_userAttr since it is set *before* new is called since this
     // is used as a positional new to reset the GrSlot
 {
 }
 
 // take care, this does not copy any of the GrSlot pointer fields
-void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t justLevels)
+void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t justLevels, size_t numChars)
 {
     // leave m_next and m_prev unchanged
     m_glyphid = orig.m_glyphid;
     m_realglyphid = orig.m_realglyphid;
     m_original = orig.m_original + charOffset;
-    m_before = orig.m_before + charOffset;
-    m_after = orig.m_after + charOffset;
+    if (charOffset + int(orig.m_before) < 0)
+        m_before = 0;
+    else
+        m_before = orig.m_before + charOffset;
+    if (charOffset <= 0 && orig.m_after + charOffset >= numChars)
+        m_after = numChars - 1;
+    else
+        m_after = orig.m_after + charOffset;
     m_parent = NULL;
     m_child = NULL;
     m_sibling = NULL;
@@ -67,13 +73,9 @@ void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t jus
     m_bidiCls = orig.m_bidiCls;
     m_bidiLevel = orig.m_bidiLevel;
     if (m_userAttr && orig.m_userAttr)
-    {
         memcpy(m_userAttr, orig.m_userAttr, numUserAttr * sizeof(*m_userAttr));
-    }
     if (m_justs && orig.m_justs)
-    {
         memcpy(m_justs, orig.m_justs, SlotJustify::size_of(justLevels));
-    }
 }
 
 void Slot::update(int /*numGrSlots*/, int numCharInfo, Position &relpos)
@@ -194,32 +196,35 @@ int Slot::getAttr(const Segment *seg, attrCode ind, uint8 subindex) const
 
     switch (ind)
     {
-    case gr_slatAdvX :		return int(m_advance.x);
-    case gr_slatAdvY :		return int(m_advance.y);
-    case gr_slatAttTo :		return m_parent ? 1 : 0;
-    case gr_slatAttX :		return int(m_attach.x);
-    case gr_slatAttY :  	return int(m_attach.y);
+    case gr_slatAdvX :      return int(m_advance.x);
+    case gr_slatAdvY :      return int(m_advance.y);
+    case gr_slatAttTo :     return m_parent ? 1 : 0;
+    case gr_slatAttX :      return int(m_attach.x);
+    case gr_slatAttY :      return int(m_attach.y);
     case gr_slatAttXOff :
-    case gr_slatAttYOff :	return 0;
+    case gr_slatAttYOff :   return 0;
     case gr_slatAttWithX :  return int(m_with.x);
     case gr_slatAttWithY :  return int(m_with.y);
     case gr_slatAttWithXOff:
     case gr_slatAttWithYOff:return 0;
-    case gr_slatAttLevel :	return m_attLevel;
-    case gr_slatBreak :		return seg->charinfo(m_original)->breakWeight();
-    case gr_slatCompRef : 	return 0;
-    case gr_slatDir :		return seg->dir();
-    case gr_slatInsert :	return isInsertBefore();
-    case gr_slatPosX :		return int(m_position.x); // but need to calculate it
-    case gr_slatPosY :		return int(m_position.y);
-    case gr_slatShiftX :	return int(m_shift.x);
-    case gr_slatShiftY :	return int(m_shift.y);
-    case gr_slatMeasureSol:	return -1; // err what's this?
+    case gr_slatAttLevel :  return m_attLevel;
+    case gr_slatBreak :     return seg->charinfo(m_original)->breakWeight();
+    case gr_slatCompRef :   return 0;
+    case gr_slatDir :       if (m_bidiCls == -1)
+                                const_cast<Slot *>(this)->setBidiClass(seg->glyphAttr(gid(), seg->silf()->aBidi()));
+                            return m_bidiCls;
+    case gr_slatInsert :    return isInsertBefore();
+    case gr_slatPosX :      return int(m_position.x); // but need to calculate it
+    case gr_slatPosY :      return int(m_position.y);
+    case gr_slatShiftX :    return int(m_shift.x);
+    case gr_slatShiftY :    return int(m_shift.y);
+    case gr_slatMeasureSol: return -1; // err what's this?
     case gr_slatMeasureEol: return -1;
-    case gr_slatJWidth:     return m_just;
-    case gr_slatUserDefn :	return m_userAttr[subindex];
+    case gr_slatJWidth:     return int(m_just);
+    case gr_slatUserDefn :  return m_userAttr[subindex];
     case gr_slatSegSplit :  return seg->charinfo(m_original)->flags() & 3;
-    default :				return 0;
+    case gr_slatBidiLevel:  return m_bidiLevel;
+    default :               return 0;
     }
 }
 
@@ -239,8 +244,8 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
 
     switch (ind)
     {
-    case gr_slatAdvX :	m_advance.x = value; break;
-    case gr_slatAdvY :	m_advance.y = value; break;
+    case gr_slatAdvX :  m_advance.x = value; break;
+    case gr_slatAdvY :  m_advance.y = value; break;
     case gr_slatAttTo :
     {
         const uint16 idx = uint16(value);
@@ -260,36 +265,36 @@ void Slot::setAttr(Segment *seg, attrCode ind, uint8 subindex, int16 value, cons
         }
         break;
     }
-    case gr_slatAttX :			m_attach.x = value; break;
-    case gr_slatAttY :			m_attach.y = value; break;
+    case gr_slatAttX :          m_attach.x = value; break;
+    case gr_slatAttY :          m_attach.y = value; break;
     case gr_slatAttXOff :
-    case gr_slatAttYOff :		break;
-    case gr_slatAttWithX :		m_with.x = value; break;
-    case gr_slatAttWithY :		m_with.y = value; break;
+    case gr_slatAttYOff :       break;
+    case gr_slatAttWithX :      m_with.x = value; break;
+    case gr_slatAttWithY :      m_with.y = value; break;
     case gr_slatAttWithXOff :
-    case gr_slatAttWithYOff :	break;
+    case gr_slatAttWithYOff :   break;
     case gr_slatAttLevel :
         m_attLevel = byte(value);
         break;
     case gr_slatBreak :
         seg->charinfo(m_original)->breakWeight(value);
         break;
-    case gr_slatCompRef :	break;      // not sure what to do here
-    case gr_slatDir :		break;  // read only
+    case gr_slatCompRef :   break;      // not sure what to do here
+    case gr_slatDir :       m_bidiCls = value; break;
     case gr_slatInsert :
         markInsertBefore(value? true : false);
         break;
-    case gr_slatPosX :		break; // can't set these here
-    case gr_slatPosY :		break;
-    case gr_slatShiftX :	m_shift.x = value; break;
+    case gr_slatPosX :      break; // can't set these here
+    case gr_slatPosY :      break;
+    case gr_slatShiftX :    m_shift.x = value; break;
     case gr_slatShiftY :    m_shift.y = value; break;
-    case gr_slatMeasureSol :	break;
-    case gr_slatMeasureEol :	break;
-    case gr_slatJWidth :	just(value); break;
+    case gr_slatMeasureSol :    break;
+    case gr_slatMeasureEol :    break;
+    case gr_slatJWidth :    just(value); break;
     case gr_slatSegSplit :  seg->charinfo(m_original)->addflags(value & 3); break;
     case gr_slatUserDefn :  m_userAttr[subindex] = value; break;
     default :
-    	break;
+        break;
     }
 }
 
@@ -319,6 +324,7 @@ void Slot::setJustify(Segment *seg, uint8 level, uint8 subindex, int16 value)
     if (!m_justs)
     {
         SlotJustify *j = seg->newJustify();
+        if (!j) return;
         j->LoadSlot(this, seg);
         m_justs = j;
     }

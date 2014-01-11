@@ -14,16 +14,13 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, builtinclass, uuid(a974a4d3-2ff1-445b-8b8e-0aada5d4eedc)]
+[scriptable, builtinclass, uuid(58f9b5f5-0e39-4999-85b1-095895569c0e)]
 interface nsIDOMAttr : nsIDOMNode
 {
   readonly attribute DOMString            name;
   readonly attribute boolean              specified;
            attribute DOMString            value;
                                             // raises(DOMException) on setting
-
-  // Introduced in DOM Level 2:
-  readonly attribute  nsIDOMElement       ownerElement;
 
   readonly attribute boolean              isId;
 };

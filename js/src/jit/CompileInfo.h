@@ -51,10 +51,12 @@ class CompileInfo
     {
         JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
 
-        // The function here can flow in from anywhere so look up the canonical function to ensure that
-        // we do not try to embed a nursery pointer in jit-code.
+        // The function here can flow in from anywhere so look up the canonical
+        // function to ensure that we do not try to embed a nursery pointer in
+        // jit-code. Precisely because it can flow in from anywhere, it's not
+        // guaranteed to be non-lazy. Hence, don't access its script!
         if (fun_) {
-            fun_ = fun_->nonLazyScript()->function();
+            fun_ = fun_->nonLazyScript()->functionNonDelazifying();
             JS_ASSERT(fun_->isTenured());
         }
 
@@ -80,7 +82,7 @@ class CompileInfo
     JSScript *script() const {
         return script_;
     }
-    JSFunction *fun() const {
+    JSFunction *funMaybeLazy() const {
         return fun_;
     }
     bool constructing() const {
@@ -174,7 +176,7 @@ class CompileInfo
         return 2;
     }
     uint32_t thisSlot() const {
-        JS_ASSERT(fun());
+        JS_ASSERT(funMaybeLazy());
         JS_ASSERT(nimplicit_ > 0);
         return nimplicit_ - 1;
     }
@@ -213,16 +215,16 @@ class CompileInfo
     }
     uint32_t endArgSlot() const {
         JS_ASSERT(script());
-        return CountArgSlots(script(), fun());
+        return CountArgSlots(script(), funMaybeLazy());
     }
 
     uint32_t totalSlots() const {
-        JS_ASSERT(script() && fun());
+        JS_ASSERT(script() && funMaybeLazy());
         return nimplicit() + nargs() + nlocals();
     }
 
     bool isSlotAliased(uint32_t index) const {
-        if (fun() && index == thisSlot())
+        if (funMaybeLazy() && index == thisSlot())
             return false;
 
         uint32_t arg = index - firstArgSlot();

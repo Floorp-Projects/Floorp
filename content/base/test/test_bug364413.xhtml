@@ -29,7 +29,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=364413
   var attrNode = test1.getAttributeNodeNS("http://www.foobar.com", "foo");
   function mutationHandler(aEvent) {
     ok(attrNode == aEvent.relatedNode);
-    ok(aEvent.target == attrNode.ownerElement);
   }
 
   function runTest() {

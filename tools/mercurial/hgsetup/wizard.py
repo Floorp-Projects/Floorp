@@ -44,12 +44,6 @@ send patches to Mozilla, you'll need to attach a name and email address. If you
 aren't comfortable giving us your full name, pseudonames are acceptable.
 '''.strip()
 
-EXTENSIONS_BEGIN = '''
-I can help you configure a number of Mercurial extensions to make your life
-easier and more productive. I'm going to ask you a series of questions about
-what extensions you want enabled.
-'''.strip()
-
 BAD_DIFF_SETTINGS = '''
 Mozilla developers produce patches in a standard format, but your Mercurial is
 not configured to produce patches in that format.
@@ -152,6 +146,14 @@ class MercurialSetupWizard(object):
                 'to your terminal'):
                 c.activate_extension('color')
                 print('Activated color extension.')
+                print('')
+
+        if 'rebase' not in active:
+            if self._prompt_yn('Would you like to enable the rebase extension '
+                'to allow you to move changesets around (which can help '
+                'maintain a linear history)'):
+                c.activate_extension('rebase')
+                print('Activated rebase extension.')
                 print('')
 
         update_bzexport = 'bzexport' in active

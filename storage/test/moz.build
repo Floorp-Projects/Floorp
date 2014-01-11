@@ -32,3 +32,4 @@ LOCAL_INCLUDES += [
     '../src',
 ]
 
+FAIL_ON_WARNINGS = True

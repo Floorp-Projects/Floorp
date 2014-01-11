@@ -403,7 +403,7 @@ BluetoothRequestParent::DoRequest(const ConnectedDevicePropertiesRequest& aReque
   MOZ_ASSERT(mRequestType == Request::TConnectedDevicePropertiesRequest);
   nsresult rv =
     mService->GetConnectedDevicePropertiesInternal(aRequest.serviceUuid(),
-                                                mReplyRunnable.get());
+                                                   mReplyRunnable.get());
   NS_ENSURE_SUCCESS(rv, false);
 
   return true;

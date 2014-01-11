@@ -15,8 +15,10 @@ var FindHelperUI = {
     close: "cmd_findClose"
   },
 
+  _finder: null,
   _open: false,
   _status: null,
+  _searchString: "",
 
   /*
    * Properties
@@ -50,33 +52,11 @@ var FindHelperUI = {
 
     this._textbox.addEventListener("keydown", this);
 
-    // Listen for find assistant messages from content
-    messageManager.addMessageListener("FindAssist:Show", this);
-    messageManager.addMessageListener("FindAssist:Hide", this);
-
     // Listen for events where form assistant should be closed
     Elements.tabList.addEventListener("TabSelect", this, true);
     Elements.browsers.addEventListener("URLChanged", this, true);
     window.addEventListener("MozAppbarShowing", this);
-  },
-
-  receiveMessage: function findHelperReceiveMessage(aMessage) {
-    let json = aMessage.json;
-    switch(aMessage.name) {
-      case "FindAssist:Show":
-        ContextUI.dismiss();
-        this.status = json.result;
-        // null rect implies nothing found
-        if (json.rect) {
-          this._zoom(Rect.fromRect(json.rect), json.contentHeight);
-        }
-        break;
-
-      case "FindAssist:Hide":
-        if (this._container.getAttribute("type") == this.type)
-          this.hide();
-        break;
-    }
+    window.addEventListener("MozFlyoutPanelShowing", this, false);
   },
 
   handleEvent: function findHelperHandleEvent(aEvent) {
@@ -92,15 +72,13 @@ var FindHelperUI = {
 
       case "keydown":
         if (aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
-          if (aEvent.shiftKey) {
-            this.goToPrevious();
-          } else {
-            this.goToNext();
-          }
+          let backwardsSearch = aEvent.shiftKey;
+          this.searchAgain(this._searchString, backwardsSearch);
         }
         break;
 
       case "MozAppbarShowing":
+      case "MozFlyoutPanelShowing":
         if (aEvent.target != this._container) {
           this.hide();
         }
@@ -151,7 +129,10 @@ var FindHelperUI = {
       this._textbox.value = "";
       this.status = null;
       this._open = false;
-
+      if (this._finder) {
+        this._finder.removeResultListener(this);
+        this._finder = null
+      }
       // Restore the scroll synchronisation
       Browser.selectedBrowser.scrollSync = true;
     };
@@ -161,22 +142,47 @@ var FindHelperUI = {
     this._container.dismiss();
   },
 
+  search: function findHelperSearch(aValue) {
+    if (!this._finder) {
+      this._finder = Browser.selectedBrowser.finder;
+      this._finder.addResultListener(this);
+    }
+    this._searchString = aValue;
+    if (aValue != "") {
+      this._finder.fastFind(aValue, false, false);
+    } else {
+      this.updateCommands();
+    }
+  },
+
+  searchAgain: function findHelperSearchAgain(aValue, aFindBackwards) {
+    // This can happen if the user taps next/previous after re-opening the search bar
+    if (!this._finder) {
+      this.search(aValue);
+      return;
+    }
+
+    this._finder.findAgain(aFindBackwards, false, false);
+  },
+
   goToPrevious: function findHelperGoToPrevious() {
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Previous", { });
+    this.searchAgain(this._searchString, true);
   },
 
   goToNext: function findHelperGoToNext() {
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Next", { });
+    this.searchAgain(this._searchString, false);
   },
 
-  search: function findHelperSearch(aValue) {
-    this.updateCommands(aValue);
-
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("FindAssist:Find", { searchString: aValue });
+  onFindResult: function(aResult, aFindBackwards, aLinkURL, aRect) {
+    this._status = aResult;
+    if (aRect) {
+      this._zoom(aRect, Browser.selectedBrowser.contentDocumentHeight);
+    }
+    this.updateCommands();
   },
 
-  updateCommands: function findHelperUpdateCommands(aValue) {
-    let disabled = (this._status == Ci.nsITypeAheadFind.FIND_NOTFOUND) || (aValue == "");
+  updateCommands: function findHelperUpdateCommands() {
+    let disabled = (this._status == Ci.nsITypeAheadFind.FIND_NOTFOUND) || (this._searchString == "");
     this._cmdPrevious.setAttribute("disabled", disabled);
     this._cmdNext.setAttribute("disabled", disabled);
   },

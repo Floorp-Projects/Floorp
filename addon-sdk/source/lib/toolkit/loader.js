@@ -39,6 +39,9 @@ const { loadSubScript } = Cc['@mozilla.org/moz/jssubscript-loader;1'].
 const { notifyObservers } = Cc['@mozilla.org/observer-service;1'].
                         getService(Ci.nsIObserverService);
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const { Reflect } = Cu.import("resource://gre/modules/reflect.jsm", {});
+const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm");
+const { join: pathJoin, normalize, dirname } = Cu.import("resource://gre/modules/osfile/ospath_unix.jsm");
 
 // Define some shortcuts.
 const bind = Function.call.bind(Function.bind);
@@ -49,6 +52,7 @@ const prototypeOf = Object.getPrototypeOf;
 const create = Object.create;
 const keys = Object.keys;
 
+const NODE_MODULES = ["assert", "buffer_ieee754", "buffer", "child_process", "cluster", "console", "constants", "crypto", "_debugger", "dgram", "dns", "domain", "events", "freelist", "fs", "http", "https", "_linklist", "module", "net", "os", "path", "punycode", "querystring", "readline", "repl", "stream", "string_decoder", "sys", "timers", "tls", "tty", "url", "util", "vm", "zlib"];
 
 const COMPONENT_ERROR = '`Components` is not available in this context.\n' +
   'Functionality provided by Components may be available in an SDK\n' +
@@ -122,7 +126,6 @@ const override = iced(function override(target, source) {
 });
 exports.override = override;
 
-
 function sourceURI(uri) { return String(uri).split(" -> ").pop(); }
 exports.sourceURI = iced(sourceURI);
 
@@ -170,6 +173,19 @@ function readURI(uri) {
   return data;
 }
 
+// Combines all arguments into a resolved, normalized path
+function join (...paths) {
+  let resolved = normalize(pathJoin(...paths))
+  // OS.File `normalize` strips out the second slash in
+  // `resource://` or `chrome://`, and third slash in
+  // `file:///`, so we work around this
+  resolved = resolved.replace(/^resource\:\/([^\/])/, 'resource://$1');
+  resolved = resolved.replace(/^file\:\/([^\/])/, 'file:///$1');
+  resolved = resolved.replace(/^chrome\:\/([^\/])/, 'chrome://$1');
+  return resolved;
+}
+exports.join = join;
+
 // Function takes set of options and returns a JS sandbox. Function may be
 // passed set of options:
 //  - `name`: A string value which identifies the sandbox in about:memory. Will
@@ -200,6 +216,8 @@ const Sandbox = iced(function Sandbox(options) {
                           options.wantGlobalProperties : [],
     sandboxPrototype: 'prototype' in options ? options.prototype : {},
     sameGroupAs: 'sandbox' in options ? options.sandbox : null,
+    invisibleToDebugger: 'invisibleToDebugger' in options ?
+                         options.invisibleToDebugger : false,
     metadata: 'metadata' in options ? options.metadata : {}
   };
 
@@ -270,6 +288,7 @@ const load = iced(function load(loader, module) {
     prototype: create(globals, descriptors),
     wantXrays: false,
     wantGlobalProperties: module.id == "sdk/indexed-db" ? ["indexedDB"] : [],
+    invisibleToDebugger: loader.invisibleToDebugger,
     metadata: {
       addonID: loader.id,
       URI: module.uri
@@ -323,39 +342,173 @@ const load = iced(function load(loader, module) {
 });
 exports.load = load;
 
-// Utility function to check if id is relative.
-function isRelative(id) { return id[0] === '.'; }
 // Utility function to normalize module `uri`s so they have `.js` extension.
-function normalize(uri) {
+function normalizeExt (uri) {
   return isJSURI(uri) ? uri :
          isJSONURI(uri) ? uri :
+         isJSMURI(uri) ? uri :
          uri + '.js';
 }
+
+// Strips `rootURI` from `string` -- used to remove absolute resourceURI
+// from a relative path
+function stripBase (rootURI, string) {
+  return string.replace(rootURI, './');
+}
+
 // Utility function to join paths. In common case `base` is a
 // `requirer.uri` but in some cases it may be `baseURI`. In order to
 // avoid complexity we require `baseURI` with a trailing `/`.
 const resolve = iced(function resolve(id, base) {
   if (!isRelative(id)) return id;
-  let paths = id.split('/');
-  let result = base.split('/');
-  result.pop();
-  while (paths.length) {
-    let path = paths.shift();
-    if (path === '..')
-      result.pop();
-    else if (path !== '.')
-      result.push(path);
-  }
-  return result.join('/');
+  let basePaths = base.split('/');
+  // Pop the last element in the `base`, because it is from a
+  // relative file
+  // '../mod.js' from '/path/to/file.js' should resolve to '/path/mod.js'
+  basePaths.pop();
+  if (!basePaths.length)
+    return normalize(id);
+  let resolved = join(basePaths.join('/'), id);
+
+  // Joining and normalizing removes the './' from relative files.
+  // We need to ensure the resolution still has the root
+  if (isRelative(base))
+    resolved = './' + resolved;
+
+  return resolved;
 });
 exports.resolve = resolve;
 
+// Node-style module lookup
+// Takes an id and path and attempts to load a file using node's resolving
+// algorithm.
+// `id` should already be resolved relatively at this point.
+// http://nodejs.org/api/modules.html#modules_all_together
+const nodeResolve = iced(function nodeResolve(id, requirer, { manifest, rootURI }) {
+  // Resolve again
+  id = exports.resolve(id, requirer);
+
+  // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
+  // and a js file isn't named 'file.json.js'
+
+  let fullId = join(rootURI, id);
+
+  let resolvedPath;
+  if (resolvedPath = loadAsFile(fullId))
+    return stripBase(rootURI, resolvedPath);
+  else if (resolvedPath = loadAsDirectory(fullId))
+    return stripBase(rootURI, resolvedPath);
+  // If manifest has dependencies, attempt to look up node modules
+  // in the `dependencies` list
+  else if (manifest.dependencies) {
+    let dirs = getNodeModulePaths(dirname(join(rootURI, requirer))).map(dir => join(dir, id));
+    for (let i = 0; i < dirs.length; i++) {
+      if (resolvedPath = loadAsFile(dirs[i]))
+        return stripBase(rootURI, resolvedPath);
+      if (resolvedPath = loadAsDirectory(dirs[i]))
+        return stripBase(rootURI, resolvedPath);
+    }
+  }
+
+  // We would not find lookup for things like `sdk/tabs`, as that's part of
+  // the alias mapping. If during `generateMap`, the runtime lookup resolves
+  // with `resolveURI` -- if during runtime, then `resolve` will throw.
+  return void 0;
+});
+exports.nodeResolve = nodeResolve;
+
+// Attempts to load `path` and then `path.js`
+// Returns `path` with valid file, or `undefined` otherwise
+function loadAsFile (path) {
+  let found;
+
+  // As per node's loader spec,
+  // we first should try and load 'path' (with no extension)
+  // before trying 'path.js'. We will not support this feature
+  // due to performance, but may add it if necessary for adoption.
+  try {
+    // Append '.js' to path name unless it's another support filetype
+    path = normalizeExt(path);
+    readURI(path);
+    found = path;
+  } catch (e) {}
+
+  return found;
+}
+
+// Attempts to load `path/package.json`'s `main` entry,
+// followed by `path/index.js`, or `undefined` otherwise
+function loadAsDirectory (path) {
+  let found;
+  try {
+    // If `path/package.json` exists, parse the `main` entry
+    // and attempt to load that
+    let main = getManifestMain(JSON.parse(readURI(path + '/package.json')));
+    if (main != null) {
+      let tmpPath = join(path, main);
+      if (found = loadAsFile(tmpPath))
+        return found
+    }
+    try {
+      let tmpPath = path + '/index.js';
+      readURI(tmpPath);
+      return tmpPath;
+    } catch (e) {}
+  } catch (e) {
+    try {
+      let tmpPath = path + '/index.js';
+      readURI(tmpPath);
+      return tmpPath;
+    } catch (e) {}
+  }
+  return void 0;
+}
+
+// From `resolve` module
+// https://github.com/substack/node-resolve/blob/master/lib/node-modules-paths.js
+function getNodeModulePaths (start) {
+  // Configurable in node -- do we need this to be configurable?
+  let moduleDir = 'node_modules';
+
+  let parts = start.split('/');
+  let dirs = [];
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (parts[i] === moduleDir) continue;
+    let dir = join(parts.slice(0, i + 1).join('/'), moduleDir);
+    dirs.push(dir);
+  }
+  return dirs;
+}
+
+
+function addTrailingSlash (path) {
+  return !path ? null : !path.endsWith('/') ? path + '/' : path;
+}
+
+// Utility function to determine of module id `name` is a built in
+// module in node (fs, path, etc.);
+function isNodeModule (name) {
+  return !!~NODE_MODULES.indexOf(name);
+}
+
+// Make mapping array that is sorted from longest path to shortest path
+// to allow overlays. Used by `resolveURI`, returns an array
+function sortPaths (paths) {
+  return keys(paths).
+    sort(function(a, b) { return b.length - a.length }).
+    map(function(path) { return [ path, paths[path] ] });
+}
+
 const resolveURI = iced(function resolveURI(id, mapping) {
   let count = mapping.length, index = 0;
+
+  // Do not resolve if already a resource URI
+  if (isResourceURI(id)) return normalizeExt(id);
+
   while (index < count) {
     let [ path, uri ] = mapping[index ++];
     if (id.indexOf(path) === 0)
-      return normalize(id.replace(path, uri));
+      return normalizeExt(id.replace(path, uri));
   }
   return void 0; // otherwise we raise a warning, see bug 910304
 });
@@ -366,18 +519,60 @@ exports.resolveURI = resolveURI;
 // of `require` that is allowed to load only a modules that are associated
 // with it during link time.
 const Require = iced(function Require(loader, requirer) {
-  let { modules, mapping, resolve, load } = loader;
+  let {
+    modules, mapping, resolve, load, manifest, rootURI, isNative, requireMap
+  } = loader;
 
   function require(id) {
     if (!id) // Throw if `id` is not passed.
       throw Error('you must provide a module name when calling require() from '
                   + requirer.id, requirer.uri);
 
-    // Resolve `id` to its requirer if it's relative.
-    let requirement = requirer ? resolve(id, requirer.id) : id;
+    let requirement;
+    let uri;
+
+    // TODO should get native Firefox modules before doing node-style lookups
+    // to save on loading time
+
+    if (isNative) {
+      // If a requireMap is available from `generateMap`, use that to
+      // immediately resolve the node-style mapping.
+      if (requireMap && requireMap[requirer.id])
+        requirement = requireMap[requirer.id][id];
+
+      // For native modules, we want to check if it's a module specified
+      // in 'modules', like `chrome`, or `@loader` -- if it exists,
+      // just set the uri to skip resolution
+      if (!requirement && modules[id])
+        uri = requirement = id;
+
+      // If no requireMap was provided, or resolution not found in
+      // the requireMap, and not a npm dependency, attempt a runtime lookup
+      if (!requirement && !isNodeModule(id)) {
+        // If `isNative` defined, this is using the new, native-style
+        // loader, not cuddlefish, so lets resolve using node's algorithm
+        // and get back a path that needs to be resolved via paths mapping
+        // in `resolveURI`
+        requirement = resolve(id, requirer.id, {
+          manifest: manifest,
+          rootURI: rootURI
+        });
+      }
+
+      // If not found in the map, not a node module, and wasn't able to be
+      // looked up, it's something
+      // found in the paths most likely, like `sdk/tabs`, which should
+      // be resolved relatively if needed using traditional resolve
+      if (!requirement) {
+        requirement = isRelative(id) ? exports.resolve(id, requirer.id) : id;
+      }
+    } else {
+      // Resolve `id` to its requirer if it's relative.
+      requirement = requirer ? resolve(id, requirer.id) : id;
+    }
 
     // Resolves `uri` of module using loaders resolve function.
-    let uri = resolveURI(requirement, mapping);
+    uri = uri || resolveURI(requirement, mapping);
 
     if (!uri) // Throw if `uri` can not be resolved.
       throw Error('Module: Can not resolve "' + id + '" module required by ' +
@@ -387,6 +582,11 @@ const Require = iced(function Require(loader, requirer) {
     // If module is already cached by loader then just use it.
     if (uri in modules) {
       module = modules[uri];
+    }
+    else if (isJSMURI(uri)) {
+      module = modules[uri] = Module(requirement, uri);
+      module.exports = Cu.import(uri, {});
+      freeze(module);
     }
     else if (isJSONURI(uri)) {
       let data;
@@ -426,7 +626,11 @@ const Require = iced(function Require(loader, requirer) {
 exports.Require = Require;
 
 const main = iced(function main(loader, id) {
-  let uri = resolveURI(id, loader.mapping)
+  // If no main entry provided, and native loader is used,
+  // read the entry in the manifest
+  if (!id && loader.isNative)
+    id = getManifestMain(loader.manifest);
+  let uri = resolveURI(id, loader.mapping);
   let module = loader.main = loader.modules[uri] = Module(id, uri);
   return loader.load(loader, module).exports;
 });
@@ -472,11 +676,15 @@ exports.unload = unload;
 //   If `resolve` does not returns `uri` string exception will be thrown by
 //   an associated `require` call.
 const Loader = iced(function Loader(options) {
-  let { modules, globals, resolve, paths } = override({
+  let {
+    modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative
+  } = override({
     paths: {},
     modules: {},
     globals: {},
-    resolve: exports.resolve
+    resolve: options.isNative ?
+      exports.nodeResolve :
+      exports.resolve,
   }, options);
 
   // We create an identity object that will be dispatched on an unload
@@ -486,11 +694,7 @@ const Loader = iced(function Loader(options) {
   // observer notifications.
   let destructor = freeze(create(null));
 
-  // Make mapping array that is sorted from longest path to shortest path
-  // to allow overlays.
-  let mapping = keys(paths).
-    sort(function(a, b) { return b.length - a.length }).
-    map(function(path) { return [ path, paths[path] ] });
+  let mapping = sortPaths(paths);
 
   // Define pseudo modules.
   modules = override({
@@ -507,6 +711,10 @@ const Loader = iced(function Loader(options) {
   modules = keys(modules).reduce(function(result, id) {
     // We resolve `uri` from `id` since modules are cached by `uri`.
     let uri = resolveURI(id, mapping);
+    // In native loader, the mapping will not contain values for
+    // pseudomodules -- store them as their ID rather than the URI
+    if (isNative && !uri)
+      uri = id;
     let module = Module(id, uri);
     module.exports = freeze(modules[id]);
     result[uri] = freeze(module);
@@ -516,7 +724,7 @@ const Loader = iced(function Loader(options) {
   // Loader object is just a representation of a environment
   // state. We freeze it and mark make it's properties non-enumerable
   // as they are pure implementation detail that no one should rely upon.
-  return freeze(create(null, {
+  let returnObj = {
     destructor: { enumerable: false, value: destructor },
     globals: { enumerable: false, value: globals },
     mapping: { enumerable: false, value: mapping },
@@ -527,6 +735,9 @@ const Loader = iced(function Loader(options) {
     resolve: { enumerable: false, value: resolve },
     // ID of the addon, if provided.
     id: { enumerable: false, value: options.id },
+    // Whether the modules loaded should be ignored by the debugger
+    invisibleToDebugger: { enumerable: false,
+                           value: options.invisibleToDebugger || false },
     load: { enumerable: false, value: options.load || load },
     // Main (entry point) module, it can be set only once, since loader
     // instance can have only one main module.
@@ -539,12 +750,155 @@ const Loader = iced(function Loader(options) {
         set: function(module) { main = main || module; }
       }
     }
-  }));
+  };
+
+  if (isNative) {
+    returnObj.isNative = { enumerable: false, value: true };
+    returnObj.manifest = { enumerable: false, value: manifest };
+    returnObj.requireMap = { enumerable: false, value: requireMap };
+    returnObj.rootURI = { enumerable: false, value: addTrailingSlash(rootURI) };
+  }
+
+  return freeze(create(null, returnObj));
 });
 exports.Loader = Loader;
 
 let isJSONURI = uri => uri.substr(-5) === '.json';
+let isJSMURI = uri => uri.substr(-4) === '.jsm';
 let isJSURI = uri => uri.substr(-3) === '.js';
+let isResourceURI = uri => uri.substr(0, 11) === 'resource://';
+let isRelative = id => id[0] === '.'
+
+const generateMap = iced(function generateMap(options, callback) {
+  let { rootURI, resolve, paths } = override({
+    paths: {},
+    resolve: exports.nodeResolve
+  }, options);
+
+  rootURI = addTrailingSlash(rootURI);
+
+  let manifest;
+  let manifestURI = join(rootURI, 'package.json');
+
+  if (rootURI)
+    manifest = JSON.parse(readURI(manifestURI));
+  else
+    throw new Error('No `rootURI` given to generate map');
+
+  let main = getManifestMain(manifest);
+
+  findAllModuleIncludes(main, {
+    resolve: resolve,
+    manifest: manifest,
+    rootURI: rootURI
+  }, {}, callback);
+
+});
+exports.generateMap = generateMap;
+
+// Default `main` entry to './index.js' and ensure is relative,
+// since node allows 'lib/index.js' without relative `./`
+function getManifestMain (manifest) {
+  let main = manifest.main || './index.js';
+  return isRelative(main) ? main : './' + main;
+}
+
+function findAllModuleIncludes (uri, options, results, callback) {
+  let { resolve, manifest, rootURI } = options;
+  results = results || {};
+
+  // Abort if JSON or JSM
+  if (isJSONURI(uri) || isJSMURI(uri)) {
+    callback(results);
+    return void 0;
+  }
+
+  findModuleIncludes(join(rootURI, uri), modules => {
+    // If no modules are included in the file, just call callback immediately
+    if (!modules.length) {
+      callback(results);
+      return void 0;
+    }
+
+    results[uri] = modules.reduce((agg, mod) => {
+      let resolved = resolve(mod, uri, { manifest: manifest, rootURI: rootURI });
+
+      // If resolution found, store the resolution; otherwise,
+      // skip storing it as runtime lookup will handle this
+      if (!resolved)
+        return agg;
+      agg[mod] = resolved;
+      return agg;
+    }, {});
+
+    let includes = keys(results[uri]);
+    let count = 0;
+    let subcallback = () => { if (++count >= includes.length) callback(results) };
+    includes.map(id => {
+      let moduleURI = results[uri][id];
+      if (!results[moduleURI])
+        findAllModuleIncludes(moduleURI, options, results, subcallback);
+      else
+        subcallback();
+    });
+  });
+}
+
+// From Substack's detector
+// https://github.com/substack/node-detective
+//
+// Given a resource URI or source, return an array of strings passed into
+// the require statements from the source
+function findModuleIncludes (uri, callback) {
+  let src = isResourceURI(uri) ? readURI(uri) : uri;
+  let modules = [];
+
+  walk(src, function (node) {
+    if (isRequire(node))
+      modules.push(node.arguments[0].value);
+  });
+
+  callback(modules);
+}
+
+function walk (src, callback) {
+  let nodes = Reflect.parse(src);
+  traverse(nodes, callback);
+}
+
+function traverse (node, cb) {
+  if (Array.isArray(node)) {
+    node.map(x => {
+      if (x != null) {
+        x.parent = node;
+        traverse(x, cb);
+      }
+    });
+  }
+  else if (node && typeof node === 'object') {
+    cb(node);
+    keys(node).map(key => {
+      if (key === 'parent' || !node[key]) return;
+      node[key].parent = node;
+      traverse(node[key], cb);
+    });
+  }
+}
+
+// From Substack's detector
+// https://github.com/substack/node-detective
+// Check an AST node to see if its a require statement.
+// A modification added to only evaluate to true if it actually
+// has a value being passed in as an argument
+function isRequire (node) {
+  var c = node.callee;
+  return c
+    && node.type === 'CallExpression'
+    && c.type === 'Identifier'
+    && c.name === 'require'
+    && node.arguments.length
+   && node.arguments[0].type === 'Literal';
+}
 
 });
 

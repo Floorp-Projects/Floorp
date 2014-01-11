@@ -15,11 +15,6 @@ ifdef VPX_ARM_ASM
 ifeq ($(OS_TARGET),Android)
 # For cpu-features.h
 LOCAL_INCLUDES += -I$(ANDROID_NDK)/sources/android/cpufeatures
-ifndef MOZ_WEBRTC
-# For cpu-features.c
-VPATH += $(ANDROID_NDK)/sources/android/cpufeatures
-CSRCS += cpu-features.c
-endif
 endif
 
 ASM_OFFSETS = vpx_scale_asm_offsets.asm vp8_asm_enc_offsets.asm

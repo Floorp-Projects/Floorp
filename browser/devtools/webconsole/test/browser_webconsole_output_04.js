@@ -50,7 +50,7 @@ let inputTests = [
   {
     input: "testDOMException()",
     output: 'DOMException [SyntaxError: "An invalid or illegal string was specified"',
-    printOutput: '[Exception... \\"An invalid or illegal string was specified\\"',
+    printOutput: '[Exception... "An invalid or illegal string was specified"',
     inspectable: true,
     variablesViewLabel: "SyntaxError",
   },

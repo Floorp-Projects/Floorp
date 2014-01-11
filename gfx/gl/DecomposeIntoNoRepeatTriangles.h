@@ -10,6 +10,7 @@
 #include "GLTypes.h"
 #include "nsRect.h"
 #include "nsTArray.h"
+#include "gfx3DMatrix.h"
 
 namespace mozilla {
 namespace gl {
@@ -18,7 +19,7 @@ namespace gl {
   */
 class RectTriangles {
 public:
-    RectTriangles() { }
+    RectTriangles() : mIsSimpleQuad(false) { }
 
     // Always pass texture coordinates upright. If you want to flip the
     // texture coordinates emitted to the tex_coords array, set flip_y to
@@ -26,6 +27,16 @@ public:
     void addRect(GLfloat x0, GLfloat y0, GLfloat x1, GLfloat y1,
                   GLfloat tx0, GLfloat ty0, GLfloat tx1, GLfloat ty1,
                   bool flip_y = false);
+
+    // Returns whether this object is made of only one rect that can be drawn
+    // with a pre-buffered unity quad which has 0,0,1,1 as both vertex
+    // positions and texture coordinates.
+    // aOutTextureTransform returns the transform that maps 0,0,1,1 texture
+    // coordinates to the correct ones.
+    bool IsSimpleQuad(gfx3DMatrix& aOutTextureTransform) const {
+      aOutTextureTransform = mTextureTransform;
+      return mIsSimpleQuad;
+    }
 
     /**
       * these return a float pointer to the start of each array respectively.
@@ -50,6 +61,8 @@ private:
     // default is 4 rectangles, each made up of 2 triangles (3 coord vertices each)
     nsAutoTArray<vert_coord, 6> vertexCoords;
     nsAutoTArray<tex_coord, 6>  texCoords;
+    gfx3DMatrix mTextureTransform;
+    bool mIsSimpleQuad;
 };
 
 /**

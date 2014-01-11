@@ -93,9 +93,7 @@ public:
         if (m_entryCounts[length-1] + 1u > listSize)
         {
             if (m_entryCounts[length-1] == 0)
-            {
                 listSize = 1;
-            }
             else
             {
                 // the problem comes when you get incremental numeric ids in a large doc
@@ -105,9 +103,7 @@ public:
             }
             newEntries = gralloc<SegCacheEntry>(listSize);
             if (!newEntries)
-            {
                 return NULL;
-            }
         }        
 
         uint16 insertPos = 0;

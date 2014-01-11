@@ -4,10 +4,11 @@
 let tmp = {};
 Cu.import("resource://gre/modules/PageThumbs.jsm", tmp);
 Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", tmp);
+Cu.import("resource://gre/modules/NewTabUtils.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 Cu.import("resource://gre/modules/FileUtils.jsm", tmp);
 Cu.import("resource://gre/modules/osfile.jsm", tmp);
-let {PageThumbs, BackgroundPageThumbs, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
+let {PageThumbs, BackgroundPageThumbs, NewTabUtils, PageThumbsStorage, SessionStore, FileUtils, OS} = tmp;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
@@ -199,11 +200,12 @@ function removeThumbnail(aURL) {
  * Asynchronously adds visits to a page, invoking a callback function when done.
  *
  * @param aPlaceInfo
- *        Can be an nsIURI, in such a case a single LINK visit will be added.
- *        Otherwise can be an object describing the visit to add, or an array
- *        of these objects:
+ *        One of the following: a string spec, an nsIURI, an object describing
+ *        the Place as described below, or an array of any such types.  An
+ *        object describing a Place must look like this:
  *          { uri: nsIURI of the page,
- *            transition: one of the TRANSITION_* from nsINavHistoryService,
+ *            [optional] transition: one of the TRANSITION_* from
+ *                       nsINavHistoryService,
  *            [optional] title: title of the page,
  *            [optional] visitDate: visit date in microseconds from the epoch
  *            [optional] referrer: nsIURI of the referrer for this visit
@@ -225,6 +227,9 @@ function addVisits(aPlaceInfo, aCallback) {
   // Create mozIVisitInfo for each entry.
   let now = Date.now();
   for (let i = 0; i < places.length; i++) {
+    if (typeof(places[i] == "string")) {
+      places[i] = { uri: Services.io.newURI(places[i], "", null) };
+    }
     if (!places[i].title) {
       places[i].title = "test visit for " + places[i].uri.spec;
     }
@@ -249,6 +254,14 @@ function addVisits(aPlaceInfo, aCallback) {
       }
     }
   );
+}
+
+/**
+ * Calls addVisits, and then forces the newtab module to repopulate its links.
+ * See addVisits for parameter descriptions.
+ */
+function addVisitsAndRepopulateNewTabLinks(aPlaceInfo, aCallback) {
+  addVisits(aPlaceInfo, () => NewTabUtils.links.populateCache(aCallback, true));
 }
 
 /**

@@ -43,6 +43,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     runtime_(zone->runtimeFromMainThread()),
     principals(nullptr),
     isSystem(false),
+    isSelfHosting(false),
     marked(true),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
@@ -724,7 +725,7 @@ CreateLazyScriptsForCompartment(JSContext *cx)
     // compiled.
     for (gc::CellIter i(cx->zone(), gc::FINALIZE_LAZY_SCRIPT); !i.done(); i.next()) {
         LazyScript *lazy = i.get<LazyScript>();
-        JSFunction *fun = lazy->function();
+        JSFunction *fun = lazy->functionNonDelazifying();
         if (fun->compartment() == cx->compartment() &&
             lazy->sourceObject() && !lazy->maybeScript())
         {

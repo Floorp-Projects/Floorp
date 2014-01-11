@@ -1524,6 +1524,17 @@ MOZ_ARG_ENABLE_BOOL(profiling,
     MOZ_PROFILING=1,
     MOZ_PROFILING= )
 
+dnl ========================================================
+dnl = Turn on systrace for android/b2g.
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(systrace,
+[  --enable-systrace       Set compile flags necessary for using sampling profilers (e.g. shark, perf)],
+    MOZ_USE_SYSTRACE=1,
+    MOZ_USE_SYSTRACE= )
+if test -n "$MOZ_USE_SYSTRACE"; then
+    AC_DEFINE(MOZ_USE_SYSTRACE)
+fi
+
 # For profiling builds keep the symbol information
 if test "$MOZ_PROFILING" -a -z "$STRIP_FLAGS"; then
     case "$OS_TARGET" in
@@ -4040,6 +4051,7 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
+MOZ_ANDROID_SYNTHAPKS=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
@@ -4998,6 +5010,18 @@ dnl = Enable NFC permission on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_BEAM"; then
     AC_DEFINE(MOZ_ANDROID_BEAM)
+fi
+
+dnl ========================================================
+dnl = Synthesized Webapp APKs on Android
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(android-synthapks,
+[  --enable-android-synthapks       Enable synthesized APKs],
+    MOZ_ANDROID_SYNTHAPKS=1,
+    MOZ_ANDROID_SYNTHAPKS=)
+
+if test -n "$MOZ_ANDROID_SYNTHAPKS"; then
+    AC_DEFINE(MOZ_ANDROID_SYNTHAPKS)
 fi
 
 dnl ========================================================
@@ -7755,7 +7779,7 @@ dnl ========================================================
 
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" -o -z "${GLIB_LIBS}" ; then
-    if test "$MOZ_ENABLE_GTK2" ; then
+    if test "$MOZ_ENABLE_GTK" ; then
         PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
     fi
 fi
@@ -8317,6 +8341,7 @@ AC_SUBST(MOZ_METRO)
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
+AC_SUBST(MOZ_ANDROID_SYNTHAPKS)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)

@@ -4885,6 +4885,44 @@ class MRegExpTest
     }
 };
 
+class MRegExpReplace
+  : public MTernaryInstruction,
+    public Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >
+{
+  private:
+
+    MRegExpReplace(MDefinition *string, MDefinition *regexp, MDefinition *replacement)
+      : MTernaryInstruction(string, regexp, replacement)
+    {
+        setResultType(MIRType_String);
+    }
+
+  public:
+    INSTRUCTION_HEADER(RegExpReplace)
+
+    static MRegExpReplace *New(TempAllocator &alloc, MDefinition *string, MDefinition *regexp, MDefinition *replacement) {
+        return new(alloc) MRegExpReplace(string, regexp, replacement);
+    }
+
+    MDefinition *string() const {
+        return getOperand(0);
+    }
+    MDefinition *regexp() const {
+        return getOperand(1);
+    }
+    MDefinition *replacement() const {
+        return getOperand(2);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
+    bool possiblyCalls() const {
+        return true;
+    }
+};
+
 struct LambdaFunctionInfo
 {
     // The functions used in lambdas are the canonical original function in
@@ -6534,16 +6572,18 @@ class MGetPropertyCache
     CompilerRootPropertyName name_;
     bool idempotent_;
     bool allowGetters_;
+    bool monitoredResult_;
 
     CacheLocationList location_;
 
     InlinePropertyTable *inlinePropertyTable_;
 
-    MGetPropertyCache(MDefinition *obj, PropertyName *name)
+    MGetPropertyCache(MDefinition *obj, PropertyName *name, bool monitoredResult)
       : MUnaryInstruction(obj),
         name_(name),
         idempotent_(false),
         allowGetters_(false),
+        monitoredResult_(monitoredResult),
         location_(),
         inlinePropertyTable_(nullptr)
     {
@@ -6558,8 +6598,9 @@ class MGetPropertyCache
   public:
     INSTRUCTION_HEADER(GetPropertyCache)
 
-    static MGetPropertyCache *New(TempAllocator &alloc, MDefinition *obj, PropertyName *name) {
-        return new(alloc) MGetPropertyCache(obj, name);
+    static MGetPropertyCache *New(TempAllocator &alloc, MDefinition *obj, PropertyName *name,
+                                  bool monitoredResult) {
+        return new(alloc) MGetPropertyCache(obj, name, monitoredResult);
     }
 
     InlinePropertyTable *initInlinePropertyTable(TempAllocator &alloc, jsbytecode *pc) {
@@ -6591,6 +6632,9 @@ class MGetPropertyCache
     }
     bool allowGetters() const {
         return allowGetters_;
+    }
+    bool monitoredResult() const {
+        return monitoredResult_;
     }
     void setAllowGetters() {
         allowGetters_ = true;

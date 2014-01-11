@@ -231,7 +231,8 @@ class SizedTypeRepresentation : public TypeRepresentation {
     size_t size() const { return size_; }
     size_t alignment() const { return alignment_; }
 
-    // Initializes memory that contains `count` instances of this type
+    // Initializes memory that contains `count` instances of this type.
+    // `count` must be at least 1.
     void initInstance(const JSRuntime *rt, uint8_t *mem, size_t count);
 
     // Traces memory that contains `count` instances of this type.

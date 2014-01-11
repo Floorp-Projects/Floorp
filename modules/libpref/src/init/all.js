@@ -797,11 +797,6 @@ pref("security.fileuri.strict_origin_policy", true);
 // telemetry is also enabled as otherwise there is no way to report
 // the results
 pref("network.allow-experiments", true);
-#if defined(EARLY_BETA_OR_EARLIER)
-pref("network.dns.allow-srv-experiment", true);
-#else
-pref("network.dns.allow-srv-experiment", false);
-#endif
 
 // Transmit UDP busy-work to the LAN when anticipating low latency
 // network reads and on wifi to mitigate 802.11 Power Save Polling delays

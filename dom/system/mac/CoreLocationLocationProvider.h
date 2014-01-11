@@ -24,16 +24,16 @@ class CoreLocationObjects;
 
 class CoreLocationLocationProvider
   : public nsIGeolocationProvider
-  , public nsIGeolocationUpdate
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIGEOLOCATIONUPDATE
   NS_DECL_NSIGEOLOCATIONPROVIDER
 
   CoreLocationLocationProvider();
   static bool IsCoreLocationAvailable();
 
+  void NotifyError(uint16_t aErrorCode);
+  void Update(nsIDOMGeoPosition* aSomewhere);
 private:
   virtual ~CoreLocationLocationProvider() {};
 

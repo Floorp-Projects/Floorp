@@ -77,7 +77,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Attr)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Attr)
-  Element* ownerElement = tmp->GetContentInternal();
+  Element* ownerElement = tmp->GetElement();
   if (tmp->IsBlack()) {
     if (ownerElement) {
       // The attribute owns the element via attribute map so we can
@@ -128,10 +128,14 @@ Attr::SetMap(nsDOMAttributeMap *aMap)
   mAttrMap = aMap;
 }
 
-nsIContent*
-Attr::GetContent() const
+Element*
+Attr::GetElement() const
 {
-  return GetContentInternal();
+  if (!mAttrMap) {
+    return nullptr;
+  }
+  nsIContent* content = mAttrMap->GetContent();
+  return content ? content->AsElement() : nullptr;
 }
 
 nsresult
@@ -181,7 +185,7 @@ Attr::GetNameAtom(nsIContent* aContent)
 NS_IMETHODIMP
 Attr::GetValue(nsAString& aValue)
 {
-  nsIContent* content = GetContentInternal();
+  nsIContent* content = GetElement();
   if (content) {
     nsCOMPtr<nsIAtom> nameAtom = GetNameAtom(content);
     content->GetAttr(mNodeInfo->NamespaceID(), nameAtom, aValue);
@@ -196,7 +200,7 @@ Attr::GetValue(nsAString& aValue)
 void
 Attr::SetValue(const nsAString& aValue, ErrorResult& aRv)
 {
-  nsIContent* content = GetContentInternal();
+  nsIContent* content = GetElement();
   if (!content) {
     mValue = aValue;
     return;
@@ -230,29 +234,6 @@ Attr::GetSpecified(bool* aSpecified)
 {
   NS_ENSURE_ARG_POINTER(aSpecified);
   *aSpecified = Specified();
-  return NS_OK;
-}
-
-Element*
-Attr::GetOwnerElement(ErrorResult& aRv)
-{
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
-  return GetContentInternal();
-}
-
-NS_IMETHODIMP
-Attr::GetOwnerElement(nsIDOMElement** aOwnerElement)
-{
-  NS_ENSURE_ARG_POINTER(aOwnerElement);
-  OwnerDoc()->WarnOnceAbout(nsIDocument::eOwnerElement);
-
-  nsIContent* content = GetContentInternal();
-  if (content) {
-    return CallQueryInterface(content, aOwnerElement);
-  }
-
-  *aOwnerElement = nullptr;
-
   return NS_OK;
 }
 
@@ -292,7 +273,7 @@ Attr::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 already_AddRefed<nsIURI>
 Attr::GetBaseURI() const
 {
-  nsINode *parent = GetContentInternal();
+  nsINode *parent = GetElement();
 
   return parent ? parent->GetBaseURI() : nullptr;
 }
@@ -317,7 +298,7 @@ Attr::SetTextContentInternal(const nsAString& aTextContent,
 NS_IMETHODIMP
 Attr::GetIsId(bool* aReturn)
 {
-  nsIContent* content = GetContentInternal();
+  nsIContent* content = GetElement();
   if (!content)
   {
     *aReturn = false;
@@ -401,12 +382,6 @@ JSObject*
 Attr::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return AttrBinding::Wrap(aCx, aScope, this);
-}
-
-Element*
-Attr::GetContentInternal() const
-{
-  return mAttrMap ? mAttrMap->GetContent() : nullptr;
 }
 
 } // namespace dom

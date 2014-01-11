@@ -96,12 +96,20 @@ public:
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                             const IntRect& aFilterSubregion,
+                            const nsTArray<bool>& aInputsAreTainted,
                             nsTArray<mozilla::RefPtr<SourceSurface>>& aInputImages) = 0;
 
   // returns true if changes to the attribute should cause us to
   // repaint the filter
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const;
+
+  // Return whether this filter primitive has tainted output. A filter's
+  // output is tainted if it depends on things that the web page is not
+  // allowed to read from, e.g. the source graphic or cross-origin images.
+  // aReferencePrincipal is the node principal of the filtered frame's element.
+  virtual bool OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
+                               nsIPrincipal* aReferencePrincipal);
 
   static nsIntRect GetMaxRect() {
     // Try to avoid overflow errors dealing with this rect. It will

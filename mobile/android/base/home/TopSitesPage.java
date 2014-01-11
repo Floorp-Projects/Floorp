@@ -16,6 +16,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -27,6 +28,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -355,6 +357,28 @@ public class TopSitesPage extends HomeFragment {
         if (itemId == R.id.top_sites_edit) {
             // Decode "user-entered" URLs before showing them.
             mEditPinnedSiteListener.onEditPinnedSite(info.position, decodeUserEnteredUrl(info.url));
+            return true;
+        }
+
+        if (itemId == R.id.home_share) {
+            if (info.url == null) {
+                Log.w(LOGTAG, "Share not enabled for context menu because URL is null.");
+                return false;
+            } else {
+                GeckoAppShell.openUriExternal(info.url, SHARE_MIME_TYPE, "", "",
+                                              Intent.ACTION_SEND, info.getDisplayTitle());
+                return true;
+            }
+        }
+
+        if (itemId == R.id.home_add_to_launcher) {
+            if (info.url == null) {
+                Log.w(LOGTAG, "Not enabling 'Add to home page' because URL is null.");
+                return false;
+            }
+
+            // Fetch the largest cacheable icon size.
+            Favicons.getLargestFaviconForPage(info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
             return true;
         }
 

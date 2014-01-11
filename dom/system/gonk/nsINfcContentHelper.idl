@@ -7,7 +7,7 @@
 
 interface nsIVariant;
 
-[scriptable, function, uuid(271f48b0-c884-4f0b-a348-e29824c95168)]
+[scriptable, function, uuid(26673d1a-4af4-470a-ba96-f1f54b1f2052)]
 interface nsINfcPeerCallback : nsISupports
 {
   /**
@@ -39,6 +39,27 @@ interface nsINfcContentHelper : nsISupports
 
   nsIDOMDOMRequest connect(in nsIDOMWindow window, in unsigned long techType, in DOMString sessionToken);
   nsIDOMDOMRequest close(in nsIDOMWindow window, in DOMString sessionToken);
+
+ /**
+  * Initiate Send file operation
+  *
+  * @param window
+  *        Current window
+  *
+  * @param blob
+  *        Raw data of the file to be sent. This object represents a file-like
+  *        (nsIDOMFile) object of immutable, raw data. The blob data needs
+  *        to be 'object wrapped' before calling this interface.
+  *
+  * @param sessionToken
+  *        Current token
+  *
+  * Returns DOMRequest, if initiation of send file operation is successful
+  * then 'onsuccess' is called else 'onerror'
+  */
+  nsIDOMDOMRequest sendFile(in nsIDOMWindow window,
+                            in jsval blob,
+                            in DOMString sessionToken);
 
  /**
   * Register the given application id with Chrome process

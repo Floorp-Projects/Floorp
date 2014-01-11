@@ -36,11 +36,13 @@ void
 TextTrackCue::SetDefaultCueSettings()
 {
   mPosition = 50;
+  mPositionAlign = AlignSetting::Middle;
   mSize = 100;
   mPauseOnExit = false;
   mSnapToLines = true;
   mLine = WEBVTT_AUTO;
   mAlign = AlignSetting::Middle;
+  mLineAlign = AlignSetting::Start;
   mVertical = DirectionSetting::_empty;
 }
 

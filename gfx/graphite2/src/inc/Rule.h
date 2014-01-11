@@ -1,6 +1,6 @@
 /*  GRAPHITE2 LICENSING
 
-    Copyright 2010, SIL International
+    Copyright 2011, SIL International
     All rights reserved.
 
     This library is free software; you can redistribute it and/or modify
@@ -107,12 +107,12 @@ public:
   Slot * const & operator[](int n) const;
   Slot       * & operator [] (int);
   void           pushSlot(Slot * const slot);
-  void			 collectGarbage();
+  void           collectGarbage();
 
   Slot         * highwater() { return m_highwater; }
   void           highwater(Slot *s) { m_highwater = s; m_highpassed = false; }
-  bool			 highpassed() const { return m_highpassed; }
-  void			 highpassed(bool v) { m_highpassed = v; }
+  bool           highpassed() const { return m_highpassed; }
+  void           highpassed(bool v) { m_highpassed = v; }
 
   Segment &    segment;
 private:
@@ -120,7 +120,7 @@ private:
   unsigned short m_size;
   unsigned short m_precontext;
   Slot         * m_highwater;
-  bool			 m_highpassed;
+  bool           m_highpassed;
 };
 
 

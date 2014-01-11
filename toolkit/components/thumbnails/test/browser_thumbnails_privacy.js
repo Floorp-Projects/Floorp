@@ -36,6 +36,14 @@ function runTests() {
     {scheme: "https", cacheControl: "private", diskCacheSSL: false}
   ];
 
+  let urls = positive.map((combi) => {
+    let url = combi.scheme + URL;
+    if (combi.cacheControl)
+      url += "?" + combi.cacheControl;
+    return url;
+  });
+  yield addVisitsAndRepopulateNewTabLinks(urls, next);
+
   yield checkCombinations(positive, true);
   yield checkCombinations(negative, false);
 }

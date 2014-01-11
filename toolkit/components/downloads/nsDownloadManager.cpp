@@ -1093,7 +1093,7 @@ nsDownloadManager::GetDownloadFromDB(const nsACString& aGUID, nsDownload **retVa
   MOZ_ASSERT(!FindDownload(aGUID),
              "If it is a current download, you should not call this method!");
 
-  nsDependentCString query = NS_LITERAL_CSTRING(
+  NS_NAMED_LITERAL_CSTRING(query,
     "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
            "entityID, currBytes, maxBytes, mimeType, preferredAction, "
            "preferredApplication, autoResume, guid "

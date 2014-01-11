@@ -2848,6 +2848,7 @@ class IDLArgument(IDLObjectWithIdentifier):
         self._isComplete = False
         self.enforceRange = False
         self.clamp = False
+        self._allowTreatNonCallableAsNull = False
 
         assert not variadic or optional
 
@@ -2874,6 +2875,8 @@ class IDLArgument(IDLObjectWithIdentifier):
                     raise WebIDLError("[EnforceRange] and [Clamp] are mutually exclusive",
                                       [self.location]);
                 self.enforceRange = True
+            elif identifier == "TreatNonCallableAsNull":
+                self._allowTreatNonCallableAsNull = True
             else:
                 raise WebIDLError("Unhandled extended attribute on an argument",
                                   [attribute.location])
@@ -2907,6 +2910,9 @@ class IDLArgument(IDLObjectWithIdentifier):
             self.defaultValue = self.defaultValue.coerceToType(self.type,
                                                                self.location)
             assert self.defaultValue
+
+    def allowTreatNonCallableAsNull(self):
+        return self._allowTreatNonCallableAsNull
 
     def _getDependentObjects(self):
         deps = set([self.type])

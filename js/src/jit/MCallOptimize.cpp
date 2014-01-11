@@ -119,6 +119,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineStrFromCharCode(callInfo);
     if (native == js_str_charAt)
         return inlineStrCharAt(callInfo);
+    if (native == str_replace)
+        return inlineStrReplaceRegExp(callInfo);
 
     // RegExp natives.
     if (native == regexp_exec && CallResultEscapes(pc))
@@ -250,9 +252,12 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles) {
+    {
         AutoThreadSafeAccess ts(templateObject);
-        templateObject->setShouldConvertDoubleElements();
+        if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+            templateObject->setShouldConvertDoubleElements();
+        else
+            templateObject->clearShouldConvertDoubleElements();
     }
 
     MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateObject,
@@ -1163,6 +1168,42 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     current->add(match);
     current->push(match);
     if (!resumeAfter(match))
+        return InliningStatus_Error;
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineStrReplaceRegExp(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 2 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    // Return: String.
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    // This: String.
+    if (callInfo.thisArg()->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    // Arg 0: RegExp.
+    types::TemporaryTypeSet *arg0Type = callInfo.getArg(0)->resultTypeSet();
+    const Class *clasp = arg0Type ? arg0Type->getKnownClass() : nullptr;
+    if (clasp != &RegExpObject::class_)
+        return InliningStatus_NotInlined;
+
+    // Arg 1: String.
+    if (callInfo.getArg(1)->type() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MInstruction *cte = MRegExpReplace::New(alloc(), callInfo.thisArg(), callInfo.getArg(0),
+                                            callInfo.getArg(1));
+    current->add(cte);
+    current->push(cte);
+    if (!resumeAfter(cte))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;

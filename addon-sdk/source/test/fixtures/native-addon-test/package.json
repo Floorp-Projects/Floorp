@@ -1,0 +1,9 @@
+{
+  "main":"index.js",
+  "dependencies": {
+    "test-math": "*",
+    "test-custom-main": "*",
+    "test-custom-main-relative": "*",
+    "test-default-main": "*"
+  }
+}

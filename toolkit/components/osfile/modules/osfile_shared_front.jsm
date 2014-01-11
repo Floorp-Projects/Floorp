@@ -16,7 +16,8 @@ if (typeof Components != "undefined") {
 
 let SharedAll =
   require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-
+let Lz4 =
+  require("resource://gre/modules/workers/lz4.js");
 let LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
 let clone = SharedAll.clone;
 
@@ -82,7 +83,7 @@ AbstractFile.prototype = {
    * less than |bytes| if the file did not contain that many bytes left.
    */
   readTo: function readTo(buffer, options = {}) {
-    let {ptr, bytes} = AbstractFile.normalizeToPointer(buffer, options.bytes);
+    let {ptr, bytes} = SharedAll.normalizeToPointer(buffer, options.bytes);
     let pos = 0;
     while (pos < bytes) {
       let chunkSize = this._read(ptr, bytes - pos, options);
@@ -116,7 +117,7 @@ AbstractFile.prototype = {
   write: function write(buffer, options = {}) {
 
     let {ptr, bytes} =
-      AbstractFile.normalizeToPointer(buffer, options.bytes || undefined);
+      SharedAll.normalizeToPointer(buffer, options.bytes || undefined);
 
     let pos = 0;
     while (pos < bytes) {
@@ -184,51 +185,6 @@ AbstractFile.openUnique = function openUnique(path, options = {}) {
     }
     throw OS.File.Error.exists("could not find an unused file name.");
   }
-};
-
-/**
- * Utility function used to normalize a Typed Array or C
- * pointer into a uint8_t C pointer.
- *
- * Future versions might extend this to other data structures.
- *
- * @param {Typed array | C pointer} candidate The buffer. If
- * a C pointer, it must be non-null.
- * @param {number} bytes The number of bytes that |candidate| should contain.
- * Used for sanity checking if the size of |candidate| can be determined.
- *
- * @return {ptr:{C pointer}, bytes:number} A C pointer of type uint8_t,
- * corresponding to the start of |candidate|.
- */
-AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes) {
-  if (!candidate) {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
-  }
-  let ptr;
-  if ("isNull" in candidate) {
-    if (candidate.isNull()) {
-      throw new TypeError("Expecting a non-null pointer");
-    }
-    ptr = SharedAll.Type.uint8_t.out_ptr.cast(candidate);
-    if (bytes == null) {
-      throw new TypeError("C pointer missing bytes indication.");
-    }
-  } else if (SharedAll.isTypedArray(candidate)) {
-    // Typed Array
-    ptr = SharedAll.Type.uint8_t.out_ptr.implementation(candidate.buffer);
-    if (bytes == null) {
-      bytes = candidate.byteLength;
-    } else if (candidate.byteLength < bytes) {
-      throw new TypeError("Buffer is too short. I need at least " +
-                         bytes +
-                         " bytes but I have only " +
-                         candidate.byteLength +
-                          "bytes");
-    }
-  } else {
-    throw new TypeError("Expecting  a Typed Array or a C pointer");
-  }
-  return {ptr: ptr, bytes: bytes};
 };
 
 /**
@@ -355,16 +311,29 @@ AbstractFile.normalizeOpenMode = function normalizeOpenMode(mode) {
  *
  * @param {string} path The path to the file.
  * @param {number=} bytes Optionally, an upper bound to the number of bytes
- * to read.
- * @param {JSON} options Optionally contains additional options.
+ * to read. DEPRECATED - please use options.bytes instead.
+ * @param {object=} options Optionally, an object with some of the following
+ * fields:
+ * - {number} bytes An upper bound to the number of bytes to read.
+ * - {string} compression If "lz4" and if the file is compressed using the lz4
+ *   compression algorithm, decompress the file contents on the fly.
  *
  * @return {Uint8Array} A buffer holding the bytes
  * and the number of bytes read from the file.
  */
 AbstractFile.read = function read(path, bytes, options = {}) {
+  if (bytes && typeof bytes == "object") {
+    options = bytes;
+    bytes = options.bytes || null;
+  }
   let file = exports.OS.File.open(path);
   try {
-    return file.read(bytes, options);
+    let buffer = file.read(bytes, options);
+    if (options.compression == "lz4") {
+      return Lz4.decompressFileContent(buffer, options);
+    } else {
+      return buffer;
+    }
   } finally {
     file.close();
   }
@@ -405,6 +374,10 @@ AbstractFile.read = function read(path, bytes, options = {}) {
  * if the system shuts down improperly (typically due to a kernel freeze
  * or a power failure) or if the device is disconnected before the buffer
  * is flushed, the file has more chances of not being corrupted.
+ * - {string} compression - If empty or unspecified, do not compress the file.
+ * If "lz4", compress the contents of the file atomically using lz4. For the
+ * time being, the container format is specific to Mozilla and cannot be read
+ * by means other than OS.File.read(..., { compression: "lz4"})
  *
  * @return {number} The number of bytes actually written.
  */
@@ -424,6 +397,12 @@ AbstractFile.writeAtomic =
     // Normalize buffer to a C buffer by encoding it
     let encoding = options.encoding || "utf-8";
     buffer = new TextEncoder(encoding).encode(buffer);
+  }
+
+  if (options.compression == "lz4") {
+    buffer = Lz4.compressFileContent(buffer, options);
+    options = Object.create(options);
+    options.bytes = buffer.byteLength;
   }
 
   let bytesWritten = 0;

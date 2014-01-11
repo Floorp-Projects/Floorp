@@ -154,8 +154,6 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   if (aOperator == OP_SOURCE) {
     aTarget->PopClip();
   }
-
-  aTarget->Flush();
 }
 
 void
@@ -389,6 +387,17 @@ ComputeBufferRect(const nsIntRect& aRequestedRect)
   }
 #endif
   return rect;
+}
+
+void
+RotatedContentBuffer::FlushBuffers()
+{
+  if (mDTBuffer) {
+    mDTBuffer->Flush();
+  }
+  if (mDTBufferOnWhite) {
+    mDTBufferOnWhite->Flush();
+  }
 }
 
 RotatedContentBuffer::PaintState

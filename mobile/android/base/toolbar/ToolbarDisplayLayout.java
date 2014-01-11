@@ -1,0 +1,554 @@
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.gecko.toolbar;
+
+import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.SiteIdentity;
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.toolbar.BrowserToolbar.ForwardButtonAnimation;
+import org.mozilla.gecko.util.StringUtils;
+import org.mozilla.gecko.widget.GeckoLinearLayout;
+import org.mozilla.gecko.widget.GeckoTextView;
+
+import org.json.JSONObject;
+
+import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.os.Build;
+import android.os.SystemClock;
+import android.text.style.ForegroundColorSpan;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.TextUtils;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.TranslateAnimation;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout.LayoutParams;
+
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+
+public class ToolbarDisplayLayout extends GeckoLinearLayout
+                                  implements Animation.AnimationListener {
+
+    private static final String LOGTAG = "GeckoToolbarDisplayLayout";
+
+    enum UpdateFlags {
+        TITLE,
+        FAVICON,
+        PROGRESS,
+        SITE_IDENTITY,
+        PRIVATE_MODE,
+        DISABLE_ANIMATIONS
+    }
+
+    private enum UIMode {
+        PROGRESS,
+        DISPLAY
+    }
+
+    interface OnStopListener {
+        public Tab onStop();
+    }
+
+    interface OnTitleChangeListener {
+        public void onTitleChange(CharSequence title);
+    }
+
+    final private BrowserApp mActivity;
+
+    private UIMode mUiMode;
+
+    private GeckoTextView mTitle;
+    private int mTitlePadding;
+    private ToolbarTitlePrefs mTitlePrefs;
+    private OnTitleChangeListener mTitleChangeListener;
+
+    private ImageButton mSiteSecurity;
+    private boolean mSiteSecurityVisible;
+
+    // To de-bounce sets.
+    private Bitmap mLastFavicon;
+    private ImageButton mFavicon;
+    private int mFaviconSize;
+
+    private ImageButton mStop;
+    private OnStopListener mStopListener;
+
+    private PageActionLayout mPageActionLayout;
+
+    private Animation mProgressSpinner;
+
+    private AlphaAnimation mLockFadeIn;
+    private TranslateAnimation mTitleSlideLeft;
+    private TranslateAnimation mTitleSlideRight;
+
+    private SiteIdentityPopup mSiteIdentityPopup;
+    private SecurityMode mSecurityMode;
+
+    private PropertyAnimator mForwardAnim;
+
+    private final ForegroundColorSpan mUrlColor;
+    private final ForegroundColorSpan mBlockedColor;
+    private final ForegroundColorSpan mDomainColor;
+    private final ForegroundColorSpan mPrivateDomainColor;
+
+    public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        setOrientation(HORIZONTAL);
+
+        mActivity = (BrowserApp) context;
+
+        LayoutInflater.from(context).inflate(R.layout.toolbar_display_layout, this);
+
+        mTitle = (GeckoTextView) findViewById(R.id.url_bar_title);
+        mTitlePadding = mTitle.getPaddingRight();
+
+        final Resources res = getResources();
+
+        mUrlColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_urltext));
+        mBlockedColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_blockedtext));
+        mDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext));
+        mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
+
+        mFavicon = (ImageButton) findViewById(R.id.favicon);
+        if (Build.VERSION.SDK_INT >= 11) {
+            if (Build.VERSION.SDK_INT >= 16) {
+                mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            }
+            mFavicon.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        }
+        mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
+
+        mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
+        mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
+
+        mSiteIdentityPopup = new SiteIdentityPopup(mActivity);
+        mSiteIdentityPopup.setAnchor(mSiteSecurity);
+
+        mProgressSpinner = AnimationUtils.loadAnimation(mActivity, R.anim.progress_spinner);
+
+        mStop = (ImageButton) findViewById(R.id.stop);
+        mPageActionLayout = (PageActionLayout) findViewById(R.id.page_action_layout);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        mTitlePrefs = new ToolbarTitlePrefs();
+
+        Button.OnClickListener faviconListener = new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSiteSecurity.getVisibility() != View.VISIBLE) {
+                    return;
+                }
+
+                mSiteIdentityPopup.show();
+            }
+        };
+
+        mFavicon.setOnClickListener(faviconListener);
+        mSiteSecurity.setOnClickListener(faviconListener);
+
+        mStop.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mStopListener != null) {
+                    // Force toolbar to switch to Display mode
+                    // immediately based on the stopped tab.
+                    final Tab tab = mStopListener.onStop();
+                    if (tab != null) {
+                        updateUiMode(tab, UIMode.DISPLAY, EnumSet.noneOf(UpdateFlags.class));
+                    }
+                }
+            }
+        });
+
+        float slideWidth = getResources().getDimension(R.dimen.browser_toolbar_lock_width);
+
+        LayoutParams siteSecParams = (LayoutParams) mSiteSecurity.getLayoutParams();
+        final float scale = getResources().getDisplayMetrics().density;
+        slideWidth += (siteSecParams.leftMargin + siteSecParams.rightMargin) * scale + 0.5f;
+
+        mLockFadeIn = new AlphaAnimation(0.0f, 1.0f);
+        mLockFadeIn.setAnimationListener(this);
+
+        mTitleSlideLeft = new TranslateAnimation(slideWidth, 0, 0, 0);
+        mTitleSlideLeft.setAnimationListener(this);
+
+        mTitleSlideRight = new TranslateAnimation(-slideWidth, 0, 0, 0);
+        mTitleSlideRight.setAnimationListener(this);
+
+        final int lockAnimDuration = 300;
+        mLockFadeIn.setDuration(lockAnimDuration);
+        mTitleSlideLeft.setDuration(lockAnimDuration);
+        mTitleSlideRight.setDuration(lockAnimDuration);
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        mTitlePrefs.close();
+    }
+
+    @Override
+    public void onAnimationStart(Animation animation) {
+        if (animation.equals(mLockFadeIn)) {
+            if (mSiteSecurityVisible)
+                mSiteSecurity.setVisibility(View.VISIBLE);
+        } else if (animation.equals(mTitleSlideLeft)) {
+            // These two animations may be scheduled to start while the forward
+            // animation is occurring. If we're showing the site security icon, make
+            // sure it doesn't take any space during the forward transition.
+            mSiteSecurity.setVisibility(View.GONE);
+        } else if (animation.equals(mTitleSlideRight)) {
+            // If we're hiding the icon, make sure that we keep its padding
+            // in place during the forward transition
+            mSiteSecurity.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    @Override
+    public void onAnimationRepeat(Animation animation) {
+    }
+
+    @Override
+    public void onAnimationEnd(Animation animation) {
+        if (animation.equals(mTitleSlideRight)) {
+            mSiteSecurity.startAnimation(mLockFadeIn);
+        }
+    }
+
+    @Override
+    public void setNextFocusDownId(int nextId) {
+        mFavicon.setNextFocusDownId(nextId);
+        mStop.setNextFocusDownId(nextId);
+        mSiteSecurity.setNextFocusDownId(nextId);
+        mPageActionLayout.setNextFocusDownId(nextId);
+    }
+
+    void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
+        if (flags.contains(UpdateFlags.TITLE)) {
+            updateTitle(tab);
+        }
+
+        if (flags.contains(UpdateFlags.FAVICON)) {
+            updateFavicon(tab);
+        }
+
+        if (flags.contains(UpdateFlags.SITE_IDENTITY)) {
+            updateSiteIdentity(tab, flags);
+        }
+
+        if (flags.contains(UpdateFlags.PROGRESS)) {
+            updateProgress(tab, flags);
+        }
+
+        if (flags.contains(UpdateFlags.PRIVATE_MODE)) {
+            mTitle.setPrivateMode(tab != null && tab.isPrivate());
+        }
+    }
+
+    void setTitle(CharSequence title) {
+        mTitle.setText(title);
+
+        if (mTitleChangeListener != null) {
+            mTitleChangeListener.onTitleChange(title);
+        }
+    }
+
+    private void updateTitle(Tab tab) {
+        // Keep the title unchanged if there's no selected tab,
+        // or if the tab is entering reader mode.
+        if (tab == null || tab.isEnteringReaderMode()) {
+            return;
+        }
+
+        final String url = tab.getURL();
+
+        // Setting a null title will ensure we just see the
+        // "Enter Search or Address" placeholder text.
+        if (AboutPages.isTitlelessAboutPage(url)) {
+            setTitle(null);
+            return;
+        }
+
+        // Show the about:blocked page title in red, regardless of prefs
+        if (tab.getErrorType() == Tab.ErrorType.BLOCKED) {
+            final String title = tab.getDisplayTitle();
+
+            final SpannableStringBuilder builder = new SpannableStringBuilder(title);
+            builder.setSpan(mBlockedColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+
+            setTitle(builder);
+            return;
+        }
+
+        // If the pref to show the URL isn't set, just use the tab's display title.
+        if (!mTitlePrefs.shouldShowUrl() || url == null) {
+            setTitle(tab.getDisplayTitle());
+            return;
+        }
+
+        CharSequence title = url;
+        if (mTitlePrefs.shouldTrimUrls()) {
+            title = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(url));
+        }
+
+        final String baseDomain = tab.getBaseDomain();
+        if (!TextUtils.isEmpty(baseDomain)) {
+            final SpannableStringBuilder builder = new SpannableStringBuilder(title);
+
+            int index = title.toString().indexOf(baseDomain);
+            if (index > -1) {
+                builder.setSpan(mUrlColor, 0, title.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                builder.setSpan(tab.isPrivate() ? mPrivateDomainColor : mDomainColor,
+                                index, index + baseDomain.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+
+                title = builder;
+            }
+        }
+
+        setTitle(title);
+    }
+
+    private void updateFavicon(Tab tab) {
+        if (tab == null) {
+            mFavicon.setImageDrawable(null);
+            return;
+        }
+
+        if (tab.getState() == Tab.STATE_LOADING) {
+            return;
+        }
+
+        Bitmap image = tab.getFavicon();
+        if (image == mLastFavicon) {
+            Log.d(LOGTAG, "Ignoring favicon: new image is identical to previous one.");
+            return;
+        }
+
+        // Cache the original so we can debounce without scaling
+        mLastFavicon = image;
+
+        Log.d(LOGTAG, "updateFavicon(" + image + ")");
+
+        if (image != null) {
+            image = Bitmap.createScaledBitmap(image, mFaviconSize, mFaviconSize, false);
+            mFavicon.setImageBitmap(image);
+        } else {
+            mFavicon.setImageDrawable(null);            
+        }
+    }
+
+    private void updateSiteIdentity(Tab tab, EnumSet<UpdateFlags> flags) {
+        final SiteIdentity siteIdentity;
+        if (tab == null) {
+            siteIdentity = null;
+        } else {
+            siteIdentity = tab.getSiteIdentity();
+        }
+
+        mSiteIdentityPopup.setSiteIdentity(siteIdentity);
+
+        final SecurityMode securityMode;
+        if (siteIdentity == null) {
+            securityMode = SecurityMode.UNKNOWN;
+        } else {
+            securityMode = siteIdentity.getSecurityMode();
+        }
+
+        if (mSecurityMode != securityMode) {
+            mSecurityMode = securityMode;
+            mSiteSecurity.setImageLevel(mSecurityMode.ordinal());
+            updatePageActions(flags);
+        }
+    }
+
+    private void updateProgress(Tab tab, EnumSet<UpdateFlags> flags) {
+        final boolean shouldShowThrobber = (tab != null &&
+                                            tab.getState() == Tab.STATE_LOADING);
+
+        updateUiMode(tab, shouldShowThrobber ? UIMode.PROGRESS : UIMode.DISPLAY, flags);
+    }
+
+    private void updateUiMode(Tab tab, UIMode uiMode, EnumSet<UpdateFlags> flags) {
+        if (mUiMode == uiMode) {
+            return;
+        }
+
+        mUiMode = uiMode;
+
+        // The "Throbber start" and "Throbber stop" log messages in this method
+        // are needed by S1/S2 tests (http://mrcote.info/phonedash/#).
+        // See discussion in Bug 804457. Bug 805124 tracks paring these down.
+        if (mUiMode == UIMode.PROGRESS) {
+            mLastFavicon = null;
+            mFavicon.setImageResource(R.drawable.progress_spinner);
+            mFavicon.setAnimation(mProgressSpinner);
+            mProgressSpinner.start();
+
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber start");
+        } else {
+            updateFavicon(tab);
+            mFavicon.setAnimation(null);
+            mProgressSpinner.cancel();
+
+            Log.i(LOGTAG, "zerdatime " + SystemClock.uptimeMillis() + " - Throbber stop");
+        }
+
+        updatePageActions(flags);
+    }
+
+    private void updatePageActions(EnumSet<UpdateFlags> flags) {
+        final boolean isShowingProgress = (mUiMode == UIMode.PROGRESS);
+
+        mStop.setVisibility(isShowingProgress ? View.VISIBLE : View.GONE);
+        mPageActionLayout.setVisibility(!isShowingProgress ? View.VISIBLE : View.GONE);
+
+        boolean shouldShowSiteSecurity = (!isShowingProgress &&
+                                          mSecurityMode != SecurityMode.UNKNOWN);
+
+        setSiteSecurityVisibility(shouldShowSiteSecurity, flags);
+
+        // We want title to fill the whole space available for it when there are icons
+        // being shown on the right side of the toolbar as the icons already have some
+        // padding in them. This is just to avoid wasting space when icons are shown.
+        mTitle.setPadding(0, 0, (!isShowingProgress ? mTitlePadding : 0), 0);
+    }
+
+    private void setSiteSecurityVisibility(boolean visible, EnumSet<UpdateFlags> flags) {
+        if (visible == mSiteSecurityVisible) {
+            return;
+        }
+
+        mSiteSecurityVisible = visible;
+
+        if (flags.contains(UpdateFlags.DISABLE_ANIMATIONS)) {
+            mSiteSecurity.setVisibility(visible ? View.VISIBLE : View.GONE);
+            return;
+        }
+
+        mTitle.clearAnimation();
+        mSiteSecurity.clearAnimation();
+
+        // If any of these animations were cancelled as a result of the
+        // clearAnimation() calls above, we need to reset them.
+        mLockFadeIn.reset();
+        mTitleSlideLeft.reset();
+        mTitleSlideRight.reset();
+
+        if (mForwardAnim != null) {
+            long delay = mForwardAnim.getRemainingTime();
+            mTitleSlideRight.setStartOffset(delay);
+            mTitleSlideLeft.setStartOffset(delay);
+        } else {
+            mTitleSlideRight.setStartOffset(0);
+            mTitleSlideLeft.setStartOffset(0);
+        }
+
+        mTitle.startAnimation(visible ? mTitleSlideRight : mTitleSlideLeft);
+    }
+
+    List<View> getFocusOrder() {
+        return Arrays.asList(mSiteSecurity, mPageActionLayout, mStop);
+    }
+
+    void setOnStopListener(OnStopListener listener) {
+        mStopListener = listener;
+    }
+
+    void setOnTitleChangeListener(OnTitleChangeListener listener) {
+        mTitleChangeListener = listener;
+    }
+
+    View getDoorHangerAnchor() {
+        return mFavicon;
+    }
+
+    void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
+        mForwardAnim = anim;
+
+        if (animation == ForwardButtonAnimation.HIDE) {
+            anim.attach(mTitle,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        0);
+            anim.attach(mFavicon,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        0);
+            anim.attach(mSiteSecurity,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        0);
+
+            // We're hiding the forward button. We're going to reset the margin before
+            // the animation starts, so we shift these items to the right so that they don't
+            // appear to move initially.
+            ViewHelper.setTranslationX(mTitle, width);
+            ViewHelper.setTranslationX(mFavicon, width);
+            ViewHelper.setTranslationX(mSiteSecurity, width);
+        } else {
+            anim.attach(mTitle,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+            anim.attach(mFavicon,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+            anim.attach(mSiteSecurity,
+                        PropertyAnimator.Property.TRANSLATION_X,
+                        width);
+        }
+    }
+
+    void finishForwardAnimation() {
+        ViewHelper.setTranslationX(mTitle, 0);
+        ViewHelper.setTranslationX(mFavicon, 0);
+        ViewHelper.setTranslationX(mSiteSecurity, 0);
+
+        mForwardAnim = null;
+    }
+
+    void prepareStartEditingAnimation() {
+        // Hide page actions/stop buttons immediately
+        ViewHelper.setAlpha(mPageActionLayout, 0);
+        ViewHelper.setAlpha(mStop, 0);
+    }
+
+    void prepareStopEditingAnimation(PropertyAnimator anim) {
+        // Fade toolbar buttons (page actions, stop) after the entry
+        // is schrunk back to its original size.
+        anim.attach(mPageActionLayout,
+                    PropertyAnimator.Property.ALPHA,
+                    1);
+
+        anim.attach(mStop,
+                    PropertyAnimator.Property.ALPHA,
+                    1);
+    }
+
+    boolean dismissSiteIdentityPopup() {
+        if (mSiteIdentityPopup != null && mSiteIdentityPopup.isShowing()) {
+            mSiteIdentityPopup.dismiss();
+            return true;
+        }
+
+        return false;
+    }
+}

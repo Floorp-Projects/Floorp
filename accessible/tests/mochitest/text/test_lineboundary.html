@@ -109,6 +109,12 @@
                        [ [ 0, 3, "foo\n", 0, 4 ], [ 4, 4, "", 4, 4 ] ]);
 
       //////////////////////////////////////////////////////////////////////////
+      // 'Hello world ' (\n is rendered as space)
+
+      testTextAtOffset([ "ht_4" ], BOUNDARY_LINE_START,
+                       [ [ 0, 12, "Hello world ", 0, 12 ] ]);
+
+      //////////////////////////////////////////////////////////////////////////
       // list items
 
       testTextAtOffset([ "li1" ], BOUNDARY_LINE_START,
@@ -138,7 +144,12 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=882292">
     Bug 882292
   </a>
-  
+  <a target="_blank"
+     title="getTextAtOffset broken for last object when closing tag is preceded by newline char"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=947170">
+    Bug 947170
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -172,6 +183,9 @@ two words
 
   <iframe id="ht_2" src="data:text/html,<div contentEditable='true'>foo<br/></div>"></iframe>
   <iframe id="ht_3" src="data:text/html,<div contentEditable='true'>foo<br/><br/></div>"></iframe>
+
+  <p id="ht_4">Hello world
+</p>
 
   <ul>
     <li id="li1">Item</li>

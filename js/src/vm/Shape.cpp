@@ -1156,26 +1156,26 @@ JSObject::clear(JSContext *cx, HandleObject obj)
     obj->checkShapeConsistency();
 }
 
-bool
-JSObject::rollbackProperties(ExclusiveContext *cx, uint32_t slotSpan)
+/* static */ bool
+JSObject::rollbackProperties(ExclusiveContext *cx, HandleObject obj, uint32_t slotSpan)
 {
     /*
      * Remove properties from this object until it has a matching slot span.
      * The object cannot have escaped in a way which would prevent safe
      * removal of the last properties.
      */
-    JS_ASSERT(!inDictionaryMode() && slotSpan <= this->slotSpan());
+    JS_ASSERT(!obj->inDictionaryMode() && slotSpan <= obj->slotSpan());
     while (true) {
-        if (lastProperty()->isEmptyShape()) {
+        if (obj->lastProperty()->isEmptyShape()) {
             JS_ASSERT(slotSpan == 0);
             break;
         } else {
-            uint32_t slot = lastProperty()->slot();
+            uint32_t slot = obj->lastProperty()->slot();
             if (slot < slotSpan)
                 break;
-            JS_ASSERT(getSlot(slot).isUndefined());
+            JS_ASSERT(obj->getSlot(slot).isUndefined());
         }
-        if (!removeProperty(cx, lastProperty()->propid()))
+        if (!obj->removeProperty(cx, obj->lastProperty()->propid()))
             return false;
     }
 

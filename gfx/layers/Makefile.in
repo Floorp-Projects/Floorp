@@ -3,18 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-VPATH       = \
-  $(srcdir) \
-  $(srcdir)/basic \
-  $(srcdir)/client \
-  $(srcdir)/composite \
-  $(srcdir)/opengl \
-  $(srcdir)/d3d9 \
-  $(srcdir)/d3d10 \
-  $(srcdir)/d3d11 \
-  $(srcdir)/ipc \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \

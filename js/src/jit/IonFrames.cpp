@@ -619,7 +619,7 @@ HandleException(ResumeFromException *rfe)
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
                 JSScript *script = frames.script();
-                probes::ExitScript(cx, script, script->function(), popSPSFrame);
+                probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
                 if (!frames.more())
                     break;
                 ++frames;
@@ -638,7 +638,7 @@ HandleException(ResumeFromException *rfe)
 
             // Unwind profiler pseudo-stack
             JSScript *script = iter.script();
-            probes::ExitScript(cx, script, script->function(),
+            probes::ExitScript(cx, script, script->functionNonDelazifying(),
                                iter.baselineFrame()->hasPushedSPSFrame());
             // After this point, any pushed SPS frame would have been popped if it needed
             // to be.  Unset the flag here so that if we call DebugEpilogue below,
@@ -688,7 +688,7 @@ HandleException(ResumeFromException *rfe)
 void
 HandleParallelFailure(ResumeFromException *rfe)
 {
-    ForkJoinSlice *slice = ForkJoinSlice::Current();
+    ForkJoinSlice *slice = ForkJoinSlice::current();
     IonFrameIterator iter(slice->perThreadData->ionTop, ParallelExecution);
 
     parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
@@ -1103,6 +1103,17 @@ MarkJitExitFrame(JSTracer *trc, const IonFrameIterator &frame)
 }
 
 static void
+MarkRectifierFrame(JSTracer *trc, const IonFrameIterator &frame)
+{
+    // Mark thisv.
+    //
+    // Baseline JIT code generated as part of the ICCall_Fallback stub may use
+    // it if we're calling a constructor that returns a primitive value.
+    IonRectifierFrameLayout *layout = (IonRectifierFrameLayout *)frame.fp();
+    gc::MarkValueRoot(trc, &layout->argv()[0], "ion-thisv");
+}
+
+static void
 MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 {
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1132,6 +1143,8 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
           case IonFrame_Unwound_OptimizedJS:
             MOZ_ASSUME_UNREACHABLE("invalid");
           case IonFrame_Rectifier:
+            MarkRectifierFrame(trc, frames);
+            break;
           case IonFrame_Unwound_Rectifier:
             break;
           case IonFrame_Osr:

@@ -6,12 +6,11 @@
 
 let doc;
 let h1;
-let div;
+let inspector;
 
-function createDocument()
-{
+function createDocument() {
   let div = doc.createElement("div");
-  let h1 = doc.createElement("h1");
+  h1 = doc.createElement("h1");
   let p1 = doc.createElement("p");
   let p2 = doc.createElement("p");
   let div2 = doc.createElement("div");
@@ -48,80 +47,38 @@ function createDocument()
   doc.body.appendChild(div2);
   doc.body.appendChild(div3);
 
-  openInspector(setupHighlighterTests);
-}
-
-function setupHighlighterTests()
-{
-  h1 = doc.querySelector("h1");
-  ok(h1, "we have the header");
-
-  let i = getActiveInspector();
-  i.selection.setNode(div);
-  i.highlighter.unlockAndFocus();
-  i.highlighter.outline.setAttribute("disable-transitions", "true");
-
-  executeSoon(function() {
-    i.selection.once("new-node", performToggleComparisons);
-    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+  openInspector(aInspector => {
+    inspector = aInspector;
+    inspector.selection.setNode(div, null);
+    inspector.once("inspector-updated", () => {
+      getHighlighterOutline().setAttribute("disable-transitions", "true");
+      inspector.toolbox.startPicker().then(testMouseOverH1Highlights);
+    });
   });
 }
 
-function performToggleComparisons(evt)
-{
-  let i = getActiveInspector();
-
-  i.highlighter.toggleLockState();
-  ok(i.highlighter.locked, "highlighter locks");
-  is(i.selection.node, div);
-  i.highlighter.toggleLockState();
-  ok(!i.highlighter.locked, "highlighter unlocks");
-
-  i.highlighter.toggleLockState();
-  ok(i.highlighter.locked, "highlighter locks if selection is unchanged");
-  i.highlighter.toggleLockState();
-
-  executeSoon(function() {
-    i.selection.once("new-node", performTestComparisons);
-    EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
+function testMouseOverH1Highlights() {
+  inspector.toolbox.once("picker-node-hovered", () => {
+    ok(isHighlighting(), "Highlighter is shown");
+    is(getHighlitNode(), h1, "Highlighter's outline correspond to the selected node");
+    testOutlineDimensions();
   });
+
+  EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
 }
 
-function performTestComparisons(evt)
-{
-  let i = getActiveInspector();
-  i.highlighter.lock();
-  ok(isHighlighting(), "highlighter is highlighting");
-  is(getHighlitNode(), h1, "highlighter matches selection")
-  is(i.selection.node, h1, "selection matches node");
-  is(i.selection.node, getHighlitNode(), "selection matches highlighter");
+function testOutlineDimensions() {
+  let h1Dims = h1.getBoundingClientRect();
+  let h1Width = h1Dims.width;
+  let h1Height = h1Dims.height;
 
-
-  div = doc.querySelector("div#checkOutThisWickedSpread");
-
-  executeSoon(function() {
-    i.selection.once("new-node", finishTestComparisons);
-    i.selection.setNode(div);
-  });
-}
-
-function finishTestComparisons()
-{
-  let i = getActiveInspector();
-
-  // get dimensions of div element
-  let divDims = div.getBoundingClientRect();
-  let divWidth = divDims.width;
-  let divHeight = divDims.height;
-
-  // get dimensions of the outline
-  let outlineDims = i.highlighter.outline.getBoundingClientRect();
+  let outlineDims = getHighlighterOutlineRect();
   let outlineWidth = outlineDims.width;
   let outlineHeight = outlineDims.height;
 
   // Disabled due to bug 716245
-  //is(outlineWidth, divWidth, "outline width matches dimensions of element (no zoom)");
-  //is(outlineHeight, divHeight, "outline height matches dimensions of element (no zoom)");
+  is(outlineWidth, h1Width, "outline width matches dimensions of element (no zoom)");
+  is(outlineHeight, h1Height, "outline height matches dimensions of element (no zoom)");
 
   // zoom the page by a factor of 2
   let contentViewer = gBrowser.selectedBrowser.docShell.contentViewer
@@ -132,38 +89,36 @@ function finishTestComparisons()
   // resize event
 
   window.setTimeout(function() {
-    // check what zoom factor we're at, should be 2
-    let zoom = i.highlighter.zoom;
-    is(zoom, 2, "zoom is 2?");
-
     // simulate the zoomed dimensions of the div element
-    let divDims = div.getBoundingClientRect();
-    let divWidth = divDims.width * zoom;
-    let divHeight = divDims.height * zoom;
+    let h1Dims = h1.getBoundingClientRect();
+    // There seems to be some very minor differences in the floats, so let's
+    // floor the values
+    let h1Width = Math.floor(h1Dims.width * contentViewer.fullZoom);
+    let h1Height = Math.floor(h1Dims.height * contentViewer.fullZoom);
 
-    // now zoomed, get new dimensions the outline
-    let outlineDims = i.highlighter.outline.getBoundingClientRect();
-    let outlineWidth = outlineDims.width;
-    let outlineHeight = outlineDims.height;
+    let outlineDims = getHighlighterOutlineRect();
+    let outlineWidth = Math.floor(outlineDims.width);
+    let outlineHeight = Math.floor(outlineDims.height);
 
     // Disabled due to bug 716245
-    //is(outlineWidth, divWidth, "outline width matches dimensions of element (no zoom)");
-    //is(outlineHeight, divHeight, "outline height matches dimensions of element (no zoom)");
+    is(outlineWidth, h1Width, "outline width matches dimensions of element (zoomed)");
+    is(outlineHeight, h1Height, "outline height matches dimensions of element (zoomed)");
 
-    doc = h1 = div = null;
     executeSoon(finishUp);
   }, 500);
 }
 
 function finishUp() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.closeToolbox(target);
-  gBrowser.removeCurrentTab();
-  finish();
+  inspector.toolbox.stopPicker().then(() => {
+    doc = h1 = inspector = null;
+    let target = TargetFactory.forTab(gBrowser.selectedTab);
+    gDevTools.closeToolbox(target);
+    gBrowser.removeCurrentTab();
+    finish();
+  });
 }
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
@@ -174,4 +129,3 @@ function test()
 
   content.location = "data:text/html,basic tests for inspector";
 }
-

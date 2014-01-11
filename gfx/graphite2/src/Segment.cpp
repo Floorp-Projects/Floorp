@@ -36,6 +36,7 @@ of the License or (at your option) any later version.
 #include "inc/Slot.h"
 #include "inc/Main.h"
 #include "inc/CmapCache.h"
+#include "inc/Bidi.h"
 #include "graphite2/Segment.h"
 
 
@@ -106,15 +107,15 @@ void Segment::removeScope(SegmentScopeState & state)
     m_defaultOriginal = 0;
 }
 
-
+#if 0
 void Segment::append(const Segment &other)
 {
     Rect bbox = other.m_bbox + m_advance;
 
     m_slots.insert(m_slots.end(), other.m_slots.begin(), other.m_slots.end());
-    CharInfo* pNewCharInfo = new CharInfo[m_numCharinfo+other.m_numCharinfo];		//since CharInfo has no constructor, this doesn't do much
+    CharInfo* pNewCharInfo = new CharInfo[m_numCharinfo+other.m_numCharinfo];       //since CharInfo has no constructor, this doesn't do much
     for (unsigned int i=0 ; i<m_numCharinfo ; ++i)
-	pNewCharInfo[i] = m_charinfo[i];
+    pNewCharInfo[i] = m_charinfo[i];
     m_last->next(other.m_first);
     other.m_last->prev(m_last);
     m_userAttrs.insert(m_userAttrs.end(), other.m_userAttrs.begin(), other.m_userAttrs.end());
@@ -131,12 +132,14 @@ void Segment::append(const Segment &other)
     m_bbox = m_bbox.widen(bbox);
     m_passBits &= other.passBits();
 }
+#endif
 #endif // GRAPHITE2_NSEGCACHE
 
 void Segment::appendSlot(int id, int cid, int gid, int iFeats, size_t coffset)
 {
     Slot *aSlot = newSlot();
     
+    if (!aSlot) return;
     m_charinfo[id].init(cid);
     m_charinfo[id].feats(iFeats);
     m_charinfo[id].base(coffset);
@@ -167,14 +170,15 @@ Slot *Segment::newSlot()
 #endif
         Slot *newSlots = grzeroalloc<Slot>(m_bufSize);
         int16 *newAttrs = grzeroalloc<int16>(numUser * m_bufSize);
-        newSlots[0].userAttrs(newAttrs);
-        for (size_t i = 1; i < m_bufSize - 1; i++)
+        if (!newSlots || !newAttrs) return NULL;
+        for (size_t i = 0; i < m_bufSize; i++)
         {
             newSlots[i].next(newSlots + i + 1);
             newSlots[i].userAttrs(newAttrs + i * numUser);
+            newSlots[i].setBidiClass(-1);
         }
-        newSlots[m_bufSize - 1].userAttrs(newAttrs + (m_bufSize - 1) * numUser);
         newSlots[m_bufSize - 1].next(NULL);
+        newSlots[0].next(NULL);
         m_slots.push_back(newSlots);
         m_userAttrs.push_back(newAttrs);
         m_freeSlots = (m_bufSize > 1)? newSlots + 1 : NULL;
@@ -219,6 +223,7 @@ SlotJustify *Segment::newJustify()
     {
         const size_t justSize = SlotJustify::size_of(m_silf->numJustLevels());
         byte *justs = grzeroalloc<byte>(justSize * m_bufSize);
+        if (!justs) return NULL;
         for (int i = m_bufSize - 2; i >= 0; --i)
         {
             SlotJustify *p = reinterpret_cast<SlotJustify *>(justs + justSize * i);
@@ -248,6 +253,7 @@ void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
                        Slot * endSlot, const Slot * srcSlot,
                        const size_t numGlyphs)
 {
+    size_t numChars = length;
     extendLength(numGlyphs - length);
     // remove any extra
     if (numGlyphs < length)
@@ -268,6 +274,7 @@ void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
         while (numGlyphs > length)
         {
             Slot * extra = newSlot();
+            if (!extra) return;
             extra->prev(endSlot);
             extra->next(endSlot->next());
             endSlot->next(extra);
@@ -282,60 +289,60 @@ void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
 
     endSlot = endSlot->next();
     assert(numGlyphs == length);
+    assert(offset + numChars <= m_numCharinfo);
     Slot * indexmap[eMaxSpliceSize*3];
     assert(numGlyphs < sizeof indexmap/sizeof *indexmap);
     Slot * slot = startSlot;
     for (uint16 i=0; i < numGlyphs; slot = slot->next(), ++i)
-    	indexmap[i] = slot;
+        indexmap[i] = slot;
 
-    slot = startSlot;
-    for (slot=startSlot; slot != endSlot; slot = slot->next(), srcSlot = srcSlot->next())
+    for (slot = startSlot; slot != endSlot; slot = slot->next(), srcSlot = srcSlot->next())
     {
-        slot->set(*srcSlot, offset, m_silf->numUser(), m_silf->numJustLevels());
-        if (srcSlot->attachedTo())	slot->attachTo(indexmap[srcSlot->attachedTo()->index()]);
-        if (srcSlot->nextSibling())	slot->m_sibling = indexmap[srcSlot->nextSibling()->index()];
-        if (srcSlot->firstChild())	slot->m_child = indexmap[srcSlot->firstChild()->index()];
+        slot->set(*srcSlot, offset, m_silf->numUser(), m_silf->numJustLevels(), numChars);
+        if (srcSlot->attachedTo())  slot->attachTo(indexmap[srcSlot->attachedTo()->index()]);
+        if (srcSlot->nextSibling()) slot->m_sibling = indexmap[srcSlot->nextSibling()->index()];
+        if (srcSlot->firstChild())  slot->m_child = indexmap[srcSlot->firstChild()->index()];
     }
 }
 #endif // GRAPHITE2_NSEGCACHE
 
 void Segment::linkClusters(Slot *s, Slot * end)
 {
-	end = end->next();
+    end = end->next();
 
-	for (; s != end && !s->isBase(); s = s->next());
-	Slot * ls = s;
+    for (; s != end && !s->isBase(); s = s->next());
+    Slot * ls = s;
 
-	if (m_dir & 1)
-	{
-		for (; s != end; s = s->next())
-		{
-			if (!s->isBase())	continue;
+    if (m_dir & 1)
+    {
+        for (; s != end; s = s->next())
+        {
+            if (!s->isBase())   continue;
 
-			s->sibling(ls);
-			ls = s;
-		}
-	}
-	else
-	{
-		for (; s != end; s = s->next())
-		{
-			if (!s->isBase())	continue;
+            s->sibling(ls);
+            ls = s;
+        }
+    }
+    else
+    {
+        for (; s != end; s = s->next())
+        {
+            if (!s->isBase())   continue;
 
-			ls->sibling(s);
-			ls = s;
-		}
-	}
+            ls->sibling(s);
+            ls = s;
+        }
+    }
 }
 
 Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
 {
     Position currpos(0., 0.);
-    Rect bbox;
     float clusterMin = 0.;
+    Rect bbox;
 
-    if (!iStart)	iStart = m_first;
-    if (!iEnd)		iEnd   = m_last;
+    if (!iStart)    iStart = m_first;
+    if (!iEnd)      iEnd   = m_last;
 
     if (m_dir & 1)
     {
@@ -357,20 +364,39 @@ Position Segment::positionSlots(const Font *font, Slot * iStart, Slot * iEnd)
 }
 
 
-void Segment::associateChars()
+void Segment::associateChars(int offset, int numChars)
 {
-    int i = 0;
+    int i = 0, j = 0;
+    CharInfo *c, *cend;
+    for (c = m_charinfo + offset, cend = m_charinfo + offset + numChars; c != cend; ++c)
+    {
+        c->before(-1);
+        c->after(-1);
+    }
     for (Slot * s = m_first; s; s->index(i++), s = s->next())
     {
-        int j = s->before();
-        if (j < 0)	continue;
+        j = s->before();
+        if (j < 0)  continue;
 
         for (const int after = s->after(); j <= after; ++j)
-		{
-			CharInfo & c = *charinfo(j);
-			if (c.before() == -1 || i < c.before()) 	c.before(i);
-			if (c.after() < i) 							c.after(i);
-		}
+        {
+            c = charinfo(j);
+            if (c->before() == -1 || i < c->before())   c->before(i);
+            if (c->after() < i)                         c->after(i);
+        }
+    }
+    for (Slot *s = m_first; s; s = s->next())
+    {
+        int a;
+        for (a = s->after() + 1; a < offset + numChars && charinfo(a)->after() < 0; ++a)
+        { charinfo(a)->after(s->index()); }
+        --a;
+        s->after(a);
+
+        for (a = s->before() - 1; a >= offset && charinfo(a)->before() < 0; --a)
+        { charinfo(a)->before(s->index()); }
+        ++a;
+        s->before(a);
     }
 }
 
@@ -378,31 +404,34 @@ void Segment::associateChars()
 template <typename utf_iter>
 inline void process_utf_data(Segment & seg, const Face & face, const int fid, utf_iter c, size_t n_chars)
 {
-	const Cmap    & cmap = face.cmap();
-	int slotid = 0;
+    const Cmap    & cmap = face.cmap();
+    int slotid = 0;
 
-	const typename utf_iter::codeunit_type * const base = c;
-	for (; n_chars; --n_chars, ++c, ++slotid)
-	{
-		const uint32 usv = *c;
-		uint16 gid = cmap[usv];
-		if (!gid)	gid = face.findPseudo(usv);
-		seg.appendSlot(slotid, usv, gid, fid, c - base);
-	}
+    const typename utf_iter::codeunit_type * const base = c;
+    for (; n_chars; --n_chars, ++c, ++slotid)
+    {
+        const uint32 usv = *c;
+        uint16 gid = cmap[usv];
+        if (!gid)   gid = face.findPseudo(usv);
+        seg.appendSlot(slotid, usv, gid, fid, c - base);
+    }
 }
 
 
-void Segment::read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void* pStart, size_t nChars)
+bool Segment::read_text(const Face *face, const Features* pFeats/*must not be NULL*/, gr_encform enc, const void* pStart, size_t nChars)
 {
-	assert(face);
-	assert(pFeats);
+    assert(face);
+    assert(pFeats);
+    if (!m_charinfo) return false;
 
-	switch (enc)
-	{
-	case gr_utf8:	process_utf_data(*this, *face, addFeatures(*pFeats), utf8::const_iterator(pStart), nChars); break;
-	case gr_utf16:	process_utf_data(*this, *face, addFeatures(*pFeats), utf16::const_iterator(pStart), nChars); break;
-	case gr_utf32:	process_utf_data(*this, *face, addFeatures(*pFeats), utf32::const_iterator(pStart), nChars); break;
-	}
+    // utf iterator is self recovering so we don't care about the error state of the iterator.
+    switch (enc)
+    {
+    case gr_utf8:   process_utf_data(*this, *face, addFeatures(*pFeats), utf8::const_iterator(pStart), nChars); break;
+    case gr_utf16:  process_utf_data(*this, *face, addFeatures(*pFeats), utf16::const_iterator(pStart), nChars); break;
+    case gr_utf32:  process_utf_data(*this, *face, addFeatures(*pFeats), utf32::const_iterator(pStart), nChars); break;
+    }
+    return true;
 }
 
 void Segment::prepare_pos(const Font * /*font*/)
@@ -410,41 +439,48 @@ void Segment::prepare_pos(const Font * /*font*/)
     // copy key changeable metrics into slot (if any);
 }
 
-Slot *resolveExplicit(int level, int dir, Slot *s, int nNest = 0);
-void resolveWeak(int baseLevel, Slot *s);
-void resolveNeutrals(int baseLevel, Slot *s);
+Slot *process_bidi(Slot *start, int level, int prelevel, int &nextLevel, int dirover, int isol, int &cisol, int &isolerr, int &embederr, int init, Segment *seg, uint8 aMirror, BracketPairStack &stack);
 void resolveImplicit(Slot *s, Segment *seg, uint8 aMirror);
-void resolveWhitespace(int baseLevel, Segment *seg, uint8 aBidi, Slot *s);
+void resolveWhitespace(int baseLevel, Slot *s);
 Slot *resolveOrder(Slot * & s, const bool reordered, const int level = 0);
 
 void Segment::bidiPass(uint8 aBidi, int paradir, uint8 aMirror)
 {
-	if (slotCount() == 0)
-		return;
+    if (slotCount() == 0)
+        return;
 
     Slot *s;
     int baseLevel = paradir ? 1 : 0;
     unsigned int bmask = 0;
+    unsigned int ssize = 0;
     for (s = first(); s; s = s->next())
     {
-    	unsigned int bAttr = glyphAttr(s->gid(), aBidi);
-        s->setBidiClass((bAttr <= 16) * bAttr);
+        if (s->getBidiClass() == -1)
+        {
+            unsigned int bAttr = glyphAttr(s->gid(), aBidi);
+            s->setBidiClass((bAttr <= 22) * bAttr);
+        }
         bmask |= (1 << s->getBidiClass());
         s->setBidiLevel(baseLevel);
+        if (glyphAttr(s->gid(), aMirror) && s->getBidiClass() == 21)
+            ++ssize;
     }
-    if (bmask & (paradir ? 0x92 : 0x9C))
+
+    BracketPairStack bstack(ssize);
+    if (bmask & (paradir ? 0x2E7892 : 0x2E789C))
     {
-        if (bmask & 0xF800)
-            resolveExplicit(baseLevel, 0, first(), 0);
-        if (bmask & 0x10178)
-            resolveWeak(baseLevel, first());
-        if (bmask & 0x361)
-            resolveNeutrals(baseLevel, first());
+        // O(8N) algorithm, with no working data beyond what is needed for processParens
+        int nextLevel = paradir;
+        int e, i, c;
+        process_bidi(first(), baseLevel, paradir, nextLevel, 0, 0, c = 0, i = 0, e = 0, 1, this, aMirror, bstack);
         resolveImplicit(first(), this, aMirror);
-        resolveWhitespace(baseLevel, this, aBidi, last());
+        resolveWhitespace(baseLevel, last());
         s = resolveOrder(s = first(), baseLevel != 0);
-        first(s); last(s->prev());
-        s->prev()->next(0); s->prev(0);
+        if (s)
+        {
+            first(s); last(s->prev());
+            s->prev()->next(0); s->prev(0);
+        }
     }
     else if (!(dir() & 4) && baseLevel && aMirror)
     {

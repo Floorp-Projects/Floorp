@@ -67,17 +67,18 @@ function testModifyRules()
     rule.editor.addProperty("font-weight", "bold", "");
   }
 
-  reselectElement(doc.querySelector("#target"), () => {
+  executeSoon(() => {
+    reselectElement(doc.querySelector("#target"), () => {
+      for (let rule of ruleView._elementStyle.rules) {
+        let lastRule = rule.textProps[rule.textProps.length - 1];
 
-    for (let rule of ruleView._elementStyle.rules) {
-      let lastRule = rule.textProps[rule.textProps.length - 1];
+        is (lastRule.name, "font-weight", "Last rule name is font-weight");
+        is (lastRule.value, "bold", "Last rule value is bold");
+      }
 
-      is (lastRule.name, "font-weight", "Last rule name is font-weight");
-      is (lastRule.value, "bold", "Last rule value is bold");
-    }
-
-    gBrowser.removeCurrentTab();
-    openXUL();
+      gBrowser.removeCurrentTab();
+      openXUL();
+    });
   });
 }
 

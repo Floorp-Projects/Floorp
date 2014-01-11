@@ -355,7 +355,7 @@ MSG_DEF(JSMSG_YIELD_IN_DEFAULT,       301, 0, JSEXN_SYNTAXERR, "yield in default
 MSG_DEF(JSMSG_INTRINSIC_NOT_DEFINED,  302, 1, JSEXN_REFERENCEERR, "no intrinsic function {0}")
 MSG_DEF(JSMSG_ALREADY_HAS_PRAGMA, 303, 2, JSEXN_ERR,      "{0} is being assigned a {1}, but already has one")
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,      304, 0, JSEXN_RANGEERR, "invalid parallel method argument")
-MSG_DEF(JSMSG_UNUSED305,              305, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_REGEXP_RUNTIME_ERROR,   305, 0, JSEXN_INTERNALERR, "an error occurred while executing regular expression")
 MSG_DEF(JSMSG_UNUSED306,              306, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNUSED307,              307, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 308, 0, JSEXN_ERR, "no conflict resolution function provided")
@@ -434,3 +434,4 @@ MSG_DEF(JSMSG_DECLARATION_AFTER_EXPORT, 379, 0, JSEXN_SYNTAXERR, "missing declar
 MSG_DEF(JSMSG_INVALID_PROTOTYPE,        380, 0, JSEXN_TYPEERR, "prototype field is not an object")
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_TO_UNSIZED, 381, 0, JSEXN_TYPEERR, "cannot create a handle to an unsized type")
 MSG_DEF(JSMSG_SETPROTOTYPEOF_FAIL,      382, 0, JSEXN_TYPEERR, "[[SetPrototypeOf]] failed")
+MSG_DEF(JSMSG_INVALID_ARG_TYPE,         383, 3, JSEXN_TYPEERR, "Invalid type: {0} can't be a{1} {2}")
