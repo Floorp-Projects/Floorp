@@ -783,8 +783,10 @@ function shouldRunServiceTest(aFirstTest) {
 
 #ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
   if (!isBinarySigned(updaterBinPath)) {
-    logTestInfo("this test can only run on builds with signed binaries.");
-    return false;
+    logTestInfo("test registry key exists but this test can only run on " +
+                "builds with signed binaries when " +
+                "DISABLE_UPDATER_AUTHENTICODE_CHECK is not defined");
+    do_throw("this test can only run on builds with signed binaries.");
   }
 #endif
   return true;
