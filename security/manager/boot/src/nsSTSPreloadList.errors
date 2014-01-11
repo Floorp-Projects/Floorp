@@ -1,4 +1,3 @@
-accounts.google.com: max-age too low: 2592000
 alpha.irccloud.com: could not connect to host
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
@@ -34,6 +33,7 @@ espra.com: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 get.zenpayroll.com: did not receive HSTS header
+getcloak.com: max-age too low: 2678400
 glass.google.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
 gocardless.com: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
@@ -109,6 +109,7 @@ www.cueup.com: did not receive HSTS header
 www.developer.mydigipass.com: could not connect to host
 www.dropcam.com: max-age too low: 2592000
 www.elanex.biz: did not receive HSTS header
+www.getcloak.com: max-age too low: 2678400
 www.gmail.com: did not receive HSTS header
 www.googlemail.com: did not receive HSTS header
 www.gov.uk: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
