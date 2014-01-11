@@ -1793,10 +1793,8 @@ CodeGenerator::visitCallNative(LCallNative *call)
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.failureLabel(executionMode));
 
-    // Load the outparam vp[0] into output register(s), if observable.
-    Address ResultAddress(StackPointer, IonNativeExitFrameLayout::offsetOfResult());
-    if (call->mir()->hasUses())
-        masm.loadValue(ResultAddress, JSReturnOperand);
+    // Load the outparam vp[0] into output register(s).
+    masm.loadValue(Address(StackPointer, IonNativeExitFrameLayout::offsetOfResult()), JSReturnOperand);
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.
@@ -1894,13 +1892,17 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative *call)
     masm.passABIArg(argArgs);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, target->jitInfo()->method));
 
-    if (!target->jitInfo()->isInfallible)
+    if (target->jitInfo()->isInfallible) {
+        masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
+                       JSReturnOperand);
+    } else {
+        // Test for failure.
         masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
 
-    // Load the outparam vp[0] into output register(s), if observable.
-    Address ResultAddress(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult());
-    if (call->mir()->hasUses())
-        masm.loadValue(ResultAddress, JSReturnOperand);
+        // Load the outparam vp[0] into output register(s).
+        masm.loadValue(Address(StackPointer, IonDOMMethodExitFrameLayout::offsetOfResult()),
+                       JSReturnOperand);
+    }
 
     // The next instruction is removing the footer of the exit frame, so there
     // is no need for leaveFakeExitFrame.

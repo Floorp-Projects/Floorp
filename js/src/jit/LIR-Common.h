@@ -1004,9 +1004,17 @@ class LStackArgV : public LInstructionHelper<0, BOX_PIECES, 0>
 template <size_t Defs, size_t Operands, size_t Temps>
 class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, Temps>
 {
+    // Slot below which %esp should be adjusted to make the call.
+    // Zero for a function without arguments.
+    uint32_t argslot_;
+
   public:
+    LJSCallInstructionHelper(uint32_t argslot)
+      : argslot_(argslot)
+    { }
+
     uint32_t argslot() const {
-        return mir()->numStackArgs();
+        return argslot_;
     }
     MCall *mir() const {
         return this->mir_->toCall();
@@ -1031,6 +1039,8 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
     uint32_t numActualArgs() const {
         return mir()->numActualArgs();
     }
+
+    typedef LJSCallInstructionHelper<Defs, Operands, Temps> JSCallHelper;
 };
 
 // Generates a polymorphic callsite, wherein the function being called is
@@ -1040,8 +1050,9 @@ class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 2>
   public:
     LIR_HEADER(CallGeneric)
 
-    LCallGeneric(const LAllocation &func, const LDefinition &nargsreg,
-                 const LDefinition &tmpobjreg)
+    LCallGeneric(const LAllocation &func, uint32_t argslot,
+                 const LDefinition &nargsreg, const LDefinition &tmpobjreg)
+      : JSCallHelper(argslot)
     {
         setOperand(0, func);
         setTemp(0, nargsreg);
@@ -1065,7 +1076,8 @@ class LCallKnown : public LJSCallInstructionHelper<BOX_PIECES, 1, 1>
   public:
     LIR_HEADER(CallKnown)
 
-    LCallKnown(const LAllocation &func, const LDefinition &tmpobjreg)
+    LCallKnown(const LAllocation &func, uint32_t argslot, const LDefinition &tmpobjreg)
+      : JSCallHelper(argslot)
     {
         setOperand(0, func);
         setTemp(0, tmpobjreg);
@@ -1085,8 +1097,10 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
   public:
     LIR_HEADER(CallNative)
 
-    LCallNative(const LDefinition &argContext, const LDefinition &argUintN,
+    LCallNative(uint32_t argslot,
+                const LDefinition &argContext, const LDefinition &argUintN,
                 const LDefinition &argVp, const LDefinition &tmpreg)
+      : JSCallHelper(argslot)
     {
         // Registers used for callWithABI().
         setTemp(0, argContext);
@@ -1117,8 +1131,10 @@ class LCallDOMNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4>
   public:
     LIR_HEADER(CallDOMNative)
 
-    LCallDOMNative(const LDefinition &argJSContext, const LDefinition &argObj,
+    LCallDOMNative(uint32_t argslot,
+                   const LDefinition &argJSContext, const LDefinition &argObj,
                    const LDefinition &argPrivate, const LDefinition &argArgs)
+      : JSCallHelper(argslot)
     {
         setTemp(0, argJSContext);
         setTemp(1, argObj);
