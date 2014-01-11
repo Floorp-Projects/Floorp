@@ -145,7 +145,7 @@ StartupCache::~StartupCache()
   // If we shutdown quickly timer wont have fired. Instead of writing
   // it on the main thread and block the shutdown we simply wont update
   // the startup cache. Always do this if the file doesn't exist since
-  // we use it part of the packge step.
+  // we use it part of the package step.
   if (!mArchive) {
     WriteToDisk();
   }
@@ -536,7 +536,15 @@ void
 StartupCache::ThreadedWrite(void *aClosure)
 {
   PR_SetCurrentThreadName("StartupCache");
-  gStartupCache->WriteToDisk();
+  /*
+   * It is safe to use the pointer passed in aClosure to reference the
+   * StartupCache object because the thread's lifetime is tightly coupled to
+   * the lifetime of the StartupCache object; this thread is joined in the
+   * StartupCache destructor, guaranteeing that this function runs if and only
+   * if the StartupCache object is valid.
+   */
+  StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
+  startupCacheObj->WriteToDisk();
 }
 
 /*
@@ -547,13 +555,21 @@ StartupCache::ThreadedWrite(void *aClosure)
 void
 StartupCache::WriteTimeout(nsITimer *aTimer, void *aClosure)
 {
-  gStartupCache->mWriteThread = PR_CreateThread(PR_USER_THREAD,
-                                                StartupCache::ThreadedWrite,
-                                                nullptr,
-                                                PR_PRIORITY_NORMAL,
-                                                PR_LOCAL_THREAD,
-                                                PR_JOINABLE_THREAD,
-                                                0);
+  /*
+   * It is safe to use the pointer passed in aClosure to reference the
+   * StartupCache object because the timer's lifetime is tightly coupled to
+   * the lifetime of the StartupCache object; this timer is canceled in the
+   * StartupCache destructor, guaranteeing that this function runs if and only
+   * if the StartupCache object is valid.
+   */
+  StartupCache* startupCacheObj = static_cast<StartupCache*>(aClosure);
+  startupCacheObj->mWriteThread = PR_CreateThread(PR_USER_THREAD,
+                                                  StartupCache::ThreadedWrite,
+                                                  startupCacheObj,
+                                                  PR_PRIORITY_NORMAL,
+                                                  PR_LOCAL_THREAD,
+                                                  PR_JOINABLE_THREAD,
+                                                  0);
 }
 
 // We don't want to refcount StartupCache, so we'll just
