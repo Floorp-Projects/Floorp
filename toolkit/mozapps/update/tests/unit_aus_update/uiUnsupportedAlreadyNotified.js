@@ -48,7 +48,8 @@ function check_test() {
     return;
   }
   do_check_true(true);
-  do_test_finished();
+
+  doTestFinish();
 }
 
 function end_test() {

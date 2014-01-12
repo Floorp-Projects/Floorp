@@ -8,7 +8,6 @@
 // We don't actually care if the MAR has any data, we only care about the
 // application return code and update.status result.
 const TEST_FILES = [];
-const MAR_CHANNEL_MISMATCH_ERROR = "22";
 
 function run_test() {
   if (!IS_MAR_CHECKS_ENABLED) {
@@ -22,11 +21,9 @@ function run_test() {
   // Note that if execv is used, the updater process will turn into the
   // callback process, so its return code will be that of the callback
   // app.
-  runUpdate((USE_EXECV ? 0 : 1));
+  runUpdate((USE_EXECV ? 0 : 1), STATE_FAILED_CHANNEL_MISMATCH_ERROR);
 }
 
 function checkUpdateApplied() {
-  //Make sure we get a version downgrade error
-  do_check_eq(readStatusFailedCode(), MAR_CHANNEL_MISMATCH_ERROR);
-  do_test_finished();
+  doTestFinish();
 }

@@ -38,5 +38,5 @@ function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   reloadUpdateManagerData();
 
-  do_timeout(TEST_CHECK_TIMEOUT, do_test_finished);
+  do_timeout(TEST_CHECK_TIMEOUT, doTestFinish);
 }

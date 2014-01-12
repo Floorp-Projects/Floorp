@@ -208,5 +208,5 @@ function run_test() {
   do_check_true(patch.selected);
   do_check_eq(patch.state, STATE_FAILED);
 
-  do_test_finished();
+  doTestFinish();
 }

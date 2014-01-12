@@ -81,7 +81,8 @@ function check_test_pt1() {
   let state = gAUS.downloadUpdate(gActiveUpdate, true);
   do_check_eq(state, "null");
   do_check_eq(gActiveUpdate.errorCode >>> 0 , AUS_Cr.NS_ERROR_FILE_TOO_BIG);
-  do_test_finished();
+
+  doTestFinish();
 }
 
 function end_test() {
