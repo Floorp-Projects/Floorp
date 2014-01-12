@@ -7,16 +7,22 @@
 
 #include "nsGenericHTMLFrameElement.h"
 
-#include "nsIDOMDocument.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIAppsService.h"
-#include "nsServiceManagerUtils.h"
-#include "mozIApplication.h"
-#include "nsIPermissionManager.h"
 #include "GeckoProfiler.h"
+#include "mozIApplication.h"
+#include "nsAttrValueInlines.h"
+#include "nsContentUtils.h"
+#include "nsIAppsService.h"
+#include "nsIDocShell.h"
+#include "nsIDOMDocument.h"
+#include "nsIFrame.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIPermissionManager.h"
+#include "nsIPresShell.h"
+#include "nsIScrollable.h"
+#include "nsPresContext.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -273,6 +279,55 @@ nsGenericHTMLFrameElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   }
 
   return NS_OK;
+}
+
+/* static */ int32_t
+nsGenericHTMLFrameElement::MapScrollingAttribute(const nsAttrValue* aValue)
+{
+  int32_t mappedValue = nsIScrollable::Scrollbar_Auto;
+  if (aValue && aValue->Type() == nsAttrValue::eEnum) {
+    switch (aValue->GetEnumValue()) {
+      case NS_STYLE_FRAME_OFF:
+      case NS_STYLE_FRAME_NOSCROLL:
+      case NS_STYLE_FRAME_NO:
+        mappedValue = nsIScrollable::Scrollbar_Never;
+        break;
+    }
+  }
+  return mappedValue;
+}
+
+/* virtual */ nsresult
+nsGenericHTMLFrameElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                                        const nsAttrValue* aValue,
+                                        bool aNotify)
+{
+  if (aName == nsGkAtoms::scrolling && aNameSpaceID == kNameSpaceID_None) {
+    if (mFrameLoader) {
+      nsIDocShell* docshell = mFrameLoader->GetExistingDocShell();
+      nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(docshell);
+      if (scrollable) {
+        int32_t cur;
+        scrollable->GetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, &cur);
+        int32_t val = MapScrollingAttribute(aValue);
+        if (cur != val) {
+          scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X, val);
+          scrollable->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y, val);
+          nsRefPtr<nsPresContext> presContext;
+          docshell->GetPresContext(getter_AddRefs(presContext));
+          nsIPresShell* shell = presContext ? presContext->GetPresShell() : nullptr;
+          nsIFrame* rootScroll = shell ? shell->GetRootScrollFrame() : nullptr;
+          if (rootScroll) {
+            shell->FrameNeedsReflow(rootScroll, nsIPresShell::eStyleChange,
+                                    NS_FRAME_IS_DIRTY);
+          }
+        }
+      }
+    }
+  }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
 }
 
 void
