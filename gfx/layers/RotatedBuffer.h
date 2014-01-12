@@ -412,6 +412,15 @@ protected:
   virtual bool HaveBufferOnWhite() const;
 
   /**
+   * Any actions that should be performed at the last moment before we begin
+   * rendering the next frame. I.e., after we calculate what we will draw,
+   * but before we rotate the buffer and possibly create new buffers.
+   * aRegionToDraw is the region which is guaranteed to be overwritten when
+   * drawing the next frame.
+   */
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) {}
+
+  /**
    * These members are only set transiently.  They're used to map mDTBuffer
    * when we're using surfaces that require explicit map/unmap. Only one
    * may be used at a time.
