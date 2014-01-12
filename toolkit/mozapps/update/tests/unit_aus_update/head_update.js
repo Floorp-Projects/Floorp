@@ -1765,6 +1765,9 @@ function checkUpdateLogContents(aCompareLogFile) {
   updateLogContents = updateLogContents.replace(/\n+/g, "\n");
   // Remove leading and trailing newlines
   updateLogContents = updateLogContents.replace(/^\n|\n$/g, "");
+  // The update log when running the service tests sometimes starts with data
+  // from the previous launch of the updater.
+  updateLogContents = updateLogContents.replace(/^calling QuitProgressUI\n[^\n]*\nUPDATE TYPE/g, "UPDATE TYPE");
 
   let compareLog = getTestDirFile(aCompareLogFile);
   let compareLogContents = readFileBytes(compareLog);
