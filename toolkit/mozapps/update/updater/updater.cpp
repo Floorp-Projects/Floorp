@@ -3016,7 +3016,7 @@ int NS_main(int argc, NS_tchar **argv)
           break;
 
         lastWriteError = GetLastError();
-        LOG(("NS_main: callback app open attempt %d failed. " \
+        LOG(("NS_main: callback app file open attempt %d failed. " \
              "File: " LOG_S ". Last error: %d", retries,
              targetPath, lastWriteError));
 
@@ -3024,15 +3024,12 @@ int NS_main(int argc, NS_tchar **argv)
       } while (++retries <= max_retries);
 
       // CreateFileW will fail if the callback executable is already in use.
-      // We don't fail the update though.
       if (callbackFile == INVALID_HANDLE_VALUE) {
-        LOG(("NS_main: file in use - failed to exclusively open executable " \
-             "file: " LOG_S, argv[callbackIndex]));
-        LogFinish();
-
-        if (lastWriteError == ERROR_SHARING_VIOLATION) {
-          LOG(("NS_main: callback in use, continuing without exclusive access"));
-        } else {
+        // Only fail the update if the last error was not a sharing violation.
+        if (lastWriteError != ERROR_SHARING_VIOLATION) {
+          LOG(("NS_main: callback app file in use, failed to exclusively open " \
+               "executable file: " LOG_S, argv[callbackIndex]));
+          LogFinish();
           if (lastWriteError == ERROR_ACCESS_DENIED) {
             WriteStatusFile(WRITE_ERROR_ACCESS_DENIED);
           } else {
@@ -3047,6 +3044,9 @@ int NS_main(int argc, NS_tchar **argv)
                             sUsingService);
           return 1;
         }
+        LOG(("NS_main: callback app file in use, continuing without " \
+             "exclusive access for executable file: " LOG_S,
+             argv[callbackIndex]));
       }
     }
   }
