@@ -215,12 +215,14 @@ public:
   struct PaintState {
     PaintState()
       : mTarget(nullptr)
+      , mMode(Layer::SURFACE_NONE)
       , mDidSelfCopy(false)
     {}
 
     gfx::DrawTarget* mTarget;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
+    Layer::SurfaceMode mMode;
     DrawRegionClip mClip;
     bool mDidSelfCopy;
   };
