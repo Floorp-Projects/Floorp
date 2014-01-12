@@ -9,7 +9,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.HomeListItems;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.home.HomeConfig.PageEntry;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -32,14 +32,14 @@ import java.util.EnumSet;
 /**
  * Fragment that displays custom lists.
  */
-public class ListPage extends HomeFragment {
-    private static final String LOGTAG = "GeckoListPage";
+public class ListPanel extends HomeFragment {
+    private static final String LOGTAG = "GeckoListPanel";
 
     // Cursor loader ID for the lists
     private static final int LOADER_ID_LIST = 0;
 
-    // The page entry associated with this page
-    private PageEntry mPageEntry;
+    // The configuration associated with this panel
+    private PanelConfig mPanelConfig;
 
     // Adapter for the list
     private HomeListAdapter mAdapter;
@@ -78,11 +78,11 @@ public class ListPage extends HomeFragment {
 
         final Bundle args = getArguments();
         if (args != null) {
-            mPageEntry = (PageEntry) args.getParcelable(HomePager.PAGE_ENTRY_ARG);
+            mPanelConfig = (PanelConfig) args.getParcelable(HomePager.PANEL_CONFIG_ARG);
         }
 
-        if (mPageEntry == null) {
-            throw new IllegalStateException("Can't create a ListPage without a PageEntry");
+        if (mPanelConfig == null) {
+            throw new IllegalStateException("Can't create a ListPanel without a PanelConfig");
         }
     }
 
@@ -189,7 +189,7 @@ public class ListPage extends HomeFragment {
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new HomeListLoader(getActivity(), mPageEntry.getId());
+            return new HomeListLoader(getActivity(), mPanelConfig.getId());
         }
 
         @Override
