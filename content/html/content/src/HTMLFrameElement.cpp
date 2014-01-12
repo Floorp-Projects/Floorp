@@ -80,31 +80,6 @@ HTMLFrameElement::ParseAttribute(int32_t aNamespaceID,
                                                    aValue, aResult);
 }
 
-void
-HTMLFrameElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        nsRuleData* aData)
-{
-  nsGenericHTMLElement::MapScrollingAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-}
-
-NS_IMETHODIMP_(bool)
-HTMLFrameElement::IsAttributeMapped(const nsIAtom* aAttribute) const
-{
-  static const MappedAttributeEntry* const map[] = {
-    sScrollingAttributeMap,
-    sCommonAttributeMap,
-  };
-  
-  return FindAttributeDependence(aAttribute, map);
-}
-
-nsMapRuleToAttributesFunc
-HTMLFrameElement::GetAttributeMappingFunction() const
-{
-  return &MapAttributesIntoRule;
-}
-
 JSObject*
 HTMLFrameElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
