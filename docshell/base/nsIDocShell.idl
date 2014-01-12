@@ -44,7 +44,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(55ca6545-7ce4-49ad-8117-8286ca9c61bb)]
+[scriptable, builtinclass, uuid(e3ea830d-2614-4aeb-9ec3-b8f744b03b80)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -110,6 +110,8 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   // Whether the load should be treated as srcdoc load, rather than a URI one.
   const long INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40;
+
+  const long INTERNAL_LOAD_FLAGS_FIXUP_SCHEME_TYPOS      = 0x80;
 
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except

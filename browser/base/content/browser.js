@@ -1839,8 +1839,10 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup) {
     postData = null;
 
   var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
-  if (allowThirdPartyFixup)
+  if (allowThirdPartyFixup) {
     flags |= nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    flags |= nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+  }
 
   try {
     gBrowser.loadURIWithFlags(uri, flags, referrer, null, postData);
