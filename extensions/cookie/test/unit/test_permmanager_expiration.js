@@ -19,7 +19,7 @@ function do_run_test() {
   // Set up a profile.
   let profile = do_get_profile();
 
-  let pm = Services.permissions;
+  let pm = Services.perms;
   let permURI = NetUtil.newURI("http://example.com");
   let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI);
 
