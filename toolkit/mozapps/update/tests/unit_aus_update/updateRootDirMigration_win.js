@@ -13,8 +13,9 @@ function clearTaskbarIDHash(exePath, appInfoName) {
                   "Software\\Mozilla\\" + appInfoName + "\\TaskBarIDs",
                   AUS_Ci.nsIWindowsRegKey.ACCESS_ALL);
     registry.removeValue(exePath);
-  } catch (ex) {
-  } finally {
+  } catch (e) {
+  }
+  finally {
     registry.close();
   }
 }
@@ -27,8 +28,9 @@ function setTaskbarIDHash(exePath, hash, appInfoName) {
                     "Software\\Mozilla\\" + appInfoName + "\\TaskBarIDs",
                     AUS_Ci.nsIWindowsRegKey.ACCESS_WRITE);
     registry.writeStringValue(exePath, hash);
-  } catch (ex) {
-  } finally {
+  } catch (e) {
+  }
+  finally {
     registry.close();
   }
 };
@@ -45,8 +47,7 @@ function getMigrated() {
 /* General Update Manager Tests */
 
 function run_test() {
-  setupTestCommon(false);
-  do_register_cleanup(end_test);
+  setupTestCommon();
 
   standardInit();
 
@@ -84,7 +85,7 @@ function run_test() {
 
   // Remove the old and new update root directories
   try {
-  oldUpdateRoot.remove(true);
+    oldUpdateRoot.remove(true);
   } catch (e) {
   }
   try {
@@ -167,5 +168,4 @@ function end_test() {
                 QueryInterface(AUS_Ci.nsIXULRuntime);
   var exeFile = FileUtils.getFile(XRE_EXECUTABLE_FILE, []);
   clearTaskbarIDHash(exeFile.parent.path, appinfo.name);
-  cleanupTestCommon();
 }

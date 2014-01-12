@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file background patch apply success test */
+/* File in use complete MAR file staged patch apply success test */
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -188,12 +188,11 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
-  gBackgroundUpdate = true;
+  gStageUpdate = true;
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
-  // Launch an existing file so it is in use during the update
+  // Launch an existing file so it is in use during the update.
   let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
                                      TEST_FILES[14].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
@@ -206,32 +205,24 @@ function run_test() {
 }
 
 function doUpdate() {
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
-
+  runUpdate(0, null);
   logTestInfo("testing update.status should be " + STATE_APPLIED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_APPLIED);
+  do_check_eq(readStatusState(), STATE_APPLIED);
 
-  // Now switch the application and its updated version
-  gBackgroundUpdate = false;
+  // Now switch the application and its updated version.
+  gStageUpdate = false;
   gSwitchApp = true;
   gDisableReplaceFallback = true;
-  exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for failure when " +
-              "switching to the updated application");
-  do_check_eq(exitValue, 1);
+  runUpdate(1);
+}
 
+function checkUpdateApplied() {
   setupHelperFinish();
 }
 
 function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_FAILED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusState(), STATE_FAILED);
 
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
@@ -241,8 +232,4 @@ function checkUpdate() {
   do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

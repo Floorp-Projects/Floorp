@@ -3,7 +3,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing update cleanup when reading the status file returns " +
               "STATUS_NONE, the version file is for a newer version, and the " +
@@ -36,8 +36,4 @@ function run_test() {
   do_check_false(versionFile.exists());
 
   do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
 }

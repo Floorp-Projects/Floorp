@@ -4,7 +4,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing that the update.log is moved after a successful update");
 
@@ -44,8 +44,4 @@ function run_test() {
   do_check_true(dir.exists());
 
   do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
 }

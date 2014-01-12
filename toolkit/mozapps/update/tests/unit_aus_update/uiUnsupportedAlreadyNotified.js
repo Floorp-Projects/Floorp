@@ -3,7 +3,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing nsIUpdatePrompt notifications should not be displayed " +
               "when showUpdateAvailable is called for an unsupported system " +
@@ -57,7 +57,6 @@ function end_test() {
                               WindowWatcherFactory);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
                               WindowMediatorFactory);
-  cleanupTestCommon();
 }
 
 // Callback function used by the custom XMLHttpRequest implementation to
@@ -69,8 +68,7 @@ function callHandleEvent() {
     var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(AUS_Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  }
-  catch(e) {
+  } catch (e) {
   }
   var e = { target: gXHR };
   gXHR.onload(e);

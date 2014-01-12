@@ -8,7 +8,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing nsIUpdatePrompt notifications should not be seen when " +
               "there is already an application update window open");
@@ -59,10 +59,6 @@ function run_test() {
                               WindowMediatorFactory);
 
   do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
 }
 
 function check_showUpdateInstalled() {

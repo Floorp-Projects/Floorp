@@ -23,7 +23,7 @@ FakeDirProvider.prototype = {
 };
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   setUpdateURLOverride();
   overrideXHR(xhr_pt1);
@@ -53,8 +53,7 @@ function xhr_pt1() {
     var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(AUS_Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
-  }
-  catch(e) {
+  } catch (e) {
     gXHR.responseXML = null;
   }
   var e = { target: gXHR };
@@ -91,6 +90,4 @@ function end_test() {
   gActiveUpdate = null;
   gDirService = null;
   gDirProvider = null;
-
-  cleanupTestCommon();
 }
