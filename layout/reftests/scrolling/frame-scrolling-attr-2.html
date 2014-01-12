@@ -1,0 +1,30 @@
+<script>
+function test() {
+  var yes = document.querySelectorAll('frame[scrolling="yes"]');
+  var no = document.querySelectorAll('frame[scrolling="no"]');
+  for (i = 0; i < no.length; ++i) {
+    no[i].setAttribute('scrolling','yes');
+  }
+  for (i = 0; i < yes.length; ++i) {
+    yes[i].setAttribute('scrolling','no');
+  }
+  document.documentElement.className='';
+}
+
+</script>
+<frameset cols="50%,50%" class="reftest-wait" onload="setTimeout(test,0)">
+<frameset rows="20%,20%,20%,20%,20%">
+    <frame frameborder="0" scrolling="yes" src="data:text/html,<body style='overflow:scroll'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="yes" src="data:text/html,<body style='overflow:auto'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="yes" src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="yes" src="data:text/html,<body style='overflow:visible'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="yes" src="data:text/html,<body style='overflow:inherit'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+</frameset>
+<frameset rows="20%,20%,20%,20%,20%">
+    <frame frameborder="0" scrolling="no" src="data:text/html,<body style='overflow:scroll'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="no" src="data:text/html,<body style='overflow:auto'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="no" src="data:text/html,<body style='overflow:hidden'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="no" src="data:text/html,<body style='overflow:visible'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+    <frame frameborder="0" scrolling="no" src="data:text/html,<body style='overflow:inherit'>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>X<br>">
+</frameset>
+</frameset>
