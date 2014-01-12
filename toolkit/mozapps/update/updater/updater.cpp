@@ -3139,10 +3139,12 @@ int NS_main(int argc, NS_tchar **argv)
     }
 #endif /* XP_MACOSX */
 
-    LaunchCallbackApp(argv[4], 
-                      argc - callbackIndex, 
-                      argv + callbackIndex, 
-                      sUsingService);
+    if (getenv("MOZ_PROCESS_UPDATES") == nullptr) {
+      LaunchCallbackApp(argv[4], 
+                        argc - callbackIndex, 
+                        argv + callbackIndex, 
+                        sUsingService);
+    }
   }
 
   return gSucceeded ? 0 : 1;
