@@ -65,7 +65,7 @@ function run_test() {
   var kPermissionType = "cookie";
   var ALLOW_FIRST_PARTY_ONLY = 9;
   // ALLOW_FIRST_PARTY_ONLY overrides
-  Services.permissions.add(uri1, kPermissionType, ALLOW_FIRST_PARTY_ONLY);
+  Services.perms.add(uri1, kPermissionType, ALLOW_FIRST_PARTY_ONLY);
   do_set_cookies(uri1, channel1, true, [0, 1, 1, 2]);
   Services.cookies.removeAll();
   do_set_cookies(uri1, channel2, true, [0, 0, 0, 0]);
@@ -104,7 +104,7 @@ function run_test() {
   var kPermissionType = "cookie";
   var LIMIT_THIRD_PARTY = 10;
   // LIMIT_THIRD_PARTY overrides
-  Services.permissions.add(uri1, kPermissionType, LIMIT_THIRD_PARTY);
+  Services.perms.add(uri1, kPermissionType, LIMIT_THIRD_PARTY);
   do_set_cookies(uri1, channel1, true, [0, 1, 2, 3]);
   Services.cookies.removeAll();
   do_set_cookies(uri1, channel2, true, [0, 0, 0, 0]);
