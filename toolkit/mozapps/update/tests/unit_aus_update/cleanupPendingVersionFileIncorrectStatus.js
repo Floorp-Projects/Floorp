@@ -35,5 +35,5 @@ function run_test() {
   logTestInfo("testing " + versionFile.path + " should not exist");
   do_check_false(versionFile.exists());
 
-  do_test_finished();
+  doTestFinish();
 }

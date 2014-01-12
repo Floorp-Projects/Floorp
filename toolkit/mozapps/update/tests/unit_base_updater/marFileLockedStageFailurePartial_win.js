@@ -207,15 +207,13 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(1, null);
-  logTestInfo("testing update.status should be " + STATE_FAILED);
-  do_check_eq(readStatusState(), STATE_FAILED);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR, null);
 
   // Now switch the application and its updated version.
   gStageUpdate = false;
   gSwitchApp = true;
   gDisableReplaceFallback = true;
-  runUpdate(1);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR);
 }
 
 function checkUpdateApplied() {
@@ -223,9 +221,6 @@ function checkUpdateApplied() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
-  do_check_eq(readStatusState(), STATE_FAILED);
-
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
 

@@ -61,7 +61,7 @@ function run_test() {
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                               WindowWatcherFactory);
 
-  do_test_finished();
+  doTestFinish();
 }
 
 function check_showUpdateInstalled() {

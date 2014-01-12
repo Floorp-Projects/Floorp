@@ -120,7 +120,7 @@ const TEST_HELPER_TIMEOUT = 100;
 const TEST_CHECK_TIMEOUT = 100;
 
 // How many of TEST_CHECK_TIMEOUT to wait before we abort the test.
-const MAX_TIMEOUT_RUNS = 1000;
+const MAX_TIMEOUT_RUNS = 2000;
 
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
@@ -138,6 +138,8 @@ var gURLData = URL_HOST + "/";
 var gTestID;
 
 var gTestserver;
+
+var gRegisteredServiceCleanup;
 
 var gXHR;
 var gXHRCallback;
@@ -346,6 +348,16 @@ var ADDITIONAL_TEST_DIRS = [];
 // information for an individual test set DEBUG_AUS_TEST to true in the test's
 // run_test function.
 var DEBUG_AUS_TEST = true;
+// Never set DEBUG_TEST_LOG to true except when running tests locally or on the
+// try server since this will force a test that failed a parallel run to fail
+// when the same test runs non-parallel so the log from parallel test run can
+// be displayed in the log.
+var DEBUG_TEST_LOG = false;
+// Set to false to keep the log file from the failed parallel test run.
+var gDeleteLogFile = true;
+var gRealDump;
+var gTestLogText = "";
+var gPassed;
 
 #include ../shared.js
 
@@ -374,11 +386,30 @@ function setupTestCommon() {
   do_test_pending();
 
   if (gTestID) {
-    do_throw("should only be called once!");
+    do_throw("setupTestCommon should only be called once!");
   }
 
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
+
+  if (DEBUG_TEST_LOG) {
+    let logFile = do_get_file(gTestID + ".log", true);
+    if (logFile.exists()) {
+      gPassed = false;
+      logTestInfo("start - dumping previous test run log");
+      logTestInfo("\n" + readFile(logFile) + "\n");
+      logTestInfo("finish - dumping previous test run log");
+      if (gDeleteLogFile) {
+        logFile.remove(false);
+      }
+      do_throw("The parallel run of this test failed. Failing non-parallel " +
+               "test so the log from the parallel run can be displayed in " +
+               "non-parallel log.")
+    } else {
+      gRealDump = dump;
+      dump = dumpOverride;
+    }
+  }
 
   // Don't attempt to show a prompt when an update finishes.
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, true);
@@ -532,6 +563,54 @@ function cleanupTestCommon() {
   resetEnvironment();
 
   logTestInfo("finish - general test cleanup");
+
+  if (gRealDump) {
+    dump = gRealDump;
+    gRealDump = null;
+  }
+
+  if (DEBUG_TEST_LOG && !gPassed) {
+    let fos = AUS_Cc["@mozilla.org/network/file-output-stream;1"].
+              createInstance(AUS_Ci.nsIFileOutputStream);
+    let logFile = do_get_file(gTestID + ".log", true);
+    if (!logFile.exists()) {
+      logFile.create(AUS_Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    }
+    fos.init(logFile, MODE_WRONLY | MODE_CREATE | MODE_APPEND, PERMS_FILE, 0);
+    fos.write(gTestLogText, gTestLogText.length);
+    fos.close();
+  }
+
+  if (DEBUG_TEST_LOG) {
+    gTestLogText = null;
+  } else {
+    let logFile = do_get_file(gTestID + ".log", true);
+    if (logFile.exists()) {
+      logFile.remove(false);
+    }
+  }
+}
+
+/**
+ * Helper function to store the log output of calls to dump in a variable so the
+ * values can be written to a file for a parallel run of a test and printed to
+ * the log file when the test runs synchronously.
+ */
+function dumpOverride(aText) {
+  gTestLogText += aText;
+  gRealDump(aText);
+}
+
+/**
+ * Helper function that calls do_test_finished that tracks whether a parallel
+ * run of a test passed when it runs synchronously so the log output can be
+ * inspected.
+ */
+function doTestFinish() {
+  if (gPassed === undefined) {
+    gPassed = true;
+  }
+  do_test_finished();
 }
 
 /**
@@ -922,13 +1001,15 @@ if (IS_WIN) {
  *
  * @param   aExpectedExitValue
  *          The expected exit value from the updater binary.
+ * @param   aExpectedStatus
+ *          The expected value of update.status when the test finishes.
  * @param   aCallback (optional)
  *          A callback function that will be called when this function finishes.
  *          If null no function will be called when this function finishes.
  *          If not specified the checkUpdateApplied function will be called when
  *          this function finishes.
  */
-function runUpdate(aExpectedExitValue, aCallback) {
+function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   // Copy the updater binary to the updates directory.
   let binDir = gGREDirOrig.clone();
   let updater = binDir.clone();
@@ -967,12 +1048,6 @@ function runUpdate(aExpectedExitValue, aCallback) {
   let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
 
-  // Backup the updater-settings.ini file if it exists by moving it.
-  let updateSettingsIni = getApplyDirFile(null, true);
-  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
-  if (updateSettingsIni.exists()) {
-    updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI_BAK);
-  }
   updateSettingsIni = getApplyDirFile(null, true);
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
@@ -1004,16 +1079,26 @@ function runUpdate(aExpectedExitValue, aCallback) {
     env.set("MOZ_NO_REPLACE_FALLBACK", "");
   }
 
-  // Restore the backed up updater-settings.ini if it exists.
-  let updateSettingsIni = getApplyDirFile(null, true);
-  updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
-  if (updateSettingsIni.exists()) {
-    updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI);
+  let status = readStatusFile();
+  if (process.exitValue != aExpectedExitValue || status != aExpectedStatus) {
+    if (process.exitValue != aExpectedExitValue) {
+      logTestInfo("updater exited with unexpected value! Got: " +
+                  process.exitValue + ", Expected: " +  aExpectedExitValue);
+    }
+    if (status != aExpectedStatus) {
+      logTestInfo("update status is not the expected status! Got: " + status +
+                  ", Expected: " +  aExpectedStatus);
+    }
+    let updateLog = getUpdatesPatchDir();
+    updateLog.append(FILE_UPDATE_LOG);
+    logTestInfo("contents of " + updateLog.path + ":\n" +
+                readFileBytes(updateLog).replace(/\r\n/g, "\n"));
   }
-
   logTestInfo("testing updater binary process exitValue against expected " +
               "exit value");
   do_check_eq(process.exitValue, aExpectedExitValue);
+  logTestInfo("testing update status against expected status");
+  do_check_eq(status, aExpectedStatus);
 
   if (aCallback !== null) {
     if (typeof(aCallback) == typeof(Function)) {
@@ -1333,10 +1418,12 @@ function attemptServiceInstall() {
  * Helper function for updater tests for launching the updater using the
  * maintenance service to apply a mar file.
  *
- * @param aInitialStatus  the initial value of update.status.
- * @param aExpectedStatus the expected value of update.status when the test
-                          finishes.
- * @param aCheckSvcLog    whether the service log should be checked (optional).
+ * @param aInitialStatus
+ *        The initial value of update.status.
+ * @param aExpectedStatus
+ *        The expected value of update.status when the test finishes.
+ * @param aCheckSvcLog
+ *        Whether the service log should be checked (optional).
  */
 function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   // Check the service logs for a successful update
@@ -1416,7 +1503,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   waitForServiceStop(true);
 
   // Prevent the cleanup function from begin run more than once
-  if (typeof(gRegisteredServiceCleanup) === "undefined") {
+  if (gRegisteredServiceCleanup === undefined) {
     gRegisteredServiceCleanup = true;
 
     do_register_cleanup(function RUUS_cleanup() {
@@ -1512,17 +1599,20 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     // Make sure all of the logs are written out.
     waitForServiceStop(false);
 
-    // Restore the backed up updater-settings.ini if it exists.
-    let updateSettingsIni = getApplyDirFile(null, true);
-    updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI_BAK);
-    if (updateSettingsIni.exists()) {
-      updateSettingsIni.moveTo(updateSettingsIni.parent, FILE_UPDATE_SETTINGS_INI);
-    }
-
-    do_check_eq(status, aExpectedStatus);
-
     aTimer.cancel();
     aTimer = null;
+
+    if (status != aExpectedStatus) {
+      logTestInfo("update status is not the expected status! Got: " + status +
+                  ", Expected: " +  aExpectedStatus);
+      logTestInfo("update.status contents: " + readStatusFile());
+      let updateLog = getUpdatesPatchDir();
+      updateLog.append(FILE_UPDATE_LOG);
+      logTestInfo("contents of " + updateLog.path + ":\n" +
+                  readFileBytes(updateLog).replace(/\r\n/g, "\n"));
+    }
+    logTestInfo("testing update status against expected status");
+    do_check_eq(status, aExpectedStatus);
 
     if (aCheckSvcLog) {
       checkServiceLogs(svcOriginalLog);
@@ -1567,14 +1657,30 @@ function getLaunchBin() {
  * is in a sleep state before performing an update by calling doUpdate.
  */
 function waitForHelperSleep() {
+  gTimeoutRuns++;
   // Give the lock file process time to lock the file before updating otherwise
   // this test can fail intermittently on Windows debug builds.
   let output = getApplyDirFile("a/b/output", true);
   if (readFile(output) != "sleeping\n") {
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper to " +
+               "finish its operation. Path: " + output.path);
+    }
     do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
     return;
   }
-  output.remove(false);
+  try {
+    output.remove(false);
+  }
+  catch (e) {
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper " +
+               "message file to no longer be in use. Path: " + output.path);
+    }
+    logTestInfo("failed to remove file. Path: " + output.path);
+    do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
+    return;
+  }
   doUpdate();
 }
 
@@ -2104,8 +2210,8 @@ function waitForFilesInUse() {
     }
   }
 
-  logTestInfo("calling do_test_finished");
-  do_test_finished();
+  logTestInfo("calling doTestFinish");
+  doTestFinish();
 }
 
 /**

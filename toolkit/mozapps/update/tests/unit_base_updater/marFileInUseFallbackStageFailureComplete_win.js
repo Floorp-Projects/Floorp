@@ -205,14 +205,12 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(0, null);
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
-  do_check_eq(readStatusState(), STATE_APPLIED);
+  runUpdate(0, STATE_APPLIED, null);
 
   // Now switch the application and its updated version.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(1);
+  runUpdate(1, STATE_PENDING);
 }
 
 function checkUpdateApplied() {
@@ -220,9 +218,6 @@ function checkUpdateApplied() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_PENDING);
-  do_check_eq(readStatusState(), STATE_PENDING);
-
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
 

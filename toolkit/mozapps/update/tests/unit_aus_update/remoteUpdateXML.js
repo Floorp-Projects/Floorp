@@ -320,5 +320,6 @@ function check_test_pt12() {
   var bestUpdate = gAUS.selectUpdate(gUpdates, gUpdateCount);
   do_check_neq(bestUpdate, null);
   do_check_eq(bestUpdate.displayVersion, "version 1.0");
-  do_test_finished();
+
+  doTestFinish();
 }

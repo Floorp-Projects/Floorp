@@ -196,13 +196,10 @@ function run_test() {
 
   gCallbackBinFile = "exe0.exe";
 
-  runUpdate(0);
+  runUpdate(0, STATE_SUCCEEDED);
 }
 
 function checkUpdateApplied() {
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusState(), STATE_SUCCEEDED);
-
   checkFilesAfterUpdateSuccess();
 
   logTestInfo("testing tobedeleted directory doesn't exist");

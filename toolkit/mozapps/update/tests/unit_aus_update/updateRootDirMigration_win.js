@@ -136,7 +136,7 @@ function run_test() {
   });
   // Do the migration
   initUpdateServiceStub();
-  do_test_finished();
+  doTestFinish();
   return;
   // Now verify that each of the files exist in the new update directory
   filesToMigrate.forEach(relPath => {
@@ -159,7 +159,7 @@ function run_test() {
     do_check_false(oldFile.exists());
   });
 
-  do_test_finished();
+  doTestFinish();
 }
 
 function end_test() {

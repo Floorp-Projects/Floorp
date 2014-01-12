@@ -33,5 +33,5 @@ function run_test() {
   }
   do_check_eq(gUpdateManager.updateCount, 0);
 
-  do_test_finished();
+  doTestFinish();
 }

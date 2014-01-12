@@ -242,13 +242,10 @@ function run_test() {
     applyToDir.lastModifiedTime = yesterday;
   }
 
-  runUpdate(0);
+  runUpdate(0, STATE_SUCCEEDED);
 }
 
 function checkUpdateApplied() {
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusState(), STATE_SUCCEEDED);
-
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");

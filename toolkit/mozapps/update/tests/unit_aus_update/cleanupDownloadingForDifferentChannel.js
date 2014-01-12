@@ -40,5 +40,5 @@ function run_test() {
   logTestInfo("verifying contents of " + FILE_UPDATE_ACTIVE);
   do_check_eq(readFile(file), getLocalUpdatesXMLString(""));
 
-  do_test_finished();
+  doTestFinish();
 }
