@@ -5,7 +5,6 @@
 dist_dest = $(DIST)/$(APP_NAME).app
 
 PREF_JS_EXPORTS = $(srcdir)/mobile.js
-DIST_FILES = recommended-addons.json
 
 ifndef LIBXUL_SDK
 ifneq (Android,$(OS_TARGET))
