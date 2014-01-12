@@ -14,6 +14,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"
+#include "nsGenericHTMLFrameElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -148,22 +149,6 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
 }
 
-inline int32_t ConvertOverflow(uint8_t aOverflow)
-{
-  switch (aOverflow) {
-    case NS_STYLE_OVERFLOW_VISIBLE:
-    case NS_STYLE_OVERFLOW_AUTO:
-      return nsIScrollable::Scrollbar_Auto;
-    case NS_STYLE_OVERFLOW_HIDDEN:
-    case NS_STYLE_OVERFLOW_CLIP:
-      return nsIScrollable::Scrollbar_Never;
-    case NS_STYLE_OVERFLOW_SCROLL:
-      return nsIScrollable::Scrollbar_Always;
-  }
-  NS_NOTREACHED("invalid overflow value passed to ConvertOverflow");
-  return nsIScrollable::Scrollbar_Auto;
-}
-
 void
 nsSubDocumentFrame::ShowViewer()
 {
@@ -179,14 +164,15 @@ nsSubDocumentFrame::ShowViewer()
     nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
     if (frameloader) {
       nsIntSize margin = GetMarginAttributes();
-      const nsStyleDisplay* disp = StyleDisplay();
       nsWeakFrame weakThis(this);
       mCallingShow = true;
+      const nsAttrValue* attrValue =
+        GetContent()->AsElement()->GetParsedAttr(nsGkAtoms::scrolling);
+      int32_t scrolling =
+        nsGenericHTMLFrameElement::MapScrollingAttribute(attrValue);
       bool didCreateDoc =
         frameloader->Show(margin.width, margin.height,
-                          ConvertOverflow(disp->mOverflowX),
-                          ConvertOverflow(disp->mOverflowY),
-                          this);
+                          scrolling, scrolling, this);
       if (!weakThis.IsAlive()) {
         return;
       }
