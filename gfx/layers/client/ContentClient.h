@@ -99,11 +99,7 @@ public:
                                                             uint32_t aFlags) = 0;
   virtual void ReturnDrawTarget(gfx::DrawTarget* aReturned) = 0;
 
-  // Sync front/back buffers content
-  // After executing, the new back buffer has the same (interesting) pixels as
-  // the new front buffer, and mValidRegion et al. are correct wrt the new
-  // back buffer (i.e. as they were for the old back buffer)
-  virtual void SyncFrontBufferToBackBuffer() {}
+  virtual void PrepareFrame() {}
 
   // Called as part of the layers transation reply. Conveys data about our
   // buffer(s) from the compositor. If appropriate we should swap references
@@ -414,7 +410,9 @@ public:
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
-  virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
+  virtual void PrepareFrame() MOZ_OVERRIDE;
+
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
@@ -451,7 +449,9 @@ public:
 
   virtual void SwapBuffers(const nsIntRegion& aFrontUpdatedRegion) MOZ_OVERRIDE;
 
-  virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
+  virtual void PrepareFrame() MOZ_OVERRIDE;
+
+  virtual void FinalizeFrame(const nsIntRegion& aRegionToDraw) MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
@@ -487,7 +487,7 @@ public:
   }
   virtual ~ContentClientSingleBuffered() {}
 
-  virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
+  virtual void PrepareFrame() MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBuffer(const nsIntRect& aBufferRect) MOZ_OVERRIDE {}
@@ -503,7 +503,7 @@ public:
   }
   ~DeprecatedContentClientSingleBuffered();
 
-  virtual void SyncFrontBufferToBackBuffer() MOZ_OVERRIDE;
+  virtual void PrepareFrame() MOZ_OVERRIDE;
 
 protected:
   virtual void CreateFrontBufferAndNotify(const nsIntRect& aBufferRect) MOZ_OVERRIDE;
