@@ -188,11 +188,10 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
-
+  setupTestCommon();
   setupUpdaterTest(FILE_COMPLETE_MAR);
 
-  // Launch an existing file so it is in use during the update
+  // Launch an existing file so it is in use during the update.
   let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
                                      TEST_FILES[14].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20"];
@@ -205,19 +204,16 @@ function run_test() {
 }
 
 function doUpdate() {
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a complete mar");
-  do_check_eq(exitValue, 0);
+  runUpdate(0);
+}
 
+function checkUpdateApplied() {
   setupHelperFinish();
 }
 
 function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
+  do_check_eq(readStatusState(), STATE_SUCCEEDED);
 
   checkFilesAfterUpdateSuccess();
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
@@ -227,8 +223,4 @@ function checkUpdate() {
   do_check_true(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

@@ -4,7 +4,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing resuming an update download in progress for the same " +
               "version of the application on startup (Bug 485624)");
@@ -39,8 +39,4 @@ function run_test() {
   reloadUpdateManagerData();
 
   do_timeout(TEST_CHECK_TIMEOUT, do_test_finished);
-}
-
-function end_test() {
-  cleanupTestCommon();
 }

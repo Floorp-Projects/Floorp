@@ -9,7 +9,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing nsIUpdatePrompt notifications should not be seen " +
               "when the " + PREF_APP_UPDATE_SILENT + " preference is true");
@@ -62,10 +62,6 @@ function run_test() {
                               WindowWatcherFactory);
 
   do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
 }
 
 function check_showUpdateInstalled() {
