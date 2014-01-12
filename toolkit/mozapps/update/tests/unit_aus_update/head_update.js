@@ -369,6 +369,8 @@ if (MOZ_APP_NAME == "xulrunner") {
  * Helper function for setting up the test environment.
  */
 function setupTestCommon() {
+  logTestInfo("start - general test setup");
+
   do_test_pending();
 
   if (gTestID) {
@@ -421,6 +423,8 @@ function setupTestCommon() {
                   updatesDir.path + ", Exception: " + e);
     }
   }
+
+  logTestInfo("finish - general test setup");
 }
 
 /**
