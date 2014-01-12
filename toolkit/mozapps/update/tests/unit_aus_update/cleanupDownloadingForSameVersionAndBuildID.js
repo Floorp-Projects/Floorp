@@ -4,7 +4,7 @@
  */
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing removal of an update download in progress for the " +
               "same version of the application with the same application " +
@@ -34,8 +34,4 @@ function run_test() {
   do_check_eq(gUpdateManager.updateCount, 0);
 
   do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
 }
