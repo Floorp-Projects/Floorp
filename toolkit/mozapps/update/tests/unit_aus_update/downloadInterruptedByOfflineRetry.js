@@ -74,5 +74,5 @@ function check_test_pt2(update) {
   do_check_neq(update, null);
   do_check_eq(update.name, "App Update Test");
 
-  do_test_finished();
+  doTestFinish();
 }

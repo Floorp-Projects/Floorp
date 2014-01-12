@@ -33,7 +33,7 @@ function run_test() {
 
 // The HttpServer must be stopped before calling do_test_finished
 function finish_test() {
-  stop_httpserver(do_test_finished);
+  stop_httpserver(doTestFinish);
 }
 
 function end_test() {

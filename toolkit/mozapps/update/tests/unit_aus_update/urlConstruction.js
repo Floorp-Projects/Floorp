@@ -404,5 +404,5 @@ function run_test_pt14() {
 
 function check_test_pt14() {
   do_check_eq(getResult(gRequestURL), "?custom=custom&force=1");
-  do_test_finished();
+  doTestFinish();
 }

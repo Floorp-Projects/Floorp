@@ -43,5 +43,5 @@ function run_test() {
   logTestInfo("testing " + dir.path + " should exist (bug 512994)");
   do_check_true(dir.exists());
 
-  do_test_finished();
+  doTestFinish();
 }

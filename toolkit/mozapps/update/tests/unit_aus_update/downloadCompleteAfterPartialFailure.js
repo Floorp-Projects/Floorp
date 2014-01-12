@@ -56,7 +56,8 @@ var WindowWatcher = {
                                                       [Services.appinfo.name,
                                                        Services.appinfo.name], 2);
         do_check_eq(aText, text);
-        do_test_finished();
+
+        doTestFinish();
       }
     }; 
   },

@@ -255,9 +255,7 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(0, null);
-  logTestInfo("testing update.status should be " + STATE_APPLIED);
-  do_check_eq(readStatusState(), STATE_APPLIED);
+  runUpdate(0, STATE_APPLIED, null);
 
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +
@@ -273,13 +271,10 @@ function doUpdate() {
   // Now switch the application and its updated version.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(0);
+  runUpdate(0, STATE_SUCCEEDED);
 }
 
 function checkUpdateApplied() {
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusState(), STATE_SUCCEEDED);
-
   let applyToDir = getApplyDirFile();
   if (IS_MACOSX) {
     logTestInfo("testing last modified time on the apply to directory has " +

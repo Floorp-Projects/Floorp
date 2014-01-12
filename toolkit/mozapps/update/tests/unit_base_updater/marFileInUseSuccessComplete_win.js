@@ -204,7 +204,7 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(0);
+  runUpdate(0, STATE_SUCCEEDED);
 }
 
 function checkUpdateApplied() {
@@ -212,9 +212,6 @@ function checkUpdateApplied() {
 }
 
 function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  do_check_eq(readStatusState(), STATE_SUCCEEDED);
-
   checkFilesAfterUpdateSuccess();
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
 
