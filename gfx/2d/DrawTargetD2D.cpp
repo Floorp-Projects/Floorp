@@ -1547,8 +1547,9 @@ DrawTargetD2D::MarkChanged()
 ID3D10BlendState*
 DrawTargetD2D::GetBlendStateForOperator(CompositionOp aOperator)
 {
-  if (mPrivateData->mBlendStates[aOperator]) {
-    return mPrivateData->mBlendStates[aOperator];
+  size_t operatorIndex = static_cast<size_t>(aOperator);
+  if (mPrivateData->mBlendStates[operatorIndex]) {
+    return mPrivateData->mBlendStates[operatorIndex];
   }
 
   D3D10_BLEND_DESC desc;
@@ -1606,9 +1607,9 @@ DrawTargetD2D::GetBlendStateForOperator(CompositionOp aOperator)
     desc.DestBlend = desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
   }
   
-  mDevice->CreateBlendState(&desc, byRef(mPrivateData->mBlendStates[aOperator]));
+  mDevice->CreateBlendState(&desc, byRef(mPrivateData->mBlendStates[operatorIndex]));
 
-  return mPrivateData->mBlendStates[aOperator];
+  return mPrivateData->mBlendStates[operatorIndex];
 }
 
 /* This function prepares the temporary RT for drawing and returns it when a
