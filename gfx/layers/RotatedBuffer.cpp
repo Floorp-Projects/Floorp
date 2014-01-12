@@ -657,6 +657,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   nsIntRegion invalidate;
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
+  result.mMode = mode;
 
   result.mTarget = BorrowDrawTargetForQuadrantUpdate(drawBounds, BUFFER_BOTH);
   result.mClip = CLIP_DRAW_SNAPPED;

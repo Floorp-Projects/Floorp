@@ -1152,6 +1152,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
 
+  result.mMode = mode;
   MOZ_ASSERT(!mLoanedDrawTarget);
 
   // BeginUpdate is allowed to modify the given region,
