@@ -19,6 +19,7 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "Layers.h"                     // for Layer::SurfaceMode
 #include "LayersTypes.h"
 
 struct gfxMatrix;
@@ -33,7 +34,6 @@ namespace layers {
 
 class DeprecatedTextureClient;
 class TextureClient;
-class ThebesLayer;
 
 /**
  * This is a cairo/Thebes surface, but with a literal twist. Scrolling
@@ -214,12 +214,10 @@ public:
    */
   struct PaintState {
     PaintState()
-      : mTarget(nullptr)
-      , mMode(Layer::SURFACE_NONE)
+      : mMode(Layer::SURFACE_NONE)
       , mDidSelfCopy(false)
     {}
 
-    gfx::DrawTarget* mTarget;
     nsIntRegion mRegionToDraw;
     nsIntRegion mRegionToInvalidate;
     Layer::SurfaceMode mMode;
@@ -247,8 +245,17 @@ public:
    * invalid pixels outside the visible region, if the visible region doesn't
    * fill the buffer bounds).
    */
-  PaintState BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
+  PaintState BeginPaint(ThebesLayer* aLayer,
                         uint32_t aFlags);
+
+  /**
+   * Fetch a DrawTarget for rendering. The DrawTarget remains owned by
+   * this. See notes on BorrowDrawTargetForQuadrantUpdate.
+   * May return null. If the return value is non-null, it must be
+   * 'un-borrowed' using ReturnDrawTarget.
+   */
+  gfx::DrawTarget* BorrowDrawTargetForPainting(ThebesLayer* aLayer,
+                                               const PaintState& aPaintState);
 
   enum {
     ALLOW_REPEAT = 0x01,

@@ -401,7 +401,7 @@ RotatedContentBuffer::FlushBuffers()
 }
 
 RotatedContentBuffer::PaintState
-RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
+RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
                                  uint32_t aFlags)
 {
   PaintState result;
@@ -412,15 +412,18 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
 
   nsIntRegion validRegion = aLayer->GetValidRegion();
 
+  bool canUseOpaqueSurface = aLayer->CanUseOpaqueSurface();
+  ContentType contentType =
+    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
+                          GFX_CONTENT_COLOR_ALPHA;
+
   Layer::SurfaceMode mode;
-  ContentType contentType;
   nsIntRegion neededRegion;
   bool canReuseBuffer;
   nsIntRect destBufferRect;
 
   while (true) {
     mode = aLayer->GetSurfaceMode();
-    contentType = aContentType;
     neededRegion = aLayer->GetVisibleRegion();
     canReuseBuffer = HaveBuffer() && BufferSizeOkFor(neededRegion.GetBounds().Size());
 
@@ -494,6 +497,12 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
                "Destination rect doesn't contain what we need to paint");
 
   result.mRegionToDraw.Sub(neededRegion, validRegion);
+
+  // Do not modify result.mRegionToDraw after this call.
+  // Do not modify mBufferRect, mBufferRotation, or mDidSelfCopy,
+  // or call CreateBuffer before this call.
+  FinalizeFrame(result.mRegionToDraw);
+
   if (result.mRegionToDraw.IsEmpty())
     return result;
 
@@ -657,14 +666,31 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
   nsIntRegion invalidate;
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
+  result.mClip = CLIP_DRAW_SNAPPED;
   result.mMode = mode;
 
-  result.mTarget = BorrowDrawTargetForQuadrantUpdate(drawBounds, BUFFER_BOTH);
-  result.mClip = CLIP_DRAW_SNAPPED;
+  return result;
+}
 
-  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+DrawTarget*
+RotatedContentBuffer::BorrowDrawTargetForPainting(ThebesLayer* aLayer,
+                                                  const PaintState& aPaintState)
+{
+  if (!aPaintState.mMode) {
+    return nullptr;
+  }
+
+  DrawTarget* result = BorrowDrawTargetForQuadrantUpdate(aPaintState.mRegionToDraw.GetBounds(),
+                                                         BUFFER_BOTH);
+
+  bool canUseOpaqueSurface = aLayer->CanUseOpaqueSurface();
+  ContentType contentType =
+    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
+                          GFX_CONTENT_COLOR_ALPHA;
+
+  if (aPaintState.mMode == Layer::SURFACE_COMPONENT_ALPHA) {
     MOZ_ASSERT(mDTBuffer && mDTBufferOnWhite);
-    nsIntRegionRectIterator iter(result.mRegionToDraw);
+    nsIntRegionRectIterator iter(aPaintState.mRegionToDraw);
     const nsIntRect *iterRect;
     while ((iterRect = iter.Next())) {
       mDTBuffer->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
@@ -672,11 +698,12 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       mDTBufferOnWhite->FillRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height),
                                  ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
-  } else if (contentType == GFX_CONTENT_COLOR_ALPHA && !isClear) {
-    nsIntRegionRectIterator iter(result.mRegionToDraw);
+  } else if (contentType == GFX_CONTENT_COLOR_ALPHA && HaveBuffer()) {
+    // HaveBuffer() => we have an existing buffer that we must clear
+    nsIntRegionRectIterator iter(aPaintState.mRegionToDraw);
     const nsIntRect *iterRect;
     while ((iterRect = iter.Next())) {
-      result.mTarget->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
+      result->ClearRect(Rect(iterRect->x, iterRect->y, iterRect->width, iterRect->height));
     }
   }
 
