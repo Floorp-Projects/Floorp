@@ -201,7 +201,8 @@ function run_test() {
   let lockFileRelPath = TEST_FILES[3].relPathDir.split("/");
   lockFileRelPath = lockFileRelPath.slice(2);
   lockFileRelPath = lockFileRelPath.join("/") + "/" + TEST_FILES[3].fileName;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40", lockFileRelPath];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT, lockFileRelPath];
   let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
                      createInstance(AUS_Ci.nsIProcess);
   lockFileProcess.init(helperBin);

@@ -86,10 +86,10 @@ function customLaunchAppToApplyUpdate() {
 function checkUpdateApplied() {
   gTimeoutRuns++;
   // Don't proceed until the active update's state is applied.
-  if (gUpdateManager.activeUpdate.state != STATE_APPLIED_PLATFORM) {
+  if (gUpdateManager.activeUpdate.state != STATE_APPLIED_SVC) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for update to be " +
-               "applied, current state is: " +
+               STATE_APPLIED_SVC + ", current state is: " +
                gUpdateManager.activeUpdate.state);
     } else {
       do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
@@ -99,10 +99,10 @@ function checkUpdateApplied() {
 
   // Don't proceed until the update's status state is applied.
   let state = readStatusState();
-  if (state != STATE_APPLIED_PLATFORM) {
+  if (state != STATE_APPLIED_SVC) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal " + STATE_APPLIED_PLATFORM + ", " +
+               "status state to equal " + STATE_APPLIED_SVC + ", " +
                "current status state: " + state);
     } else {
       do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);

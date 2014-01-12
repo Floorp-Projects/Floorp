@@ -122,12 +122,15 @@ const TEST_CHECK_TIMEOUT = 100;
 // How many of TEST_CHECK_TIMEOUT to wait before we abort the test.
 const MAX_TIMEOUT_RUNS = 2000;
 
+// Time in seconds the helper application should sleep.the helper's input and output files
+const HELPER_SLEEP_TIMEOUT = 180;
+
 // Maximum number of milliseconds the process that is launched can run before
 // the test will try to kill it.
 const APP_TIMER_TIMEOUT = 120000;
 
 #ifdef XP_WIN
-const PIPE_TO_NULL = "1> nul 2>&1";
+const PIPE_TO_NULL = ">nul";
 #else
 const PIPE_TO_NULL = "> /dev/null 2>&1";
 #endif
@@ -361,12 +364,6 @@ var gPassed;
 
 #include ../shared.js
 
-#ifdef MOZ_MAINTENANCE_SERVICE
-const STATE_APPLIED_PLATFORM = STATE_APPLIED_SVC;
-#else
-const STATE_APPLIED_PLATFORM = STATE_APPLIED;
-#endif
-
 // This makes it possible to run most tests on xulrunner where the update
 // channel default preference is not set.
 if (MOZ_APP_NAME == "xulrunner") {
@@ -422,9 +419,9 @@ function setupTestCommon() {
     applyDir = applyDir.parent;
   }
 
-  // Try to remove the directory used to apply updates. Since the test hasn't
-  // ran yet and the directory shouldn't exist finished this is non-fatal for
-  // the test.
+  // Try to remove the directory used to apply updates and the updates directory
+  // on platforms other than Windows. Since the test hasn't ran yet and the
+  // directory shouldn't exist finished this is non-fatal for the test.
   if (applyDir.exists()) {
     logTestInfo("attempting to remove directory. Path: " + applyDir.path);
     try {
@@ -439,19 +436,20 @@ function setupTestCommon() {
   // it is defined as a function.
   adjustGeneralPaths();
 
-  removeUpdateDirsAndFiles();
-
-  // Try to remove the directory used to apply updates. Since the test hasn't
-  // ran yet and the directory shouldn't exist finished this is non-fatal for
-  // the test.
-  let updatesDir = getMockUpdRootD();
-  if (updatesDir.exists())  {
-    logTestInfo("attempting to remove directory. Path: " + updatesDir.path);
-    try {
-      removeDirRecursive(updatesDir);
-    } catch (e) {
-      logTestInfo("non-fatal error removing directory. Path: " +
-                  updatesDir.path + ", Exception: " + e);
+  // Remove the updates directory on Windows which is located outside of the
+  // application directory after the call to adjustGeneralPaths has set it up.
+  // Since the test hasn't ran yet and the directory shouldn't exist finished
+  // this is non-fatal for the test.
+  if (IS_WIN) {
+    let updatesDir = getMockUpdRootD();
+    if (updatesDir.exists())  {
+      logTestInfo("attempting to remove directory. Path: " + updatesDir.path);
+      try {
+        removeDirRecursive(updatesDir);
+      } catch (e) {
+        logTestInfo("non-fatal error removing directory. Path: " +
+                    updatesDir.path + ", Exception: " + e);
+      }
     }
   }
 
@@ -523,8 +521,6 @@ function cleanupTestCommon() {
     } catch (e) {
     }
   }
-
-  removeUpdateDirsAndFiles();
 
   // The updates directory is located outside of the application directory on
   // Windows so it also needs to be removed.
@@ -1540,8 +1536,7 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     "-no-remote",
     "-process-updates",
     "-dump-args",
-    appArgsLogPath,
-    PIPE_TO_NULL
+    appArgsLogPath
   ];
 
   if (gSwitchApp) {
@@ -1703,8 +1698,8 @@ function waitForHelperFinished() {
 }
 
 /**
- * Helper function that waits until the helper's input and output directories
- * are no longer in use before calling checkUpdate.
+ * Helper function that waits until the helper's input and output files are no
+ * longer in use before calling checkUpdate.
  */
 function waitForHelperFinishFileUnlock() {
   try {
@@ -2595,7 +2590,7 @@ function getProcessArgs(aExtraArgs) {
     args = [launchScript.path];
   } else {
     args = ["/D", "/Q", "/C", appBinPath, "-no-remote", "-process-updates"].
-           concat(aExtraArgs).concat(["1> nul 2>&1"]);
+           concat(aExtraArgs).concat([PIPE_TO_NULL]);
   }
   return args;
 }
