@@ -439,7 +439,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     d2dDisabled = OncePreferenceDirect2DDisabled();
     d2dForceEnabled = OncePreferenceDirect2DForceEnabled();
 
-    bool tryD2D = !d2dBlocked || d2dForceEnabled;
+    bool tryD2D = (!d2dBlocked && !GetPrefLayersPreferD3D9()) || d2dForceEnabled;
 
     // Do not ever try if d2d is explicitly disabled,
     // or if we're not using DWrite fonts.
