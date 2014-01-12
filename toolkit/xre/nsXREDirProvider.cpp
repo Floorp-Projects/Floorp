@@ -1003,8 +1003,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   bool pathHashResult = false;
 
   nsAutoString appDirPath;
-  if (gAppData->vendor && !getenv("MOZ_UPDATE_NO_HASH_DIR") &&
-      SUCCEEDED(updRoot->GetPath(appDirPath))) {
+  if (gAppData->vendor && SUCCEEDED(updRoot->GetPath(appDirPath))) {
 
     // Figure out where we should check for a cached hash value
     wchar_t regPath[1024] = { L'\0' };
