@@ -1187,43 +1187,6 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
 
-  result.mMode = mode;
-  MOZ_ASSERT(!mLoanedDrawTarget);
-
-  // BeginUpdate is allowed to modify the given region,
-  // if it wants more to be repainted than we request.
-  if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
-    nsIntRegion drawRegionCopy = result.mRegionToDraw;
-    nsRefPtr<gfxASurface> onBlack = GetUpdateSurface(BUFFER_BLACK, drawRegionCopy);
-    nsRefPtr<gfxASurface> onWhite = GetUpdateSurface(BUFFER_WHITE, result.mRegionToDraw);
-    if (onBlack && onWhite) {
-      NS_ASSERTION(result.mRegionToDraw == drawRegionCopy,
-                   "BeginUpdate should always modify the draw region in the same way!");
-      FillSurface(onBlack, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
-      FillSurface(onWhite, result.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
-      MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-      RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize().ToIntSize());
-      RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize().ToIntSize());
-      mLoanedDrawTarget = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
-    } else {
-      mLoanedDrawTarget = nullptr;
-    }
-  } else {
-    nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, result.mRegionToDraw);
-    MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
-    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
-  }
-  if (!mLoanedDrawTarget) {
-    NS_WARNING("unable to get context for update");
-    return result;
-  }
-
-  result.mTarget = mLoanedDrawTarget;
-  mLoanedTransform = mLoanedDrawTarget->GetTransform();
-  mLoanedTransform.Translate(-drawBounds.x, -drawBounds.y);
-  result.mTarget->SetTransform(mLoanedTransform);
-  mLoanedTransform.Translate(drawBounds.x, drawBounds.y);
-
   // If we do partial updates, we have to clip drawing to the regionToDraw.
   // If we don't clip, background images will be fillrect'd to the region correctly,
   // while text or lines will paint outside of the regionToDraw. This becomes apparent
@@ -1232,11 +1195,62 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   // newly exposed area. It would be wise to fix this glitch in any way to have simpler
   // clip and draw regions.
   result.mClip = CLIP_DRAW;
+  result.mMode = mode;
+
+  return result;
+}
+
+DrawTarget*
+ContentClientIncremental::BorrowDrawTargetForPainting(ThebesLayer* aLayer,
+                                                      const PaintState& aPaintState)
+{
+  if (!aPaintState.mMode) {
+    return nullptr;
+  }
+
+  DrawTarget* result = nullptr;
+
+  nsIntRect drawBounds = aPaintState.mRegionToDraw.GetBounds();
+  MOZ_ASSERT(!mLoanedDrawTarget);
+
+  // BeginUpdate is allowed to modify the given region,
+  // if it wants more to be repainted than we request.
+  if (aPaintState.mMode == Layer::SURFACE_COMPONENT_ALPHA) {
+    nsIntRegion drawRegionCopy = aPaintState.mRegionToDraw;
+    nsRefPtr<gfxASurface> onBlack = GetUpdateSurface(BUFFER_BLACK, drawRegionCopy);
+    nsRefPtr<gfxASurface> onWhite = GetUpdateSurface(BUFFER_WHITE, aPaintState.mRegionToDraw);
+    if (onBlack && onWhite) {
+      NS_ASSERTION(aPaintState.mRegionToDraw == drawRegionCopy,
+                   "BeginUpdate should always modify the draw region in the same way!");
+      FillSurface(onBlack, aPaintState.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(0.0, 0.0, 0.0, 1.0));
+      FillSurface(onWhite, aPaintState.mRegionToDraw, nsIntPoint(drawBounds.x, drawBounds.y), gfxRGBA(1.0, 1.0, 1.0, 1.0));
+      MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
+      RefPtr<DrawTarget> onBlackDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onBlack, onBlack->GetSize().ToIntSize());
+      RefPtr<DrawTarget> onWhiteDT = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(onWhite, onWhite->GetSize().ToIntSize());
+      mLoanedDrawTarget = Factory::CreateDualDrawTarget(onBlackDT, onWhiteDT);
+    } else {
+      mLoanedDrawTarget = nullptr;
+    }
+  } else {
+    nsRefPtr<gfxASurface> surf = GetUpdateSurface(BUFFER_BLACK, aPaintState.mRegionToDraw);
+    MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContent());
+    mLoanedDrawTarget = gfxPlatform::GetPlatform()->CreateDrawTargetForUpdateSurface(surf, surf->GetSize().ToIntSize());
+  }
+  if (!mLoanedDrawTarget) {
+    NS_WARNING("unable to get context for update");
+    return nullptr;
+  }
+
+  result = mLoanedDrawTarget;
+  mLoanedTransform = mLoanedDrawTarget->GetTransform();
+  mLoanedTransform.Translate(-drawBounds.x, -drawBounds.y);
+  result->SetTransform(mLoanedTransform);
+  mLoanedTransform.Translate(drawBounds.x, drawBounds.y);
 
   if (mContentType == GFX_CONTENT_COLOR_ALPHA) {
-    gfxUtils::ClipToRegion(result.mTarget, result.mRegionToDraw);
-    nsIntRect bounds = result.mRegionToDraw.GetBounds();
-    result.mTarget->ClearRect(Rect(bounds.x, bounds.y, bounds.width, bounds.height));
+    gfxUtils::ClipToRegion(result, aPaintState.mRegionToDraw);
+    nsIntRect bounds = aPaintState.mRegionToDraw.GetBounds();
+    result->ClearRect(Rect(bounds.x, bounds.y, bounds.width, bounds.height));
   }
 
   return result;
@@ -1274,7 +1288,7 @@ ContentClientIncremental::Updated(const nsIntRegion& aRegionToDraw,
 
 already_AddRefed<gfxASurface>
 ContentClientIncremental::GetUpdateSurface(BufferType aType,
-                                           nsIntRegion& aUpdateRegion)
+                                           const nsIntRegion& aUpdateRegion)
 {
   nsIntRect rgnSize = aUpdateRegion.GetBounds();
   if (!mBufferRect.Contains(rgnSize)) {
