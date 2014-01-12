@@ -100,11 +100,16 @@ function checkUpdateFinished() {
   let updater = getUpdatesPatchDir();
   updater.append(FILE_UPDATER_BIN);
   if (updater.exists()) {
-    try {
-      updater.remove(false);
-    } catch (e) {
-      do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-      return;
+    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+      do_throw("Exceeded while waiting for updater binary to no longer be in " +
+               "use");
+    } else {
+      try {
+        updater.remove(false);
+      } catch (e) {
+        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
+        return;
+      }
     }
   }
 
