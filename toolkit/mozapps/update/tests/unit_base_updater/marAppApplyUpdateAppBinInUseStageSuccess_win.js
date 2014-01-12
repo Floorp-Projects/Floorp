@@ -23,7 +23,7 @@ function run_test() {
   setupTestCommon();
 
   if (IS_WIN) {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, true);
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
   }
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
@@ -82,7 +82,7 @@ function customLaunchAppToApplyUpdate() {
 function checkUpdateApplied() {
   gTimeoutRuns++;
   // Don't proceed until the active update's state is applied.
-  if (gUpdateManager.activeUpdate.state != STATE_APPLIED_PLATFORM) {
+  if (gUpdateManager.activeUpdate.state != STATE_APPLIED) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for update to be " +
                "applied, current state is: " +
@@ -95,10 +95,10 @@ function checkUpdateApplied() {
 
   // Don't proceed until the update's status state is applied.
   let state = readStatusState();
-  if (state != STATE_APPLIED_PLATFORM) {
+  if (state != STATE_APPLIED) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal " + STATE_APPLIED_PLATFORM + ", " +
+               "status state to equal " + STATE_APPLIED + ", " +
                "current status state: " + state);
     } else {
       do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);

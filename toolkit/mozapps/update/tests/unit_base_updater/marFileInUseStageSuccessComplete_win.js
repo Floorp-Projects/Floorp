@@ -195,7 +195,8 @@ function run_test() {
   // Launch an existing file so it is in use during the update.
   let fileInUseBin = getApplyDirFile(TEST_FILES[14].relPathDir +
                                      TEST_FILES[14].fileName);
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "40"];
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
+              HELPER_SLEEP_TIMEOUT];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
   fileInUseProcess.init(fileInUseBin);
