@@ -208,6 +208,9 @@ IDBFactory::Create(JSContext* aCx,
   factory->mOwningObject = aOwningObject;
   factory->mContentParent = aContentParent;
 
+  mozilla::HoldJSObjects(factory.get());
+  factory->mRootedOwningObject = true;
+
   if (!IndexedDatabaseManager::IsMainProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     NS_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
