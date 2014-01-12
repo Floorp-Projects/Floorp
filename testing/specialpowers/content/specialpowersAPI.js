@@ -973,7 +973,27 @@ SpecialPowersAPI.prototype = {
     return this._sendSyncMessage("SPWebAppService", message);
   },
 
+  _proxiedObservers: {
+    "specialpowers-http-notify-request": function(aMessage) {
+      let uri = aMessage.json.uri;
+      Services.obs.notifyObservers(null, "specialpowers-http-notify-request", uri);
+    },
+  },
+
+  _addObserverProxy: function(notification) {
+    if (notification in this._proxiedObservers) {
+      this._addMessageListener(notification, this._proxiedObservers[notification]);
+    }
+  },
+
+  _removeObserverProxy: function(notification) {
+    if (notification in this._proxiedObservers) {
+      this._removeMessageListener(notification, this._proxiedObservers[notification]);
+    }
+  },
+
   addObserver: function(obs, notification, weak) {
+    this._addObserverProxy(notification);
     if (typeof obs == 'object' && obs.observe.name != 'SpecialPowersCallbackWrapper')
       obs.observe = wrapCallback(obs.observe);
     var obsvc = Cc['@mozilla.org/observer-service;1']
@@ -981,6 +1001,7 @@ SpecialPowersAPI.prototype = {
     obsvc.addObserver(obs, notification, weak);
   },
   removeObserver: function(obs, notification) {
+    this._removeObserverProxy(notification);
     var obsvc = Cc['@mozilla.org/observer-service;1']
                    .getService(Ci.nsIObserverService);
     obsvc.removeObserver(obs, notification);

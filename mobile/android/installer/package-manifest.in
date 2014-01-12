@@ -87,7 +87,6 @@
 @BINPATH@/res/drawable
 @BINPATH@/res/drawable-hdpi
 @BINPATH@/res/layout
-@BINPATH@/recommended-addons.json
 @BINPATH@/distribution/*
 
 [browser]

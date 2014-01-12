@@ -19,17 +19,17 @@ import android.view.LayoutInflater;
 
 import android.widget.ImageButton;
 
-public class HistoryPage extends HomeFragment
-                        implements IconTabWidget.OnTabChangedListener {
+public class HistoryPanel extends HomeFragment
+                          implements IconTabWidget.OnTabChangedListener {
     // Logging tag name
-    private static final String LOGTAG = "GeckoHistoryPage";
+    private static final String LOGTAG = "GeckoHistoryPanel";
     private IconTabWidget mTabWidget;
     private int mSelectedTab;
-    private boolean initializeRecentPage;
+    private boolean initializeRecentPanel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_history_page, container, false);
+        return inflater.inflate(R.layout.home_history_panel, container, false);
     }
 
     @Override
@@ -49,11 +49,11 @@ public class HistoryPage extends HomeFragment
 
     @Override
     public void load() {
-        // Show most recent page as the initial page.
+        // Show most recent panel as the initial panel.
         // Since we detach/attach on config change, this prevents from replacing current fragment.
-        if (!initializeRecentPage) {
-            showMostRecentPage();
-            initializeRecentPage = true;
+        if (!initializeRecentPanel) {
+            showMostRecentPanel();
+            initializeRecentPanel = true;
         }
     }
 
@@ -64,9 +64,9 @@ public class HistoryPage extends HomeFragment
         }
 
         if (index == 0) {
-            showMostRecentPage();
+            showMostRecentPanel();
         } else if (index == 1) {
-            showLastTabsPage();
+            showLastTabsPanel();
         }
 
         mTabWidget.setCurrentTab(index);
@@ -86,23 +86,23 @@ public class HistoryPage extends HomeFragment
         }
     }
 
-    private void showSubPage(Fragment subPage) {
+    private void showSubPanel(Fragment subPanel) {
         final Bundle args = new Bundle();
         args.putBoolean(HomePager.CAN_LOAD_ARG, getCanLoadHint());
-        subPage.setArguments(args);
+        subPanel.setArguments(args);
 
         getChildFragmentManager().beginTransaction()
-                .addToBackStack(null).replace(R.id.history_page_container, subPage)
+                .addToBackStack(null).replace(R.id.history_panel_container, subPanel)
                 .commitAllowingStateLoss();
     }
 
-    private void showMostRecentPage() {
-        final MostRecentPage mostRecentPage = MostRecentPage.newInstance();
-        showSubPage(mostRecentPage);
+    private void showMostRecentPanel() {
+        final MostRecentPanel mostRecentPanel = MostRecentPanel.newInstance();
+        showSubPanel(mostRecentPanel);
     }
 
-    private void showLastTabsPage() {
-        final LastTabsPage lastTabsPage = LastTabsPage.newInstance();
-        showSubPage(lastTabsPage);
+    private void showLastTabsPanel() {
+        final LastTabsPanel lastTabsPanel = LastTabsPanel.newInstance();
+        showSubPanel(lastTabsPanel);
     }
 }
