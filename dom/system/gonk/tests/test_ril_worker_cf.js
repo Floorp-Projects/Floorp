@@ -9,10 +9,10 @@ function run_test() {
 
 function toaFromString(number) {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -54,9 +54,9 @@ add_test(function test_toaFromString_international() {
 function _getWorker() {
   let _postedMessage;
   let _worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       _postedMessage = message;
     }
   });

@@ -23,7 +23,7 @@ let subscriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
  */
 function newWorker(custom_ns) {
   let worker_ns = {
-    importScripts: function fakeImportScripts() {
+    importScripts: function() {
       Array.slice(arguments).forEach(function(script) {
         if (!script.startsWith("resource:")) {
           script = "resource://gre/modules/" + script;
@@ -32,10 +32,10 @@ function newWorker(custom_ns) {
       }, this);
     },
 
-    postRILMessage: function fakePostRILMessage(message) {
+    postRILMessage: function(message) {
     },
 
-    postMessage: function fakepostMessage(message) {
+    postMessage: function(message) {
     },
 
     // Define these variables inside the worker scope so ES5 strict mode

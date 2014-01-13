@@ -766,10 +766,10 @@ add_test(function test_get_network_name_from_icc() {
 
 add_test(function test_path_id_for_spid_and_spn() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }});
   let RIL = worker.RIL;
@@ -2629,9 +2629,9 @@ add_test(function test_read_new_sms_on_sim() {
   function newSmsOnSimWorkerHelper() {
     let _postedMessage;
     let _worker = newWorker({
-      postRILMessage: function fakePostRILMessage(data) {
+      postRILMessage: function(data) {
       },
-      postMessage: function fakePostMessage(message) {
+      postMessage: function(message) {
         _postedMessage = message;
       }
     });
@@ -2645,7 +2645,7 @@ add_test(function test_read_new_sms_on_sim() {
       get worker() {
         return _worker;
       },
-      fakeWokerBuffer: function fakeWokerBuffer() {
+      fakeWokerBuffer: function() {
         let index = 0; // index for read
         let buf = [];
         _worker.Buf.writeUint8 = function(value) {
