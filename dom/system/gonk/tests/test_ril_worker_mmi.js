@@ -9,10 +9,10 @@ function run_test() {
 
 function parseMMI(mmi) {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -22,9 +22,9 @@ function parseMMI(mmi) {
 function getWorker() {
   let _postedMessage;
   let _worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       _postedMessage = message;
     },
   });
