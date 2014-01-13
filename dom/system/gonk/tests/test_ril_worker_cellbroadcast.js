@@ -25,10 +25,10 @@ add_test(function test_ril_consts_cellbroadcast_misc() {
 
 add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -134,10 +134,10 @@ add_test(function test_ril_worker_GsmPDUHelper_readCbDataCodingScheme() {
 
 add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -210,10 +210,10 @@ add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
 
 add_test(function test_ril_worker__checkCellBroadcastMMISettable() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -260,10 +260,10 @@ add_test(function test_ril_worker__checkCellBroadcastMMISettable() {
 
 add_test(function test_ril_worker__mergeCellBroadcastConfigs() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });

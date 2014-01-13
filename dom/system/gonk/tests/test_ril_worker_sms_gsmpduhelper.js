@@ -12,10 +12,10 @@ function run_test() {
  */
 add_test(function test_GsmPDUHelper_readDataCodingScheme() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -151,10 +151,10 @@ add_test(function test_GsmPDUHelper_readDataCodingScheme() {
  */
 add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
   });
@@ -190,10 +190,10 @@ add_test(function test_GsmPDUHelper_writeStringAsSeptets() {
  */
 add_test(function test_GsmPDUHelper_readAddress() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // Do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // Do nothing
     }
 
