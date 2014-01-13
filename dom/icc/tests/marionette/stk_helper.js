@@ -28,12 +28,12 @@ let pendingEmulatorCmdCount = 0;
 function sendStkPduToEmulator(command, func, expect) {
   ++pendingEmulatorCmdCount;
 
-  runEmulatorCmd(command, function (result) {
+  runEmulatorCmd(command, function(result) {
     --pendingEmulatorCmdCount;
     is(result[0], "OK");
   });
 
-  icc.onstkcommand = function (evt) {
+  icc.onstkcommand = function(evt) {
     if (expect) {
       func(evt.command, expect);
     } else {

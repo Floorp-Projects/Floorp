@@ -16,10 +16,10 @@ function run_test() {
 function add_test_incoming_parcel(parcel, handler) {
   add_test(function test_incoming_parcel() {
     let worker = newWorker({
-      postRILMessage: function fakePostRILMessage(data) {
+      postRILMessage: function(data) {
         // do nothing
       },
-      postMessage: function fakePostMessage(message) {
+      postMessage: function(message) {
         // do nothing
       }
     });
@@ -86,10 +86,10 @@ add_test_incoming_parcel(null,
 // Test Bug 814761: buffer overwritten
 add_test(function test_incoming_parcel_buffer_overwritten() {
   let worker = newWorker({
-    postRILMessage: function fakePostRILMessage(data) {
+    postRILMessage: function(data) {
       // do nothing
     },
-    postMessage: function fakePostMessage(message) {
+    postMessage: function(message) {
       // do nothing
     }
   });

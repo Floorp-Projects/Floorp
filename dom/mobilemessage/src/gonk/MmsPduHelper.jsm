@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 let DEBUG; // set to true to see debug messages
 
-this.MMS_VERSION = (function () {
+this.MMS_VERSION = (function() {
   Cu.import("resource://gre/modules/Services.jsm");
 
   try {
@@ -63,7 +63,7 @@ RangedValue.prototype = {
    *
    * @throws CodeError if decoded value is not in the range [this.min, this.max].
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let value = WSP.Octet.decode(data);
     if ((value >= this.min) && (value <= this.max)) {
       return value;
@@ -78,7 +78,7 @@ RangedValue.prototype = {
    * @param value
    *        An integer value within thr range [this.min, this.max].
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     if ((value < this.min) || (value > this.max)) {
       throw new WSP.CodeError(this.name + ": invalid value " + value);
     }
@@ -103,7 +103,7 @@ this.BooleanValue = {
    *
    * @throws CodeError if read octet equals to neither 128 nor 129.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let value = WSP.Octet.decode(data);
     if ((value != 128) && (value != 129)) {
       throw new WSP.CodeError("Boolean-value: invalid value " + value);
@@ -118,7 +118,7 @@ this.BooleanValue = {
    * @param value
    *        A boolean value to be encoded.
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     WSP.Octet.encode(data, value ? 128 : 129);
   },
 };
@@ -137,7 +137,7 @@ this.Address = {
    *
    * @return An object of two string-typed attributes: address and type.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let str = EncodedStringValue.decode(data);
 
     let result;
@@ -171,7 +171,7 @@ this.Address = {
    * @param value
    *        An object of two string-typed attributes: address and type.
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     if (!value || !value.type || !value.address) {
       throw new WSP.CodeError("Address: invalid value");
     }
@@ -229,7 +229,7 @@ this.Address = {
    *
    * @return Address type.
    */
-  resolveType: function resolveType(address) {
+  resolveType: function(address) {
     if (address.match(this.REGEXP_EMAIL)) {
       return "email";
     }
@@ -284,7 +284,7 @@ this.HeaderField = {
    *         but the `value` property can be many different types depending on
    *         `name`.
    */
-  decode: function decode(data, options) {
+  decode: function(data, options) {
     return WSP.decodeAlternatives(data, options,
                                   MmsHeader, WSP.ApplicationHeader);
   },
@@ -297,7 +297,7 @@ this.HeaderField = {
    * @param options
    *        Extra context for encoding.
    */
-  encode: function encode(data, value, options) {
+  encode: function(data, value, options) {
     WSP.encodeAlternatives(data, value, options,
                            MmsHeader, WSP.ApplicationHeader);
   },
@@ -324,7 +324,7 @@ this.MmsHeader = {
    * @throws NotWellKnownEncodingError if decoded well-known header field
    *         number is not registered or supported.
    */
-  decode: function decode(data, options) {
+  decode: function(data, options) {
     let index = WSP.ShortInteger.decode(data);
 
     let entry = MMS_HEADER_FIELDS[index];
@@ -363,7 +363,7 @@ this.MmsHeader = {
    * @throws NotWellKnownEncodingError if the well-known header field number is
    *         not registered or supported.
    */
-  encode: function encode(data, header) {
+  encode: function(data, header) {
     if (!header.name) {
       throw new WSP.CodeError("MMS-header: empty header name");
     }
@@ -417,7 +417,7 @@ this.ContentLocationValue = {
    * @return A decoded object containing `uri` and conditional `statusCount`
    *         properties.
    */
-  decode: function decode(data, options) {
+  decode: function(data, options) {
     let type = WSP.ensureHeader(options, "x-mms-message-type");
 
     let result = {};
@@ -454,7 +454,7 @@ this.ElementDescriptorValue = {
    * @return A decoded object containing a string property `contentReference`
    *         and an optinal `params` name-value map.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -494,7 +494,7 @@ this.Parameter = {
    * @throws NotWellKnownEncodingError if decoded well-known parameter number
    *         is not registered or supported.
    */
-  decodeParameterName: function decodeParameterName(data) {
+  decodeParameterName: function(data) {
     let begin = data.offset;
     let number;
     try {
@@ -522,7 +522,7 @@ this.Parameter = {
    *         but the `value` property can be many different types depending on
    *         `name`.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let name = this.decodeParameterName(data);
     let value = WSP.decodeAlternatives(data, null,
                                        WSP.ConstrainedEncoding, WSP.TextString);
@@ -540,7 +540,7 @@ this.Parameter = {
    *
    * @return An array of decoded objects.
    */
-  decodeMultiple: function decodeMultiple(data, end) {
+  decodeMultiple: function(data, end) {
     let params, param;
 
     while (data.offset < end) {
@@ -568,7 +568,7 @@ this.Parameter = {
    * @param options
    *        Extra context for encoding.
    */
-  encode: function encode(data, param, options) {
+  encode: function(data, param, options) {
     if (!param || !param.name) {
       throw new WSP.CodeError("Parameter-name: empty param name");
     }
@@ -605,7 +605,7 @@ this.EncodedStringValue = {
    * @throws NotWellKnownEncodingError if decoded well-known charset number is
    *         not registered or supported.
    */
-  decodeCharsetEncodedString: function decodeCharsetEncodedString(data) {
+  decodeCharsetEncodedString: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -657,7 +657,7 @@ this.EncodedStringValue = {
    *
    * @return Decoded string.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let begin = data.offset;
     try {
       return WSP.TextString.decode(data);
@@ -675,7 +675,7 @@ this.EncodedStringValue = {
    * @param str
    *        A string.
    */
-  encodeCharsetEncodedString: function encodeCharsetEncodedString(data, str) {
+  encodeCharsetEncodedString: function(data, str) {
     let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                .createInstance(Ci.nsIScriptableUnicodeConverter);
     // `When the text string cannot be represented as us-ascii, the character
@@ -714,7 +714,7 @@ this.EncodedStringValue = {
    * @param str
    *        A string.
    */
-  encode: function encode(data, str) {
+  encode: function(data, str) {
     let begin = data.offset;
     try {
       WSP.TextString.encode(data, str);
@@ -741,7 +741,7 @@ this.ExpiryValue = {
    *
    * @throws CodeError if decoded token equals to neither 128 nor 129.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -770,7 +770,7 @@ this.ExpiryValue = {
    * @param value
    *        A Date object for absolute expiry or an integer for relative one.
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     let isDate, begin = data.offset;
     if (value instanceof Date) {
       isDate = true;
@@ -815,7 +815,7 @@ this.FromValue = {
    *
    * @throws CodeError if decoded token equals to neither 128 nor 129.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -842,7 +842,7 @@ this.FromValue = {
    * @param value
    *        A Address-value or null for MMS Proxy-Relay Insert-Address mode.
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     if (!value) {
       WSP.ValueLength.encode(data, 1);
       WSP.Octet.encode(data, 129);
@@ -876,7 +876,7 @@ this.PreviouslySentByValue = {
    * @return Decoded object containing an integer `forwardedCount` and an
    *         string-typed `originator` attributes.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -906,7 +906,7 @@ this.PreviouslySentDateValue = {
    * @return Decoded object containing an integer `forwardedCount` and an
    *         Date-typed `timestamp` attributes.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -943,7 +943,7 @@ this.MessageClassValue = {
    *
    * @throws CodeError if decoded value is not in the range 128..131.
    */
-  decodeClassIdentifier: function decodeClassIdentifier(data) {
+  decodeClassIdentifier: function(data) {
     let value = WSP.Octet.decode(data);
     if ((value >= 128) && (value < (128 + this.WELL_KNOWN_CLASSES.length))) {
       return this.WELL_KNOWN_CLASSES[value - 128];
@@ -958,7 +958,7 @@ this.MessageClassValue = {
    *
    * @return A decoded string.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let begin = data.offset;
     try {
       return this.decodeClassIdentifier(data);
@@ -973,7 +973,7 @@ this.MessageClassValue = {
    *        A wrapped object to store encoded raw data.
    * @param klass
    */
-  encode: function encode(data, klass) {
+  encode: function(data, klass) {
     let index = this.WELL_KNOWN_CLASSES.indexOf(klass.toLowerCase());
     if (index >= 0) {
       WSP.Octet.encode(data, index + 128);
@@ -1008,7 +1008,7 @@ this.MmFlagsValue = {
    *
    * @throws CodeError if decoded value is not in the range 128..130.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let length = WSP.ValueLength.decode(data);
     let end = data.offset + length;
 
@@ -1033,7 +1033,7 @@ this.MmFlagsValue = {
    *        An object containing an integer `type` and an string-typed
    *        `text` attributes.
    */
-  encode: function encode(data, value) {
+  encode: function(data, value) {
     if ((value.type < 128) || (value.type > 130)) {
       throw new WSP.CodeError("MM-flags-value: invalid type " + value.type);
     }
@@ -1093,7 +1093,7 @@ this.RecommendedRetrievalModeValue = {
    *
    * @return A decoded integer.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     return WSP.Octet.decodeEqualTo(data, 128);
   },
 };
@@ -1131,7 +1131,7 @@ this.ResponseText = {
    * @return An object containing a string-typed `text` attribute and a
    *         integer-typed `statusCount` one.
    */
-  decode: function decode(data, options) {
+  decode: function(data, options) {
     let type = WSP.ensureHeader(options, "x-mms-message-type");
 
     let result = {};
@@ -1180,7 +1180,7 @@ this.RetrieveStatusValue = {
    *
    * @return A decoded integer.
    */
-  decode: function decode(data) {
+  decode: function(data) {
     let value = WSP.Octet.decode(data);
     if (value == MMS_PDU_ERROR_OK) {
       return value;
@@ -1230,7 +1230,7 @@ this.PduHelper = {
    *
    * @return A boolean value indicating whether it's followed by message body.
    */
-  parseHeaders: function parseHeaders(data, headers) {
+  parseHeaders: function(data, headers) {
     if (!headers) {
       headers = {};
     }
@@ -1269,7 +1269,7 @@ this.PduHelper = {
    * @param msg
    *        A message object to store decoded multipart or octet array content.
    */
-  parseContent: function parseContent(data, msg) {
+  parseContent: function(data, msg) {
     let contentType = msg.headers["content-type"].media;
     if ((contentType == "application/vnd.wap.multipart.related")
         || (contentType == "application/vnd.wap.multipart.mixed")) {
@@ -1300,7 +1300,7 @@ this.PduHelper = {
    *
    * @throws FatalCodeError if the PDU type is not supported yet.
    */
-  checkMandatoryFields: function checkMandatoryFields(msg) {
+  checkMandatoryFields: function(msg) {
     let type = WSP.ensureHeader(msg.headers, "x-mms-message-type");
     let entry = MMS_PDU_TYPES[type];
     if (!entry) {
@@ -1308,7 +1308,7 @@ this.PduHelper = {
         "checkMandatoryFields: unsupported message type " + type);
     }
 
-    entry.mandatoryFields.forEach(function (name) {
+    entry.mandatoryFields.forEach(function(name) {
       WSP.ensureHeader(msg.headers, name);
     });
 
@@ -1326,7 +1326,7 @@ this.PduHelper = {
    *
    * @return A MMS message object or null in case of errors found.
    */
-  parse: function parse(data, msg) {
+  parse: function(data, msg) {
     if (!msg) {
       msg = {};
     }
@@ -1355,7 +1355,7 @@ this.PduHelper = {
    * @param name
    *        Name of the header field to be encoded.
    */
-  encodeHeader: function encodeHeader(data, headers, name) {
+  encodeHeader: function(data, headers, name) {
     let value = headers[name];
     if (Array.isArray(value)) {
       for (let i = 0; i < value.length; i++) {
@@ -1372,7 +1372,7 @@ this.PduHelper = {
    * @param headers
    *        A dictionary object containing multiple name/value mapping.
    */
-  encodeHeaderIfExists: function encodeHeaderIfExists(data, headers, name) {
+  encodeHeaderIfExists: function(data, headers, name) {
     // Header value could be zero or null.
     if (headers[name] !== undefined) {
       this.encodeHeader(data, headers, name);
@@ -1387,7 +1387,7 @@ this.PduHelper = {
    *
    * @return the passed data parameter or a created one.
    */
-  encodeHeaders: function encodeHeaders(data, headers) {
+  encodeHeaders: function(data, headers) {
     if (!data) {
       data = {array: [], offset: 0};
     }
@@ -1425,7 +1425,7 @@ this.PduHelper = {
    *
    * @return An instance of nsIMultiplexInputStream or null in case of errors.
    */
-  compose: function compose(multiStream, msg) {
+  compose: function(multiStream, msg) {
     if (!multiStream) {
       multiStream = Cc["@mozilla.org/io/multiplex-input-stream;1"]
                     .createInstance(Ci.nsIMultiplexInputStream);
@@ -1455,7 +1455,7 @@ this.PduHelper = {
   },
 };
 
-const MMS_PDU_TYPES = (function () {
+const MMS_PDU_TYPES = (function() {
   let pdus = {};
   function add(number, hasContent, mandatoryFields) {
     pdus[number] = {
@@ -1520,7 +1520,7 @@ const MMS_PDU_TYPES = (function () {
  *
  * @see OMA-TS-MMS_ENC-V1_3-20110913-A clause 7.4
  */
-const MMS_HEADER_FIELDS = (function () {
+const MMS_HEADER_FIELDS = (function() {
   let names = {};
   function add(name, number, coder) {
     let entry = {
@@ -1599,7 +1599,7 @@ const MMS_HEADER_FIELDS = (function () {
 })();
 
 // @see OMA-TS-MMS_ENC-V1_3-20110913-A Table 27: Parameter Name Assignments
-const MMS_WELL_KNOWN_PARAMS = (function () {
+const MMS_WELL_KNOWN_PARAMS = (function() {
   let params = {};
 
   function add(name, number, coder) {
@@ -1619,11 +1619,11 @@ const MMS_WELL_KNOWN_PARAMS = (function () {
 
 let debug;
 if (DEBUG) {
-  debug = function (s) {
+  debug = function(s) {
     dump("-$- MmsPduHelper: " + s + "\n");
   };
 } else {
-  debug = function (s) {};
+  debug = function(s) {};
 }
 
 this.EXPORTED_SYMBOLS = ALL_CONST_SYMBOLS.concat([
