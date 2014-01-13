@@ -169,15 +169,15 @@ PatternIsCompatible(const Pattern& aPattern)
 {
   switch (aPattern.GetType())
   {
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
     {
       const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
-      return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
+      return pattern.mStops->GetBackendType() == BackendType::CAIRO;
     }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
     {
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
-      return pattern.mStops->GetBackendType() == BACKEND_CAIRO;
+      return pattern.mStops->GetBackendType() == BackendType::CAIRO;
     }
     default:
       return true;
@@ -202,13 +202,13 @@ ReleaseData(void* aData)
 cairo_surface_t*
 GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = false)
 {
-  if (aSurface->GetType() == SURFACE_CAIRO) {
+  if (aSurface->GetType() == SurfaceType::CAIRO) {
     cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
     return surf;
   }
 
-  if (aSurface->GetType() == SURFACE_CAIRO_IMAGE) {
+  if (aSurface->GetType() == SurfaceType::CAIRO_IMAGE) {
     cairo_surface_t* surf =
       static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
     cairo_surface_reference(surf);
@@ -261,7 +261,7 @@ public:
   AutoClearDeviceOffset(const Pattern& aPattern)
     : mSurface(nullptr)
   {
-    if (aPattern.GetType() == PATTERN_SURFACE) {
+    if (aPattern.GetType() == PatternType::SURFACE) {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
       Init(pattern.mSurface);
     }
@@ -311,14 +311,14 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
   switch (aPattern.GetType())
   {
-    case PATTERN_COLOR:
+    case PatternType::COLOR:
     {
       Color color = static_cast<const ColorPattern&>(aPattern).mColor;
       pat = cairo_pattern_create_rgba(color.r, color.g, color.b, color.a * aAlpha);
       break;
     }
 
-    case PATTERN_SURFACE:
+    case PatternType::SURFACE:
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
       cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
@@ -334,14 +334,14 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       break;
     }
-    case PATTERN_LINEAR_GRADIENT:
+    case PatternType::LINEAR_GRADIENT:
     {
       const LinearGradientPattern& pattern = static_cast<const LinearGradientPattern&>(aPattern);
 
       pat = cairo_pattern_create_linear(pattern.mBegin.x, pattern.mBegin.y,
                                         pattern.mEnd.x, pattern.mEnd.y);
 
-      MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
+      MOZ_ASSERT(pattern.mStops->GetBackendType() == BackendType::CAIRO);
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
 
@@ -357,14 +357,14 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
 
       break;
     }
-    case PATTERN_RADIAL_GRADIENT:
+    case PatternType::RADIAL_GRADIENT:
     {
       const RadialGradientPattern& pattern = static_cast<const RadialGradientPattern&>(aPattern);
 
       pat = cairo_pattern_create_radial(pattern.mCenter1.x, pattern.mCenter1.y, pattern.mRadius1,
                                         pattern.mCenter2.x, pattern.mCenter2.y, pattern.mRadius2);
 
-      MOZ_ASSERT(pattern.mStops->GetBackendType() == BACKEND_CAIRO);
+      MOZ_ASSERT(pattern.mStops->GetBackendType() == BackendType::CAIRO);
       GradientStopsCairo* cairoStops = static_cast<GradientStopsCairo*>(pattern.mStops.get());
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(cairoStops->GetExtendMode()));
 
@@ -405,7 +405,7 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 {
   // We pre-multiply colours' alpha by the global alpha, so we don't need to
   // use an intermediate surface for them.
-  if (aPattern.GetType() == PATTERN_COLOR)
+  if (aPattern.GetType() == PatternType::COLOR)
     return false;
 
   if (aOptions.mAlpha == 1.0)
@@ -575,7 +575,7 @@ DrawTargetCairo::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                        Float aSigma,
                                        CompositionOp aOperator)
 {
-  if (aSurface->GetType() != SURFACE_CAIRO) {
+  if (aSurface->GetType() != SurfaceType::CAIRO) {
     return;
   }
   
@@ -834,7 +834,7 @@ DrawTargetCairo::Stroke(const Path *aPath,
 {
   AutoPrepareForDrawing prep(this, mContext, aPath);
 
-  if (aPath->GetBackendType() != BACKEND_CAIRO)
+  if (aPath->GetBackendType() != BackendType::CAIRO)
     return;
 
   PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
@@ -850,7 +850,7 @@ DrawTargetCairo::Fill(const Path *aPath,
 {
   AutoPrepareForDrawing prep(this, mContext, aPath);
 
-  if (aPath->GetBackendType() != BACKEND_CAIRO)
+  if (aPath->GetBackendType() != BackendType::CAIRO)
     return;
 
   PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
@@ -968,7 +968,7 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
 void
 DrawTargetCairo::PushClip(const Path *aPath)
 {
-  if (aPath->GetBackendType() != BACKEND_CAIRO) {
+  if (aPath->GetBackendType() != BackendType::CAIRO) {
     return;
   }
 
@@ -1010,7 +1010,7 @@ DrawTargetCairo::PopClip()
 }
 
 TemporaryRef<PathBuilder>
-DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) const
+DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FillRule::FILL_WINDING */) const
 {
   RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
@@ -1020,7 +1020,7 @@ DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) cons
 void
 DrawTargetCairo::ClearSurfaceForUnboundedSource(const CompositionOp &aOperator)
 {
-  if (aOperator != OP_SOURCE)
+  if (aOperator != CompositionOp::OP_SOURCE)
     return;
   cairo_set_operator(mContext, CAIRO_OPERATOR_CLEAR);
   // It doesn't really matter what the source is here, since Paint
@@ -1107,7 +1107,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
 TemporaryRef<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-  if (aSurface.mType == NATIVE_SURFACE_CAIRO_SURFACE) {
+  if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
     IntSize size;
     cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
     if (GetCairoSurfaceSize(surf, size)) {
@@ -1158,8 +1158,8 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   mSize = aSize;
   mFormat = CairoContentToGfxFormat(cairo_surface_get_content(aSurface));
 
-  if (mFormat == FORMAT_B8G8R8A8 ||
-      mFormat == FORMAT_R8G8B8A8) {
+  if (mFormat == SurfaceFormat::B8G8R8A8 ||
+      mFormat == SurfaceFormat::R8G8B8A8) {
     SetPermitSubpixelAA(false);
   } else {
     SetPermitSubpixelAA(true);
@@ -1240,10 +1240,10 @@ DrawTargetCairo::Init(unsigned char* aData, const IntSize &aSize, int32_t aStrid
 void *
 DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
 {
-  if (aType == NATIVE_SURFACE_CAIRO_SURFACE) {
+  if (aType == NativeSurfaceType::CAIRO_SURFACE) {
     return cairo_get_target(mContext);
   }
-  if (aType == NATIVE_SURFACE_CAIRO_CONTEXT) {
+  if (aType == NativeSurfaceType::CAIRO_CONTEXT) {
     return mContext;
   }
 
@@ -1290,7 +1290,7 @@ DrawTargetCairo::GetUserSpaceClip()
 cairo_t*
 BorrowedCairoContext::BorrowCairoContextFromDrawTarget(DrawTarget* aDT)
 {
-  if (aDT->GetType() != BACKEND_CAIRO || aDT->IsDualDrawTarget()) {
+  if (aDT->GetType() != BackendType::CAIRO || aDT->IsDualDrawTarget()) {
     return nullptr;
   }
   DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
@@ -1311,7 +1311,7 @@ void
 BorrowedCairoContext::ReturnCairoContextToDrawTarget(DrawTarget* aDT,
                                                      cairo_t* aCairo)
 {
-  if (aDT->GetType() != BACKEND_CAIRO || aDT->IsDualDrawTarget()) {
+  if (aDT->GetType() != BackendType::CAIRO || aDT->IsDualDrawTarget()) {
     return;
   }
   DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);

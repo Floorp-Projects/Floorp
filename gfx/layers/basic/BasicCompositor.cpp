@@ -175,7 +175,7 @@ public:
     PlanarYCbCrData data;
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 
-    gfx::SurfaceFormat format = FORMAT_B8G8R8X8;
+    gfx::SurfaceFormat format = SurfaceFormat::B8G8R8X8;
     gfx::IntSize size;
     gfx::GetYCbCrToRGBDestFormatAndSize(data, format, size);
     if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
@@ -235,7 +235,7 @@ void BasicCompositor::Destroy()
 TemporaryRef<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), FORMAT_B8G8R8A8);
+  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
 
   RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
 
@@ -247,7 +247,7 @@ BasicCompositor::CreateRenderTargetFromSource(const IntRect &aRect,
                                               const CompositingRenderTarget *aSource,
                                               const IntPoint &aSourcePoint)
 {
-  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), FORMAT_B8G8R8A8);
+  RefPtr<DrawTarget> target = mDrawTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
   RefPtr<BasicCompositingRenderTarget> rt = new BasicCompositingRenderTarget(target, aRect);
 
   DrawTarget *source;
@@ -307,13 +307,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
     Matrix dtTransform = aDest->GetTransform();
     aDest->SetTransform(aMaskTransform);
     Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
-    aDest->MaskSurface(SurfacePattern(aSource, EXTEND_REPEAT, patternMatrix),
+    aDest->MaskSurface(SurfacePattern(aSource, ExtendMode::REPEAT, patternMatrix),
                        aMask, Point(), DrawOptions(aOpacity));
     aDest->SetTransform(dtTransform);
     aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
-                    SurfacePattern(aSource, EXTEND_REPEAT, matrix),
+                    SurfacePattern(aSource, ExtendMode::REPEAT, matrix),
                     DrawOptions(aOpacity));
   }
 }
@@ -421,7 +421,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     newTransform = aTransform.As2D();
   } else {
     // Create a temporary surface for the transform.
-    dest = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(RoundOut(aRect).Size(), FORMAT_B8G8R8A8);
+    dest = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(RoundOut(aRect).Size(), SurfaceFormat::B8G8R8A8);
     if (!dest) {
       return;
     }
@@ -514,7 +514,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     RefPtr<SourceSurface> snapshot = dest->Snapshot();
     RefPtr<DataSourceSurface> source = snapshot->GetDataSurface();
     RefPtr<DataSourceSurface> temp =
-      Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), FORMAT_B8G8R8A8);
+      Factory::CreateDataSourceSurface(RoundOut(transformBounds).Size(), SurfaceFormat::B8G8R8A8);
     if (!temp) {
       return;
     }
@@ -554,7 +554,7 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (mCopyTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Create a dummy
     // placeholder so that CreateRenderTarget() works.
-    mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1,1), FORMAT_B8G8R8A8);
+    mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1,1), SurfaceFormat::B8G8R8A8);
   } else {
     mDrawTarget = mWidget->StartRemoteDrawing();
   }

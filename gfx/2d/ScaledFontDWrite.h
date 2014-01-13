@@ -23,7 +23,7 @@ public:
   {}
   ScaledFontDWrite(uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize);
 
-  virtual FontType GetType() const { return FONT_DWRITE; }
+  virtual FontType GetType() const { return FontType::DWRITE; }
 
   virtual TemporaryRef<Path> GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget);
   virtual void CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint);
@@ -53,7 +53,7 @@ public:
   {
   }
 
-  virtual FontType GetType() const { return FONT_DWRITE; }
+  virtual FontType GetType() const { return FontType::DWRITE; }
 
 private:
   friend class DrawTargetD2D;

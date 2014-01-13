@@ -14,7 +14,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(5fe25c47-5462-4b85-b946-fc2e20c07cdf)]
+[scriptable, builtinclass, uuid(4080f700-9c16-4884-8f8d-e28094377084)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -69,5 +69,14 @@ interface nsISSLSocketControl : nsISupports {
      * The original flags from the socket provider.
      */
     readonly attribute uint32_t providerFlags;
+
+    /* These values are defined by TLS. */
+    const short SSL_VERSION_3   = 0x0300;
+    const short TLS_VERSION_1   = 0x0301;
+    const short TLS_VERSION_1_1 = 0x0302;
+    const short TLS_VERSION_1_2 = 0x0303;
+    const short SSL_VERSION_UNKNOWN = -1;
+
+    [infallible] readonly attribute short SSLVersionUsed;
 };
 

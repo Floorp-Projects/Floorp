@@ -190,22 +190,16 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   setupUpdaterTest(FILE_PARTIAL_WIN_MAR);
 
   gCallbackBinFile = "exe0.exe";
 
-  // apply the complete mar
-  let exitValue = runUpdate();
-  logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a partial mar");
-  do_check_eq(exitValue, 0);
+  runUpdate(0, STATE_SUCCEEDED);
+}
 
-  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
-  let updatesDir = do_get_file(gTestID + UPDATES_DIR_SUFFIX);
-  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
-
+function checkUpdateApplied() {
   checkFilesAfterUpdateSuccess();
 
   logTestInfo("testing tobedeleted directory doesn't exist");
@@ -213,8 +207,4 @@ function run_test() {
   do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
-}
-
-function end_test() {
-  cleanupUpdaterTest();
 }

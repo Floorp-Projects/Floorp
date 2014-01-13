@@ -5588,5 +5588,15 @@
     "expires_in_version": "4.0a1",
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
+  },
+  "CERT_OCSP_ENABLED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Is OCSP fetching enabled? (pref security.OCSP.enabled)"
+  },
+  "CERT_OCSP_REQUIRED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Is OCSP required when the cert has an OCSP URI? (pref security.OCSP.require)"
   }
 }

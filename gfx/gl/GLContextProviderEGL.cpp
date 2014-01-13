@@ -799,8 +799,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
 // often without the ability to texture from them directly.
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
-                                      const SurfaceCaps& caps,
-                                      ContextFlags flags)
+                                      const SurfaceCaps& caps)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         return nullptr;
@@ -823,7 +822,7 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
 // and 2) some mobile devices have a very strict limit on global number of GL contexts (bug 754257)
 // and 3) each EGL context eats 750k on B2G (bug 813783)
 GLContext *
-GLContextProviderEGL::GetGlobalContext(const ContextFlags)
+GLContextProviderEGL::GetGlobalContext()
 {
     return nullptr;
 }

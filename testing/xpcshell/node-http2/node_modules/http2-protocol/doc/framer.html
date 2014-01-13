@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>framer.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page">
+            
+              
+              <a class="source" href="compressor.html">
+                compressor.js
+              </a>
+            
+              
+              <a class="source" href="connection.html">
+                connection.js
+              </a>
+            
+              
+              <a class="source" href="endpoint.html">
+                endpoint.js
+              </a>
+            
+              
+              <a class="source" href="flow.html">
+                flow.js
+              </a>
+            
+              
+              <a class="source" href="framer.html">
+                framer.js
+              </a>
+            
+              
+              <a class="source" href="index.html">
+                index.js
+              </a>
+            
+              
+              <a class="source" href="stream.html">
+                stream.js
+              </a>
+            
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>framer.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>The framer consists of two <a href="http://nodejs.org/api/stream.html#stream_class_stream_transform">Transform Stream</a> subclasses that operate in <a href="http://nodejs.org/api/stream.html#stream_new_stream_readable_options">object mode</a>:
+the Serializer and the Deserializer</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> assert = require(<span class="string">'assert'</span>);
+
+<span class="keyword">var</span> Transform = require(<span class="string">'stream'</span>).Transform;
+
+exports.Serializer = Serializer;
+exports.Deserializer = Deserializer;
+
+<span class="keyword">var</span> logData = Boolean(process.env.HTTP2_LOG_DATA);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <h2 id="serializer">Serializer</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <pre><code>Frame Objects
+* * * * * * * --+---------------------------
+                |                          |
+                v                          v           Buffers
+ [] -----&gt; Payload Ser. --[buffers]--&gt; Header Ser. --&gt; * * * *
+empty      adds payload                adds header
+array        buffers                     buffer</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">Serializer</span><span class="params">(log, sizeLimit)</span> {</span>
+  <span class="keyword">this</span>._log = log.child({ component: <span class="string">'serializer'</span> });
+  <span class="keyword">this</span>._sizeLimit = sizeLimit || MAX_PAYLOAD_SIZE;
+  Transform.call(<span class="keyword">this</span>, { objectMode: <span class="literal">true</span> });
+}
+Serializer.prototype = Object.create(Transform.prototype, { constructor: { value: Serializer } });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>When there&#39;s an incoming frame object, it first generates the frame type specific part of the
+frame (payload), and then then adds the header part which holds fields that are common to all
+frame types (like the length of the payload).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.prototype._transform = <span class="function"><span class="keyword">function</span> <span class="title">_transform</span><span class="params">(frame, encoding, done)</span> {</span>
+  <span class="keyword">this</span>._log.trace({ frame: frame }, <span class="string">'Outgoing frame'</span>);
+
+  assert(frame.type <span class="keyword">in</span> Serializer, <span class="string">'Unknown frame type: '</span> + frame.type);
+
+  <span class="keyword">var</span> buffers = [];
+  Serializer[frame.type](frame, buffers);
+  Serializer.commonHeader(frame, buffers);
+
+  assert(buffers[<span class="number">0</span>].readUInt16BE(<span class="number">0</span>) &lt;= <span class="keyword">this</span>._sizeLimit, <span class="string">'Frame too large!'</span>);
+
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; buffers.length; i++) {
+    <span class="keyword">if</span> (logData) {
+      <span class="keyword">this</span>._log.trace({ data: buffers[i] }, <span class="string">'Outgoing data'</span>);
+    }
+    <span class="keyword">this</span>.push(buffers[i]);
+  }
+
+  done();
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <h2 id="deserializer">Deserializer</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <pre><code>Buffers
+* * * * --------+-------------------------
+                |                        |
+                v                        v           Frame Objects
+ {} -----&gt; Header Des. --{frame}--&gt; Payload Des. --&gt; * * * * * * *
+empty      adds parsed              adds parsed
+object  header properties        payload properties</code></pre>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">Deserializer</span><span class="params">(log, sizeLimit)</span> {</span>
+  <span class="keyword">this</span>._log = log.child({ component: <span class="string">'deserializer'</span> });
+  <span class="keyword">this</span>._sizeLimit = sizeLimit || MAX_PAYLOAD_SIZE;
+  Transform.call(<span class="keyword">this</span>, { objectMode: <span class="literal">true</span> });
+  <span class="keyword">this</span>._next(COMMON_HEADER_SIZE);
+}
+Deserializer.prototype = Object.create(Transform.prototype, { constructor: { value: Deserializer } });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>The Deserializer is stateful, and it&#39;s two main alternating states are: <em>waiting for header</em> and
+<em>waiting for payload</em>. The state is stored in the boolean property <code>_waitingForHeader</code>.</p>
+<p>When entering a new state, a <code>_buffer</code> is created that will hold the accumulated data (header or
+payload). The <code>_cursor</code> is used to track the progress.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Deserializer.prototype._next = <span class="function"><span class="keyword">function</span><span class="params">(size)</span> {</span>
+  <span class="keyword">this</span>._cursor = <span class="number">0</span>;
+  <span class="keyword">this</span>._buffer = <span class="keyword">new</span> Buffer(size);
+  <span class="keyword">this</span>._waitingForHeader = !<span class="keyword">this</span>._waitingForHeader;
+  <span class="keyword">if</span> (<span class="keyword">this</span>._waitingForHeader) {
+    <span class="keyword">this</span>._frame = {};
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Parsing an incoming buffer is an iterative process because it can hold multiple frames if it&#39;s
+large enough. A <code>cursor</code> is used to track the progress in parsing the incoming <code>chunk</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Deserializer.prototype._transform = <span class="function"><span class="keyword">function</span> <span class="title">_transform</span><span class="params">(chunk, encoding, done)</span> {</span>
+  <span class="keyword">var</span> cursor = <span class="number">0</span>;
+
+  <span class="keyword">if</span> (logData) {
+    <span class="keyword">this</span>._log.trace({ data: chunk }, <span class="string">'Incoming data'</span>);
+  }
+
+  <span class="keyword">while</span>(cursor &lt; chunk.length) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>The content of an incoming buffer is first copied to <code>_buffer</code>. If it can&#39;t hold the full
+chunk, then only a part of it is copied.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> toCopy = Math.min(chunk.length - cursor, <span class="keyword">this</span>._buffer.length - <span class="keyword">this</span>._cursor);
+    chunk.copy(<span class="keyword">this</span>._buffer, <span class="keyword">this</span>._cursor, cursor, cursor + toCopy);
+    <span class="keyword">this</span>._cursor += toCopy;
+    cursor += toCopy;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>When <code>_buffer</code> is full, it&#39;s content gets parsed either as header or payload depending on
+the actual state.</p>
+<p>If it&#39;s header then the parsed data is stored in a temporary variable and then the
+deserializer waits for the specified length payload.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> ((<span class="keyword">this</span>._cursor === <span class="keyword">this</span>._buffer.length) &amp;&amp; <span class="keyword">this</span>._waitingForHeader) {
+      <span class="keyword">var</span> payloadSize = Deserializer.commonHeader(<span class="keyword">this</span>._buffer, <span class="keyword">this</span>._frame);
+      <span class="keyword">if</span> (payloadSize &lt;= <span class="keyword">this</span>._sizeLimit) {
+        <span class="keyword">this</span>._next(payloadSize);
+      } <span class="keyword">else</span> {
+        <span class="keyword">this</span>.emit(<span class="string">'error'</span>, <span class="string">'FRAME_SIZE_ERROR'</span>);
+        <span class="keyword">return</span>;
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>If it&#39;s payload then the the frame object is finalized and then gets pushed out.
+Unknown frame types are ignored.</p>
+<p>Note: If we just finished the parsing of a header and the payload length is 0, this branch
+will also run.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> ((<span class="keyword">this</span>._cursor === <span class="keyword">this</span>._buffer.length) &amp;&amp; !<span class="keyword">this</span>._waitingForHeader) {
+      <span class="keyword">if</span> (<span class="keyword">this</span>._frame.type) {
+        <span class="keyword">var</span> error = Deserializer[<span class="keyword">this</span>._frame.type](<span class="keyword">this</span>._buffer, <span class="keyword">this</span>._frame);
+        <span class="keyword">if</span> (error) {
+          <span class="keyword">this</span>._log.error(<span class="string">'Incoming frame parsing error: '</span> + error);
+          <span class="keyword">this</span>.emit(<span class="string">'error'</span>, <span class="string">'PROTOCOL_ERROR'</span>);
+        } <span class="keyword">else</span> {
+          <span class="keyword">this</span>._log.trace({ frame: <span class="keyword">this</span>._frame }, <span class="string">'Incoming frame'</span>);
+          <span class="keyword">this</span>.push(<span class="keyword">this</span>._frame);
+        }
+      } <span class="keyword">else</span> {
+        <span class="keyword">this</span>._log.warn({ frame: <span class="keyword">this</span>._frame }, <span class="string">'Unknown type incoming frame'</span>);
+      }
+      <span class="keyword">this</span>._next(COMMON_HEADER_SIZE);
+    }
+  }
+
+  done();
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <h2 id="-frame-header-http-http2-github-io-http2-spec-frameheader-"><a href="http://http2.github.io/http2-spec/#FrameHeader">Frame Header</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>HTTP/2.0 frames share a common base format consisting of an 8-byte header followed by 0 to 65535
+bytes of data.</p>
+<p>Additional size limits can be set by specific application uses. HTTP limits the frame size to
+16,383 octets.</p>
+<pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| R |     Length (14)           |   Type (8)    |   Flags (8)   |
++-+-+---------------------------+---------------+---------------+
+|R|                 Stream Identifier (31)                      |
++-+-------------------------------------------------------------+
+|                     Frame Data (0...)                       ...
++---------------------------------------------------------------+</code></pre>
+<p>The fields of the frame header are defined as:</p>
+<ul>
+<li><p>R:
+A reserved 2-bit field. The semantics of these bits are undefined and the bits MUST remain
+unset (0) when sending and MUST be ignored when receiving.</p>
+</li>
+<li><p>Length:
+The length of the frame data expressed as an unsigned 14-bit integer. The 8 bytes of the frame
+header are not included in this value.</p>
+</li>
+<li><p>Type:
+The 8-bit type of the frame. The frame type determines how the remainder of the frame header
+and data are interpreted. Implementations MUST ignore unsupported and unrecognized frame types.</p>
+</li>
+<li><p>Flags:
+An 8-bit field reserved for frame-type specific boolean flags.</p>
+<p>Flags are assigned semantics specific to the indicated frame type. Flags that have no defined
+semantics for a particular frame type MUST be ignored, and MUST be left unset (0) when sending.</p>
+</li>
+<li><p>R:
+A reserved 1-bit field. The semantics of this bit are undefined and the bit MUST remain unset
+(0) when sending and MUST be ignored when receiving.</p>
+</li>
+<li><p>Stream Identifier:
+A 31-bit stream identifier. The value 0 is reserved for frames that are associated with the
+connection as a whole as opposed to an individual stream.</p>
+</li>
+</ul>
+<p>The structure and content of the remaining frame data is dependent entirely on the frame type.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> COMMON_HEADER_SIZE = <span class="number">8</span>;
+<span class="keyword">var</span> MAX_PAYLOAD_SIZE = <span class="number">16383</span>;
+
+<span class="keyword">var</span> frameTypes = [];
+
+<span class="keyword">var</span> frameFlags = {};
+
+<span class="keyword">var</span> genericAttributes = [<span class="string">'type'</span>, <span class="string">'flags'</span>, <span class="string">'stream'</span>];
+
+<span class="keyword">var</span> typeSpecificAttributes = {};
+
+Serializer.commonHeader = <span class="function"><span class="keyword">function</span> <span class="title">writeCommonHeader</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> headerBuffer = <span class="keyword">new</span> Buffer(COMMON_HEADER_SIZE);
+
+  <span class="keyword">var</span> size = <span class="number">0</span>;
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; buffers.length; i++) {
+    size += buffers[i].length;
+  }
+  assert(size &lt;= MAX_PAYLOAD_SIZE, size);
+  headerBuffer.writeUInt16BE(size, <span class="number">0</span>);
+
+  <span class="keyword">var</span> typeId = frameTypes.indexOf(frame.type);  <span class="comment">// If we are here then the type is valid for sure</span>
+  headerBuffer.writeUInt8(typeId, <span class="number">2</span>);
+
+  <span class="keyword">var</span> flagByte = <span class="number">0</span>;
+  <span class="keyword">for</span> (<span class="keyword">var</span> flag <span class="keyword">in</span> frame.flags) {
+    <span class="keyword">var</span> position = frameFlags[frame.type].indexOf(flag);
+    assert(position !== -<span class="number">1</span>, <span class="string">'Unknown flag for frame type '</span> + frame.type + <span class="string">': '</span> + flag);
+    <span class="keyword">if</span> (frame.flags[flag]) {
+      flagByte |= (<span class="number">1</span> &lt;&lt; position);
+    }
+  }
+  headerBuffer.writeUInt8(flagByte, <span class="number">3</span>);
+
+  assert((<span class="number">0</span> &lt;= frame.stream) &amp;&amp; (frame.stream &lt; <span class="number">0x7fffffff</span>), frame.stream);
+  headerBuffer.writeUInt32BE(frame.stream || <span class="number">0</span>, <span class="number">4</span>);
+
+  buffers.unshift(headerBuffer);
+};
+
+Deserializer.commonHeader = <span class="function"><span class="keyword">function</span> <span class="title">readCommonHeader</span><span class="params">(buffer, frame)</span> {</span>
+  <span class="keyword">var</span> length = buffer.readUInt16BE(<span class="number">0</span>);
+
+  frame.type = frameTypes[buffer.readUInt8(<span class="number">2</span>)];
+
+  frame.flags = {};
+  <span class="keyword">var</span> flagByte = buffer.readUInt8(<span class="number">3</span>);
+  <span class="keyword">var</span> definedFlags = frameFlags[frame.type];
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; definedFlags.length; i++) {
+    frame.flags[definedFlags[i]] = Boolean(flagByte &amp; (<span class="number">1</span> &lt;&lt; i));
+  }
+
+  frame.stream = buffer.readUInt32BE(<span class="number">4</span>) &amp; <span class="number">0x7fffffff</span>;
+
+  <span class="keyword">return</span> length;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <h1 id="frame-types">Frame types</h1>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Every frame type is registered in the following places:</p>
+<ul>
+<li><code>frameTypes</code>: a register of frame type codes (used by <code>commonHeader()</code>)</li>
+<li><code>frameFlags</code>: a register of valid flags for frame types (used by <code>commonHeader()</code>)</li>
+<li><code>typeSpecificAttributes</code>: a register of frame specific frame object attributes (used by
+logging code and also serves as documentation for frame objects)</li>
+</ul>
+<h2 id="-data-frames-http-http2-github-io-http2-spec-dataframes-"><a href="http://http2.github.io/http2-spec/#DataFrames">DATA Frames</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>DATA frames (type=0x0) convey arbitrary, variable-length sequences of octets associated with a
+stream.</p>
+<p>The DATA frame defines the following flags:</p>
+<ul>
+<li>END_STREAM (0x1):
+Bit 1 being set indicates that this frame is the last that the endpoint will send for the
+identified stream.</li>
+<li>RESERVED (0x2):
+Bit 2 is reserved for future use.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x0</span>] = <span class="string">'DATA'</span>;
+
+frameFlags.DATA = [<span class="string">'END_STREAM'</span>, <span class="string">'RESERVED'</span>];
+
+typeSpecificAttributes.DATA = [<span class="string">'data'</span>];
+
+Serializer.DATA = <span class="function"><span class="keyword">function</span> <span class="title">writeData</span><span class="params">(frame, buffers)</span> {</span>
+  buffers.push(frame.data);
+};
+
+Deserializer.DATA = <span class="function"><span class="keyword">function</span> <span class="title">readData</span><span class="params">(buffer, frame)</span> {</span>
+  frame.data = buffer;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <h2 id="-headers-http-http2-github-io-http2-spec-headers-"><a href="http://http2.github.io/http2-spec/#HEADERS">HEADERS</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>The HEADERS frame (type=0x1) allows the sender to create a stream.</p>
+<p>The HEADERS frame defines the following flags:</p>
+<ul>
+<li>END_STREAM (0x1):
+Bit 1 being set indicates that this frame is the last that the endpoint will send for the
+identified stream.</li>
+<li>RESERVED (0x2):
+Bit 2 is reserved for future use.</li>
+<li>END_HEADERS (0x4):
+The END_HEADERS bit indicates that this frame contains the entire payload necessary to provide
+a complete set of headers.</li>
+<li>PRIORITY (0x8):
+Bit 4 being set indicates that the first four octets of this frame contain a single reserved
+bit and a 31-bit priority.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x1</span>] = <span class="string">'HEADERS'</span>;
+
+frameFlags.HEADERS = [<span class="string">'END_STREAM'</span>, <span class="string">'RESERVED'</span>, <span class="string">'END_HEADERS'</span>, <span class="string">'PRIORITY'</span>];
+
+typeSpecificAttributes.HEADERS = [<span class="string">'priority'</span>, <span class="string">'headers'</span>, <span class="string">'data'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|X|               (Optional) Priority (31)                      |
++-+-------------------------------------------------------------+
+|                    Header Block (*)                         ...
++---------------------------------------------------------------+</code></pre>
+<p>The payload of a HEADERS frame contains a Headers Block</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.HEADERS = <span class="function"><span class="keyword">function</span> <span class="title">writeHeadersPriority</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">if</span> (frame.flags.PRIORITY) {
+    <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">4</span>);
+    assert((<span class="number">0</span> &lt;= frame.priority) &amp;&amp; (frame.priority &lt;= <span class="number">0xffffffff</span>), frame.priority);
+    buffer.writeUInt32BE(frame.priority, <span class="number">0</span>);
+    buffers.push(buffer);
+  }
+  buffers.push(frame.data);
+};
+
+Deserializer.HEADERS = <span class="function"><span class="keyword">function</span> <span class="title">readHeadersPriority</span><span class="params">(buffer, frame)</span> {</span>
+  <span class="keyword">if</span> (frame.flags.PRIORITY) {
+    frame.priority = buffer.readUInt32BE(<span class="number">0</span>) &amp; <span class="number">0x7fffffff</span>;
+    frame.data = buffer.slice(<span class="number">4</span>);
+  } <span class="keyword">else</span> {
+    frame.data = buffer;
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <h2 id="-priority-http-http2-github-io-http2-spec-priority-"><a href="http://http2.github.io/http2-spec/#PRIORITY">PRIORITY</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream.</p>
+<p>The PRIORITY frame does not define any flags.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x2</span>] = <span class="string">'PRIORITY'</span>;
+
+frameFlags.PRIORITY = [];
+
+typeSpecificAttributes.PRIORITY = [<span class="string">'priority'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|X|                   Priority (31)                             |
++-+-------------------------------------------------------------+</code></pre>
+<p>The payload of a PRIORITY frame contains a single reserved bit and a 31-bit priority.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.PRIORITY = <span class="function"><span class="keyword">function</span> <span class="title">writePriority</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">4</span>);
+  buffer.writeUInt32BE(frame.priority, <span class="number">0</span>);
+  buffers.push(buffer);
+};
+
+Deserializer.PRIORITY = <span class="function"><span class="keyword">function</span> <span class="title">readPriority</span><span class="params">(buffer, frame)</span> {</span>
+  frame.priority = buffer.readUInt32BE(<span class="number">0</span>);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <h2 id="-rst_stream-http-http2-github-io-http2-spec-rst_stream-"><a href="http://http2.github.io/http2-spec/#RST_STREAM">RST_STREAM</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>The RST_STREAM frame (type=0x3) allows for abnormal termination of a stream.</p>
+<p>No type-flags are defined.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x3</span>] = <span class="string">'RST_STREAM'</span>;
+
+frameFlags.RST_STREAM = [];
+
+typeSpecificAttributes.RST_STREAM = [<span class="string">'error'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                         Error Code (32)                       |
++---------------------------------------------------------------+</code></pre>
+<p>The RST_STREAM frame contains a single unsigned, 32-bit integer identifying the error
+code (see Error Codes). The error code indicates why the stream is being terminated.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.RST_STREAM = <span class="function"><span class="keyword">function</span> <span class="title">writeRstStream</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">4</span>);
+  <span class="keyword">var</span> code = errorCodes.indexOf(frame.error);
+  assert((<span class="number">0</span> &lt;= code) &amp;&amp; (code &lt;= <span class="number">0xffffffff</span>), code);
+  buffer.writeUInt32BE(code, <span class="number">0</span>);
+  buffers.push(buffer);
+};
+
+Deserializer.RST_STREAM = <span class="function"><span class="keyword">function</span> <span class="title">readRstStream</span><span class="params">(buffer, frame)</span> {</span>
+  frame.error = errorCodes[buffer.readUInt32BE(<span class="number">0</span>)];
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <h2 id="-settings-http-http2-github-io-http2-spec-settings-"><a href="http://http2.github.io/http2-spec/#SETTINGS">SETTINGS</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
+communicate.</p>
+<p>The SETTINGS frame defines the following flag:</p>
+<ul>
+<li>ACK (0x1):
+Bit 1 being set indicates that this frame acknowledges receipt and application of the peer&#39;s
+SETTINGS frame.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x4</span>] = <span class="string">'SETTINGS'</span>;
+
+frameFlags.SETTINGS = [<span class="string">'ACK'</span>];
+
+typeSpecificAttributes.SETTINGS = [<span class="string">'settings'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>The payload of a SETTINGS frame consists of zero or more settings. Each setting consists of an
+8-bit reserved field, an unsigned 24-bit setting identifier, and an unsigned 32-bit value.</p>
+<pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|  Reserved(8)  |             Setting Identifier (24)           |
++---------------+-----------------------------------------------+
+|                        Value (32)                             |
++---------------------------------------------------------------+</code></pre>
+<p>Each setting in a SETTINGS frame replaces the existing value for that setting.  Settings are
+processed in the order in which they appear, and a receiver of a SETTINGS frame does not need to
+maintain any state other than the current value of settings.  Therefore, the value of a setting
+is the last value that is seen by a receiver. This permits the inclusion of the same settings
+multiple times in the same SETTINGS frame, though doing so does nothing other than waste
+connection capacity.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.SETTINGS = <span class="function"><span class="keyword">function</span> <span class="title">writeSettings</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> settings = [], settingsLeft = Object.keys(frame.settings);
+  definedSettings.forEach(<span class="function"><span class="keyword">function</span><span class="params">(setting, id)</span> {</span>
+    <span class="keyword">if</span> (setting.name <span class="keyword">in</span> frame.settings) {
+      settingsLeft.splice(settingsLeft.indexOf(setting.name), <span class="number">1</span>);
+      <span class="keyword">var</span> value = frame.settings[setting.name];
+      settings.push({ id: id, value: setting.flag ? Boolean(value) : value });
+    }
+  });
+  assert(settingsLeft.length === <span class="number">0</span>, <span class="string">'Unknown settings: '</span> + settingsLeft.join(<span class="string">', '</span>));
+
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(settings.length * <span class="number">8</span>);
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; settings.length; i++) {
+    buffer.writeUInt32BE(settings[i].id &amp; <span class="number">0xffffff</span>, i*<span class="number">8</span>);
+    buffer.writeUInt32BE(settings[i].value, i*<span class="number">8</span> + <span class="number">4</span>);
+  }
+
+  buffers.push(buffer);
+};
+
+Deserializer.SETTINGS = <span class="function"><span class="keyword">function</span> <span class="title">readSettings</span><span class="params">(buffer, frame)</span> {</span>
+  frame.settings = {};
+
+  <span class="keyword">if</span> (buffer.length % <span class="number">8</span> !== <span class="number">0</span>) {
+    <span class="keyword">return</span> <span class="string">'Invalid SETTINGS frame'</span>;
+  }
+  <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; buffer.length / <span class="number">8</span>; i++) {
+    <span class="keyword">var</span> id = buffer.readUInt32BE(i*<span class="number">8</span>) &amp; <span class="number">0xffffff</span>;
+    <span class="keyword">var</span> setting = definedSettings[id];
+    <span class="keyword">if</span> (setting) {
+      <span class="keyword">var</span> value = buffer.readUInt32BE(i*<span class="number">8</span> + <span class="number">4</span>);
+      frame.settings[setting.name] = setting.flag ? Boolean(value &amp; <span class="number">0x1</span>) : value;
+    } <span class="keyword">else</span> {
+      <span class="comment">/* Unknown setting, ignoring */</span>
+    }
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>The following settings are defined:</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> definedSettings = [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <ul>
+<li>SETTINGS_HEADER_TABLE_SIZE (1):
+Allows the sender to inform the remote endpoint of the size of the header compression table
+used to decode header blocks.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>definedSettings[<span class="number">1</span>] = { name: <span class="string">'SETTINGS_HEADER_TABLE_SIZE'</span>, flag: <span class="literal">false</span> };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <ul>
+<li>SETTINGS_ENABLE_PUSH (2):
+This setting can be use to disable server push. An endpoint MUST NOT send a PUSH_PROMISE frame
+if it receives this setting set to a value of 0. The default value is 1, which indicates that
+push is permitted.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>definedSettings[<span class="number">2</span>] = { name: <span class="string">'SETTINGS_ENABLE_PUSH'</span>, flag: <span class="literal">true</span> };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <ul>
+<li>SETTINGS_MAX_CONCURRENT_STREAMS (4):
+indicates the maximum number of concurrent streams that the sender will allow.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>definedSettings[<span class="number">4</span>] = { name: <span class="string">'SETTINGS_MAX_CONCURRENT_STREAMS'</span>, flag: <span class="literal">false</span> };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <ul>
+<li>SETTINGS_INITIAL_WINDOW_SIZE (7):
+indicates the sender&#39;s initial stream window size (in bytes) for new streams.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>definedSettings[<span class="number">7</span>] = { name: <span class="string">'SETTINGS_INITIAL_WINDOW_SIZE'</span>, flag: <span class="literal">false</span> };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <ul>
+<li>SETTINGS_FLOW_CONTROL_OPTIONS (10):
+indicates that streams directed to the sender will not be subject to flow control. The least
+significant bit (0x1) is set to indicate that new streams are not flow controlled. All other
+bits are reserved.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>definedSettings[<span class="number">10</span>] = { name: <span class="string">'SETTINGS_FLOW_CONTROL_OPTIONS'</span>, flag: <span class="literal">true</span> };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <h2 id="-push_promise-http-http2-github-io-http2-spec-push_promise-"><a href="http://http2.github.io/http2-spec/#PUSH_PROMISE">PUSH_PROMISE</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams the
+sender intends to initiate.</p>
+<p>The PUSH_PROMISE frame defines the following flags:</p>
+<ul>
+<li>END_PUSH_PROMISE (0x4):
+The END_PUSH_PROMISE bit indicates that this frame contains the entire payload necessary to
+provide a complete set of headers.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x5</span>] = <span class="string">'PUSH_PROMISE'</span>;
+
+frameFlags.PUSH_PROMISE = [<span class="string">'RESERVED1'</span>, <span class="string">'RESERVED2'</span>, <span class="string">'END_PUSH_PROMISE'</span>];
+
+typeSpecificAttributes.PUSH_PROMISE = [<span class="string">'promised_stream'</span>, <span class="string">'headers'</span>, <span class="string">'data'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|X|                Promised-Stream-ID (31)                      |
++-+-------------------------------------------------------------+
+|                    Header Block (*)                         ...
++---------------------------------------------------------------+</code></pre>
+<p>The PUSH_PROMISE frame includes the unsigned 31-bit identifier of
+the stream the endpoint plans to create along with a minimal set of headers that provide
+additional context for the stream.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.PUSH_PROMISE = <span class="function"><span class="keyword">function</span> <span class="title">writePushPromise</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">4</span>);
+
+  <span class="keyword">var</span> promised_stream = frame.promised_stream;
+  assert((<span class="number">0</span> &lt;= promised_stream) &amp;&amp; (promised_stream &lt;= <span class="number">0x7fffffff</span>), promised_stream);
+  buffer.writeUInt32BE(promised_stream, <span class="number">0</span>);
+
+  buffers.push(buffer);
+  buffers.push(frame.data);
+};
+
+Deserializer.PUSH_PROMISE = <span class="function"><span class="keyword">function</span> <span class="title">readPushPromise</span><span class="params">(buffer, frame)</span> {</span>
+  frame.promised_stream = buffer.readUInt32BE(<span class="number">0</span>) &amp; <span class="number">0x7fffffff</span>;
+  frame.data = buffer.slice(<span class="number">4</span>);
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <h2 id="-ping-http-http2-github-io-http2-spec-ping-"><a href="http://http2.github.io/http2-spec/#PING">PING</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
+sender, as well as determining whether an idle connection is still functional.</p>
+<p>The PING frame defines one type-specific flag:</p>
+<ul>
+<li>ACK (0x1):
+Bit 1 being set indicates that this PING frame is a PING response.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x6</span>] = <span class="string">'PING'</span>;
+
+frameFlags.PING = [<span class="string">'ACK'</span>];
+
+typeSpecificAttributes.PING = [<span class="string">'data'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>In addition to the frame header, PING frames MUST contain 8 additional octets of opaque data.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.PING = <span class="function"><span class="keyword">function</span> <span class="title">writePing</span><span class="params">(frame, buffers)</span> {</span>
+  buffers.push(frame.data);
+};
+
+Deserializer.PING = <span class="function"><span class="keyword">function</span> <span class="title">readPing</span><span class="params">(buffer, frame)</span> {</span>
+  <span class="keyword">if</span> (buffer.length !== <span class="number">8</span>) {
+    <span class="keyword">return</span> <span class="string">'Invalid size PING frame'</span>;
+  }
+  frame.data = buffer;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <h2 id="-goaway-http-http2-github-io-http2-spec-goaway-"><a href="http://http2.github.io/http2-spec/#GOAWAY">GOAWAY</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>The GOAWAY frame (type=0x7) informs the remote peer to stop creating streams on this connection.</p>
+<p>The GOAWAY frame does not define any flags.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x7</span>] = <span class="string">'GOAWAY'</span>;
+
+frameFlags.GOAWAY = [];
+
+typeSpecificAttributes.GOAWAY = [<span class="string">'last_stream'</span>, <span class="string">'error'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <pre><code> 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|X|                  Last-Stream-ID (31)                        |
++-+-------------------------------------------------------------+
+|                      Error Code (32)                          |
++---------------------------------------------------------------+</code></pre>
+<p>The last stream identifier in the GOAWAY frame contains the highest numbered stream identifier
+for which the sender of the GOAWAY frame has received frames on and might have taken some action
+on.</p>
+<p>The GOAWAY frame also contains a 32-bit error code (see Error Codes) that contains the reason for
+closing the connection.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.GOAWAY = <span class="function"><span class="keyword">function</span> <span class="title">writeGoaway</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">8</span>);
+
+  <span class="keyword">var</span> last_stream = frame.last_stream;
+  assert((<span class="number">0</span> &lt;= last_stream) &amp;&amp; (last_stream &lt;= <span class="number">0x7fffffff</span>), last_stream);
+  buffer.writeUInt32BE(last_stream, <span class="number">0</span>);
+
+  <span class="keyword">var</span> code = errorCodes.indexOf(frame.error);
+  assert((<span class="number">0</span> &lt;= code) &amp;&amp; (code &lt;= <span class="number">0xffffffff</span>), code);
+  buffer.writeUInt32BE(code, <span class="number">4</span>);
+
+  buffers.push(buffer);
+};
+
+Deserializer.GOAWAY = <span class="function"><span class="keyword">function</span> <span class="title">readGoaway</span><span class="params">(buffer, frame)</span> {</span>
+  frame.last_stream = buffer.readUInt32BE(<span class="number">0</span>) &amp; <span class="number">0x7fffffff</span>;
+  frame.error = errorCodes[buffer.readUInt32BE(<span class="number">4</span>)];
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <h2 id="-window_update-http-http2-github-io-http2-spec-window_update-"><a href="http://http2.github.io/http2-spec/#WINDOW_UPDATE">WINDOW_UPDATE</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>The WINDOW_UPDATE frame (type=0x9) is used to implement flow control.</p>
+<p>The WINDOW_UPDATE frame does not define any flags.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0x9</span>] = <span class="string">'WINDOW_UPDATE'</span>;
+
+frameFlags.WINDOW_UPDATE = [];
+
+typeSpecificAttributes.WINDOW_UPDATE = [<span class="string">'window_size'</span>];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>The payload of a WINDOW_UPDATE frame is a 32-bit value indicating the additional number of bytes
+that the sender can transmit in addition to the existing flow control window. The legal range
+for this field is 1 to 2^31 - 1 (0x7fffffff) bytes; the most significant bit of this value is
+reserved.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>Serializer.WINDOW_UPDATE = <span class="function"><span class="keyword">function</span> <span class="title">writeWindowUpdate</span><span class="params">(frame, buffers)</span> {</span>
+  <span class="keyword">var</span> buffer = <span class="keyword">new</span> Buffer(<span class="number">4</span>);
+
+  <span class="keyword">var</span> window_size = frame.window_size;
+  assert((<span class="number">0</span> &lt;= window_size) &amp;&amp; (window_size &lt;= <span class="number">0x7fffffff</span>), window_size);
+  buffer.writeUInt32BE(window_size, <span class="number">0</span>);
+
+  buffers.push(buffer);
+};
+
+Deserializer.WINDOW_UPDATE = <span class="function"><span class="keyword">function</span> <span class="title">readWindowUpdate</span><span class="params">(buffer, frame)</span> {</span>
+  frame.window_size = buffer.readUInt32BE(<span class="number">0</span>) &amp; <span class="number">0x7fffffff</span>;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <h2 id="-continuation-http-http2-github-io-http2-spec-continuation-"><a href="http://http2.github.io/http2-spec/#CONTINUATION">CONTINUATION</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>The CONTINUATION frame (type=0xA) is used to continue a sequence of header block fragments.</p>
+<p>The CONTINUATION frame defines the following flag:</p>
+<ul>
+<li>END_HEADERS (0x4):
+The END_HEADERS bit indicates that this frame ends the sequence of header block fragments
+necessary to provide a complete set of headers.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>frameTypes[<span class="number">0xA</span>] = <span class="string">'CONTINUATION'</span>;
+
+frameFlags.CONTINUATION = [<span class="string">'RESERVED1'</span>, <span class="string">'RESERVED2'</span>, <span class="string">'END_HEADERS'</span>];
+
+typeSpecificAttributes.CONTINUATION = [<span class="string">'headers'</span>, <span class="string">'data'</span>];
+
+Serializer.CONTINUATION = <span class="function"><span class="keyword">function</span> <span class="title">writeContinuation</span><span class="params">(frame, buffers)</span> {</span>
+  buffers.push(frame.data);
+};
+
+Deserializer.CONTINUATION = <span class="function"><span class="keyword">function</span> <span class="title">readContinuation</span><span class="params">(buffer, frame)</span> {</span>
+  frame.data = buffer;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <h2 id="-error-codes-http-http2-github-io-http2-spec-errorcodes-"><a href="http://http2.github.io/http2-spec/#ErrorCodes">Error Codes</a></h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> errorCodes = [
+  <span class="string">'NO_ERROR'</span>,
+  <span class="string">'PROTOCOL_ERROR'</span>,
+  <span class="string">'INTERNAL_ERROR'</span>,
+  <span class="string">'FLOW_CONTROL_ERROR'</span>,
+  <span class="string">'SETTINGS_TIMEOUT'</span>,
+  <span class="string">'STREAM_CLOSED'</span>,
+  <span class="string">'FRAME_SIZE_ERROR'</span>,
+  <span class="string">'REFUSED_STREAM'</span>,
+  <span class="string">'CANCEL'</span>,
+  <span class="string">'COMPRESSION_ERROR'</span>,
+  <span class="string">'CONNECT_ERROR'</span>
+];
+errorCodes[<span class="number">420</span>] = <span class="string">'ENHANCE_YOUR_CALM'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <h2 id="logging">Logging</h2>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p><a href="https://github.com/trentm/node-bunyan#serializers">Bunyan serializers</a> to improve logging output
+for debug messages emitted in this component.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>exports.serializers = {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <ul>
+<li><code>frame</code> serializer: it transforms data attributes from Buffers to hex strings and filters out
+flags that are not present.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="keyword">var</span> frameCounter = <span class="number">0</span>;
+exports.serializers.frame = <span class="function"><span class="keyword">function</span><span class="params">(frame)</span> {</span>
+  <span class="keyword">if</span> (!frame) {
+    <span class="keyword">return</span> <span class="literal">null</span>;
+  }
+
+  <span class="keyword">if</span> (<span class="string">'id'</span> <span class="keyword">in</span> frame) {
+    <span class="keyword">return</span> frame.id;
+  }
+
+  frame.id = frameCounter;
+  frameCounter += <span class="number">1</span>;
+
+  <span class="keyword">var</span> logEntry = { id: frame.id };
+  genericAttributes.concat(typeSpecificAttributes[frame.type]).forEach(<span class="function"><span class="keyword">function</span><span class="params">(name)</span> {</span>
+    logEntry[name] = frame[name];
+  });
+
+  <span class="keyword">if</span> (frame.data <span class="keyword">instanceof</span> Buffer) {
+    <span class="keyword">if</span> (logEntry.data.length &gt; <span class="number">50</span>) {
+      logEntry.data = frame.data.slice(<span class="number">0</span>, <span class="number">47</span>).toString(<span class="string">'hex'</span>) + <span class="string">'...'</span>;
+    } <span class="keyword">else</span> {
+      logEntry.data = frame.data.toString(<span class="string">'hex'</span>);
+    }
+
+    <span class="keyword">if</span> (!(<span class="string">'length'</span> <span class="keyword">in</span> logEntry)) {
+      logEntry.length = frame.data.length;
+    }
+  }
+
+  <span class="keyword">if</span> (frame.promised_stream <span class="keyword">instanceof</span> Object) {
+    logEntry.promised_stream = <span class="string">'stream-'</span> + frame.promised_stream.id;
+  }
+
+  logEntry.flags = Object.keys(frame.flags || {}).filter(<span class="function"><span class="keyword">function</span><span class="params">(name)</span> {</span>
+    <span class="keyword">return</span> frame.flags[name] === <span class="literal">true</span>;
+  });
+
+  <span class="keyword">return</span> logEntry;
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <ul>
+<li><code>data</code> serializer: it simply transforms a buffer to a hex string.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>exports.serializers.data = <span class="function"><span class="keyword">function</span><span class="params">(data)</span> {</span>
+  <span class="keyword">return</span> data.toString(<span class="string">'hex'</span>);
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

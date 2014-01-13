@@ -31,7 +31,7 @@ void
 PathBuilderSkia::SetFillRule(FillRule aFillRule)
 {
   mFillRule = aFillRule;
-  if (mFillRule == FILL_WINDING) {
+  if (mFillRule == FillRule::FILL_WINDING) {
     mPath.setFillType(SkPath::kWinding_FillType);
   } else {
     mPath.setFillType(SkPath::kEvenOdd_FillType);

@@ -11,16 +11,15 @@
 #include "base/basictypes.h"
 #include "base/message_loop.h"
 
-#include "mozilla/WeakPtr.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Vector.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
 #include "nsAutoPtr.h"
-#include "mozilla/DebugOnly.h"
 
 #include <deque>
 #include <stack>
-#include <vector>
 #include <math.h>
 
 namespace mozilla {
@@ -43,6 +42,9 @@ class MessageChannel : HasResultCodes
     friend class ProcessLink;
     friend class ThreadLink;
     friend class AutoEnterRPCTransaction;
+
+    class CxxStackFrame;
+    class InterruptFrame;
 
     typedef mozilla::Monitor Monitor;
 
@@ -273,78 +275,6 @@ class MessageChannel : HasResultCodes
     MessageListener *Listener() const {
         return mListener.get();
     }
-
-    enum Direction { IN_MESSAGE, OUT_MESSAGE };
-    struct InterruptFrame {
-        InterruptFrame(Direction direction, const Message* msg)
-          : mDirection(direction), mMsg(msg)
-        { }
-
-        bool IsInterruptIncall() const {
-            return mMsg->is_interrupt() && IN_MESSAGE == mDirection;
-        }
-        bool IsInterruptOutcall() const {
-            return mMsg->is_interrupt() && OUT_MESSAGE == mDirection;
-        }
-
-        void Describe(int32_t* id, const char** dir, const char** sems,
-                      const char** name) const
-        {
-            *id = mMsg->routing_id();
-            *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
-            *sems = mMsg->is_interrupt() ? "intr" : mMsg->is_sync() ? "sync" : "async";
-            *name = mMsg->name();
-        }
-
-        Direction mDirection;
-        const Message* mMsg;
-    };
-
-    class MOZ_STACK_CLASS CxxStackFrame
-    {
-      public:
-        CxxStackFrame(MessageChannel& that, Direction direction, const Message* msg)
-          : mThat(that)
-        {
-            mThat.AssertWorkerThread();
-
-            if (mThat.mCxxStackFrames.empty())
-                mThat.EnteredCxxStack();
-
-            mThat.mCxxStackFrames.push_back(InterruptFrame(direction, msg));
-            const InterruptFrame& frame = mThat.mCxxStackFrames.back();
-
-            if (frame.IsInterruptIncall())
-                mThat.EnteredCall();
-
-            mThat.mSawInterruptOutMsg |= frame.IsInterruptOutcall();
-        }
-
-        ~CxxStackFrame() {
-            bool exitingCall = mThat.mCxxStackFrames.back().IsInterruptIncall();
-            mThat.mCxxStackFrames.pop_back();
-            bool exitingStack = mThat.mCxxStackFrames.empty();
-
-            // mListener could have gone away if Close() was called while
-            // MessageChannel code was still on the stack
-            if (!mThat.mListener)
-                return;
-
-            mThat.AssertWorkerThread();
-            if (exitingCall)
-                mThat.ExitedCall();
-
-            if (exitingStack)
-                mThat.ExitedCxxStack();
-        }
-      private:
-        MessageChannel& mThat;
-
-        // disable harmful methods
-        CxxStackFrame();
-        CxxStackFrame(const CxxStackFrame&);
-        CxxStackFrame& operator=(const CxxStackFrame&);
-    };
 
     void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,
@@ -673,7 +603,7 @@ class MessageChannel : HasResultCodes
     // This member is only accessed on the worker thread, and so is not
     // protected by mMonitor.  It is managed exclusively by the helper
     // |class CxxStackFrame|.
-    std::vector<InterruptFrame> mCxxStackFrames;
+    mozilla::Vector<InterruptFrame> mCxxStackFrames;
 
     // Did we process an Interrupt out-call during this stack?  Only meaningful in
     // ExitedCxxStack(), from which this variable is reset.

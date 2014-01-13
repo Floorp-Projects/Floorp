@@ -119,11 +119,9 @@ PluginProcessChild::Init()
       return false;
     }
 
-    mPlugin.Init(pluginFilename, ParentHandle(),
-                 IOThreadChild::message_loop(),
-                 IOThreadChild::channel());
-
-    return true;
+    return mPlugin.Init(pluginFilename, ParentHandle(),
+                        IOThreadChild::message_loop(),
+                        IOThreadChild::channel());
 }
 
 void

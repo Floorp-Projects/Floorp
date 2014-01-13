@@ -18,6 +18,9 @@ TEST_HARNESS_FILES := \
   head.js \
   node-spdy \
   moz-spdy \
+  node-http2 \
+  moz-http2 \
+  node \
   $(NULL)
 
 # Extra files needed from $(topsrcdir)/build

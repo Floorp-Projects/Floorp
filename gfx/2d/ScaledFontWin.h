@@ -17,7 +17,7 @@ class ScaledFontWin : public ScaledFontBase
 public:
   ScaledFontWin(LOGFONT* aFont, Float aSize);
 
-  virtual FontType GetType() const { return FONT_GDI; }
+  virtual FontType GetType() const { return FontType::GDI; }
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
 #endif

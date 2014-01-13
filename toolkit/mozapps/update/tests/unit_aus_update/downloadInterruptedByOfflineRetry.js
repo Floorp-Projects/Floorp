@@ -7,7 +7,7 @@
 const NETWORK_ERROR_OFFLINE = 111;
 
 function run_test() {
-  setupTestCommon(true);
+  setupTestCommon();
 
   logTestInfo("testing when an update check fails because the network is " +
               "offline that we check again when the network comes online " +
@@ -64,8 +64,8 @@ function xhr_pt2() {
     var parser = AUS_Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(AUS_Ci.nsIDOMParser);
     gXHR.responseXML = parser.parseFromString(responseBody, "application/xml");
+  } catch (e) {
   }
-  catch(e) { }
   gXHR.onload({ target: gXHR });
 }
 
@@ -74,9 +74,5 @@ function check_test_pt2(update) {
   do_check_neq(update, null);
   do_check_eq(update.name, "App Update Test");
 
-  do_test_finished();
-}
-
-function end_test() {
-  cleanupTestCommon();
+  doTestFinish();
 }
