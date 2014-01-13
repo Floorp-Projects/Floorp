@@ -85,7 +85,7 @@ public:
 protected:
   MediaRecorder& operator = (const MediaRecorder& x) MOZ_DELETE;
   // Create dataavailable event with Blob data and it runs in main thread
-  nsresult CreateAndDispatchBlobEvent(Session *session);
+  nsresult CreateAndDispatchBlobEvent(const already_AddRefed<nsIDOMBlob> &aBlob);
   // Creating a simple event to notify UA simple event.
   void DispatchSimpleEvent(const nsAString & aStr);
   // Creating a error event with message.
