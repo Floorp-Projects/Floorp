@@ -360,51 +360,6 @@ static uint64_t BytesToTime(int64_t offset, uint64_t length, uint64_t durationUs
   return uint64_t(double(durationUs) * perc);
 }
 
-nsresult MediaOmxReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime)
-{
-  if (!mOmxDecoder.get())
-    return NS_OK;
-
-  MediaResource* stream = mOmxDecoder->GetResource();
-
-  int64_t durationUs = 0;
-  mOmxDecoder->GetDuration(&durationUs);
-
-  // Nothing to cache if the media takes 0us to play.
-  if (!durationUs)
-    return NS_OK;
-
-  // Special case completely cached files.  This also handles local files.
-  if (stream->IsDataCachedToEndOfResource(0)) {
-    aBuffered->Add(0, durationUs);
-    return NS_OK;
-  }
-
-  int64_t totalBytes = stream->GetLength();
-
-  // If we can't determine the total size, pretend that we have nothing
-  // buffered. This will put us in a state of eternally-low-on-undecoded-data
-  // which is not get, but about the best we can do.
-  if (totalBytes == -1)
-    return NS_OK;
-
-  int64_t startOffset = stream->GetNextCachedData(0);
-  while (startOffset >= 0) {
-    int64_t endOffset = stream->GetCachedDataEnd(startOffset);
-    // Bytes [startOffset..endOffset] are cached.
-    NS_ASSERTION(startOffset >= 0, "Integer underflow in GetBuffered");
-    NS_ASSERTION(endOffset >= 0, "Integer underflow in GetBuffered");
-
-    uint64_t startUs = BytesToTime(startOffset, totalBytes, durationUs);
-    uint64_t endUs = BytesToTime(endOffset, totalBytes, durationUs);
-    if (startUs != endUs) {
-      aBuffered->Add((double)startUs / USECS_PER_S, (double)endUs / USECS_PER_S);
-    }
-    startOffset = stream->GetNextCachedData(endOffset);
-  }
-  return NS_OK;
-}
-
 void MediaOmxReader::OnDecodeThreadFinish() {
   if (mOmxDecoder.get()) {
     mOmxDecoder->Pause();
